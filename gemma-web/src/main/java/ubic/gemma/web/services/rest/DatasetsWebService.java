@@ -18,13 +18,13 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import lombok.Value;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.io.FilenameUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import org.springframework.web.util.UriComponentsBuilder;
-import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.gemma.core.analysis.preprocess.OutlierDetectionService;
 import ubic.gemma.core.analysis.preprocess.filter.FilteringException;
 import ubic.gemma.core.analysis.preprocess.filter.NoRowsLeftAfterFilteringException;
@@ -61,10 +61,7 @@ import javax.ws.rs.core.StreamingOutput;
 import java.io.File;
 import java.io.OutputStreamWriter;
 import java.net.URI;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 /**
  * RESTful interface for datasets.
@@ -177,7 +174,7 @@ public class DatasetsWebService {
     @GET
     @Path("/{dataset}/platforms")
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Retrieve the platform of a dataset", responses = {
+    @Operation(summary = "Retrieve the platforms of a dataset", responses = {
             @ApiResponse(responseCode = "200", content = @Content(schema = @Schema(ref = "ResponseDataObjectListArrayDesignValueObject"))),
             @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
                     content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
@@ -215,7 +212,7 @@ public class DatasetsWebService {
     @GET
     @Path("/{dataset}/analyses/differential")
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Retrieve the differential analyses of a dataset", responses = {
+    @Operation(summary = "Retrieve annotations and surface level stats for a dataset's differential analyses", responses = {
             @ApiResponse(responseCode = "200", content = @Content(schema = @Schema(ref = "ResponseDataObjectListDifferentialExpressionAnalysisValueObject"))),
             @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
                     content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
@@ -248,15 +245,17 @@ public class DatasetsWebService {
             @Context HttpServletRequest request ) {
         ExpressionExperiment ee = datasetArg.getEntity( expressionExperimentService );
         UriComponentsBuilder uriComponents;
-        // this is only for testing because Jersey inmemory container lacks a servlet context
+        // this is only for testing because Jersey in-memory container lacks a servlet context
         if ( request != null ) {
-            uriComponents = ServletUriComponentsBuilder.fromServletMapping( request );
+            uriComponents = ServletUriComponentsBuilder.fromServletMapping( request )
+                    .scheme( null ).host( null );
         } else {
             uriComponents = UriComponentsBuilder.newInstance();
         }
-        URI resultSetUri = uriComponents.path( "/resultSets" )
-                .queryParam( "datasets", ee.getId() )
-                .build().toUri();
+        URI resultSetUri = uriComponents
+                .path( "/resultSets" )
+                .queryParam( "datasets", "{datasetId}" )
+                .buildAndExpand( ee.getId() ).toUri();
         return Response.status( Response.Status.FOUND )
                 .location( resultSetUri )
                 .build();
@@ -271,7 +270,7 @@ public class DatasetsWebService {
     @GET
     @Path("/{dataset}/annotations")
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Retrieve the annotations analysis of a dataset", responses = {
+    @Operation(summary = "Retrieve the annotations of a dataset", responses = {
             @ApiResponse(responseCode = "200", content = @Content(schema = @Schema(ref = "ResponseDataObjectSetAnnotationValueObject"))),
             @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
                     content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
@@ -323,8 +322,7 @@ public class DatasetsWebService {
         } catch ( NoRowsLeftAfterFilteringException e ) {
             return Response.noContent().build();
         } catch ( FilteringException e ) {
-            // TODO: handle other cases of filtering issue
-            throw new RuntimeException( e );
+            throw new InternalServerErrorException( String.format( "Filtering of dataset %s failed.", ee.getShortName() ), e );
         }
     }
 
@@ -407,7 +405,7 @@ public class DatasetsWebService {
             @PathParam("dataset") DatasetArg<?> datasetArg // Required
     ) {
         SVDValueObject svd = svdService.getSvd( datasetArg.getEntity( expressionExperimentService ).getId() );
-        return Responder.respond( svd == null ? null : new SimpleSVDValueObject( svd.getBioMaterialIds(), svd.getVariances(), svd.getvMatrix() )
+        return Responder.respond( svd == null ? null : new SimpleSVDValueObject( Arrays.asList( svd.getBioMaterialIds() ), svd.getVariances(), svd.getvMatrix().getRawMatrix() )
         );
     }
 
@@ -579,35 +577,18 @@ public class DatasetsWebService {
     }
 
     @SuppressWarnings("unused") // Used for json serialization
+    @Value
     private static class SimpleSVDValueObject {
         /**
          * Order same as the rows of the v matrix.
          */
-        private final Long[] bioMaterialIds;
+        List<Long> bioMaterialIds;
 
         /**
          * An array of values representing the fraction of the variance each component accounts for
          */
-        private final Double[] variances;
-        private final DoubleMatrix<Long, Integer> vMatrix;
-
-        SimpleSVDValueObject( Long[] bioMaterialIds, Double[] variances, DoubleMatrix<Long, Integer> vMatrix ) {
-            this.bioMaterialIds = bioMaterialIds;
-            this.variances = variances;
-            this.vMatrix = vMatrix;
-        }
-
-        public Long[] getBioMaterialIds() {
-            return bioMaterialIds;
-        }
-
-        public Double[] getVariances() {
-            return variances;
-        }
-
-        public DoubleMatrix<Long, Integer> getvMatrix() {
-            return vMatrix;
-        }
+        double[] variances;
+        double[][] vMatrix;
     }
 
 }

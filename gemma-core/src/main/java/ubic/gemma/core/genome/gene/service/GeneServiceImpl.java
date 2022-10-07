@@ -199,16 +199,8 @@ public class GeneServiceImpl extends AbstractFilteringVoEnabledService<Gene, Gen
             if ( assoc.getOntologyEntry() == null )
                 continue;
 
-            AnnotationValueObject annotationValueObject = new AnnotationValueObject();
-
-            annotationValueObject.setId( assoc.getOntologyEntry().getId() );
+            AnnotationValueObject annotationValueObject = new AnnotationValueObject( assoc.getOntologyEntry() );
             annotationValueObject.setTermName( geneOntologyService.getTermName( assoc.getOntologyEntry().getValue() ) );
-            annotationValueObject.setTermUri( assoc.getOntologyEntry().getValue() );
-            annotationValueObject
-                    .setEvidenceCode( assoc.getEvidenceCode() != null ? assoc.getEvidenceCode().getValue() : null );
-            annotationValueObject.setDescription( assoc.getOntologyEntry().getDescription() );
-            annotationValueObject.setClassUri( assoc.getOntologyEntry().getCategoryUri() );
-            annotationValueObject.setClassName( assoc.getOntologyEntry().getCategory() );
 
             ontologies.add( annotationValueObject );
         }
@@ -311,7 +303,7 @@ public class GeneServiceImpl extends AbstractFilteringVoEnabledService<Gene, Gen
         GeneValueObject gvo = GeneValueObject.convert2ValueObject( gene );
 
         Collection<GeneAlias> aliasObjects = gene.getAliases();
-        Collection<String> aliasStrings = new ArrayList<>();
+        SortedSet<String> aliasStrings = new TreeSet<>();
         for ( GeneAlias ga : aliasObjects ) {
             aliasStrings.add( ga.getAlias() );
         }
@@ -390,7 +382,7 @@ public class GeneServiceImpl extends AbstractFilteringVoEnabledService<Gene, Gen
         GeneValueObject details = new GeneValueObject( initialResult );
 
         Collection<GeneAlias> aliasObjects = gene.getAliases();
-        Collection<String> aliasStrings = new ArrayList<>();
+        SortedSet<String> aliasStrings = new TreeSet<>();
         for ( GeneAlias ga : aliasObjects ) {
             aliasStrings.add( ga.getAlias() );
         }
@@ -443,8 +435,8 @@ public class GeneServiceImpl extends AbstractFilteringVoEnabledService<Gene, Gen
 
     @Override
     @Transactional(readOnly = true)
-    public Collection<GeneValueObject> loadValueObjectsByIds( Collection<Long> ids ) {
-        Collection<Gene> g = this.geneDao.loadThawed( ids );
+    public List<GeneValueObject> loadValueObjectsByIds( Collection<Long> ids ) {
+        List<Gene> g = this.geneDao.loadThawed( ids );
         return this.loadValueObjects( g );
     }
 
@@ -509,9 +501,11 @@ public class GeneServiceImpl extends AbstractFilteringVoEnabledService<Gene, Gen
 
         for ( SearchResult<Gene> sr : geneSearchResults ) {
             Gene g = sr.getResultObject();
-            g = this.thaw( g );
-            genes.add( g );
-            log.debug( "Gene search result: " + g.getOfficialSymbol() );
+            if ( g != null ) {
+                g = this.thaw( g );
+                genes.add( g );
+                log.debug( "Gene search result: " + g.getOfficialSymbol() );
+            }
         }
         Collection<GeneValueObject> geneValueObjects = this.loadValueObjects( genes );
         log.debug( "Gene search: " + geneValueObjects.size() + " value objects returned." );

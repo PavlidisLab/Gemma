@@ -51,6 +51,11 @@ public class SearchWebService {
      */
     public static final String RESULT_TYPES_SCHEMA_NAME = "SearchResultType";
 
+    /**
+     * Maximum number of search results.
+     */
+    public static final int MAX_SEARCH_RESULTS = 1000;
+
     @Autowired
     private SearchService searchService;
     @Autowired
@@ -60,7 +65,7 @@ public class SearchWebService {
 
     /**
      * Search everything subject to taxon and platform constraints.
-     *
+     * <p>
      * Naming the schema in for the result types is necessary so that it can be resolved in {@link SearchResultTypeAllowableValuesModelResolver}.
      */
     @GET
@@ -93,7 +98,7 @@ public class SearchWebService {
                 .taxon( taxonArg != null ? taxonArg.getEntity( taxonService ) : null )
                 .platformConstraint( platformArg != null ? platformArg.getEntity( arrayDesignService ) : null )
                 .resultTypes( resultTypesCls )
-                .maxResults( limit.getValue( 100 ) )
+                .maxResults( limit.getValue( MAX_SEARCH_RESULTS ) )
                 .build();
 
         List<SearchResult<? extends Identifiable>> searchResults;
@@ -105,24 +110,37 @@ public class SearchWebService {
             throw new BadRequestException( "Invalid search settings: " + searchSettings + ".", e );
         }
 
-        // convert the response to search results of VOs
-        return new SearchResultsResponseDataObject( searchResults.stream()
+        List<SearchResult<? extends IdentifiableValueObject<? extends Identifiable>>> searchResultVos = searchResults.stream()
                 .map( searchService::loadValueObject )
+                .collect( Collectors.toList() );
+
+        // Some result VOs are null for unknown reasons, see https://github.com/PavlidisLab/Gemma/issues/417
+        List<String> searchResultVosWithNullResultObject = searchResultVos.stream().filter( sr -> sr.getResultObject() == null )
+                .map( SearchResult::toString )
+                .collect( Collectors.toList() );
+        if ( !searchResultVosWithNullResultObject.isEmpty() ) {
+            log.warn( String.format( "The following search results have null result objects: %s.", String.join( ", ", searchResultVosWithNullResultObject ) ) );
+        }
+
+        // convert the response to search results of VOs
+        return new SearchResultsResponseDataObject( searchResultVos.stream()
+                .filter( sr -> sr.getResultObject() != null ) // exclude null cases, we warn about them above
                 .sorted() // SearchResults are sorted by descending score order
-                .limit( limit.getValue( 100 ) ) // results are limited by class, so there might be more results than expected when unraveling everything
+                .limit( limit.getValue( MAX_SEARCH_RESULTS ) ) // results are limited by class, so there might be more results than expected when unraveling everything
                 .map( SearchResultValueObject::new )
                 .collect( Collectors.toList() ), new SearchSettingsValueObject( searchSettings ) );
     }
 
     /**
      * Represents search settings for the RESTful API.
-     *
+     * <p>
      * Note that we will only expose back what the {@link SearchWebService} accepts to take as parameters for searching.
      */
     @Data
     public class SearchSettingsValueObject {
 
         private final String query;
+        @ArraySchema(schema = @Schema(ref = "SearchResultType"))
         private final Set<String> resultTypes;
 
         /* constraints */
@@ -144,13 +162,17 @@ public class SearchWebService {
      * Representation of {@link SearchResult} for the RESTful API.
      */
     @Data
-    public static class SearchResultValueObject<T extends IdentifiableValueObject<? extends Identifiable>> {
+    public static class SearchResultValueObject<T extends IdentifiableValueObject> {
 
         private final Long resultId;
 
+        @Schema(ref = "SearchResultType")
         private final String resultType;
 
-        private final Double score;
+        private final double score;
+
+        @Schema(hidden = true)
+        private final String source;
 
         private final T resultObject;
 
@@ -159,6 +181,7 @@ public class SearchWebService {
             this.resultType = searchResult.getResultClass().getName();
             this.resultObject = searchResult.getResultObject();
             this.score = searchResult.getScore();
+            this.source = searchResult.getSource().toString();
         }
     }
 

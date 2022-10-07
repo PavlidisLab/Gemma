@@ -15,6 +15,9 @@
 package ubic.gemma.web.services.rest;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.enums.Explode;
+import io.swagger.v3.oas.annotations.media.Schema;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -279,7 +282,7 @@ public class TaxaWebService {
     @Operation(summary = "Retrieve the candidate gens for a given set of phenotypes and taxon", hidden = true)
     public ResponseDataObject<Set<GeneEvidenceValueObject>> findCandidateGenesInTaxon( // Params:
             @PathParam("taxon") TaxonArg<?> taxonArg, // Required
-            @QueryParam("phenotypes") StringArrayArg phenotypes, // Required
+            @Parameter(schema = @Schema(implementation = StringArrayArg.class), explode = Explode.FALSE) @QueryParam("phenotypes") StringArrayArg phenotypes, // Required
             @QueryParam("editableOnly") @DefaultValue("false") BoolArg editableOnly // Optional, default false
     ) {
         requiredArg( phenotypes, "phenotypes" );

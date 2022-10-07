@@ -18,6 +18,7 @@
  */
 package ubic.gemma.model.common.auditAndSecurity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.LogFactory;
 import ubic.gemma.model.IdentifiableValueObject;
@@ -43,6 +44,7 @@ public class AuditEventValueObject extends IdentifiableValueObject<AuditEvent> i
     private String action;
     private String note;
     private String detail;
+    @JsonIgnore
     private AuditEventType eventType;
 
     /**

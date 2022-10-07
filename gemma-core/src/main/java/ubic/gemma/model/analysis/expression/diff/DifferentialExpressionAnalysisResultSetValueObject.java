@@ -14,7 +14,7 @@ import java.util.stream.Collectors;
 /**
  * Wraps an {@link ExpressionAnalysisResultSet} and expose it to the public API.
  */
-public class ExpressionAnalysisResultSetValueObject extends AnalysisResultSetValueObject<DifferentialExpressionAnalysisResult, ExpressionAnalysisResultSet> {
+public class DifferentialExpressionAnalysisResultSetValueObject extends AnalysisResultSetValueObject<DifferentialExpressionAnalysisResult, ExpressionAnalysisResultSet> {
 
     private final DifferentialExpressionAnalysisValueObject analysis;
     private final Collection<ExperimentalFactorValueObject> experimentalFactors;
@@ -31,9 +31,12 @@ public class ExpressionAnalysisResultSetValueObject extends AnalysisResultSetVal
      * Create a simple analysis results set VO with limited data.
      * @param analysisResultSet
      */
-    public ExpressionAnalysisResultSetValueObject( ExpressionAnalysisResultSet analysisResultSet ) {
+    public DifferentialExpressionAnalysisResultSetValueObject( ExpressionAnalysisResultSet analysisResultSet ) {
         super( analysisResultSet );
         this.analysis = new DifferentialExpressionAnalysisValueObject( analysisResultSet.getAnalysis() );
+        // these are ignored from JSON serialization of set to null
+        this.analysis.setFactorValuesUsed( null );
+        this.analysis.setResultSets( null );
         this.experimentalFactors = analysisResultSet.getExperimentalFactors().stream()
                 .map( ExperimentalFactorValueObject::new )
                 .collect( Collectors.toList() );
@@ -46,7 +49,7 @@ public class ExpressionAnalysisResultSetValueObject extends AnalysisResultSetVal
      *  @param analysisResultSet
      * @param result2Gene
      */
-    public ExpressionAnalysisResultSetValueObject( ExpressionAnalysisResultSet analysisResultSet, Map<DifferentialExpressionAnalysisResult, List<Gene>> result2Genes ) {
+    public DifferentialExpressionAnalysisResultSetValueObject( ExpressionAnalysisResultSet analysisResultSet, Map<DifferentialExpressionAnalysisResult, List<Gene>> result2Genes ) {
         this( analysisResultSet );
         this.results = analysisResultSet.getResults()
                 .stream()

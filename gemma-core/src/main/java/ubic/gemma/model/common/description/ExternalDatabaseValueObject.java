@@ -14,6 +14,11 @@
  */
 package ubic.gemma.model.common.description;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import ubic.gemma.model.IdentifiableValueObject;
+
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.TreeSet;
@@ -22,11 +27,14 @@ import java.util.TreeSet;
  * @author Paul
  */
 @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
-public class ExternalDatabaseValueObject implements Serializable, Comparable<ExternalDatabaseValueObject> {
+@Data
+@EqualsAndHashCode(of = { "name" }, callSuper = false)
+public class ExternalDatabaseValueObject extends IdentifiableValueObject<ExternalDatabase> implements Serializable, Comparable<ExternalDatabaseValueObject> {
 
     private static final long serialVersionUID = -1714429166594162374L;
     private String name;
-    private Long id;
+    private String uri;
+    @JsonIgnore
     private boolean checked = false;
 
     public ExternalDatabaseValueObject() {
@@ -34,16 +42,15 @@ public class ExternalDatabaseValueObject implements Serializable, Comparable<Ext
     }
 
     public ExternalDatabaseValueObject( Long id, String name, boolean checked ) {
-        super();
+        super( id );
         this.name = name;
-        this.id = id;
         this.checked = checked;
     }
 
     public ExternalDatabaseValueObject( ExternalDatabase ed ) {
-        super();
-        this.id = ed.getId();
+        super( ed );
         this.name = ed.getName();
+        this.uri = ed.getWebUri();
     }
 
     public static Collection<ExternalDatabaseValueObject> fromEntity( Collection<ExternalDatabase> eds ) {
@@ -59,65 +66,8 @@ public class ExternalDatabaseValueObject implements Serializable, Comparable<Ext
         return vos;
     }
 
-    @Deprecated // use constructor instead
-    public static ExternalDatabaseValueObject fromEntity( ExternalDatabase ed ) {
-        if ( ed == null )
-            return null;
-        ExternalDatabaseValueObject vo = new ExternalDatabaseValueObject();
-        vo.setName( ed.getName() );
-        vo.setId( ed.getId() );
-        return vo;
-    }
-
     @Override
     public int compareTo( ExternalDatabaseValueObject externalDatabaseValueObject ) {
         return this.getName().toLowerCase().compareTo( externalDatabaseValueObject.getName().toLowerCase() );
-    }
-
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + ( ( name == null ) ? 0 : name.hashCode() );
-        return result;
-    }
-
-    @Override
-    public boolean equals( Object obj ) {
-        if ( this == obj )
-            return true;
-        if ( obj == null )
-            return false;
-        if ( this.getClass() != obj.getClass() )
-            return false;
-        ExternalDatabaseValueObject other = ( ExternalDatabaseValueObject ) obj;
-        if ( name == null ) {
-            return other.name == null;
-        } else
-            return name.equals( other.name );
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId( Long id ) {
-        this.id = id;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName( String name ) {
-        this.name = name;
-    }
-
-    public boolean isChecked() {
-        return checked;
-    }
-
-    public void setChecked( boolean checked ) {
-        this.checked = checked;
     }
 }

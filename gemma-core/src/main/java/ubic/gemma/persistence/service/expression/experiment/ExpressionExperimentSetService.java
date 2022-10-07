@@ -28,6 +28,7 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.BaseVoEnabledService;
 
 import java.util.Collection;
+import java.util.List;
 
 /**
  * @author paul
@@ -184,11 +185,13 @@ public interface ExpressionExperimentSetService
     ExpressionExperimentSetValueObject updateDatabaseEntityNameDesc( ExpressionExperimentSetValueObject eeSetVO,
             boolean loadEEIds );
 
+    @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_READ" })
     ExpressionExperimentSetValueObject loadValueObjectById( Long id );
 
+    @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
-    Collection<ExpressionExperimentSetValueObject> loadValueObjectsByIds( Collection<Long> eeSetIds );
+    List<ExpressionExperimentSetValueObject> loadValueObjectsByIds( Collection<Long> eeSetIds );
 
     void thaw( ExpressionExperimentSet set );
 }

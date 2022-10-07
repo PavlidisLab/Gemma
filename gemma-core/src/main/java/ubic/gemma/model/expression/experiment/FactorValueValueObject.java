@@ -8,6 +8,7 @@
  */
 package ubic.gemma.model.expression.experiment;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.common.description.Characteristic;
 
@@ -40,7 +41,9 @@ public class FactorValueValueObject extends IdentifiableValueObject<FactorValue>
      */
     private Long charId;
     private Long factorId;
-    private Boolean isBaseline = false;
+    @JsonProperty("isBaseline")
+    private boolean isBaseline = false;
+    @JsonProperty("isMeasurement")
     private boolean measurement = false;
 
     /**

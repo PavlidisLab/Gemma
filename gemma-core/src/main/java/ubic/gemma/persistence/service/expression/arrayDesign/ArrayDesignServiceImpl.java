@@ -31,6 +31,7 @@ import ubic.gemma.persistence.service.AbstractFilteringVoEnabledService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventDao;
 import ubic.gemma.persistence.service.expression.experiment.BlacklistedEntityDao;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.*;
 
 /**
@@ -38,6 +39,7 @@ import java.util.*;
  * @see ArrayDesignService
  */
 @Service
+@ParametersAreNonnullByDefault
 public class ArrayDesignServiceImpl extends AbstractFilteringVoEnabledService<ArrayDesign, ArrayDesignValueObject>
         implements ArrayDesignService {
 
@@ -134,8 +136,6 @@ public class ArrayDesignServiceImpl extends AbstractFilteringVoEnabledService<Ar
 
     @Override
     public Long getCompositeSequenceCount( ArrayDesign arrayDesign ) {
-        if ( arrayDesign == null )
-            throw new IllegalArgumentException( "Array design cannot be null" );
         return this.arrayDesignDao.numCompositeSequences( arrayDesign );
     }
 
@@ -215,7 +215,8 @@ public class ArrayDesignServiceImpl extends AbstractFilteringVoEnabledService<Ar
 
     @Override
     public Taxon getTaxon( java.lang.Long id ) {
-        return this.arrayDesignDao.load( id ).getPrimaryTaxon();
+        ArrayDesign ad = this.arrayDesignDao.load( id );
+        return ad == null ? null : ad.getPrimaryTaxon();
     }
 
     /*
@@ -339,7 +340,7 @@ public class ArrayDesignServiceImpl extends AbstractFilteringVoEnabledService<Ar
 
     @Override
     @Transactional(readOnly = true)
-    public int numExperiments( ArrayDesign arrayDesign ) {
+    public long numExperiments( ArrayDesign arrayDesign ) {
         return this.arrayDesignDao.numExperiments( arrayDesign );
     }
 
@@ -407,11 +408,11 @@ public class ArrayDesignServiceImpl extends AbstractFilteringVoEnabledService<Ar
              * check for merged; check for subsumed; check events for those.
              */
             ArrayDesign arrayDesign = this.load( arrayDesignId );
-            if ( arrayDesign.getSubsumingArrayDesign() != null ) {
+            if ( arrayDesign != null && arrayDesign.getSubsumingArrayDesign() != null ) {
                 ArrayDesign subsumedInto = arrayDesign.getSubsumingArrayDesign();
                 this.checkForMoreRecentMethod( lastEventMap, eventclass, arrayDesignId, subsumedInto );
             }
-            if ( arrayDesign.getMergedInto() != null ) {
+            if ( arrayDesign != null && arrayDesign.getMergedInto() != null ) {
                 ArrayDesign mergedInto = arrayDesign.getMergedInto();
                 this.checkForMoreRecentMethod( lastEventMap, eventclass, arrayDesignId, mergedInto );
             }

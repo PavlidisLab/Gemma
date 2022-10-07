@@ -18,21 +18,24 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.common.description.Characteristic;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.persistence.service.AbstractVoEnabledService;
+import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignDao;
 import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialDao;
 import ubic.gemma.persistence.util.EntityUtils;
 import ubic.gemma.persistence.util.ObjectFilter;
 import ubic.gemma.persistence.util.Sort;
 
-import java.util.Collection;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
+import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 /**
  * @author pavlidis
@@ -48,11 +51,14 @@ public class BioAssayServiceImpl extends AbstractVoEnabledService<BioAssay, BioA
 
     private final BioMaterialDao bioMaterialDao;
 
+    private final ArrayDesignDao arrayDesignDao;
+
     @Autowired
-    public BioAssayServiceImpl( BioAssayDao bioAssayDao, BioMaterialDao bioMaterialDao ) {
+    public BioAssayServiceImpl( BioAssayDao bioAssayDao, BioMaterialDao bioMaterialDao, ArrayDesignDao arrayDesignDao ) {
         super( bioAssayDao );
         this.bioAssayDao = bioAssayDao;
         this.bioMaterialDao = bioMaterialDao;
+        this.arrayDesignDao = arrayDesignDao;
     }
 
     @Override
@@ -104,8 +110,15 @@ public class BioAssayServiceImpl extends AbstractVoEnabledService<BioAssay, BioA
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<BioAssayValueObject> loadValueObjects( Collection<BioAssay> entities, boolean basic ) {
-        return entities == null ? null : bioAssayDao.loadValueObjects( entities, basic );
+        Set<ArrayDesign> arrayDesigns = new HashSet<>();
+        arrayDesigns.addAll( entities.stream().map( BioAssay::getArrayDesignUsed ).collect( Collectors.toSet() ) );
+        arrayDesigns.addAll( entities.stream().map( BioAssay::getOriginalPlatform ).filter( Objects::nonNull ).collect( Collectors.toSet() ) );
+        Map<Long, ArrayDesignValueObject> arrayDesignVosById = arrayDesignDao.loadValueObjects( arrayDesigns )
+                .stream()
+                .collect( Collectors.toMap( ArrayDesignValueObject::getId, Function.identity() ) );
+        return bioAssayDao.loadValueObjects( entities, arrayDesignVosById, basic );
     }
 
     private void handleAddBioMaterialAssociation( BioAssay bioAssay, BioMaterial bioMaterial ) {

@@ -26,6 +26,7 @@ import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.AuditEventValueObject;
 import ubic.gemma.model.common.description.CitationValueObject;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
+import ubic.gemma.model.genome.TaxonValueObject;
 
 import java.util.Collection;
 import java.util.Date;
@@ -418,9 +419,9 @@ public class ExpressionExperimentDetailsValueObject extends ExpressionExperiment
     public void setArrayDesigns( Collection<ArrayDesignValueObject> arrayDesigns ) {
         this.arrayDesigns = arrayDesigns;
         ArrayDesignValueObject ad = arrayDesigns.iterator().next();
-        setArrayDesignCount( arrayDesigns.size() );
+        setArrayDesignCount( ( long ) arrayDesigns.size() );
         this.setTechnologyType( ad.getTechnologyType() );
-        this.setTaxon( ad.getTaxon() ); // FIXME still need the ID of the taxon, don't we?
+        this.setTaxonObject( ad.getTaxonObject() ); // FIXME still need the ID of the taxon, don't we?
     }
 
     public void setBatchFetchEventType( String batchFetchEventType ) {

@@ -48,7 +48,7 @@ public class BibliographicReferenceDaoImpl
     public BibliographicReference findByExternalId( final String id, final String databaseName ) {
         //noinspection unchecked
         return ( BibliographicReference ) this.getSessionFactory().getCurrentSession().createQuery(
-                "from BibliographicReference b where b.pubAccession.accession=:id AND b.pubAccession.externalDatabase.name=:databaseName" )
+                        "from BibliographicReference b where b.pubAccession.accession=:id AND b.pubAccession.externalDatabase.name=:databaseName" )
                 .setParameter( "id", id ).setParameter( "databaseName", databaseName ).uniqueResult();
     }
 
@@ -77,8 +77,8 @@ public class BibliographicReferenceDaoImpl
         if ( bibliographicReference == null || bibliographicReference.getId() == null )
             return bibliographicReference;
         return ( BibliographicReference ) this.getSessionFactory().getCurrentSession().createQuery(
-                "select b from BibliographicReference b left join fetch b.pubAccession left join fetch b.chemicals "
-                        + "left join fetch b.meshTerms left join fetch b.keywords where b.id = :id " )
+                        "select b from BibliographicReference b left join fetch b.pubAccession left join fetch b.chemicals "
+                                + "left join fetch b.meshTerms left join fetch b.keywords where b.id = :id " )
                 .setParameter( "id", bibliographicReference.getId() ).uniqueResult();
     }
 
@@ -88,8 +88,8 @@ public class BibliographicReferenceDaoImpl
             return bibliographicReferences;
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession().createQuery(
-                "select b from BibliographicReference b left join fetch b.pubAccession left join fetch b.chemicals "
-                        + "left join fetch b.meshTerms left join fetch b.keywords where b.id in (:ids) " )
+                        "select b from BibliographicReference b left join fetch b.pubAccession left join fetch b.chemicals "
+                                + "left join fetch b.meshTerms left join fetch b.keywords where b.id in (:ids) " )
                 .setParameterList( "ids", EntityUtils.getIds( bibliographicReferences ) ).list();
     }
 
@@ -174,7 +174,7 @@ public class BibliographicReferenceDaoImpl
     }
 
     @Override
-    public BibliographicReferenceValueObject loadValueObject( BibliographicReference entity ) {
+    protected BibliographicReferenceValueObject doLoadValueObject( BibliographicReference entity ) {
         return new BibliographicReferenceValueObject( entity );
     }
 

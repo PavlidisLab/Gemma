@@ -35,6 +35,7 @@ import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.model.genome.TaxonValueObject;
 import ubic.gemma.model.genome.gene.*;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 
@@ -185,7 +186,7 @@ public class GeneSearchServiceImpl implements GeneSearchService {
             }
 
             // Check to see if we have an exact match, if so, return earlier abstaining from doing other searches
-            for ( SearchResult geneResult : results.get( Gene.class ) ) {
+            for ( SearchResult<?> geneResult : results.get( Gene.class ) ) {
                 Gene g = ( Gene ) geneResult.getResultObject();
                 // aliases too?
                 if ( g != null && g.getOfficialSymbol() != null && g.getOfficialSymbol().startsWith( query.trim() ) ) {
@@ -215,8 +216,11 @@ public class GeneSearchServiceImpl implements GeneSearchService {
             // convert result object to a value object
             for ( SearchResult sr : taxonCheckedSets ) {
                 GeneSet g = ( GeneSet ) sr.getResultObject();
-                DatabaseBackedGeneSetValueObject gsVo = geneSetValueObjectHelper.convertToValueObject( g );
-                sr.setResultObject( gsVo );
+                if ( g != null ) {
+                    DatabaseBackedGeneSetValueObject gsVo = geneSetValueObjectHelper.convertToValueObject( g );
+                    //noinspection unchecked
+                    sr.setResultObject( gsVo );
+                }
             }
             geneSets = SearchResultDisplayObject.convertSearchResults2SearchResultDisplayObjects( taxonCheckedSets );
 
@@ -234,11 +238,14 @@ public class GeneSearchServiceImpl implements GeneSearchService {
 
             geneSets = new ArrayList<>();
             SearchResultDisplayObject srDo;
-            for ( SearchResult sr : geneSetSearchResults ) {
+            for ( SearchResult<?> sr : geneSetSearchResults ) {
                 GeneSet gs = ( GeneSet ) sr.getResultObject();
+                if ( gs == null ) {
+                    continue;
+                }
                 isSetOwnedByUser.put( gs.getId(), securityService.isOwnedByCurrentUser( gs ) );
 
-                taxon = geneSetService.getTaxon( ( GeneSet ) sr.getResultObject() );
+                taxon = geneSetService.getTaxon( gs );
                 GeneSetValueObject gsVo = geneSetValueObjectHelper.convertToValueObject( gs );
                 srDo = new SearchResultDisplayObject( gsVo );
                 srDo.setTaxonId( taxon.getId() );
@@ -372,14 +379,16 @@ public class GeneSearchServiceImpl implements GeneSearchService {
                 // an empty set is an indication of no results.
                 queryToGenes.put( queryAsKey, null );
             } else if ( geneSearchResults.size() == 1 ) { // Just one result so add it
-                Gene g = ( Gene ) geneSearchResults.iterator().next().getResultObject();
-                queryToGenes.put( queryAsKey, new GeneValueObject( g ) );
+                Gene g = geneSearchResults.iterator().next().getResultObject();
+                if ( g != null ) {
+                    queryToGenes.put( queryAsKey, new GeneValueObject( g ) );
+                }
             } else { // Multiple results need to find best one
                 // Usually if there is more than 1 results the search term was a official symbol and picked up matches
                 // like grin1, grin2, grin3, grin (given the search term was grin)
-                for ( SearchResult sr : geneSearchResults ) {
+                for ( SearchResult<Gene> sr : geneSearchResults ) {
                     Gene srGene = ( Gene ) sr.getResultObject();
-                    if ( srGene.getTaxon().equals( taxon ) && srGene.getOfficialSymbol().equalsIgnoreCase( line ) ) {
+                    if ( srGene != null && srGene.getTaxon().equals( taxon ) && srGene.getOfficialSymbol().equalsIgnoreCase( line ) ) {
                         queryToGenes.put( queryAsKey, new GeneValueObject( srGene ) );
                         break; // found so done
                     }
@@ -408,12 +417,12 @@ public class GeneSearchServiceImpl implements GeneSearchService {
         List<SearchResult> taxonCheckedSets = new ArrayList<>();
         for ( SearchResult sr : geneSetSearchResults ) {
             GeneSet gs = ( GeneSet ) sr.getResultObject();
-            GeneSetValueObject gsVo = geneSetValueObjectHelper.convertToValueObject( gs );
-
-            isSetOwnedByUser.put( gs.getId(), securityService.isOwnedByCurrentUser( gs ) );
-
-            if ( Objects.equals( gsVo.getTaxonId(), taxonId ) ) {
-                taxonCheckedSets.add( sr );
+            if ( gs != null ) {
+                GeneSetValueObject gsVo = geneSetValueObjectHelper.convertToValueObject( gs );
+                isSetOwnedByUser.put( gs.getId(), securityService.isOwnedByCurrentUser( gs ) );
+                if ( Objects.equals( gsVo.getTaxonId(), taxonId ) ) {
+                    taxonCheckedSets.add( sr );
+                }
             }
         }
         return taxonCheckedSets;
@@ -423,7 +432,7 @@ public class GeneSearchServiceImpl implements GeneSearchService {
         List<SearchResult> taxonCheckedGenes = new ArrayList<>();
         for ( SearchResult sr : geneSearchResults ) {
             Gene gene = ( Gene ) sr.getResultObject();
-            if ( gene.getTaxon() != null && gene.getTaxon().getId().equals( taxonId ) ) {
+            if ( gene != null && gene.getTaxon() != null && gene.getTaxon().getId().equals( taxonId ) ) {
                 taxonCheckedGenes.add( sr );
             }
         }
@@ -588,15 +597,11 @@ public class GeneSearchServiceImpl implements GeneSearchService {
 
     private SearchResultDisplayObject getSearchResultForSessionBoundGroupValueObject( Taxon taxonForGS,
             SessionBoundGeneSetValueObject sbGsVo ) {
-
         if ( taxonForGS != null ) {
             // GO groups don't seem to have there sbGsVo's taxon info populated
-            sbGsVo.setTaxonId( taxonForGS.getId() );
-            sbGsVo.setTaxonName( taxonForGS.getCommonName() );
-
+            sbGsVo.setTaxon( new TaxonValueObject( taxonForGS ) );
         } else {
-            sbGsVo.setTaxonId( sbGsVo.getTaxonId() );
-            sbGsVo.setTaxonName( sbGsVo.getTaxonName() );
+            sbGsVo.setTaxon( sbGsVo.getTaxon() );
         }
         SearchResultDisplayObject sdo = new SearchResultDisplayObject( sbGsVo );
         sdo.setUserOwned( false );

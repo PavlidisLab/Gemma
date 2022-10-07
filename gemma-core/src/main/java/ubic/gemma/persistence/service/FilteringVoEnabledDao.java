@@ -7,12 +7,15 @@ import ubic.gemma.persistence.util.ObjectFilter;
 import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.persistence.util.Sort;
 
+import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.List;
 
 /**
  * Interface for VO-enabled DAO with filtering capabilities.
  * @author poirigui
  */
+@ParametersAreNonnullByDefault
 public interface FilteringVoEnabledDao<O extends Identifiable, VO extends IdentifiableValueObject<O>>
         extends FilteringDao<O>, BaseVoEnabledDao<O, VO> {
 
@@ -31,7 +34,7 @@ public interface FilteringVoEnabledDao<O extends Identifiable, VO extends Identi
      * @param limit   a limit on the number of returned results, or -1 to ignore
      * @return a slice of the relevant data
      */
-    Slice<VO> loadValueObjectsPreFilter( Filters filters, Sort sort, int offset, int limit );
+    Slice<VO> loadValueObjectsPreFilter( @Nullable Filters filters, @Nullable Sort sort, int offset, int limit );
 
     /**
      * Load VOs with minimal ordering and filtering.
@@ -41,5 +44,5 @@ public interface FilteringVoEnabledDao<O extends Identifiable, VO extends Identi
      *
      * @see #loadValueObjectsPreFilter(Filters, Sort, int, int)
      */
-    List<VO> loadValueObjectsPreFilter( Filters filters, Sort sort );
+    List<VO> loadValueObjectsPreFilter( @Nullable Filters filters, @Nullable Sort sort );
 }

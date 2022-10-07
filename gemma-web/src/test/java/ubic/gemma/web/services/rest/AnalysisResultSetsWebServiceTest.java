@@ -10,7 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
-import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSetValueObject;
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResultSetValueObject;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -131,7 +131,7 @@ public class AnalysisResultSetsWebServiceTest extends BaseSpringWebTest {
                 LimitArg.valueOf( "10" ),
                 SortArg.valueOf( "+id" ) );
         //noinspection unchecked
-        List<ExpressionAnalysisResultSetValueObject> results = ( ( List<ExpressionAnalysisResultSetValueObject> ) result.getData() );
+        List<DifferentialExpressionAnalysisResultSetValueObject> results = ( ( List<DifferentialExpressionAnalysisResultSetValueObject> ) result.getData() );
 
         // this is kind of annoying, but we can have results from other tests still lingering in the database, so we
         // only need to check for the fixture
@@ -153,7 +153,7 @@ public class AnalysisResultSetsWebServiceTest extends BaseSpringWebTest {
                 LimitArg.valueOf( "10" ),
                 SortArg.valueOf( "+id" ) );
         //noinspection unchecked
-        List<ExpressionAnalysisResultSetValueObject> results = ( List<ExpressionAnalysisResultSetValueObject> ) result.getData();
+        List<DifferentialExpressionAnalysisResultSetValueObject> results = ( List<DifferentialExpressionAnalysisResultSetValueObject> ) result.getData();
         assertEquals( results.size(), 1 );
         // individual analysis results are not exposed from this endpoint
         assertNull( results.get( 0 ).getResults() );
@@ -168,7 +168,7 @@ public class AnalysisResultSetsWebServiceTest extends BaseSpringWebTest {
                 LimitArg.valueOf( "10" ),
                 SortArg.valueOf( "+id" ) );
         //noinspection unchecked
-        List<ExpressionAnalysisResultSetValueObject> results = ( List<ExpressionAnalysisResultSetValueObject> ) result.getData();
+        List<DifferentialExpressionAnalysisResultSetValueObject> results = ( List<DifferentialExpressionAnalysisResultSetValueObject> ) result.getData();
         assertEquals( results.size(), 1 );
         // individual analysis results are not exposed from this endpoint
         assertNull( results.get( 0 ).getResults() );
@@ -195,7 +195,7 @@ public class AnalysisResultSetsWebServiceTest extends BaseSpringWebTest {
                 LimitArg.valueOf( "10" ),
                 SortArg.valueOf( "+id" ) );
         //noinspection unchecked
-        List<ExpressionAnalysisResultSetValueObject> results = ( List<ExpressionAnalysisResultSetValueObject> ) result.getData();
+        List<DifferentialExpressionAnalysisResultSetValueObject> results = ( List<DifferentialExpressionAnalysisResultSetValueObject> ) result.getData();
         assertEquals( results.get( 0 ).getId(), dears.getId() );
     }
 
@@ -220,7 +220,7 @@ public class AnalysisResultSetsWebServiceTest extends BaseSpringWebTest {
                 LimitArg.valueOf( "10" ),
                 SortArg.valueOf( "+id" ) );
         //noinspection unchecked
-        List<ExpressionAnalysisResultSetValueObject> results = ( List<ExpressionAnalysisResultSetValueObject> ) result.getData();
+        List<DifferentialExpressionAnalysisResultSetValueObject> results = ( List<DifferentialExpressionAnalysisResultSetValueObject> ) result.getData();
         assertEquals( results.get( 0 ).getId(), dears.getId() );
     }
 
@@ -239,7 +239,7 @@ public class AnalysisResultSetsWebServiceTest extends BaseSpringWebTest {
     @Test
     public void testFindByIdThenReturn200Success() {
         ResponseDataObject<?> result = service.getResultSet( ExpressionAnalysisResultSetArg.valueOf( dears.getId().toString() ), false );
-        ExpressionAnalysisResultSetValueObject dearsVo = ( ExpressionAnalysisResultSetValueObject ) result.getData();
+        DifferentialExpressionAnalysisResultSetValueObject dearsVo = ( DifferentialExpressionAnalysisResultSetValueObject ) result.getData();
         assertEquals( dearsVo.getId(), dears.getId() );
         assertEquals( dearsVo.getAnalysis().getId(), dea.getId() );
         assertNotNull( dearsVo.getResults() );
@@ -248,7 +248,7 @@ public class AnalysisResultSetsWebServiceTest extends BaseSpringWebTest {
     @Test
     public void testFindByIdWhenExcludeResultsThenReturn200Success() {
         ResponseDataObject<?> result = service.getResultSet( ExpressionAnalysisResultSetArg.valueOf( dears.getId().toString() ), true );
-        ExpressionAnalysisResultSetValueObject dearsVo = ( ExpressionAnalysisResultSetValueObject ) result.getData();
+        DifferentialExpressionAnalysisResultSetValueObject dearsVo = ( DifferentialExpressionAnalysisResultSetValueObject ) result.getData();
         assertEquals( dearsVo.getId(), dears.getId() );
         assertEquals( dearsVo.getAnalysis().getId(), dea.getId() );
         assertNull( dearsVo.getResults() );

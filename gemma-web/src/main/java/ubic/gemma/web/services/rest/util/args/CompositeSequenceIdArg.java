@@ -19,10 +19,10 @@ public class CompositeSequenceIdArg extends CompositeSequenceArg<Long> {
 
     @Override
     public CompositeSequence getEntity( CompositeSequenceService service ) {
-        if ( arrayDesign == null )
+        if ( platform == null )
             throw new BadRequestException( "Platform not set for composite sequence retrieval" );
         CompositeSequence cs = service.load( this.getValue() );
-        if ( !Objects.equals( cs.getArrayDesign().getId(), this.arrayDesign.getId() ) ) {
+        if ( !Objects.equals( cs.getArrayDesign().getId(), this.platform.getId() ) ) {
             throw new BadRequestException( "Platform does not match the sequence's platform." );
         }
         return checkEntity( this.getValue() == null ? null : cs );

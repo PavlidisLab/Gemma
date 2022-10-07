@@ -21,21 +21,21 @@ import javax.ws.rs.ext.Provider;
  * @author poirigui
  */
 @Provider
-public class QueryExceptionMapper implements ExceptionMapper<QueryException> {
-
-    private static Log log = LogFactory.getLog( QueryExceptionMapper.class.getName() );
-
-    @Context
-    private HttpServletRequest request;
-
-    @Context
-    private ServletConfig servletConfig;
+public class QueryExceptionMapper extends AbstractExceptionMapper<QueryException> {
 
     @Override
-    public Response toResponse( QueryException e ) {
-        log.error( "Unknown query exception while serving request: " + ServletUtils.summarizeRequest( request ) + ".", e );
-        WellComposedErrorBody error = new WellComposedErrorBody( Response.Status.BAD_REQUEST,
+    protected Response.Status getStatus( QueryException exception ) {
+        return Response.Status.BAD_REQUEST;
+    }
+
+    @Override
+    protected WellComposedErrorBody getWellComposedErrorBody( QueryException exception ) {
+        return new WellComposedErrorBody( Response.Status.BAD_REQUEST,
                 "Entity does not contain the given property, or the provided value can not be converted to the property type." );
-        return Response.status( error.getStatus() ).entity( new ResponseErrorObject( error, OpenApiUtils.getOpenApi( servletConfig ) ) ).build();
+    }
+
+    @Override
+    protected boolean logException() {
+        return true;
     }
 }

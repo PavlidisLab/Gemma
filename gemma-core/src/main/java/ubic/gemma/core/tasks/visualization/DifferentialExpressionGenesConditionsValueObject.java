@@ -254,7 +254,7 @@ public class DifferentialExpressionGenesConditionsValueObject {
         public Condition( ExpressionExperimentValueObject experiment,
                 DifferentialExpressionAnalysisValueObject analysis, DiffExResultSetSummaryValueObject resultSet,
                 FactorValueValueObject factorValue ) {
-            this( resultSet.getResultSetId(), factorValue.getId() );
+            this( resultSet.getId(), factorValue.getId() );
             numberOfProbesOnArray = resultSet.getNumberOfProbesAnalyzed();
             numberOfGenesTested = resultSet.getNumberOfGenesAnalyzed();
             datasetShortName = experiment.getShortName();

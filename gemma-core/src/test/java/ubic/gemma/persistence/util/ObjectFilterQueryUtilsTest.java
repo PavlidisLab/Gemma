@@ -75,4 +75,11 @@ public class ObjectFilterQueryUtilsTest {
         addRestrictionParameters( mockedQuery, filters );
         verify( mockedQuery ).setParameter( "id1", 12L );
     }
+
+    @Test
+    public void testFormRestrictionAndGroupByAndOrderByClauses() {
+        Filters filters = Filters.singleFilter( new ObjectFilter( null, "id", Long.class, ObjectFilter.Operator.eq, 12L ) );
+        assertThat( formRestrictionAndGroupByAndOrderByClauses( filters, "ee", Sort.by( "ee", "shortName" ) ) )
+                .isEqualTo( " and (id = :id1) group by ee order by ee.shortName" );
+    }
 }

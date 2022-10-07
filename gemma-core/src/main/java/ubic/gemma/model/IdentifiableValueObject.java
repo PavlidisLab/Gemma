@@ -1,5 +1,6 @@
 package ubic.gemma.model;
 
+import lombok.EqualsAndHashCode;
 import ubic.gemma.model.common.Identifiable;
 
 import java.util.Objects;
@@ -9,6 +10,7 @@ import java.util.Objects;
  * Interface for value objects representing persistent objects
  */
 @SuppressWarnings({ "unused", "WeakerAccess" }) // Frontend use
+@EqualsAndHashCode(of = { "id" })
 public abstract class IdentifiableValueObject<O extends Identifiable> implements Identifiable {
 
     protected Long id = null;
@@ -48,10 +50,5 @@ public abstract class IdentifiableValueObject<O extends Identifiable> implements
      */
     final public void setId( Long id ) {
         this.id = id;
-    }
-
-    @Override
-    public int hashCode() {
-        return 31 * Objects.hashCode( id );
     }
 }

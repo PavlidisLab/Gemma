@@ -37,6 +37,7 @@ import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.List;
 
 /**
  * Spring Service base class for <code>ubic.gemma.model.analysis.expression.ExpressionExperimentSetService</code>,
@@ -351,7 +352,7 @@ public class ExpressionExperimentSetServiceImpl
 
     @Override
     @Transactional(readOnly = true)
-    public Collection<ExpressionExperimentSetValueObject> loadValueObjectsByIds( Collection<Long> eeSetIds ) {
+    public List<ExpressionExperimentSetValueObject> loadValueObjectsByIds( Collection<Long> eeSetIds ) {
         return this.expressionExperimentSetDao.loadValueObjects( eeSetIds, false );
     }
 

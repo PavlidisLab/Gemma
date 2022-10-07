@@ -4,6 +4,7 @@ import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.persistence.util.ObjectFilter;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.Collection;
 import java.util.List;
 
@@ -11,6 +12,7 @@ import java.util.List;
  * Created by tesarst on 01/06/17.
  * Interface for DAOs providing value object functionality
  */
+@ParametersAreNonnullByDefault
 public interface BaseVoEnabledDao<O extends Identifiable, VO extends IdentifiableValueObject<O>> extends BaseDao<O> {
 
     /**
@@ -21,6 +23,8 @@ public interface BaseVoEnabledDao<O extends Identifiable, VO extends Identifiabl
      */
     VO loadValueObject( O entity );
 
+    VO loadValueObjectById( Long id );
+
     /**
      * Load value objects corresponding to entities
      *
@@ -28,6 +32,8 @@ public interface BaseVoEnabledDao<O extends Identifiable, VO extends Identifiabl
      * @return a collection of value objects
      */
     List<VO> loadValueObjects( Collection<O> entities );
+
+    List<VO> loadValueObjectsByIds( Collection<Long> ids );
 
     List<VO> loadAllValueObjects();
 }

@@ -19,6 +19,9 @@
 
 package ubic.gemma.model.expression.experiment;
 
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+
 /**
  * Represents administrative geeq information. On top of the classic VO, this one also exposes
  * the underlying variables behind the public scores for suitability, quality, batch effect and batch confound.
@@ -26,6 +29,8 @@ package ubic.gemma.model.expression.experiment;
  * @author paul, tesarst
  */
 @SuppressWarnings("unused") // Used in frontend
+@Data
+@EqualsAndHashCode(callSuper = true)
 public class GeeqAdminValueObject extends GeeqValueObject {
 
     private double detectedQualityScore;
@@ -52,25 +57,6 @@ public class GeeqAdminValueObject extends GeeqValueObject {
     public GeeqAdminValueObject() {
     }
 
-    public GeeqAdminValueObject( Object[] row ) {
-        super( row );
-        this.detectedQualityScore = ( double ) row[1];
-        this.manualQualityScore = ( double ) row[2];
-        this.manualQualityOverride = ( boolean ) row[3];
-        this.detectedSuitabilityScore = ( double ) row[4];
-        this.manualSuitabilityScore = ( double ) row[5];
-        this.manualSuitabilityOverride = ( boolean ) row[6];
-
-        this.qScoreBatchEffect = ( double ) row[23];
-        this.manualHasStrongBatchEffect = ( boolean ) row[24];
-        this.manualHasNoBatchEffect = ( boolean ) row[25];
-        this.manualBatchEffectActive = ( boolean ) row[26];
-        this.qScoreBatchConfound = ( double ) row[27];
-        this.manualHasBatchConfound = ( boolean ) row[28];
-        this.manualBatchConfoundActive = ( boolean ) row[29];
-        this.otherIssues = ( String ) row[34];
-    }
-
     public GeeqAdminValueObject( Geeq g ) {
         super( g );
         this.detectedQualityScore = g.getDetectedQualityScore();
@@ -88,117 +74,5 @@ public class GeeqAdminValueObject extends GeeqValueObject {
         this.manualHasBatchConfound = g.isManualHasBatchConfound();
         this.manualBatchConfoundActive = g.isManualBatchConfoundActive();
         this.otherIssues = g.getOtherIssues();
-    }
-
-    public double getDetectedQualityScore() {
-        return detectedQualityScore;
-    }
-
-    public void setDetectedQualityScore( double detectedQualityScore ) {
-        this.detectedQualityScore = detectedQualityScore;
-    }
-
-    public double getManualQualityScore() {
-        return manualQualityScore;
-    }
-
-    public void setManualQualityScore( double manualQualityScore ) {
-        this.manualQualityScore = manualQualityScore;
-    }
-
-    public boolean isManualQualityOverride() {
-        return manualQualityOverride;
-    }
-
-    public void setManualQualityOverride( boolean manualQualityOverride ) {
-        this.manualQualityOverride = manualQualityOverride;
-    }
-
-    public double getDetectedSuitabilityScore() {
-        return detectedSuitabilityScore;
-    }
-
-    public void setDetectedSuitabilityScore( double detectedSuitabilityScore ) {
-        this.detectedSuitabilityScore = detectedSuitabilityScore;
-    }
-
-    public double getManualSuitabilityScore() {
-        return manualSuitabilityScore;
-    }
-
-    public void setManualSuitabilityScore( double manualSuitabilityScore ) {
-        this.manualSuitabilityScore = manualSuitabilityScore;
-    }
-
-    public boolean isManualSuitabilityOverride() {
-        return manualSuitabilityOverride;
-    }
-
-    public void setManualSuitabilityOverride( boolean manualSuitabilityOverride ) {
-        this.manualSuitabilityOverride = manualSuitabilityOverride;
-    }
-
-    public double getqScoreBatchEffect() {
-        return qScoreBatchEffect;
-    }
-
-    public void setqScoreBatchEffect( double qScoreBatchEffect ) {
-        this.qScoreBatchEffect = qScoreBatchEffect;
-    }
-
-    public boolean isManualHasStrongBatchEffect() {
-        return manualHasStrongBatchEffect;
-    }
-
-    public void setManualHasStrongBatchEffect( boolean manualHasStrongBatchEffect ) {
-        this.manualHasStrongBatchEffect = manualHasStrongBatchEffect;
-    }
-
-    public boolean isManualHasNoBatchEffect() {
-        return manualHasNoBatchEffect;
-    }
-
-    public void setManualHasNoBatchEffect( boolean manualHasNoBatchEffect ) {
-        this.manualHasNoBatchEffect = manualHasNoBatchEffect;
-    }
-
-    public boolean isManualBatchEffectActive() {
-        return manualBatchEffectActive;
-    }
-
-    public void setManualBatchEffectActive( boolean manualBatchEffectActive ) {
-        this.manualBatchEffectActive = manualBatchEffectActive;
-    }
-
-    public double getqScoreBatchConfound() {
-        return qScoreBatchConfound;
-    }
-
-    public void setqScoreBatchConfound( double qScoreBatchConfound ) {
-        this.qScoreBatchConfound = qScoreBatchConfound;
-    }
-
-    public boolean isManualHasBatchConfound() {
-        return manualHasBatchConfound;
-    }
-
-    public void setManualHasBatchConfound( boolean manualHasBatchConfound ) {
-        this.manualHasBatchConfound = manualHasBatchConfound;
-    }
-
-    public boolean isManualBatchConfoundActive() {
-        return manualBatchConfoundActive;
-    }
-
-    public void setManualBatchConfoundActive( boolean manualBatchConfoundActive ) {
-        this.manualBatchConfoundActive = manualBatchConfoundActive;
-    }
-
-    public String getOtherIssues() {
-        return otherIssues;
-    }
-
-    public void setOtherIssues( String otherIssues ) {
-        this.otherIssues = otherIssues;
     }
 }

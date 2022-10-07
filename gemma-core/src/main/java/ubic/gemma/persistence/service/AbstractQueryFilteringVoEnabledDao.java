@@ -10,6 +10,8 @@ import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.persistence.util.Sort;
 
+import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Objects;
@@ -26,6 +28,7 @@ import java.util.stream.Collectors;
  *
  * @author poirigui
  */
+@ParametersAreNonnullByDefault
 public abstract class AbstractQueryFilteringVoEnabledDao<O extends Identifiable, VO extends IdentifiableValueObject<O>> extends AbstractFilteringVoEnabledDao<O, VO> {
 
     /**
@@ -52,14 +55,14 @@ public abstract class AbstractQueryFilteringVoEnabledDao<O extends Identifiable,
      *
      * @return a {@link Query} that produce a list of {@link O}
      */
-    protected abstract Query getLoadValueObjectsQuery( Filters filters, Sort sort, EnumSet<QueryHint> hints );
+    protected abstract Query getLoadValueObjectsQuery( @Nullable Filters filters, @Nullable Sort sort, EnumSet<QueryHint> hints );
 
     /**
      * Produce a query that will be used to retrieve the size of {@link #getLoadValueObjectsQuery(Filters, Sort, EnumSet)}.
      * @param filters
      * @return a {@link Query} which must return a single {@link Long} value
      */
-    protected Query getCountValueObjectsQuery( Filters filters ) {
+    protected Query getCountValueObjectsQuery( @Nullable Filters filters ) {
         throw new NotImplementedException( "Counting " + elementClass + " is not supported." );
     }
 
@@ -68,17 +71,19 @@ public abstract class AbstractQueryFilteringVoEnabledDao<O extends Identifiable,
      *
      * The result is obtained from {@link Query#list()}.
      *
-     * By default, it will cast the result into a {@link O} and then apply {@link #loadValueObject(Identifiable)} to
+     * By default, it will cast the result into a {@link O} and then apply {@link #doLoadValueObject(Identifiable)} to
      * obtain a value object.
      *
      * @return a value object, or null, and it will be ignored when constructing the {@link Slice} in {@link #loadValueObjectsPreFilter(Filters, Sort, int, int)}
      */
+    @Nullable
     protected VO processLoadValueObjectsQueryResult( Object result ) {
-        return loadValueObject( ( O ) result );
+        //noinspection unchecked
+        return doLoadValueObject( ( O ) result );
     }
 
     @Override
-    public Slice<VO> loadValueObjectsPreFilter( Filters filters, Sort sort, int offset, int limit ) {
+    public Slice<VO> loadValueObjectsPreFilter( @Nullable Filters filters, @Nullable Sort sort, int offset, int limit ) {
         StopWatch stopWatch = StopWatch.createStarted();
 
         EnumSet<QueryHint> hints = EnumSet.noneOf( QueryHint.class );
@@ -95,7 +100,6 @@ public abstract class AbstractQueryFilteringVoEnabledDao<O extends Identifiable,
         if ( limit > 0 )
             query.setMaxResults( limit );
 
-        //noinspection unchecked
         StopWatch queryStopWatch = StopWatch.createStarted();
         List<?> list = query.list();
         queryStopWatch.stop();
@@ -113,7 +117,7 @@ public abstract class AbstractQueryFilteringVoEnabledDao<O extends Identifiable,
 
         stopWatch.stop();
 
-        if ( stopWatch.getTime( TimeUnit.MILLISECONDS ) > 20 ) {
+        if ( stopWatch.getTime( TimeUnit.MILLISECONDS ) > REPORT_SLOW_QUERY_AFTER_MS ) {
             log.info( "Loading and counting VOs for " + elementClass.getName() + " took " + stopWatch.getTime( TimeUnit.MILLISECONDS ) + " ms "
                     + "(querying: " + queryStopWatch.getTime( TimeUnit.MILLISECONDS ) + " ms, "
                     + "counting: " + countingStopWatch.getTime( TimeUnit.MILLISECONDS ) + " ms, "
@@ -124,7 +128,7 @@ public abstract class AbstractQueryFilteringVoEnabledDao<O extends Identifiable,
     }
 
     @Override
-    public List<VO> loadValueObjectsPreFilter( Filters filters, Sort sort ) {
+    public List<VO> loadValueObjectsPreFilter( @Nullable Filters filters, @Nullable Sort sort ) {
         StopWatch stopWatch = StopWatch.createStarted();
         StopWatch queryStopWatch = StopWatch.create();
         StopWatch postProcessingStopWatch = StopWatch.create();
@@ -144,7 +148,7 @@ public abstract class AbstractQueryFilteringVoEnabledDao<O extends Identifiable,
 
         stopWatch.stop();
 
-        if ( stopWatch.getTime( TimeUnit.MILLISECONDS ) > 20 ) {
+        if ( stopWatch.getTime( TimeUnit.MILLISECONDS ) > REPORT_SLOW_QUERY_AFTER_MS ) {
             log.info( "Loading VOs for " + elementClass.getName() + " took " + stopWatch.getTime( TimeUnit.MILLISECONDS ) + "ms ("
                     + "querying: " + queryStopWatch.getTime( TimeUnit.MILLISECONDS ) + " ms, "
                     + "post-processing: " + postProcessingStopWatch.getTime( TimeUnit.MILLISECONDS ) + " ms)." );

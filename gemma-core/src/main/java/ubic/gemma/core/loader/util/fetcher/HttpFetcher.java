@@ -23,6 +23,7 @@ import ubic.gemma.model.common.description.LocalFile;
 import ubic.gemma.persistence.util.Settings;
 
 import java.io.*;
+import java.net.URI;
 import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.Collection;
@@ -93,7 +94,7 @@ public class HttpFetcher extends AbstractFetcher {
                 URL urlPattern = new URL( seekFile );
 
                 InputStream inputStream = new BufferedInputStream( urlPattern.openStream() );
-                try (OutputStream outputStream = new FileOutputStream( new File( outputFileName ) )) {
+                try ( OutputStream outputStream = new FileOutputStream( new File( outputFileName ) ) ) {
 
                     final byte[] buffer = new byte[65536];
                     int read;
@@ -150,8 +151,8 @@ public class HttpFetcher extends AbstractFetcher {
         File file = new File( outputFileName );
         AbstractFetcher.log.info( "Downloaded: " + file );
         LocalFile newFile = LocalFile.Factory.newInstance();
-        newFile.setLocalURL( file.toURI().toURL() );
-        newFile.setRemoteURL( new URL( seekFile ) );
+        newFile.setLocalURL( file.toURI() );
+        newFile.setRemoteURL( URI.create( seekFile ) );
         newFile.setVersion( new SimpleDateFormat().format( new Date() ) );
         result.add( newFile );
         return result;

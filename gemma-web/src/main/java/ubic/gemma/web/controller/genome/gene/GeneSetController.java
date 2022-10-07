@@ -95,8 +95,7 @@ public class GeneSetController {
     public SessionBoundGeneSetValueObject addSessionGroup( SessionBoundGeneSetValueObject gsvo,
             Boolean modificationBased ) {
         TaxonValueObject tax = geneSetService.getTaxonVOforGeneSetVO( gsvo );
-        gsvo.setTaxonId( tax.getId() );
-        gsvo.setTaxonName( tax.getCommonName() );
+        gsvo.setTaxon( tax );
         return sessionListManager.addGeneSet( gsvo, modificationBased );
     }
 

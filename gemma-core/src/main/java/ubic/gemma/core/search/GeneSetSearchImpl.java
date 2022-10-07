@@ -35,6 +35,7 @@ import ubic.gemma.core.genome.gene.service.GeneSetService;
 import ubic.gemma.core.ontology.providers.GeneOntologyService;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.model.genome.TaxonValueObject;
 import ubic.gemma.model.genome.gene.GeneSet;
 import ubic.gemma.model.genome.gene.GeneSetMember;
 import ubic.gemma.model.genome.gene.GeneSetValueObject;
@@ -97,8 +98,7 @@ public class GeneSetSearchImpl implements GeneSetSearch {
                 }
                 GOGroupValueObject ggvo = geneSetValueObjectHelper.convertToGOValueObject( result, goId, goId );
 
-                ggvo.setTaxonId( taxon.getId() );
-                ggvo.setTaxonName( taxon.getCommonName() );
+                ggvo.setTaxon( new TaxonValueObject( taxon ) );
 
                 return ggvo;
             }
@@ -256,8 +256,7 @@ public class GeneSetSearchImpl implements GeneSetSearch {
             transientGeneSet.setDescription( uris.get( uri ).getValue() );
             transientGeneSet.setGeneIds( geneIds );
 
-            transientGeneSet.setTaxonId( gvos.iterator().next().getTaxonId() );
-            transientGeneSet.setTaxonName( gvos.iterator().next().getTaxonCommonName() );
+            transientGeneSet.setTaxon( gvos.iterator().next().getTaxon() );
 
             results.add( transientGeneSet );
 
@@ -300,7 +299,7 @@ public class GeneSetSearchImpl implements GeneSetSearch {
         allMatches.add( term );
         assert term instanceof OntologyTerm;
         allMatches.addAll( this.geneOntologyService.getAllChildren( ( OntologyTerm ) term ) );
-       // GeneSetSearchImpl.log.info( term );
+        // GeneSetSearchImpl.log.info( term );
         /*
          * Gather up uris
          */

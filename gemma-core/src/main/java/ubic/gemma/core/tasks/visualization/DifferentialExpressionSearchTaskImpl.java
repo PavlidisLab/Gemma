@@ -171,7 +171,7 @@ public class DifferentialExpressionSearchTaskImpl
                          * that // won't be the case.
                          */
                         DifferentialExpressionSearchTaskImpl.log
-                                .warn( "Nothing usable for resultSet=" + resultSet.getResultSetId() );
+                                .warn( "Nothing usable for resultSet=" + resultSet.getId() );
                         continue;
                     }
 
@@ -187,7 +187,7 @@ public class DifferentialExpressionSearchTaskImpl
                         if ( condition.getNumberDiffExpressedProbes() == -1 ) {
                             DifferentialExpressionSearchTaskImpl.log
                                     .warn( bas + ": Error: No hit list sizes for resultSet with ID=" + resultSet
-                                            .getResultSetId() );
+                                            .getId() );
                             continue;
                         }
                         if ( condition.getNumberOfProbesOnArray() == null
@@ -436,7 +436,7 @@ public class DifferentialExpressionSearchTaskImpl
             if ( resultSet.getBaselineGroup() == null ) {
                 DifferentialExpressionSearchTaskImpl.log
                         .warn( "Possible Data Issue: resultSet.getBaselineGroup() returned null for result set with ID="
-                                + resultSet.getResultSetId() );
+                                + resultSet.getId() );
                 continue;
             }
 
@@ -444,7 +444,7 @@ public class DifferentialExpressionSearchTaskImpl
             if ( resultSet.getNumberOfDiffExpressedProbes() == null ) {
                 DifferentialExpressionSearchTaskImpl.log
                         .warn( "Possible data issue: resultSet.getHitListSizes() returned null for result set with ID="
-                                + resultSet.getResultSetId() );
+                                + resultSet.getId() );
                 continue;
             }
 
@@ -532,7 +532,7 @@ public class DifferentialExpressionSearchTaskImpl
         Collection<FactorValueValueObject> factorValues = experimentalFactor.getValues();
         for ( FactorValueValueObject factorValue : factorValues ) {
             String conditionId = DifferentialExpressionGenesConditionsValueObject
-                    .constructConditionId( resultSet.getResultSetId(), factorValue.getId() );
+                    .constructConditionId( resultSet.getId(), factorValue.getId() );
             searchResult
                     .addBlackCell( geneId, conditionId, correctedPvalue, pValue, numProbes, numProbesDiffExpressed );
         }
@@ -646,7 +646,7 @@ public class DifferentialExpressionSearchTaskImpl
                             DifferentialExpressionSearchTaskImpl.log
                                     .warn( "Data Integrity error: Null factor value for contrast with id=" + cr.getId()
                                             + " associated with diffexresult " + deaResult.getResultId()
-                                            + " for resultset " + resultSet.getResultSetId()
+                                            + " for resultset " + resultSet.getId()
                                             + ". (additional warnings may be suppressed but additional results will be omitted)" );
                             warned = true;
                         }
@@ -654,12 +654,12 @@ public class DifferentialExpressionSearchTaskImpl
                     }
 
                     String conditionId = DifferentialExpressionGenesConditionsValueObject
-                            .constructConditionId( resultSet.getResultSetId(), factorValue );
+                            .constructConditionId( resultSet.getId(), factorValue );
 
                     if ( cr.getLogFoldChange() == null && !warned ) {
                         DifferentialExpressionSearchTaskImpl.log.warn( "Fold change was null for contrast " + cr.getId()
                                 + " associated with diffexresult " + deaResult.getResultId() + " for resultset "
-                                + resultSet.getResultSetId() + ". (additional warnings may be suppressed)" );
+                                + resultSet.getId() + ". (additional warnings may be suppressed)" );
                         warned = true;
                     }
 

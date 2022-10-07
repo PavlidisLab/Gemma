@@ -29,6 +29,7 @@ import ubic.gemma.model.genome.Taxon;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URI;
 import java.net.URL;
 import java.util.Collection;
 import java.util.HashMap;
@@ -109,20 +110,20 @@ public class NcbiGeneDomainObjectGenerator {
 
         assert gene2AccesionFilePath != null;
 
-        try {
-            URL geneInfoUrl = ( new File( geneInfoFilePath ) ).toURI().toURL();
-            URL gene2AccesionUrl = ( new File( gene2AccesionFilePath ) ).toURI().toURL();
-            URL geneHistoryUrl = ( new File( geneHistoryFilePath ) ).toURI().toURL();
+        {
+            URI geneInfoUrl = ( new File( geneInfoFilePath ) ).toURI();
+            URI gene2AccessionUrl = ( new File( gene2AccesionFilePath ) ).toURI();
+            URI geneHistoryUrl = ( new File( geneHistoryFilePath ) ).toURI();
 
-            URL geneEnsemblUrl = null;
+            URI geneEnsemblUrl = null;
             if ( geneEnsemblFilePath != null )
-                geneEnsemblUrl = ( new File( geneEnsemblFilePath ) ).toURI().toURL();
+                geneEnsemblUrl = ( new File( geneEnsemblFilePath ) ).toURI();
 
             LocalFile geneInfoFile = LocalFile.Factory.newInstance();
             geneInfoFile.setLocalURL( geneInfoUrl );
 
             LocalFile gene2AccessionFile = LocalFile.Factory.newInstance();
-            gene2AccessionFile.setLocalURL( gene2AccesionUrl );
+            gene2AccessionFile.setLocalURL( gene2AccessionUrl );
 
             LocalFile geneHistoryFile = LocalFile.Factory.newInstance();
             geneHistoryFile.setLocalURL( geneHistoryUrl );
@@ -135,8 +136,6 @@ public class NcbiGeneDomainObjectGenerator {
 
             this.processLocalFiles( geneInfoFile, gene2AccessionFile, geneHistoryFile, geneEnsemblFile, queue );
 
-        } catch ( IOException e ) {
-            throw new RuntimeException( e );
         }
     }
 
@@ -191,8 +190,8 @@ public class NcbiGeneDomainObjectGenerator {
 
             //
             NcbiGeneDomainObjectGenerator.log.debug( "Parsing GeneInfo =" + geneInfoFile.asFile().getAbsolutePath() );
-            try (InputStream is = FileTools
-                    .getInputStreamFromPlainOrCompressedFile( geneInfoFile.asFile().getAbsolutePath() )) {
+            try ( InputStream is = FileTools
+                    .getInputStreamFromPlainOrCompressedFile( geneInfoFile.asFile().getAbsolutePath() ) ) {
                 infoParser.parse( is );
             }
         } catch ( IOException e ) {

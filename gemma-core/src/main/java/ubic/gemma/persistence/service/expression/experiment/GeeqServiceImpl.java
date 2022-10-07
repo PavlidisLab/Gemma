@@ -412,7 +412,7 @@ public class GeeqServiceImpl extends AbstractVoEnabledService<Geeq, GeeqValueObj
         // FIXME factor out magic numbers. Rationale: rarely used platforms are less favored
         int i = 0;
         for ( ArrayDesign ad : ads ) {
-            int cnt = arrayDesignService.numExperiments( ad );
+            long cnt = arrayDesignService.numExperiments( ad );
             scores[i++] = cnt < 10 ? GeeqServiceImpl.N_10
                     : cnt < 20 ? GeeqServiceImpl.N_05 : cnt < 50 ? GeeqServiceImpl.P_00 : cnt < 100 ? GeeqServiceImpl.P_05 : GeeqServiceImpl.P_10;
         }

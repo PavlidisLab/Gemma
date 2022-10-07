@@ -395,7 +395,7 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
         result = this.setAlternateNames( result, arrayDesign );
         result = this.setExtRefsAndCounts( result, arrayDesign );
         result = this.setSummaryInfo( result, id );
-        result.setSwitchedExpressionExperimentCount( arrayDesignService.getSwitchedExperimentIds( arrayDesign ).size() );
+        result.setSwitchedExpressionExperimentCount( ( long ) arrayDesignService.getSwitchedExperimentIds( arrayDesign ).size() );
 
         populateMergeStatus( arrayDesign, result ); // SLOW if we follow down to mergees of mergees etc.
 
@@ -442,7 +442,7 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
     private ArrayDesignValueObjectExt setExtRefsAndCounts( ArrayDesignValueObjectExt result, ArrayDesign arrayDesign ) {
         Integer numCompositeSequences = arrayDesignService.getCompositeSequenceCount( arrayDesign ).intValue();
 
-        int numExpressionExperiments = arrayDesignService.numExperiments( arrayDesign );
+        long numExpressionExperiments = arrayDesignService.numExperiments( arrayDesign );
 
         Collection<DatabaseEntryValueObject> externalReferences = new HashSet<>();
         for ( DatabaseEntry en : arrayDesign.getExternalReferences() ) {

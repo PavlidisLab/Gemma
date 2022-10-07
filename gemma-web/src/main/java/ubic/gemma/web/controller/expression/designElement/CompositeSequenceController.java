@@ -179,7 +179,7 @@ public class CompositeSequenceController extends BaseController {
 
             for ( SearchResult sr : searchResults ) {
                 CompositeSequence cs = ( CompositeSequence ) sr.getResultObject();
-                if ( arrayDesign == null || cs.getArrayDesign().equals( arrayDesign ) ) {
+                if ( cs != null && ( arrayDesign == null || cs.getArrayDesign().equals( arrayDesign ) ) ) {
                     css.add( cs );
                 }
             }

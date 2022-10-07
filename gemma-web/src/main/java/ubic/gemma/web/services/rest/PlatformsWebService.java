@@ -141,7 +141,7 @@ public class PlatformsWebService {
     @GET
     @Path("/{platform}/datasets")
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Retrieve all experiments within a given platform")
+    @Operation(summary = "Retrieve all experiments using a given platform")
     public PaginatedResponseDataObject<ExpressionExperimentValueObject> getPlatformDatasets( // Params:
             @PathParam("platform") PlatformArg<?> platformArg, // Required
             @QueryParam("offset") @DefaultValue("0") OffsetArg offset, // Optional, default 0

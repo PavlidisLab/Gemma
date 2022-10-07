@@ -318,7 +318,9 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
                 auditableUtil.removeTroubledArrayDesigns( ( Collection<ArrayDesignValueObject> ) vos );
             }
         } else if ( CompositeSequence.class.isAssignableFrom( entityClass ) ) {
-            Collection<CompositeSequence> compositeSequences = results.stream().map( SearchResult::getResultObject )
+            Collection<CompositeSequence> compositeSequences = results.stream()
+                    .map( SearchResult::getResultObject )
+                    .filter( Objects::nonNull )
                     .map( o -> ( CompositeSequence ) o )
                     .collect( Collectors.toSet() );
             vos = compositeSequenceService
@@ -337,7 +339,9 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
             Collection<CharacteristicValueObject> cvos = new ArrayList<>();
             for ( SearchResult sr : results ) {
                 CharacteristicValueObject ch = ( CharacteristicValueObject ) sr.getResultObject();
-                cvos.add( ch );
+                if ( ch != null ) {
+                    cvos.add( ch );
+                }
             }
             vos = cvos;
         } else if ( BioSequenceValueObject.class.isAssignableFrom( entityClass ) ) {
@@ -349,7 +353,9 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
         } else if ( BlacklistedEntity.class.isAssignableFrom( entityClass ) ) {
             Collection<BlacklistedValueObject> bvos = new ArrayList<>();
             for ( SearchResult sr : results ) {
-                bvos.add( BlacklistedValueObject.fromEntity( ( BlacklistedEntity ) sr.getResultObject() ) );
+                if ( sr.getResultObject() != null ) {
+                    bvos.add( BlacklistedValueObject.fromEntity( ( BlacklistedEntity ) sr.getResultObject() ) );
+                }
             }
             vos = bvos;
         } else {

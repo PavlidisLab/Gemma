@@ -109,12 +109,8 @@ public abstract class AbstractFetcher implements Fetcher {
     protected LocalFile fetchedFile( String seekFilePath, String outputFilePath ) {
         LocalFile file = LocalFile.Factory.newInstance();
         file.setVersion( new SimpleDateFormat().format( new Date() ) );
-        try {
-            file.setRemoteURL( ( new File( seekFilePath ) ).toURI().toURL() );
-            file.setLocalURL( ( new File( outputFilePath ).toURI().toURL() ) );
-        } catch ( MalformedURLException e ) {
-            throw new RuntimeException( e );
-        }
+        file.setRemoteURL( ( new File( seekFilePath ) ).toURI() );
+        file.setLocalURL( ( new File( outputFilePath ).toURI() ) );
         return file;
     }
 
@@ -132,12 +128,8 @@ public abstract class AbstractFetcher implements Fetcher {
     protected Collection<LocalFile> getExistingFile( File existingFile, String seekFile ) {
         Collection<LocalFile> fallback = new HashSet<>();
         LocalFile lf = LocalFile.Factory.newInstance();
-        try {
-            lf.setLocalURL( existingFile.toURI().toURL() );
-            lf.setRemoteURL( ( new File( seekFile ) ).toURI().toURL() );
-        } catch ( MalformedURLException e ) {
-            throw new RuntimeException( e );
-        }
+        lf.setLocalURL( existingFile.toURI() );
+        lf.setRemoteURL( ( new File( seekFile ) ).toURI() );
         lf.setSize( existingFile.length() );
         fallback.add( lf );
         return fallback;

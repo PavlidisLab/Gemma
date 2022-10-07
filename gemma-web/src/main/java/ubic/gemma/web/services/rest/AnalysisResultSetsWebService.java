@@ -20,6 +20,7 @@ package ubic.gemma.web.services.rest;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.enums.Explode;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -30,9 +31,10 @@ import ubic.gemma.core.analysis.service.ExpressionAnalysisResultSetFileService;
 import ubic.gemma.model.analysis.AnalysisResultSet;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
-import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSetValueObject;
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResultSetValueObject;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.persistence.service.analysis.expression.diff.ExpressionAnalysisResultSetService;
 import ubic.gemma.persistence.service.common.description.DatabaseEntryService;
@@ -45,6 +47,7 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.StreamingOutput;
 import java.io.OutputStreamWriter;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -80,25 +83,28 @@ public class AnalysisResultSetsWebService {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve all result sets matching the provided criteria")
-    public PaginatedResponseDataObject<ExpressionAnalysisResultSetValueObject> getResultSets(
-            @QueryParam("datasets") DatasetArrayArg datasets,
-            @QueryParam("databaseEntries") DatabaseEntryArrayArg databaseEntries,
+    public PaginatedResponseDataObject<DifferentialExpressionAnalysisResultSetValueObject> getResultSets(
+            @Parameter(schema = @Schema(implementation = DatasetArrayArg.class), explode = Explode.FALSE) @QueryParam("datasets") DatasetArrayArg datasets,
+            @Parameter(schema = @Schema(implementation = DatabaseEntryArrayArg.class), explode = Explode.FALSE) @QueryParam("databaseEntries") DatabaseEntryArrayArg databaseEntries,
             @QueryParam("filter") @DefaultValue("") FilterArg filters,
             @QueryParam("offset") @DefaultValue("0") OffsetArg offset,
             @QueryParam("limit") @DefaultValue("20") LimitArg limit,
             @QueryParam("sort") @DefaultValue("+id") SortArg sort ) {
-        Collection<BioAssaySet> ees = null;
+        Collection<BioAssaySet> bas = null;
         if ( datasets != null ) {
-            ees = datasets.getEntities( expressionExperimentService ).stream()
-                    .map( BioAssaySet.class::cast )
-                    .collect( Collectors.toList() );
+            Collection<ExpressionExperiment> ees = new ArrayList<>( datasets.getEntities( expressionExperimentService ) );
+            bas = new ArrayList<>( ees );
+            // expand with all subsets
+            for ( ExpressionExperiment ee : ees ) {
+                bas.addAll( expressionExperimentService.getSubSets( ee ) );
+            }
         }
         Collection<DatabaseEntry> des = null;
         if ( databaseEntries != null ) {
             des = databaseEntries.getEntities( databaseEntryService );
         }
         return Responder.paginate( expressionAnalysisResultSetService.findByBioAssaySetInAndDatabaseEntryInLimit(
-                ees, des, filters.getObjectFilters( expressionAnalysisResultSetService ), offset.getValue(), limit.getValue(), sort.getSort( expressionAnalysisResultSetService ) ) );
+                bas, des, filters.getObjectFilters( expressionAnalysisResultSetService ), offset.getValue(), limit.getValue(), sort.getSort( expressionAnalysisResultSetService ) ) );
     }
 
     private static final String TSV_EXAMPLE = "# If you use this file for your research, please cite:\n" +
@@ -128,7 +134,7 @@ public class AnalysisResultSetsWebService {
                     content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(ref = "ResponseDataObjectExpressionAnalysisResultSetValueObject"))),
             @ApiResponse(responseCode = "404", description = "The analysis result set could not be found.",
                     content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
-    public ResponseDataObject<ExpressionAnalysisResultSetValueObject> getResultSet(
+    public ResponseDataObject<DifferentialExpressionAnalysisResultSetValueObject> getResultSet(
             @PathParam("resultSet") ExpressionAnalysisResultSetArg analysisResultSet,
             @Parameter(hidden = true) @QueryParam("excludeResults") @DefaultValue("false") Boolean excludeResults ) {
         if ( excludeResults ) {

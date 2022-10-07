@@ -18,85 +18,110 @@
  */
 package ubic.gemma.core.search;
 
+import lombok.Data;
 import lombok.EqualsAndHashCode;
-import lombok.NonNull;
+import lombok.ToString;
 import ubic.gemma.model.common.Identifiable;
-import ubic.gemma.persistence.util.ReflectionUtil;
+
+import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
+import java.util.Comparator;
+import java.util.Objects;
 
 /**
  * @author paul
  */
+@Data
+@ParametersAreNonnullByDefault
 @EqualsAndHashCode(of = { "resultClass", "resultId" })
-public class SearchResult<T extends Identifiable> implements Comparable<SearchResult<? extends Identifiable>> {
+@ToString(of = { "resultId", "resultClass", "highlightedText", "score", "source" })
+public class SearchResult<T extends Identifiable> implements Comparable<SearchResult<?>> {
 
+    /**
+     * Obtain a comparator for this search result.
+     * <p>
+     * Results are compared by {@link #getScore()} in descending order. Note that any search result can be compared
+     * regardless of their result type or result object.
+     */
+    public static Comparator<SearchResult<?>> getComparator() {
+        return Comparator.comparing( SearchResult::getScore, Comparator.reverseOrder() );
+    }
+
+    /**
+     * Create a search result from an entity, a score and some highlighted text.
+     */
+    public static <T extends Identifiable> SearchResult<T> from( T entity, double score, @Nullable String highlightedText, Object source ) {
+        SearchResult<T> sr = new SearchResult<>( entity, source );
+        sr.setScore( score );
+        sr.setHighlightedText( highlightedText );
+        return sr;
+    }
+
+    /**
+     * Class of the result, immutable.
+     */
     private final Class<? extends Identifiable> resultClass;
 
-    private final long resultId;
+    /**
+     * ID of the result, immutable.
+     */
+    private final Long resultId;
 
+    /**
+     * Result object this search result is referring to.
+     * <p>
+     * This can be null, at least initially if the resultClass and objectId are provided.
+     * <p>
+     * It may also be replaced at a later time via {@link #setResultObject(Identifiable)}.
+     */
+    @Nullable
+    private T resultObject;
+
+    /**
+     * Highlighted text for this result.
+     * <p>
+     * This is provided by Compass to indicate which part of the result was matched by a query.
+     */
+    @Nullable
     private String highlightedText;
 
-    private Double score = 0.0;
+    /**
+     * Score for ranking this result among other results.
+     */
+    private double score = 1.0;
 
-    private T resultObject; // can be null, at least initially, if the resultClass and objectId are provided.
+    /**
+     * Object representing the source of this result object.
+     * <p>
+     * This can simply be a {@link String}.
+     */
+    private final Object source;
 
-    public SearchResult( @NonNull T resultObject ) {
+    public SearchResult( T resultObject, Object source ) {
         if ( resultObject.getId() == null ) {
-            throw new IllegalArgumentException( "Result object ID cannot be null." );
+            throw new IllegalArgumentException( "THe result object ID cannot be null." );
         }
+        this.resultClass = resultObject.getClass();
         this.resultId = resultObject.getId();
-        this.resultObject = resultObject; // FIXME: maybe this is a bad idea. Eventually we would only want value objects.
-        this.resultClass = ( Class<? extends Identifiable> ) ReflectionUtil.getBaseForImpl( resultObject.getClass() );
+        setResultObject( resultObject );
+        this.source = source;
     }
 
-    public SearchResult( @NonNull T searchResult, double score ) {
-        this( searchResult );
-        this.score = score;
-    }
-
-    public SearchResult( @NonNull T searchResult, double score, String matchingText ) {
-        this( searchResult );
-        this.score = score;
-        this.highlightedText = matchingText;
-    }
-
-    public SearchResult( @NonNull Class<? extends Identifiable> entityClass, @NonNull Long entityId, double score, String matchingText ) {
+    /**
+     * Placeholder for provisional search results.
+     * <p>
+     * This is used when the class and ID is known beforehand, but the result hasn't been retrieve yet from persistent
+     * storage.
+     */
+    public SearchResult( Class<? extends Identifiable> entityClass, long entityId, Object source ) {
         this.resultClass = entityClass;
         this.resultId = entityId;
-        this.score = score;
-        this.highlightedText = matchingText;
-    }
-
-    public SearchResult( @NonNull Class<? extends Identifiable> entityClass, @NonNull T entity, double score, String matchingText ) {
-        this( entityClass, entity.getId(), score, matchingText );
-        this.resultObject = entity;
+        this.source = source;
     }
 
     @Override
     public int compareTo( SearchResult<?> o ) {
-        return -this.score.compareTo( o.getScore() );
-    }
-
-    public String getHighlightedText() {
-        return highlightedText;
-    }
-
-    public void setHighlightedText( String highlightedText ) {
-        this.highlightedText = highlightedText;
-    }
-
-    /**
-     * @return the id for the underlying result entity.
-     */
-    public Long getResultId() {
-        return resultId;
-    }
-
-    public Class<? extends Identifiable> getResultClass() {
-        return resultClass;
-    }
-
-    public T getResultObject() {
-        return this.resultObject;
+        return getComparator().compare( this, o );
     }
 
     /**
@@ -104,34 +129,13 @@ public class SearchResult<T extends Identifiable> implements Comparable<SearchRe
      *
      * @throws IllegalArgumentException if the provided result object IDs differs from {@link #getResultId()}.
      */
-    public void setResultObject( @NonNull T resultObject ) {
-        if ( resultObject.getId() == null ) {
+    public void setResultObject( @Nullable T resultObject ) {
+        if ( resultObject != null && resultObject.getId() == null ) {
             throw new IllegalArgumentException( "The result object ID cannot be null." );
         }
-        if ( resultObject.getId() != this.resultId ) {
+        if ( resultObject != null && !Objects.equals( resultObject.getId(), this.resultId ) ) {
             throw new IllegalArgumentException( "The result object cannot be replaced with one that has a different ID." );
         }
         this.resultObject = resultObject;
-    }
-
-    /**
-     * Clear the result object.
-     */
-    public void clearResultObject() {
-        this.resultObject = null;
-    }
-
-    public Double getScore() {
-        return score;
-    }
-
-    public void setScore( Double score ) {
-        this.score = score;
-    }
-
-    @Override
-    public String toString() {
-        return resultClass.getSimpleName() + "[ID=" + this.resultId + "] matched in: "
-                + ( this.highlightedText != null ? "'" + this.highlightedText + "'" : "(?)" );
     }
 }

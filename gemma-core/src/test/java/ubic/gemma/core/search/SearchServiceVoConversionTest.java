@@ -10,6 +10,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
+import ubic.gemma.core.annotation.reference.BibliographicReferenceService;
 import ubic.gemma.core.association.phenotype.PhenotypeAssociationManagerService;
 import ubic.gemma.core.genome.gene.service.GeneSearchService;
 import ubic.gemma.core.genome.gene.service.GeneService;
@@ -18,6 +19,7 @@ import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.core.search.source.CompassSearchSource;
 import ubic.gemma.core.search.source.DatabaseSearchSource;
 import ubic.gemma.model.analysis.expression.diff.ContrastResult;
+import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -174,6 +176,11 @@ public class SearchServiceVoConversionTest extends AbstractJUnit4SpringContextTe
         public TaxonService taxonService() {
             return mock( TaxonService.class );
         }
+
+        @Bean
+        public BibliographicReferenceService bibliographicReferenceService() {
+            return mock( BibliographicReferenceService.class );
+        }
     }
 
     @Autowired
@@ -221,20 +228,20 @@ public class SearchServiceVoConversionTest extends AbstractJUnit4SpringContextTe
 
     @Test
     public void testConvertArrayDesign() {
-        searchService.loadValueObject( new SearchResult<>( ad ) );
+        searchService.loadValueObject( new SearchResult<>( ad, "test object" ) );
         verify( arrayDesignService ).loadValueObject( ad );
     }
 
     @Test
     public void testConvertExpressionExperiment() {
-        searchService.loadValueObject( new SearchResult<>( ee ) );
+        searchService.loadValueObject( new SearchResult<>( ee, "test object" ) );
         verify( expressionExperimentService ).loadValueObject( ee );
     }
 
     @Test
     public void testConvertPhenotypeAssociation() {
         // this is a complicated one because
-        assertThat( searchService.loadValueObject( new SearchResult<>( phenotypeAssociation ) ) )
+        assertThat( searchService.loadValueObject( new SearchResult<>( phenotypeAssociation, "test object" ) ) )
                 .extracting( "resultObject" )
                 .isSameAs( phenotypeAssociation );
     }
@@ -242,13 +249,13 @@ public class SearchServiceVoConversionTest extends AbstractJUnit4SpringContextTe
     @Test
     public void testConvertGeneSet() {
         // this is another complicated one because GeneSetService does not implement BaseVoEnabledService
-        searchService.loadValueObject( new SearchResult<>( gs ) );
+        searchService.loadValueObject( new SearchResult<>( gs, "test object" ) );
         verify( geneSetService ).loadValueObject( gs );
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void testUnsupportedResultTypeRaisesIllegalArgumentException() {
-        searchService.loadValueObject( new SearchResult<>( new ContrastResult() ) );
+        searchService.loadValueObject( new SearchResult<>( new ContrastResult(), "test object" ) );
     }
 
 }

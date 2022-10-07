@@ -1381,7 +1381,9 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
         long lastTime = 0;
 
         // this analysis should take just 10 or 20 seconds for most data sets.
-        double MAX_ANALYSIS_TIME = 60 * 1000 * 10; // 10 minutes.
+        // but there are cases that take longer; addressing https://github.com/PavlidisLab/Gemma/issues/13
+        // would help.
+        double MAX_ANALYSIS_TIME = 60 * 1000 * 100; // 100 minutes.
         double updateIntervalMillis = 60 * 1000;// 1 minute
         while ( !f.isDone() ) {
             try {
@@ -1399,10 +1401,10 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
             }
 
             if ( timer.getTime() > MAX_ANALYSIS_TIME ) {
-                LinearModelAnalyzer.log
-                        .error( "Analysis is taking too long, something bad must have happened; cancelling" );
-                f.cancel( true );
-                throw new RuntimeException( "Analysis was taking too long, it was cancelled" );
+//                LinearModelAnalyzer.log
+//                        .error( "Analysis is taking too long, something bad must have happened; cancelling" );
+//                f.cancel( true );
+//                throw new RuntimeException( "Analysis was taking too long, it was cancelled" );
             }
         }
 

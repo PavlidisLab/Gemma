@@ -186,10 +186,6 @@ public interface GeneService extends FilteringVoEnabledService<Gene, GeneValueOb
 
     Collection<Gene> loadThawedLiter( Collection<Long> ids );
 
-    GeneValueObject loadValueObjectById( Long id );
-
-    Collection<GeneValueObject> loadValueObjectsByIds( Collection<Long> ids );
-
     Collection<GeneValueObject> loadValueObjectsByIdsLiter( Collection<Long> ids );
 
     Gene thaw( Gene gene );

@@ -43,12 +43,15 @@ import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.persistence.util.Sort;
 import ubic.gemma.persistence.util.monitor.Monitored;
 
+import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.*;
 
 /**
  * @author kelsey
  */
 @SuppressWarnings("unused") // Possible external use
+@ParametersAreNonnullByDefault
 public interface ExpressionExperimentService
         extends FilteringVoEnabledService<ExpressionExperiment, ExpressionExperimentValueObject> {
 
@@ -119,7 +122,7 @@ public interface ExpressionExperimentService
     @Override
     @Monitored
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ_QUIET" })
-    ExpressionExperiment load( Long id );
+    ExpressionExperiment load( @Nullable Long id );
 
     @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
@@ -432,13 +435,13 @@ public interface ExpressionExperimentService
      */
     @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
-    Slice<ExpressionExperimentValueObject> loadValueObjectsPreFilter( Filters filters, Sort sort, int offset, int limit );
+    Slice<ExpressionExperimentValueObject> loadValueObjectsPreFilter( @Nullable Filters filters, @Nullable Sort sort, int offset, int limit );
 
     /**
      * @see ExpressionExperimentDao#loadDetailsValueObjectsByIds(Collection, Taxon, Sort, int, int)
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
-    Slice<ExpressionExperimentDetailsValueObject> loadDetailsValueObjects( Collection<Long> ids, Taxon taxon, Sort sort, int offset, int limit );
+    Slice<ExpressionExperimentDetailsValueObject> loadDetailsValueObjects( Collection<Long> ids, Taxon taxon, @Nullable Sort sort, int offset, int limit );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
     List<ExpressionExperimentDetailsValueObject> loadDetailsValueObjects( Collection<Long> ids );

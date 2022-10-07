@@ -103,7 +103,7 @@ public class SearchResultDisplayObject implements Comparable<SearchResultDisplay
      * SearchObjects containing an object of any of those types
      *
      * @param  results a collection of SearchResult objects to create SearchResultDisplayObjects for
-     * @return         a collection of SearchResultDisplayObjects created from the objects passed in, sorted by name
+     * @return a collection of SearchResultDisplayObjects created from the objects passed in, sorted by name
      */
     public static List<SearchResultDisplayObject> convertSearchResults2SearchResultDisplayObjects(
             List<SearchResult> results ) {
@@ -347,27 +347,23 @@ public class SearchResultDisplayObject implements Comparable<SearchResultDisplay
      *
      * @param searchResult search result
      */
-    private void setValues( SearchResult searchResult ) {
+    private void setValues( SearchResult<?> searchResult ) {
 
         // if it's a search result, grab the underlying object
         Class<?> searchResultClass = searchResult.getResultClass();
+        Object resultObject = searchResult.getResultObject();
         // class-specific construction
-        if ( searchResult.getResultObject() instanceof GeneValueObject ) {
-            GeneValueObject gene = ( GeneValueObject ) searchResult.getResultObject();
+        if ( resultObject instanceof GeneValueObject ) {
+            GeneValueObject gene = ( GeneValueObject ) resultObject;
             this.setValues( gene );
-        } else if ( searchResult.getResultObject() instanceof Gene ) {
-            Gene gene = ( Gene ) searchResult.getResultObject();
-            this.setValues( gene );
-        } else if ( searchResult.getResultObject() instanceof GeneSetValueObject ) {
-            GeneSetValueObject geneSet = ( GeneSetValueObject ) searchResult.getResultObject();
-            this.setValues( geneSet );
-        } else if ( searchResult.getResultObject() instanceof ExpressionExperimentValueObject ) {
-            ExpressionExperimentValueObject ee = ( ExpressionExperimentValueObject ) searchResult.getResultObject();
-            this.setValues( ee );
-        } else if ( searchResult.getResultObject() instanceof ExpressionExperimentSetValueObject ) {
-            ExpressionExperimentSetValueObject eeSet = ( ExpressionExperimentSetValueObject ) searchResult
-                    .getResultObject();
-            this.setValues( eeSet );
+        } else if ( resultObject instanceof Gene ) {
+            this.setValues( ( Gene ) resultObject );
+        } else if ( resultObject instanceof GeneSetValueObject ) {
+            this.setValues( ( GeneSetValueObject ) resultObject );
+        } else if ( resultObject instanceof ExpressionExperimentValueObject ) {
+            this.setValues( ( ExpressionExperimentValueObject ) resultObject );
+        } else if ( resultObject instanceof ExpressionExperimentSetValueObject ) {
+            this.setValues( ( ExpressionExperimentSetValueObject ) resultObject );
         } else {
             this.isGroup = false;
             this.size = -1;

@@ -18,8 +18,13 @@
  */
 package ubic.gemma.model.expression.biomaterial;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
 import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.model.IdentifiableValueObject;
+import ubic.gemma.model.annotations.GemmaWebOnly;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
@@ -36,45 +41,63 @@ import java.util.*;
  * @author lukem
  */
 @SuppressWarnings({ "unused", "WeakerAccess" }) // Used in frontend
+@Data
+@EqualsAndHashCode(of = { "name" }, callSuper = true)
 public class BioMaterialValueObject extends IdentifiableValueObject<BioMaterial> implements Serializable {
 
     private static final String CHARACTERISTIC_DELIMITER = "::::";
     private static final long serialVersionUID = -145137827948521045L;
-    private final Collection<FactorValueBasicValueObject> fVBasicVOs = new HashSet<>();
-    private String assayDescription;
-    private String assayName;
-    private Collection<Long> bioAssays = new HashSet<>();
-    private Collection<CharacteristicValueObject> characteristics = new HashSet<>();
+
+    private String name;
     private String description;
+    @GemmaWebOnly
+    private String assayName;
+    @GemmaWebOnly
+    private String assayDescription;
     /**
-     * Map of factor ids (factor232) to factor value (id or the actual value) for this biomaterial.
+     * Related {@link BioAssay} IDs.
      */
-    private Map<String, String> factorIdToFactorValueId;
+    private Collection<Long> bioAssayIds = new HashSet<>();
+    private Collection<CharacteristicValueObject> characteristics = new HashSet<>();
+
+    /*
+     * Map of (informative) categories to values (for this biomaterial). This is only used for display so we don't need ids as well.
+     */
+    @GemmaWebOnly
+    private Map<String, String> characteristicValues = new HashMap<>();
+
     /**
-     * Map of ids (factor232) to a representation of the factor (e.g., the name).
+     * Indicate if this is using the {@link #fVBasicVOs} or {@link #factorValueObjects} for representing factor values.
      */
-    private Map<String, String> factors;
+    @JsonIgnore
+    private boolean basicFVs;
+
+    @JsonIgnore
+    private Collection<FactorValueBasicValueObject> fVBasicVOs = new HashSet<>();
+
+    @JsonIgnore
     private Collection<FactorValueValueObject> factorValueObjects = new HashSet<>();
+
     /**
      * Map of ids (fv133) to a representation of the value (for this biomaterial.)
      */
+    @GemmaWebOnly
     private Map<String, String> factorValues;
-    private String name;
 
-    private boolean basicFVs;
-    private Date assayProcessingDate;
-
-    @Override public String toString() {
-        return "BioMaterialValueObject{" +
-                "assayName='" + assayName + '\'' +
-                ", id=" + id +
-                '}';
-    }
-
-    /*
-    * Map of (informative) categories to values (for this biomaterial). This is only used for display so we don't need ids as well.
+    /**
+     * Map of factor ids (factor232) to factor value (id or the actual value) for this biomaterial.
      */
-    private Map<String, String> characteristicValues = new HashMap<>();
+    @GemmaWebOnly
+    private Map<String, String> factorIdToFactorValueId;
+
+    /**
+     * Map of ids (factor232) to a representation of the factor (e.g., the name).
+     */
+    @GemmaWebOnly
+    private Map<String, String> factors;
+
+    @GemmaWebOnly
+    private Date assayProcessingDate;
 
     /**
      * Required when using the class as a spring bean.
@@ -127,18 +150,18 @@ public class BioMaterialValueObject extends IdentifiableValueObject<BioMaterial>
         }
 
         // used for display of characteristics in the biomaterial experimental design editor view.
-        for(Characteristic c : bm.getCharacteristics()) {
-            if  (StringUtils.isBlank( c.getCategory() )) {
+        for ( Characteristic c : bm.getCharacteristics() ) {
+            if ( StringUtils.isBlank( c.getCategory() ) ) {
                 continue;
             }
-            this.characteristicValues.put(c.getCategory(), c.getValue());
+            this.characteristicValues.put( c.getCategory(), c.getValue() );
         }
     }
 
     public BioMaterialValueObject( BioMaterial bm, BioAssay ba ) {
         this( bm );
         BioAssayValueObject baVo = new BioAssayValueObject( ba, false );
-        this.bioAssays.add( baVo.getId() );
+        this.bioAssayIds.add( baVo.getId() );
         this.assayName = ba.getName();
         this.assayDescription = ba.getDescription();
         this.assayName = ba.getName();
@@ -146,134 +169,18 @@ public class BioMaterialValueObject extends IdentifiableValueObject<BioMaterial>
         this.assayProcessingDate = ba.getProcessingDate();
     }
 
-    @Override
-    public boolean equals( Object obj ) {
-        if ( this == obj )
-            return true;
-        if ( obj == null )
-            return false;
-        if ( this.getClass() != obj.getClass() )
-            return false;
-        BioMaterialValueObject other = ( BioMaterialValueObject ) obj;
-
-        if ( id == null ) {
-            if ( other.id != null )
-                return false;
-        } else
-            return id.equals( other.id ) && id.equals( other.id );
-
-        if ( name == null ) {
-            return other.name == null;
-        } else
-            return name.equals( other.name );
-    }
-
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + ( ( id == null ) ? 0 : id.hashCode() );
-
-        if ( id == null )
-            result = prime * result + ( ( name == null ) ? 0 : name.hashCode() );
-        return result;
-    }
-
-    public String getAssayDescription() {
-        return assayDescription;
-    }
-
-    public void setAssayDescription( String assayDescription ) {
-        this.assayDescription = assayDescription;
-    }
-
-    public String getAssayName() {
-        return assayName;
-    }
-
-    public void setAssayName( String assayName ) {
-        this.assayName = assayName;
-    }
-
-    public Collection<Long> getBioAssays() {
-        return bioAssays;
-    }
-
-    public void setBioAssays( Collection<Long> bioAssays ) {
-        this.bioAssays = bioAssays;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public void setDescription( String description ) {
-        this.description = description;
-    }
-
-    public Map<String, String> getFactorIdToFactorValueId() {
-        return factorIdToFactorValueId;
-    }
-
-    public void setFactorIdToFactorValueId( Map<String, String> factorIdToFactorValueId ) {
-        this.factorIdToFactorValueId = factorIdToFactorValueId;
-    }
-
-    public Map<String, String> getFactors() {
-        return factors;
-    }
-
-    public void setFactors( Map<String, String> factors ) {
-        this.factors = factors;
-    }
-
-    public Collection<? extends IdentifiableValueObject> getFactorValueObjects() {
+    @JsonProperty("factorValues")
+    public Collection<? extends IdentifiableValueObject> getFactorValues() {
         return basicFVs ? fVBasicVOs : factorValueObjects;
     }
 
-    public Map<String, String> getCharacteristicValues() {
-        return characteristicValues;
-    }
-
-    // not used, managed internally
-    public void setCharacteristicValues( Map<String, String> characteristicValues ) {
-        this.characteristicValues = characteristicValues;
-    }
-
-    public void setFactorValueObjects( Collection<FactorValueValueObject> factorValueObjects ) {
-        this.factorValueObjects = factorValueObjects;
-    }
-
-    public Map<String, String> getFactorValues() {
-        return factorValues;
-    }
-
-    public void setFactorValues( Map<String, String> factorValues ) {
-        this.factorValues = factorValues;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName( String name ) {
-        this.name = name;
-    }
-
-    public Collection<CharacteristicValueObject> getCharacteristics() {
-        return characteristics;
-    }
-
-    public void setCharacteristics( Collection<CharacteristicValueObject> characteristicsDetails ) {
-        this.characteristics = characteristicsDetails;
-    }
-
-    public Date getAssayProcessingDate() {
-        return assayProcessingDate;
-    }
-
-    public void setAssayProcessingDate( Date assayProcessingDate ) {
-        this.assayProcessingDate = assayProcessingDate;
+    /**
+     * @deprecated use {@link #getFactorValues()}
+     */
+    @Deprecated
+    @JsonProperty("factorValueObjects")
+    public Collection<? extends IdentifiableValueObject> getFactorValueObjects() {
+        return basicFVs ? fVBasicVOs : factorValueObjects;
     }
 
     /**
@@ -289,4 +196,11 @@ public class BioMaterialValueObject extends IdentifiableValueObject<BioMaterial>
         }
     }
 
+    @Override
+    public String toString() {
+        return "BioMaterialValueObject{" +
+                "assayName='" + assayName + '\'' +
+                ", id=" + id +
+                '}';
+    }
 }

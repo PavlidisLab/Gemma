@@ -19,6 +19,8 @@ import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.persistence.service.FilteringService;
 import ubic.gemma.web.services.rest.util.MalformedArgException;
 
+import javax.annotation.Nullable;
+
 /**
  * Class representing an API argument that should be an integer.
  *
@@ -43,11 +45,13 @@ public class SortArg extends AbstractArg<SortArg.Sort> {
      *                               argument was malformed in the first place
      */
     public ubic.gemma.persistence.util.Sort getSort( FilteringService service ) throws MalformedArgException {
-        ubic.gemma.persistence.util.Sort.Direction direction = null;
-        if ( this.getValue().direction.equals( Sort.Direction.ASC ) ) {
+        ubic.gemma.persistence.util.Sort.Direction direction;
+        if ( getValue().direction == Sort.Direction.ASC ) {
             direction = ubic.gemma.persistence.util.Sort.Direction.ASC;
-        } else if ( this.getValue().direction.equals( Sort.Direction.DESC ) ) {
+        } else if ( getValue().direction == Sort.Direction.DESC ) {
             direction = ubic.gemma.persistence.util.Sort.Direction.DESC;
+        } else {
+            direction = null;
         }
         try {
             return service.getSort( this.getValue().orderBy, direction );
@@ -81,21 +85,24 @@ public class SortArg extends AbstractArg<SortArg.Sort> {
      * @return true if character was '+', false if it was '-'. Null in any other case.
      */
     private static Sort.Direction parseDirection( char c ) {
-        if ( c == '+' ) {
+        if ( c == ' ' ) {
+            throw new MalformedArgException( "The sorting direction cannot be an empty character. It seems that you used a raw '+' in your query, instead use the URL-encoded '%2B' value." );
+        } else if ( c == '+' ) {
             return Sort.Direction.ASC;
         } else if ( c == '-' ) {
             return Sort.Direction.DESC;
         } else {
-            return null;
+            return null; /* the character will be parsed as part of the order by property with the default direction */
         }
     }
 
     public static class Sort {
 
         private final String orderBy;
+        @Nullable
         private final Direction direction;
 
-        private Sort( String orderBy, Direction direction ) {
+        private Sort( String orderBy, @Nullable Direction direction ) {
             if ( StringUtils.isBlank( orderBy ) ) {
                 throw new IllegalArgumentException( "The 'orderBy' attribute cannot be blank or empty." );
             }

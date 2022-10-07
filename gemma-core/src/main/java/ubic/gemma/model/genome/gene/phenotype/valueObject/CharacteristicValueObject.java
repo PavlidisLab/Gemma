@@ -16,10 +16,13 @@ package ubic.gemma.model.genome.gene.phenotype.valueObject;
 
 import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.Ordering;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import ubic.gemma.model.IdentifiableValueObject;
+import ubic.gemma.model.annotations.GemmaWebOnly;
 import ubic.gemma.model.common.description.Characteristic;
 
 import java.util.ArrayList;
@@ -33,6 +36,7 @@ import java.util.List;
  * @see Characteristic
  */
 @SuppressWarnings({ "WeakerAccess", "unused" }) // Used in frontend
+@Data
 public class CharacteristicValueObject extends IdentifiableValueObject<Characteristic>
         implements Comparable<CharacteristicValueObject> {
 
@@ -40,29 +44,38 @@ public class CharacteristicValueObject extends IdentifiableValueObject<Character
     /**
      * id used by url on the client side
      */
-    String urlId = "";
+    @GemmaWebOnly
+    private String urlId = "";
+    @GemmaWebOnly
     private boolean alreadyPresentInDatabase = false;
+    @GemmaWebOnly
     private boolean alreadyPresentOnGene = false;
     private String category = "";
     private String categoryUri = null;
     /**
      * child term from a root
      */
+    @GemmaWebOnly
     private boolean child = false;
+    @GemmaWebOnly
     private int numTimesUsed = 0;
     /**
      * what Ontology uses this term
      */
     private String ontologyUsed = null;
+    @GemmaWebOnly
     private long privateGeneCount = 0L;
     /**
      * number of occurrences in all genes
      */
+    @GemmaWebOnly
     private long publicGeneCount = 0L;
     /**
      * root of a query
      */
+    @GemmaWebOnly
     private boolean root = false;
+    @GemmaWebOnly
     private String taxon = "";
     private String value = "";
     private String valueUri = null;
@@ -82,7 +95,7 @@ public class CharacteristicValueObject extends IdentifiableValueObject<Character
         {
             this.valueUri = characteristic.getValueUri();
             if ( this.valueUri != null )
-                this.parseUrlId();
+                this.urlId = parseUrlId( this.valueUri );
         }
         this.category = characteristic.getCategory();
         this.categoryUri = characteristic.getCategoryUri();
@@ -98,7 +111,7 @@ public class CharacteristicValueObject extends IdentifiableValueObject<Character
     public CharacteristicValueObject( Long id, String valueUri ) {
         super( id );
         this.valueUri = valueUri;
-        this.parseUrlId();
+        this.urlId = parseUrlId( this.valueUri );
         if ( StringUtils.isNotBlank( this.urlId ) ) {
             try {
                 // we don't always populate from the database, give it an id anyway
@@ -194,134 +207,19 @@ public class CharacteristicValueObject extends IdentifiableValueObject<Character
         return "[Category= " + category + " Value=" + value + ( valueUri != null ? " (" + valueUri + ")" : "" ) + "]";
     }
 
-    public String getCategory() {
-        return this.category;
-    }
-
-    public void setCategory( String category ) {
-        this.category = category;
-    }
-
-    public String getCategoryUri() {
-        return this.categoryUri;
-    }
-
-    public void setCategoryUri( String categoryUri ) {
-        this.categoryUri = categoryUri;
-    }
-
-    public int getNumTimesUsed() {
-        return numTimesUsed;
-    }
-
-    public void setNumTimesUsed( int numTimesUsed ) {
-        this.numTimesUsed = numTimesUsed;
-    }
-
-    public String getOntologyUsed() {
-        return this.ontologyUsed;
-    }
-
-    public void setOntologyUsed( String ontologyUsed ) {
-        this.ontologyUsed = ontologyUsed;
-    }
-
-    public long getPrivateGeneCount() {
-        return this.privateGeneCount;
-    }
-
-    public void setPrivateGeneCount( long privateGeneCount ) {
-        this.privateGeneCount = privateGeneCount;
-    }
-
-    public long getPublicGeneCount() {
-        return this.publicGeneCount;
-    }
-
-    public void setPublicGeneCount( long publicGeneCount ) {
-        this.publicGeneCount = publicGeneCount;
-    }
-
-    public String getTaxon() {
-        return this.taxon;
-    }
-
-    public void setTaxon( String taxon ) {
-        this.taxon = taxon;
-    }
-
-    public String getUrlId() {
-        return this.urlId;
-    }
-
-    public void setUrlId( String urlId ) {
-        this.urlId = urlId;
-    }
-
-    public String getValue() {
-        return this.value;
-    }
-
-    public void setValue( String value ) {
-        this.value = value;
-    }
-
-    public String getValueUri() {
-        return this.valueUri;
-    }
-
-    public void setValueUri( String valueUri ) {
-        if ( valueUri == null )
-            this.valueUri = null;
-        else
-            this.valueUri = valueUri;
-    }
-
     public void incrementOccurrenceCount() {
         this.numTimesUsed++;
     }
 
-    public boolean isAlreadyPresentInDatabase() {
-        return this.alreadyPresentInDatabase;
-    }
-
-    public void setAlreadyPresentInDatabase( boolean alreadyPresentInDatabase ) {
-        this.alreadyPresentInDatabase = alreadyPresentInDatabase;
-    }
-
-    public boolean isAlreadyPresentOnGene() {
-        return this.alreadyPresentOnGene;
-    }
-
-    public void setAlreadyPresentOnGene( boolean alreadyPresentOnGene ) {
-        this.alreadyPresentOnGene = alreadyPresentOnGene;
-    }
-
-    public boolean isChild() {
-        return this.child;
-    }
-
-    public void setChild( boolean child ) {
-        this.child = child;
-    }
-
-    public boolean isRoot() {
-        return this.root;
-    }
-
-    public void setRoot( boolean root ) {
-        this.root = root;
-    }
-
-    private void parseUrlId() {
+    private static String parseUrlId( String valueUri ) {
         if ( StringUtils.isBlank( valueUri ) )
-            return;
+            return "";
         if ( valueUri.indexOf( "#" ) > 0 ) {
-            this.urlId = valueUri.substring( valueUri.lastIndexOf( "#" ) + 1, this.valueUri.length() );
+            return valueUri.substring( valueUri.lastIndexOf( "#" ) + 1, valueUri.length() );
         } else if ( valueUri.lastIndexOf( "/" ) > 0 ) {
-            this.urlId = valueUri.substring( valueUri.lastIndexOf( "/" ) + 1, this.valueUri.length() );
+            return valueUri.substring( valueUri.lastIndexOf( "/" ) + 1, valueUri.length() );
+        } else {
+            return "";
         }
-
     }
-
 }

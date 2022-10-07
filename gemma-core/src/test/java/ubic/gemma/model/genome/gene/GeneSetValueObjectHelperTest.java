@@ -70,7 +70,7 @@ public class GeneSetValueObjectHelperTest extends BaseSpringContextTest {
         GeneSetValueObject gsvo = geneSetValueObjectHelper.convertToValueObject( gset );
 
         assertEquals( gset.getId(), gsvo.getId() );
-        assertEquals( gset.getMembers().size(), gsvo.getSize().intValue() );
+        assertEquals( gset.getMembers().size(), gsvo.getSize() );
         assertEquals( gset.getName(), gsvo.getName() );
     }
 
@@ -83,7 +83,7 @@ public class GeneSetValueObjectHelperTest extends BaseSpringContextTest {
         GeneSetValueObject gsvo = geneSetValueObjectHelper.convertToLightValueObject( gset );
 
         assertEquals( gset.getId(), gsvo.getId() );
-        assertEquals( gset.getMembers().size(), gsvo.getSize().intValue() );
+        assertEquals( gset.getMembers().size(), gsvo.getSize() );
         assertEquals( gset.getName(), gsvo.getName() );
     }
 }

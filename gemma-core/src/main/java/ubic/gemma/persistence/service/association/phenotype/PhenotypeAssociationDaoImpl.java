@@ -30,6 +30,7 @@ import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.model.genome.TaxonValueObject;
 import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.ExternalDatabaseStatisticsValueObject;
@@ -82,8 +83,8 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
             Long geneDifferentialExpressionMetaAnalysisId ) {
 
         return ( Long ) this.getSessionFactory().getCurrentSession().createQuery(
-                "select count (d) from DifferentialExpressionEvidenceImpl as d where d.geneDifferentialExpressionMetaAnalysisResult "
-                        + "in (select r from GeneDifferentialExpressionMetaAnalysis as g join g.results as r where g.id= :gid)" )
+                        "select count (d) from DifferentialExpressionEvidenceImpl as d where d.geneDifferentialExpressionMetaAnalysisResult "
+                                + "in (select r from GeneDifferentialExpressionMetaAnalysis as g join g.results as r where g.id= :gid)" )
                 .setParameter( "gid", geneDifferentialExpressionMetaAnalysisId ).uniqueResult();
     }
 
@@ -153,8 +154,8 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
 
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession().createQuery(
-                "select p from PhenotypeAssociation as p fetch all properties where "
-                        + "lower(p.evidenceSource.externalDatabase.name)=:name" )
+                        "select p from PhenotypeAssociation as p fetch all properties where "
+                                + "lower(p.evidenceSource.externalDatabase.name)=:name" )
                 .setParameter( "name", externalDatabaseName.toLowerCase() ).setFirstResult( start )
                 .setMaxResults( limit != null ? limit : PhenotypeAssociationDaoImpl.DEFAULT_PA_LIMIT ).list();
     }
@@ -291,7 +292,7 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
     public Collection<PhenotypeAssociation> findPhenotypeAssociationForGeneId( Long geneId ) {
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession().createQuery(
-                "select distinct p from PhenotypeAssociation as p fetch all properties where p.gene.id = :gid" )
+                        "select distinct p from PhenotypeAssociation as p fetch all properties where p.gene.id = :gid" )
                 .setParameter( "gid", geneId ).list();
     }
 
@@ -324,8 +325,8 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
                 // get all manual curated evidence (the ones with no external source)
                 //noinspection unchecked
                 manualCuration = this.getSessionFactory().getCurrentSession().createQuery(
-                        "select distinct p from PhenotypeAssociation as p fetch all properties "
-                                + "where p.gene.id=:gid and p.evidenceSource is null" ).setParameter( "gid", geneId )
+                                "select distinct p from PhenotypeAssociation as p fetch all properties "
+                                        + "where p.gene.id=:gid and p.evidenceSource is null" ).setParameter( "gid", geneId )
                         .list();
             }
         }
@@ -358,7 +359,7 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
 
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession().createQuery(
-                "select p from PhenotypeAssociation as p fetch all properties " + "where p.gene.ncbiGeneId=:n" )
+                        "select p from PhenotypeAssociation as p fetch all properties " + "where p.gene.ncbiGeneId=:n" )
                 .setParameter( "n", geneNCBI ).list();
 
     }
@@ -372,8 +373,8 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
 
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession().createQuery(
-                "select p from PhenotypeAssociation as p join p.phenotypes as phe join p.gene as g "
-                        + "where phe.valueUri in (:p) and g.ncbiGeneId=:n " ).setParameterList( "p", phenotype )
+                        "select p from PhenotypeAssociation as p join p.phenotypes as phe join p.gene as g "
+                                + "where phe.valueUri in (:p) and g.ncbiGeneId=:n " ).setParameterList( "p", phenotype )
                 .setParameter( "n", geneNCBI ).list();
     }
 
@@ -611,8 +612,8 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
 
         //noinspection unchecked
         return ( List<DifferentialExpressionEvidence> ) this.getSessionFactory().getCurrentSession().createQuery(
-                "select d from DifferentialExpressionEvidenceImpl as d where d.geneDifferentialExpressionMetaAnalysisResult "
-                        + "in (select r from GeneDifferentialExpressionMetaAnalysis as g join g.results as r where g.id=:gid)" )
+                        "select d from DifferentialExpressionEvidenceImpl as d where d.geneDifferentialExpressionMetaAnalysisResult "
+                                + "in (select r from GeneDifferentialExpressionMetaAnalysis as g join g.results as r where g.id=:gid)" )
                 .setParameter( "gid", geneDifferentialExpressionMetaAnalysisId ).setMaxResults( maxResults ).list();
     }
 
@@ -900,8 +901,7 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
                     g.setNcbiId( nbciGeneId );
                     g.setOfficialName( officialName );
                     g.setOfficialSymbol( officialSymbol );
-                    g.setTaxonCommonName( taxonCommonName );
-                    g.setTaxonId( taxonId );
+                    g.setTaxon( new TaxonValueObject( taxonId, taxonCommonName ) );
                     g.getPhenotypesValueUri().add( valueUri );
                     genesWithPhenotypes.put( geneId, g );
                 }

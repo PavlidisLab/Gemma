@@ -18,9 +18,6 @@
  */
 package ubic.gemma.persistence.service.common.description;
 
-import java.util.*;
-import java.util.stream.Collectors;
-
 import org.apache.commons.collections4.ListUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
@@ -28,10 +25,10 @@ import org.hibernate.Query;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
-
 import ubic.basecode.util.BatchIterator;
 import ubic.gemma.model.association.Gene2GOAssociationImpl;
 import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
+import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.biomaterial.Treatment;
@@ -42,7 +39,13 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 import ubic.gemma.persistence.service.AbstractDao;
 import ubic.gemma.persistence.service.AbstractVoEnabledDao;
+import ubic.gemma.persistence.util.AclQueryUtils;
 import ubic.gemma.persistence.util.EntityUtils;
+
+import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * @author Luke
@@ -50,6 +53,7 @@ import ubic.gemma.persistence.util.EntityUtils;
  * @see    Characteristic
  */
 @Repository
+@ParametersAreNonnullByDefault
 public class CharacteristicDaoImpl extends AbstractVoEnabledDao<Characteristic, CharacteristicValueObject>
         implements CharacteristicDao {
 
@@ -86,7 +90,7 @@ public class CharacteristicDaoImpl extends AbstractVoEnabledDao<Characteristic, 
     }
 
     @Override
-    public Collection<Characteristic> findByUri( Collection<Class<?>> classes, Collection<String> characteristicUris ) {
+    public Collection<Characteristic> findByUri( Collection<Class<?>> classes, @Nullable Collection<String> characteristicUris ) {
 
         Collection<Characteristic> result = new HashSet<>();
 
@@ -105,89 +109,87 @@ public class CharacteristicDaoImpl extends AbstractVoEnabledDao<Characteristic, 
         return result;
     }
 
-    @SuppressWarnings({ "rawtypes", "unchecked", "cast" })
+    @SuppressWarnings({ "rawtypes", "cast" })
     @Override
-    public Map<Class<?>, Map<String, Collection<Long>>> findExperimentsByUris( Collection<String> uriStrings, Taxon t, int limit ) {
-        Map<Class<?>, Map<String, Collection<Long>>> result = new HashMap<>();
+    public Map<Class<? extends Identifiable>, Map<String, Set<ExpressionExperiment>>> findExperimentsByUris( Collection<String> uris, @Nullable Taxon taxon, int limit ) {
+        Map<Class<? extends Identifiable>, Map<String, Set<ExpressionExperiment>>> result = new HashMap<>();
 
-        if ( uriStrings.isEmpty() )
+        if ( uris.isEmpty() )
             return result;
 
         // Note that the limit isn't strictly adhered to; we just stop querying when we have enough. We avoid duplicates
-        Query q;
-        Set<Long> seenIDs = new HashSet<>();
+        Set<ExpressionExperiment> seenEEs = new HashSet<>();
 
         // direct associations
         // language=HQL
-        q = this.getEEsByUriQuery( "select distinct ee.id, c.valueUri from ExpressionExperiment ee "
-                + "join ee.characteristics c", uriStrings, t, seenIDs );
-        result.put( ExpressionExperiment.class, toEEsByUri( q.list(), seenIDs ) );
-
-        if ( limit > 0 && seenIDs.size() >= limit ) {
-            return result;
-        }
+        result.put( ExpressionExperiment.class, queryAndMarkAsSeen(
+                "select distinct ee, c.valueUri from ExpressionExperiment ee "
+                        + "join ee.characteristics c",
+                uris, taxon, seenEEs, limit ) );
 
         // via experimental factor
         // language=HQL
-        q = this.getEEsByUriQuery( "select distinct ee.id, c.valueUri from ExpressionExperiment ee "
+        result.put( FactorValue.class, queryAndMarkAsSeen( "select distinct ee, c.valueUri from ExpressionExperiment ee "
                 + "join ee.experimentalDesign ed join ed.experimentalFactors ef "
-                + "join ef.factorValues fv join fv.characteristics c", uriStrings, t, seenIDs );
-        result.put( FactorValue.class, toEEsByUri( q.list(), seenIDs ) );
-
-        if ( limit > 0 && seenIDs.size() >= limit ) {
-            return result;
-        }
+                + "join ef.factorValues fv join fv.characteristics c", uris, taxon, seenEEs, limit ) );
 
         // via biomaterial
         // language=HQL
-        q = this.getEEsByUriQuery( "select distinct ee.id, c.valueUri  from ExpressionExperiment ee "
+        result.put( BioMaterial.class, queryAndMarkAsSeen( "select distinct ee, c.valueUri from ExpressionExperiment ee "
                         + "join ee.bioAssays ba join ba.sampleUsed bm join bm.characteristics c",
-                uriStrings, t, seenIDs );
-        result.put( BioMaterial.class, toEEsByUri( q.list(), seenIDs ) );
+                uris, taxon, seenEEs, limit ) );
 
         return result;
     }
 
-    private Query getEEsByUriQuery( String query, Collection<String> uriStrings, Taxon t, Set<Long> seenIDs ) {
-        query += " where c.valueUri in (:uriStrings) ";
+    private Map<String, Set<ExpressionExperiment>> queryAndMarkAsSeen( String query, Collection<String> uris, @Nullable Taxon taxon, Set<ExpressionExperiment> seenEEs, int limit ) {
+        if ( limit != 0 && seenEEs.size() > limit ) {
+            return Collections.emptyMap();
+        }
+
+        query += AclQueryUtils.formAclJoinClause( "ee" );
+        query += AclQueryUtils.formAclRestrictionClause();
+
+        query += " and c.valueUri in (:uriStrings)";
 
         // don't retrieve EE IDs that we have already fetched otherwise
-        if ( !seenIDs.isEmpty() ) {
-            query += "and ee.id not in (:seenids) ";
+        if ( !seenEEs.isEmpty() ) {
+            query += " and ee not in (:seenEEs)";
         }
 
         // by taxon
-        if ( t != null ) {
-            query += "and ee.taxon = :t";
+        if ( taxon != null ) {
+            query += " and ee.taxon = :t";
         }
 
-        Query q = getSessionFactory().getCurrentSession().createQuery( query );
-        q.setParameterList( "uriStrings", uriStrings );
-        if ( !seenIDs.isEmpty() )
-            q.setParameterList( "seenids", seenIDs );
-        if ( t != null )
-            q.setParameter( "t", t );
-        return q;
-    }
+        Query q = getSessionFactory().getCurrentSession()
+                .createQuery( query )
+                .setParameterList( "uriStrings", uris );
+        if ( !seenEEs.isEmpty() )
+            q.setParameterList( "seenEEs", seenEEs );
+        if ( taxon != null )
+            q.setParameter( "t", taxon );
+        AclQueryUtils.addAclJoinParameters( q, ExpressionExperiment.class );
+        AclQueryUtils.addAclRestrictionParameters( q );
 
-    private Map<String, Collection<Long>> toEEsByUri( List<Object[]> r, Set<Long> seenIDs ) {
-        if ( r.isEmpty() ) {
-            return Collections.emptyMap();
-        }
-        Map<String, Collection<Long>> c = new HashMap<>();
-        for ( Object[] o : r ) {
-            Long eeID = ( Long ) o[0];
-            if ( seenIDs.contains( eeID ) ) continue;
+        //noinspection unchecked
+        List<Object[]> results = q.list();
 
-            String uri = ( String ) o[1];
-
-            if ( !c.containsKey( uri ) ) {
-                c.put( uri, new HashSet<>() );
+        Map<String, Set<ExpressionExperiment>> map = new HashMap<>();
+        for ( Object[] row : results ) {
+            ExpressionExperiment ee = ( ExpressionExperiment ) row[0];
+            String uri = ( String ) row[1];
+            if ( seenEEs.contains( ee ) ) {
+                continue;
             }
-            c.get( uri ).add( eeID );
-            seenIDs.add( eeID );
+            if ( !map.containsKey( uri ) ) {
+                map.put( uri, new HashSet<>() );
+            }
+            map.get( uri ).add( ee );
+            seenEEs.add( ee );
         }
-        return c;
+
+        return map;
     }
 
     @Override
@@ -264,7 +266,7 @@ public class CharacteristicDaoImpl extends AbstractVoEnabledDao<Characteristic, 
     }
 
     @Override
-    public Map<Characteristic, Object> getParents( Class<?> parentClass, Collection<Characteristic> characteristics ) {
+    public Map<Characteristic, Object> getParents( Class<?> parentClass, @Nullable Collection<Characteristic> characteristics ) {
 
         Map<Characteristic, Object> charToParent = new HashMap<>();
         if ( characteristics == null || characteristics.size() == 0 ) {
@@ -300,7 +302,7 @@ public class CharacteristicDaoImpl extends AbstractVoEnabledDao<Characteristic, 
     }
 
     @Override
-    public Map<Characteristic, Long> getParentIds( Class<?> parentClass, Collection<Characteristic> characteristics ) {
+    public Map<Characteristic, Long> getParentIds( Class<?> parentClass, @Nullable Collection<Characteristic> characteristics ) {
 
         Map<Characteristic, Long> charToParent = new HashMap<>();
         if ( characteristics == null || characteristics.size() == 0 ) {
@@ -337,7 +339,7 @@ public class CharacteristicDaoImpl extends AbstractVoEnabledDao<Characteristic, 
     }
 
     @Override
-    public CharacteristicValueObject loadValueObject( Characteristic entity ) {
+    protected CharacteristicValueObject doLoadValueObject( Characteristic entity ) {
         return new CharacteristicValueObject( entity );
     }
 

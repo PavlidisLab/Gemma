@@ -5,7 +5,7 @@
 	<name>Gemma</name>
 	<groupId>gemma</groupId>
 	<artifactId>gemma</artifactId>
-	<version>1.29.0-SNAPSHOT</version>
+	<version>1.28.0</version>
 	<inceptionYear>2005</inceptionYear>
 	<description>The Gemma Project for meta-analysis of genomics data</description>
 	<url>https://gemma.msl.ubc.ca</url>
@@ -16,7 +16,7 @@
 	<parent>
 		<groupId>ubc.pavlab</groupId>
 		<artifactId>pavlab-starter-parent</artifactId>
-		<version>1.1.5</version>
+		<version>1.1.7</version>
 	</parent>
 	<modules>
 		<module>gemma-core</module>
@@ -577,16 +577,6 @@
 					<name>localDeploy</name>
 					<url>file:///space/gemmaData/gemma-devsite</url>
 				</site>
-				<repository>
-					<id>repo</id>
-					<name>Pavlab</name>
-					<url>file:///space/maven2</url>
-				</repository>
-				<snapshotRepository>
-					<id>repo</id>
-					<name>Pavlab</name>
-					<url>file:///space/maven2</url>
-				</snapshotRepository>
 			</distributionManagement>
 		</profile>
 	</profiles>
@@ -595,16 +585,6 @@
 			<id>website</id>
 			<url>/space/gemmaData/gemma-devsite</url>
 		</site>
-		<repository>
-			<id>repo</id>
-			<name>Pavlab</name>
-			<url>/space/maven2</url>
-		</repository>
-		<snapshotRepository>
-			<id>repo</id>
-			<name>Pavlab</name>
-			<url>/space/maven2</url>
-		</snapshotRepository>
 	</distributionManagement>
 	<reporting>
 		<plugins>
@@ -642,11 +622,11 @@
 		<spring.version>3.2.18.RELEASE</spring.version>
 		<spring.security.version>3.2.10.RELEASE</spring.security.version>
 		<jersey.version>2.25.1</jersey.version>
-		<jackson.version>2.13.3</jackson.version>
-		<swagger.version>2.2.1</swagger.version>
+		<jackson.version>2.13.4</jackson.version>
+		<swagger.version>2.2.3</swagger.version>
 		<jawr.version>3.9</jawr.version>
 		<lucene.version>3.6.2</lucene.version>
-		<slack.version>1.23.0</slack.version>
+		<slack.version>1.25.1</slack.version>
 		<!-- this ensures that -DexcludedGroups works properly -->
 		<excludedGroups/>
 	</properties>

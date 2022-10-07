@@ -327,6 +327,8 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractCLICon
         // Filter out all the ee that are not of correct taxon
         for ( SearchResult<ExpressionExperiment> sr : eeSearchResults ) {
             ExpressionExperiment ee = sr.getResultObject();
+            if ( ee == null )
+                continue; // ee no longer valid, could be an outdated compass hit
             Taxon t = eeService.getTaxon( ee );
             if ( t != null && t.getCommonName().equalsIgnoreCase( taxon.getCommonName() ) ) {
                 ees.add( ee );

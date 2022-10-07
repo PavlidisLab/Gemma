@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2007 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -48,14 +48,14 @@ public class TreeCharacteristicValueObject extends CharacteristicValueObject {
 
     public TreeCharacteristicValueObject( Long id, String value, String valueUri ) {
         super( id, value, "", valueUri, "" );
-        this._id = this.urlId;
+        this._id = this.getUrlId();
     }
 
     public TreeCharacteristicValueObject( Long id, String value, String valueUri,
             TreeSet<TreeCharacteristicValueObject> children ) {
         super( id, value, "", valueUri, "" );
         this.children = children;
-        this._id = this.urlId;
+        this._id = this.getUrlId();
     }
 
     public static TreeCharacteristicValueObject ontology2TreeCharacteristicValueObjects( OntologyTerm ontologyTerm,

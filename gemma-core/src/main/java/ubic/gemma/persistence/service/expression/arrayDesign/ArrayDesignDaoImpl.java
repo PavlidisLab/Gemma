@@ -19,6 +19,7 @@
  */
 package ubic.gemma.persistence.service.expression.arrayDesign;
 
+import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.hibernate.*;
@@ -29,7 +30,6 @@ import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
-import ubic.gemma.model.expression.arrayDesign.BlacklistedPlatform;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -41,9 +41,12 @@ import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.persistence.service.AbstractDao;
 import ubic.gemma.persistence.service.common.auditAndSecurity.curation.AbstractCuratableDao;
 import ubic.gemma.persistence.util.*;
-import ubic.gemma.persistence.util.Filters;
 
+import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
+import java.math.BigInteger;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 /**
@@ -51,6 +54,7 @@ import java.util.stream.Collectors;
  * @see ubic.gemma.model.expression.arrayDesign.ArrayDesign
  */
 @Repository
+@ParametersAreNonnullByDefault
 public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayDesignValueObject>
         implements ArrayDesignDao {
 
@@ -83,7 +87,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
 
     @Override
     public Collection<CompositeSequence> compositeSequenceWithoutBlatResults( ArrayDesign arrayDesign ) {
-        if ( arrayDesign == null || arrayDesign.getId() == null ) {
+        if ( arrayDesign.getId() == null ) {
             throw new IllegalArgumentException();
         }
         long id = arrayDesign.getId();
@@ -99,7 +103,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
 
     @Override
     public Collection<CompositeSequence> compositeSequenceWithoutGenes( ArrayDesign arrayDesign ) {
-        if ( arrayDesign == null || arrayDesign.getId() == null ) {
+        if ( arrayDesign.getId() == null ) {
             throw new IllegalArgumentException();
         }
         long id = arrayDesign.getId();
@@ -377,7 +381,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
      * Get the ids of experiments that "originally" used this platform, but which don't any more due to a platform
      * switch.
      *
-     * @param  arrayDesign
+     * @param  arrayDesign a platform for which the statistic is computed
      * @return collection of experiment IDs.
      */
     @Override
@@ -398,7 +402,6 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
         //language=HQL
         final String queryString = "select count(distinct e) from ExpressionExperiment e inner join e.bioAssays b where b.originalPlatform = :arrayDesign";
 
-        //noinspection unchecked
         return ( Long ) this.getSessionFactory().getCurrentSession().createQuery( queryString )
                 .setParameter( "arrayDesign", arrayDesign )
                 .setCacheable( true )
@@ -421,102 +424,59 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
 
     @Override
     public Map<Long, Boolean> isMerged( Collection<Long> ids ) {
-
-        Map<Long, Boolean> eventMap = new HashMap<>();
-        if ( ids.size() == 0 ) {
-            return eventMap;
+        if ( ids.isEmpty() ) {
+            return Collections.emptyMap();
         }
-
-        //language=HQL
-        final String queryString =
-                "select ad.id, count(subs) from ArrayDesign as ad " + "left join ad.mergees subs where ad.id in (:ids) "
-                        + "group by ad";
+        final String queryString = "select ad.id, count(subs) as isMerged from ArrayDesign as ad left join ad.mergees subs where ad.id in (:ids) group by ad";
         //noinspection unchecked
         List<Object[]> list = this.getSessionFactory().getCurrentSession().createQuery( queryString )
                 .setParameterList( "ids", ids ).list();
-
-        this.putIdsInList( eventMap, list );
-        for ( Long id : ids ) {
-            if ( !eventMap.containsKey( id ) ) {
-                eventMap.put( id, Boolean.FALSE );
-            }
-        }
-
-        return eventMap;
+        return list.stream().collect( Collectors.toMap( row -> ( Long ) row[0], row -> ( Long ) row[1] > 0 ) );
     }
 
     @Override
     public Map<Long, Boolean> isMergee( final Collection<Long> ids ) {
-
         Map<Long, Boolean> eventMap = new HashMap<>();
         if ( ids.size() == 0 ) {
             return eventMap;
         }
-
         //language=HQL
-        final String queryString = "select ad.id, ad.mergedInto from ArrayDesign as ad where ad.id in (:ids) ";
+        final String queryString = "select ad.id, ad.mergedInto.id from ArrayDesign as ad where ad.id in (:ids) ";
         //noinspection unchecked
         List<Object[]> list = this.getSessionFactory().getCurrentSession().createQuery( queryString )
                 .setParameterList( "ids", ids ).list();
-
-        this.putIdsInListCheckMerger( eventMap, list );
-        for ( Long id : ids ) {
-            if ( !eventMap.containsKey( id ) ) {
-                eventMap.put( id, Boolean.FALSE );
-            }
-        }
-
-        return eventMap;
+        return list.stream().collect( Collectors.toMap( row -> ( Long ) row[0], row -> row[1] != null ) );
     }
 
     @Override
     public Map<Long, Boolean> isSubsumed( final Collection<Long> ids ) {
-        Map<Long, Boolean> eventMap = new HashMap<>();
         if ( ids.size() == 0 ) {
-            return eventMap;
+            return Collections.emptyMap();
         }
-
         //language=HQL
-        final String queryString = "select ad.id, ad.subsumingArrayDesign from ArrayDesign as ad where ad.id in (:ids) ";
+        final String queryString = "select ad.id, ad.subsumingArrayDesign.id from ArrayDesign as ad where ad.id in (:ids) ";
         //noinspection unchecked
         List<Object[]> list = this.getSessionFactory().getCurrentSession().createQuery( queryString )
                 .setParameterList( "ids", ids ).list();
-
-        this.putIdsInListCheckMerger( eventMap, list );
-        for ( Long id : ids ) {
-            if ( !eventMap.containsKey( id ) ) {
-                eventMap.put( id, Boolean.FALSE );
-            }
-        }
-        return eventMap;
+        return list.stream().collect( Collectors.toMap( row -> ( Long ) row[0], row -> row[1] != null ) );
     }
 
     @Override
     public Map<Long, Boolean> isSubsumer( Collection<Long> ids ) {
-
-        Map<Long, Boolean> eventMap = new HashMap<>();
         if ( ids.size() == 0 ) {
-            return eventMap;
+            return Collections.emptyMap();
         }
-
         //language=HQL
-        final String queryString = "select ad.id, count(subs) from ArrayDesign as ad inner join ad.subsumedArrayDesigns subs where ad.id in (:ids) group by ad";
+        final String queryString = "select ad.id, count(subs) from ArrayDesign as ad left join ad.subsumedArrayDesigns subs where ad.id in (:ids) group by ad";
         //noinspection unchecked
         List<Object[]> list = this.getSessionFactory().getCurrentSession().createQuery( queryString )
                 .setParameterList( "ids", ids ).list();
-
-        this.putIdsInList( eventMap, list );
-        for ( Long id : ids ) {
-            if ( !eventMap.containsKey( id ) ) {
-                eventMap.put( id, Boolean.FALSE );
-            }
-        }
-        return eventMap;
+        return list.stream().collect( Collectors.toMap( row -> ( Long ) row[0], row -> ( Long ) row[1] > 0 ) );
     }
 
     @Override
     public Map<CompositeSequence, Collection<BlatResult>> loadAlignments( ArrayDesign arrayDesign ) {
-        //noinspection unchecked,JpaQlInspection - blatResult not visible because it is in a sub-class (BlatAssociation)
+        //noinspection unchecked,JpaQlInspection - blatResult not visible because it is in a subclass (BlatAssociation)
         List<Object[]> m = this.getSessionFactory().getCurrentSession().createQuery(
                         "select cs, br from CompositeSequence cs "
                                 + " join cs.biologicalCharacteristic bs join bs.bioSequence2GeneProduct bs2gp"
@@ -553,35 +513,12 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
      * @return a value object with properties of the given array design.
      */
     @Override
-    public ArrayDesignValueObject loadValueObject( ArrayDesign ad ) {
-        ArrayDesignValueObject vo = new ArrayDesignValueObject( ad );
-
-        vo.setExpressionExperimentCount( getExpressionExperimentCountMap().getOrDefault( ad.getId(), 0L ).intValue() );
-        vo.setSwitchedExpressionExperimentCount( getSwitchedExpressionExperimentsCount( ad ).intValue() );
-
-        return vo;
+    protected ArrayDesignValueObject doLoadValueObject( ArrayDesign ad ) {
+        return new ArrayDesignValueObject( ad );
     }
 
     @Override
-    public List<ArrayDesignValueObject> loadValueObjects( Collection<ArrayDesign> entities ) {
-        List<ArrayDesignValueObject> results = super.loadValueObjects( entities );
-        populateBlacklisted( results );
-        return results;
-    }
-
-    @Override
-    public List<ArrayDesignValueObject> loadValueObjectsByIds( Collection<Long> ids ) {
-        if ( ids == null || ids.isEmpty() ) {
-            return new ArrayList<>();
-        }
-
-        ObjectFilter filter = new ObjectFilter( "ad", "id", Long.class, ObjectFilter.Operator.in, ids );
-
-        return loadValueObjectsPreFilter( Filters.singleFilter( filter ), null, 0, -1 );
-    }
-
-    @Override
-    public List<ArrayDesignValueObject> loadValueObjectsForEE( Long eeId ) {
+    public List<ArrayDesignValueObject> loadValueObjectsForEE( @Nullable Long eeId ) {
         if ( eeId == null ) {
             return new ArrayList<>();
         }
@@ -591,17 +528,28 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     }
 
     @Override
-    public Slice<ArrayDesignValueObject> loadValueObjectsPreFilter( Filters filters, Sort sort, int offset, int limit ) {
+    public Slice<ArrayDesignValueObject> loadValueObjectsPreFilter( @Nullable Filters filters, @Nullable Sort sort, int offset, int limit ) {
         Slice<ArrayDesignValueObject> results = super.loadValueObjectsPreFilter( filters, sort, offset, limit );
-        populateBlacklisted( results );
+        populateArrayDesignValueObjects( results );
         return results;
     }
 
     @Override
-    public List<ArrayDesignValueObject> loadValueObjectsPreFilter( Filters filters, Sort sort ) {
+    public List<ArrayDesignValueObject> loadValueObjectsPreFilter( @Nullable Filters filters, @Nullable Sort sort ) {
         List<ArrayDesignValueObject> results = super.loadValueObjectsPreFilter( filters, sort );
-        populateBlacklisted( results );
+        populateArrayDesignValueObjects( results );
         return results;
+    }
+
+    private void populateArrayDesignValueObjects( Collection<ArrayDesignValueObject> results ) {
+        StopWatch timer = StopWatch.createStarted();
+        populateIsMerged( results );
+        populateBlacklisted( results );
+        populateExpressionExperimentCount( results );
+        populateSwitchedExpressionExperimentCount( results );
+        if ( timer.getTime( TimeUnit.MILLISECONDS ) > 20 ) {
+            log.info( String.format( "Populating ArrayDesign VOs took %d ms.", timer.getTime( TimeUnit.MILLISECONDS ) ) );
+        }
     }
 
     @Override
@@ -619,7 +567,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     @Transactional
     public long numAllCompositeSequenceWithBioSequences( Collection<Long> ids ) {
 
-        if ( ids == null || ids.isEmpty() )
+        if ( ids.isEmpty() )
             return 0L;
 
         //language=HQL
@@ -644,8 +592,8 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     @Override
     @Transactional
     public long numAllCompositeSequenceWithBlatResults( Collection<Long> ids ) {
-        if ( ids == null || ids.size() == 0 ) {
-            throw new IllegalArgumentException();
+        if ( ids.isEmpty() ) {
+            return 0;
         }
         //language=HQL
         final String queryString =
@@ -670,8 +618,8 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     @Override
     @Transactional
     public long numAllCompositeSequenceWithGenes( Collection<Long> ids ) {
-        if ( ids == null || ids.size() == 0 ) {
-            throw new IllegalArgumentException();
+        if ( ids.isEmpty() ) {
+            return 0;
         }
         //language=HQL
         final String queryString =
@@ -698,8 +646,8 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     @Override
     @Transactional
     public long numAllGenes( Collection<Long> ids ) {
-        if ( ids == null || ids.size() == 0 ) {
-            throw new IllegalArgumentException();
+        if ( ids.isEmpty() ) {
+            return 0;
         }
         //language=HQL
         final String queryString =
@@ -780,7 +728,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
 
     @Override
     @Transactional
-    public int numExperiments( ArrayDesign arrayDesign ) {
+    public long numExperiments( ArrayDesign arrayDesign ) {
         //language=HQL
         final String queryString = "select distinct ee.id  from   "
                 + " ExpressionExperiment ee inner join ee.bioAssays bas join bas.arrayDesignUsed ad where ad = :ad";
@@ -798,21 +746,21 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     }
 
     @Override
-    @Transactional
+    @Transactional(readOnly = true)
     public long numGenes( ArrayDesign arrayDesign ) {
         //language=HQL
-        final String queryString =
-                "select count (distinct gene) from  CompositeSequence as cs inner join cs.arrayDesign as ar "
-                        + ", BioSequence2GeneProduct bs2gp, Gene gene inner join gene.products gp "
-                        + "where bs2gp.bioSequence=cs.biologicalCharacteristic and "
-                        + "bs2gp.geneProduct=gp and ar = :ar";
-        return ( Long ) this.getSessionFactory().getCurrentSession().createQuery( queryString )
-                .setParameter( "ar", arrayDesign ).list().iterator().next();
+        return ( ( BigInteger ) getSessionFactory().getCurrentSession().createSQLQuery(
+                        "select count(distinct g2cs.GENE) from GENE2CS g2cs "
+                                + "where g2cs.AD = :arrayDesignId" )
+                .setParameter( "arrayDesignId", arrayDesign.getId() )
+                .uniqueResult() ).longValue();
     }
 
     @Override
     public void remove( ArrayDesign arrayDesign ) {
         arrayDesign = this.load( arrayDesign.getId() );
+        if ( arrayDesign == null )
+            return; /* already removed... */
         //getSession().buildLockRequest( LockOptions.NONE ).lock( arrayDesign );
         Hibernate.initialize( arrayDesign.getMergees() );
         Hibernate.initialize( arrayDesign.getSubsumedArrayDesigns() );
@@ -831,9 +779,6 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
 
     @Override
     public void removeBiologicalCharacteristics( final ArrayDesign arrayDesign ) {
-        if ( arrayDesign == null ) {
-            throw new IllegalArgumentException( "Array design cannot be null" );
-        }
         Session session = this.getSessionFactory().getCurrentSession();
         session.buildLockRequest( LockOptions.NONE ).lock( arrayDesign );
 
@@ -930,23 +875,14 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     }
 
     @Override
-    public ArrayDesign thawLite( ArrayDesign arrayDesign ) {
-        if ( arrayDesign == null ) {
-            throw new IllegalArgumentException( "array design cannot be null" );
-        }
-        List res = this.getSessionFactory().getCurrentSession().createQuery(
+    public ArrayDesign thawLite( @NonNull ArrayDesign arrayDesign ) {
+        return Objects.requireNonNull( ( ArrayDesign ) this.getSessionFactory().getCurrentSession().createQuery(
                         "select distinct a from ArrayDesign a left join fetch a.subsumedArrayDesigns "
                                 + " left join fetch a.mergees left join fetch a.designProvider left join fetch a.primaryTaxon "
                                 + " join fetch a.auditTrail trail join fetch trail.events join fetch a.curationDetails left join fetch a.externalReferences"
                                 + " left join fetch a.subsumingArrayDesign left join fetch a.mergedInto left join fetch a.alternativeTo where a.id=:adId" )
-                .setParameter( "adId", arrayDesign.getId() ).list();
-
-        if ( res.size() == 0 ) {
-            throw new IllegalArgumentException(
-                    "No array design with id=" + arrayDesign.getId() + " could be loaded." );
-        }
-
-        return ( ArrayDesign ) res.get( 0 );
+                .setParameter( "adId", arrayDesign.getId() )
+                .uniqueResult(), "No array design with id=" + arrayDesign.getId() + " could be loaded." );
     }
 
     @Override
@@ -967,7 +903,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     public Boolean updateSubsumingStatus( ArrayDesign candidateSubsumer, ArrayDesign candidateSubsumee ) {
 
         if ( candidateSubsumee.equals( candidateSubsumer ) ) {
-            log.warn("Attempt to check a platform against itself for subsuming!");
+            log.warn( "Attempt to check a platform against itself for subsuming!" );
             return false;
         }
 
@@ -1042,30 +978,8 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
         return true;
     }
 
-    /**
-     * Gets the number of expression experiments per ArrayDesign for all array designs.
-     *
-     * In case you're wondering why we're retrieving counts for all AD at once, it's just better to have a single
-     * cacheable query to cover all possible cases.
-     */
-    private Map<Long, Long> getExpressionExperimentCountMap() {
-        //language=HQL
-        final String queryString = "select ad.id, count(distinct ee) from   "
-                + " ExpressionExperiment ee inner join ee.bioAssays bas inner join bas.arrayDesignUsed ad group by ad";
-
-        //noinspection unchecked
-        List<Object[]> list = this.getSessionFactory().getCurrentSession().createQuery( queryString )
-                .setCacheable( true )
-                .list();
-
-        if ( list.size() < 2 )
-            AbstractDao.log.warn( list.size() + " rows from getExpressionExperimentCountMap query" );
-
-        return list.stream().collect( Collectors.toMap( o -> ( Long ) o[0], o -> ( Long ) o[1] ) );
-    }
-
     @Override
-    protected Query getLoadValueObjectsQuery( Filters filters, Sort sort, EnumSet<QueryHint> hints ) {
+    protected Query getLoadValueObjectsQuery( @Nullable Filters filters, @Nullable Sort sort, EnumSet<QueryHint> hints ) {
         // FIXME: the distinct is necessary because the ACL jointure creates duplicated platforms
         String queryString =
                 "select distinct ad from ArrayDesign as ad "
@@ -1086,11 +1000,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
 
         queryString += AclQueryUtils.formAclJoinClause( "ad" );
         queryString += AclQueryUtils.formAclRestrictionClause();
-        queryString += ObjectFilterQueryUtils.formRestrictionClause( filters );
-
-        if ( sort != null ) {
-            queryString += ObjectFilterQueryUtils.formOrderByClause( sort );
-        }
+        queryString += ObjectFilterQueryUtils.formRestrictionAndGroupByAndOrderByClauses( filters, null, sort );
 
         Query query = this.getSessionFactory().getCurrentSession().createQuery( queryString );
 
@@ -1098,14 +1008,11 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
         AclQueryUtils.addAclRestrictionParameters( query );
         ObjectFilterQueryUtils.addRestrictionParameters( query, filters );
 
-        // FIXME: caching does not work for relationships
-        // query.setCacheable( true );
-
         return query;
     }
 
     @Override
-    protected Query getCountValueObjectsQuery( Filters filters ) {
+    protected Query getCountValueObjectsQuery( @Nullable Filters filters ) {
         // contain duplicated platforms
         String queryString =
                 "select count(distinct ad) from ArrayDesign as ad "
@@ -1134,47 +1041,65 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
         AclQueryUtils.addAclRestrictionParameters( query );
         ObjectFilterQueryUtils.addRestrictionParameters( query, filters );
 
-        query.setCacheable( true );
-
         return query;
+    }
+
+    private void populateIsMerged( Collection<ArrayDesignValueObject> results ) {
+        Map<Long, Boolean> isMergedByArrayDesignId = isMerged( EntityUtils.getIds( results ) );
+        for ( ArrayDesignValueObject advo : results ) {
+            advo.setIsMerged( isMergedByArrayDesignId.get( advo.getId() ) );
+        }
     }
 
     private void populateBlacklisted( Collection<ArrayDesignValueObject> vos ) {
 
         if ( vos.isEmpty() ) return;
 
-        Map<String, ArrayDesignValueObject> shortNames = new HashMap<>();
-        for ( ArrayDesignValueObject vs : vos ) {
-            shortNames.put( vs.getShortName(), vs );
-        }
+        Set<String> shortNames = vos.stream()
+                .map( ArrayDesignValueObject::getShortName )
+                .collect( Collectors.toSet() );
 
         //noinspection unchecked
-        List<BlacklistedPlatform> r = this.getSessionFactory().getCurrentSession()
-                .createQuery( "select b from BlacklistedPlatform b where b.shortName in :n" )
-                .setParameterList( "n", shortNames.keySet() ).list();
-        for ( BlacklistedPlatform b : r ) {
-            shortNames.get( b.getShortName() ).setBlackListed( true );
-        }
+        Set<String> blacklistedShortnames = new HashSet<>( this.getSessionFactory().getCurrentSession()
+                .createQuery( "select b.shortName from BlacklistedPlatform b where b.shortName in :n" )
+                .setParameterList( "n", shortNames )
+                .list() );
 
-    }
-
-    private void putIdsInList( Map<Long, Boolean> eventMap, List<Object[]> list ) {
-        for ( Object[] o : list ) {
-            Long id = ( Long ) o[0];
-            Long mergeeCount = ( Long ) o[1];
-            if ( mergeeCount != null && mergeeCount > 0 ) {
-                eventMap.put( id, Boolean.TRUE );
-            }
+        for ( ArrayDesignValueObject vo : vos ) {
+            vo.setBlackListed( blacklistedShortnames.contains( vo.getShortName() ) );
         }
     }
 
-    private void putIdsInListCheckMerger( Map<Long, Boolean> eventMap, List<Object[]> list ) {
-        for ( Object[] o : list ) {
-            Long id = ( Long ) o[0];
-            ArrayDesign merger = ( ArrayDesign ) o[1];
-            if ( merger != null ) {
-                eventMap.put( id, Boolean.TRUE );
-            }
+    private void populateExpressionExperimentCount( Collection<ArrayDesignValueObject> entities ) {
+        //noinspection unchecked
+        List<Object[]> list = this.getSessionFactory().getCurrentSession().createQuery(
+                        "select ad.id, count(distinct ee) from ExpressionExperiment ee "
+                                + "join ee.bioAssays bas "
+                                + "join bas.arrayDesignUsed ad "
+                                + "group by ad" )
+                .setCacheable( true )
+                .list();
+        Map<Long, Long> countById = list.stream()
+                .collect( Collectors.toMap( o -> ( Long ) o[0], o -> ( Long ) o[1] ) );
+        for ( ArrayDesignValueObject vo : entities ) {
+            // missing implies no EEs, so zero is a valid default
+            vo.setExpressionExperimentCount( countById.getOrDefault( vo.getId(), 0L ) );
+        }
+    }
+
+    private void populateSwitchedExpressionExperimentCount( Collection<ArrayDesignValueObject> entities ) {
+        //noinspection unchecked
+        List<Object[]> results = this.getSessionFactory().getCurrentSession().createQuery(
+                        "select b.originalPlatform.id, count(distinct e) from ExpressionExperiment e "
+                                + "join e.bioAssays b "
+                                + "group by b.originalPlatform" )
+                .setCacheable( true )
+                .list();
+        Map<Long, Long> switchedCountById = results.stream()
+                .collect( Collectors.toMap( row -> ( Long ) row[0], row -> ( Long ) row[1] ) );
+        for ( ArrayDesignValueObject vo : entities ) {
+            // missing implies no switched EEs, so zero is a valid default
+            vo.setSwitchedExpressionExperimentCount( switchedCountById.getOrDefault( vo.getId(), 0L ) );
         }
     }
 

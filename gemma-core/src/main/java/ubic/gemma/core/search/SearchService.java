@@ -115,21 +115,14 @@ public interface SearchService {
 
     /**
      * Convert a {@link SearchResult} to its VO flavour.
-     *
-     * The resulting search result preserve the result ID, score and highlighted text, but see its {@link SearchResult#getResultClass()}
-     * and {@link SearchResult#getResultObject()} transformed.
-     *
+     * <p>
+     * The resulting search result preserve the result ID, score and highlighted text, and {@link SearchResult#getResultClass()},
+     * but sees its {@link SearchResult#getResultObject()} transformed.
+     * <p>
      * The conversion logic is mainly defined by the corresponding {@link ubic.gemma.persistence.service.BaseVoEnabledService}
-     * that match the result type.
+     * that match the result type. See {@link #getSupportedResultTypes()} for a set of supported result types this o
+     * function can handle.
+     * @throws IllegalArgumentException if the passed search result is not supported for VO conversion
      */
-    <T extends Identifiable, U extends IdentifiableValueObject<T>> SearchResult<U> loadValueObject( SearchResult<T> searchResult );
-
-    /**
-     * Convert a collection of {@link SearchResult} to their VO flavours.
-     *
-     * @param searchResults a collection of {@link SearchResult}, which may contain a mixture of different {@link Identifiable}
-     *                      result objects
-     * @return converted search results as per {@link #loadValueObject(SearchResult)}
-     */
-    List<SearchResult<? extends IdentifiableValueObject<? extends Identifiable>>> loadValueObjects( Collection<SearchResult<ExpressionExperiment>> searchResults );
+    <T extends Identifiable, U extends IdentifiableValueObject<T>> SearchResult<U> loadValueObject( SearchResult<T> searchResult ) throws IllegalArgumentException;
 }
