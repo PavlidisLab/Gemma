@@ -286,14 +286,10 @@ public class SearchServiceImpl implements SearchService {
         if ( resultObject != null ) {
             try {
                 //noinspection unchecked
-                U resultObjectVo = ( U ) resultObjectConversionService.convert( resultObject, IdentifiableValueObject.class );
-                sr.setResultObject( resultObjectVo );
+                sr.setResultObject( ( U ) resultObjectConversionService.convert( resultObject, IdentifiableValueObject.class ) );
             } catch ( ConverterNotFoundException e ) {
                 throw new IllegalArgumentException( "Result type " + searchResult.getResultClass() + " is not supported for VO conversion.", e );
             }
-        }
-        if ( sr.getResultObject() == null ) {
-            log.warn( String.format( "Result object for %s is null.", sr ) );
         }
         return sr;
     }
