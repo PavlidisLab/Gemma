@@ -228,20 +228,20 @@ public class SearchServiceVoConversionTest extends AbstractJUnit4SpringContextTe
 
     @Test
     public void testConvertArrayDesign() {
-        searchService.loadValueObject( new SearchResult<>( ad ) );
+        searchService.loadValueObject( new SearchResult<>( ad, "test object" ) );
         verify( arrayDesignService ).loadValueObject( ad );
     }
 
     @Test
     public void testConvertExpressionExperiment() {
-        searchService.loadValueObject( new SearchResult<>( ee ) );
+        searchService.loadValueObject( new SearchResult<>( ee, "test object" ) );
         verify( expressionExperimentService ).loadValueObject( ee );
     }
 
     @Test
     public void testConvertPhenotypeAssociation() {
         // this is a complicated one because
-        assertThat( searchService.loadValueObject( new SearchResult<>( phenotypeAssociation ) ) )
+        assertThat( searchService.loadValueObject( new SearchResult<>( phenotypeAssociation, "test object" ) ) )
                 .extracting( "resultObject" )
                 .isSameAs( phenotypeAssociation );
     }
@@ -249,13 +249,13 @@ public class SearchServiceVoConversionTest extends AbstractJUnit4SpringContextTe
     @Test
     public void testConvertGeneSet() {
         // this is another complicated one because GeneSetService does not implement BaseVoEnabledService
-        searchService.loadValueObject( new SearchResult<>( gs ) );
+        searchService.loadValueObject( new SearchResult<>( gs, "test object" ) );
         verify( geneSetService ).loadValueObject( gs );
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void testUnsupportedResultTypeRaisesIllegalArgumentException() {
-        searchService.loadValueObject( new SearchResult<>( new ContrastResult() ) );
+        searchService.loadValueObject( new SearchResult<>( new ContrastResult(), "test object" ) );
     }
 
 }

@@ -28,31 +28,31 @@ public class SearchResultTest {
 
     @Test
     public void testResultObject() {
-        SearchResult<Identifiable> sr = new SearchResult<>( new FooBar( 1L ) );
+        SearchResult<Identifiable> sr = new SearchResult<>( new FooBar( 1L ), "test object" );
         assertThat( sr.getScore() ).isEqualTo( 1.0 );
         assertThat( sr.getHighlightedText() ).isNull();
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void testResultObjectWithNullId() {
-        new SearchResult<Identifiable>( new FooBar( null ) );
+        new SearchResult<Identifiable>( new FooBar( null ), "test object" );
     }
 
     @Test
     public void testSetResultObject() {
-        SearchResult<Identifiable> sr = new SearchResult<>( FooBar.class, 1L );
+        SearchResult<Identifiable> sr = new SearchResult<>( FooBar.class, 1L, "test object" );
         sr.setResultObject( new FooBar( 1L ) );
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void testSetResultObjectWithNullId() {
-        SearchResult<Identifiable> sr = new SearchResult<>( FooBar.class, 1L );
+        SearchResult<Identifiable> sr = new SearchResult<>( FooBar.class, 1L, "test object" );
         sr.setResultObject( new FooBar( null ) );
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void testSetResultObjectWithDifferentId() {
-        SearchResult<Identifiable> sr = new SearchResult<>( FooBar.class, 1L );
+        SearchResult<Identifiable> sr = new SearchResult<>( FooBar.class, 1L, "test object" );
         sr.setResultObject( new FooBar( 2L ) );
     }
 

@@ -209,10 +209,11 @@ public class CompassSearchSource implements SearchSource {
         if ( !settings.getUseIndices() )
             return new HashSet<>();
 
+        Object source = bean.getSettings().getSetting( "compass.name" );
         CompassTemplate template = new CompassTemplate( bean );
         Set<SearchResult<T>> searchResults;
         try {
-            searchResults = template.execute( session -> CompassSearchSource.this.performSearch( settings, session, clazz ) );
+            searchResults = template.execute( session -> CompassSearchSource.this.performSearch( settings, session, clazz, source ) );
         } catch ( SearchEngineQueryParseException e ) {
             throw new CompassSearchException( "Compass failed to parse the search query.", e );
         } catch ( CompassException e ) {
@@ -224,7 +225,7 @@ public class CompassSearchSource implements SearchSource {
 
         if ( CompassSearchSource.log.isDebugEnabled() ) {
             CompassSearchSource.log
-                    .debug( "Compass search via " + bean.getSettings().getSetting( "compass.name" ) + " : " + settings
+                    .debug( "Compass search via " + source + " : " + settings
                             + " -> " + searchResults.size() + " hits" );
         }
 
@@ -234,7 +235,7 @@ public class CompassSearchSource implements SearchSource {
     /**
      * Runs inside Compass transaction
      */
-    private <T extends Identifiable> Set<SearchResult<T>> performSearch( SearchSettings settings, CompassSession session, Class<T> clazz ) {
+    private <T extends Identifiable> Set<SearchResult<T>> performSearch( SearchSettings settings, CompassSession session, Class<T> clazz, Object source ) {
         StopWatch watch = new StopWatch();
         watch.start();
         String enhancedQuery = settings.getQuery().trim();
@@ -274,7 +275,7 @@ public class CompassSearchSource implements SearchSource {
                             + " took " + watch.getTime() + " ms" );
         }
 
-        return this.getSearchResults( hits, clazz );
+        return this.getSearchResults( hits, clazz, source );
     }
 
     /**
@@ -312,7 +313,7 @@ public class CompassSearchSource implements SearchSource {
      * @param  hits CompassHits object
      * @return collection of SearchResult. These *do not* contain the actual entities, just their IDs and class.
      */
-    private <T extends Identifiable> Set<SearchResult<T>> getSearchResults( CompassHits hits, Class<T> hitsClass ) {
+    private <T extends Identifiable> Set<SearchResult<T>> getSearchResults( CompassHits hits, Class<T> hitsClass, Object source ) {
         StopWatch timer = new StopWatch();
         timer.start();
         Set<SearchResult<T>> results = new HashSet<>();
@@ -336,7 +337,7 @@ public class CompassSearchSource implements SearchSource {
             }
 
             //noinspection unchecked
-            SearchResult<T> sr = new SearchResult<>( ( T ) resultObject );
+            SearchResult<T> sr = new SearchResult<>( ( T ) resultObject, source );
             sr.setScore( score * CompassSearchSource.COMPASS_HIT_SCORE_PENALTY_FACTOR );
             sr.setHighlightedText( this.getHighlightedText( hits, i ) );
 
@@ -389,9 +390,9 @@ public class CompassSearchSource implements SearchSource {
         return filteredResults;
     }
 
-    private <T extends Identifiable> List<SearchResult> indirectDbHitsToSearchResults( Collection<T> entities, SearchResult<?> compassHitDerivedFrom ) {
+    private <T extends Identifiable> List<SearchResult<T>> indirectDbHitsToSearchResults( Collection<T> entities, SearchResult<?> compassHitDerivedFrom ) {
         StopWatch timer = StopWatch.createStarted();
-        List<SearchResult> results = new ArrayList<>();
+        List<SearchResult<T>> results = new ArrayList<>();
         for ( T e : entities ) {
             if ( e == null ) {
                 if ( CompassSearchSource.log.isDebugEnabled() )
@@ -402,14 +403,9 @@ public class CompassSearchSource implements SearchSource {
                 log.warn( "Search result object with null ID." );
                 continue;
             }
-            SearchResult<T> esr;
-            if ( compassHitDerivedFrom != null ) {
-                esr = new SearchResult<>( e );
-                esr.setScore( compassHitDerivedFrom.getScore() * CompassSearchSource.INDIRECT_DB_HIT_PENALTY );
-                esr.setHighlightedText( compassHitDerivedFrom.getHighlightedText() );
-            } else {
-                esr = new SearchResult<>( e );
-            }
+            SearchResult<T> esr = new SearchResult<>( e, compassHitDerivedFrom.getSource() );
+            esr.setScore( compassHitDerivedFrom.getScore() * CompassSearchSource.INDIRECT_DB_HIT_PENALTY );
+            esr.setHighlightedText( compassHitDerivedFrom.getHighlightedText() );
             results.add( esr );
         }
         if ( timer.getTime() > 1000 ) {

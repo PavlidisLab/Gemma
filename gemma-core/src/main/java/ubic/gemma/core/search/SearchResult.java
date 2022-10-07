@@ -20,6 +20,7 @@ package ubic.gemma.core.search;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.ToString;
 import ubic.gemma.model.common.Identifiable;
 
 import javax.annotation.Nullable;
@@ -33,6 +34,7 @@ import java.util.Objects;
 @Data
 @ParametersAreNonnullByDefault
 @EqualsAndHashCode(of = { "resultClass", "resultId" })
+@ToString(of = { "resultId", "resultClass", "highlightedText", "score", "source" })
 public class SearchResult<T extends Identifiable> implements Comparable<SearchResult<?>> {
 
     /**
@@ -46,19 +48,10 @@ public class SearchResult<T extends Identifiable> implements Comparable<SearchRe
     }
 
     /**
-     * Create a search result from an entity and a score.
-     */
-    public static <T extends Identifiable> SearchResult<T> from( T entity, double score ) {
-        SearchResult<T> sr = new SearchResult<>( entity );
-        sr.setScore( score );
-        return sr;
-    }
-
-    /**
      * Create a search result from an entity, a score and some highlighted text.
      */
-    public static <T extends Identifiable> SearchResult<T> from( T entity, double score, String highlightedText ) {
-        SearchResult<T> sr = new SearchResult<>( entity );
+    public static <T extends Identifiable> SearchResult<T> from( T entity, double score, @Nullable String highlightedText, Object source ) {
+        SearchResult<T> sr = new SearchResult<>( entity, source );
         sr.setScore( score );
         sr.setHighlightedText( highlightedText );
         return sr;
@@ -97,13 +90,21 @@ public class SearchResult<T extends Identifiable> implements Comparable<SearchRe
      */
     private double score = 1.0;
 
-    public SearchResult( T resultObject ) {
+    /**
+     * Object representing the source of this result object.
+     * <p>
+     * This can simply be a {@link String}.
+     */
+    private final Object source;
+
+    public SearchResult( T resultObject, Object source ) {
         if ( resultObject.getId() == null ) {
             throw new IllegalArgumentException( "THe result object ID cannot be null." );
         }
         this.resultClass = resultObject.getClass();
         this.resultId = resultObject.getId();
         setResultObject( resultObject );
+        this.source = source;
     }
 
     /**
@@ -112,9 +113,10 @@ public class SearchResult<T extends Identifiable> implements Comparable<SearchRe
      * This is used when the class and ID is known beforehand, but the result hasn't been retrieve yet from persistent
      * storage.
      */
-    public SearchResult( Class<? extends Identifiable> entityClass, long entityId ) {
+    public SearchResult( Class<? extends Identifiable> entityClass, long entityId, Object source ) {
         this.resultClass = entityClass;
         this.resultId = entityId;
+        this.source = source;
     }
 
     @Override
@@ -135,11 +137,5 @@ public class SearchResult<T extends Identifiable> implements Comparable<SearchRe
             throw new IllegalArgumentException( "The result object cannot be replaced with one that has a different ID." );
         }
         this.resultObject = resultObject;
-    }
-
-    @Override
-    public String toString() {
-        return resultClass.getSimpleName() + "[ID=" + this.resultId + "] matched in: "
-                + ( this.highlightedText != null ? "'" + this.highlightedText + "'" : "(?)" );
     }
 }

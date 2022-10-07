@@ -77,6 +77,7 @@ import ubic.gemma.persistence.util.CacheUtils;
 import ubic.gemma.persistence.util.EntityUtils;
 import ubic.gemma.persistence.util.Settings;
 
+import javax.annotation.Nullable;
 import javax.annotation.PostConstruct;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
@@ -277,7 +278,7 @@ public class SearchServiceImpl implements SearchService {
     @Override
     @Transactional(readOnly = true)
     public <T extends Identifiable, U extends IdentifiableValueObject<T>> SearchResult<U> loadValueObject( SearchResult<T> searchResult ) throws IllegalArgumentException {
-        SearchResult<U> sr = new SearchResult<>( searchResult.getResultClass(), searchResult.getResultId() );
+        SearchResult<U> sr = new SearchResult<>( searchResult.getResultClass(), searchResult.getResultId(), searchResult.getSource() );
         sr.setScore( searchResult.getScore() );
         sr.setHighlightedText( sr.getHighlightedText() );
         // null if a valid state if the original result is provisional, then we return a provisional VO
@@ -290,6 +291,9 @@ public class SearchServiceImpl implements SearchService {
             } catch ( ConverterNotFoundException e ) {
                 throw new IllegalArgumentException( "Result type " + searchResult.getResultClass() + " is not supported for VO conversion.", e );
             }
+        }
+        if ( sr.getResultObject() == null ) {
+            log.warn( String.format( "Result object for %s is null.", sr ) );
         }
         return sr;
     }
@@ -413,7 +417,7 @@ public class SearchServiceImpl implements SearchService {
         if ( settings.getUseGo() ) {
             try {
                 results.addAll( this.dbHitsToSearchResult(
-                        geneSearchService.getGOGroupGenes( settings.getQuery(), settings.getTaxon() ), "From GO group" ) );
+                        geneSearchService.getGOGroupGenes( settings.getQuery(), settings.getTaxon() ), "From GO group", "GeneSearchService.getGOGroupGenes" ) );
             } catch ( OntologySearchException e ) {
                 throw new BaseCodeOntologySearchException( e );
             }
@@ -531,7 +535,7 @@ public class SearchServiceImpl implements SearchService {
 
     private Collection<SearchResult<ExpressionExperimentSet>> experimentSetSearch( SearchSettings settings ) throws SearchException {
         Collection<SearchResult<ExpressionExperimentSet>> results = this
-                .dbHitsToSearchResult( this.experimentSetService.findByName( settings.getQuery() ), null );
+                .dbHitsToSearchResult( this.experimentSetService.findByName( settings.getQuery() ), null, "ExperimentSetService.findByName" );
 
         results.addAll( this.compassSearchSource.searchExperimentSet( settings ) );
         return results;
@@ -548,7 +552,7 @@ public class SearchServiceImpl implements SearchService {
      *                     results.
      */
     private Collection<SearchResult<ArrayDesign>> arrayDesignSearch( SearchSettings settings,
-            Collection<SearchResult<CompositeSequence>> probeResults ) throws SearchException {
+            @Nullable Collection<SearchResult<CompositeSequence>> probeResults ) throws SearchException {
 
         StopWatch watch = StopWatch.createStarted();
         String searchString = settings.getQuery();
@@ -556,14 +560,14 @@ public class SearchServiceImpl implements SearchService {
 
         ArrayDesign shortNameResult = arrayDesignService.findByShortName( searchString );
         if ( shortNameResult != null ) {
-            results.add( new SearchResult<>( shortNameResult ) );
+            results.add( new SearchResult<>( shortNameResult, "ArrayDesignService.findByShortName" ) );
             return results;
         }
 
         Collection<ArrayDesign> nameResult = arrayDesignService.findByName( searchString );
         if ( nameResult != null && !nameResult.isEmpty() ) {
             for ( ArrayDesign ad : nameResult ) {
-                results.add( new SearchResult<>( ad ) );
+                results.add( new SearchResult<>( ad, "ArrayDesignService.findByShortName" ) );
             }
             return results;
         }
@@ -571,7 +575,7 @@ public class SearchServiceImpl implements SearchService {
         BlacklistedEntity b = blackListDao.findByAccession( searchString );
         if ( b != null ) {
             // FIXME: I'm not sure the ID is a good thing to put here
-            SearchResult<ArrayDesign> sr = new SearchResult<>( ArrayDesign.class, b.getId() );
+            SearchResult<ArrayDesign> sr = new SearchResult<>( ArrayDesign.class, b.getId(), "BlackListDao.findByAccession" );
             sr.setHighlightedText( "Blacklisted accessions are not loaded into Gemma" );
             results.add( sr );
             return results;
@@ -579,14 +583,14 @@ public class SearchServiceImpl implements SearchService {
 
         Collection<ArrayDesign> altNameResults = arrayDesignService.findByAlternateName( searchString );
         for ( ArrayDesign arrayDesign : altNameResults ) {
-            SearchResult<ArrayDesign> sr = new SearchResult<>( arrayDesign );
+            SearchResult<ArrayDesign> sr = new SearchResult<>( arrayDesign, "ArrayDesignService.findByAlternateName" );
             sr.setScore( 0.9 );
             results.add( sr );
         }
 
         Collection<ArrayDesign> manufacturerResults = arrayDesignService.findByManufacturer( searchString );
         for ( ArrayDesign arrayDesign : manufacturerResults ) {
-            SearchResult<ArrayDesign> sr = new SearchResult<>( arrayDesign );
+            SearchResult<ArrayDesign> sr = new SearchResult<>( arrayDesign, "ArrayDesignService.findByManufacturer" );
             sr.setScore( 0.9 );
             results.add( sr );
         }
@@ -616,7 +620,7 @@ public class SearchServiceImpl implements SearchService {
             if ( cs == null || cs.getArrayDesign() == null ) {
                 continue;
             }
-            SearchResult<ArrayDesign> sr = new SearchResult<>( cs.getArrayDesign() );
+            SearchResult<ArrayDesign> sr = new SearchResult<>( cs.getArrayDesign(), "ArrayDesign associated to probes obtained by a Compass search." );
             // indirect hit penalty
             sr.setScore( INDIRECT_HIT_PENALTY * r.getScore() );
             results.add( sr );
@@ -820,7 +824,7 @@ public class SearchServiceImpl implements SearchService {
                     if ( !clazz.isAssignableFrom( ExpressionExperiment.class ) ) {
                         matchedText = matchedText + " via " + clazz.getSimpleName();
                     }
-                    SearchResult<ExpressionExperiment> sr = new SearchResult<>( ExpressionExperiment.class, eeID );
+                    SearchResult<ExpressionExperiment> sr = new SearchResult<>( ExpressionExperiment.class, eeID, "CharacteristicService.findExperimentsByUris" );
                     sr.setHighlightedText( matchedText );
                     results.add( sr );
                     if ( limit > 0 && results.size() >= limit ) {
@@ -1018,7 +1022,7 @@ public class SearchServiceImpl implements SearchService {
     /**
      * Convert hits from database searches into SearchResults.
      */
-    private <T extends Identifiable> Collection<SearchResult<T>> dbHitsToSearchResult( Collection<T> entities, String matchText ) {
+    private <T extends Identifiable> Collection<SearchResult<T>> dbHitsToSearchResult( Collection<T> entities, String matchText, String source ) {
         StopWatch watch = StopWatch.createStarted();
         List<SearchResult<T>> results = new ArrayList<>();
         for ( T e : entities ) {
@@ -1030,7 +1034,7 @@ public class SearchServiceImpl implements SearchService {
             if ( e.getId() == null ) {
                 log.warn( "Search result object with null ID." );
             }
-            SearchResult<T> esr = new SearchResult<>( e );
+            SearchResult<T> esr = new SearchResult<>( e, source );
             esr.setHighlightedText( matchText );
             results.add( esr );
         }
@@ -1091,7 +1095,7 @@ public class SearchServiceImpl implements SearchService {
 
             BlacklistedEntity b = blackListDao.findByAccession( settings.getQuery() );
             if ( b != null ) {
-                SearchResult<ExpressionExperiment> sr = new SearchResult<>( ExpressionExperiment.class, b.getId() );
+                SearchResult<ExpressionExperiment> sr = new SearchResult<>( ExpressionExperiment.class, b.getId(), "BlackListDao.findByAccession" );
                 sr.setHighlightedText( "Blacklisted accessions are not loaded into Gemma" );
                 results.add( sr );
                 return results;
@@ -1203,7 +1207,7 @@ public class SearchServiceImpl implements SearchService {
                             .getExpressionExperiments( ad );
                     if ( expressionExperiments.size() > 0 )
                         results.addAll( this.dbHitsToSearchResult( expressionExperiments,
-                                ad.getShortName() + " - " + ad.getName() ) );
+                                ad.getShortName() + " - " + ad.getName(), String.format( "ArrayDesignService.getExpressionExperiments(%s)", ad ) ) );
                 }
             }
             if ( watch.getTime() > 500 )
@@ -1379,7 +1383,7 @@ public class SearchServiceImpl implements SearchService {
                         Gene g = Gene.Factory.newInstance();
                         g.setId( gvo.getId() );
                         g.setTaxon( settings.getTaxon() );
-                        SearchResult<Gene> sr = new SearchResult<>( g );
+                        SearchResult<Gene> sr = new SearchResult<>( g, "PhenotypeAssociationManagerService.findCandidateGenes" );
                         sr.setHighlightedText( phenotype.getValue() + " (" + phenotype.getValueUri() + ")" );
 
                         // if ( gvo.getScore() != null ) {
@@ -1407,9 +1411,9 @@ public class SearchServiceImpl implements SearchService {
         if ( settings.getTaxon() != null ) {
             hits = this
                     .dbHitsToSearchResult( this.geneSetService.findByName( settings.getQuery(), settings.getTaxon() ),
-                            null );
+                            null, "GeneSetService.findByName" );
         } else {
-            hits = this.dbHitsToSearchResult( this.geneSetService.findByName( settings.getQuery() ), null );
+            hits = this.dbHitsToSearchResult( this.geneSetService.findByName( settings.getQuery() ), null, "GeneSetService.findByName" );
         }
 
         hits.addAll( this.compassSearchSource.searchGeneSet( settings ) );
@@ -1641,7 +1645,7 @@ public class SearchServiceImpl implements SearchService {
                 ////
                 if ( settings.hasResultType( Gene.class ) ) {
                     results.put( Gene.class, new ArrayList<>() );
-                    results.get( Gene.class ).add( new SearchResult<>( g ) );
+                    results.get( Gene.class ).add( new SearchResult<>( g, "GeneService.findByNCBIId" ) );
 
                 }
             }

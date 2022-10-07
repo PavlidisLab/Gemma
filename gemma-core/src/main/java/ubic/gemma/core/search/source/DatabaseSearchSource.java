@@ -199,7 +199,7 @@ public class DatabaseSearchSource implements SearchSource {
         if ( ad != null ) {
             CompositeSequence cs = compositeSequenceService.findByName( ad, searchString );
             if ( cs != null )
-                matchedCs.add( SearchResult.from( cs, MATCH_BY_NAME_SCORE ) );
+                matchedCs.add( SearchResult.from( cs, MATCH_BY_NAME_SCORE, null, "CompositeSequenceService.findByName" ) );
         } else {
             matchedCs = toSearchResults( compositeSequenceService.findByName( searchString ), MATCH_BY_NAME_SCORE );
         }
@@ -273,21 +273,21 @@ public class DatabaseSearchSource implements SearchSource {
 
         Collection<ExpressionExperiment> ees = expressionExperimentService.findByName( query );
         for ( ExpressionExperiment ee : ees ) {
-            results.add( SearchResult.from( ee, MATCH_BY_NAME_SCORE, ee.getName() ) );
+            results.add( SearchResult.from( ee, MATCH_BY_NAME_SCORE, ee.getName(), "ExpressionExperimentService.findByName" ) );
         }
 
         // in response to https://github.com/PavlidisLab/Gemma/issues/140, always keep going if admin.
         if ( results.isEmpty() || SecurityUtil.isUserAdmin() ) {
             ExpressionExperiment ee = expressionExperimentService.findByShortName( query );
             if ( ee != null ) {
-                results.add( SearchResult.from( ee, MATCH_BY_SHORT_NAME_SCORE, ee.getShortName() ) );
+                results.add( SearchResult.from( ee, MATCH_BY_SHORT_NAME_SCORE, ee.getShortName(), "ExpressionExperimentService.findByShortName" ) );
             }
         }
 
         if ( results.isEmpty() || SecurityUtil.isUserAdmin() ) {
             ees = expressionExperimentService.findByAccession( query ); // this will find split parts
             for ( ExpressionExperiment e : ees ) {
-                results.add( SearchResult.from( e, MATCH_BY_ACCESSION_SCORE, e.getId().toString() ) );
+                results.add( SearchResult.from( e, MATCH_BY_ACCESSION_SCORE, e.getId().toString(), "ExpressionExperimentService.findByAccession" ) );
             }
         }
 
@@ -296,7 +296,7 @@ public class DatabaseSearchSource implements SearchSource {
                 // maybe user put in a primary key value.
                 ExpressionExperiment ee = expressionExperimentService.load( Long.parseLong( query ) );
                 if ( ee != null ) {
-                    results.add( SearchResult.from( ee, MATCH_BY_ID_SCORE, ee.getId().toString() ) );
+                    results.add( SearchResult.from( ee, MATCH_BY_ID_SCORE, ee.getId().toString(), "ExpressionExperimentService.load" ) );
                 }
             } catch ( NumberFormatException e ) {
                 // no-op - it's not an ID.
@@ -352,11 +352,11 @@ public class DatabaseSearchSource implements SearchSource {
             //
         }
         if ( result != null ) {
-            results.add( SearchResult.from( result, MATCH_BY_ID_SCORE ) );
+            results.add( SearchResult.from( result, MATCH_BY_ID_SCORE, null, "GeneService.findByNCBIId" ) );
         } else {
             result = geneService.findByAccession( searchString, null );
             if ( result != null ) {
-                results.add( SearchResult.from( result, MATCH_BY_ACCESSION_SCORE ) );
+                results.add( SearchResult.from( result, MATCH_BY_ACCESSION_SCORE, null, "GeneService.findByAccession" ) );
             }
         }
 
@@ -420,7 +420,7 @@ public class DatabaseSearchSource implements SearchSource {
             results.addAll( toSearchResults( geneService.findByAlias( exactString ), MATCH_BY_ALIAS_SCORE ) );
             Gene geneByEnsemblId = geneService.findByEnsemblId( exactString );
             if ( geneByEnsemblId != null ) {
-                results.add( SearchResult.from( geneByEnsemblId, MATCH_BY_ACCESSION_SCORE ) );
+                results.add( SearchResult.from( geneByEnsemblId, MATCH_BY_ACCESSION_SCORE, null, "GeneService.findByAlias" ) );
             }
             results.addAll( toSearchResults( geneProductService.getGenesByName( exactString ), INDIRECT_HIT_PENALTY * MATCH_BY_NAME_SCORE ) );
             results.addAll( toSearchResults( geneProductService.getGenesByNcbiId( exactString ), INDIRECT_HIT_PENALTY * MATCH_BY_ACCESSION_SCORE ) );
@@ -456,7 +456,7 @@ public class DatabaseSearchSource implements SearchSource {
         return entities.stream()
                 .filter( Objects::nonNull )
                 .map( e -> {
-                    SearchResult<T> sr = new SearchResult<>( e );
+                    SearchResult<T> sr = new SearchResult<>( e, this );
                     sr.setScore( score );
                     return sr;
                 } )
