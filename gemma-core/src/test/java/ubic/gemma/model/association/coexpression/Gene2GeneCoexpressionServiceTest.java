@@ -58,7 +58,8 @@ public class Gene2GeneCoexpressionServiceTest extends BaseSpringContextTest {
     private ExpressionExperiment ee;
 
     @Before
-    public void setup() {
+    public void setUp() throws Exception {
+        super.setUp();
 
         Taxon mouseTaxon = taxonS.findByCommonName( "mouse" );
 

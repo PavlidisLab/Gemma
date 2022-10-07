@@ -5,7 +5,7 @@
 	<name>Gemma</name>
 	<groupId>gemma</groupId>
 	<artifactId>gemma</artifactId>
-	<version>1.27.18</version>
+	<version>1.28.0</version>
 	<inceptionYear>2005</inceptionYear>
 	<description>The Gemma Project for meta-analysis of genomics data</description>
 	<url>https://gemma.msl.ubc.ca</url>
@@ -13,6 +13,11 @@
 		<name>Pavlidis lab, Michael Smith Laboratories and Department of Psychiatry, University of British Columbia</name>
 		<url>https://pavlab.msl.ubc.ca/</url>
 	</organization>
+	<parent>
+		<groupId>ubc.pavlab</groupId>
+		<artifactId>pavlab-starter-parent</artifactId>
+		<version>1.1.7</version>
+	</parent>
 	<modules>
 		<module>gemma-core</module>
 		<module>gemma-web</module>
@@ -132,7 +137,6 @@
 		<dependency>
 			<groupId>baseCode</groupId>
 			<artifactId>baseCode</artifactId>
-			<version>1.1.4</version>
 		</dependency>
 
 		<dependency>
@@ -212,13 +216,10 @@
 		<dependency>
 			<groupId>org.hibernate</groupId>
 			<artifactId>hibernate-core</artifactId>
-			<version>${hibernate.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.hibernate</groupId>
 			<artifactId>hibernate-ehcache</artifactId>
-			<version>${hibernate.version}</version>
-			<scope>runtime</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.hibernate.javax.persistence</groupId>
@@ -229,20 +230,15 @@
 			<!-- required by hibernate, explicitly import so we get it at runtime. -->
 			<groupId>org.javassist</groupId>
 			<artifactId>javassist</artifactId>
-			<version>3.29.0-GA</version>
-			<scope>runtime</scope>
 		</dependency>
 		<dependency>
 			<groupId>mysql</groupId>
 			<artifactId>mysql-connector-java</artifactId>
-			<version>${mysql.version}</version>
-			<scope>runtime</scope>
 		</dependency>
 		<!-- used in dataSource.xml and testDataSource.xml -->
 		<dependency>
 			<groupId>org.apache.commons</groupId>
 			<artifactId>commons-dbcp2</artifactId>
-			<version>2.9.0</version>
 			<scope>compile</scope>
 		</dependency>
 
@@ -250,30 +246,6 @@
 		<dependency>
 			<groupId>net.sf.ehcache</groupId>
 			<artifactId>ehcache-core</artifactId>
-			<version>2.4.3</version>
-		</dependency>
-
-		<!-- Distributed tasks (Spring JMS + ActiveMQ) -->
-		<dependency>
-			<groupId>org.springframework</groupId>
-			<artifactId>spring-jms</artifactId>
-			<version>${spring.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.activemq</groupId>
-			<artifactId>activemq-core</artifactId>
-			<version>5.7.0</version>
-		</dependency>
-		<!-- This is a vulnerable ActiveMQ dependency (see https://nvd.nist.gov/vuln/detail/CVE-2014-9970) -->
-		<dependency>
-			<groupId>org.jasypt</groupId>
-			<artifactId>jasypt</artifactId>
-			<version>1.9.3</version>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.geronimo.specs</groupId>
-			<artifactId>geronimo-jms_1.1_spec</artifactId>
-			<version>1.1.1</version>
 		</dependency>
 
 		<!-- Scheduling -->
@@ -334,7 +306,6 @@
 		<dependency>
 			<groupId>commons-logging</groupId>
 			<artifactId>commons-logging</artifactId>
-			<version>1.2</version>
 		</dependency>
 		<dependency>
 			<groupId>commons-logging</groupId>
@@ -407,27 +378,22 @@
 		<dependency>
 			<groupId>org.apache.logging.log4j</groupId>
 			<artifactId>log4j-core</artifactId>
-			<version>${log4j2.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.logging.log4j</groupId>
 			<artifactId>log4j-slf4j-impl</artifactId>
-			<version>${log4j2.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.logging.log4j</groupId>
 			<artifactId>log4j-1.2-api</artifactId>
-			<version>${log4j2.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.slf4j</groupId>
 			<artifactId>slf4j-api</artifactId>
-			<version>${slf4j.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.slf4j</groupId>
 			<artifactId>jcl-over-slf4j</artifactId>
-			<version>${slf4j.version}</version>
 		</dependency>
 
 		<!-- Test -->
@@ -440,8 +406,6 @@
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
-			<version>4.13.2</version>
-			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>io.takari.junit</groupId>
@@ -458,28 +422,20 @@
 		<dependency>
 			<groupId>org.mockito</groupId>
 			<artifactId>mockito-core</artifactId>
-			<version>4.6.1</version>
-			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.mockito</groupId>
 			<artifactId>mockito-inline</artifactId>
-			<version>4.6.1</version>
-			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.assertj</groupId>
 			<artifactId>assertj-core</artifactId>
-			<version>3.23.1</version>
-			<scope>test</scope>
 		</dependency>
 
 		<!-- Development tools -->
 		<dependency>
 			<groupId>org.projectlombok</groupId>
 			<artifactId>lombok</artifactId>
-			<version>1.18.24</version>
-			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>com.google.code.findbugs</groupId>
@@ -512,22 +468,7 @@
 			<plugin>
 				<groupId>com.amashchenko.maven.plugin</groupId>
 				<artifactId>gitflow-maven-plugin</artifactId>
-				<version>1.16.0</version>
 				<configuration>
-					<!-- Do not push to remote -->
-					<pushRemote>false</pushRemote>
-					<verbose>true</verbose>
-					<!-- Branch naming schemes -->
-					<gitFlowConfig>
-						<productionBranch>master</productionBranch>
-						<developmentBranch>development</developmentBranch>
-						<releaseBranchPrefix>release-</releaseBranchPrefix>
-						<origin>origin</origin>
-						<!-- Unused for releasing -->
-						<featureBranchPrefix>feature-</featureBranchPrefix>
-						<hotfixBranchPrefix>hotfix-</hotfixBranchPrefix>
-						<supportBranchPrefix>support-</supportBranchPrefix>
-					</gitFlowConfig>
 					<skipTestProject>true</skipTestProject>
 				</configuration>
 			</plugin>
@@ -562,7 +503,7 @@
 			<plugin>
 				<groupId>org.owasp</groupId>
 				<artifactId>dependency-check-maven</artifactId>
-				<version>6.5.3</version>
+				<version>7.1.1</version>
 			</plugin>
 		</plugins>
 		<extensions>
@@ -605,16 +546,6 @@
 					<name>localDeploy</name>
 					<url>file:///space/gemmaData/gemma-devsite</url>
 				</site>
-				<repository>
-					<id>repo</id>
-					<name>Pavlab</name>
-					<url>file:///space/maven2</url>
-				</repository>
-				<snapshotRepository>
-					<id>repo</id>
-					<name>Pavlab</name>
-					<url>file:///space/maven2</url>
-				</snapshotRepository>
 			</distributionManagement>
 		</profile>
 	</profiles>
@@ -623,16 +554,6 @@
 			<id>website</id>
 			<url>/space/gemmaData/gemma-devsite</url>
 		</site>
-		<repository>
-			<id>repo</id>
-			<name>Pavlab</name>
-			<url>/space/maven2</url>
-		</repository>
-		<snapshotRepository>
-			<id>repo</id>
-			<name>Pavlab</name>
-			<url>/space/maven2</url>
-		</snapshotRepository>
 	</distributionManagement>
 	<reporting>
 		<plugins>
@@ -666,19 +587,14 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<maven.compiler.source>1.8</maven.compiler.source>
 		<maven.compiler.target>1.8</maven.compiler.target>
-		<gsec.version>0.0.7</gsec.version>
+		<gsec.version>0.0.8</gsec.version>
 		<spring.version>3.2.18.RELEASE</spring.version>
 		<spring.security.version>3.2.10.RELEASE</spring.security.version>
-		<hibernate.version>3.6.10.Final</hibernate.version>
 		<jersey.version>2.25.1</jersey.version>
-		<jackson.version>2.13.3</jackson.version>
-		<swagger.version>2.2.1</swagger.version>
+		<jackson.version>2.13.4</jackson.version>
+		<swagger.version>2.2.3</swagger.version>
 		<jawr.version>3.9</jawr.version>
-		<tomcat.version>8.5.81</tomcat.version>
-		<mysql.version>8.0.29</mysql.version>
 		<lucene.version>3.6.2</lucene.version>
-		<log4j2.version>2.17.2</log4j2.version>
-		<slf4j.version>1.7.36</slf4j.version>
-		<slack.version>1.23.0</slack.version>
+		<slack.version>1.25.1</slack.version>
 	</properties>
 </project>

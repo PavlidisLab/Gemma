@@ -2,30 +2,27 @@ package ubic.gemma.web.services.rest.util.args;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.NonNull;
+import ubic.gemma.web.services.rest.util.MalformedArgException;
 
 /**
  * Argument used to represent an offset.
  */
-@Schema(type = "integer", minimum = "0")
+@Schema(type = "integer", minimum = "0", description = "The offset of the first retrieved result.")
 public class OffsetArg extends AbstractArg<Integer> {
 
     private OffsetArg( @NonNull Integer value ) {
         super( value );
     }
 
-    private OffsetArg( String message, Throwable cause ) {
-        super( message, cause );
-    }
-
-    public static OffsetArg valueOf( String s ) {
+    public static OffsetArg valueOf( String s ) throws MalformedArgException {
         int offset;
         try {
             offset = Integer.parseInt( s );
         } catch ( NumberFormatException e ) {
-            return new OffsetArg( "Offset must be a valid integer.", e );
+            throw new MalformedArgException( "Offset must be a valid integer.", e );
         }
         if ( offset < 0 ) {
-            return new OffsetArg( "Offset must be positive.", null );
+            throw new MalformedArgException( "Offset must be positive.", null );
         }
         return new OffsetArg( offset );
     }

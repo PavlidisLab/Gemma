@@ -8,6 +8,9 @@
  */
 package ubic.gemma.model.expression.experiment;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
 import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.measurement.MeasurementValueObject;
@@ -26,16 +29,19 @@ import org.apache.commons.lang3.StringUtils;
  * @author tesarst
  */
 @SuppressWarnings("unused") // Used in json serialization
+@Data
+@EqualsAndHashCode(of = { "characteristics" }, callSuper = true)
 public class FactorValueBasicValueObject extends IdentifiableValueObject<FactorValue> implements Serializable {
 
     private static final long serialVersionUID = 3378801249808036785L;
 
-    private Boolean isBaseline;
+    @JsonProperty("isBaseline")
+    private boolean isBaseline;
     private Collection<CharacteristicBasicValueObject> characteristics;
     private CharacteristicBasicValueObject experimentalFactorCategory;
     private MeasurementValueObject measurement;
-    private String fvValue;
-    private String fvSummary;
+    private String value;
+    private String summary;
     private Long experimentalFactorId;
 
     /**
@@ -50,14 +56,14 @@ public class FactorValueBasicValueObject extends IdentifiableValueObject<FactorV
 
     public FactorValueBasicValueObject( FactorValue fv ) {
         super( fv.getId() );
-        this.fvSummary = getSummaryString( fv );
+        this.summary = getSummaryString( fv );
         this.experimentalFactorId = fv.getExperimentalFactor().getId();
         this.isBaseline = fv.getIsBaseline() != null ? fv.getIsBaseline() : false;
 
         if ( fv.getMeasurement() != null ) {
             this.measurement = new MeasurementValueObject( fv.getMeasurement() );
         }
-        this.fvValue = fv.getValue();
+        this.value = fv.getValue();
 
         if ( fv.getCharacteristics() != null ) {
             this.characteristics = new ArrayList<>( fv.getCharacteristics().size() );
@@ -72,56 +78,14 @@ public class FactorValueBasicValueObject extends IdentifiableValueObject<FactorV
     }
 
     @Override
-    public boolean equals( Object obj ) {
-        if ( obj == null )
-            return false;
-        if ( getClass() != obj.getClass() )
-            return false;
-        FactorValueBasicValueObject other = ( FactorValueBasicValueObject ) obj;
-
-        if ( characteristics != null && other.characteristics != null ) {
-            return characteristics.equals( other.characteristics ) && id.equals( other.id );
-        }
-        return characteristics == null && other.characteristics == null && id.equals( other.id );
-    }
-
-    @Override
     public String toString() {
-        return "FactorValueValueObject [factor=" + fvSummary + ", value=" + fvValue + "]";
-    }
-
-    public Boolean getBaseline() {
-        return isBaseline;
-    }
-
-    public Collection<CharacteristicBasicValueObject> getCharacteristics() {
-        return characteristics;
-    }
-
-    public MeasurementValueObject getMeasurement() {
-        return measurement;
+        return "FactorValueValueObject [factor=" + summary + ", value=" + value + "]";
     }
 
     // causes a conflict with getMeasurement...
 //    public Boolean isMeasurement() {
 //        return this.measurement != null;
 //    }
-
-    public String getFvValue() {
-        return fvValue;
-    }
-
-    public String getFvSummary() {
-        return fvSummary;
-    }
-
-    public Long getExperimentalFactorId() {
-        return experimentalFactorId;
-    }
-
-    public CharacteristicBasicValueObject getExperimentalFactorCategory() {
-        return experimentalFactorCategory;
-    }
 
     static String getSummaryString( FactorValue fv ) {
         StringBuilder buf = new StringBuilder();

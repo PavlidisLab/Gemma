@@ -21,6 +21,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.UnexpectedRollbackException;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
+import ubic.gemma.core.analysis.preprocess.filter.FilteringException;
+import ubic.gemma.core.analysis.preprocess.filter.NoRowsLeftAfterFilteringException;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.analysis.expression.sampleCoexpression.SampleCoexpressionAnalysisService;
@@ -40,7 +42,7 @@ public class OutlierDetectionServiceImpl implements OutlierDetectionService {
     private SampleCoexpressionAnalysisService sampleCoexpressionAnalysisService;
 
     @Override
-    public Collection<OutlierDetails> identifyOutliersByMedianCorrelation( ExpressionExperiment ee ) {
+    public Collection<OutlierDetails> identifyOutliersByMedianCorrelation( ExpressionExperiment ee ) throws FilteringException {
         DoubleMatrix<BioAssay, BioAssay> cormat = sampleCoexpressionAnalysisService.loadTryRegressedThenFull( ee );
 
         if ( cormat == null || cormat.rows() == 0 ) {

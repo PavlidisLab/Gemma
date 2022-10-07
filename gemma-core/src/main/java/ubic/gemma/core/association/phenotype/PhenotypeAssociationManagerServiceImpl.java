@@ -20,7 +20,6 @@ package ubic.gemma.core.association.phenotype;
 
 import gemma.gsec.SecurityService;
 import gemma.gsec.acl.domain.AclPrincipalSid;
-import gemma.gsec.authentication.UserManager;
 import gemma.gsec.util.SecurityUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
@@ -42,6 +41,7 @@ import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.search.SearchResult;
 import ubic.gemma.core.search.SearchService;
+import ubic.gemma.core.security.authentication.UserManager;
 import ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysis;
 import ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysisResult;
 import ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysisSummaryValueObject;
@@ -423,14 +423,14 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
             taxon = this.taxonService.load( taxonId );
         }
         SearchSettings settings = SearchSettings.geneSearch( newQuery, taxon );
-        List<SearchResult<?>> geneSearchResults = this.searchService.search( settings ).get( Gene.class );
+        List<SearchResult<Gene>> geneSearchResults = this.searchService.search( settings, Gene.class );
 
         Collection<Gene> genes = new HashSet<>();
         if ( geneSearchResults == null || geneSearchResults.isEmpty() ) {
             return Collections.emptyList();
         }
 
-        for ( SearchResult sr : geneSearchResults ) {
+        for ( SearchResult<Gene> sr : geneSearchResults ) {
             Gene g = geneService.load( sr.getResultId() );
             if ( g == null ) {
                 log.warn( "No gene matching search result " + sr );

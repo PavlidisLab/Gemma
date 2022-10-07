@@ -42,7 +42,8 @@ public class BioAssayServiceTest extends BaseSpringContextTest {
     private BioAssayService bioAssayService;
 
     @Before
-    public void setup() {
+    public void setUp() throws Exception {
+        super.setUp();
 
         ExpressionExperiment ee = super.getTestPersistentCompleteExpressionExperiment( false );
 
@@ -67,8 +68,7 @@ public class BioAssayServiceTest extends BaseSpringContextTest {
 
     @Test
     public void testGetCount() {
-        Integer count = bioAssayService.countAll();
-        assertNotNull( count );
+        long count = bioAssayService.countAll();
         assertTrue( count > 0 );
     }
 

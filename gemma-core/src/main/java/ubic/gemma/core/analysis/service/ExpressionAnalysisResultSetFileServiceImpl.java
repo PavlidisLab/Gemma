@@ -43,7 +43,7 @@ public class ExpressionAnalysisResultSetFileServiceImpl extends AbstractTsvFileS
         final List<ContrastResult> firstContrastResults = analysisResultSet.getResults().stream()
                 .findFirst()
                 .map( DifferentialExpressionAnalysisResult::getContrasts )
-                .orElse( Collections.emptyList() )
+                .orElse( Collections.emptySet() )
                 .stream().sorted( contrastResultComparator )
                 .collect( Collectors.toList() );
 
@@ -56,10 +56,6 @@ public class ExpressionAnalysisResultSetFileServiceImpl extends AbstractTsvFileS
                     contrastResultPrefix + "_tstat",
                     contrastResultPrefix + "_pvalue" ) );
         }
-
-        List<Pair<FactorValue, FactorValue>> factors = firstContrastResults.stream().sorted( contrastResultComparator )
-                .map( cr -> Pair.of( cr.getFactorValue(), cr.getSecondFactorValue() ) )
-                .collect( Collectors.toList() );
 
         try ( CSVPrinter printer = getTsvFormatBuilder( "Experimental factors: " + experimentalFactorsMetadata )
                 .setHeader( header.toArray( new String[0] ) )

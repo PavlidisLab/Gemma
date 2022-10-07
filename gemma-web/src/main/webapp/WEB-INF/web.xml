@@ -28,7 +28,7 @@
     <context-param>
         <param-name>contextConfigLocation</param-name>
         <param-value>
-            classpath*:gemma/gsec/applicationContext-*.xml,classpath*:/ubic/gemma/applicationContext-*.xml,classpath*:/ubic/gemma/dataSource.xml
+            classpath*:gemma/gsec/applicationContext-*.xml,classpath*:ubic/gemma/applicationContext-*.xml,classpath:ubic/gemma/dataSource.xml
         </param-value>
     </context-param>
 
@@ -60,6 +60,18 @@
         <filter-class>com.opensymphony.sitemesh.webapp.SiteMeshFilter</filter-class>
     </filter>
 
+    <!-- CORS -->
+    <filter>
+        <filter-name>cors</filter-name>
+        <filter-class>ubic.gemma.web.services.rest.servlet.CorsFilter</filter-class>
+    </filter>
+
+    <!-- this is the default servlet that servers static resources -->
+    <filter>
+        <filter-name>restapidocsFilter</filter-name>
+        <filter-class>ubic.gemma.web.services.rest.servlet.RestapidocsIndexRewriteFilter</filter-class>
+    </filter>
+
     <!-- Spring Security -->
     <filter-mapping>
         <filter-name>springSecurityFilterChain</filter-name>
@@ -79,6 +91,17 @@
         <servlet-name>gemma</servlet-name>
     </filter-mapping>
 
+    <filter-mapping>
+        <filter-name>cors</filter-name>
+        <servlet-name>gemma-rest</servlet-name>
+    </filter-mapping>
+
+    <!-- rewrites /resources/restapidocs/ -> /resources/restapidocs/index.html -->
+    <filter-mapping>
+        <filter-name>restapidocsFilter</filter-name>
+        <servlet-name>default</servlet-name>
+    </filter-mapping>
+
     <listener>
         <listener-class>org.springframework.web.util.IntrospectorCleanupListener</listener-class>
     </listener>
@@ -91,6 +114,7 @@
     <listener>
         <listener-class>org.springframework.security.web.session.HttpSessionEventPublisher</listener-class>
     </listener>
+
 
     <!-- Dispatch Servlet Configuration -->
     <servlet>
@@ -213,6 +237,13 @@
         <url-pattern>*.woff2</url-pattern>
         <!-- flash animation -->
         <url-pattern>*.swf</url-pattern>
+    </servlet-mapping>
+
+    <!-- a few static resources to be delivered by Tomcat -->
+    <servlet-mapping>
+        <servlet-name>default</servlet-name>
+        <url-pattern>/robots.txt</url-pattern>
+        <url-pattern>/sitemap.xml</url-pattern>
     </servlet-mapping>
 
     <session-config>

@@ -25,6 +25,7 @@ import ubic.gemma.model.expression.bioAssay.BioAssay;
 
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Set;
 
 /**
  * Represents a set of BioAssays. This is not associated with any actual data, and soley represents a logical grouping
@@ -35,7 +36,7 @@ public abstract class BioAssaySet extends Investigation {
 
     private static final long serialVersionUID = 2368063046639481521L;
     private DatabaseEntry accession;
-    protected Collection<BioAssay> bioAssays = new HashSet<>();
+    private Set<BioAssay> bioAssays = new HashSet<>();
 
     public DatabaseEntry getAccession() {
         return this.accession;
@@ -46,9 +47,13 @@ public abstract class BioAssaySet extends Investigation {
     }
 
     @SuppressWarnings("JpaAttributeTypeInspection") // Inspector is not handling this correctly
-    public abstract Collection<BioAssay> getBioAssays();
+    public Set<BioAssay> getBioAssays() {
+        return bioAssays;
+    }
 
-    public abstract void setBioAssays( Collection<BioAssay> bioAssays );
+    public void setBioAssays( Set<BioAssay> bioAssays ) {
+        this.bioAssays = bioAssays;
+    }
 
     /**
      * Special use case. Use a constructor of the desired VO instead, or the loadValueObject() in all VO-Enabled services.

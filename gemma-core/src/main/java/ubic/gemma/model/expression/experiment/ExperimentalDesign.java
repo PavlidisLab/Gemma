@@ -23,7 +23,7 @@ import ubic.gemma.model.common.Describable;
 import ubic.gemma.model.common.description.Characteristic;
 
 import javax.persistence.Transient;
-import java.util.Collection;
+import java.util.Set;
 
 public class ExperimentalDesign extends Describable implements gemma.gsec.model.SecuredChild {
 
@@ -31,17 +31,17 @@ public class ExperimentalDesign extends Describable implements gemma.gsec.model.
     private String replicateDescription;
     private String qualityControlDescription;
     private String normalizationDescription;
-    private Collection<ExperimentalFactor> experimentalFactors = new java.util.HashSet<>();
-    private Collection<Characteristic> types = new java.util.HashSet<>();
+    private Set<ExperimentalFactor> experimentalFactors = new java.util.HashSet<>();
+    private Set<Characteristic> types = new java.util.HashSet<>();
 
     /**
      * @return The description of the factors (TimeCourse, Dosage, etc.) that group the BioAssays.
      */
-    public Collection<ExperimentalFactor> getExperimentalFactors() {
+    public Set<ExperimentalFactor> getExperimentalFactors() {
         return this.experimentalFactors;
     }
 
-    public void setExperimentalFactors( Collection<ExperimentalFactor> experimentalFactors ) {
+    public void setExperimentalFactors( Set<ExperimentalFactor> experimentalFactors ) {
         this.experimentalFactors = experimentalFactors;
     }
 
@@ -75,11 +75,11 @@ public class ExperimentalDesign extends Describable implements gemma.gsec.model.
         return null;
     }
 
-    public Collection<Characteristic> getTypes() {
+    public Set<Characteristic> getTypes() {
         return this.types;
     }
 
-    public void setTypes( Collection<Characteristic> types ) {
+    public void setTypes( Set<Characteristic> types ) {
         this.types = types;
     }
 

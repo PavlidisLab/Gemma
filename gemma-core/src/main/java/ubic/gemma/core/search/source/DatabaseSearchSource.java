@@ -18,12 +18,12 @@ import ubic.gemma.core.search.SearchResult;
 import ubic.gemma.core.search.SearchSource;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.common.Identifiable;
+import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
-import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.gene.GeneSet;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
@@ -31,14 +31,12 @@ import ubic.gemma.persistence.service.expression.designElement.CompositeSequence
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.genome.biosequence.BioSequenceService;
 import ubic.gemma.persistence.service.genome.gene.GeneProductService;
-import ubic.gemma.persistence.service.genome.taxon.TaxonDao;
-import ubic.gemma.persistence.util.EntityUtils;
+import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 /**
  * Search source for direct database results.
@@ -50,6 +48,32 @@ import java.util.regex.Pattern;
 @Component
 @CommonsLog
 public class DatabaseSearchSource implements SearchSource {
+
+    /**
+     * Score when a result is matched exactly by numerical ID.
+     */
+    public static final double MATCH_BY_ID_SCORE = 1.0;
+    private static final double MATCH_BY_SHORT_NAME_SCORE = 1.0;
+
+    private static final double MATCH_BY_ACCESSION_SCORE = 1.0;
+    private static final double MATCH_BY_NAME_SCORE = 0.95;
+
+    private static final double MATCH_BY_NAME_INEXACT_SCORE = 0.90;
+
+    /**
+     * Score when a result is matched by an alias.
+     */
+    private static final double MATCH_BY_ALIAS_SCORE = 0.90;
+
+    private static final double MATCH_BY_OFFICIAL_SYMBOL_SCORE = 1.0;
+    private static final double MATCH_BY_OFFICIAL_SYMBOL_INEXACT_SCORE = 0.9;
+
+    /**
+     * Penalty when results are matched indirectly.
+     * <p>
+     * For example, if a platform is matched by a gene hit.
+     */
+    private final double INDIRECT_HIT_PENALTY = 0.8;
 
     @Autowired
     private BioSequenceService bioSequenceService;
@@ -65,10 +89,8 @@ public class DatabaseSearchSource implements SearchSource {
     private GeneSetService geneSetService;
     @Autowired
     private PhenotypeAssociationManagerService phenotypeAssociationManagerService;
-
-    // TODO: use the service
     @Autowired
-    private TaxonDao taxonDao;
+    private TaxonService taxonService;
 
     /**
      * Searches the DB for array designs which have composite sequences whose names match the given search string.
@@ -76,7 +98,7 @@ public class DatabaseSearchSource implements SearchSource {
      * on access control list (ACL) permissions.
      */
     @Override
-    public Collection<SearchResult<?>> searchArrayDesign( SearchSettings settings ) {
+    public Collection<SearchResult<ArrayDesign>> searchArrayDesign( SearchSettings settings ) {
         if ( !settings.getUseDatabase() )
             return new HashSet<>();
 
@@ -96,16 +118,16 @@ public class DatabaseSearchSource implements SearchSource {
                     .info( "Array Design Composite Sequence DB search for " + settings + " took " + watch.getTime()
                             + " ms" + " found " + adSet.size() + " Ads" );
 
-        return this.dbHitsToSearchResult( adSet );
+        return this.toSearchResults( adSet, MATCH_BY_NAME_SCORE );
     }
 
     @Override
-    public Collection<SearchResult<?>> searchBibliographicReference( SearchSettings settings ) {
+    public Collection<SearchResult<BibliographicReference>> searchBibliographicReference( SearchSettings settings ) {
         throw new NotImplementedException( "Database search for bibliographic reference is not implemented." );
     }
 
     @Override
-    public Collection<SearchResult<?>> searchExperimentSet( SearchSettings settings ) {
+    public Collection<SearchResult<ExpressionExperimentSet>> searchExperimentSet( SearchSettings settings ) {
         throw new NotImplementedException( "Database search for expression experiment set is not implemented." );
     }
 
@@ -113,7 +135,7 @@ public class DatabaseSearchSource implements SearchSource {
      * A database search for biosequences. Biosequence names are already indexed by compass...
      */
     @Override
-    public Collection<SearchResult<?>> searchBioSequence( SearchSettings settings, Collection<SearchResult<?>> previousGeneSearchResults ) {
+    public Collection<SearchResult<BioSequence>> searchBioSequence( SearchSettings settings ) {
         if ( !settings.getUseDatabase() )
             return new HashSet<>();
 
@@ -129,7 +151,7 @@ public class DatabaseSearchSource implements SearchSource {
 
         Collection<BioSequence> bs = bioSequenceService.findByName( inexactString );
         // bioSequenceService.thawRawAndProcessed( bs );
-        Collection<SearchResult<?>> bioSequenceList = new HashSet<>( this.dbHitsToSearchResult( bs ) );
+        Collection<SearchResult<BioSequence>> bioSequenceList = new HashSet<>( this.toSearchResults( bs, MATCH_BY_NAME_INEXACT_SCORE ) );
 
         watch.stop();
         if ( watch.getTime() > 1000 )
@@ -140,30 +162,46 @@ public class DatabaseSearchSource implements SearchSource {
         return bioSequenceList;
     }
 
+    @Override
+    public Collection<SearchResult> searchBioSequenceAndGene( SearchSettings settings, Collection<SearchResult<Gene>> previousGeneSearchResults ) {
+        return new HashSet<>( this.searchBioSequence( settings ) );
+    }
+
+    @Override
+    public Collection<SearchResult<CompositeSequence>> searchCompositeSequence( SearchSettings settings ) {
+        return this.searchCompositeSequenceAndPopulateGenes( settings, new HashSet<>() );
+    }
+
     /**
      * Search the DB for composite sequences and the genes that are matched to them.
      */
     @Override
-    public Collection<SearchResult<?>> searchCompositeSequence( SearchSettings settings ) {
+    public Collection<SearchResult> searchCompositeSequenceAndGene( SearchSettings settings ) {
+        Set<SearchResult<Gene>> geneSet = new HashSet<>();
+        Collection<SearchResult<CompositeSequence>> matchedCs = this.searchCompositeSequenceAndPopulateGenes( settings, geneSet );
+        Collection<SearchResult> combinedResults = new HashSet<>();
+        combinedResults.addAll( geneSet );
+        combinedResults.addAll( matchedCs );
+        return combinedResults;
+    }
 
+    private Collection<SearchResult<CompositeSequence>> searchCompositeSequenceAndPopulateGenes( SearchSettings settings, Set<SearchResult<Gene>> geneSet ) {
         if ( !settings.getUseDatabase() )
             return new HashSet<>();
 
         StopWatch watch = StopWatch.createStarted();
 
-        Set<Gene> geneSet = new HashSet<>();
-
         String searchString = settings.getQuery();
         ArrayDesign ad = settings.getPlatformConstraint();
 
         // search by exact composite sequence name
-        Collection<CompositeSequence> matchedCs = new HashSet<>();
+        Collection<SearchResult<CompositeSequence>> matchedCs = new LinkedHashSet<>();
         if ( ad != null ) {
             CompositeSequence cs = compositeSequenceService.findByName( ad, searchString );
             if ( cs != null )
-                matchedCs.add( cs );
+                matchedCs.add( SearchResult.from( cs, MATCH_BY_NAME_SCORE, null, "CompositeSequenceService.findByName" ) );
         } else {
-            matchedCs = compositeSequenceService.findByName( searchString );
+            matchedCs = toSearchResults( compositeSequenceService.findByName( searchString ), MATCH_BY_NAME_SCORE );
         }
 
         /*
@@ -172,38 +210,38 @@ public class DatabaseSearchSource implements SearchSource {
         if ( matchedCs.isEmpty() ) {
             Collection<CompositeSequence> csViaBioSeq = compositeSequenceService.findByBioSequenceName( searchString );
             if ( ad != null ) {
-                for ( CompositeSequence c : csViaBioSeq ) {
-                    if ( c.getArrayDesign().equals( ad ) ) {
-                        matchedCs.add( c );
-                    }
-                }
-            } else {
-                matchedCs.addAll( csViaBioSeq );
+                csViaBioSeq.removeIf( c -> !c.getArrayDesign().equals( ad ) );
             }
+            matchedCs.addAll( toSearchResults( csViaBioSeq, INDIRECT_HIT_PENALTY * MATCH_BY_NAME_SCORE ) );
         }
 
         /*
          * In case the query _is_ a gene
          */
-        Collection<SearchResult<?>> rawGeneResults = this.searchGene( settings );
-        for ( SearchResult<?> searchResult : rawGeneResults ) {
-            Object j = searchResult.getResultObject();
-            if ( Gene.class.isAssignableFrom( j.getClass() ) ) {
-                geneSet.add( ( Gene ) j );
+        Collection<SearchResult<Gene>> rawGeneResults = this.searchGene( settings );
+        for ( SearchResult<Gene> searchResult : rawGeneResults ) {
+            if ( searchResult.getResultObject() != null ) {
+                geneSet.add( searchResult );
             }
         }
 
-        for ( Gene g : geneSet ) {
+        for ( SearchResult<Gene> g : geneSet ) {
             if ( settings.getPlatformConstraint() != null ) {
-                matchedCs.addAll( compositeSequenceService.findByGene( g, settings.getPlatformConstraint() ) );
+                matchedCs.addAll( toSearchResults( compositeSequenceService.findByGene( g.getResultObject(), settings.getPlatformConstraint() ), INDIRECT_HIT_PENALTY * g.getScore() ) );
             } else {
-                matchedCs.addAll( compositeSequenceService.findByGene( g ) );
+                matchedCs.addAll( toSearchResults( compositeSequenceService.findByGene( g.getResultObject() ), INDIRECT_HIT_PENALTY * g.getScore() ) );
             }
         }
 
         // search by associated genes.
-        for ( Collection<Gene> genes : compositeSequenceService.getGenes( matchedCs ).values() ) {
-            geneSet.addAll( genes );
+        Collection<CompositeSequence> compositeSequences = matchedCs.stream()
+                .map( SearchResult::getResultObject )
+                .filter( Objects::nonNull )
+                .collect( Collectors.toSet() );
+        for ( Collection<Gene> genes : compositeSequenceService.getGenes( compositeSequences ).values() ) {
+            // TODO: each individual CS have a potentially different score that should be reflected in the gene score,
+            //       but that would require knowing which CS matched which gene
+            geneSet.addAll( toSearchResults( genes, INDIRECT_HIT_PENALTY ) );
         }
 
         watch.stop();
@@ -212,12 +250,9 @@ public class DatabaseSearchSource implements SearchSource {
                     .info( "Gene composite sequence DB search " + searchString + " took " + watch.getTime() + " ms, "
                             + geneSet.size() + " items." );
 
-        Collection<SearchResult<?>> results = this.dbHitsToSearchResult( geneSet );
-
-        results.addAll( this.dbHitsToSearchResult( matchedCs ) );
-
-        return results;
+        return matchedCs;
     }
+
 
     /**
      * Does search on exact string by: id, name and short name. This only returns results if these fields match exactly,
@@ -226,58 +261,53 @@ public class DatabaseSearchSource implements SearchSource {
      * @return {@link Collection}
      */
     @Override
-    public Collection<SearchResult<?>> searchExpressionExperiment( SearchSettings settings ) {
+    public Collection<SearchResult<ExpressionExperiment>> searchExpressionExperiment( SearchSettings settings ) {
         if ( !settings.getUseDatabase() )
             return new HashSet<>();
 
         StopWatch watch = StopWatch.createStarted();
 
-        Map<ExpressionExperiment, String> results = new HashMap<>();
         String query = StringEscapeUtils.unescapeJava( settings.getQuery() );
-        Collection<ExpressionExperiment> ees = expressionExperimentService.findByName( query );
 
+        LinkedHashSet<SearchResult<ExpressionExperiment>> results = new LinkedHashSet<>();
+
+        Collection<ExpressionExperiment> ees = expressionExperimentService.findByName( query );
         for ( ExpressionExperiment ee : ees ) {
-            results.put( ee, ee.getName() );
+            results.add( SearchResult.from( ee, MATCH_BY_NAME_SCORE, ee.getName(), "ExpressionExperimentService.findByName" ) );
         }
 
         // in response to https://github.com/PavlidisLab/Gemma/issues/140, always keep going if admin.
         if ( results.isEmpty() || SecurityUtil.isUserAdmin() ) {
             ExpressionExperiment ee = expressionExperimentService.findByShortName( query );
             if ( ee != null ) {
-                results.put( ee, ee.getShortName() );
+                results.add( SearchResult.from( ee, MATCH_BY_SHORT_NAME_SCORE, ee.getShortName(), "ExpressionExperimentService.findByShortName" ) );
             }
         }
 
         if ( results.isEmpty() || SecurityUtil.isUserAdmin() ) {
             ees = expressionExperimentService.findByAccession( query ); // this will find split parts
             for ( ExpressionExperiment e : ees ) {
-                results.put( e, e.getId().toString() );
+                results.add( SearchResult.from( e, MATCH_BY_ACCESSION_SCORE, e.getId().toString(), "ExpressionExperimentService.findByAccession" ) );
             }
         }
 
         if ( results.isEmpty() ) {
             try {
                 // maybe user put in a primary key value.
-                ExpressionExperiment ee = expressionExperimentService.load( new Long( query ) );
-                if ( ee != null )
-                    results.put( ee, ee.getId().toString() );
+                ExpressionExperiment ee = expressionExperimentService.load( Long.parseLong( query ) );
+                if ( ee != null ) {
+                    results.add( SearchResult.from( ee, MATCH_BY_ID_SCORE, ee.getId().toString(), "ExpressionExperimentService.load" ) );
+                }
             } catch ( NumberFormatException e ) {
                 // no-op - it's not an ID.
             }
         }
 
-
+        // filter matches by taxon
         if ( settings.getTaxon() != null ) {
-            Map<Long, ExpressionExperiment> idMap = EntityUtils.getIdMap( results.keySet() );
             Collection<Long> retainedIds = expressionExperimentService
-                    .filterByTaxon( idMap.keySet(), settings.getTaxon() );
-
-            for ( Long id : idMap.keySet() ) {
-                if ( !retainedIds.contains( id ) ) {
-                    results.remove( idMap.get( id ) );
-                }
-            }
-
+                    .filterByTaxon( results.stream().map( SearchResult::getResultId ).collect( Collectors.toList() ), settings.getTaxon() );
+            results.removeIf( sr -> !retainedIds.contains( sr.getResultId() ) );
         }
 
         watch.stop();
@@ -285,7 +315,7 @@ public class DatabaseSearchSource implements SearchSource {
             DatabaseSearchSource.log.info( "DB Expression Experiment search for " + settings + " took " + watch.getTime()
                     + " ms and found " + results.size() + " EEs" );
 
-        return this.dbHitsToSearchResult( results );
+        return results;
     }
 
     /**
@@ -293,7 +323,7 @@ public class DatabaseSearchSource implements SearchSource {
      * tables
      */
     @Override
-    public Collection<SearchResult<?>> searchGene( SearchSettings settings ) {
+    public Collection<SearchResult<Gene>> searchGene( SearchSettings settings ) {
         if ( !settings.getUseDatabase() )
             return new HashSet<>();
 
@@ -310,7 +340,7 @@ public class DatabaseSearchSource implements SearchSource {
         if ( StringUtils.isBlank( searchString ) )
             return new HashSet<>();
 
-        Collection<SearchResult<?>> results = new HashSet<>();
+        Collection<SearchResult<Gene>> results = new LinkedHashSet<>();
 
         /*
          * First search by accession. If we find it, stop.
@@ -322,22 +352,37 @@ public class DatabaseSearchSource implements SearchSource {
             //
         }
         if ( result != null ) {
-            results.add( this.dbHitToSearchResult( result ) );
+            results.add( SearchResult.from( result, MATCH_BY_ID_SCORE, null, "GeneService.findByNCBIId" ) );
         } else {
             result = geneService.findByAccession( searchString, null );
             if ( result != null ) {
-                results.add( this.dbHitToSearchResult( result ) );
+                results.add( SearchResult.from( result, MATCH_BY_ACCESSION_SCORE, null, "GeneService.findByAccession" ) );
             }
         }
-        if ( results.size() > 0 ) {
-            this.filterByTaxon( settings, results );
-            watch.stop();
-            if ( watch.getTime() > 1000 )
-                DatabaseSearchSource.log
-                        .info( "Gene DB search for " + searchString + " took " + watch.getTime() + " ms and found "
-                                + results.size() + " genes" );
-            return results;
+
+        if ( results.isEmpty() ) {
+            results.addAll( searchGeneExpanded( searchString ) );
         }
+
+        // filter by taxon
+        if ( settings.getTaxon() != null ) {
+            results.removeIf( result1 -> result1.getResultObject() != null && !result1.getResultObject().getTaxon().equals( settings.getTaxon() ) );
+        }
+
+        watch.stop();
+        if ( watch.getTime() > 1000 )
+            DatabaseSearchSource.log
+                    .info( "Gene DB search for " + searchString + " took " + watch.getTime() + " ms and found "
+                            + results.size() + " genes" );
+
+        return results;
+    }
+
+    /**
+     * Expanded gene search used when a simple search does not yield results.
+     */
+    private LinkedHashSet<SearchResult<Gene>> searchGeneExpanded( String searchString ) {
+        LinkedHashSet<SearchResult<Gene>> results = new LinkedHashSet<>();
 
         // replace * at end with % for inexact symbol search
         String inexactString = searchString;
@@ -350,182 +395,71 @@ public class DatabaseSearchSource implements SearchSource {
 
         // if the query is shortish, always do a wild card search. This gives better behavior in 'live
         // search' situations. If we do wildcards on very short queries we get too many results.
-        Collection<Gene> geneSet = new HashSet<>();
         if ( searchString.length() <= 2 ) {
             // case 0: we got no results yet, or user entered a very short string. We search only for exact matches.
-            geneSet.addAll( geneService.findByOfficialSymbolInexact( exactString ) );
+            results.addAll( toSearchResults( geneService.findByOfficialSymbolInexact( exactString ), MATCH_BY_OFFICIAL_SYMBOL_SCORE ) );
         } else if ( inexactString.endsWith( "%" ) ) {
             // case 1: user explicitly asked for wildcard. We allow this on strings of length 3 or more.
-            geneSet.addAll( geneService.findByOfficialSymbolInexact( inexactString ) );
+            results.addAll( toSearchResults( geneService.findByOfficialSymbolInexact( inexactString ), MATCH_BY_OFFICIAL_SYMBOL_INEXACT_SCORE ) );
         } else if ( searchString.length() > 3 ) {
             // case 2: user did not ask for a wildcard, but we add it anyway, if the string is 4 or 5 characters.
             if ( !inexactString.endsWith( "%" ) ) {
                 inexactString = inexactString + "%";
             }
-            geneSet.addAll( geneService.findByOfficialSymbolInexact( inexactString ) );
+            results.addAll( toSearchResults( geneService.findByOfficialSymbolInexact( inexactString ), MATCH_BY_OFFICIAL_SYMBOL_INEXACT_SCORE ) );
 
         } else {
             // case 3: string is long enough, and user did not ask for wildcard.
-            geneSet.addAll( geneService.findByOfficialSymbol( exactString ) );
+            results.addAll( toSearchResults( geneService.findByOfficialSymbol( exactString ), MATCH_BY_OFFICIAL_SYMBOL_SCORE ) );
         }
 
         /*
          * If we found a match using official symbol or name, don't bother with this
          */
-        if ( geneSet.isEmpty() ) {
-            geneSet.addAll( geneService.findByAlias( exactString ) );
-            geneSet.addAll( geneProductService.getGenesByName( exactString ) );
-            geneSet.addAll( geneProductService.getGenesByNcbiId( exactString ) );
-            geneSet.addAll( bioSequenceService.getGenesByAccession( exactString ) );
-            geneSet.addAll( bioSequenceService.getGenesByName( exactString ) );
-            geneSet.add( geneService.findByEnsemblId( exactString ) );
+        if ( results.isEmpty() ) {
+            results.addAll( toSearchResults( geneService.findByAlias( exactString ), MATCH_BY_ALIAS_SCORE ) );
+            Gene geneByEnsemblId = geneService.findByEnsemblId( exactString );
+            if ( geneByEnsemblId != null ) {
+                results.add( SearchResult.from( geneByEnsemblId, MATCH_BY_ACCESSION_SCORE, null, "GeneService.findByAlias" ) );
+            }
+            results.addAll( toSearchResults( geneProductService.getGenesByName( exactString ), INDIRECT_HIT_PENALTY * MATCH_BY_NAME_SCORE ) );
+            results.addAll( toSearchResults( geneProductService.getGenesByNcbiId( exactString ), INDIRECT_HIT_PENALTY * MATCH_BY_ACCESSION_SCORE ) );
+            results.addAll( toSearchResults( bioSequenceService.getGenesByAccession( exactString ), INDIRECT_HIT_PENALTY * MATCH_BY_ACCESSION_SCORE ) );
+            results.addAll( toSearchResults( bioSequenceService.getGenesByName( exactString ), INDIRECT_HIT_PENALTY * MATCH_BY_NAME_SCORE ) );
         }
 
-        watch.stop();
-        if ( watch.getTime() > 1000 )
-            DatabaseSearchSource.log
-                    .info( "Gene DB search for " + searchString + " took " + watch.getTime() + " ms and found "
-                            + geneSet.size() + " genes" );
-
-        results = this.dbHitsToSearchResult( geneSet );
-        this.filterByTaxon( settings, results );
         return results;
     }
 
     @Override
-    public Collection<SearchResult<?>> searchGeneSet( SearchSettings settings ) {
-        return null;
+    public Collection<SearchResult<GeneSet>> searchGeneSet( SearchSettings settings ) {
+        if ( !settings.getUseDatabase() )
+            return new HashSet<>();
+        throw new NotImplementedException( "Searching by gene set from the database is not supported." );
     }
 
     /**
      * Find phenotypes.
      */
     @Override
-    public Collection<SearchResult<?>> searchPhenotype( SearchSettings settings ) throws SearchException {
+    public Collection<SearchResult<CharacteristicValueObject>> searchPhenotype( SearchSettings settings ) throws SearchException {
+        if ( !settings.getUseDatabase() )
+            return new HashSet<>();
         try {
-            return this.dbHitsToSearchResult( this.phenotypeAssociationManagerService.searchInDatabaseForPhenotype( settings.getQuery() ) );
+            return this.toSearchResults( this.phenotypeAssociationManagerService.searchInDatabaseForPhenotype( settings.getQuery() ), 1.0 );
         } catch ( OntologySearchException e ) {
             throw new BaseCodeOntologySearchException( "Failed to search for phenotype associations.", e );
         }
     }
 
-    /**
-     * Convert hits from database searches into SearchResults.
-     */
-    private List<SearchResult<?>> dbHitsToSearchResult( Collection<? extends Identifiable> entities ) {
-        StopWatch watch = StopWatch.createStarted();
-        List<SearchResult<?>> results = new ArrayList<>();
-        for ( Identifiable e : entities ) {
-            if ( e == null ) {
-                if ( DatabaseSearchSource.log.isDebugEnabled() )
-                    DatabaseSearchSource.log.debug( "Null search result object" );
-                continue;
-            }
-            SearchResult esr = this.dbHitToSearchResult( e, null );
-            results.add( esr );
-        }
-        if ( watch.getTime() > 1000 ) {
-            DatabaseSearchSource.log.info( "Unpack " + results.size() + " search resultsS: " + watch.getTime() + "ms" );
-        }
-        return results;
-    }
-
-    /**
-     * Convert hits from database searches into SearchResults.
-     */
-    private List<SearchResult<?>> dbHitsToSearchResult( Map<? extends Identifiable, String> entities ) {
-        List<SearchResult<?>> results = new ArrayList<>();
-        for ( Identifiable e : entities.keySet() ) {
-            SearchResult esr = this.dbHitToSearchResult( e, entities.get( e ) );
-            results.add( esr );
-        }
-        return results;
-    }
-
-    private SearchResult dbHitToSearchResult( Identifiable e ) {
-        return this.dbHitToSearchResult( e, null );
-    }
-
-    /**
-     * @param text that matched the query (for highlighting)
-     */
-    private SearchResult<?> dbHitToSearchResult( Identifiable e, String text ) {
-        SearchResult<?> esr = new SearchResult<>( e, 1.0, text );
-        log.debug( esr );
-        return esr;
-    }
-
-    /**
-     * We only use this if we are not already filtering during the search (which is faster if the results will be large
-     * without the filter)
-     *
-     */
-    private void filterByTaxon( SearchSettings settings, Collection<SearchResult<?>> results ) {
-        if ( settings.getTaxon() == null ) {
-            return;
-        }
-        Collection<SearchResult> toRemove = new HashSet<>();
-        Taxon t = settings.getTaxon();
-
-        if ( results == null )
-            return;
-
-        for ( SearchResult sr : results ) {
-
-            Object o = sr.getResultObject();
-            try {
-
-                Taxon currentTaxon;
-
-                if ( o instanceof ExpressionExperiment ) {
-                    ExpressionExperiment ee = ( ExpressionExperiment ) o;
-                    currentTaxon = expressionExperimentService.getTaxon( ee );
-
-                } else if ( o instanceof ExpressionExperimentSet ) {
-                    ExpressionExperimentSet ees = ( ExpressionExperimentSet ) o;
-                    currentTaxon = ees.getTaxon();
-
-                } else if ( o instanceof Gene ) {
-                    Gene gene = ( Gene ) o;
-                    currentTaxon = gene.getTaxon();
-
-                } else if ( o instanceof GeneSet ) {
-                    GeneSet geneSet = ( GeneSet ) o;
-                    currentTaxon = geneSetService.getTaxon( geneSet );
-
-                } else if ( o instanceof CharacteristicValueObject ) {
-                    CharacteristicValueObject charVO = ( CharacteristicValueObject ) o;
-                    currentTaxon = taxonDao.findByCommonName( charVO.getTaxon() );
-
-                } else {
-                    Method m = o.getClass().getMethod( "getTaxon" );
-                    currentTaxon = ( Taxon ) m.invoke( o );
-                }
-
-                if ( currentTaxon == null || !currentTaxon.getId().equals( t.getId() ) ) {
-                    if ( currentTaxon == null ) {
-                        // Sanity check for bad data in db (could happen if EE has no samples). Can happen that
-                        // searchResults have a valid getTaxon method
-                        // but the method returns null (shouldn't make it this far)
-                        DatabaseSearchSource.log.debug( "Object has getTaxon method but it returns null. Obj is: " + o );
-                    }
-                    toRemove.add( sr );
-                }
-            } catch ( SecurityException | IllegalArgumentException | InvocationTargetException |
-                      IllegalAccessException e ) {
-                throw new RuntimeException( e );
-            } catch ( NoSuchMethodException e ) {
-                /*
-                 * In case of a programming error where the results don't have a taxon at all, we assume we should
-                 * filter them out but issue a warning.
-                 */
-                toRemove.add( sr );
-                DatabaseSearchSource.log
-                        .warn( "No getTaxon method for: " + o.getClass() + ".  Filtering from results. Error was: "
-                                + e );
-
-            }
-        }
-        results.removeAll( toRemove );
+    private <T extends Identifiable> List<SearchResult<T>> toSearchResults( Collection<T> entities, double score ) {
+        return entities.stream()
+                .filter( Objects::nonNull )
+                .map( e -> {
+                    SearchResult<T> sr = new SearchResult<>( e, this );
+                    sr.setScore( score );
+                    return sr;
+                } )
+                .collect( Collectors.toList() );
     }
 }

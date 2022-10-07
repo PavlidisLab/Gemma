@@ -7,11 +7,10 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.mock.web.MockHttpServletResponse;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
-import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSetValueObject;
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResultSetValueObject;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -27,7 +26,6 @@ import ubic.gemma.web.services.rest.util.ResponseDataObject;
 import ubic.gemma.web.services.rest.util.args.*;
 import ubic.gemma.web.util.BaseSpringWebTest;
 
-import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.NotFoundException;
 import javax.ws.rs.core.Response;
@@ -41,6 +39,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.*;
 
 public class AnalysisResultSetsWebServiceTest extends BaseSpringWebTest {
@@ -74,7 +73,9 @@ public class AnalysisResultSetsWebServiceTest extends BaseSpringWebTest {
     private DatabaseEntry databaseEntry2;
 
     @Before
-    public void setUp() {
+    public void setUp() throws Exception {
+        super.setUp();
+
         ee = getTestPersistentBasicExpressionExperiment();
 
         dea = new DifferentialExpressionAnalysis();
@@ -99,7 +100,7 @@ public class AnalysisResultSetsWebServiceTest extends BaseSpringWebTest {
 
         ExternalDatabase geo = externalDatabaseService.findByName( "GEO" );
         assertNotNull( geo );
-        assertEquals( geo.getName(), "GEO" );
+        assertEquals( "GEO", geo.getName() );
 
         databaseEntry = DatabaseEntry.Factory.newInstance();
         databaseEntry.setAccession( "GEO123123" );
@@ -123,35 +124,36 @@ public class AnalysisResultSetsWebServiceTest extends BaseSpringWebTest {
 
     @Test
     public void testFindAllWhenNoDatasetsAreProvidedThenReturnLatestAnalysisResults() {
-        HttpServletResponse response = new MockHttpServletResponse();
-        ResponseDataObject<?> result = service.findAll( null,
+        ResponseDataObject<?> result = service.getResultSets( null,
                 null,
                 FilterArg.valueOf( "" ),
                 OffsetArg.valueOf( "0" ),
                 LimitArg.valueOf( "10" ),
-                SortArg.valueOf( "+id" ),
-                response );
-        assertEquals( response.getStatus(), 200 );
+                SortArg.valueOf( "+id" ) );
         //noinspection unchecked
-        List<ExpressionAnalysisResultSetValueObject> results = ( List<ExpressionAnalysisResultSetValueObject> ) result.getData();
-        assertEquals( results.size(), 1 );
+        List<DifferentialExpressionAnalysisResultSetValueObject> results = ( ( List<DifferentialExpressionAnalysisResultSetValueObject> ) result.getData() );
+
+        // this is kind of annoying, but we can have results from other tests still lingering in the database, so we
+        // only need to check for the fixture
+        assertThat( results )
+                .extracting( "id" )
+                .contains( this.dears.getId() );
+
         // individual analysis results are not exposed from this endpoint
-        assertNull( results.get( 0 ).getResults() );
+        assertThat( results ).extracting( "results" )
+                .containsOnlyNulls();
     }
 
     @Test
     public void testFindAllWithFilters() {
-        HttpServletResponse response = new MockHttpServletResponse();
-        ResponseDataObject<?> result = service.findAll( null,
+        ResponseDataObject<?> result = service.getResultSets( null,
                 null,
                 FilterArg.valueOf( "id = " + this.dears.getId() ),
                 OffsetArg.valueOf( "0" ),
                 LimitArg.valueOf( "10" ),
-                SortArg.valueOf( "+id" ),
-                response );
-        assertEquals( response.getStatus(), 200 );
+                SortArg.valueOf( "+id" ) );
         //noinspection unchecked
-        List<ExpressionAnalysisResultSetValueObject> results = ( List<ExpressionAnalysisResultSetValueObject> ) result.getData();
+        List<DifferentialExpressionAnalysisResultSetValueObject> results = ( List<DifferentialExpressionAnalysisResultSetValueObject> ) result.getData();
         assertEquals( results.size(), 1 );
         // individual analysis results are not exposed from this endpoint
         assertNull( results.get( 0 ).getResults() );
@@ -159,17 +161,14 @@ public class AnalysisResultSetsWebServiceTest extends BaseSpringWebTest {
 
     @Test
     public void testFindAllWithFiltersAndCollections() {
-        HttpServletResponse response = new MockHttpServletResponse();
-        ResponseDataObject<?> result = service.findAll( null,
+        ResponseDataObject<?> result = service.getResultSets( null,
                 null,
                 FilterArg.valueOf( "id in (" + this.dears.getId() + ")" ),
                 OffsetArg.valueOf( "0" ),
                 LimitArg.valueOf( "10" ),
-                SortArg.valueOf( "+id" ),
-                response );
-        assertEquals( response.getStatus(), 200 );
+                SortArg.valueOf( "+id" ) );
         //noinspection unchecked
-        List<ExpressionAnalysisResultSetValueObject> results = ( List<ExpressionAnalysisResultSetValueObject> ) result.getData();
+        List<DifferentialExpressionAnalysisResultSetValueObject> results = ( List<DifferentialExpressionAnalysisResultSetValueObject> ) result.getData();
         assertEquals( results.size(), 1 );
         // individual analysis results are not exposed from this endpoint
         assertNull( results.get( 0 ).getResults() );
@@ -177,84 +176,70 @@ public class AnalysisResultSetsWebServiceTest extends BaseSpringWebTest {
 
     @Test
     public void testFindAllWithInvalidFilters() {
-        HttpServletResponse response = new MockHttpServletResponse();
-        assertThrows( BadRequestException.class, () -> service.findAll( null,
+        assertThrows( BadRequestException.class, () -> service.getResultSets( null,
                 null,
                 FilterArg.valueOf( "id2 = " + this.dears.getId() ),
                 OffsetArg.valueOf( "0" ),
                 LimitArg.valueOf( "10" ),
-                SortArg.valueOf( "+id" ),
-                response ) );
+                SortArg.valueOf( "+id" ) ) );
     }
 
     @Test
     public void testFindAllWithDatasetIdsThenReturnLatestAnalysisResults() {
-        HttpServletResponse response = new MockHttpServletResponse();
         DatasetArrayArg datasets = DatasetArrayArg.valueOf( String.valueOf( ee.getId() ) );
-        ResponseDataObject<?> result = service.findAll(
+        ResponseDataObject<?> result = service.getResultSets(
                 datasets,
                 null,
                 FilterArg.valueOf( "" ),
                 OffsetArg.valueOf( "0" ),
                 LimitArg.valueOf( "10" ),
-                SortArg.valueOf( "+id" ),
-                response );
-        assertEquals( response.getStatus(), 200 );
+                SortArg.valueOf( "+id" ) );
         //noinspection unchecked
-        List<ExpressionAnalysisResultSetValueObject> results = ( List<ExpressionAnalysisResultSetValueObject> ) result.getData();
+        List<DifferentialExpressionAnalysisResultSetValueObject> results = ( List<DifferentialExpressionAnalysisResultSetValueObject> ) result.getData();
         assertEquals( results.get( 0 ).getId(), dears.getId() );
     }
 
     @Test
     public void testFindAllWhenDatasetDoesNotExistThenRaise404NotFound() {
-        HttpServletResponse response = new MockHttpServletResponse();
-        NotFoundException e = assertThrows( NotFoundException.class, () -> service.findAll(
+        NotFoundException e = assertThrows( NotFoundException.class, () -> service.getResultSets(
                 DatasetArrayArg.valueOf( "GEO123124" ),
                 null,
                 null,
                 OffsetArg.valueOf( "0" ),
                 LimitArg.valueOf( "10" ),
-                SortArg.valueOf( "+id" ),
-                response ) );
+                SortArg.valueOf( "+id" ) ) );
         assertEquals( e.getResponse().getStatus(), Response.Status.NOT_FOUND.getStatusCode() );
     }
 
     @Test
     public void testFindAllWithDatabaseEntriesThenReturnLatestAnalysisResults() {
-        HttpServletResponse response = new MockHttpServletResponse();
-        ResponseDataObject<?> result = service.findAll( null,
+        ResponseDataObject<?> result = service.getResultSets( null,
                 DatabaseEntryArrayArg.valueOf( ee.getAccession().getAccession() ),
                 FilterArg.valueOf( "" ),
                 OffsetArg.valueOf( "0" ),
                 LimitArg.valueOf( "10" ),
-                SortArg.valueOf( "+id" ),
-                response );
-        assertEquals( response.getStatus(), 200 );
+                SortArg.valueOf( "+id" ) );
         //noinspection unchecked
-        List<ExpressionAnalysisResultSetValueObject> results = ( List<ExpressionAnalysisResultSetValueObject> ) result.getData();
+        List<DifferentialExpressionAnalysisResultSetValueObject> results = ( List<DifferentialExpressionAnalysisResultSetValueObject> ) result.getData();
         assertEquals( results.get( 0 ).getId(), dears.getId() );
     }
 
     @Test
     public void testFindAllWhenDatabaseEntryDoesNotExistThenRaise404NotFound() {
-        HttpServletResponse response = new MockHttpServletResponse();
-        NotFoundException e = assertThrows( NotFoundException.class, () -> service.findAll(
+        NotFoundException e = assertThrows( NotFoundException.class, () -> service.getResultSets(
                 null,
                 DatabaseEntryArrayArg.valueOf( "GEO123124,GEO1213121" ),
                 null,
                 OffsetArg.valueOf( "0" ),
                 LimitArg.valueOf( "10" ),
-                SortArg.valueOf( "+id" ),
-                response ) );
+                SortArg.valueOf( "+id" ) ) );
         assertEquals( e.getResponse().getStatus(), Response.Status.NOT_FOUND.getStatusCode() );
     }
 
     @Test
     public void testFindByIdThenReturn200Success() {
-        HttpServletResponse response = new MockHttpServletResponse();
-        ResponseDataObject<?> result = service.findById( ExpressionAnalysisResultSetArg.valueOf( dears.getId().toString() ), false );
-        assertEquals( response.getStatus(), 200 );
-        ExpressionAnalysisResultSetValueObject dearsVo = ( ExpressionAnalysisResultSetValueObject ) result.getData();
+        ResponseDataObject<?> result = service.getResultSet( ExpressionAnalysisResultSetArg.valueOf( dears.getId().toString() ), false );
+        DifferentialExpressionAnalysisResultSetValueObject dearsVo = ( DifferentialExpressionAnalysisResultSetValueObject ) result.getData();
         assertEquals( dearsVo.getId(), dears.getId() );
         assertEquals( dearsVo.getAnalysis().getId(), dea.getId() );
         assertNotNull( dearsVo.getResults() );
@@ -262,10 +247,8 @@ public class AnalysisResultSetsWebServiceTest extends BaseSpringWebTest {
 
     @Test
     public void testFindByIdWhenExcludeResultsThenReturn200Success() {
-        HttpServletResponse response = new MockHttpServletResponse();
-        ResponseDataObject<?> result = service.findById( ExpressionAnalysisResultSetArg.valueOf( dears.getId().toString() ), true );
-        assertEquals( response.getStatus(), 200 );
-        ExpressionAnalysisResultSetValueObject dearsVo = ( ExpressionAnalysisResultSetValueObject ) result.getData();
+        ResponseDataObject<?> result = service.getResultSet( ExpressionAnalysisResultSetArg.valueOf( dears.getId().toString() ), true );
+        DifferentialExpressionAnalysisResultSetValueObject dearsVo = ( DifferentialExpressionAnalysisResultSetValueObject ) result.getData();
         assertEquals( dearsVo.getId(), dears.getId() );
         assertEquals( dearsVo.getAnalysis().getId(), dea.getId() );
         assertNull( dearsVo.getResults() );
@@ -273,22 +256,19 @@ public class AnalysisResultSetsWebServiceTest extends BaseSpringWebTest {
 
     @Test
     public void testFindByIdWhenInvalidIdentifierThenThrowMalformedArgException() {
-        HttpServletResponse response = new MockHttpServletResponse();
-        assertThrows( MalformedArgException.class, () -> service.findById( ExpressionAnalysisResultSetArg.valueOf( "alksdok102" ), false ) );
+        assertThrows( MalformedArgException.class, () -> service.getResultSet( ExpressionAnalysisResultSetArg.valueOf( "alksdok102" ), false ) );
     }
 
     @Test
     public void testFindByIdWhenResultSetDoesNotExistsThenReturn404NotFoundError() {
         long id = 123129L;
-        HttpServletResponse response = new MockHttpServletResponse();
-        NotFoundException e = assertThrows( NotFoundException.class, () -> service.findById( ExpressionAnalysisResultSetArg.valueOf( String.valueOf( id ) ), false ) );
+        NotFoundException e = assertThrows( NotFoundException.class, () -> service.getResultSet( ExpressionAnalysisResultSetArg.valueOf( String.valueOf( id ) ), false ) );
         assertEquals( e.getResponse().getStatus(), Response.Status.NOT_FOUND.getStatusCode() );
     }
 
     @Test
     public void testFindByIdToTsv() throws IOException {
-        HttpServletResponse response = new MockHttpServletResponse();
-        StreamingOutput result = service.findByIdToTsv( ExpressionAnalysisResultSetArg.valueOf( dears.getId().toString() ), response );
+        StreamingOutput result = service.getResultSetAsTsv( ExpressionAnalysisResultSetArg.valueOf( dears.getId().toString() ) );
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
         result.write( byteArrayOutputStream );
         byteArrayOutputStream.toString( StandardCharsets.UTF_8.name() );

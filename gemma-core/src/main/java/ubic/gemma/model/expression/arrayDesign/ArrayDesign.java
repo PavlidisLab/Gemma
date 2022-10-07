@@ -28,7 +28,7 @@ import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.genome.Taxon;
 
-import java.util.Collection;
+import java.util.Set;
 import java.util.HashSet;
 
 /**
@@ -51,17 +51,17 @@ public class ArrayDesign extends AbstractAuditable implements gemma.gsec.model.S
      */
     private static final long serialVersionUID = -7566439134502613470L;
     private Integer advertisedNumberOfDesignElements;
-    private Collection<AlternateName> alternateNames = new HashSet<>();
+    private Set<AlternateName> alternateNames = new HashSet<>();
     private ArrayDesign alternativeTo; // for affymetrix
-    private Collection<CompositeSequence> compositeSequences = new HashSet<>();
+    private Set<CompositeSequence> compositeSequences = new HashSet<>();
     private CurationDetails curationDetails;
     private Contact designProvider;
-    private Collection<DatabaseEntry> externalReferences = new HashSet<>();
+    private Set<DatabaseEntry> externalReferences = new HashSet<>();
     private ArrayDesign mergedInto;
-    private Collection<ArrayDesign> mergees = new HashSet<>();
+    private Set<ArrayDesign> mergees = new HashSet<>();
     private Taxon primaryTaxon;
     private String shortName;
-    private Collection<ArrayDesign> subsumedArrayDesigns = new HashSet<>();
+    private Set<ArrayDesign> subsumedArrayDesigns = new HashSet<>();
     private ArrayDesign subsumingArrayDesign;
 
     private TechnologyType technologyType;
@@ -89,13 +89,13 @@ public class ArrayDesign extends AbstractAuditable implements gemma.gsec.model.S
      *         was
      *         entered into the system. The actual number of design elements can only be determined by looking at the
      *         associated
-     *         Collection of DesignElements.
+     *         Set of DesignElements.
      */
     public Integer getAdvertisedNumberOfDesignElements() {
         return this.advertisedNumberOfDesignElements;
     }
 
-    public Collection<AlternateName> getAlternateNames() {
+    public Set<AlternateName> getAlternateNames() {
         return this.alternateNames;
     }
 
@@ -107,7 +107,7 @@ public class ArrayDesign extends AbstractAuditable implements gemma.gsec.model.S
         return alternativeTo;
     }
 
-    public Collection<CompositeSequence> getCompositeSequences() {
+    public Set<CompositeSequence> getCompositeSequences() {
         return this.compositeSequences;
     }
 
@@ -123,7 +123,7 @@ public class ArrayDesign extends AbstractAuditable implements gemma.gsec.model.S
     /**
      * @return Accessions for this array design in other databases, e.g., GEO, ArrayExpression.
      */
-    public Collection<DatabaseEntry> getExternalReferences() {
+    public Set<DatabaseEntry> getExternalReferences() {
         return this.externalReferences;
     }
 
@@ -131,7 +131,7 @@ public class ArrayDesign extends AbstractAuditable implements gemma.gsec.model.S
         return this.mergedInto;
     }
 
-    public Collection<ArrayDesign> getMergees() {
+    public Set<ArrayDesign> getMergees() {
         return this.mergees;
     }
 
@@ -159,7 +159,7 @@ public class ArrayDesign extends AbstractAuditable implements gemma.gsec.model.S
      *         elements
      *         that are on the HG-U133A and HG-U133B, so they are subsumed by the HG-U133_Plus_2.
      */
-    public Collection<ArrayDesign> getSubsumedArrayDesigns() {
+    public Set<ArrayDesign> getSubsumedArrayDesigns() {
         return this.subsumedArrayDesigns;
     }
 
@@ -188,7 +188,7 @@ public class ArrayDesign extends AbstractAuditable implements gemma.gsec.model.S
         this.advertisedNumberOfDesignElements = advertisedNumberOfDesignElements;
     }
 
-    public void setAlternateNames( Collection<AlternateName> alternateNames ) {
+    public void setAlternateNames( Set<AlternateName> alternateNames ) {
         this.alternateNames = alternateNames;
     }
 
@@ -197,7 +197,7 @@ public class ArrayDesign extends AbstractAuditable implements gemma.gsec.model.S
     }
 
     public void setCompositeSequences(
-            Collection<CompositeSequence> compositeSequences ) {
+            Set<CompositeSequence> compositeSequences ) {
         this.compositeSequences = compositeSequences;
     }
 
@@ -211,7 +211,7 @@ public class ArrayDesign extends AbstractAuditable implements gemma.gsec.model.S
     }
 
     public void setExternalReferences(
-            Collection<DatabaseEntry> externalReferences ) {
+            Set<DatabaseEntry> externalReferences ) {
         this.externalReferences = externalReferences;
     }
 
@@ -219,7 +219,7 @@ public class ArrayDesign extends AbstractAuditable implements gemma.gsec.model.S
         this.mergedInto = mergedInto;
     }
 
-    public void setMergees( Collection<ArrayDesign> mergees ) {
+    public void setMergees( Set<ArrayDesign> mergees ) {
         this.mergees = mergees;
     }
 
@@ -232,7 +232,7 @@ public class ArrayDesign extends AbstractAuditable implements gemma.gsec.model.S
     }
 
     public void setSubsumedArrayDesigns(
-            Collection<ArrayDesign> subsumedArrayDesigns ) {
+            Set<ArrayDesign> subsumedArrayDesigns ) {
         this.subsumedArrayDesigns = subsumedArrayDesigns;
     }
 

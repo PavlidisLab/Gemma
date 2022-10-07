@@ -882,7 +882,7 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
                 FactorValue fv = FactorValue.Factory.newInstance();
                 fv.setIsBaseline( false ); /* we could set true for the first batch, but nobody cares. */
                 fv.setValue( batchId );
-                Collection<Characteristic> chars = new HashSet<>();
+                Set<Characteristic> chars = new HashSet<>();
                 Characteristic c = Characteristic.Factory.newInstance();
                 c.setCategory( ExperimentalDesignUtils.BATCH_FACTOR_CATEGORY_NAME );
                 c.setValue( batchId );

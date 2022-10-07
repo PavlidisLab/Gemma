@@ -5,7 +5,7 @@
 <title><fmt:message key="generalSearch.title" /></title>
 
 <jwr:script src='/scripts/api/ext/data/DwrProxy.js' />
-<jwr:script src='/scripts/app/search.js' />
+<jwr:script src='/scripts/api/search/search.js' />
 
 <script type="text/javascript">
 	Ext.state.Manager.setProvider(new Ext.state.CookieProvider( ));

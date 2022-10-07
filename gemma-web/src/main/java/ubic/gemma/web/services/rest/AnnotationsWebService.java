@@ -20,8 +20,13 @@
 package ubic.gemma.web.services.rest;
 
 import io.swagger.v3.oas.annotations.Operation;
-import org.apache.commons.text.StringEscapeUtils;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.enums.Explode;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.text.StringEscapeUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ubic.basecode.ontology.search.OntologySearchException;
@@ -30,6 +35,7 @@ import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.search.SearchResult;
 import ubic.gemma.core.search.SearchService;
+import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
@@ -40,14 +46,14 @@ import ubic.gemma.persistence.service.expression.experiment.ExpressionExperiment
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Slice;
+import ubic.gemma.persistence.util.Sort;
 import ubic.gemma.web.services.rest.util.PaginatedResponseDataObject;
 import ubic.gemma.web.services.rest.util.Responder;
 import ubic.gemma.web.services.rest.util.ResponseDataObject;
+import ubic.gemma.web.services.rest.util.ResponseErrorObject;
 import ubic.gemma.web.services.rest.util.args.*;
 
-import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.*;
-import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import java.util.*;
 
@@ -97,15 +103,17 @@ public class AnnotationsWebService {
      * @see CharacteristicValueObject for the output object structure.
      */
     @GET
-    @Path("/search/{query}")
+    @Path("/search")
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Search for annotation tags")
-    public ResponseDataObject<List<AnnotationSearchResultValueObject>> search( // Params:
-            @PathParam("query") @DefaultValue("") StringArrayArg query, // Required
-            @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
+    @Operation(summary = "Search for annotation tags", responses = {
+            @ApiResponse(responseCode = "200", content = @Content(schema = @Schema(ref = "ResponseDataObjectListAnnotationSearchResultValueObject"))),
+            @ApiResponse(responseCode = "400", description = "The search query is empty or invalid.", content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
+    })
+    public ResponseDataObject<List<AnnotationSearchResultValueObject>> searchAnnotations(
+            @Parameter(schema = @Schema(implementation = StringArrayArg.class), explode = Explode.FALSE) @QueryParam("query") @DefaultValue("") StringArrayArg query
     ) {
-        if ( query.getValue().isEmpty() ) {
-            throw new BadRequestException( "Search query empty." );
+        if ( query == null || query.getValue().isEmpty() ) {
+            throw new BadRequestException( "Search query cannot be empty." );
         }
         try {
             return Responder.respond( this.getTerms( query ) );
@@ -115,25 +123,46 @@ public class AnnotationsWebService {
     }
 
     /**
+     * @see #searchAnnotations(StringArrayArg)
+     */
+    @GET
+    @Path("/search/{query}")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(summary = "Search for annotation tags.", responses = {
+            @ApiResponse(responseCode = "200", content = @Content(schema = @Schema(ref = "ResponseDataObjectListAnnotationSearchResultValueObject"))),
+            @ApiResponse(responseCode = "400", description = "The search query is empty or invalid.", content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
+    }, deprecated = true)
+    public ResponseDataObject<List<AnnotationSearchResultValueObject>> searchAnnotationsByPathQuery( // Params:
+            @PathParam("query") @DefaultValue("") StringArrayArg query // Required
+    ) {
+        return searchAnnotations( query );
+    }
+
+    /**
      * Does a search for datasets containing characteristics matching the given string.
-     * If filter, offset, limit or sort parameters are provided.
+     * If filterArg, offset, limit or sortArg parameters are provided.
      *
      * @param query the search query. Either plain text, or an ontology term URI
      * @return response data object with a collection of dataset that match the search query.
      * @see ExpressionExperimentSearchService#searchExpressionExperiments(String) for better description of the search process.
      */
     @GET
-    @Path("/search/{query}/datasets")
+    @Path("/search/datasets")
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Retrieve datasets associated to an annotation tags search")
-    public PaginatedResponseDataObject<ExpressionExperimentValueObject> datasets( // Params:
-            @PathParam("query") StringArrayArg query, // Required
-            @QueryParam("filter") @DefaultValue("") FilterArg filter, // Optional, default null
+    @Operation(summary = "Retrieve datasets associated to an annotation tags search", responses = {
+            @ApiResponse(responseCode = "200", content = @Content(schema = @Schema(ref = "ResponseDataObjectListAnnotationSearchResultValueObject"))),
+            @ApiResponse(responseCode = "400", description = "The search query is empty or invalid.", content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
+    })
+    public PaginatedResponseDataObject<ExpressionExperimentValueObject> searchDatasets( // Params:
+            @Parameter(schema = @Schema(implementation = StringArrayArg.class), explode = Explode.FALSE) @QueryParam("query") @DefaultValue("") StringArrayArg query,
+            @QueryParam("filter") @DefaultValue("") FilterArg filterArg, // Optional, default null
             @QueryParam("offset") @DefaultValue("0") OffsetArg offset, // Optional, default 0
             @QueryParam("limit") @DefaultValue("20") LimitArg limit, // Optional, default 20
-            @QueryParam("sort") @DefaultValue("+id") SortArg sort, // Optional, default +id
-            @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
+            @QueryParam("sort") @DefaultValue("+id") SortArg sortArg // Optional, default +id
     ) {
+        if ( query == null || query.getValue().isEmpty() ) {
+            throw new BadRequestException( "Search query cannot be empty." );
+        }
         Collection<Long> foundIds;
         try {
             foundIds = this.searchEEs( query.getValue() );
@@ -145,45 +174,69 @@ public class AnnotationsWebService {
             return Responder.paginate( Slice.fromList( Collections.emptyList() ) );
         }
 
-        // If there are filters other than the search query, intersect the results.
-        if ( filter.getObjectFilters( expressionExperimentService ) != null ||
-                offset.getValue() != 0 ||
-                limit.getValue() != 0 ||
-                !sort.getValue().getOrderBy().equals( "id" ) ||
-                sort.getValue().getDirection() != SortArg.Sort.Direction.ASC ) {
+        Filters filters = filterArg.getObjectFilters( expressionExperimentService );
+        Sort sort = sortArg.getSort( expressionExperimentService );
 
-            // this without cluttering the code.
-            Filters filters = filter.getObjectFilters( expressionExperimentService );
-            if ( filters == null ) {
-                filters = new Filters();
-            }
-            filters.add( DatasetArrayArg.valueOf( StringUtils.join( foundIds, ',' ) ).getObjectFilters( expressionExperimentService ) );
-            return Responder.paginate( expressionExperimentService.loadValueObjectsPreFilter( filters, sort.getSort( expressionExperimentService ), offset.getValue(), limit.getValue() ) );
+        if ( filters == null
+                && offset.getValue() == 0
+                && foundIds.size() < limit.getValue()
+                && sort.getPropertyName().equals( "id" )
+                && sort.getDirection() == Sort.Direction.ASC ) {
+            // Otherwise there is no need to go the pre-filter path since we already know exactly what IDs we want.
+            return Responder.paginate( Slice.fromList( expressionExperimentService.loadValueObjectsByIds( foundIds ) ) );
+
         }
 
-        // Otherwise there is no need to go the pre-filter path since we already know exactly what IDs we want.
-        return Responder.paginate( Slice.fromList( expressionExperimentService.loadValueObjectsByIds( foundIds ) ) );
+        // FIXME: this is not necessary since FilterArg.valueOf("") returns an empty Filters object
+        if ( filters == null ) {
+            filters = new Filters();
+        }
+
+        // If there are filters other than the search query, intersect the results.
+        filters.add( DatasetArrayArg.valueOf( StringUtils.join( foundIds, ',' ) ).getObjectFilters( expressionExperimentService ) );
+        return Responder.paginate( expressionExperimentService.loadValueObjectsPreFilter( filters, sort, offset.getValue(), limit.getValue() ) );
+    }
+
+    @GET
+    @Path("/search/{query}/datasets")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(summary = "Retrieve datasets associated to an annotation tags search", responses = {
+            @ApiResponse(responseCode = "200", content = @Content(schema = @Schema(ref = "ResponseDataObjectListAnnotationSearchResultValueObject"))),
+            @ApiResponse(responseCode = "400", description = "The search query is empty or invalid.", content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
+    }, deprecated = true)
+    public PaginatedResponseDataObject<ExpressionExperimentValueObject> searchDatasetsByQueryInPath( // Params:
+            @PathParam("query") @DefaultValue("") StringArrayArg query, // Required
+            @QueryParam("filter") @DefaultValue("") FilterArg filterArg, // Optional, default null
+            @QueryParam("offset") @DefaultValue("0") OffsetArg offset, // Optional, default 0
+            @QueryParam("limit") @DefaultValue("20") LimitArg limit, // Optional, default 20
+            @QueryParam("sort") @DefaultValue("+id") SortArg sortArg // Optional, default +id
+    ) {
+        return searchDatasets( query, filterArg, offset, limit, sortArg );
     }
 
     /**
-     * Same as this#datasets(ArrayStringArg, DatasetFilterArg, IntArg, IntArg, SortArg, HttpServletResponse) but
-     * also filters by taxon.
-     * see this#datasets(ArrayStringArg, DatasetFilterArg, IntArg, IntArg, SortArg, HttpServletResponse).
+     * Same as {@link #searchDatasets(StringArrayArg, FilterArg, OffsetArg, LimitArg, SortArg)} but also filters by
+     * taxon.
      */
     @GET
-    @Path("/{taxonArg}/search/{query}/datasets")
+    @Path("/{taxon}/search/datasets")
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Retrieve datasets within a given taxa associated to an annotation tags search")
-    public PaginatedResponseDataObject<ExpressionExperimentValueObject> taxonDatasets( // Params:
-            @PathParam("taxonArg") TaxonArg<Object> taxonArg, // Required
-            @PathParam("query") StringArrayArg query, // Required
+    @Operation(summary = "Retrieve datasets within a given taxa associated to an annotation tags search", responses = {
+            @ApiResponse(responseCode = "200", content = @Content(schema = @Schema(ref = "ResponseDataObjectListAnnotationSearchResultValueObject"))),
+            @ApiResponse(responseCode = "400", description = "The search query is empty or invalid.", content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
+    })
+    public PaginatedResponseDataObject<ExpressionExperimentValueObject> searchTaxonDatasets( // Params:
+            @PathParam("taxon") TaxonArg<?> taxonArg, // Required
+            @Parameter(schema = @Schema(implementation = StringArrayArg.class), explode = Explode.FALSE) @QueryParam("query") @DefaultValue("") StringArrayArg query,
             @QueryParam("filter") @DefaultValue("") FilterArg filter, // Optional, default null
             @QueryParam("offset") @DefaultValue("0") OffsetArg offset, // Optional, default 0
             @QueryParam("limit") @DefaultValue("20") LimitArg limit, // Optional, default 20
-            @QueryParam("sort") @DefaultValue("+id") SortArg sort, // Optional, default +id
-            @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
+            @QueryParam("sort") @DefaultValue("+id") SortArg sort // Optional, default +id
     ) {
-        Collection<Long> foundIds = null;
+        if ( query == null || query.getValue().isEmpty() ) {
+            throw new BadRequestException( "Search query cannot be empty." );
+        }
+        Collection<Long> foundIds;
         try {
             foundIds = this.searchEEs( query.getValue() );
         } catch ( SearchException e ) {
@@ -208,6 +261,27 @@ public class AnnotationsWebService {
     }
 
     /**
+     * @see #searchDatasets(StringArrayArg, FilterArg, OffsetArg, LimitArg, SortArg)
+     */
+    @GET
+    @Path("/{taxon}/search/{query}/datasets")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(summary = "Retrieve datasets within a given taxa associated to an annotation tags search", responses = {
+            @ApiResponse(responseCode = "200", content = @Content(schema = @Schema(ref = "ResponseDataObjectListAnnotationSearchResultValueObject"))),
+            @ApiResponse(responseCode = "400", description = "The search query is empty or invalid.", content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
+    }, deprecated = true)
+    public PaginatedResponseDataObject<ExpressionExperimentValueObject> searchTaxonDatasetsByQueryInPath( // Params:
+            @PathParam("taxon") TaxonArg<?> taxonArg, // Required
+            @PathParam("query") @DefaultValue("") StringArrayArg query, // Required
+            @QueryParam("filter") @DefaultValue("") FilterArg filter, // Optional, default null
+            @QueryParam("offset") @DefaultValue("0") OffsetArg offset, // Optional, default 0
+            @QueryParam("limit") @DefaultValue("20") LimitArg limit, // Optional, default 20
+            @QueryParam("sort") @DefaultValue("+id") SortArg sort // Optional, default +id
+    ) {
+        return searchTaxonDatasets( taxonArg, query, filter, offset, limit, sort );
+    }
+
+    /**
      * Performs a dataset search for each given value, then intersects the results to create a final set of dataset IDs.
      *
      * @param values the values that the datasets should match.
@@ -221,7 +295,7 @@ public class AnnotationsWebService {
 
             SearchSettings settings = SearchSettings.expressionExperimentSearch( value );
 
-            Map<Class<?>, List<SearchResult<?>>> results = searchService.search( settings, false, false );
+            Map<Class<? extends Identifiable>, List<SearchResult<? extends Identifiable>>> results = searchService.search( settings, false, false );
             List<SearchResult<?>> eeResults = results.get( ExpressionExperiment.class );
 
             if ( eeResults == null ) {

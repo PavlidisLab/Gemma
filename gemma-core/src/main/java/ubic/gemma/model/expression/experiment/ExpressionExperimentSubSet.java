@@ -45,16 +45,6 @@ public class ExpressionExperimentSubSet extends BioAssaySet implements SecuredCh
     }
 
     @Override
-    public Collection<BioAssay> getBioAssays() {
-        return this.bioAssays;
-    }
-
-    @Override
-    public void setBioAssays( Collection<BioAssay> bioAssays ) {
-        this.bioAssays = bioAssays;
-    }
-
-    @Override
     public ExpressionExperimentValueObject createValueObject() {
         return new ExpressionExperimentSubsetValueObject( this );
     }

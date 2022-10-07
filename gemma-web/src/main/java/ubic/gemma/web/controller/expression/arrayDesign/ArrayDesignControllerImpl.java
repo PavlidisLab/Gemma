@@ -171,7 +171,7 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
                             + " can't be deleted. Dataset has a dependency on this Array." );
         }
 
-        String taskId = taskRunningService.submitLocalTask( new TaskCommand( arrayDesign.getId() ) );
+        String taskId = taskRunningService.submitTaskCommand( new TaskCommand( arrayDesign.getId() ) );
 
         return new ModelAndView().addObject( "taskId", taskId );
 
@@ -263,12 +263,12 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
                     .addObject( "message", "No search criteria provided" );
         }
 
-        List<SearchResult<?>> searchResults = null;
+        Collection<SearchResult<ArrayDesign>> searchResults = null;
         try {
-            searchResults = searchService.search( SearchSettings.arrayDesignSearch( filter ) )
-                    .get( ArrayDesign.class );
+            searchResults = searchService.search( SearchSettings.arrayDesignSearch( filter ), ArrayDesign.class );
         } catch ( SearchException e ) {
-            throw new IllegalArgumentException( "Invalid search settings.", e );
+            return new ModelAndView( new RedirectView( "/arrays/showAllArrayDesigns.html", true ) )
+                    .addObject( "message", "Invalid search settings: " + e.getMessage() );
         }
 
         if ( ( searchResults == null ) || ( searchResults.size() == 0 ) ) {
@@ -287,7 +287,7 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
                             "Matched one : " + arrayDesign.getName() + "(" + arrayDesign.getShortName() + ")" );
         }
 
-        for ( SearchResult ad : searchResults ) {
+        for ( SearchResult<ArrayDesign> ad : searchResults ) {
             list.append( ad.getResultId() ).append( "," );
         }
 
@@ -310,7 +310,7 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
         GenerateArraySummaryLocalTask job;
         if ( StringUtils.isBlank( sId ) ) {
             job = new GenerateArraySummaryLocalTask( new TaskCommand() );
-            String taskId = taskRunningService.submitLocalTask( job );
+            String taskId = taskRunningService.submitTask( job );
             return new ModelAndView( new RedirectView( "/arrays/showAllArrayDesigns.html", true ) )
                     .addObject( "taskId", taskId );
         }
@@ -318,7 +318,7 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
         try {
             Long id = Long.parseLong( sId );
             job = new GenerateArraySummaryLocalTask( new TaskCommand( id ) );
-            String taskId = taskRunningService.submitLocalTask( job );
+            String taskId = taskRunningService.submitTask( job );
             return new ModelAndView( new RedirectView( "/arrays/showAllArrayDesigns.html?id=" + sId, true ) )
                     .addObject( "taskId", taskId );
         } catch ( NumberFormatException e ) {
@@ -395,7 +395,7 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
         result = this.setAlternateNames( result, arrayDesign );
         result = this.setExtRefsAndCounts( result, arrayDesign );
         result = this.setSummaryInfo( result, id );
-        result.setSwitchedExpressionExperimentCount( arrayDesignService.getSwitchedExperimentIds( arrayDesign ).size() );
+        result.setSwitchedExpressionExperimentCount( ( long ) arrayDesignService.getSwitchedExperimentIds( arrayDesign ).size() );
 
         populateMergeStatus( arrayDesign, result ); // SLOW if we follow down to mergees of mergees etc.
 
@@ -442,7 +442,7 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
     private ArrayDesignValueObjectExt setExtRefsAndCounts( ArrayDesignValueObjectExt result, ArrayDesign arrayDesign ) {
         Integer numCompositeSequences = arrayDesignService.getCompositeSequenceCount( arrayDesign ).intValue();
 
-        int numExpressionExperiments = arrayDesignService.numExperiments( arrayDesign );
+        long numExpressionExperiments = arrayDesignService.numExperiments( arrayDesign );
 
         Collection<DatabaseEntryValueObject> externalReferences = new HashSet<>();
         for ( DatabaseEntry en : arrayDesign.getExternalReferences() ) {
@@ -544,7 +544,7 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
 
         RemoveArrayLocalTask job = new RemoveArrayLocalTask( new TaskCommand( arrayDesign.getId() ) );
 
-        return taskRunningService.submitLocalTask( job );
+        return taskRunningService.submitTask( job );
 
     }
 
@@ -646,13 +646,13 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
     @Override
     public String updateReport( EntityDelegator ed ) {
         GenerateArraySummaryLocalTask job = new GenerateArraySummaryLocalTask( new TaskCommand( ed.getId() ) );
-        return taskRunningService.submitLocalTask( job );
+        return taskRunningService.submitTask( job );
     }
 
     @Override
     public String updateReportById( Long id ) {
         GenerateArraySummaryLocalTask job = new GenerateArraySummaryLocalTask( new TaskCommand( id ) );
-        return taskRunningService.submitLocalTask( job );
+        return taskRunningService.submitTask( job );
     }
 
     private String formatAlternateNames( ArrayDesign ad ) {

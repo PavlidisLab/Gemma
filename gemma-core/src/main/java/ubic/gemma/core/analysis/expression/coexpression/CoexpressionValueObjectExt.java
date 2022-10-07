@@ -19,6 +19,7 @@
 package ubic.gemma.core.analysis.expression.coexpression;
 
 import org.apache.commons.lang3.StringUtils;
+import ubic.gemma.model.annotations.GemmaWebOnly;
 import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.persistence.service.association.coexpression.CoexpressionValueObject;
 

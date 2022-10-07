@@ -1,9 +1,7 @@
 package ubic.gemma.web.services.rest;
 
-import org.apache.commons.lang3.StringUtils;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.mock.web.MockServletConfig;
 import ubic.gemma.web.services.rest.util.OpenApiUtils;
 import ubic.gemma.web.services.rest.util.ResponseDataObject;
@@ -18,7 +16,7 @@ public class RootWebServiceTest extends BaseSpringWebTest {
 
     @Test
     public void test() {
-        ResponseDataObject<RootWebService.ApiInfoValueObject> response = rootWebService.all( new MockHttpServletResponse(), new MockServletConfig() );
+        ResponseDataObject<RootWebService.ApiInfoValueObject> response = rootWebService.getApiInfo( new MockServletConfig() );
         String expectedVersion = OpenApiUtils.getOpenApi( null ).getInfo().getVersion();
         assertThat( expectedVersion ).isNotBlank();
         assertThat( response.getData().getVersion() ).isEqualTo( expectedVersion );

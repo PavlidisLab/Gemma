@@ -1,12 +1,15 @@
 package ubic.gemma.model.common.measurement;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import ubic.gemma.model.IdentifiableValueObject;
+import ubic.gemma.model.annotations.GemmaWebOnly;
 
 @SuppressWarnings("unused") // Used in frontend through FVBasicVO
 public class MeasurementValueObject extends IdentifiableValueObject {
 
     private String value;
     private String unit;
+    @JsonIgnore
     private Long unitId;
     private String type;
     private String representation;

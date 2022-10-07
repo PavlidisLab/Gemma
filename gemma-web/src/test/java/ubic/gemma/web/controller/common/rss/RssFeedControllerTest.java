@@ -51,7 +51,8 @@ public class RssFeedControllerTest extends BaseSpringWebTest {
     private Map<ExpressionExperiment, String> experiments = new HashMap<>();
 
     @Before
-    public void setup() {
+    public void setUp() throws Exception {
+        super.setUp();
         super.getTestPersistentExpressionExperiment();
         super.getTestPersistentExpressionExperiment();
 

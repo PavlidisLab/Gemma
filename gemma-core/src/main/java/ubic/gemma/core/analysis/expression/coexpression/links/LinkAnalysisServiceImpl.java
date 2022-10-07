@@ -35,7 +35,9 @@ import ubic.gemma.core.analysis.preprocess.OutlierDetails;
 import ubic.gemma.core.analysis.preprocess.OutlierDetectionService;
 import ubic.gemma.core.analysis.preprocess.batcheffects.BatchEffectDetails;
 import ubic.gemma.core.analysis.preprocess.filter.FilterConfig;
+import ubic.gemma.core.analysis.preprocess.filter.FilteringException;
 import ubic.gemma.core.analysis.preprocess.filter.InsufficientSamplesException;
+import ubic.gemma.core.analysis.preprocess.filter.NoRowsLeftAfterFilteringException;
 import ubic.gemma.core.analysis.preprocess.svd.ExpressionDataSVD;
 import ubic.gemma.core.analysis.report.ExpressionExperimentReportService;
 import ubic.gemma.core.analysis.service.ExpressionDataMatrixService;
@@ -133,7 +135,7 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
 
     @Override
     public LinkAnalysis processVectors( Taxon t, Collection<ProcessedExpressionDataVector> dataVectors,
-            FilterConfig filterConfig, LinkAnalysisConfig linkAnalysisConfig ) {
+            FilterConfig filterConfig, LinkAnalysisConfig linkAnalysisConfig ) throws FilteringException {
         ExpressionDataDoubleMatrix datamatrix = expressionDataMatrixService
                 .getFilteredMatrix( linkAnalysisConfig.getArrayName(), filterConfig, dataVectors );
 
@@ -155,7 +157,7 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
 
     }
 
-    private void checkDatamatrix( ExpressionDataDoubleMatrix datamatrix ) {
+    private void checkDatamatrix( ExpressionDataDoubleMatrix datamatrix ) throws InsufficientProbesException {
         if ( datamatrix.rows() == 0 ) {
             LinkAnalysisServiceImpl.log.info( "No rows left after filtering" );
             throw new InsufficientProbesException( "No rows left after filtering" );
@@ -183,7 +185,7 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
     }
 
     private void analyze( ExpressionExperiment ee, FilterConfig filterConfig, LinkAnalysisConfig linkAnalysisConfig,
-            LinkAnalysis la, Collection<ProcessedExpressionDataVector> dataVectors ) {
+            LinkAnalysis la, Collection<ProcessedExpressionDataVector> dataVectors ) throws FilteringException {
 
         this.qcCheck( linkAnalysisConfig, ee );
 
@@ -421,7 +423,7 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
     /**
      * Reject if experiment has outliers or batch effects.
      */
-    private void qcCheck( LinkAnalysisConfig config, ExpressionExperiment ee ) throws UnsuitableForAnalysisException {
+    private void qcCheck( LinkAnalysisConfig config, ExpressionExperiment ee ) throws UnsuitableForAnalysisException, FilteringException {
 
         if ( config.isCheckForOutliers() ) {
             Collection<OutlierDetails> outliers = outlierDetectionService.identifyOutliersByMedianCorrelation( ee );

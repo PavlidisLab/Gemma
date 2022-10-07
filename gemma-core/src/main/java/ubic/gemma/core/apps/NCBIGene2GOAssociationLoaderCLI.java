@@ -83,7 +83,7 @@ public class NCBIGene2GOAssociationLoaderCLI extends AbstractCLIContextCLI {
             }
             files = new HashSet<>();
             LocalFile lf = LocalFile.Factory.newInstance();
-            lf.setLocalURL( f.toURI().toURL() );
+            lf.setLocalURL( f.toURI() );
             files.add( lf );
         } else {
             files = fetcher.fetch( "ftp://ftp.ncbi.nih.gov/gene/DATA/" + NCBIGene2GOAssociationLoaderCLI.GENE2GO_FILE );

@@ -9,15 +9,11 @@ import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
  *
  * @author tesarst
  */
-@Schema(type = "string")
+@Schema(type = "string", description = "A platform short name.")
 public class PlatformStringArg extends PlatformArg<String> {
 
     PlatformStringArg( String s ) {
         super( s );
-    }
-
-    public PlatformStringArg( String message, Throwable cause ) {
-        super( message, cause );
     }
 
     @Override

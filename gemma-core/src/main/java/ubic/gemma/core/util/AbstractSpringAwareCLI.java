@@ -57,7 +57,15 @@ import java.util.stream.Collectors;
  */
 public abstract class AbstractSpringAwareCLI extends AbstractCLI {
 
+    /**
+     * @deprecated Use {@link #USERNAME_ENV} instead.
+     */
+    @Deprecated
     private static final String USERNAME_OPTION = "u";
+    /**
+     * @deprecated Use {@link #PASSWORD_ENV} or {@link #PASSWORD_CMD_ENV} instead.
+     */
+    @Deprecated
     private static final String PASSWORD_OPTION = "p";
 
     /**
@@ -93,10 +101,10 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
     protected void buildStandardOptions( Options options ) {
         super.buildStandardOptions( options );
         options.addOption( Option.builder( USERNAME_OPTION ).argName( "user" ).longOpt( "user" ).hasArg()
-                .desc( "User name for accessing the system (optional for some tools)" )
+                .desc( "User name for accessing the system (optional for some tools, deprecated: use $GEMMA_USER instead)" )
                 .build() );
         options.addOption( Option.builder( PASSWORD_OPTION ).argName( "passwd" ).longOpt( "password" ).hasArg()
-                .desc( "Password for accessing the system (optional for some tools)" )
+                .desc( "Password for accessing the system (optional for some tools, deprecated: use $GEMMA_PASSWORD or $GEMMA_PASSWORD_CMD instead)" )
                 .build() );
     }
 
@@ -127,16 +135,6 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
     @SuppressWarnings("unused") // Possible external use
     public void setCtx( BeanFactory ctx ) {
         this.ctx = ctx;
-    }
-
-    /**
-     * Override this method in your subclass to provide additional Spring configuration files that will be merged with
-     * the Gemma spring context. See SpringContextUtil; an example path is "classpath*:/myproject/applicationContext-mine.xml".
-     *
-     * @return string[]
-     */
-    protected String[] getAdditionalSpringConfigLocations() {
-        return null;
     }
 
     /**
@@ -229,8 +227,7 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
      */
     protected void createSpringContext( CommandLine commandLine ) {
 
-        ctx = SpringContextUtil.getApplicationContext( commandLine.hasOption( "testing" ), false /* webapp */,
-                this.getAdditionalSpringConfigLocations() );
+        ctx = SpringContextUtil.getApplicationContext( commandLine.hasOption( "testing" ), false, null );
 
         /*
          * Guarantee that the security settings are inherited from current thread.
@@ -243,6 +240,14 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
      * @param commandLine
      */
     private void authenticate( CommandLine commandLine ) {
+
+        if ( commandLine.hasOption( USERNAME_OPTION ) ) {
+            log.warn( "Usage of the -" + USERNAME_OPTION + " is deprecated and will be removed in a future release. Use $GEMMA_USERNAME instead." );
+        }
+
+        if ( commandLine.hasOption( PASSWORD_OPTION ) ) {
+            log.warn( "Usage of the -" + PASSWORD_OPTION + " is deprecated and will be removed in a future release. Use $GEMMA_PASSWORD or $GEMMA_PASSWORD_CMD instead." );
+        }
 
         ManualAuthenticationService manAuthentication = ctx.getBean( ManualAuthenticationService.class );
         if ( requireLogin() || commandLine.hasOption( USERNAME_OPTION ) || System.getenv().containsKey( USERNAME_ENV ) ) {
@@ -283,7 +288,6 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
 
     private String getPassword( CommandLine commandLine ) {
         if ( commandLine.hasOption( PASSWORD_OPTION ) ) {
-            log.warn( "Using the " + PASSWORD_OPTION + " CLI option is highly discouraged. Consider instead passing  a " + PASSWORD_ENV + " or " + PASSWORD_CMD_ENV + " environment variable." );
             return commandLine.getOptionValue( PASSWORD_OPTION );
         }
 

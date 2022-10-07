@@ -15,6 +15,7 @@
 package ubic.gemma.model.genome;
 
 import ubic.gemma.model.IdentifiableValueObject;
+import ubic.gemma.model.annotations.GemmaWebOnly;
 import ubic.gemma.model.common.description.ExternalDatabaseValueObject;
 
 /**
@@ -26,7 +27,9 @@ public class TaxonValueObject extends IdentifiableValueObject<Taxon> {
     private String scientificName;
     private String commonName;
     private Integer ncbiId;
+    @GemmaWebOnly
     private Boolean isSpecies;
+    @GemmaWebOnly
     private Boolean isGenesUsable;
     private ExternalDatabaseValueObject externalDatabase;
 
@@ -45,6 +48,11 @@ public class TaxonValueObject extends IdentifiableValueObject<Taxon> {
 
     public TaxonValueObject( Long id ) {
         super( id );
+    }
+
+    public TaxonValueObject( Long id, String commonName ) {
+        super( id );
+        this.commonName = commonName;
     }
 
     public static TaxonValueObject fromEntity( Taxon taxon ) {

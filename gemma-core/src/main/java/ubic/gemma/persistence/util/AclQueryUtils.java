@@ -1,15 +1,18 @@
 package ubic.gemma.persistence.util;
 
-import com.google.common.base.Strings;
 import gemma.gsec.model.Securable;
 import gemma.gsec.util.SecurityUtil;
 import org.hibernate.Query;
 import org.hibernate.QueryParameterException;
 import org.springframework.security.acls.domain.BasePermission;
 
+import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
+
 /**
  * Utilities for integrating ACL into {@link Query}.
  */
+@ParametersAreNonnullByDefault
 public class AclQueryUtils {
 
     public static final String AOI_ALIAS = "aoi", SID_ALIAS = "sid";
@@ -34,9 +37,7 @@ public class AclQueryUtils {
      * @param alias   placeholder for the identifier e.g. "ee.id"
      * @return clause to add to the query
      */
-    public static String formAclJoinClause( String alias ) {
-        if ( Strings.isNullOrEmpty( alias ) )
-            throw new IllegalArgumentException( "Alias cannot be null or empty." );
+    public static String formAclJoinClause( @Nullable String alias ) {
         if ( SecurityUtil.isUserAdmin() ) {
             return ", AclObjectIdentity as aoi inner join aoi.ownerSid sid "
                     + "where aoi.identifier = " + ObjectFilterQueryUtils.formPropertyName( alias, "id" ) + " "

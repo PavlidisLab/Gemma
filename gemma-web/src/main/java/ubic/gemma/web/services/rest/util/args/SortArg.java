@@ -15,19 +15,18 @@
 package ubic.gemma.web.services.rest.util.args;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.Data;
 import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.persistence.service.FilteringService;
-import ubic.gemma.persistence.util.EntityUtils;
-import ubic.gemma.persistence.util.Sort;
 import ubic.gemma.web.services.rest.util.MalformedArgException;
+
+import javax.annotation.Nullable;
 
 /**
  * Class representing an API argument that should be an integer.
  *
  * @author tesarst
  */
-@Schema(type = "string")
+@Schema(type = "string", pattern = "^(\\+|-?)(\\w+)$", description = "Order results by the given property and direction. The '+' sign indicate ascending order whereas the '-' indicate descending.")
 public class SortArg extends AbstractArg<SortArg.Sort> {
     private static final String ERROR_MSG =
             "Value '%s' can not be interpreted as a sort argument. Correct syntax is: [+,-][field]. E.g: '-id' means 'order by ID descending. "
@@ -38,31 +37,24 @@ public class SortArg extends AbstractArg<SortArg.Sort> {
     }
 
     /**
-     * Constructor used to create an instance that instead of returning the sort values, informs that the received
-     * string was not well-formed.
-     *
-     * @param errorMessage the malformed original string argument.
-     */
-    private SortArg( String errorMessage, Exception exception ) {
-        super( errorMessage, exception );
-    }
-
-    /**
      * Obtain the {@link Sort} underlying this argument.
+     *
      * @param service a {@link FilteringService} that knows how to build a sort object
      * @return the sorting object in question
      * @throws MalformedArgException in case the orderBy property cannot be applied for the given class, or if the
      *                               argument was malformed in the first place
      */
     public ubic.gemma.persistence.util.Sort getSort( FilteringService service ) throws MalformedArgException {
-        ubic.gemma.persistence.util.Sort.Direction direction = null;
-        if ( this.getValue().getDirection().equals( Sort.Direction.ASC ) ) {
+        ubic.gemma.persistence.util.Sort.Direction direction;
+        if ( getValue().direction == Sort.Direction.ASC ) {
             direction = ubic.gemma.persistence.util.Sort.Direction.ASC;
-        } else if ( this.getValue().getDirection().equals( Sort.Direction.DESC ) ) {
+        } else if ( getValue().direction == Sort.Direction.DESC ) {
             direction = ubic.gemma.persistence.util.Sort.Direction.DESC;
+        } else {
+            direction = null;
         }
         try {
-            return service.getSort( this.getValue().getOrderBy(), direction );
+            return service.getSort( this.getValue().orderBy, direction );
         } catch ( IllegalArgumentException e ) {
             throw new MalformedArgException( e );
         }
@@ -76,13 +68,13 @@ public class SortArg extends AbstractArg<SortArg.Sort> {
      * throw a {@link javax.ws.rs.BadRequestException}, if the given string was not well-formed.
      */
     @SuppressWarnings("unused")
-    public static SortArg valueOf( final String s ) {
+    public static SortArg valueOf( final String s ) throws MalformedArgException {
         try {
             Sort.Direction direction = parseDirection( s.charAt( 0 ) );
             String orderBy = direction == null ? s : s.substring( 1 );
             return new SortArg( orderBy, direction );
         } catch ( NullPointerException | IndexOutOfBoundsException | IllegalArgumentException e ) {
-            return new SortArg( String.format( ERROR_MSG, s ), e );
+            throw new MalformedArgException( String.format( ERROR_MSG, s ), e );
         }
     }
 
@@ -93,22 +85,24 @@ public class SortArg extends AbstractArg<SortArg.Sort> {
      * @return true if character was '+', false if it was '-'. Null in any other case.
      */
     private static Sort.Direction parseDirection( char c ) {
-        if ( c == '+' ) {
+        if ( c == ' ' ) {
+            throw new MalformedArgException( "The sorting direction cannot be an empty character. It seems that you used a raw '+' in your query, instead use the URL-encoded '%2B' value." );
+        } else if ( c == '+' ) {
             return Sort.Direction.ASC;
         } else if ( c == '-' ) {
             return Sort.Direction.DESC;
         } else {
-            return null;
+            return null; /* the character will be parsed as part of the order by property with the default direction */
         }
     }
 
-    @Data
     public static class Sort {
 
         private final String orderBy;
+        @Nullable
         private final Direction direction;
 
-        public Sort( String orderBy, Direction direction ) {
+        private Sort( String orderBy, @Nullable Direction direction ) {
             if ( StringUtils.isBlank( orderBy ) ) {
                 throw new IllegalArgumentException( "The 'orderBy' attribute cannot be blank or empty." );
             }

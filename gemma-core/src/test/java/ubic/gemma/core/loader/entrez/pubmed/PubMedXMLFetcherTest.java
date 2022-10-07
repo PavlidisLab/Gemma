@@ -24,6 +24,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import ubic.gemma.core.util.test.category.PubMedTest;
 import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.common.description.BibliographicReference;
 
@@ -81,7 +82,7 @@ public class PubMedXMLFetcherTest {
      * 23865096 is a NCBI bookshelf article, not a paper
      */
     @Test
-    @Category(SlowTest.class)
+    @Category({ SlowTest.class, PubMedTest.class })
     public final void testRetrieveByHTTPBookshelf() {
         try {
             BibliographicReference br = pmf.retrieveByHTTP( 23865096 );

@@ -19,10 +19,6 @@ import gemma.gsec.SecurityService;
 import gemma.gsec.acl.domain.AclGrantedAuthoritySid;
 import gemma.gsec.acl.domain.AclService;
 import gemma.gsec.authentication.UserExistsException;
-import gemma.gsec.authentication.UserService;
-import gemma.gsec.model.GroupAuthority;
-import gemma.gsec.model.User;
-import gemma.gsec.model.UserGroup;
 import gemma.gsec.util.SecurityUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -30,6 +26,8 @@ import org.springframework.dao.InvalidDataAccessResourceUsageException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ubic.gemma.model.common.auditAndSecurity.User;
+import ubic.gemma.model.common.auditAndSecurity.UserGroup;
 import ubic.gemma.persistence.service.common.auditAndSecurity.UserDao;
 import ubic.gemma.persistence.service.common.auditAndSecurity.UserGroupDao;
 
@@ -57,19 +55,19 @@ public class UserServiceImpl implements UserService {
     private SecurityService securityService;
 
     @Override
-    public void addGroupAuthority( UserGroup group, String authority ) {
+    public void addGroupAuthority( gemma.gsec.model.UserGroup group, String authority ) {
         this.userGroupDao.addAuthority( ( ubic.gemma.model.common.auditAndSecurity.UserGroup ) group, authority );
     }
 
     @Override
-    public void addUserToGroup( UserGroup group, User user ) {
+    public void addUserToGroup( gemma.gsec.model.UserGroup group, gemma.gsec.model.User user ) {
         // add user to list of members
         group.getGroupMembers().add( user );
         this.userGroupDao.update( ( ubic.gemma.model.common.auditAndSecurity.UserGroup ) group );
     }
 
     @Override
-    public User create( final User user ) throws UserExistsException {
+    public User create( final gemma.gsec.model.User user ) throws UserExistsException {
 
         if ( user.getUserName() == null ) {
             throw new IllegalArgumentException( "UserName cannot be null" );
@@ -92,12 +90,12 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public UserGroup create( UserGroup group ) {
+    public UserGroup create( gemma.gsec.model.UserGroup group ) {
         return this.userGroupDao.create( ( ubic.gemma.model.common.auditAndSecurity.UserGroup ) group );
     }
 
     @Override
-    public void delete( User user ) {
+    public void delete( gemma.gsec.model.User user ) {
         for ( UserGroup group : this.userDao.loadGroups( ( ubic.gemma.model.common.auditAndSecurity.User ) user ) ) {
             group.getGroupMembers().remove( user );
             this.userGroupDao.update( ( ubic.gemma.model.common.auditAndSecurity.UserGroup ) group );
@@ -107,7 +105,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void delete( UserGroup group ) {
+    public void delete( gemma.gsec.model.UserGroup group ) {
         String groupName = group.getName();
 
         if ( !this.groupExists( groupName ) ) {
@@ -145,7 +143,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public User findByUserName( final String userName ) {
+    public ubic.gemma.model.common.auditAndSecurity.User findByUserName( final String userName ) {
         return this.userDao.findByUserName( userName );
     }
 
@@ -160,15 +158,15 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public Collection<UserGroup> findGroupsForUser( User user ) {
-        Collection<UserGroup> ret = new ArrayList<>();
+    public Collection<gemma.gsec.model.UserGroup> findGroupsForUser( gemma.gsec.model.User user ) {
+        Collection<gemma.gsec.model.UserGroup> ret = new ArrayList<>();
         ret.addAll( this.userGroupDao.findGroupsForUser( ( ubic.gemma.model.common.auditAndSecurity.User ) user ) );
         return ret;
     }
 
     @Override
-    public Collection<UserGroup> listAvailableGroups() {
-        Collection<UserGroup> ret = new ArrayList<>();
+    public Collection<gemma.gsec.model.UserGroup> listAvailableGroups() {
+        Collection<gemma.gsec.model.UserGroup> ret = new ArrayList<>();
         ret.addAll( this.userGroupDao.loadAll() );
         return ret;
     }
@@ -179,26 +177,26 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public Collection<User> loadAll() {
-        Collection<User> ret = new ArrayList<>();
+    public Collection<gemma.gsec.model.User> loadAll() {
+        Collection<gemma.gsec.model.User> ret = new ArrayList<>();
         ret.addAll( this.userDao.loadAll() );
         return ret;
     }
 
     @Override
-    public Collection<GroupAuthority> loadGroupAuthorities( User user ) {
-        Collection<GroupAuthority> ret = new ArrayList<>();
+    public Collection<gemma.gsec.model.GroupAuthority> loadGroupAuthorities( gemma.gsec.model.User user ) {
+        Collection<gemma.gsec.model.GroupAuthority> ret = new ArrayList<>();
         ret.addAll( this.userDao.loadGroupAuthorities( ( ubic.gemma.model.common.auditAndSecurity.User ) user ) );
         return ret;
     }
 
     @Override
-    public void removeGroupAuthority( UserGroup group, String authority ) {
+    public void removeGroupAuthority( gemma.gsec.model.UserGroup group, String authority ) {
         this.userGroupDao.removeAuthority( ( ubic.gemma.model.common.auditAndSecurity.UserGroup ) group, authority );
     }
 
     @Override
-    public void removeUserFromGroup( User user, UserGroup group ) {
+    public void removeUserFromGroup( gemma.gsec.model.User user, gemma.gsec.model.UserGroup group ) {
         group.getGroupMembers().remove( user );
 
         String userName = user.getName();
@@ -220,12 +218,12 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void update( final User user ) {
+    public void update( final gemma.gsec.model.User user ) {
         this.userDao.update( ( ubic.gemma.model.common.auditAndSecurity.User ) user );
     }
 
     @Override
-    public void update( UserGroup group ) {
+    public void update( gemma.gsec.model.UserGroup group ) {
         this.userGroupDao.update( ( ubic.gemma.model.common.auditAndSecurity.UserGroup ) group );
     }
 

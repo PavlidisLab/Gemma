@@ -23,6 +23,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.association.Gene2GOAssociationImpl;
 import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
+import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
@@ -35,6 +36,8 @@ import ubic.gemma.persistence.util.EntityUtils;
 import ubic.gemma.persistence.util.ObjectFilter;
 import ubic.gemma.persistence.util.Sort;
 
+import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.*;
 
 /**
@@ -42,6 +45,7 @@ import java.util.*;
  * @see    CharacteristicService
  */
 @Service
+@ParametersAreNonnullByDefault
 public class CharacteristicServiceImpl extends AbstractVoEnabledService<Characteristic, CharacteristicValueObject>
         implements CharacteristicService {
 
@@ -72,8 +76,8 @@ public class CharacteristicServiceImpl extends AbstractVoEnabledService<Characte
     }
 
     @Override
-    public Map<Class<?>, Map<String, Collection<Long>>> findExperimentsByUris( Collection<String> uriStrings, Taxon t, int limit ) {
-        return this.characteristicDao.findExperimentsByUris( uriStrings, t, limit );
+    public Map<Class<? extends Identifiable>, Map<String, Set<ExpressionExperiment>>> findExperimentsByUris( Collection<String> uris, @Nullable Taxon taxon, int limit ) {
+        return this.characteristicDao.findExperimentsByUris( uris, taxon, limit );
     }
 
     @Override
@@ -106,8 +110,7 @@ public class CharacteristicServiceImpl extends AbstractVoEnabledService<Characte
     @Override
     public Map<Characteristic, Object> getParents( Collection<Characteristic> characteristics ) {
         Map<Characteristic, Object> charToParent = new HashMap<>();
-        Collection<Characteristic> needToSearch = new HashSet<>();
-        needToSearch.addAll( characteristics );
+        Collection<Characteristic> needToSearch = new HashSet<>( characteristics );
         for ( Class<?> parentClass : CharacteristicServiceImpl.CLASSES_WITH_CHARACTERISTICS ) {
             Map<Characteristic, Object> found = this.characteristicDao.getParents( parentClass, needToSearch );
             charToParent.putAll( found );
@@ -117,14 +120,14 @@ public class CharacteristicServiceImpl extends AbstractVoEnabledService<Characte
     }
 
     @Override
-    public Map<Characteristic, Long> getParentIds( Class<?> parentClass, Collection<Characteristic> characteristics ) {
+    public Map<Characteristic, Long> getParentIds( Class<?> parentClass, @Nullable Collection<Characteristic> characteristics ) {
         return this.characteristicDao.getParentIds( parentClass, characteristics );
     }
 
     @Override
     @Transactional(readOnly = true)
     public Map<Characteristic, Object> getParents( Collection<Class<?>> classes,
-            Collection<Characteristic> characteristics ) {
+            @Nullable Collection<Characteristic> characteristics ) {
         Map<Characteristic, Object> charToParent = new HashMap<>();
         for ( Class<?> parentClass : classes ) {
             charToParent.putAll( this.characteristicDao.getParents( parentClass, characteristics ) );

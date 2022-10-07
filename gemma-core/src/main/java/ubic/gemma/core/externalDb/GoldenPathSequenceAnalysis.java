@@ -447,9 +447,9 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
         } );
     }
 
-    private Collection<PhysicalLocation> blocksToPhysicalLocations( int[] blockSizes, int[] blockStarts,
+    private Set<PhysicalLocation> blocksToPhysicalLocations( int[] blockSizes, int[] blockStarts,
             Chromosome chromosome ) {
-        Collection<PhysicalLocation> blocks = new HashSet<>();
+        Set<PhysicalLocation> blocks = new HashSet<>();
         for ( int i = 0; i < blockSizes.length; i++ ) {
             long exonStart = blockStarts[i];
             int exonSize = blockSizes[i];
@@ -851,10 +851,10 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
      * @param exonEnds ends
      * @throws SQLException sql problem
      */
-    private Collection<PhysicalLocation> getExons( Chromosome chrom, Blob exonStarts, Blob exonEnds )
+    private Set<PhysicalLocation> getExons( Chromosome chrom, Blob exonStarts, Blob exonEnds )
             throws SQLException {
 
-        Collection<PhysicalLocation> exons = new HashSet<>();
+        Set<PhysicalLocation> exons = new HashSet<>();
         if ( exonStarts == null || exonEnds == null ) {
             return exons;
         }
@@ -934,10 +934,10 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
         Chromosome chromosome = null;
         if ( gene.getPhysicalLocation() != null )
             chromosome = gene.getPhysicalLocation().getChromosome();
-        Collection<PhysicalLocation> exons = this.blocksToPhysicalLocations( exonSizeInts, exonStartInts, chromosome );
+        Set<PhysicalLocation> exons = this.blocksToPhysicalLocations( exonSizeInts, exonStartInts, chromosome );
         gp.setExons( exons );
         gp.setName( gene.getNcbiGeneId().toString() ); // this isn't right?
-        Collection<GeneProduct> products = new HashSet<>();
+        Set<GeneProduct> products = new HashSet<>();
         products.add( gp );
         gene.setProducts( products );
     }

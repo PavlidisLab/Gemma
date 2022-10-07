@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2012 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -23,6 +23,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import ubic.gemma.core.genome.gene.service.GeneSetService;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.model.genome.TaxonValueObject;
 import ubic.gemma.model.genome.gene.DatabaseBackedGeneSetValueObject;
 import ubic.gemma.model.genome.gene.GeneSet;
 import ubic.gemma.model.genome.gene.GeneSetMember;
@@ -103,7 +104,7 @@ public class GeneSetValueObjectHelperImpl implements GeneSetValueObjectHelper {
      * @param  geneSets                gene sets
      * @param  includeOnesWithoutGenes should empty sets get removed?
      * @param  light                   Don't fill in the gene ids. Should be faster
-     * @return                         list of gene set value objects
+     * @return list of gene set value objects
      */
     private List<DatabaseBackedGeneSetValueObject> convertToLightValueObjects( Collection<GeneSet> geneSets,
             boolean includeOnesWithoutGenes, boolean light ) {
@@ -126,12 +127,7 @@ public class GeneSetValueObjectHelperImpl implements GeneSetValueObjectHelper {
             }
         }
 
-        Collections.sort( results, new Comparator<GeneSetValueObject>() {
-            @Override
-            public int compare( GeneSetValueObject o1, GeneSetValueObject o2 ) {
-                return -o1.getSize().compareTo( o2.getSize() );
-            }
-        } );
+        results.sort( Comparator.comparingInt( GeneSetValueObject::getSize ) );
 
         return results;
     }
@@ -156,9 +152,7 @@ public class GeneSetValueObjectHelperImpl implements GeneSetValueObjectHelper {
 
         Taxon tax = this.geneSetService.getTaxon( gs );
         if ( tax != null ) {
-
-            sbgsvo.setTaxonId( tax.getId() );
-            sbgsvo.setTaxonName( tax.getCommonName() );
+            sbgsvo.setTaxon( new TaxonValueObject( tax ) );
         }
 
         sbgsvo.setId( new Long( -1 ) );

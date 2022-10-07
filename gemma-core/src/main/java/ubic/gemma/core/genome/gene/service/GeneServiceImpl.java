@@ -32,6 +32,7 @@ import ubic.gemma.core.search.SearchService;
 import ubic.gemma.model.association.Gene2GOAssociation;
 import ubic.gemma.model.association.coexpression.GeneCoexpressionNodeDegreeValueObject;
 import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
+import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.description.AnnotationValueObject;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.common.search.SearchSettings;
@@ -198,16 +199,8 @@ public class GeneServiceImpl extends AbstractFilteringVoEnabledService<Gene, Gen
             if ( assoc.getOntologyEntry() == null )
                 continue;
 
-            AnnotationValueObject annotationValueObject = new AnnotationValueObject();
-
-            annotationValueObject.setId( assoc.getOntologyEntry().getId() );
+            AnnotationValueObject annotationValueObject = new AnnotationValueObject( assoc.getOntologyEntry() );
             annotationValueObject.setTermName( geneOntologyService.getTermName( assoc.getOntologyEntry().getValue() ) );
-            annotationValueObject.setTermUri( assoc.getOntologyEntry().getValue() );
-            annotationValueObject
-                    .setEvidenceCode( assoc.getEvidenceCode() != null ? assoc.getEvidenceCode().getValue() : null );
-            annotationValueObject.setDescription( assoc.getOntologyEntry().getDescription() );
-            annotationValueObject.setClassUri( assoc.getOntologyEntry().getCategoryUri() );
-            annotationValueObject.setClassName( assoc.getOntologyEntry().getCategory() );
 
             ontologies.add( annotationValueObject );
         }
@@ -310,7 +303,7 @@ public class GeneServiceImpl extends AbstractFilteringVoEnabledService<Gene, Gen
         GeneValueObject gvo = GeneValueObject.convert2ValueObject( gene );
 
         Collection<GeneAlias> aliasObjects = gene.getAliases();
-        Collection<String> aliasStrings = new ArrayList<>();
+        SortedSet<String> aliasStrings = new TreeSet<>();
         for ( GeneAlias ga : aliasObjects ) {
             aliasStrings.add( ga.getAlias() );
         }
@@ -352,7 +345,7 @@ public class GeneServiceImpl extends AbstractFilteringVoEnabledService<Gene, Gen
                     .query( "http://purl.org/commons/record/ncbi_gene/" + gvo.getNcbiId() )
                     .resultType( ExpressionExperiment.class )
                     .build();
-            Map<Class<?>, List<SearchResult<?>>> r = null;
+            Map<Class<? extends Identifiable>, List<SearchResult<? extends Identifiable>>> r;
             try {
                 r = searchService.search( s );
                 if ( r.containsKey( ExpressionExperiment.class ) ) {
@@ -360,7 +353,8 @@ public class GeneServiceImpl extends AbstractFilteringVoEnabledService<Gene, Gen
                     gvo.setAssociatedExperimentCount( hits.size() );
                 }
             } catch ( SearchException e ) {
-                log.error( "Failed to retrieve associated EE count for " + gene + ".", e );
+                log.error( "Failed to retrieve the associated EE count for " + s + ".", e );
+                gvo.setAssociatedExperimentCount( null );
             }
         }
 
@@ -388,7 +382,7 @@ public class GeneServiceImpl extends AbstractFilteringVoEnabledService<Gene, Gen
         GeneValueObject details = new GeneValueObject( initialResult );
 
         Collection<GeneAlias> aliasObjects = gene.getAliases();
-        Collection<String> aliasStrings = new ArrayList<>();
+        SortedSet<String> aliasStrings = new TreeSet<>();
         for ( GeneAlias ga : aliasObjects ) {
             aliasStrings.add( ga.getAlias() );
         }
@@ -441,8 +435,8 @@ public class GeneServiceImpl extends AbstractFilteringVoEnabledService<Gene, Gen
 
     @Override
     @Transactional(readOnly = true)
-    public Collection<GeneValueObject> loadValueObjectsByIds( Collection<Long> ids ) {
-        Collection<Gene> g = this.geneDao.loadThawed( ids );
+    public List<GeneValueObject> loadValueObjectsByIds( Collection<Long> ids ) {
+        List<Gene> g = this.geneDao.loadThawed( ids );
         return this.loadValueObjects( g );
     }
 
@@ -496,7 +490,7 @@ public class GeneServiceImpl extends AbstractFilteringVoEnabledService<Gene, Gen
             taxon = this.taxonService.load( taxonId );
         }
         SearchSettings settings = SearchSettings.geneSearch( query, taxon );
-        List<SearchResult<?>> geneSearchResults = this.searchService.search( settings ).get( Gene.class );
+        List<SearchResult<Gene>> geneSearchResults = this.searchService.search( settings, Gene.class );
 
         Collection<Gene> genes = new HashSet<>();
         if ( geneSearchResults == null || geneSearchResults.isEmpty() ) {
@@ -505,11 +499,13 @@ public class GeneServiceImpl extends AbstractFilteringVoEnabledService<Gene, Gen
         }
         log.info( "Gene search: " + query + " taxon=" + taxonId + ", " + geneSearchResults.size() + " found" );
 
-        for ( SearchResult sr : geneSearchResults ) {
-            Gene g = ( Gene ) sr.getResultObject();
-            g = this.thaw( g );
-            genes.add( g );
-            log.debug( "Gene search result: " + g.getOfficialSymbol() );
+        for ( SearchResult<Gene> sr : geneSearchResults ) {
+            Gene g = sr.getResultObject();
+            if ( g != null ) {
+                g = this.thaw( g );
+                genes.add( g );
+                log.debug( "Gene search result: " + g.getOfficialSymbol() );
+            }
         }
         Collection<GeneValueObject> geneValueObjects = this.loadValueObjects( genes );
         log.debug( "Gene search: " + geneValueObjects.size() + " value objects returned." );

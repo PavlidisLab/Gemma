@@ -13,8 +13,8 @@ import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.persistence.service.FilteringVoEnabledDao;
 import ubic.gemma.persistence.service.common.auditAndSecurity.curation.CuratableDao;
-import ubic.gemma.persistence.util.ObjectFilter;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -24,6 +24,7 @@ import java.util.Map;
  * ArrayDesignDao interface
  */
 @Repository
+@ParametersAreNonnullByDefault
 public interface ArrayDesignDao extends InitializingBean, CuratableDao<ArrayDesign, ArrayDesignValueObject>,
         FilteringVoEnabledDao<ArrayDesign, ArrayDesignValueObject> {
 
@@ -59,7 +60,7 @@ public interface ArrayDesignDao extends InitializingBean, CuratableDao<ArrayDesi
 
     /**
      * Obtain a collection of {@link ExpressionExperiment} identifiers that have been switched from a given platform.
-     *
+     * <p>
      * If you only need to count them, consider using the more performant {@link #getSwitchedExpressionExperimentsCount(ArrayDesign)}
      * instead.
      */
@@ -116,7 +117,7 @@ public interface ArrayDesignDao extends InitializingBean, CuratableDao<ArrayDesi
 
     long numCompositeSequenceWithGenes( ArrayDesign arrayDesign );
 
-    int numExperiments( ArrayDesign arrayDesign );
+    long numExperiments( ArrayDesign arrayDesign );
 
     long numGenes( ArrayDesign arrayDesign );
 
@@ -131,5 +132,6 @@ public interface ArrayDesignDao extends InitializingBean, CuratableDao<ArrayDesi
     Boolean updateSubsumingStatus( ArrayDesign candidateSubsumer, ArrayDesign candidateSubsumee );
 
     void deleteGeneProductAlignmentAssociations( ArrayDesign arrayDesign );
+
     void deleteGeneProductAnnotationAssociations( ArrayDesign arrayDesign );
 }

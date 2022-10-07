@@ -4,9 +4,10 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.common.Identifiable;
-import ubic.gemma.persistence.service.genome.taxon.TaxonServiceImpl;
 
+import javax.annotation.Nullable;
 import javax.annotation.OverridingMethodsMustInvokeSuper;
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.Collection;
 
 /**
@@ -15,9 +16,10 @@ import java.util.Collection;
  * @param <O> the Identifiable Object type that this service is handling.
  * @author tesarst
  */
+@ParametersAreNonnullByDefault
 public abstract class AbstractService<O extends Identifiable> implements BaseService<O> {
 
-    protected static final Log log = LogFactory.getLog( TaxonServiceImpl.class );
+    protected static final Log log = LogFactory.getLog( AbstractService.class );
 
     private final BaseDao<O> mainDao;
 
@@ -58,7 +60,7 @@ public abstract class AbstractService<O extends Identifiable> implements BaseSer
 
     @Override
     @Transactional
-    public O load( Long id ) {
+    public O load( @Nullable Long id ) {
         return mainDao.load( id );
     }
 
@@ -70,7 +72,7 @@ public abstract class AbstractService<O extends Identifiable> implements BaseSer
 
     @Override
     @Transactional
-    public int countAll() {
+    public long countAll() {
         return this.mainDao.countAll();
     }
 

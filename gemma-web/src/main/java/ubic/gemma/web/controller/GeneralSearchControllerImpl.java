@@ -121,11 +121,11 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
                 .withDoHighlighting( true );
 
         searchTimer.start();
-        Map<Class<?>, List<SearchResult<?>>> searchResults;
+        Map<Class<? extends Identifiable>, List<SearchResult<? extends Identifiable>>> searchResults;
         try {
             searchResults = searchService.search( searchSettings );
         } catch ( SearchException e ) {
-            throw new IllegalArgumentException( "Invalid search settings.", e );
+            throw new IllegalArgumentException( "Invalid search settings " + searchSettings + ".", e );
         }
         searchTimer.stop();
 
@@ -147,7 +147,7 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
                 /*
                  * Now put the valueObjects inside the SearchResults in score order.
                  */
-                results.sort( SearchResult.getComparator() );
+                results = results.stream().sorted().collect( Collectors.toList() );
                 this.fillValueObjects( clazz, results, searchSettings );
                 finalResults.addAll( results );
             }
@@ -269,8 +269,7 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
     @Deprecated
     @Override
     @RequestMapping(value = "/searcher.html", method = RequestMethod.GET)
-    protected ModelAndView showForm( HttpServletRequest request, HttpServletResponse response, BindException errors )
-            throws Exception {
+    protected ModelAndView showForm( HttpServletRequest request, HttpServletResponse response, BindException errors ) {
         if ( request.getParameter( "query" ) != null || request.getParameter( "termUri" ) != null ) {
             SearchSettings searchSettings = this.formBackingObject( request );
             return this.doSearch( request, response, searchSettings, errors );
@@ -319,7 +318,9 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
                 auditableUtil.removeTroubledArrayDesigns( ( Collection<ArrayDesignValueObject> ) vos );
             }
         } else if ( CompositeSequence.class.isAssignableFrom( entityClass ) ) {
-            Collection<CompositeSequence> compositeSequences = results.stream().map( SearchResult::getResultObject )
+            Collection<CompositeSequence> compositeSequences = results.stream()
+                    .map( SearchResult::getResultObject )
+                    .filter( Objects::nonNull )
                     .map( o -> ( CompositeSequence ) o )
                     .collect( Collectors.toSet() );
             vos = compositeSequenceService
@@ -338,7 +339,9 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
             Collection<CharacteristicValueObject> cvos = new ArrayList<>();
             for ( SearchResult sr : results ) {
                 CharacteristicValueObject ch = ( CharacteristicValueObject ) sr.getResultObject();
-                cvos.add( ch );
+                if ( ch != null ) {
+                    cvos.add( ch );
+                }
             }
             vos = cvos;
         } else if ( BioSequenceValueObject.class.isAssignableFrom( entityClass ) ) {
@@ -350,7 +353,9 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
         } else if ( BlacklistedEntity.class.isAssignableFrom( entityClass ) ) {
             Collection<BlacklistedValueObject> bvos = new ArrayList<>();
             for ( SearchResult sr : results ) {
-                bvos.add( BlacklistedValueObject.fromEntity( ( BlacklistedEntity ) sr.getResultObject() ) );
+                if ( sr.getResultObject() != null ) {
+                    bvos.add( BlacklistedValueObject.fromEntity( ( BlacklistedEntity ) sr.getResultObject() ) );
+                }
             }
             vos = bvos;
         } else {
@@ -420,14 +425,8 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
     //    }
 
     private void populateTaxonReferenceData( Map<String, List<?>> mapping ) {
-        List<Taxon> taxa = new ArrayList<>();
-        taxa.addAll( taxonService.loadAll() );
-        Collections.sort( taxa, new Comparator<Taxon>() {
-            @Override
-            public int compare( Taxon o1, Taxon o2 ) {
-                return ( o1 ).getScientificName().compareTo( ( o2 ).getScientificName() );
-            }
-        } );
+        List<Taxon> taxa = new ArrayList<>( taxonService.loadAll() );
+        taxa.sort( Comparator.comparing( Taxon::getScientificName ) );
         mapping.put( "taxa", taxa );
     }
 
@@ -449,8 +448,8 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
                 .build();
     }
 
-    private static Set<Class<?>> resultTypesFromVo( SearchSettingsValueObject valueObject ) {
-        Set<Class<?>> ret = new HashSet<>();
+    private static Set<Class<? extends Identifiable>> resultTypesFromVo( SearchSettingsValueObject valueObject ) {
+        Set<Class<? extends Identifiable>> ret = new HashSet<>();
         if ( valueObject.getSearchExperiments() ) {
             ret.add( ExpressionExperiment.class );
         }

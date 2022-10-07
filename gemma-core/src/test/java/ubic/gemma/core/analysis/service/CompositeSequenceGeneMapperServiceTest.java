@@ -91,6 +91,12 @@ public class CompositeSequenceGeneMapperServiceTest extends AbstractGeoServiceTe
     @Autowired
     private TaskExecutor taskExecutor;
 
+    @Autowired
+    private ArrayDesignSequenceAlignmentService aligner;
+
+    @Autowired
+    private ArrayDesignProbeMapperService arrayDesignProbeMapperService;
+
     @After
     public void cleanup() {
 
@@ -115,12 +121,12 @@ public class CompositeSequenceGeneMapperServiceTest extends AbstractGeoServiceTe
     }
 
     @Before
-    public void setup() throws Exception {
+    public void setUp() throws Exception {
+        super.setUp();
         this.cleanup();
         geoService.setGeoDomainObjectGenerator(
                 new GeoDomainObjectGeneratorLocal( this.getTestFileBasePath( "platform" ) ) );
-        @SuppressWarnings("unchecked")
-        final Collection<ArrayDesign> ads = ( Collection<ArrayDesign> ) geoService
+        @SuppressWarnings("unchecked") final Collection<ArrayDesign> ads = ( Collection<ArrayDesign> ) geoService
                 .fetchAndLoad( arrayAccession, true, true, false );
         ad = ads.iterator().next();
 
@@ -178,8 +184,6 @@ public class CompositeSequenceGeneMapperServiceTest extends AbstractGeoServiceTe
 
         Taxon taxon = taxonService.findByScientificName( "Homo sapiens" );
 
-        ArrayDesignSequenceAlignmentService aligner = this.getBean( ArrayDesignSequenceAlignmentService.class );
-
         InputStream blatResultInputStream = new GZIPInputStream(
                 this.getClass().getResourceAsStream( "/data/loader/genome/gpl96.blatresults.psl.gz" ) );
 
@@ -188,8 +192,6 @@ public class CompositeSequenceGeneMapperServiceTest extends AbstractGeoServiceTe
         aligner.processArrayDesign( ad, taxon, results );
 
         // real stuff.
-        ArrayDesignProbeMapperService arrayDesignProbeMapperService = this
-                .getBean( ArrayDesignProbeMapperService.class );
         arrayDesignProbeMapperService.processArrayDesign( ad );
     }
 
@@ -223,8 +225,8 @@ public class CompositeSequenceGeneMapperServiceTest extends AbstractGeoServiceTe
     }
 
     private void loadSequenceData() throws IOException {
-        try (InputStream sequenceFile = this.getClass()
-                .getResourceAsStream( "/data/loader/genome/gpl96_short.sequences2.fasta" )) {
+        try ( InputStream sequenceFile = this.getClass()
+                .getResourceAsStream( "/data/loader/genome/gpl96_short.sequences2.fasta" ) ) {
 
             sequenceProcessingService
                     .processArrayDesign( ad, sequenceFile, SequenceType.EST, taxonService.findByCommonName( "human" ) );

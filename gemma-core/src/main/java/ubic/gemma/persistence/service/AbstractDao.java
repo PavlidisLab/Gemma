@@ -18,22 +18,24 @@
  */
 package ubic.gemma.persistence.service;
 
+import org.apache.commons.collections4.ListUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
 import org.hibernate.FlushMode;
 import org.hibernate.SessionFactory;
+import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
 import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.common.Identifiable;
-import ubic.gemma.persistence.service.genome.taxon.TaxonServiceImpl;
 
+import javax.annotation.Nullable;
 import javax.annotation.OverridingMethodsMustInvokeSuper;
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.io.Serializable;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * AbstractDao can find the generic type at runtime and simplify the code implementation of the BaseDao interface
@@ -41,18 +43,33 @@ import java.util.List;
  * @author Anton, Nicolas
  */
 @Transactional
+@ParametersAreNonnullByDefault
 public abstract class AbstractDao<T extends Identifiable> extends HibernateDaoSupport implements BaseDao<T> {
 
-    protected static final Log log = LogFactory.getLog( TaxonServiceImpl.class );
+    protected static final Log log = LogFactory.getLog( AbstractDao.class );
 
     /**
-     * Batch size to reach before flushing the Hibernate session.
+     * Default batch size for loading data from the database using {@link #load(Collection)}.
+     *
+     * No batching is performed by default, thus {@link Integer#MAX_VALUE}.
+     */
+    public static final int DEFAULT_LOAD_BATCH_SIZE = Integer.MAX_VALUE;
+
+    /**
+     * Default batch size to reach before flushing the Hibernate session.
+     *
+     * You should use {@link #setBatchSize(int)} to adjust this value to an optimal one for the DAO. Large model should
+     * have a relatively small batch size to reduce memory usage.
      *
      * See https://docs.jboss.org/hibernate/core/3.6/reference/en-US/html/batch.html for more details.
      */
-    private static final int BATCH_SIZE = 100;
+    public static final int DEFAULT_BATCH_SIZE = 100;
 
     protected final Class<T> elementClass;
+
+    private int loadBatchSize = DEFAULT_LOAD_BATCH_SIZE;
+
+    private int batchSize = DEFAULT_BATCH_SIZE;
 
     protected AbstractDao( Class<T> elementClass, SessionFactory sessionFactory ) {
         super.setSessionFactory( sessionFactory );
@@ -61,15 +78,16 @@ public abstract class AbstractDao<T extends Identifiable> extends HibernateDaoSu
 
     @Override
     public Collection<T> create( Collection<T> entities ) {
+        Collection<T> results = new ArrayList<>( entities.size() );
         int i = 0;
         for ( T t : entities ) {
-            this.create( t );
-            if ( ++i % BATCH_SIZE == 0 ) {
+            results.add( this.create( t ) );
+            if ( ++i % batchSize == 0 ) {
                 this.getSessionFactory().getCurrentSession().flush();
                 this.getSessionFactory().getCurrentSession().clear();
             }
         }
-        return entities;
+        return results;
     }
 
     @Override
@@ -87,17 +105,27 @@ public abstract class AbstractDao<T extends Identifiable> extends HibernateDaoSu
         if ( ids.isEmpty() ) {
             return Collections.emptyList();
         }
-        //noinspection unchecked
-        return this.getSessionFactory().getCurrentSession()
-                .createQuery( //language=none // Prevents unresolvable missing value warnings.
-                        "from " + elementClass.getSimpleName() + " e where e.id in (:ids)" )
-                .setParameterList( "ids", ids ).list();
+        String idPropertyName = getSessionFactory().getClassMetadata( elementClass ).getIdentifierPropertyName();
+        List<Long> uniqueIds = ids.stream()
+                .filter( Objects::nonNull )
+                .distinct()
+                .sorted()
+                .collect( Collectors.toList() );
+        Collection<T> results = new ArrayList<>( uniqueIds.size() );
+        for ( List<Long> batch : ListUtils.partition( uniqueIds, loadBatchSize ) ) {
+            //noinspection unchecked
+            results.addAll( this.getSessionFactory().getCurrentSession()
+                    .createCriteria( elementClass )
+                    .add( Restrictions.in( idPropertyName, batch ) )
+                    .list() );
+        }
+        return results;
     }
 
     @SuppressWarnings("unchecked")
     @Override
     @Transactional(readOnly = true)
-    public T load( Long id ) {
+    public T load( @Nullable Long id ) {
         // Don't use 'load' because if the object doesn't exist you can get an invalid proxy.
         //noinspection unchecked
         return id == null ? null : ( T ) this.getSessionFactory().getCurrentSession().get( elementClass, id );
@@ -111,11 +139,10 @@ public abstract class AbstractDao<T extends Identifiable> extends HibernateDaoSu
     }
 
     @Override
-    public Integer countAll() {
-        return ( ( Long ) this.getSessionFactory().getCurrentSession()
-                .createQuery( //language=none // Prevents unresolvable missing value warnings.
-                        "select count(*) from " + elementClass.getSimpleName() )
-                .uniqueResult() ).intValue();
+    public long countAll() {
+        return ( Long ) this.getSessionFactory().getCurrentSession().createCriteria( elementClass )
+                .setProjection( Projections.rowCount() )
+                .uniqueResult();
     }
 
     @Override
@@ -123,7 +150,7 @@ public abstract class AbstractDao<T extends Identifiable> extends HibernateDaoSu
         int i = 0;
         for ( T e : entities ) {
             this.remove( e );
-            if ( ++i % BATCH_SIZE == 0 ) {
+            if ( ++i % batchSize == 0 ) {
                 this.getSessionFactory().getCurrentSession().flush();
                 this.getSessionFactory().getCurrentSession().clear();
             }
@@ -132,14 +159,15 @@ public abstract class AbstractDao<T extends Identifiable> extends HibernateDaoSu
 
     @Override
     public void remove( Long id ) {
-        if ( id == null ) throw new IllegalArgumentException( "Id cannot be null" );
-        this.remove( this.load( id ) );
+        T entity = this.load( id );
+        if ( entity != null ) {
+            this.remove( entity );
+        }
     }
 
     @Override
     @OverridingMethodsMustInvokeSuper
     public void remove( T entity ) {
-        if ( entity == null ) throw new IllegalArgumentException( "Entity cannot be null" );
         this.getSessionFactory().getCurrentSession().delete( entity );
     }
 
@@ -149,12 +177,11 @@ public abstract class AbstractDao<T extends Identifiable> extends HibernateDaoSu
     }
 
     @Override
-    @Transactional
     public void update( Collection<T> entities ) {
         int i = 0;
         for ( T entity : entities ) {
             this.update( entity );
-            if ( ++i % BATCH_SIZE == 0 ) {
+            if ( ++i % batchSize == 0 ) {
                 this.getSessionFactory().getCurrentSession().flush();
                 this.getSessionFactory().getCurrentSession().clear();
             }
@@ -162,24 +189,20 @@ public abstract class AbstractDao<T extends Identifiable> extends HibernateDaoSu
     }
 
     @Override
-    @Transactional
     @OverridingMethodsMustInvokeSuper
     public void update( T entity ) {
-        if ( entity == null ) throw new IllegalArgumentException( "Entity cannot be null" );
         this.getSessionFactory().getCurrentSession().update( entity );
     }
 
     @Override
     @Transactional(readOnly = true)
     public T find( T entity ) {
-        if ( entity == null ) throw new IllegalArgumentException( "Entity cannot be null" );
         return this.load( entity.getId() );
     }
 
     @Override
     @Transactional
     public T findOrCreate( T entity ) {
-        if ( entity == null ) throw new IllegalArgumentException( "Entity cannot be null" );
         T found = this.find( entity );
         return found == null ? this.create( entity ) : found;
     }
@@ -256,4 +279,32 @@ public abstract class AbstractDao<T extends Identifiable> extends HibernateDaoSu
         return criteria.list();
     }
 
+    /**
+     * Set the batch size for loading entities using {@link #load(Collection)}.
+     *
+     * Use {@link Integer#MAX_VALUE} to effectively disable batching.
+     *
+     * @param loadBatchSize a strictly positive number
+     */
+    protected final void setLoadBatchSize( int loadBatchSize ) {
+        if ( loadBatchSize < 1 ) {
+            throw new IllegalArgumentException( "Batch size must be strictly positive." );
+        }
+        this.loadBatchSize = loadBatchSize;
+    }
+
+    /**
+     * Set the batch size for batched creation, update and deletions.
+     *
+     * Use {@link Integer#MAX_VALUE} to effectively disable batching and '1' to flush changes right away.
+     *
+     * @param batchSize a strictly positive number
+     */
+    @SuppressWarnings("unused")
+    protected final void setBatchSize( int batchSize ) {
+        if ( batchSize < 1 ) {
+            throw new IllegalArgumentException( "Batch size must be strictly positive." );
+        }
+        this.batchSize = batchSize;
+    }
 }

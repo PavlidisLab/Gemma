@@ -62,7 +62,7 @@ public class BatchInfoFetchController {
         BatchInfoFetchTaskCommand cmd = new BatchInfoFetchTaskCommand( ee );
 
         experimentReportService.evictFromCache( id );
-        return taskRunningService.submitRemoteTask( cmd );
+        return taskRunningService.submitTaskCommand( cmd );
     }
 
 }

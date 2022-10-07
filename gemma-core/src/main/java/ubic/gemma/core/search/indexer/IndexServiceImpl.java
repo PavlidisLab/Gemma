@@ -77,56 +77,56 @@ public class IndexServiceImpl implements IndexService {
 
     @Override
     public String index( IndexerTaskCommand command ) {
-        return taskRunningService.submitLocalTask( new IndexerJob( command ) );
+        return taskRunningService.submitTask( new IndexerJob( command ) );
     }
 
     @Override
     public String indexAll() {
         IndexerTaskCommand command = new IndexerTaskCommand();
         command.setAll( true );
-        return taskRunningService.submitLocalTask( new IndexerJob( command ) );
+        return taskRunningService.submitTask( new IndexerJob( command ) );
     }
 
     @Override
     public String indexArrayDesigns() {
         IndexerTaskCommand command = new IndexerTaskCommand();
         command.setIndexAD( true );
-        return taskRunningService.submitLocalTask( new IndexerJob( command ) );
+        return taskRunningService.submitTask( new IndexerJob( command ) );
     }
 
     @Override
     public String indexBibliographicReferences() {
         IndexerTaskCommand command = new IndexerTaskCommand();
         command.setIndexBibRef( true );
-        return taskRunningService.submitLocalTask( new IndexerJob( command ) );
+        return taskRunningService.submitTask( new IndexerJob( command ) );
     }
 
     @Override
     public String indexBioSequences() {
         IndexerTaskCommand command = new IndexerTaskCommand();
         command.setIndexBioSequence( true );
-        return taskRunningService.submitLocalTask( new IndexerJob( command ) );
+        return taskRunningService.submitTask( new IndexerJob( command ) );
     }
 
     @Override
     public String indexExpressionExperiments() {
         IndexerTaskCommand command = new IndexerTaskCommand();
         command.setIndexEE( true );
-        return taskRunningService.submitLocalTask( new IndexerJob( command ) );
+        return taskRunningService.submitTask( new IndexerJob( command ) );
     }
 
     @Override
     public String indexGenes() {
         IndexerTaskCommand command = new IndexerTaskCommand();
         command.setIndexGene( true );
-        return taskRunningService.submitLocalTask( new IndexerJob( command ) );
+        return taskRunningService.submitTask( new IndexerJob( command ) );
     }
 
     @Override
     public String indexProbes() {
         IndexerTaskCommand command = new IndexerTaskCommand();
         command.setIndexProbe( true );
-        return taskRunningService.submitLocalTask( new IndexerJob( command ) );
+        return taskRunningService.submitTask( new IndexerJob( command ) );
     }
 
     private void loadExternalIndices( IndexerTaskCommand indexerTaskCommand, IndexerResult remoteIndexTaskResult ) {
@@ -211,7 +211,7 @@ public class IndexServiceImpl implements IndexService {
         @Override
         public IndexerResult call() {
             IndexerResult result;
-            String taskId = taskRunningService.submitRemoteTask( taskCommand );
+            String taskId = taskRunningService.submitTaskCommand( taskCommand );
 
             SubmittedTask<IndexerResult> indexingTask = taskRunningService.getSubmittedTask( taskId );
             try {

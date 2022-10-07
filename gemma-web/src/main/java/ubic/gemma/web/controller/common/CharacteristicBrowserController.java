@@ -74,7 +74,7 @@ public class CharacteristicBrowserController {
     private CharacteristicService characteristicService;
 
     public JsonReaderResponse<AnnotationValueObject> browse( ListBatchCommand batch ) {
-        Integer count = characteristicService.countAll();
+        long count = characteristicService.countAll();
 
         List<AnnotationValueObject> results = new ArrayList<>();
 
@@ -111,15 +111,7 @@ public class CharacteristicBrowserController {
             Characteristic c = ( Characteristic ) o;
             Object parent = charToParent.get( c );
 
-            AnnotationValueObject avo = new AnnotationValueObject();
-            avo.setId( c.getId() );
-            avo.setClassName( c.getCategory() );
-            avo.setTermName( c.getValue() );
-
-            if ( c.getEvidenceCode() != null )
-                avo.setEvidenceCode( c.getEvidenceCode().toString() );
-
-            populateClassValues( c, avo );
+            AnnotationValueObject avo = new AnnotationValueObject( c, Characteristic.class.getSimpleName() );
 
             if ( parent != null ) {
                 populateParentInformation( avo, parent );
@@ -127,16 +119,10 @@ public class CharacteristicBrowserController {
             results.add( avo );
         }
 
-        return new JsonReaderResponse<>( results, count );
+        return new JsonReaderResponse<>( results, ( int ) count );
     }
 
-    private void populateClassValues( Characteristic c, AnnotationValueObject avo ) {
-        avo.setClassUri( c.getCategoryUri() );
-        avo.setTermUri( c.getValueUri() );
-        avo.setObjectClass( Characteristic.class.getSimpleName() );
-    }
-
-    public Integer count() {
+    public Long count() {
         return characteristicService.countAll();
     }
 
@@ -181,15 +167,7 @@ public class CharacteristicBrowserController {
                     || ( searchNos && parent == null ) || ( searchPAs
                     && parent instanceof PhenotypeAssociation ) ) {
 
-                AnnotationValueObject avo = new AnnotationValueObject();
-                avo.setId( c.getId() );
-                avo.setClassName( c.getCategory() );
-                avo.setTermName( c.getValue() );
-
-                if ( c.getEvidenceCode() != null )
-                    avo.setEvidenceCode( c.getEvidenceCode().toString() );
-
-                populateClassValues( c, avo );
+                AnnotationValueObject avo = new AnnotationValueObject( c, Characteristic.class.getSimpleName() );
 
                 if ( parent != null ) {
                     populateParentInformation( avo, parent );
@@ -211,9 +189,7 @@ public class CharacteristicBrowserController {
                 if ( StringUtils.isBlank( factorValue.getValue() ) )
                     continue;
 
-                AnnotationValueObject avo = new AnnotationValueObject();
-
-                avo.setId( factorValue.getId() );
+                AnnotationValueObject avo = new AnnotationValueObject( factorValue.getId() );
                 avo.setTermName( factorValue.getValue() );
                 avo.setObjectClass( FactorValue.class.getSimpleName() );
 
@@ -238,7 +214,7 @@ public class CharacteristicBrowserController {
         CharacteristicUpdateCommand c = new CharacteristicUpdateCommand();
         c.setAnnotationValueObjects( chars );
         c.setRemove( true );
-        taskRunningService.submitLocalTask( c );
+        taskRunningService.submitTaskCommand( c );
     }
 
     /**
@@ -249,7 +225,7 @@ public class CharacteristicBrowserController {
         CharacteristicUpdateCommand c = new CharacteristicUpdateCommand();
         c.setAnnotationValueObjects( avos );
         c.setRemove( false );
-        taskRunningService.submitLocalTask( c );
+        taskRunningService.submitTaskCommand( c );
     }
 
     /**

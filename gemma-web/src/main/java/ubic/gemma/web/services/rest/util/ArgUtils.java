@@ -15,7 +15,6 @@
 package ubic.gemma.web.services.rest.util;
 
 import lombok.NonNull;
-import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.web.services.rest.util.args.Arg;
 
 import javax.ws.rs.BadRequestException;

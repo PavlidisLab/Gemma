@@ -119,7 +119,7 @@ public class ExpressionExperimentSetDaoImpl
     }
 
     @Override
-    public ExpressionExperimentSetValueObject loadValueObject( ExpressionExperimentSet entity ) {
+    protected ExpressionExperimentSetValueObject doLoadValueObject( ExpressionExperimentSet entity ) {
         return this.loadValueObject( entity.getId(), false );
     }
 
@@ -153,8 +153,8 @@ public class ExpressionExperimentSetDaoImpl
         timer.start();
         //noinspection unchecked
         List<Object[]> withCoexp = this.getSessionFactory().getCurrentSession().createQuery(
-                "select e.id, count(an) from ExpressionExperimentSet e, CoexpressionAnalysis an join e.experiments ea "
-                        + "where an.experimentAnalyzed = ea and e.id in (:ids) group by e.id" )
+                        "select e.id, count(an) from ExpressionExperimentSet e, CoexpressionAnalysis an join e.experiments ea "
+                                + "where an.experimentAnalyzed = ea and e.id in (:ids) group by e.id" )
                 .setParameterList( "ids", idMap.keySet() ).list();
 
         for ( Object[] oa : withCoexp ) {
@@ -169,9 +169,9 @@ public class ExpressionExperimentSetDaoImpl
          */
         //noinspection unchecked
         List<Object[]> withDiffEx = this.getSessionFactory().getCurrentSession().createQuery(
-                "select e.id, count(distinct an.experimentAnalyzed) "
-                        + "from ExpressionExperimentSet e, DifferentialExpressionAnalysis an join e.experiments ea "
-                        + "where an.experimentAnalyzed = ea and e.id in (:ids) group by e.id" )
+                        "select e.id, count(distinct an.experimentAnalyzed) "
+                                + "from ExpressionExperimentSet e, DifferentialExpressionAnalysis an join e.experiments ea "
+                                + "where an.experimentAnalyzed = ea and e.id in (:ids) group by e.id" )
                 .setParameterList( "ids", idMap.keySet() ).list();
 
         for ( Object[] oa : withDiffEx ) {

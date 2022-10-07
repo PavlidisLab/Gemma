@@ -5,6 +5,8 @@ import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.core.analysis.preprocess.OutlierDetails;
 import ubic.gemma.core.analysis.preprocess.OutlierDetectionService;
+import ubic.gemma.core.analysis.preprocess.filter.FilteringException;
+import ubic.gemma.core.analysis.preprocess.filter.NoRowsLeftAfterFilteringException;
 import ubic.gemma.model.common.description.AnnotationValueObject;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -13,7 +15,9 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.web.services.rest.util.MalformedArgException;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -23,17 +27,13 @@ import java.util.stream.Collectors;
  *
  * @author tesarst
  */
-@Schema(subTypes = { DatasetIdArg.class, DatasetStringArg.class })
+@Schema(oneOf = { DatasetIdArg.class, DatasetStringArg.class })
 @CommonsLog
 public abstract class DatasetArg<T>
         extends AbstractEntityArg<T, ExpressionExperiment, ExpressionExperimentService> {
 
     protected DatasetArg( T value ) {
         super( ExpressionExperiment.class, value );
-    }
-
-    protected DatasetArg( String message, Throwable cause ) {
-        super( ExpressionExperiment.class, message, cause );
     }
 
     /**
@@ -43,9 +43,9 @@ public abstract class DatasetArg<T>
      * @return instance of appropriate implementation of DatasetArg based on the actual Type the argument represents.
      */
     @SuppressWarnings("unused")
-    public static DatasetArg<?> valueOf( final String s ) {
+    public static DatasetArg<?> valueOf( final String s ) throws MalformedArgException {
         if ( StringUtils.isBlank( s ) ) {
-            return new DatasetStringArg( "Dataset identifier cannot be null or empty.", null );
+            throw new MalformedArgException( "Dataset identifier cannot be null or empty." );
         }
         try {
             return new DatasetIdArg( Long.parseLong( s.trim() ) );
@@ -78,12 +78,18 @@ public abstract class DatasetArg<T>
             BioAssayService baService, OutlierDetectionService outlierDetectionService ) {
         ExpressionExperiment ee = service.thawBioAssays( this.getEntity( service ) );
         List<BioAssayValueObject> bioAssayValueObjects = baService.loadValueObjects( ee.getBioAssays(), true );
-        Set<Long> predictedOutlierBioAssayIds = outlierDetectionService.identifyOutliersByMedianCorrelation( ee ).stream()
-                .map( OutlierDetails::getBioAssay )
-                .map( BioAssay::getId )
-                .collect( Collectors.toSet() );
-        for ( BioAssayValueObject vo : bioAssayValueObjects ) {
-            vo.setPredictedOutlier( predictedOutlierBioAssayIds.contains( vo.getId() ) );
+        try {
+            Set<Long> predictedOutlierBioAssayIds = outlierDetectionService.identifyOutliersByMedianCorrelation( ee ).stream()
+                    .map( OutlierDetails::getBioAssay )
+                    .map( BioAssay::getId )
+                    .collect( Collectors.toSet() );
+            for ( BioAssayValueObject vo : bioAssayValueObjects ) {
+                vo.setPredictedOutlier( predictedOutlierBioAssayIds.contains( vo.getId() ) );
+            }
+        } catch ( NoRowsLeftAfterFilteringException e ) {
+            // there are no rows left in the data matrix, thus no outliers ;o
+        } catch ( FilteringException e ) {
+            throw new RuntimeException( e );
         }
         return bioAssayValueObjects;
     }

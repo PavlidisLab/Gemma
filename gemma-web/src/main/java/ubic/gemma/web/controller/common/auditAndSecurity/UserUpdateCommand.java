@@ -23,6 +23,7 @@ import ubic.gemma.model.common.auditAndSecurity.JobInfo;
 import ubic.gemma.model.common.auditAndSecurity.User;
 
 import java.util.Collection;
+import java.util.Set;
 
 /**
  * Just like a regular user; but has 'new password' and 'confirm password' fields. It can be constructed from a user. To
@@ -126,7 +127,7 @@ public class UserUpdateCommand {
         return this.user.getJobs();
     }
 
-    public void setJobs( Collection<JobInfo> jobs ) {
+    public void setJobs( Set<JobInfo> jobs ) {
         this.user.setJobs( jobs );
     }
 

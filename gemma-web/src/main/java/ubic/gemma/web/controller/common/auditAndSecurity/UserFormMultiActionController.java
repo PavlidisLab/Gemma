@@ -19,8 +19,6 @@
 package ubic.gemma.web.controller.common.auditAndSecurity;
 
 import gemma.gsec.authentication.UserDetailsImpl;
-import gemma.gsec.authentication.UserManager;
-import gemma.gsec.model.User;
 import gemma.gsec.util.JSONUtil;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -33,6 +31,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
+import ubic.gemma.core.security.authentication.UserManager;
+import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.web.controller.BaseController;
 
 import javax.servlet.http.HttpServletRequest;

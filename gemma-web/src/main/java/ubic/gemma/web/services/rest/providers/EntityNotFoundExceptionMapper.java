@@ -1,7 +1,5 @@
 package ubic.gemma.web.services.rest.providers;
 
-import io.swagger.v3.oas.models.OpenAPI;
-import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.association.phenotype.EntityNotFoundException;
 import ubic.gemma.web.services.rest.util.OpenApiUtils;
 import ubic.gemma.web.services.rest.util.ResponseErrorObject;
@@ -18,16 +16,13 @@ import javax.ws.rs.ext.Provider;
  * Map {@link EntityNotFoundException} to a response containing a JSON error object.
  */
 @Provider
-public class EntityNotFoundExceptionMapper implements ExceptionMapper<EntityNotFoundException> {
+public class EntityNotFoundExceptionMapper extends AbstractExceptionMapper<EntityNotFoundException> {
 
     @Context
     private ServletConfig servletConfig;
 
     @Override
-    public Response toResponse( EntityNotFoundException e ) {
-        return Response.status( Response.Status.NOT_FOUND )
-                .type( MediaType.APPLICATION_JSON_TYPE )
-                .entity( new ResponseErrorObject( new WellComposedErrorBody( Response.Status.NOT_FOUND, e.getMessage() ), OpenApiUtils.getOpenApi( servletConfig ) ) )
-                .build();
+    protected Response.Status getStatus( EntityNotFoundException exception ) {
+        return Response.Status.NOT_FOUND;
     }
 }

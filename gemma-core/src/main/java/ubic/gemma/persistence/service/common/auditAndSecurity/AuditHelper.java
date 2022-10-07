@@ -14,9 +14,9 @@
  */
 package ubic.gemma.persistence.service.common.auditAndSecurity;
 
-import gemma.gsec.model.User;
 import ubic.gemma.model.common.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
+import ubic.gemma.model.common.auditAndSecurity.User;
 
 /**
  * This is to allow for a single way to deal with audit events and status update. Note: Security is not checked. Note: Only used from

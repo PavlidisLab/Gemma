@@ -52,7 +52,7 @@ public class AgilentScanDateExtractor extends BaseScanDateExtractor {
     public static DateFormat AGILENT_DATE_FORMAT = new SimpleDateFormat( "MM-dd-yyyy hh:mm:ss", Locale.ENGLISH ); // 10-18-2005 13:02:36
 
     @Override
-    public Date extract( InputStream is ) {
+    public Date extract( InputStream is ) throws UnsupportedRawdataFileFormatException {
         BufferedReader reader = null;
         try {
             /*

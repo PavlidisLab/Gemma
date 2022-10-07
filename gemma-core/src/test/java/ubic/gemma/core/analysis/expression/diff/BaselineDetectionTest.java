@@ -58,6 +58,7 @@ public class BaselineDetectionTest extends AbstractGeoServiceTest {
 
     @Before
     public void setUp() throws Exception {
+        super.setUp();
 
         String path = FileTools.resourceToPath( "/data/loader/expression/geo/gse18162Short" );
         try {
@@ -77,8 +78,8 @@ public class BaselineDetectionTest extends AbstractGeoServiceTest {
             ee = eeService.load( ee.getId() );
             ee = this.eeService.thawLite( ee );
 
-            try (InputStream is = this.getClass()
-                    .getResourceAsStream( "/data/loader/expression/geo/gse18162Short/design.txt" )) {
+            try ( InputStream is = this.getClass()
+                    .getResourceAsStream( "/data/loader/expression/geo/gse18162Short/design.txt" ) ) {
                 experimentalDesignImporter.importDesign( ee, is );
             }
             ee = eeService.load( ee.getId() );

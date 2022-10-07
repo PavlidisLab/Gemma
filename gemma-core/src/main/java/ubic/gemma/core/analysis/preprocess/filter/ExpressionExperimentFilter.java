@@ -130,7 +130,6 @@ public class ExpressionExperimentFilter {
     }
 
 
-
     /**
      * Remove rows that have a variance of zero (within a small constant)
      *
@@ -161,8 +160,9 @@ public class ExpressionExperimentFilter {
      *
      * @param dataVectors data vectors
      * @return filtered matrix
+     * @throws NoRowsLeftAfterFilteringException if filtering results in no row left in the expression matrix
      */
-    public ExpressionDataDoubleMatrix getFilteredMatrix( Collection<ProcessedExpressionDataVector> dataVectors ) {
+    public ExpressionDataDoubleMatrix getFilteredMatrix( Collection<ProcessedExpressionDataVector> dataVectors ) throws FilteringException {
         ExpressionDataDoubleMatrix eeDoubleMatrix = new ExpressionDataDoubleMatrix( dataVectors );
         this.transform( eeDoubleMatrix );
         return this.filter( eeDoubleMatrix );
@@ -187,7 +187,7 @@ public class ExpressionExperimentFilter {
      * @return A data matrix in which filters have been applied and missing values (in the PRESENTABSENT quantitation
      * type, if present) are masked
      */
-    private ExpressionDataDoubleMatrix doFilter( ExpressionDataDoubleMatrix eeDoubleMatrix ) {
+    private ExpressionDataDoubleMatrix doFilter( ExpressionDataDoubleMatrix eeDoubleMatrix ) throws NoRowsLeftAfterFilteringException {
 
         ExpressionDataDoubleMatrix filteredMatrix = eeDoubleMatrix;
 
@@ -229,7 +229,7 @@ public class ExpressionExperimentFilter {
             config.setAfterMinPresentFilter( afterMinPresentFilter );
 
             if ( filteredMatrix.rows() == 0 ) {
-                throw new IllegalStateException( "No rows left after minimum non-missing data filtering" );
+                throw new NoRowsLeftAfterFilteringException( "No rows left after minimum non-missing data filtering" );
             }
         }
 
@@ -241,7 +241,7 @@ public class ExpressionExperimentFilter {
         afterZeroVarianceCut = filteredMatrix.rows();
         config.setAfterZeroVarianceCut( afterZeroVarianceCut );
         if ( filteredMatrix.rows() == 0 ) {
-            throw new IllegalStateException( "No rows left after filtering rows with zero variance" );
+            throw new NoRowsLeftAfterFilteringException( "No rows left after filtering rows with zero variance" );
         }
 
         /*
@@ -255,7 +255,7 @@ public class ExpressionExperimentFilter {
             config.setAfterLowExpressionCut( afterLowExpressionCut );
 
             if ( filteredMatrix.rows() == 0 ) {
-                throw new IllegalStateException( "No rows left after expression level filtering" );
+                throw new NoRowsLeftAfterFilteringException( "No rows left after expression level filtering" );
             }
         }
 
@@ -276,7 +276,7 @@ public class ExpressionExperimentFilter {
             config.setAfterLowVarianceCut( afterLowVarianceCut );
 
             if ( filteredMatrix.rows() == 0 ) {
-                throw new IllegalStateException( "No rows left after variance filtering" );
+                throw new NoRowsLeftAfterFilteringException( "No rows left after variance filtering" );
             }
         }
 
@@ -309,7 +309,7 @@ public class ExpressionExperimentFilter {
      * @param eeDoubleMatrix , already masked for missing values.
      * @return filtered matrix
      */
-    private ExpressionDataDoubleMatrix filter( ExpressionDataDoubleMatrix eeDoubleMatrix ) {
+    private ExpressionDataDoubleMatrix filter( ExpressionDataDoubleMatrix eeDoubleMatrix ) throws NoRowsLeftAfterFilteringException, InsufficientSamplesException, InsufficientProbesException {
         if ( eeDoubleMatrix == null || eeDoubleMatrix.rows() == 0 )
             throw new IllegalArgumentException( "No data found!" );
 

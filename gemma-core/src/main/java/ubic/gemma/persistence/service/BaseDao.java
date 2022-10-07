@@ -18,8 +18,7 @@
  */
 package ubic.gemma.persistence.service;
 
-import javax.annotation.CheckReturnValue;
-import javax.annotation.OverridingMethodsMustInvokeSuper;
+import javax.annotation.*;
 import java.util.Collection;
 
 /**
@@ -28,6 +27,7 @@ import java.util.Collection;
  * @param <T> type
  * @author paul
  */
+@ParametersAreNonnullByDefault
 public interface BaseDao<T> {
 
     /**
@@ -36,6 +36,7 @@ public interface BaseDao<T> {
      * @param entities the entities to be crated.
      * @return collection of entities representing the instances in the persistent storage that were created.
      */
+    @CheckReturnValue
     Collection<T> create( Collection<T> entities );
 
     /**
@@ -45,12 +46,13 @@ public interface BaseDao<T> {
      * @param entity the entity to create
      * @return the persistent version of the entity
      */
+    @CheckReturnValue
     T create( T entity );
 
     /**
      * Loads entities with given ids form the persistent storage.
      *
-     * @param ids the ids of entities to be loaded. If some id's are not found, they are skipped.
+     * @param ids the IDs of entities to be loaded. If some IDs are not found or null, they are skipped.
      * @return collection of entities with given ids.
      */
     Collection<T> load( Collection<Long> ids );
@@ -59,9 +61,10 @@ public interface BaseDao<T> {
      * Loads the entity with given id from the persistent storage.
      *
      * @param id the id of entity to load.
-     * @return the entity with given id, or null if such entity does not exist.
+     * @return the entity with given ID, or null if such entity does not exist or if the passed ID was null
      */
-    T load( Long id );
+    @Nullable
+    T load( @Nullable Long id );
 
     /**
      * Loads all instanced of specific class from the persistent storage.
@@ -75,16 +78,19 @@ public interface BaseDao<T> {
      *
      * @return number that is the amount of instances currently accessible.
      */
-    Integer countAll();
+    long countAll();
 
     void remove( Collection<T> entities );
 
     /**
-     * Remove a persistent instance based on its id. The implementer is trusted to know what type of object to remove.
-     * Note that this method is to be avoided for Securables, because it will leave cruft in the ACL tables. We may fix
-     * this by having this method return the removed object.
+     * Remove a persistent instance based on its ID.
      *
-     * @param id the id of the entity to be removed
+     * The implementer is trusted to know what type of object to remove.
+     *
+     * Note that this method is to be avoided for {@link gemma.gsec.model.Securable}, because it will leave cruft in the
+     * ACL tables. We may fix this by having this method return the removed object.
+     *
+     * @param id the ID of the entity to be removed
      */
     void remove( Long id );
 
@@ -117,6 +123,8 @@ public interface BaseDao<T> {
      * @param entity the entity to look for.
      * @return an entity that was found in the persistent storage, or null if no such entity was found.
      */
+    @Nullable
+    @CheckReturnValue
     T find( T entity );
 
     /**

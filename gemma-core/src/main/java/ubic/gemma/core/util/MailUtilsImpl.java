@@ -14,8 +14,6 @@
  */
 package ubic.gemma.core.util;
 
-import gemma.gsec.authentication.UserService;
-import gemma.gsec.model.User;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -24,6 +22,8 @@ import org.springframework.mail.SimpleMailMessage;
 import org.springframework.stereotype.Component;
 import ubic.gemma.core.job.EmailNotificationContext;
 import ubic.gemma.core.job.TaskResult;
+import ubic.gemma.core.security.authentication.UserService;
+import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.persistence.util.MailEngine;
 import ubic.gemma.persistence.util.Settings;
 

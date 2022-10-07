@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -19,7 +19,6 @@
 package ubic.gemma.web.controller.common.auditAndSecurity;
 
 import gemma.gsec.authentication.UserDetailsImpl;
-import gemma.gsec.authentication.UserManager;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.LazyInitializationException;
@@ -30,6 +29,8 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.servlet.ModelAndView;
+import ubic.gemma.core.security.authentication.UserManager;
+import ubic.gemma.model.common.auditAndSecurity.User;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -66,8 +67,8 @@ public class UserListControllerImpl implements UserListController {
         Collection<UserValueObject> userValueObjects = new ArrayList<>();
 
         try {
-            Collection<gemma.gsec.model.User> users = userManager.loadAll();
-            for ( gemma.gsec.model.User u : users ) {
+            Collection<User> users = userManager.loadAll();
+            for ( User u : users ) {
                 UserValueObject uv = new UserValueObject( u );
                 userValueObjects.add( uv );
             }
@@ -83,7 +84,7 @@ public class UserListControllerImpl implements UserListController {
         /*
          * FIXME: this lists all users, not the ones who are active.
          */
-        Collection<gemma.gsec.model.User> users = null;
+        Collection<User> users = null;
         try {
             users = userManager.loadAll();
         } catch ( UncategorizedSQLException | LazyInitializationException e ) {
@@ -97,7 +98,7 @@ public class UserListControllerImpl implements UserListController {
     public void saveUser( UserValueObject user ) {
 
         String userName = user.getUserName();
-        gemma.gsec.model.User u = userManager.findByUserName( userName );
+        User u = userManager.findByUserName( userName );
 
         UserDetailsImpl userDetails;
 

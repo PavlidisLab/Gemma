@@ -19,66 +19,88 @@
 
 package ubic.gemma.model.genome.gene;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
 import org.hibernate.Hibernate;
 import ubic.gemma.model.IdentifiableValueObject;
+import ubic.gemma.model.annotations.GemmaWebOnly;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.model.genome.TaxonValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 
+import javax.annotation.Nullable;
 import java.io.Serializable;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.Objects;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * @author kelsey
  */
-@SuppressWarnings({ "unused", "WeakerAccess" }) // Possibly used in front end
+@Data
+@EqualsAndHashCode(of = { "ncbiId", "officialSymbol", "taxonId" }, callSuper = true)
 public class GeneValueObject extends IdentifiableValueObject<Gene> implements Serializable {
     /**
      * The serial version UID of this class. Needed for serialization.
      */
     private static final long serialVersionUID = -7098036090107647318L;
-    private Collection<String> aliases;
+    /**
+     * Gene aliases, sorted alphabetically.
+     */
+    private SortedSet<String> aliases;
     /**
      * How many experiments "involve" (manipulate, etc.) this gene
      */
+    @JsonIgnore
     private Integer associatedExperimentCount = 0;
+    @JsonIgnore
     private Integer compositeSequenceCount = 0; // number of probes
+    @JsonIgnore
     private String description;
+    @JsonIgnore
     private Collection<GeneSetValueObject> geneSets = null;
+    @JsonIgnore
     private Collection<GeneValueObject> homologues = null;
     /**
      * Was this gene directly used in a query? Or is it inferred somehow. The default is true, use this when you need to
      * differentiate
      */
+    @JsonIgnore
     private Boolean isQuery = true;
-    private Double multifunctionalityRank = 0.0;
+    private Double multifunctionalityRank;
+    @JsonIgnore
     private String name;
     private Integer ncbiId;
     private String ensemblId;
+    @JsonIgnore
     private double[] nodeDegreeNegRanks;
+    @JsonIgnore
     private double[] nodeDegreePosRanks;
     /**
      * Array containing number of links supported by 0,1,2, .... data sets (value in first index is always 0) for
      * negative correlation coexpression
      */
+    @JsonIgnore
     private int[] nodeDegreesNeg;
     /**
      * Array containing number of links supported by 0,1,2, .... data sets (value in first index is always 0) for
      * positive coexpression
      */
+    @JsonIgnore
     private int[] nodeDegreesPos;
+    @JsonIgnore
     private Integer numGoTerms = 0;
     private String officialName;
     private String officialSymbol;
+    @JsonIgnore
     private Collection<CharacteristicValueObject> phenotypes;
+    @JsonIgnore
     private Integer platformCount;
+    @JsonIgnore
     private Double score; // This is for genes in gene sets might have a rank or a score associated with them.
-    private String taxonCommonName;
-    private Long taxonId;
-    private String taxonScientificName;
+    @Nullable
+    private TaxonValueObject taxon;
 
     /**
      * Required when using the class as a spring bean.
@@ -101,13 +123,19 @@ public class GeneValueObject extends IdentifiableValueObject<Gene> implements Se
         this.officialName = gene.getOfficialName();
         this.officialSymbol = gene.getOfficialSymbol();
         if ( gene.getTaxon() != null && Hibernate.isInitialized( gene.getTaxon() ) ) {
-            this.taxonId = gene.getTaxon().getId();
-            this.taxonScientificName = gene.getTaxon().getScientificName();
-            this.setTaxonCommonName( gene.getTaxon().getCommonName() );
+            this.taxon = new TaxonValueObject( gene.getTaxon() );
         }
         this.name = gene.getName();
         this.description = gene.getDescription();
         this.ensemblId = gene.getEnsemblId();
+        if ( gene.getMultifunctionality() != null && Hibernate.isInitialized( gene.getMultifunctionality() ) ) {
+            this.multifunctionalityRank = gene.getMultifunctionality().getRank();
+        } else {
+            this.multifunctionalityRank = null;
+        }
+        if ( gene.getAliases() != null && Hibernate.isInitialized( gene.getAliases() ) ) {
+            this.aliases = gene.getAliases().stream().map( GeneAlias::getAlias ).collect( Collectors.toCollection( TreeSet::new ) );
+        }
     }
 
     /**
@@ -118,33 +146,22 @@ public class GeneValueObject extends IdentifiableValueObject<Gene> implements Se
      */
     @SuppressWarnings("CopyConstructorMissesField") // Only copying constructor argument fields
     public GeneValueObject( GeneValueObject otherBean ) {
-        this( otherBean.getId(), otherBean.getName(), null, otherBean.getNcbiId(), otherBean.getOfficialSymbol(),
-                otherBean.getOfficialName(), otherBean.getDescription(), otherBean.getScore(), otherBean.getTaxonId(),
-                otherBean.getTaxonScientificName(), otherBean.getTaxonCommonName() );
-    }
-
-    public GeneValueObject( Long id, String name, Collection<String> aliases, Integer ncbiId, String officialSymbol,
-            String officialName, String description, Double score, Long taxonId, String taxonScientificName,
-            String taxonCommonName ) {
-        super( id );
-        this.name = name;
-        this.ncbiId = ncbiId;
-        this.officialSymbol = officialSymbol;
-        this.officialName = officialName;
-        this.description = description;
-        this.score = score;
-        this.taxonId = taxonId;
-        this.taxonScientificName = taxonScientificName;
-        this.taxonCommonName = taxonCommonName;
-        this.aliases = aliases;
+        super( otherBean.id );
+        this.name = otherBean.name;
+        this.ncbiId = otherBean.ncbiId;
+        this.officialSymbol = otherBean.officialSymbol;
+        this.officialName = otherBean.officialName;
+        this.description = otherBean.description;
+        this.score = otherBean.score;
+        this.taxon = otherBean.taxon;
+        this.aliases = null;
     }
 
     public GeneValueObject( Long geneId, String geneSymbol, String geneOfficialName, Taxon taxon ) {
         super( geneId );
         this.officialSymbol = geneSymbol;
         this.officialName = geneOfficialName;
-        this.taxonId = taxon.getId();
-        this.taxonCommonName = taxon.getCommonName();
+        this.taxon = new TaxonValueObject( taxon );
     }
 
     /**
@@ -188,53 +205,26 @@ public class GeneValueObject extends IdentifiableValueObject<Gene> implements Se
     }
 
     private static void addConvertedAliases( Gene gene, GeneValueObject geneValueObject ) {
-        LinkedList<String> aliases = new LinkedList<>();
+        SortedSet<String> aliases = new TreeSet<>();
         for ( GeneAlias ga : gene.getAliases() ) {
             aliases.add( ga.getAlias() );
         }
         geneValueObject.setAliases( aliases );
     }
 
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-
-        if ( id != null )
-            return id.hashCode();
-        if ( ncbiId != null )
-            return ncbiId.hashCode();
-        result = prime * result + ( ( officialSymbol == null ) ? 0 : officialSymbol.hashCode() );
-        result = prime * result + ( ( taxonId == null ) ? 0 : taxonId.hashCode() );
-        return result;
+    @GemmaWebOnly
+    public Long getTaxonId() {
+        return taxon == null ? null : taxon.getId();
     }
 
-    @Override
-    public boolean equals( Object obj ) {
-        if ( this == obj )
-            return true;
-        if ( obj == null )
-            return false;
-        if ( this.getClass() != obj.getClass() )
-            return false;
-        GeneValueObject other = ( GeneValueObject ) obj;
+    @GemmaWebOnly
+    public String getTaxonCommonName() {
+        return taxon == null ? null : taxon.getCommonName();
+    }
 
-        if ( id != null ) {
-            return other.id != null && ( Objects.equals( this.id, other.id ) );
-        }
-        if ( ncbiId != null ) {
-            return other.ncbiId != null && Objects.equals( this.ncbiId, other.ncbiId );
-        }
-
-        if ( officialSymbol == null ) {
-            if ( other.officialSymbol != null )
-                return false;
-        } else if ( !officialSymbol.equals( other.officialSymbol ) )
-            return false;
-        if ( taxonId == null ) {
-            return other.taxonId == null;
-        } else
-            return taxonId.equals( other.taxonId );
+    @GemmaWebOnly
+    public String getTaxonScientificName() {
+        return taxon == null ? null : taxon.getScientificName();
     }
 
     @Override
@@ -242,202 +232,5 @@ public class GeneValueObject extends IdentifiableValueObject<Gene> implements Se
         return "GeneValueObject [" + ( id != null ? "id=" + id + ", " : "" ) + ( officialSymbol != null ?
                 "officialSymbol=" + officialSymbol + ", " :
                 "" ) + ( officialName != null ? "officialName=" + officialName : "" ) + "]";
-    }
-
-    public Collection<String> getAliases() {
-        return aliases;
-    }
-
-    public void setAliases( Collection<String> aliases ) {
-        this.aliases = aliases;
-    }
-
-    public Integer getAssociatedExperimentCount() {
-        return associatedExperimentCount;
-    }
-
-    public void setAssociatedExperimentCount( Integer associatedExperimentCount ) {
-        this.associatedExperimentCount = associatedExperimentCount;
-    }
-
-    public Integer getCompositeSequenceCount() {
-        return compositeSequenceCount;
-    }
-
-    public void setCompositeSequenceCount( Integer compositeSequenceCount ) {
-        this.compositeSequenceCount = compositeSequenceCount;
-    }
-
-    /**
-     * @return public Long getTaxonId() { return taxonId; } public void setTaxonId( Long taxonId ) { this.taxonId = taxonId; }
-     */
-    public String getDescription() {
-        return this.description;
-    }
-
-    public void setDescription( String description ) {
-        this.description = description;
-    }
-
-    public Collection<GeneSetValueObject> getGeneSets() {
-        return geneSets;
-    }
-
-    public void setGeneSets( Collection<GeneSetValueObject> geneSets ) {
-        this.geneSets = geneSets;
-    }
-
-    public Collection<GeneValueObject> getHomologues() {
-        return homologues;
-    }
-
-    public void setHomologues( Collection<GeneValueObject> homologues ) {
-        this.homologues = homologues;
-    }
-
-    public Boolean getIsQuery() {
-        return isQuery;
-    }
-
-    public void setIsQuery( Boolean isQuery ) {
-        this.isQuery = isQuery;
-    }
-
-    public Double getMultifunctionalityRank() {
-        return multifunctionalityRank;
-    }
-
-    public void setMultifunctionalityRank( Double multifunctionalityRank ) {
-        this.multifunctionalityRank = multifunctionalityRank;
-    }
-
-    public String getName() {
-        return this.name;
-    }
-
-    public void setName( String name ) {
-        this.name = name;
-    }
-
-    public Integer getNcbiId() {
-        return this.ncbiId;
-    }
-
-    public void setNcbiId( Integer ncbiId ) {
-        this.ncbiId = ncbiId;
-    }
-
-    public double[] getNodeDegreeNegRanks() {
-        return nodeDegreeNegRanks;
-    }
-
-    public void setNodeDegreeNegRanks( double[] nodeDegreeNegRanks ) {
-        this.nodeDegreeNegRanks = nodeDegreeNegRanks;
-    }
-
-    public double[] getNodeDegreePosRanks() {
-        return nodeDegreePosRanks;
-    }
-
-    public void setNodeDegreePosRanks( double[] nodeDegreePosRanks ) {
-        this.nodeDegreePosRanks = nodeDegreePosRanks;
-    }
-
-    public int[] getNodeDegreesNeg() {
-        return nodeDegreesNeg;
-    }
-
-    public void setNodeDegreesNeg( int[] nodeDegreesNeg ) {
-        this.nodeDegreesNeg = nodeDegreesNeg;
-    }
-
-    public int[] getNodeDegreesPos() {
-        return nodeDegreesPos;
-    }
-
-    public void setNodeDegreesPos( int[] nodeDegreesPos ) {
-        this.nodeDegreesPos = nodeDegreesPos;
-    }
-
-    public Integer getNumGoTerms() {
-        return numGoTerms;
-    }
-
-    public void setNumGoTerms( Integer numGoTerms ) {
-        this.numGoTerms = numGoTerms;
-    }
-
-    public String getOfficialName() {
-        return this.officialName;
-    }
-
-    public void setOfficialName( String officialName ) {
-        this.officialName = officialName;
-    }
-
-    public String getOfficialSymbol() {
-        return this.officialSymbol;
-    }
-
-    public void setOfficialSymbol( String officialSymbol ) {
-        this.officialSymbol = officialSymbol;
-    }
-
-    public Collection<CharacteristicValueObject> getPhenotypes() {
-        return phenotypes;
-    }
-
-    public void setPhenotypes( Collection<CharacteristicValueObject> phenotypes ) {
-        this.phenotypes = phenotypes;
-    }
-
-    public Integer getPlatformCount() {
-        return platformCount;
-    }
-
-    public void setPlatformCount( Integer platformCount ) {
-        this.platformCount = platformCount;
-    }
-
-    public Double getScore() {
-        return score;
-    }
-
-    public void setScore( Double score ) {
-        this.score = score;
-    }
-
-    /**
-     * @return the taxonCommonName
-     */
-    public String getTaxonCommonName() {
-        return taxonCommonName;
-    }
-
-    /**
-     * @param taxonCommonName the taxonCommonName to set
-     */
-    public void setTaxonCommonName( String taxonCommonName ) {
-        this.taxonCommonName = taxonCommonName;
-    }
-
-    public Long getTaxonId() {
-        return taxonId;
-    }
-
-    public void setTaxonId( Long taxonId ) {
-        this.taxonId = taxonId;
-    }
-
-    public String getTaxonScientificName() {
-        return taxonScientificName;
-    }
-
-    public void setTaxonScientificName( String taxonScientificName ) {
-        this.taxonScientificName = taxonScientificName;
-    }
-
-    public String getEnsemblId() {
-        return ensemblId;
     }
 }

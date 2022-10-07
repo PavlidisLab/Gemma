@@ -16,8 +16,6 @@ package ubic.gemma.web.services.rest.util;
 
 import io.swagger.v3.jaxrs2.integration.JaxrsOpenApiContextBuilder;
 import io.swagger.v3.oas.integration.OpenApiConfigurationException;
-import io.swagger.v3.oas.integration.OpenApiContextLocator;
-import io.swagger.v3.oas.integration.api.OpenApiContext;
 import io.swagger.v3.oas.models.OpenAPI;
 import lombok.extern.apachecommons.CommonsLog;
 

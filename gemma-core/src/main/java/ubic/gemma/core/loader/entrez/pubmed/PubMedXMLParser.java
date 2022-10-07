@@ -202,8 +202,8 @@ public class PubMedXMLParser {
         return result;
     }
 
-    private Collection<Compound> extractChemicals( Node chemNodes ) {
-        Collection<Compound> compounds = new HashSet<>();
+    private Set<Compound> extractChemicals( Node chemNodes ) {
+        Set<Compound> compounds = new HashSet<>();
         NodeList childNodes = chemNodes.getChildNodes();
         for ( int i = 0; i < childNodes.getLength(); i++ ) {
             Node chemNode = childNodes.item( i );
@@ -309,8 +309,8 @@ public class PubMedXMLParser {
         }
     }
 
-    private Collection<Keyword> extractKeywords( Node keywordNode ) {
-        Collection<Keyword> keywords = new HashSet<>();
+    private Set<Keyword> extractKeywords( Node keywordNode ) {
+        Set<Keyword> keywords = new HashSet<>();
         NodeList childNodes = keywordNode.getChildNodes();
         for ( int i = 0; i < childNodes.getLength(); i++ ) {
             Node item = childNodes.item( i );

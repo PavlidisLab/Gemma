@@ -21,7 +21,6 @@ package ubic.gemma.core.security.authorization.acl;
 import gemma.gsec.SecurityService;
 import gemma.gsec.acl.ValueObjectAwareIdentityRetrievalStrategyImpl;
 import gemma.gsec.authentication.UserDetailsImpl;
-import gemma.gsec.authentication.UserManager;
 import gemma.gsec.model.Securable;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.Before;
@@ -32,6 +31,7 @@ import org.springframework.security.acls.model.*;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 
+import ubic.gemma.core.security.authentication.UserManager;
 import ubic.gemma.core.util.test.BaseSpringContextTest;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
@@ -41,6 +41,7 @@ import ubic.gemma.persistence.service.expression.designElement.CompositeSequence
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.Set;
 
 import static org.junit.Assert.*;
 
@@ -52,11 +53,11 @@ public class AclAuthorizationTest extends BaseSpringContextTest {
 
     private final String aDifferentUsername = "AclAuthTest_" + RandomStringUtils.randomAlphabetic( 5 );
     private final String arrayDesignName =
-            "AD_" + RandomStringUtils.randomAlphabetic( BaseSpringContextTest.RANDOM_STRING_LENGTH );
+            "AD_" + RandomStringUtils.randomAlphabetic( 10 );
     private final String compositeSequenceName1 =
-            "Design Element_" + RandomStringUtils.randomAlphabetic( BaseSpringContextTest.RANDOM_STRING_LENGTH );
+            "Design Element_" + RandomStringUtils.randomAlphabetic( 10 );
     private final String compositeSequenceName2 =
-            "Design Element_" + RandomStringUtils.randomAlphabetic( BaseSpringContextTest.RANDOM_STRING_LENGTH );
+            "Design Element_" + RandomStringUtils.randomAlphabetic( 10 );
     private final ObjectIdentityRetrievalStrategy objectIdentityRetrievalStrategy = new ValueObjectAwareIdentityRetrievalStrategyImpl();
     private ArrayDesign arrayDesign;
     @Autowired
@@ -71,7 +72,8 @@ public class AclAuthorizationTest extends BaseSpringContextTest {
     private CompositeSequenceService compositeSequenceService;
 
     @Before
-    public void setup() {
+    public void setUp() throws Exception {
+        super.setUp();
 
         arrayDesign = ArrayDesign.Factory.newInstance();
         arrayDesign.setName( arrayDesignName );
@@ -85,7 +87,7 @@ public class AclAuthorizationTest extends BaseSpringContextTest {
         CompositeSequence cs2 = CompositeSequence.Factory.newInstance();
         cs2.setName( compositeSequenceName2 );
 
-        Collection<CompositeSequence> col = new HashSet<>();
+        Set<CompositeSequence> col = new HashSet<>();
         col.add( cs1 );
         col.add( cs2 );
         cs1.setArrayDesign( arrayDesign );

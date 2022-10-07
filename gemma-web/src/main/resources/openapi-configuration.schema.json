@@ -1,0 +1,18 @@
+{
+  "$id": "https://",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Open API 3.1 Configuration Schema",
+  "description": "This format is used as a configuration by swagger-core to generate an OpenAPI 3.1 specification.",
+  "type": "object",
+  "properties": {
+    "resourcePackages": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "openAPI": {
+      "$ref": "https://spec.openapis.org/oas/3.1/schema/2022-02-27"
+    }
+  }
+}

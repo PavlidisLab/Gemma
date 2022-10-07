@@ -15,7 +15,6 @@
 package ubic.gemma.web.services.rest.util;
 
 import ubic.gemma.persistence.util.Slice;
-import ubic.gemma.persistence.util.Sort;
 
 import java.util.List;
 

@@ -31,11 +31,6 @@ public abstract class AbstractEntityArrayArg<A, O extends Identifiable, S extend
         this.entityArgClass = entityArgClass;
     }
 
-    protected AbstractEntityArrayArg( Class<? extends AbstractEntityArg> entityArgClass, String errorMessage, Exception exception ) {
-        super( errorMessage, exception );
-        this.entityArgClass = entityArgClass;
-    }
-
     /**
      * Obtain an {@link ObjectFilter} disjunction clause for this entity.
      *

@@ -18,6 +18,7 @@
  */
 package ubic.gemma.model.expression.designElement;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import ubic.gemma.core.analysis.sequence.GeneMappingSummary;
 import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
@@ -36,6 +37,7 @@ public class CompositeSequenceValueObject extends IdentifiableValueObject<Compos
     private String name;
     private String description;
     private ArrayDesignValueObject arrayDesign;
+    @JsonIgnore
     private Collection<GeneMappingSummary> geneMappingSummaries;
 
     /**

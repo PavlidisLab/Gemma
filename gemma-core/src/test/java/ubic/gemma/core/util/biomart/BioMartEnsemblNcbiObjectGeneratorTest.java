@@ -26,6 +26,7 @@ import ubic.gemma.core.loader.util.biomart.Ensembl2NcbiValueObject;
 import ubic.gemma.model.genome.Taxon;
 
 import java.io.File;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -46,7 +47,7 @@ public class BioMartEnsemblNcbiObjectGeneratorTest {
     private File taxonBiomartFile = null;
 
     @Before
-    public void setUp() {
+    public void setUp() throws URISyntaxException {
         biomartEnsemblNcbiObjectGenerator = new BiomartEnsemblNcbiObjectGenerator();
         Taxon taxon = Taxon.Factory.newInstance();
         taxon.setIsGenesUsable( true );
@@ -57,7 +58,7 @@ public class BioMartEnsemblNcbiObjectGeneratorTest {
 
         String fileNameBiomartmouse = "/data/loader/protein/biomart/biomartmmusculusShort.txt";
         URL fileNameBiomartmouseURL = this.getClass().getResource( fileNameBiomartmouse );
-        taxonBiomartFile = new File( fileNameBiomartmouseURL.getFile() );
+        taxonBiomartFile = new File( fileNameBiomartmouseURL.toURI() );
 
     }
 

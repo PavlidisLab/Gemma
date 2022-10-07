@@ -21,9 +21,6 @@ package ubic.gemma.core.security;
 import gemma.gsec.AuthorityConstants;
 import gemma.gsec.SecurityService;
 import gemma.gsec.authentication.UserDetailsImpl;
-import gemma.gsec.authentication.UserManager;
-import gemma.gsec.authentication.UserService;
-import gemma.gsec.model.UserGroup;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -32,7 +29,10 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
+import ubic.gemma.core.security.authentication.UserManager;
+import ubic.gemma.core.security.authentication.UserService;
 import ubic.gemma.core.util.test.BaseSpringContextTest;
+import ubic.gemma.model.common.auditAndSecurity.UserGroup;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 import java.util.ArrayList;
@@ -59,7 +59,8 @@ public class UserGroupServiceTest extends BaseSpringContextTest {
     private String groupName = null;
 
     @Before
-    public void setup() {
+    public void setUp() throws Exception {
+        super.setUp();
         this.groupName = RandomStringUtils.randomAlphabetic( 6 );
 
         /*

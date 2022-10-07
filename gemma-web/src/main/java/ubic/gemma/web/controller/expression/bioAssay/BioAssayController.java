@@ -27,6 +27,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 import ubic.gemma.core.analysis.preprocess.OutlierDetails;
 import ubic.gemma.core.analysis.preprocess.OutlierDetectionService;
+import ubic.gemma.core.analysis.preprocess.filter.FilteringException;
+import ubic.gemma.core.analysis.preprocess.filter.NoRowsLeftAfterFilteringException;
 import ubic.gemma.core.job.executor.webapp.TaskRunningService;
 import ubic.gemma.core.tasks.analysis.expression.BioAssayOutlierProcessingTaskCommand;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -40,10 +42,7 @@ import ubic.gemma.web.util.EntityNotFoundException;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Map;
+import java.util.*;
 
 /**
  * @author keshav
@@ -75,7 +74,14 @@ public class BioAssayController {
 
         ee = this.eeService.thawLite( ee );
         Collection<BioAssayValueObject> result = new HashSet<>();
-        Collection<OutlierDetails> outliers = outlierDetectionService.identifyOutliersByMedianCorrelation( ee );
+        Collection<OutlierDetails> outliers = null;
+        try {
+            outliers = outlierDetectionService.identifyOutliersByMedianCorrelation( ee );
+        } catch ( NoRowsLeftAfterFilteringException e ) {
+            outliers = Collections.emptySet();
+        } catch ( FilteringException e ) {
+            throw new RuntimeException( e );
+        }
         Map<Long, OutlierDetails> outlierMap = EntityUtils.getNestedPropertyMap( outliers, "bioAssay", "id" );
 
         for ( BioAssay assay : ee.getBioAssays() ) {
@@ -88,12 +94,12 @@ public class BioAssayController {
 
     @SuppressWarnings("unused") // Is used in EEManager.js
     public String markOutlier( Collection<Long> ids ) {
-        return taskRunningService.submitLocalTask( new BioAssayOutlierProcessingTaskCommand( ids ) );
+        return taskRunningService.submitTaskCommand( new BioAssayOutlierProcessingTaskCommand( ids ) );
     }
 
     @SuppressWarnings("unused") // Is used in EEManager.js
     public String unmarkOutlier( Collection<Long> ids ) {
-        return taskRunningService.submitLocalTask( new BioAssayOutlierProcessingTaskCommand( ids, true ) );
+        return taskRunningService.submitTaskCommand( new BioAssayOutlierProcessingTaskCommand( ids, true ) );
     }
 
     @RequestMapping(value = { "/showBioAssay.html", "/" })

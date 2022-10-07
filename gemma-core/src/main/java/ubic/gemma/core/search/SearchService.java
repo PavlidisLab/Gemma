@@ -14,11 +14,15 @@
  */
 package ubic.gemma.core.search;
 
+import ubic.gemma.model.IdentifiableValueObject;
+import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.search.SearchSettings;
-import ubic.gemma.model.common.search.SearchSettingsValueObject;
-import ubic.gemma.model.genome.Gene;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * @author paul
@@ -41,7 +45,7 @@ public interface SearchService {
      * @param  settings settings
      * @return Map of Class to SearchResults. The results are already filtered for security considerations.
      */
-    Map<Class<?>, List<SearchResult<?>>> search( SearchSettings settings ) throws SearchException;
+    Map<Class<? extends Identifiable>, List<SearchResult<? extends Identifiable>>> search( SearchSettings settings ) throws SearchException;
 
     /**
      * This speedSearch method is probably unnecessary right now considering we only call from geneSearch, just putting
@@ -52,7 +56,7 @@ public interface SearchService {
      * @return Map of Class to SearchResults. The results are already filtered for security considerations.
      * @see             #search(SearchSettings)
      */
-    Map<Class<?>, List<SearchResult<?>>> speedSearch( SearchSettings settings ) throws SearchException;
+    Map<Class<? extends Identifiable>, List<SearchResult<? extends Identifiable>>> speedSearch( SearchSettings settings ) throws SearchException;
 
     /**
      * Makes an attempt at determining of the query term is a valid URI from an Ontology in Gemma or a Gene URI (a GENE
@@ -74,7 +78,7 @@ public interface SearchService {
      * @return Map of Class to SearchResults. The results are already filtered for security
      *                        considerations.
      */
-    Map<Class<?>, List<SearchResult<?>>> search( SearchSettings settings, boolean fillObjects, boolean webSpeedSearch ) throws SearchException;
+    Map<Class<? extends Identifiable>, List<SearchResult<? extends Identifiable>>> search( SearchSettings settings, boolean fillObjects, boolean webSpeedSearch ) throws SearchException;
 
     /**
      * A search of experiments only. At least one of the arguments must be non-null.
@@ -83,29 +87,42 @@ public interface SearchService {
      * @param  taxonId can be null; if non-null, used to filter results. If query is blank, all experiments for the
      *                 taxon are returned.
      * @return Collection of ids.
+     * @deprecated use {@link #search(SearchSettings, Class)} with {@link ExpressionExperiment#getClass()} instead.
      */
+    @Deprecated
     Collection<Long> searchExpressionExperiments( String query, Long taxonId ) throws SearchException;
 
     /**
-     * convenience method to return only search results from one class
+     * Search results for a specific class.
      *
-     * @param  <T>
+     * Note: the {@link SearchSettings#getResultTypes()} is entirely ignored, and a narrow search in {@link T} is
+     * performed.
      *
-     * @param  settings    settings
-     * @param  resultClass class
+     * @param  <T> result type to search for
+     *
+     * @param  settings    search settings
+     * @param  resultClass the result type class from which the type is inferred
      * @return only search results from one class
      */
-    <T> List<T> search( SearchSettings settings, Class<T> resultClass ) throws SearchException;
+    <T extends Identifiable> List<SearchResult<T>> search( SearchSettings settings, Class<T> resultClass ) throws SearchException;
 
     /**
      * Returns a set of supported result types.
      *
      * This is mainly used to perform a search for everything via {@link SearchSettings#getResultTypes()}.
      */
-    Set<Class<?>> getSupportedResultTypes();
+    Set<Class<? extends Identifiable>> getSupportedResultTypes();
 
     /**
-     * Convert the {@link SearchResult#getResultObject()} to its corresponding VO representation.
+     * Convert a {@link SearchResult} to its VO flavour.
+     * <p>
+     * The resulting search result preserve the result ID, score and highlighted text, and {@link SearchResult#getResultClass()},
+     * but sees its {@link SearchResult#getResultObject()} transformed.
+     * <p>
+     * The conversion logic is mainly defined by the corresponding {@link ubic.gemma.persistence.service.BaseVoEnabledService}
+     * that match the result type. See {@link #getSupportedResultTypes()} for a set of supported result types this o
+     * function can handle.
+     * @throws IllegalArgumentException if the passed search result is not supported for VO conversion
      */
-    Object convertSearchResultObjectToValueObject( SearchResult searchResult );
+    <T extends Identifiable, U extends IdentifiableValueObject<T>> SearchResult<U> loadValueObject( SearchResult<T> searchResult ) throws IllegalArgumentException;
 }

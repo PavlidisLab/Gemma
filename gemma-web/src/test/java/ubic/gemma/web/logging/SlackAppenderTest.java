@@ -53,17 +53,6 @@ public class SlackAppenderTest {
     }
 
     @Test
-    public void testLargeMessageTruncation() {
-        StringBuilder message = new StringBuilder();
-        for ( int i = 0; i < 2500; i++ ) {
-            message.append( "test" );
-        }
-        log.error( message.toString() );
-        // TODO: verify( mockedSlack ).methods( slackToken );
-        // TODO: verify( mockedSlack.methods( slackToken ) ).chatPostMessage( any( ChatPostMessageRequest.class ) );
-    }
-
-    @Test
     public void testWarnLogsShouldNotBeAppended() {
         log.warn( "This should not be captured by the Slack appender." );
         // TODO: verifyNoInteractions( mockedSlack );

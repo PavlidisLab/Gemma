@@ -22,6 +22,7 @@ import ubic.gemma.model.genome.Gene;
 
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Set;
 
 @SuppressWarnings("unused") // Possible external usage
 public class GeneDifferentialExpressionMetaAnalysisResult implements java.io.Serializable {
@@ -37,7 +38,7 @@ public class GeneDifferentialExpressionMetaAnalysisResult implements java.io.Ser
     private Boolean upperTail;
     private Long id;
     private Gene gene;
-    private Collection<DifferentialExpressionAnalysisResult> resultsUsed = new HashSet<>();
+    private Set<DifferentialExpressionAnalysisResult> resultsUsed = new HashSet<>();
 
     public Gene getGene() {
         return this.gene;
@@ -97,11 +98,11 @@ public class GeneDifferentialExpressionMetaAnalysisResult implements java.io.Ser
     /**
      * @return The underlying differential expression results that contributed to the meta-analysis result.
      */
-    public Collection<DifferentialExpressionAnalysisResult> getResultsUsed() {
+    public Set<DifferentialExpressionAnalysisResult> getResultsUsed() {
         return this.resultsUsed;
     }
 
-    public void setResultsUsed( Collection<DifferentialExpressionAnalysisResult> resultsUsed ) {
+    public void setResultsUsed( Set<DifferentialExpressionAnalysisResult> resultsUsed ) {
         this.resultsUsed = resultsUsed;
     }
 

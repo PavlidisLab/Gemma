@@ -8,34 +8,33 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.persistence.util.*;
+import ubic.gemma.persistence.util.Filters;
+import ubic.gemma.persistence.util.ObjectFilter;
+import ubic.gemma.persistence.util.Slice;
+import ubic.gemma.web.services.rest.util.MalformedArgException;
 
 /**
  * Mutable argument type base class for dataset (ExpressionExperiment) API.
  *
  * @author tesarst
  */
-@Schema(subTypes = { PlatformIdArg.class, PlatformStringArg.class })
+@Schema(oneOf = { PlatformIdArg.class, PlatformStringArg.class })
 public abstract class PlatformArg<T> extends AbstractEntityArg<T, ArrayDesign, ArrayDesignService> {
 
     protected PlatformArg( T value ) {
         super( ArrayDesign.class, value );
     }
 
-    public PlatformArg( String message, Throwable cause ) {
-        super( ArrayDesign.class, message, cause );
-    }
-
     /**
      * Used by RS to parse value of request parameters.
      *
-     * @param  s the request dataset argument.
+     * @param s the request dataset argument.
      * @return instance of appropriate implementation of DatasetArg based on the actual Type the argument represents.
      */
     @SuppressWarnings("unused")
-    public static PlatformArg<?> valueOf( final String s ) {
+    public static PlatformArg<?> valueOf( final String s ) throws MalformedArgException {
         if ( StringUtils.isBlank( s ) ) {
-            return new PlatformStringArg( "Platform identifier cannot be null or empty.", null );
+            throw new MalformedArgException( "Platform identifier cannot be null or empty.", null );
         }
         try {
             return new PlatformIdArg( Long.parseLong( s.trim() ) );
@@ -47,8 +46,8 @@ public abstract class PlatformArg<T> extends AbstractEntityArg<T, ArrayDesign, A
     /**
      * Retrieves the Datasets of the Platform that this argument represents.
      *
-     * @param  service   service that will be used to retrieve the persistent AD object.
-     * @param  eeService service to use to retrieve the EEs.
+     * @param service   service that will be used to retrieve the persistent AD object.
+     * @param eeService service to use to retrieve the EEs.
      * @return a collection of Datasets that the platform represented by this argument contains.
      */
     public Slice<ExpressionExperimentValueObject> getExperiments( ArrayDesignService service,
@@ -61,7 +60,7 @@ public abstract class PlatformArg<T> extends AbstractEntityArg<T, ArrayDesign, A
     /**
      * Retrieves the Elements of the Platform that this argument represents.
      *
-     * @param  service service that will be used to retrieve the persistent AD object.
+     * @param service service that will be used to retrieve the persistent AD object.
      * @return a collection of Composite Sequence VOs that the platform represented by this argument contains.
      */
     public Slice<CompositeSequenceValueObject> getElements( ArrayDesignService service,

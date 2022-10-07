@@ -1,28 +1,37 @@
 package ubic.gemma.web.services.rest.util.args;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.Getter;
+import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
+import ubic.gemma.web.services.rest.util.MalformedArgException;
+
+import javax.annotation.Nullable;
 
 /**
  * Mutable argument type base class for Composite Sequence arguments.
  *
  * @author tesarst
  */
-@Schema(subTypes = { CompositeSequenceIdArg.class, CompositeSequenceNameArg.class })
+@Getter
+@Setter
+@Schema(oneOf = { CompositeSequenceIdArg.class, CompositeSequenceNameArg.class })
 public abstract class CompositeSequenceArg<T>
         extends AbstractEntityArg<T, CompositeSequence, CompositeSequenceService> {
 
-    protected ArrayDesign arrayDesign;
+    /**
+     * Platform this is filtering for, or null.
+     */
+    @Nullable
+    @JsonIgnore
+    protected ArrayDesign platform;
 
     protected CompositeSequenceArg( T arg ) {
         super( CompositeSequence.class, arg );
-    }
-
-    protected CompositeSequenceArg( String message, Throwable cause ) {
-        super( CompositeSequence.class, message, cause );
     }
 
     /**
@@ -32,21 +41,14 @@ public abstract class CompositeSequenceArg<T>
      * @return instance of CompositeSequenceArg.
      */
     @SuppressWarnings("unused")
-    public static CompositeSequenceArg<?> valueOf( final String s ) {
+    public static CompositeSequenceArg<?> valueOf( final String s ) throws MalformedArgException {
         if ( StringUtils.isBlank( s ) ) {
-            return new CompositeSequenceIdArg( "Composite sequence identifier cannot be null or empty.", null );
+            throw new MalformedArgException( "Composite sequence identifier cannot be null or empty.", null );
         }
         try {
             return new CompositeSequenceIdArg( Long.parseLong( s.trim() ) );
         } catch ( NumberFormatException e ) {
             return new CompositeSequenceNameArg( s );
         }
-    }
-
-    /**
-     * Sets the platform for which the persistent object should be retrieved.
-     */
-    public void setPlatform( ArrayDesign arrayDesign ) {
-        this.arrayDesign = arrayDesign;
     }
 }

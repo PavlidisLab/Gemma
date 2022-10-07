@@ -31,6 +31,7 @@ import java.util.Collection;
  */
 public interface FactorValueService extends FilteringVoEnabledService<FactorValue, FactorValueValueObject> {
 
+    @Deprecated
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     Collection<FactorValue> findByValue( String valuePrefix );
 

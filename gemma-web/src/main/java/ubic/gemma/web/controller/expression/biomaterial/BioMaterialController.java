@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -47,6 +47,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Set;
 
 /**
  * @author keshav
@@ -85,7 +86,7 @@ public class BioMaterialController {
 
         for ( BioMaterial material : bms ) {
             Collection<FactorValue> oldValues = material.getFactorValues();
-            Collection<FactorValue> updatedValues = new HashSet<>();
+            Set<FactorValue> updatedValues = new HashSet<>();
 
             // Make sure that the BM doesn't have a FactorValue for the Factor
             // we are adding already
@@ -128,26 +129,13 @@ public class BioMaterialController {
         Collection<AnnotationValueObject> annotation = new ArrayList<>();
 
         for ( Characteristic c : bioM.getCharacteristics() ) {
-            AnnotationValueObject annotationValue = new AnnotationValueObject();
-            annotationValue.setId( c.getId() );
-            annotationValue.setClassName( c.getCategory() );
-            annotationValue.setTermName( c.getValue() );
-            annotationValue.setObjectClass( BioMaterial.class.getSimpleName() );
+            AnnotationValueObject annotationValue = new AnnotationValueObject( c, BioMaterial.class.getSimpleName() );
 
-            if ( c.getEvidenceCode() != null ) {
-                annotationValue.setEvidenceCode( c.getEvidenceCode().toString() );
-            }
-
-            annotationValue.setClassUri( c.getCategoryUri() );
             String className = getLabelFromUri( c.getCategoryUri() );
-
             if ( className != null )
                 annotationValue.setClassName( className );
 
-            annotationValue.setTermUri( c.getValueUri() );
-
             String termName = getLabelFromUri( c.getValueUri() );
-
             if ( termName != null )
                 annotationValue.setTermName( termName );
 

@@ -58,7 +58,8 @@ public class ExpressionExperimentSetValueObjectHelperTest extends BaseSpringCont
     private ExpressionExperimentSet eeSet = null;
 
     @Before
-    public void setUp() {
+    public void setUp() throws Exception {
+        super.setUp();
 
         Taxon tax1 = this.getTaxon( "human" );
         ee = this.getTestPersistentExpressionExperiment( tax1 );

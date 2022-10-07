@@ -20,9 +20,11 @@
 package ubic.gemma.core.analysis.expression.diff;
 
 import org.junit.After;
+import org.junit.Assume;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.AccessDeniedException;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.io.reader.DoubleMatrixReader;
 import ubic.gemma.core.loader.expression.DataUpdater;
@@ -97,13 +99,18 @@ public class DiffExTest extends AbstractGeoServiceTest {
     @Test
     @Category(SlowTest.class)
     public void testCountData() throws Exception {
-        assertNull( eeService.findByShortName( "GSE29006" ) );
+        ExpressionExperiment ee = eeService.findByShortName( "GSE29006" );
+        Assume.assumeTrue( String.format( "%s was not properly cleaned up by another test.", ee ),
+                ee == null );
 
         geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGenerator() );
 
         try {
             Collection<?> results = geoService.fetchAndLoad( "GSE29006", false, false, false );
             ee = ( ExpressionExperiment ) results.iterator().next();
+        } catch ( AccessDeniedException e ) {
+            // see https://github.com/PavlidisLab/Gemma/issues/206
+            Assume.assumeNoException( e );
         } catch ( AlreadyExistsInSystemException e ) {
             throw new IllegalStateException( "Need to remove this data set before test is run" );
         }

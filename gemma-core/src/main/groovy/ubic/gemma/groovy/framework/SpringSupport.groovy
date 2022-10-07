@@ -43,9 +43,7 @@ class SpringSupport {
         }
 
         // scan for beans, but exclude jms, web
-        ctx = SpringContextUtil.getApplicationContext(false, false, (String[]) [
-                "classpath*:ubic/gemma/cliContext-component-scan.xml"
-        ])
+        ctx = SpringContextUtil.getApplicationContext(false, false, null)
         b.set(true)
         t.join()
 

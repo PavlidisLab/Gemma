@@ -22,7 +22,7 @@ import ubic.gemma.model.association.BioSequence2GeneProduct;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.genome.Taxon;
 
-import java.util.Collection;
+import java.util.Set;
 
 /**
  * <p>
@@ -50,7 +50,7 @@ public class BioSequence extends ubic.gemma.model.common.Describable {
     private Double fractionRepeats;
     private ubic.gemma.model.common.description.DatabaseEntry sequenceDatabaseEntry;
     private Taxon taxon;
-    private Collection<BioSequence2GeneProduct> bioSequence2GeneProduct = new java.util.HashSet<>();
+    private Set<BioSequence2GeneProduct> bioSequence2GeneProduct = new java.util.HashSet<>();
 
     /**
      * No-arg constructor added to satisfy javabean contract
@@ -60,11 +60,11 @@ public class BioSequence extends ubic.gemma.model.common.Describable {
     public BioSequence() {
     }
 
-    public Collection<BioSequence2GeneProduct> getBioSequence2GeneProduct() {
+    public Set<BioSequence2GeneProduct> getBioSequence2GeneProduct() {
         return this.bioSequence2GeneProduct;
     }
 
-    public void setBioSequence2GeneProduct( Collection<BioSequence2GeneProduct> bioSequence2GeneProduct ) {
+    public void setBioSequence2GeneProduct( Set<BioSequence2GeneProduct> bioSequence2GeneProduct ) {
         this.bioSequence2GeneProduct = bioSequence2GeneProduct;
     }
 

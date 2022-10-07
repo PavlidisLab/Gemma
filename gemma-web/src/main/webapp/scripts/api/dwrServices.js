@@ -1072,9 +1072,6 @@ SystemMonitorController._path = ctxBasePath + '/dwr';
 SystemMonitorController.getHibernateStatus = function (callback) {
     dwr.engine._execute(SystemMonitorController._path, 'SystemMonitorController', 'getHibernateStatus', callback);
 };
-SystemMonitorController.getSpaceStatus = function (callback) {
-    dwr.engine._execute(SystemMonitorController._path, 'SystemMonitorController', 'getJMSBrokerStatus', callback);
-};
 SystemMonitorController.getCacheStatus = function (callback) {
     dwr.engine._execute(SystemMonitorController._path, 'SystemMonitorController', 'getCacheStatus', callback);
 };

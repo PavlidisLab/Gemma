@@ -51,6 +51,7 @@ import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Set;
 
 /**
  * This class will handle population of ExpressionExperimentSetValueObjects. Services need to be accessed in order to
@@ -99,7 +100,7 @@ public class ExpressionExperimentSetValueObjectHelperImpl implements ExpressionE
                     "The value object must have some experiments associated before it can be converted and persisted" );
         }
 
-        Collection<BioAssaySet> bas = new HashSet<BioAssaySet>( experiments );
+        Set<BioAssaySet> bas = new HashSet<BioAssaySet>( experiments );
         entity.setExperiments( bas );
         entity.setName( setVO.getName() );
 

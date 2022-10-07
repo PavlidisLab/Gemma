@@ -30,6 +30,7 @@ import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.model.genome.TaxonValueObject;
 import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.ExternalDatabaseStatisticsValueObject;
@@ -889,8 +890,7 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
                 g.setNcbiId( nbciGeneId );
                 g.setOfficialName( officialName );
                 g.setOfficialSymbol( officialSymbol );
-                g.setTaxonCommonName( taxonCommonName );
-                g.setTaxonId( taxonId );
+                g.setTaxon( new TaxonValueObject( taxonId, taxonCommonName ) );
                 g.getPhenotypesValueUri().add( valueUri );
                 genesWithPhenotypes.put( geneId, g );
             }

@@ -94,7 +94,6 @@
 	<bean id="cacheManager" class="org.springframework.cache.ehcache.EhCacheCacheManager"
 		  p:cache-manager-ref="ehcache"/>
 
-	<bean id="ehcache" class="org.springframework.cache.ehcache.EhCacheManagerFactoryBean"
-		  p:config-location="classpath:${gemma.ehcache.configfile.name}" p:shared="true"/>
+	<bean id="ehcache" class="org.springframework.cache.ehcache.EhCacheManagerFactoryBean"/>
 
 </beans>

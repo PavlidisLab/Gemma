@@ -135,7 +135,7 @@ public class ProcessedDataComputeCLI extends ExpressionExperimentManipulatingCLI
 
             // Note the auditing is done by the service.
             addSuccessObject( ee, "Successfully processed: " + ee );
-        } catch ( PreprocessingException | Exception e ) {
+        } catch ( Exception e ) {
             addErrorObject( ee, e.getMessage(), e );
         }
     }

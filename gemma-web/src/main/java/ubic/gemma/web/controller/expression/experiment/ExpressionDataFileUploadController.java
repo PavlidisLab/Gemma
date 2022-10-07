@@ -77,7 +77,7 @@ public class ExpressionDataFileUploadController {
 
     public String load( SimpleExpressionExperimentLoadTaskCommand loadEECommand ) {
         loadEECommand.setValidateOnly( false );
-        return taskRunningService.submitLocalTask( new SimpleEELoadLocalTask( loadEECommand ) );
+        return taskRunningService.submitTask( new SimpleEELoadLocalTask( loadEECommand ) );
     }
 
     @RequestMapping("/expressionExperiment/upload.html")
@@ -89,7 +89,7 @@ public class ExpressionDataFileUploadController {
     public String validate( SimpleExpressionExperimentLoadTaskCommand command ) {
         assert command != null;
         command.setValidateOnly( true );
-        return taskRunningService.submitLocalTask( new SimpleEEValidateLocalTask( command ) );
+        return taskRunningService.submitTask( new SimpleEEValidateLocalTask( command ) );
     }
 
     private SimpleExpressionExperimentCommandValidation doValidate(

@@ -49,6 +49,6 @@ public class ArrayDesignProbeMapperController {
         ArrayDesignProbeMapTaskCommand cmd = new ArrayDesignProbeMapTaskCommand();
         cmd.setArrayDesign( arrayDesign );
 
-        return taskRunningService.submitRemoteTask( cmd );
+        return taskRunningService.submitTaskCommand( cmd );
     }
 }

@@ -18,10 +18,10 @@ import org.apache.commons.lang3.StringUtils;
 import org.hibernate.Criteria;
 import org.hibernate.SessionFactory;
 import org.hibernate.criterion.Restrictions;
-import org.hibernate.jdbc.Work;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.orm.hibernate3.HibernateTemplate;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.gene.GeneProduct;
@@ -44,6 +44,7 @@ public class AnnotationAssociationDaoImpl extends AbstractDao<AnnotationAssociat
     @Autowired
     public AnnotationAssociationDaoImpl( SessionFactory sessionFactory ) {
         super( AnnotationAssociation.class, sessionFactory );
+        setLoadBatchSize( 2000 );
     }
 
     @Override
@@ -136,58 +137,15 @@ public class AnnotationAssociationDaoImpl extends AbstractDao<AnnotationAssociat
     }
 
     @Override
+    @Transactional
     public Collection<AnnotationAssociation> create( final Collection<AnnotationAssociation> entities ) {
-        this.getSessionFactory().getCurrentSession().doWork( new Work() {
-            @Override
-            public void execute( Connection connection ) {
-                for ( AnnotationAssociation entity : entities ) {
-                    AnnotationAssociationDaoImpl.this.create( entity );
-                }
-            }
-        } );
-        return entities;
+        return super.create( entities );
     }
 
     @Override
-    public Collection<AnnotationAssociation> load( Collection<Long> ids ) {
-        if ( ids.size() == 0 ) {
-            return new HashSet<>();
-        }
-        int BATCH_SIZE = 2000;
-
-        //language=HQL
-        final String queryString = "select a from AnnotationAssociation a where a.id in (:ids)";
-        Collection<Long> batch = new HashSet<>();
-        Collection<AnnotationAssociation> results = new HashSet<>();
-
-        for ( Long id : ids ) {
-            batch.add( id );
-            if ( batch.size() == BATCH_SIZE ) {
-                //noinspection unchecked
-                results.addAll( this.getSessionFactory().getCurrentSession().createQuery( queryString )
-                        .setParameterList( "ids", batch ).list() );
-                batch.clear();
-            }
-        }
-        if ( batch.size() > 0 ) {
-            //noinspection unchecked
-            results.addAll( this.getSessionFactory().getCurrentSession().createQuery( queryString )
-                    .setParameterList( "ids", batch ).list() );
-        }
-
-        return results;
-    }
-
-    @Override
+    @Transactional
     public void update( final Collection<AnnotationAssociation> entities ) {
-        this.getSessionFactory().getCurrentSession().doWork( new Work() {
-            @Override
-            public void execute( Connection connection ) {
-                for ( AnnotationAssociation entity : entities ) {
-                    AnnotationAssociationDaoImpl.this.update( entity );
-                }
-            }
-        } );
+        super.update( entities );
     }
 
     private void thawAssociation( org.hibernate.Session session, AnnotationAssociation association ) {

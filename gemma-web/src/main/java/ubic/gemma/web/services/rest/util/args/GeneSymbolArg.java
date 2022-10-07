@@ -1,5 +1,6 @@
 package ubic.gemma.web.services.rest.util.args;
 
+import io.swagger.v3.oas.annotations.ExternalDocumentation;
 import io.swagger.v3.oas.annotations.media.Schema;
 import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.model.genome.Gene;
@@ -7,6 +8,7 @@ import ubic.gemma.model.genome.PhysicalLocationValueObject;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneValueObject;
 
+import javax.ws.rs.BadRequestException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -17,10 +19,9 @@ import java.util.List;
  *
  * @author tesarst
  */
-@Schema(type = "string")
+@Schema(type = "string", description = "An official gene symbol approved by HGNC.",
+        externalDocs = @ExternalDocumentation(url = "https://www.genenames.org/"))
 public class GeneSymbolArg extends GeneArg<String> {
-
-    private static final String ID_NAME = "Official Symbol";
 
     GeneSymbolArg( String s ) {
         super( s );
@@ -68,13 +69,9 @@ public class GeneSymbolArg extends GeneArg<String> {
         if ( gene == null )
             return null;
         if ( !gene.getTaxon().equals( taxon ) ) {
-            throw new IllegalArgumentException( "Taxon does not match gene's taxon." );
+            throw new BadRequestException( "Taxon does not match gene's taxon." );
         }
         return geneService.getPhysicalLocationsValueObjects( gene );
     }
 
-    @Override
-    String getIdentifierName() {
-        return ID_NAME;
-    }
 }

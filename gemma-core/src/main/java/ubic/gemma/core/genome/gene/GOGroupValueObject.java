@@ -37,6 +37,8 @@
 
 package ubic.gemma.core.genome.gene;
 
+import ubic.gemma.model.genome.TaxonValueObject;
+
 import java.util.Collection;
 
 /**
@@ -70,8 +72,7 @@ public class GOGroupValueObject extends SessionBoundGeneSetValueObject {
         this.setName( name );
         this.setDescription( description );
         this.setSize( memberIds.size() );
-        this.setTaxonId( taxonId );
-        this.setTaxonName( taxonName );
+        this.setTaxon( new TaxonValueObject( taxonId, taxonName ) );
         this.setGeneIds( memberIds );
         this.setId( new Long( -1 ) );
         this.setModified( false );

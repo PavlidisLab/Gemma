@@ -27,16 +27,14 @@ import ubic.gemma.web.services.rest.util.Responder;
 import ubic.gemma.web.services.rest.util.ResponseDataObject;
 import ubic.gemma.web.services.rest.util.args.*;
 
-import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.*;
-import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import java.util.Set;
 
 /**
  * RESTful interface for phenotypes.
  * Does not have an 'all' endpoint (no use-cases). To list all phenotypes on a specific taxon,
- * see {@link TaxaWebService#taxonPhenotypes(TaxonArg, BoolArg, BoolArg, HttpServletResponse)}.
+ * see {@link TaxaWebService#getTaxonPhenotypes(TaxonArg, BoolArg, BoolArg)}}.
  *
  * @author tesarst
  */
@@ -71,12 +69,11 @@ public class PhenotypeWebService {
     @GET
     @Path("/evidence")
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Retrieve all the evidence from a given external database name")
-    public ResponseDataObject<Set<EvidenceValueObject<? extends PhenotypeAssociation>>> evidence( // Params:
+    @Operation(summary = "Retrieve all the evidence from a given external database name", hidden = true)
+    public ResponseDataObject<Set<EvidenceValueObject<? extends PhenotypeAssociation>>> getPhenotypeEvidence( // Params:
             @QueryParam("database") StringArg database, // required
             @QueryParam("offset") @DefaultValue("0") OffsetArg offset, // Optional, default 0
-            @QueryParam("limit") @DefaultValue(PhenotypeAssociationDaoImpl.DEFAULT_PA_LIMIT + "") LimitArg limit, // Opt.
-            @Context final HttpServletResponse sr // The servlet response, needed for response code setting
+            @QueryParam("limit") @DefaultValue(PhenotypeAssociationDaoImpl.DEFAULT_PA_LIMIT + "") LimitArg limit // Opt.
     ) {
         ArgUtils.requiredArg( database, "database" );
         return Responder.respond( this.phenotypeAssociationManagerService
@@ -92,10 +89,8 @@ public class PhenotypeWebService {
     @GET
     @Path("/dumps")
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Retrieve all phenotype data dumps")
-    public ResponseDataObject<Set<DumpsValueObject>> dumps( // Params:
-            @Context final HttpServletResponse sr // The servlet response, needed for response code setting
-    ) {
+    @Operation(summary = "Retrieve all phenotype data dumps", hidden = true)
+    public ResponseDataObject<Set<DumpsValueObject>> getPhenotypeDumps() {
         return Responder.respond( this.phenotypeAssociationManagerService.helpFindAllDumps() );
     }
 

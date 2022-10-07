@@ -20,10 +20,11 @@
 package ubic.gemma.core.search;
 
 import org.apache.commons.lang3.RandomStringUtils;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
-
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.basecode.ontology.search.OntologySearchException;
 import ubic.gemma.core.genome.gene.service.GeneService;
@@ -33,6 +34,8 @@ import ubic.gemma.core.tasks.maintenance.IndexerTask;
 import ubic.gemma.core.tasks.maintenance.IndexerTaskCommand;
 import ubic.gemma.core.util.test.BaseSpringContextTest;
 import ubic.gemma.core.util.test.category.SlowTest;
+import ubic.gemma.model.IdentifiableValueObject;
+import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.search.SearchSettings;
@@ -44,6 +47,7 @@ import ubic.gemma.persistence.service.expression.experiment.ExpressionExperiment
 import java.io.InputStream;
 import java.util.*;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.*;
 
 /**
@@ -72,17 +76,14 @@ public class SearchServiceTest extends BaseSpringContextTest {
     @Autowired
     private IndexerTask indexerTask;
 
+    /* fixtures */
     private ExpressionExperiment ee;
     private Gene gene;
-
     private String geneNcbiId;
 
-    /**
-     * This is not configured as a regular test fixture on purpose, it is called explicitly by tests.
-     *
-     * @throws Exception
-     */
-    public void setup() throws Exception {
+    @Before
+    public void setUp() throws Exception {
+        super.setUp();
         try ( InputStream is = this.getClass().getResourceAsStream( "/data/loader/ontology/fma.test.owl" ) ) {
             assert is != null;
 
@@ -97,23 +98,23 @@ public class SearchServiceTest extends BaseSpringContextTest {
         eeCharSpinalCord.setCategoryUri( SearchServiceTest.SPINAL_CORD );
         eeCharSpinalCord.setValue( "spinal cord" );
         eeCharSpinalCord.setValueUri( SearchServiceTest.SPINAL_CORD );
-        characteristicService.create( eeCharSpinalCord );
+        eeCharSpinalCord = characteristicService.create( eeCharSpinalCord );
 
         Characteristic eeCharGeneURI = Characteristic.Factory.newInstance();
         eeCharGeneURI.setCategory( SearchServiceTest.GENE_URI );
         eeCharGeneURI.setCategoryUri( SearchServiceTest.GENE_URI );
         eeCharGeneURI.setValue( SearchServiceTest.GENE_URI );
         eeCharGeneURI.setValueUri( SearchServiceTest.GENE_URI );
-        characteristicService.create( eeCharGeneURI );
+        eeCharGeneURI = characteristicService.create( eeCharGeneURI );
 
         Characteristic eeCharCortexURI = Characteristic.Factory.newInstance();
         eeCharCortexURI.setCategory( SearchServiceTest.BRAIN_CAVITY );
         eeCharCortexURI.setCategoryUri( SearchServiceTest.BRAIN_CAVITY );
         eeCharCortexURI.setValue( "cavity of brain" );
         eeCharCortexURI.setValueUri( SearchServiceTest.BRAIN_CAVITY );
-        characteristicService.create( eeCharCortexURI );
+        eeCharCortexURI = characteristicService.create( eeCharCortexURI );
 
-        Collection<Characteristic> chars = new HashSet<>();
+        Set<Characteristic> chars = new HashSet<>();
         chars.add( eeCharSpinalCord );
         chars.add( eeCharGeneURI );
         chars.add( eeCharCortexURI );
@@ -128,15 +129,10 @@ public class SearchServiceTest extends BaseSpringContextTest {
 
     }
 
+    @After
     public void tearDown() {
-        try {
-            if ( gene != null )
-                geneService.remove( gene );
-            if ( ee != null )
-                eeService.remove( ee );
-        } catch ( Exception e ) {
-            // no big deal.
-        }
+        geneService.remove( gene );
+        eeService.remove( ee );
     }
 
     /**
@@ -145,11 +141,6 @@ public class SearchServiceTest extends BaseSpringContextTest {
      */
     @Test
     public void testGeneralSearch4Brain() throws SearchException, OntologySearchException {
-        try {
-            this.setup();
-        } catch ( Exception e ) {
-            e.printStackTrace();
-        }
         SearchSettings settings = SearchSettings.builder()
                 .query( "Brain" ) // should hit 'cavity of brain'.
                 .resultType( ExpressionExperiment.class )
@@ -159,22 +150,20 @@ public class SearchServiceTest extends BaseSpringContextTest {
                 .build();
 
         Collection<OntologyTerm> ontologyhits = ontologyService.findTerms( "brain" );
-        assertTrue( !ontologyhits.isEmpty() ); // making sure this isn't a problem, rather than the search per se.
+        assertFalse( ontologyhits.isEmpty() ); // making sure this isn't a problem, rather than the search per se.
 
-        Map<Class<?>, List<SearchResult<?>>> found = this.searchService.search( settings );
-        assertTrue( !found.isEmpty() );
+        Map<Class<? extends Identifiable>, List<SearchResult<? extends Identifiable>>> found = this.searchService.search( settings );
+        assertFalse( found.isEmpty() );
 
         List<SearchResult<?>> eer = found.get( ExpressionExperiment.class );
-        assertTrue( !eer.isEmpty() );
+        assertFalse( eer.isEmpty() );
 
         for ( SearchResult sr : eer ) {
             if ( sr.getResultId().equals( ee.getId() ) ) {
-                this.tearDown();
                 return;
             }
         }
 
-        this.tearDown();
         fail( "Didn't get expected result from search" );
     }
 
@@ -183,38 +172,25 @@ public class SearchServiceTest extends BaseSpringContextTest {
      */
     @Test
     public void testGeneUriSearch() throws SearchException {
-        try {
-            this.setup();
-        } catch ( Exception e ) {
-            e.printStackTrace();
-        }
         SearchSettings settings = SearchSettings.builder()
                 .query( SearchServiceTest.GENE_URI + this.geneNcbiId )
                 .resultType( Gene.class )
                 .build();
-        Map<Class<?>, List<SearchResult<?>>> found = this.searchService.search( settings );
-        assertTrue( !found.isEmpty() );
+        Map<Class<? extends Identifiable>, List<SearchResult<? extends Identifiable>>> found = this.searchService.search( settings );
+        assertFalse( found.isEmpty() );
 
-        for ( SearchResult sr : found.get( Gene.class ) ) {
-            if ( sr.getResultObject().equals( gene ) ) {
-                this.tearDown();
+        for ( SearchResult<?> sr : found.get( Gene.class ) ) {
+            if ( gene.equals( sr.getResultObject() ) ) {
                 return;
             }
         }
 
-        this.tearDown();
         fail( "Didn't get expected result from search" );
-
     }
 
     @Test
     @Category(SlowTest.class)
     public void testSearchByBibRefIdProblems() throws SearchException {
-        try {
-            this.setup();
-        } catch ( Exception e ) {
-            e.printStackTrace();
-        }
         PubMedXMLFetcher fetcher = new PubMedXMLFetcher();
         BibliographicReference bibref = fetcher.retrieveByHTTP( 9600966 );
         bibref = ( BibliographicReference ) persisterHelper.persist( bibref );
@@ -236,25 +212,19 @@ public class SearchServiceTest extends BaseSpringContextTest {
                 .resultType( BibliographicReference.class )
                 .build();
 
-        Map<Class<?>, List<SearchResult<?>>> found = this.searchService.search( settings );
-        assertTrue( !found.isEmpty() );
+        Map<Class<? extends Identifiable>, List<SearchResult<? extends Identifiable>>> found = this.searchService.search( settings );
+        assertFalse( found.isEmpty() );
         for ( SearchResult sr : found.get( BibliographicReference.class ) ) {
-            if ( sr.getResultObject().equals( bibref ) ) {
-                this.tearDown();
+            if ( bibref.equals( sr.getResultObject() ) ) {
                 return;
             }
         }
-        this.tearDown();
+
         fail( "Didn't get expected result from search" );
     }
 
     @Test
     public void testSearchByBibRefIdProblemsB() throws SearchException {
-        try {
-            this.setup();
-        } catch ( Exception e ) {
-            e.printStackTrace();
-        }
         PubMedXMLFetcher fetcher = new PubMedXMLFetcher();
         BibliographicReference bibref = fetcher.retrieveByHTTP( 22780917 );
         bibref = ( BibliographicReference ) persisterHelper.persist( bibref );
@@ -276,26 +246,19 @@ public class SearchServiceTest extends BaseSpringContextTest {
                 .resultType( BibliographicReference.class )
                 .build();
 
-        Map<Class<?>, List<SearchResult<?>>> found = this.searchService.search( settings );
-        assertTrue( !found.isEmpty() );
+        Map<Class<? extends Identifiable>, List<SearchResult<? extends Identifiable>>> found = this.searchService.search( settings );
+        assertFalse( found.isEmpty() );
         for ( SearchResult sr : found.get( BibliographicReference.class ) ) {
-            if ( sr.getResultObject().equals( bibref ) ) {
-                this.tearDown();
+            if ( bibref.equals( sr.getResultObject() ) ) {
                 return;
             }
         }
 
-        this.tearDown();
         fail( "Didn't get expected result from search" );
     }
 
 //    @Test
 //    public void testSearchByBibRefId() {
-//        try {
-//            this.setup();
-//        } catch ( Exception e ) {
-//            e.printStackTrace();
-//        }
 //        String id;
 //        if ( ee.getPrimaryPublication() == null ) {
 //            PubMedXMLFetcher fetcher = new PubMedXMLFetcher();
@@ -324,12 +287,10 @@ public class SearchServiceTest extends BaseSpringContextTest {
 //        assertTrue( !found.isEmpty() );
 //        for ( SearchResult sr : found.get( ExpressionExperiment.class ) ) {
 //            if ( sr.getResultId().equals( ee.getId() ) ) {
-//                this.tearDown();
 //                return;
 //            }
 //        }
 //
-//        this.tearDown();
 //        fail( "Didn't get expected result from search" );
 //    }
 
@@ -338,26 +299,20 @@ public class SearchServiceTest extends BaseSpringContextTest {
      */
     @Test
     public void testURIChildSearch() throws SearchException {
-        try {
-            this.setup();
-        } catch ( Exception e ) {
-            e.printStackTrace();
-        }
         SearchSettings settings = SearchSettings.builder()
                 .query( "http://purl.obolibrary.org/obo/FMA_83153" ) // OrganComponent of Neuraxis; superclass of
                 // 'spinal cord'.
                 .resultType( ExpressionExperiment.class )
                 .build();
-        Map<Class<?>, List<SearchResult<?>>> found = this.searchService.search( settings );
-        assertTrue( !found.isEmpty() );
+        Map<Class<? extends Identifiable>, List<SearchResult<? extends Identifiable>>> found = this.searchService.search( settings );
+        assertFalse( found.isEmpty() );
 
         for ( SearchResult sr : found.get( ExpressionExperiment.class ) ) {
             if ( sr.getResultId().equals( ee.getId() ) ) {
-                this.tearDown();
                 return;
             }
         }
-        this.tearDown();
+
         fail( "Didn't get expected result from search" );
     }
 
@@ -366,11 +321,6 @@ public class SearchServiceTest extends BaseSpringContextTest {
      */
     @Test
     public void testURISearch() throws SearchException {
-        try {
-            this.setup();
-        } catch ( Exception e ) {
-            e.printStackTrace();
-        }
         SearchSettings settings = SearchSettings.builder()
                 .query( SearchServiceTest.SPINAL_CORD )
                 .resultType( ExpressionExperiment.class )
@@ -378,17 +328,34 @@ public class SearchServiceTest extends BaseSpringContextTest {
                 .useIndices( false )
                 .useCharacteristics( true )
                 .build();
-        Map<Class<?>, List<SearchResult<?>>> found = this.searchService.search( settings );
-        assertTrue( !found.isEmpty() );
+        Map<Class<? extends Identifiable>, List<SearchResult<? extends Identifiable>>> found = this.searchService.search( settings );
+        assertFalse( found.isEmpty() );
 
         for ( SearchResult sr : found.get( ExpressionExperiment.class ) ) {
             if ( sr.getResultId().equals( ee.getId() ) ) {
-                this.tearDown();
                 return;
             }
         }
-        this.tearDown();
+
         fail( "Didn't get expected result from search" );
     }
 
+    @Test
+    public void testLoadValueObject() throws SearchException {
+        SearchSettings settings = SearchSettings.builder()
+                .query( SearchServiceTest.SPINAL_CORD )
+                .resultType( ExpressionExperiment.class )
+                .build();
+        List<SearchResult<ExpressionExperiment>> results = searchService.search( settings, ExpressionExperiment.class );
+        assertThat( results )
+                .hasSize( 1 );
+        SearchResult<IdentifiableValueObject<ExpressionExperiment>> resultVo = searchService.loadValueObject( results.get( 0 ) );
+        // ensure that the resultType is preserved
+        assertThat( resultVo.getResultClass() )
+                .isAssignableFrom( ExpressionExperiment.class );
+        assertThat( resultVo.getResultId() )
+                .isEqualTo( ee.getId() );
+        assertThat( resultVo.getResultObject() )
+                .isNotNull();
+    }
 }

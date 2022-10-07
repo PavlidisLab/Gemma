@@ -15,6 +15,10 @@
 package ubic.gemma.web.services.rest;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,13 +34,12 @@ import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.util.Filters;
+import ubic.gemma.web.services.rest.util.MediaTypeUtils;
 import ubic.gemma.web.services.rest.util.PaginatedResponseDataObject;
 import ubic.gemma.web.services.rest.util.Responder;
 import ubic.gemma.web.services.rest.util.args.*;
 
-import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.*;
-import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.File;
@@ -84,12 +87,11 @@ public class PlatformsWebService {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve all platforms")
-    public PaginatedResponseDataObject<ArrayDesignValueObject> all( // Params:
+    public PaginatedResponseDataObject<ArrayDesignValueObject> getPlatforms( // Params:
             @QueryParam("filter") @DefaultValue("") FilterArg filter, // Optional, default null
             @QueryParam("offset") @DefaultValue("0") OffsetArg offset, // Optional, default 0
             @QueryParam("limit") @DefaultValue("20") LimitArg limit, // Optional, default 20
-            @QueryParam("sort") @DefaultValue("+id") SortArg sort, // Optional, default +id
-            @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
+            @QueryParam("sort") @DefaultValue("+id") SortArg sort // Optional, default +id
     ) {
         return Responder.paginate( arrayDesignService.loadValueObjectsPreFilter( filter.getObjectFilters( arrayDesignService ), sort.getSort( arrayDesignService ), offset.getValue(), limit.getValue() ) );
     }
@@ -111,13 +113,12 @@ public class PlatformsWebService {
     @Path("/{platform}")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve all platforms matching a set of platform identifiers")
-    public PaginatedResponseDataObject<ArrayDesignValueObject> platforms( // Params:
+    public PaginatedResponseDataObject<ArrayDesignValueObject> getPlatformsByIds( // Params:
             @PathParam("platform") PlatformArrayArg datasetsArg, // Optional
             @QueryParam("filter") @DefaultValue("") FilterArg filter, // Optional, default null
             @QueryParam("offset") @DefaultValue("0") OffsetArg offset, // Optional, default 0
             @QueryParam("limit") @DefaultValue("20") LimitArg limit, // Optional, default 20
-            @QueryParam("sort") @DefaultValue("+id") SortArg sort, // Optional, default +id
-            @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
+            @QueryParam("sort") @DefaultValue("+id") SortArg sort // Optional, default +id
     ) {
         Filters filters = filter.getObjectFilters( arrayDesignService );
         if ( filters == null ) {
@@ -131,23 +132,20 @@ public class PlatformsWebService {
 
     /**
      * Retrieves experiments in the given platform.
-     *
-     * @param platformArg can either be the ArrayDesign ID or its short name (e.g. "GPL1355" ). Retrieval by ID
+     *  @param platformArg can either be the ArrayDesign ID or its short name (e.g. "GPL1355" ). Retrieval by ID
      *                    is more efficient. Only platforms that user has access to will be available.
      * @param offset      optional parameter (defaults to 0) skips the specified amount of datasets when retrieving them
      *                    from the database.
      * @param limit       optional parameter (defaults to 20) limits the result to specified amount of datasets. Use 0
-     *                    for no limit.
      */
     @GET
     @Path("/{platform}/datasets")
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Retrieve all experiments within a given platform")
-    public PaginatedResponseDataObject<ExpressionExperimentValueObject> platformDatasets( // Params:
+    @Operation(summary = "Retrieve all experiments using a given platform")
+    public PaginatedResponseDataObject<ExpressionExperimentValueObject> getPlatformDatasets( // Params:
             @PathParam("platform") PlatformArg<?> platformArg, // Required
             @QueryParam("offset") @DefaultValue("0") OffsetArg offset, // Optional, default 0
-            @QueryParam("limit") @DefaultValue("20") LimitArg limit, // Optional, default 20
-            @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
+            @QueryParam("limit") @DefaultValue("20") LimitArg limit // Optional, default 20
     ) {
         return Responder.paginate( platformArg
                 .getExperiments( arrayDesignService, expressionExperimentService, limit.getValue(), offset.getValue() )
@@ -156,23 +154,20 @@ public class PlatformsWebService {
 
     /**
      * Retrieves the composite sequences (elements) for the given platform.
-     *
-     * @param platformArg can either be the ArrayDesign ID or its short name (e.g. "GPL1355" ). Retrieval by ID
+     *  @param platformArg can either be the ArrayDesign ID or its short name (e.g. "GPL1355" ). Retrieval by ID
      *                    is more efficient. Only platforms that user has access to will be available.
      * @param offset      optional parameter (defaults to 0) skips the specified amount of datasets when retrieving them
      *                    from the database.
      * @param limit       optional parameter (defaults to 20) limits the result to specified amount of datasets. Use 0
-     *                    for no limit.
      */
     @GET
     @Path("/{platform}/elements")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve the composite sequences for a given platform")
-    public PaginatedResponseDataObject<CompositeSequenceValueObject> platformElements( // Params:
+    public PaginatedResponseDataObject<CompositeSequenceValueObject> getPlatformElements( // Params:
             @PathParam("platform") PlatformArg<?> platformArg, // Required
             @QueryParam("offset") @DefaultValue("0") OffsetArg offset, // Optional, default 0
-            @QueryParam("limit") @DefaultValue("20") LimitArg limit, // Optional, default 20
-            @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
+            @QueryParam("limit") @DefaultValue("20") LimitArg limit // Optional, default 20
     ) {
         return Responder.paginate( platformArg
                 .getElements( arrayDesignService, compositeSequenceService, limit.getValue(), offset.getValue() ) );
@@ -196,12 +191,11 @@ public class PlatformsWebService {
     @Path("/{platform}/elements/{probes}")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve the selected composite sequences for a given platform")
-    public PaginatedResponseDataObject<CompositeSequenceValueObject> platformElement( // Params:
+    public PaginatedResponseDataObject<CompositeSequenceValueObject> getPlatformElement( // Params:
             @PathParam("platform") PlatformArg<?> platformArg, // Required
             @PathParam("probes") CompositeSequenceArrayArg probesArg, // Required
             @QueryParam("offset") @DefaultValue("0") OffsetArg offset, // Optional, default 0
-            @QueryParam("limit") @DefaultValue("20") LimitArg limit, // Optional, default 20
-            @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
+            @QueryParam("limit") @DefaultValue("20") LimitArg limit // Optional, default 20
     ) {
         probesArg.setPlatform( platformArg.getEntity( arrayDesignService ) );
         return Responder.paginate( compositeSequenceService.loadValueObjectsPreFilter( Filters.singleFilter( probesArg.getPlatformFilter() ), null, offset.getValue(), limit.getValue() ) );
@@ -225,12 +219,11 @@ public class PlatformsWebService {
     @Path("/{platform}/elements/{probe}/genes")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve the genes associated to a probe in a given platform")
-    public PaginatedResponseDataObject<GeneValueObject> platformElementGenes( // Params:
+    public PaginatedResponseDataObject<GeneValueObject> getPlatformElementGenes( // Params:
             @PathParam("platform") PlatformArg<?> platformArg, // Required
-            @PathParam("probe") CompositeSequenceArg<Object> probeArg, // Required
+            @PathParam("probe") CompositeSequenceArg<?> probeArg, // Required
             @QueryParam("offset") @DefaultValue("0") OffsetArg offset, // Optional, default 0
-            @QueryParam("limit") @DefaultValue("20") LimitArg limit, // Optional, default 20
-            @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
+            @QueryParam("limit") @DefaultValue("20") LimitArg limit // Optional, default 20
     ) {
         probeArg.setPlatform( platformArg.getEntity( arrayDesignService ) );
         return Responder.paginate( compositeSequenceService
@@ -248,11 +241,11 @@ public class PlatformsWebService {
      */
     @GET
     @Path("/{platform}/annotations")
-    @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Retrieve the annotations of a given platform")
-    public Response platformAnnotations( // Params:
-            @PathParam("platform") PlatformArg<?> platformArg, // Optional, default null
-            @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
+    @Produces(MediaTypeUtils.TEXT_TAB_SEPARATED_VALUES_UTF8)
+    @Operation(summary = "Retrieve the annotations of a given platform", responses = {
+            @ApiResponse(responseCode = "200", content = @Content(schema = @Schema(type = "string", format = "binary"))) })
+    public Response getPlatformAnnotations( // Params:
+            @PathParam("platform") PlatformArg<?> platformArg // Optional, default null
     ) {
         return outputAnnotationFile( platformArg.getEntity( arrayDesignService ) );
     }
@@ -265,7 +258,7 @@ public class PlatformsWebService {
      */
     private Response outputAnnotationFile( ArrayDesign arrayDesign ) {
         String fileName = arrayDesign.getShortName().replaceAll( Pattern.quote( "/" ), "_" )
-                + ArrayDesignAnnotationService.NO_PARENTS_FILE_SUFFIX
+                + ArrayDesignAnnotationService.STANDARD_FILE_SUFFIX
                 + ArrayDesignAnnotationService.ANNOTATION_FILE_SUFFIX;
         File file = new File( ArrayDesignAnnotationService.ANNOT_DATA_DIR + fileName );
         if ( !file.exists() ) {
@@ -279,7 +272,10 @@ public class PlatformsWebService {
             }
         }
 
-        return Response.ok( file ).header( "Content-Disposition", "attachment; filename=" + file.getName() ).build();
+        return Response.ok( file )
+                .header( "Content-Encoding", "gzip" )
+                .header( "Content-Disposition", "attachment; filename=" + FilenameUtils.removeExtension( file.getName() ) )
+                .build();
     }
 
 }

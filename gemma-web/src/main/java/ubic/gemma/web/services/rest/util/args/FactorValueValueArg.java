@@ -6,9 +6,11 @@ import ubic.gemma.persistence.service.expression.experiment.FactorValueService;
 
 /**
  * Maps {@link FactorValue} by its factor value.
+ *
  * @author poirigui
  */
-@Schema(type = "string")
+@Deprecated
+@Schema(type = "string", description = "The value of a factor value.")
 public class FactorValueValueArg extends FactorValueArg<String> {
 
     public FactorValueValueArg( String value ) {
@@ -17,7 +19,7 @@ public class FactorValueValueArg extends FactorValueArg<String> {
 
     @Override
     public FactorValue getEntity( FactorValueService service ) {
-        return checkEntity( service.findByValue( getValue() ).stream().findFirst().get() );
+        return checkEntity( service.findByValue( getValue() ).stream().findFirst().orElse( null ) );
     }
 
     @Override

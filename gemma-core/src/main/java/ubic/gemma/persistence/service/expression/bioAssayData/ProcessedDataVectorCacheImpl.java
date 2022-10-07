@@ -23,7 +23,6 @@ import net.sf.ehcache.CacheManager;
 import net.sf.ehcache.Element;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cache.ehcache.EhCacheManagerFactoryBean;
 import org.springframework.stereotype.Component;
 import ubic.gemma.model.expression.bioAssayData.DoubleVectorValueObject;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
@@ -56,7 +55,7 @@ public class ProcessedDataVectorCacheImpl implements InitializingBean, Processed
     private Cache cache;
 
     @Autowired
-    private EhCacheManagerFactoryBean cacheManagerFactory;
+    private CacheManager cacheManager;
 
     @Override
     public void addToCache( Long eeId, Long g, Collection<DoubleVectorValueObject> collection ) {
@@ -102,7 +101,6 @@ public class ProcessedDataVectorCacheImpl implements InitializingBean, Processed
 
     @Override
     public void afterPropertiesSet() {
-        CacheManager cacheManager = this.cacheManagerFactory.getObject();
         int maxElements = Settings.getInt( "gemma.cache.vectors.maxelements",
                 ProcessedDataVectorCacheImpl.VECTOR_CACHE_DEFAULT_MAX_ELEMENTS );
         int timeToLive = Settings.getInt( "gemma.cache.vectors.timetolive",
@@ -111,14 +109,12 @@ public class ProcessedDataVectorCacheImpl implements InitializingBean, Processed
                 ProcessedDataVectorCacheImpl.VECTOR_CACHE_DEFAULT_TIME_TO_IDLE );
         boolean overFlowToDisk = Settings.getBoolean( "gemma.cache.vectors.usedisk",
                 ProcessedDataVectorCacheImpl.VECTOR_CACHE_DEFAULT_OVERFLOW_TO_DISK );
-        boolean terracottaEnabled = Settings.getBoolean( "gemma.cache.clustered", true );
         boolean eternal = Settings.getBoolean( "gemma.cache.vectors.eternal",
                 ProcessedDataVectorCacheImpl.VECTOR_CACHE_DEFAULT_ETERNAL ) && timeToLive == 0;
-        boolean diskPersistent = Settings.getBoolean( "gemma.cache.diskpersistent", true ) && !terracottaEnabled;
 
         this.cache = CacheUtils
-                .createOrLoadCache( cacheManager, ProcessedDataVectorCacheImpl.VECTOR_CACHE_NAME, terracottaEnabled,
-                        maxElements, overFlowToDisk, eternal, timeToIdle, timeToLive, diskPersistent );
+                .createOrLoadCache( cacheManager, ProcessedDataVectorCacheImpl.VECTOR_CACHE_NAME,
+                        maxElements, overFlowToDisk, eternal, timeToIdle, timeToLive );
 
     }
 }

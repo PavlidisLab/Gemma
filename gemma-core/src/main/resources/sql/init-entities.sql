@@ -86,11 +86,16 @@ insert into EXTERNAL_DATABASE (NAME, DESCRIPTION,  WEB_URI, FTP_URI, TYPE) value
 
 -- denormalized table joining genes and compositeSequences; maintained by TableMaintenanceUtil.
 drop table if exists GENE2CS;
-create table GENE2CS (
-	GENE BIGINT not null,
-	CS BIGINT not null,
-	AD BIGINT not null,
-	INDEX gene2csgeneindex (GENE),
-	INDEX gene2cscsindex (CS),
-	INDEX gene2csgeneadindex (AD, GENE)
+create table GENE2CS
+(
+    GENE BIGINT not null,
+    CS   BIGINT not null,
+    AD   BIGINT not null,
+    primary key (AD, CS, GENE)
 );
+alter table GENE2CS
+    add foreign key GENE2CS_ARRAY_DESIGN_FKC (AD) references ARRAY_DESIGN (ID) on update cascade on delete cascade;
+alter table GENE2CS
+    add foreign key GENE2CS_CS_FKC (CS) references COMPOSITE_SEQUENCE (ID) on update cascade on delete cascade;
+alter table GENE2CS
+    add foreign key GENE2CS_GENE_FKC (GENE) references CHROMOSOME_FEATURE (ID) on update cascade on delete cascade;

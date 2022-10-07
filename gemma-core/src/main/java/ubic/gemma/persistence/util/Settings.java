@@ -59,11 +59,6 @@ public class Settings {
      * Name of the resource containing defaults that the user can override (classpath)
      */
     private static final String DEFAULT_CONFIGURATION = "default.properties";
-    /**
-     * Configuration parameter for lib directory, where jars shouldu be copied to make them available to the compute
-     * grid (for example)
-     */
-    private static final String REMOTE_TASKS_ENABLED_PROPERTY = "gemma.remoteTasks.enabled";
     private static final String QUARTZ_ENABLED_PROPERTY = "quartzOn";
     /**
      * The name of the file users can use to configure Gemma.
@@ -438,30 +433,6 @@ public class Settings {
             Settings.log.info( key + " is not configured, returning default value of null" );
             return null;
         }
-    }
-
-    public static String getTaskControlQueue() {
-        return Settings.getString( "gemma.remoteTasks.controlQueue" );
-    }
-
-    public static String getTaskLifeCycleQueuePrefix() {
-        return Settings.getString( "gemma.remoteTasks.lifeCycleQueuePrefix" );
-    }
-
-    public static String getTaskProgressQueuePrefix() {
-        return Settings.getString( "gemma.remoteTasks.progressUpdatesQueuePrefix" );
-    }
-
-    public static String getTaskResultQueuePrefix() {
-        return Settings.getString( "gemma.remoteTasks.resultQueuePrefix" );
-    }
-
-    public static String getTaskSubmissionQueue() {
-        return Settings.getString( "gemma.remoteTasks.taskSubmissionQueue" );
-    }
-
-    public static boolean isRemoteTasksEnabled() {
-        return Settings.getBoolean( Settings.REMOTE_TASKS_ENABLED_PROPERTY, false );
     }
 
     /**

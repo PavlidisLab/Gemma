@@ -156,8 +156,8 @@ public abstract class FtpArchiveFetcher extends FtpFetcher implements ArchiveFet
                 continue;
             // log.info( "\t" + file.getCanonicalPath() );
             LocalFile newFile = LocalFile.Factory.newInstance();
-            newFile.setLocalURL( file.toURI().toURL() );
-            newFile.setRemoteURL( new File( remoteFile ).toURI().toURL() );
+            newFile.setLocalURL( file.toURI() );
+            newFile.setRemoteURL( new File( remoteFile ).toURI() );
             newFile.setVersion( new SimpleDateFormat().format( new Date() ) );
             result.add( newFile );
         }

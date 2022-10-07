@@ -43,7 +43,6 @@ import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedDataVecto
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.util.CacheUtils;
 import ubic.gemma.persistence.util.EntityUtils;
-import ubic.gemma.persistence.util.Settings;
 
 import java.util.*;
 
@@ -92,12 +91,9 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
 
     @Override
     public void afterPropertiesSet() {
-        boolean terracottaEnabled = Settings.getBoolean( "gemma.cache.clustered", false );
-        boolean diskPersistent = Settings.getBoolean( "gemma.cache.diskpersistent", false ) && !terracottaEnabled;
-
         this.statsCache = CacheUtils
                 .createOrLoadCache( cacheManager, ExpressionExperimentReportServiceImpl.EESTATS_CACHE_NAME,
-                        terracottaEnabled, 5000, false, false, 0, 300, diskPersistent );
+                        5000, false, false, 0, 300 );
 
     }
 

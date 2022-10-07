@@ -57,15 +57,6 @@ public class GeneEvidenceValueObject extends GeneValueObject {
         this.evidence = evidence;
     }
 
-    public GeneEvidenceValueObject( Long id, String name, Collection<String> aliases, Integer ncbiId,
-            String officialSymbol, String officialName, String description, Double score, Long taxonId,
-            String taxonScientificName, String taxonCommonName,
-            Collection<EvidenceValueObject<? extends PhenotypeAssociation>> evidence ) {
-        super( id, name, aliases, ncbiId, officialSymbol, officialName, description, score, taxonId,
-                taxonScientificName, taxonCommonName );
-        this.evidence = evidence;
-    }
-
     /**
      * @return Given a geneVO finds all valueRI of phenotypes for that gene
      */

@@ -1,12 +1,12 @@
 package ubic.gemma.web.services.rest.util.args;
 
 import org.junit.Test;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.FilteringService;
 import ubic.gemma.persistence.util.Sort;
 import ubic.gemma.web.services.rest.util.MalformedArgException;
 
-import static org.assertj.core.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -38,13 +38,13 @@ public class SortArgTest {
 
     @Test
     public void testEmptySortArg() {
-        assertThatThrownBy( () -> SortArg.valueOf( "" ).getValue() )
+        assertThatThrownBy( () -> SortArg.valueOf( "" ) )
                 .isInstanceOf( MalformedArgException.class );
     }
 
     @Test
     public void testSortArgWithoutField() {
-        assertThatThrownBy( () -> SortArg.valueOf( "+" ).getValue() )
+        assertThatThrownBy( () -> SortArg.valueOf( "+" ) )
                 .isInstanceOf( MalformedArgException.class );
     }
 

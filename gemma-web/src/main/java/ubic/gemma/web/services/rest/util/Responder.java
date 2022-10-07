@@ -14,12 +14,9 @@
  */
 package ubic.gemma.web.services.rest.util;
 
-import ubic.gemma.core.search.SearchResult;
 import ubic.gemma.persistence.util.Slice;
-import ubic.gemma.web.services.rest.SearchWebService;
 
 import javax.ws.rs.NotFoundException;
-import java.util.List;
 
 /**
  * Handles setting of the response status code and composing a proper payload structure.

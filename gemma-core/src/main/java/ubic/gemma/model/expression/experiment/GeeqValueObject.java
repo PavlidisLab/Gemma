@@ -19,7 +19,13 @@
 
 package ubic.gemma.model.expression.experiment;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.Setter;
+import lombok.ToString;
 import ubic.gemma.model.IdentifiableValueObject;
+import ubic.gemma.model.annotations.GemmaWebOnly;
 import ubic.gemma.persistence.service.expression.experiment.GeeqServiceImpl;
 
 /**
@@ -28,6 +34,9 @@ import ubic.gemma.persistence.service.expression.experiment.GeeqServiceImpl;
  * @author paul, tesarst
  */
 @SuppressWarnings("unused") // Used in frontend
+@Setter
+@EqualsAndHashCode(callSuper = true)
+@ToString
 public class GeeqValueObject extends IdentifiableValueObject<Geeq> {
 
     private double publicQualityScore;
@@ -37,27 +46,44 @@ public class GeeqValueObject extends IdentifiableValueObject<Geeq> {
      * Suitability score factors
      */
 
+    @JsonProperty("sScorePublication")
     private double sScorePublication;
+    @JsonProperty("sScorePlatformAmount")
     private double sScorePlatformAmount;
+    @JsonProperty("sScorePlatformTechMulti")
     private double sScorePlatformsTechMulti;
+    @JsonProperty("sScoreAvgPlatformPopularity")
     private double sScoreAvgPlatformPopularity;
+    @JsonProperty("sScoreAvgPlatformSize")
     private double sScoreAvgPlatformSize;
+    @JsonProperty("sScoreSampleSize")
     private double sScoreSampleSize;
+    @JsonProperty("sScoreRawData")
     private double sScoreRawData;
+    @JsonProperty("sScoreMissingValues")
     private double sScoreMissingValues;
 
     /*
      * Quality score factors
      */
 
+    @JsonProperty("qScoreOutliers")
     private double qScoreOutliers;
+    @JsonProperty("qScoreSampleMeanCorrelation")
     private double qScoreSampleMeanCorrelation;
+    @JsonProperty("qScoreSampleMedianCorrelation")
     private double qScoreSampleMedianCorrelation;
+    @JsonProperty("qScoreSampleCorrelationVariance")
     private double qScoreSampleCorrelationVariance;
+    @JsonProperty("qScorePlatformsTech")
     private double qScorePlatformsTech;
+    @JsonProperty("qScoreReplicates")
     private double qScoreReplicates;
+    @JsonProperty("qScoreBatchInfo")
     private double qScoreBatchInfo;
+    @JsonProperty("qScorePublicBatchEffect")
     private double qScorePublicBatchEffect;
+    @JsonProperty("qScorePublicBatchConfound")
     private double qScorePublicBatchConfound;
 
     /*
@@ -74,36 +100,6 @@ public class GeeqValueObject extends IdentifiableValueObject<Geeq> {
      */
     @SuppressWarnings("WeakerAccess") //Spring needs it to be public
     public GeeqValueObject() {
-    }
-
-    public GeeqValueObject( Object[] row ) {
-        super( ( Long ) row[0] );
-
-        this.setPublicQualityScore( ( double ) row[1], ( double ) row[2], ( boolean ) row[3] );
-        this.setPublicSuitabilityScore( ( double ) row[4], ( double ) row[5], ( boolean ) row[6] );
-
-        this.sScorePublication = ( double ) row[7];
-        this.sScorePlatformAmount = ( double ) row[8];
-        this.sScorePlatformsTechMulti = ( double ) row[9];
-        this.sScoreAvgPlatformPopularity = ( double ) row[10];
-        this.sScoreAvgPlatformSize = ( double ) row[11];
-        this.sScoreSampleSize = ( double ) row[12];
-        this.sScoreRawData = ( double ) row[13];
-        this.sScoreMissingValues = ( double ) row[14];
-        this.qScoreOutliers = ( double ) row[15];
-        this.qScoreSampleMeanCorrelation = ( double ) row[16];
-        this.qScoreSampleMedianCorrelation = ( double ) row[17];
-        this.qScoreSampleCorrelationVariance = ( double ) row[18];
-        this.qScorePlatformsTech = ( double ) row[19];
-        this.qScoreReplicates = ( double ) row[20];
-        this.qScoreBatchInfo = ( double ) row[21];
-        this.setqScorePublicBatchEffect( ( double ) row[23], ( boolean ) row[24], ( boolean ) row[25],
-                ( boolean ) row[26] );
-        this.setqScorePublicBatchConfound( ( double ) row[27], ( boolean ) row[28], ( boolean ) row[29] );
-        this.noVectors = ( boolean ) row[30];
-        this.corrMatIssues = ( byte ) row[31];
-        this.replicatesIssues = ( byte ) row[32];
-        this.batchCorrected = ( boolean ) row[33];
     }
 
     public GeeqValueObject( Geeq g ) {
@@ -127,14 +123,124 @@ public class GeeqValueObject extends IdentifiableValueObject<Geeq> {
         this.qScorePlatformsTech = g.getqScorePlatformsTech();
         this.qScoreReplicates = g.getqScoreReplicates();
         this.qScoreBatchInfo = g.getqScoreBatchInfo();
-        this.setqScorePublicBatchEffect( g.getqScoreBatchEffect(), g.isManualHasStrongBatchEffect(),
+        this.setQScorePublicBatchEffect( g.getqScoreBatchEffect(), g.isManualHasStrongBatchEffect(),
                 g.isManualHasNoBatchEffect(), g.isManualBatchEffectActive() );
-        this.setqScorePublicBatchConfound( g.getqScoreBatchConfound(), g.isManualHasBatchConfound(),
+        this.setQScorePublicBatchConfound( g.getqScoreBatchConfound(), g.isManualHasBatchConfound(),
                 g.isManualBatchConfoundActive() );
         this.noVectors = g.isNoVectors();
         this.batchCorrected = g.isBatchCorrected();
         this.corrMatIssues = g.getCorrMatIssues();
         this.replicatesIssues = g.getReplicatesIssues();
+    }
+
+    public double getPublicQualityScore() {
+        return publicQualityScore;
+    }
+
+    public double getPublicSuitabilityScore() {
+        return publicSuitabilityScore;
+    }
+
+
+    @GemmaWebOnly
+    public double getsScorePublication() {
+        return sScorePublication;
+    }
+
+    @GemmaWebOnly
+    public double getsScorePlatformAmount() {
+        return sScorePlatformAmount;
+    }
+
+    @GemmaWebOnly
+    public double getsScorePlatformsTechMulti() {
+        return sScorePlatformsTechMulti;
+    }
+
+    @GemmaWebOnly
+    public double getsScoreAvgPlatformPopularity() {
+        return sScoreAvgPlatformPopularity;
+    }
+
+    @GemmaWebOnly
+    public double getsScoreAvgPlatformSize() {
+        return sScoreAvgPlatformSize;
+    }
+
+    @GemmaWebOnly
+    public double getsScoreSampleSize() {
+        return sScoreSampleSize;
+    }
+
+    @GemmaWebOnly
+    public double getsScoreRawData() {
+        return sScoreRawData;
+    }
+
+    @GemmaWebOnly
+    public double getsScoreMissingValues() {
+        return sScoreMissingValues;
+    }
+
+    @GemmaWebOnly
+    public double getqScoreOutliers() {
+        return qScoreOutliers;
+    }
+
+    @GemmaWebOnly
+    public double getqScoreSampleMeanCorrelation() {
+        return qScoreSampleMeanCorrelation;
+    }
+
+    @GemmaWebOnly
+    public double getqScoreSampleMedianCorrelation() {
+        return qScoreSampleMedianCorrelation;
+    }
+
+    @GemmaWebOnly
+    public double getqScoreSampleCorrelationVariance() {
+        return qScoreSampleCorrelationVariance;
+    }
+
+    @GemmaWebOnly
+    public double getqScorePlatformsTech() {
+        return qScorePlatformsTech;
+    }
+
+    @GemmaWebOnly
+    public double getqScoreReplicates() {
+        return qScoreReplicates;
+    }
+
+    @GemmaWebOnly
+    public double getqScoreBatchInfo() {
+        return qScoreBatchInfo;
+    }
+
+    @GemmaWebOnly
+    public double getqScorePublicBatchEffect() {
+        return qScorePublicBatchEffect;
+    }
+
+    @GemmaWebOnly
+    public double getqScorePublicBatchConfound() {
+        return qScorePublicBatchConfound;
+    }
+
+    public boolean isNoVectors() {
+        return noVectors;
+    }
+
+    public byte getCorrMatIssues() {
+        return corrMatIssues;
+    }
+
+    public byte getReplicatesIssues() {
+        return replicatesIssues;
+    }
+
+    public boolean isBatchCorrected() {
+        return batchCorrected;
     }
 
     private void setPublicQualityScore( double detected, double manual, boolean override ) {
@@ -145,7 +251,7 @@ public class GeeqValueObject extends IdentifiableValueObject<Geeq> {
         this.publicSuitabilityScore = override ? manual : detected;
     }
 
-    private void setqScorePublicBatchEffect( double detected, boolean manualStrong, boolean manualNone,
+    private void setQScorePublicBatchEffect( double detected, boolean manualStrong, boolean manualNone,
             boolean override ) {
         this.qScorePublicBatchEffect = //
                 !override ? detected : //
@@ -153,203 +259,9 @@ public class GeeqValueObject extends IdentifiableValueObject<Geeq> {
                                 manualNone ? GeeqServiceImpl.BATCH_EFF_NONE : GeeqServiceImpl.BATCH_EFF_WEAK;
     }
 
-    private void setqScorePublicBatchConfound( double detected, boolean manualHasConfound, boolean override ) {
+    private void setQScorePublicBatchConfound( double detected, boolean manualHasConfound, boolean override ) {
         this.qScorePublicBatchConfound = //
                 !override ? detected : //
                         manualHasConfound ? GeeqServiceImpl.BATCH_CONF_HAS : GeeqServiceImpl.BATCH_CONF_NO_HAS;
-    }
-
-    public double getPublicQualityScore() {
-        return publicQualityScore;
-    }
-
-    /**
-     * Only for DWR serializer, do not use to manually set the score.
-     *
-     * @param publicQualityScore the new score
-     */
-    public void setPublicQualityScore( double publicQualityScore ) {
-        this.publicQualityScore = publicQualityScore;
-    }
-
-    public double getPublicSuitabilityScore() {
-        return publicSuitabilityScore;
-    }
-
-    /**
-     * Only for DWR serializer, do not use to manually set the score.
-     *
-     * @param publicSuitabilityScore the new score
-     */
-    public void setPublicSuitabilityScore( double publicSuitabilityScore ) {
-        this.publicSuitabilityScore = publicSuitabilityScore;
-    }
-
-    public double getsScorePublication() {
-        return sScorePublication;
-    }
-
-    public void setsScorePublication( double sScorePublication ) {
-        this.sScorePublication = sScorePublication;
-    }
-
-    public double getsScorePlatformAmount() {
-        return sScorePlatformAmount;
-    }
-
-    public void setsScorePlatformAmount( double sScorePlatformAmount ) {
-        this.sScorePlatformAmount = sScorePlatformAmount;
-    }
-
-    public double getsScorePlatformsTechMulti() {
-        return sScorePlatformsTechMulti;
-    }
-
-    public void setsScorePlatformsTechMulti( double sScorePlatformsTechMulti ) {
-        this.sScorePlatformsTechMulti = sScorePlatformsTechMulti;
-    }
-
-    public double getsScoreAvgPlatformPopularity() {
-        return sScoreAvgPlatformPopularity;
-    }
-
-    public void setsScoreAvgPlatformPopularity( double sScoreAvgPlatformPopularity ) {
-        this.sScoreAvgPlatformPopularity = sScoreAvgPlatformPopularity;
-    }
-
-    public double getsScoreAvgPlatformSize() {
-        return sScoreAvgPlatformSize;
-    }
-
-    public void setsScoreAvgPlatformSize( double sScoreAvgPlatformSize ) {
-        this.sScoreAvgPlatformSize = sScoreAvgPlatformSize;
-    }
-
-    public double getsScoreSampleSize() {
-        return sScoreSampleSize;
-    }
-
-    public void setsScoreSampleSize( double sScoreSampleSize ) {
-        this.sScoreSampleSize = sScoreSampleSize;
-    }
-
-    public double getsScoreRawData() {
-        return sScoreRawData;
-    }
-
-    public void setsScoreRawData( double sScoreRawData ) {
-        this.sScoreRawData = sScoreRawData;
-    }
-
-    public double getsScoreMissingValues() {
-        return sScoreMissingValues;
-    }
-
-    public void setsScoreMissingValues( double sScoreMissingValues ) {
-        this.sScoreMissingValues = sScoreMissingValues;
-    }
-
-    public double getqScoreOutliers() {
-        return qScoreOutliers;
-    }
-
-    public void setqScoreOutliers( double qScoreOutliers ) {
-        this.qScoreOutliers = qScoreOutliers;
-    }
-
-    public double getqScoreSampleMeanCorrelation() {
-        return qScoreSampleMeanCorrelation;
-    }
-
-    public void setqScoreSampleMeanCorrelation( double qScoreSampleMeanCorrelation ) {
-        this.qScoreSampleMeanCorrelation = qScoreSampleMeanCorrelation;
-    }
-
-    public double getqScoreSampleMedianCorrelation() {
-        return qScoreSampleMedianCorrelation;
-    }
-
-    public void setqScoreSampleMedianCorrelation( double qScoreSampleMedianCorrelation ) {
-        this.qScoreSampleMedianCorrelation = qScoreSampleMedianCorrelation;
-    }
-
-    public double getqScoreSampleCorrelationVariance() {
-        return qScoreSampleCorrelationVariance;
-    }
-
-    public void setqScoreSampleCorrelationVariance( double qScoreSampleCorrelationVariance ) {
-        this.qScoreSampleCorrelationVariance = qScoreSampleCorrelationVariance;
-    }
-
-    public double getqScorePlatformsTech() {
-        return qScorePlatformsTech;
-    }
-
-    public void setqScorePlatformsTech( double qScorePlatformsTech ) {
-        this.qScorePlatformsTech = qScorePlatformsTech;
-    }
-
-    public double getqScoreReplicates() {
-        return qScoreReplicates;
-    }
-
-    public void setqScoreReplicates( double qScoreReplicates ) {
-        this.qScoreReplicates = qScoreReplicates;
-    }
-
-    public double getqScoreBatchInfo() {
-        return qScoreBatchInfo;
-    }
-
-    public void setqScoreBatchInfo( double qScoreBatchInfo ) {
-        this.qScoreBatchInfo = qScoreBatchInfo;
-    }
-
-    public double getqScorePublicBatchEffect() {
-        return qScorePublicBatchEffect;
-    }
-
-    public void setqScorePublicBatchEffect( double qScorePublicBatchEffect ) {
-        this.qScorePublicBatchEffect = qScorePublicBatchEffect;
-    }
-
-    public double getqScorePublicBatchConfound() {
-        return qScorePublicBatchConfound;
-    }
-
-    public void setqScorePublicBatchConfound( double qScorePublicBatchConfound ) {
-        this.qScorePublicBatchConfound = qScorePublicBatchConfound;
-    }
-
-    public boolean isNoVectors() {
-        return noVectors;
-    }
-
-    public void setNoVectors( boolean noVectors ) {
-        this.noVectors = noVectors;
-    }
-
-    public byte getCorrMatIssues() {
-        return corrMatIssues;
-    }
-
-    public void setCorrMatIssues( byte corrMatIssues ) {
-        this.corrMatIssues = corrMatIssues;
-    }
-
-    public byte getReplicatesIssues() {
-        return replicatesIssues;
-    }
-
-    public void setReplicatesIssues( byte replicatesIssues ) {
-        this.replicatesIssues = replicatesIssues;
-    }
-
-    public boolean isBatchCorrected() {
-        return batchCorrected;
-    }
-
-    public void setBatchCorrected( boolean batchCorrected ) {
-        this.batchCorrected = batchCorrected;
     }
 }

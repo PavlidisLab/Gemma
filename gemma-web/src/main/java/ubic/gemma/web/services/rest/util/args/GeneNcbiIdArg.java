@@ -1,5 +1,6 @@
 package ubic.gemma.web.services.rest.util.args;
 
+import io.swagger.v3.oas.annotations.ExternalDocumentation;
 import io.swagger.v3.oas.annotations.media.Schema;
 import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.model.genome.Gene;
@@ -9,10 +10,9 @@ import ubic.gemma.model.genome.Gene;
  *
  * @author tesarst
  */
-@Schema(type = "string")
+@Schema(type = "string", description = "An NCBI gene identifier.",
+        externalDocs = @ExternalDocumentation(url = "https://www.ncbi.nlm.nih.gov/gene"))
 public class GeneNcbiIdArg extends GeneAnyIdArg<Integer> {
-
-    private static final String ID_NAME = "NCBI ID";
 
     /**
      * @param l intentionally primitive type, so the value property can never be null.
@@ -31,8 +31,4 @@ public class GeneNcbiIdArg extends GeneAnyIdArg<Integer> {
         return "ncbiGeneId";
     }
 
-    @Override
-    String getIdentifierName() {
-        return ID_NAME;
-    }
 }

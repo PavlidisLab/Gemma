@@ -28,6 +28,7 @@ import ubic.gemma.model.genome.Gene;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.Set;
 
 /**
  * Represents abstract evidence for the association of a gene with a phenotype.
@@ -45,11 +46,11 @@ public abstract class PhenotypeAssociation extends AbstractAuditable implements 
     private String score;
     private Double strength;
     private Gene gene;
-    private Collection<Characteristic> phenotypes = new HashSet<>();
+    private Set<Characteristic> phenotypes = new HashSet<>();
     private Characteristic associationType;
     private DatabaseEntry evidenceSource;
     private QuantitationType scoreType;
-    private Collection<PhenotypeAssociationPublication> phenotypeAssociationPublications = new HashSet<>();
+    private Set<PhenotypeAssociationPublication> phenotypeAssociationPublications = new HashSet<>();
     private PhenotypeMappingType mappingType;
     private String originalPhenotype;
     private String relationship; // information for a gene-disease relationship
@@ -117,11 +118,11 @@ public abstract class PhenotypeAssociation extends AbstractAuditable implements 
      * @return The phenotype this association is about. A phenotype is (basically) a term from a controlled vocabulary such as a
      * disease.
      */
-    public Collection<Characteristic> getPhenotypes() {
+    public Set<Characteristic> getPhenotypes() {
         return this.phenotypes;
     }
 
-    public void setPhenotypes( Collection<Characteristic> phenotypes ) {
+    public void setPhenotypes( Set<Characteristic> phenotypes ) {
         this.phenotypes = phenotypes;
     }
 
@@ -160,12 +161,12 @@ public abstract class PhenotypeAssociation extends AbstractAuditable implements 
         this.strength = strength;
     }
 
-    public Collection<PhenotypeAssociationPublication> getPhenotypeAssociationPublications() {
+    public Set<PhenotypeAssociationPublication> getPhenotypeAssociationPublications() {
         return phenotypeAssociationPublications;
     }
 
     public void setPhenotypeAssociationPublications(
-            Collection<PhenotypeAssociationPublication> phenotypeAssociationPublications ) {
+            Set<PhenotypeAssociationPublication> phenotypeAssociationPublications ) {
         this.phenotypeAssociationPublications = phenotypeAssociationPublications;
     }
 

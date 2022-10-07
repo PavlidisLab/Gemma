@@ -30,11 +30,13 @@ import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.persistence.service.FilteringVoEnabledService;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
 @SuppressWarnings("unused") // Possible external use
+@ParametersAreNonnullByDefault
 public interface ArrayDesignService extends FilteringVoEnabledService<ArrayDesign, ArrayDesignValueObject> {
 
     @Secured({ "GROUP_ADMIN" })
@@ -245,8 +247,6 @@ public interface ArrayDesignService extends FilteringVoEnabledService<ArrayDesig
      */
     List<ArrayDesignValueObject> loadValueObjectsForEE( Long eeId );
 
-    Collection<ArrayDesignValueObject> loadValueObjectsByIds( Collection<Long> ids );
-
     /**
      * Function to return a count of all compositeSequences with bioSequence associations
      *
@@ -338,7 +338,7 @@ public interface ArrayDesignService extends FilteringVoEnabledService<ArrayDesig
      * @param arrayDesign AD
      * @return how many experiments use this platform (not including experiment subsets) security filtered
      */
-    int numExperiments( ArrayDesign arrayDesign );
+    long numExperiments( ArrayDesign arrayDesign );
 
     /**
      * Returns the number of unique Genes associated with this ArrayDesign id

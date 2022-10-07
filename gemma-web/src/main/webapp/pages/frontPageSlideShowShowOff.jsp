@@ -20,11 +20,11 @@
 						<img style="position: absolute; top: 60px; left: 200px"	src="${pageContext.request.contextPath}/images/slideShow/mouseOutline65_simplified.png" />
 						<!-- img style="position:absolute;top:17px;left:300px" src="/Gemma/images/slideShow/rightBrace.png"/-->
 					</td>
-					<td class="slideTextTD">Over <b>10000</b> curated expression studies	</td>
+					<td class="slideTextTD">Over <b>15000</b> curated expression studies	</td>
 				</tr>
 			</table>
 		</div>
-		<div title="2">
+<!--		<div title="2">
 			<table>
 				<tr>
 					<td class="slideImageTD"><img src="${pageContext.request.contextPath}/images/slideShow/diffEx.png" style="margin-top: 10px" /></td>
@@ -67,11 +67,11 @@
 					</td>
 				</tr>
 			</table>
-		</div>
+		</div> -->
 	</div>
 </div>
 <script type="text/javascript">
-   jQuery.noConflict();
+ /*  jQuery.noConflict();
 
    jQuery( document ).ready( function() {
 
@@ -86,4 +86,5 @@
       } );
 
    } );
+   */
 </script>

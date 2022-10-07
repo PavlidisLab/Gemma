@@ -18,7 +18,6 @@
  */
 package ubic.gemma.web.controller.diff;
 
-import gemma.gsec.authentication.UserManager;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -29,6 +28,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 import ubic.gemma.core.analysis.expression.diff.GeneDiffExMetaAnalysisHelperService;
 import ubic.gemma.core.job.executor.webapp.TaskRunningService;
+import ubic.gemma.core.security.authentication.UserManager;
 import ubic.gemma.core.tasks.analysis.diffex.DiffExMetaAnalyzerTaskCommand;
 import ubic.gemma.model.BaseValueObject;
 import ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysisDetailValueObject;
@@ -59,7 +59,7 @@ public class DiffExMetaAnalyzerController {
 
     public String analyzeResultSets( Collection<Long> analysisResultSetIds ) {
         DiffExMetaAnalyzerTaskCommand cmd = new DiffExMetaAnalyzerTaskCommand( analysisResultSetIds );
-        return taskRunningService.submitRemoteTask( cmd );
+        return taskRunningService.submitTaskCommand( cmd );
     }
 
     public BaseValueObject findDetailMetaAnalysisById( Long id ) {
@@ -102,7 +102,7 @@ public class DiffExMetaAnalyzerController {
         boolean persist = StringUtils.isNotBlank( name );
         DiffExMetaAnalyzerTaskCommand cmd = new DiffExMetaAnalyzerTaskCommand( analysisResultSetIds, name, description,
                 persist );
-        return taskRunningService.submitRemoteTask( cmd );
+        return taskRunningService.submitTaskCommand( cmd );
     }
 
     @RequestMapping(value = { "/metaAnalysisManager.html" })

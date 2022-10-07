@@ -23,10 +23,6 @@ public class TaxonArrayArg extends AbstractEntityArrayArg<String, Taxon, TaxonSe
         super( TaxonArg.class, values );
     }
 
-    private TaxonArrayArg( String errorMessage, Exception exception ) {
-        super( TaxonArg.class, errorMessage, exception );
-    }
-
     @Override
     public ObjectFilter[] getObjectFilters( TaxonService service ) throws MalformedArgException {
         if ( getPropertyName( service ).equals( "commonName" ) ) {
@@ -42,14 +38,14 @@ public class TaxonArrayArg extends AbstractEntityArrayArg<String, Taxon, TaxonSe
      * Used by RS to parse value of request parameters.
      *
      * @param s the request arrayTaxon argument
-     * @return an instance of ArrayTaxonArg representing an array of Taxon identifiers from the input string,
-     * or a malformed ArrayTaxonArg that will throw an {@link javax.ws.rs.BadRequestException} when accessing its value, if the
-     * input String can not be converted into an array of Taxon identifiers.
+     * @return an instance of ArrayTaxonArg representing an array of Taxon identifiers from the input string, or a
+     * malformed ArrayTaxonArg that will throw an {@link javax.ws.rs.BadRequestException} when accessing its value, if
+     * the input String can not be converted into an array of Taxon identifiers.
      */
     @SuppressWarnings("unused")
     public static TaxonArrayArg valueOf( final String s ) {
         if ( StringUtils.isBlank( s ) ) {
-            return new TaxonArrayArg( String.format( TaxonArrayArg.ERROR_MSG, s ),
+            throw new MalformedArgException( String.format( TaxonArrayArg.ERROR_MSG, s ),
                     new IllegalArgumentException( TaxonArrayArg.ERROR_MSG_DETAIL ) );
         }
         return new TaxonArrayArg( splitAndTrim( s ) );

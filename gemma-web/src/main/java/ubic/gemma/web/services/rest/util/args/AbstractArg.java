@@ -17,11 +17,6 @@ public abstract class AbstractArg<T> implements Arg<T> {
 
     private final T value;
 
-    /* if this is malformed */
-    private final boolean malformed;
-    private String errorMessage;
-    private Throwable cause;
-
     /**
      * Constructor for well-formed value.
      *
@@ -32,31 +27,6 @@ public abstract class AbstractArg<T> implements Arg<T> {
      */
     protected AbstractArg( @NonNull T value ) {
         this.value = value;
-        this.malformed = false;
-    }
-
-    /**
-     * Constructor used to inform that the received argument is malformed.
-     *
-     * If this is used, subsequent call to {@link #getValue()} will raise a {@link MalformedArgException} which will in
-     * turn converted to a proper response as it inherits {@link javax.ws.rs.WebApplicationException}.
-     *
-     * @param errorMessage the error message to be displayed to the client.
-     * @param cause        the exception that the client should be informed about.
-     */
-    protected AbstractArg( @NonNull String errorMessage, Throwable cause ) {
-        this.value = null;
-        this.malformed = true;
-        this.errorMessage = errorMessage;
-        this.cause = cause;
-    }
-
-    /**
-     * Test if this argument is malformed without triggering a {@link MalformedArgException}.
-     * @return
-     */
-    public final boolean isMalformed() {
-        return malformed;
     }
 
     /**
@@ -66,19 +36,12 @@ public abstract class AbstractArg<T> implements Arg<T> {
      * @throws MalformedArgException if this arg is malformed
      */
     @Override
-    public T getValue() throws MalformedArgException {
-        if ( this.malformed ) {
-            throw new MalformedArgException( this.errorMessage, this.cause );
-        }
+    public T getValue() {
         return this.value;
     }
 
     @Override
     public String toString() {
-        if ( this.malformed ) {
-            return "This " + getClass().getName() + " is malformed because of the following error: " + errorMessage;
-        } else {
-            return String.valueOf( this.value );
-        }
+        return String.valueOf( this.value );
     }
 }

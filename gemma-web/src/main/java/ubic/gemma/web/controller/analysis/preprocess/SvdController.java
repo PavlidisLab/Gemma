@@ -56,6 +56,6 @@ public class SvdController {
         experimentReportService.evictFromCache( id );
         SvdTaskCommand cmd = new SvdTaskCommand( ee );
 
-        return taskRunningService.submitRemoteTask( cmd );
+        return taskRunningService.submitTaskCommand( cmd );
     }
 }

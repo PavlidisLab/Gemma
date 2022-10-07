@@ -18,147 +18,124 @@
  */
 package ubic.gemma.core.search;
 
-import ubic.gemma.persistence.util.EntityUtils;
-import ubic.gemma.persistence.util.ReflectionUtil;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
+import ubic.gemma.model.common.Identifiable;
 
+import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.Comparator;
+import java.util.Objects;
 
 /**
  * @author paul
  */
-public class SearchResult<T> implements Comparable<SearchResult<T>> {
+@Data
+@ParametersAreNonnullByDefault
+@EqualsAndHashCode(of = { "resultClass", "resultId" })
+@ToString(of = { "resultId", "resultClass", "highlightedText", "score", "source" })
+public class SearchResult<T extends Identifiable> implements Comparable<SearchResult<?>> {
 
     /**
-     * Comparator to be used in conjunction with {@link java.util.List#sort} when dealing with collections of mixed
-     * search results.
+     * Obtain a comparator for this search result.
+     * <p>
+     * Results are compared by {@link #getScore()} in descending order. Note that any search result can be compared
+     * regardless of their result type or result object.
      */
     public static Comparator<SearchResult<?>> getComparator() {
-        return ( a, b ) -> -a.score.compareTo( b.score );
+        return Comparator.comparing( SearchResult::getScore, Comparator.reverseOrder() );
     }
 
-    private Class<? super T> resultClass;
+    /**
+     * Create a search result from an entity, a score and some highlighted text.
+     */
+    public static <T extends Identifiable> SearchResult<T> from( T entity, double score, @Nullable String highlightedText, Object source ) {
+        SearchResult<T> sr = new SearchResult<>( entity, source );
+        sr.setScore( score );
+        sr.setHighlightedText( highlightedText );
+        return sr;
+    }
 
-    private Long objectId;
+    /**
+     * Class of the result, immutable.
+     */
+    private final Class<? extends Identifiable> resultClass;
 
+    /**
+     * ID of the result, immutable.
+     */
+    private final Long resultId;
+
+    /**
+     * Result object this search result is referring to.
+     * <p>
+     * This can be null, at least initially if the resultClass and objectId are provided.
+     * <p>
+     * It may also be replaced at a later time via {@link #setResultObject(Identifiable)}.
+     */
+    @Nullable
+    private T resultObject;
+
+    /**
+     * Highlighted text for this result.
+     * <p>
+     * This is provided by Compass to indicate which part of the result was matched by a query.
+     */
+    @Nullable
     private String highlightedText;
 
-    private Double score = 0.0;
-
-    private T resultObject; // can be null, at least initially, if the resultClass and objectId are provided.
+    /**
+     * Score for ranking this result among other results.
+     */
+    private double score = 1.0;
 
     /**
-     *
-     * @param searchResult
+     * Object representing the source of this result object.
+     * <p>
+     * This can simply be a {@link String}.
      */
-    public SearchResult( T searchResult ) {
-        if ( searchResult == null )
-            throw new IllegalArgumentException( "Search result cannot be null" );
-        this.resultObject = searchResult; // FIXME: maybe this is a bad idea. Eventually we would only want value objects.
-        //noinspection unchecked
-        this.resultClass = ( Class<? super T> ) ReflectionUtil.getBaseForImpl( searchResult.getClass() );
-        this.objectId = EntityUtils.getProperty( resultObject, "id" );
+    private final Object source;
+
+    public SearchResult( T resultObject, Object source ) {
+        if ( resultObject.getId() == null ) {
+            throw new IllegalArgumentException( "THe result object ID cannot be null." );
+        }
+        this.resultClass = resultObject.getClass();
+        this.resultId = resultObject.getId();
+        setResultObject( resultObject );
+        this.source = source;
     }
 
-    public SearchResult( T searchResult, double score ) {
-        this( searchResult );
-        this.score = score;
-    }
-
-    public SearchResult( T searchResult, double score, String matchingText ) {
-        this( searchResult );
-        this.score = score;
-        this.highlightedText = matchingText;
-    }
-
-    public SearchResult( Class<? super T> entityClass, Long entityId, double score, String matchingText ) {
+    /**
+     * Placeholder for provisional search results.
+     * <p>
+     * This is used when the class and ID is known beforehand, but the result hasn't been retrieve yet from persistent
+     * storage.
+     */
+    public SearchResult( Class<? extends Identifiable> entityClass, long entityId, Object source ) {
         this.resultClass = entityClass;
-        this.objectId = entityId;
-        this.score = score;
-        this.highlightedText = matchingText;
+        this.resultId = entityId;
+        this.source = source;
     }
 
     @Override
-    public int compareTo( SearchResult<T> o ) {
-        return -this.score.compareTo( o.score );
-    }
-
-    public String getHighlightedText() {
-        return highlightedText;
-    }
-
-    public void setHighlightedText( String highlightedText ) {
-        this.highlightedText = highlightedText;
+    public int compareTo( SearchResult<?> o ) {
+        return getComparator().compare( this, o );
     }
 
     /**
-     * @return the id for the underlying result entity.
+     * Set the result object.
+     *
+     * @throws IllegalArgumentException if the provided result object IDs differs from {@link #getResultId()}.
      */
-    public Long getResultId() {
-        return objectId;
-    }
-
-    public Class<? super T> getResultClass() {
-        return resultClass;
-    }
-
-    public T getResultObject() {
-        return this.resultObject;
-    }
-
-    /**
-     * @param resultObject if null, the resultObject is reset to null, but the class and id information will not be
-     *                     overwritten.
-     */
-    public void setResultObject( T resultObject ) {
+    public void setResultObject( @Nullable T resultObject ) {
+        if ( resultObject != null && resultObject.getId() == null ) {
+            throw new IllegalArgumentException( "The result object ID cannot be null." );
+        }
+        if ( resultObject != null && !Objects.equals( resultObject.getId(), this.resultId ) ) {
+            throw new IllegalArgumentException( "The result object cannot be replaced with one that has a different ID." );
+        }
         this.resultObject = resultObject;
-        if ( resultObject != null ) {
-            //noinspection unchecked
-            this.resultClass = ( Class<? super T> ) ReflectionUtil.getBaseForImpl( resultObject.getClass() );
-            this.objectId = EntityUtils.getProperty( resultObject, "id" );
-        }
-    }
-
-    public Double getScore() {
-        return score;
-    }
-
-    public void setScore( Double score ) {
-        this.score = score;
-    }
-
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + ( ( objectId == null ) ? 0 : objectId.hashCode() );
-        result = prime * result + ( ( resultClass == null ) ? 0 : resultClass.getName().hashCode() );
-        return result;
-    }
-
-    @Override
-    public boolean equals( Object obj ) {
-        if ( this == obj )
-            return true;
-        if ( obj == null )
-            return false;
-        if ( this.getClass() != obj.getClass() )
-            return false;
-        //noinspection unchecked
-        final SearchResult<T> other = ( SearchResult<T> ) obj;
-        if ( objectId == null ) {
-            if ( other.objectId != null )
-                return false;
-        } else if ( !objectId.equals( other.objectId ) )
-            return false;
-        if ( resultClass == null ) {
-            return other.resultClass == null;
-        }
-        return resultClass.getName().equals( other.resultClass.getName() );
-    }
-
-    @Override
-    public String toString() {
-        return this.getResultClass().getSimpleName() + "[ID=" + this.getResultId() + "] matched in: "
-                + ( this.highlightedText != null ? "'" + this.highlightedText + "'" : "(?)" );
     }
 }

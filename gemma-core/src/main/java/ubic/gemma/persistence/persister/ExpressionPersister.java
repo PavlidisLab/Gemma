@@ -271,7 +271,7 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
         bioAssay.setArrayDesignUsed( arrayDesignUsed );
 
         BioMaterial material = bioAssay.getSampleUsed();
-        Collection<FactorValue> savedFactorValues = new HashSet<>();
+        Set<FactorValue> savedFactorValues = new HashSet<>();
         for ( FactorValue factorValue : material.getFactorValues() ) {
             // Factors are not compositioned in any more, but by association with the ExperimentalFactor.
             this.fillInFactorValueAssociations( factorValue );
@@ -330,11 +330,11 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
         this.persistCollectionElements( annotations );
     }
 
-    private Collection<BioAssay> fillInExpressionExperimentDataVectorAssociations( ExpressionExperiment ee,
+    private Set<BioAssay> fillInExpressionExperimentDataVectorAssociations( ExpressionExperiment ee,
             ArrayDesignsForExperimentCache c ) {
         AbstractPersister.log.debug( "Filling in DesignElementDataVectors..." );
 
-        Collection<BioAssay> bioAssays = new HashSet<>();
+        Set<BioAssay> bioAssays = new HashSet<>();
         StopWatch timer = new StopWatch();
         timer.start();
         int count = 0;
@@ -374,16 +374,23 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
 
         factorValue.setExperimentalFactor( this.persistExperimentalFactor( factorValue.getExperimentalFactor() ) );
 
+        // validate categorical v.s. continuous factor values
+        FactorType factorType = factorValue.getExperimentalFactor().getType();
+        if ( factorType.equals( FactorType.CONTINUOUS ) && factorValue.getMeasurement() == null ) {
+            throw new IllegalStateException( "Continuous factor value must have a measurement." );
+        } else if ( factorType.equals( FactorType.CATEGORICAL ) && factorValue.getCharacteristics().isEmpty() ) {
+            throw new IllegalStateException( "Categorical factor value must have at least one characteristic." );
+        }
+
+        // sanity check
         if ( factorValue.getCharacteristics().size() > 0 && factorValue.getMeasurement() != null ) {
-            throw new IllegalStateException(
-                    "FactorValue can only have one of ontology entry or measurement." );
+            throw new IllegalStateException( "FactorValue can only have one of ontology entry or measurement." );
         }
 
         // measurement will cascade, but not unit.
         if ( factorValue.getMeasurement() != null && factorValue.getMeasurement().getUnit() != null ) {
             factorValue.getMeasurement().setUnit( this.persistUnit( factorValue.getMeasurement().getUnit() ) );
         }
-
     }
 
     private BioAssayDimension getBioAssayDimensionFromCacheOrCreate( DesignElementDataVector vector,
@@ -527,7 +534,7 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
      */
     private void processBioAssays( ExpressionExperiment expressionExperiment, ArrayDesignsForExperimentCache c ) {
 
-        Collection<BioAssay> alreadyFilled = new HashSet<>();
+        Set<BioAssay> alreadyFilled = new HashSet<>();
 
         if ( expressionExperiment.getRawExpressionDataVectors().isEmpty() ) {
             AbstractPersister.log.debug( "Filling in bioassays" );
@@ -547,7 +554,7 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
         this.persistCollectionElements( experimentalDesign.getTypes() );
 
         // Withhold to avoid premature cascade.
-        Collection<ExperimentalFactor> factors = experimentalDesign.getExperimentalFactors();
+        Set<ExperimentalFactor> factors = experimentalDesign.getExperimentalFactors();
         if ( factors == null ) {
             factors = new HashSet<>();
         }
@@ -577,16 +584,17 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
                 continue;
             }
 
+            Set<FactorValue> createdFactorValues = new HashSet<>( factorValues.size() );
             for ( FactorValue factorValue : factorValues ) {
                 factorValue.setExperimentalFactor( experimentalFactor );
                 this.fillInFactorValueAssociations( factorValue );
 
                 // this cascades from updates to the factor, but because auto-flush is off, we have to do this here to
                 // get ACLs populated.
-                factorValueDao.create( factorValue );
+                createdFactorValues.add( factorValueDao.create( factorValue ) );
             }
 
-            experimentalFactor.setFactorValues( factorValues );
+            experimentalFactor.setFactorValues( createdFactorValues );
 
             experimentalFactorDao.update( experimentalFactor );
 

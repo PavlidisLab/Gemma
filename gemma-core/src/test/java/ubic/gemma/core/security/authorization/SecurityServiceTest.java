@@ -22,7 +22,6 @@ import gemma.gsec.SecurityService;
 import gemma.gsec.acl.domain.AclGrantedAuthoritySid;
 import gemma.gsec.acl.domain.AclPrincipalSid;
 import gemma.gsec.authentication.UserDetailsImpl;
-import gemma.gsec.authentication.UserManager;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -34,6 +33,7 @@ import org.springframework.security.acls.model.MutableAcl;
 import org.springframework.security.acls.model.Sid;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import ubic.gemma.core.security.authentication.UserManager;
 import ubic.gemma.core.security.authorization.acl.AclTestUtils;
 import ubic.gemma.core.util.test.BaseSpringContextTest;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -69,7 +69,8 @@ public class SecurityServiceTest extends BaseSpringContextTest {
     private AclTestUtils aclTestUtils;
 
     @Before
-    public void setup() {
+    public void setUp() throws Exception {
+        super.setUp();
         this.arrayDesignName = "AD_" + RandomStringUtils.randomAlphabetic( 5 );
 
         // admin
@@ -85,7 +86,7 @@ public class SecurityServiceTest extends BaseSpringContextTest {
         CompositeSequence cs2 = CompositeSequence.Factory.newInstance();
         cs2.setName( SecurityServiceTest.compositeSequenceName2 );
 
-        Collection<CompositeSequence> col = new HashSet<>();
+        Set<CompositeSequence> col = new HashSet<>();
         col.add( cs1 );
         col.add( cs2 );
 

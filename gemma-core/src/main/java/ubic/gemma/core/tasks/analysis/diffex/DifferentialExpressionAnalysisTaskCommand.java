@@ -82,7 +82,6 @@ public class DifferentialExpressionAnalysisTaskCommand extends TaskCommand {
         super();
         this.expressionExperiment = ee;
         this.toRedo = toRedo;
-        this.remoteOnly = Settings.getBoolean( "gemma.grid.gridonly.diff" );
     }
 
     public DifferentialExpressionAnalysisTaskCommand( String taskId, boolean forceAnalysis,
@@ -91,7 +90,6 @@ public class DifferentialExpressionAnalysisTaskCommand extends TaskCommand {
         this.setTaskId( taskId );
         this.forceAnalysis = forceAnalysis;
         this.expressionExperiment = expressionExperiment;
-        this.remoteOnly = Settings.getBoolean( "gemma.grid.gridonly.diff" );
     }
 
     public AnalysisType getAnalysisType() {

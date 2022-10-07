@@ -28,6 +28,7 @@ import ubic.gemma.model.genome.Gene;
 
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Set;
 
 /**
  * A group of results for an ExpressionExperiment.
@@ -38,10 +39,10 @@ public class ExpressionAnalysisResultSet extends FactorAssociatedAnalysisResultS
     private Integer numberOfProbesTested;
     private Integer numberOfGenesTested;
     private FactorValue baselineGroup;
-    private Collection<DifferentialExpressionAnalysisResult> results = new java.util.HashSet<>();
+    private Set<DifferentialExpressionAnalysisResult> results = new HashSet<>();
     private DifferentialExpressionAnalysis analysis;
     private PvalueDistribution pvalueDistribution;
-    private Collection<HitListSize> hitListSizes = new HashSet<>();
+    private Set<HitListSize> hitListSizes = new HashSet<>();
 
     @Override
     public String toString() {
@@ -100,11 +101,11 @@ public class ExpressionAnalysisResultSet extends FactorAssociatedAnalysisResultS
         this.baselineGroup = baselineGroup;
     }
 
-    public Collection<HitListSize> getHitListSizes() {
+    public Set<HitListSize> getHitListSizes() {
         return this.hitListSizes;
     }
 
-    public void setHitListSizes( Collection<HitListSize> hitListSizes ) {
+    public void setHitListSizes( Set<HitListSize> hitListSizes ) {
         this.hitListSizes = hitListSizes;
     }
 
@@ -140,11 +141,11 @@ public class ExpressionAnalysisResultSet extends FactorAssociatedAnalysisResultS
     }
 
     @Override
-    public Collection<DifferentialExpressionAnalysisResult> getResults() {
+    public Set<DifferentialExpressionAnalysisResult> getResults() {
         return this.results;
     }
 
-    public void setResults( Collection<DifferentialExpressionAnalysisResult> results ) {
+    public void setResults( Set<DifferentialExpressionAnalysisResult> results ) {
         this.results = results;
     }
 
@@ -154,10 +155,10 @@ public class ExpressionAnalysisResultSet extends FactorAssociatedAnalysisResultS
             return new ExpressionAnalysisResultSet();
         }
 
-        public static ExpressionAnalysisResultSet newInstance( Collection<ExperimentalFactor> experimentalFactors,
+        public static ExpressionAnalysisResultSet newInstance( Set<ExperimentalFactor> experimentalFactors,
                 Integer numberOfProbesTested, java.lang.Integer numberOfGenesTested, FactorValue baselineGroup,
-                Collection<DifferentialExpressionAnalysisResult> results, DifferentialExpressionAnalysis analysis,
-                PvalueDistribution pvalueDistribution, Collection<HitListSize> hitListSizes ) {
+                Set<DifferentialExpressionAnalysisResult> results, DifferentialExpressionAnalysis analysis,
+                PvalueDistribution pvalueDistribution, Set<HitListSize> hitListSizes ) {
             final ExpressionAnalysisResultSet entity = new ExpressionAnalysisResultSet();
             entity.setExperimentalFactors( experimentalFactors );
             entity.setNumberOfProbesTested( numberOfProbesTested );

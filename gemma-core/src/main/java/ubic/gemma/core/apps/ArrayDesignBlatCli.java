@@ -86,7 +86,7 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
                 .build();
 
         options.addOption( taxonOption );
-        this.addThreadsOption( options );
+       // this.addThreadsOption( options );
         options.addOption( blatScoreThresholdOption );
         options.addOption( blatResultOption );
     }
@@ -103,9 +103,9 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
             this.blatResultFile = commandLine.getOptionValue( 'b' );
         }
 
-        if ( commandLine.hasOption( AbstractCLI.THREADS_OPTION ) ) {
-            this.numThreads = this.getIntegerOptionValue( commandLine, "threads" );
-        }
+//        if ( commandLine.hasOption( AbstractCLI.THREADS_OPTION ) ) {
+//            this.numThreads = this.getIntegerOptionValue( commandLine, "threads" );
+//        }
 
         if ( commandLine.hasOption( 's' ) ) {
             this.blatScoreThreshold = this.getDoubleOptionValue( commandLine, 's' );

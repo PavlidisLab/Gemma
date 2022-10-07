@@ -21,9 +21,9 @@ package ubic.gemma.persistence.service.genome.sequenceAnalysis;
 import org.hibernate.Criteria;
 import org.hibernate.Hibernate;
 import org.hibernate.SessionFactory;
-import org.hibernate.jdbc.Work;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResultValueObject;
@@ -54,28 +54,15 @@ public class BlatResultDaoImpl extends AbstractVoEnabledDao<BlatResult, BlatResu
     }
 
     @Override
+    @Transactional
     public Collection<BlatResult> create( final Collection<BlatResult> entities ) {
-        this.getSessionFactory().getCurrentSession().doWork( new Work() {
-            @Override
-            public void execute( Connection connection ) {
-                for ( BlatResult entity : entities ) {
-                    BlatResultDaoImpl.this.create( entity );
-                }
-            }
-        } );
-        return entities;
+        return super.create( entities );
     }
 
     @Override
+    @Transactional
     public void update( final Collection<BlatResult> entities ) {
-        this.getSessionFactory().getCurrentSession().doWork( new Work() {
-            @Override
-            public void execute( Connection connection ) {
-                for ( BlatResult entity : entities ) {
-                    BlatResultDaoImpl.this.update( entity );
-                }
-            }
-        } );
+        super.update( entities );
     }
 
     @Override
@@ -83,11 +70,11 @@ public class BlatResultDaoImpl extends AbstractVoEnabledDao<BlatResult, BlatResu
         if ( blatResult.getId() == null )
             return blatResult;
         return ( BlatResult ) this.getHibernateTemplate().findByNamedParam(
-                "select b from BlatResult b left join fetch b.querySequence qs left join fetch b.targetSequence ts  "
-                        + " left join fetch b.searchedDatabase left join fetch b.targetChromosome tc left join fetch tc.taxon left join fetch tc.sequence"
-                        + " left join fetch qs.taxon t "
-                        + " left join fetch t.externalDatabase left join fetch qs.sequenceDatabaseEntry s "
-                        + " left join fetch s.externalDatabase" + " where b.id = :id", "id", blatResult.getId() )
+                        "select b from BlatResult b left join fetch b.querySequence qs left join fetch b.targetSequence ts  "
+                                + " left join fetch b.searchedDatabase left join fetch b.targetChromosome tc left join fetch tc.taxon left join fetch tc.sequence"
+                                + " left join fetch qs.taxon t "
+                                + " left join fetch t.externalDatabase left join fetch qs.sequenceDatabaseEntry s "
+                                + " left join fetch s.externalDatabase" + " where b.id = :id", "id", blatResult.getId() )
                 .iterator().next();
     }
 
@@ -130,7 +117,7 @@ public class BlatResultDaoImpl extends AbstractVoEnabledDao<BlatResult, BlatResu
     }
 
     @Override
-    public BlatResultValueObject loadValueObject( BlatResult entity ) {
+    protected BlatResultValueObject doLoadValueObject( BlatResult entity ) {
         return new BlatResultValueObject( entity );
     }
 

@@ -33,6 +33,7 @@ import ubic.gemma.persistence.service.expression.experiment.ExpressionExperiment
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedList;
+import java.util.Set;
 
 import static org.junit.Assert.*;
 
@@ -56,7 +57,8 @@ public class ExpressionExperimentSetServiceTest extends BaseSpringContextTest {
     private ExpressionExperimentSet eeSetAutoGen = null;
 
     @Before
-    public void setUp() {
+    public void setUp() throws Exception {
+        super.setUp();
 
         // need persistent entities so that experiment's taxon can be
         // queried from database during methods being tested
@@ -100,7 +102,7 @@ public class ExpressionExperimentSetServiceTest extends BaseSpringContextTest {
 
         String newName = "newName";
         String newDesc = "newDesc";
-        Collection<BioAssaySet> newMembers = new HashSet<>();
+        Set<BioAssaySet> newMembers = new HashSet<>();
         newMembers.add( ee1 );
 
         eeSet.setName( newName );
@@ -125,7 +127,7 @@ public class ExpressionExperimentSetServiceTest extends BaseSpringContextTest {
 
     @Test(expected = Exception.class)
     public void testAddingExperimentOfWrongTaxonUpdate() {
-        Collection<BioAssaySet> newMembers = new LinkedList<>();
+        Set<BioAssaySet> newMembers = new HashSet<>();
         newMembers.add( ee1 );
         newMembers.add( eeMouse );
         eeSet.setExperiments( newMembers );

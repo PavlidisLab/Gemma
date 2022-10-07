@@ -29,6 +29,7 @@ import org.springframework.orm.hibernate3.HibernateTemplate;
 import org.springframework.stereotype.Repository;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.model.genome.TaxonValueObject;
 import ubic.gemma.model.genome.gene.DatabaseBackedGeneSetValueObject;
 import ubic.gemma.model.genome.gene.GeneSet;
 import ubic.gemma.model.genome.gene.GeneSetMember;
@@ -254,8 +255,7 @@ public class GeneSetDaoImpl extends AbstractDao<GeneSet> implements GeneSetDao {
         dvo.setName( geneSet.getName() );
         dvo.setDescription( geneSet.getDescription() );
         if ( taxon != null ) {
-            dvo.setTaxonId( taxon.getId() );
-            dvo.setTaxonName( taxon.getCommonName() );
+            dvo.setTaxon( new TaxonValueObject( taxon ) );
         } else {
             // NPE bug 60 - happens if we have leftover (empty) gene sets for taxa that were removed.
             log.warn( "No taxon found for gene set " + geneSet );

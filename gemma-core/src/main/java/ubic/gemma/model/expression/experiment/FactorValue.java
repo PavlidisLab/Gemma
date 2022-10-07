@@ -26,7 +26,7 @@ import ubic.gemma.model.common.measurement.Measurement;
 
 import javax.persistence.Transient;
 import java.io.Serializable;
-import java.util.Collection;
+import java.util.Set;
 
 /**
  * The value for a ExperimentalFactor, representing a specific instance of the factor, such as "10 ug/kg" or "mutant"
@@ -38,12 +38,16 @@ public class FactorValue implements Identifiable, Serializable, gemma.gsec.model
      */
     private static final long serialVersionUID = -3783172994360698631L;
     private ExpressionExperiment securityOwner = null;
+    /**
+     * Use {@link #characteristics} instead.
+     */
+    @Deprecated
     private String value;
     private Boolean isBaseline;
     private Long id;
     private ExperimentalFactor experimentalFactor;
     private Measurement measurement;
-    private Collection<Characteristic> characteristics = new java.util.HashSet<>();
+    private Set<Characteristic> characteristics = new java.util.HashSet<>();
 
     /**
      * No-arg constructor added to satisfy javabean contract
@@ -139,11 +143,11 @@ public class FactorValue implements Identifiable, Serializable, gemma.gsec.model
         this.securityOwner = ee;
     }
 
-    public Collection<Characteristic> getCharacteristics() {
+    public Set<Characteristic> getCharacteristics() {
         return this.characteristics;
     }
 
-    public void setCharacteristics( Collection<Characteristic> characteristics ) {
+    public void setCharacteristics( Set<Characteristic> characteristics ) {
         this.characteristics = characteristics;
     }
 
@@ -175,10 +179,18 @@ public class FactorValue implements Identifiable, Serializable, gemma.gsec.model
         this.measurement = measurement;
     }
 
+    /**
+     * @deprecated use {@link #getCharacteristics()} instead.
+     */
+    @Deprecated
     public String getValue() {
         return this.value;
     }
 
+    /**
+     * @deprecated use {@link #setCharacteristics(Set)} ()} instead.
+     */
+    @Deprecated
     public void setValue( String value ) {
         this.value = value;
     }

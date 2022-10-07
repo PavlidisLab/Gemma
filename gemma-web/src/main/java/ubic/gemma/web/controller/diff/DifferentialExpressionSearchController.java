@@ -237,7 +237,7 @@ public class DifferentialExpressionSearchController {
         final DifferentialExpressionSearchTaskCommand taskCommand = new DifferentialExpressionSearchTaskCommand( genes,
                 experiments, gsvo.getName(), eevo.getName() );
 
-        String taskId = taskRunningService.submitLocalTask( taskCommand );
+        String taskId = taskRunningService.submitTaskCommand( taskCommand );
 
         log.info( "Scheduled search with task=" + taskId );
 

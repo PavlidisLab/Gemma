@@ -25,6 +25,7 @@ import ubic.gemma.model.common.AbstractAuditable;
 
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Set;
 
 /**
  * An organized group of researchers with an identifiable leader and group members.
@@ -37,8 +38,8 @@ public class UserGroup extends AbstractAuditable implements gemma.gsec.model.Use
      * The serial version UID of this class. Needed for serialization.
      */
     private static final long serialVersionUID = 5795744069086222179L;
-    private Collection<User> groupMembers = new HashSet<>();
-    private Collection<GroupAuthority> authorities = new HashSet<>();
+    private Set<User> groupMembers = new HashSet<>();
+    private Set<GroupAuthority> authorities = new HashSet<>();
 
     /**
      * No-arg constructor added to satisfy javabean contract
@@ -48,26 +49,26 @@ public class UserGroup extends AbstractAuditable implements gemma.gsec.model.Use
 
     @SuppressWarnings({ "unchecked", "JpaAttributeMemberSignatureInspection" })
     @Override
-    public Collection<GroupAuthority> getAuthorities() {
+    public Set<GroupAuthority> getAuthorities() {
         return this.authorities;
     }
 
     @SuppressWarnings("unchecked")
     @Override
     public <T extends GroupAuthority> void setAuthorities( Collection<T> authorities ) {
-        this.authorities = ( Collection<GroupAuthority> ) authorities;
+        this.authorities = ( Set<GroupAuthority> ) authorities;
     }
 
     @SuppressWarnings({ "unchecked", "JpaAttributeMemberSignatureInspection" })
     @Override
-    public Collection<User> getGroupMembers() {
+    public Set<User> getGroupMembers() {
         return this.groupMembers;
     }
 
     @SuppressWarnings("unchecked")
     @Override
     public <T extends User> void setGroupMembers( Collection<T> groupMembers ) {
-        this.groupMembers = ( Collection<User> ) groupMembers;
+        this.groupMembers = ( Set<User> ) groupMembers;
     }
 
     public static final class Factory {

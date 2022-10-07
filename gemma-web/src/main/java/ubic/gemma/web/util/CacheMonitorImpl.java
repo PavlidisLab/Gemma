@@ -84,6 +84,8 @@ public class CacheMonitorImpl implements CacheMonitor {
         int stop = 0;
         for ( String cacheName : cacheNames ) {
             // Terracotta clustered?
+            // FIXME: this is not supported anymore, so it will always result in false, but there's no harm in looking
+            // it up either way
             boolean isTerracottaClustered = cacheManager.getCache( cacheName ).getCacheConfiguration().isTerracottaClustered();
             buf.append( "Distributed caching is " );
             buf.append( isTerracottaClustered ? "enabled" : "disabled" );

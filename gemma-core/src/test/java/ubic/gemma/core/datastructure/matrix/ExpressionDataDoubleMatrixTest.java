@@ -90,7 +90,8 @@ public class ExpressionDataDoubleMatrixTest extends AbstractGeoServiceTest {
     private OutlierFlaggingService sampleRemoveService;
 
     @Before
-    public void setup() throws Exception {
+    public void setUp() throws Exception {
+        super.setUp();
 
         Collection<ArrayDesign> ads = new HashSet<>();
 
@@ -266,7 +267,7 @@ public class ExpressionDataDoubleMatrixTest extends AbstractGeoServiceTest {
         de2.setArrayDesign( ad );
         vector2.setDesignElement( de2 );
 
-        Collection<RawExpressionDataVector> eeVectors = new LinkedHashSet<>();
+        Set<RawExpressionDataVector> eeVectors = new LinkedHashSet<>();
         eeVectors.add( vector1 );
         eeVectors.add( vector2 );
 

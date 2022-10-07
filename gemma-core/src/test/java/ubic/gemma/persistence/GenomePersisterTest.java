@@ -29,8 +29,8 @@ import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.persistence.service.genome.biosequence.BioSequenceService;
 
-import java.util.Collection;
 import java.util.HashSet;
+import java.util.Set;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -50,7 +50,7 @@ public class GenomePersisterTest extends BaseSpringContextTest {
         gene.setName( RandomStringUtils.randomAlphabetic( 10 ) );
         gene.setNcbiGeneId( Integer.parseInt( RandomStringUtils.randomNumeric( 8 ) ) );
 
-        Collection<GeneProduct> gps = new HashSet<>();
+        Set<GeneProduct> gps = new HashSet<>();
         for ( int i = 0; i < 10; i++ ) {
             GeneProduct gp = GeneProduct.Factory.newInstance();
             gp.setName( RandomStringUtils.randomAlphabetic( 10 ) );

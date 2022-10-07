@@ -15,7 +15,6 @@
 package ubic.gemma.core.job;
 
 import gemma.gsec.authentication.UserDetailsImpl;
-import gemma.gsec.authentication.UserManager;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.junit.Assume;
@@ -28,6 +27,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import ubic.gemma.core.job.executor.common.ExecutingTask;
+import ubic.gemma.core.security.authentication.UserManager;
 import ubic.gemma.core.tasks.AbstractTask;
 import ubic.gemma.core.tasks.Task;
 import ubic.gemma.core.util.test.BaseSpringContextTest;
@@ -53,7 +53,8 @@ public class ExecutingTaskTest extends BaseSpringContextTest {
     UserManager userManager;
 
     @Before
-    public void setUp() {
+    public void setUp() throws Exception {
+        super.setUp();
         Assume.assumeTrue( "These tests must be run with -Dlog4j1.compatibility=true",
                 Objects.equals( System.getProperty( "log4j1.compatibility" ), "true" ) );
     }

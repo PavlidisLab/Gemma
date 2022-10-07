@@ -36,6 +36,7 @@ public interface FactorValueDao extends FilteringVoEnabledDao<FactorValue, Facto
      * @param valuePrefix value prefix
      * @return collection of factor values
      */
+    @Deprecated
     Collection<FactorValue> findByValue( String valuePrefix );
 
 }

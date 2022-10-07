@@ -23,6 +23,7 @@ import ubic.gemma.model.analysis.expression.ExpressionAnalysis;
 
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Set;
 
 /**
  * Represents an analysis that combines the results of other analyses of differential expression.
@@ -32,8 +33,8 @@ public class GeneDifferentialExpressionMetaAnalysis extends ExpressionAnalysis i
     private static final long serialVersionUID = -2588180973962410595L;
     private Integer numGenesAnalyzed;
     private Double qvalueThresholdForStorage;
-    private Collection<ExpressionAnalysisResultSet> resultSetsIncluded = new HashSet<>();
-    private Collection<GeneDifferentialExpressionMetaAnalysisResult> results = new HashSet<>();
+    private Set<ExpressionAnalysisResultSet> resultSetsIncluded = new HashSet<>();
+    private Set<GeneDifferentialExpressionMetaAnalysisResult> results = new HashSet<>();
 
     /**
      * @return How many genes were included in the meta-analysis. This does not mean that all genes were analyzed in all the
@@ -58,19 +59,19 @@ public class GeneDifferentialExpressionMetaAnalysis extends ExpressionAnalysis i
         this.qvalueThresholdForStorage = qvalueThresholdForStorage;
     }
 
-    public Collection<GeneDifferentialExpressionMetaAnalysisResult> getResults() {
+    public Set<GeneDifferentialExpressionMetaAnalysisResult> getResults() {
         return this.results;
     }
 
-    public void setResults( Collection<GeneDifferentialExpressionMetaAnalysisResult> results ) {
+    public void setResults( Set<GeneDifferentialExpressionMetaAnalysisResult> results ) {
         this.results = results;
     }
 
-    public Collection<ExpressionAnalysisResultSet> getResultSetsIncluded() {
+    public Set<ExpressionAnalysisResultSet> getResultSetsIncluded() {
         return this.resultSetsIncluded;
     }
 
-    public void setResultSetsIncluded( Collection<ExpressionAnalysisResultSet> resultSetsIncluded ) {
+    public void setResultSetsIncluded( Set<ExpressionAnalysisResultSet> resultSetsIncluded ) {
         this.resultSetsIncluded = resultSetsIncluded;
     }
 

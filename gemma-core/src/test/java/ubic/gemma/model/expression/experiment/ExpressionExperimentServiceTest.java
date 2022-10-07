@@ -63,7 +63,8 @@ public class ExpressionExperimentServiceTest extends BaseSpringContextTest {
     private boolean persisted = false;
 
     @Before
-    public void setup() {
+    public void setUp() throws Exception {
+        super.setUp();
 
         if ( !persisted ) {
             ee = this.getTestPersistentCompleteExpressionExperiment( false );
@@ -143,12 +144,10 @@ public class ExpressionExperimentServiceTest extends BaseSpringContextTest {
 
     @Test
     public void testGetByTaxon() {
-        ExpressionExperimentService eeService = this.getBean( ExpressionExperimentService.class );
-
         Taxon taxon = taxonService.findByCommonName( "mouse" );
         Collection<ExpressionExperiment> list = expressionExperimentService.findByTaxon( taxon );
         assertNotNull( list );
-        Taxon checkTaxon = eeService.getTaxon( list.iterator().next() );
+        Taxon checkTaxon = expressionExperimentService.getTaxon( list.iterator().next() );
         assertEquals( taxon, checkTaxon );
 
     }
@@ -231,11 +230,13 @@ public class ExpressionExperimentServiceTest extends BaseSpringContextTest {
                 .hasFieldOrPropertyWithValue( "operator", ObjectFilter.Operator.greaterOrEq )
                 .hasFieldOrPropertyWithValue( "requiredValue", 4 );
 
+        Calendar calendar = new GregorianCalendar( 2020, Calendar.JANUARY, 10 );
+        calendar.setTimeZone( TimeZone.getTimeZone( "UTC" ) );
         assertThat( expressionExperimentService.getObjectFilter( "lastUpdated", ObjectFilter.Operator.greaterOrEq, "2020-01-10" ) )
                 .hasFieldOrPropertyWithValue( "objectAlias", "s" )
                 .hasFieldOrPropertyWithValue( "propertyName", "lastUpdated" )
                 .hasFieldOrPropertyWithValue( "operator", ObjectFilter.Operator.greaterOrEq )
-                .hasFieldOrPropertyWithValue( "requiredValue", new GregorianCalendar( 2020, Calendar.JANUARY, 10 ).getTime() );
+                .hasFieldOrPropertyWithValue( "requiredValue", calendar.getTime() );
 
         assertThat( expressionExperimentService.getObjectFilter( "troubled", ObjectFilter.Operator.eq, "true" ) )
                 .hasFieldOrPropertyWithValue( "objectAlias", "s" )

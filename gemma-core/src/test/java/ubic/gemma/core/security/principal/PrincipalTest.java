@@ -19,7 +19,7 @@
 package ubic.gemma.core.security.principal;
 
 import gemma.gsec.authentication.UserDetailsImpl;
-import gemma.gsec.authentication.UserManager;
+import ubic.gemma.core.security.authentication.UserManager;
 import ubic.gemma.core.util.test.BaseSpringContextTest;
 
 import org.junit.Before;

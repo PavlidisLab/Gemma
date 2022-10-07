@@ -132,7 +132,7 @@ public class ExperimentalDesignViewCli extends AbstractCLIContextCLI {
                         continue;
                     }
 
-                    log.info( "           " + fv.getFvSummary() );
+                    log.info( "           " + fv.getSummary() );
 
                 }
             }

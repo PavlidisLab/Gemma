@@ -15,6 +15,8 @@
 package ubic.gemma.core.analysis.service;
 
 import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalysisConfig;
+import ubic.gemma.core.analysis.preprocess.filter.FilteringException;
+import ubic.gemma.core.analysis.preprocess.filter.NoRowsLeftAfterFilteringException;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
@@ -119,7 +121,7 @@ public interface ExpressionDataFileService extends TsvFileService<ExpressionExpe
     @SuppressWarnings("UnusedReturnValue")
     // Possible external use
     File writeDataFile( ExpressionExperiment ee, boolean filtered, String fileName, boolean compress )
-            throws IOException;
+            throws IOException, FilteringException;
 
     /**
      * Write raw expression data to a given writer.
@@ -155,7 +157,7 @@ public interface ExpressionDataFileService extends TsvFileService<ExpressionExpe
      * @param ee         the experiment
      * @return file
      */
-    File writeOrLocateDataFile( ExpressionExperiment ee, boolean forceWrite, boolean filtered );
+    File writeOrLocateDataFile( ExpressionExperiment ee, boolean forceWrite, boolean filtered ) throws FilteringException;
 
     /**
      * Locate or create a new data file for the given quantitation type. The output will include gene information if it
@@ -193,7 +195,7 @@ public interface ExpressionDataFileService extends TsvFileService<ExpressionExpe
      * @param forceWrite whether to force write
      * @return file
      */
-    File writeOrLocateJSONDataFile( ExpressionExperiment ee, boolean forceWrite, boolean filtered );
+    File writeOrLocateJSONDataFile( ExpressionExperiment ee, boolean forceWrite, boolean filtered ) throws FilteringException;
 
     File writeOrLocateJSONDataFile( QuantitationType type, boolean forceWrite );
 

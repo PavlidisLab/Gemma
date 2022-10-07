@@ -7,7 +7,6 @@ import ubic.gemma.web.services.rest.util.OpenApiUtils;
 import ubic.gemma.web.services.rest.util.ResponseErrorObject;
 import ubic.gemma.web.services.rest.util.ServletUtils;
 import ubic.gemma.web.services.rest.util.WellComposedErrorBody;
-import ubic.gemma.web.services.rest.util.args.FilterArg;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.http.HttpServletRequest;
@@ -22,21 +21,21 @@ import javax.ws.rs.ext.Provider;
  * @author poirigui
  */
 @Provider
-public class QueryExceptionMapper implements ExceptionMapper<QueryException> {
-
-    private static Log log = LogFactory.getLog( QueryExceptionMapper.class.getName() );
-
-    @Context
-    private HttpServletRequest request;
-
-    @Context
-    private ServletConfig servletConfig;
+public class QueryExceptionMapper extends AbstractExceptionMapper<QueryException> {
 
     @Override
-    public Response toResponse( QueryException e ) {
-        log.error( "Unknown query exception while serving request: " + ServletUtils.summarizeRequest( request ) + ".", e );
-        WellComposedErrorBody error = new WellComposedErrorBody( Response.Status.BAD_REQUEST,
-                FilterArg.ERROR_MSG_MALFORMED_REQUEST );
-        return Response.status( error.getStatus() ).entity( new ResponseErrorObject( error, OpenApiUtils.getOpenApi( servletConfig ) ) ).build();
+    protected Response.Status getStatus( QueryException exception ) {
+        return Response.Status.BAD_REQUEST;
+    }
+
+    @Override
+    protected WellComposedErrorBody getWellComposedErrorBody( QueryException exception ) {
+        return new WellComposedErrorBody( Response.Status.BAD_REQUEST,
+                "Entity does not contain the given property, or the provided value can not be converted to the property type." );
+    }
+
+    @Override
+    protected boolean logException() {
+        return true;
     }
 }

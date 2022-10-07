@@ -1,5 +1,7 @@
 package ubic.gemma.web.services.rest.util.args;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.core.association.phenotype.PhenotypeAssociationManagerService;
 import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.core.ontology.providers.GeneOntologyService;
@@ -11,11 +13,10 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.GeneEvidenceValueObject;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
+import ubic.gemma.web.services.rest.util.MalformedArgException;
 
-import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -23,9 +24,9 @@ import java.util.stream.Collectors;
  *
  * @author tesarst
  */
+@Schema(oneOf = { GeneEnsemblIdArg.class, GeneNcbiIdArg.class, GeneSymbolArg.class })
 public abstract class GeneArg<T> extends AbstractEntityArg<T, Gene, GeneService> {
 
-    private static final String ERROR_MSG_TAXON = "Gene with given %s does not exist on this taxon";
     private static final String ENSEMBL_ID_REGEX = "(ENSTBE|MGP_BALBcJ_|MGP_PWKPhJ_|ENSMUS|MGP_129S1SvImJ_|"
             + "ENSSHA|ENSPFO|ENSRNO|FB|MGP_NODShiLtJ_|ENSLAF|ENSOAN|MGP_FVBNJ_|ENSDAR|ENSSSC|ENSGGO|ENSAMX|"
             + "ENSXMA|ENSCHO|ENSGAC|ENSDOR|MGP_CASTEiJ_|ENSGMO|ENSTSY|ENSAME|ENSLOC|MGP_LPJ_|ENSCPO|ENSPAN|"
@@ -47,6 +48,9 @@ public abstract class GeneArg<T> extends AbstractEntityArg<T, Gene, GeneService>
      */
     @SuppressWarnings("unused")
     public static GeneArg<?> valueOf( final String s ) {
+        if ( StringUtils.isBlank( s ) ) {
+            throw new MalformedArgException( "Gene identifier cannot be null or empty." );
+        }
         try {
             return new GeneNcbiIdArg( Integer.parseInt( s.trim() ) );
         } catch ( NumberFormatException e ) {
@@ -116,18 +120,6 @@ public abstract class GeneArg<T> extends AbstractEntityArg<T, Gene, GeneService>
             GeneOntologyService geneOntologyService ) {
         Gene gene = this.getEntity( geneService );
         return geneOntologyService.getValueObjects( gene );
-    }
-
-    /**
-     * @return the name of the identifier that the GeneArg represents.
-     */
-    abstract String getIdentifierName();
-
-    /**
-     * @return the error message for when the null cause is gene not existing on a taxon.
-     */
-    String getTaxonError() {
-        return String.format( GeneArg.ERROR_MSG_TAXON, this.getIdentifierName() );
     }
 
     /**

@@ -47,7 +47,8 @@ public class ArrayDesignReportServiceTest extends BaseSpringContextTest {
     ArrayDesignReportService arrayDesignReportService;
 
     @Before
-    public void setup() throws Exception {
+    public void setUp() throws Exception {
+        super.setUp();
         if ( !ArrayDesignReportServiceTest.persisted ) {
             ArrayDesignReportServiceTest.ad = this
                     .getTestPersistentArrayDesign( 5, true, false, false ); // not read only.

@@ -64,6 +64,9 @@ public class RNASeqBatchInfoPopulationTest extends AbstractGeoServiceTest {
     @Autowired
     private AuditEventService auditService;
 
+    @Autowired
+    private GeoService geoService;
+
     @Test
     public void testParseHeaders() {
         BatchInfoPopulationHelperServiceImpl s = new BatchInfoPopulationHelperServiceImpl();
@@ -92,7 +95,8 @@ public class RNASeqBatchInfoPopulationTest extends AbstractGeoServiceTest {
     }
 
     @Before
-    public void setup() throws Exception {
+    public void setUp() throws Exception {
+        super.setUp();
         Settings.setProperty( "gemma.fastq.headers.dir",
                 new File( getClass().getResource( "/data/analysis/preprocess/batcheffects/fastqheaders" ).toURI() ).getAbsolutePath() );
     }
@@ -105,7 +109,6 @@ public class RNASeqBatchInfoPopulationTest extends AbstractGeoServiceTest {
     @Test
     public void testGetBatches() throws Exception {
 
-        GeoService geoService = this.getBean( GeoService.class );
         geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( this.getTestFileBasePath() ) );
 
         Collection<ExpressionExperiment> ees = eeService.findByAccession( "GSE71229" );
@@ -146,8 +149,6 @@ public class RNASeqBatchInfoPopulationTest extends AbstractGeoServiceTest {
      */
     @Test
     public void testGSE14285OneBatch() throws Exception {
-        GeoService geoService = this.getBean( GeoService.class );
-
         geoService.setGeoDomainObjectGenerator(
                 new GeoDomainObjectGeneratorLocal( FileTools.resourceToPath( "/data/analysis/preprocess/batcheffects/" ) ) );
         try {
@@ -172,8 +173,6 @@ public class RNASeqBatchInfoPopulationTest extends AbstractGeoServiceTest {
      */
     @Test
     public void testGSE156689NoBatchinfo() throws Exception {
-        GeoService geoService = this.getBean( GeoService.class );
-
         geoService.setGeoDomainObjectGenerator(
                 new GeoDomainObjectGeneratorLocal( FileTools.resourceToPath( "/data/analysis/preprocess/batcheffects/" ) ) );
         try {

@@ -19,9 +19,11 @@
 package ubic.gemma.core.loader.expression.geo.service;
 
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.loader.expression.geo.model.GeoRecord;
 import ubic.gemma.core.util.test.BaseSpringContextTest;
+import ubic.gemma.core.util.test.category.GeoTest;
 
 import java.net.UnknownHostException;
 import java.util.List;
@@ -31,6 +33,7 @@ import static org.junit.Assert.*;
 /**
  * @author paul
  */
+@Category(GeoTest.class)
 public class GeoBrowserServiceTest extends BaseSpringContextTest {
     @Autowired
     GeoBrowserService gbs;

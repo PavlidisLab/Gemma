@@ -321,12 +321,14 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractCLICon
             return ees;
         }
 
-        List<SearchResult<?>> eeSearchResults = searchService
-                .search( SearchSettings.expressionExperimentSearch( query ) ).get( ExpressionExperiment.class );
+        Collection<SearchResult<ExpressionExperiment>> eeSearchResults = searchService
+                .search( SearchSettings.expressionExperimentSearch( query ), ExpressionExperiment.class );
 
         // Filter out all the ee that are not of correct taxon
-        for ( SearchResult sr : eeSearchResults ) {
-            ExpressionExperiment ee = ( ExpressionExperiment ) sr.getResultObject();
+        for ( SearchResult<ExpressionExperiment> sr : eeSearchResults ) {
+            ExpressionExperiment ee = sr.getResultObject();
+            if ( ee == null )
+                continue; // ee no longer valid, could be an outdated compass hit
             Taxon t = eeService.getTaxon( ee );
             if ( t != null && t.getCommonName().equalsIgnoreCase( taxon.getCommonName() ) ) {
                 ees.add( ee );

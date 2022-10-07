@@ -2,6 +2,7 @@ package ubic.gemma.persistence.service.common.auditAndSecurity.curation;
 
 import gemma.gsec.util.SecurityUtil;
 import org.hibernate.SessionFactory;
+import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.curation.AbstractCuratableValueObject;
 import ubic.gemma.model.common.auditAndSecurity.curation.Curatable;
@@ -29,13 +30,9 @@ public abstract class AbstractCuratableDao<C extends Curatable, VO extends Abstr
     }
 
     @Override
+    @Transactional
     public Collection<C> create( final Collection<C> entities ) {
-        this.getSessionFactory().getCurrentSession().doWork( connection -> {
-            for ( C entity : entities ) {
-                AbstractCuratableDao.this.create( entity );
-            }
-        } );
-        return entities;
+        return super.create( entities );
     }
 
     @Override

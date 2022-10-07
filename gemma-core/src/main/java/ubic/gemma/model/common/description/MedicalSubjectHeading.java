@@ -19,17 +19,19 @@
 package ubic.gemma.model.common.description;
 
 import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
 
 public class MedicalSubjectHeading extends BibRefAnnotationImpl {
 
     private static final long serialVersionUID = 7820807342851172028L;
-    private Collection<MedicalSubjectHeading> qualifiers = new java.util.HashSet<>();
+    private Set<MedicalSubjectHeading> qualifiers = new HashSet<>();
 
-    public Collection<MedicalSubjectHeading> getQualifiers() {
+    public Set<MedicalSubjectHeading> getQualifiers() {
         return this.qualifiers;
     }
 
-    public void setQualifiers( Collection<MedicalSubjectHeading> qualifiers ) {
+    public void setQualifiers( Set<MedicalSubjectHeading> qualifiers ) {
         this.qualifiers = qualifiers;
     }
 

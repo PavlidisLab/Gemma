@@ -39,6 +39,7 @@ import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Set;
 
 /**
  * Service for managing gene sets
@@ -237,7 +238,7 @@ public class GeneSetServiceImpl implements GeneSetService {
                         + " genes fetched" );
             }
 
-            Collection<GeneSetMember> geneMembers = new HashSet<>();
+            Set<GeneSetMember> geneMembers = new HashSet<>();
             for ( Gene g : genes ) {
                 GeneSetMember gmember = GeneSetMember.Factory.newInstance();
                 gmember.setGene( g );

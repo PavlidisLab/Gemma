@@ -18,8 +18,6 @@
  */
 package ubic.gemma.core.security.audit;
 
-import gemma.gsec.authentication.UserManager;
-import gemma.gsec.model.User;
 import gemma.gsec.util.CrudUtils;
 import gemma.gsec.util.CrudUtilsImpl;
 import org.aspectj.lang.JoinPoint;
@@ -37,9 +35,11 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Component;
+import ubic.gemma.core.security.authentication.UserManager;
 import ubic.gemma.core.security.authorization.acl.AclAdvice;
 import ubic.gemma.model.common.AbstractAuditable;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
+import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditHelper;

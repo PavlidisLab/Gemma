@@ -1,5 +1,6 @@
 package ubic.gemma.persistence.service;
 
+import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.persistence.util.ObjectFilter;
@@ -23,12 +24,22 @@ public interface BaseVoEnabledService<O extends Identifiable, VO extends Identif
     VO loadValueObject( O entity );
 
     /**
+     * Load a value object by its ID.
+     */
+    VO loadValueObjectById( Long entityId );
+
+    /**
      * Loads value objects for all given entities.
      *
      * @param  entities the entities to be converted to value objects
      * @return          a collection of value objects representing he given entities.
      */
     List<VO> loadValueObjects( Collection<O> entities );
+
+    /**
+     * Load value objects by a given collection of IDs.
+     */
+    List<VO> loadValueObjectsByIds( Collection<Long> entityIds );
 
     /**
      * Loads value objects representing all the entities of specific type.

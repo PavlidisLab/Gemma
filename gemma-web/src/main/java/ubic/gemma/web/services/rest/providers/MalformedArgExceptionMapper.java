@@ -15,20 +15,19 @@ import javax.ws.rs.ext.Provider;
 
 @Provider
 @CommonsLog
-public class MalformedArgExceptionMapper implements ExceptionMapper<MalformedArgException> {
-
-    @Context
-    private ServletConfig servletConfig;
+public class MalformedArgExceptionMapper extends AbstractExceptionMapper<MalformedArgException> {
 
     @Override
-    public Response toResponse( MalformedArgException e ) {
-        WellComposedErrorBody body = new WellComposedErrorBody( Response.Status.BAD_REQUEST, e.getMessage() );
-        if ( e.getCause() != null ) {
-            WellComposedErrorBody.addExceptionFields( body, e.getCause() );
+    protected Response.Status getStatus( MalformedArgException exception ) {
+        return Response.Status.BAD_REQUEST;
+    }
+
+    @Override
+    protected WellComposedErrorBody getWellComposedErrorBody( MalformedArgException exception ) {
+        WellComposedErrorBody body = new WellComposedErrorBody( Response.Status.BAD_REQUEST, exception.getMessage() );
+        if ( exception.getCause() != null ) {
+            WellComposedErrorBody.addExceptionFields( body, exception.getCause() );
         }
-        return Response.status( body.getStatus() )
-                .type( MediaType.APPLICATION_JSON_TYPE )
-                .entity( new ResponseErrorObject( body, OpenApiUtils.getOpenApi( servletConfig ) ) )
-                .build();
+        return body;
     }
 }

@@ -7,8 +7,13 @@ import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Projections;
 import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.common.Identifiable;
-import ubic.gemma.persistence.util.*;
+import ubic.gemma.persistence.util.Filters;
+import ubic.gemma.persistence.util.ObjectFilterCriteriaUtils;
+import ubic.gemma.persistence.util.Slice;
+import ubic.gemma.persistence.util.Sort;
 
+import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -22,6 +27,7 @@ import java.util.concurrent.TimeUnit;
  *
  * @author poirigui
  */
+@ParametersAreNonnullByDefault
 public abstract class AbstractCriteriaFilteringVoEnabledDao<O extends Identifiable, VO extends IdentifiableValueObject<O>> extends AbstractFilteringVoEnabledDao<O, VO> {
 
     protected AbstractCriteriaFilteringVoEnabledDao( Class<O> elementClass, SessionFactory sessionFactory ) {
@@ -35,11 +41,12 @@ public abstract class AbstractCriteriaFilteringVoEnabledDao<O extends Identifiab
      * @see ObjectFilterCriteriaUtils#formRestrictionClause(Filters) to obtain a {@link org.hibernate.criterion.DetachedCriteria}
      * from a set of filter clauses.
      */
-    protected abstract Criteria getLoadValueObjectsCriteria( Filters filters );
+    protected abstract Criteria getLoadValueObjectsCriteria( @Nullable Filters filters );
 
     @Override
-    public Slice<VO> loadValueObjectsPreFilter( Filters filters, Sort sort, int offset, int limit ) {
+    public Slice<VO> loadValueObjectsPreFilter( @Nullable Filters filters, @Nullable Sort sort, int offset, int limit ) {
         StopWatch stopWatch = StopWatch.createStarted();
+        StopWatch queryStopWatch = StopWatch.create();
         StopWatch countingStopWatch = StopWatch.create();
         StopWatch postProcessingStopWatch = StopWatch.create();
 
@@ -57,8 +64,10 @@ public abstract class AbstractCriteriaFilteringVoEnabledDao<O extends Identifiab
         if ( limit > 0 )
             query.setMaxResults( limit );
 
+        queryStopWatch.start();
         //noinspection unchecked
         List<O> data = query.setResultTransformer( Criteria.DISTINCT_ROOT_ENTITY ).list();
+        queryStopWatch.stop();
 
         countingStopWatch.start();
         Long totalElements = ( Long ) totalElementsQuery
@@ -67,23 +76,22 @@ public abstract class AbstractCriteriaFilteringVoEnabledDao<O extends Identifiab
         countingStopWatch.stop();
 
         postProcessingStopWatch.start();
-        List<VO> results = super.loadValueObjects( data );
+        List<VO> results = doLoadValueObjects( data );
         postProcessingStopWatch.stop();
 
         stopWatch.stop();
 
         if ( stopWatch.getTime( TimeUnit.MILLISECONDS ) > REPORT_SLOW_QUERY_AFTER_MS ) {
             log.info( String.format( "Loading and counting VOs took %d ms (querying: %d, counting: %d, post-processing: %d).",
-                    stopWatch.getTime( TimeUnit.MILLISECONDS ), countingStopWatch.getTime( TimeUnit.MILLISECONDS ),
-                    postProcessingStopWatch.getTime( TimeUnit.MILLISECONDS ) ) );
+                    stopWatch.getTime( TimeUnit.MILLISECONDS ), queryStopWatch.getTime( TimeUnit.MILLISECONDS ),
+                    countingStopWatch.getTime( TimeUnit.MILLISECONDS ), postProcessingStopWatch.getTime( TimeUnit.MILLISECONDS ) ) );
         }
 
-        //noinspection unchecked
         return new Slice<>( results, sort, offset, limit, totalElements );
     }
 
     @Override
-    public List<VO> loadValueObjectsPreFilter( Filters objectFilters, Sort sort ) {
+    public List<VO> loadValueObjectsPreFilter( @Nullable Filters objectFilters, @Nullable Sort sort ) {
         StopWatch stopWatch = StopWatch.createStarted();
         StopWatch queryStopWatch = StopWatch.create();
         StopWatch postProcessingStopWatch = StopWatch.create();
@@ -102,7 +110,7 @@ public abstract class AbstractCriteriaFilteringVoEnabledDao<O extends Identifiab
         queryStopWatch.stop();
 
         postProcessingStopWatch.start();
-        List<VO> results = super.loadValueObjects( data );
+        List<VO> results = this.doLoadValueObjects( data );
         postProcessingStopWatch.stop();
 
         stopWatch.stop();

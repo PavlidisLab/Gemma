@@ -9,7 +9,7 @@ import ubic.gemma.persistence.service.expression.experiment.ExpressionExperiment
  *
  * @author tesarst
  */
-@Schema(type = "integer", format = "int64")
+@Schema(type = "integer", format = "int64", description = "A numerical dataset identifier.")
 public class DatasetIdArg extends DatasetArg<Long> {
 
     /**

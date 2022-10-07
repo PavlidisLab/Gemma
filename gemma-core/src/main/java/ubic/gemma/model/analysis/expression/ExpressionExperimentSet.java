@@ -26,6 +26,7 @@ import ubic.gemma.model.genome.Taxon;
 
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Set;
 
 /**
  * A grouping of expression studies.
@@ -39,7 +40,7 @@ public class ExpressionExperimentSet extends AbstractAuditable implements Secura
      */
     private static final long serialVersionUID = -1034074709420077917L;
     private ubic.gemma.model.genome.Taxon taxon;
-    private Collection<BioAssaySet> experiments = new HashSet<>();
+    private Set<BioAssaySet> experiments = new HashSet<>();
 
     /**
      * No-arg constructor added to satisfy javabean contract
@@ -47,11 +48,11 @@ public class ExpressionExperimentSet extends AbstractAuditable implements Secura
     public ExpressionExperimentSet() {
     }
 
-    public Collection<BioAssaySet> getExperiments() {
+    public Set<BioAssaySet> getExperiments() {
         return this.experiments;
     }
 
-    public void setExperiments( Collection<BioAssaySet> experiments ) {
+    public void setExperiments( Set<BioAssaySet> experiments ) {
         this.experiments = experiments;
     }
 

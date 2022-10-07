@@ -20,16 +20,14 @@
 package ubic.gemma.persistence.service.expression.experiment;
 
 import org.hibernate.SessionFactory;
-import org.hibernate.cfg.NotYetImplementedException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import ubic.gemma.model.expression.experiment.Geeq;
 import ubic.gemma.model.expression.experiment.GeeqValueObject;
-import ubic.gemma.persistence.service.AbstractDao;
+import ubic.gemma.persistence.service.AbstractVoEnabledDao;
 import ubic.gemma.persistence.util.EntityUtils;
-import ubic.gemma.persistence.util.ObjectFilter;
-import ubic.gemma.persistence.util.Slice;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -38,7 +36,8 @@ import java.util.List;
  * @author paul, tesarst
  */
 @Repository
-public class GeeqDaoImpl extends AbstractDao<Geeq> implements GeeqDao {
+@ParametersAreNonnullByDefault
+public class GeeqDaoImpl extends AbstractVoEnabledDao<Geeq, GeeqValueObject> implements GeeqDao {
 
     @Autowired
     public GeeqDaoImpl( SessionFactory sessionFactory ) {
@@ -46,36 +45,7 @@ public class GeeqDaoImpl extends AbstractDao<Geeq> implements GeeqDao {
     }
 
     @Override
-    public GeeqValueObject loadValueObject( Geeq entity ) {
+    protected GeeqValueObject doLoadValueObject( Geeq entity ) {
         return new GeeqValueObject( entity );
     }
-
-    @Override
-    public List<GeeqValueObject> loadValueObjects( Collection<Geeq> entities ) {
-        //noinspection unchecked
-        List<Object[]> rows = this.getSessionFactory().getCurrentSession()
-                .createQuery( "select GQ from Geeq as GQ where GQ.id in (:ids) " )
-                .setParameterList( "ids", EntityUtils.getIds( entities ) ).list();
-
-        return this.createVosFromRows( rows );
-    }
-
-    @Override
-    public List<GeeqValueObject> loadAllValueObjects() {
-        //noinspection unchecked
-        List<Object[]> rows = this.getSessionFactory().getCurrentSession().createQuery( "select GQ from Geeq as GQ" )
-                .list();
-
-        return this.createVosFromRows( rows );
-    }
-
-    private List<GeeqValueObject> createVosFromRows( List<Object[]> rows ) {
-        ArrayList<GeeqValueObject> vos = new ArrayList<>( rows.size() );
-        for ( Object[] row : rows ) {
-            vos.add( new GeeqValueObject( row ) );
-        }
-
-        return vos;
-    }
-
 }

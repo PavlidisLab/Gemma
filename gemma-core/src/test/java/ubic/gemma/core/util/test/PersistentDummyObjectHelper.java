@@ -271,12 +271,12 @@ public class PersistentDummyObjectHelper {
         ee.setExperimentalDesign( ed );
         ee.setOwner( this.getTestPersistentContact() );
         List<ArrayDesign> arrayDesignsUsed = new ArrayList<>( eeService.getArrayDesignsUsed( prototype ) );
-        Collection<BioAssay> bioAssays = new HashSet<>();
+        Set<BioAssay> bioAssays = new HashSet<>();
 
-        Collection<QuantitationType> quantitationTypes = this.addQuantitationTypes( new HashSet<QuantitationType>() );
+        Set<QuantitationType> quantitationTypes = this.addQuantitationTypes( new HashSet<>() );
 
         eeService.thaw( prototype );
-        Collection<RawExpressionDataVector> vectors = new HashSet<>();
+        Set<RawExpressionDataVector> vectors = new HashSet<>();
         for ( ArrayDesign ad : arrayDesignsUsed ) {
             List<BioAssay> bas = this.getBioAssays( bioMaterials, ad );
             bioAssays.addAll( bas );
@@ -324,7 +324,7 @@ public class PersistentDummyObjectHelper {
         ee.setExperimentalDesign( ed );
         ee.setOwner( this.getTestPersistentContact() );
 
-        Collection<BioAssay> bioAssays = new HashSet<>();
+        Set<BioAssay> bioAssays = new HashSet<>();
         Collection<BioMaterial> bioMaterials = this.getBioMaterials( allFactorValues );
         List<BioAssay> bioAssaysA = this.getBioAssays( bioMaterials, adA );
         List<BioAssay> bioAssaysB = this.getBioAssays( bioMaterials, adB );
@@ -334,9 +334,9 @@ public class PersistentDummyObjectHelper {
         ee.setTaxon( bioAssays.iterator().next().getSampleUsed().getSourceTaxon() );
 
         log.debug( "expression experiment => design element data vectors" );
-        Collection<RawExpressionDataVector> vectors = new HashSet<>();
+        Set<RawExpressionDataVector> vectors = new HashSet<>();
 
-        Collection<QuantitationType> quantitationTypes = this.addQuantitationTypes( new HashSet<QuantitationType>() );
+        Set<QuantitationType> quantitationTypes = this.addQuantitationTypes( new HashSet<>() );
 
         assert quantitationTypes.size() > 0;
 
@@ -402,7 +402,7 @@ public class PersistentDummyObjectHelper {
         RealDistribution log2fcDistribution = new NormalDistribution( 0, 2 );
         // assuming 3 replicates (thus 2 degree of freedom)
         TDistribution ttestDistribution = new TDistribution( 3 - 1 );
-        Collection<DifferentialExpressionAnalysisResult> results = new HashSet<>();
+        Set<DifferentialExpressionAnalysisResult> results = new HashSet<>();
         for ( CompositeSequence probe : ad.getCompositeSequences() ) {
             double log2fc = log2fcDistribution.sample();
             double tstat = ( log2fc - 0.0 ) / 2.0; // simple Z-transform
@@ -558,7 +558,7 @@ public class PersistentDummyObjectHelper {
         ee.getBioAssays().addAll( bioAssays );
         ee.setTaxon( bioAssays.iterator().next().getSampleUsed().getSourceTaxon() );
 
-        Collection<QuantitationType> quantitationTypes = this.addQuantitationTypes( new HashSet<QuantitationType>() );
+        Set<QuantitationType> quantitationTypes = this.addQuantitationTypes( new HashSet<>() );
 
         assert quantitationTypes.size() > 0;
         ee.setQuantitationTypes( quantitationTypes );
@@ -623,7 +623,7 @@ public class PersistentDummyObjectHelper {
      * @return bio sequence to gene products
      */
     @SuppressWarnings("unchecked")
-    public Collection<BioSequence2GeneProduct> getTestPersistentBioSequence2GeneProducts( BioSequence bioSequence ) {
+    public Set<BioSequence2GeneProduct> getTestPersistentBioSequence2GeneProducts( BioSequence bioSequence ) {
 
         Collection<BioSequence2GeneProduct> b2gCol = new HashSet<>();
 
@@ -635,7 +635,7 @@ public class PersistentDummyObjectHelper {
         b2gCol.add( b2g );
 
         //noinspection unchecked
-        return ( Collection<BioSequence2GeneProduct> ) persisterHelper.persist( b2gCol );
+        return ( Set<BioSequence2GeneProduct> ) persisterHelper.persist( b2gCol );
     }
 
     public BlatResult getTestPersistentBlatResult( BioSequence querySequence, Taxon taxon ) {
@@ -782,9 +782,9 @@ public class PersistentDummyObjectHelper {
         ee.setOwner( this.getTestPersistentContact() );
 
         log.debug( "expression experiment => design element data vectors" );
-        Collection<RawExpressionDataVector> vectors = new HashSet<>();
+        Set<RawExpressionDataVector> vectors = new HashSet<>();
 
-        Collection<QuantitationType> quantitationTypes = this.addQuantitationTypes( new HashSet<QuantitationType>() );
+        Set<QuantitationType> quantitationTypes = this.addQuantitationTypes( new HashSet<>() );
 
         assert quantitationTypes.size() > 0;
 
@@ -831,9 +831,9 @@ public class PersistentDummyObjectHelper {
         this.testElementCollectionSize = PersistentDummyObjectHelper.DEFAULT_TEST_ELEMENT_COLLECTION_SIZE;
     }
 
-    protected Collection<ExperimentalFactor> getExperimentalFactors( ExperimentalDesign ed,
+    protected Set<ExperimentalFactor> getExperimentalFactors( ExperimentalDesign ed,
             Collection<FactorValue> allFactorValues ) {
-        Collection<ExperimentalFactor> efCol = new HashSet<>();
+        Set<ExperimentalFactor> efCol = new HashSet<>();
         for ( int i = 0; i < PersistentDummyObjectHelper.NUM_EXPERIMENTAL_FACTORS; i++ ) {
             ExperimentalFactor ef = ExperimentalFactor.Factory.newInstance();
             ef.setExperimentalDesign( ed );
@@ -852,15 +852,16 @@ public class PersistentDummyObjectHelper {
         return efCol;
     }
 
-    protected Collection<FactorValue> getFactorValues( ExperimentalFactor ef,
+    protected Set<FactorValue> getFactorValues( ExperimentalFactor ef,
             Collection<FactorValue> allFactorValues ) {
 
-        Collection<FactorValue> fvCol = new HashSet<>();
+        Set<FactorValue> fvCol = new HashSet<>();
         for ( int i = 0; i < PersistentDummyObjectHelper.NUM_FACTOR_VALUES; i++ ) {
             FactorValue fv = FactorValue.Factory.newInstance();
             fv.setValue( "Factor value " + RandomStringUtils
                     .randomNumeric( PersistentDummyObjectHelper.RANDOM_STRING_LENGTH ) );
             fv.setExperimentalFactor( ef );
+            fv.setCharacteristics( Collections.singleton( getTestCharacteristic( "name" + RandomStringUtils.randomNumeric( RANDOM_STRING_LENGTH ), fv.getValue() ) ) );
             fvCol.add( fv );
         }
 
@@ -869,7 +870,11 @@ public class PersistentDummyObjectHelper {
         return fvCol;
     }
 
-    private Collection<QuantitationType> addQuantitationTypes( Collection<QuantitationType> quantitationTypes ) {
+    protected Characteristic getTestCharacteristic( String name, String value ) {
+        return Characteristic.Factory.newInstance( name, null, value, null, null, null, null );
+    }
+
+    private Set<QuantitationType> addQuantitationTypes( Set<QuantitationType> quantitationTypes ) {
         for ( int quantitationTypeNum = 0; quantitationTypeNum < PersistentDummyObjectHelper.NUM_QUANTITATION_TYPES; quantitationTypeNum++ ) {
             QuantitationType q = PersistentDummyObjectHelper.getTestNonPersistentQuantitationType();
             if ( quantitationTypes.size() == 0 ) {
@@ -902,7 +907,7 @@ public class PersistentDummyObjectHelper {
         // one biomaterial for each set of bioassays
         for ( int j = 0; j < PersistentDummyObjectHelper.NUM_BIOMATERIALS; j++ ) {
             BioMaterial bm = this.getTestNonPersistentBioMaterial();
-            Collection<FactorValue> fvCol = new HashSet<>();
+            Set<FactorValue> fvCol = new HashSet<>();
             if ( iter.hasNext() ) {
                 fvCol.add( iter.next() );
             } else {

@@ -32,6 +32,7 @@ import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.search.SearchResult;
 import ubic.gemma.core.search.SearchService;
+import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
@@ -168,7 +169,7 @@ public class CompositeSequenceController extends BaseController {
          */
         ArrayDesign arrayDesign = loadArrayDesign( arrayDesignId );
 
-        Map<Class<?>, List<SearchResult<?>>> search = searchService
+        Map<Class<? extends Identifiable>, List<SearchResult<? extends Identifiable>>> search = searchService
                 .search( SearchSettings.compositeSequenceSearch( searchString, arrayDesign ) );
 
         Collection<CompositeSequence> css = new HashSet<>();
@@ -178,7 +179,7 @@ public class CompositeSequenceController extends BaseController {
 
             for ( SearchResult sr : searchResults ) {
                 CompositeSequence cs = ( CompositeSequence ) sr.getResultObject();
-                if ( arrayDesign == null || cs.getArrayDesign().equals( arrayDesign ) ) {
+                if ( cs != null && ( arrayDesign == null || cs.getArrayDesign().equals( arrayDesign ) ) ) {
                     css.add( cs );
                 }
             }

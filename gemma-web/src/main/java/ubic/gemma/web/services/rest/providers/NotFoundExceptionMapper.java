@@ -1,5 +1,6 @@
 package ubic.gemma.web.services.rest.providers;
 
+import org.apache.commons.math3.analysis.function.Abs;
 import ubic.gemma.web.services.rest.util.OpenApiUtils;
 import ubic.gemma.web.services.rest.util.ResponseErrorObject;
 import ubic.gemma.web.services.rest.util.WellComposedErrorBody;
@@ -22,20 +23,19 @@ import javax.ws.rs.ext.Provider;
  * @author poirigui
  */
 @Provider
-public class NotFoundExceptionMapper implements ExceptionMapper<NotFoundException> {
-
-    @Context
-    private ServletConfig servletConfig;
+public class NotFoundExceptionMapper extends AbstractExceptionMapper<NotFoundException> {
 
     @Override
-    public Response toResponse( NotFoundException e ) {
-        WellComposedErrorBody errorBody = new WellComposedErrorBody( Response.Status.NOT_FOUND, e.getMessage() );
-        if ( e.getCause() != null ) {
-            WellComposedErrorBody.addExceptionFields( errorBody, e.getCause() );
+    protected Response.Status getStatus( NotFoundException exception ) {
+        return Response.Status.NOT_FOUND;
+    }
+
+    @Override
+    protected WellComposedErrorBody getWellComposedErrorBody( NotFoundException exception ) {
+        WellComposedErrorBody errorBody = new WellComposedErrorBody( Response.Status.NOT_FOUND, exception.getMessage() );
+        if ( exception.getCause() != null ) {
+            WellComposedErrorBody.addExceptionFields( errorBody, exception.getCause() );
         }
-        return Response.fromResponse( e.getResponse() )
-                .type( MediaType.APPLICATION_JSON_TYPE )
-                .entity( new ResponseErrorObject( errorBody, OpenApiUtils.getOpenApi( servletConfig ) ) )
-                .build();
+        return errorBody;
     }
 }

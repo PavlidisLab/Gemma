@@ -111,7 +111,8 @@ public class LowVarianceDataTest extends AbstractGeoServiceTest {
     }
 
     @Before
-    public void setup() throws Exception {
+    public void setUp() throws Exception {
+        super.setUp();
 
         geoService.setGeoDomainObjectGenerator(
                 new GeoDomainObjectGeneratorLocal( FileTools.resourceToPath( "/data/analysis/expression" ) ) );
@@ -162,7 +163,6 @@ public class LowVarianceDataTest extends AbstractGeoServiceTest {
         config.setAnalysisType( aa );
         config.setFactorsToInclude( factors );
 
-        analyzer = this.getBean( DiffExAnalyzer.class );
         Collection<DifferentialExpressionAnalysis> result = analyzer.run( ee, config );
         assertEquals( 1, result.size() );
 

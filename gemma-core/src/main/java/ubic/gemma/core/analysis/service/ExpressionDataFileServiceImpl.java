@@ -32,6 +32,8 @@ import ubic.basecode.util.StringUtil;
 import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalysisConfig;
 import ubic.gemma.core.analysis.preprocess.ExpressionDataMatrixBuilder;
 import ubic.gemma.core.analysis.preprocess.filter.FilterConfig;
+import ubic.gemma.core.analysis.preprocess.filter.FilteringException;
+import ubic.gemma.core.analysis.preprocess.filter.NoRowsLeftAfterFilteringException;
 import ubic.gemma.core.datastructure.matrix.ExperimentalDesignWriter;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataMatrix;
@@ -300,7 +302,7 @@ public class ExpressionDataFileServiceImpl extends AbstractTsvFileService<Expres
 
     @Override
     public File writeDataFile( ExpressionExperiment ee, boolean filtered, String fileName, boolean compress )
-            throws IOException {
+            throws IOException, FilteringException {
         File f = new File( fileName );
         return this.writeDataFile( ee, filtered, f, compress );
     }
@@ -316,7 +318,7 @@ public class ExpressionDataFileServiceImpl extends AbstractTsvFileService<Expres
 
         ExpressionDataFileServiceImpl.log
                 .info( "Creating differential expression analysis archive file: " + f.getName() );
-        try (ZipOutputStream zipOut = new ZipOutputStream( new FileOutputStream( f ) )) {
+        try ( ZipOutputStream zipOut = new ZipOutputStream( new FileOutputStream( f ) ) ) {
 
             // top-level analysis results - ANOVA-style
             zipOut.putNextEntry( new ZipEntry( "analysis.results.txt" ) );
@@ -389,7 +391,7 @@ public class ExpressionDataFileServiceImpl extends AbstractTsvFileService<Expres
     }
 
     @Override
-    public File writeOrLocateDataFile( ExpressionExperiment ee, boolean forceWrite, boolean filtered ) {
+    public File writeOrLocateDataFile( ExpressionExperiment ee, boolean forceWrite, boolean filtered ) throws FilteringException {
         try {
             File f = this.getOutputFile( ee, filtered );
             Date check = expressionExperimentService.getLastArrayDesignUpdate( ee );
@@ -470,7 +472,7 @@ public class ExpressionDataFileServiceImpl extends AbstractTsvFileService<Expres
     }
 
     @Override
-    public File writeOrLocateJSONDataFile( ExpressionExperiment ee, boolean forceWrite, boolean filtered ) {
+    public File writeOrLocateJSONDataFile( ExpressionExperiment ee, boolean forceWrite, boolean filtered ) throws FilteringException {
 
         try {
             File f = this.getOutputFile( ee, filtered );
@@ -640,7 +642,7 @@ public class ExpressionDataFileServiceImpl extends AbstractTsvFileService<Expres
      * @param  forceWrite whether the file should be overridden even if found.
      * @param  f          the file to check.
      * @param  check      the file will be considered invalid after this date.
-     * @return            true, if the given file is ok to be returned, false if it should be regenerated.
+     * @return true, if the given file is ok to be returned, false if it should be regenerated.
      */
     private boolean checkFileOkToReturn( boolean forceWrite, File f, Date check ) {
         Date modified = new Date( f.lastModified() );
@@ -726,7 +728,7 @@ public class ExpressionDataFileServiceImpl extends AbstractTsvFileService<Expres
         return ee.getId() + "_" + FileTools.cleanForFileName( ee.getShortName() ) + "_expmat" + filteredAdd + suffix;
     }
 
-    private ExpressionDataDoubleMatrix getDataMatrix( ExpressionExperiment ee, boolean filtered ) {
+    private ExpressionDataDoubleMatrix getDataMatrix( ExpressionExperiment ee, boolean filtered ) throws FilteringException {
         ee = expressionExperimentService.thawLite( ee );
         ExpressionDataDoubleMatrix matrix;
         if ( filtered ) {
@@ -1070,7 +1072,7 @@ public class ExpressionDataFileServiceImpl extends AbstractTsvFileService<Expres
         }
 
         // Write coexpression data to file (zipped of course)
-        try (Writer writer = new OutputStreamWriter( new GZIPOutputStream( new FileOutputStream( file ) ) )) {
+        try ( Writer writer = new OutputStreamWriter( new GZIPOutputStream( new FileOutputStream( file ) ) ) ) {
             writer.write( buf.toString() );
         }
 
@@ -1080,7 +1082,7 @@ public class ExpressionDataFileServiceImpl extends AbstractTsvFileService<Expres
      * @param compress if true, file will be output in GZIP format.
      */
     private File writeDataFile( ExpressionExperiment ee, boolean filtered, File f, boolean compress )
-            throws IOException {
+            throws IOException, FilteringException {
         ExpressionDataFileServiceImpl.log.info( "Creating new expression data file: " + f.getName() );
         ExpressionDataDoubleMatrix matrix = this.getDataMatrix( ee, filtered );
 
@@ -1101,7 +1103,7 @@ public class ExpressionDataFileServiceImpl extends AbstractTsvFileService<Expres
         OutputStream oStream;
         oStream = new GZIPOutputStream( new FileOutputStream( file ) );
 
-        try (Writer writer = new OutputStreamWriter( oStream )) {
+        try ( Writer writer = new OutputStreamWriter( oStream ) ) {
             ExperimentalDesignWriter edWriter = new ExperimentalDesignWriter();
             edWriter.write( writer, expressionExperiment, true );
         }
@@ -1111,14 +1113,14 @@ public class ExpressionDataFileServiceImpl extends AbstractTsvFileService<Expres
     private void writeJson( File file, Collection<DesignElementDataVector> vectors ) throws IOException {
         this.rawExpressionDataVectorService.thawRawAndProcessed( vectors );
         ExpressionDataMatrix<?> expressionDataMatrix = ExpressionDataMatrixBuilder.getMatrix( vectors );
-        try (Writer writer = new OutputStreamWriter( new GZIPOutputStream( new FileOutputStream( file ) ) )) {
+        try ( Writer writer = new OutputStreamWriter( new GZIPOutputStream( new FileOutputStream( file ) ) ) ) {
             MatrixWriter matrixWriter = new MatrixWriter();
             matrixWriter.writeJSON( writer, expressionDataMatrix );
         }
     }
 
     private void writeJson( File file, ExpressionDataMatrix<?> expressionDataMatrix ) throws IOException {
-        try (Writer writer = new OutputStreamWriter( new GZIPOutputStream( new FileOutputStream( file ) ) )) {
+        try ( Writer writer = new OutputStreamWriter( new GZIPOutputStream( new FileOutputStream( file ) ) ) ) {
             MatrixWriter matrixWriter = new MatrixWriter();
             matrixWriter.writeJSON( writer, expressionDataMatrix );
         }
@@ -1136,11 +1138,11 @@ public class ExpressionDataFileServiceImpl extends AbstractTsvFileService<Expres
         MatrixWriter matrixWriter = new MatrixWriter();
 
         if ( gzipped ) {
-            try (Writer writer = new OutputStreamWriter( new GZIPOutputStream( new FileOutputStream( file ) ) )) {
+            try ( Writer writer = new OutputStreamWriter( new GZIPOutputStream( new FileOutputStream( file ) ) ) ) {
                 matrixWriter.writeWithStringifiedGeneAnnotations( writer, expressionDataMatrix, geneAnnotations, true );
             }
         } else {
-            try (Writer writer = new OutputStreamWriter( new FileOutputStream( file ) )) {
+            try ( Writer writer = new OutputStreamWriter( new FileOutputStream( file ) ) ) {
                 matrixWriter.writeWithStringifiedGeneAnnotations( writer, expressionDataMatrix, geneAnnotations, true );
             }
         }

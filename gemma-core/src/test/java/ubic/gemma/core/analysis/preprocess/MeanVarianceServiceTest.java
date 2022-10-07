@@ -14,6 +14,7 @@
  */
 package ubic.gemma.core.analysis.preprocess;
 
+import org.hibernate.ObjectNotFoundException;
 import org.junit.After;
 import org.junit.Assume;
 import org.junit.Test;
@@ -30,6 +31,7 @@ import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 import ubic.gemma.core.loader.expression.geo.service.GeoService;
 import ubic.gemma.core.loader.util.AlreadyExistsInSystemException;
 import ubic.gemma.core.security.authorization.acl.AclTestUtils;
+import ubic.gemma.core.util.test.category.GeoTest;
 import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.common.quantitationtype.*;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -51,6 +53,7 @@ import static org.junit.Assert.*;
 /**
  * @author ptan
  */
+@Category(GeoTest.class)
 public class MeanVarianceServiceTest extends AbstractGeoServiceTest {
 
     private static final ByteArrayConverter bac = new ByteArrayConverter();
@@ -77,7 +80,11 @@ public class MeanVarianceServiceTest extends AbstractGeoServiceTest {
     @After
     public void after() {
         if ( ee != null ) {
-            eeService.remove( ee );
+            try {
+                eeService.remove( ee );
+            } catch ( ObjectNotFoundException e ) {
+                Assume.assumeNoException( e );
+            }
         }
     }
 
@@ -199,7 +206,11 @@ public class MeanVarianceServiceTest extends AbstractGeoServiceTest {
             throw new IllegalStateException( "Need to remove this data set before test is run" );
         }
 
-        ee = eeService.thaw( ee );
+        try {
+            ee = eeService.thaw( ee );
+        } catch ( ObjectNotFoundException e ) {
+            Assume.assumeNoException( e );
+        }
 
         qt = this.createOrUpdateQt( ScaleType.COUNT );
 

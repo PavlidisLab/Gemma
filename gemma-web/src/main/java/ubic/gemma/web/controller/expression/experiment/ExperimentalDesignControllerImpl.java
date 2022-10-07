@@ -167,7 +167,7 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
                     "Experimental factor with ID=" + e.getId() + " could not be accessed for editing" );
         }
 
-        Collection<Characteristic> chars = new HashSet<>();
+        Set<Characteristic> chars = new HashSet<>();
         for ( FactorValue fv : ef.getFactorValues() ) {
             //noinspection LoopStatementThatDoesntLoop // No, but its an effective way of doing this
             for ( Characteristic c : fv.getCharacteristics() ) {

@@ -20,6 +20,7 @@
 package ubic.gemma.core.analysis.preprocess;
 
 import org.springframework.security.access.annotation.Secured;
+import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
@@ -42,6 +43,6 @@ public interface SplitExperimentService {
      * @return results of the split
      */
     @Secured({ "GROUP_ADMIN", "ACL_SECURABLE_EDIT" })
-    Collection<ExpressionExperiment> split( ExpressionExperiment expressionExperiment, ExperimentalFactor splitOn, boolean postProcess );
+    ExpressionExperimentSet split( ExpressionExperiment expressionExperiment, ExperimentalFactor splitOn, boolean postProcess );
 
 }

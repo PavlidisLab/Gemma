@@ -104,7 +104,7 @@ public class BioMaterialDaoImpl extends AbstractVoEnabledDao<BioMaterial, BioMat
     public Collection<BioMaterial> findByExperiment( ExpressionExperiment experiment ) {
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession().createQuery(
-                "select distinct bm from ExpressionExperiment e join e.bioAssays b join b.sampleUsed bm where e = :ee" )
+                        "select distinct bm from ExpressionExperiment e join e.bioAssays b join b.sampleUsed bm where e = :ee" )
                 .setParameter( "ee", experiment ).list();
     }
 
@@ -119,7 +119,7 @@ public class BioMaterialDaoImpl extends AbstractVoEnabledDao<BioMaterial, BioMat
     @Override
     public ExpressionExperiment getExpressionExperiment( Long bioMaterialId ) {
         return ( ExpressionExperiment ) this.getSessionFactory().getCurrentSession().createQuery(
-                "select distinct e from ExpressionExperiment e inner join e.bioAssays ba inner join ba.sampleUsed bm where bm.id =:bmid " )
+                        "select distinct e from ExpressionExperiment e inner join e.bioAssays ba inner join ba.sampleUsed bm where bm.id =:bmid " )
                 .setParameter( "bmid", bioMaterialId ).uniqueResult();
     }
 
@@ -140,13 +140,13 @@ public class BioMaterialDaoImpl extends AbstractVoEnabledDao<BioMaterial, BioMat
             return bioMaterials;
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession().createQuery(
-                "select distinct b from BioMaterial b left join fetch b.sourceTaxon left join fetch b.bioAssaysUsedIn"
-                        + " left join fetch b.treatments left join fetch b.factorValues where b.id in (:ids)" )
+                        "select distinct b from BioMaterial b left join fetch b.sourceTaxon left join fetch b.bioAssaysUsedIn"
+                                + " left join fetch b.treatments left join fetch b.factorValues where b.id in (:ids)" )
                 .setParameterList( "ids", EntityUtils.getIds( bioMaterials ) ).list();
     }
 
     @Override
-    public BioMaterialValueObject loadValueObject( BioMaterial entity ) {
+    protected BioMaterialValueObject doLoadValueObject( BioMaterial entity ) {
         return new BioMaterialValueObject( entity );
     }
 

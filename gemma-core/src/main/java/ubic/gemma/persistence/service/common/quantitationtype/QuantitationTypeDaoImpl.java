@@ -121,7 +121,7 @@ public class QuantitationTypeDaoImpl extends AbstractVoEnabledDao<QuantitationTy
     }
 
     @Override
-    public QuantitationTypeValueObject loadValueObject( QuantitationType entity ) {
+    protected QuantitationTypeValueObject doLoadValueObject( QuantitationType entity ) {
         return new QuantitationTypeValueObject( entity );
     }
 

@@ -34,6 +34,7 @@ import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGenerator;
 import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 import ubic.gemma.core.loader.util.AlreadyExistsInSystemException;
 import ubic.gemma.core.security.authorization.acl.AclTestUtils;
+import ubic.gemma.core.util.test.category.GeoTest;
 import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
@@ -62,6 +63,7 @@ import static org.junit.Assert.*;
  *
  * @author pavlidis
  */
+@Category(GeoTest.class)
 public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
 
     @Autowired

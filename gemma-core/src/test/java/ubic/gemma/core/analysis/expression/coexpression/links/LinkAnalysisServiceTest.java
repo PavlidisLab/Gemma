@@ -91,7 +91,8 @@ public class LinkAnalysisServiceTest extends BaseSpringContextTest {
     private TableMaintenanceUtil tableMaintenanceUtil;
 
     @Before
-    public void setup() {
+    public void setUp() throws Exception {
+        super.setUp();
         super.setTestCollectionSize( 100 );
         gene2GeneCoexpressionCache.shutdown();
     }

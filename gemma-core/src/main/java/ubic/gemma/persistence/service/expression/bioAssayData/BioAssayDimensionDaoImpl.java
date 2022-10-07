@@ -172,7 +172,7 @@ public class BioAssayDimensionDaoImpl extends AbstractVoEnabledDao<BioAssayDimen
     }
 
     @Override
-    public BioAssayDimensionValueObject loadValueObject( BioAssayDimension entity ) {
+    protected BioAssayDimensionValueObject doLoadValueObject( BioAssayDimension entity ) {
         return new BioAssayDimensionValueObject( entity );
     }
 

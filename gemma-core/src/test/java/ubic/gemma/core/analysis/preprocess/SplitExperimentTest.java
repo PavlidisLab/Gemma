@@ -1,8 +1,8 @@
 /*
  * The gemma-core project
- * 
+ *
  * Copyright (c) 2018 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -19,34 +19,33 @@
 
 package ubic.gemma.core.analysis.preprocess;
 
-import static org.junit.Assert.*;
-
-import java.io.InputStream;
-import java.util.Collection;
-import java.util.HashSet;
-
+import gemma.gsec.SecurityService;
 import org.junit.After;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
-
-import gemma.gsec.SecurityService;
 import ubic.basecode.util.FileTools;
 import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 import ubic.gemma.core.loader.expression.geo.service.GeoService;
 import ubic.gemma.core.loader.expression.simple.ExperimentalDesignImporter;
 import ubic.gemma.core.util.test.BaseSpringContextTest;
 import ubic.gemma.core.util.test.category.SlowTest;
+import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
+import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
+import java.io.InputStream;
+import java.util.Collection;
+
+import static org.junit.Assert.*;
+
 /**
- * 
- * 
+ *
+ *
  * @author paul
  */
 public class SplitExperimentTest extends BaseSpringContextTest {
@@ -71,17 +70,11 @@ public class SplitExperimentTest extends BaseSpringContextTest {
 
     private ExpressionExperiment ee;
 
-    private Collection<ExpressionExperiment> results;
-
-    @Before
-    public void setup() throws Exception {
-        ee = null;
-        results = new HashSet<>();
-    }
+    private ExpressionExperimentSet results;
 
     @Test
     @Category(SlowTest.class)
-    public void testSplitGSE17183ByOrganismPart() throws Exception, PreprocessingException {
+    public void testSplitGSE17183ByOrganismPart() throws Exception {
 
         String geoId = "GSE17183";
 
@@ -114,10 +107,10 @@ public class SplitExperimentTest extends BaseSpringContextTest {
         assertNotNull( splitOn );
 
         results = splitService.split( ee, splitOn, true );
-        assertEquals( splitOn.getFactorValues().size(), results.size() );
+        assertEquals( splitOn.getFactorValues().size(), results.getExperiments().size() );
 
-        for ( ExpressionExperiment e : results ) {
-            e = eeService.thaw( e );
+        for ( BioAssaySet b : results.getExperiments() ) {
+            ExpressionExperiment e = eeService.thaw( ( ExpressionExperiment ) b );
 
             Collection<RawExpressionDataVector> rvs = e.getRawExpressionDataVectors();
             assertEquals( 100, rvs.size() );
@@ -167,7 +160,7 @@ public class SplitExperimentTest extends BaseSpringContextTest {
         assertNotNull( splitOn );
 
         results = splitService.split( ee, splitOn, false );
-        assertEquals( splitOn.getFactorValues().size(), results.size() );
+        assertEquals( splitOn.getFactorValues().size(), results.getExperiments().size() );
     }
 
     @After
@@ -175,8 +168,8 @@ public class SplitExperimentTest extends BaseSpringContextTest {
         if ( ee != null ) {
             eeService.remove( ee );
         }
-        for ( ExpressionExperiment splitEE : results ) {
-            eeService.remove( splitEE );
+        for ( BioAssaySet splitEE : results.getExperiments() ) {
+            eeService.remove( ( ExpressionExperiment ) splitEE );
         }
     }
 

@@ -66,6 +66,8 @@ import ubic.basecode.math.distribution.Histogram;
 import ubic.gemma.core.analysis.preprocess.MeanVarianceService;
 import ubic.gemma.core.analysis.preprocess.OutlierDetails;
 import ubic.gemma.core.analysis.preprocess.OutlierDetectionService;
+import ubic.gemma.core.analysis.preprocess.filter.FilteringException;
+import ubic.gemma.core.analysis.preprocess.filter.NoRowsLeftAfterFilteringException;
 import ubic.gemma.core.analysis.preprocess.svd.SVDService;
 import ubic.gemma.core.analysis.preprocess.svd.SVDValueObject;
 import ubic.gemma.core.analysis.util.ExperimentalDesignUtils;
@@ -193,8 +195,13 @@ public class ExpressionExperimentQCController extends BaseController {
             return null;
         }
 
-        DoubleMatrix<BioAssay, BioAssay> sampleCorrelationMatrix = sampleCoexpressionAnalysisService
-                .loadFullMatrix( ee );
+        DoubleMatrix<BioAssay, BioAssay> sampleCorrelationMatrix = null;
+        try {
+            sampleCorrelationMatrix = sampleCoexpressionAnalysisService
+                    .loadFullMatrix( ee );
+        } catch ( FilteringException e ) {
+            log.warn( "Error when filtering the expression data matrix for " + ee + ", nothing will be displayed.", e );
+        }
         if ( sampleCorrelationMatrix == null || sampleCorrelationMatrix.rows() < 3 ) {
             return null;
         }
@@ -687,7 +694,7 @@ public class ExpressionExperimentQCController extends BaseController {
     private CategoryDataset getPCAScree( SVDValueObject svdo ) {
         DefaultCategoryDataset series = new DefaultCategoryDataset();
 
-        Double[] variances = svdo.getVariances();
+        double[] variances = svdo.getVariances();
         if ( variances == null || variances.length == 0 ) {
             return series;
         }

@@ -48,10 +48,7 @@ import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.persistence.util.Settings;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
+import java.util.*;
 
 /**
  * Other tests can extend this class if they want an expression experiment with complete block design and biological
@@ -106,7 +103,8 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
     private Collection<ProcessedExpressionDataVector> vectors = null;
 
     @Before
-    public void setup() throws Exception {
+    public void setUp() throws Exception {
+        super.setUp();
 
         try {
             if ( Settings.getBoolean( "gemma.linearmodels.useR" ) ) {
@@ -152,7 +150,7 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
         factorValueA1.setValue( "cerebellum" );
         Characteristic characteristicA1 = Characteristic.Factory.newInstance();
         characteristicA1.setValue( factorValueA1.getValue() );
-        Collection<Characteristic> characteristicsA1 = new HashSet<>();
+        Set<Characteristic> characteristicsA1 = new HashSet<>();
         characteristicsA1.add( characteristicA1 );
         factorValueA1.setCharacteristics( characteristicsA1 );
         factorValueA1.setExperimentalFactor( experimentalFactorA_Area );
@@ -163,7 +161,7 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
         factorValueA2.setId( 1002L );
         Characteristic characteristicA2 = Characteristic.Factory.newInstance();
         characteristicA2.setValue( factorValueA2.getValue() );
-        Collection<Characteristic> characteristicsA2 = new HashSet<>();
+        Set<Characteristic> characteristicsA2 = new HashSet<>();
         characteristicsA2.add( characteristicA2 );
         factorValueA2.setCharacteristics( characteristicsA2 );
         factorValueA2.setExperimentalFactor( experimentalFactorA_Area );
@@ -185,7 +183,7 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
         factorValueB1.setId( 1003L );
         Characteristic characteristicB1 = Characteristic.Factory.newInstance();
         characteristicB1.setValue( factorValueB1.getValue() );
-        Collection<Characteristic> characteristicsB1 = new HashSet<>();
+        Set<Characteristic> characteristicsB1 = new HashSet<>();
         characteristicsB1.add( characteristicB1 );
         factorValueB1.setCharacteristics( characteristicsB1 );
         factorValueB1.setExperimentalFactor( experimentalFactorB );
@@ -195,7 +193,7 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
         factorValueB2.setId( 1004L );
         Characteristic characteristicB2 = Characteristic.Factory.newInstance();
         characteristicB2.setValue( factorValueB2.getValue() );
-        Collection<Characteristic> characteristicsB2 = new HashSet<>();
+        Set<Characteristic> characteristicsB2 = new HashSet<>();
         characteristicsB2.add( characteristicB2 );
         factorValueB2.setCharacteristics( characteristicsB2 );
         factorValueB2.setExperimentalFactor( experimentalFactorB );
@@ -335,7 +333,7 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
         biomaterial3a.getBioAssaysUsedIn().add( bioAssay3a );
         biomaterial3b.getBioAssaysUsedIn().add( bioAssay3b );
 
-        expressionExperiment.setBioAssays( bioAssays );
+        expressionExperiment.setBioAssays( new HashSet<>( bioAssays ) );
 
         experimentalFactors = new ArrayList<>();
         experimentalFactors.add( experimentalFactorA_Area );
@@ -343,7 +341,7 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
 
         experimentalDesign = ExperimentalDesign.Factory.newInstance();
         experimentalDesign.setName( "experimental design" );
-        experimentalDesign.setExperimentalFactors( experimentalFactors );
+        experimentalDesign.setExperimentalFactors( new HashSet<>( experimentalFactors ) );
 
         expressionExperiment.setExperimentalDesign( experimentalDesign );
 
@@ -418,7 +416,7 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
         this.configureVectors( biomaterials, null );
 
         experimentalFactors.remove( experimentalFactorA_Area );
-        experimentalDesign.setExperimentalFactors( experimentalFactors );
+        experimentalDesign.setExperimentalFactors( new HashSet<>( experimentalFactors ) );
         expressionExperiment.setExperimentalDesign( experimentalDesign );
     }
 
@@ -436,7 +434,7 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
         bioAssays.remove( bioAssay2b );
         bioAssays.remove( bioAssay3b );
 
-        expressionExperiment.setBioAssays( bioAssays );
+        expressionExperiment.setBioAssays( new HashSet<>( bioAssays ) );
 
         bioAssayDimension.setBioAssays( bioAssays );
 
@@ -465,7 +463,7 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
         DoubleMatrix<String, String> dataMatrix = r.read( this.getClass().getResourceAsStream( path ) );
         // RandomData randomData = new RandomDataImpl( new MersenneTwister( 0 ) ); // fixed seed - important!
 
-        Collection<CompositeSequence> compositeSequences = new HashSet<>();
+        Set<CompositeSequence> compositeSequences = new HashSet<>();
         for ( int i = 0; i < BaseAnalyzerConfigurationTest.NUM_DESIGN_ELEMENTS; i++ ) {
             ProcessedExpressionDataVector vector = ProcessedExpressionDataVector.Factory.newInstance();
             vector.setBioAssayDimension( bioAssayDimension );
@@ -491,7 +489,7 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
 
             compositeSequences.add( cs );
         }
-        expressionExperiment.setProcessedExpressionDataVectors( vectors );
+        expressionExperiment.setProcessedExpressionDataVectors( new HashSet<>( vectors ) );
 
         arrayDesign.setCompositeSequences( compositeSequences );
     }

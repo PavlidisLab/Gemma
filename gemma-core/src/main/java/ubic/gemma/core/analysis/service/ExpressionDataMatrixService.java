@@ -17,6 +17,8 @@ package ubic.gemma.core.analysis.service;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.gemma.core.analysis.preprocess.filter.FilterConfig;
+import ubic.gemma.core.analysis.preprocess.filter.FilteringException;
+import ubic.gemma.core.analysis.preprocess.filter.NoRowsLeftAfterFilteringException;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -39,7 +41,7 @@ public interface ExpressionDataMatrixService {
      * @param filterConfig the configuration.
      * @return data matrix
      */
-    ExpressionDataDoubleMatrix getFilteredMatrix( ExpressionExperiment ee, FilterConfig filterConfig );
+    ExpressionDataDoubleMatrix getFilteredMatrix( ExpressionExperiment ee, FilterConfig filterConfig ) throws FilteringException;
 
     /**
      * Provide a filtered expression data matrix.
@@ -50,10 +52,10 @@ public interface ExpressionDataMatrixService {
      * @return data matrix
      */
     ExpressionDataDoubleMatrix getFilteredMatrix( ExpressionExperiment ee, FilterConfig filterConfig,
-            Collection<ProcessedExpressionDataVector> dataVectors );
+            Collection<ProcessedExpressionDataVector> dataVectors ) throws FilteringException;
 
     ExpressionDataDoubleMatrix getFilteredMatrix( String arrayDesignName, FilterConfig filterConfig,
-            Collection<ProcessedExpressionDataVector> dataVectors );
+            Collection<ProcessedExpressionDataVector> dataVectors ) throws FilteringException;
 
     /**
      * @param ee the expression experiment.

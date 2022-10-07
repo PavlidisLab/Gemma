@@ -19,7 +19,6 @@
 package ubic.gemma.core.security.authentication;
 
 import gemma.gsec.authentication.ManualAuthenticationService;
-import gemma.gsec.authentication.UserManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;

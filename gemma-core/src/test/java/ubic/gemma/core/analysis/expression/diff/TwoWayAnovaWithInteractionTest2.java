@@ -77,7 +77,8 @@ public class TwoWayAnovaWithInteractionTest2 extends BaseSpringContextTest {
     private ExpressionExperiment ee;
 
     @Before
-    public void setup() throws IOException {
+    public void setUp() throws Exception {
+        super.setUp();
         try ( InputStream io = this.getClass()
                 .getResourceAsStream( "/data/analysis/expression/GSE8441_expmat_8probes.txt" ) ) {
 
@@ -143,7 +144,6 @@ public class TwoWayAnovaWithInteractionTest2 extends BaseSpringContextTest {
         config.setFactorsToInclude( factors );
         config.getInteractionsToInclude().add( factors );
 
-        analyzer = this.getBean( DiffExAnalyzer.class );
         Collection<DifferentialExpressionAnalysis> result = analyzer.run( ee, config );
         assertEquals( 1, result.size() );
 

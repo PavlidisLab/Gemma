@@ -59,7 +59,8 @@ public class BibRefControllerTest extends BaseSpringWebTest {
      * Add a bibliographic reference to the database for testing purposes.
      */
     @Before
-    public void setup() throws Exception {
+    public void setUp() throws Exception {
+        super.setUp();
 
         assert brs != null;
 

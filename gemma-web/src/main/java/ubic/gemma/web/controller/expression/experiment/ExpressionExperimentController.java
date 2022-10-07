@@ -33,6 +33,8 @@ import org.springframework.web.servlet.view.RedirectView;
 import ubic.gemma.core.analysis.preprocess.MeanVarianceService;
 import ubic.gemma.core.analysis.preprocess.OutlierDetails;
 import ubic.gemma.core.analysis.preprocess.OutlierDetectionService;
+import ubic.gemma.core.analysis.preprocess.filter.FilteringException;
+import ubic.gemma.core.analysis.preprocess.filter.NoRowsLeftAfterFilteringException;
 import ubic.gemma.core.analysis.preprocess.svd.SVDService;
 import ubic.gemma.core.analysis.report.ExpressionExperimentReportService;
 import ubic.gemma.core.analysis.report.WhatsNew;
@@ -239,7 +241,7 @@ public class ExpressionExperimentController {
         if ( id == null )
             return null;
         RemoveExpressionExperimentTask task = new RemoveExpressionExperimentTask( new TaskCommand( id ) );
-        return taskRunningService.submitLocalTask( task );
+        return taskRunningService.submitTask( task );
     }
 
     /**
@@ -826,7 +828,7 @@ public class ExpressionExperimentController {
     @SuppressWarnings("UnusedReturnValue") // AJAX method - Possibly used in JS
     public String removePrimaryPublication( Long eeId ) {
         RemovePubMed task = new RemovePubMed( new TaskCommand( eeId ) );
-        return taskRunningService.submitLocalTask( task );
+        return taskRunningService.submitTask( task );
     }
 
     /**
@@ -1136,7 +1138,7 @@ public class ExpressionExperimentController {
         UpdatePubMedCommand command = new UpdatePubMedCommand( eeId );
         command.setPubmedId( pubmedId );
         UpdatePubMed task = new UpdatePubMed( command );
-        return taskRunningService.submitLocalTask( task );
+        return taskRunningService.submitTask( task );
     }
 
     @RequestMapping("/downloadExpressionExperimentList.html")
@@ -1176,12 +1178,10 @@ public class ExpressionExperimentController {
     private JsonReaderResponse<ExpressionExperimentDetailsValueObject> browseSpecific( ListBatchCommand batch,
             List<Long> ids, Taxon taxon ) {
 
-        Collection<ExpressionExperimentDetailsValueObject> records = this
+        Slice<ExpressionExperimentDetailsValueObject> records = this
                 .loadAllValueObjectsOrdered( batch, ids, taxon );
 
-        int count = SecurityUtil.isUserAdmin() ? expressionExperimentService.countAll() : expressionExperimentService.countNotTroubled();
-
-        return new JsonReaderResponse<>( records, count );
+        return new JsonReaderResponse<>( records, records.getTotalElements() );
     }
 
     /**
@@ -1200,7 +1200,14 @@ public class ExpressionExperimentController {
             return 0;
         }
 
-        Collection<OutlierDetails> outliers = outlierDetectionService.identifyOutliersByMedianCorrelation( ee );
+        Collection<OutlierDetails> outliers = null;
+        try {
+            outliers = outlierDetectionService.identifyOutliersByMedianCorrelation( ee );
+        } catch ( NoRowsLeftAfterFilteringException e ) {
+            outliers = Collections.emptySet();
+        } catch ( FilteringException e ) {
+            throw new RuntimeException( e );
+        }
         count = outliers.size();
 
         if ( count > 0 )
@@ -1614,7 +1621,7 @@ public class ExpressionExperimentController {
         return initialListOfValueObject;
     }
 
-    private Collection<ExpressionExperimentDetailsValueObject> loadAllValueObjectsOrdered( ListBatchCommand batch,
+    private Slice<ExpressionExperimentDetailsValueObject> loadAllValueObjectsOrdered( ListBatchCommand batch,
             List<Long> ids, Taxon taxon ) {
         String o = batch.getSort();
         Sort.Direction direction;
@@ -1681,7 +1688,7 @@ public class ExpressionExperimentController {
      *
      * @param id id
      */
-    private void updateCorrelationMatrixFile( Long id ) {
+    private void updateCorrelationMatrixFile( Long id ) throws FilteringException {
         ExpressionExperiment ee;
         ee = expressionExperimentService.load( id );
         ee = expressionExperimentService.thawLiter( ee );

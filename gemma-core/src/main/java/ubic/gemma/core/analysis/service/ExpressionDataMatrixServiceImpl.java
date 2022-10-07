@@ -29,6 +29,7 @@ import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.math.DescriptiveWithMissing;
 import ubic.gemma.core.analysis.preprocess.filter.ExpressionExperimentFilter;
 import ubic.gemma.core.analysis.preprocess.filter.FilterConfig;
+import ubic.gemma.core.analysis.preprocess.filter.FilteringException;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -67,7 +68,7 @@ public class ExpressionDataMatrixServiceImpl implements ExpressionDataMatrixServ
     private ArrayDesignService arrayDesignService;
 
     @Override
-    public ExpressionDataDoubleMatrix getFilteredMatrix( ExpressionExperiment ee, FilterConfig filterConfig ) {
+    public ExpressionDataDoubleMatrix getFilteredMatrix( ExpressionExperiment ee, FilterConfig filterConfig ) throws FilteringException {
         Collection<ProcessedExpressionDataVector> dataVectors = processedExpressionDataVectorService
                 .getProcessedDataVectors( ee );
         return this.getFilteredMatrix( ee, filterConfig, dataVectors );
@@ -75,14 +76,14 @@ public class ExpressionDataMatrixServiceImpl implements ExpressionDataMatrixServ
 
     @Override
     public ExpressionDataDoubleMatrix getFilteredMatrix( ExpressionExperiment ee, FilterConfig filterConfig,
-            Collection<ProcessedExpressionDataVector> dataVectors ) {
+            Collection<ProcessedExpressionDataVector> dataVectors ) throws FilteringException {
         Collection<ArrayDesign> arrayDesignsUsed = expressionExperimentService.getArrayDesignsUsed( ee );
         return this.getFilteredMatrix( filterConfig, dataVectors, arrayDesignsUsed );
     }
 
     @Override
     public ExpressionDataDoubleMatrix getFilteredMatrix( String arrayDesignName, FilterConfig filterConfig,
-            Collection<ProcessedExpressionDataVector> dataVectors ) {
+            Collection<ProcessedExpressionDataVector> dataVectors ) throws FilteringException {
         ArrayDesign ad = arrayDesignService.findByShortName( arrayDesignName );
         if ( ad == null ) {
             throw new IllegalArgumentException( "No platform named '" + arrayDesignName + "'" );
@@ -171,7 +172,7 @@ public class ExpressionDataMatrixServiceImpl implements ExpressionDataMatrixServ
     }
 
     private ExpressionDataDoubleMatrix getFilteredMatrix( FilterConfig filterConfig,
-            Collection<ProcessedExpressionDataVector> dataVectors, Collection<ArrayDesign> arrayDesignsUsed ) {
+            Collection<ProcessedExpressionDataVector> dataVectors, Collection<ArrayDesign> arrayDesignsUsed ) throws FilteringException {
         if ( dataVectors == null || dataVectors.isEmpty() )
             throw new IllegalArgumentException( "Vectors must be provided" );
         ExpressionExperimentFilter filter = new ExpressionExperimentFilter( arrayDesignsUsed, filterConfig );

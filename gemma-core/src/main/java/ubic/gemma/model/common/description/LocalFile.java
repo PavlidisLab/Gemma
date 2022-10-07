@@ -33,8 +33,8 @@ import java.net.URISyntaxException;
 public class LocalFile implements Identifiable, Serializable {
 
     private static final long serialVersionUID = 5057142607188347151L;
-    private java.net.URL localURL;
-    private java.net.URL remoteURL;
+    private java.net.URI localURL;
+    private java.net.URI remoteURL;
     private String version;
     private Long size;
     private Long id;
@@ -51,11 +51,7 @@ public class LocalFile implements Identifiable, Serializable {
             return null;
         }
 
-        try {
-            return new File( this.getLocalURL().toURI() );
-        } catch ( URISyntaxException e ) {
-            throw new RuntimeException( e );
-        }
+        return new File( this.localURL );
 
     }
 
@@ -79,22 +75,22 @@ public class LocalFile implements Identifiable, Serializable {
     /**
      * @return The location of the file on a local server
      */
-    public java.net.URL getLocalURL() {
+    public java.net.URI getLocalURL() {
         return this.localURL;
     }
 
-    public void setLocalURL( java.net.URL localURL ) {
+    public void setLocalURL( java.net.URI localURL ) {
         this.localURL = localURL;
     }
 
     /**
      * @return Source where the file was downloaded from.
      */
-    public java.net.URL getRemoteURL() {
+    public java.net.URI getRemoteURL() {
         return this.remoteURL;
     }
 
-    public void setRemoteURL( java.net.URL remoteURL ) {
+    public void setRemoteURL( java.net.URI remoteURL ) {
         this.remoteURL = remoteURL;
     }
 

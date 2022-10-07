@@ -147,39 +147,4 @@ public class CompassUtils {
         compass.getSearchEngineIndexManager().start();
 
     }
-
-    /**
-     * "Turning on" means adding the compass context to our spring context, as well as creating the compass index
-     * directory. This does not turn on index mirroring to automatically update the index while persisting data (to a
-     * database). To do this, call enableIndexMirroring after running this.
-     *
-     * @param testEnv test env
-     * @param paths   paths
-     */
-    public static void turnOnCompass( boolean testEnv, List<String> paths ) {
-        if ( testEnv ) {
-            CompassUtils.addCompassTestContext( paths );
-        } else {
-            CompassUtils.addCompassContext( paths );
-        }
-
-    }
-
-    /**
-     * Add the compass contexts to the other spring contexts
-     *
-     * @param paths paths
-     */
-    private static void addCompassContext( List<String> paths ) {
-        paths.add( "classpath*:ubic/gemma/applicationContext-search.xml" );
-    }
-
-    /**
-     * Add the compass test contexts to the other spring contexts.
-     *
-     * @param paths paths
-     */
-    private static void addCompassTestContext( List<String> paths ) {
-        paths.add( "classpath*:ubic/gemma/applicationContext-search.xml" );
-    }
 }

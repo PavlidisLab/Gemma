@@ -27,6 +27,7 @@ import ubic.gemma.model.common.description.Characteristic;
 
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Set;
 
 /**
  * An abstract concept of a scientific study
@@ -35,19 +36,19 @@ public abstract class Investigation extends AbstractAuditable implements Securab
 
     private static final long serialVersionUID = -5191564466698945873L;
 
-    private Collection<Characteristic> characteristics = new HashSet<>();
-    private Collection<BibliographicReference> otherRelevantPublications = new HashSet<>();
+    private Set<Characteristic> characteristics = new HashSet<>();
+    private Set<BibliographicReference> otherRelevantPublications = new HashSet<>();
     private Contact owner;
     private BibliographicReference primaryPublication;
 
     /**
      * @return Annotations that describe the experiment as a whole, for example "tumor" or "brain".
      */
-    public Collection<Characteristic> getCharacteristics() {
+    public Set<Characteristic> getCharacteristics() {
         return this.characteristics;
     }
 
-    public void setCharacteristics( Collection<Characteristic> characteristics ) {
+    public void setCharacteristics( Set<Characteristic> characteristics ) {
         this.characteristics = characteristics;
     }
 
@@ -56,11 +57,11 @@ public abstract class Investigation extends AbstractAuditable implements Securab
      *         data but
      *         are not the primary publication for the investigation).
      */
-    public Collection<BibliographicReference> getOtherRelevantPublications() {
+    public Set<BibliographicReference> getOtherRelevantPublications() {
         return this.otherRelevantPublications;
     }
 
-    public void setOtherRelevantPublications( Collection<BibliographicReference> otherRelevantPublications ) {
+    public void setOtherRelevantPublications( Set<BibliographicReference> otherRelevantPublications ) {
         this.otherRelevantPublications = otherRelevantPublications;
     }
 

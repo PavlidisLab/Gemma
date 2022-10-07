@@ -34,9 +34,9 @@ public class PrincipalComponentAnalysis extends SingleExperimentAnalysis {
     private Integer numComponentsStored;
     private Integer maxNumProbesPerComponent;
     private BioAssayDimension bioAssayDimension;
-    private Collection<ProbeLoading> probeLoadings = new HashSet<>();
-    private Collection<Eigenvalue> eigenValues = new HashSet<>();
-    private Collection<Eigenvector> eigenVectors = new HashSet<>();
+    private Set<ProbeLoading> probeLoadings = new HashSet<>();
+    private Set<Eigenvalue> eigenValues = new HashSet<>();
+    private Set<Eigenvector> eigenVectors = new HashSet<>();
 
     public ubic.gemma.model.expression.bioAssayData.BioAssayDimension getBioAssayDimension() {
         return this.bioAssayDimension;
@@ -46,19 +46,19 @@ public class PrincipalComponentAnalysis extends SingleExperimentAnalysis {
         this.bioAssayDimension = bioAssayDimension;
     }
 
-    public Collection<Eigenvalue> getEigenValues() {
+    public Set<Eigenvalue> getEigenValues() {
         return this.eigenValues;
     }
 
-    public void setEigenValues( Collection<Eigenvalue> eigenValues ) {
+    public void setEigenValues( Set<Eigenvalue> eigenValues ) {
         this.eigenValues = eigenValues;
     }
 
-    public Collection<Eigenvector> getEigenVectors() {
+    public Set<Eigenvector> getEigenVectors() {
         return this.eigenVectors;
     }
 
-    public void setEigenVectors( Collection<Eigenvector> eigenVectors ) {
+    public void setEigenVectors( Set<Eigenvector> eigenVectors ) {
         this.eigenVectors = eigenVectors;
     }
 
@@ -84,11 +84,11 @@ public class PrincipalComponentAnalysis extends SingleExperimentAnalysis {
         this.numComponentsStored = numComponentsStored;
     }
 
-    public Collection<ProbeLoading> getProbeLoadings() {
+    public Set<ProbeLoading> getProbeLoadings() {
         return this.probeLoadings;
     }
 
-    public void setProbeLoadings( Collection<ProbeLoading> probeLoadings ) {
+    public void setProbeLoadings( Set<ProbeLoading> probeLoadings ) {
         this.probeLoadings = probeLoadings;
     }
 
@@ -135,8 +135,8 @@ public class PrincipalComponentAnalysis extends SingleExperimentAnalysis {
      * access the Eigenvalue data.
      */
     @Transient
-    public Double[] getVarianceFractions() {
-        Double[] result = new Double[this.getEigenValues().size()];
+    public double[] getVarianceFractions() {
+        double[] result = new double[this.getEigenValues().size()];
         for ( Eigenvalue v : this.getEigenValues() ) {
             result[v.getComponentNumber() - 1] = v.getVarianceFraction();
         }

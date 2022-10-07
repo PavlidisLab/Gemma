@@ -383,18 +383,21 @@ Gemma.GeneDetails = Ext.extend(Ext.Panel, {
                                 + '&nbsp;<i id="multifuncHelp" class="qtp fa fa-question-circle fa-fw"></i>',
                                 items: this.renderMultifunctionality(geneDetails)
                             },
+                            /*
                             {
                                 fieldLabel: 'Coexpression'
                                 + '&nbsp;<i id="nodeDegreeHelp" class="qtp fa fa-question-circle fa-fw"></i>',
                                 items: this.renderNodeDegree(geneDetails)
                             },
+
+
                             {
                                 fieldLabel: 'Phenotypes &nbsp;<i id="phenotypeHelp" class="qtp fa fa-question-circle fa-fw"></i>',
                                 items: this.renderPhenotypes(geneDetails),
                                 hidden: !(geneDetails.taxonId == 1 || geneDetails.taxonId == 2
                                     || geneDetails.taxonId == 3 || geneDetails.taxonId == 13 || geneDetails.taxonId == 14)
                             },
-
+                             */
                             {
                                 fieldLabel: 'Elements'
                                 + '&nbsp; <i id="elementsHelp" class="qtp fa fa-question-circle fa-fw"></i>',

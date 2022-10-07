@@ -43,7 +43,9 @@ public class BibliographicReferenceServiceImplTest extends BaseSpringContextTest
     private BibliographicReferenceDao brdao;
 
     @Before
-    public void setUp() {
+    @Override
+    public void setUp() throws Exception {
+        super.setUp();
 
         svc = new BibliographicReferenceServiceImpl( brdao );
 

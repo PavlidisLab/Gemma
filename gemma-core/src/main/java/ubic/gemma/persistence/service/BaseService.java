@@ -3,6 +3,8 @@ package ubic.gemma.persistence.service;
 import ubic.gemma.model.common.Identifiable;
 
 import javax.annotation.CheckReturnValue;
+import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.Collection;
 
 /**
@@ -11,14 +13,17 @@ import java.util.Collection;
  * @param <O> the Object type that this service is handling.
  * @author tesarst
  */
+@ParametersAreNonnullByDefault
 public interface BaseService<O extends Identifiable> {
 
     /**
      * Does a search for the entity in the persistent storage
      *
      * @param entity the entity to be searched for
-     * @return the version of entity retrieved from the persistent storage, if found.
+     * @return the version of entity retrieved from the persistent storage, if found, otherwise null.
      */
+    @Nullable
+    @CheckReturnValue
     O find( O entity );
 
     /**
@@ -37,6 +42,7 @@ public interface BaseService<O extends Identifiable> {
      * @return collection of objects referencing the persistent instances of given entities.
      */
     @SuppressWarnings("unused") // Consistency
+    @CheckReturnValue
     Collection<O> create( Collection<O> entities );
 
     /**
@@ -45,23 +51,25 @@ public interface BaseService<O extends Identifiable> {
      * @param entity the entity to be created.
      * @return object referencing the persistent instance of the given entity.
      */
+    @CheckReturnValue
     O create( O entity );
 
     /**
      * Loads objects with given ids.
      *
      * @param ids the ids of objects to be loaded.
-     * @return collection containing object with given ids.
+     * @return collection containing object with given IDs.
      */
     Collection<O> load( Collection<Long> ids );
 
     /**
-     * Loads object with given id.
+     * Loads object with given ID.
      *
-     * @param id the id of entity to be loaded.
-     * @return the entity with matching id, or null if the entity does not exist.
+     * @param id the ID of entity to be loaded.
+     * @return the entity with matching ID, or null if the entity does not exist or if the passed ID was null
      */
-    O load( Long id );
+    @Nullable
+    O load( @Nullable Long id );
 
     /**
      * Loads all the entities of specific type.
@@ -70,7 +78,7 @@ public interface BaseService<O extends Identifiable> {
      */
     Collection<O> loadAll();
 
-    int countAll();
+    long countAll();
 
     /**
      * Removes all the given entities from persistent storage.
@@ -80,9 +88,9 @@ public interface BaseService<O extends Identifiable> {
     void remove( Collection<O> entities );
 
     /**
-     * Removes the entity with given id from the persistent storage.
+     * Removes the entity with given ID from the persistent storage.
      *
-     * @param id the id of entity to be removed.
+     * @param id the ID of entity to be removed.
      */
     void remove( Long id );
 

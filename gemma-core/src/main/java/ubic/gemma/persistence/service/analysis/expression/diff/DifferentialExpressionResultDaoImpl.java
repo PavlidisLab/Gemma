@@ -117,6 +117,7 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
             DifferentialExpressionResultCache differentialExpressionResultCache ) {
         super( DifferentialExpressionAnalysisResult.class, sessionFactory );
         this.differentialExpressionResultCache = differentialExpressionResultCache;
+        setLoadBatchSize( 1000 ); // previously: 500
     }
 
     @Override
@@ -950,35 +951,6 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
 
         return hist;
 
-    }
-
-    @Override
-    public Collection<DifferentialExpressionAnalysisResult> load( Collection<Long> ids ) {
-        //language=HQL
-        final String queryString = "from DifferentialExpressionAnalysisResult dea where dea.id in (:ids)";
-
-        Collection<DifferentialExpressionAnalysisResult> probeResults = new HashSet<>();
-
-        if ( ids.isEmpty() ) {
-            return probeResults;
-        }
-
-        int BATCH_SIZE = 1000; // previously: 500.
-
-        for ( Collection<Long> batch : new BatchIterator<>( ids, BATCH_SIZE ) ) {
-            StopWatch timer = new StopWatch();
-            timer.start();
-            //noinspection unchecked
-            probeResults.addAll( this.getSessionFactory().getCurrentSession().createQuery( queryString )
-                    .setParameterList( "ids", batch ).list() );
-
-            if ( timer.getTime() > 1000 ) {
-                AbstractDao.log.info( "Fetch " + batch.size() + "/" + ids.size() + " results with contrasts: " + timer
-                        .getTime() + "ms; query was\n " + queryString );
-            }
-        }
-
-        return probeResults;
     }
 
     @Override
