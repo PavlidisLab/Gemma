@@ -356,6 +356,6 @@ public class SearchServiceTest extends BaseSpringContextTest {
         assertThat( resultVo.getResultId() )
                 .isEqualTo( ee.getId() );
         assertThat( resultVo.getResultObject() )
-                .isNull();
+                .isNotNull();
     }
 }
