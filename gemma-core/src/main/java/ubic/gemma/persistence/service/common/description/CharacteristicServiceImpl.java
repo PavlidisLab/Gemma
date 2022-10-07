@@ -120,14 +120,14 @@ public class CharacteristicServiceImpl extends AbstractVoEnabledService<Characte
     }
 
     @Override
-    public Map<Characteristic, Long> getParentIds( Class<?> parentClass, Collection<Characteristic> characteristics ) {
+    public Map<Characteristic, Long> getParentIds( Class<?> parentClass, @Nullable Collection<Characteristic> characteristics ) {
         return this.characteristicDao.getParentIds( parentClass, characteristics );
     }
 
     @Override
     @Transactional(readOnly = true)
     public Map<Characteristic, Object> getParents( Collection<Class<?>> classes,
-            Collection<Characteristic> characteristics ) {
+            @Nullable Collection<Characteristic> characteristics ) {
         Map<Characteristic, Object> charToParent = new HashMap<>();
         for ( Class<?> parentClass : classes ) {
             charToParent.putAll( this.characteristicDao.getParents( parentClass, characteristics ) );

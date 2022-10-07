@@ -27,6 +27,7 @@ import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObj
 import ubic.gemma.persistence.service.BaseVoEnabledService;
 import ubic.gemma.persistence.service.FilteringService;
 
+import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.Collection;
 import java.util.List;
@@ -72,7 +73,7 @@ public interface CharacteristicService extends BaseVoEnabledService<Characterist
      *                   associated characteristic using the given uriString. The class lets us track where the
      *                   annotation was.
      */
-    Map<Class<? extends Identifiable>, Map<String, Set<ExpressionExperiment>>> findExperimentsByUris( Collection<String> uris, Taxon taxon, int limit );
+    Map<Class<? extends Identifiable>, Map<String, Set<ExpressionExperiment>>> findExperimentsByUris( Collection<String> uris, @Nullable Taxon taxon, int limit );
 
     /**
      * given a collection of strings that represent URI's will find all the characteristics that are used in the system
@@ -119,7 +120,7 @@ public interface CharacteristicService extends BaseVoEnabledService<Characterist
      *                         given.
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_MAP_VALUES_READ" })
-    Map<Characteristic, Object> getParents( Collection<Class<?>> classes, Collection<Characteristic> characteristics );
+    Map<Characteristic, Object> getParents( Collection<Class<?>> classes, @Nullable Collection<Characteristic> characteristics );
 
     //    /**
     //     * @param classes constraint
@@ -154,5 +155,5 @@ public interface CharacteristicService extends BaseVoEnabledService<Characterist
      * @param  characteristics
      * @return
      */
-    Map<Characteristic, Long> getParentIds( Class<?> parentClass, Collection<Characteristic> characteristics );
+    Map<Characteristic, Long> getParentIds( Class<?> parentClass, @Nullable Collection<Characteristic> characteristics );
 }
