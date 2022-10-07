@@ -12,27 +12,16 @@ import org.springframework.web.context.support.GenericWebApplicationContext;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.ext.Provider;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 
-public class AbstractExceptionMapperTest extends JerseyTest {
-
-    @Provider
-    private static class WebApplicationExceptionMapper extends AbstractExceptionMapper<WebApplicationException> {
-
-        @Override
-        protected Response.Status getStatus( WebApplicationException exception ) {
-            return Response.Status.fromStatusCode( exception.getResponse().getStatus() );
-        }
-    }
+public class WebApplicationExceptionMapperTest extends JerseyTest {
 
     /**
      * This is a very simplisitc example that produces two representation for the same resource.
      */
-    @Path("/")
+    @Path("/custom")
     public static class CustomResource {
 
         public static class MyModel {
@@ -67,7 +56,7 @@ public class AbstractExceptionMapperTest extends JerseyTest {
 
     @Test
     public void testTextRepresentation() {
-        assertThatThrownBy( () -> target( "/" ).request().accept( MediaType.TEXT_PLAIN ).get( CustomResource.MyModel.class ) )
+        assertThatThrownBy( () -> target( "/custom" ).request().accept( MediaType.TEXT_PLAIN ).get( CustomResource.MyModel.class ) )
                 .isInstanceOf( BadRequestException.class )
                 .extracting( "response" )
                 .extracting( "entity" )
@@ -77,7 +66,7 @@ public class AbstractExceptionMapperTest extends JerseyTest {
 
     @Test
     public void testJsonRepresentation() {
-        assertThatThrownBy( () -> target( "/" ).request().accept( MediaType.APPLICATION_JSON ).get( CustomResource.MyModel.class ) )
+        assertThatThrownBy( () -> target( "/custom" ).request().accept( MediaType.APPLICATION_JSON ).get( CustomResource.MyModel.class ) )
                 .isInstanceOf( BadRequestException.class )
                 .extracting( "response" )
                 .extracting( "entity" )
