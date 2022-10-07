@@ -814,11 +814,11 @@ public class SearchServiceImpl implements SearchService {
 
     private void findExperimentsByUris( Collection<String> uris, Collection<SearchResult<ExpressionExperiment>> results, Taxon t, int limit,
             Map<String, String> uri2value ) {
-        Map<Class<?>, Map<String, Collection<Long>>> hits = characteristicService.findExperimentsByUris( uris, t, limit );
+        Map<Class<? extends Identifiable>, Map<String, Set<ExpressionExperiment>>> hits = characteristicService.findExperimentsByUris( uris, t, limit );
 
-        for ( Class<?> clazz : hits.keySet() ) {
+        for ( Class<? extends Identifiable> clazz : hits.keySet() ) {
             for ( String uri : hits.get( clazz ).keySet() ) {
-                for ( Long eeID : hits.get( clazz ).get( uri ) ) {
+                for ( ExpressionExperiment ee : hits.get( clazz ).get( uri ) ) {
                     String matchedText = "Tagged term: <a href=\"" + Settings.getRootContext()
                             + "/searcher.html?query=" + uri + "\">" + uri2value.get( uri ) + "</a> ";
                     if ( !clazz.isAssignableFrom( ExpressionExperiment.class ) ) {
