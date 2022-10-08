@@ -28,6 +28,7 @@ import org.springframework.context.support.ClassPathXmlApplicationContext;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Methods to create Spring contexts for Gemma manually. This is meant to be used by CLIs only.
@@ -42,19 +43,11 @@ public class SpringContextUtil {
      * Obtain an application context for Gemma.
      *
      * @param testing                           If true, it will get a test-configured application context
-     * @param isWebApp                          If true, a {@link UnsupportedOperationException} will be raised since
-     *                                          retrieving the web application context is not supported from here. Use
-     *                                          WebApplicationContextUtils.getWebApplicationContext() instead. This is
-     *                                          only kept for backward-compatibility with external scripts.
      * @param additionalConfigurationLocations, like "classpath*:/myproject/applicationContext-mine.xml"
      * @return a fully initialized {@link ApplicationContext}
      * @throws org.springframework.beans.BeansException if the creation of the context fails
      */
-    public static ApplicationContext getApplicationContext( boolean testing, boolean isWebApp, String[] additionalConfigurationLocations ) throws BeansException {
-        if ( isWebApp ) {
-            throw new UnsupportedOperationException( "The Web app context cannot be retrieved from here, use WebApplicationContextUtils.getWebApplicationContext() instead." );
-        }
-
+    public static ApplicationContext getApplicationContext( boolean testing, String... additionalConfigurationLocations ) throws BeansException {
         List<String> paths = new ArrayList<>();
 
         paths.add( "classpath*:gemma/gsec/applicationContext-*.xml" );
@@ -72,9 +65,27 @@ public class SpringContextUtil {
 
         StopWatch timer = StopWatch.createStarted();
         try {
+            SpringContextUtil.log.info( "Loading Gemma" + ( testing ? " test " : " " ) + "context, hold on!" );
             return new ClassPathXmlApplicationContext( paths.toArray( new String[0] ) );
         } finally {
-            SpringContextUtil.log.info( "Got context in " + timer.getTime() + "ms" );
+            SpringContextUtil.log.info( "Got Gemma context in " + timer.getTime( TimeUnit.MILLISECONDS ) + " ms." );
         }
+    }
+
+    /**
+     * @deprecated this method does not support producing Gemma Web contexts, please migrate existing code to use
+     * {@link #getApplicationContext(boolean, String...)} instead.
+     *
+     * @param isWebApp If true, a {@link UnsupportedOperationException} will be raised since retrieving the Web
+     *                 application context is not supported from here. Use WebApplicationContextUtils.getWebApplicationContext()
+     *                 instead. This is only kept for backward-compatibility with external scripts.
+     * @see #getApplicationContext(boolean, String...)
+     */
+    @Deprecated
+    public static ApplicationContext getApplicationContext( boolean testing, boolean isWebApp, String[] additionalConfigurationLocations ) throws BeansException {
+        if ( isWebApp ) {
+            throw new UnsupportedOperationException( "The Web app context cannot be retrieved from here, use WebApplicationContextUtils.getWebApplicationContext() instead." );
+        }
+        return getApplicationContext( testing, additionalConfigurationLocations );
     }
 }

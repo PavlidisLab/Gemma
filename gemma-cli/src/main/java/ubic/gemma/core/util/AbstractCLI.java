@@ -34,6 +34,7 @@ import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.persistence.util.Settings;
 
 import java.io.File;
+import java.io.PrintWriter;
 import java.util.*;
 import java.util.concurrent.*;
 
@@ -71,10 +72,13 @@ public abstract class AbstractCLI implements CLI {
     protected static final Log log = LogFactory.getLog( AbstractCLI.class );
     private static final String LOGGER_OPTION = "logger";
     private static final int DEFAULT_PORT = 3306;
-    private static final String HEADER = "Options:";
+    public static final String HEADER = "Options:";
     private static final String HOST_OPTION = "H";
     private static final String PORT_OPTION = "P";
     private static final String VERBOSITY_OPTION = "v";
+    private static final String HELP_OPTION = "h";
+    private static final String TESTING_OPTION = "testing";
+    private static final String DATE_OPTION = "mdate";
 
     /* support for convenience options */
     private final String DEFAULT_HOST = "localhost";
@@ -127,6 +131,10 @@ public abstract class AbstractCLI implements CLI {
                 printHelp( options );
                 return SUCCESS;
             }
+            if ( commandLine.hasOption( TESTING_OPTION ) ) {
+                System.err.printf( "The -testing/--testing option must be passed before the %s command.%n", getCommandName() );
+                return FAILURE;
+            }
             processStandardOptions( commandLine );
             processOptions( commandLine );
             doWork();
@@ -157,7 +165,7 @@ public abstract class AbstractCLI implements CLI {
 
     @SuppressWarnings("static-access")
     protected void addDateOption( Options options ) {
-        Option dateOption = Option.builder( "mdate" ).hasArg().desc(
+        Option dateOption = Option.builder( DATE_OPTION ).hasArg().desc(
                         "Constrain to run only on entities with analyses older than the given date. "
                                 + "For example, to run only on entities that have not been analyzed in the last 10 days, use '-10d'. "
                                 + "If there is no record of when the analysis was last run, it will be run." )
@@ -216,12 +224,13 @@ public abstract class AbstractCLI implements CLI {
     @SuppressWarnings("static-access")
     protected void buildStandardOptions( Options options ) {
         AbstractCLI.log.debug( "Creating standard options" );
-        Option helpOpt = new Option( "h", "help", false, "Print this message" );
-        Option testOpt = new Option( "testing", false, "Use the test environment" );
-        Option logOpt = new Option( "v", "verbosity", true,
+        Option helpOpt = new Option( HELP_OPTION, "help", false, "Print this message" );
+        Option testOpt = new Option( TESTING_OPTION, "testing", false, "Use the test environment. This option must be passed before the command." );
+        Option logOpt = new Option( VERBOSITY_OPTION, "verbosity", true,
                 "Set verbosity level for all loggers (0=silent, 5=very verbose; default is custom, see log4j.properties)" );
-        Option otherLogOpt = Option.builder().longOpt( "logger" ).hasArg().argName( "logger" ).desc( "Configure a specific logger verbosity"
-                        + "For example, '--logger ubic.gemma=5' or --logger log4j.logger.org.hibernate.SQL=5" )
+        Option otherLogOpt = Option.builder( LOGGER_OPTION )
+                .longOpt( "logger" ).hasArg().argName( "logger" )
+                .desc( "Configure a specific logger verbosity. For example, '--logger ubic.gemma=5' or --logger log4j.logger.org.hibernate.SQL=5" )
                 .build();
 
         options.addOption( otherLogOpt );
@@ -302,10 +311,10 @@ public abstract class AbstractCLI implements CLI {
     }
 
     protected void printHelp( Options options ) {
-        HelpFormatter h = new HelpFormatter();
-        h.setWidth( 150 );
-        h.printHelp( this.getCommandName() + " [options]", this.getShortDesc() + "\n" + AbstractCLI.HEADER, options,
-                AbstractCLI.FOOTER );
+        new HelpFormatter().printHelp( new PrintWriter( System.err, true ), 150,
+                this.getCommandName() + " [options]",
+                this.getShortDesc() + "\n" + AbstractCLI.HEADER,
+                options, HelpFormatter.DEFAULT_LEFT_PAD, HelpFormatter.DEFAULT_DESC_PAD, AbstractCLI.FOOTER );
     }
 
     /**
@@ -547,8 +556,8 @@ public abstract class AbstractCLI implements CLI {
             context.updateLoggers();
         }
 
-        if ( commandLine.hasOption( "mdate" ) ) {
-            this.mDate = commandLine.getOptionValue( "mdate" );
+        if ( commandLine.hasOption( DATE_OPTION ) ) {
+            this.mDate = commandLine.getOptionValue( DATE_OPTION );
         }
 
         if ( this.numThreads < 1 ) {

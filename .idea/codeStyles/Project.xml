@@ -12,6 +12,8 @@
     </JavaCodeStyleSettings>
     <XML>
       <option name="XML_TEXT_WRAP" value="0" />
+      <option name="XML_ALIGN_ATTRIBUTES" value="false" />
+      <option name="XML_SPACE_INSIDE_EMPTY_TAG" value="true" />
     </XML>
     <codeStyleSettings language="JAVA">
       <option name="ALIGN_MULTILINE_PARAMETERS" value="false" />
@@ -42,6 +44,12 @@
       <indentOptions>
         <option name="INDENT_SIZE" value="3" />
         <option name="CONTINUATION_INDENT_SIZE" value="3" />
+      </indentOptions>
+    </codeStyleSettings>
+    <codeStyleSettings language="XML">
+      <indentOptions>
+        <option name="CONTINUATION_INDENT_SIZE" value="4" />
+        <option name="USE_TAB_CHARACTER" value="true" />
       </indentOptions>
     </codeStyleSettings>
     <codeStyleSettings language="yaml">

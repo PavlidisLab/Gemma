@@ -26,8 +26,8 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.BeanFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.concurrent.DelegatingSecurityContextCallable;
-import org.springframework.security.core.context.SecurityContextHolder;
 import ubic.gemma.model.common.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.curation.Curatable;
@@ -38,7 +38,6 @@ import ubic.gemma.persistence.persister.Persister;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.persistence.util.SpringContextUtil;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -83,11 +82,21 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
      */
     private static final String PASSWORD_CMD_ENV = "GEMMA_PASSWORD_CMD";
 
+    @Autowired
+    private BeanFactory ctx;
+    @Autowired
+    private ManualAuthenticationService manAuthentication;
+    @Autowired
     protected AuditTrailService auditTrailService;
+    @Autowired
     protected AuditEventService auditEventService;
-    protected BeanFactory ctx;
+    @Autowired
+    private ExpressionExperimentService ees;
+    @Autowired
+    private Persister persisterHelper;
 
     @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
+    @Autowired
     public AbstractSpringAwareCLI() {
         super();
     }
@@ -126,19 +135,14 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
     @Override
     protected void processStandardOptions( CommandLine commandLine ) {
         super.processStandardOptions( commandLine );
-        this.createSpringContext( commandLine );
         this.authenticate( commandLine );
-        this.auditTrailService = this.getBean( AuditTrailService.class );
-        this.auditEventService = this.getBean( AuditEventService.class );
-    }
-
-    @SuppressWarnings("unused") // Possible external use
-    public void setCtx( BeanFactory ctx ) {
-        this.ctx = ctx;
     }
 
     /**
      * Convenience method to obtain instance of any bean by name.
+     *
+     * @deprecated Use {@link Autowired} to specify your dependencies, this is just a wrapper around the current
+     * {@link BeanFactory}.
      *
      * @param <T>  the bean class type
      * @param clz  class
@@ -146,19 +150,20 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
      * @return bean
      */
     @SuppressWarnings("SameParameterValue") // Better for general use
+    @Deprecated
     protected <T> T getBean( String name, Class<T> clz ) {
         assert ctx != null : "Spring context was not initialized";
         return ctx.getBean( name, clz );
     }
 
+    @Deprecated
     protected <T> T getBean( Class<T> clz ) {
         assert ctx != null : "Spring context was not initialized";
         return ctx.getBean( clz );
     }
 
     protected Persister getPersisterHelper() {
-        assert ctx != null : "Spring context was not initialized";
-        return ( Persister ) ctx.getBean( "persisterHelper" );
+        return persisterHelper;
     }
 
     /**
@@ -204,7 +209,6 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
 
             // special case for expression experiments - check associated ADs.
             if ( okToRun && curatable instanceof ExpressionExperiment ) {
-                ExpressionExperimentService ees = this.getBean( ExpressionExperimentService.class );
                 for ( ArrayDesign ad : ees.getArrayDesignsUsed( ( ExpressionExperiment ) auditable ) ) {
                     if ( ad.getCurationDetails().getTroubled() ) {
                         okToRun = false; // not ok if even one parent AD is troubled, no need to check the remaining ones.
@@ -222,20 +226,6 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
     }
 
     /**
-     * check if using test or production contexts
-     * @param commandLine
-     */
-    protected void createSpringContext( CommandLine commandLine ) {
-
-        ctx = SpringContextUtil.getApplicationContext( commandLine.hasOption( "testing" ), false, null );
-
-        /*
-         * Guarantee that the security settings are inherited from current thread.
-         */
-        SecurityContextHolder.setStrategyName( SecurityContextHolder.MODE_INHERITABLETHREADLOCAL );
-    }
-
-    /**
      * check username and password.
      * @param commandLine
      */
@@ -249,7 +239,6 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
             log.warn( "Usage of the -" + PASSWORD_OPTION + " is deprecated and will be removed in a future release. Use $GEMMA_PASSWORD or $GEMMA_PASSWORD_CMD instead." );
         }
 
-        ManualAuthenticationService manAuthentication = ctx.getBean( ManualAuthenticationService.class );
         if ( requireLogin() || commandLine.hasOption( USERNAME_OPTION ) || System.getenv().containsKey( USERNAME_ENV ) ) {
             String username = getUsername( commandLine );
             String password = getPassword( commandLine );

@@ -58,7 +58,7 @@ public class MeshTermFetcherCli extends AbstractCLI {
 
     @Override
     public GemmaCLI.CommandGroup getCommandGroup() {
-        return null;
+        return GemmaCLI.CommandGroup.MISC;
     }
 
     @SuppressWarnings("static-access")
