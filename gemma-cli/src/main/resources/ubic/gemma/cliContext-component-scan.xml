@@ -12,6 +12,12 @@
 		<context:include-filter type="assignable" expression="ubic.gemma.core.util.CLI" />
 	</context:component-scan>
 
+	<!-- Non-standard CLI tools used to load data into Gemma database -->
+	<context:component-scan base-package="ubic.gemma.core.loader"
+		name-generator="ubic.gemma.persistence.util.BeanNameGenerator">
+		<context:include-filter type="assignable" expression="ubic.gemma.core.util.CLI" />
+	</context:component-scan>
+
 	<!-- CLI tools from contrib packages -->
 	<context:component-scan base-package="ubic.gemma.contrib.apps"
 		name-generator="ubic.gemma.persistence.util.BeanNameGenerator">
