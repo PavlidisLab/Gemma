@@ -50,7 +50,7 @@ public class GemmaCLI {
     public static void main( String[] args ) {
         Options options = new Options()
                 .addOption( HELP_OPTION, "help", false, "Show help" )
-                .addOption( HELP_ALL_OPTION, false, "Show complete help with all available CLI commands" )
+                .addOption( HELP_ALL_OPTION, "help-all", false, "Show complete help with all available CLI commands" )
                 .addOption( TESTING_OPTION, "testing", false, "Use the test environment" );
         CommandLine commandLine;
         try {
