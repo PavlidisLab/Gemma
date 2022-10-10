@@ -537,7 +537,7 @@
     <cache name="ubic.gemma.model.association.RelationshipImpl" maxElementsInMemory="10000"
            timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false"/>
 
-    <cache name="ubic.gemma.model.association.Gene2GOAssociationImpl" maxElementsInMemory="10000"
+    <cache name="ubic.gemma.model.association.Gene2GOAssociation" maxElementsInMemory="10000"
            timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false"/>
 
     <cache name="ubic.gemma.model.association.BioSequence2GeneProduct" maxElementsInMemory="10000"

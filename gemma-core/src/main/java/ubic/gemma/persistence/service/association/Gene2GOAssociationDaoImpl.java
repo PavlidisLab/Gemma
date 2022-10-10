@@ -65,7 +65,7 @@ public class Gene2GOAssociationDaoImpl extends AbstractDao<Gene2GOAssociation> i
     public Collection<Characteristic> findByGene( Gene gene ) {
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession().createQuery(
-                "select distinct geneAss.ontologyEntry from Gene2GOAssociationImpl as geneAss  where geneAss.gene = :gene" )
+                "select distinct geneAss.ontologyEntry from Gene2GOAssociation as geneAss  where geneAss.gene = :gene" )
                 .setParameter( "gene", gene ).list();
     }
 
@@ -101,7 +101,7 @@ public class Gene2GOAssociationDaoImpl extends AbstractDao<Gene2GOAssociation> i
     public Collection<Gene> findByGoTerm( String goId, Taxon taxon ) {
         //noinspection unchecked
         return super.getSessionFactory().getCurrentSession().createQuery(
-                "select distinct geneAss.gene from Gene2GOAssociationImpl as geneAss  "
+                "select distinct geneAss.gene from Gene2GOAssociation as geneAss  "
                         + "where geneAss.ontologyEntry.value = :goID and geneAss.gene.taxon = :taxon" )
                 .setParameter( "goID", goId.replaceFirst( ":", "_" ) ).setParameter( "taxon", taxon ).list();
     }
@@ -124,7 +124,7 @@ public class Gene2GOAssociationDaoImpl extends AbstractDao<Gene2GOAssociation> i
     public Collection<Gene> getGenes( Collection<String> ids ) {
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession().createQuery(
-                "select distinct geneAss.gene from Gene2GOAssociationImpl as geneAss  "
+                "select distinct geneAss.gene from Gene2GOAssociation as geneAss  "
                         + "where geneAss.ontologyEntry.value in ( :goIDs)" )
                 .setParameterList( "goIDs", ids ).list();
     }
@@ -136,7 +136,7 @@ public class Gene2GOAssociationDaoImpl extends AbstractDao<Gene2GOAssociation> i
 
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession().createQuery(
-                "select distinct  " + "  gene from Gene2GOAssociationImpl as geneAss join geneAss.gene as gene "
+                "select distinct  " + "  gene from Gene2GOAssociation as geneAss join geneAss.gene as gene "
                         + "where geneAss.ontologyEntry.value in ( :goIDs) and gene.taxon = :tax" )
                 .setParameterList( "goIDs", ids ).setParameter( "tax", taxon ).list();
     }
@@ -167,7 +167,7 @@ public class Gene2GOAssociationDaoImpl extends AbstractDao<Gene2GOAssociation> i
     private Map<? extends Gene, ? extends Collection<Characteristic>> fetchBatch( Set<Gene> batch ) {
         Map<Long, Gene> giMap = EntityUtils.getIdMap( batch );
         //language=HQL
-        final String queryString = "select g.id, geneAss.ontologyEntry from Gene2GOAssociationImpl as geneAss join geneAss.gene g where g.id in (:genes)";
+        final String queryString = "select g.id, geneAss.ontologyEntry from Gene2GOAssociation as geneAss join geneAss.gene g where g.id in (:genes)";
         Map<Gene, Collection<Characteristic>> results = new HashMap<>();
         Query query = this.getSessionFactory().getCurrentSession().createQuery( queryString );
         query.setFetchSize( batch.size() );

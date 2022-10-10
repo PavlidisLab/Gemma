@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006-2012 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -23,9 +23,13 @@ import org.apache.commons.lang3.reflect.FieldUtils;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.genome.Gene;
 
-public abstract class Gene2GOAssociation extends Gene2OntologyEntryAssociationImpl {
+public class Gene2GOAssociation extends Gene2OntologyEntryAssociationImpl {
 
-    private static final long serialVersionUID = -8503436886033033975L;
+    /**
+     * The serial version UID of this class. Needed for serialization.
+     */
+    private static final long serialVersionUID = -710930089869830248L;
+
     private final GOEvidenceCode evidenceCode = null;
 
     public GOEvidenceCode getEvidenceCode() {
@@ -36,7 +40,7 @@ public abstract class Gene2GOAssociation extends Gene2OntologyEntryAssociationIm
 
         public static Gene2GOAssociation newInstance( Gene gene, Characteristic ontologyEntry,
                 GOEvidenceCode evidenceCode ) {
-            final Gene2GOAssociation entity = new ubic.gemma.model.association.Gene2GOAssociationImpl();
+            final Gene2GOAssociation entity = new ubic.gemma.model.association.Gene2GOAssociation();
 
             try {
                 FieldUtils.writeField( entity, "gene", gene, true );

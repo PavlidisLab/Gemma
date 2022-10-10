@@ -21,7 +21,7 @@ package ubic.gemma.persistence.service.common.description;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ubic.gemma.model.association.Gene2GOAssociationImpl;
+import ubic.gemma.model.association.Gene2GOAssociation;
 import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.description.Characteristic;
@@ -51,7 +51,7 @@ public class CharacteristicServiceImpl extends AbstractVoEnabledService<Characte
      * Classes examined when getting the "parents" of characteristics.
      */
     private static final Class<?>[] CLASSES_WITH_CHARACTERISTICS = new Class[] { ExpressionExperiment.class,
-            BioMaterial.class, FactorValue.class, ExperimentalFactor.class, Gene2GOAssociationImpl.class,
+            BioMaterial.class, FactorValue.class, ExperimentalFactor.class, Gene2GOAssociation.class,
             PhenotypeAssociation.class };
     private final CharacteristicDao characteristicDao;
 

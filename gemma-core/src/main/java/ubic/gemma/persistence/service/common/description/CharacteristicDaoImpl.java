@@ -26,7 +26,7 @@ import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import ubic.basecode.util.BatchIterator;
-import ubic.gemma.model.association.Gene2GOAssociationImpl;
+import ubic.gemma.model.association.Gene2GOAssociation;
 import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.description.Characteristic;
@@ -385,7 +385,7 @@ public class CharacteristicDaoImpl extends AbstractVoEnabledDao<Characteristic, 
         String field = "characteristics";
         if ( parentClass.isAssignableFrom( ExperimentalFactor.class ) )
             field = "category";
-        else if ( parentClass.isAssignableFrom( Gene2GOAssociationImpl.class ) )
+        else if ( parentClass.isAssignableFrom( Gene2GOAssociation.class ) )
             field = "ontologyEntry";
         else if ( parentClass.isAssignableFrom( PhenotypeAssociation.class ) ) {
             field = "phenotypes";
