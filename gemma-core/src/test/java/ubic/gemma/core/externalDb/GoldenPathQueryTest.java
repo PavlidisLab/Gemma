@@ -19,17 +19,14 @@
 package ubic.gemma.core.externalDb;
 
 import org.junit.Assert;
-import junit.framework.TestCase;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.springframework.jdbc.CannotGetJdbcConnectionException;
 import ubic.gemma.core.util.test.category.GoldenPathTest;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
-import ubic.gemma.persistence.util.Settings;
 
 import java.util.Collection;
 
@@ -51,7 +48,8 @@ public class GoldenPathQueryTest {
         t.setIsGenesUsable( true );
         try {
             queryer = new GoldenPathQuery( t );
-        } catch ( Exception e ) {
+            queryer.getJdbcTemplate().queryForObject( "select 1", Integer.class );
+        } catch ( CannotGetJdbcConnectionException e ) {
             Assume.assumeNoException( "Skipping test because hg could not be configured", e );
         }
     }

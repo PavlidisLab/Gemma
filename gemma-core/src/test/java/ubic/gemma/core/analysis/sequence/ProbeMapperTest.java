@@ -21,9 +21,11 @@ package ubic.gemma.core.analysis.sequence;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.junit.Assert;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.springframework.jdbc.CannotGetJdbcConnectionException;
 import ubic.gemma.core.externalDb.GoldenPathSequenceAnalysis;
 import ubic.gemma.core.loader.genome.BlatResultParser;
 import ubic.gemma.core.util.test.category.GoldenPathTest;
@@ -34,6 +36,7 @@ import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.model.genome.sequenceAnalysis.ThreePrimeDistanceMethod;
 
 import java.io.InputStream;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -59,6 +62,13 @@ public class ProbeMapperTest {
         Taxon humanTaxon = Taxon.Factory.newInstance( "human" );
         mousegp = new GoldenPathSequenceAnalysis( mouseTaxon );
         humangp = new GoldenPathSequenceAnalysis( humanTaxon );
+
+        try {
+            mousegp.getJdbcTemplate().queryForObject( "select 1", Integer.class );
+            humangp.getJdbcTemplate().queryForObject( "select 1", Integer.class );
+        } catch ( CannotGetJdbcConnectionException e ) {
+            Assume.assumeNoException( e );
+        }
 
         tester = new ArrayList<>();
         tester.add( 400d );
