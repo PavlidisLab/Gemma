@@ -555,14 +555,20 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
     @Override
     public void removeDataForCompositeSequence( final CompositeSequence compositeSequence ) {
         final String dedvRemovalQuery = "delete ProcessedExpressionDataVector dedv where dedv.designElement = ?";
-        int deleted = this.getHibernateTemplate().bulkUpdate( dedvRemovalQuery, compositeSequence );
+        int deleted = this.getSessionFactory().getCurrentSession()
+                .createQuery( dedvRemovalQuery )
+                .setParameter( 0, compositeSequence )
+                .executeUpdate();
         AbstractDao.log.info( "Deleted: " + deleted );
     }
 
     @Override
     public void removeDataForQuantitationType( final QuantitationType quantitationType ) {
         final String dedvRemovalQuery = "delete from ProcessedExpressionDataVector as dedv where dedv.quantitationType = ?";
-        int deleted = this.getHibernateTemplate().bulkUpdate( dedvRemovalQuery, quantitationType );
+        int deleted = this.getSessionFactory().getCurrentSession()
+                .createQuery( dedvRemovalQuery )
+                .setParameter( 0, quantitationType )
+                .executeUpdate();
         AbstractDao.log.info( "Deleted " + deleted + " data vector elements" );
     }
     //

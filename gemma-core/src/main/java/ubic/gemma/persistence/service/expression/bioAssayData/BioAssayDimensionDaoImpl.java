@@ -25,6 +25,7 @@ import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimensionValueObject;
@@ -119,55 +120,47 @@ public class BioAssayDimensionDaoImpl extends AbstractVoEnabledDao<BioAssayDimen
     }
 
     @Override
+    @Transactional
     public BioAssayDimension thawLite( final BioAssayDimension bioAssayDimension ) {
         if ( bioAssayDimension == null )
             return null;
         if ( bioAssayDimension.getId() == null )
             return bioAssayDimension;
-
-        this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
-            @Override
-            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                session.buildLockRequest( LockOptions.NONE ).lock( bioAssayDimension );
-                Hibernate.initialize( bioAssayDimension );
-                Hibernate.initialize( bioAssayDimension.getBioAssays() );
-                return null;
-            }
-        } );
+        Session session = getSessionFactory().getCurrentSession();
+        session.buildLockRequest( LockOptions.NONE ).lock( bioAssayDimension );
+        Hibernate.initialize( bioAssayDimension );
+        Hibernate.initialize( bioAssayDimension.getBioAssays() );
         return bioAssayDimension;
     }
 
     @Override
+    @Transactional
     public BioAssayDimension thaw( final BioAssayDimension bioAssayDimension ) {
         if ( bioAssayDimension == null )
             return null;
         if ( bioAssayDimension.getId() == null )
             return bioAssayDimension;
 
-        this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
-            @Override
-            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                session.buildLockRequest( LockOptions.NONE ).lock( bioAssayDimension );
-                Hibernate.initialize( bioAssayDimension );
-                Hibernate.initialize( bioAssayDimension.getBioAssays() );
+        Session session = getSessionFactory().getCurrentSession();
+        session.buildLockRequest( LockOptions.NONE ).lock( bioAssayDimension );
+        Hibernate.initialize( bioAssayDimension );
+        Hibernate.initialize( bioAssayDimension.getBioAssays() );
 
-                for ( BioAssay ba : bioAssayDimension.getBioAssays() ) {
-                    if ( ba != null ) {
-                        session.buildLockRequest( LockOptions.NONE ).lock( ba );
-                        Hibernate.initialize( ba );
-                        Hibernate.initialize( ba.getSampleUsed() );
-                        Hibernate.initialize( ba.getArrayDesignUsed() );
-                        Hibernate.initialize( ba.getOriginalPlatform() );
-                        BioMaterial bm = ba.getSampleUsed();
-                        session.buildLockRequest( LockOptions.NONE ).lock( bm );
-                        Hibernate.initialize( bm );
-                        Hibernate.initialize( bm.getBioAssaysUsedIn() );
-                        Hibernate.initialize( bm.getFactorValues() );
-                    }
-                }
-                return null;
+        for ( BioAssay ba : bioAssayDimension.getBioAssays() ) {
+            if ( ba != null ) {
+                session.buildLockRequest( LockOptions.NONE ).lock( ba );
+                Hibernate.initialize( ba );
+                Hibernate.initialize( ba.getSampleUsed() );
+                Hibernate.initialize( ba.getArrayDesignUsed() );
+                Hibernate.initialize( ba.getOriginalPlatform() );
+                BioMaterial bm = ba.getSampleUsed();
+                session.buildLockRequest( LockOptions.NONE ).lock( bm );
+                Hibernate.initialize( bm );
+                Hibernate.initialize( bm.getBioAssaysUsedIn() );
+                Hibernate.initialize( bm.getFactorValues() );
             }
-        } );
+        }
+
         return bioAssayDimension;
     }
 

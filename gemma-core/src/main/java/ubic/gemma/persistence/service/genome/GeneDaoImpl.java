@@ -25,6 +25,7 @@ import org.hibernate.Criteria;
 import org.hibernate.Hibernate;
 import org.hibernate.Query;
 import org.hibernate.SessionFactory;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import ubic.basecode.util.BatchIterator;
@@ -50,7 +51,7 @@ import java.util.*;
  * @see Gene
  */
 @Repository
-public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneValueObject> implements GeneDao {
+public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneValueObject> implements GeneDao, InitializingBean {
 
     private static final int BATCH_SIZE = 100;
     private static final int MAX_RESULTS = 100;
@@ -79,8 +80,11 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
 
         if ( source == null ) {
             //noinspection unchecked
-            genes = this.getHibernateTemplate().findByNamedParam( accessionQuery, "accession", accession );
-            if ( genes.size() == 0 ) {
+            genes = this.getSessionFactory().getCurrentSession()
+                    .createQuery( accessionQuery )
+                    .setParameter( "accession", accession )
+                    .list();
+            if ( genes.isEmpty() ) {
                 try {
                     return this.findByNcbiId( Integer.parseInt( accession ) );
                 } catch ( NumberFormatException e ) {
@@ -96,9 +100,11 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
                 }
             } else {
                 //noinspection unchecked
-                genes = this.getHibernateTemplate()
-                        .findByNamedParam( externalDbQuery, new String[] { "accession", "source" },
-                                new Object[] { accession, source } );
+                genes = this.getSessionFactory().getCurrentSession()
+                        .createQuery( externalDbQuery )
+                        .setParameter( "accession", accession )
+                        .setParameter( "source", source )
+                        .list();
             }
         }
         if ( genes.size() > 0 ) {
@@ -177,9 +183,11 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
 
         for ( Collection<String> batch : new BatchIterator<>( query, GeneDaoImpl.BATCH_SIZE ) ) {
             //noinspection unchecked
-            List<Gene> results = this.getHibernateTemplate()
-                    .findByNamedParam( queryString, new String[] { "symbols", "taxonId" },
-                            new Object[] { batch, taxonId } );
+            List<Gene> results = this.getSessionFactory().getCurrentSession()
+                    .createQuery( queryString )
+                    .setParameterList( "symbols", batch )
+                    .setParameter( "taxonId", taxonId )
+                    .list();
             for ( Gene g : results ) {
                 result.put( g.getOfficialSymbol().toLowerCase(), g );
             }
@@ -195,7 +203,10 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
 
         for ( Collection<Integer> batch : new BatchIterator<>( ncbiIds, GeneDaoImpl.BATCH_SIZE ) ) {
             //noinspection unchecked
-            List<Gene> results = this.getHibernateTemplate().findByNamedParam( queryString, "ncbi", batch );
+            List<Gene> results = this.getSessionFactory().getCurrentSession()
+                    .createQuery( queryString )
+                    .setParameterList( "ncbi", batch )
+                    .list();
             for ( Gene g : results ) {
                 result.put( g.getNcbiGeneId(), g );
             }
@@ -223,8 +234,10 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
                 "select count(distinct cs) from Gene as gene inner join gene.products gp,  BioSequence2GeneProduct"
                         + " as bs2gp, CompositeSequence as cs where gp=bs2gp.geneProduct "
                         + " and cs.biologicalCharacteristic=bs2gp.bioSequence " + " and gene.id = :id ";
-        List<?> r = this.getHibernateTemplate().findByNamedParam( queryString, "id", id );
-        return ( Long ) r.iterator().next();
+        return ( Long ) this.getSessionFactory().getCurrentSession()
+                .createQuery( queryString )
+                .setParameter( "id", id )
+                .uniqueResult();
     }
 
     @Override
@@ -237,17 +250,12 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
                         + " and cs.biologicalCharacteristic=bs2gp.bioSequence "
                         + " and gene = :gene and cs.arrayDesign = :arrayDesign ";
 
-        try {
-            org.hibernate.Query queryObject = this.getSessionFactory().getCurrentSession().createQuery( queryString );
-            queryObject.setParameter( "arrayDesign", arrayDesign );
-            queryObject.setParameter( "gene", gene );
-            //noinspection unchecked
-            compSeq = queryObject.list();
-
-        } catch ( org.hibernate.HibernateException ex ) {
-            throw getHibernateTemplate().convertHibernateAccessException( ex );
-        }
-        return compSeq;
+        //noinspection unchecked
+        return this.getSessionFactory().getCurrentSession()
+                .createQuery( queryString )
+                .setParameter( "arrayDesign", arrayDesign )
+                .setParameter( "gene", gene )
+                .list();
     }
 
     /**
@@ -263,7 +271,9 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
                         + " as bs2gp , CompositeSequence as cs where gp=bs2gp.geneProduct "
                         + " and cs.biologicalCharacteristic=bs2gp.bioSequence " + " and gene.id = :id ";
         //noinspection unchecked
-        return this.getHibernateTemplate().findByNamedParam( queryString, "id", id );
+        return this.getSessionFactory().getCurrentSession().createQuery( queryString )
+                .setParameter( "id", id )
+                .list();
     }
 
     @Override
@@ -271,7 +281,10 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
         //language=HQL
         final String queryString = "select gene from Gene as gene where gene.taxon = :taxon ";
         //noinspection unchecked
-        return this.getHibernateTemplate().findByNamedParam( queryString, "taxon", taxon );
+        return this.getSessionFactory().getCurrentSession()
+                .createQuery( queryString )
+                .setParameter( "taxon", taxon )
+                .list();
     }
 
     @Override
@@ -280,7 +293,7 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
         final String queryString = "select gene from Gene as gene where gene.taxon = :taxon"
                 + " and (gene.description like '%micro RNA or sno RNA' OR gene.description = 'miRNA')";
         //noinspection unchecked
-        return this.getHibernateTemplate().findByNamedParam( queryString, "taxon", taxon );
+        return this.getSessionFactory().getCurrentSession().createQuery( queryString ).setParameter( "taxon", taxon ).list();
     }
 
     @Override
@@ -290,9 +303,10 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
                 "select count(distinct cs.arrayDesign) from Gene as gene inner join gene.products gp,  BioSequence2GeneProduct"
                         + " as bs2gp, CompositeSequence as cs where gp=bs2gp.geneProduct "
                         + " and cs.biologicalCharacteristic=bs2gp.bioSequence " + " and gene.id = :id ";
-        List r = this.getSessionFactory().getCurrentSession().createQuery( queryString ).setParameter( "id", id ).list();
-        return ( ( Long ) r.iterator().next() ).intValue();
-
+        return ( ( Long ) this.getSessionFactory().getCurrentSession()
+                .createQuery( queryString )
+                .setParameter( "id", id )
+                .uniqueResult() ).intValue();
     }
 
     @Override
@@ -301,7 +315,10 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
         final String queryString = "select gene from Gene as gene fetch all properties where gene.taxon = :taxon";
 
         //noinspection unchecked
-        return this.getHibernateTemplate().findByNamedParam( queryString, "taxon", taxon );
+        return getSessionFactory().getCurrentSession()
+                .createQuery( queryString )
+                .setParameter( "taxon", taxon )
+                .list();
     }
 
     @Override
@@ -342,17 +359,16 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
     public Gene thaw( final Gene gene ) {
         if ( gene.getId() == null )
             return gene;
-
-        List<?> res = this.getHibernateTemplate().findByNamedParam(
-                "select distinct g from Gene g " + " left join fetch g.aliases left join fetch g.accessions acc"
-                        + " left join fetch acc.externalDatabase left join fetch g.products gp "
-                        + " left join fetch gp.accessions gpacc left join fetch gpacc.externalDatabase left join"
-                        + " fetch gp.physicalLocation gppl left join fetch gppl.chromosome chr left join fetch chr.taxon "
-                        + " left join fetch g.taxon t left join fetch t.externalDatabase "
-                        + " left join fetch g.multifunctionality left join fetch g.phenotypeAssociations "
-                        + " where g.id=:gid", "gid", gene.getId() );
-
-        return ( Gene ) res.iterator().next();
+        return ( Gene ) this.getSessionFactory().getCurrentSession().createQuery(
+                        "select distinct g from Gene g " + " left join fetch g.aliases left join fetch g.accessions acc"
+                                + " left join fetch acc.externalDatabase left join fetch g.products gp "
+                                + " left join fetch gp.accessions gpacc left join fetch gpacc.externalDatabase left join"
+                                + " fetch gp.physicalLocation gppl left join fetch gppl.chromosome chr left join fetch chr.taxon "
+                                + " left join fetch g.taxon t left join fetch t.externalDatabase "
+                                + " left join fetch g.multifunctionality left join fetch g.phenotypeAssociations "
+                                + " where g.id=:gid" )
+                .setParameter( "gid", gene.getId() )
+                .uniqueResult();
     }
 
     /**
@@ -362,11 +378,10 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
     public Gene thawAliases( final Gene gene ) {
         if ( gene.getId() == null )
             return gene;
-
-        List<?> res = this.getHibernateTemplate().findByNamedParam( "select distinct g from Gene g "
-                + "left join fetch g.aliases left join fetch g.accessions acc where g.id=:gid", "gid", gene.getId() );
-
-        return ( Gene ) res.iterator().next();
+        return ( Gene ) this.getSessionFactory().getCurrentSession()
+                .createQuery( "select distinct g from Gene g left join fetch g.aliases left join fetch g.accessions acc where g.id=:gid" )
+                .setParameter( "gid", gene.getId() )
+                .uniqueResult();
     }
 
     @Override
@@ -402,21 +417,22 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
         if ( gene.getId() == null )
             return gene;
 
-        List<?> res = this.getHibernateTemplate()
-                .findByNamedParam( "select distinct g from Gene g " + " left join fetch g.taxon" + " where g.id=:gid",
-                        "gid", gene.getId() );
-
-        return ( Gene ) res.iterator().next();
+        return ( Gene ) this.getSessionFactory().getCurrentSession()
+                .createQuery( "select distinct g from Gene g left join fetch g.taxon where g.id=:gid" )
+                .setParameter( "gid", gene.getId() )
+                .uniqueResult();
     }
 
     @Override
     public void remove( Gene gene ) {
         // remove associations
-        List<?> associations = this.getHibernateTemplate().findByNamedParam(
-                "select ba from BioSequence2GeneProduct ba join ba.geneProduct gp join gp.gene g where g=:g ", "g",
-                gene );
-        if ( !associations.isEmpty() )
-            this.getHibernateTemplate().deleteAll( associations );
+        List<?> associations = this.getSessionFactory().getCurrentSession()
+                .createQuery( "select ba from BioSequence2GeneProduct ba join ba.geneProduct gp join gp.gene g where g=:g" )
+                .setParameter( "g", gene )
+                .list();
+        for ( Object association : associations ) {
+            getSessionFactory().getCurrentSession().delete( association );
+        }
 
         super.remove( gene );
     }
@@ -505,7 +521,7 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
     }
 
     @Override
-    protected void initDao() {
+    public void afterPropertiesSet() {
         CacheUtils.createOrLoadCache( cacheManager, GeneDaoImpl.G2CS_CACHE_NAME, 500000, false,
                 false, 0, 0 );
     }
@@ -557,17 +573,18 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
 
     private Collection<Gene> doLoadThawedLite( Collection<Long> ids ) {
         //noinspection unchecked
-        return this.getHibernateTemplate().findByNamedParam(
+        return this.getSessionFactory().getCurrentSession().createQuery(
                 "select g from Gene g left join fetch g.aliases left join fetch g.accessions acc "
                         + "join fetch g.taxon t left join fetch g.products gp left join fetch g.multifunctionality "
-                        + "where g.id in (:gIds)", "gIds", ids );
+                        + "where g.id in (:gIds)" ).setParameterList( "gIds", ids ).list();
     }
 
     private Collection<Gene> doLoadThawedLiter( Collection<Long> ids ) {
         //noinspection unchecked
-        return this.getHibernateTemplate()
-                .findByNamedParam( "select g from Gene g join fetch g.taxon t " + "where g.id in (:gIds)", "gIds",
-                        ids );
+        return this.getSessionFactory().getCurrentSession()
+                .createQuery( "select g from Gene g join fetch g.taxon t where g.id in (:gIds)" )
+                .setParameterList( "gIds", ids )
+                .list();
     }
 
     /**
@@ -587,18 +604,22 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
                 + "and pl.chromosome = :chromosome and " + SequenceBinUtils.addBinToQuery( "pl", targetStart,
                 targetEnd );
 
-        String[] params;
-        Object[] vals;
         if ( strand != null ) {
-            query = query + " and pl.strand = :strand ";
-            params = new String[] { "chromosome", "start", "end", "strand" };
-            vals = new Object[] { chromosome, targetStart, targetEnd, strand };
+            //noinspection unchecked
+            return getSessionFactory().getCurrentSession().createQuery( query + " and pl.strand = :strand" )
+                    .setParameter( "chromosome", chromosome )
+                    .setParameter( "start", targetStart )
+                    .setParameter( "end", targetEnd )
+                    .setParameter( "strand", strand )
+                    .list();
         } else {
-            params = new String[] { "chromosome", "start", "end" };
-            vals = new Object[] { chromosome, targetStart, targetEnd };
+            //noinspection unchecked
+            return getSessionFactory().getCurrentSession().createQuery( query )
+                    .setParameter( "chromosome", chromosome )
+                    .setParameter( "start", targetStart )
+                    .setParameter( "end", targetEnd )
+                    .list();
         }
-        //noinspection unchecked
-        return this.getHibernateTemplate().findByNamedParam( query, params, vals );
     }
 
     private void debug( List<Gene> results ) {

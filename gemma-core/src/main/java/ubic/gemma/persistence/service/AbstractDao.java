@@ -26,7 +26,6 @@ import org.hibernate.FlushMode;
 import org.hibernate.SessionFactory;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
-import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.common.Identifiable;
 
@@ -42,7 +41,7 @@ import java.util.stream.Collectors;
  * @author Anton, Nicolas
  */
 @Transactional
-public abstract class AbstractDao<T extends Identifiable> extends HibernateDaoSupport implements BaseDao<T> {
+public abstract class AbstractDao<T extends Identifiable> implements BaseDao<T> {
 
     protected static final Log log = LogFactory.getLog( AbstractDao.class );
 
@@ -63,6 +62,8 @@ public abstract class AbstractDao<T extends Identifiable> extends HibernateDaoSu
      */
     public static final int DEFAULT_BATCH_SIZE = 100;
 
+    private final SessionFactory sessionFactory;
+
     protected final Class<T> elementClass;
 
     private int loadBatchSize = DEFAULT_LOAD_BATCH_SIZE;
@@ -70,7 +71,7 @@ public abstract class AbstractDao<T extends Identifiable> extends HibernateDaoSu
     private int batchSize = DEFAULT_BATCH_SIZE;
 
     protected AbstractDao( Class<T> elementClass, SessionFactory sessionFactory ) {
-        super.setSessionFactory( sessionFactory );
+        this.sessionFactory = sessionFactory;
         this.elementClass = elementClass;
     }
 
@@ -203,6 +204,10 @@ public abstract class AbstractDao<T extends Identifiable> extends HibernateDaoSu
     public T findOrCreate( T entity ) {
         T found = this.find( entity );
         return found == null ? this.create( entity ) : found;
+    }
+
+    protected SessionFactory getSessionFactory() {
+        return sessionFactory;
     }
 
     /**

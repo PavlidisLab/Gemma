@@ -69,26 +69,9 @@ public class BioAssayDaoImpl extends AbstractVoEnabledDao<BioAssay, BioAssayValu
 
     @Override
     public BioAssay find( BioAssay bioAssay ) {
-        try {
-            Criteria queryObject = BusinessKey
-                    .createQueryObject( this.getSessionFactory().getCurrentSession(), bioAssay );
-
-            List<?> results = queryObject.list();
-            Object result = null;
-            if ( results != null ) {
-                if ( results.size() > 1 ) {
-                    throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                            "More than one instance of '" + BioAssay.class.getName()
-                                    + "' was found when executing query" );
-
-                } else if ( results.size() == 1 ) {
-                    result = results.iterator().next();
-                }
-            }
-            return ( BioAssay ) result;
-        } catch ( org.hibernate.HibernateException ex ) {
-            throw getHibernateTemplate().convertHibernateAccessException( ex );
-        }
+        return ( BioAssay ) BusinessKey
+                .createQueryObject( this.getSessionFactory().getCurrentSession(), bioAssay )
+                .uniqueResult();
     }
 
     @Override
@@ -148,14 +131,13 @@ public class BioAssayDaoImpl extends AbstractVoEnabledDao<BioAssay, BioAssayValu
     public Collection<BioAssay> thaw( Collection<BioAssay> bioAssays ) {
         if ( bioAssays.isEmpty() )
             return bioAssays;
-        List<?> thawedBioassays = this.getHibernateTemplate().findByNamedParam(
-                "select distinct b from BioAssay b left join fetch b.arrayDesignUsed"
-                        + " left join fetch b.sampleUsed bm"
-                        + " left join bm.factorValues left join bm.bioAssaysUsedIn where b.id in (:ids) ",
-                "ids",
-                EntityUtils.getIds( bioAssays ) );
         //noinspection unchecked
-        return ( Collection<BioAssay> ) thawedBioassays;
+        return this.getSessionFactory().getCurrentSession()
+                .createQuery( "select distinct b from BioAssay b left join fetch b.arrayDesignUsed"
+                        + " left join fetch b.sampleUsed bm"
+                        + " left join bm.factorValues left join bm.bioAssaysUsedIn where b.id in (:ids) " )
+                .setParameterList( "ids", EntityUtils.getIds( bioAssays ) )
+                .list();
     }
 
     /**

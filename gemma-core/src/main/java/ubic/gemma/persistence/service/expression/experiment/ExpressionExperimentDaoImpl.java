@@ -254,7 +254,6 @@ public class ExpressionExperimentDaoImpl
 
     @Override
     public Collection<ExpressionExperiment> findByExpressedGene( Gene gene, Double rank ) {
-
         //language=MySQL
         final String queryString = "SELECT DISTINCT ee.ID AS eeID FROM "
                 + "GENE2CS g2s, COMPOSITE_SEQUENCE cs, PROCESSED_EXPRESSION_DATA_VECTOR dedv, INVESTIGATION ee "
@@ -263,22 +262,18 @@ public class ExpressionExperimentDaoImpl
 
         Collection<Long> eeIds;
 
-        try {
-            Session session = this.getSessionFactory().getCurrentSession();
-            org.hibernate.SQLQuery queryObject = session.createSQLQuery( queryString );
-            queryObject.setLong( "geneID", gene.getId() );
-            queryObject.setDouble( "rank", rank );
-            queryObject.addScalar( "eeID", new LongType() );
-            //noinspection unchecked
-            List<Long> results = queryObject.list();
+        Session session = this.getSessionFactory().getCurrentSession();
+        org.hibernate.SQLQuery queryObject = session.createSQLQuery( queryString );
+        queryObject.setLong( "geneID", gene.getId() );
+        queryObject.setDouble( "rank", rank );
+        queryObject.addScalar( "eeID", new LongType() );
+        //noinspection unchecked
+        List<Long> results = queryObject.list();
 
-            eeIds = new HashSet<>( results );
+        eeIds = new HashSet<>( results );
 
-            session.flush();
-            session.clear();
-        } catch ( org.hibernate.HibernateException ex ) {
-            throw super.getHibernateTemplate().convertHibernateAccessException( ex );
-        }
+        session.flush();
+        session.clear();
 
         return this.load( eeIds );
     }

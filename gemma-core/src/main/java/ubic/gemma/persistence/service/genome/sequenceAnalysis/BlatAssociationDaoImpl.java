@@ -23,10 +23,11 @@ import org.hibernate.Criteria;
 import org.hibernate.Hibernate;
 import org.hibernate.LockOptions;
 import org.hibernate.SessionFactory;
+import org.hibernate.classic.Session;
 import org.hibernate.criterion.Restrictions;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.orm.hibernate3.HibernateTemplate;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.gene.GeneProduct;
@@ -95,40 +96,28 @@ public class BlatAssociationDaoImpl extends AbstractDao<BlatAssociation> impleme
     }
 
     @Override
+    @Transactional(readOnly = true)
     public void thaw( final Collection<BlatAssociation> blatAssociations ) {
         if ( blatAssociations == null )
             return;
-        HibernateTemplate templ = this.getHibernateTemplate();
-        templ.executeWithNativeSession( new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
-            @Override
-            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                for ( Object object : blatAssociations ) {
-                    BlatAssociation blatAssociation = ( BlatAssociation ) object;
-                    if ( ( blatAssociation ).getId() == null )
-                        continue;
-                    BlatAssociationDaoImpl.this.thawBlatAssociation( session, blatAssociation );
-                    session.evict( blatAssociation );
-                }
-                return null;
-            }
-
-        } );
+        for ( BlatAssociation blatAssociation : blatAssociations ) {
+            this.thaw( blatAssociation );
+        }
     }
 
     @Override
+    @Transactional(readOnly = true)
     public void thaw( final BlatAssociation blatAssociation ) {
         if ( blatAssociation == null )
             return;
         if ( blatAssociation.getId() == null )
             return;
-        HibernateTemplate templ = this.getHibernateTemplate();
-        templ.executeWithNativeSession( new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
-            @Override
-            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                BlatAssociationDaoImpl.this.thawBlatAssociation( session, blatAssociation );
-                return null;
-            }
-        } );
+        Session session = getSessionFactory().getCurrentSession();
+        session.buildLockRequest( LockOptions.NONE ).lock( blatAssociation );
+        Hibernate.initialize( blatAssociation.getBioSequence() );
+        Hibernate.initialize( blatAssociation.getGeneProduct() );
+        Hibernate.initialize( blatAssociation.getBlatResult() );
+        Hibernate.initialize( blatAssociation.getBlatResult().getTargetChromosome() );
     }
 
     @Override
@@ -139,14 +128,6 @@ public class BlatAssociationDaoImpl extends AbstractDao<BlatAssociation> impleme
                 this.getSessionFactory().getCurrentSession()
                         .createQuery( "select b from BlatAssociation b join b.geneProduct gp where gp in (:gps)" )
                         .setParameterList( "gps", gps ).list();
-    }
-
-    private void thawBlatAssociation( org.hibernate.Session session, BlatAssociation blatAssociation ) {
-        session.buildLockRequest( LockOptions.NONE ).lock( blatAssociation );
-        Hibernate.initialize( blatAssociation.getBioSequence() );
-        Hibernate.initialize( blatAssociation.getGeneProduct() );
-        Hibernate.initialize( blatAssociation.getBlatResult() );
-        Hibernate.initialize( blatAssociation.getBlatResult().getTargetChromosome() );
     }
 
 }

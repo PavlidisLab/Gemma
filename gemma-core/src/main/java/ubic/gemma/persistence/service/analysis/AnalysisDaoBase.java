@@ -77,6 +77,8 @@ public abstract class AnalysisDaoBase<T extends Analysis> extends AbstractDao<T>
                 + " an inner join an.experimentAnalyzed ee inner join ee.bioAssays ba "
                 + "inner join ba.sampleUsed sample where sample.sourceTaxon = :taxon ";
         //noinspection unchecked
-        return this.getHibernateTemplate().findByNamedParam( queryString, "taxon", taxon );
+        return getSessionFactory().getCurrentSession().createQuery( queryString )
+                .setParameter( "taxon", taxon )
+                .list();
     }
 }

@@ -141,16 +141,11 @@ public class BioSequenceDaoImpl extends AbstractVoEnabledDao<BioSequence, BioSeq
 
     @Override
     public Collection<Gene> getGenesByName( String search ) {
-        try {
-            //noinspection unchecked
-            return this.getSessionFactory().getCurrentSession().createQuery(
-                            "select distinct gene from Gene as gene inner join gene.products gp,  BioSequence2GeneProduct as bs2gp where gp=bs2gp.geneProduct "
-                                    + " and bs2gp.bioSequence.name like :search " )
-                    .setString( "search", search ).list();
-
-        } catch ( org.hibernate.HibernateException ex ) {
-            throw getHibernateTemplate().convertHibernateAccessException( ex );
-        }
+        //noinspection unchecked
+        return this.getSessionFactory().getCurrentSession().createQuery(
+                        "select distinct gene from Gene as gene inner join gene.products gp,  BioSequence2GeneProduct as bs2gp where gp=bs2gp.geneProduct "
+                                + " and bs2gp.bioSequence.name like :search " )
+                .setString( "search", search ).list();
     }
 
     @Override
@@ -183,15 +178,14 @@ public class BioSequenceDaoImpl extends AbstractVoEnabledDao<BioSequence, BioSeq
         if ( bioSequence.getId() == null )
             return bioSequence;
 
-        List<?> res = this.getHibernateTemplate().findByNamedParam( "select b from BioSequence b "
+        return ( BioSequence ) getSessionFactory().getCurrentSession().createQuery( "select b from BioSequence b "
                         + " left join fetch b.taxon tax left join fetch tax.externalDatabase "
                         + " left join fetch b.sequenceDatabaseEntry s left join fetch s.externalDatabase"
                         + " left join fetch b.bioSequence2GeneProduct bs2gp "
                         + " left join fetch bs2gp.geneProduct gp left join fetch gp.gene g"
-                        + " left join fetch g.aliases left join fetch g.accessions  where b.id=:bid", "bid",
-                bioSequence.getId() );
-
-        return ( BioSequence ) res.iterator().next();
+                        + " left join fetch g.aliases left join fetch g.accessions  where b.id=:bid" )
+                .setParameter( "bid", bioSequence.getId() )
+                .uniqueResult();
     }
 
     @Override
@@ -261,12 +255,13 @@ public class BioSequenceDaoImpl extends AbstractVoEnabledDao<BioSequence, BioSeq
 
     private Collection<? extends BioSequence> doThawBatch( Collection<BioSequence> batch ) {
         //noinspection unchecked
-        return this.getHibernateTemplate().findByNamedParam( "select b from BioSequence b "
+        return this.getSessionFactory().getCurrentSession().createQuery( "select b from BioSequence b "
                         + " left join fetch b.taxon tax left join fetch tax.externalDatabase left join fetch b.sequenceDatabaseEntry s "
                         + " left join fetch s.externalDatabase" + " left join fetch b.bioSequence2GeneProduct bs2gp "
                         + " left join fetch bs2gp.geneProduct gp left join fetch gp.gene g"
-                        + " left join fetch g.aliases left join fetch g.accessions  where b.id in (:bids)", "bids",
-                EntityUtils.getIds( batch ) );
+                        + " left join fetch g.aliases left join fetch g.accessions  where b.id in (:bids)")
+                .setParameterList( "bids", EntityUtils.getIds( batch ) )
+                .list();
     }
 
     private void findByGenesBatch( Collection<Gene> genes, Map<Gene, Collection<BioSequence>> results ) {
