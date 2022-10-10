@@ -37,7 +37,6 @@ import ubic.gemma.persistence.util.ObjectFilter;
 import ubic.gemma.persistence.util.Sort;
 
 import javax.annotation.Nullable;
-import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.*;
 
 /**
@@ -45,7 +44,6 @@ import java.util.*;
  * @see    CharacteristicService
  */
 @Service
-@ParametersAreNonnullByDefault
 public class CharacteristicServiceImpl extends AbstractVoEnabledService<Characteristic, CharacteristicValueObject>
         implements CharacteristicService {
 

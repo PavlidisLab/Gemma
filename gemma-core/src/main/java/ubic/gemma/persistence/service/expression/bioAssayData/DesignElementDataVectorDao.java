@@ -26,6 +26,7 @@ import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.persistence.service.BaseDao;
 
+import javax.annotation.Nullable;
 import java.util.Collection;
 
 /**
@@ -67,7 +68,7 @@ public interface DesignElementDataVectorDao<T extends DesignElementDataVector> e
      * @return Loads an instance of ubic.gemma.model.expression.bioAssayData.DesignElementDataVector from the persistent store.
      */
     @Override
-    T load( Long id );
+    T load( @Nullable Long id );
 
     /**
      * Loads all entities of type {@link DesignElementDataVector}.

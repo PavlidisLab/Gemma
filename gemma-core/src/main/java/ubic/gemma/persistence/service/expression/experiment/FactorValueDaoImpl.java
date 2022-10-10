@@ -35,7 +35,6 @@ import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Sort;
 
 import javax.annotation.Nullable;
-import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.Collection;
 import java.util.EnumSet;
 import java.util.List;
@@ -47,7 +46,6 @@ import java.util.List;
  * </p>
  */
 @Repository
-@ParametersAreNonnullByDefault
 public class FactorValueDaoImpl extends AbstractQueryFilteringVoEnabledDao<FactorValue, FactorValueValueObject>
         implements FactorValueDao {
 

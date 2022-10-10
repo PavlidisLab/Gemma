@@ -7,7 +7,6 @@ import ubic.gemma.model.common.Identifiable;
 
 import javax.annotation.Nullable;
 import javax.annotation.OverridingMethodsMustInvokeSuper;
-import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.Collection;
 
 /**
@@ -16,7 +15,6 @@ import java.util.Collection;
  * @param <O> the Identifiable Object type that this service is handling.
  * @author tesarst
  */
-@ParametersAreNonnullByDefault
 public abstract class AbstractService<O extends Identifiable> implements BaseService<O> {
 
     protected static final Log log = LogFactory.getLog( AbstractService.class );

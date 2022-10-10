@@ -28,7 +28,6 @@ import ubic.gemma.persistence.service.BaseVoEnabledDao;
 import ubic.gemma.persistence.service.BrowsingDao;
 
 import javax.annotation.Nullable;
-import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -37,7 +36,6 @@ import java.util.Set;
 /**
  * @see ubic.gemma.model.common.description.Characteristic
  */
-@ParametersAreNonnullByDefault
 public interface CharacteristicDao
         extends BrowsingDao<Characteristic>, BaseVoEnabledDao<Characteristic, CharacteristicValueObject> {
 

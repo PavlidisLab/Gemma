@@ -25,6 +25,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.persistence.service.BaseVoEnabledService;
 
+import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.Date;
 import java.util.Map;
@@ -64,7 +65,7 @@ public interface BioMaterialService extends BaseVoEnabledService<BioMaterial, Bi
 
     @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
-    BioMaterial load( Long id );
+    BioMaterial load( @Nullable Long id );
 
     @Override
     @Secured({ "GROUP_USER", "AFTER_ACL_COLLECTION_READ" })

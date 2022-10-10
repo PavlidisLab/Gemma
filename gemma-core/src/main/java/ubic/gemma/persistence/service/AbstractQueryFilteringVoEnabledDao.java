@@ -11,7 +11,6 @@ import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.persistence.util.Sort;
 
 import javax.annotation.Nullable;
-import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Objects;
@@ -28,7 +27,6 @@ import java.util.stream.Collectors;
  *
  * @author poirigui
  */
-@ParametersAreNonnullByDefault
 public abstract class AbstractQueryFilteringVoEnabledDao<O extends Identifiable, VO extends IdentifiableValueObject<O>> extends AbstractFilteringVoEnabledDao<O, VO> {
 
     /**

@@ -28,6 +28,7 @@ import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.persistence.service.BaseVoEnabledService;
 import ubic.gemma.persistence.service.FilteringService;
 
+import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.List;
 
@@ -76,7 +77,7 @@ public interface BioAssayService extends BaseVoEnabledService<BioAssay, BioAssay
 
     @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
-    BioAssay load( Long id );
+    BioAssay load( @Nullable Long id );
 
     @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })

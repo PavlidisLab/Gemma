@@ -27,6 +27,7 @@ import ubic.gemma.model.common.search.SearchSettingsValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.BaseVoEnabledService;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -35,6 +36,7 @@ import java.util.Map;
  * @author kelsey
  */
 @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
+@ParametersAreNonnullByDefault
 public interface BibliographicReferenceService
         extends BaseVoEnabledService<BibliographicReference, BibliographicReferenceValueObject> {
 

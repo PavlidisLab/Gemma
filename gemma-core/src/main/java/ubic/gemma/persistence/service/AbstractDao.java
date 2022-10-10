@@ -32,7 +32,6 @@ import ubic.gemma.model.common.Identifiable;
 
 import javax.annotation.Nullable;
 import javax.annotation.OverridingMethodsMustInvokeSuper;
-import javax.annotation.ParametersAreNonnullByDefault;
 import java.io.Serializable;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -43,7 +42,6 @@ import java.util.stream.Collectors;
  * @author Anton, Nicolas
  */
 @Transactional
-@ParametersAreNonnullByDefault
 public abstract class AbstractDao<T extends Identifiable> extends HibernateDaoSupport implements BaseDao<T> {
 
     protected static final Log log = LogFactory.getLog( AbstractDao.class );

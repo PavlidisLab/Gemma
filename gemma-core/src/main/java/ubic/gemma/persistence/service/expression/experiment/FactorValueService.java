@@ -24,6 +24,7 @@ import ubic.gemma.model.expression.experiment.FactorValueValueObject;
 import ubic.gemma.persistence.service.BaseVoEnabledService;
 import ubic.gemma.persistence.service.FilteringVoEnabledService;
 
+import javax.annotation.Nullable;
 import java.util.Collection;
 
 /**
@@ -41,7 +42,7 @@ public interface FactorValueService extends FilteringVoEnabledService<FactorValu
 
     @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
-    FactorValue load( Long id );
+    FactorValue load( @Nullable Long id );
 
     @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })

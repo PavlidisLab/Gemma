@@ -43,7 +43,6 @@ import ubic.gemma.persistence.service.common.auditAndSecurity.curation.AbstractC
 import ubic.gemma.persistence.util.*;
 
 import javax.annotation.Nullable;
-import javax.annotation.ParametersAreNonnullByDefault;
 import java.math.BigInteger;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
@@ -54,7 +53,6 @@ import java.util.stream.Collectors;
  * @see ubic.gemma.model.expression.arrayDesign.ArrayDesign
  */
 @Repository
-@ParametersAreNonnullByDefault
 public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayDesignValueObject>
         implements ArrayDesignDao {
 

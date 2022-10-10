@@ -39,14 +39,12 @@ import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignDao;
 import ubic.gemma.persistence.util.BusinessKey;
 import ubic.gemma.persistence.util.EntityUtils;
 
-import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.*;
 
 /**
  * @author pavlidis
  */
 @Repository
-@ParametersAreNonnullByDefault
 public class BioAssayDaoImpl extends AbstractVoEnabledDao<BioAssay, BioAssayValueObject> implements BioAssayDao {
 
     @Autowired

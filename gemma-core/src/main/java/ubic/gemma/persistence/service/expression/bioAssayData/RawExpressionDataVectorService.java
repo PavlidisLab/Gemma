@@ -22,6 +22,7 @@ import org.springframework.security.access.annotation.Secured;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
+import javax.annotation.Nullable;
 import java.util.Collection;
 
 /**
@@ -31,7 +32,7 @@ public interface RawExpressionDataVectorService extends DesignElementDataVectorS
 
     @Override
     @Secured({ "GROUP_ADMIN" })
-    RawExpressionDataVector load( Long id );
+    RawExpressionDataVector load( @Nullable Long id );
 
     /**
      * @deprecated never use this method, instead clear {@link ExpressionExperiment#getProcessedExpressionDataVectors()}

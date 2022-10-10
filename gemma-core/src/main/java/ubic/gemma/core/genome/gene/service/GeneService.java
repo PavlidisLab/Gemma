@@ -33,6 +33,7 @@ import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.persistence.service.BaseVoEnabledService;
 import ubic.gemma.persistence.service.FilteringVoEnabledService;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -41,6 +42,7 @@ import java.util.Map;
  * @author kelsey
  */
 @SuppressWarnings("unused") // Possible external use
+@ParametersAreNonnullByDefault
 public interface GeneService extends FilteringVoEnabledService<Gene, GeneValueObject> {
 
     @Override

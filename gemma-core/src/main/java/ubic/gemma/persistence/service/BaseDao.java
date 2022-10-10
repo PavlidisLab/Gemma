@@ -27,7 +27,6 @@ import java.util.Collection;
  * @param <T> type
  * @author paul
  */
-@ParametersAreNonnullByDefault
 public interface BaseDao<T> {
 
     /**

@@ -49,7 +49,6 @@ import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.persistence.util.Sort;
 
 import javax.annotation.Nullable;
-import javax.annotation.ParametersAreNonnullByDefault;
 import java.text.MessageFormat;
 import java.util.*;
 
@@ -57,7 +56,6 @@ import java.util.*;
  * @author pavlidis
  */
 @Repository
-@ParametersAreNonnullByDefault
 public class CompositeSequenceDaoImpl extends AbstractQueryFilteringVoEnabledDao<CompositeSequence, CompositeSequenceValueObject>
         implements CompositeSequenceDao {
 

@@ -34,7 +34,6 @@ import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.persistence.util.Sort;
 
 import javax.annotation.Nullable;
-import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -42,7 +41,6 @@ import java.util.Map;
 /**
  * @see ExpressionAnalysisResultSet
  */
-@ParametersAreNonnullByDefault
 public interface ExpressionAnalysisResultSetDao extends AnalysisResultSetDao<DifferentialExpressionAnalysisResult, ExpressionAnalysisResultSet>, FilteringVoEnabledDao<ExpressionAnalysisResultSet, DifferentialExpressionAnalysisResultSetValueObject> {
 
     ExpressionAnalysisResultSet loadWithResultsAndContrasts( Long id );

@@ -43,7 +43,6 @@ import ubic.gemma.persistence.util.AclQueryUtils;
 import ubic.gemma.persistence.util.EntityUtils;
 
 import javax.annotation.Nullable;
-import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -53,7 +52,6 @@ import java.util.stream.Collectors;
  * @see    Characteristic
  */
 @Repository
-@ParametersAreNonnullByDefault
 public class CharacteristicDaoImpl extends AbstractVoEnabledDao<Characteristic, CharacteristicValueObject>
         implements CharacteristicDao {
 

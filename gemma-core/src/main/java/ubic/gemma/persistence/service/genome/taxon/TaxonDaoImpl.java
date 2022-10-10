@@ -31,7 +31,6 @@ import ubic.gemma.persistence.util.ObjectFilterQueryUtils;
 import ubic.gemma.persistence.util.Sort;
 
 import javax.annotation.Nullable;
-import javax.annotation.ParametersAreNonnullByDefault;
 import java.text.MessageFormat;
 import java.util.Collection;
 import java.util.EnumSet;
@@ -42,7 +41,6 @@ import java.util.List;
  * @see Taxon
  */
 @Repository
-@ParametersAreNonnullByDefault
 public class TaxonDaoImpl extends AbstractQueryFilteringVoEnabledDao<Taxon, TaxonValueObject> implements TaxonDao {
 
     @Autowired

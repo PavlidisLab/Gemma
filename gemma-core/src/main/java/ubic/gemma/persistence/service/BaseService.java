@@ -4,7 +4,6 @@ import ubic.gemma.model.common.Identifiable;
 
 import javax.annotation.CheckReturnValue;
 import javax.annotation.Nullable;
-import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.Collection;
 
 /**
@@ -13,7 +12,6 @@ import java.util.Collection;
  * @param <O> the Object type that this service is handling.
  * @author tesarst
  */
-@ParametersAreNonnullByDefault
 public interface BaseService<O extends Identifiable> {
 
     /**

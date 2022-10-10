@@ -27,6 +27,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentSetValueObject
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.BaseVoEnabledService;
 
+import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.List;
 
@@ -48,7 +49,7 @@ public interface ExpressionExperimentSetService
 
     @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
-    ExpressionExperimentSet load( Long id );
+    ExpressionExperimentSet load( @Nullable Long id );
 
     @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })

@@ -26,6 +26,7 @@ import ubic.gemma.model.genome.gene.DatabaseBackedGeneSetValueObject;
 import ubic.gemma.model.genome.gene.GeneSet;
 import ubic.gemma.persistence.service.BaseDao;
 
+import javax.annotation.Nullable;
 import java.util.Collection;
 
 /**
@@ -93,7 +94,7 @@ public interface GeneSetDao extends BaseDao<GeneSet> {
 
     @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
-    GeneSet load( Long id );
+    GeneSet load( @Nullable Long id );
 
     @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })

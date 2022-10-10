@@ -14,7 +14,6 @@ import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.persistence.service.FilteringVoEnabledDao;
 import ubic.gemma.persistence.service.common.auditAndSecurity.curation.CuratableDao;
 
-import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -24,7 +23,6 @@ import java.util.Map;
  * ArrayDesignDao interface
  */
 @Repository
-@ParametersAreNonnullByDefault
 public interface ArrayDesignDao extends InitializingBean, CuratableDao<ArrayDesign, ArrayDesignValueObject>,
         FilteringVoEnabledDao<ArrayDesign, ArrayDesignValueObject> {
 

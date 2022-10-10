@@ -44,14 +44,12 @@ import ubic.gemma.persistence.util.Sort;
 import ubic.gemma.persistence.util.monitor.Monitored;
 
 import javax.annotation.Nullable;
-import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.*;
 
 /**
  * @author kelsey
  */
 @SuppressWarnings("unused") // Possible external use
-@ParametersAreNonnullByDefault
 public interface ExpressionExperimentService
         extends FilteringVoEnabledService<ExpressionExperiment, ExpressionExperimentValueObject> {
 

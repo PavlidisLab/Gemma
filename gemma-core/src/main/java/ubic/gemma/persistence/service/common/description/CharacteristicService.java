@@ -28,7 +28,6 @@ import ubic.gemma.persistence.service.BaseVoEnabledService;
 import ubic.gemma.persistence.service.FilteringService;
 
 import javax.annotation.Nullable;
-import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -37,7 +36,6 @@ import java.util.Set;
 /**
  * @author paul
  */
-@ParametersAreNonnullByDefault
 public interface CharacteristicService extends BaseVoEnabledService<Characteristic, CharacteristicValueObject>, FilteringService<Characteristic> {
 
     /**

@@ -56,7 +56,6 @@ import ubic.gemma.persistence.service.genome.taxon.TaxonDao;
 import ubic.gemma.persistence.util.*;
 
 import javax.annotation.Nullable;
-import javax.annotation.ParametersAreNonnullByDefault;
 import java.text.MessageFormat;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -66,7 +65,6 @@ import java.util.stream.Collectors;
  * @see ubic.gemma.model.expression.experiment.ExpressionExperiment
  */
 @Repository
-@ParametersAreNonnullByDefault
 public class ExpressionExperimentDaoImpl
         extends AbstractCuratableDao<ExpressionExperiment, ExpressionExperimentValueObject>
         implements ExpressionExperimentDao {

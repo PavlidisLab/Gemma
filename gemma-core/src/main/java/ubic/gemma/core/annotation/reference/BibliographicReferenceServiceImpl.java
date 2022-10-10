@@ -36,6 +36,7 @@ import ubic.gemma.persistence.service.association.phenotype.service.PhenotypeAss
 import ubic.gemma.persistence.service.common.description.BibliographicReferenceDao;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.*;
 import java.util.function.Supplier;
 
@@ -47,6 +48,7 @@ import java.util.function.Supplier;
  * @see    BibliographicReferenceService
  */
 @Service
+@ParametersAreNonnullByDefault
 public class BibliographicReferenceServiceImpl
         extends AbstractVoEnabledService<BibliographicReference, BibliographicReferenceValueObject>
         implements BibliographicReferenceService {

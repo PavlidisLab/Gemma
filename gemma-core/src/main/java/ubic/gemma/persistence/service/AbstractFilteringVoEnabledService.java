@@ -5,6 +5,7 @@ import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.persistence.util.*;
 
+import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.List;
 
@@ -51,13 +52,13 @@ public abstract class AbstractFilteringVoEnabledService<O extends Identifiable, 
 
     @Override
     @Transactional(readOnly = true)
-    public Slice<VO> loadValueObjectsPreFilter( Filters filters, Sort sort, int offset, int limit ) {
+    public Slice<VO> loadValueObjectsPreFilter( @Nullable Filters filters, @Nullable Sort sort, int offset, int limit ) {
         return voDao.loadValueObjectsPreFilter( filters, sort, offset, limit );
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<VO> loadValueObjectsPreFilter( Filters filters, Sort sort ) {
+    public List<VO> loadValueObjectsPreFilter( @Nullable Filters filters, @Nullable Sort sort ) {
         return voDao.loadValueObjectsPreFilter( filters, sort );
     }
 

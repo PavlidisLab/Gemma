@@ -32,6 +32,7 @@ import ubic.gemma.persistence.service.AbstractDao;
 import ubic.gemma.persistence.service.AbstractVoEnabledDao;
 import ubic.gemma.persistence.util.BusinessKey;
 
+import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
@@ -50,7 +51,10 @@ public class ExperimentalFactorDaoImpl extends AbstractVoEnabledDao<Experimental
     }
 
     @Override
-    public ExperimentalFactor load( Long id ) {
+    public ExperimentalFactor load( @Nullable Long id ) {
+        if ( id == null ) {
+            return null;
+        }
         return ( ExperimentalFactor ) this.getSessionFactory().getCurrentSession().createQuery(
                         "select ef from ExperimentalFactor ef left join fetch ef.factorValues fv left join fetch fv.characteristics c where ef.id=:id" )
                 .setParameter( "id", id ).uniqueResult();

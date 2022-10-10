@@ -31,7 +31,6 @@ import ubic.gemma.persistence.service.AbstractFilteringVoEnabledService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventDao;
 import ubic.gemma.persistence.service.expression.experiment.BlacklistedEntityDao;
 
-import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.*;
 
 /**
@@ -39,7 +38,6 @@ import java.util.*;
  * @see ArrayDesignService
  */
 @Service
-@ParametersAreNonnullByDefault
 public class ArrayDesignServiceImpl extends AbstractFilteringVoEnabledService<ArrayDesign, ArrayDesignValueObject>
         implements ArrayDesignService {
 

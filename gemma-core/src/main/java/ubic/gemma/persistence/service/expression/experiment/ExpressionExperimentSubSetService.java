@@ -25,6 +25,7 @@ import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.expression.experiment.FactorValueValueObject;
 import ubic.gemma.persistence.service.BaseService;
 
+import javax.annotation.Nullable;
 import java.util.Collection;
 
 /**
@@ -46,7 +47,7 @@ public interface ExpressionExperimentSubSetService extends BaseService<Expressio
 
     @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
-    ExpressionExperimentSubSet load( Long id );
+    ExpressionExperimentSubSet load( @Nullable Long id );
 
     @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })

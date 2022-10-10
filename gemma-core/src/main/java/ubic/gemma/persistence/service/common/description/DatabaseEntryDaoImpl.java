@@ -30,7 +30,6 @@ import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Sort;
 
 import javax.annotation.Nullable;
-import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.EnumSet;
 
 /**
@@ -40,7 +39,6 @@ import java.util.EnumSet;
  * @see DatabaseEntry
  */
 @Repository
-@ParametersAreNonnullByDefault
 public class DatabaseEntryDaoImpl extends AbstractQueryFilteringVoEnabledDao<DatabaseEntry, DatabaseEntryValueObject>
         implements DatabaseEntryDao {
 

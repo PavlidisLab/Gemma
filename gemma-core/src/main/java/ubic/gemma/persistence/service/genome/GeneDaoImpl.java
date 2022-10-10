@@ -42,7 +42,6 @@ import ubic.gemma.persistence.service.AbstractQueryFilteringVoEnabledDao;
 import ubic.gemma.persistence.util.*;
 
 import javax.annotation.Nullable;
-import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.*;
 
 /**
@@ -51,7 +50,6 @@ import java.util.*;
  * @see Gene
  */
 @Repository
-@ParametersAreNonnullByDefault
 public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneValueObject> implements GeneDao {
 
     private static final int BATCH_SIZE = 100;

@@ -7,12 +7,10 @@ import org.hibernate.QueryParameterException;
 import org.springframework.security.acls.domain.BasePermission;
 
 import javax.annotation.Nullable;
-import javax.annotation.ParametersAreNonnullByDefault;
 
 /**
  * Utilities for integrating ACL into {@link Query}.
  */
-@ParametersAreNonnullByDefault
 public class AclQueryUtils {
 
     public static final String AOI_ALIAS = "aoi", SID_ALIAS = "sid";

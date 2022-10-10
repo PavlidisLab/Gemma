@@ -23,6 +23,7 @@ import ubic.gemma.model.expression.experiment.ExperimentalDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.BaseService;
 
+import javax.annotation.Nullable;
 import java.util.Collection;
 
 /**
@@ -36,7 +37,7 @@ public interface ExperimentalDesignService extends BaseService<ExperimentalDesig
 
     @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
-    ExperimentalDesign load( Long id );
+    ExperimentalDesign load( @Nullable Long id );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
     ExperimentalDesign loadWithExperimentalFactors( Long id );

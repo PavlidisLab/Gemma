@@ -8,14 +8,12 @@ import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.persistence.util.Sort;
 
 import javax.annotation.Nullable;
-import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.List;
 
 /**
  * Interface for VO-enabled DAO with filtering capabilities.
  * @author poirigui
  */
-@ParametersAreNonnullByDefault
 public interface FilteringVoEnabledDao<O extends Identifiable, VO extends IdentifiableValueObject<O>>
         extends FilteringDao<O>, BaseVoEnabledDao<O, VO> {
 

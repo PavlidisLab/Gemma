@@ -28,7 +28,6 @@ import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.persistence.service.FilteringVoEnabledDao;
 
 import javax.annotation.Nullable;
-import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -36,7 +35,6 @@ import java.util.Map;
 /**
  * @see Gene
  */
-@ParametersAreNonnullByDefault
 public interface GeneDao extends FilteringVoEnabledDao<Gene, GeneValueObject> {
 
     String OBJECT_ALIAS = "gene";

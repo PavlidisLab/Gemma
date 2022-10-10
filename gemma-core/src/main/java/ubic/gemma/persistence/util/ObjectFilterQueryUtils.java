@@ -4,14 +4,12 @@ import com.google.common.base.Strings;
 import org.hibernate.Query;
 
 import javax.annotation.Nullable;
-import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.*;
 import java.util.stream.Collectors;
 
 /**
  * Utilities for integrating {@link ObjectFilter} into {@link org.hibernate.Query}.
  */
-@ParametersAreNonnullByDefault
 public class ObjectFilterQueryUtils {
 
     /**
