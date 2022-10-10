@@ -20,6 +20,7 @@
 package ubic.gemma.model.association;
 
 import org.hibernate.HibernateException;
+import org.hibernate.engine.spi.SessionImplementor;
 
 import java.io.Serializable;
 import java.sql.PreparedStatement;
@@ -93,14 +94,14 @@ public final class GOEvidenceCodeEnum extends GOEvidenceCode implements org.hibe
     }
 
     @Override
-    public Object nullSafeGet( ResultSet resultSet, String[] values, Object owner )
+    public Object nullSafeGet( ResultSet resultSet, String[] values, SessionImplementor sessionImplementor, Object owner )
             throws HibernateException, SQLException {
         final String value = ( String ) resultSet.getObject( values[0] );
         return resultSet.wasNull() ? null : GOEvidenceCode.fromString( value );
     }
 
     @Override
-    public void nullSafeSet( PreparedStatement statement, Object value, int index )
+    public void nullSafeSet( PreparedStatement statement, Object value, int index, SessionImplementor sessionImplementor )
             throws HibernateException, SQLException {
         if ( value == null ) {
             statement.setNull( index, Types.VARCHAR );

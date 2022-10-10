@@ -20,7 +20,7 @@ package ubic.gemma.persistence.service.common.auditAndSecurity;
 
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.hibernate.SessionFactory;
-import org.hibernate.engine.SessionImplementor;
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.metadata.ClassMetadata;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;

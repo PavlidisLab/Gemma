@@ -77,15 +77,15 @@
             <property name="blockCount" type="java.lang.Integer">
                 <column name="BLOCK_COUNT" not-null="false" unique="false" sql-type="INTEGER"/>
             </property>
-            <property name="blockSizes" type="org.springframework.orm.hibernate3.support.ClobStringType">
+            <property name="blockSizes" type="org.hibernate.type.MaterializedClobType">
                 <column name="BLOCK_SIZES" not-null="false" unique="false"
                         sql-type="text"/>
             </property>
-            <property name="queryStarts" type="org.springframework.orm.hibernate3.support.ClobStringType">
+            <property name="queryStarts" type="org.hibernate.type.MaterializedClobType">
                 <column name="QUERY_STARTS" not-null="false" unique="false"
                         sql-type="text"/>
             </property>
-            <property name="targetStarts" type="org.springframework.orm.hibernate3.support.ClobStringType">
+            <property name="targetStarts" type="org.hibernate.type.MaterializedClobType">
                 <column name="TARGET_STARTS" not-null="false" unique="false"
                         sql-type="text"/>
             </property>

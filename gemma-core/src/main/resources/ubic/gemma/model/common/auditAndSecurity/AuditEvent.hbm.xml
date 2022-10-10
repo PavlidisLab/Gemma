@@ -18,11 +18,11 @@
                     sql-type="VARCHAR(255)"/>
         </property>
         <property access="field" name="note"
-                  type="org.springframework.orm.hibernate3.support.ClobStringType">
+                  type="org.hibernate.type.MaterializedClobType">
             <column name="NOTE" not-null="false" sql-type="text"/>
         </property>
         <property access="field" name="detail"
-                  type="org.springframework.orm.hibernate3.support.ClobStringType">
+                  type="org.hibernate.type.MaterializedClobType">
             <column name="DETAIL" not-null="false" sql-type="text"/>
         </property>
         <many-to-one access="field"

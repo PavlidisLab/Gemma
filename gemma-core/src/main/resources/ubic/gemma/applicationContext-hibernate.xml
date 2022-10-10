@@ -45,20 +45,16 @@
 		<constructor-arg name="traverseCauses" value="true"/>
 	</bean>
 
-	<bean id="transactionManager" class="org.springframework.orm.hibernate3.HibernateTransactionManager"
+	<bean id="transactionManager" class="org.springframework.orm.hibernate4.HibernateTransactionManager"
 		  lazy-init="true">
 		<property name="sessionFactory" ref="sessionFactory"/>
 	</bean>
 
 	<tx:annotation-driven order="3"/>
 
-	<!-- Required for org.springframework.orm.hibernate3.support.ClobStringType -->
-	<bean id="defaultLobHandler" class="org.springframework.jdbc.support.lob.DefaultLobHandler" lazy-init="true"/>
-
 	<!-- Hibernate SessionFactory -->
-	<bean id="sessionFactory" class="org.springframework.orm.hibernate3.LocalSessionFactoryBean" lazy-init="true">
+	<bean id="sessionFactory" class="org.springframework.orm.hibernate4.LocalSessionFactoryBean" lazy-init="true">
 		<property name="dataSource" ref="dataSource"/>
-		<property name="lobHandler" ref="defaultLobHandler"/>
 		<property name="configLocations">
 			<array>
 				<value>classpath:gemma/gsec/hibernate.cfg.xml</value>
@@ -68,9 +64,8 @@
 		<property name="hibernateProperties">
 			<props>
 				<prop key="hibernate.dialect">org.hibernate.dialect.MySQL5InnoDBDialect</prop>
-				<prop key="hibernate.cache.query_cache_factory">org.hibernate.cache.StandardQueryCacheFactory</prop>
-				<!-- <prop key="hibernate.cache.region.factory_class">net.sf.ehcache.hibernate.EhCacheRegionFactory</prop> -->
-				<!--suppress SpringXmlModelInspection -->
+				<!-- <prop key="hibernate.cache.query_cache_factory">org.hibernate.cache.ehcache.StandardQueryCacheFactory</prop> -->
+				<prop key="hibernate.cache.region.factory_class">org.hibernate.cache.ehcache.EhCacheRegionFactory</prop>
 				<prop key="hibernate.hbm2ddl.auto">${gemma.hibernate.hbm2ddl.auto}</prop>
 				<prop key="hibernate.max_fetch_depth">${gemma.hibernate.max_fetch_depth}</prop>
 				<prop key="hibernate.jdbc.fetch_size">${gemma.hibernate.jdbc_fetch_size}</prop>
@@ -91,7 +86,7 @@
 
 		<!-- We have a annotation-configuubic.gemma.persistence.util.ExternalCacheRegionFactorytory -->
 		<!-- <property name="cacheProvider"> <ref bean="externalCacheProvider" /> </property> -->
-		<property name="cacheRegionFactory" ref="externalCacheRegionFactory"/>
+		<!-- <property name="cacheRegionFactory" ref="externalCacheRegionFactory"/> -->
 		<!-- <property name="cacheRegionFactory" ref="cacheRegionFactory" /> -->
 	</bean>
 

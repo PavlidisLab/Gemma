@@ -20,8 +20,8 @@
 package ubic.gemma.persistence.util;
 
 import net.sf.ehcache.CacheManager;
-import net.sf.ehcache.hibernate.EhCacheRegionFactory;
 import org.hibernate.cache.CacheException;
+import org.hibernate.cache.ehcache.EhCacheRegionFactory;
 import org.hibernate.cfg.Settings;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.InitializingBean;

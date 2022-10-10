@@ -19,9 +19,7 @@
 package ubic.gemma.persistence.service.expression.bioAssay;
 
 import org.apache.commons.lang3.StringUtils;
-import org.hibernate.Hibernate;
-import org.hibernate.SessionFactory;
-import org.hibernate.classic.Session;
+import org.hibernate.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;

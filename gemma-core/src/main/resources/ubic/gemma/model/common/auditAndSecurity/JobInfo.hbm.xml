@@ -14,7 +14,7 @@
         <property name="runningStatus" type="java.lang.Boolean">
             <column name="RUNNING_STATUS" not-null="true" unique="false" sql-type="TINYINT"/>
         </property>
-        <property name="failedMessage" type="org.springframework.orm.hibernate3.support.ClobStringType">
+        <property name="failedMessage" type="org.hibernate.type.MaterializedClobType">
             <column name="FAILED_MESSAGE" not-null="false" unique="false" sql-type="text"/>
         </property>
         <property name="startTime" type="java.util.Date">
@@ -29,7 +29,7 @@
         <property name="description" type="java.lang.String">
             <column name="DESCRIPTION" not-null="false" unique="false" sql-type="VARCHAR(255)"/>
         </property>
-        <property name="messages" type="org.springframework.orm.hibernate3.support.ClobStringType">
+        <property name="messages" type="org.hibernate.type.MaterializedClobType">
             <column name="MESSAGES" not-null="false" unique="false" sql-type="longtext"/>
         </property>
         <property name="taskId" type="java.lang.String">

@@ -14,7 +14,7 @@
       <property name="name" type="java.lang.String">
          <column name="NAME" not-null="false" unique="false" sql-type="VARCHAR(255)"/>
       </property>
-      <property name="description" type="org.springframework.orm.hibernate3.support.ClobStringType">
+      <property name="description" type="org.hibernate.type.MaterializedClobType">
          <column name="DESCRIPTION" not-null="false" unique="false" sql-type="text"/>
       </property>
       <property name="processingDate" type="java.util.Date">
@@ -32,10 +32,10 @@
       <property name="isOutlier" type="java.lang.Boolean">
          <column name="IS_OUTLIER" not-null="false" unique="false" sql-type="TINYINT"/>
       </property>
-      <property name="metadata" type="org.springframework.orm.hibernate3.support.ClobStringType">
+      <property name="metadata" type="org.hibernate.type.MaterializedClobType">
          <column name="METADATA" not-null="false" unique="false" sql-type="text"/>
       </property>
-      <property name="fastqHeaders" type="org.springframework.orm.hibernate3.support.ClobStringType">
+      <property name="fastqHeaders" type="org.hibernate.type.MaterializedClobType">
       	<column name="FASTQ_HEADERS" not-null="false" unique="false" sql-type="text"/>
       </property>
       <!-- the four entities below are assumed readily available in BioAssayValueObject -->

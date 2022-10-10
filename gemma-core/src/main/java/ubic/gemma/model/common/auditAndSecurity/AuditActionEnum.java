@@ -20,6 +20,7 @@
 package ubic.gemma.model.common.auditAndSecurity;
 
 import org.hibernate.HibernateException;
+import org.hibernate.engine.spi.SessionImplementor;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -78,14 +79,14 @@ public final class AuditActionEnum extends AuditAction implements org.hibernate.
     }
 
     @Override
-    public Object nullSafeGet( ResultSet resultSet, String[] values, Object owner )
+    public Object nullSafeGet( ResultSet resultSet, String[] values, SessionImplementor sessionImplementor, Object owner )
             throws HibernateException, SQLException {
         final String value = ( String ) resultSet.getObject( values[0] );
         return resultSet.wasNull() ? null : AuditAction.fromString( value );
     }
 
     @Override
-    public void nullSafeSet( PreparedStatement statement, Object value, int index )
+    public void nullSafeSet( PreparedStatement statement, Object value, int index, SessionImplementor sessionImplementor )
             throws HibernateException, SQLException {
         if ( value == null ) {
             statement.setNull( index, Types.VARCHAR );

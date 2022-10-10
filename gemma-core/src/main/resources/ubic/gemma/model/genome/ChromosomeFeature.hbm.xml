@@ -17,7 +17,7 @@
             <column name="NAME" not-null="false" unique="false"
                     sql-type="VARCHAR(255)"/>
         </property>
-        <property name="description" type="org.springframework.orm.hibernate3.support.ClobStringType">
+        <property name="description" type="org.hibernate.type.MaterializedClobType">
             <column name="DESCRIPTION" not-null="false" unique="false"
                     sql-type="text"/>
         </property>
@@ -53,7 +53,7 @@
                 <column name="OFFICIAL_SYMBOL" not-null="false" unique="false"
                         sql-type="VARCHAR(255)"/>
             </property>
-            <property name="officialName" type="org.springframework.orm.hibernate3.support.ClobStringType">
+            <property name="officialName" type="org.hibernate.type.MaterializedClobType">
                 <column name="OFFICIAL_NAME" not-null="false" unique="false"
                         sql-type="text"/>
             </property>

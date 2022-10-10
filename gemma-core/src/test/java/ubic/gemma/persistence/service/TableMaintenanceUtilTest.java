@@ -1,11 +1,11 @@
 package ubic.gemma.persistence.service;
 
-import org.apache.commons.io.FileUtils;
 import org.hibernate.SQLQuery;
+import org.hibernate.Session;
 import org.hibernate.SessionFactory;
-import org.hibernate.classic.Session;
-import org.junit.*;
-import org.mockito.Mock;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -17,14 +17,12 @@ import ubic.gemma.persistence.model.Gene2CsStatus;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.persistence.service.common.description.ExternalDatabaseService;
 import ubic.gemma.persistence.util.MailEngine;
-import ubic.gemma.persistence.util.Settings;
 
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
+import java.io.ObjectOutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
-import java.nio.file.attribute.FileAttribute;
 import java.util.Date;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -76,7 +74,7 @@ public class TableMaintenanceUtilTest extends AbstractJUnit4SpringContextTests {
 
     private final ExternalDatabase gene2csDatabaseEntry = ExternalDatabase.Factory.newInstance( "gene2cs", DatabaseType.OTHER );
 
-    private org.hibernate.classic.Session session;
+    private Session session;
 
     private Path gene2csInfoPath;
 

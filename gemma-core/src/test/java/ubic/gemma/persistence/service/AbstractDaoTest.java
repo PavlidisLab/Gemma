@@ -2,8 +2,8 @@ package ubic.gemma.persistence.service;
 
 import org.hibernate.Criteria;
 import org.hibernate.FlushMode;
+import org.hibernate.Session;
 import org.hibernate.SessionFactory;
-import org.hibernate.classic.Session;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.metadata.ClassMetadata;
 import org.junit.Before;

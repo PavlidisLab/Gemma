@@ -24,8 +24,8 @@ import org.aspectj.lang.Signature;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Before;
 import org.hibernate.*;
-import org.hibernate.engine.CascadeStyle;
-import org.hibernate.engine.CascadingAction;
+import org.hibernate.engine.spi.CascadeStyle;
+import org.hibernate.engine.spi.CascadingAction;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.Type;
 import org.slf4j.Logger;
@@ -188,7 +188,7 @@ public class AuditAdvice {
             EntityPersister persister = ( EntityPersister ) sessionFactory.getClassMetadata( Hibernate.getClass( object ) );
             CascadeStyle[] cascadeStyles = persister.getPropertyCascadeStyles();
             String[] propertyNames = persister.getPropertyNames();
-            Object[] propertyValues = persister.getPropertyValues( object, EntityMode.POJO );
+            Object[] propertyValues = persister.getPropertyValues( object );
             Type[] propertyTypes = persister.getPropertyTypes();
             for ( int j = 0; j < propertyNames.length; j++ ) {
                 CascadeStyle cs = cascadeStyles[j];

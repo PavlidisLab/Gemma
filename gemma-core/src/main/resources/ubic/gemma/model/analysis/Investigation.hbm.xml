@@ -19,7 +19,7 @@
 			<column name="NAME" not-null="false" unique="false"
 					sql-type="VARCHAR(255)"/>
 		</property>
-		<property name="description" type="org.springframework.orm.hibernate3.support.ClobStringType">
+		<property name="description" type="org.hibernate.type.MaterializedClobType">
 			<column name="DESCRIPTION" not-null="false" unique="false"
 					sql-type="text"/>
 		</property>
@@ -64,7 +64,7 @@
 				<property name="numberOfSamples" type="java.lang.Integer">
 					<column name="NUMBER_OF_SAMPLES" not-null="false" unique="false" sql-type="INTEGER"/>
 				</property>
-				<property name="metadata" type="org.springframework.orm.hibernate3.support.ClobStringType">
+				<property name="metadata" type="org.hibernate.type.MaterializedClobType">
 					<column name="METADATA" not-null="false" unique="false"
 							sql-type="text"/>
 				</property>
