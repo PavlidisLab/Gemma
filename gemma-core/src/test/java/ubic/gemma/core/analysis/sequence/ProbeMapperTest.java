@@ -18,11 +18,14 @@
  */
 package ubic.gemma.core.analysis.sequence;
 
-import org.junit.Assert;
-import junit.framework.TestCase;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.junit.Assert;
+import org.junit.Assume;
+import org.junit.Before;
+import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.springframework.jdbc.CannotGetJdbcConnectionException;
 import ubic.gemma.core.externalDb.GoldenPathSequenceAnalysis;
 import ubic.gemma.core.loader.genome.BlatResultParser;
 import ubic.gemma.core.util.test.category.GoldenPathTest;
@@ -45,7 +48,7 @@ import java.util.Map;
  * @author pavlidis
  */
 @Category(GoldenPathTest.class)
-public class ProbeMapperTest extends TestCase {
+public class ProbeMapperTest {
 
     private static final Log log = LogFactory.getLog( ProbeMapperTest.class.getName() );
     private Collection<BlatResult> blatres;
@@ -53,24 +56,28 @@ public class ProbeMapperTest extends TestCase {
     private GoldenPathSequenceAnalysis mousegp = null;
     private GoldenPathSequenceAnalysis humangp = null;
 
+    @Test
     public void testComputeSpecificityA() {
         Double actual = BlatAssociationScorer.computeSpecificity( tester, 400 );
         Double expected = 400 / 750.0;
         Assert.assertEquals( expected, actual, 0.0001 );
     }
 
+    @Test
     public void testComputeSpecificityB() {
         Double actual = BlatAssociationScorer.computeSpecificity( tester, 200 );
         Double expected = 200 / 750.0;
         Assert.assertEquals( expected, actual, 0.0001 );
     }
 
+    @Test
     public void testComputeSpecificityC() {
         Double actual = BlatAssociationScorer.computeSpecificity( tester, 50 );
         Double expected = 50 / 750.0;
         Assert.assertEquals( expected, actual, 0.0001 );
     }
 
+    @Test
     public void testComputeSpecificityD() {
         Double actual = BlatAssociationScorer.computeSpecificity( tester, 395 );
         Double expected = 395 / 750.0;
@@ -83,8 +90,8 @@ public class ProbeMapperTest extends TestCase {
      * here</a>
      * 73,461,405-73,480,144)
      */
+    @Test
     public void testLocateGene() {
-
         Collection<GeneProduct> products = humangp.findRefGenesByLocation( "2", 73461505L, 73462405L, "+" );
         Assert.assertEquals( 6, products.size() );
         GeneProduct gprod = products.iterator().next();
@@ -95,16 +102,16 @@ public class ProbeMapperTest extends TestCase {
      * Tests a sequence alignment that hits a gene, but the alignment is on the wrong strand; show that ignoring the
      * strand works.
      */
+    @Test
     public void testLocateGeneOnWrongStrand() {
-
         Collection<GeneProduct> products = humangp.findRefGenesByLocation( "6", 32916471L, 32918445L, null );
         Assert.assertEquals( 1, products.size() );
         GeneProduct gprod = products.iterator().next();
         Assert.assertEquals( "HLA-DMA", gprod.getGene().getOfficialSymbol() ); // oka 2/2011
     }
 
+    @Test
     public void testProcessBlatResults() {
-
         ProbeMapperConfig config = new ProbeMapperConfig();
         config.setMinimumExonOverlapFraction( 0 ); // test is sensitive to this.
 
@@ -126,8 +133,8 @@ public class ProbeMapperTest extends TestCase {
         Assert.assertTrue( found );
     }
 
+    @Test
     public void testIntronIssues() {
-
         ProbeMapperConfig config = new ProbeMapperConfig();
         Collection<BlatAssociation> results = humangp
                 .findAssociations( "chr1", 145517370L, 145518088L, "145517370,145518070", "18,18", null,
@@ -142,10 +149,8 @@ public class ProbeMapperTest extends TestCase {
         }
     }
 
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
-
+    @Before
+    public void setUp() throws Exception {
         tester = new ArrayList<>();
         tester.add( 400d );
         tester.add( 200d );
@@ -172,6 +177,11 @@ public class ProbeMapperTest extends TestCase {
         humangp = new GoldenPathSequenceAnalysis( 3306, Settings.getString( "gemma.goldenpath.db.human" ), databaseHost,
                 databaseUser, databasePassword );
 
+        try {
+            mousegp.getJdbcTemplate().queryForObject( "select 1", Integer.class );
+            humangp.getJdbcTemplate().queryForObject( "select 1", Integer.class );
+        } catch ( CannotGetJdbcConnectionException e ) {
+            Assume.assumeNoException( e );
+        }
     }
-
 }

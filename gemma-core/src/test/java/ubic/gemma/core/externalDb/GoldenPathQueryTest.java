@@ -18,11 +18,14 @@
  */
 package ubic.gemma.core.externalDb;
 
-import org.junit.Assert;
-import junit.framework.TestCase;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.junit.Assert;
+import org.junit.Assume;
+import org.junit.Before;
+import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.springframework.jdbc.CannotGetJdbcConnectionException;
 import ubic.gemma.core.util.test.category.GoldenPathTest;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
@@ -36,26 +39,19 @@ import java.util.Collection;
  * @author pavlidis
  */
 @Category(GoldenPathTest.class)
-public class GoldenPathQueryTest extends TestCase {
+public class GoldenPathQueryTest {
 
     private static final Log log = LogFactory.getLog( GoldenPathQueryTest.class.getName() );
     private GoldenPathQuery queryer;
-    private boolean hasDb = false;
 
+    @Test
     public final void testQueryEst() {
-        if ( !hasDb ) {
-            GoldenPathQueryTest.log.warn( "Skipping test because hg could not be configured" );
-            return;
-        }
         Collection<BlatResult> actualValue = queryer.findAlignments( "AA411542" );
         Assert.assertEquals( 6, actualValue.size() ); // updated for hg19 2/2011
     }
 
+    @Test
     public final void testQueryMrna() {
-        if ( !hasDb ) {
-            GoldenPathQueryTest.log.warn( "Skipping test because hg could not be configured" );
-            return;
-        }
         Collection<BlatResult> actualValue = queryer.findAlignments( "AK095183" );
         // assertEquals( 3, actualValue.size() );
         Assert.assertTrue( actualValue.size() > 0 ); // value used to be 3, now 2; this should be safer.
@@ -63,33 +59,26 @@ public class GoldenPathQueryTest extends TestCase {
         Assert.assertEquals( "AK095183", ( r.getQuerySequence().getName() ) );
     }
 
+    @Test
     public final void testQueryNoResult() {
-        if ( !hasDb ) {
-            GoldenPathQueryTest.log.warn( "Skipping test because hg could not be configured" );
-            return;
-        }
         Collection<BlatResult> actualValue = queryer.findAlignments( "YYYYYUUYUYUYUY" );
         Assert.assertEquals( 0, actualValue.size() );
     }
 
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
+    @Before
+    public void setUp() throws Exception {
         Taxon t = Taxon.Factory.newInstance();
         t.setCommonName( "human" );
         t.setIsGenesUsable( true );
-
         try {
             String databaseHost = Settings.getString( "gemma.testdb.host" );
             String databaseUser = Settings.getString( "gemma.testdb.user" );
             String databasePassword = Settings.getString( "gemma.testdb.password" );
             queryer = new GoldenPathQuery( Settings.getString( "gemma.goldenpath.db.human" ), databaseHost,
                     databaseUser, databasePassword );
-            this.hasDb = true;
-        } catch ( Exception e ) {
-            this.hasDb = false;
+            queryer.getJdbcTemplate().queryForObject( "select 1", Integer.class );
+        } catch ( CannotGetJdbcConnectionException e ) {
+            Assume.assumeNoException( "Skipping test because hg could not be configured", e );
         }
-
     }
-
 }
