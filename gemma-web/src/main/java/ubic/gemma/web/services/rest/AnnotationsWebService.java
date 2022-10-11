@@ -295,15 +295,11 @@ public class AnnotationsWebService {
 
             SearchSettings settings = SearchSettings.expressionExperimentSearch( value );
 
-            Map<Class<? extends Identifiable>, List<SearchResult<? extends Identifiable>>> results = searchService.search( settings, false, false );
-            List<SearchResult<?>> eeResults = results.get( ExpressionExperiment.class );
-
-            if ( eeResults == null ) {
-                return new HashSet<>(); // No terms found for the current term means the intersection will be empty.
-            }
+            SearchService.SearchResultMap results = searchService.search( settings, false, false );
+            List<SearchResult<ExpressionExperiment>> eeResults = results.get( ExpressionExperiment.class );
 
             // Working only with IDs
-            for ( SearchResult result : eeResults ) {
+            for ( SearchResult<ExpressionExperiment> result : eeResults ) {
                 valueIds.add( result.getResultId() );
             }
 

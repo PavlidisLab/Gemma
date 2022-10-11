@@ -171,23 +171,23 @@ public class GeneSearchServiceImpl implements GeneSearchService {
 
         GeneSearchServiceImpl.log.debug( "getting results from searchService for " + query );
 
-        Map<Class<? extends Identifiable>, List<SearchResult<? extends Identifiable>>> results = searchService.speedSearch( settings );
+        SearchService.SearchResultMap results = searchService.speedSearch( settings );
 
-        List<SearchResult> geneSetSearchResults = new ArrayList<>();
-        List<SearchResult> geneSearchResults = new ArrayList<>();
+        List<SearchResult<GeneSet>> geneSetSearchResults = new ArrayList<>();
+        List<SearchResult<Gene>> geneSearchResults = new ArrayList<>();
 
         boolean exactGeneSymbolMatch = false;
         if ( !results.isEmpty() ) {
-            if ( results.get( GeneSet.class ) != null ) {
+            if ( settings.hasResultType( GeneSet.class ) ) {
                 geneSetSearchResults.addAll( results.get( GeneSet.class ) );
             }
-            if ( results.get( Gene.class ) != null ) {
+            if ( settings.hasResultType( Gene.class ) ) {
                 geneSearchResults.addAll( results.get( Gene.class ) );
             }
 
             // Check to see if we have an exact match, if so, return earlier abstaining from doing other searches
-            for ( SearchResult<?> geneResult : results.get( Gene.class ) ) {
-                Gene g = ( Gene ) geneResult.getResultObject();
+            for ( SearchResult<Gene> geneResult : results.get( Gene.class ) ) {
+                Gene g = geneResult.getResultObject();
                 // aliases too?
                 if ( g != null && g.getOfficialSymbol() != null && g.getOfficialSymbol().startsWith( query.trim() ) ) {
                     exactGeneSymbolMatch = true;
@@ -203,26 +203,22 @@ public class GeneSearchServiceImpl implements GeneSearchService {
 
         if ( taxon != null ) { // filter search results by taxon
 
-            List<SearchResult> taxonCheckedGenes = this.retainGenesOfThisTaxon( taxonId, geneSearchResults );
+            List<SearchResult<Gene>> taxonCheckedGenes = this.retainGenesOfThisTaxon( taxonId, geneSearchResults );
 
             // convert result object to a value object to a SearchResultDisplayObject
-            for ( SearchResult sr : taxonCheckedGenes ) {
+            for ( SearchResult<Gene> sr : taxonCheckedGenes ) {
                 genes.add( new SearchResultDisplayObject( sr ) );
             }
 
-            List<SearchResult> taxonCheckedSets = this
+            List<SearchResult<GeneSet>> taxonCheckedSets = this
                     .retainGeneSetsOfThisTaxon( taxonId, geneSetSearchResults, isSetOwnedByUser );
 
             // convert result object to a value object
-            for ( SearchResult sr : taxonCheckedSets ) {
-                GeneSet g = ( GeneSet ) sr.getResultObject();
-                if ( g != null ) {
-                    DatabaseBackedGeneSetValueObject gsVo = geneSetValueObjectHelper.convertToValueObject( g );
-                    //noinspection unchecked
-                    sr.setResultObject( gsVo );
-                }
-            }
-            geneSets = SearchResultDisplayObject.convertSearchResults2SearchResultDisplayObjects( taxonCheckedSets );
+            List<SearchResult<DatabaseBackedGeneSetValueObject>> dbsgvo = taxonCheckedSets.stream()
+                    .filter( Objects::nonNull )
+                    .map( sr -> SearchResult.from( sr, geneSetValueObjectHelper.convertToValueObject( sr.getResultObject() ) ) )
+                    .collect( Collectors.toList() );
+            geneSets = SearchResultDisplayObject.convertSearchResults2SearchResultDisplayObjects( dbsgvo );
 
             for ( SearchResultDisplayObject srDo : geneSets ) {
                 // geneSets were filtered by taxon above:
@@ -232,14 +228,14 @@ public class GeneSearchServiceImpl implements GeneSearchService {
             }
         } else { // set the taxon values
 
-            for ( SearchResult sr : geneSearchResults ) {
+            for ( SearchResult<Gene> sr : geneSearchResults ) {
                 genes.add( new SearchResultDisplayObject( sr ) );
             }
 
             geneSets = new ArrayList<>();
             SearchResultDisplayObject srDo;
-            for ( SearchResult<?> sr : geneSetSearchResults ) {
-                GeneSet gs = ( GeneSet ) sr.getResultObject();
+            for ( SearchResult<GeneSet> sr : geneSetSearchResults ) {
+                GeneSet gs = sr.getResultObject();
                 if ( gs == null ) {
                     continue;
                 }
@@ -371,9 +367,7 @@ public class GeneSearchServiceImpl implements GeneSearchService {
 
             // searching one gene at a time is a bit slow; we do a quick search for symbols.
             SearchSettings settings = SearchSettings.geneSearch( line, taxon );
-            List<SearchResult<Gene>> geneSearchResults = searchService.speedSearch( settings ).get( Gene.class ).stream()
-                    .map( r -> ( SearchResult<Gene> ) r )
-                    .collect( Collectors.toList() );
+            List<SearchResult<Gene>> geneSearchResults = searchService.speedSearch( settings ).get( Gene.class );
 
             if ( geneSearchResults.isEmpty() ) {
                 // an empty set is an indication of no results.
@@ -412,11 +406,11 @@ public class GeneSearchServiceImpl implements GeneSearchService {
         }
     }
 
-    private List<SearchResult> retainGeneSetsOfThisTaxon( Long taxonId, List<SearchResult> geneSetSearchResults,
+    private List<SearchResult<GeneSet>> retainGeneSetsOfThisTaxon( Long taxonId, List<SearchResult<GeneSet>> geneSetSearchResults,
             Map<Long, Boolean> isSetOwnedByUser ) {
-        List<SearchResult> taxonCheckedSets = new ArrayList<>();
-        for ( SearchResult sr : geneSetSearchResults ) {
-            GeneSet gs = ( GeneSet ) sr.getResultObject();
+        List<SearchResult<GeneSet>> taxonCheckedSets = new ArrayList<>();
+        for ( SearchResult<GeneSet> sr : geneSetSearchResults ) {
+            GeneSet gs = sr.getResultObject();
             if ( gs != null ) {
                 GeneSetValueObject gsVo = geneSetValueObjectHelper.convertToValueObject( gs );
                 isSetOwnedByUser.put( gs.getId(), securityService.isOwnedByCurrentUser( gs ) );
@@ -428,10 +422,10 @@ public class GeneSearchServiceImpl implements GeneSearchService {
         return taxonCheckedSets;
     }
 
-    private List<SearchResult> retainGenesOfThisTaxon( Long taxonId, List<SearchResult> geneSearchResults ) {
-        List<SearchResult> taxonCheckedGenes = new ArrayList<>();
-        for ( SearchResult sr : geneSearchResults ) {
-            Gene gene = ( Gene ) sr.getResultObject();
+    private List<SearchResult<Gene>> retainGenesOfThisTaxon( Long taxonId, List<SearchResult<Gene>> geneSearchResults ) {
+        List<SearchResult<Gene>> taxonCheckedGenes = new ArrayList<>();
+        for ( SearchResult<Gene> sr : geneSearchResults ) {
+            Gene gene = sr.getResultObject();
             if ( gene != null && gene.getTaxon() != null && gene.getTaxon().getId().equals( taxonId ) ) {
                 taxonCheckedGenes.add( sr );
             }

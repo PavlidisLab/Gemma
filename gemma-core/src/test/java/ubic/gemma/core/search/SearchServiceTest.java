@@ -152,13 +152,13 @@ public class SearchServiceTest extends BaseSpringContextTest {
         Collection<OntologyTerm> ontologyhits = ontologyService.findTerms( "brain" );
         assertFalse( ontologyhits.isEmpty() ); // making sure this isn't a problem, rather than the search per se.
 
-        Map<Class<? extends Identifiable>, List<SearchResult<? extends Identifiable>>> found = this.searchService.search( settings );
+        SearchService.SearchResultMap found = this.searchService.search( settings );
         assertFalse( found.isEmpty() );
 
-        List<SearchResult<?>> eer = found.get( ExpressionExperiment.class );
+        List<SearchResult<ExpressionExperiment>> eer = found.get( ExpressionExperiment.class );
         assertFalse( eer.isEmpty() );
 
-        for ( SearchResult sr : eer ) {
+        for ( SearchResult<ExpressionExperiment> sr : eer ) {
             if ( sr.getResultId().equals( ee.getId() ) ) {
                 return;
             }
@@ -176,10 +176,10 @@ public class SearchServiceTest extends BaseSpringContextTest {
                 .query( SearchServiceTest.GENE_URI + this.geneNcbiId )
                 .resultType( Gene.class )
                 .build();
-        Map<Class<? extends Identifiable>, List<SearchResult<? extends Identifiable>>> found = this.searchService.search( settings );
+        SearchService.SearchResultMap found = this.searchService.search( settings );
         assertFalse( found.isEmpty() );
 
-        for ( SearchResult<?> sr : found.get( Gene.class ) ) {
+        for ( SearchResult<Gene> sr : found.get( Gene.class ) ) {
             if ( gene.equals( sr.getResultObject() ) ) {
                 return;
             }
@@ -212,9 +212,9 @@ public class SearchServiceTest extends BaseSpringContextTest {
                 .resultType( BibliographicReference.class )
                 .build();
 
-        Map<Class<? extends Identifiable>, List<SearchResult<? extends Identifiable>>> found = this.searchService.search( settings );
+        SearchService.SearchResultMap found = this.searchService.search( settings );
         assertFalse( found.isEmpty() );
-        for ( SearchResult sr : found.get( BibliographicReference.class ) ) {
+        for ( SearchResult<BibliographicReference> sr : found.get( BibliographicReference.class ) ) {
             if ( bibref.equals( sr.getResultObject() ) ) {
                 return;
             }
@@ -246,9 +246,9 @@ public class SearchServiceTest extends BaseSpringContextTest {
                 .resultType( BibliographicReference.class )
                 .build();
 
-        Map<Class<? extends Identifiable>, List<SearchResult<? extends Identifiable>>> found = this.searchService.search( settings );
+        SearchService.SearchResultMap found = this.searchService.search( settings );
         assertFalse( found.isEmpty() );
-        for ( SearchResult sr : found.get( BibliographicReference.class ) ) {
+        for ( SearchResult<BibliographicReference> sr : found.get( BibliographicReference.class ) ) {
             if ( bibref.equals( sr.getResultObject() ) ) {
                 return;
             }
@@ -304,10 +304,10 @@ public class SearchServiceTest extends BaseSpringContextTest {
                 // 'spinal cord'.
                 .resultType( ExpressionExperiment.class )
                 .build();
-        Map<Class<? extends Identifiable>, List<SearchResult<? extends Identifiable>>> found = this.searchService.search( settings );
+        SearchService.SearchResultMap found = this.searchService.search( settings );
         assertFalse( found.isEmpty() );
 
-        for ( SearchResult sr : found.get( ExpressionExperiment.class ) ) {
+        for ( SearchResult<ExpressionExperiment> sr : found.get( ExpressionExperiment.class ) ) {
             if ( sr.getResultId().equals( ee.getId() ) ) {
                 return;
             }
@@ -328,10 +328,10 @@ public class SearchServiceTest extends BaseSpringContextTest {
                 .useIndices( false )
                 .useCharacteristics( true )
                 .build();
-        Map<Class<? extends Identifiable>, List<SearchResult<? extends Identifiable>>> found = this.searchService.search( settings );
+        SearchService.SearchResultMap found = this.searchService.search( settings );
         assertFalse( found.isEmpty() );
 
-        for ( SearchResult sr : found.get( ExpressionExperiment.class ) ) {
+        for ( SearchResult<ExpressionExperiment> sr : found.get( ExpressionExperiment.class ) ) {
             if ( sr.getResultId().equals( ee.getId() ) ) {
                 return;
             }

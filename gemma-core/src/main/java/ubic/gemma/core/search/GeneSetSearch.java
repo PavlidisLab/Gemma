@@ -21,6 +21,7 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneSet;
 import ubic.gemma.model.genome.gene.GeneSetValueObject;
 
+import javax.annotation.Nullable;
 import java.util.Collection;
 
 /**
@@ -42,7 +43,7 @@ public interface GeneSetSearch {
      * @param taxonId taxon id
      * @return a GeneSet or null if nothing is found
      */
-    GOGroupValueObject findGeneSetValueObjectByGoId( String goId, Long taxonId );
+    GOGroupValueObject findGeneSetValueObjectByGoId( String goId, @Nullable Long taxonId );
 
     /**
      * Finds gene sets by exact match to goTermId eg: GO:0000002 Note: the gene set returned is not persistent.

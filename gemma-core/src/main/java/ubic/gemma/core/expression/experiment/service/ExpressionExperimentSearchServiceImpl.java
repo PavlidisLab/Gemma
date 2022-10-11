@@ -133,7 +133,7 @@ public class ExpressionExperimentSearchServiceImpl implements ExpressionExperime
             return this.searchExperimentsAndExperimentGroupBlankQuery( taxonId );
         }
 
-        Map<Class<? extends Identifiable>, List<SearchResult<? extends Identifiable>>> results = this.initialSearch( query, taxonId );
+        SearchService.SearchResultMap results = this.initialSearch( query, taxonId );
 
         List<SearchResultDisplayObject> experimentSets = this.getExpressionExperimentSetResults( results );
         List<SearchResultDisplayObject> experiments = this.getExpressionExperimentResults( results );
@@ -253,16 +253,12 @@ public class ExpressionExperimentSearchServiceImpl implements ExpressionExperime
         return setResults;
     }
 
-    private List<SearchResultDisplayObject> getExpressionExperimentResults(
-            Map<Class<? extends Identifiable>, List<SearchResult<? extends Identifiable>>> results ) {
+    private List<SearchResultDisplayObject> getExpressionExperimentResults( SearchService.SearchResultMap results ) {
         // get all expressionExperiment results and convert result object into a value object
-        List<SearchResult<? extends Identifiable>> srEEs = results.get( ExpressionExperiment.class );
-        if ( srEEs == null ) {
-            srEEs = new ArrayList<>();
-        }
+        List<SearchResult<ExpressionExperiment>> srEEs = results.get( ExpressionExperiment.class );
 
         List<Long> eeIds = new ArrayList<>();
-        for ( SearchResult sr : srEEs ) {
+        for ( SearchResult<ExpressionExperiment> sr : srEEs ) {
             eeIds.add( sr.getResultId() );
         }
 
@@ -275,27 +271,25 @@ public class ExpressionExperimentSearchServiceImpl implements ExpressionExperime
     }
 
     private List<SearchResultDisplayObject> getExpressionExperimentSetResults(
-            Map<Class<? extends Identifiable>, List<SearchResult<? extends Identifiable>>> results ) {
+            SearchService.SearchResultMap results ) {
         List<SearchResultDisplayObject> experimentSets = new ArrayList<>();
 
-        if ( results.get( ExpressionExperimentSet.class ) != null ) {
-            List<Long> eeSetIds = new ArrayList<>();
-            for ( SearchResult sr : results.get( ExpressionExperimentSet.class ) ) {
-                eeSetIds.add( sr.getResultId() );
-            }
+        List<Long> eeSetIds = new ArrayList<>();
+        for ( SearchResult<ExpressionExperimentSet> sr : results.get( ExpressionExperimentSet.class ) ) {
+            eeSetIds.add( sr.getResultId() );
+        }
 
-            if ( eeSetIds.isEmpty() ) {
-                return experimentSets;
-            }
-            for ( ExpressionExperimentSetValueObject eesvo : expressionExperimentSetService
-                    .loadValueObjectsByIds( eeSetIds ) ) {
-                experimentSets.add( new SearchResultDisplayObject( eesvo ) );
-            }
+        if ( eeSetIds.isEmpty() ) {
+            return experimentSets;
+        }
+        for ( ExpressionExperimentSetValueObject eesvo : expressionExperimentSetService
+                .loadValueObjectsByIds( eeSetIds ) ) {
+            experimentSets.add( new SearchResultDisplayObject( eesvo ) );
         }
         return experimentSets;
     }
 
-    private Map<Class<? extends Identifiable>, List<SearchResult<? extends Identifiable>>> initialSearch( String query, Long taxonId ) throws SearchException {
+    private SearchService.SearchResultMap initialSearch( String query, Long taxonId ) throws SearchException {
         SearchSettings settings = SearchSettings.builder()
                 .query( query )
                 .resultType( ExpressionExperiment.class )

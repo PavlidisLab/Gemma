@@ -11,6 +11,7 @@ import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.gene.GeneSet;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 
+import javax.annotation.Nullable;
 import java.util.Collection;
 
 /**
@@ -29,7 +30,7 @@ public interface SearchSource {
 
     /**
      * Search for biosequence and, unfortunately genes.
-     *
+     * <p>
      * I wanted to remove this, but there's some logic with indirect gene hit penalty that we might want to keep around.
      *
      * @deprecated use {@link #searchBioSequence(SearchSettings)} (SearchSettings)} instead
@@ -37,10 +38,10 @@ public interface SearchSource {
      * @return a mixture of {@link BioSequence} and {@link Gene} matching the search settings.
      */
     @Deprecated
-    @SuppressWarnings("unused")
-    Collection<SearchResult> searchBioSequenceAndGene( SearchSettings settings,
-            Collection<SearchResult<Gene>> previousGeneSearchResults ) throws SearchException;
+    Collection<SearchResult<?>> searchBioSequenceAndGene( SearchSettings settings,
+            @Nullable Collection<SearchResult<Gene>> previousGeneSearchResults ) throws SearchException;
 
+    @SuppressWarnings("unused")
     Collection<SearchResult<CompositeSequence>> searchCompositeSequence( SearchSettings settings ) throws SearchException;
 
     /**
@@ -53,7 +54,7 @@ public interface SearchSource {
      * @return a mixture of {@link Gene} and {@link CompositeSequence} matching the search settings
      */
     @Deprecated
-    Collection<SearchResult> searchCompositeSequenceAndGene( SearchSettings settings ) throws SearchException;
+    Collection<SearchResult<?>> searchCompositeSequenceAndGene( SearchSettings settings ) throws SearchException;
 
     Collection<SearchResult<ExpressionExperiment>> searchExpressionExperiment( SearchSettings settings ) throws SearchException;
 

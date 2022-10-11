@@ -3,15 +3,14 @@ package ubic.gemma.core.search.source;
 import gemma.gsec.util.SecurityUtil;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.lang3.NotImplementedException;
-import org.apache.commons.text.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
+import org.apache.commons.text.StringEscapeUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import ubic.basecode.ontology.search.OntologySearchException;
 import ubic.gemma.core.association.phenotype.PhenotypeAssociationManagerService;
 import ubic.gemma.core.genome.gene.service.GeneService;
-import ubic.gemma.core.genome.gene.service.GeneSetService;
 import ubic.gemma.core.search.BaseCodeOntologySearchException;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.search.SearchResult;
@@ -31,8 +30,8 @@ import ubic.gemma.persistence.service.expression.designElement.CompositeSequence
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.genome.biosequence.BioSequenceService;
 import ubic.gemma.persistence.service.genome.gene.GeneProductService;
-import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 
+import javax.annotation.Nullable;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -86,11 +85,7 @@ public class DatabaseSearchSource implements SearchSource {
     @Autowired
     private GeneProductService geneProductService;
     @Autowired
-    private GeneSetService geneSetService;
-    @Autowired
     private PhenotypeAssociationManagerService phenotypeAssociationManagerService;
-    @Autowired
-    private TaxonService taxonService;
 
     /**
      * Searches the DB for array designs which have composite sequences whose names match the given search string.
@@ -163,7 +158,7 @@ public class DatabaseSearchSource implements SearchSource {
     }
 
     @Override
-    public Collection<SearchResult> searchBioSequenceAndGene( SearchSettings settings, Collection<SearchResult<Gene>> previousGeneSearchResults ) {
+    public Collection<SearchResult<?>> searchBioSequenceAndGene( SearchSettings settings, @Nullable Collection<SearchResult<Gene>> previousGeneSearchResults ) {
         return new HashSet<>( this.searchBioSequence( settings ) );
     }
 
@@ -176,10 +171,10 @@ public class DatabaseSearchSource implements SearchSource {
      * Search the DB for composite sequences and the genes that are matched to them.
      */
     @Override
-    public Collection<SearchResult> searchCompositeSequenceAndGene( SearchSettings settings ) {
+    public Collection<SearchResult<?>> searchCompositeSequenceAndGene( SearchSettings settings ) {
         Set<SearchResult<Gene>> geneSet = new HashSet<>();
         Collection<SearchResult<CompositeSequence>> matchedCs = this.searchCompositeSequenceAndPopulateGenes( settings, geneSet );
-        Collection<SearchResult> combinedResults = new HashSet<>();
+        Collection<SearchResult<?>> combinedResults = new HashSet<>();
         combinedResults.addAll( geneSet );
         combinedResults.addAll( matchedCs );
         return combinedResults;

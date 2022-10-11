@@ -45,7 +45,10 @@ import ubic.gemma.web.remote.EntityDelegator;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.awt.*;
 import java.util.*;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * @author joseph
@@ -169,19 +172,14 @@ public class CompositeSequenceController extends BaseController {
          */
         ArrayDesign arrayDesign = loadArrayDesign( arrayDesignId );
 
-        Map<Class<? extends Identifiable>, List<SearchResult<? extends Identifiable>>> search = searchService
-                .search( SearchSettings.compositeSequenceSearch( searchString, arrayDesign ) );
+        SearchService.SearchResultMap search = searchService.search( SearchSettings.compositeSequenceSearch( searchString, arrayDesign ) );
 
         Collection<CompositeSequence> css = new HashSet<>();
-        if ( search.containsKey( CompositeSequence.class ) ) {
-
-            Collection<SearchResult<?>> searchResults = search.get( CompositeSequence.class );
-
-            for ( SearchResult sr : searchResults ) {
-                CompositeSequence cs = ( CompositeSequence ) sr.getResultObject();
-                if ( cs != null && ( arrayDesign == null || cs.getArrayDesign().equals( arrayDesign ) ) ) {
-                    css.add( cs );
-                }
+        Collection<SearchResult<CompositeSequence>> searchResults = search.get( CompositeSequence.class );
+        for ( SearchResult<CompositeSequence> sr : searchResults ) {
+            CompositeSequence cs = sr.getResultObject();
+            if ( cs != null && ( arrayDesign == null || cs.getArrayDesign().equals( arrayDesign ) ) ) {
+                css.add( cs );
             }
         }
 

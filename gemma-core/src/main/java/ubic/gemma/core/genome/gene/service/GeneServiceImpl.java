@@ -345,13 +345,11 @@ public class GeneServiceImpl extends AbstractFilteringVoEnabledService<Gene, Gen
                     .query( "http://purl.org/commons/record/ncbi_gene/" + gvo.getNcbiId() )
                     .resultType( ExpressionExperiment.class )
                     .build();
-            Map<Class<? extends Identifiable>, List<SearchResult<? extends Identifiable>>> r;
+            SearchService.SearchResultMap r;
             try {
                 r = searchService.search( s );
-                if ( r.containsKey( ExpressionExperiment.class ) ) {
-                    List<SearchResult<?>> hits = r.get( ExpressionExperiment.class );
-                    gvo.setAssociatedExperimentCount( hits.size() );
-                }
+                List<SearchResult<ExpressionExperiment>> hits = r.get( ExpressionExperiment.class );
+                gvo.setAssociatedExperimentCount( hits.size() );
             } catch ( SearchException e ) {
                 log.error( "Failed to retrieve the associated EE count for " + s + ".", e );
                 gvo.setAssociatedExperimentCount( null );
