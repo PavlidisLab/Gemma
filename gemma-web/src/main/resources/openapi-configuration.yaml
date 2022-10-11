@@ -8,7 +8,7 @@ openAPI:
       url: https://dev.gemma.msl.ubc.ca/rest/v2
   info:
     title: Gemma RESTful API
-    version: 2.5.0
+    version: 2.5.1
     description: |
       This website documents the usage of the [Gemma RESTful API](https://gemma.msl.ubc.ca/rest/v2/). Here you can find
       example script usage of the API, as well as graphical interface for each endpoint, with description of its
@@ -18,6 +18,12 @@ openAPI:
       Please read these in full before continuing to use this webpage or any other part of the Gemma system.
 
       ## Updates
+
+      ### Update 2.5.1
+
+      Restore `objectClass` visibility in `AnnotationValueObject`.
+
+      Fix incorrect response types for annotations search endpoints returning datasets.
 
       ### Update 2.5.0
 
