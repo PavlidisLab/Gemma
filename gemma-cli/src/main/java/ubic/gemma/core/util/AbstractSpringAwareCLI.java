@@ -57,17 +57,6 @@ import java.util.stream.Collectors;
 public abstract class AbstractSpringAwareCLI extends AbstractCLI {
 
     /**
-     * @deprecated Use {@link #USERNAME_ENV} instead.
-     */
-    @Deprecated
-    private static final String USERNAME_OPTION = "u";
-    /**
-     * @deprecated Use {@link #PASSWORD_ENV} or {@link #PASSWORD_CMD_ENV} instead.
-     */
-    @Deprecated
-    private static final String PASSWORD_OPTION = "p";
-
-    /**
      * Environment variable used to store the username (if not passed directly to the CLI).
      */
     private static final String USERNAME_ENV = "GEMMA_USERNAME";
@@ -104,17 +93,6 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
     @Override
     public String getShortDesc() {
         return "No description provided";
-    }
-
-    @Override
-    protected void buildStandardOptions( Options options ) {
-        super.buildStandardOptions( options );
-        options.addOption( Option.builder( USERNAME_OPTION ).argName( "user" ).longOpt( "user" ).hasArg()
-                .desc( "User name for accessing the system (optional for some tools, deprecated: use $GEMMA_USER instead)" )
-                .build() );
-        options.addOption( Option.builder( PASSWORD_OPTION ).argName( "passwd" ).longOpt( "password" ).hasArg()
-                .desc( "Password for accessing the system (optional for some tools, deprecated: use $GEMMA_PASSWORD or $GEMMA_PASSWORD_CMD instead)" )
-                .build() );
     }
 
     /**
@@ -230,16 +208,7 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
      * @param commandLine
      */
     private void authenticate( CommandLine commandLine ) {
-
-        if ( commandLine.hasOption( USERNAME_OPTION ) ) {
-            log.warn( "Usage of the -" + USERNAME_OPTION + " is deprecated and will be removed in a future release. Use $GEMMA_USERNAME instead." );
-        }
-
-        if ( commandLine.hasOption( PASSWORD_OPTION ) ) {
-            log.warn( "Usage of the -" + PASSWORD_OPTION + " is deprecated and will be removed in a future release. Use $GEMMA_PASSWORD or $GEMMA_PASSWORD_CMD instead." );
-        }
-
-        if ( requireLogin() || commandLine.hasOption( USERNAME_OPTION ) || System.getenv().containsKey( USERNAME_ENV ) ) {
+        if ( requireLogin() || System.getenv().containsKey( USERNAME_ENV ) ) {
             String username = getUsername( commandLine );
             String password = getPassword( commandLine );
 
@@ -266,9 +235,7 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
     }
 
     private String getUsername( CommandLine commandLine ) {
-        if ( commandLine.hasOption( USERNAME_OPTION ) ) {
-            return commandLine.getOptionValue( USERNAME_OPTION );
-        } else if ( System.getenv().containsKey( USERNAME_ENV ) ) {
+        if ( System.getenv().containsKey( USERNAME_ENV ) ) {
             return System.getenv().get( USERNAME_ENV );
         } else {
             return System.console().readLine( "Username: " );
@@ -276,10 +243,6 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
     }
 
     private String getPassword( CommandLine commandLine ) {
-        if ( commandLine.hasOption( PASSWORD_OPTION ) ) {
-            return commandLine.getOptionValue( PASSWORD_OPTION );
-        }
-
         if ( System.getenv().containsKey( PASSWORD_ENV ) ) {
             return System.getenv().get( PASSWORD_ENV );
         }

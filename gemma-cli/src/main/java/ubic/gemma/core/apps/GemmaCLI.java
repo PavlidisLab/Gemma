@@ -32,6 +32,8 @@ import ubic.gemma.persistence.util.SpringContextUtil;
 import javax.annotation.Nullable;
 import java.io.PrintWriter;
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Generic command line for Gemma. Commands are referred by shorthand names; this class prints out available commands
@@ -48,6 +50,13 @@ public class GemmaCLI {
             HELP_ALL_OPTION = "ha",
             VERSION_OPTION = "v",
             TESTING_OPTION = "testing"; // historically named '-testing', but now '--testing' is also accepted
+
+    /**
+     * Pattern used to match password in the CLI arguments.
+     * <p>
+     * Passwords are no longer allowed as of 1.29.0, but some users might still supply their passwords.
+     */
+    private static final Pattern PASSWORD_IN_CLI_MATCHER = Pattern.compile( "(-{1,2}p(?:assword)?)\\s+(.+?)\\b" );
 
     public static void main( String[] args ) {
         Options options = new Options()
@@ -147,8 +156,11 @@ public class GemmaCLI {
      * Mask password for logging
      */
     static String getOptStringForLogging( Object[] argsToPass ) {
-        return java.util.regex.Pattern.compile( "(-{1,2}p(?:assword)?)\\s+(.+?)\\b" )
-                .matcher( StringUtils.join( argsToPass, " " ) ).replaceAll( "$1 XXXXXX" );
+        Matcher matcher = PASSWORD_IN_CLI_MATCHER.matcher( StringUtils.join( argsToPass, " " ) );
+        if ( matcher.matches() ) {
+            log.warn( "It seems that you still supply the -p/--password argument through the CLI. This feature has been removed for security purposes in Gemma 1.29." );
+        }
+        return matcher.replaceAll( "$1 XXXXXX" );
     }
 
     private static void printHelp( Options options, @Nullable SortedMap<CommandGroup, SortedMap<String, CLI>> commands ) {
