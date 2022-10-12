@@ -373,7 +373,7 @@ public class AuditEventDaoImpl extends AbstractDao<AuditEvent> implements AuditE
             final String trailQuery = "select a, a.auditTrail from " + clazz + " a where a in (:auditables) ";
             List<?> res = getSessionFactory().getCurrentSession()
                     .createQuery( trailQuery )
-                    .setParameter( "auditables", classMap.get( clazz ) )
+                    .setParameterList( "auditables", classMap.get( clazz ) )
                     .list();
             for ( Object o : res ) {
                 Object[] ar = ( Object[] ) o;
