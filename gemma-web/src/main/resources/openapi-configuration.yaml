@@ -17,6 +17,11 @@ openAPI:
       Use of this webpage and the Gemma Web services, including the REST API, is subject to [these terms and conditions](https://pavlidislab.github.io/Gemma/terms.html).
       Please read these in full before continuing to use this webpage or any other part of the Gemma system.
 
+      Fix return type for `getResultSets` which was incorrectly referring to a renamed VO.
+
+      Remove the `security` requirements by default from the specification, which forced the Python package to supply
+      empty credentials. There is currently no privileged endpoints, although some can return additional results.
+
       ## Updates
 
       ### Update 2.5.1
