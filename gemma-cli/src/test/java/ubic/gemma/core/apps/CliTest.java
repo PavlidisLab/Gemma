@@ -17,7 +17,7 @@
  *
  */
 
-package ubic.gemma.core;
+package ubic.gemma.core.apps;
 
 import org.junit.Test;
 import ubic.gemma.core.apps.GemmaCLI;

@@ -26,6 +26,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import ubic.gemma.core.util.AbstractCLI;
 import ubic.gemma.core.util.CLI;
+import ubic.gemma.persistence.util.Settings;
 import ubic.gemma.persistence.util.SpringContextUtil;
 
 import javax.annotation.Nullable;
@@ -45,12 +46,14 @@ public class GemmaCLI {
     private static final String
             HELP_OPTION = "h",
             HELP_ALL_OPTION = "ha",
+            VERSION_OPTION = "v",
             TESTING_OPTION = "testing"; // historically named '-testing', but now '--testing' is also accepted
 
     public static void main( String[] args ) {
         Options options = new Options()
                 .addOption( HELP_OPTION, "help", false, "Show help" )
                 .addOption( HELP_ALL_OPTION, "help-all", false, "Show complete help with all available CLI commands" )
+                .addOption( VERSION_OPTION, "version", false, "Show Gemma version" )
                 .addOption( TESTING_OPTION, "testing", false, "Use the test environment" );
         CommandLine commandLine;
         try {
@@ -64,6 +67,13 @@ public class GemmaCLI {
         if ( commandLine.hasOption( HELP_OPTION ) ) {
             GemmaCLI.printHelp( options, null );
             System.exit( 1 );
+            return;
+        }
+
+        if ( commandLine.hasOption( VERSION_OPTION ) ) {
+            System.err.printf( "Gemma version %s%n", getAppVersion() );
+            System.exit( 0 );
+            return;
         }
 
         // check for the -testing flag to load the appropriate application context
@@ -128,15 +138,20 @@ public class GemmaCLI {
         }
     }
 
+    private static String getAppVersion() {
+        String appVersion = Settings.getAppVersion();
+        return appVersion != null ? appVersion : "?";
+    }
+
     /**
      * Mask password for logging
      */
-    public static String getOptStringForLogging( Object[] argsToPass ) {
+    static String getOptStringForLogging( Object[] argsToPass ) {
         return java.util.regex.Pattern.compile( "(-{1,2}p(?:assword)?)\\s+(.+?)\\b" )
                 .matcher( StringUtils.join( argsToPass, " " ) ).replaceAll( "$1 XXXXXX" );
     }
 
-    public static void printHelp( Options options, @Nullable SortedMap<CommandGroup, SortedMap<String, CLI>> commands ) {
+    private static void printHelp( Options options, @Nullable SortedMap<CommandGroup, SortedMap<String, CLI>> commands ) {
         System.err.println( "============ Gemma CLI tools ============" );
 
         StringBuilder footer = new StringBuilder();
