@@ -111,7 +111,3 @@ openAPI:
       name: Pavlidis Lab Support
       email: pavlab-support@msl.ubc.ca
       url: https://pavlab.msl.ubc.ca/
-  security:
-    - basicAuth: []
-    - cookieAuth: [] # this is meant for client that reuse their JSESSIONID from Gemma website
-    - {} # this corresponds to anonymous authentication
