@@ -113,7 +113,7 @@ public class DatabaseSearchSource implements SearchSource {
                     .info( "Array Design Composite Sequence DB search for " + settings + " took " + watch.getTime()
                             + " ms" + " found " + adSet.size() + " Ads" );
 
-        return this.toSearchResults( adSet, MATCH_BY_NAME_SCORE );
+        return this.toSearchResults( adSet, MATCH_BY_NAME_SCORE, "CompositeSequenceService.findByName" );
     }
 
     @Override
@@ -146,7 +146,7 @@ public class DatabaseSearchSource implements SearchSource {
 
         Collection<BioSequence> bs = bioSequenceService.findByName( inexactString );
         // bioSequenceService.thawRawAndProcessed( bs );
-        Collection<SearchResult<BioSequence>> bioSequenceList = new HashSet<>( this.toSearchResults( bs, MATCH_BY_NAME_INEXACT_SCORE ) );
+        Collection<SearchResult<BioSequence>> bioSequenceList = new HashSet<>( this.toSearchResults( bs, MATCH_BY_NAME_INEXACT_SCORE, "BioSequenceService.findByName" ) );
 
         watch.stop();
         if ( watch.getTime() > 1000 )
@@ -196,7 +196,7 @@ public class DatabaseSearchSource implements SearchSource {
             if ( cs != null )
                 matchedCs.add( SearchResult.from( cs, MATCH_BY_NAME_SCORE, null, "CompositeSequenceService.findByName" ) );
         } else {
-            matchedCs = toSearchResults( compositeSequenceService.findByName( searchString ), MATCH_BY_NAME_SCORE );
+            matchedCs = toSearchResults( compositeSequenceService.findByName( searchString ), MATCH_BY_NAME_SCORE, "CompositeSequenceService.findByName" );
         }
 
         /*
@@ -207,7 +207,7 @@ public class DatabaseSearchSource implements SearchSource {
             if ( ad != null ) {
                 csViaBioSeq.removeIf( c -> !c.getArrayDesign().equals( ad ) );
             }
-            matchedCs.addAll( toSearchResults( csViaBioSeq, INDIRECT_HIT_PENALTY * MATCH_BY_NAME_SCORE ) );
+            matchedCs.addAll( toSearchResults( csViaBioSeq, INDIRECT_HIT_PENALTY * MATCH_BY_NAME_SCORE, "CompositeSequenceService.findByBioSequenceName" ) );
         }
 
         /*
@@ -222,9 +222,9 @@ public class DatabaseSearchSource implements SearchSource {
 
         for ( SearchResult<Gene> g : geneSet ) {
             if ( settings.getPlatformConstraint() != null ) {
-                matchedCs.addAll( toSearchResults( compositeSequenceService.findByGene( g.getResultObject(), settings.getPlatformConstraint() ), INDIRECT_HIT_PENALTY * g.getScore() ) );
+                matchedCs.addAll( toSearchResults( compositeSequenceService.findByGene( g.getResultObject(), settings.getPlatformConstraint() ), INDIRECT_HIT_PENALTY * g.getScore(), "CompositeSequenceService.findByGene with platform constraint" ) );
             } else {
-                matchedCs.addAll( toSearchResults( compositeSequenceService.findByGene( g.getResultObject() ), INDIRECT_HIT_PENALTY * g.getScore() ) );
+                matchedCs.addAll( toSearchResults( compositeSequenceService.findByGene( g.getResultObject() ), INDIRECT_HIT_PENALTY * g.getScore(), "CompositeSequenceService.findByGene" ) );
             }
         }
 
@@ -236,7 +236,7 @@ public class DatabaseSearchSource implements SearchSource {
         for ( Collection<Gene> genes : compositeSequenceService.getGenes( compositeSequences ).values() ) {
             // TODO: each individual CS have a potentially different score that should be reflected in the gene score,
             //       but that would require knowing which CS matched which gene
-            geneSet.addAll( toSearchResults( genes, INDIRECT_HIT_PENALTY ) );
+            geneSet.addAll( toSearchResults( genes, INDIRECT_HIT_PENALTY, "CompositeSequenceService.getGenes" ) );
         }
 
         watch.stop();
@@ -392,35 +392,35 @@ public class DatabaseSearchSource implements SearchSource {
         // search' situations. If we do wildcards on very short queries we get too many results.
         if ( searchString.length() <= 2 ) {
             // case 0: we got no results yet, or user entered a very short string. We search only for exact matches.
-            results.addAll( toSearchResults( geneService.findByOfficialSymbolInexact( exactString ), MATCH_BY_OFFICIAL_SYMBOL_SCORE ) );
+            results.addAll( toSearchResults( geneService.findByOfficialSymbolInexact( exactString ), MATCH_BY_OFFICIAL_SYMBOL_SCORE, "GeneService.findByOfficialSymbolInexact" ) );
         } else if ( inexactString.endsWith( "%" ) ) {
             // case 1: user explicitly asked for wildcard. We allow this on strings of length 3 or more.
-            results.addAll( toSearchResults( geneService.findByOfficialSymbolInexact( inexactString ), MATCH_BY_OFFICIAL_SYMBOL_INEXACT_SCORE ) );
+            results.addAll( toSearchResults( geneService.findByOfficialSymbolInexact( inexactString ), MATCH_BY_OFFICIAL_SYMBOL_INEXACT_SCORE, "GeneService.findByOfficialSymbolInexact" ) );
         } else if ( searchString.length() > 3 ) {
             // case 2: user did not ask for a wildcard, but we add it anyway, if the string is 4 or 5 characters.
             if ( !inexactString.endsWith( "%" ) ) {
                 inexactString = inexactString + "%";
             }
-            results.addAll( toSearchResults( geneService.findByOfficialSymbolInexact( inexactString ), MATCH_BY_OFFICIAL_SYMBOL_INEXACT_SCORE ) );
+            results.addAll( toSearchResults( geneService.findByOfficialSymbolInexact( inexactString ), MATCH_BY_OFFICIAL_SYMBOL_INEXACT_SCORE, "GeneService.findByOfficialSymbolInexact" ) );
 
         } else {
             // case 3: string is long enough, and user did not ask for wildcard.
-            results.addAll( toSearchResults( geneService.findByOfficialSymbol( exactString ), MATCH_BY_OFFICIAL_SYMBOL_SCORE ) );
+            results.addAll( toSearchResults( geneService.findByOfficialSymbol( exactString ), MATCH_BY_OFFICIAL_SYMBOL_SCORE, "GeneService.findByOfficialSymbol" ) );
         }
 
         /*
          * If we found a match using official symbol or name, don't bother with this
          */
         if ( results.isEmpty() ) {
-            results.addAll( toSearchResults( geneService.findByAlias( exactString ), MATCH_BY_ALIAS_SCORE ) );
+            results.addAll( toSearchResults( geneService.findByAlias( exactString ), MATCH_BY_ALIAS_SCORE, "GeneService.findByAlias" ) );
             Gene geneByEnsemblId = geneService.findByEnsemblId( exactString );
             if ( geneByEnsemblId != null ) {
                 results.add( SearchResult.from( geneByEnsemblId, MATCH_BY_ACCESSION_SCORE, null, "GeneService.findByAlias" ) );
             }
-            results.addAll( toSearchResults( geneProductService.getGenesByName( exactString ), INDIRECT_HIT_PENALTY * MATCH_BY_NAME_SCORE ) );
-            results.addAll( toSearchResults( geneProductService.getGenesByNcbiId( exactString ), INDIRECT_HIT_PENALTY * MATCH_BY_ACCESSION_SCORE ) );
-            results.addAll( toSearchResults( bioSequenceService.getGenesByAccession( exactString ), INDIRECT_HIT_PENALTY * MATCH_BY_ACCESSION_SCORE ) );
-            results.addAll( toSearchResults( bioSequenceService.getGenesByName( exactString ), INDIRECT_HIT_PENALTY * MATCH_BY_NAME_SCORE ) );
+            results.addAll( toSearchResults( geneProductService.getGenesByName( exactString ), INDIRECT_HIT_PENALTY * MATCH_BY_NAME_SCORE, "GeneProductService.getGenesByName" ) );
+            results.addAll( toSearchResults( geneProductService.getGenesByNcbiId( exactString ), INDIRECT_HIT_PENALTY * MATCH_BY_ACCESSION_SCORE, "GeneProductService.getGenesByNcbiId" ) );
+            results.addAll( toSearchResults( bioSequenceService.getGenesByAccession( exactString ), INDIRECT_HIT_PENALTY * MATCH_BY_ACCESSION_SCORE, "BioSequenceService.GetGenesByAccession" ) );
+            results.addAll( toSearchResults( bioSequenceService.getGenesByName( exactString ), INDIRECT_HIT_PENALTY * MATCH_BY_NAME_SCORE, "BioSequenceService.getGenesByName" ) );
         }
 
         return results;
@@ -441,17 +441,17 @@ public class DatabaseSearchSource implements SearchSource {
         if ( !settings.getUseDatabase() )
             return new HashSet<>();
         try {
-            return this.toSearchResults( this.phenotypeAssociationManagerService.searchInDatabaseForPhenotype( settings.getQuery() ), 1.0 );
+            return this.toSearchResults( this.phenotypeAssociationManagerService.searchInDatabaseForPhenotype( settings.getQuery() ), 1.0, "PhenotypeAssociationManagerService.searchInDatabaseForPhenotype" );
         } catch ( OntologySearchException e ) {
             throw new BaseCodeOntologySearchException( "Failed to search for phenotype associations.", e );
         }
     }
 
-    private <T extends Identifiable> List<SearchResult<T>> toSearchResults( Collection<T> entities, double score ) {
+    private <T extends Identifiable> List<SearchResult<T>> toSearchResults( Collection<T> entities, double score, String source ) {
         return entities.stream()
                 .filter( Objects::nonNull )
                 .map( e -> {
-                    SearchResult<T> sr = new SearchResult<>( e, this );
+                    SearchResult<T> sr = new SearchResult<>( e, source );
                     sr.setScore( score );
                     return sr;
                 } )
