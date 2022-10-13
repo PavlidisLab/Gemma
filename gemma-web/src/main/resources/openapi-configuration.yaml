@@ -19,9 +19,6 @@ openAPI:
 
       Fix return type for `getResultSets` which was incorrectly referring to a renamed VO.
 
-      Remove the `security` requirements by default from the specification, which forced the Python package to supply
-      empty credentials. There is currently no privileged endpoints, although some can return additional results.
-
       ## Updates
 
       ### Update 2.5.1
@@ -116,3 +113,7 @@ openAPI:
       name: Pavlidis Lab Support
       email: pavlab-support@msl.ubc.ca
       url: https://pavlab.msl.ubc.ca/
+  security:
+    - basicAuth: []
+    - cookieAuth: [] # this is meant for client that reuse their JSESSIONID from Gemma website
+    - {} # this corresponds to anonymous authentication
