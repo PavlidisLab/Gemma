@@ -37,6 +37,7 @@ import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.search.SearchResult;
 import ubic.gemma.core.search.SearchService;
 import ubic.gemma.core.security.audit.AuditableUtil;
+import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
 import ubic.gemma.model.common.Identifiable;
@@ -102,7 +103,7 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
     private CompositeSequenceService compositeSequenceService;
 
     @Override
-    public JsonReaderResponse<SearchResult> ajaxSearch( SearchSettingsValueObject settingsValueObject ) {
+    public JsonReaderResponse<SearchResult<?>> ajaxSearch( SearchSettingsValueObject settingsValueObject ) {
         StopWatch timer = new StopWatch();
         StopWatch searchTimer = new StopWatch();
         StopWatch fillVosTimer = new StopWatch();
@@ -121,7 +122,7 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
                 .withDoHighlighting( true );
 
         searchTimer.start();
-        Map<Class<? extends Identifiable>, List<SearchResult<? extends Identifiable>>> searchResults;
+        SearchService.SearchResultMap searchResults;
         try {
             searchResults = searchService.search( searchSettings );
         } catch ( SearchException e ) {
@@ -131,10 +132,10 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
 
         // FIXME: sort by the number of hits per class, so the smallest number of hits is at the top.
         fillVosTimer.start();
-        List<SearchResult> finalResults = new ArrayList<>();
+        List<SearchResult<?>> finalResults = new ArrayList<>();
         if ( searchResults != null ) {
-            for ( Class<?> clazz : searchResults.keySet() ) {
-                List<SearchResult<?>> results = searchResults.get( clazz );
+            for ( Class<? extends Identifiable> clazz : searchResults.keySet() ) {
+                List<SearchResult<?>> results = searchResults.get( ( Object ) clazz );
 
                 if ( results.size() == 0 )
                     continue;
@@ -298,10 +299,10 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
     @SuppressWarnings("unchecked")
     private void fillValueObjects( Class<?> entityClass, List<SearchResult<?>> results, SearchSettings settings ) {
         StopWatch timer = StopWatch.createStarted();
-        Collection<? extends Identifiable> vos;
+        Collection<? extends IdentifiableValueObject<?>> vos;
 
         Collection<Long> ids = new ArrayList<>();
-        for ( SearchResult r : results ) {
+        for ( SearchResult<?> r : results ) {
             ids.add( r.getResultId() );
         }
 
@@ -337,7 +338,7 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
         } else if ( CharacteristicValueObject.class.isAssignableFrom( entityClass ) ) {
             // This is used for phenotypes.
             Collection<CharacteristicValueObject> cvos = new ArrayList<>();
-            for ( SearchResult sr : results ) {
+            for ( SearchResult<?> sr : results ) {
                 CharacteristicValueObject ch = ( CharacteristicValueObject ) sr.getResultObject();
                 if ( ch != null ) {
                     cvos.add( ch );
@@ -352,7 +353,7 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
             vos = experimentSetService.loadValueObjects( experimentSetService.load( ids ) );
         } else if ( BlacklistedEntity.class.isAssignableFrom( entityClass ) ) {
             Collection<BlacklistedValueObject> bvos = new ArrayList<>();
-            for ( SearchResult sr : results ) {
+            for ( SearchResult<?> sr : results ) {
                 if ( sr.getResultObject() != null ) {
                     bvos.add( BlacklistedValueObject.fromEntity( ( BlacklistedEntity ) sr.getResultObject() ) );
                 }
@@ -376,16 +377,18 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
         }
 
         // retained objects...
-        Map<Long, ? extends Identifiable> idMap = EntityUtils.getIdMap( vos );
+        Map<Long, ? extends IdentifiableValueObject<?>> idMap = EntityUtils.getIdMap( vos );
 
-        for ( Iterator<SearchResult<?>> it = results.iterator(); it.hasNext(); ) {
-            SearchResult sr = it.next();
-            if ( !idMap.containsKey( sr.getResultId() ) ) {
-                it.remove();
-                continue;
+        List<SearchResult<? extends IdentifiableValueObject<?>>> convertResults = new ArrayList<>( results.size() );
+        for ( SearchResult<?> sr : results ) {
+            if ( idMap.containsKey( sr.getResultId() ) ) {
+                convertResults.add( SearchResult.from( sr, idMap.get( sr.getResultId() ) ) );
             }
-            sr.setResultObject( idMap.get( sr.getResultId() ) );
         }
+
+        // rewrite results with VOs
+        results.clear();
+        results.addAll( convertResults );
 
         timer.stop();
 

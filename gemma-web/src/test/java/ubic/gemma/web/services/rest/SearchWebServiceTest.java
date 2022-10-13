@@ -96,7 +96,9 @@ public class SearchWebServiceTest extends AbstractJUnit4SpringContextTests {
     @Test
     public void testSearchEverything() throws SearchException {
         ArgumentCaptor<SearchSettings> searchSettingsArgumentCaptor = ArgumentCaptor.forClass( SearchSettings.class );
-        when( searchService.search( searchSettingsArgumentCaptor.capture() ) ).thenReturn( Collections.singletonMap( Gene.class, Collections.singletonList( new SearchResult<>( gene, "test object" ) ) ) );
+        SearchService.SearchResultMap srm = mock( SearchService.SearchResultMap.class );
+        when( srm.values() ).thenReturn( Collections.singleton( Collections.singletonList( new SearchResult<>( gene, "test object" ) ) ) );
+        when( searchService.search( searchSettingsArgumentCaptor.capture() ) ).thenReturn( srm );
         when( searchService.loadValueObject( any() ) ).thenAnswer( args -> {
             //noinspection unchecked
             SearchResult<Gene> searchResult = args.getArgument( 0, SearchResult.class );
@@ -132,7 +134,9 @@ public class SearchWebServiceTest extends AbstractJUnit4SpringContextTests {
 
     @Test
     public void testSearchByTaxon() throws SearchException {
-        when( searchService.search( any() ) ).thenReturn( Collections.singletonMap( Gene.class, Collections.singletonList( new SearchResult<>( gene, "test object" ) ) ) );
+        SearchService.SearchResultMap srm = mock( SearchService.SearchResultMap.class );
+        when( srm.get( Gene.class ) ).thenReturn( Collections.singletonList( new SearchResult<>( gene, "test object" ) ) );
+        when( searchService.search( any() ) ).thenReturn( srm );
         when( searchService.loadValueObject( any() ) ).thenAnswer( args -> {
             //noinspection unchecked
             SearchResult<Gene> searchResult = args.getArgument( 0, SearchResult.class );
@@ -150,7 +154,9 @@ public class SearchWebServiceTest extends AbstractJUnit4SpringContextTests {
 
     @Test
     public void testSearchByArrayDesign() throws SearchException {
-        when( searchService.search( any() ) ).thenReturn( Collections.singletonMap( Gene.class, Collections.singletonList( new SearchResult<>( gene, "test object" ) ) ) );
+        SearchService.SearchResultMap srm = mock( SearchService.SearchResultMap.class );
+        when( srm.get( Gene.class ) ).thenReturn( Collections.singletonList( new SearchResult<>( gene, "test object" ) ) );
+        when( searchService.search( any() ) ).thenReturn( srm );
         when( searchService.loadValueObject( any() ) ).thenAnswer( args -> {
             //noinspection unchecked
             SearchResult<Gene> searchResult = args.getArgument( 0, SearchResult.class );

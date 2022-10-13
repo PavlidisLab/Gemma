@@ -45,10 +45,8 @@ import ubic.gemma.persistence.service.association.Gene2GOAssociationService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.persistence.util.EntityUtils;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
+import javax.annotation.Nullable;
+import java.util.*;
 
 /**
  * @author paul
@@ -81,7 +79,7 @@ public class GeneSetSearchImpl implements GeneSetSearch {
     }
 
     @Override
-    public GOGroupValueObject findGeneSetValueObjectByGoId( String goId, Long taxonId ) {
+    public GOGroupValueObject findGeneSetValueObjectByGoId( String goId, @Nullable Long taxonId ) {
 
         // shouldn't need to set the taxon here, should be taken care of when creating the value object
         Taxon taxon;
@@ -91,7 +89,7 @@ public class GeneSetSearchImpl implements GeneSetSearch {
             if ( taxon == null ) {
                 GeneSetSearchImpl.log.warn( "No such taxon with id=" + taxonId );
             } else {
-                GeneSet result = this.findByGoId( goId, taxonService.load( taxonId ) );
+                GeneSet result = this.findByGoId( goId, taxon );
                 if ( result == null ) {
                     GeneSetSearchImpl.log.warn( "No matching gene set found for: " + goId );
                     return null;
@@ -118,13 +116,13 @@ public class GeneSetSearchImpl implements GeneSetSearch {
     }
 
     @Override
-    public Collection<GeneSet> findByGoTermName( String goTermName, Taxon taxon ) throws OntologySearchException {
+    public Collection<GeneSet> findByGoTermName( String goTermName, @Nullable Taxon taxon ) throws OntologySearchException {
         return this.findByGoTermName( goTermName, taxon, null, null );
     }
 
     @Override
-    public Collection<GeneSet> findByGoTermName( String goTermName, Taxon taxon, Integer maxGoTermsProcessed,
-            Integer maxGeneSetSize ) throws OntologySearchException {
+    public Collection<GeneSet> findByGoTermName( String goTermName, @Nullable Taxon taxon, @Nullable Integer maxGoTermsProcessed,
+            @Nullable Integer maxGeneSetSize ) throws OntologySearchException {
         Collection<? extends OntologyResource> matches = this.geneOntologyService
                 .findTerm( StringUtils.strip( goTermName ) );
 
@@ -288,10 +286,7 @@ public class GeneSetSearchImpl implements GeneSetSearch {
     /**
      * Convert a GO term to a 'GeneSet', including genes from all child terms. Divide up by taxon.
      */
-    private GeneSet goTermToGeneSet( OntologyResource term, Taxon taxon, Integer maxGeneSetSize ) {
-        assert taxon != null;
-        if ( term == null )
-            return null;
+    private GeneSet goTermToGeneSet( OntologyResource term, Taxon taxon, @Nullable Integer maxGeneSetSize ) {
         if ( term.getUri() == null )
             return null;
 
@@ -335,11 +330,9 @@ public class GeneSetSearchImpl implements GeneSetSearch {
         return transientGeneSet;
     }
 
-    private Collection<GeneSet> goTermToGeneSets( OntologyTerm term, Integer maxGeneSetSize ) {
-        if ( term == null )
-            return null;
+    private Collection<GeneSet> goTermToGeneSets( OntologyTerm term, @Nullable Integer maxGeneSetSize ) {
         if ( term.getUri() == null )
-            return null;
+            return Collections.emptySet();
 
         Collection<OntologyResource> allMatches = new HashSet<>();
         allMatches.add( term );

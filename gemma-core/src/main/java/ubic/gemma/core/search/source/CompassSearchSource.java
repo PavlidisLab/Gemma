@@ -33,6 +33,7 @@ import ubic.gemma.model.genome.gene.GeneSet;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 import ubic.gemma.persistence.service.genome.biosequence.BioSequenceService;
 
+import javax.annotation.Nullable;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -134,9 +135,9 @@ public class CompassSearchSource implements SearchSource {
      *                                  for the genes are added to the final results.
      */
     @Override
-    public Collection<SearchResult> searchBioSequenceAndGene( SearchSettings settings,
-            Collection<SearchResult<Gene>> previousGeneSearchResults ) throws SearchException {
-        Collection<SearchResult> results = new HashSet<>( this.compassSearch( compassBiosequence, settings, BioSequence.class ) );
+    public Collection<SearchResult<?>> searchBioSequenceAndGene( SearchSettings settings,
+            @Nullable Collection<SearchResult<Gene>> previousGeneSearchResults ) throws SearchException {
+        Collection<SearchResult<?>> results = new HashSet<>( this.compassSearch( compassBiosequence, settings, BioSequence.class ) );
 
         // FIXME: incorporate the genes in the biosequence results (breaks generics)
         Collection<SearchResult<Gene>> geneResults;
@@ -168,10 +169,8 @@ public class CompassSearchSource implements SearchSource {
     }
 
     @Override
-    public Collection<SearchResult> searchCompositeSequenceAndGene( final SearchSettings settings ) throws SearchException {
-        return this.searchBioSequence( settings ).stream()
-                .map( o -> ( SearchResult ) o )
-                .collect( Collectors.toList() );
+    public Collection<SearchResult<?>> searchCompositeSequenceAndGene( final SearchSettings settings ) throws SearchException {
+        return new ArrayList<>( this.searchBioSequence( settings ) );
     }
 
     /**
@@ -372,7 +371,7 @@ public class CompassSearchSource implements SearchSource {
 
     private Collection<SearchResult<ExpressionExperiment>> filterExperimentHitsByTaxon
             ( Collection<SearchResult<ExpressionExperiment>> unfilteredResults,
-                    Taxon t ) {
+                    @Nullable Taxon t ) {
         if ( t == null || unfilteredResults.isEmpty() )
             return unfilteredResults;
 

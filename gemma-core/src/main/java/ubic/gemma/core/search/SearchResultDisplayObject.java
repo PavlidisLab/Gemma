@@ -20,12 +20,14 @@ package ubic.gemma.core.search;
 
 import ubic.gemma.core.genome.gene.GOGroupValueObject;
 import ubic.gemma.core.genome.gene.SessionBoundGeneSetValueObject;
+import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSetValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.gene.GeneSetValueObject;
 import ubic.gemma.model.genome.gene.GeneValueObject;
 
+import javax.annotation.Nullable;
 import java.util.*;
 
 /**
@@ -87,7 +89,7 @@ public class SearchResultDisplayObject implements Comparable<SearchResultDisplay
         } else if ( ExpressionExperimentValueObject.class.isAssignableFrom( entity.getClass() ) ) {
             this.setValues( ( ExpressionExperimentValueObject ) entity );
         } else if ( SearchResult.class.isAssignableFrom( entity.getClass() ) ) {
-            this.setValues( ( SearchResult ) entity );
+            this.setValues( ( SearchResult<?> ) entity );
         } else {
             throw new UnsupportedOperationException( entity.getClass() + " not supported" );
         }
@@ -105,15 +107,15 @@ public class SearchResultDisplayObject implements Comparable<SearchResultDisplay
      * @param  results a collection of SearchResult objects to create SearchResultDisplayObjects for
      * @return a collection of SearchResultDisplayObjects created from the objects passed in, sorted by name
      */
-    public static List<SearchResultDisplayObject> convertSearchResults2SearchResultDisplayObjects(
-            List<SearchResult> results ) {
+    public static <T extends Identifiable> List<SearchResultDisplayObject> convertSearchResults2SearchResultDisplayObjects(
+            @Nullable List<SearchResult<T>> results ) {
 
         // collection of SearchResultDisplayObjects to return
         List<SearchResultDisplayObject> searchResultDisplayObjects = new ArrayList<>();
 
         if ( results != null && results.size() > 0 ) {
             // for every object passed in, create a SearchResultDisplayObject
-            for ( SearchResult result : results ) {
+            for ( SearchResult<T> result : results ) {
                 searchResultDisplayObjects.add( new SearchResultDisplayObject( result ) );
             }
         }
@@ -292,7 +294,9 @@ public class SearchResultDisplayObject implements Comparable<SearchResultDisplay
     private void setValues( ExpressionExperimentValueObject expressionExperiment ) {
         this.isGroup = false;
         this.size = 1;
-        this.taxonId = expressionExperiment.getTaxonId();
+        if ( expressionExperiment.getTaxonObject() != null ) {
+            this.taxonId = expressionExperiment.getTaxonObject().getId();
+        }
 
         this.taxonName = expressionExperiment.getTaxon();
         this.name = expressionExperiment.getShortName();

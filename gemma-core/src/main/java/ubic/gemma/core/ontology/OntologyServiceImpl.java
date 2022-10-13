@@ -1019,27 +1019,25 @@ public class OntologyServiceImpl implements OntologyService {
                 .taxon( taxon )
                 .resultType( Gene.class )
                 .build();
-        Map<Class<? extends Identifiable>, List<SearchResult<? extends Identifiable>>> geneResults = this.searchService.search( ss, false, false );
+        SearchService.SearchResultMap geneResults = this.searchService.search( ss, false, false );
 
-        if ( geneResults.containsKey( Gene.class ) ) {
-            for ( SearchResult<?> sr : geneResults.get( Gene.class ) ) {
-                if ( !sr.getResultClass().isAssignableFrom( Gene.class ) ) {
-                    throw new IllegalStateException( "Expected a gene search result, got a " + sr.getResultClass() );
-                }
-
-                GeneValueObject g = this.geneService.loadValueObjectById( sr.getResultId() );
-
-                if ( g == null ) {
-                    log.warn(
-                            "There is no gene with ID=" + sr.getResultId() + " (in response to search for "
-                                    + queryString + ") - index out of date?" );
-                    continue;
-                }
-
-                if ( OntologyServiceImpl.log.isDebugEnabled() )
-                    OntologyServiceImpl.log.debug( "Search for " + queryString + " returned: " + g );
-                searchResults.add( new CharacteristicValueObject( this.gene2Characteristic( g ) ) );
+        for ( SearchResult<Gene> sr : geneResults.get( Gene.class ) ) {
+            if ( !sr.getResultClass().isAssignableFrom( Gene.class ) ) {
+                throw new IllegalStateException( "Expected a gene search result, got a " + sr.getResultClass() );
             }
+
+            GeneValueObject g = this.geneService.loadValueObjectById( sr.getResultId() );
+
+            if ( g == null ) {
+                log.warn(
+                        "There is no gene with ID=" + sr.getResultId() + " (in response to search for "
+                                + queryString + ") - index out of date?" );
+                continue;
+            }
+
+            if ( OntologyServiceImpl.log.isDebugEnabled() )
+                OntologyServiceImpl.log.debug( "Search for " + queryString + " returned: " + g );
+            searchResults.add( new CharacteristicValueObject( this.gene2Characteristic( g ) ) );
         }
     }
 

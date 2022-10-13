@@ -101,7 +101,7 @@ public class SearchWebService {
                 .maxResults( limit.getValue( MAX_SEARCH_RESULTS ) )
                 .build();
 
-        List<SearchResult<? extends Identifiable>> searchResults;
+        List<SearchResult<?>> searchResults;
         try {
             searchResults = searchService.search( searchSettings ).values().stream()
                     .flatMap( List::stream )
