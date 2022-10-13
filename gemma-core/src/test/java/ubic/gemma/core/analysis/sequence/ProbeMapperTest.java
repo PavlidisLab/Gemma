@@ -92,6 +92,7 @@ public class ProbeMapperTest {
         Assert.assertEquals( expected, actual, 0.0001 );
     }
 
+    @Test
     public void testComputeSpecificityB() {
         Double actual = BlatAssociationScorer.computeSpecificity( tester, 200 );
         Double expected = 200 / 750.0;
@@ -120,7 +121,6 @@ public class ProbeMapperTest {
      */
     @Test
     public void testLocateGene() {
-
         Collection<GeneProduct> products = humangp.findRefGenesByLocation( "2", 73461505L, 73462405L, "+" );
         Assert.assertEquals( 6, products.size() );
         GeneProduct gprod = products.iterator().next();
@@ -133,7 +133,6 @@ public class ProbeMapperTest {
      */
     @Test
     public void testLocateGeneOnWrongStrand() {
-
         Collection<GeneProduct> products = humangp.findRefGenesByLocation( "6", 32916471L, 32918445L, null );
         Assert.assertEquals( 1, products.size() );
         GeneProduct gprod = products.iterator().next();
@@ -142,7 +141,6 @@ public class ProbeMapperTest {
 
     @Test
     public void testProcessBlatResults() {
-
         ProbeMapperConfig config = new ProbeMapperConfig();
         config.setMinimumExonOverlapFraction( 0 ); // test is sensitive to this.
 
@@ -166,7 +164,6 @@ public class ProbeMapperTest {
 
     @Test
     public void testIntronIssues() {
-
         ProbeMapperConfig config = new ProbeMapperConfig();
         Collection<BlatAssociation> results = humangp
                 .findAssociations( "chr1", 145517370L, 145518088L, "145517370,145518070", "18,18", null,

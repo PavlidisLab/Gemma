@@ -150,7 +150,7 @@ public class AnnotationsWebService {
     @Path("/search/datasets")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve datasets associated to an annotation tags search", responses = {
-            @ApiResponse(responseCode = "200", content = @Content(schema = @Schema(ref = "ResponseDataObjectListAnnotationSearchResultValueObject"))),
+            @ApiResponse(responseCode = "200", content = @Content(schema = @Schema(ref = "PaginatedResponseDataObjectExpressionExperimentValueObject"))),
             @ApiResponse(responseCode = "400", description = "The search query is empty or invalid.", content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
     })
     public PaginatedResponseDataObject<ExpressionExperimentValueObject> searchDatasets( // Params:
@@ -201,7 +201,7 @@ public class AnnotationsWebService {
     @Path("/search/{query}/datasets")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve datasets associated to an annotation tags search", responses = {
-            @ApiResponse(responseCode = "200", content = @Content(schema = @Schema(ref = "ResponseDataObjectListAnnotationSearchResultValueObject"))),
+            @ApiResponse(responseCode = "200", content = @Content(schema = @Schema(ref = "PaginatedResponseDataObjectExpressionExperimentValueObject"))),
             @ApiResponse(responseCode = "400", description = "The search query is empty or invalid.", content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
     }, deprecated = true)
     public PaginatedResponseDataObject<ExpressionExperimentValueObject> searchDatasetsByQueryInPath( // Params:
@@ -222,7 +222,7 @@ public class AnnotationsWebService {
     @Path("/{taxon}/search/datasets")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve datasets within a given taxa associated to an annotation tags search", responses = {
-            @ApiResponse(responseCode = "200", content = @Content(schema = @Schema(ref = "ResponseDataObjectListAnnotationSearchResultValueObject"))),
+            @ApiResponse(responseCode = "200", content = @Content(schema = @Schema(ref = "PaginatedResponseDataObjectExpressionExperimentValueObject"))),
             @ApiResponse(responseCode = "400", description = "The search query is empty or invalid.", content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
     })
     public PaginatedResponseDataObject<ExpressionExperimentValueObject> searchTaxonDatasets( // Params:
@@ -267,7 +267,7 @@ public class AnnotationsWebService {
     @Path("/{taxon}/search/{query}/datasets")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve datasets within a given taxa associated to an annotation tags search", responses = {
-            @ApiResponse(responseCode = "200", content = @Content(schema = @Schema(ref = "ResponseDataObjectListAnnotationSearchResultValueObject"))),
+            @ApiResponse(responseCode = "200", content = @Content(schema = @Schema(ref = "PaginatedResponseDataObjectExpressionExperimentValueObject"))),
             @ApiResponse(responseCode = "400", description = "The search query is empty or invalid.", content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
     }, deprecated = true)
     public PaginatedResponseDataObject<ExpressionExperimentValueObject> searchTaxonDatasetsByQueryInPath( // Params:
@@ -295,15 +295,11 @@ public class AnnotationsWebService {
 
             SearchSettings settings = SearchSettings.expressionExperimentSearch( value );
 
-            Map<Class<? extends Identifiable>, List<SearchResult<? extends Identifiable>>> results = searchService.search( settings, false, false );
-            List<SearchResult<?>> eeResults = results.get( ExpressionExperiment.class );
-
-            if ( eeResults == null ) {
-                return new HashSet<>(); // No terms found for the current term means the intersection will be empty.
-            }
+            SearchService.SearchResultMap results = searchService.search( settings, false, false );
+            List<SearchResult<ExpressionExperiment>> eeResults = results.get( ExpressionExperiment.class );
 
             // Working only with IDs
-            for ( SearchResult result : eeResults ) {
+            for ( SearchResult<ExpressionExperiment> result : eeResults ) {
                 valueIds.add( result.getResultId() );
             }
 

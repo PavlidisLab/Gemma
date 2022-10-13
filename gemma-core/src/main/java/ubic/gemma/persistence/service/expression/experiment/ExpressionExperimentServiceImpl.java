@@ -273,16 +273,16 @@ public class ExpressionExperimentServiceImpl
     @Transactional(readOnly = true)
     public Collection<Long> filter( String searchString ) throws SearchException {
 
-        Map<Class<? extends Identifiable>, List<SearchResult<? extends Identifiable>>> searchResultsMap = searchService
+        SearchService.SearchResultMap searchResultsMap = searchService
                 .search( SearchSettings.expressionExperimentSearch( searchString ) );
 
         assert searchResultsMap != null;
 
-        List<SearchResult<? extends Identifiable>> searchResults = searchResultsMap.get( ExpressionExperiment.class );
+        List<SearchResult<ExpressionExperiment>> searchResults = searchResultsMap.get( ExpressionExperiment.class );
 
         Collection<Long> ids = new ArrayList<>( searchResults.size() );
 
-        for ( SearchResult<?> s : searchResults ) {
+        for ( SearchResult<ExpressionExperiment> s : searchResults ) {
             ids.add( s.getResultId() );
         }
 
@@ -434,7 +434,7 @@ public class ExpressionExperimentServiceImpl
 
     @Override
     @Transactional(readOnly = true)
-    public Collection<ExpressionExperiment> findByTaxon( final Taxon taxon, Integer limit ) {
+    public Collection<ExpressionExperiment> findByTaxon( final Taxon taxon, @Nullable Integer limit ) {
         return this.expressionExperimentDao.findByTaxon( taxon, limit );
     }
 

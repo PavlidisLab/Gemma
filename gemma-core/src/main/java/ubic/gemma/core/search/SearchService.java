@@ -14,20 +14,34 @@
  */
 package ubic.gemma.core.search;
 
+import org.springframework.util.MultiValueMap;
 import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
+import javax.annotation.Nonnull;
 import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 /**
  * @author paul
  */
 public interface SearchService {
+
+    interface SearchResultMap extends MultiValueMap<Class<? extends Identifiable>, SearchResult<?>> {
+
+        /**
+         * Specialization of {@link #get(Object)} that correctly types the output.
+         *
+         * @param searchResultType
+         * @return
+         * @param <T>
+         */
+        @Nonnull
+        <T extends Identifiable> List<SearchResult<T>> get( Class<T> searchResultType );
+    }
 
     /**
      * The results are sorted in order of decreasing score, organized by class. The following objects can be searched
@@ -45,7 +59,7 @@ public interface SearchService {
      * @param  settings settings
      * @return Map of Class to SearchResults. The results are already filtered for security considerations.
      */
-    Map<Class<? extends Identifiable>, List<SearchResult<? extends Identifiable>>> search( SearchSettings settings ) throws SearchException;
+    SearchResultMap search( SearchSettings settings ) throws SearchException;
 
     /**
      * This speedSearch method is probably unnecessary right now considering we only call from geneSearch, just putting
@@ -56,7 +70,7 @@ public interface SearchService {
      * @return Map of Class to SearchResults. The results are already filtered for security considerations.
      * @see             #search(SearchSettings)
      */
-    Map<Class<? extends Identifiable>, List<SearchResult<? extends Identifiable>>> speedSearch( SearchSettings settings ) throws SearchException;
+    SearchResultMap speedSearch( SearchSettings settings ) throws SearchException;
 
     /**
      * Makes an attempt at determining of the query term is a valid URI from an Ontology in Gemma or a Gene URI (a GENE
@@ -78,7 +92,7 @@ public interface SearchService {
      * @return Map of Class to SearchResults. The results are already filtered for security
      *                        considerations.
      */
-    Map<Class<? extends Identifiable>, List<SearchResult<? extends Identifiable>>> search( SearchSettings settings, boolean fillObjects, boolean webSpeedSearch ) throws SearchException;
+    SearchResultMap search( SearchSettings settings, boolean fillObjects, boolean webSpeedSearch ) throws SearchException;
 
     /**
      * A search of experiments only. At least one of the arguments must be non-null.

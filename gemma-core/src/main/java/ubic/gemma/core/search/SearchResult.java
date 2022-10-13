@@ -24,7 +24,6 @@ import lombok.ToString;
 import ubic.gemma.model.common.Identifiable;
 
 import javax.annotation.Nullable;
-import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.Comparator;
 import java.util.Objects;
 
@@ -32,7 +31,6 @@ import java.util.Objects;
  * @author paul
  */
 @Data
-@ParametersAreNonnullByDefault
 @EqualsAndHashCode(of = { "resultClass", "resultId" })
 @ToString(of = { "resultId", "resultClass", "highlightedText", "score", "source" })
 public class SearchResult<T extends Identifiable> implements Comparable<SearchResult<?>> {
@@ -54,6 +52,20 @@ public class SearchResult<T extends Identifiable> implements Comparable<SearchRe
         SearchResult<T> sr = new SearchResult<>( entity, source );
         sr.setScore( score );
         sr.setHighlightedText( highlightedText );
+        return sr;
+    }
+
+    /**
+     * Create a search result from an existing one, replacing the result object with the target one.
+     * <p>
+     * This is useful if you need to convert the result object (i.e. to a VO) while preserving the metadata (score,
+     * highlighted text, etc.).
+     */
+    public static <T extends Identifiable> SearchResult<T> from( SearchResult<?> original, @Nullable T newResultObject ) {
+        SearchResult<T> sr = new SearchResult<>( original.resultClass, original.resultId, original.source );
+        sr.setScore( original.getScore() );
+        sr.setHighlightedText( original.getHighlightedText() );
+        sr.setResultObject( newResultObject );
         return sr;
     }
 
