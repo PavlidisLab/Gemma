@@ -483,7 +483,8 @@
 				<artifactId>maven-surefire-plugin</artifactId>
 				<version>2.22.2</version>
 				<configuration>
-					<argLine>-Dlog4j1.compatibility=true</argLine>
+					<!-- we have to set -Dfile.encoding explicitly because of a bug in Maven Surefire https://issues.apache.org/jira/browse/SUREFIRE-951 -->
+					<argLine>-Dlog4j1.compatibility=true -Dfile.encoding=${project.build.sourceEncoding}</argLine>
 					<redirectTestOutputToFile>true</redirectTestOutputToFile>
 					<excludes>
 						<exclude>**/*Abstract*</exclude>
