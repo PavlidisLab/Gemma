@@ -93,7 +93,6 @@ public class BioMaterialValueObject extends IdentifiableValueObject<BioMaterial>
     /**
      * Map of ids (factor232) to a representation of the factor (e.g., the name).
      */
-    @GemmaWebOnly
     private Map<String, String> factors;
 
     @GemmaWebOnly
