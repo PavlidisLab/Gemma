@@ -20,7 +20,7 @@ public interface FilteringDao<O extends Identifiable> extends BaseDao<O> {
      * The purpose of this interface is to provide introspectable properties to construct {@link ObjectFilter} and
      * {@link Sort} objects.
      */
-    Class<O> getElementClass();
+    Class<? extends O> getElementClass();
 
     /**
      * Obtain the object alias used to identify {@link O} in Hibernate queries.

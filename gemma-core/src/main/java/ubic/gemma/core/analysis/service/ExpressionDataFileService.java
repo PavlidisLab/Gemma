@@ -124,10 +124,21 @@ public interface ExpressionDataFileService extends TsvFileService<ExpressionExpe
             throws IOException, FilteringException;
 
     /**
-     * Write raw expression data to a given writer.
+     * Write raw expression data to a given writer for a given quantitation type.
+     * <p>
+     * Note: For compression, wrap a {@link java.util.zip.GZIPOutputStream} with a {@link java.io.OutputStreamWriter}.
+     * To write to a string, consider using {@link java.io.StringWriter}.
      *
-     * Note: the preferred quantitations are used.
-     *
+     * @param ee the expression experiment
+     * @param qt a quantitation type to use, otherwise the preferred one is picked
+     * @param writer the destination for the raw expression data
+     * @throws IOException if operations with the writer fails
+     */
+    void writeRawExpressionData( ExpressionExperiment ee, QuantitationType qt, Writer writer ) throws IOException;
+
+    /**
+     * Write processed expression data to a given writer for a given quantitation type.
+     * <p>
      * Note: For compression, wrap a {@link java.util.zip.GZIPOutputStream} with a {@link java.io.OutputStreamWriter}.
      * To write to a string, consider using {@link java.io.StringWriter}.
      *
@@ -135,7 +146,7 @@ public interface ExpressionDataFileService extends TsvFileService<ExpressionExpe
      * @param writer the destination for the raw expression data
      * @throws IOException if operations with the writer fails
      */
-    void writeRawExpressionData( ExpressionExperiment ee, Writer writer ) throws IOException;
+    void writeProcessedExpressionData( ExpressionExperiment ee, QuantitationType qt, Writer writer ) throws IOException;
 
     /**
      * Write or located the coexpression data file for a given experiment

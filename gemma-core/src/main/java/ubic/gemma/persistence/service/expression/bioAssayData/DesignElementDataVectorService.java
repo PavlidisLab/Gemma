@@ -6,6 +6,7 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.BaseService;
 
 import java.util.Collection;
@@ -109,6 +110,12 @@ interface DesignElementDataVectorService<T extends DesignElementDataVector> exte
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_DATAVECTOR_COLLECTION_READ" })
     Collection<T> find( Collection<CompositeSequence> designElements, QuantitationType quantitationType );
+
+    /**
+     * @see DesignElementDataVectorDao#findByExpressionExperiment(ExpressionExperiment, QuantitationType)
+     */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_DATAVECTOR_COLLECTION_READ" })
+    Collection<T> findByExpressionExperiment( ExpressionExperiment expressionExperiment, QuantitationType quantitationType );
 
     @Override
     @Secured({ "GROUP_USER" })

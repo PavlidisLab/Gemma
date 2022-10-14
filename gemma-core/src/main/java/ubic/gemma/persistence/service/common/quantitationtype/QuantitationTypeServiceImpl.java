@@ -23,8 +23,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.QuantitationTypeValueObject;
+import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.persistence.service.AbstractVoEnabledService;
+import ubic.gemma.persistence.service.AbstractFilteringVoEnabledService;
 
 import java.util.List;
 
@@ -34,7 +35,7 @@ import java.util.List;
  * @see    QuantitationTypeService
  */
 @Service
-public class QuantitationTypeServiceImpl extends AbstractVoEnabledService<QuantitationType, QuantitationTypeValueObject>
+public class QuantitationTypeServiceImpl extends AbstractFilteringVoEnabledService<QuantitationType, QuantitationTypeValueObject>
         implements QuantitationTypeService {
 
     private final QuantitationTypeDao quantitationTypeDao;
@@ -55,6 +56,17 @@ public class QuantitationTypeServiceImpl extends AbstractVoEnabledService<Quanti
     @Transactional(readOnly = true)
     public QuantitationType find( ExpressionExperiment ee, QuantitationType quantitationType ) {
         return this.quantitationTypeDao.find( ee, quantitationType );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public QuantitationType findByIdAndDataVectorType( ExpressionExperiment ee, Long id, Class<? extends DesignElementDataVector> dataVectorType ) {
+        return this.quantitationTypeDao.findByIdAndDataVectorType( ee, id, dataVectorType );
+    }
+
+    @Transactional(readOnly = true)
+    public QuantitationType findByNameAndDataVectorType( ExpressionExperiment ee, String name, Class<? extends DesignElementDataVector> dataVectorType ) {
+        return this.quantitationTypeDao.findByNameAndDataVectorType( ee, name, dataVectorType );
     }
 
 }

@@ -21,6 +21,11 @@ openAPI:
 
       ## Updates
 
+      Introduce a new endpoint to retrieve quantitation types for a given dataset and parameters to retrieve expression
+      data by quantitation type to `getDatasetProcessedExpression` and `getDatasetRawExpression`. As it was too difficult
+      to extends `getDatasetExpression` to also support quantitation type while retaining the filter feature, we decided
+      to deprecate it and reintroduce filtering for both raw and processed expression in the future.
+
       ### Update 2.5.1
 
       Restore `objectClass` visibility in `AnnotationValueObject`.

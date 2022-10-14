@@ -1,10 +1,12 @@
 package ubic.gemma.persistence.service.expression.bioAssayData;
 
+import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.AbstractService;
 
 import java.util.Collection;
@@ -74,4 +76,9 @@ public abstract class DesignElementDataVectorServiceImpl<T extends DesignElement
         return this.designElementDataVectorDao.find( designElements, quantitationType );
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public Collection<T> findByExpressionExperiment( ExpressionExperiment expressionExperiment, QuantitationType quantitationType ) {
+        return this.designElementDataVectorDao.findByExpressionExperiment( expressionExperiment, quantitationType );
+    }
 }

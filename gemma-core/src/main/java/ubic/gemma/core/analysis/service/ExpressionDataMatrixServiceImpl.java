@@ -34,7 +34,6 @@ import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
-import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
@@ -44,7 +43,6 @@ import ubic.gemma.persistence.service.expression.bioAssayData.RawExpressionDataV
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 /**
  * Tools for easily getting data matrices for analysis in a consistent way.
@@ -107,28 +105,14 @@ public class ExpressionDataMatrixServiceImpl implements ExpressionDataMatrixServ
 
     @Override
     @Transactional(readOnly = true)
-    public ExpressionDataDoubleMatrix getRawExpressionDataMatrix( ExpressionExperiment ee ) {
-        Map<QuantitationType, List<RawExpressionDataVector>> rawVectorsByQt = ee.getRawExpressionDataVectors().stream()
-                .collect( Collectors.groupingBy( RawExpressionDataVector::getQuantitationType, Collectors.toList() ) );
+    public ExpressionDataDoubleMatrix getProcessedExpressionDataMatrix( ExpressionExperiment ee, QuantitationType quantitationType ) {
+        return new ExpressionDataDoubleMatrix( processedExpressionDataVectorService.findByExpressionExperiment( ee, quantitationType ) );
+    }
 
-        Set<QuantitationType> preferredQuantitationTypes = rawVectorsByQt.keySet().stream()
-                .filter( QuantitationType::getIsPreferred )
-                .collect( Collectors.toSet() );
-
-        if ( preferredQuantitationTypes.isEmpty() ) {
-            throw new IllegalArgumentException( "There are no RawExpressionDataVectors for " + ee + ", they must be created first." );
-        }
-
-        if ( preferredQuantitationTypes.size() > 1 ) {
-            log.warn( "There are more than one preferred quantitation type for " + ee + " raw expression vectors." );
-        }
-
-        // pick the QT with the maximum ID, which should be the latest one created
-        QuantitationType pickedQuantitationType = preferredQuantitationTypes.stream()
-                .max( Comparator.comparing( QuantitationType::getId ) )
-                .orElse( null );
-
-        return new ExpressionDataDoubleMatrix( rawVectorsByQt.get( pickedQuantitationType ) );
+    @Override
+    @Transactional(readOnly = true)
+    public ExpressionDataDoubleMatrix getRawExpressionDataMatrix( ExpressionExperiment ee, QuantitationType quantitationType ) {
+        return new ExpressionDataDoubleMatrix( rawExpressionDataVectorService.findByExpressionExperiment( ee, quantitationType ) );
     }
 
     @Override
