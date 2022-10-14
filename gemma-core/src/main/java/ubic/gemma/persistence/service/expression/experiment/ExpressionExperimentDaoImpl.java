@@ -41,6 +41,7 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
+import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
@@ -899,6 +900,20 @@ public class ExpressionExperimentDaoImpl
                 .setParameter( "ee", expressionExperiment ) // Set the EE
                 .setParameter( "ad", arrayDesign ) // Set the AD
                 .list();
+    }
+
+    @Override
+    public Optional<QuantitationType> getPreferredQuantitationTypeForDataVectorType( ExpressionExperiment ee, Class<? extends DesignElementDataVector> vectorType ) {
+        //noinspection unchecked
+        List<QuantitationType> quantitationTypes = this.getSessionFactory().getCurrentSession()
+                .createQuery( "select distinct v.quantitationType from " + vectorType.getName() + " v where v.quantitationType.isPreferred = true and v.expressionExperiment = :ee" )
+                .setParameter( "ee", ee )
+                .list();
+        if ( quantitationTypes.size() > 1 ) {
+            log.warn( String.format( "There are more than one preferred %s for %s, the most recent one according to its numerical ID will be selected.", vectorType.getSimpleName(), ee ) );
+        }
+        return quantitationTypes.stream().sorted()
+                .max( Comparator.comparing( QuantitationType::getId ) );
     }
 
     @Override

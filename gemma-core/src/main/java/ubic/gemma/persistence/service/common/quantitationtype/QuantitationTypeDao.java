@@ -20,15 +20,17 @@ package ubic.gemma.persistence.service.common.quantitationtype;
 
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.QuantitationTypeValueObject;
+import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.persistence.service.BaseVoEnabledDao;
+import ubic.gemma.persistence.service.FilteringVoEnabledDao;
 
 import java.util.List;
 
 /**
  * @see QuantitationType
  */
-public interface QuantitationTypeDao extends BaseVoEnabledDao<QuantitationType, QuantitationTypeValueObject> {
+public interface QuantitationTypeDao extends FilteringVoEnabledDao<QuantitationType, QuantitationTypeValueObject> {
+
 
     List<QuantitationType> loadByDescription( String description );
 
@@ -42,4 +44,10 @@ public interface QuantitationTypeDao extends BaseVoEnabledDao<QuantitationType, 
      */
     QuantitationType find( ExpressionExperiment ee, QuantitationType quantitationType );
 
+    QuantitationType findByIdAndDataVectorType( ExpressionExperiment ee, Long id, Class<? extends DesignElementDataVector> dataVectorClass );
+
+    /**
+     * Retrieve the quantitation type matching.
+     */
+    QuantitationType findByNameAndDataVectorType( ExpressionExperiment ee, String name, Class<? extends DesignElementDataVector> dataVectorClass );
 }

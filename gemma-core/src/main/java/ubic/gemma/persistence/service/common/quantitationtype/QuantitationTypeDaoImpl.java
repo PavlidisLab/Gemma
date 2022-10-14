@@ -24,14 +24,14 @@ import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
+import ubic.gemma.model.common.quantitationtype.QuantitationTypeImpl;
 import ubic.gemma.model.common.quantitationtype.QuantitationTypeValueObject;
+import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.persistence.service.AbstractVoEnabledDao;
+import ubic.gemma.persistence.service.AbstractCriteriaFilteringVoEnabledDao;
 import ubic.gemma.persistence.util.BusinessKey;
 
-import java.util.Collection;
-import java.util.LinkedHashSet;
-import java.util.List;
+import java.util.*;
 
 /**
  * <p>
@@ -42,12 +42,12 @@ import java.util.List;
  * @see ubic.gemma.model.common.quantitationtype.QuantitationType
  */
 @Repository
-public class QuantitationTypeDaoImpl extends AbstractVoEnabledDao<QuantitationType, QuantitationTypeValueObject>
+public class QuantitationTypeDaoImpl extends AbstractCriteriaFilteringVoEnabledDao<QuantitationType, QuantitationTypeValueObject>
         implements QuantitationTypeDao {
 
     @Autowired
     public QuantitationTypeDaoImpl( SessionFactory sessionFactory ) {
-        super( QuantitationType.class, sessionFactory );
+        super( QuantitationTypeImpl.class, sessionFactory );
     }
 
     @Override
@@ -113,6 +113,24 @@ public class QuantitationTypeDaoImpl extends AbstractVoEnabledDao<QuantitationTy
         }
         return ( QuantitationType ) list.iterator().next();
 
+    }
+
+    @Override
+    public QuantitationType findByIdAndDataVectorType( ExpressionExperiment ee, Long id, Class<? extends DesignElementDataVector> dataVectorClass ) {
+        return ( QuantitationType ) this.getSessionFactory().getCurrentSession()
+                .createQuery( "select distinct q from " + dataVectorClass.getName() + " v join v.quantitationType as q where q.id = :id and v.expressionExperiment = :ee" )
+                .setParameter( "id", id )
+                .setParameter( "ee", ee )
+                .uniqueResult();
+    }
+
+    @Override
+    public QuantitationType findByNameAndDataVectorType( ExpressionExperiment ee, String name, Class<? extends DesignElementDataVector> dataVectorClass ) {
+        return ( QuantitationType ) this.getSessionFactory().getCurrentSession()
+                .createQuery( "select distinct q from " + dataVectorClass.getName() + " v join v.quantitationType as q where q.name = :name and v.expressionExperiment = :ee" )
+                .setParameter( "name", name )
+                .setParameter( "ee", ee )
+                .uniqueResult();
     }
 
     @Override

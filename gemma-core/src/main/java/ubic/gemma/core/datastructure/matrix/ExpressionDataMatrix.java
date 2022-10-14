@@ -158,6 +158,11 @@ public interface ExpressionDataMatrix<T> {
     T[][] getColumns( List<BioAssay> bioAssays );
 
     /**
+     * Obtain all the design elements in this data matrix.
+     */
+    List<CompositeSequence> getDesignElements();
+
+    /**
      * @param index i
      * @return cs
      */

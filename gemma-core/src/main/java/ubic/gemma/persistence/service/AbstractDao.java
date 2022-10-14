@@ -65,13 +65,13 @@ public abstract class AbstractDao<T extends Identifiable> extends HibernateDaoSu
      */
     public static final int DEFAULT_BATCH_SIZE = 100;
 
-    protected final Class<T> elementClass;
+    protected final Class<? extends T> elementClass;
 
     private int loadBatchSize = DEFAULT_LOAD_BATCH_SIZE;
 
     private int batchSize = DEFAULT_BATCH_SIZE;
 
-    protected AbstractDao( Class<T> elementClass, SessionFactory sessionFactory ) {
+    protected AbstractDao( Class<? extends T> elementClass, SessionFactory sessionFactory ) {
         super.setSessionFactory( sessionFactory );
         this.elementClass = elementClass;
     }

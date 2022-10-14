@@ -8,6 +8,7 @@ import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
+import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.model.genome.Gene;
@@ -15,15 +16,11 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.FilteringVoEnabledDao;
 import ubic.gemma.persistence.service.common.auditAndSecurity.curation.CuratableDao;
 import ubic.gemma.persistence.util.Filters;
-import ubic.gemma.persistence.util.ObjectFilter;
 import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.persistence.util.Sort;
 
 import javax.annotation.Nullable;
-import java.util.Collection;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Created by tesarst on 13/03/17.
@@ -115,6 +112,15 @@ public interface ExpressionExperimentDao
 
     Collection<QuantitationType> getQuantitationTypes( ExpressionExperiment expressionExperiment,
             ArrayDesign arrayDesign );
+
+    /**
+     * Obtain the preferred quantitation type for a given data vector type.
+     * <p>
+     * If more than one preferred QT exists, a warning is emitted and the latest one is returned.
+     *
+     * @return the data vector, or null if no preferred vector type could be determined
+     */
+    Optional<QuantitationType> getPreferredQuantitationTypeForDataVectorType( ExpressionExperiment ee, Class<? extends DesignElementDataVector> vectorType );
 
     Map<ExpressionExperiment, Collection<AuditEvent>> getSampleRemovalEvents(
             Collection<ExpressionExperiment> expressionExperiments );

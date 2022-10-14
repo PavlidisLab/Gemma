@@ -8,6 +8,7 @@ import ubic.gemma.core.analysis.preprocess.OutlierDetectionService;
 import ubic.gemma.core.analysis.preprocess.filter.FilteringException;
 import ubic.gemma.core.analysis.preprocess.filter.NoRowsLeftAfterFilteringException;
 import ubic.gemma.model.common.description.AnnotationValueObject;
+import ubic.gemma.model.common.quantitationtype.QuantitationTypeValueObject;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
@@ -17,7 +18,7 @@ import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.web.services.rest.util.MalformedArgException;
 
-import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -52,6 +53,13 @@ public abstract class DatasetArg<T>
         } catch ( NumberFormatException e ) {
             return new DatasetStringArg( s );
         }
+    }
+
+    /**
+     * Retrieve a dataset with quantitation type initialized.
+     */
+    public Set<QuantitationTypeValueObject> getQuantitationTypes( ExpressionExperimentService service ) {
+        return new HashSet<>( service.getQuantitationTypeValueObjects( getEntity( service ) ) );
     }
 
     /**
