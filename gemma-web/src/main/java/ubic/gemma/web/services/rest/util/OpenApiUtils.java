@@ -34,7 +34,7 @@ public class OpenApiUtils {
      */
     public static OpenAPI getOpenApi( ServletConfig servletConfig ) {
         try {
-            return new JaxrsOpenApiContextBuilder()
+            return new JaxrsOpenApiContextBuilder<>()
                     .servletConfig( servletConfig )
                     // if we don't set that, it will reuse the default context which is already built, but for some very
                     // obscure reason ignores the 'openApi.configuration.location' init parameter. Using a different
