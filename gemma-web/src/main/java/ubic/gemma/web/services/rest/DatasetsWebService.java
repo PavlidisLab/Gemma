@@ -325,7 +325,7 @@ public class DatasetsWebService {
     @Path("/{dataset}/data")
     @Produces(MediaTypeUtils.TEXT_TAB_SEPARATED_VALUES_UTF8)
     @Operation(summary = "Retrieve processed expression data of a dataset",
-            description = "This endpoint is deprecated and getProcessedExpressionData() should be used instead.",
+            description = "This endpoint is deprecated and getDatasetProcessedExpression() should be used instead.",
             responses = {
                     @ApiResponse(responseCode = "200", content = @Content(mediaType = MediaTypeUtils.TEXT_TAB_SEPARATED_VALUES_UTF8,
                             schema = @Schema(type = "string", format = "binary"))),
