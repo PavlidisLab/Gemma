@@ -58,7 +58,7 @@ public class ArgModelResolver extends ModelResolver implements CustomModelConver
     }
 
     @Override
-    public int getPrecedence() {
-        return 10;
+    public int getOrder() {
+        return HIGHEST_PRECEDENCE;
     }
 }

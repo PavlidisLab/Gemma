@@ -45,9 +45,4 @@ public class SearchResultTypeAllowableValuesModelResolver extends ModelResolver 
         }
         return super.resolveAllowableValues( a, annotations, schema );
     }
-
-    @Override
-    public int getPrecedence() {
-        return 5;
-    }
 }

@@ -33,7 +33,8 @@ public class CustomModelConvertersRegistrationListener implements ServletContext
         this.converters = applicationContext.getBeansOfType( CustomModelConverter.class )
                 .entrySet().stream()
                 .map( Pair::of )
-                .sorted( Comparator.comparing( pair -> pair.getValue().getPrecedence() ) )
+                // sorted in reverse order because of how addConverter works (thus negative sign)
+                .sorted( Comparator.comparingInt( pair -> -pair.getValue().getOrder() ) )
                 .collect( Collectors.toList() );
         for ( Pair<String, CustomModelConverter> converter : converters ) {
             ModelConverters.getInstance().addConverter( converter.getValue() );
