@@ -24,6 +24,7 @@ import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.FilteringVoEnabledDao;
 
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -50,4 +51,6 @@ public interface QuantitationTypeDao extends FilteringVoEnabledDao<QuantitationT
      * Retrieve the quantitation type matching.
      */
     QuantitationType findByNameAndDataVectorType( ExpressionExperiment ee, String name, Class<? extends DesignElementDataVector> dataVectorClass );
+
+    List<QuantitationTypeValueObject> loadValueObjectsWithExpressionExperiment( Collection<QuantitationType> qts, ExpressionExperiment ee );
 }

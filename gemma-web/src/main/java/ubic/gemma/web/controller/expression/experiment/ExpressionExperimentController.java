@@ -155,8 +155,6 @@ public class ExpressionExperimentController {
     @Autowired
     private CoexpressionAnalysisService coexpressionAnalysisService;
     @Autowired
-    private QuantitationTypeService quantitationTypeService;
-    @Autowired
     private GeeqService geeqService;
 
     /**
@@ -758,9 +756,8 @@ public class ExpressionExperimentController {
         ExpressionExperiment ee = expressionExperimentService.load( eeId );
         // need to thawRawAndProcessed?
         ee = expressionExperimentService.thawLite( ee );
-        Collection<QuantitationType> qts = ee.getQuantitationTypes();
 
-        return quantitationTypeService.loadValueObjects( qts );
+        return expressionExperimentService.getQuantitationTypeValueObjects( ee );
     }
 
     /**

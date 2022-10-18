@@ -91,4 +91,6 @@ public interface QuantitationTypeService extends FilteringVoEnabledService<Quant
     @Secured({ "GROUP_USER" })
     List<QuantitationType> loadByDescription( String description );
 
+    @Secured({ "GROUP_USER" })
+    List<QuantitationTypeValueObject> loadValueObjectsWithExpressionExperiment( Collection<QuantitationType> qts, ExpressionExperiment expressionExperiment );
 }

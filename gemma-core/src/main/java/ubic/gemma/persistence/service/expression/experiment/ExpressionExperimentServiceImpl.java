@@ -116,7 +116,7 @@ public class ExpressionExperimentServiceImpl
     @Autowired
     private PrincipalComponentAnalysisService principalComponentAnalysisService;
     @Autowired
-    private QuantitationTypeService quantitationTypeDao;
+    private QuantitationTypeService quantitationTypeService;
     @Autowired
     private SearchService searchService;
     @Autowired
@@ -199,7 +199,7 @@ public class ExpressionExperimentServiceImpl
 
         QuantitationType newQt = qts.iterator().next();
         if ( newQt.getId() == null ) { // we try to re-use QTs, but if not:
-            newQt = this.quantitationTypeDao.create( newQt );
+            newQt = this.quantitationTypeService.create( newQt );
         }
 
         /*
@@ -764,7 +764,7 @@ public class ExpressionExperimentServiceImpl
     @Transactional(readOnly = true)
     public Collection<QuantitationTypeValueObject> getQuantitationTypeValueObjects( ExpressionExperiment expressionExperiment ) {
         Collection<QuantitationType> qts = this.expressionExperimentDao.getQuantitationTypes( expressionExperiment );
-        return quantitationTypeDao.loadValueObjects( qts );
+        return quantitationTypeService.loadValueObjectsWithExpressionExperiment( qts, expressionExperiment );
     }
 
     @Override
