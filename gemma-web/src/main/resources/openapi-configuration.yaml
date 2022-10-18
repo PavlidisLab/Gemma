@@ -19,6 +19,9 @@ openAPI:
 
       Fix return type for `getResultSets` which was incorrectly referring to a renamed VO.
 
+      Annotate all possible types for `SearchResult.resultObject`. This incidentally includes the `GeneSetValueObject`
+      in the specification which is not exposed elsewhere in the API.
+
       ## Updates
 
       ### Update 2.5.2
