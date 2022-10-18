@@ -18,7 +18,6 @@
  */
 package ubic.gemma.model.common.quantitationtype;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
@@ -76,7 +75,6 @@ public class QuantitationTypeValueObject extends IdentifiableValueObject<Quantit
      * This only makes sense in the context of an associated EE.
      */
     @Nullable
-    @JsonInclude(JsonInclude.Include.NON_NULL)
     private String vectorType = null;
 
     public QuantitationTypeValueObject( QuantitationType qt ) {
