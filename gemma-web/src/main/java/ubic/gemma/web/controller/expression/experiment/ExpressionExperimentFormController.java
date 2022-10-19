@@ -389,18 +389,18 @@ public class ExpressionExperimentFormController extends BaseFormController {
                     String newName = newQtype.getName();
                     String newDescription = newQtype.getDescription();
                     GeneralType newgentype = GeneralType.fromString( newQtype.getGeneralType() );
-                    boolean newisBkg = newQtype.isBackground();
-                    boolean newisBkgSub = newQtype.isBackgroundSubtracted();
-                    boolean newisNormalized = newQtype.isNormalized();
+                    boolean newisBkg = newQtype.getIsBackground();
+                    boolean newisBkgSub = newQtype.getIsBackgroundSubtracted();
+                    boolean newisNormalized = newQtype.getIsNormalized();
                     PrimitiveType newrep = PrimitiveType.fromString( newQtype.getRepresentation() );
                     ScaleType newscale = ScaleType.fromString( newQtype.getScale() );
                     StandardQuantitationType newType = StandardQuantitationType.fromString( newQtype.getType() );
-                    boolean newisPreferred = newQtype.isPreferred();
-                    boolean newIsmaskedPreferred = newQtype.isMaskedPreferred();
-                    boolean newisRatio = newQtype.isRatio();
+                    boolean newisPreferred = newQtype.getIsPreferred();
+                    boolean newIsmaskedPreferred = newQtype.getIsMaskedPreferred();
+                    boolean newisRatio = newQtype.getIsRatio();
 
-                    boolean newIsBatchCorrected = newQtype.isBatchCorrected();
-                    boolean newIsRecomputedFromRawData = newQtype.isRecomputedFromRawData();
+                    boolean newIsBatchCorrected = newQtype.getIsBatchCorrected();
+                    boolean newIsRecomputedFromRawData = newQtype.getIsRecomputedFromRawData();
 
                     // make it a copy.
                     revisedType.setIsBackgroundSubtracted( newisBkgSub );
