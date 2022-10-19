@@ -35,14 +35,19 @@ import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisValueObject;
 import ubic.gemma.model.common.auditAndSecurity.eventType.BatchInformationFetchingEvent;
 import ubic.gemma.model.common.description.AnnotationValueObject;
+import ubic.gemma.model.common.quantitationtype.QuantitationType;
+import ubic.gemma.model.common.quantitationtype.QuantitationTypeValueObject;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
 import ubic.gemma.model.expression.bioAssayData.ExperimentExpressionLevelsValueObject;
+import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
+import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentDetailsValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
+import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
@@ -87,6 +92,7 @@ public class DatasetsWebService {
     private DifferentialExpressionAnalysisService differentialExpressionAnalysisService;
     private AuditEventService auditEventService;
     private OutlierDetectionService outlierDetectionService;
+    private QuantitationTypeService quantitationTypeService;
 
     /**
      * Required by spring
@@ -103,7 +109,7 @@ public class DatasetsWebService {
             BioAssayService bioAssayService, ProcessedExpressionDataVectorService processedExpressionDataVectorService,
             GeneService geneService, SVDService svdService,
             DifferentialExpressionAnalysisService differentialExpressionAnalysisService, AuditEventService auditEventService,
-            OutlierDetectionService outlierDetectionService ) {
+            OutlierDetectionService outlierDetectionService, QuantitationTypeService quantitationTypeService ) {
         this.service = expressionExperimentService;
         this.expressionExperimentService = expressionExperimentService;
         this.expressionDataFileService = expressionDataFileService;
@@ -115,6 +121,7 @@ public class DatasetsWebService {
         this.differentialExpressionAnalysisService = differentialExpressionAnalysisService;
         this.auditEventService = auditEventService;
         this.outlierDetectionService = outlierDetectionService;
+        this.quantitationTypeService = quantitationTypeService;
     }
 
     @GET
@@ -281,6 +288,17 @@ public class DatasetsWebService {
     }
 
     /**
+     * Retrieve all available quantitation types for a dataset.
+     */
+    @GET
+    @Path("/{dataset}/quantitationTypes")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(summary = "Retrieve quantitation types of a dataset")
+    public ResponseDataObject<Set<QuantitationTypeValueObject>> getDatasetQuantitationTypes( @PathParam("dataset") DatasetArg<?> datasetArg ) {
+        return Responder.respond( datasetArg.getQuantitationTypes( expressionExperimentService ) );
+    }
+
+    /**
      * Retrieves the data for the given dataset.
      * <p>
      * The returned TSV format contains the following columns:
@@ -306,12 +324,14 @@ public class DatasetsWebService {
     @GET
     @Path("/{dataset}/data")
     @Produces(MediaTypeUtils.TEXT_TAB_SEPARATED_VALUES_UTF8)
-    @Operation(summary = "Retrieve the expression data of a dataset", responses = {
-            @ApiResponse(responseCode = "200", content = @Content(mediaType = MediaTypeUtils.TEXT_TAB_SEPARATED_VALUES_UTF8,
-                    schema = @Schema(type = "string", format = "binary"))),
-            @ApiResponse(responseCode = "204", description = "The dataset expression matrix is empty."),
-            @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
-                    content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class))) })
+    @Operation(summary = "Retrieve processed expression data of a dataset",
+            description = "This endpoint is deprecated and getDatasetProcessedExpression() should be used instead.",
+            responses = {
+                    @ApiResponse(responseCode = "200", content = @Content(mediaType = MediaTypeUtils.TEXT_TAB_SEPARATED_VALUES_UTF8,
+                            schema = @Schema(type = "string", format = "binary"))),
+                    @ApiResponse(responseCode = "204", description = "The dataset expression matrix is empty."),
+                    @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class))) }, deprecated = true)
     public Response getDatasetExpression( // Params:
             @PathParam("dataset") DatasetArg<?> datasetArg, // Required
             @QueryParam("filter") @DefaultValue("false") BoolArg filterData // Optional, default false
@@ -327,6 +347,37 @@ public class DatasetsWebService {
     }
 
     /**
+     * Retrieve processed expression data.
+     * <p>
+     * The payload is transparently compressed via a <code>Content-Encoding</code> header and streamed to avoid dumping
+     * the whole payload in memory.
+     */
+    @GZIP
+    @GET
+    @Path("/{dataset}/data/processed")
+    @Produces(MediaTypeUtils.TEXT_TAB_SEPARATED_VALUES_UTF8)
+    @Operation(summary = "Retrieve processed expression data of a dataset", responses = {
+            @ApiResponse(responseCode = "200", content = @Content(mediaType = MediaTypeUtils.TEXT_TAB_SEPARATED_VALUES_UTF8,
+                    schema = @Schema(type = "string", format = "binary"))),
+            @ApiResponse(responseCode = "404", description = "Either the dataset or the quantitation type do not exist.",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class))) })
+    public Response getDatasetProcessedExpression( @PathParam("dataset") DatasetArg<?> datasetArg,
+            @QueryParam("quantitationType") QuantitationTypeArg<?> quantitationTypeArg ) {
+        ExpressionExperiment ee = datasetArg.getEntity( expressionExperimentService );
+        QuantitationType qt;
+        if ( quantitationTypeArg != null ) {
+            qt = quantitationTypeArg.getEntityForExpressionExperimentAndDataVectorType( ee, ProcessedExpressionDataVector.class, quantitationTypeService );
+        } else {
+            qt = expressionExperimentService.getPreferredQuantitationTypeForDataVectorType( ee, ProcessedExpressionDataVector.class )
+                    .orElseThrow( () -> new NotFoundException( String.format( "No preferred quantitation type could be for found processed expression data data of %s.", ee ) ) );
+        }
+        StreamingOutput stream = ( output ) -> expressionDataFileService.writeProcessedExpressionData( ee, qt, new OutputStreamWriter( output ) );
+        return Response.ok( stream )
+                .header( "Content-Disposition", String.format( "attachment; filename=%d_%s_expmat.unfilt.data.txt", ee.getId(), ee.getShortName() ) )
+                .build();
+    }
+
+    /**
      * Retrieve raw expression data.
      *
      * The payload is transparently compressed via a <code>Content-Encoding</code> header and streamed to avoid dumping
@@ -339,11 +390,19 @@ public class DatasetsWebService {
     @Operation(summary = "Retrieve raw expression data of a dataset", responses = {
             @ApiResponse(responseCode = "200", content = @Content(mediaType = MediaTypeUtils.TEXT_TAB_SEPARATED_VALUES_UTF8,
                     schema = @Schema(type = "string", format = "binary"))),
-            @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
+            @ApiResponse(responseCode = "404", description = "Either the dataset or the quantitation type do not exist.",
                     content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class))) })
-    public Response getDatasetRawExpression( @PathParam("dataset") DatasetArg<?> datasetArg ) {
+    public Response getDatasetRawExpression( @PathParam("dataset") DatasetArg<?> datasetArg,
+            @QueryParam("quantitationType") QuantitationTypeArg<?> quantitationTypeArg ) {
         ExpressionExperiment ee = datasetArg.getEntity( expressionExperimentService );
-        StreamingOutput stream = ( output ) -> expressionDataFileService.writeRawExpressionData( ee, new OutputStreamWriter( output ) );
+        QuantitationType qt;
+        if ( quantitationTypeArg != null ) {
+            qt = quantitationTypeArg.getEntityForExpressionExperimentAndDataVectorType( ee, RawExpressionDataVector.class, quantitationTypeService );
+        } else {
+            qt = expressionExperimentService.getPreferredQuantitationTypeForDataVectorType( ee, RawExpressionDataVector.class )
+                    .orElseThrow( () -> new NotFoundException( String.format( "No preferred quantitation type could be found for raw expression data data of %s.", ee ) ) );
+        }
+        StreamingOutput stream = ( output ) -> expressionDataFileService.writeRawExpressionData( ee, qt, new OutputStreamWriter( output ) );
         return Response.ok( stream )
                 .header( "Content-Disposition", String.format( "attachment; filename=%d_%s_expmat.unfilt.raw.data.txt", ee.getId(), ee.getShortName() ) )
                 .build();

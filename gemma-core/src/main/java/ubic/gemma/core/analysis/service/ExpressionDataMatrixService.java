@@ -20,11 +20,14 @@ import ubic.gemma.core.analysis.preprocess.filter.FilterConfig;
 import ubic.gemma.core.analysis.preprocess.filter.FilteringException;
 import ubic.gemma.core.analysis.preprocess.filter.NoRowsLeftAfterFilteringException;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
+import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
+import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorDao;
 
+import javax.annotation.Nullable;
 import java.util.Collection;
 
 /**
@@ -65,11 +68,16 @@ public interface ExpressionDataMatrixService {
     ExpressionDataDoubleMatrix getProcessedExpressionDataMatrix( ExpressionExperiment ee );
 
     /**
-     * @throws IllegalArgumentException if the expression experiment has no preferred raw quantitation types
-     * @param ee
-     * @return
+     * Obtain a processed expression data matrix for a given quantitation type.
+     * @param quantitationType the quantitation type, or null to pick the preferred one
      */
-    ExpressionDataDoubleMatrix getRawExpressionDataMatrix( ExpressionExperiment ee );
+    ExpressionDataDoubleMatrix getProcessedExpressionDataMatrix( ExpressionExperiment ee, QuantitationType quantitationType );
+
+    /**
+     * Obtain a raw expression data matrix for a given quantitation type
+     * @param quantitationType the quantitation type, or null to pick the preferred one
+     */
+    ExpressionDataDoubleMatrix getRawExpressionDataMatrix( ExpressionExperiment ee, QuantitationType quantitationType );
 
     DoubleMatrix<Gene, ExpressionExperiment> getRankMatrix( Collection<Gene> genes,
             Collection<ExpressionExperiment> ees, ProcessedExpressionDataVectorDao.RankMethod method );

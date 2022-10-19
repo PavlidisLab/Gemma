@@ -21,8 +21,9 @@ package ubic.gemma.persistence.service.common.quantitationtype;
 import org.springframework.security.access.annotation.Secured;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.QuantitationTypeValueObject;
+import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.persistence.service.BaseVoEnabledService;
+import ubic.gemma.persistence.service.FilteringVoEnabledService;
 
 import java.util.Collection;
 import java.util.List;
@@ -30,7 +31,7 @@ import java.util.List;
 /**
  * @author kelsey
  */
-public interface QuantitationTypeService extends BaseVoEnabledService<QuantitationType, QuantitationTypeValueObject> {
+public interface QuantitationTypeService extends FilteringVoEnabledService<QuantitationType, QuantitationTypeValueObject> {
 
     /**
      * Locate a QT associated with the given ee matching the specification of the passed quantitationType, or null if
@@ -42,6 +43,22 @@ public interface QuantitationTypeService extends BaseVoEnabledService<Quantitati
      */
     @Secured({ "GROUP_USER" })
     QuantitationType find( ExpressionExperiment ee, QuantitationType quantitationType );
+
+    /**
+     * Find a quantitation type by ID and vector type.
+     * <p>
+     * While the QT can be retrieved uniquely by ID, the purpose of this method is to ensure that it also belongs to a
+     * given expression experiment and data vector type.
+     */
+    QuantitationType findByIdAndDataVectorType( ExpressionExperiment ee, Long id, Class<? extends DesignElementDataVector> dataVectorType );
+
+    /**
+     * Locate a QT by name.
+     * @param ee
+     * @param name
+     * @return
+     */
+    QuantitationType findByNameAndDataVectorType( ExpressionExperiment ee, String name, Class<? extends DesignElementDataVector> dataVectorType );
 
     @Override
     @Secured({ "GROUP_USER" })
@@ -74,4 +91,6 @@ public interface QuantitationTypeService extends BaseVoEnabledService<Quantitati
     @Secured({ "GROUP_USER" })
     List<QuantitationType> loadByDescription( String description );
 
+    @Secured({ "GROUP_USER" })
+    List<QuantitationTypeValueObject> loadValueObjectsWithExpressionExperiment( Collection<QuantitationType> qts, ExpressionExperiment expressionExperiment );
 }

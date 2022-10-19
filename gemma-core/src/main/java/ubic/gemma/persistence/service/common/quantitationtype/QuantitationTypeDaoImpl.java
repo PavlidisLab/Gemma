@@ -23,15 +23,21 @@ import org.hibernate.Criteria;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
+import ubic.gemma.model.common.quantitationtype.QuantitationTypeImpl;
 import ubic.gemma.model.common.quantitationtype.QuantitationTypeValueObject;
+import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
+import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
+import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.persistence.service.AbstractVoEnabledDao;
+import ubic.gemma.model.genome.gene.Multifunctionality;
+import ubic.gemma.persistence.service.AbstractCriteriaFilteringVoEnabledDao;
 import ubic.gemma.persistence.util.BusinessKey;
 
-import java.util.Collection;
-import java.util.LinkedHashSet;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * <p>
@@ -42,12 +48,12 @@ import java.util.List;
  * @see ubic.gemma.model.common.quantitationtype.QuantitationType
  */
 @Repository
-public class QuantitationTypeDaoImpl extends AbstractVoEnabledDao<QuantitationType, QuantitationTypeValueObject>
+public class QuantitationTypeDaoImpl extends AbstractCriteriaFilteringVoEnabledDao<QuantitationType, QuantitationTypeValueObject>
         implements QuantitationTypeDao {
 
     @Autowired
     public QuantitationTypeDaoImpl( SessionFactory sessionFactory ) {
-        super( QuantitationType.class, sessionFactory );
+        super( QuantitationTypeImpl.class, sessionFactory );
     }
 
     @Override
@@ -116,6 +122,24 @@ public class QuantitationTypeDaoImpl extends AbstractVoEnabledDao<QuantitationTy
     }
 
     @Override
+    public QuantitationType findByIdAndDataVectorType( ExpressionExperiment ee, Long id, Class<? extends DesignElementDataVector> dataVectorClass ) {
+        return ( QuantitationType ) this.getSessionFactory().getCurrentSession()
+                .createQuery( "select distinct q from " + dataVectorClass.getName() + " v join v.quantitationType as q where q.id = :id and v.expressionExperiment = :ee" )
+                .setParameter( "id", id )
+                .setParameter( "ee", ee )
+                .uniqueResult();
+    }
+
+    @Override
+    public QuantitationType findByNameAndDataVectorType( ExpressionExperiment ee, String name, Class<? extends DesignElementDataVector> dataVectorClass ) {
+        return ( QuantitationType ) this.getSessionFactory().getCurrentSession()
+                .createQuery( "select distinct q from " + dataVectorClass.getName() + " v join v.quantitationType as q where q.name = :name and v.expressionExperiment = :ee" )
+                .setParameter( "name", name )
+                .setParameter( "ee", ee )
+                .uniqueResult();
+    }
+
+    @Override
     public List<QuantitationType> loadByDescription( String description ) {
         return this.findByStringProperty( "description", description );
     }
@@ -125,4 +149,54 @@ public class QuantitationTypeDaoImpl extends AbstractVoEnabledDao<QuantitationTy
         return new QuantitationTypeValueObject( entity );
     }
 
+    /**
+     * Load {@link QuantitationTypeValueObject} in the context of an associated expression experiment.
+     * <p>
+     * The resulting VO has a few more fields filled which would be otherwise hidden from JSON serialization.
+     * @see QuantitationTypeValueObject#QuantitationTypeValueObject(QuantitationType, ExpressionExperiment, Class)
+     */
+    @Override
+    public List<QuantitationTypeValueObject> loadValueObjectsWithExpressionExperiment( Collection<QuantitationType> qts, ExpressionExperiment ee ) {
+        List<QuantitationTypeValueObject> vos = loadValueObjects( qts );
+        populateVectorType( vos, ee );
+        return vos;
+    }
+
+    private void populateVectorType( Collection<QuantitationTypeValueObject> quantitationTypeValueObjects, ExpressionExperiment ee ) {
+        Set<Long> ids = quantitationTypeValueObjects.stream()
+                .map( QuantitationTypeValueObject::getId )
+                .collect( Collectors.toSet() );
+
+        // here the order matters if there is more than one matching vector type, so try to organize types in decreasing
+        // desirability
+        List<Class<? extends DesignElementDataVector>> vectorTypes = new ArrayList<Class<? extends DesignElementDataVector>>() {{
+            add( ProcessedExpressionDataVector.class );
+            add( RawExpressionDataVector.class );
+        }};
+
+        MultiValueMap<Long, Class<? extends DesignElementDataVector>> vectorTypeById = new LinkedMultiValueMap<>();
+        for ( Class<? extends DesignElementDataVector> vectorType : vectorTypes ) {
+            //noinspection unchecked
+            List<Long> qtIds = getSessionFactory().getCurrentSession()
+                    .createQuery( "select distinct v.quantitationType.id from " + vectorType.getName() + " v where v.expressionExperiment = :ee and v.quantitationType.id in :ids" )
+                    .setParameter( "ee", ee )
+                    .setParameterList( "ids", ids )
+                    .list();
+            qtIds.forEach( id -> vectorTypeById.add( id, vectorType ) );
+        }
+
+        for ( QuantitationTypeValueObject vo : quantitationTypeValueObjects ) {
+            vo.setExpressionExperimentId( ee.getId() );
+            List<Class<? extends DesignElementDataVector>> vts = vectorTypeById.get( vo.getId() );
+            if ( vts != null ) {
+                if ( vts.size() > 1 ) {
+                    log.warn( String.format( "%s is associated to multiple vector types in %s: %s.", vo, ee, vts ) );
+                }
+                vo.setVectorType( vts.iterator().next().getName() );
+            } else {
+                // this is generally not a problem since the QuantitationType might be generic (i.e. representing a data transformation)
+                log.info( String.format( "%s is not associated to any process/raw vectors of %s.", vo, ee ) );
+            }
+        }
+    }
 }

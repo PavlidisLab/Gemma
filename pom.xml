@@ -5,7 +5,7 @@
 	<name>Gemma</name>
 	<groupId>gemma</groupId>
 	<artifactId>gemma</artifactId>
-	<version>1.28.1</version>
+	<version>1.28.2</version>
 	<inceptionYear>2005</inceptionYear>
 	<description>The Gemma Project for meta-analysis of genomics data</description>
 	<url>https://gemma.msl.ubc.ca</url>
@@ -16,7 +16,7 @@
 	<parent>
 		<groupId>ubc.pavlab</groupId>
 		<artifactId>pavlab-starter-parent</artifactId>
-		<version>1.1.7</version>
+		<version>1.1.8</version>
 	</parent>
 	<modules>
 		<module>gemma-core</module>
@@ -265,7 +265,7 @@
 		<dependency>
 			<groupId>org.apache.xbean</groupId>
 			<artifactId>xbean-spring</artifactId>
-			<version>4.21</version>
+			<version>4.22</version>
 		</dependency>
 		<dependency>
 			<groupId>com.google.guava</groupId>
@@ -301,7 +301,7 @@
 		<dependency>
 			<groupId>org.apache.commons</groupId>
 			<artifactId>commons-text</artifactId>
-			<version>1.9</version>
+			<version>1.10.0</version>
 		</dependency>
 		<dependency>
 			<groupId>commons-logging</groupId>
@@ -592,9 +592,9 @@
 		<spring.security.version>3.2.10.RELEASE</spring.security.version>
 		<jersey.version>2.25.1</jersey.version>
 		<jackson.version>2.13.4</jackson.version>
-		<swagger.version>2.2.3</swagger.version>
+		<swagger.version>2.2.4</swagger.version>
 		<jawr.version>3.9</jawr.version>
 		<lucene.version>3.6.2</lucene.version>
-		<slack.version>1.25.1</slack.version>
+		<slack.version>1.26.1</slack.version>
 	</properties>
 </project>

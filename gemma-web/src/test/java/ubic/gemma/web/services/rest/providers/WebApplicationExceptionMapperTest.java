@@ -7,7 +7,9 @@ import org.glassfish.jersey.test.inmemory.InMemoryTestContainerFactory;
 import org.glassfish.jersey.test.spi.TestContainerException;
 import org.glassfish.jersey.test.spi.TestContainerFactory;
 import org.junit.Test;
+import org.springframework.mock.web.MockServletConfig;
 import org.springframework.web.context.support.GenericWebApplicationContext;
+import ubic.gemma.web.services.rest.util.OpenApiUtils;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.Application;
@@ -66,11 +68,12 @@ public class WebApplicationExceptionMapperTest extends JerseyTest {
 
     @Test
     public void testJsonRepresentation() {
+        String version = OpenApiUtils.getOpenApi( new MockServletConfig() ).getInfo().getVersion();
         assertThatThrownBy( () -> target( "/custom" ).request().accept( MediaType.APPLICATION_JSON ).get( CustomResource.MyModel.class ) )
                 .isInstanceOf( BadRequestException.class )
                 .extracting( "response" )
                 .extracting( "entity" )
                 .asInstanceOf( InstanceOfAssertFactories.INPUT_STREAM )
-                .hasContent( "{\"error\":{\"code\":400,\"message\":\"test\"},\"apiVersion\":\"2.5.0\"}" );
+                .hasContent( String.format( "{\"error\":{\"code\":400,\"message\":\"test\"},\"apiVersion\":\"%s\"}", version ) );
     }
 }

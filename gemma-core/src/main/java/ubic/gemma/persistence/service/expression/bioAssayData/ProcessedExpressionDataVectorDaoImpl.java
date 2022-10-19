@@ -553,6 +553,16 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
     }
 
     @Override
+    public Collection<ProcessedExpressionDataVector> findByExpressionExperiment( ExpressionExperiment ee, QuantitationType quantitationType ) {
+        //noinspection unchecked
+        return this.getSessionFactory().getCurrentSession().createQuery(
+                        "select v from ProcessedExpressionDataVector as v where v.expressionExperiment = :ee and v.quantitationType = :qt" )
+                .setParameter( "ee", ee )
+                .setParameter( "qt", quantitationType )
+                .list();
+    }
+
+    @Override
     public void removeDataForCompositeSequence( final CompositeSequence compositeSequence ) {
         final String dedvRemovalQuery = "delete ProcessedExpressionDataVector dedv where dedv.designElement = ?";
         int deleted = this.getHibernateTemplate().bulkUpdate( dedvRemovalQuery, compositeSequence );

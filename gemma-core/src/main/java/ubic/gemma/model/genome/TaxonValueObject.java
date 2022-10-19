@@ -18,11 +18,13 @@ import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.annotations.GemmaWebOnly;
 import ubic.gemma.model.common.description.ExternalDatabaseValueObject;
 
+import java.io.Serializable;
+
 /**
  * @author Paul
  */
 @SuppressWarnings({ "WeakerAccess", "unused" }) // Used in frontend
-public class TaxonValueObject extends IdentifiableValueObject<Taxon> {
+public class TaxonValueObject extends IdentifiableValueObject<Taxon> implements Serializable {
 
     private String scientificName;
     private String commonName;

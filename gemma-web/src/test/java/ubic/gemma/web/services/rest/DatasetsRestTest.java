@@ -245,7 +245,7 @@ public class DatasetsRestTest extends BaseSpringWebTest {
     @Test
     public void testGetDatasetRawExpression() throws IOException {
         ExpressionExperiment ee = ees.get( 0 );
-        Response response = datasetsWebService.getDatasetRawExpression( DatasetArg.valueOf( String.valueOf( ee.getId() ) ) );
+        Response response = datasetsWebService.getDatasetRawExpression( DatasetArg.valueOf( String.valueOf( ee.getId() ) ), null );
         byte[] payload;
         try ( ByteArrayOutputStream os = new ByteArrayOutputStream() ) {
             ( ( StreamingOutput ) response.getEntity() ).write( os );

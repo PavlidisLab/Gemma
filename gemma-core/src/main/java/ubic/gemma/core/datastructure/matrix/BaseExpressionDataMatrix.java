@@ -149,6 +149,16 @@ abstract public class BaseExpressionDataMatrix<T> implements ExpressionDataMatri
     }
 
     @Override
+    public List<CompositeSequence> getDesignElements() {
+        Vector<CompositeSequence> compositeSequences = new Vector<>();
+        compositeSequences.setSize( rows() );
+        for ( int i = 0; i < rows(); i++ ) {
+            compositeSequences.set( i, this.rowDesignElementMapByInteger.get( i ) );
+        }
+        return compositeSequences;
+    }
+
+    @Override
     public CompositeSequence getDesignElementForRow( int index ) {
         return this.rowDesignElementMapByInteger.get( index );
     }

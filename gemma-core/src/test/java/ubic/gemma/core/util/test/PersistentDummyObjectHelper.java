@@ -253,6 +253,7 @@ public class PersistentDummyObjectHelper {
         return this.getTestExpressionExperimentWithAllDependencies( true );
     }
 
+    @Transactional
     public ExpressionExperiment getTestExpressionExperimentWithAllDependencies( ExpressionExperiment prototype ) {
 
         ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
