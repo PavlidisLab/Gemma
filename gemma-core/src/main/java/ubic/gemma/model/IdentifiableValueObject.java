@@ -3,6 +3,7 @@ package ubic.gemma.model;
 import lombok.EqualsAndHashCode;
 import ubic.gemma.model.common.Identifiable;
 
+import java.io.Serializable;
 import java.util.Objects;
 
 /**
