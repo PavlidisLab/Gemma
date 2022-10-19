@@ -152,6 +152,11 @@
     </servlet>
 
     <servlet>
+        <servlet-name>gemma-restapidocs</servlet-name>
+        <jsp-file>/resources/restapidocs/index.jsp</jsp-file>
+    </servlet>
+
+    <servlet>
         <servlet-name>gemma-static-js</servlet-name>
         <servlet-class>net.jawr.web.servlet.JawrServlet</servlet-class>
         <init-param>
@@ -209,6 +214,11 @@
     <servlet-mapping>
         <servlet-name>default</servlet-name>
         <url-pattern>/resources/*</url-pattern>
+    </servlet-mapping>
+
+    <servlet-mapping>
+        <servlet-name>gemma-restapidocs</servlet-name>
+        <url-pattern>/resources/restapidocs/index.html</url-pattern>
     </servlet-mapping>
 
     <servlet-mapping>

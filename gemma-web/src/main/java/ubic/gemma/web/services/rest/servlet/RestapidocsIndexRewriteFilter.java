@@ -37,7 +37,7 @@ public class RestapidocsIndexRewriteFilter extends OncePerRequestFilter {
         if ( REQUEST_WITH_MISSING_SLASH_MATCHER.matches( servletRequest ) ) {
             String redirectUrl = ServletUriComponentsBuilder.fromRequest( servletRequest )
                     .scheme( null ).host( null )
-                    .replacePath( "/resources/restapidocs/" )
+                    .replacePath( servletRequest.getContextPath() + "/resources/restapidocs/" )
                     .build()
                     .toString();
             servletResponse.sendRedirect( redirectUrl );
