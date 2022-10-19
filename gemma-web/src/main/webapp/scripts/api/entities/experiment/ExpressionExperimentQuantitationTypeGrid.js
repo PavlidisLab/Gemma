@@ -20,6 +20,10 @@ Gemma.ExpressionExperimentQuantitationTypeGrid = Ext.extend( Ext.grid.GridPanel,
    eeid : null, // needs to be set in configs on creation
    store : new Ext.data.SimpleStore( {
       fields : Ext.data.Record.create( [ {
+         name : "id"
+      }, {
+         name : "expressionExperimentId"
+      }, {
          name : "name"
       }, {
          name : "description"
@@ -47,6 +51,8 @@ Gemma.ExpressionExperimentQuantitationTypeGrid = Ext.extend( Ext.grid.GridPanel,
          name : "scale"
       }, {
          name : "type"
+      }, {
+         name : "vectorType"
       } ] ),
       sortInfo : {
          field : 'name',
@@ -71,7 +77,20 @@ Gemma.ExpressionExperimentQuantitationTypeGrid = Ext.extend( Ext.grid.GridPanel,
          id : 'name',
          header : "Name",
          dataIndex : "name",
-         tooltip : 'Name'
+         tooltip : 'Name',
+         renderer : function( value, metadata, record, rowIndex, colIndex, store ) {
+            var downloadQuantitationUrl;
+            if ( record.data.vectorType === 'ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector' ) {
+               downloadQuantitationUrl = ctxBasePath + '/rest/v2/datasets/' + record.data.expressionExperimentId + '/data/processed?quantitationType=' + record.data.id;
+            } else if ( record.data.vectorType === 'ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector' ) {
+               downloadQuantitationUrl = ctxBasePath + '/rest/v2/datasets/' + record.data.expressionExperimentId + '/data/raw?quantitationType=' + record.data.id;
+            }
+            if ( downloadQuantitationUrl ) {
+               return '<a href="' + downloadQuantitationUrl + '">' + value + "</a>";
+            } else {
+               return value;
+            }
+         }
       }, {
          id : 'desc',
          header : "Description",

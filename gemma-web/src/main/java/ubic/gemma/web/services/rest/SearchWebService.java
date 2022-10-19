@@ -15,9 +15,17 @@ import ubic.gemma.core.search.SearchResult;
 import ubic.gemma.core.search.SearchService;
 import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.common.Identifiable;
+import ubic.gemma.model.common.description.BibliographicReferenceValueObject;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
+import ubic.gemma.model.expression.designElement.CompositeSequenceValueObject;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentSetValueObject;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.TaxonValueObject;
+import ubic.gemma.model.genome.gene.GeneSetValueObject;
+import ubic.gemma.model.genome.gene.GeneValueObject;
+import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
+import ubic.gemma.model.genome.sequenceAnalysis.BioSequenceValueObject;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.web.services.rest.swagger.resolvers.SearchResultTypeAllowableValuesModelResolver;
@@ -174,6 +182,17 @@ public class SearchWebService {
         @Schema(hidden = true)
         private final String source;
 
+        @Schema(oneOf = {
+                ArrayDesignValueObject.class,
+                BibliographicReferenceValueObject.class,
+                BioSequenceValueObject.class,
+                CompositeSequenceValueObject.class,
+                ExpressionExperimentValueObject.class,
+                ExpressionExperimentSetValueObject.class,
+                GeneValueObject.class,
+                GeneSetValueObject.class,
+                CharacteristicValueObject.class // for PhenotypeAssociation
+        })
         private final T resultObject;
 
         public SearchResultValueObject( SearchResult<T> searchResult ) {

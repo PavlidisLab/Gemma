@@ -24,6 +24,7 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.BaseDao;
 
 import javax.annotation.Nullable;
@@ -96,6 +97,11 @@ public interface DesignElementDataVectorDao<T extends DesignElementDataVector> e
     Collection<T> find( ArrayDesign arrayDesign, QuantitationType quantitationType );
 
     Collection<T> find( Collection<CompositeSequence> designElements, QuantitationType quantitationType );
+
+    /**
+     * Find expression vectors by {@link ExpressionExperiment}.
+     */
+    Collection<T> findByExpressionExperiment( ExpressionExperiment ee, QuantitationType quantitationType );
 
     void removeDataForCompositeSequence( CompositeSequence compositeSequence );
 

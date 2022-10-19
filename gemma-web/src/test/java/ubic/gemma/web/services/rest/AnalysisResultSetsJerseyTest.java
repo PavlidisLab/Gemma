@@ -5,17 +5,16 @@ import io.swagger.v3.oas.models.OpenAPI;
 import lombok.extern.apachecommons.CommonsLog;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.web.util.BaseJerseyTest;
+import ubic.gemma.web.services.rest.util.BaseJerseyIntegrationTest;
 
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URI;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -28,8 +27,9 @@ import static org.assertj.core.api.Assertions.assertThat;
  * @author poirigui
  */
 @CommonsLog
-public class AnalysisResultSetsJerseyTest extends BaseJerseyTest {
+public class AnalysisResultSetsJerseyTest extends BaseJerseyIntegrationTest {
 
+    @Autowired
     private ExpressionExperimentService expressionExperimentService;
 
     /* fixture */
@@ -38,7 +38,6 @@ public class AnalysisResultSetsJerseyTest extends BaseJerseyTest {
     @Before
     public void setUp() throws Exception {
         super.setUp();
-        expressionExperimentService = applicationContext.getBean( ExpressionExperimentService.class );
         ee = ExpressionExperiment.Factory.newInstance();
         ee = expressionExperimentService.create( ee );
     }

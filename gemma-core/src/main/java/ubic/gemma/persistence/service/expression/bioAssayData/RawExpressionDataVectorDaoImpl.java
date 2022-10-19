@@ -95,6 +95,16 @@ public class RawExpressionDataVectorDaoImpl extends DesignElementDataVectorDaoIm
     }
 
     @Override
+    public Collection<RawExpressionDataVector> findByExpressionExperiment( ExpressionExperiment ee, QuantitationType quantitationType ) {
+        //noinspection unchecked
+        return this.getSessionFactory().getCurrentSession().createQuery(
+                        "select v from RawExpressionDataVector as v where v.expressionExperiment = :ee and v.quantitationType = :qt" )
+                .setParameter( "ee", ee )
+                .setParameter( "qt", quantitationType )
+                .list();
+    }
+
+    @Override
     public void removeDataForCompositeSequence( final CompositeSequence compositeSequence ) {
         final String dedvRemovalQuery = "delete RawExpressionDataVector dedv where dedv.designElement = ?";
         int deleted = this.getSessionFactory().getCurrentSession()

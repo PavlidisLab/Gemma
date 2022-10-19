@@ -176,7 +176,7 @@ public class ArrayDesignReportServiceImpl implements ArrayDesignReportService {
                 ObjectOutputStream oos = new ObjectOutputStream( fos )) {
             oos.writeObject( adVo );
         } catch ( Throwable e ) {
-            ArrayDesignReportServiceImpl.log.error( "Cannot write to file: " + reportFileName );
+            ArrayDesignReportServiceImpl.log.error( "Cannot write to file: " + reportFileName, e );
             return;
         }
         ArrayDesignReportServiceImpl.log.info( "Generated report for " + ad );

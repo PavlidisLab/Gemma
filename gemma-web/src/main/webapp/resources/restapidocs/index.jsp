@@ -1,3 +1,4 @@
+<%@ page contentType="text/html;charset=UTF-8" %>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -11,7 +12,7 @@
 <script>
     window.onload = function () {
         window.ui = SwaggerUIBundle({
-            url: '/rest/v2/openapi.json',
+            url: '${pageContext.request.contextPath}/rest/v2/openapi.json',
             dom_id: '#swagger-ui',
             deepLinking: true,
             presets: [

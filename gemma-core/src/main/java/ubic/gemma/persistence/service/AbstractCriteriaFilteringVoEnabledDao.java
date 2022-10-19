@@ -28,7 +28,7 @@ import java.util.concurrent.TimeUnit;
  */
 public abstract class AbstractCriteriaFilteringVoEnabledDao<O extends Identifiable, VO extends IdentifiableValueObject<O>> extends AbstractFilteringVoEnabledDao<O, VO> {
 
-    protected AbstractCriteriaFilteringVoEnabledDao( Class<O> elementClass, SessionFactory sessionFactory ) {
+    protected AbstractCriteriaFilteringVoEnabledDao( Class<? extends O> elementClass, SessionFactory sessionFactory ) {
         // This is a good default objet alias for Hibernate Criteria since null is used to refer to the root entity.
         super( null, elementClass, sessionFactory );
     }
@@ -39,7 +39,11 @@ public abstract class AbstractCriteriaFilteringVoEnabledDao<O extends Identifiab
      * @see ObjectFilterCriteriaUtils#formRestrictionClause(Filters) to obtain a {@link org.hibernate.criterion.DetachedCriteria}
      * from a set of filter clauses.
      */
-    protected abstract Criteria getLoadValueObjectsCriteria( @Nullable Filters filters );
+    protected Criteria getLoadValueObjectsCriteria( @Nullable Filters filters ) {
+        return this.getSessionFactory().getCurrentSession()
+                .createCriteria( elementClass, getObjectAlias() )
+                .add( ObjectFilterCriteriaUtils.formRestrictionClause( filters ) );
+    }
 
     @Override
     public Slice<VO> loadValueObjectsPreFilter( @Nullable Filters filters, @Nullable Sort sort, int offset, int limit ) {

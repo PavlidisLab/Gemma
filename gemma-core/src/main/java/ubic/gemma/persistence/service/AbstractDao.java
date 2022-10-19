@@ -64,13 +64,13 @@ public abstract class AbstractDao<T extends Identifiable> implements BaseDao<T> 
 
     private final SessionFactory sessionFactory;
 
-    protected final Class<T> elementClass;
+    protected final Class<? extends T> elementClass;
 
     private int loadBatchSize = DEFAULT_LOAD_BATCH_SIZE;
 
     private int batchSize = DEFAULT_BATCH_SIZE;
 
-    protected AbstractDao( Class<T> elementClass, SessionFactory sessionFactory ) {
+    protected AbstractDao( Class<? extends T> elementClass, SessionFactory sessionFactory ) {
         this.sessionFactory = sessionFactory;
         this.elementClass = elementClass;
     }

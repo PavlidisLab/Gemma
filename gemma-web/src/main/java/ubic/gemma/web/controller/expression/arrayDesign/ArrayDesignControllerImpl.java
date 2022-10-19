@@ -19,14 +19,22 @@
 package ubic.gemma.web.controller.expression.arrayDesign;
 
 import gemma.gsec.util.SecurityUtil;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.FileSystemResource;
+import org.springframework.core.io.InputStreamResource;
+import org.springframework.core.io.Resource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 import ubic.gemma.core.analysis.report.ArrayDesignReportService;
@@ -62,6 +70,7 @@ import ubic.gemma.web.util.EntityNotFoundException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.*;
+import java.nio.file.Files;
 import java.util.*;
 
 /**
@@ -177,75 +186,45 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
 
     }
 
-    @Override
     @RequestMapping(value = "/downloadAnnotationFile.html", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
-    public ModelAndView downloadAnnotationFile( HttpServletRequest request, HttpServletResponse response ) {
-
-        String arrayDesignIdStr = request.getParameter( "id" );
-        if ( arrayDesignIdStr == null ) {
-            // should be a validation error, on 'submit'.
-            throw new EntityNotFoundException( "Must provide a platform name or Id" );
+    public void downloadAnnotationFile( @RequestParam("id") Long arrayDesignId, @RequestParam(value = "fileType", required = false) String fileType, HttpServletResponse response ) throws IOException {
+        if ( fileType == null ) {
+            fileType = ArrayDesignAnnotationService.STANDARD_FILE_SUFFIX;
+        } else if ( fileType.equalsIgnoreCase( "noParents" ) ) {
+            fileType = ArrayDesignAnnotationService.NO_PARENTS_FILE_SUFFIX;
+        } else if ( fileType.equalsIgnoreCase( "bioProcess" ) )
+            fileType = ArrayDesignAnnotationService.BIO_PROCESS_FILE_SUFFIX;
+        else {
+            throw new IllegalArgumentException( "Unknown file type for the 'fileType' query parameter." );
+        }
+        ArrayDesign arrayDesign = arrayDesignService.load( arrayDesignId );
+        if ( arrayDesign == null ) {
+            throw new EntityNotFoundException( String.format( "No array design with ID %d was found.", arrayDesignId ) );
         }
 
-        String fileType = request.getParameter( "fileType" );
-        if ( fileType == null )
-            fileType = ArrayDesignAnnotationService.STANDARD_FILE_SUFFIX;
-        else if ( fileType.equalsIgnoreCase( "noParents" ) )
-            fileType = ArrayDesignAnnotationService.NO_PARENTS_FILE_SUFFIX;
-        else if ( fileType.equalsIgnoreCase( "bioProcess" ) )
-            fileType = ArrayDesignAnnotationService.BIO_PROCESS_FILE_SUFFIX;
-        else
-            fileType = ArrayDesignAnnotationService.STANDARD_FILE_SUFFIX;
-
-        ArrayDesign arrayDesign = arrayDesignService.load( Long.parseLong( arrayDesignIdStr ) );
         String fileBaseName = ArrayDesignAnnotationServiceImpl.mungeFileName( arrayDesign.getShortName() );
         String fileName = fileBaseName + fileType + ArrayDesignAnnotationService.ANNOTATION_FILE_SUFFIX;
-
         File f = new File( ArrayDesignAnnotationService.ANNOT_DATA_DIR + fileName );
 
         if ( !f.exists() || !f.canRead() ) {
+            // Experimental. Ideally make a background process. But usually these files should be available anyway...
+            log.info( String.format( "Annotation file %s not found, creating for %s...", f.getPath(), arrayDesign ) );
             try {
-                // Experimental. Ideally make a background process. But usually these files should be available anyway...
-                log.info( "Annotation file not found, creating for " + arrayDesign );
                 annotationFileService.create( arrayDesign, true );
-                f = new File( ArrayDesignAnnotationService.ANNOT_DATA_DIR + fileName );
-                if ( !f.exists() || !f.canRead() ) {
-                    throw new IOException( "Created but could not read?" );
-                }
             } catch ( Exception e ) {
-                log.error( e, e );
-                throw new RuntimeException(
-                        "The file could not be found and could not be created for " + arrayDesign.getShortName() + " ("
-                                + e.getMessage() + "). " + "Please contact " + SUPPORT_EMAIL + " for assistance" );
+                log.error( String.format( "Failed to create annotation file %s for %s.", f.getPath(), arrayDesign ), e );
             }
         }
 
-        try ( InputStream reader = new BufferedInputStream( new FileInputStream( f ) ) ) {
-
-            response.setHeader( "Content-disposition", "attachment; filename=" + fileName );
-            response.setContentLength( ( int ) f.length() );
+        try ( InputStream is = new FileInputStream( f ) ) {
+            response.setHeader( "Content-Disposition", "attachment; filename=" + fileName );
             // response.setContentType( "application/x-gzip" ); // see Bug4206
-
-            try ( OutputStream outputStream = response.getOutputStream() ) {
-
-                byte[] buf = new byte[1024];
-                int len;
-                while ( ( len = reader.read( buf ) ) > 0 ) {
-                    outputStream.write( buf, 0, len );
-                }
-                reader.close();
-
-            } catch ( IOException ioe ) {
-                log.warn( "Failure during streaming of annotation file " + fileName + " Error: " + ioe );
-            }
+            response.setContentLength( ( int ) f.length() );
+            IOUtils.copy( is, response.getOutputStream() );
         } catch ( FileNotFoundException e ) {
-            log.warn( "Annotation file " + fileName + " can't be found at " + e );
-            return null;
-        } catch ( IOException e ) {
-            log.warn( "Annotation file " + fileName + " could not be read: " + e.getMessage() );
-            return null;
+            throw new RuntimeException( String.format( "The annotation file could not be found for %s. Please contact %s for assistance.",
+                    arrayDesign.getShortName(), SUPPORT_EMAIL ) );
         }
-        return null;
     }
 
     @Override

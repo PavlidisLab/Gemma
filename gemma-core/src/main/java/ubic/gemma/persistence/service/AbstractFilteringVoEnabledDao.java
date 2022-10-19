@@ -24,7 +24,7 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
 
     private final String objectAlias;
 
-    protected AbstractFilteringVoEnabledDao( @Nullable String objectAlias, Class<O> elementClass, SessionFactory sessionFactory ) {
+    protected AbstractFilteringVoEnabledDao( @Nullable String objectAlias, Class<? extends O> elementClass, SessionFactory sessionFactory ) {
         super( elementClass, sessionFactory );
         this.objectAlias = objectAlias;
     }
@@ -36,7 +36,7 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
     }
 
     @Override
-    public Class<O> getElementClass() {
+    public Class<? extends O> getElementClass() {
         return elementClass;
     }
 
