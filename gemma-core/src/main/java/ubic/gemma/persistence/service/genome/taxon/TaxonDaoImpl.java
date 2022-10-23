@@ -97,14 +97,14 @@ public class TaxonDaoImpl extends AbstractQueryFilteringVoEnabledDao<Taxon, Taxo
     public Taxon findByCommonName( final String commonName ) {
         if ( StringUtils.isBlank( commonName ) )
             throw new IllegalArgumentException( "commonName cannot be empty" );
-        return this.findOneByStringProperty( "commonName", commonName );
+        return findOneByProperty( "commonName", commonName );
     }
 
     @Override
     public Taxon findByScientificName( final String scientificName ) {
         if ( StringUtils.isBlank( scientificName ) )
             throw new IllegalArgumentException( "scientificName cannot be empty" );
-        return this.findOneByStringProperty( "scientificName", scientificName );
+        return findOneByProperty( "scientificName", scientificName );
     }
 
     @Override

@@ -208,37 +208,6 @@ public abstract class AbstractDao<T extends Identifiable> extends HibernateDaoSu
     }
 
     /**
-     * Does a like-match case insensitive search on given property and its value.
-     *
-     * @param  propertyName  the name of property to be matched.
-     * @param  propertyValue the value to look for.
-     * @return an entity whose property first like-matched the given value.
-     */
-    @SuppressWarnings("unchecked")
-    protected T findOneByStringProperty( String propertyName, String propertyValue ) {
-        Criteria criteria = this.getSessionFactory().getCurrentSession().createCriteria( this.elementClass );
-        criteria.add( Restrictions.ilike( propertyName, propertyValue ) );
-        criteria.setMaxResults( 1 );
-        //noinspection unchecked
-        return ( T ) criteria.uniqueResult();
-    }
-
-    /**
-     * Does a like-match case insensitive search on given property and its value.
-     *
-     * @param  propertyName  the name of property to be matched.
-     * @param  propertyValue the value to look for.
-     * @return a list of entities whose properties like-matched the given value.
-     */
-    @SuppressWarnings("SameParameterValue") // Better for general use
-    protected List<T> findByStringProperty( String propertyName, String propertyValue ) {
-        Criteria criteria = this.getSessionFactory().getCurrentSession().createCriteria( this.elementClass );
-        criteria.add( Restrictions.ilike( propertyName, propertyValue ) );
-        //noinspection unchecked
-        return criteria.list();
-    }
-
-    /**
      * Lists all entities whose given property matches the given value.
      *
      * @param  propertyName  the name of property to be matched.
@@ -247,22 +216,22 @@ public abstract class AbstractDao<T extends Identifiable> extends HibernateDaoSu
      */
     @SuppressWarnings("unchecked")
     protected T findOneByProperty( String propertyName, Object propertyValue ) {
-
         /*
          * Disable flush to avoid NonNullability constraint failures, etc. prematurely when running this during object
          * creation. This effectively makes this method read-only even in a read-write context. (the same setup might be
          * needed for other methods)
          */
         FlushMode fm = this.getSessionFactory().getCurrentSession().getFlushMode();
-        this.getSessionFactory().getCurrentSession().setFlushMode( FlushMode.MANUAL );
-        Criteria criteria = this.getSessionFactory().getCurrentSession().createCriteria( this.elementClass );
-        criteria.add( Restrictions.eq( propertyName, propertyValue ) );
-        criteria.setMaxResults( 1 );
-
-        //noinspection unchecked
-        T result = ( T ) criteria.uniqueResult();
-        this.getSessionFactory().getCurrentSession().setFlushMode( fm );
-        return result;
+        try {
+            this.getSessionFactory().getCurrentSession().setFlushMode( FlushMode.MANUAL );
+            Criteria criteria = this.getSessionFactory().getCurrentSession().createCriteria( this.elementClass );
+            criteria.add( Restrictions.eq( propertyName, propertyValue ) );
+            criteria.setMaxResults( 1 );
+            //noinspection unchecked
+            return ( T ) criteria.uniqueResult();
+        } finally {
+            this.getSessionFactory().getCurrentSession().setFlushMode( fm );
+        }
     }
 
     /**
