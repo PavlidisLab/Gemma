@@ -142,6 +142,15 @@ public class CompassSearchSourceTest extends AbstractJUnit4SpringContextTests {
     }
 
     @Test
+    public void test_multipleQuotedTermsWithOr() throws SearchException {
+        setupCompassMocks( compassGene );
+        searchSource.searchGene( SearchSettings.geneSearch( "\"collections of materials\" OR \"lung cancer\"", null ) );
+        verify( compassGene ).openSession();
+        verify( mockedSession ).beginTransaction();
+        verify( mockedQueryBuilder ).queryString( "\"collections of materials\" OR \"lung cancer\"" );
+    }
+
+    @Test
     public void test_whenQueryIsEmpty_thenReturnNothing() throws SearchException {
         setupCompassMocks( compassGene );
         searchSource.searchGene( SearchSettings.geneSearch( "", null ) );

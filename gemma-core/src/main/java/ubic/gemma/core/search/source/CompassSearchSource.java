@@ -194,11 +194,6 @@ public class CompassSearchSource implements SearchSource {
         return this.compassSearch( compassGeneSet, settings, GeneSet.class );
     }
 
-    @Override
-    public Collection<SearchResult<CharacteristicValueObject>> searchPhenotype( SearchSettings settings ) {
-        throw new NotImplementedException( "Searching phenotypes is not supported for the Compass source." );
-    }
-
     /**
      * Generic method for searching Lucene indices for entities (excluding ontology terms, which use the OntologySearch)
      */
@@ -274,7 +269,7 @@ public class CompassSearchSource implements SearchSource {
             CompassSearchSource.log.debug( message );
         }
 
-        String source = String.format( "%s with %s", session.getSettings().getSetting( "compass.name" ), compassQuery );
+        String source = String.format( "%s with '%s'", session.getSettings().getSetting( "compass.name" ), compassQuery );
 
         return this.getSearchResults( hits, clazz, source );
     }

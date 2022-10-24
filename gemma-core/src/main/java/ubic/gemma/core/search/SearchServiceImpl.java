@@ -436,8 +436,10 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
 
         if ( settings.getUseGo() ) {
             try {
+                // FIXME: add support for OR, but there's a bug in baseCode that prevents this https://github.com/PavlidisLab/baseCode/issues/22
+                String query = settings.getQuery().replaceAll( "\\s+OR\\s+", "" );
                 results.addAll( this.dbHitsToSearchResult(
-                        geneSearchService.getGOGroupGenes( settings.getQuery(), settings.getTaxon() ), "From GO group", "GeneSearchService.getGOGroupGenes" ) );
+                        geneSearchService.getGOGroupGenes( query, settings.getTaxon() ), "From GO group", "GeneSearchService.getGOGroupGenes" ) );
             } catch ( OntologySearchException e ) {
                 throw new BaseCodeOntologySearchException( e );
             }
@@ -456,7 +458,24 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
         }
 
         if ( settings.hasResultType( PhenotypeAssociation.class ) ) {
-            results.addAll( this.databaseSearchSource.searchPhenotype( settings ) );
+            results.addAll( searchPhenotype( settings ) );
+        }
+    }
+
+    /**
+     * Find phenotypes.
+     */
+    private Collection<SearchResult<CharacteristicValueObject>> searchPhenotype( SearchSettings settings ) throws SearchException {
+        if ( !settings.getUseDatabase() )
+            return new HashSet<>();
+        try {
+            // FIXME: add support for OR, but there's a bug in baseCode that prevents this https://github.com/PavlidisLab/baseCode/issues/22
+            String query = settings.getQuery().replaceAll( "\\s+OR\\s+", "" );
+            return this.phenotypeAssociationManagerService.searchInDatabaseForPhenotype( query ).stream()
+                    .map( r -> SearchResult.from( r, 1.0, null, "PhenotypeAssociationManagerService.searchInDatabaseForPhenotype" ) )
+                    .collect( Collectors.toSet() );
+        } catch ( OntologySearchException e ) {
+            throw new BaseCodeOntologySearchException( "Failed to search for phenotype associations.", e );
         }
     }
 
@@ -689,7 +708,7 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
         StopWatch watch = StopWatch.createStarted();
 
         log.info( "Starting EE search for " + settings );
-        String[] subclauses = prepareDatabaseQuery( settings ).split( " OR " );
+        String[] subclauses = prepareDatabaseQuery( settings ).split( "\\s+OR\\s+" );
         for ( String subclause : subclauses ) {
             /*
              * Note that the AND is applied only within one entity type. The fix would be to apply AND at this
@@ -1311,6 +1330,10 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
      */
     private SearchResultMap generalSearch( SearchSettings settings, boolean fillObjects,
             boolean webSpeedSearch ) throws SearchException {
+        // If nothing to search return nothing.
+        if ( StringUtils.isBlank( settings.getQuery() ) ) {
+            return new SearchResultMapImpl();
+        }
 
         // attempt to infer a taxon from the query if missing
         if ( settings.getTaxon() == null ) {
@@ -1321,12 +1344,6 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
 
         // do gene first before we munge the query too much.
         this.accreteResultsGenes( rawResults, settings, webSpeedSearch );
-
-        // If nothing to search return nothing.
-        if ( StringUtils.isBlank( settings.getQuery() ) ) {
-            log.info( String.format( "Nothing was returned from gene search for %s, returning nothing.", settings ) );
-            return new SearchResultMapImpl();
-        }
 
         this.accreteResultsOthers(
                 rawResults,
@@ -1374,8 +1391,10 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
         if ( combinedGeneList.isEmpty() ) {
             Collection<CharacteristicValueObject> phenotypeTermHits;
             try {
+                // FIXME: add support for OR, but there's a bug in baseCode that prevents this https://github.com/PavlidisLab/baseCode/issues/22
+                String query = settings.getQuery().replaceAll( "\\s+OR\\s+", "" );
                 phenotypeTermHits = this.phenotypeAssociationManagerService
-                        .searchInDatabaseForPhenotype( settings.getQuery() );
+                        .searchInDatabaseForPhenotype( query );
             } catch ( OntologySearchException e ) {
                 throw new BaseCodeOntologySearchException( e );
             }
@@ -1389,9 +1408,7 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
                         .findCandidateGenes( phenotypeUris, settings.getTaxon() );
 
                 if ( !phenotypeGenes.isEmpty() ) {
-                    SearchServiceImpl.log
-                            .info( phenotypeGenes.size() + " genes associated with " + phenotype + " (via query='"
-                                    + settings.getQuery() + "')" );
+                    SearchServiceImpl.log.info( String.format( "%d genes associated with %s via %s", phenotypeGenes.size(), phenotype, settings ) );
 
                     for ( GeneEvidenceValueObject gvo : phenotypeGenes ) {
                         Gene g = Gene.Factory.newInstance();

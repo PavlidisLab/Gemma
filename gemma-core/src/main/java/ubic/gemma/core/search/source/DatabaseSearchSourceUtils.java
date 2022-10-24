@@ -14,14 +14,17 @@ public class DatabaseSearchSourceUtils {
      * See <a href="https://lucene.apache.org/core/3_6_2/queryparsersyntax.html">Apache Lucene - Query Parser Syntax</a>
      * for more details about special characters.
      */
-    private static final String LUCENE_SPECIAL_CHARACTERS = Arrays.stream( "+ - && || ! ( ) { } [ ] ^ \" ~ * ? : \\".split( " " ) )
+    private static final String[] LUCENE_SPECIAL_CHARACTERS = "+ - && || ! ( ) { } [ ] ^ \" ~ * ? : \\".split( " " );
+
+    private static final String LUCENE_SPECIAL_CHARACTERS_PATTERN = Arrays.stream( LUCENE_SPECIAL_CHARACTERS )
             .map( Pattern::quote )
             .collect( Collectors.joining( "|" ) );
 
     /**
      * Essentially the same as {@link #LUCENE_SPECIAL_CHARACTERS}, but excluding those that are supported.
      */
-    private static final String LUCENE_SPECIAL_CHARACTERS_BUT_WILDCARDS = Arrays.stream( "+ - && || ! ( ) { } [ ] ^ \" ~ : \\".split( " " ) )
+    private static final String LUCENE_SPECIAL_CHARACTERS_BUT_WILDCARDS_PATTERN = Arrays.stream( LUCENE_SPECIAL_CHARACTERS )
+            .filter( c -> !c.equals( String.valueOf( SearchSettings.WILDCARD_CHAR ) ) && !c.equals( String.valueOf( SearchSettings.SINGLE_WILDCARD_CHAR ) ) )
             .map( Pattern::quote )
             .collect( Collectors.joining( "|" ) );
 
@@ -33,7 +36,7 @@ public class DatabaseSearchSourceUtils {
     public static String prepareDatabaseQuery( SearchSettings settings ) {
         return settings.getQuery()
                 // also remove wildcards, those are for inexact matches only
-                .replaceAll( LUCENE_SPECIAL_CHARACTERS, "" );
+                .replaceAll( LUCENE_SPECIAL_CHARACTERS_PATTERN, "" );
     }
 
     /**
@@ -43,7 +46,7 @@ public class DatabaseSearchSourceUtils {
      */
     public static String prepareDatabaseQueryForInexactMatch( SearchSettings settings ) {
         return settings.getQuery()
-                .replaceAll( LUCENE_SPECIAL_CHARACTERS_BUT_WILDCARDS, "" )
+                .replaceAll( LUCENE_SPECIAL_CHARACTERS_BUT_WILDCARDS_PATTERN, "" )
                 .replaceAll( "%", "\\\\%" )
                 .replaceAll( "_", "\\\\_" )
                 .replace( SearchSettings.WILDCARD_CHAR, '%' )

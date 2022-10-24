@@ -426,19 +426,6 @@ public class DatabaseSearchSource implements SearchSource {
         }
     }
 
-    /**
-     * Find phenotypes.
-     */
-    @Override
-    public Collection<SearchResult<CharacteristicValueObject>> searchPhenotype( SearchSettings settings ) throws SearchException {
-        if ( !settings.getUseDatabase() )
-            return new HashSet<>();
-        try {
-            return this.toSearchResults( this.phenotypeAssociationManagerService.searchInDatabaseForPhenotype( prepareDatabaseQuery( settings ) ), 1.0, "PhenotypeAssociationManagerService.searchInDatabaseForPhenotype" );
-        } catch ( OntologySearchException e ) {
-            throw new BaseCodeOntologySearchException( "Failed to search for phenotype associations.", e );
-        }
-    }
 
     private <T extends Identifiable> List<SearchResult<T>> toSearchResults( Collection<T> entities, double score, String source ) {
         return entities.stream()
