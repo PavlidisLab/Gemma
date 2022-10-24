@@ -19,6 +19,7 @@
 package ubic.gemma.web.controller;
 
 import gemma.gsec.util.SecurityUtil;
+import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -126,7 +127,7 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
         try {
             searchResults = searchService.search( searchSettings );
         } catch ( SearchException e ) {
-            throw new IllegalArgumentException( "Invalid search settings " + searchSettings + ".", e );
+            throw new IllegalArgumentException( String.format( "Invalid search settings: %s.", ExceptionUtils.getRootCause( e ) ), e );
         }
         searchTimer.stop();
 
