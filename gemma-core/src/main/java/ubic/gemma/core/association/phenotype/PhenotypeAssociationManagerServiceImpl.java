@@ -2059,10 +2059,10 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
      * @return       the string with an added wildcard to it.
      */
     private String prepareOntologyQuery( String query ) {
-
-        String newSearchQuery = query;
-
-        if ( query != null ) {
+        if ( query == null )
+            return query;
+        String newSearchQuery = query.trim();
+        if ( !query.endsWith( "\"" ) && !query.endsWith( "*" ) ) {
             newSearchQuery = newSearchQuery + "*";
         }
         return newSearchQuery;

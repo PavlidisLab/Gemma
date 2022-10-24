@@ -547,7 +547,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
         populateBlacklisted( results );
         populateExpressionExperimentCount( results );
         populateSwitchedExpressionExperimentCount( results );
-        if ( timer.getTime( TimeUnit.MILLISECONDS ) > 20 ) {
+        if ( timer.getTime( TimeUnit.MILLISECONDS ) > 50 ) {
             log.info( String.format( "Populating ArrayDesign VOs took %d ms.", timer.getTime( TimeUnit.MILLISECONDS ) ) );
         }
     }

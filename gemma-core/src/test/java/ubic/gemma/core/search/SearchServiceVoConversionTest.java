@@ -1,25 +1,14 @@
 package ubic.gemma.core.search;
 
-import net.sf.ehcache.CacheManager;
-import org.compass.core.Compass;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
-import ubic.gemma.core.annotation.reference.BibliographicReferenceService;
-import ubic.gemma.core.association.phenotype.PhenotypeAssociationManagerService;
-import ubic.gemma.core.genome.gene.service.GeneSearchService;
-import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.core.genome.gene.service.GeneSetService;
-import ubic.gemma.core.ontology.OntologyService;
-import ubic.gemma.core.search.source.CompassSearchSource;
-import ubic.gemma.core.search.source.DatabaseSearchSource;
 import ubic.gemma.model.analysis.expression.diff.ContrastResult;
-import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -28,15 +17,8 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.DatabaseBackedGeneSetValueObject;
 import ubic.gemma.model.genome.gene.GeneSet;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
-import ubic.gemma.persistence.service.common.description.CharacteristicService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
-import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
-import ubic.gemma.persistence.service.expression.experiment.BlacklistedEntityDao;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSetService;
-import ubic.gemma.persistence.service.genome.biosequence.BioSequenceService;
-import ubic.gemma.persistence.service.genome.gene.GeneProductService;
-import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
@@ -45,142 +27,8 @@ import static org.mockito.Mockito.*;
 public class SearchServiceVoConversionTest extends AbstractJUnit4SpringContextTests {
 
     @Configuration
-    public static class SearchServiceVoConversionTestContextConfiguration {
+    static class SearchServiceVoConversionTestContextConfiguration extends SearchServiceTestContextConfiguration {
 
-        @Bean
-        public SearchService searchService() {
-            return new SearchServiceImpl();
-        }
-
-        @Bean
-        public CacheManager cacheManager() {
-            return mock( CacheManager.class );
-        }
-
-        @Bean
-        public SearchSource compassSearchSource() {
-            return mock( CompassSearchSource.class );
-        }
-
-        @Bean
-        public Compass compassArray() {
-            return mock( Compass.class );
-        }
-
-        @Bean
-        public Compass compassBibliographic() {
-            return mock( Compass.class );
-        }
-
-        @Bean
-        public Compass compassBiosequence() {
-            return mock( Compass.class );
-        }
-
-        @Bean
-        public Compass compassExperimentSet() {
-            return mock( Compass.class );
-        }
-
-        @Bean
-        public Compass compassExpression() {
-            return mock( Compass.class );
-        }
-
-        @Bean
-        public Compass compassGene() {
-            return mock( Compass.class );
-        }
-
-        @Bean
-        public Compass compassGeneSet() {
-            return mock( Compass.class );
-        }
-
-        @Bean
-        public Compass compassProbe() {
-            return mock( Compass.class );
-        }
-
-        @Bean
-        public DatabaseSearchSource databaseSearchSource() {
-            return mock( DatabaseSearchSource.class );
-        }
-
-        @Bean
-        public GeneProductService geneProductService() {
-            return mock( GeneProductService.class );
-        }
-
-        @Bean
-        public ArrayDesignService arrayDesignService() {
-            return mock( ArrayDesignService.class );
-        }
-
-        @Bean
-        public CharacteristicService characteristicService() {
-            return mock( CharacteristicService.class );
-        }
-
-        @Bean
-        public ExpressionExperimentService expressionExperimentService() {
-            return mock( ExpressionExperimentService.class );
-        }
-
-        @Bean
-        public ExpressionExperimentSetService experimentSetService() {
-            return mock( ExpressionExperimentSetService.class );
-        }
-
-        @Bean
-        public GeneSearchService geneSearchService() {
-            return mock( GeneSearchService.class );
-        }
-
-        @Bean
-        public GeneService geneService() {
-            return mock( GeneService.class );
-        }
-
-        @Bean
-        public GeneSetService geneSetService() {
-            return mock( GeneSetService.class );
-        }
-
-        @Bean
-        public OntologyService ontologyService() {
-            return mock( OntologyService.class );
-        }
-
-        @Bean
-        public PhenotypeAssociationManagerService phenotypeAssociationManagerService() {
-            return mock( PhenotypeAssociationManagerService.class );
-        }
-
-        @Bean
-        public BioSequenceService bioSequenceService() {
-            return mock( BioSequenceService.class );
-        }
-
-        @Bean
-        public CompositeSequenceService compositeSequenceService() {
-            return mock( CompositeSequenceService.class );
-        }
-
-        @Bean
-        public BlacklistedEntityDao blackListDao() {
-            return mock( BlacklistedEntityDao.class );
-        }
-
-        @Bean
-        public TaxonService taxonService() {
-            return mock( TaxonService.class );
-        }
-
-        @Bean
-        public BibliographicReferenceService bibliographicReferenceService() {
-            return mock( BibliographicReferenceService.class );
-        }
     }
 
     @Autowired

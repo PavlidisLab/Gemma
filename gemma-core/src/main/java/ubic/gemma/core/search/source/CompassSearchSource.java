@@ -237,14 +237,17 @@ public class CompassSearchSource implements SearchSource {
     private <T extends Identifiable> Set<SearchResult<T>> performSearch( SearchSettings settings, CompassSession session, Class<T> clazz, Object source ) {
         StopWatch watch = new StopWatch();
         watch.start();
-        String enhancedQuery = settings.getQuery().trim();
 
-        //noinspection ConstantConditions
-        if ( StringUtils.isBlank( enhancedQuery )
-                || enhancedQuery.length() < CompassSearchSource.MINIMUM_STRING_LENGTH_FOR_FREE_TEXT_SEARCH
-                // FIXME: this is ignored because of the minimum string length
-                || enhancedQuery.equals( "*" ) )
-            return new HashSet<>();
+        // some strings of size 1 cause lucene to barf, and they were slipping through in multi-term queries, get rid of them
+        String enhancedQuery = Arrays.stream( settings.getQuery().split( "\\s+" ) )
+                .filter( t -> t.length() > 1 )
+                .collect( Collectors.joining( " " ) );
+
+        // exclude non-word characters when measuring query length
+        if ( enhancedQuery.replaceAll( "\\W", "" ).length() < CompassSearchSource.MINIMUM_STRING_LENGTH_FOR_FREE_TEXT_SEARCH ) {
+            log.debug( String.format( "Query %s does not contain enough word-like character for free-text search.", settings ) );
+            return Collections.emptySet();
+        }
 
         CompassQuery compassQuery = session.queryBuilder().queryString( enhancedQuery ).toQuery();
         CompassSearchSource.log.debug( "Parsed query: " + compassQuery );
@@ -263,15 +266,14 @@ public class CompassSearchSource implements SearchSource {
         }
 
         watch.stop();
-        if ( watch.getTime() > 100 ) {
-            CompassSearchSource.log
-                    .info( "Getting " + hits.getLength() + " lucene hits for " + enhancedQuery + " took " + watch
-                            .getTime() + " ms" );
-        }
+
+        String message = String.format( "Getting %d Lucene hits for %s (parsed as %s) took %d ms", hits.getLength(), enhancedQuery, compassQuery, watch.getTime() );
         if ( watch.getTime() > 5000 ) {
-            CompassSearchSource.log
-                    .info( "***** Slow Lucene Index Search!  " + hits.getLength() + " lucene hits for " + enhancedQuery
-                            + " took " + watch.getTime() + " ms" );
+            CompassSearchSource.log.warn( "***** Slow Lucene Index Search!  " + message );
+        } else if ( watch.getTime() > 100 ) {
+            CompassSearchSource.log.info( message );
+        } else {
+            CompassSearchSource.log.debug( message );
         }
 
         return this.getSearchResults( hits, clazz, source );
@@ -412,5 +414,4 @@ public class CompassSearchSource implements SearchSource {
         }
         return results;
     }
-
 }

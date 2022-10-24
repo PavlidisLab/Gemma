@@ -29,6 +29,7 @@ import net.sf.ehcache.Element;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.text.StringEscapeUtils;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.convert.ConverterNotFoundException;
@@ -47,6 +48,7 @@ import ubic.gemma.core.genome.gene.service.GeneSearchService;
 import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.core.genome.gene.service.GeneSetService;
 import ubic.gemma.core.ontology.OntologyService;
+import ubic.gemma.core.search.source.DatabaseSearchSource;
 import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
@@ -78,10 +80,11 @@ import ubic.gemma.persistence.util.Settings;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import javax.annotation.PostConstruct;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+
+import static ubic.gemma.core.search.SearchSettingsUtils.escapeQuery;
 
 /**
  * This service is used for performing searches using free text or exact matches to items in the database.
@@ -96,7 +99,8 @@ import java.util.stream.Collectors;
  */
 @Service
 @CommonsLog
-public class SearchServiceImpl implements SearchService {
+public class SearchServiceImpl implements SearchService, InitializingBean {
+
 
     private static class SearchResultMapImpl extends LinkedMultiValueMap<Class<? extends Identifiable>, SearchResult<?>> implements SearchResultMap {
 
@@ -314,8 +318,8 @@ public class SearchServiceImpl implements SearchService {
         return SearchResult.from( searchResult, convertedResultObject );
     }
 
-    @PostConstruct
-    void initializeSearchService() {
+    @Override
+    public void afterPropertiesSet() throws Exception {
         initializeSupportedResultTypes();
         initializeResultObjectConversionService();
         try {
@@ -550,9 +554,8 @@ public class SearchServiceImpl implements SearchService {
     }
 
     private Collection<SearchResult<ExpressionExperimentSet>> experimentSetSearch( SearchSettings settings ) throws SearchException {
-        Collection<SearchResult<ExpressionExperimentSet>> results = this
-                .dbHitsToSearchResult( this.experimentSetService.findByName( settings.getQuery() ), null, "ExperimentSetService.findByName" );
-
+        LinkedHashSet<SearchResult<ExpressionExperimentSet>> results = new LinkedHashSet<>();
+        results.addAll( databaseSearchSource.searchExperimentSet( settings ) );
         results.addAll( this.compassSearchSource.searchExperimentSet( settings ) );
         return results;
     }
@@ -571,19 +574,19 @@ public class SearchServiceImpl implements SearchService {
             @Nullable Collection<SearchResult<CompositeSequence>> probeResults ) throws SearchException {
 
         StopWatch watch = StopWatch.createStarted();
-        String searchString = settings.getQuery();
+        String searchString = escapeQuery( settings );
         Collection<SearchResult<ArrayDesign>> results = new HashSet<>();
 
         ArrayDesign shortNameResult = arrayDesignService.findByShortName( searchString );
         if ( shortNameResult != null ) {
-            results.add( new SearchResult<>( shortNameResult, "ArrayDesignService.findByShortName" ) );
+            results.add( SearchResult.from( shortNameResult, DatabaseSearchSource.MATCH_BY_SHORT_NAME_SCORE, null, "ArrayDesignService.findByShortName" ) );
             return results;
         }
 
         Collection<ArrayDesign> nameResult = arrayDesignService.findByName( searchString );
         if ( nameResult != null && !nameResult.isEmpty() ) {
             for ( ArrayDesign ad : nameResult ) {
-                results.add( new SearchResult<>( ad, "ArrayDesignService.findByShortName" ) );
+                results.add( SearchResult.from( ad, DatabaseSearchSource.MATCH_BY_NAME_SCORE, null, "ArrayDesignService.findByShortName" ) );
             }
             return results;
         }
@@ -592,6 +595,7 @@ public class SearchServiceImpl implements SearchService {
         if ( b != null ) {
             // FIXME: I'm not sure the ID is a good thing to put here
             SearchResult<ArrayDesign> sr = new SearchResult<>( ArrayDesign.class, b.getId(), "BlackListDao.findByAccession" );
+            sr.setScore( DatabaseSearchSource.MATCH_BY_ACCESSION_SCORE );
             sr.setHighlightedText( "Blacklisted accessions are not loaded into Gemma" );
             results.add( sr );
             return results;
@@ -684,8 +688,8 @@ public class SearchServiceImpl implements SearchService {
 
         StopWatch watch = StopWatch.createStarted();
 
-        log.info( "Starting EE search for " + settings.getQuery() );
-        String[] subclauses = settings.getQuery().split( " OR " );
+        log.info( "Starting EE search for " + settings );
+        String[] subclauses = escapeQuery( settings ).split( " OR " );
         for ( String subclause : subclauses ) {
             /*
              * Note that the AND is applied only within one entity type. The fix would be to apply AND at this
@@ -1109,9 +1113,10 @@ public class SearchServiceImpl implements SearchService {
                 return results;
             }
 
-            BlacklistedEntity b = blackListDao.findByAccession( settings.getQuery() );
+            BlacklistedEntity b = blackListDao.findByAccession( escapeQuery( settings ) );
             if ( b != null ) {
                 SearchResult<ExpressionExperiment> sr = new SearchResult<>( ExpressionExperiment.class, b.getId(), "BlackListDao.findByAccession" );
+                sr.setScore( DatabaseSearchSource.MATCH_BY_ACCESSION_SCORE );
                 sr.setHighlightedText( "Blacklisted accessions are not loaded into Gemma" );
                 results.add( sr );
                 return results;
@@ -1307,23 +1312,26 @@ public class SearchServiceImpl implements SearchService {
     private SearchResultMap generalSearch( SearchSettings settings, boolean fillObjects,
             boolean webSpeedSearch ) throws SearchException {
 
-        settings = SearchSettingsStringUtils.processSettings( settings, this.nameToTaxonMap );
+        // attempt to infer a taxon from the query if missing
+        if ( settings.getTaxon() == null ) {
+            settings.setTaxon( inferTaxon( settings ) );
+        }
 
         LinkedHashSet<SearchResult<?>> rawResults = new LinkedHashSet<>();
 
-        // do gene first first before we munge the query too much.
+        // do gene first before we munge the query too much.
         this.accreteResultsGenes( rawResults, settings, webSpeedSearch );
-
-        // some strings of size 1 cause lucene to barf and they were slipping through in multi-term queries, get rid of
-        // them
-        settings.setQuery( SearchSettingsStringUtils.stripShortTerms( settings.getQuery() ) );
 
         // If nothing to search return nothing.
         if ( StringUtils.isBlank( settings.getQuery() ) ) {
+            log.info( String.format( "Nothing was returned from gene search for %s, returning nothing.", settings ) );
             return new SearchResultMapImpl();
         }
 
-        this.accreteResultsOthers( rawResults, settings, webSpeedSearch );
+        this.accreteResultsOthers(
+                rawResults,
+                settings,
+                webSpeedSearch );
 
         return this.groupAndSortResultsByType( rawResults, settings, fillObjects );
     }
@@ -1338,8 +1346,6 @@ public class SearchServiceImpl implements SearchService {
     private Collection<SearchResult<Gene>> geneSearch( final SearchSettings settings, boolean returnOnDbHit ) throws SearchException {
 
         StopWatch watch = StopWatch.createStarted();
-
-        String searchString = settings.getQuery();
 
         Collection<SearchResult<Gene>> geneDbList = this.databaseSearchSource.searchGene( settings );
 
@@ -1409,21 +1415,14 @@ public class SearchServiceImpl implements SearchService {
 
         if ( watch.getTime() > 1000 )
             SearchServiceImpl.log
-                    .info( "Gene search for " + searchString + " took " + watch.getTime() + " ms; " + combinedGeneList
+                    .info( "Gene search for " + settings + " took " + watch.getTime() + " ms; " + combinedGeneList
                             .size() + " results." );
         return combinedGeneList;
     }
 
     private Collection<SearchResult<GeneSet>> geneSetSearch( SearchSettings settings ) throws SearchException {
-        Collection<SearchResult<GeneSet>> hits;
-        if ( settings.getTaxon() != null ) {
-            hits = this
-                    .dbHitsToSearchResult( this.geneSetService.findByName( settings.getQuery(), settings.getTaxon() ),
-                            null, "GeneSetService.findByName" );
-        } else {
-            hits = this.dbHitsToSearchResult( this.geneSetService.findByName( settings.getQuery() ), null, "GeneSetService.findByName" );
-        }
-
+        Collection<SearchResult<GeneSet>> hits = new LinkedHashSet<>();
+        hits.addAll( this.databaseSearchSource.searchGeneSet( settings ) );
         hits.addAll( this.compassSearchSource.searchGeneSet( settings ) );
         return hits;
     }
@@ -1704,4 +1703,23 @@ public class SearchServiceImpl implements SearchService {
     //            throw new UnsupportedOperationException( "Don't know how to retrieve objects for class=" + entityClass );
     //        }
     //    }
+
+
+    /**
+     * Infer a {@link Taxon} from the search settings.
+     */
+    private Taxon inferTaxon( SearchSettings settings ) {
+        // split the query around whitespace characters, limit the splitting to 4 terms (may be excessive)
+        // remove quotes and other characters tha can interfere with the exact match
+        String[] searchTerms = escapeQuery( settings ).split( "\\s+", 4 );
+
+        for ( String term : searchTerms ) {
+            if ( nameToTaxonMap.containsKey( term ) ) {
+                return nameToTaxonMap.get( term );
+            }
+        }
+
+        // no match found, on taxon is inferred
+        return null;
+    }
 }
