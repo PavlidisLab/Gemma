@@ -2,7 +2,6 @@ package ubic.gemma.core.search.source;
 
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.lang3.NotImplementedException;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.compass.core.*;
 import org.compass.core.engine.SearchEngineQueryParseException;
@@ -208,11 +207,10 @@ public class CompassSearchSource implements SearchSource {
         if ( !settings.getUseIndices() )
             return new HashSet<>();
 
-        Object source = bean.getSettings().getSetting( "compass.name" );
         CompassTemplate template = new CompassTemplate( bean );
         Set<SearchResult<T>> searchResults;
         try {
-            searchResults = template.execute( session -> CompassSearchSource.this.performSearch( settings, session, clazz, source ) );
+            searchResults = template.execute( session -> CompassSearchSource.this.performSearch( settings, session, clazz ) );
         } catch ( SearchEngineQueryParseException e ) {
             throw new CompassSearchException( "Compass failed to parse the search query.", e );
         } catch ( CompassException e ) {
@@ -224,7 +222,7 @@ public class CompassSearchSource implements SearchSource {
 
         if ( CompassSearchSource.log.isDebugEnabled() ) {
             CompassSearchSource.log
-                    .debug( "Compass search via " + source + " : " + settings
+                    .debug( "Compass search via " + bean.getSettings().getSetting( "compass.name" ) + " : " + settings
                             + " -> " + searchResults.size() + " hits" );
         }
 
@@ -234,7 +232,7 @@ public class CompassSearchSource implements SearchSource {
     /**
      * Runs inside Compass transaction
      */
-    private <T extends Identifiable> Set<SearchResult<T>> performSearch( SearchSettings settings, CompassSession session, Class<T> clazz, Object source ) {
+    private <T extends Identifiable> Set<SearchResult<T>> performSearch( SearchSettings settings, CompassSession session, Class<T> clazz ) {
         StopWatch watch = new StopWatch();
         watch.start();
 
@@ -275,6 +273,8 @@ public class CompassSearchSource implements SearchSource {
         } else {
             CompassSearchSource.log.debug( message );
         }
+
+        String source = String.format( "%s with %s", session.getSettings().getSetting( "compass.name" ), compassQuery );
 
         return this.getSearchResults( hits, clazz, source );
     }

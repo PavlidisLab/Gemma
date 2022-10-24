@@ -43,6 +43,10 @@ import java.util.Set;
 @ToString(of = { "query", "taxon", "platformConstraint", "resultTypes" })
 public class SearchSettings implements Serializable {
 
+    public static final char
+            WILDCARD_CHAR = '*',
+            SINGLE_WILDCARD_CHAR = '?';
+
     /**
      * The serial version UID of this class. Needed for serialization.
      */

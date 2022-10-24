@@ -33,8 +33,8 @@ import javax.annotation.Nullable;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static ubic.gemma.core.search.SearchSettingsUtils.escapeQuery;
-import static ubic.gemma.core.search.SearchSettingsUtils.escapeQueryForInexactMatch;
+import static ubic.gemma.core.search.source.DatabaseSearchSourceUtils.prepareDatabaseQuery;
+import static ubic.gemma.core.search.source.DatabaseSearchSourceUtils.prepareDatabaseQueryForInexactMatch;
 
 /**
  * Search source for direct database results.
@@ -103,7 +103,7 @@ public class DatabaseSearchSource implements SearchSource {
         Collection<ArrayDesign> adSet = new HashSet<>();
 
         // search by exact composite sequence name
-        Collection<CompositeSequence> matchedCs = compositeSequenceService.findByName( escapeQuery( settings ) );
+        Collection<CompositeSequence> matchedCs = compositeSequenceService.findByName( prepareDatabaseQuery( settings ) );
         for ( CompositeSequence sequence : matchedCs ) {
             adSet.add( sequence.getArrayDesign() );
         }
@@ -138,7 +138,7 @@ public class DatabaseSearchSource implements SearchSource {
 
         StopWatch watch = StopWatch.createStarted();
 
-        String searchString = escapeQuery( settings );
+        String searchString = prepareDatabaseQuery( settings );
 
         Collection<BioSequence> bs = bioSequenceService.findByName( searchString );
         // bioSequenceService.thawRawAndProcessed( bs );
@@ -182,7 +182,7 @@ public class DatabaseSearchSource implements SearchSource {
 
         StopWatch watch = StopWatch.createStarted();
 
-        String searchString = escapeQuery( settings );
+        String searchString = prepareDatabaseQuery( settings );
         ArrayDesign ad = settings.getPlatformConstraint();
 
         // search by exact composite sequence name
@@ -258,7 +258,7 @@ public class DatabaseSearchSource implements SearchSource {
 
         StopWatch watch = StopWatch.createStarted();
 
-        String query = escapeQuery( settings );
+        String query = prepareDatabaseQuery( settings );
 
         LinkedHashSet<SearchResult<ExpressionExperiment>> results = new LinkedHashSet<>();
 
@@ -323,9 +323,9 @@ public class DatabaseSearchSource implements SearchSource {
         String searchString;
         if ( settings.isTermQuery() ) {
             // then we can get the NCBI ID, maybe.
-            searchString = StringUtils.substringAfterLast( escapeQuery( settings ), "/" );
+            searchString = StringUtils.substringAfterLast( prepareDatabaseQuery( settings ), "/" );
         } else {
-            searchString = escapeQuery( settings );
+            searchString = prepareDatabaseQuery( settings );
         }
 
         if ( StringUtils.isBlank( searchString ) )
@@ -375,23 +375,23 @@ public class DatabaseSearchSource implements SearchSource {
     private LinkedHashSet<SearchResult<Gene>> searchGeneExpanded( SearchSettings settings ) {
         LinkedHashSet<SearchResult<Gene>> results = new LinkedHashSet<>();
 
-        String exactString = escapeQuery( settings );
-        String inexactString = escapeQueryForInexactMatch( settings );
+        String exactString = prepareDatabaseQuery( settings );
+        String inexactString = prepareDatabaseQueryForInexactMatch( settings );
 
         // if the query is shortish, always do a wild card search. This gives better behavior in 'live
         // search' situations. If we do wildcards on very short queries we get too many results.
         if ( exactString.length() <= 2 ) {
             // case 0: we got no results yet, or user entered a very short string. We search only for exact matches.
             results.addAll( toSearchResults( geneService.findByOfficialSymbol( exactString ), MATCH_BY_OFFICIAL_SYMBOL_SCORE, "GeneService.findByOfficialSymbol" ) );
-        } else if ( inexactString.contains( "*" ) ) {
+        } else if ( settings.getQuery().contains( String.valueOf( SearchSettings.WILDCARD_CHAR ) ) ) {
             // case 1: user explicitly asked for wildcard. We allow this on strings of length 3 or more.
-            results.addAll( toSearchResults( geneService.findByOfficialSymbolInexact( inexactString.replace( '*', '%' ) ), MATCH_BY_OFFICIAL_SYMBOL_INEXACT_SCORE, "GeneService.findByOfficialSymbolInexact" ) );
+            results.addAll( toSearchResults( geneService.findByOfficialSymbolInexact( inexactString ), MATCH_BY_OFFICIAL_SYMBOL_INEXACT_SCORE, "GeneService.findByOfficialSymbolInexact" ) );
         } else if ( exactString.length() > 3 ) {
             // case 2: user did not ask for a wildcard, but we add it anyway, if the string is 4 or 5 characters.
-            if ( !inexactString.endsWith( "*" ) ) {
-                inexactString = inexactString + "*";
+            if ( !settings.getQuery().endsWith( String.valueOf( SearchSettings.WILDCARD_CHAR ) ) ) {
+                inexactString = inexactString + "%";
             }
-            results.addAll( toSearchResults( geneService.findByOfficialSymbolInexact( inexactString.replace( '*', '%' ) ), MATCH_BY_OFFICIAL_SYMBOL_INEXACT_SCORE, "GeneService.findByOfficialSymbolInexact" ) );
+            results.addAll( toSearchResults( geneService.findByOfficialSymbolInexact( inexactString ), MATCH_BY_OFFICIAL_SYMBOL_INEXACT_SCORE, "GeneService.findByOfficialSymbolInexact" ) );
         } else {
             // case 3: string is long enough, and user did not ask for wildcard.
             results.addAll( toSearchResults( geneService.findByOfficialSymbol( exactString ), MATCH_BY_OFFICIAL_SYMBOL_SCORE, "GeneService.findByOfficialSymbol" ) );
@@ -434,7 +434,7 @@ public class DatabaseSearchSource implements SearchSource {
         if ( !settings.getUseDatabase() )
             return new HashSet<>();
         try {
-            return this.toSearchResults( this.phenotypeAssociationManagerService.searchInDatabaseForPhenotype( escapeQuery( settings ) ), 1.0, "PhenotypeAssociationManagerService.searchInDatabaseForPhenotype" );
+            return this.toSearchResults( this.phenotypeAssociationManagerService.searchInDatabaseForPhenotype( prepareDatabaseQuery( settings ) ), 1.0, "PhenotypeAssociationManagerService.searchInDatabaseForPhenotype" );
         } catch ( OntologySearchException e ) {
             throw new BaseCodeOntologySearchException( "Failed to search for phenotype associations.", e );
         }

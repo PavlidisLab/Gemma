@@ -84,7 +84,7 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-import static ubic.gemma.core.search.SearchSettingsUtils.escapeQuery;
+import static ubic.gemma.core.search.source.DatabaseSearchSourceUtils.prepareDatabaseQuery;
 
 /**
  * This service is used for performing searches using free text or exact matches to items in the database.
@@ -574,7 +574,7 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
             @Nullable Collection<SearchResult<CompositeSequence>> probeResults ) throws SearchException {
 
         StopWatch watch = StopWatch.createStarted();
-        String searchString = escapeQuery( settings );
+        String searchString = prepareDatabaseQuery( settings );
         Collection<SearchResult<ArrayDesign>> results = new HashSet<>();
 
         ArrayDesign shortNameResult = arrayDesignService.findByShortName( searchString );
@@ -689,7 +689,7 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
         StopWatch watch = StopWatch.createStarted();
 
         log.info( "Starting EE search for " + settings );
-        String[] subclauses = escapeQuery( settings ).split( " OR " );
+        String[] subclauses = prepareDatabaseQuery( settings ).split( " OR " );
         for ( String subclause : subclauses ) {
             /*
              * Note that the AND is applied only within one entity type. The fix would be to apply AND at this
@@ -1113,7 +1113,7 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
                 return results;
             }
 
-            BlacklistedEntity b = blackListDao.findByAccession( escapeQuery( settings ) );
+            BlacklistedEntity b = blackListDao.findByAccession( prepareDatabaseQuery( settings ) );
             if ( b != null ) {
                 SearchResult<ExpressionExperiment> sr = new SearchResult<>( ExpressionExperiment.class, b.getId(), "BlackListDao.findByAccession" );
                 sr.setScore( DatabaseSearchSource.MATCH_BY_ACCESSION_SCORE );
@@ -1711,7 +1711,7 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
     private Taxon inferTaxon( SearchSettings settings ) {
         // split the query around whitespace characters, limit the splitting to 4 terms (may be excessive)
         // remove quotes and other characters tha can interfere with the exact match
-        String[] searchTerms = escapeQuery( settings ).split( "\\s+", 4 );
+        String[] searchTerms = prepareDatabaseQuery( settings ).split( "\\s+", 4 );
 
         for ( String term : searchTerms ) {
             if ( nameToTaxonMap.containsKey( term ) ) {

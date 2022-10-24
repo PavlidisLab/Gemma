@@ -91,8 +91,6 @@ public class DatabaseSearchSourceTest extends AbstractJUnit4SpringContextTests {
         databaseSearchSource.searchGene( SearchSettings.geneSearch( "\"BRCA1\"", null ) );
         verify( geneService ).findByAccession( "BRCA1", null );
         verify( geneService ).findByOfficialSymbolInexact( "BRCA1%" );
-        databaseSearchSource.searchGene( SearchSettings.geneSearch( "'BRCA2'", null ) );
-        verify( geneService ).findByOfficialSymbolInexact( "BRCA2%" );
     }
 
     @Test
@@ -103,8 +101,8 @@ public class DatabaseSearchSourceTest extends AbstractJUnit4SpringContextTests {
 
     @Test
     public void test_whenQueryContainsAsterisk_thenSubstituteForPercent() throws SearchException {
-        databaseSearchSource.searchGene( SearchSettings.geneSearch( "BRCA1*", null ) );
-        verify( geneService ).findByOfficialSymbolInexact( "BRCA1%" );
+        databaseSearchSource.searchGene( SearchSettings.geneSearch( "BRCA?*", null ) );
+        verify( geneService ).findByOfficialSymbolInexact( "BRCA_%" );
     }
 
     @Test
