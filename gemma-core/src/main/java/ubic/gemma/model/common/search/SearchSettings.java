@@ -220,6 +220,13 @@ public class SearchSettings implements Serializable {
     }
 
     /**
+     * Check if the query is a wildcard query.
+     */
+    public boolean isWildcard() {
+        return query.contains( String.valueOf( WILDCARD_CHAR ) ) || query.contains( String.valueOf( SINGLE_WILDCARD_CHAR ) );
+    }
+
+    /**
      * Check if this is configured to search a given result type.
      */
     public boolean hasResultType( Class<?> cls ) {

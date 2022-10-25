@@ -376,21 +376,25 @@ public class DatabaseSearchSource implements SearchSource {
 
         // if the query is shortish, always do a wild card search. This gives better behavior in 'live
         // search' situations. If we do wildcards on very short queries we get too many results.
-        if ( exactString.length() <= 2 ) {
+        if ( exactString.length() <= 1 ) {
             // case 0: we got no results yet, or user entered a very short string. We search only for exact matches.
             results.addAll( toSearchResults( geneService.findByOfficialSymbol( exactString ), MATCH_BY_OFFICIAL_SYMBOL_SCORE, "GeneService.findByOfficialSymbol" ) );
-        } else if ( settings.getQuery().contains( String.valueOf( SearchSettings.WILDCARD_CHAR ) ) ) {
-            // case 1: user explicitly asked for wildcard. We allow this on strings of length 3 or more.
-            results.addAll( toSearchResults( geneService.findByOfficialSymbolInexact( inexactString ), MATCH_BY_OFFICIAL_SYMBOL_INEXACT_SCORE, "GeneService.findByOfficialSymbolInexact" ) );
-        } else if ( exactString.length() > 3 ) {
-            // case 2: user did not ask for a wildcard, but we add it anyway, if the string is 4 or 5 characters.
-            if ( !settings.getQuery().endsWith( String.valueOf( SearchSettings.WILDCARD_CHAR ) ) ) {
-                inexactString = inexactString + "%";
+        } else if ( exactString.length() <= 5 ) {
+            if ( settings.isWildcard() ) {
+                // case 2: user did ask for a wildcard, if the string is 2, 3, 4 or 5 characters.
+                results.addAll( toSearchResults( geneService.findByOfficialSymbolInexact( inexactString ), MATCH_BY_OFFICIAL_SYMBOL_INEXACT_SCORE, "GeneService.findByOfficialSymbolInexact" ) );
+            } else {
+                // case 2: user did not ask for a wildcard, but we add it anyway, if the string is 2, 3, 4 or 5 characters.
+                results.addAll( toSearchResults( geneService.findByOfficialSymbolInexact( inexactString + "%" ), MATCH_BY_OFFICIAL_SYMBOL_INEXACT_SCORE, "GeneService.findByOfficialSymbolInexact" ) );
             }
-            results.addAll( toSearchResults( geneService.findByOfficialSymbolInexact( inexactString ), MATCH_BY_OFFICIAL_SYMBOL_INEXACT_SCORE, "GeneService.findByOfficialSymbolInexact" ) );
         } else {
-            // case 3: string is long enough, and user did not ask for wildcard.
-            results.addAll( toSearchResults( geneService.findByOfficialSymbol( exactString ), MATCH_BY_OFFICIAL_SYMBOL_SCORE, "GeneService.findByOfficialSymbol" ) );
+            if ( settings.isWildcard() ) {
+                // case 3: string is long enough, and user asked for wildcard.
+                results.addAll( toSearchResults( geneService.findByOfficialSymbolInexact( inexactString ), MATCH_BY_OFFICIAL_SYMBOL_INEXACT_SCORE, "GeneService.findByOfficialSymbol" ) );
+            } else {
+                // case 3: string is long enough, and user did not ask for wildcard.
+                results.addAll( toSearchResults( geneService.findByOfficialSymbol( exactString ), MATCH_BY_OFFICIAL_SYMBOL_SCORE, "GeneService.findByOfficialSymbol" ) );
+            }
         }
 
         /*

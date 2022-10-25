@@ -95,8 +95,8 @@ public class DatabaseSearchSourceTest extends AbstractJUnit4SpringContextTests {
 
     @Test
     public void test_whenQueryContainsLikePatterns_thenEscape() throws SearchException {
-        databaseSearchSource.searchGene( SearchSettings.geneSearch( "BRCA1%", null ) );
-        verify( geneService ).findByOfficialSymbolInexact( "BRCA1\\%%" );
+        databaseSearchSource.searchGene( SearchSettings.geneSearch( "BRCA%", null ) );
+        verify( geneService ).findByOfficialSymbolInexact( "BRCA\\%%" );
     }
 
     @Test
@@ -108,6 +108,6 @@ public class DatabaseSearchSourceTest extends AbstractJUnit4SpringContextTests {
     @Test
     public void test_quotedTerms() throws SearchException {
         databaseSearchSource.searchGene( SearchSettings.geneSearch( "\"BRCA1\" \"BRCA2\"", null ) );
-        verify( geneService ).findByOfficialSymbolInexact( "BRCA1 BRCA2%" );
+        verify( geneService ).findByOfficialSymbol( "BRCA1 BRCA2" );
     }
 }

@@ -416,13 +416,15 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         }
 
         // make sure it does an inexact search
-        String newQuery = query + "%";
+        if ( !query.endsWith( "*" ) ) {
+            query = query + "*";
+        }
 
         Taxon taxon = null;
         if ( taxonId != null ) {
             taxon = this.taxonService.load( taxonId );
         }
-        SearchSettings settings = SearchSettings.geneSearch( newQuery, taxon );
+        SearchSettings settings = SearchSettings.geneSearch( query, taxon );
         List<SearchResult<Gene>> geneSearchResults = this.searchService.search( settings, Gene.class );
 
         Collection<Gene> genes = new HashSet<>();
