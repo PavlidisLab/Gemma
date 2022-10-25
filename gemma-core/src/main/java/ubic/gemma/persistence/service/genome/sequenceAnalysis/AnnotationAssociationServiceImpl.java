@@ -25,11 +25,13 @@ public class AnnotationAssociationServiceImpl extends AbstractService<Annotation
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Collection<AnnotationAssociation> find( BioSequence bioSequence ) {
         return this.annotationAssociationDao.find( bioSequence );
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Collection<AnnotationAssociation> find( Gene gene ) {
         return this.annotationAssociationDao.find( gene );
     }

@@ -20,6 +20,7 @@ package ubic.gemma.persistence.service.common.description;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.persistence.service.AbstractService;
 
@@ -39,6 +40,7 @@ public class ExternalDatabaseServiceImpl extends AbstractService<ExternalDatabas
     }
 
     @Override
+    @Transactional(readOnly = true)
     public ExternalDatabase findByName( String name ) {
         return this.externalDatabaseDao.findByName( name );
     }

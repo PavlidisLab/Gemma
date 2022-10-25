@@ -53,6 +53,7 @@ public class BioAssayDimensionServiceImpl
     }
 
     @Override
+    @Transactional(readOnly = true)
     public BioAssayDimension thaw( BioAssayDimension bioAssayDimension ) {
         return this.bioAssayDimensionDao.thaw( bioAssayDimension );
     }

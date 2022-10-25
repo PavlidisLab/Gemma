@@ -20,6 +20,7 @@ package ubic.gemma.persistence.service.genome.biosequence;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.genome.Gene;
@@ -52,21 +53,25 @@ public class BioSequenceServiceImpl extends AbstractVoEnabledService<BioSequence
     }
 
     @Override
+    @Transactional(readOnly = true)
     public BioSequence findByAccession( DatabaseEntry accession ) {
         return this.bioSequenceDao.findByAccession( accession );
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Map<Gene, Collection<BioSequence>> findByGenes( Collection<Gene> genes ) {
         return this.bioSequenceDao.findByGenes( genes );
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Collection<BioSequence> findByName( String name ) {
         return this.bioSequenceDao.findByName( name );
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Collection<BioSequence> findOrCreate( Collection<BioSequence> bioSequences ) {
         Collection<BioSequence> result = new HashSet<>();
         for ( BioSequence bioSequence : bioSequences ) {
@@ -76,26 +81,31 @@ public class BioSequenceServiceImpl extends AbstractVoEnabledService<BioSequence
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Collection<Gene> getGenesByAccession( String search ) {
         return this.bioSequenceDao.getGenesByAccession( search );
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Collection<Gene> getGenesByName( String search ) {
         return this.bioSequenceDao.getGenesByName( search );
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Collection<BioSequence> thaw( Collection<BioSequence> bioSequences ) {
         return this.bioSequenceDao.thaw( bioSequences );
     }
 
     @Override
+    @Transactional(readOnly = true)
     public BioSequence thaw( BioSequence bioSequence ) {
         return this.bioSequenceDao.thaw( bioSequence );
     }
 
     @Override
+    @Transactional(readOnly = true)
     public BioSequence findByCompositeSequence( CompositeSequence compositeSequence ) {
         return this.bioSequenceDao.findByCompositeSequence( compositeSequence );
     }
