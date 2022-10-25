@@ -325,8 +325,7 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
                     .filter( Objects::nonNull )
                     .map( o -> ( CompositeSequence ) o )
                     .collect( Collectors.toSet() );
-            vos = compositeSequenceService
-                    .loadValueObjectsWithoutGeneMappingSummary( compositeSequences );
+            vos = compositeSequenceService.loadValueObjects( compositeSequences );
         } else if ( BibliographicReference.class.isAssignableFrom( entityClass ) ) {
             Collection<BibliographicReference> bss = bibliographicReferenceService
                     .load( ids );

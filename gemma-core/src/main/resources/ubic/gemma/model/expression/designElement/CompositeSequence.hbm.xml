@@ -21,9 +21,8 @@
                    lazy="proxy" fetch="select">
          <column name="BIOLOGICAL_CHARACTERISTIC_FK" not-null="false" sql-type="BIGINT"/>
       </many-to-one>
-      <!-- assumed readily available in CompositeSequenceValueObject -->
       <many-to-one name="arrayDesign" class="ubic.gemma.model.expression.arrayDesign.ArrayDesign" cascade="none"
-                   lazy="false" fetch="join">
+                   lazy="proxy" fetch="select">
          <column name="ARRAY_DESIGN_FK" not-null="true" sql-type="BIGINT"/>
       </many-to-one>
    </class>

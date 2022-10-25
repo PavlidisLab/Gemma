@@ -19,6 +19,7 @@
 package ubic.gemma.persistence.service.expression.designElement;
 
 import org.springframework.security.access.annotation.Secured;
+import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.core.analysis.sequence.GeneMappingSummary;
 import ubic.gemma.model.association.BioSequence2GeneProduct;
 import ubic.gemma.model.common.Identifiable;
@@ -75,14 +76,10 @@ public interface CompositeSequenceService
     Collection<CompositeSequence> findByGene( Gene gene );
 
     /**
-     * Alternative flavour of {@link #loadValueObject(Identifiable)} that excludes the costly gene-mapping summary.
+     * Include gene mapping summary in the {@link CompositeSequenceValueObject}.
      */
-    CompositeSequenceValueObject loadValueObjectWithoutGeneMappingSummary( CompositeSequence cs );
-
-    /**
-     * Alternative flavour of {@link #loadValueObjects(Collection)} that excludes costly gene-mapping summaries.
-     */
-    List<CompositeSequenceValueObject> loadValueObjectsWithoutGeneMappingSummary( Collection<CompositeSequence> compositeSequences );
+    @Transactional(readOnly = true)
+    CompositeSequenceValueObject loadValueObjectWithGeneMappingSummary( CompositeSequence cs );
 
     Slice<CompositeSequenceValueObject> loadValueObjectsForGene( Gene gene, int start, int limit );
 
