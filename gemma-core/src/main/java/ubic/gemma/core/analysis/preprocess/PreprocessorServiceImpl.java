@@ -23,7 +23,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalyzerService;
 import ubic.gemma.core.analysis.preprocess.batcheffects.ExpressionExperimentBatchCorrectionService;
 import ubic.gemma.core.analysis.preprocess.filter.NoRowsLeftAfterFilteringException;
@@ -112,7 +111,6 @@ public class PreprocessorServiceImpl implements PreprocessorService {
     private GeeqService geeqService;
 
     @Override
-    @Transactional
     public ExpressionExperiment process( ExpressionExperiment ee ) throws PreprocessingException {
 
         ee = expressionExperimentService.thaw( ee );
@@ -133,7 +131,6 @@ public class PreprocessorServiceImpl implements PreprocessorService {
      * Only used for TwoChannelMissingValueCLI? Possibly redundant? FIXME
      */
     @Override
-    @Transactional
     public void process( ExpressionExperiment ee, boolean light ) throws PreprocessingException {
         if ( light ) {
             try {
@@ -155,7 +152,6 @@ public class PreprocessorServiceImpl implements PreprocessorService {
      * updated
      */
     @Override
-    @Transactional
     public void batchCorrect( ExpressionExperiment ee, boolean force ) throws PreprocessingException {
         String note = "ComBat batch correction";
         String detail = null;
@@ -283,7 +279,6 @@ public class PreprocessorServiceImpl implements PreprocessorService {
      * @param ee
      */
     @Override
-    @Transactional
     public void processDiagnostics( ExpressionExperiment ee ) {
         this.processForSampleCorrelation( ee );
         this.processForMeanVarianceRelation( ee );
