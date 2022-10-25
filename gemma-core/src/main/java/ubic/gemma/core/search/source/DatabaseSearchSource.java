@@ -7,11 +7,10 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import ubic.basecode.ontology.search.OntologySearchException;
-import ubic.gemma.core.association.phenotype.PhenotypeAssociationManagerService;
 import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.core.genome.gene.service.GeneSetService;
-import ubic.gemma.core.search.*;
+import ubic.gemma.core.search.SearchResult;
+import ubic.gemma.core.search.SearchSource;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.description.BibliographicReference;
@@ -22,7 +21,6 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.gene.GeneSet;
-import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSetService;
@@ -82,8 +80,6 @@ public class DatabaseSearchSource implements SearchSource {
     @Autowired
     private GeneProductService geneProductService;
     @Autowired
-    private PhenotypeAssociationManagerService phenotypeAssociationManagerService;
-    @Autowired
     private GeneSetService geneSetService;
     @Autowired
     private ExpressionExperimentSetService experimentSetService;
@@ -96,7 +92,7 @@ public class DatabaseSearchSource implements SearchSource {
     @Override
     public Collection<SearchResult<ArrayDesign>> searchArrayDesign( SearchSettings settings ) {
         if ( !settings.getUseDatabase() )
-            return new HashSet<>();
+            return Collections.emptySet();
 
         StopWatch watch = StopWatch.createStarted();
 
@@ -114,7 +110,7 @@ public class DatabaseSearchSource implements SearchSource {
                     .info( "Array Design Composite Sequence DB search for " + settings + " took " + watch.getTime()
                             + " ms" + " found " + adSet.size() + " Ads" );
 
-        return this.toSearchResults( adSet, MATCH_BY_NAME_SCORE, "CompositeSequenceService.findByName" );
+        return toSearchResults( adSet, MATCH_BY_NAME_SCORE, "CompositeSequenceService.findByName" );
     }
 
     @Override
@@ -134,7 +130,7 @@ public class DatabaseSearchSource implements SearchSource {
     @Override
     public Collection<SearchResult<BioSequence>> searchBioSequence( SearchSettings settings ) {
         if ( !settings.getUseDatabase() )
-            return new HashSet<>();
+            return Collections.emptySet();
 
         StopWatch watch = StopWatch.createStarted();
 
@@ -142,7 +138,7 @@ public class DatabaseSearchSource implements SearchSource {
 
         Collection<BioSequence> bs = bioSequenceService.findByName( searchString );
         // bioSequenceService.thawRawAndProcessed( bs );
-        Collection<SearchResult<BioSequence>> bioSequenceList = new HashSet<>( this.toSearchResults( bs, MATCH_BY_NAME_SCORE, "BioSequenceService.findByName" ) );
+        Collection<SearchResult<BioSequence>> bioSequenceList = toSearchResults( bs, MATCH_BY_NAME_SCORE, "BioSequenceService.findByName" );
 
         watch.stop();
         if ( watch.getTime() > 1000 )
@@ -160,7 +156,7 @@ public class DatabaseSearchSource implements SearchSource {
 
     @Override
     public Collection<SearchResult<CompositeSequence>> searchCompositeSequence( SearchSettings settings ) {
-        return this.searchCompositeSequenceAndPopulateGenes( settings, new HashSet<>() );
+        return this.searchCompositeSequenceAndPopulateGenes( settings, Collections.emptySet() );
     }
 
     /**
@@ -178,7 +174,7 @@ public class DatabaseSearchSource implements SearchSource {
 
     private Collection<SearchResult<CompositeSequence>> searchCompositeSequenceAndPopulateGenes( SearchSettings settings, Set<SearchResult<Gene>> geneSet ) {
         if ( !settings.getUseDatabase() )
-            return new HashSet<>();
+            return Collections.emptySet();
 
         StopWatch watch = StopWatch.createStarted();
 
@@ -186,7 +182,7 @@ public class DatabaseSearchSource implements SearchSource {
         ArrayDesign ad = settings.getPlatformConstraint();
 
         // search by exact composite sequence name
-        Collection<SearchResult<CompositeSequence>> matchedCs = new LinkedHashSet<>();
+        Collection<SearchResult<CompositeSequence>> matchedCs = new HashSet<>();
         if ( ad != null ) {
             CompositeSequence cs = compositeSequenceService.findByName( ad, searchString );
             if ( cs != null )
@@ -254,13 +250,13 @@ public class DatabaseSearchSource implements SearchSource {
     @Override
     public Collection<SearchResult<ExpressionExperiment>> searchExpressionExperiment( SearchSettings settings ) {
         if ( !settings.getUseDatabase() )
-            return new HashSet<>();
+            return Collections.emptySet();
 
         StopWatch watch = StopWatch.createStarted();
 
         String query = prepareDatabaseQuery( settings );
 
-        LinkedHashSet<SearchResult<ExpressionExperiment>> results = new LinkedHashSet<>();
+        Collection<SearchResult<ExpressionExperiment>> results = new HashSet<>();
 
         Collection<ExpressionExperiment> ees = expressionExperimentService.findByName( query );
         for ( ExpressionExperiment ee : ees ) {
@@ -316,7 +312,7 @@ public class DatabaseSearchSource implements SearchSource {
     @Override
     public Collection<SearchResult<Gene>> searchGene( SearchSettings settings ) {
         if ( !settings.getUseDatabase() )
-            return new HashSet<>();
+            return Collections.emptySet();
 
         StopWatch watch = StopWatch.createStarted();
 
@@ -329,9 +325,9 @@ public class DatabaseSearchSource implements SearchSource {
         }
 
         if ( StringUtils.isBlank( searchString ) )
-            return new HashSet<>();
+            return Collections.emptySet();
 
-        Collection<SearchResult<Gene>> results = new LinkedHashSet<>();
+        Collection<SearchResult<Gene>> results = new HashSet<>();
 
         /*
          * First search by accession. If we find it, stop.
@@ -372,8 +368,8 @@ public class DatabaseSearchSource implements SearchSource {
     /**
      * Expanded gene search used when a simple search does not yield results.
      */
-    private LinkedHashSet<SearchResult<Gene>> searchGeneExpanded( SearchSettings settings ) {
-        LinkedHashSet<SearchResult<Gene>> results = new LinkedHashSet<>();
+    private Collection<SearchResult<Gene>> searchGeneExpanded( SearchSettings settings ) {
+        Collection<SearchResult<Gene>> results = new HashSet<>();
 
         String exactString = prepareDatabaseQuery( settings );
         String inexactString = prepareDatabaseQueryForInexactMatch( settings );
@@ -418,19 +414,18 @@ public class DatabaseSearchSource implements SearchSource {
     @Override
     public Collection<SearchResult<GeneSet>> searchGeneSet( SearchSettings settings ) {
         if ( !settings.getUseDatabase() )
-            return new HashSet<>();
+            return Collections.emptySet();
         if ( settings.getTaxon() != null ) {
             return toSearchResults( this.geneSetService.findByName( settings.getQuery(), settings.getTaxon() ), MATCH_BY_NAME_SCORE, "GeneSetService.findByNameWithTaxon" );
         } else {
-            return this.toSearchResults( this.geneSetService.findByName( settings.getQuery() ), MATCH_BY_NAME_SCORE, "GeneSetService.findByName" );
+            return toSearchResults( this.geneSetService.findByName( settings.getQuery() ), MATCH_BY_NAME_SCORE, "GeneSetService.findByName" );
         }
     }
 
-
-    private <T extends Identifiable> List<SearchResult<T>> toSearchResults( Collection<T> entities, double score, String source ) {
+    private static <T extends Identifiable> Set<SearchResult<T>> toSearchResults( Collection<T> entities, double score, String source ) {
         return entities.stream()
                 .filter( Objects::nonNull )
                 .map( e -> SearchResult.from( e, score, null, source ) )
-                .collect( Collectors.toList() );
+                .collect( Collectors.toSet() );
     }
 }
