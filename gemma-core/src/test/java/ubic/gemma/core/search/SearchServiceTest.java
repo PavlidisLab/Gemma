@@ -1,5 +1,6 @@
 package ubic.gemma.core.search;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,8 +18,7 @@ import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 
 import java.util.Collections;
 
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ContextConfiguration
 public class SearchServiceTest extends AbstractJUnit4SpringContextTests {
@@ -48,6 +48,11 @@ public class SearchServiceTest extends AbstractJUnit4SpringContextTests {
     @Autowired
     private OntologyService ontologyService;
 
+    @After
+    public void tearDown() {
+        reset( databaseSearchSource );
+    }
+
     @Test
     public void test_whenTaxonIsNameIsUsedInQuery_thenAddTaxonToSearchSettings() throws SearchException {
         SearchSettings settings = SearchSettings.builder()
@@ -66,6 +71,5 @@ public class SearchServiceTest extends AbstractJUnit4SpringContextTests {
         verify( ontologyService ).findTerms( "cancer" );
         verify( ontologyService ).findIndividuals( "liver" );
         verify( ontologyService ).findTerms( "liver" );
-        verify( databaseSearchSource );
     }
 }
