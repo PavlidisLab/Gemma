@@ -32,7 +32,7 @@ import java.util.*;
 @Service
 @CommonsLog
 public class ProcessedExpressionDataVectorServiceImpl
-        extends DesignElementDataVectorServiceImpl<ProcessedExpressionDataVector>
+        extends AbstractDesignElementDataVectorService<ProcessedExpressionDataVector>
         implements ProcessedExpressionDataVectorService {
 
     private static final int DIFFEX_MIN_NUMBER_OF_RESULTS = 50;
@@ -59,6 +59,7 @@ public class ProcessedExpressionDataVectorServiceImpl
     }
 
     @Override
+    @Transactional
     public ExpressionExperiment createProcessedDataVectors( ExpressionExperiment ee,
             Collection<ProcessedExpressionDataVector> vectors ) {
         try {
@@ -277,7 +278,7 @@ public class ProcessedExpressionDataVectorServiceImpl
             v.setPvalue( pvalues.get( v.getDesignElement().getId() ) );
         }
 
-        Collections.sort( dedvs, new Comparator<DoubleVectorValueObject>() {
+        dedvs.sort( new Comparator<DoubleVectorValueObject>() {
             @Override
             public int compare( DoubleVectorValueObject o1, DoubleVectorValueObject o2 ) {
                 if ( o1.getPvalue() == null )
@@ -292,6 +293,7 @@ public class ProcessedExpressionDataVectorServiceImpl
     }
 
     @Override
+    @Transactional
     public Collection<ProcessedExpressionDataVector> computeProcessedExpressionData( ExpressionExperiment ee ) {
         try {
 
@@ -312,6 +314,7 @@ public class ProcessedExpressionDataVectorServiceImpl
     }
 
     @Override
+    @Transactional
     public void reorderByDesign( Long eeId ) {
         this.helperService.reorderByDesign( eeId );
     }
