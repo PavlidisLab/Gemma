@@ -55,9 +55,8 @@ public class CompositeSequenceValueObject extends IdentifiableValueObject<Compos
         super( cs.getId() );
         this.name = cs.getName();
         this.description = cs.getDescription();
-        if ( Hibernate.isInitialized( cs.getArrayDesign() ) ) {
-            this.arrayDesign = new ArrayDesignValueObject( cs.getArrayDesign() );
-        }
+        // eagerly fetched in entity definition
+        this.arrayDesign = new ArrayDesignValueObject( cs.getArrayDesign() );
     }
 
     @Override

@@ -493,8 +493,6 @@ public class CompositeSequenceDaoImpl extends AbstractQueryFilteringVoEnabledDao
                 int numToDo = compositeSequences.size();
                 for ( CompositeSequence cs : compositeSequences ) {
 
-                    session.buildLockRequest( LockOptions.NONE ).lock( cs );
-                    Hibernate.initialize( cs.getArrayDesign() );
                     session.buildLockRequest( LockOptions.NONE ).lock( cs.getArrayDesign() );
                     Hibernate.initialize( cs.getArrayDesign().getPrimaryTaxon() );
 

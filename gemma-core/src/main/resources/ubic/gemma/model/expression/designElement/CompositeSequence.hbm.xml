@@ -22,7 +22,7 @@
          <column name="BIOLOGICAL_CHARACTERISTIC_FK" not-null="false" sql-type="BIGINT"/>
       </many-to-one>
       <many-to-one name="arrayDesign" class="ubic.gemma.model.expression.arrayDesign.ArrayDesign" cascade="none"
-                   lazy="proxy" fetch="select">
+                   lazy="false" fetch="select">
          <column name="ARRAY_DESIGN_FK" not-null="true" sql-type="BIGINT"/>
       </many-to-one>
    </class>
