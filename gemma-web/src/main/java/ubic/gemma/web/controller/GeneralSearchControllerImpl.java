@@ -330,7 +330,6 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
         } else if ( BibliographicReference.class.isAssignableFrom( entityClass ) ) {
             Collection<BibliographicReference> bss = bibliographicReferenceService
                     .load( ids );
-            bss = bibliographicReferenceService.thaw( bss );
             vos = bibliographicReferenceService.loadValueObjects( bss );
         } else if ( Gene.class.isAssignableFrom( entityClass ) ) {
             Collection<Gene> genes = geneService.load( ids );

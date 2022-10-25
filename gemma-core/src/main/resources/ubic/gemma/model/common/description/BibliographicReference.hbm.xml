@@ -60,7 +60,7 @@
             <column name="RETRACTED" not-null="false" unique="false" sql-type="TINYINT"/>
         </property>
         <many-to-one name="pubAccession" class="ubic.gemma.model.common.description.DatabaseEntry" cascade="all"
-                     lazy="proxy" fetch="select">
+                     lazy="false" fetch="join">
             <column name="PUB_ACCESSION_FK" not-null="false" sql-type="BIGINT" unique="true"/>
         </many-to-one>
 
