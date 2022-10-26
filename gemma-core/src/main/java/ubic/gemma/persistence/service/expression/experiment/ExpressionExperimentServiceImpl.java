@@ -128,7 +128,7 @@ public class ExpressionExperimentServiceImpl
     @Autowired
     private SampleCoexpressionAnalysisService sampleCoexpressionAnalysisService;
     @Autowired
-    private BlacklistedEntityDao blacklistedEntityDao;
+    private BlacklistedEntityService blacklistedEntityService;
 
     @Autowired
     public ExpressionExperimentServiceImpl( ExpressionExperimentDao expressionExperimentDao ) {
@@ -1117,7 +1117,7 @@ public class ExpressionExperimentServiceImpl
     @Override
     @Transactional(readOnly = true)
     public boolean isBlackListed( String geoAccession ) {
-        return this.blacklistedEntityDao.isBlacklisted( geoAccession );
+        return this.blacklistedEntityService.isBlacklisted( geoAccession );
     }
 
     @Override

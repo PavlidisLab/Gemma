@@ -29,7 +29,7 @@ import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.persistence.service.AbstractFilteringVoEnabledService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventDao;
-import ubic.gemma.persistence.service.expression.experiment.BlacklistedEntityDao;
+import ubic.gemma.persistence.service.expression.experiment.BlacklistedEntityService;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.*;
@@ -46,7 +46,7 @@ public class ArrayDesignServiceImpl extends AbstractFilteringVoEnabledService<Ar
     private final ArrayDesignDao arrayDesignDao;
     private final AuditEventDao auditEventDao;
     @Autowired
-    private BlacklistedEntityDao blacklistedEntityDao;
+    private BlacklistedEntityService blacklistedEntityService;
 
     @Autowired
     public ArrayDesignServiceImpl( ArrayDesignDao arrayDesignDao, AuditEventDao auditEventDao ) {
@@ -247,7 +247,7 @@ public class ArrayDesignServiceImpl extends AbstractFilteringVoEnabledService<Ar
     @Override
     @Transactional(readOnly = true)
     public boolean isBlackListed( String geoAccession ) {
-        return this.blacklistedEntityDao.isBlacklisted( geoAccession );
+        return this.blacklistedEntityService.isBlacklisted( geoAccession );
 
     }
 

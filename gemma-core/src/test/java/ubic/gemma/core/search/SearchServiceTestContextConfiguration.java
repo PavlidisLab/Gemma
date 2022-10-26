@@ -12,6 +12,7 @@ import ubic.gemma.persistence.service.common.description.CharacteristicService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
 import ubic.gemma.persistence.service.expression.experiment.BlacklistedEntityDao;
+import ubic.gemma.persistence.service.expression.experiment.BlacklistedEntityService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSetService;
 import ubic.gemma.persistence.service.genome.biosequence.BioSequenceService;
@@ -106,8 +107,8 @@ class SearchServiceTestContextConfiguration {
     }
 
     @Bean
-    public BlacklistedEntityDao blackListDao() {
-        return mock( BlacklistedEntityDao.class );
+    public BlacklistedEntityService blacklistedEntityService() {
+        return mock( BlacklistedEntityService.class );
     }
 
     @Bean

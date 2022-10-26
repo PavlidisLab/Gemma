@@ -70,7 +70,7 @@ import ubic.gemma.persistence.service.BaseVoEnabledService;
 import ubic.gemma.persistence.service.common.description.CharacteristicService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
-import ubic.gemma.persistence.service.expression.experiment.BlacklistedEntityDao;
+import ubic.gemma.persistence.service.expression.experiment.BlacklistedEntityService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSetService;
 import ubic.gemma.persistence.service.genome.biosequence.BioSequenceService;
@@ -198,7 +198,7 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
 
     // TODO: use services instead of DAO here
     @Autowired
-    private BlacklistedEntityDao blackListDao;
+    private BlacklistedEntityService blacklistedEntityService;
     @Autowired
     private TaxonService taxonService;
     @Autowired
@@ -611,7 +611,7 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
             return results;
         }
 
-        BlacklistedEntity b = blackListDao.findByAccession( searchString );
+        BlacklistedEntity b = blacklistedEntityService.findByAccession( searchString );
         if ( b != null ) {
             // FIXME: I'm not sure the ID is a good thing to put here
             SearchResult<ArrayDesign> sr = new SearchResult<>( ArrayDesign.class, b.getId(), "BlackListDao.findByAccession" );
@@ -1135,7 +1135,7 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
                 return results;
             }
 
-            BlacklistedEntity b = blackListDao.findByAccession( prepareDatabaseQuery( settings ) );
+            BlacklistedEntity b = blacklistedEntityService.findByAccession( prepareDatabaseQuery( settings ) );
             if ( b != null ) {
                 SearchResult<ExpressionExperiment> sr = new SearchResult<>( ExpressionExperiment.class, b.getId(), "BlackListDao.findByAccession" );
                 sr.setScore( DatabaseSearchSource.MATCH_BY_ACCESSION_SCORE );
