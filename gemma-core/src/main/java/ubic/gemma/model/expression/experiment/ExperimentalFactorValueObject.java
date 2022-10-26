@@ -18,8 +18,7 @@
  */
 package ubic.gemma.model.expression.experiment;
 
-import lombok.Data;
-import lombok.EqualsAndHashCode;
+import lombok.*;
 import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.annotations.GemmaWebOnly;
@@ -34,8 +33,9 @@ import java.util.HashSet;
  * @author keshav
  */
 @SuppressWarnings({ "unused", "WeakerAccess" }) // Used in frontend
-@Data
-@EqualsAndHashCode(callSuper = true)
+@Getter
+@Setter
+@ToString
 public class ExperimentalFactorValueObject extends IdentifiableValueObject<ExperimentalFactor> implements Serializable {
 
     private static final long serialVersionUID = -2615804031123874251L;

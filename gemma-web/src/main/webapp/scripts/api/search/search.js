@@ -8,7 +8,7 @@ Ext.namespace( "Gemma.Search" );
 Ext.BLANK_IMAGE_URL = ctxBasePath + '/images/default/s.gif';
 
 Gemma.Search.SEARCH_RESULT_CLASS_METAS = {
-   "ArrayDesign" : {title : "Probe", sortBy : "shortName"},
+   "ArrayDesign" : {title : "Platform", sortBy : "shortName"},
    "BibliographicReference" : {title : "Annotated Paper", sortBy : "citation"},
    "BioSequence" : {title : "Sequence", sortBy : "name"},
    "BlacklistedValueObject" : {title : "Blacklisted accession"},

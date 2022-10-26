@@ -20,10 +20,7 @@
 package ubic.gemma.model.expression.experiment;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.Setter;
-import lombok.ToString;
+import lombok.*;
 import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.annotations.GemmaWebOnly;
 import ubic.gemma.persistence.service.expression.experiment.GeeqServiceImpl;
@@ -35,7 +32,6 @@ import ubic.gemma.persistence.service.expression.experiment.GeeqServiceImpl;
  */
 @SuppressWarnings("unused") // Used in frontend
 @Setter
-@EqualsAndHashCode(callSuper = true)
 @ToString
 public class GeeqValueObject extends IdentifiableValueObject<Geeq> {
 

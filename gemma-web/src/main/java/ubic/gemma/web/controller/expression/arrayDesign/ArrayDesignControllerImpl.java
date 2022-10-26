@@ -334,7 +334,7 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
         }
         result.removeAll( toHide );
 
-        Collections.sort( result );
+        result.sort( Comparator.comparing( ArrayDesignValueObject::getId ) );
 
         return result;
     }

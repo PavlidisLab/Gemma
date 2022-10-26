@@ -96,4 +96,6 @@
 
 	<bean id="ehcache" class="org.springframework.cache.ehcache.EhCacheManagerFactoryBean"/>
 
+	<bean class="org.springframework.dao.annotation.PersistenceExceptionTranslationPostProcessor"/>
+
 </beans>

@@ -32,6 +32,7 @@ import ubic.basecode.math.DescriptiveWithMissing;
 import ubic.gemma.core.analysis.preprocess.OutlierDetectionService;
 import ubic.gemma.core.analysis.preprocess.batcheffects.BatchEffectDetails;
 import ubic.gemma.core.analysis.service.ExpressionDataMatrixService;
+import ubic.gemma.core.analysis.service.NoProcessedExpressionDataVectorsException;
 import ubic.gemma.core.analysis.util.ExperimentalDesignUtils;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
@@ -248,10 +249,9 @@ public class GeeqServiceImpl extends AbstractVoEnabledService<Geeq, GeeqValueObj
             log.info( GeeqServiceImpl.LOG_PREFIX + " Finished geeq re-scoring for ee id " + eeId
                     + ", saving results..." );
         } catch ( Exception e ) {
-            log.info(
+            log.error(
                     GeeqServiceImpl.LOG_PREFIX + " Major problem encountered, scoring did not finish for ee id " + eeId
-                            + "." );
-            e.printStackTrace();
+                            + ".", e );
             gq.addOtherIssues( e.getMessage() );
         }
 
@@ -518,11 +518,8 @@ public class GeeqServiceImpl extends AbstractVoEnabledService<Geeq, GeeqValueObj
             try {
                 ExpressionDataDoubleMatrix dmatrix = expressionDataMatrixService.getProcessedExpressionDataMatrix( ee );
                 hasMissingValues = dmatrix.hasMissingValues();
-            } catch ( IllegalArgumentException e ) {
+            } catch ( NoProcessedExpressionDataVectorsException e ) {
                 hasProcessedVectors = false;
-            } catch ( Exception e ) {
-                hasProcessedVectors = false;
-                problems = GeeqServiceImpl.ERR_MSG_MISSING_VALS + e.getMessage();
             }
         }
 

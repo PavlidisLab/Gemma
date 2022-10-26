@@ -33,11 +33,9 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
-import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionResultService;
 import ubic.gemma.persistence.service.analysis.expression.diff.ExpressionAnalysisResultSetService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collection;
 
@@ -78,7 +76,6 @@ public class TwoWayAnovaWithInteractionTest2 extends BaseSpringContextTest {
 
     @Before
     public void setUp() throws Exception {
-        super.setUp();
         try ( InputStream io = this.getClass()
                 .getResourceAsStream( "/data/analysis/expression/GSE8441_expmat_8probes.txt" ) ) {
 

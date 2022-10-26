@@ -8,8 +8,7 @@ import gemma.gsec.acl.domain.AclSid;
 import gemma.gsec.model.Securable;
 import gemma.gsec.model.SecureValueObject;
 import gemma.gsec.util.SecurityUtil;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
+import lombok.*;
 import org.hibernate.Hibernate;
 import ubic.gemma.model.annotations.GemmaWebOnly;
 import ubic.gemma.model.common.auditAndSecurity.curation.AbstractCuratableValueObject;
@@ -20,8 +19,8 @@ import javax.annotation.Nullable;
 import java.util.Objects;
 
 @SuppressWarnings({ "unused", "WeakerAccess" }) // used in front end
-@Data
-@EqualsAndHashCode(callSuper = true)
+@Getter
+@Setter
 public class ExpressionExperimentValueObject extends AbstractCuratableValueObject<ExpressionExperiment>
         implements SecureValueObject {
 

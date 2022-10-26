@@ -58,7 +58,6 @@ public class ExpressionExperimentSetServiceTest extends BaseSpringContextTest {
 
     @Before
     public void setUp() throws Exception {
-        super.setUp();
 
         // need persistent entities so that experiment's taxon can be
         // queried from database during methods being tested

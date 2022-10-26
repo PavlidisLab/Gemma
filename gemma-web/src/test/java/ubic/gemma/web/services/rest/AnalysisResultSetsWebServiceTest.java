@@ -74,7 +74,6 @@ public class AnalysisResultSetsWebServiceTest extends BaseSpringWebTest {
 
     @Before
     public void setUp() throws Exception {
-        super.setUp();
 
         ee = getTestPersistentBasicExpressionExperiment();
 

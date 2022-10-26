@@ -60,7 +60,6 @@ public class SecureValueObjectAuthorizationTest extends BaseSpringContextTest {
 
     @Before
     public void setUp() throws Exception {
-        super.setUp();
 
         ExpressionExperiment publicEe = super.getTestPersistentBasicExpressionExperiment();
         securityService.makePublic( publicEe );

@@ -20,7 +20,6 @@ import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.criterion.Restrictions;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.dao.InvalidDataAccessResourceUsageException;
 import org.springframework.stereotype.Repository;
 import ubic.gemma.model.common.auditAndSecurity.GroupAuthority;
 import ubic.gemma.model.common.auditAndSecurity.User;
@@ -28,7 +27,9 @@ import ubic.gemma.model.common.auditAndSecurity.UserGroup;
 import ubic.gemma.persistence.service.AbstractDao;
 import ubic.gemma.persistence.util.BusinessKey;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.List;
+import java.util.Objects;
 
 /**
  * DAO Class: is able to create, update, remove, load, and find objects of type
@@ -99,6 +100,7 @@ public class UserDaoImpl extends AbstractDao<User> implements UserDao {
     }
 
     @Override
+    @SuppressWarnings("MethodDoesntCallSuperMethod")
     public void update( User user ) {
         if ( user == null ) {
             throw new IllegalArgumentException( "User.update - 'user' can not be null" );
@@ -134,18 +136,9 @@ public class UserDaoImpl extends AbstractDao<User> implements UserDao {
 
     private User handleFindByEmail( final String email ) {
         //noinspection unchecked
-        List<User> list = this.getSessionFactory().getCurrentSession()
-                .createQuery( "from User c where c.email = :email" ).setParameter( "email", email ).list();
-        Set<User> results = new HashSet<>( list );
-        User result = null;
-        if ( results.size() > 1 ) {
-            throw new InvalidDataAccessResourceUsageException(
-                    "More than one instance of 'Contact" + "' was found when executing query --> '"
-                            + "from User c where c.email = :email" + "'" );
-        } else if ( results.size() == 1 ) {
-            result = results.iterator().next();
-        }
-        return result;
+        return ( User ) this.getSessionFactory().getCurrentSession()
+                .createQuery( "from User c where c.email = :email" ).setParameter( "email", email )
+                .uniqueResult();
     }
 
 }

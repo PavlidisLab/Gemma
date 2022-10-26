@@ -58,7 +58,6 @@ public class BaselineDetectionTest extends AbstractGeoServiceTest {
 
     @Before
     public void setUp() throws Exception {
-        super.setUp();
 
         String path = FileTools.resourceToPath( "/data/loader/expression/geo/gse18162Short" );
         try {

@@ -22,7 +22,7 @@ import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
  * Provides methods that can be applied to both RawExpressionDataVector and ProcessedExpressionDataVector
  */
 @Service
-public class RawExpressionDataVectorServiceImpl extends DesignElementDataVectorServiceImpl<RawExpressionDataVector>
+public class RawExpressionDataVectorServiceImpl extends AbstractDesignElementDataVectorService<RawExpressionDataVector>
         implements RawExpressionDataVectorService {
 
     @Autowired

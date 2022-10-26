@@ -60,11 +60,13 @@ public class GeneProductServiceImpl extends AbstractVoEnabledService<GeneProduct
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Collection<Gene> getGenesByName( String search ) {
         return this.geneProductDao.getGenesByName( search );
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Collection<Gene> getGenesByNcbiId( String search ) {
         return this.geneProductDao.getGenesByNcbiId( search );
     }

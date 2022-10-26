@@ -16,9 +16,7 @@ package ubic.gemma.model.analysis.expression.diff;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.hibernate.Hibernate;
 import ubic.gemma.model.analysis.AnalysisValueObject;
 import ubic.gemma.model.expression.experiment.ExperimentalFactorValueObject;
@@ -38,8 +36,8 @@ import java.util.Map;
  * @author paul
  */
 @SuppressWarnings("unused") // Used in frontend
-@Data
-@EqualsAndHashCode(callSuper = true)
+@Getter
+@Setter
 public class DifferentialExpressionAnalysisValueObject extends AnalysisValueObject<DifferentialExpressionAnalysis>
         implements Serializable {
 

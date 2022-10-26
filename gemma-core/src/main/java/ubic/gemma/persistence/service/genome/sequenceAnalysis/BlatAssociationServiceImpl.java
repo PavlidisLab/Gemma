@@ -20,6 +20,7 @@ package ubic.gemma.persistence.service.genome.sequenceAnalysis;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
@@ -45,21 +46,25 @@ public class BlatAssociationServiceImpl extends AbstractService<BlatAssociation>
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Collection<BlatAssociation> find( BioSequence bioSequence ) {
         return this.blatAssociationDao.find( bioSequence );
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Collection<BlatAssociation> find( Gene gene ) {
         return this.blatAssociationDao.find( gene );
     }
 
     @Override
+    @Transactional(readOnly = true)
     public void thaw( Collection<BlatAssociation> blatAssociations ) {
         this.blatAssociationDao.thaw( blatAssociations );
     }
 
     @Override
+    @Transactional(readOnly = true)
     public void thaw( BlatAssociation blatAssociation ) {
         this.blatAssociationDao.thaw( blatAssociation );
     }

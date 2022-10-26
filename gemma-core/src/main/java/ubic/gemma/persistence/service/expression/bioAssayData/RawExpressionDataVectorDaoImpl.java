@@ -73,9 +73,9 @@ public class RawExpressionDataVectorDaoImpl extends DesignElementDataVectorDaoIm
     public Collection<RawExpressionDataVector> find( ArrayDesign arrayDesign, QuantitationType quantitationType ) {
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession().createQuery(
-                "select dev from RawExpressionDataVector dev  inner join fetch dev.bioAssayDimension bd "
-                        + " inner join fetch dev.designElement de inner join fetch dev.quantitationType inner join de.arrayDesign ad where ad.id = :adid "
-                        + "and dev.quantitationType = :quantitationType " )
+                        "select dev from RawExpressionDataVector dev  inner join fetch dev.bioAssayDimension bd "
+                                + " inner join fetch dev.designElement de inner join fetch dev.quantitationType inner join de.arrayDesign ad where ad.id = :adid "
+                                + "and dev.quantitationType = :quantitationType " )
                 .setParameter( "quantitationType", quantitationType ).setParameter( "adid", arrayDesign.getId() )
                 .list();
 
@@ -89,8 +89,8 @@ public class RawExpressionDataVectorDaoImpl extends DesignElementDataVectorDaoIm
 
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession().createQuery(
-                "select dev from RawExpressionDataVector as dev inner join dev.designElement as de "
-                        + " where de in (:des) and dev.quantitationType = :qt" )
+                        "select dev from RawExpressionDataVector as dev inner join dev.designElement as de "
+                                + " where de in (:des) and dev.quantitationType = :qt" )
                 .setParameterList( "des", designElements ).setParameter( "qt", quantitationType ).list();
     }
 
@@ -123,33 +123,16 @@ public class RawExpressionDataVectorDaoImpl extends DesignElementDataVectorDaoIm
 
         BusinessKey.checkKey( designElementDataVector );
 
-        DetachedCriteria crit = DetachedCriteria.forClass( RawExpressionDataVector.class );
-
-        crit.createCriteria( "designElement" )
-                .add( Restrictions.eq( "name", designElementDataVector.getDesignElement().getName() ) )
-                .createCriteria( "arrayDesign" ).add( Restrictions
-                .eq( "name", designElementDataVector.getDesignElement().getArrayDesign().getName() ) );
-
-        crit.createCriteria( "quantitationType" )
-                .add( Restrictions.eq( "name", designElementDataVector.getQuantitationType().getName() ) );
-
-        crit.createCriteria( "expressionExperiment" )
-                .add( Restrictions.eq( "name", designElementDataVector.getExpressionExperiment().getName() ) );
-
-        List<?> results = this.getHibernateTemplate().findByCriteria( crit );
-        Object result = null;
-        if ( results != null ) {
-            if ( results.size() > 1 ) {
-                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                        "More than one instance of '" + DesignElementDataVector.class.getName()
-                                + "' was found when executing query" );
-
-            } else if ( results.size() == 1 ) {
-                result = results.iterator().next();
-            }
-        }
-        return ( RawExpressionDataVector ) result;
-
-    }
+        return ( RawExpressionDataVector ) this.getSessionFactory().getCurrentSession().createCriteria( RawExpressionDataVector.class )
+                .createCriteria( "designElement" )
+                    .add( Restrictions.eq( "name", designElementDataVector.getDesignElement().getName() ) )
+                .createCriteria( "arrayDesign" )
+                    .add( Restrictions.eq( "name", designElementDataVector.getDesignElement().getArrayDesign().getName() ) )
+                .createCriteria( "quantitationType" )
+                    .add( Restrictions.eq( "name", designElementDataVector.getQuantitationType().getName() ) )
+                .createCriteria( "expressionExperiment" )
+                    .add( Restrictions.eq( "name", designElementDataVector.getExpressionExperiment().getName() ) )
+                .uniqueResult();
+}
 
 }

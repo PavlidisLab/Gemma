@@ -64,7 +64,6 @@ public class AclCollectionBeforeTest extends BaseSpringContextTest {
 
     @Before
     public final void setUp() throws Exception {
-        super.setUp();
 
         one = super.getTestPersistentBasicExpressionExperiment();
         two = super.getTestPersistentBasicExpressionExperiment();

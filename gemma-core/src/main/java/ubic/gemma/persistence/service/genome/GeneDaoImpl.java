@@ -22,7 +22,6 @@ import net.sf.ehcache.CacheManager;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.hibernate.Criteria;
-import org.hibernate.Hibernate;
 import org.hibernate.Query;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -63,7 +62,6 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
     public GeneDaoImpl( SessionFactory sessionFactory, CacheManager cacheManager ) {
         super( GeneDao.OBJECT_ALIAS, Gene.class, sessionFactory );
         this.cacheManager = cacheManager;
-        setLoadBatchSize( 2000 );
     }
 
     @Override
@@ -239,16 +237,11 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
                         + " and cs.biologicalCharacteristic=bs2gp.bioSequence "
                         + " and gene = :gene and cs.arrayDesign = :arrayDesign ";
 
-        try {
-            org.hibernate.Query queryObject = this.getSessionFactory().getCurrentSession().createQuery( queryString );
-            queryObject.setParameter( "arrayDesign", arrayDesign );
-            queryObject.setParameter( "gene", gene );
-            //noinspection unchecked
-            compSeq = queryObject.list();
-
-        } catch ( org.hibernate.HibernateException ex ) {
-            throw getHibernateTemplate().convertHibernateAccessException( ex );
-        }
+        org.hibernate.Query queryObject = this.getSessionFactory().getCurrentSession().createQuery( queryString );
+        queryObject.setParameter( "arrayDesign", arrayDesign );
+        queryObject.setParameter( "gene", gene );
+        //noinspection unchecked
+        compSeq = queryObject.list();
         return compSeq;
     }
 

@@ -18,6 +18,7 @@
  */
 package ubic.gemma.core.analysis.expression.diff;
 
+import lombok.SneakyThrows;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.easymock.EasyMock;
 import org.junit.After;
@@ -30,6 +31,7 @@ import ubic.basecode.util.r.RClient;
 import ubic.basecode.util.r.RConnectionFactory;
 import ubic.basecode.util.r.RServeClient;
 import ubic.gemma.core.analysis.service.ExpressionDataMatrixService;
+import ubic.gemma.core.analysis.service.NoProcessedExpressionDataVectorsException;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.core.util.test.BaseSpringContextTest;
 import ubic.gemma.model.common.description.Characteristic;
@@ -104,7 +106,6 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
 
     @Before
     public void setUp() throws Exception {
-        super.setUp();
 
         try {
             if ( Settings.getBoolean( "gemma.linearmodels.useR" ) ) {
@@ -379,6 +380,7 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
      *
      * @param numMethodCalls The number of times the mocked method will be called.
      */
+    @SneakyThrows(NoProcessedExpressionDataVectorsException.class)
     void configureMockAnalysisServiceHelper( int numMethodCalls ) {
         this.expressionDataMatrixService = EasyMock.createMock( ExpressionDataMatrixService.class );
         EasyMock.expect( expressionDataMatrixService.getProcessedExpressionDataMatrix( expressionExperiment ) )

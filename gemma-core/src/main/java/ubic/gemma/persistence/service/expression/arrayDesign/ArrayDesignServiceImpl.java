@@ -29,7 +29,7 @@ import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.persistence.service.AbstractFilteringVoEnabledService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventDao;
-import ubic.gemma.persistence.service.expression.experiment.BlacklistedEntityDao;
+import ubic.gemma.persistence.service.expression.experiment.BlacklistedEntityService;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.*;
@@ -46,7 +46,7 @@ public class ArrayDesignServiceImpl extends AbstractFilteringVoEnabledService<Ar
     private final ArrayDesignDao arrayDesignDao;
     private final AuditEventDao auditEventDao;
     @Autowired
-    private BlacklistedEntityDao blacklistedEntityDao;
+    private BlacklistedEntityService blacklistedEntityService;
 
     @Autowired
     public ArrayDesignServiceImpl( ArrayDesignDao arrayDesignDao, AuditEventDao auditEventDao ) {
@@ -62,31 +62,37 @@ public class ArrayDesignServiceImpl extends AbstractFilteringVoEnabledService<Ar
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Collection<CompositeSequence> compositeSequenceWithoutBioSequences( ArrayDesign arrayDesign ) {
         return this.arrayDesignDao.compositeSequenceWithoutBioSequences( arrayDesign );
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Collection<CompositeSequence> compositeSequenceWithoutBlatResults( ArrayDesign arrayDesign ) {
         return this.arrayDesignDao.compositeSequenceWithoutBlatResults( arrayDesign );
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Collection<CompositeSequence> compositeSequenceWithoutGenes( ArrayDesign arrayDesign ) {
         return this.arrayDesignDao.compositeSequenceWithoutGenes( arrayDesign );
     }
 
     @Override
+    @Transactional
     public void deleteAlignmentData( ArrayDesign arrayDesign ) {
         this.arrayDesignDao.deleteAlignmentData( arrayDesign );
     }
 
     @Override
+    @Transactional
     public void deleteGeneProductAssociations( ArrayDesign arrayDesign ) {
         this.arrayDesignDao.deleteGeneProductAssociations( arrayDesign );
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Collection<ArrayDesign> findByAlternateName( String queryString ) {
         return this.arrayDesignDao.findByAlternateName( queryString );
     }
@@ -101,11 +107,13 @@ public class ArrayDesignServiceImpl extends AbstractFilteringVoEnabledService<Ar
      * @see ArrayDesignService#findByName(java.lang.String)
      */
     @Override
+    @Transactional(readOnly = true)
     public Collection<ArrayDesign> findByName( String name ) {
         return this.arrayDesignDao.findByName( name );
     }
 
     @Override
+    @Transactional(readOnly = true)
     public ArrayDesign findByShortName( String shortName ) {
         return this.arrayDesignDao.findByShortName( shortName );
     }
@@ -123,7 +131,8 @@ public class ArrayDesignServiceImpl extends AbstractFilteringVoEnabledService<Ar
     }
 
     @Override
-    public java.util.Collection<BioAssay> getAllAssociatedBioAssays( ArrayDesign arrayDesign ) {
+    @Transactional(readOnly = true)
+    public Collection<BioAssay> getAllAssociatedBioAssays( ArrayDesign arrayDesign ) {
         return this.arrayDesignDao.getAllAssociatedBioAssays( arrayDesign );
 
     }
@@ -135,26 +144,31 @@ public class ArrayDesignServiceImpl extends AbstractFilteringVoEnabledService<Ar
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Long getCompositeSequenceCount( ArrayDesign arrayDesign ) {
         return this.arrayDesignDao.numCompositeSequences( arrayDesign );
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Collection<CompositeSequence> getCompositeSequences( ArrayDesign arrayDesign ) {
         return this.arrayDesignDao.loadCompositeSequences( arrayDesign, -1, 0 );
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Collection<CompositeSequence> getCompositeSequences( ArrayDesign arrayDesign, int limit, int offset ) {
         return this.arrayDesignDao.loadCompositeSequences( arrayDesign, limit, offset );
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Collection<ExpressionExperiment> getExpressionExperiments( ArrayDesign arrayDesign ) {
         return this.arrayDesignDao.getExpressionExperiments( arrayDesign );
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Map<Long, AuditEvent> getLastGeneMapping( Collection<Long> ids ) {
         Map<Long, Collection<AuditEvent>> eventMap = this.arrayDesignDao.getAuditEvents( ids );
         Map<Long, AuditEvent> lastEventMap = new HashMap<>();
@@ -165,6 +179,7 @@ public class ArrayDesignServiceImpl extends AbstractFilteringVoEnabledService<Ar
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Map<Long, AuditEvent> getLastRepeatAnalysis( Collection<Long> ids ) {
         Map<Long, Collection<AuditEvent>> eventMap = this.arrayDesignDao.getAuditEvents( ids );
         Map<Long, AuditEvent> lastEventMap = new HashMap<>();
@@ -176,6 +191,7 @@ public class ArrayDesignServiceImpl extends AbstractFilteringVoEnabledService<Ar
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Map<Long, AuditEvent> getLastSequenceAnalysis( Collection<Long> ids ) {
         Map<Long, Collection<AuditEvent>> eventMap = this.arrayDesignDao.getAuditEvents( ids );
         Map<Long, AuditEvent> lastEventMap = new HashMap<>();
@@ -187,6 +203,7 @@ public class ArrayDesignServiceImpl extends AbstractFilteringVoEnabledService<Ar
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Map<Long, AuditEvent> getLastSequenceUpdate( Collection<Long> ids ) {
         Map<Long, Collection<AuditEvent>> eventMap = this.arrayDesignDao.getAuditEvents( ids );
         Map<Long, AuditEvent> lastEventMap = new HashMap<>();
@@ -204,16 +221,19 @@ public class ArrayDesignServiceImpl extends AbstractFilteringVoEnabledService<Ar
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Collection<Long> getSwitchedExperimentIds( ArrayDesign arrayDesign ) {
         return this.arrayDesignDao.getSwitchedExpressionExperimentIds( arrayDesign );
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Collection<Taxon> getTaxa( ArrayDesign arrayDesign ) {
         return this.arrayDesignDao.getTaxa( arrayDesign );
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Taxon getTaxon( java.lang.Long id ) {
         ArrayDesign ad = this.arrayDesignDao.load( id );
         return ad == null ? null : ad.getPrimaryTaxon();
@@ -225,8 +245,9 @@ public class ArrayDesignServiceImpl extends AbstractFilteringVoEnabledService<Ar
      * @see ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService#isBlackListed(java.lang.String)
      */
     @Override
+    @Transactional(readOnly = true)
     public boolean isBlackListed( String geoAccession ) {
-        return this.blacklistedEntityDao.isBlacklisted( geoAccession );
+        return this.blacklistedEntityService.isBlacklisted( geoAccession );
 
     }
 
@@ -243,21 +264,25 @@ public class ArrayDesignServiceImpl extends AbstractFilteringVoEnabledService<Ar
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Map<Long, Boolean> isMerged( Collection<Long> ids ) {
         return this.arrayDesignDao.isMerged( ids );
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Map<Long, Boolean> isMergee( Collection<Long> ids ) {
         return this.arrayDesignDao.isMergee( ids );
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Map<Long, Boolean> isSubsumed( Collection<Long> ids ) {
         return this.arrayDesignDao.isSubsumed( ids );
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Map<Long, Boolean> isSubsumer( Collection<Long> ids ) {
         return this.arrayDesignDao.isSubsumer( ids );
     }
@@ -269,46 +294,55 @@ public class ArrayDesignServiceImpl extends AbstractFilteringVoEnabledService<Ar
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<ArrayDesignValueObject> loadValueObjectsForEE( Long eeId ) {
         return this.arrayDesignDao.loadValueObjectsForEE( eeId );
     }
 
     @Override
+    @Transactional(readOnly = true)
     public long numAllCompositeSequenceWithBioSequences() {
         return this.arrayDesignDao.numAllCompositeSequenceWithBioSequences();
     }
 
     @Override
+    @Transactional(readOnly = true)
     public long numAllCompositeSequenceWithBioSequences( Collection<Long> ids ) {
         return this.arrayDesignDao.numAllCompositeSequenceWithBioSequences( ids );
     }
 
     @Override
+    @Transactional(readOnly = true)
     public long numAllCompositeSequenceWithBlatResults() {
         return this.arrayDesignDao.numAllCompositeSequenceWithBlatResults();
     }
 
     @Override
+    @Transactional(readOnly = true)
     public long numAllCompositeSequenceWithBlatResults( Collection<Long> ids ) {
         return this.arrayDesignDao.numAllCompositeSequenceWithBlatResults( ids );
     }
 
     @Override
+    @Transactional(readOnly = true)
     public long numAllCompositeSequenceWithGenes() {
         return this.arrayDesignDao.numAllCompositeSequenceWithGenes();
     }
 
     @Override
+    @Transactional(readOnly = true)
     public long numAllCompositeSequenceWithGenes( Collection<Long> ids ) {
         return this.arrayDesignDao.numAllCompositeSequenceWithGenes( ids );
     }
 
     @Override
+    @Transactional(readOnly = true)
     public long numAllGenes() {
         return this.arrayDesignDao.numAllGenes();
     }
 
     @Override
+    @Transactional(readOnly = true)
     public long numAllGenes( Collection<Long> ids ) {
         return this.arrayDesignDao.numAllGenes( ids );
     }
@@ -319,16 +353,19 @@ public class ArrayDesignServiceImpl extends AbstractFilteringVoEnabledService<Ar
     }
 
     @Override
+    @Transactional(readOnly = true)
     public long numBlatResults( ArrayDesign arrayDesign ) {
         return this.arrayDesignDao.numBlatResults( arrayDesign );
     }
 
     @Override
+    @Transactional(readOnly = true)
     public long numCompositeSequenceWithBioSequences( ArrayDesign arrayDesign ) {
         return this.arrayDesignDao.numCompositeSequenceWithBioSequences( arrayDesign );
     }
 
     @Override
+    @Transactional(readOnly = true)
     public long numCompositeSequenceWithBlatResults( ArrayDesign arrayDesign ) {
         return this.arrayDesignDao.numCompositeSequenceWithBlatResults( arrayDesign );
     }
@@ -345,11 +382,13 @@ public class ArrayDesignServiceImpl extends AbstractFilteringVoEnabledService<Ar
     }
 
     @Override
+    @Transactional(readOnly = true)
     public long numGenes( ArrayDesign arrayDesign ) {
         return this.arrayDesignDao.numGenes( arrayDesign );
     }
 
     @Override
+    @Transactional
     public void removeBiologicalCharacteristics( ArrayDesign arrayDesign ) {
         this.arrayDesignDao.removeBiologicalCharacteristics( arrayDesign );
 
@@ -374,6 +413,7 @@ public class ArrayDesignServiceImpl extends AbstractFilteringVoEnabledService<Ar
     }
 
     @Override
+    @Transactional
     public Boolean updateSubsumingStatus( ArrayDesign candidateSubsumer, ArrayDesign candidateSubsumee ) {
         return this.arrayDesignDao.updateSubsumingStatus( candidateSubsumer, candidateSubsumee );
     }

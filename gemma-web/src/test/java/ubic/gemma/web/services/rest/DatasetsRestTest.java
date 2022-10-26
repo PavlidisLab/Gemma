@@ -43,7 +43,6 @@ public class DatasetsRestTest extends BaseSpringWebTest {
 
     @Before
     public void setUp() throws Exception {
-        super.setUp();
         for ( int i = 0; i < 10; i++ ) {
             ees.add( this.getNewTestPersistentCompleteExpressionExperiment() );
         }

@@ -276,14 +276,10 @@ public class AuditEventDaoImpl extends AbstractDao<AuditEvent> implements AuditE
     }
 
     private void tryAddAllToResult( Collection<Auditable> result, String queryString, Date date ) {
-        try {
-            org.hibernate.Query queryObject = this.getSessionFactory().getCurrentSession().createQuery( queryString );
-            queryObject.setParameter( "date", date );
-            //noinspection unchecked
-            result.addAll( queryObject.list() );
-        } catch ( org.hibernate.HibernateException ex ) {
-            throw getHibernateTemplate().convertHibernateAccessException( ex );
-        }
+        org.hibernate.Query queryObject = this.getSessionFactory().getCurrentSession().createQuery( queryString );
+        queryObject.setParameter( "date", date );
+        //noinspection unchecked
+        result.addAll( queryObject.list() );
     }
 
     private void putAllQrs( Map<Auditable, AuditEvent> result, List<?> qr, Map<AuditTrail, Auditable> atMap ) {

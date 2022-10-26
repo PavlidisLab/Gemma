@@ -112,6 +112,7 @@ public class BioMaterialServiceImpl extends AbstractVoEnabledService<BioMaterial
     }
 
     @Override
+    @Transactional
     public <T> void associateBatchFactor( final Map<BioMaterial, T> descriptors, final Map<T, FactorValue> d2fv ) {
 
         for ( final BioMaterial bm : descriptors.keySet() ) {

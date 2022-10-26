@@ -1,7 +1,6 @@
 package ubic.gemma.model.analysis.expression.diff;
 
-import lombok.Data;
-import lombok.EqualsAndHashCode;
+import lombok.*;
 import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.expression.experiment.FactorValueBasicValueObject;
 
@@ -9,8 +8,9 @@ import ubic.gemma.model.expression.experiment.FactorValueBasicValueObject;
  * Represents a contrast result.
  * @author poirigui
  */
-@Data
-@EqualsAndHashCode(callSuper = true)
+@Getter
+@Setter
+@ToString
 public class ContrastResultValueObject extends IdentifiableValueObject<ContrastResult> {
 
     private final Double pvalue;

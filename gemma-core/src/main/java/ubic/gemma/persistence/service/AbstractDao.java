@@ -18,11 +18,8 @@
  */
 package ubic.gemma.persistence.service;
 
-import org.apache.commons.collections4.ListUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.hibernate.Criteria;
-import org.hibernate.FlushMode;
 import org.hibernate.SessionFactory;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
@@ -35,7 +32,6 @@ import javax.annotation.OverridingMethodsMustInvokeSuper;
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.io.Serializable;
 import java.util.*;
-import java.util.stream.Collectors;
 
 /**
  * AbstractDao can find the generic type at runtime and simplify the code implementation of the BaseDao interface
@@ -49,25 +45,17 @@ public abstract class AbstractDao<T extends Identifiable> extends HibernateDaoSu
     protected static final Log log = LogFactory.getLog( AbstractDao.class );
 
     /**
-     * Default batch size for loading data from the database using {@link #load(Collection)}.
-     *
-     * No batching is performed by default, thus {@link Integer#MAX_VALUE}.
-     */
-    public static final int DEFAULT_LOAD_BATCH_SIZE = Integer.MAX_VALUE;
-
-    /**
      * Default batch size to reach before flushing the Hibernate session.
-     *
+     * <p>
      * You should use {@link #setBatchSize(int)} to adjust this value to an optimal one for the DAO. Large model should
      * have a relatively small batch size to reduce memory usage.
-     *
-     * See https://docs.jboss.org/hibernate/core/3.6/reference/en-US/html/batch.html for more details.
+     * <p>
+     * See <a href="https://docs.jboss.org/hibernate/core/3.6/reference/en-US/html/batch.html">Chapter 15. Batch processing</a>
+     * for more details.
      */
     public static final int DEFAULT_BATCH_SIZE = 100;
 
     protected final Class<? extends T> elementClass;
-
-    private int loadBatchSize = DEFAULT_LOAD_BATCH_SIZE;
 
     private int batchSize = DEFAULT_BATCH_SIZE;
 
@@ -83,8 +71,7 @@ public abstract class AbstractDao<T extends Identifiable> extends HibernateDaoSu
         for ( T t : entities ) {
             results.add( this.create( t ) );
             if ( ++i % batchSize == 0 ) {
-                this.getSessionFactory().getCurrentSession().flush();
-                this.getSessionFactory().getCurrentSession().clear();
+                flushAndClear();
             }
         }
         return results;
@@ -106,20 +93,11 @@ public abstract class AbstractDao<T extends Identifiable> extends HibernateDaoSu
             return Collections.emptyList();
         }
         String idPropertyName = getSessionFactory().getClassMetadata( elementClass ).getIdentifierPropertyName();
-        List<Long> uniqueIds = ids.stream()
-                .filter( Objects::nonNull )
-                .distinct()
-                .sorted()
-                .collect( Collectors.toList() );
-        Collection<T> results = new ArrayList<>( uniqueIds.size() );
-        for ( List<Long> batch : ListUtils.partition( uniqueIds, loadBatchSize ) ) {
-            //noinspection unchecked
-            results.addAll( this.getSessionFactory().getCurrentSession()
-                    .createCriteria( elementClass )
-                    .add( Restrictions.in( idPropertyName, batch ) )
-                    .list() );
-        }
-        return results;
+        //noinspection unchecked
+        return this.getSessionFactory().getCurrentSession()
+                .createCriteria( elementClass )
+                .add( Restrictions.in( idPropertyName, new HashSet<>( ids ) ) )
+                .list();
     }
 
     @SuppressWarnings("unchecked")
@@ -151,8 +129,7 @@ public abstract class AbstractDao<T extends Identifiable> extends HibernateDaoSu
         for ( T e : entities ) {
             this.remove( e );
             if ( ++i % batchSize == 0 ) {
-                this.getSessionFactory().getCurrentSession().flush();
-                this.getSessionFactory().getCurrentSession().clear();
+                flushAndClear();
             }
         }
     }
@@ -182,8 +159,7 @@ public abstract class AbstractDao<T extends Identifiable> extends HibernateDaoSu
         for ( T entity : entities ) {
             this.update( entity );
             if ( ++i % batchSize == 0 ) {
-                this.getSessionFactory().getCurrentSession().flush();
-                this.getSessionFactory().getCurrentSession().clear();
+                flushAndClear();
             }
         }
     }
@@ -208,37 +184,6 @@ public abstract class AbstractDao<T extends Identifiable> extends HibernateDaoSu
     }
 
     /**
-     * Does a like-match case insensitive search on given property and its value.
-     *
-     * @param  propertyName  the name of property to be matched.
-     * @param  propertyValue the value to look for.
-     * @return an entity whose property first like-matched the given value.
-     */
-    @SuppressWarnings("unchecked")
-    protected T findOneByStringProperty( String propertyName, String propertyValue ) {
-        Criteria criteria = this.getSessionFactory().getCurrentSession().createCriteria( this.elementClass );
-        criteria.add( Restrictions.ilike( propertyName, propertyValue ) );
-        criteria.setMaxResults( 1 );
-        //noinspection unchecked
-        return ( T ) criteria.uniqueResult();
-    }
-
-    /**
-     * Does a like-match case insensitive search on given property and its value.
-     *
-     * @param  propertyName  the name of property to be matched.
-     * @param  propertyValue the value to look for.
-     * @return a list of entities whose properties like-matched the given value.
-     */
-    @SuppressWarnings("SameParameterValue") // Better for general use
-    protected List<T> findByStringProperty( String propertyName, String propertyValue ) {
-        Criteria criteria = this.getSessionFactory().getCurrentSession().createCriteria( this.elementClass );
-        criteria.add( Restrictions.ilike( propertyName, propertyValue ) );
-        //noinspection unchecked
-        return criteria.list();
-    }
-
-    /**
      * Lists all entities whose given property matches the given value.
      *
      * @param  propertyName  the name of property to be matched.
@@ -247,22 +192,12 @@ public abstract class AbstractDao<T extends Identifiable> extends HibernateDaoSu
      */
     @SuppressWarnings("unchecked")
     protected T findOneByProperty( String propertyName, Object propertyValue ) {
-
-        /*
-         * Disable flush to avoid NonNullability constraint failures, etc. prematurely when running this during object
-         * creation. This effectively makes this method read-only even in a read-write context. (the same setup might be
-         * needed for other methods)
-         */
-        FlushMode fm = this.getSessionFactory().getCurrentSession().getFlushMode();
-        this.getSessionFactory().getCurrentSession().setFlushMode( FlushMode.MANUAL );
-        Criteria criteria = this.getSessionFactory().getCurrentSession().createCriteria( this.elementClass );
-        criteria.add( Restrictions.eq( propertyName, propertyValue ) );
-        criteria.setMaxResults( 1 );
-
         //noinspection unchecked
-        T result = ( T ) criteria.uniqueResult();
-        this.getSessionFactory().getCurrentSession().setFlushMode( fm );
-        return result;
+        return ( T ) this.getSessionFactory().getCurrentSession()
+                .createCriteria( this.elementClass )
+                .add( Restrictions.eq( propertyName, propertyValue ) )
+                .setMaxResults( 1 )
+                .uniqueResult();
     }
 
     /**
@@ -273,29 +208,16 @@ public abstract class AbstractDao<T extends Identifiable> extends HibernateDaoSu
      * @return an entity whose property first matched the given value.
      */
     protected List<T> findByProperty( String propertyName, Object propertyValue ) {
-        Criteria criteria = this.getSessionFactory().getCurrentSession().createCriteria( this.elementClass );
-        criteria.add( Restrictions.eq( propertyName, propertyValue ) );
         //noinspection unchecked
-        return criteria.list();
-    }
-
-    /**
-     * Set the batch size for loading entities using {@link #load(Collection)}.
-     *
-     * Use {@link Integer#MAX_VALUE} to effectively disable batching.
-     *
-     * @param loadBatchSize a strictly positive number
-     */
-    protected final void setLoadBatchSize( int loadBatchSize ) {
-        if ( loadBatchSize < 1 ) {
-            throw new IllegalArgumentException( "Batch size must be strictly positive." );
-        }
-        this.loadBatchSize = loadBatchSize;
+        return this.getSessionFactory().getCurrentSession()
+                .createCriteria( this.elementClass )
+                .add( Restrictions.eq( propertyName, propertyValue ) )
+                .list();
     }
 
     /**
      * Set the batch size for batched creation, update and deletions.
-     *
+     * <p>
      * Use {@link Integer#MAX_VALUE} to effectively disable batching and '1' to flush changes right away.
      *
      * @param batchSize a strictly positive number
@@ -306,5 +228,22 @@ public abstract class AbstractDao<T extends Identifiable> extends HibernateDaoSu
             throw new IllegalArgumentException( "Batch size must be strictly positive." );
         }
         this.batchSize = batchSize;
+    }
+
+    /**
+     * Flush pending changes to the persistent storage.
+     */
+    protected void flush() {
+        this.getSessionFactory().getCurrentSession().flush();
+    }
+
+    /**
+     * Flush pending changes and clear the session.
+     * <p>
+     * Use this carefully, cleared entities referenced later will be retrieved from the persistent storage.
+     */
+    protected void flushAndClear() {
+        this.getSessionFactory().getCurrentSession().flush();
+        this.getSessionFactory().getCurrentSession().clear();
     }
 }

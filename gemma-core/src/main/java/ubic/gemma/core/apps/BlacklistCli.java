@@ -34,8 +34,8 @@ import ubic.gemma.model.expression.BlacklistedEntity;
 import ubic.gemma.model.expression.arrayDesign.BlacklistedPlatform;
 import ubic.gemma.model.expression.experiment.BlacklistedExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.persistence.service.common.description.ExternalDatabaseDao;
-import ubic.gemma.persistence.service.expression.experiment.BlacklistedEntityDao;
+import ubic.gemma.persistence.service.common.description.ExternalDatabaseService;
+import ubic.gemma.persistence.service.expression.experiment.BlacklistedEntityService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
 import java.io.BufferedReader;
@@ -98,10 +98,10 @@ public class BlacklistCli extends AbstractCLIContextCLI {
 
     @Override
     protected void doWork() throws Exception {
-        BlacklistedEntityDao blacklistedEntityDao = this.getBean( BlacklistedEntityDao.class );
-        ExternalDatabaseDao externalDatabaseDao = this.getBean( ExternalDatabaseDao.class );
+        BlacklistedEntityService blacklistedEntityService = this.getBean( BlacklistedEntityService.class );
+        ExternalDatabaseService externalDatabaseService = this.getBean( ExternalDatabaseService.class );
 
-        ExternalDatabase geo = externalDatabaseDao.findByName( "GEO" );
+        ExternalDatabase geo = externalDatabaseService.findByName( "GEO" );
 
         if ( geo == null )
             throw new IllegalStateException( "GEO not found as an external database in the system" );
@@ -112,7 +112,7 @@ public class BlacklistCli extends AbstractCLIContextCLI {
             return;
         }
 
-        try (BufferedReader in = new BufferedReader( new FileReader( fileName ) )) {
+        try ( BufferedReader in = new BufferedReader( new FileReader( fileName ) ) ) {
             while ( in.ready() ) {
                 String line = in.readLine().trim();
                 if ( line.startsWith( "#" ) ) {
@@ -131,13 +131,13 @@ public class BlacklistCli extends AbstractCLIContextCLI {
 
                 String accession = split[0];
 
-                boolean alreadyBlacklisted = blacklistedEntityDao.isBlacklisted( accession );
+                boolean alreadyBlacklisted = blacklistedEntityService.isBlacklisted( accession );
                 if ( remove ) {
                     if ( !alreadyBlacklisted ) {
                         log.warn( "Attempting to de-blacklist " + accession + " but it is not blacklisted" );
                         continue;
                     }
-                    blacklistedEntityDao.remove( blacklistedEntityDao.findByAccession( accession ) );
+                    blacklistedEntityService.remove( blacklistedEntityService.findByAccession( accession ) );
                     log.info( "De-blacklisted " + accession );
                     continue;
                 } else if ( alreadyBlacklisted ) {
@@ -159,7 +159,7 @@ public class BlacklistCli extends AbstractCLIContextCLI {
                     throw new IllegalArgumentException( "A reason for blacklisting must be provided for " + accession );
                 }
 
-                if ( blacklistedEntityDao.findByAccession( accession ) != null ) {
+                if ( blacklistedEntityService.findByAccession( accession ) != null ) {
                     log.warn( accession + " is already on the blacklist, skipping" );
                     continue;
                 }
@@ -181,7 +181,7 @@ public class BlacklistCli extends AbstractCLIContextCLI {
                     blee.setDescription( split[3] );
                 }
 
-                blacklistedEntityDao.create( blee );
+                blacklistedEntityService.create( blee );
 
                 log.info( "Blacklisted " + accession );
             }
@@ -192,11 +192,11 @@ public class BlacklistCli extends AbstractCLIContextCLI {
     }
 
     /**
-     * 
+     *
      */
     private void proactivelyBlacklistExperiments( ExternalDatabase geo ) throws Exception {
         GeoBrowser gbs = new GeoBrowser();
-        BlacklistedEntityDao blacklistedEntityDao = this.getBean( BlacklistedEntityDao.class );
+        BlacklistedEntityService blacklistedEntityDao = this.getBean( BlacklistedEntityService.class );
 
         Collection<String> candidates = new ArrayList<>();
         int numChecked = 0;
@@ -230,10 +230,10 @@ public class BlacklistCli extends AbstractCLIContextCLI {
      * @param  gbs
      * @param  blacklistedEntityDao
      * @param  candidates
-     * @return                      number of actually blacklisted experiments in this batch.
+     * @return number of actually blacklisted experiments in this batch.
      * @throws InterruptedException
      */
-    private int fetchAndBlacklist( ExternalDatabase geo, GeoBrowser gbs, BlacklistedEntityDao blacklistedEntityDao, Collection<String> candidates )
+    private int fetchAndBlacklist( ExternalDatabase geo, GeoBrowser gbs, BlacklistedEntityService blacklistedEntityDao, Collection<String> candidates )
             throws InterruptedException {
         int start = 0;
 

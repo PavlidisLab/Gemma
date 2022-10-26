@@ -122,7 +122,7 @@ public class AclAdviceTest extends BaseSpringContextTest {
     @Test
     public void testSignup() {
         try {
-            super.runAsAnonymous( this.applicationContext );
+            super.runAsAnonymous();
             String userName = "testuser" + RandomStringUtils.randomAlphabetic( 3 );
             this.makeUser( userName );
             this.runAsUser( userName );
@@ -171,7 +171,7 @@ public class AclAdviceTest extends BaseSpringContextTest {
         assertEquals( 2, arrayDesignService.getExpressionExperiments( ad ).size() );
 
         // anonymous can only see the public set
-        super.runAsAnonymous( this.applicationContext );
+        super.runAsAnonymous();
         assertEquals( 1, arrayDesignService.numExperiments( ad ) );
 
         // make the other data set public too...
@@ -179,7 +179,7 @@ public class AclAdviceTest extends BaseSpringContextTest {
         securityService.makePublic( ee );
 
         // anonymous can see both
-        super.runAsAnonymous( this.applicationContext );
+        super.runAsAnonymous();
         assertEquals( 2, arrayDesignService.numExperiments( ad ) );
 
         // logged-in user can also see both
@@ -204,7 +204,7 @@ public class AclAdviceTest extends BaseSpringContextTest {
         assertEquals( 2, arrayDesignService.numExperiments( ad ) );
 
         // anonymous can only see the public one.
-        super.runAsAnonymous( this.applicationContext );
+        super.runAsAnonymous();
         assertEquals( 1, arrayDesignService.numExperiments( ad ) );
 
         // create a new user group, add user to it, make ee2 private to group
@@ -217,7 +217,7 @@ public class AclAdviceTest extends BaseSpringContextTest {
         assertEquals( 2, arrayDesignService.numExperiments( ad ) );
 
         // anonymous can't see private groups
-        super.runAsAnonymous( this.applicationContext );
+        super.runAsAnonymous();
         assertEquals( 0, arrayDesignService.numExperiments( ad ) );
 
         // user can view experiment he owns as well as one shared with him

@@ -47,7 +47,7 @@ public class ChromosomeServiceImpl extends AbstractService<Chromosome> implement
     }
 
     @Override
-    @Transactional
+    @Transactional(readOnly = true)
     public Collection<Chromosome> find( String name, Taxon taxon ) {
         return this.chromosomeDao.find( name, taxon );
     }

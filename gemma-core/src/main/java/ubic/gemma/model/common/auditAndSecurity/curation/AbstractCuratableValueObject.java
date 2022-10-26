@@ -15,8 +15,7 @@ import java.util.Date;
  */
 @SuppressWarnings({ "unused", "WeakerAccess" }) // Used in frontend
 @CommonsLog
-public abstract class AbstractCuratableValueObject<C extends Curatable> extends IdentifiableValueObject<C>
-        implements Comparable<AbstractCuratableValueObject<C>> {
+public abstract class AbstractCuratableValueObject<C extends Curatable> extends IdentifiableValueObject<C> {
 
     private static final String TROUBLE_DETAILS_NONE = "No trouble details provided.";
 
@@ -147,13 +146,5 @@ public abstract class AbstractCuratableValueObject<C extends Curatable> extends 
         }
 
         return htmlEscape ? StringEscapeUtils.escapeHtml4( details ) : details;
-    }
-
-    @Override
-    public int compareTo( AbstractCuratableValueObject<C> arg0 ) {
-        if ( arg0.getId() == null || this.getId() == null ) {
-            return 0;
-        }
-        return arg0.getId().compareTo( this.getId() );
     }
 }

@@ -76,21 +76,25 @@ public class CharacteristicServiceImpl extends AbstractVoEnabledService<Characte
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Map<Class<? extends Identifiable>, Map<String, Set<ExpressionExperiment>>> findExperimentsByUris( Collection<String> uris, @Nullable Taxon taxon, int limit ) {
         return this.characteristicDao.findExperimentsByUris( uris, taxon, limit );
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Collection<Characteristic> findByUri( Collection<String> uris ) {
         return this.characteristicDao.findByUri( uris );
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Collection<Characteristic> findByUri( String searchString ) {
         return this.characteristicDao.findByUri( searchString );
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Collection<Characteristic> findByValue( java.lang.String search ) {
         return this.characteristicDao.findByValue( search + '%' );
     }
@@ -108,6 +112,7 @@ public class CharacteristicServiceImpl extends AbstractVoEnabledService<Characte
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Map<Characteristic, Object> getParents( Collection<Characteristic> characteristics ) {
         Map<Characteristic, Object> charToParent = new HashMap<>();
         Collection<Characteristic> needToSearch = new HashSet<>( characteristics );
@@ -120,6 +125,7 @@ public class CharacteristicServiceImpl extends AbstractVoEnabledService<Characte
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Map<Characteristic, Long> getParentIds( Class<?> parentClass, @Nullable Collection<Characteristic> characteristics ) {
         return this.characteristicDao.getParentIds( parentClass, characteristics );
     }
@@ -136,6 +142,7 @@ public class CharacteristicServiceImpl extends AbstractVoEnabledService<Characte
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Collection<? extends Characteristic> findByCategory( String query ) {
         return this.characteristicDao.findByCategory( query );
     }

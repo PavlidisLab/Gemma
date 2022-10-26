@@ -54,7 +54,6 @@ public class ExecutingTaskTest extends BaseSpringContextTest {
 
     @Before
     public void setUp() throws Exception {
-        super.setUp();
         Assume.assumeTrue( "These tests must be run with -Dlog4j1.compatibility=true",
                 Objects.equals( System.getProperty( "log4j1.compatibility" ), "true" ) );
     }

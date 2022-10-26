@@ -78,33 +78,21 @@ public class TaxonDaoImpl extends AbstractQueryFilteringVoEnabledDao<Taxon, Taxo
         queryObject.setFlushMode( FlushMode.MANUAL );
         BusinessKey.addRestrictions( queryObject, taxon );
 
-        List<?> results = queryObject.list();
-        Object result = null;
-        if ( results != null ) {
-            if ( results.size() > 1 ) {
-                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                        "More than one instance of '" + taxon.getClass().getName()
-                                + "' was found when executing query" );
-            } else if ( results.size() == 1 ) {
-                result = results.iterator().next();
-            }
-        }
-        return ( Taxon ) result;
-
+        return ( Taxon ) queryObject.uniqueResult();
     }
 
     @Override
     public Taxon findByCommonName( final String commonName ) {
         if ( StringUtils.isBlank( commonName ) )
             throw new IllegalArgumentException( "commonName cannot be empty" );
-        return this.findOneByStringProperty( "commonName", commonName );
+        return findOneByProperty( "commonName", commonName );
     }
 
     @Override
     public Taxon findByScientificName( final String scientificName ) {
         if ( StringUtils.isBlank( scientificName ) )
             throw new IllegalArgumentException( "scientificName cannot be empty" );
-        return this.findOneByStringProperty( "scientificName", scientificName );
+        return findOneByProperty( "scientificName", scientificName );
     }
 
     @Override

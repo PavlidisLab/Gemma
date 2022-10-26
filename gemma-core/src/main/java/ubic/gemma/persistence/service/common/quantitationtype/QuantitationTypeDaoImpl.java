@@ -32,7 +32,6 @@ import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.genome.gene.Multifunctionality;
 import ubic.gemma.persistence.service.AbstractCriteriaFilteringVoEnabledDao;
 import ubic.gemma.persistence.util.BusinessKey;
 
@@ -141,7 +140,11 @@ public class QuantitationTypeDaoImpl extends AbstractCriteriaFilteringVoEnabledD
 
     @Override
     public List<QuantitationType> loadByDescription( String description ) {
-        return this.findByStringProperty( "description", description );
+        //noinspection unchecked
+        return this.getSessionFactory().getCurrentSession()
+                .createQuery( "select q from QuantitationType q where q.description like :description" )
+                .setParameter( "description", description )
+                .list();
     }
 
     @Override

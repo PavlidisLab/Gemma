@@ -1,21 +1,12 @@
 package ubic.gemma.web.services.rest.util;
 
-import gemma.gsec.AuthorityConstants;
-import org.glassfish.jersey.test.JerseyTest;
+import org.junit.After;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.security.authentication.ProviderManager;
-import org.springframework.security.authentication.TestingAuthenticationProvider;
-import org.springframework.security.authentication.TestingAuthenticationToken;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.web.context.WebApplicationContext;
-
-import java.util.Arrays;
+import ubic.gemma.core.util.test.TestAuthenticationUtils;
 
 /**
  * Base class for Jersey-based integration tests.
@@ -28,28 +19,23 @@ import java.util.Arrays;
 public abstract class BaseJerseyIntegrationTest extends BaseJerseyTest {
 
     @Autowired
-    @Qualifier("authenticationManager")
-    private ProviderManager providerManager;
+    private TestAuthenticationUtils testAuthenticationUtils;
 
-    @Before
-    @Override
-    public void setUp() throws Exception {
-        super.setUp();
-        this.runAsAdmin();
+    @BeforeClass
+    public static void setUpSecurityContextHolderStrategy() {
+        SecurityContextHolder.setStrategyName( SecurityContextHolder.MODE_INHERITABLETHREADLOCAL );
     }
 
-    private void runAsAdmin() {
-        providerManager.getProviders().add( new TestingAuthenticationProvider() );
+    @Before
+    public void setUpAuthentication() {
+        testAuthenticationUtils.runAsAdmin();
+    }
 
-        // Grant all roles to test user.
-        TestingAuthenticationToken token = new TestingAuthenticationToken( "administrator", "administrator",
-                Arrays.asList( new GrantedAuthority[] {
-                        new SimpleGrantedAuthority( AuthorityConstants.ADMIN_GROUP_AUTHORITY ) } ) );
-
-        token.setAuthenticated( true );
-
-        SecurityContext securityContext = SecurityContextHolder.createEmptyContext();
-        securityContext.setAuthentication( token );
-        SecurityContextHolder.setContext( securityContext );
+    /**
+     * Clear the {@link SecurityContextHolder} so that subsequent tests don't inherit authentication.
+     */
+    @After
+    public final void tearDownSecurityContext() {
+        SecurityContextHolder.clearContext();
     }
 }

@@ -33,7 +33,9 @@ import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.expression.experiment.BlacklistedExperiment;
 import ubic.gemma.persistence.service.common.description.ExternalDatabaseDao;
+import ubic.gemma.persistence.service.common.description.ExternalDatabaseService;
 import ubic.gemma.persistence.service.expression.experiment.BlacklistedEntityDao;
+import ubic.gemma.persistence.service.expression.experiment.BlacklistedEntityService;
 
 /**
  * 
@@ -43,10 +45,10 @@ import ubic.gemma.persistence.service.expression.experiment.BlacklistedEntityDao
 public class BlacklistTest extends BaseSpringContextTest {
 
     @Autowired
-    BlacklistedEntityDao blacklistedEntityDao;
+    BlacklistedEntityService blacklistedEntityService;
 
     @Autowired
-    ExternalDatabaseDao externalDatabaseDao;
+    ExternalDatabaseService externalDatabaseService;
 
     @Autowired
     GeoService geoService;
@@ -63,15 +65,15 @@ public class BlacklistTest extends BaseSpringContextTest {
 
         blee.setShortName( acc );
 
-        ExternalDatabase geo = externalDatabaseDao.findByName( "geo" );
+        ExternalDatabase geo = externalDatabaseService.findByName( "geo" );
 
         DatabaseEntry d = DatabaseEntry.Factory.newInstance( acc, null, null, geo );
         blee.setExternalAccession( d );
 
-        blacklistedEntityDao.create( blee );
+        blacklistedEntityService.create( blee );
 
-        assertTrue( blacklistedEntityDao.isBlacklisted( acc ) );
-        assertFalse( blacklistedEntityDao.isBlacklisted( "imok" ) );
+        assertTrue( blacklistedEntityService.isBlacklisted( acc ) );
+        assertFalse( blacklistedEntityService.isBlacklisted( "imok" ) );
         try {
             geoService.fetchAndLoad( acc, false, false, false );
             fail( "Should have gotten an exception when trying to load a blacklisted experiment" );

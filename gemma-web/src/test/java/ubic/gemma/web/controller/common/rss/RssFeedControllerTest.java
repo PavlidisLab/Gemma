@@ -52,7 +52,6 @@ public class RssFeedControllerTest extends BaseSpringWebTest {
 
     @Before
     public void setUp() throws Exception {
-        super.setUp();
         super.getTestPersistentExpressionExperiment();
         super.getTestPersistentExpressionExperiment();
 

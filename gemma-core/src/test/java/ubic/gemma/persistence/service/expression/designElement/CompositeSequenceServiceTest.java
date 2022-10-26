@@ -22,9 +22,7 @@ public class CompositeSequenceServiceTest extends BaseSpringContextTest {
     private ArrayDesign arrayDesign;
 
     @Before
-    @Override
     public void setUp() throws Exception {
-        super.setUp();
         arrayDesign = getTestPersistentArrayDesign( 10, true );
     }
 

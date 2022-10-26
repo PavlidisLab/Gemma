@@ -156,10 +156,6 @@ public abstract class DesignElementDataVectorDaoImpl<T extends DesignElementData
             session.buildLockRequest( LockOptions.NONE ).lock( seq );
             Hibernate.initialize( seq );
 
-            // is this really necessary?
-            ArrayDesign arrayDesign = de.getArrayDesign();
-            Hibernate.initialize( arrayDesign );
-
             if ( ++count % 10000 == 0 ) {
                 if ( timer.getTime() - lastTime > 1000 ) {
                     AbstractDao.log.info( "Thawed " + count + " vector-associated probes " + timer.getTime() + " ms" );

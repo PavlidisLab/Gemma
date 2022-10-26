@@ -66,6 +66,7 @@ public class ExpressionDataMatrixServiceImpl implements ExpressionDataMatrixServ
     private ArrayDesignService arrayDesignService;
 
     @Override
+    @Transactional(readOnly = true)
     public ExpressionDataDoubleMatrix getFilteredMatrix( ExpressionExperiment ee, FilterConfig filterConfig ) throws FilteringException {
         Collection<ProcessedExpressionDataVector> dataVectors = processedExpressionDataVectorService
                 .getProcessedDataVectors( ee );
@@ -73,6 +74,7 @@ public class ExpressionDataMatrixServiceImpl implements ExpressionDataMatrixServ
     }
 
     @Override
+    @Transactional(readOnly = true)
     public ExpressionDataDoubleMatrix getFilteredMatrix( ExpressionExperiment ee, FilterConfig filterConfig,
             Collection<ProcessedExpressionDataVector> dataVectors ) throws FilteringException {
         Collection<ArrayDesign> arrayDesignsUsed = expressionExperimentService.getArrayDesignsUsed( ee );
@@ -80,6 +82,7 @@ public class ExpressionDataMatrixServiceImpl implements ExpressionDataMatrixServ
     }
 
     @Override
+    @Transactional(readOnly = true)
     public ExpressionDataDoubleMatrix getFilteredMatrix( String arrayDesignName, FilterConfig filterConfig,
             Collection<ProcessedExpressionDataVector> dataVectors ) throws FilteringException {
         ArrayDesign ad = arrayDesignService.findByShortName( arrayDesignName );
@@ -92,11 +95,12 @@ public class ExpressionDataMatrixServiceImpl implements ExpressionDataMatrixServ
     }
 
     @Override
-    public ExpressionDataDoubleMatrix getProcessedExpressionDataMatrix( ExpressionExperiment ee ) {
+    @Transactional(readOnly = true)
+    public ExpressionDataDoubleMatrix getProcessedExpressionDataMatrix( ExpressionExperiment ee ) throws NoProcessedExpressionDataVectorsException {
         Collection<ProcessedExpressionDataVector> dataVectors = this.processedExpressionDataVectorService
                 .getProcessedDataVectors( ee );
         if ( dataVectors.isEmpty() ) {
-            throw new IllegalArgumentException(
+            throw new NoProcessedExpressionDataVectorsException(
                     "There are no ProcessedExpressionDataVectors for " + ee + ", they must be created first" );
         }
         this.processedExpressionDataVectorService.thaw( dataVectors );
@@ -116,6 +120,7 @@ public class ExpressionDataMatrixServiceImpl implements ExpressionDataMatrixServ
     }
 
     @Override
+    @Transactional(readOnly = true)
     public DoubleMatrix<Gene, ExpressionExperiment> getRankMatrix( Collection<Gene> genes,
             Collection<ExpressionExperiment> ees, ProcessedExpressionDataVectorDao.RankMethod method ) {
 
