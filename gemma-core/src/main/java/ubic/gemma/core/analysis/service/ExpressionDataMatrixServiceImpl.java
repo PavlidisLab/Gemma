@@ -96,11 +96,11 @@ public class ExpressionDataMatrixServiceImpl implements ExpressionDataMatrixServ
 
     @Override
     @Transactional(readOnly = true)
-    public ExpressionDataDoubleMatrix getProcessedExpressionDataMatrix( ExpressionExperiment ee ) {
+    public ExpressionDataDoubleMatrix getProcessedExpressionDataMatrix( ExpressionExperiment ee ) throws NoProcessedExpressionDataVectorsException {
         Collection<ProcessedExpressionDataVector> dataVectors = this.processedExpressionDataVectorService
                 .getProcessedDataVectors( ee );
         if ( dataVectors.isEmpty() ) {
-            throw new IllegalArgumentException(
+            throw new NoProcessedExpressionDataVectorsException(
                     "There are no ProcessedExpressionDataVectors for " + ee + ", they must be created first" );
         }
         this.processedExpressionDataVectorService.thaw( dataVectors );

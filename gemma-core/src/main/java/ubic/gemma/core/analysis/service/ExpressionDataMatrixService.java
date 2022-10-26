@@ -65,7 +65,7 @@ public interface ExpressionDataMatrixService {
      * @return matrix of preferred data, with all missing values masked. If the ProcessedExpressionDataVectors are
      * missing, this will throw an exception.
      */
-    ExpressionDataDoubleMatrix getProcessedExpressionDataMatrix( ExpressionExperiment ee );
+    ExpressionDataDoubleMatrix getProcessedExpressionDataMatrix( ExpressionExperiment ee ) throws NoProcessedExpressionDataVectorsException;
 
     /**
      * Obtain a processed expression data matrix for a given quantitation type.
