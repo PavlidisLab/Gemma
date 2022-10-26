@@ -156,21 +156,7 @@ public class BibliographicReferenceDaoImpl
             throw new NullPointerException( "PubAccession cannot be null" );
         }
 
-        List<?> results = queryObject.list();
-        Object result = null;
-        if ( results != null ) {
-            if ( results.size() > 1 ) {
-                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                        "More than one instance of '" + BibliographicReference.class.getName() + "' with accession "
-                                + bibliographicReference.getPubAccession().getAccession()
-                                + " was found when executing query" );
-
-            } else if ( results.size() == 1 ) {
-                result = results.iterator().next();
-            }
-        }
-        return ( BibliographicReference ) result;
-
+        return ( BibliographicReference ) queryObject.uniqueResult();
     }
 
     @Override

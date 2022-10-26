@@ -74,19 +74,7 @@ public class BioAssayDaoImpl extends AbstractVoEnabledDao<BioAssay, BioAssayValu
         Criteria queryObject = BusinessKey
                 .createQueryObject( this.getSessionFactory().getCurrentSession(), bioAssay );
 
-        List<?> results = queryObject.list();
-        Object result = null;
-        if ( results != null ) {
-            if ( results.size() > 1 ) {
-                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                        "More than one instance of '" + BioAssay.class.getName()
-                                + "' was found when executing query" );
-
-            } else if ( results.size() == 1 ) {
-                result = results.iterator().next();
-            }
-        }
-        return ( BioAssay ) result;
+        return ( BioAssay ) queryObject.uniqueResult();
     }
 
     @Override

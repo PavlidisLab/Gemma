@@ -116,20 +116,7 @@ public class FactorValueDaoImpl extends AbstractQueryFilteringVoEnabledDao<Facto
 
         BusinessKey.createQueryObject( queryObject, factorValue );
 
-        java.util.List<?> results = queryObject.list();
-        Object result = null;
-        if ( results != null ) {
-            if ( results.size() > 1 ) {
-                this.debug( results );
-                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                        results.size() + " instances of '" + FactorValue.class.getName()
-                                + "' was found when executing query for " + factorValue );
-
-            } else if ( results.size() == 1 ) {
-                result = results.iterator().next();
-            }
-        }
-        return ( FactorValue ) result;
+        return ( FactorValue ) queryObject.uniqueResult();
     }
 
     @Override

@@ -49,17 +49,6 @@ public class UnitDaoImpl extends AbstractDao<Unit> implements UnitDao {
     public Unit find( Unit unit ) {
         BusinessKey.checkValidKey( unit );
         Criteria queryObject = BusinessKey.createQueryObject( this.getSessionFactory().getCurrentSession(), unit );
-        List<?> results = queryObject.list();
-        Object result = null;
-        if ( results != null ) {
-            if ( results.size() > 1 ) {
-                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                        results.size() + " " + Unit.class.getName() + "s were found when executing query" );
-
-            } else if ( results.size() == 1 ) {
-                result = results.iterator().next();
-            }
-        }
-        return ( Unit ) result;
+        return ( Unit ) queryObject.uniqueResult();
     }
 }

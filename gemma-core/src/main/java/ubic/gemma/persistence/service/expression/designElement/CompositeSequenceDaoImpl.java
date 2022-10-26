@@ -214,20 +214,10 @@ public class CompositeSequenceDaoImpl extends AbstractQueryFilteringVoEnabledDao
 
     @Override
     public CompositeSequence findByName( ArrayDesign arrayDesign, final String name ) {
-        List<?> results = this.getSessionFactory().getCurrentSession().createQuery(
+        return ( CompositeSequence ) this.getSessionFactory().getCurrentSession().createQuery(
                         "from CompositeSequence as compositeSequence where compositeSequence.arrayDesign = :arrayDesign and compositeSequence.name = :name" )
-                .setParameter( "arrayDesign", arrayDesign ).setParameter( "name", name ).list();
-
-        Object result = null;
-
-        if ( results.size() > 1 ) {
-            throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                    "More than one instance of 'CompositeSequence" + "' was found for name '" + name
-                            + "' and array design '" + arrayDesign.getId() + "'" );
-        } else if ( results.size() == 1 ) {
-            result = results.iterator().next();
-        }
-        return ( CompositeSequence ) result;
+                .setParameter( "arrayDesign", arrayDesign ).setParameter( "name", name )
+                .uniqueResult();
     }
 
     @Override
@@ -598,20 +588,7 @@ public class CompositeSequenceDaoImpl extends AbstractQueryFilteringVoEnabledDao
         queryObject.createCriteria( "arrayDesign" )
                 .add( Restrictions.eq( "name", compositeSequence.getArrayDesign().getName() ) );
 
-        java.util.List<?> results = queryObject.list();
-        Object result = null;
-        if ( results != null ) {
-            if ( results.size() > 1 ) {
-                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                        "More than one instance of '" + CompositeSequence.class.getName()
-                                + "' was found when executing query" );
-
-            } else if ( results.size() == 1 ) {
-                result = results.iterator().next();
-            }
-        }
-        return ( CompositeSequence ) result;
-
+        return ( CompositeSequence ) queryObject.uniqueResult();
     }
 
     @Override

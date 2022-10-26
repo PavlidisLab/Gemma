@@ -42,25 +42,9 @@ public class ExperimentalDesignDaoImpl extends AbstractDao<ExperimentalDesign> i
 
     @Override
     public ExperimentalDesign find( ExperimentalDesign experimentalDesign ) {
-
-        Criteria queryObject = this.getSessionFactory().getCurrentSession().createCriteria( ExperimentalDesign.class );
-
-        queryObject.add( Restrictions.eq( "name", experimentalDesign.getName() ) );
-
-        List<?> results = queryObject.list();
-        Object result = null;
-        if ( results != null ) {
-            if ( results.size() > 1 ) {
-                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                        "More than one instance of '" + ExperimentalDesign.class.getName()
-                                + "' was found when executing query" );
-
-            } else if ( results.size() == 1 ) {
-                result = results.iterator().next();
-            }
-        }
-        return ( ExperimentalDesign ) result;
-
+        return ( ExperimentalDesign ) this.getSessionFactory().getCurrentSession().createCriteria( ExperimentalDesign.class )
+                .add( Restrictions.eq( "name", experimentalDesign.getName() ) )
+                .uniqueResult();
     }
 
     @Override
