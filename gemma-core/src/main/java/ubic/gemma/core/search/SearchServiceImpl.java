@@ -29,6 +29,7 @@ import net.sf.ehcache.Element;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.text.StringEscapeUtils;
+import org.hibernate.Hibernate;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -659,6 +660,8 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
             if ( cs == null || cs.getArrayDesign() == null ) {
                 continue;
             }
+            // FIXME: this should not be necessary, the AD is eagerly fetched in the model definition (see https://github.com/PavlidisLab/Gemma/issues/483)
+            Hibernate.initialize( cs.getArrayDesign() );
             SearchResult<ArrayDesign> sr = new SearchResult<>( cs.getArrayDesign(), "ArrayDesign associated to probes obtained by a Compass search." );
             // indirect hit penalty
             sr.setScore( INDIRECT_HIT_PENALTY * r.getScore() );
