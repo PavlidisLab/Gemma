@@ -416,9 +416,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         }
 
         // make sure it does an inexact search
-        if ( !query.endsWith( "*" ) ) {
-            query = query + "*";
-        }
+        query = prepareOntologyQuery( query );
 
         Taxon taxon = null;
         if ( taxonId != null ) {
