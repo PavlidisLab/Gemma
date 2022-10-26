@@ -22,8 +22,7 @@ package ubic.gemma.model.genome.gene;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import gemma.gsec.model.Securable;
 import gemma.gsec.model.SecureValueObject;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
+import lombok.*;
 import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.annotations.GemmaWebOnly;
 import ubic.gemma.model.genome.TaxonValueObject;
@@ -38,8 +37,8 @@ import java.util.HashSet;
  *
  * @author kelsey
  */
-@Data
-@EqualsAndHashCode(callSuper = true)
+@Getter
+@Setter
 public class GeneSetValueObject extends IdentifiableValueObject<GeneSet> implements SecureValueObject {
 
     private static final long serialVersionUID = 6212231006289412683L;

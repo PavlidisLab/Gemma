@@ -19,8 +19,7 @@
 
 package ubic.gemma.model.expression.experiment;
 
-import lombok.Data;
-import lombok.EqualsAndHashCode;
+import lombok.*;
 
 /**
  * Represents administrative geeq information. On top of the classic VO, this one also exposes
@@ -29,8 +28,9 @@ import lombok.EqualsAndHashCode;
  * @author paul, tesarst
  */
 @SuppressWarnings("unused") // Used in frontend
-@Data
-@EqualsAndHashCode(callSuper = true)
+@Getter
+@Setter
+@ToString
 public class GeeqAdminValueObject extends GeeqValueObject {
 
     private double detectedQualityScore;
