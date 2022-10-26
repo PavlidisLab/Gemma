@@ -26,6 +26,8 @@ import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObj
 import ubic.gemma.model.genome.gene.phenotype.valueObject.ExternalDatabaseStatisticsValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.GeneEvidenceValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.PhenotypeValueObject;
+import ubic.gemma.persistence.service.AbstractService;
+import ubic.gemma.persistence.service.BaseDao;
 import ubic.gemma.persistence.service.association.phenotype.*;
 
 import java.util.Collection;
@@ -36,7 +38,7 @@ import java.util.Set;
  * Service responsible of low level operations, used by PhenotypeAssociationManagerServiceImpl
  */
 @Service
-public class PhenotypeAssociationServiceImpl implements PhenotypeAssociationService {
+public class PhenotypeAssociationServiceImpl extends AbstractService<PhenotypeAssociation> implements PhenotypeAssociationService {
 
     @Autowired
     private ExperimentalEvidenceDao experimentalEvidenceDao;
@@ -53,6 +55,11 @@ public class PhenotypeAssociationServiceImpl implements PhenotypeAssociationServ
     @Autowired
     private PhenotypeAssociationDao phenotypeAssociationDao;
 
+    @Autowired
+    public PhenotypeAssociationServiceImpl( PhenotypeAssociationDao phenotypeAssociationDao ) {
+        super( phenotypeAssociationDao );
+    }
+
     /**
      * @param pa Using an phenotypeAssociation id removes the evidence
      */
@@ -60,13 +67,7 @@ public class PhenotypeAssociationServiceImpl implements PhenotypeAssociationServ
     @Transactional
     public void remove( PhenotypeAssociation pa ) {
         pa.getGene().getPhenotypeAssociations().remove( pa );
-        this.phenotypeAssociationDao.remove( pa );
-    }
-
-    @Override
-    @Transactional
-    public PhenotypeAssociation create( PhenotypeAssociation p ) {
-        return this.phenotypeAssociationDao.create( p );
+        super.remove( pa );
     }
 
     /**
@@ -98,16 +99,6 @@ public class PhenotypeAssociationServiceImpl implements PhenotypeAssociationServ
     }
 
     /**
-     * @return find all phenotypes
-     */
-    @SuppressWarnings("unchecked")
-    @Override
-    @Transactional(readOnly = true)
-    public Collection<PhenotypeAssociation> loadAll() {
-        return this.phenotypeAssociationDao.loadAll();
-    }
-
-    /**
      * @param pubmed pubmed
      * @return find GenericExperiments by PubMed ID
      */
@@ -117,20 +108,6 @@ public class PhenotypeAssociationServiceImpl implements PhenotypeAssociationServ
         return this.genericExperimentDao.findByPubmedID( pubmed );
     }
 
-    /**
-     * @param id id
-     * @return load an evidence given an ID
-     */
-    @Override
-    @Transactional(readOnly = true)
-    public PhenotypeAssociation load( Long id ) {
-        return this.phenotypeAssociationDao.load( id );
-    }
-
-    /**
-     * @param id id
-     * @return load an ExperimentalEvidence given an ID
-     */
     @Override
     @Transactional(readOnly = true)
     public ExperimentalEvidence loadExperimentalEvidence( Long id ) {
@@ -155,12 +132,6 @@ public class PhenotypeAssociationServiceImpl implements PhenotypeAssociationServ
     @Transactional(readOnly = true)
     public LiteratureEvidence loadLiteratureEvidence( Long id ) {
         return this.literatureEvidenceDao.load( id );
-    }
-
-    @Override
-    @Transactional
-    public void update( PhenotypeAssociation evidence ) {
-        this.phenotypeAssociationDao.update( evidence );
     }
 
     /**
@@ -419,5 +390,4 @@ public class PhenotypeAssociationServiceImpl implements PhenotypeAssociationServ
     public Collection<String> loadAllDescription() {
         return this.phenotypeAssociationDao.loadAllDescription();
     }
-
 }
