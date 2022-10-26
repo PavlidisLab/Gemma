@@ -681,11 +681,6 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         PhenotypeAssociation evidence = this.phenoAssocService.load( id );
 
         if ( evidence != null ) {
-
-            if ( evidence.getEvidenceSource() != null ) {
-                this.databaseEntryDao.remove( evidence.getEvidenceSource().getId() );
-            }
-
             this.phenoAssocService.remove( evidence );
 
         } else {
