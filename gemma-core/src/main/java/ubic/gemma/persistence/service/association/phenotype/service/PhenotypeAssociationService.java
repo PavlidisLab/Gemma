@@ -24,6 +24,7 @@ import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObj
 import ubic.gemma.model.genome.gene.phenotype.valueObject.ExternalDatabaseStatisticsValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.GeneEvidenceValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.PhenotypeValueObject;
+import ubic.gemma.persistence.service.BaseService;
 
 import java.util.Collection;
 import java.util.Map;
@@ -33,7 +34,7 @@ import java.util.Set;
  * @author nicolas
  */
 @SuppressWarnings({ "UnusedReturnValue", "unused" }) // Possible external use
-public interface PhenotypeAssociationService {
+public interface PhenotypeAssociationService extends BaseService<PhenotypeAssociation> {
 
     /**
      * @param p Using a phenotypeAssociation id removes the evidence

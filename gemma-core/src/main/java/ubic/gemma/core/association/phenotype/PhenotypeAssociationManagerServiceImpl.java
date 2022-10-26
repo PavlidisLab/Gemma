@@ -416,13 +416,13 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         }
 
         // make sure it does an inexact search
-        String newQuery = query + "%";
+        query = prepareOntologyQuery( query );
 
         Taxon taxon = null;
         if ( taxonId != null ) {
             taxon = this.taxonService.load( taxonId );
         }
-        SearchSettings settings = SearchSettings.geneSearch( newQuery, taxon );
+        SearchSettings settings = SearchSettings.geneSearch( query, taxon );
         List<SearchResult<Gene>> geneSearchResults = this.searchService.search( settings, Gene.class );
 
         Collection<Gene> genes = new HashSet<>();
@@ -681,11 +681,6 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         PhenotypeAssociation evidence = this.phenoAssocService.load( id );
 
         if ( evidence != null ) {
-
-            if ( evidence.getEvidenceSource() != null ) {
-                this.databaseEntryDao.remove( evidence.getEvidenceSource().getId() );
-            }
-
             this.phenoAssocService.remove( evidence );
 
         } else {
@@ -2059,10 +2054,10 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
      * @return       the string with an added wildcard to it.
      */
     private String prepareOntologyQuery( String query ) {
-
-        String newSearchQuery = query;
-
-        if ( query != null ) {
+        if ( query == null )
+            return query;
+        String newSearchQuery = query.trim();
+        if ( !query.endsWith( "\"" ) && !query.endsWith( "*" ) ) {
             newSearchQuery = newSearchQuery + "*";
         }
         return newSearchQuery;

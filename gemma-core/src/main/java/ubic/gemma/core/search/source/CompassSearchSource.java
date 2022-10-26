@@ -1,8 +1,6 @@
 package ubic.gemma.core.search.source;
 
 import lombok.extern.apachecommons.CommonsLog;
-import org.apache.commons.lang3.NotImplementedException;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.compass.core.*;
 import org.compass.core.engine.SearchEngineQueryParseException;
@@ -30,7 +28,6 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.gene.GeneSet;
-import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 import ubic.gemma.persistence.service.genome.biosequence.BioSequenceService;
 
 import javax.annotation.Nullable;
@@ -68,12 +65,6 @@ public class CompassSearchSource implements SearchSource {
     private static final int MAX_LUCENE_HITS = 300;
 
     private static final int MINIMUM_STRING_LENGTH_FOR_FREE_TEXT_SEARCH = 2;
-
-    /**
-     * Text displayed when we fail to retrieve the information on why a hit was retrieved. This was "[Matching text not
-     * available" but we decided that was confusing.
-     */
-    private static final String HIGHLIGHT_TEXT_NOT_AVAILABLE_MESSAGE = "";
 
     @Autowired
     @Qualifier("compassArray")
@@ -155,9 +146,12 @@ public class CompassSearchSource implements SearchSource {
 
         Map<Gene, Collection<BioSequence>> seqsFromDb = bioSequenceService.findByGenes( genes.keySet() );
         for ( Gene gene : seqsFromDb.keySet() ) {
-            List<BioSequence> bs = new ArrayList<>( seqsFromDb.get( gene ) );
-            // bioSequenceService.thawRawAndProcessed( bs );
-            results.addAll( this.indirectDbHitsToSearchResults( bs, genes.get( gene ) ) );
+            SearchResult<?> compassHitDerivedFrom = genes.get( gene );
+            results.addAll( seqsFromDb.get( gene ).stream()
+                    .filter( Objects::nonNull )
+                    .filter( entity -> entity.getId() != null )
+                    .map( entity -> SearchResult.from( entity, compassHitDerivedFrom.getScore() * CompassSearchSource.INDIRECT_DB_HIT_PENALTY, compassHitDerivedFrom.getHighlightedText(), compassHitDerivedFrom.getSource() ) )
+                    .collect( Collectors.toList() ) );
         }
 
         return results;
@@ -182,196 +176,7 @@ public class CompassSearchSource implements SearchSource {
     @Override
     public Collection<SearchResult<ExpressionExperiment>> searchExpressionExperiment( SearchSettings settings ) throws SearchException {
         Collection<SearchResult<ExpressionExperiment>> unfilteredResults = this.compassSearch( compassExpression, settings, ExpressionExperiment.class );
-        return filterExperimentHitsByTaxon( unfilteredResults, settings.getTaxon() );
-    }
-
-    @Override
-    public Collection<SearchResult<Gene>> searchGene( final SearchSettings settings ) throws SearchException {
-        return this.compassSearch( compassGene, settings, Gene.class );
-    }
-
-    @Override
-    public Collection<SearchResult<GeneSet>> searchGeneSet( SearchSettings settings ) throws SearchException {
-        return this.compassSearch( compassGeneSet, settings, GeneSet.class );
-    }
-
-    @Override
-    public Collection<SearchResult<CharacteristicValueObject>> searchPhenotype( SearchSettings settings ) {
-        throw new NotImplementedException( "Searching phenotypes is not supported for the Compass source." );
-    }
-
-    /**
-     * Generic method for searching Lucene indices for entities (excluding ontology terms, which use the OntologySearch)
-     */
-    private <T extends Identifiable> Set<SearchResult<T>> compassSearch( Compass bean, final SearchSettings settings, Class<T> clazz ) throws SearchException {
-
-        if ( !settings.getUseIndices() )
-            return new HashSet<>();
-
-        Object source = bean.getSettings().getSetting( "compass.name" );
-        CompassTemplate template = new CompassTemplate( bean );
-        Set<SearchResult<T>> searchResults;
-        try {
-            searchResults = template.execute( session -> CompassSearchSource.this.performSearch( settings, session, clazz, source ) );
-        } catch ( SearchEngineQueryParseException e ) {
-            throw new CompassSearchException( "Compass failed to parse the search query.", e );
-        } catch ( CompassException e ) {
-            // FIXME: there's nothing we can do here and bubbling the error would abort the search altogether
-            log.warn( String.format( "Compass search via %s failed due to a cause unrelated to the query syntax. No results will be returned.",
-                    bean.getSettings().getSetting( "compass.name" ) ) );
-            searchResults = new HashSet<>();
-        }
-
-        if ( CompassSearchSource.log.isDebugEnabled() ) {
-            CompassSearchSource.log
-                    .debug( "Compass search via " + source + " : " + settings
-                            + " -> " + searchResults.size() + " hits" );
-        }
-
-        return searchResults;
-    }
-
-    /**
-     * Runs inside Compass transaction
-     */
-    private <T extends Identifiable> Set<SearchResult<T>> performSearch( SearchSettings settings, CompassSession session, Class<T> clazz, Object source ) {
-        StopWatch watch = new StopWatch();
-        watch.start();
-        String enhancedQuery = settings.getQuery().trim();
-
-        //noinspection ConstantConditions
-        if ( StringUtils.isBlank( enhancedQuery )
-                || enhancedQuery.length() < CompassSearchSource.MINIMUM_STRING_LENGTH_FOR_FREE_TEXT_SEARCH
-                // FIXME: this is ignored because of the minimum string length
-                || enhancedQuery.equals( "*" ) )
-            return new HashSet<>();
-
-        CompassQuery compassQuery = session.queryBuilder().queryString( enhancedQuery ).toQuery();
-        CompassSearchSource.log.debug( "Parsed query: " + compassQuery );
-
-        CompassHits hits = compassQuery.hits();
-
-        // highlighting, if desired & supported by Compass (always!)
-        if ( settings.isDoHighlighting() ) {
-            if ( session instanceof InternalCompassSession ) {
-                // always ...
-                CompassMapping mapping = ( ( InternalCompassSession ) session ).getMapping();
-                ResourceMapping[] rootMappings = mapping.getRootMappings();
-                // should only be one rootMapping.
-                this.process( rootMappings, hits );
-            }
-        }
-
-        watch.stop();
-        if ( watch.getTime() > 100 ) {
-            CompassSearchSource.log
-                    .info( "Getting " + hits.getLength() + " lucene hits for " + enhancedQuery + " took " + watch
-                            .getTime() + " ms" );
-        }
-        if ( watch.getTime() > 5000 ) {
-            CompassSearchSource.log
-                    .info( "***** Slow Lucene Index Search!  " + hits.getLength() + " lucene hits for " + enhancedQuery
-                            + " took " + watch.getTime() + " ms" );
-        }
-
-        return this.getSearchResults( hits, clazz, source );
-    }
-
-    /**
-     * Recursively cache the highlighted text. This must be done during the search transaction.
-     *
-     * @param givenMappings on first call, the root mapping(s)
-     */
-    private void process( ResourceMapping[] givenMappings, CompassHits hits ) {
-        for ( ResourceMapping resourceMapping : givenMappings ) {
-            Iterator<Mapping> mappings = resourceMapping.mappingsIt(); // one for each property.
-            while ( mappings.hasNext() ) {
-                Mapping m = mappings.next();
-
-                if ( m instanceof ComponentMapping ) {
-                    ClassMapping[] refClassMappings = ( ( ComponentMapping ) m ).getRefClassMappings();
-                    this.process( refClassMappings, hits );
-                } else { // should be a ClassPropertyMapping
-                    String name = m.getName();
-                    for ( int i = 0; i < hits.getLength(); i++ ) {
-                        try {
-                            String frag = hits.highlighter( i ).fragment( name );
-                            if ( log.isDebugEnabled() )
-                                log.debug( "Highlighted fragment: " + frag + " for " + hits.hit( i ) );
-                        } catch ( Exception e ) {
-                            break; // skip this property entirely for all hits ...
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    /**
-     *
-     * @param  hits CompassHits object
-     * @return collection of SearchResult. These *do not* contain the actual entities, just their IDs and class.
-     */
-    private <T extends Identifiable> Set<SearchResult<T>> getSearchResults( CompassHits hits, Class<T> hitsClass, Object source ) {
-        StopWatch timer = new StopWatch();
-        timer.start();
-        Set<SearchResult<T>> results = new HashSet<>();
-        /*
-         * Note that hits come in decreasing score order.
-         */
-        int maxHits = Math.min( CompassSearchSource.MAX_LUCENE_HITS, hits.getLength() );
-        for ( int i = 0; i < maxHits; i++ ) {
-            Object resultObject = hits.data( i );
-
-            // check if result object is of expected type
-            if ( !hitsClass.isAssignableFrom( resultObject.getClass() ) ) {
-                log.warn( "Incompatible result from compass: " + resultObject );
-                continue;
-            }
-
-            // FIXME: score is generally (always?) NaN
-            double score = hits.score( i );
-            if ( Double.isNaN( score ) ) {
-                score = 1.0;
-            }
-
-            //noinspection unchecked
-            SearchResult<T> sr = new SearchResult<>( ( T ) resultObject, source );
-            sr.setScore( score * CompassSearchSource.COMPASS_HIT_SCORE_PENALTY_FACTOR );
-            sr.setHighlightedText( this.getHighlightedText( hits, i ) );
-
-            /*
-             * Always give compass hits a lower score, so they can be differentiated from exact database hits.
-             */
-            results.add( sr );
-        }
-
-        if ( timer.getTime() > 100 ) {
-            String message = results.size() + " hits retrieved (out of " + hits.getLength() + " raw hits tested) in "
-                    + timer.getTime() + "ms for "
-                    + hits.getQuery();
-            if ( timer.getTime() > 5000 ) {
-                CompassSearchSource.log.warn( message );
-            } else {
-                CompassSearchSource.log.info( message );
-            }
-        }
-
-        return results;
-    }
-
-    private String getHighlightedText( CompassHits hits, int i ) {
-        CompassHighlightedText highlightedText = hits.highlightedText( i );
-        if ( highlightedText != null && highlightedText.getHighlightedText() != null ) {
-            return highlightedText.getHighlightedText();
-        } else {
-            return HIGHLIGHT_TEXT_NOT_AVAILABLE_MESSAGE;
-        }
-    }
-
-    private Collection<SearchResult<ExpressionExperiment>> filterExperimentHitsByTaxon
-            ( Collection<SearchResult<ExpressionExperiment>> unfilteredResults,
-                    @Nullable Taxon t ) {
+        Taxon t = settings.getTaxon();
         if ( t == null || unfilteredResults.isEmpty() )
             return unfilteredResults;
 
@@ -389,28 +194,145 @@ public class CompassSearchSource implements SearchSource {
         return filteredResults;
     }
 
-    private <T extends Identifiable> List<SearchResult<T>> indirectDbHitsToSearchResults( Collection<T> entities, SearchResult<?> compassHitDerivedFrom ) {
-        StopWatch timer = StopWatch.createStarted();
-        List<SearchResult<T>> results = new ArrayList<>();
-        for ( T e : entities ) {
-            if ( e == null ) {
-                if ( CompassSearchSource.log.isDebugEnabled() )
-                    CompassSearchSource.log.debug( "Null search result object" );
+    @Override
+    public Collection<SearchResult<Gene>> searchGene( final SearchSettings settings ) throws SearchException {
+        return this.compassSearch( compassGene, settings, Gene.class );
+    }
+
+    @Override
+    public Collection<SearchResult<GeneSet>> searchGeneSet( SearchSettings settings ) throws SearchException {
+        return this.compassSearch( compassGeneSet, settings, GeneSet.class );
+    }
+
+    /**
+     * Generic method for searching Lucene indices for entities (excluding ontology terms, which use the OntologySearch)
+     */
+    private <T extends Identifiable> Set<SearchResult<T>> compassSearch( Compass compass, final SearchSettings settings, Class<T> clazz ) throws SearchException {
+        if ( !settings.getUseIndices() )
+            return Collections.emptySet();
+        try {
+            StopWatch timer = StopWatch.createStarted();
+            Set<SearchResult<T>> searchResults = new CompassTemplate( compass )
+                    .execute( session -> performSearch( settings, session, clazz ) );
+            log.debug( String.format( "Compass search via %s with %s yielded %d hits in %d ms.",
+                    compass.getSettings().getSetting( "compass.name" ),
+                    settings,
+                    searchResults.size(),
+                    timer.getTime() ) );
+            return searchResults;
+        } catch ( SearchEngineQueryParseException e ) {
+            throw new CompassSearchException( "Compass failed to parse the search query.", e );
+        } catch ( CompassException e ) {
+            // FIXME: there's nothing we can do here and bubbling the error would abort the search altogether
+            log.warn( String.format( "Compass search via %s failed due to a cause unrelated to the query syntax. No results will be returned.",
+                    compass.getSettings().getSetting( "compass.name" ) ), e );
+            return Collections.emptySet();
+        }
+    }
+
+    /**
+     * Runs inside Compass transaction
+     */
+    private <T extends Identifiable> Set<SearchResult<T>> performSearch( SearchSettings settings, CompassSession session, Class<T> clazz ) {
+        StopWatch watch = new StopWatch();
+        watch.start();
+
+        // some strings of size 1 cause lucene to barf, and they were slipping through in multi-term queries, get rid of them
+        String enhancedQuery = Arrays.stream( settings.getQuery().split( "\\s+" ) )
+                .filter( t -> t.length() > 1 )
+                .collect( Collectors.joining( " " ) );
+
+        // exclude non-word characters when measuring query length
+        if ( enhancedQuery.replaceAll( "\\W", "" ).length() < CompassSearchSource.MINIMUM_STRING_LENGTH_FOR_FREE_TEXT_SEARCH ) {
+            log.debug( String.format( "Query %s does not contain enough word-like character for free-text search.", settings ) );
+            return Collections.emptySet();
+        }
+
+        CompassQuery compassQuery = session.queryBuilder().queryString( enhancedQuery ).toQuery();
+        CompassSearchSource.log.debug( "Parsed query: " + compassQuery );
+
+        CompassHits hits = compassQuery.hits();
+
+        // Note that hits come in decreasing score order, so it makes sense to limit ourselves to a few first results
+        int maxHits = Math.min( CompassSearchSource.MAX_LUCENE_HITS, hits.getLength() );
+
+        // highlighting, if desired & supported by Compass (always!)
+        if ( settings.isDoHighlighting() ) {
+            if ( session instanceof InternalCompassSession ) {
+                // always ...
+                CompassMapping mapping = ( ( InternalCompassSession ) session ).getMapping();
+                ResourceMapping[] rootMappings = mapping.getRootMappings();
+                // should only be one rootMapping.
+                processHits( hits, rootMappings, maxHits );
+            }
+        }
+
+        String source = String.format( "%s with '%s'", session.getSettings().getSetting( "compass.name" ), compassQuery );
+
+        Set<SearchResult<T>> results = new HashSet<>( maxHits );
+        for ( int i = 0; i < maxHits; i++ ) {
+            Object resultObject = hits.data( i );
+
+            // check if result object is of expected type
+            if ( !clazz.isAssignableFrom( resultObject.getClass() ) ) {
+                log.warn( String.format( "Incompatible Compass result with type %s (expected %s) from %s with %s.",
+                        resultObject.getClass().getName(), clazz.getName(), source, compassQuery ) );
                 continue;
             }
-            if ( e.getId() == null ) {
-                log.warn( "Search result object with null ID." );
-                continue;
+
+            double score = Double.isNaN( hits.score( i ) ) ? 1.0 : hits.score( i );
+            String ht = null;
+            if ( settings.isDoHighlighting() && hits.highlightedText( i ) != null ) {
+                ht = hits.highlightedText( i ).getHighlightedText();
             }
-            SearchResult<T> esr = new SearchResult<>( e, compassHitDerivedFrom.getSource() );
-            esr.setScore( compassHitDerivedFrom.getScore() * CompassSearchSource.INDIRECT_DB_HIT_PENALTY );
-            esr.setHighlightedText( compassHitDerivedFrom.getHighlightedText() );
-            results.add( esr );
+
+            //noinspection unchecked
+            results.add( SearchResult.from( ( T ) resultObject, score * CompassSearchSource.COMPASS_HIT_SCORE_PENALTY_FACTOR, ht, source ) );
         }
-        if ( timer.getTime() > 1000 ) {
-            CompassSearchSource.log.info( "Unpack " + results.size() + " search resultsS: " + timer.getTime() + "ms" );
+
+        watch.stop();
+
+        String message = String.format( "Getting %d Lucene hits for %s (parsed as %s) from %s took %d ms",
+                hits.getLength(), enhancedQuery, compassQuery, session.getSettings().getSetting( "compass.name" ), watch.getTime() );
+        if ( watch.getTime() > 5000 ) {
+            CompassSearchSource.log.warn( "***** Slow Lucene Index Search!  " + message );
+        } else if ( watch.getTime() > 1 ) {
+            CompassSearchSource.log.info( message );
+        } else {
+            CompassSearchSource.log.debug( message );
         }
+
         return results;
     }
 
+    /**
+     * Recursively cache the highlighted text. This must be done during the search transaction.
+     *
+     * @param hits          hits to cache
+     * @param givenMappings on first call, the root mapping(s)
+     * @param maxHits       maximum hits to cache
+     */
+    private static void processHits( CompassHits hits, ResourceMapping[] givenMappings, int maxHits ) {
+        for ( ResourceMapping resourceMapping : givenMappings ) {
+            Iterator<Mapping> mappings = resourceMapping.mappingsIt(); // one for each property.
+            while ( mappings.hasNext() ) {
+                Mapping m = mappings.next();
+                if ( m instanceof ComponentMapping ) {
+                    ClassMapping[] refClassMappings = ( ( ComponentMapping ) m ).getRefClassMappings();
+                    processHits( hits, refClassMappings, maxHits );
+                } else { // should be a ClassPropertyMapping
+                    String name = m.getName();
+                    for ( int i = 0; i < maxHits; i++ ) {
+                        try {
+                            String frag = hits.highlighter( i ).fragment( name );
+                            if ( log.isDebugEnabled() )
+                                log.debug( "Highlighted fragment: " + frag + " for " + hits.hit( i ) );
+                        } catch ( Exception e ) {
+                            break; // skip this property entirely for all hits ...
+                        }
+                    }
+                }
+            }
+        }
+    }
 }

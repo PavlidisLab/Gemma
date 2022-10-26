@@ -44,7 +44,6 @@ public class AnnotationAssociationDaoImpl extends AbstractDao<AnnotationAssociat
     @Autowired
     public AnnotationAssociationDaoImpl( SessionFactory sessionFactory ) {
         super( AnnotationAssociation.class, sessionFactory );
-        setLoadBatchSize( 2000 );
     }
 
     @Override

@@ -35,7 +35,7 @@ public class AclQueryUtilsTest extends BaseSpringContextTest {
 
     @Test
     public void testFormAclJoinClauseAsNonAdminIncludesAoiEntriesInnerJointure() {
-        super.runAsAnonymous( this.applicationContext );
+        super.runAsAnonymous();
         String clause = formAclJoinClause( "ee" );
         assertThat( clause )
                 .contains( "ee.id" )

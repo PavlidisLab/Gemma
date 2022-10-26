@@ -47,7 +47,6 @@ public class AuditEventDaoImplTest extends BaseSpringContextTest {
 
     @Before
     public void setUp() throws Exception {
-        super.setUp();
         for ( int i = 0; i < 5; i++ ) {
             ArrayDesign ad = ArrayDesign.Factory.newInstance();
             ad.setName( "ffoo " + i );

@@ -1,13 +1,13 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2011 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
@@ -22,6 +22,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import ubic.basecode.io.ByteArrayConverter;
 import ubic.basecode.math.linearmodels.MeanVarianceEstimator;
+import ubic.gemma.core.analysis.service.NoProcessedExpressionDataVectorsException;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrixUtil;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
@@ -50,7 +51,7 @@ public class MeanVarianceServiceImpl implements MeanVarianceService {
     /**
      * @param  matrix on which mean variance relation is computed with
      * @param  mvr    object, if null, a new object is created
-     * @return        MeanVarianceRelation object
+     * @return MeanVarianceRelation object
      */
     private MeanVarianceRelation calculateMeanVariance( ExpressionDataDoubleMatrix matrix, MeanVarianceRelation mvr ) {
 
@@ -91,7 +92,12 @@ public class MeanVarianceServiceImpl implements MeanVarianceService {
         }
 
         ee = expressionExperimentService.thawLiter( ee );
-        ExpressionDataDoubleMatrix intensities = meanVarianceServiceHelper.getIntensities( ee );
+        ExpressionDataDoubleMatrix intensities;
+        try {
+            intensities = meanVarianceServiceHelper.getIntensities( ee );
+        } catch ( NoProcessedExpressionDataVectorsException e ) {
+            throw new RuntimeException( e );
+        }
         if ( intensities == null ) {
             throw new IllegalStateException( "Could not locate intensity matrix for " + ee.getShortName() );
         }

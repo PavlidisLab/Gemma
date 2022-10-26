@@ -169,7 +169,7 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilterin
         // Remove result set
         AbstractDao.log.info( "Removing result set " + resultSet.getId() );
         super.remove( resultSet );
-        this.getSessionFactory().getCurrentSession().flush();
+        flush();
     }
 
     @Override

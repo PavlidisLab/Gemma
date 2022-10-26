@@ -54,7 +54,6 @@ public class ExternalFileGeneLoaderServiceTest extends BaseSpringContextTest {
 
     @Before
     public void setUp() throws Exception {
-        super.setUp();
         geneFile = FileTools.resourceToPath( "/data/loader/genome/gene/externalGeneFileLoadTest.txt" );
         try {
             Collection<Gene> zyx = geneService.findByOfficialSymbol( "ZYXMMMM" );

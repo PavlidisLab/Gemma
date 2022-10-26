@@ -63,7 +63,6 @@ public class ExpressionExperimentBatchCorrectionServiceTest extends AbstractGeoS
 
     @Before
     public void setUp() throws Exception {
-        super.setUp();
         this.cleanup();
     }
 

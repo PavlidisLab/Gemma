@@ -110,22 +110,7 @@ public class ExperimentalFactorDaoImpl extends AbstractVoEnabledDao<Experimental
         BusinessKey.checkValidKey( experimentalFactor );
         Criteria queryObject = super.getSessionFactory().getCurrentSession().createCriteria( ExperimentalFactor.class );
         BusinessKey.addRestrictions( queryObject, experimentalFactor );
-
-        java.util.List<?> results = queryObject.list();
-        Object result = null;
-        if ( results != null ) {
-            if ( results.size() > 1 ) {
-
-                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                        results.size() + " " + ExperimentalFactor.class.getName()
-                                + "s were found when executing query" );
-
-            } else if ( results.size() == 1 ) {
-                result = results.iterator().next();
-            }
-        }
-        return ( ExperimentalFactor ) result;
-
+        return ( ExperimentalFactor ) queryObject.uniqueResult();
     }
 
     @Override

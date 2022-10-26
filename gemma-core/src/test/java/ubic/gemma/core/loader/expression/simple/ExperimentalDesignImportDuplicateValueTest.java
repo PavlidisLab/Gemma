@@ -63,7 +63,6 @@ public class ExperimentalDesignImportDuplicateValueTest extends BaseSpringContex
 
     @Before
     public void setUp() throws Exception {
-        super.setUp();
         SimpleExpressionExperimentMetaData metaData = new SimpleExpressionExperimentMetaData();
 
         Taxon human = taxonService.findByCommonName( "human" );

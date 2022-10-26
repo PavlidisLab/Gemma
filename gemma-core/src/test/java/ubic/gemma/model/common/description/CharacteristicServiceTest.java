@@ -61,7 +61,6 @@ public class CharacteristicServiceTest extends BaseSpringContextTest {
 
     @Before
     public void setUp() throws Exception {
-        super.setUp();
 
         ee = this.getTestPersistentBasicExpressionExperiment();
         ee.setCharacteristics( this.getTestPersistentCharacteristics( 2 ) );

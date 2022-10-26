@@ -84,7 +84,6 @@ public class ExperimentalDesignImporterTest extends BaseSpringContextTest {
 
     @Before
     public void setUp() throws Exception {
-        super.setUp();
         SimpleExpressionExperimentMetaData metaData = new SimpleExpressionExperimentMetaData();
 
         Taxon human = taxonService.findByCommonName( "human" );

@@ -24,7 +24,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import ubic.gemma.core.util.test.BaseSpringContextTest;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AlignmentBasedGeneMappingEvent;
-import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignGeneMappingEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignSequenceAnalysisEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignSequenceUpdateEvent;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -48,7 +47,6 @@ public class ArrayDesignReportServiceTest extends BaseSpringContextTest {
 
     @Before
     public void setUp() throws Exception {
-        super.setUp();
         if ( !ArrayDesignReportServiceTest.persisted ) {
             ArrayDesignReportServiceTest.ad = this
                     .getTestPersistentArrayDesign( 5, true, false, false ); // not read only.

@@ -116,7 +116,7 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
             DifferentialExpressionResultCache differentialExpressionResultCache ) {
         super( DifferentialExpressionAnalysisResult.class, sessionFactory );
         this.differentialExpressionResultCache = differentialExpressionResultCache;
-        setLoadBatchSize( 1000 ); // previously: 500
+        // previously: 500
     }
 
     @Override

@@ -210,8 +210,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
                     "Done deleting " + blatAssociations.size() + " blat associations for " + arrayDesign );
         }
 
-        this.getSessionFactory().getCurrentSession().flush();
-        this.getSessionFactory().getCurrentSession().clear();
+        flushAndClear();
 
         final String annotationAssociationQueryString = "select ba from CompositeSequence cs "
                 + " inner join cs.biologicalCharacteristic bs, AnnotationAssociation ba "
@@ -545,7 +544,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
         populateBlacklisted( results );
         populateExpressionExperimentCount( results );
         populateSwitchedExpressionExperimentCount( results );
-        if ( timer.getTime( TimeUnit.MILLISECONDS ) > 20 ) {
+        if ( timer.getTime( TimeUnit.MILLISECONDS ) > 50 ) {
             log.info( String.format( "Populating ArrayDesign VOs took %d ms.", timer.getTime( TimeUnit.MILLISECONDS ) ) );
         }
     }
@@ -967,11 +966,9 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
         candidateSubsumee.setSubsumingArrayDesign( candidateSubsumer );
         this.update( candidateSubsumer );
 
-        this.getSessionFactory().getCurrentSession().flush();
-        this.getSessionFactory().getCurrentSession().clear();
+        flushAndClear();
         this.update( candidateSubsumee );
-        this.getSessionFactory().getCurrentSession().flush();
-        this.getSessionFactory().getCurrentSession().clear();
+        flushAndClear();
 
         return true;
     }

@@ -43,6 +43,10 @@ import java.util.Set;
 @ToString(of = { "query", "taxon", "platformConstraint", "resultTypes" })
 public class SearchSettings implements Serializable {
 
+    public static final char
+            WILDCARD_CHAR = '*',
+            SINGLE_WILDCARD_CHAR = '?';
+
     /**
      * The serial version UID of this class. Needed for serialization.
      */
@@ -213,6 +217,13 @@ public class SearchSettings implements Serializable {
             throw new IllegalArgumentException( "The term URI must be a valid URI." );
         }
         setQuery( termUri );
+    }
+
+    /**
+     * Check if the query is a wildcard query.
+     */
+    public boolean isWildcard() {
+        return query.contains( String.valueOf( WILDCARD_CHAR ) ) || query.contains( String.valueOf( SINGLE_WILDCARD_CHAR ) );
     }
 
     /**

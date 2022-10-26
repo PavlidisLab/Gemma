@@ -356,7 +356,7 @@
 		<dependency>
 			<groupId>com.fasterxml.jackson.core</groupId>
 			<artifactId>jackson-databind</artifactId>
-			<version>${jackson.version}</version>
+			<version>${jackson.version}.2</version>
 		</dependency>
 
 		<!-- XML, XSLT and XPath -->
@@ -530,6 +530,25 @@
 					<descriptors>
 						<descriptor>src/assembly/src.xml</descriptor>
 					</descriptors>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-javadoc-plugin</artifactId>
+				<version>3.3.1</version>
+				<configuration>
+					<quiet>true</quiet>
+					<source>8</source>
+					<doclint>none</doclint>
+					<links>
+						<link>https://gemma.msl.ubc.ca/resources/baseCode/apidocs/</link>
+						<link>https://dst.lbl.gov/ACSSoftware/colt/api/</link>
+						<link>https://static.springsource.org/spring/docs/${spring.version}/javadoc-api/</link>
+						<link>https://docs.jboss.org/hibernate/orm/3.6/javadocs/</link>
+					</links>
+					<additionalJOptions>
+						<additionalJOption>-J-Xmx2g</additionalJOption>
+					</additionalJOptions>
 				</configuration>
 			</plugin>
 			<plugin>

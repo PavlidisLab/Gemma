@@ -22,7 +22,6 @@ import net.sf.ehcache.CacheManager;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.hibernate.Criteria;
-import org.hibernate.Hibernate;
 import org.hibernate.Query;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.InitializingBean;
@@ -62,7 +61,6 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
     public GeneDaoImpl( SessionFactory sessionFactory, CacheManager cacheManager ) {
         super( GeneDao.OBJECT_ALIAS, Gene.class, sessionFactory );
         this.cacheManager = cacheManager;
-        setLoadBatchSize( 2000 );
     }
 
     @Override
@@ -242,7 +240,6 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
 
     @Override
     public Collection<CompositeSequence> getCompositeSequences( Gene gene, ArrayDesign arrayDesign ) {
-        Collection<CompositeSequence> compSeq;
         //language=HQL
         final String queryString =
                 "select distinct cs from Gene as gene inner join gene.products gp,  BioSequence2GeneProduct"

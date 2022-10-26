@@ -57,7 +57,6 @@ public class HomologeneServiceTest extends BaseSpringContextTest {
 
     @Before
     public void setUp() throws Exception {
-        super.setUp();
         try (InputStream is = this.getClass()
                 .getResourceAsStream( "/data/loader/genome/homologene/homologene.testdata.txt" )) {
             assert is != null;

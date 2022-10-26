@@ -53,6 +53,7 @@ public class ExperimentalDesignServiceImpl extends AbstractService<ExperimentalD
     }
 
     @Override
+    @Transactional(readOnly = true)
     public ExpressionExperiment getExpressionExperiment( ExperimentalDesign experimentalDesign ) {
         return this.experimentalDesignDao.getExpressionExperiment( experimentalDesign );
     }

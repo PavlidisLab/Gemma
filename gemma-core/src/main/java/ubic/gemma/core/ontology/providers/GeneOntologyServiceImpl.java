@@ -230,7 +230,9 @@ public class GeneOntologyServiceImpl implements GeneOntologyService {
 
         // make sure we are all-inclusive
         queryString = queryString.trim();
-        queryString = queryString.replaceAll( "\\s+", " AND " );
+        queryString = queryString
+                .replaceAll( "\\s+AND\\s+", "" )
+                .replaceAll( "\\s+", " AND " );
 
         StopWatch timer = new StopWatch();
         timer.start();

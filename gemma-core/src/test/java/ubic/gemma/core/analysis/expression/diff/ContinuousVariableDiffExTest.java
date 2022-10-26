@@ -114,7 +114,6 @@ public class ContinuousVariableDiffExTest extends AbstractGeoServiceTest {
 
     @Before
     public void setUp() throws Exception {
-        super.setUp();
 
         /*
          * this is an exon array data set that has the data present. It's an annoying choice for a test in that it

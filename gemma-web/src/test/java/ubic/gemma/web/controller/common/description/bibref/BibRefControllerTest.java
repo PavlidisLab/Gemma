@@ -60,7 +60,6 @@ public class BibRefControllerTest extends BaseSpringWebTest {
      */
     @Before
     public void setUp() throws Exception {
-        super.setUp();
 
         assert brs != null;
 

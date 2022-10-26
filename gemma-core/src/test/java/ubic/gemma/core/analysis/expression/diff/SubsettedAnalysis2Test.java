@@ -64,7 +64,6 @@ public class SubsettedAnalysis2Test extends AbstractGeoServiceTest {
 
     @Before
     public void setUp() throws Exception {
-        super.setUp();
 
         geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal(
                 FileTools.resourceToPath( "/data/analysis/expression/gse12991short" ) ) );

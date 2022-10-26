@@ -51,7 +51,6 @@ public class ExperimentalDesignWriterTest extends AbstractGeoServiceTest {
 
     @Before
     public void setUp() throws Exception {
-        super.setUp();
         ee = eeService.findByShortName( shortName );
 
         if ( ee == null ) {

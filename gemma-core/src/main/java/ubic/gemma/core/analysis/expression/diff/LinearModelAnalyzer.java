@@ -38,6 +38,7 @@ import ubic.basecode.dataStructure.matrix.ObjectMatrix;
 import ubic.basecode.math.DescriptiveWithMissing;
 import ubic.basecode.math.MathUtil;
 import ubic.basecode.math.linearmodels.*;
+import ubic.gemma.core.analysis.service.NoProcessedExpressionDataVectorsException;
 import ubic.gemma.core.analysis.util.ExperimentalDesignUtils;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrixUtil;
@@ -318,8 +319,13 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
         /*
          * Start by setting it up like the full experiment.
          */
-        ExpressionDataDoubleMatrix dmatrix = expressionDataMatrixService
-                .getProcessedExpressionDataMatrix( subset.getSourceExperiment() );
+        ExpressionDataDoubleMatrix dmatrix = null;
+        try {
+            dmatrix = expressionDataMatrixService
+                    .getProcessedExpressionDataMatrix( subset.getSourceExperiment() );
+        } catch ( NoProcessedExpressionDataVectorsException e ) {
+            throw new RuntimeException( e );
+        }
 
         ExperimentalFactor ef = config.getSubsetFactor();
         Collection<BioMaterial> bmTmp = new HashSet<>();
@@ -378,8 +384,13 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
     public Collection<DifferentialExpressionAnalysis> run( ExpressionExperiment expressionExperiment,
             DifferentialExpressionAnalysisConfig config ) {
 
-        ExpressionDataDoubleMatrix dmatrix = expressionDataMatrixService
-                .getProcessedExpressionDataMatrix( expressionExperiment );
+        ExpressionDataDoubleMatrix dmatrix = null;
+        try {
+            dmatrix = expressionDataMatrixService
+                    .getProcessedExpressionDataMatrix( expressionExperiment );
+        } catch ( NoProcessedExpressionDataVectorsException e ) {
+            throw new RuntimeException( e );
+        }
 
         /*
          * FIXME remove flagged outlier samples ... at some point; so we don't carry NaNs around unnecessarily.

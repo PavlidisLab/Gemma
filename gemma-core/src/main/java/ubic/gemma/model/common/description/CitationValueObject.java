@@ -19,6 +19,7 @@
 package ubic.gemma.model.common.description;
 
 import org.apache.commons.lang3.StringUtils;
+import org.hibernate.Hibernate;
 
 import java.util.*;
 
@@ -89,8 +90,10 @@ public class CitationValueObject implements Comparable<CitationValueObject> {
                 .append( ": " ).append( pages );
 
         this.setCitation( buf.toString() );
-        this.setPubmedAccession( ref.getPubAccession().getAccession() );
-        this.setPubmedURL( CitationValueObject.PUBMED_URL_ROOT + ref.getPubAccession().getAccession() );
+        if ( Hibernate.isInitialized(ref.getPubAccession())) {
+            this.setPubmedAccession( ref.getPubAccession().getAccession() );
+            this.setPubmedURL( CitationValueObject.PUBMED_URL_ROOT + ref.getPubAccession().getAccession() );
+        }
         this.setId( ref.getId() );
         this.retracted = ref.getRetracted();
 

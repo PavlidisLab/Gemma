@@ -18,6 +18,7 @@
  */
 package ubic.gemma.core.analysis.preprocess;
 
+import ubic.gemma.core.analysis.service.NoProcessedExpressionDataVectorsException;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.expression.bioAssayData.MeanVarianceRelation;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -37,5 +38,5 @@ public interface MeanVarianceServiceHelper {
      * @param ee the experiment
      * @return ExpressionDataDoubleMatrix of expression intensities
      */
-    ExpressionDataDoubleMatrix getIntensities( ExpressionExperiment ee );
+    ExpressionDataDoubleMatrix getIntensities( ExpressionExperiment ee ) throws NoProcessedExpressionDataVectorsException;
 }

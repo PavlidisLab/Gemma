@@ -7,6 +7,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
@@ -115,7 +116,7 @@ public class SearchWebService {
                     .flatMap( List::stream )
                     .collect( Collectors.toList() );
         } catch ( SearchException e ) {
-            throw new BadRequestException( "Invalid search settings: " + searchSettings + ".", e );
+            throw new BadRequestException( String.format( "Invalid search settings: %s.", ExceptionUtils.getRootCauseMessage( e ) ), e );
         }
 
         List<SearchResult<? extends IdentifiableValueObject<? extends Identifiable>>> searchResultVos = searchResults.stream()
@@ -170,7 +171,7 @@ public class SearchWebService {
      * Representation of {@link SearchResult} for the RESTful API.
      */
     @Data
-    public static class SearchResultValueObject<T extends IdentifiableValueObject> {
+    public static class SearchResultValueObject<T extends IdentifiableValueObject<?>> {
 
         private final Long resultId;
 
@@ -204,14 +205,14 @@ public class SearchWebService {
         }
     }
 
-    public static class SearchResultsResponseDataObject extends ResponseDataObject<List<SearchResultValueObject>> {
+    public static class SearchResultsResponseDataObject extends ResponseDataObject<List<SearchResultValueObject<?>>> {
 
         private final SearchSettingsValueObject searchSettings;
 
         /**
          * @param payload the data to be serialised and returned as the response payload.
          */
-        public SearchResultsResponseDataObject( List<SearchResultValueObject> payload, SearchSettingsValueObject searchSettings ) {
+        public SearchResultsResponseDataObject( List<SearchResultValueObject<?>> payload, SearchSettingsValueObject searchSettings ) {
             super( payload );
             this.searchSettings = searchSettings;
         }

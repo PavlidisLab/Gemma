@@ -73,9 +73,9 @@ public class RawExpressionDataVectorDaoImpl extends DesignElementDataVectorDaoIm
     public Collection<RawExpressionDataVector> find( ArrayDesign arrayDesign, QuantitationType quantitationType ) {
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession().createQuery(
-                "select dev from RawExpressionDataVector dev  inner join fetch dev.bioAssayDimension bd "
-                        + " inner join fetch dev.designElement de inner join fetch dev.quantitationType inner join de.arrayDesign ad where ad.id = :adid "
-                        + "and dev.quantitationType = :quantitationType " )
+                        "select dev from RawExpressionDataVector dev  inner join fetch dev.bioAssayDimension bd "
+                                + " inner join fetch dev.designElement de inner join fetch dev.quantitationType inner join de.arrayDesign ad where ad.id = :adid "
+                                + "and dev.quantitationType = :quantitationType " )
                 .setParameter( "quantitationType", quantitationType ).setParameter( "adid", arrayDesign.getId() )
                 .list();
 
@@ -89,8 +89,8 @@ public class RawExpressionDataVectorDaoImpl extends DesignElementDataVectorDaoIm
 
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession().createQuery(
-                "select dev from RawExpressionDataVector as dev inner join dev.designElement as de "
-                        + " where de in (:des) and dev.quantitationType = :qt" )
+                        "select dev from RawExpressionDataVector as dev inner join dev.designElement as de "
+                                + " where de in (:des) and dev.quantitationType = :qt" )
                 .setParameterList( "des", designElements ).setParameter( "qt", quantitationType ).list();
     }
 

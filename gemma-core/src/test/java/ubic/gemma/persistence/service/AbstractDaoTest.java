@@ -40,7 +40,6 @@ public class AbstractDaoTest {
 
         public MyDao( SessionFactory sessionFactory ) {
             super( MyEntity.class, sessionFactory );
-            setLoadBatchSize( 100 );
         }
     }
 

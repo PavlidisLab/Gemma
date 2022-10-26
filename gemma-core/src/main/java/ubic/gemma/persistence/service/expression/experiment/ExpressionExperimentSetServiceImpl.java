@@ -169,6 +169,7 @@ public class ExpressionExperimentSetServiceImpl
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Collection<ExpressionExperimentSet> findByName( String name ) {
         return this.expressionExperimentSetDao.findByName( name );
     }

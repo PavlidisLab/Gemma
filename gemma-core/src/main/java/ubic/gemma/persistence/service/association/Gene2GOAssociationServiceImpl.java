@@ -67,11 +67,13 @@ public class Gene2GOAssociationServiceImpl extends AbstractService<Gene2GOAssoci
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Collection<Gene2GOAssociation> findAssociationByGene( Gene gene ) {
         return this.gene2GOAssociationDao.findAssociationByGene( gene );
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Collection<Characteristic> findByGene( Gene gene ) {
 
         Element element = this.gene2goCache.get( gene );
@@ -110,6 +112,7 @@ public class Gene2GOAssociationServiceImpl extends AbstractService<Gene2GOAssoci
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Collection<Gene> findByGOTerm( String goID, Taxon taxon ) {
         return this.gene2GOAssociationDao.findByGoTerm( goID, taxon );
     }

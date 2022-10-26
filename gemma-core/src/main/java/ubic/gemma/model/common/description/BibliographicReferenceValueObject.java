@@ -18,6 +18,7 @@
  */
 package ubic.gemma.model.common.description;
 
+import org.hibernate.Hibernate;
 import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.expression.biomaterial.Compound;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
@@ -80,8 +81,12 @@ public class BibliographicReferenceValueObject extends IdentifiableValueObject<B
         this.volume = ref.getVolume();
         this.citation = constructCitation( ref );
 
-        this.meshTerms = extractTermsFromHeadings( ref.getMeshTerms() );
-        this.chemicalsTerms = extractChemFromHeadings( ref.getChemicals() );
+        if ( Hibernate.isInitialized( ref.getMeshTerms() ) ) {
+            this.meshTerms = extractTermsFromHeadings( ref.getMeshTerms() );
+        }
+        if ( Hibernate.isInitialized( ref.getChemicals() ) ) {
+            this.chemicalsTerms = extractChemFromHeadings( ref.getChemicals() );
+        }
         this.retracted = ref.getRetracted();
     }
 

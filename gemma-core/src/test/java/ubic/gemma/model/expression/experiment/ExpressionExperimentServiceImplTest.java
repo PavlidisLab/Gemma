@@ -53,7 +53,6 @@ public class ExpressionExperimentServiceImplTest extends BaseSpringContextTest {
 
     @Before
     public void setUp() throws Exception {
-        super.setUp();
 
         svc = new ExpressionExperimentServiceImpl( eeDao );
 

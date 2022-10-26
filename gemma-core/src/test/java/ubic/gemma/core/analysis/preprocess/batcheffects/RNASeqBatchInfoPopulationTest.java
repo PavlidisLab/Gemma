@@ -96,7 +96,6 @@ public class RNASeqBatchInfoPopulationTest extends AbstractGeoServiceTest {
 
     @Before
     public void setUp() throws Exception {
-        super.setUp();
         Settings.setProperty( "gemma.fastq.headers.dir",
                 new File( getClass().getResource( "/data/analysis/preprocess/batcheffects/fastqheaders" ).toURI() ).getAbsolutePath() );
     }

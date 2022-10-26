@@ -152,7 +152,7 @@ public class CompositeSequenceController extends BaseController {
 
         log.debug( "Finished processing AJAX call: getGeneMappingSummary" );
         return compositeSequenceService.getGeneMappingSummary( cs.getBiologicalCharacteristic(),
-                compositeSequenceService.loadValueObject( cs ) );
+                compositeSequenceService.loadValueObjectWithGeneMappingSummary( cs ) );
     }
 
     @InitBinder

@@ -73,11 +73,13 @@ public class BibliographicReferenceServiceImpl
     }
 
     @Override
+    @Transactional(readOnly = true)
     public BibliographicReferenceValueObject loadValueObject( BibliographicReference entity ) {
         return this.loadMultipleValueObjectsFromObjects( Collections.singleton( entity ) ).iterator().next();
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<BibliographicReferenceValueObject> loadAllValueObjects() {
         return this.loadMultipleValueObjectsFromObjects( this.loadAll() );
     }

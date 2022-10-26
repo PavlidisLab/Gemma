@@ -33,7 +33,7 @@ public class PlatformsWebServiceTest extends BaseSpringWebTest {
     private ArrayDesign arrayDesign;
 
     @Before
-    public void setUp() {
+    public void setUp() throws Exception {
         expressionExperiment = getTestPersistentBasicExpressionExperiment();
         arrayDesign = expressionExperiment.getBioAssays().iterator().next().getArrayDesignUsed();
     }

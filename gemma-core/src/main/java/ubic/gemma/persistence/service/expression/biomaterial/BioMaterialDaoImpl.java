@@ -57,30 +57,18 @@ public class BioMaterialDaoImpl extends AbstractVoEnabledDao<BioMaterial, BioMat
         BusinessKey.addRestrictions( queryObject, bioMaterial );
 
         // This part is involved in a weird race condition that I could not get to a bottom of, so this is a hack-fix for now - tesarst, 2018-May-2
-        List results = null;
+        BioMaterial result = null;
         int rep = 0;
-        while ( results == null && rep < BioMaterialDaoImpl.MAX_REPS ) {
+        while ( result == null && rep < BioMaterialDaoImpl.MAX_REPS ) {
             try {
-                results = queryObject.list();
+                result = ( BioMaterial ) queryObject.uniqueResult();
                 rep++;
             } catch ( ObjectNotFoundException e ) {
                 AbstractDao.log.warn( "BioMaterial query list threw: " + e.getMessage() );
             }
         }
 
-        Object result = null;
-        if ( results != null ) {
-            if ( results.size() > 1 ) {
-                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                        "More than one instance of '" + BioMaterial.class.getName()
-                                + "' was found when executing query" );
-
-            } else if ( results.size() == 1 ) {
-                result = results.iterator().next();
-            }
-        }
-        AbstractDao.log.debug( "Done with find" );
-        return ( BioMaterial ) result;
+        return result;
     }
 
     @Override
