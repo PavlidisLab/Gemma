@@ -92,8 +92,7 @@ public class FactorValueDaoImpl extends AbstractQueryFilteringVoEnabledDao<Facto
         this.getSessionFactory().getCurrentSession().update( ef );
 
         // will get the dreaded 'already in session' error if we don't do this.
-        this.getSessionFactory().getCurrentSession().flush();
-        this.getSessionFactory().getCurrentSession().clear();
+        flushAndClear();
 
         super.remove( factorValue );
     }

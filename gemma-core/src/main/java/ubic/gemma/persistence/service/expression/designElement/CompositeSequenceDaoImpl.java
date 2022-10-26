@@ -100,7 +100,6 @@ public class CompositeSequenceDaoImpl extends AbstractQueryFilteringVoEnabledDao
     @Autowired
     public CompositeSequenceDaoImpl( SessionFactory sessionFactory ) {
         super( CompositeSequenceDao.OBJECT_ALIAS, CompositeSequence.class, sessionFactory );
-        setLoadBatchSize( 2000 );
     }
 
     @Override

@@ -29,7 +29,6 @@ import ubic.gemma.model.genome.sequenceAnalysis.AnnotationAssociation;
 import ubic.gemma.persistence.service.AbstractDao;
 import ubic.gemma.persistence.util.BusinessKey;
 
-import java.sql.Connection;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
@@ -44,7 +43,6 @@ public class AnnotationAssociationDaoImpl extends AbstractDao<AnnotationAssociat
     @Autowired
     public AnnotationAssociationDaoImpl( SessionFactory sessionFactory ) {
         super( AnnotationAssociation.class, sessionFactory );
-        setLoadBatchSize( 2000 );
     }
 
     @Override
