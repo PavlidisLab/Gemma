@@ -2,12 +2,8 @@
 <!DOCTYPE hibernate-configuration PUBLIC
         "-//Hibernate/Hibernate Configuration DTD//EN"
         "http://www.hibernate.org/dtd/hibernate-configuration-3.0.dtd">
-<!--suppress HibernateConfigDomInspection -->
 <hibernate-configuration>
     <session-factory>
-        <property name="connection.url"/>
-        <property name="connection.driver_class"/>
-        <property name="hibernate.dialect">org.hibernate.dialect.MySQL5InnoDBDialect</property>
         <!-- unfortunately, these mappings must be listed explicitly, but fortunately this is only used for IntelliJ's code insights -->
         <mapping resource="gemma/gsec/model/AclEntry.hbm.xml"/>
         <mapping resource="gemma/gsec/model/AclObjectIdentity.hbm.xml"/>
