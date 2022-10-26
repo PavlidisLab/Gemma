@@ -66,7 +66,6 @@ public class GeneSetServiceTest extends BaseSpringContextTest {
 
     @Before
     public void setUp() throws Exception {
-        super.setUp();
 
         InputStream is = new GZIPInputStream(
                 this.getClass().getResourceAsStream( "/data/loader/ontology/molecular-function.test.owl.gz" ) );

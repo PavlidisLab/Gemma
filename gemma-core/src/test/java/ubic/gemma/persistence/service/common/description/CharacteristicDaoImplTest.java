@@ -22,7 +22,7 @@ public class CharacteristicDaoImplTest extends BaseSpringContextTest {
     private Collection<Characteristic> characteristics;
 
     @Before
-    public void setUp() {
+    public void setUp() throws Exception {
         // TODO
         characteristics = Arrays.asList(
                 createCharacteristic( "http://test/T0001", "male" ),

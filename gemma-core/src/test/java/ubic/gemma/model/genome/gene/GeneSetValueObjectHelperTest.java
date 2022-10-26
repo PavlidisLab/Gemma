@@ -46,7 +46,6 @@ public class GeneSetValueObjectHelperTest extends BaseSpringContextTest {
 
     @Before
     public void setUp() throws Exception {
-        super.setUp();
 
         Gene g1 = this.getTestPersistentGene();
         Taxon tax1 = this.getTaxon( "human" );

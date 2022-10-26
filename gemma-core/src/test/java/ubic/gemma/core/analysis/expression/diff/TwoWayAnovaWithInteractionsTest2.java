@@ -108,7 +108,6 @@ public class TwoWayAnovaWithInteractionsTest2 extends AbstractGeoServiceTest {
 
     @Before
     public void setUp() throws Exception {
-        super.setUp();
 
         geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal(
                 FileTools.resourceToPath( "/data/analysis/expression/gse18795short" ) ) );

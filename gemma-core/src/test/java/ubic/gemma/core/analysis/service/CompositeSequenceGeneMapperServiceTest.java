@@ -122,7 +122,6 @@ public class CompositeSequenceGeneMapperServiceTest extends AbstractGeoServiceTe
 
     @Before
     public void setUp() throws Exception {
-        super.setUp();
         this.cleanup();
         geoService.setGeoDomainObjectGenerator(
                 new GeoDomainObjectGeneratorLocal( this.getTestFileBasePath( "platform" ) ) );

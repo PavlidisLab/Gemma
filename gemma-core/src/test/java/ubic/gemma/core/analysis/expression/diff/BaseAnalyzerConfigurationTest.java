@@ -106,7 +106,6 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
 
     @Before
     public void setUp() throws Exception {
-        super.setUp();
 
         try {
             if ( Settings.getBoolean( "gemma.linearmodels.useR" ) ) {

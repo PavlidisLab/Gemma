@@ -100,6 +100,7 @@ public class UserDaoImpl extends AbstractDao<User> implements UserDao {
     }
 
     @Override
+    @SuppressWarnings("MethodDoesntCallSuperMethod")
     public void update( User user ) {
         if ( user == null ) {
             throw new IllegalArgumentException( "User.update - 'user' can not be null" );

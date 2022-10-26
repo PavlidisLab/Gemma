@@ -32,7 +32,6 @@ import ubic.gemma.persistence.service.association.coexpression.CoexpressionValue
 import ubic.gemma.persistence.service.association.coexpression.LinkCreator;
 import ubic.gemma.persistence.service.association.coexpression.NonPersistentNonOrderedCoexpLink;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
-import ubic.gemma.persistence.util.EntityUtils;
 
 import java.util.*;
 
@@ -59,7 +58,6 @@ public class Gene2GeneCoexpressionServiceTest extends BaseSpringContextTest {
 
     @Before
     public void setUp() throws Exception {
-        super.setUp();
 
         Taxon mouseTaxon = taxonS.findByCommonName( "mouse" );
 

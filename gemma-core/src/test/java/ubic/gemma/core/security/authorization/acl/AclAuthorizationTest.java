@@ -73,7 +73,6 @@ public class AclAuthorizationTest extends BaseSpringContextTest {
 
     @Before
     public void setUp() throws Exception {
-        super.setUp();
 
         arrayDesign = ArrayDesign.Factory.newInstance();
         arrayDesign.setName( arrayDesignName );

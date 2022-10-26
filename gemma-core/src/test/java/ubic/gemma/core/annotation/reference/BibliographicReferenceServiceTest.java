@@ -23,7 +23,6 @@ import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import ubic.gemma.core.util.test.BaseSpringContextTest;
-import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.DatabaseEntry;
 
@@ -48,7 +47,6 @@ public class BibliographicReferenceServiceTest extends BaseSpringContextTest {
      */
     @Before
     public void setUp() throws Exception {
-        super.setUp();
 
         testBibRef = BibliographicReference.Factory.newInstance();
 

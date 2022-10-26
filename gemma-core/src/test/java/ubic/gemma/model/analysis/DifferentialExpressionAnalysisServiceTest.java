@@ -62,7 +62,6 @@ public class DifferentialExpressionAnalysisServiceTest extends BaseSpringContext
 
     @Before
     public void setUp() throws Exception {
-        super.setUp();
 
         e1 = ExpressionExperiment.Factory.newInstance();
         e1.setShortName( RandomStringUtils.randomAlphabetic( 6 ) );

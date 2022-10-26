@@ -31,7 +31,6 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.genome.GeneDao;
 import ubic.gemma.persistence.service.genome.GeneDaoImpl;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
@@ -56,7 +55,6 @@ public class GeneServiceImplTest extends BaseSpringContextTest {
 
     @Before
     public void setUp() throws Exception {
-        super.setUp();
 
         geneDaoMock = createMock( GeneDaoImpl.class );
         svc = new GeneServiceImpl( geneDaoMock );

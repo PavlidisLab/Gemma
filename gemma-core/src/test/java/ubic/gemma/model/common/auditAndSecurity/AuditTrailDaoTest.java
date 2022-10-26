@@ -49,7 +49,6 @@ public class AuditTrailDaoTest extends BaseSpringContextTest {
 
     @Before
     public void setUp() throws Exception {
-        super.setUp();
 
         ArrayDesign ad = ArrayDesign.Factory.newInstance();
         ad.setName( "test_" + RandomStringUtils.randomAlphabetic( 10 ) );

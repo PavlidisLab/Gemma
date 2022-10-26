@@ -91,7 +91,6 @@ public class ExpressionDataDoubleMatrixTest extends AbstractGeoServiceTest {
 
     @Before
     public void setUp() throws Exception {
-        super.setUp();
 
         Collection<ArrayDesign> ads = new HashSet<>();
 

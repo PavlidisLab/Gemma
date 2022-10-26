@@ -43,7 +43,6 @@ public class BioMaterialServiceTest extends BaseSpringContextTest {
 
     @Before
     public void setUp() throws Exception {
-        super.setUp();
         log.info( "Starting setup" );
         BioMaterial testbm = this.getTestPersistentBioMaterial();
         searchkeyName = testbm.getName();
