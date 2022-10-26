@@ -142,7 +142,7 @@ public class QuantitationTypeDaoImpl extends AbstractCriteriaFilteringVoEnabledD
     public List<QuantitationType> loadByDescription( String description ) {
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession()
-                .createQuery( "select q from QuantitationType q where q.description like :description" )
+                .createQuery( "select q from QuantitationTypeImpl q where q.description like :description" )
                 .setParameter( "description", description )
                 .list();
     }
