@@ -141,16 +141,11 @@ public class BioSequenceDaoImpl extends AbstractVoEnabledDao<BioSequence, BioSeq
 
     @Override
     public Collection<Gene> getGenesByName( String search ) {
-        try {
-            //noinspection unchecked
-            return this.getSessionFactory().getCurrentSession().createQuery(
-                            "select distinct gene from Gene as gene inner join gene.products gp,  BioSequence2GeneProduct as bs2gp where gp=bs2gp.geneProduct "
-                                    + " and bs2gp.bioSequence.name like :search " )
-                    .setString( "search", search ).list();
-
-        } catch ( org.hibernate.HibernateException ex ) {
-            throw getHibernateTemplate().convertHibernateAccessException( ex );
-        }
+        //noinspection unchecked
+        return this.getSessionFactory().getCurrentSession().createQuery(
+                        "select distinct gene from Gene as gene inner join gene.products gp,  BioSequence2GeneProduct as bs2gp where gp=bs2gp.geneProduct "
+                                + " and bs2gp.bioSequence.name like :search " )
+                .setString( "search", search ).list();
     }
 
     @Override

@@ -153,15 +153,10 @@ public class CompositeSequenceDaoImpl extends AbstractQueryFilteringVoEnabledDao
         Collection<CompositeSequence> compositeSequences;
         //language=HQL
         final String queryString = "select distinct cs from CompositeSequence" + " cs where cs.biologicalCharacteristic = :id";
-        try {
-            org.hibernate.Query queryObject = this.getSessionFactory().getCurrentSession().createQuery( queryString );
-            queryObject.setParameter( "id", bioSequence );
-            //noinspection unchecked
-            compositeSequences = queryObject.list();
-
-        } catch ( org.hibernate.HibernateException ex ) {
-            throw getHibernateTemplate().convertHibernateAccessException( ex );
-        }
+        org.hibernate.Query queryObject = this.getSessionFactory().getCurrentSession().createQuery( queryString );
+        queryObject.setParameter( "id", bioSequence );
+        //noinspection unchecked
+        compositeSequences = queryObject.list();
         return compositeSequences;
     }
 
@@ -171,15 +166,10 @@ public class CompositeSequenceDaoImpl extends AbstractQueryFilteringVoEnabledDao
         //language=HQL
         final String queryString = "select distinct cs from CompositeSequence"
                 + " cs inner join cs.biologicalCharacteristic b where b.name = :name";
-        try {
-            org.hibernate.Query queryObject = this.getSessionFactory().getCurrentSession().createQuery( queryString );
-            queryObject.setParameter( "name", name );
-            //noinspection unchecked
-            compositeSequences = queryObject.list();
-
-        } catch ( org.hibernate.HibernateException ex ) {
-            throw getHibernateTemplate().convertHibernateAccessException( ex );
-        }
+        org.hibernate.Query queryObject = this.getSessionFactory().getCurrentSession().createQuery( queryString );
+        queryObject.setParameter( "name", name );
+        //noinspection unchecked
+        compositeSequences = queryObject.list();
         return compositeSequences;
     }
 
@@ -460,16 +450,12 @@ public class CompositeSequenceDaoImpl extends AbstractQueryFilteringVoEnabledDao
             // get all probes. Uses a light-weight version of this query that omits as much as possible.
             final String queryString = CompositeSequenceDaoImpl.nativeBaseSummaryShorterQueryString + " where ad.id = " + arrayDesign
                     .getId();
-            try {
-                org.hibernate.SQLQuery queryObject = this.getSessionFactory().getCurrentSession()
-                        .createSQLQuery( queryString );
-                queryObject.addScalar( "deID" ).addScalar( "deName" ).addScalar( "bsName" ).addScalar( "bsdbacc" )
-                        .addScalar( "ssrid" ).addScalar( "gId" ).addScalar( "gSymbol" );
-                queryObject.setMaxResults( CompositeSequenceDaoImpl.MAX_CS_RECORDS );
-                return queryObject.list();
-            } catch ( org.hibernate.HibernateException ex ) {
-                throw SessionFactoryUtils.convertHibernateAccessException( ex );
-            }
+            org.hibernate.SQLQuery queryObject = this.getSessionFactory().getCurrentSession()
+                    .createSQLQuery( queryString );
+            queryObject.addScalar( "deID" ).addScalar( "deName" ).addScalar( "bsName" ).addScalar( "bsdbacc" )
+                    .addScalar( "ssrid" ).addScalar( "gId" ).addScalar( "gSymbol" );
+            queryObject.setMaxResults( CompositeSequenceDaoImpl.MAX_CS_RECORDS );
+            return queryObject.list();
 
         }
         // just a chunk but get the full set of results.

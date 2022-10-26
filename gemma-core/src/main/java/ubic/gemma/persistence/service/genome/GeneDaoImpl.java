@@ -237,16 +237,11 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
                         + " and cs.biologicalCharacteristic=bs2gp.bioSequence "
                         + " and gene = :gene and cs.arrayDesign = :arrayDesign ";
 
-        try {
-            org.hibernate.Query queryObject = this.getSessionFactory().getCurrentSession().createQuery( queryString );
-            queryObject.setParameter( "arrayDesign", arrayDesign );
-            queryObject.setParameter( "gene", gene );
-            //noinspection unchecked
-            compSeq = queryObject.list();
-
-        } catch ( org.hibernate.HibernateException ex ) {
-            throw getHibernateTemplate().convertHibernateAccessException( ex );
-        }
+        org.hibernate.Query queryObject = this.getSessionFactory().getCurrentSession().createQuery( queryString );
+        queryObject.setParameter( "arrayDesign", arrayDesign );
+        queryObject.setParameter( "gene", gene );
+        //noinspection unchecked
+        compSeq = queryObject.list();
         return compSeq;
     }
 

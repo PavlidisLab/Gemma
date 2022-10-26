@@ -110,30 +110,26 @@ public class FactorValueDaoImpl extends AbstractQueryFilteringVoEnabledDao<Facto
 
     @Override
     public FactorValue find( FactorValue factorValue ) {
-        try {
-            Criteria queryObject = this.getSessionFactory().getCurrentSession().createCriteria( FactorValue.class );
+        Criteria queryObject = this.getSessionFactory().getCurrentSession().createCriteria( FactorValue.class );
 
-            BusinessKey.checkKey( factorValue );
+        BusinessKey.checkKey( factorValue );
 
-            BusinessKey.createQueryObject( queryObject, factorValue );
+        BusinessKey.createQueryObject( queryObject, factorValue );
 
-            java.util.List<?> results = queryObject.list();
-            Object result = null;
-            if ( results != null ) {
-                if ( results.size() > 1 ) {
-                    this.debug( results );
-                    throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                            results.size() + " instances of '" + FactorValue.class.getName()
-                                    + "' was found when executing query for " + factorValue );
+        java.util.List<?> results = queryObject.list();
+        Object result = null;
+        if ( results != null ) {
+            if ( results.size() > 1 ) {
+                this.debug( results );
+                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
+                        results.size() + " instances of '" + FactorValue.class.getName()
+                                + "' was found when executing query for " + factorValue );
 
-                } else if ( results.size() == 1 ) {
-                    result = results.iterator().next();
-                }
+            } else if ( results.size() == 1 ) {
+                result = results.iterator().next();
             }
-            return ( FactorValue ) result;
-        } catch ( org.hibernate.HibernateException ex ) {
-            throw getHibernateTemplate().convertHibernateAccessException( ex );
         }
+        return ( FactorValue ) result;
     }
 
     @Override

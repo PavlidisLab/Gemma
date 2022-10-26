@@ -66,28 +66,18 @@ public class GeneProductDaoImpl extends AbstractVoEnabledDao<GeneProduct, GenePr
 
     @Override
     public Collection<Gene> getGenesByName( String search ) {
-        try {
-            //noinspection unchecked
-            return this.getSessionFactory().getCurrentSession().createQuery(
-                            "select distinct gene from Gene as gene inner join gene.products gp where  gp.name = :search" )
-                    .setString( "search", search ).list();
-
-        } catch ( org.hibernate.HibernateException ex ) {
-            throw getHibernateTemplate().convertHibernateAccessException( ex );
-        }
+        //noinspection unchecked
+        return this.getSessionFactory().getCurrentSession().createQuery(
+                        "select distinct gene from Gene as gene inner join gene.products gp where  gp.name = :search" )
+                .setString( "search", search ).list();
     }
 
     @Override
     public Collection<Gene> getGenesByNcbiId( String search ) {
-        try {
-            //noinspection unchecked
-            return this.getSessionFactory().getCurrentSession().createQuery(
-                            "select distinct gene from Gene as gene inner join gene.products gp where gp.ncbiGi = :search" )
-                    .setString( "search", search ).list();
-
-        } catch ( org.hibernate.HibernateException ex ) {
-            throw getHibernateTemplate().convertHibernateAccessException( ex );
-        }
+        //noinspection unchecked
+        return this.getSessionFactory().getCurrentSession().createQuery(
+                        "select distinct gene from Gene as gene inner join gene.products gp where gp.ncbiGi = :search" )
+                .setString( "search", search ).list();
     }
 
     @Override
@@ -129,77 +119,73 @@ public class GeneProductDaoImpl extends AbstractVoEnabledDao<GeneProduct, GenePr
 
     @Override
     public GeneProduct find( GeneProduct geneProduct ) {
-        try {
-            Criteria queryObject = this.getSessionFactory().getCurrentSession().createCriteria( GeneProduct.class )
-                    .setResultTransformer( CriteriaSpecification.DISTINCT_ROOT_ENTITY );
+        Criteria queryObject = this.getSessionFactory().getCurrentSession().createCriteria( GeneProduct.class )
+                .setResultTransformer( CriteriaSpecification.DISTINCT_ROOT_ENTITY );
 
-            BusinessKey.checkValidKey( geneProduct );
+        BusinessKey.checkValidKey( geneProduct );
 
-            BusinessKey.createQueryObject( queryObject, geneProduct );
+        BusinessKey.createQueryObject( queryObject, geneProduct );
 
-            AbstractDao.log.debug( queryObject );
+        AbstractDao.log.debug( queryObject );
 
-            //noinspection unchecked
-            List<GeneProduct> results = queryObject.list();
-            Object result = null;
-            if ( results.size() > 1 ) {
+        //noinspection unchecked
+        List<GeneProduct> results = queryObject.list();
+        Object result = null;
+        if ( results.size() > 1 ) {
 
-                /*
-                 * At this point we can trust that the genes are from the same taxon. This kind of confusion should
-                 * reduce with cruft-reduction.
-                 */
-                Collections.sort( results, GeneProductDaoImpl.c ); // we tend to want to keep the one with the lowest ID
-                Gene gene = geneProduct.getGene();
-                if ( gene != null ) {
-                    GeneProduct keeper = null;
-                    int numFound = 0;
-                    for ( Object object : results ) {
-                        GeneProduct candidateMatch = ( GeneProduct ) object;
+            /*
+             * At this point we can trust that the genes are from the same taxon. This kind of confusion should
+             * reduce with cruft-reduction.
+             */
+            Collections.sort( results, GeneProductDaoImpl.c ); // we tend to want to keep the one with the lowest ID
+            Gene gene = geneProduct.getGene();
+            if ( gene != null ) {
+                GeneProduct keeper = null;
+                int numFound = 0;
+                for ( Object object : results ) {
+                    GeneProduct candidateMatch = ( GeneProduct ) object;
 
-                        Gene candidateGene = candidateMatch.getGene();
-                        if ( candidateGene.getOfficialSymbol().equals( gene.getOfficialSymbol() ) && candidateGene
-                                .getTaxon().equals( gene.getTaxon() ) ) {
-                            keeper = candidateMatch;
-                            numFound++;
-                        }
-                    }
-
-                    if ( numFound == 1 ) {
-                        // not so bad, we figured out a match.
-                        AbstractDao.log.warn( "Multiple gene products match " + geneProduct
-                                + ", but only one for the right gene (" + gene + "), returning " + keeper );
-                        this.debug( results );
-                        return keeper;
-                    }
-
-                    if ( numFound == 0 ) {
-                        AbstractDao.log
-                                .error( "Multiple gene products match " + geneProduct + ", but none with " + gene );
-                        this.debug( results );
-                        AbstractDao.log.error( "Returning arbitrary match " + results.iterator().next() );
-                        return results.iterator().next();
-                    }
-
-                    if ( numFound > 1 ) {
-                        AbstractDao.log
-                                .error( "Multiple gene products match " + geneProduct + ", and matches " + numFound
-                                        + " genes" );
-                        this.debug( results );
-                        AbstractDao.log.error( "Returning arbitrary match " + results.iterator().next() );
-                        return results.iterator().next();
+                    Gene candidateGene = candidateMatch.getGene();
+                    if ( candidateGene.getOfficialSymbol().equals( gene.getOfficialSymbol() ) && candidateGene
+                            .getTaxon().equals( gene.getTaxon() ) ) {
+                        keeper = candidateMatch;
+                        numFound++;
                     }
                 }
 
-            } else if ( results.size() == 1 ) {
-                result = results.iterator().next();
+                if ( numFound == 1 ) {
+                    // not so bad, we figured out a match.
+                    AbstractDao.log.warn( "Multiple gene products match " + geneProduct
+                            + ", but only one for the right gene (" + gene + "), returning " + keeper );
+                    this.debug( results );
+                    return keeper;
+                }
+
+                if ( numFound == 0 ) {
+                    AbstractDao.log
+                            .error( "Multiple gene products match " + geneProduct + ", but none with " + gene );
+                    this.debug( results );
+                    AbstractDao.log.error( "Returning arbitrary match " + results.iterator().next() );
+                    return results.iterator().next();
+                }
+
+                if ( numFound > 1 ) {
+                    AbstractDao.log
+                            .error( "Multiple gene products match " + geneProduct + ", and matches " + numFound
+                                    + " genes" );
+                    this.debug( results );
+                    AbstractDao.log.error( "Returning arbitrary match " + results.iterator().next() );
+                    return results.iterator().next();
+                }
             }
-            if ( result == null )
-                return null;
-            AbstractDao.log.debug( "Found: " + result );
-            return ( GeneProduct ) result;
-        } catch ( org.hibernate.HibernateException ex ) {
-            throw getHibernateTemplate().convertHibernateAccessException( ex );
+
+        } else if ( results.size() == 1 ) {
+            result = results.iterator().next();
         }
+        if ( result == null )
+            return null;
+        AbstractDao.log.debug( "Found: " + result );
+        return ( GeneProduct ) result;
     }
 
     @Override
