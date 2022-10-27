@@ -194,6 +194,7 @@ public class ArrayDesignValueObject extends AbstractCuratableValueObject<ArrayDe
         this.technologyType = arrayDesignValueObject.technologyType;
         this.isAffymetrixAltCdf = arrayDesignValueObject.isAffymetrixAltCdf;
         this.blackListed = arrayDesignValueObject.blackListed;
+        this.switchedExpressionExperimentCount = arrayDesignValueObject.switchedExpressionExperimentCount;
     }
 
     /**
