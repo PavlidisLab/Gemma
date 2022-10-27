@@ -56,7 +56,7 @@ public abstract class AbstractCuratableValueObject<C extends Curatable> extends 
      * Copy constructor.
      * @param curatable
      */
-    protected AbstractCuratableValueObject( AbstractCuratableValueObject curatable ) {
+    protected AbstractCuratableValueObject( AbstractCuratableValueObject<C> curatable ) {
         super( curatable );
         this.lastUpdated = curatable.getLastUpdated();
         this.troubled = curatable.getTroubled();
