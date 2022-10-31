@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006-2012 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -19,16 +19,23 @@
 
 package ubic.gemma.model.common.description;
 
+import ubic.gemma.model.common.Auditable;
 import ubic.gemma.model.common.Describable;
+import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
+import ubic.gemma.model.common.auditAndSecurity.AuditTrailImpl;
 import ubic.gemma.model.common.auditAndSecurity.Contact;
 
+import javax.annotation.Nullable;
 import javax.persistence.Transient;
+import javax.persistence.Version;
+import java.net.URL;
 import java.util.Collection;
+import java.util.Date;
 
 /**
  * @author Paul
  */
-public class ExternalDatabase extends Describable {
+public class ExternalDatabase extends Describable implements Auditable, Versioned {
 
     /**
      * The serial version UID of this class. Needed for serialization.
@@ -39,6 +46,13 @@ public class ExternalDatabase extends Describable {
     private String ftpUri;
     private DatabaseType type;
     private Contact databaseSupplier;
+    private AuditTrail auditTrail;
+    @Nullable
+    private String releaseVersion;
+    @Nullable
+    private URL releaseUrl;
+    @Nullable
+    private Date lastUpdated;
 
     /**
      * No-arg constructor added to satisfy javabean contract
@@ -48,20 +62,17 @@ public class ExternalDatabase extends Describable {
 
     @Override
     public boolean equals( Object object ) {
-        if ( !( object instanceof ExternalDatabase ) )
-            return false;
+        if ( !( object instanceof ExternalDatabase ) ) return false;
 
         ExternalDatabase that = ( ExternalDatabase ) object;
-        if ( this.getId() != null && that.getId() != null )
-            return super.equals( object );
+        if ( this.getId() != null && that.getId() != null ) return super.equals( object );
 
         return this.getName().equals( that.getName() );
     }
 
     @Override
     public int hashCode() {
-        if ( this.getId() != null )
-            return super.hashCode();
+        if ( this.getId() != null ) return super.hashCode();
 
         return this.getName().hashCode();
     }
@@ -109,12 +120,58 @@ public class ExternalDatabase extends Describable {
         this.webUri = webUri;
     }
 
+    @Override
+    public AuditTrail getAuditTrail() {
+        return this.auditTrail;
+    }
+
+    @Override
+    public void setAuditTrail( AuditTrail auditTrail ) {
+        this.auditTrail = auditTrail;
+    }
+
+    @Nullable
+    @Override
+    public String getReleaseVersion() {
+        return releaseVersion;
+    }
+
+    public void setReleaseVersion( @Nullable String releaseVersion ) {
+        this.releaseVersion = releaseVersion;
+    }
+
+    @Nullable
+    @Override
+    public URL getReleaseUrl() {
+        return releaseUrl;
+    }
+
+    public void setReleaseUrl( @Nullable URL releaseUrl ) {
+        this.releaseUrl = releaseUrl;
+    }
+
+    @Nullable
+    @Override
+    public Date getLastUpdated() {
+        return lastUpdated;
+    }
+
+    public void setLastUpdated( @Nullable Date lastUpdated ) {
+        this.lastUpdated = lastUpdated;
+    }
+
     public static final class Factory {
 
         public static ubic.gemma.model.common.description.ExternalDatabase newInstance() {
             return new ubic.gemma.model.common.description.ExternalDatabase();
         }
 
+        public static ExternalDatabase newInstance( String gene2cs, DatabaseType other ) {
+            ExternalDatabase ed = new ExternalDatabase();
+            ed.setName( gene2cs );
+            ed.setType( other );
+            return ed;
+        }
     }
 
 }

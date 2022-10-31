@@ -14,19 +14,32 @@
  */
 package ubic.gemma.model.common.description;
 
+import lombok.Data;
+import lombok.EqualsAndHashCode;
 import ubic.gemma.model.IdentifiableValueObject;
 
+import javax.annotation.Nullable;
 import java.io.Serializable;
+import java.net.URL;
+import java.util.Date;
 
 /**
  * ValueObject for database entry
  */
 @SuppressWarnings("WeakerAccess") // Used in frontend
-public class DatabaseEntryValueObject extends IdentifiableValueObject<DatabaseEntry> implements Serializable {
+@Data
+@EqualsAndHashCode(of = { "accession", "externalDatabase" }, callSuper = false)
+public class DatabaseEntryValueObject extends IdentifiableValueObject<DatabaseEntry> implements Versioned, Serializable {
 
     private static final long serialVersionUID = -527323410580090L;
     private String accession;
     private ExternalDatabaseValueObject externalDatabase;
+    @Nullable
+    private URL releaseUrl;
+    @Nullable
+    private String releaseVersion;
+    @Nullable
+    private Date lastUpdated;
 
     public DatabaseEntryValueObject( DatabaseEntry de ) {
         super( de.getId() );
@@ -39,55 +52,19 @@ public class DatabaseEntryValueObject extends IdentifiableValueObject<DatabaseEn
         super( id );
     }
 
+    public String getReleaseVersion() {
+        return releaseVersion != null ? releaseVersion : externalDatabase.getReleaseVersion();
+    }
+
+    public URL getReleaseUrl() {
+        return releaseUrl != null ? releaseUrl : externalDatabase.getReleaseUrl();
+    }
+
     /**
-     * Required when using the class as a spring bean.
+     * The last updated data, if known, otherwise defaults on the {@link #externalDatabase} last updated.
      */
-    public DatabaseEntryValueObject() {
-    }
-
     @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + ( ( this.accession == null ) ? 0 : this.accession.hashCode() );
-        result = prime * result + ( ( this.externalDatabase == null ) ? 0 : this.externalDatabase.hashCode() );
-        return result;
+    public Date getLastUpdated() {
+        return lastUpdated != null ? lastUpdated : externalDatabase.getLastUpdated();
     }
-
-    @Override
-    public boolean equals( Object obj ) {
-        if ( this == obj )
-            return true;
-        if ( obj == null )
-            return false;
-        if ( this.getClass() != obj.getClass() )
-            return false;
-        DatabaseEntryValueObject other = ( DatabaseEntryValueObject ) obj;
-        if ( this.accession == null ) {
-            if ( other.accession != null )
-                return false;
-        } else if ( !this.accession.equals( other.accession ) )
-            return false;
-        if ( this.externalDatabase == null ) {
-            return other.externalDatabase == null;
-        } else
-            return this.externalDatabase.equals( other.externalDatabase );
-    }
-
-    public String getAccession() {
-        return this.accession;
-    }
-
-    public void setAccession( String accession ) {
-        this.accession = accession;
-    }
-
-    public ExternalDatabaseValueObject getExternalDatabase() {
-        return this.externalDatabase;
-    }
-
-    public void setExternalDatabase( ExternalDatabaseValueObject externalDatabase ) {
-        this.externalDatabase = externalDatabase;
-    }
-
 }
