@@ -16,7 +16,7 @@
 	<parent>
 		<groupId>ubc.pavlab</groupId>
 		<artifactId>pavlab-starter-parent</artifactId>
-		<version>1.1.8</version>
+		<version>1.1.9</version>
 	</parent>
 	<modules>
 		<module>gemma-core</module>
@@ -532,7 +532,6 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-site-plugin</artifactId>
-				<version>3.9.1</version>
 			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
@@ -647,9 +646,6 @@
 		</plugins>
 	</reporting>
 	<properties>
-		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<maven.compiler.source>1.8</maven.compiler.source>
-		<maven.compiler.target>1.8</maven.compiler.target>
 		<gsec.version>0.0.8</gsec.version>
 		<spring.version>3.2.18.RELEASE</spring.version>
 		<spring.security.version>3.2.10.RELEASE</spring.security.version>
