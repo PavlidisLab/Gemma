@@ -295,6 +295,20 @@ public abstract class AbstractDao<T extends Identifiable> implements BaseDao<T> 
     }
 
     /**
+     * Perform a search on a given property and all its possible values.
+     */
+    protected List<T> findByPropertyIn( String propertyName, Collection<?> propertyValues ) {
+        if ( propertyValues.isEmpty() ) {
+            return Collections.emptyList();
+        }
+        //noinspection unchecked
+        return this.getSessionFactory().getCurrentSession()
+                .createCriteria( this.elementClass )
+                .add( Restrictions.in( propertyName, propertyValues ) )
+                .list();
+    }
+
+    /**
      * Reattach an entity to the current persistence context.
      * <p>
      * This is a hack to avoid {@link org.hibernate.LazyInitializationException} when manipulating an unmanaged or

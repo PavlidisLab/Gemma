@@ -81,7 +81,7 @@ create procedure add_external_database(in name varchar(255), in description text
 
 -- insert new db we need to track various things
 call add_external_database ('PubMed', 'PubMed database from NCBI', 'https://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=PubMed', 'ftp://ftp.ncbi.nlm.nih.gov/pubmed/', 'LITERATURE');
-call add_external_database('GO', 'Gene Ontology database', 'https://www.godatabase.org/dev/database/', 'https://archive.godatabase.org', 'ONTOLOGY');
+-- call add_external_database('GO', 'Gene Ontology database', 'https://www.godatabase.org/dev/database/', 'https://archive.godatabase.org', 'ONTOLOGY');
 call add_external_database('GEO', 'Gene Expression Omnibus', 'https://www.ncbi.nlm.nih.gov/geo/', 'ftp://ftp.ncbi.nih.gov/pub/geo/DATA', 'EXPRESSION');
 call add_external_database('ArrayExpress', 'EBI ArrayExpress', 'https://www.ebi.ac.uk/arrayexpress/', 'ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/', 'EXPRESSION');
 call add_external_database('Genbank', 'NCBI Genbank', 'https://www.ncbi.nlm.nih.gov/Genbank/index.html', 'ftp://ftp.ncbi.nih.gov/genbank/', 'SEQUENCE');
@@ -89,6 +89,9 @@ call add_external_database('Entrez Gene', 'NCBI Gene database', 'https://www.ncb
 call add_external_database('Ensembl', 'EMBL - EBI/Sanger Institute genome annotations', 'https://www.ensembl.org/', 'ftp://ftp.ensembl.org/pub/', 'GENOME');
 call add_external_database('OBO_REL', 'Open Biomedical Ontologies Relationships', 'https://www.obofoundry.org/ro/', NULL, 'ONTOLOGY');
 call add_external_database('STRING', 'STRING - Known and Predicted Protein-Protein Interactions', 'https://string-db.org/version_8_2/newstring_cgi/show_network_section.pl?identifiers=', NULL, 'PROTEIN');
+call add_external_database('hg38', NULL, '', NULL, 'SEQUENCE');
+call add_external_database('mm10', NULL, '', NULL, 'SEQUENCE');
+call add_external_database('rn7', NULL, '', NULL, 'SEQUENCE');
 call add_external_database('hg18 annotations', NULL, 'https://hgdownload.cse.ucsc.edu/goldenpath/hg18/database/', NULL, 'OTHER');
 call add_external_database('hg19 annotations', NULL, 'https://hgdownload.cse.ucsc.edu/goldenpath/hg19/database/', NULL, 'OTHER');
 call add_external_database('hg38 annotations', NULL, 'https://hgdownload.cse.ucsc.edu/goldenpath/hg38/database/', NULL, 'OTHER');
@@ -115,7 +118,7 @@ call add_external_database('hg37 RNA-Seq annotations', NULL, NULL, NULL, 'OTHER'
 call add_external_database('mm10 RNA-Seq annotations', NULL, NULL, NULL, 'OTHER');
 call add_external_database('rn6 RNA-Seq annotations', NULL, NULL, NULL, 'OTHER');
 call add_external_database('gene', NULL, NULL, 'https://ftp.ncbi.nih.gov/gene/DATA/gene_info.gz', 'OTHER');
--- call add_external_database('go', NULL, NULL, 'https://ftp.ncbi.nih.gov/gene/DATA/gene2go.gz', 'OTHER');
+call add_external_database('go', NULL, NULL, 'https://ftp.ncbi.nih.gov/gene/DATA/gene2go.gz', 'ONTOLOGY');
 call add_external_database('multifunctionality', NULL, NULL, NULL, 'OTHER');
 call add_external_database('gene2cs', NULL, NULL, NULL, 'OTHER');
 

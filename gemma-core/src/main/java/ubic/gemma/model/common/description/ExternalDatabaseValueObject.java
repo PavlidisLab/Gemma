@@ -37,6 +37,7 @@ public class ExternalDatabaseValueObject extends IdentifiableValueObject<Externa
 
     private static final long serialVersionUID = -1714429166594162374L;
     private String name;
+    private String description;
     private String uri;
     private String releaseVersion;
     private URL releaseUrl;
@@ -54,10 +55,10 @@ public class ExternalDatabaseValueObject extends IdentifiableValueObject<Externa
         this.checked = checked;
     }
 
-    @SneakyThrows(MalformedURLException.class)
     public ExternalDatabaseValueObject( ExternalDatabase ed ) {
         super( ed );
         this.name = ed.getName();
+        this.description = ed.getDescription();
         this.uri = ed.getWebUri();
         this.releaseUrl = ed.getReleaseUrl();
         this.releaseVersion = ed.getReleaseVersion();

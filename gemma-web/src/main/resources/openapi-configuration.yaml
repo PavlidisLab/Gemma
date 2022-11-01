@@ -24,6 +24,12 @@ openAPI:
 
       ## Updates
 
+      Add a new `externalDatabases` attribute to the main endpoint that displays version of some of the main external
+      databases that we are using. This exposes versions and last updates for genomes, gene annotations, GO terms, and
+      much more!
+
+      The `ExternalDatabaseValueObject` now exposes a `description` which provides additional details.
+
       ### Update 2.5.2
 
       Restore `factors` in `BioMaterialValueObject` as it is being still used by our RNA-Seq pipeline. The attribute is

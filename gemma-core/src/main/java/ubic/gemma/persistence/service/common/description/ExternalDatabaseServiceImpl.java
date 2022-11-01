@@ -21,8 +21,14 @@ package ubic.gemma.persistence.service.common.description;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ubic.gemma.core.util.ListUtils;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.persistence.service.AbstractService;
+
+import java.util.Comparator;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * @author pavlidis
@@ -43,5 +49,14 @@ public class ExternalDatabaseServiceImpl extends AbstractService<ExternalDatabas
     @Transactional(readOnly = true)
     public ExternalDatabase findByName( String name ) {
         return this.externalDatabaseDao.findByName( name );
+    }
+
+    @Override
+    public List<ExternalDatabase> findAllByNameIn( List<String> names ) {
+        // the database is case insensitive...
+        Map<String, Integer> namesIndex = ListUtils.indexOfCaseInsensitiveStringElements( names );
+        return externalDatabaseDao.findAllByNameIn( names ).stream()
+                .sorted( Comparator.comparing( ed -> namesIndex.get( ed.getName() ) ) )
+                .collect( Collectors.toList() );
     }
 }

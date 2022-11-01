@@ -21,6 +21,9 @@ package ubic.gemma.persistence.service.common.description;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.persistence.service.BaseDao;
 
+import java.util.Collection;
+import java.util.List;
+
 /**
  * @see ubic.gemma.model.common.description.ExternalDatabase
  */
@@ -28,4 +31,5 @@ public interface ExternalDatabaseDao extends BaseDao<ExternalDatabase> {
 
     ExternalDatabase findByName( String name );
 
+    List<ExternalDatabase> findAllByNameIn( Collection<String> names );
 }

@@ -6,12 +6,17 @@ import io.swagger.v3.oas.annotations.enums.SecuritySchemeType;
 import io.swagger.v3.oas.annotations.security.SecurityScheme;
 import io.swagger.v3.oas.models.OpenAPI;
 import lombok.Getter;
+import lombok.Value;
 import lombok.extern.apachecommons.CommonsLog;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
+import org.springframework.web.util.UriComponentsBuilder;
 import ubic.gemma.core.security.authentication.UserManager;
 import ubic.gemma.model.common.auditAndSecurity.User;
+import ubic.gemma.model.common.description.ExternalDatabaseValueObject;
+import ubic.gemma.persistence.service.common.description.ExternalDatabaseService;
 import ubic.gemma.persistence.util.Settings;
 import ubic.gemma.web.controller.common.auditAndSecurity.UserValueObject;
 import ubic.gemma.web.services.rest.util.OpenApiUtils;
@@ -19,13 +24,18 @@ import ubic.gemma.web.services.rest.util.Responder;
 import ubic.gemma.web.services.rest.util.ResponseDataObject;
 
 import javax.servlet.ServletConfig;
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
+import java.net.URI;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Handles calls to the root API url and user info api
@@ -40,22 +50,19 @@ import java.util.Collection;
 public class RootWebService {
 
     private static final String MSG_WELCOME = "Welcome to Gemma RESTful API.";
-    private static final String APIDOCS_URL = Settings.getBaseUrl() + "resources/restapidocs/";
-    private static final String ERROR_MSG_USER_INFO_ACCESS = "Inappropriate privileges. Only your user info is available.";
-
-    private UserManager userManager;
 
     /**
-     * Required by spring
+     * Hardcoded list of {@link ubic.gemma.model.common.description.ExternalDatabase} names to display on the root
+     * endpoint.
+     * TODO: use a {@link ubic.gemma.model.common.description.DatabaseType} to identify those.
      */
-    @SuppressWarnings("unused")
-    public RootWebService() {
-    }
+    static final String[] EXTERNAL_DATABASE_NAMES = { "hg38", "mm10", "rn7", "gene", "go", "multifunctionality", "gene2cs" };
 
     @Autowired
-    public RootWebService( UserManager userManager ) {
-        this.userManager = userManager;
-    }
+    private ExternalDatabaseService externalDatabaseService;
+
+    @Autowired
+    private UserManager userManager;
 
     /**
      * Returns an object with API information.
@@ -65,8 +72,17 @@ public class RootWebService {
     @Operation(summary = "Retrieve an object with basic API information")
     public ResponseDataObject<ApiInfoValueObject> getApiInfo( // Params:
             // The servlet response, needed for response code setting.
+            @Context final HttpServletRequest request,
             @Context final ServletConfig servletConfig ) {
-        return Responder.respond( new ApiInfoValueObject( MSG_WELCOME, OpenApiUtils.getOpenApi( servletConfig ), APIDOCS_URL ) );
+        // collect various versioned entities to display on the main endpoint
+        List<ExternalDatabaseValueObject> versioned = externalDatabaseService.findAllByNameIn( Arrays.asList( EXTERNAL_DATABASE_NAMES ) ).stream()
+                .map( ExternalDatabaseValueObject::new )
+                .collect( Collectors.toList() );
+        URI apiDocsUrl = ServletUriComponentsBuilder.fromContextPath( request )
+                .path( "/resources/restapidocs/" )
+                .build()
+                .toUri();
+        return Responder.respond( new ApiInfoValueObject( MSG_WELCOME, OpenApiUtils.getOpenApi( servletConfig ), apiDocsUrl, versioned ) );
     }
 
     /**
@@ -101,21 +117,22 @@ public class RootWebService {
         return Responder.respond( uvo );
     }
 
-    @SuppressWarnings("unused") // Getters used during RS serialization
-    @Getter
+    @Value
     public static class ApiInfoValueObject {
-        private final String welcome;
-        private final String version;
-        private final String docs;
+        String welcome;
+        String version;
+        URI docs;
+        List<ExternalDatabaseValueObject> externalDatabases;
 
-        public ApiInfoValueObject( String msgWelcome, OpenAPI openApi, String apidocsUrl ) {
+        public ApiInfoValueObject( String msgWelcome, OpenAPI openApi, URI apiDocsUrl, List<ExternalDatabaseValueObject> externalDatabases ) {
             this.welcome = msgWelcome;
             if ( openApi.getInfo() != null ) {
                 this.version = openApi.getInfo().getVersion();
             } else {
                 this.version = null;
             }
-            this.docs = apidocsUrl;
+            this.docs = apiDocsUrl;
+            this.externalDatabases = externalDatabases;
         }
     }
 
