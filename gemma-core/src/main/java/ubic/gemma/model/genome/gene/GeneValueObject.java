@@ -25,6 +25,7 @@ import lombok.EqualsAndHashCode;
 import org.hibernate.Hibernate;
 import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.annotations.GemmaWebOnly;
+import ubic.gemma.model.common.description.DatabaseEntryValueObject;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonValueObject;
@@ -73,6 +74,7 @@ public class GeneValueObject extends IdentifiableValueObject<Gene> implements Se
     private String name;
     private Integer ncbiId;
     private String ensemblId;
+    private Set<DatabaseEntryValueObject> accessions;
     @JsonIgnore
     private double[] nodeDegreeNegRanks;
     @JsonIgnore
@@ -135,6 +137,11 @@ public class GeneValueObject extends IdentifiableValueObject<Gene> implements Se
         }
         if ( gene.getAliases() != null && Hibernate.isInitialized( gene.getAliases() ) ) {
             this.aliases = gene.getAliases().stream().map( GeneAlias::getAlias ).collect( Collectors.toCollection( TreeSet::new ) );
+        }
+        if ( Hibernate.isInitialized( gene.getAccessions() ) ) {
+            this.accessions = gene.getAccessions().stream()
+                    .map( DatabaseEntryValueObject::new )
+                    .collect( Collectors.toSet() );
         }
     }
 

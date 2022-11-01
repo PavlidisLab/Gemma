@@ -1,8 +1,8 @@
 /*
  * The gemma-web project
- * 
+ *
  * Copyright (c) 2014 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -42,7 +42,6 @@ public class ArrayDesignValueObjectExt extends ArrayDesignValueObject {
     private ArrayDesignValueObject alternative; // e.g. for Affymetrix CDF versions
     private String bioProcessAnnotationLink;
     private String colorString;
-    private Collection<DatabaseEntryValueObject> externalReferences;
     private Collection<ArrayDesignValueObject> mergees;
     private ArrayDesignValueObject merger;
     private String noParentsAnnotationLink;
@@ -75,10 +74,6 @@ public class ArrayDesignValueObjectExt extends ArrayDesignValueObject {
 
     public String getColorString() {
         return colorString;
-    }
-
-    public Collection<DatabaseEntryValueObject> getExternalReferences() {
-        return externalReferences;
     }
 
     public Collection<ArrayDesignValueObject> getMergees() {
@@ -134,10 +129,6 @@ public class ArrayDesignValueObjectExt extends ArrayDesignValueObject {
 
     public void setColorString( String colorString ) {
         this.colorString = colorString;
-    }
-
-    public void setExternalReferences( Collection<DatabaseEntryValueObject> externalReferences ) {
-        this.externalReferences = externalReferences;
     }
 
     public void setMergees( Collection<ArrayDesignValueObject> mergees ) {

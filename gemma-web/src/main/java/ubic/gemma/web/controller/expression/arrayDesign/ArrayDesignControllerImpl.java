@@ -423,7 +423,7 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
 
         long numExpressionExperiments = arrayDesignService.numExperiments( arrayDesign );
 
-        Collection<DatabaseEntryValueObject> externalReferences = new HashSet<>();
+        Set<DatabaseEntryValueObject> externalReferences = new HashSet<>();
         for ( DatabaseEntry en : arrayDesign.getExternalReferences() ) {
             externalReferences.add( new DatabaseEntryValueObject( en ) );
         }

@@ -29,17 +29,11 @@ import java.util.Date;
 @SuppressWarnings("WeakerAccess") // Used in frontend
 @Data
 @EqualsAndHashCode(of = { "accession", "externalDatabase" }, callSuper = false)
-public class DatabaseEntryValueObject extends IdentifiableValueObject<DatabaseEntry> implements Versioned, Serializable {
+public class DatabaseEntryValueObject extends IdentifiableValueObject<DatabaseEntry> implements Serializable {
 
     private static final long serialVersionUID = -527323410580090L;
     private String accession;
     private ExternalDatabaseValueObject externalDatabase;
-    @Nullable
-    private URL releaseUrl;
-    @Nullable
-    private String releaseVersion;
-    @Nullable
-    private Date lastUpdated;
 
     public DatabaseEntryValueObject( DatabaseEntry de ) {
         super( de.getId() );
@@ -50,21 +44,5 @@ public class DatabaseEntryValueObject extends IdentifiableValueObject<DatabaseEn
 
     public DatabaseEntryValueObject( long id ) {
         super( id );
-    }
-
-    public String getReleaseVersion() {
-        return releaseVersion != null ? releaseVersion : externalDatabase.getReleaseVersion();
-    }
-
-    public URL getReleaseUrl() {
-        return releaseUrl != null ? releaseUrl : externalDatabase.getReleaseUrl();
-    }
-
-    /**
-     * The last updated data, if known, otherwise defaults on the {@link #externalDatabase} last updated.
-     */
-    @Override
-    public Date getLastUpdated() {
-        return lastUpdated != null ? lastUpdated : externalDatabase.getLastUpdated();
     }
 }
