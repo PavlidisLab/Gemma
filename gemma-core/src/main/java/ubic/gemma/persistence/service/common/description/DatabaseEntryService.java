@@ -21,7 +21,6 @@ package ubic.gemma.persistence.service.common.description;
 import org.springframework.security.access.annotation.Secured;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.DatabaseEntryValueObject;
-import ubic.gemma.persistence.service.BaseVoEnabledService;
 import ubic.gemma.persistence.service.FilteringVoEnabledService;
 
 /**
@@ -29,7 +28,10 @@ import ubic.gemma.persistence.service.FilteringVoEnabledService;
  */
 public interface DatabaseEntryService extends FilteringVoEnabledService<DatabaseEntry, DatabaseEntryValueObject> {
 
-    DatabaseEntry load( String accession );
+    /**
+     * Find the latest (as per its version or ID) database entry by accession.
+     */
+    DatabaseEntry findLatestByAccession( String accession );
 
     @Override
     @Secured({ "GROUP_USER" })

@@ -21,6 +21,7 @@ package ubic.gemma.model.common.description;
 import ubic.gemma.model.common.Identifiable;
 
 import java.io.Serializable;
+import java.util.Comparator;
 
 /**
  * <p>
@@ -33,6 +34,20 @@ public class DatabaseEntry implements Identifiable, Serializable {
      * The serial version UID of this class. Needed for serialization.
      */
     private static final long serialVersionUID = 5418961655066735636L;
+
+    /**
+     * Compares {@link DatabaseEntry} by version.
+     */
+    public static Comparator<DatabaseEntry> getComparator() {
+        return Comparator
+                // we always prefer integer versions, so we put them last
+                .comparing( DatabaseEntry::getAccessionVersionAsInteger, Comparator.nullsFirst( Comparator.naturalOrder() ) )
+                // sort the remaining accessions lexicographically
+                .thenComparing( DatabaseEntry::getAccessionVersion )
+                // for ties, simply use the latest ID
+                .thenComparing( DatabaseEntry::getId );
+    }
+
     private String accession;
     private String accessionVersion;
     private String Uri;
@@ -98,6 +113,14 @@ public class DatabaseEntry implements Identifiable, Serializable {
 
     public void setAccessionVersion( String accessionVersion ) {
         this.accessionVersion = accessionVersion;
+    }
+
+    private Integer getAccessionVersionAsInteger() {
+        try {
+            return accessionVersion != null ? Integer.valueOf( accessionVersion ) : null;
+        } catch ( NumberFormatException e ) {
+            return null;
+        }
     }
 
     public ExternalDatabase getExternalDatabase() {

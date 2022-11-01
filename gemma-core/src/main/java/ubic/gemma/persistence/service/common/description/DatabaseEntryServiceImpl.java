@@ -26,6 +26,9 @@ import ubic.gemma.model.common.description.DatabaseEntryValueObject;
 import ubic.gemma.persistence.service.AbstractFilteringVoEnabledService;
 import ubic.gemma.persistence.service.AbstractVoEnabledService;
 
+import java.util.Comparator;
+import java.util.List;
+
 /**
  * Spring Service base class for <code>DatabaseEntryService</code>, provides access to all services and entities
  * referenced by this service.
@@ -46,8 +49,11 @@ public class DatabaseEntryServiceImpl extends AbstractFilteringVoEnabledService<
 
     @Override
     @Transactional(readOnly = true)
-    public DatabaseEntry load( String accession ) {
-        return this.databaseEntryDao.findByAccession( accession );
+    public DatabaseEntry findLatestByAccession( String accession ) {
+        return this.databaseEntryDao.findByAccession( accession )
+                .stream()
+                .max( DatabaseEntry.getComparator() )
+                .orElse( null );
     }
 
 }

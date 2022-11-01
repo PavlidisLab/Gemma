@@ -19,7 +19,7 @@ public class DatabaseEntryStringArg extends DatabaseEntryArg<String> {
     @Override
     public DatabaseEntry getEntity( DatabaseEntryService service ) {
         String value = getValue();
-        return checkEntity( value == null ? null : service.load( value ) );
+        return checkEntity( value == null ? null : service.findLatestByAccession( value ) );
     }
 
     @Override

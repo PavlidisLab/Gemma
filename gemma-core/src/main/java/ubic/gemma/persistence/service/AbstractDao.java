@@ -187,11 +187,14 @@ public abstract class AbstractDao<T extends Identifiable> implements BaseDao<T> 
     }
 
     /**
-     * Lists all entities whose given property matches the given value.
+     * Retrieve one entity whose given property matches the given value.
+     * <p>
+     * Note: the property should have a unique index, otherwise a {@link org.hibernate.NonUniqueResultException} will be
+     * raised.
      *
      * @param  propertyName  the name of property to be matched.
      * @param  propertyValue the value to look for.
-     * @return a list of entities whose properties matched the given value.
+     * @return an entity whose property matched the given value
      */
     @SuppressWarnings("unchecked")
     protected T findOneByProperty( String propertyName, Object propertyValue ) {
@@ -199,7 +202,6 @@ public abstract class AbstractDao<T extends Identifiable> implements BaseDao<T> 
         return ( T ) this.getSessionFactory().getCurrentSession()
                 .createCriteria( this.elementClass )
                 .add( Restrictions.eq( propertyName, propertyValue ) )
-                .setMaxResults( 1 )
                 .uniqueResult();
     }
 
