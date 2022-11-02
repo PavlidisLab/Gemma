@@ -316,7 +316,7 @@
         <dependency>
             <groupId>org.aspectj</groupId>
             <artifactId>aspectjweaver</artifactId>
-            <version>1.7.4</version>
+            <version>1.9.9.1</version>
         </dependency>
         <!-- bit array -->
         <!-- it can't be updated though because the binary format has changed, and we store those in the database -->
