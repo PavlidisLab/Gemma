@@ -11,6 +11,6 @@ import ubic.gemma.core.util.test.category.SlowTest;
  */
 @RunWith(Categories.class)
 @Categories.ExcludeCategory(SlowTest.class)
-@Suite.SuiteClasses({ AllTestSuite.class })
-public class FastTestSuite {
+@Suite.SuiteClasses({ AllTests.class })
+public class FastTests {
 }
