@@ -94,12 +94,15 @@
         </aop:aspect>
     </aop:config>
 
-    <!-- Aspect to add audit info for objects after CRUD operations. -->
+    <!-- Aspect to add audit info for objects before CRUD operations. -->
     <aop:config>
         <aop:aspect id="auditAspect" ref="auditAdvice" order="5">
-            <aop:after-returning method="doAuditAdvice"
-                                 pointcut="ubic.gemma.core.util.Pointcuts.modifier()"
-                                 returning="retValue"/>
+            <aop:before method="doCreateAdvice"
+                        pointcut="ubic.gemma.core.util.Pointcuts.creator()"/>
+            <aop:before method="doUpdateAdvice"
+                        pointcut="ubic.gemma.core.util.Pointcuts.updater()"/>
+            <aop:before method="doDeleteAdvice"
+                        pointcut="ubic.gemma.core.util.Pointcuts.deleter()"/>
         </aop:aspect>
     </aop:config>
 

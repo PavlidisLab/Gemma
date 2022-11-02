@@ -12,7 +12,7 @@
          </generator>
       </id>
       <many-to-one name="auditTrail" class="ubic.gemma.model.common.auditAndSecurity.AuditTrailImpl"  cascade="all" lazy="proxy" fetch="select">
-         <column name="AUDIT_TRAIL_FK" not-null="false" sql-type="BIGINT" unique="true"/>
+         <column name="AUDIT_TRAIL_FK" not-null="true" sql-type="BIGINT" unique="true"/>
       </many-to-one>
       <!-- This is assumed readily available in AbstractCuratableValueObject -->
       <!-- The curation details are a single-row thing with only eagerly join-fetched many-to-one relationships, so it's no big deal -->

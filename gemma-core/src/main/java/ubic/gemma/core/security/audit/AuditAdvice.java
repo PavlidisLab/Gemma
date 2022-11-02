@@ -18,388 +18,264 @@
  */
 package ubic.gemma.core.security.audit;
 
-import gemma.gsec.util.CrudUtils;
-import gemma.gsec.util.CrudUtilsImpl;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.Signature;
+import org.hibernate.EntityMode;
 import org.hibernate.Hibernate;
 import org.hibernate.LazyInitializationException;
-import org.hibernate.LockOptions;
 import org.hibernate.SessionFactory;
-import org.hibernate.classic.Session;
 import org.hibernate.engine.CascadeStyle;
+import org.hibernate.engine.CascadingAction;
+import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.type.CollectionType;
+import org.hibernate.type.Type;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Component;
 import ubic.gemma.core.security.authentication.UserManager;
-import ubic.gemma.core.security.authorization.acl.AclAdvice;
-import ubic.gemma.model.common.AbstractAuditable;
+import ubic.gemma.core.util.Pointcuts;
+import ubic.gemma.model.common.Auditable;
+import ubic.gemma.model.common.auditAndSecurity.AuditAction;
+import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
 import ubic.gemma.model.common.auditAndSecurity.User;
-import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.persistence.service.common.auditAndSecurity.AuditHelper;
-import ubic.gemma.persistence.util.ReflectionUtil;
-import ubic.gemma.persistence.util.Settings;
 
-import javax.annotation.PostConstruct;
-import java.beans.PropertyDescriptor;
-import java.lang.reflect.InvocationTargetException;
-import java.util.Collection;
-import java.util.NoSuchElementException;
+import javax.annotation.ParametersAreNonnullByDefault;
+import java.util.*;
 
 /**
  * Manage audit trails on objects.
+ * <p>
+ * When an auditable entity is created, updated or deleted, this advice will automatically populate the audit trail with
+ * appropriate audit events before the operation occurs.
+ * <p>
+ * The propagation of audit events respects the cascading style. However, since there's no way to determine the cascade
+ * style on the original entity, we use {@link CascadingAction#PERSIST} for a {@link Pointcuts#creator()},
+ * {@link CascadingAction#SAVE_UPDATE} for an {@link Pointcuts#updater()} and {@link CascadingAction#DELETE} for a
+ * {@link Pointcuts#deleter()}.
  *
  * @author pavlidis
  */
 @Component
+@ParametersAreNonnullByDefault
 public class AuditAdvice {
 
     // Note that we have a special logger configured for this class, so remove events get stored.
     private static final Logger log = LoggerFactory.getLogger( AuditAdvice.class.getName() );
 
-    private boolean AUDIT_CREATE = true;
-
-    private boolean AUDIT_DELETE = true;
-
-    private boolean AUDIT_UPDATE = true;
-
-    @Autowired
-    private AuditHelper auditHelper;
-
-    @Autowired
-    private CrudUtils crudUtils;
-    @Autowired
-    private SessionFactory sessionFactory;
     @Autowired
     private UserManager userManager;
 
-    /**
-     * Entry point. This only takes action if the method involves AbstractAuditables.
-     *
-     * @param pjp pjp
-     * @param retValue return value
-     */
-    @SuppressWarnings("unused") // entry point
-    public void doAuditAdvice( JoinPoint pjp, Object retValue ) {
+    @Autowired
+    private SessionFactory sessionFactory;
 
-        final Signature signature = pjp.getSignature();
-        final String methodName = signature.getName();
-        final Object[] args = pjp.getArgs();
+    @SuppressWarnings("unused")
+    public void doCreateAdvice( JoinPoint pjp ) {
+        doAuditAdvice( pjp, AuditAction.CREATE );
+    }
 
-        Object object = this.getPersistentObject( retValue, methodName, args );
+    @SuppressWarnings("unused")
+    public void doUpdateAdvice( JoinPoint pjp ) {
+        doAuditAdvice( pjp, AuditAction.UPDATE );
+    }
 
-        if ( object == null )
+    @SuppressWarnings("unused")
+    public void doDeleteAdvice( JoinPoint pjp ) {
+        doAuditAdvice( pjp, AuditAction.DELETE );
+    }
+
+    private void doAuditAdvice( JoinPoint pjp, AuditAction operationType ) {
+        Signature signature = pjp.getSignature();
+        Object[] args = pjp.getArgs();
+        // only audit the first argument
+        if ( args.length < 1 )
             return;
-
+        Object arg = args[0];
+        if ( arg == null ) {
+            AuditAdvice.log.warn( String.format( "Cannot audit a null object passed as first argument of %s.", signature ) );
+            return;
+        }
         User user = userManager.getCurrentUser();
-
         if ( user == null ) {
-            AuditAdvice.log.info( "User could not be determined (anonymous?), audit will be skipped." );
+            AuditAdvice.log.info( String.format( "User could not be determined (anonymous?), audit will be skipped for %s.", signature ) );
             return;
         }
-
-        if ( object instanceof Collection ) {
-            for ( final Object o : ( Collection<?> ) object ) {
-                if ( AbstractAuditable.class.isAssignableFrom( o.getClass() ) ) {
-                    this.process( methodName, ( AbstractAuditable ) o, user );
-                }
-            }
-        } else if ( ( AbstractAuditable.class.isAssignableFrom( object.getClass() ) ) ) {
-            this.process( methodName, ( AbstractAuditable ) object, user );
-        }
-    }
-
-    @PostConstruct
-    protected void init() {
-
-        try {
-            AUDIT_UPDATE = Settings.getBoolean( "audit.update" );
-            AUDIT_DELETE = Settings.getBoolean( "audit.delete" );
-            AUDIT_CREATE = Settings.getBoolean( "audit.create" ) || AUDIT_UPDATE;
-        } catch ( NoSuchElementException e ) {
-            AuditAdvice.log.error( "Configuration error: " + e.getMessage() + "; will use default values" );
-        }
-    }
-
-    private boolean canSkipAssociationCheck( Object object, String propertyName ) {
-
-        /*
-         * If this is an expression experiment, don't go down the data vectors.
-         */
-        if ( ExpressionExperiment.class.isAssignableFrom( object.getClass() ) && ( propertyName.equals( "rawExpressionDataVectors" ) || propertyName
-                .equals( "processedExpressionDataVectors" ) ) ) {
-            AuditAdvice.log.trace( "Skipping vectors" );
-            return true;
-        }
-
-        /*
-         * Array designs...
-         */
-        if ( ArrayDesign.class.isAssignableFrom( object.getClass() ) && ( propertyName.equals( "compositeSequences" )
-                || propertyName.equals( "reporters" ) ) ) {
-            AuditAdvice.log.trace( "Skipping probes" );
-            return true;
-        }
-
-        return false;
-    }
-
-    /**
-     * Adds 'create' AuditEvent to audit trail of the passed AbstractAuditable.
-     *
-     * @param note Additional text to add to the automatically generated note.
-     */
-    private void addCreateAuditEvent( final AbstractAuditable auditable, User user, final String note ) {
-
-        if ( this.isNullOrTransient( auditable ) )
-            return;
-
-        AuditTrail auditTrail = auditable.getAuditTrail();
-
-        this.ensureInSession( auditTrail );
-
-        if ( auditTrail != null && !auditTrail.getEvents().isEmpty() ) {
-            // This can happen when we persist objects and then let this interceptor look at them again
-            // while persisting parent objects. That's okay.
-            if ( AuditAdvice.log.isDebugEnabled() )
-                AuditAdvice.log
-                        .debug( "Call to addCreateAuditEvent but the auditTrail already has events. AuditTrail id: "
-                                + auditTrail.getId() );
-            return;
-        }
-
-        String details = "Create " + auditable.getClass().getSimpleName() + " " + auditable.getId() + note;
-
-        try {
-            auditHelper.addCreateAuditEvent( auditable, details, user );
-            if ( AuditAdvice.log.isDebugEnabled() ) {
-                AuditAdvice.log
-                        .debug( "Audited event: " + ( note.length() > 0 ? note : "[no note]" ) + " on " + auditable
-                                .getClass().getSimpleName() + ":" + auditable.getId() + " by " + user.getUserName() );
-            }
-
-        } catch ( UsernameNotFoundException e ) {
-            AuditAdvice.log.warn( "No user, cannot add 'create' event" );
-        }
-    }
-
-    private void addDeleteAuditEvent( AbstractAuditable d, User user ) {
-        assert d != null;
-        // what else could we do? But need to keep this record in a good place. See log4j.properties.
-        if ( AuditAdvice.log.isInfoEnabled() ) {
-            String un = "";
-            if ( user != null ) {
-                un = "by " + user.getUserName();
-            }
-            AuditAdvice.log
-                    .info( "Delete event on entity " + d.getClass().getName() + ":" + d.getId() + "  [" + d + "] "
-                            + un );
-        }
-    }
-
-    private void addUpdateAuditEvent( final AbstractAuditable auditable, User user ) {
-        assert auditable != null;
-
-        AuditTrail auditTrail = auditable.getAuditTrail();
-
-        this.ensureInSession( auditTrail );
-
-        if ( auditTrail == null || auditTrail.getEvents().isEmpty() ) {
-            /*
-             * Note: This can happen for ExperimentalFactors when loading from GEO etc. because of the bidirectional
-             * association and the way we persist them. See ExpressionPersister. (actually this seems to be fixed...)
-             */
-            AuditAdvice.log.error( "No create event for update method call on " + auditable
-                    + ", performing 'create' instead" );
-            this.addCreateAuditEvent( auditable, user, " - Event added on update of existing object." );
-        } else {
-            String note = "Updated " + auditable.getClass().getSimpleName() + " " + auditable.getId();
-            auditHelper.addUpdateAuditEvent( auditable, note, user );
-            if ( AuditAdvice.log.isDebugEnabled() ) {
-                AuditAdvice.log.debug( "Audited event: " + note + " on " + auditable.getClass().getSimpleName() + ":"
-                        + auditable.getId() + " by " + user.getUserName() );
-            }
-        }
-    }
-
-    private void ensureInSession( AuditTrail auditTrail ) {
-        if ( auditTrail == null )
-            return;
-        /*
-         * Ensure we have the object in the session. It might not be, if we have flushed the session.
-         */
-        Session session = sessionFactory.getCurrentSession();
-        if ( !session.contains( auditTrail ) ) {
-            session.buildLockRequest( LockOptions.NONE ).lock( auditTrail );
-        }
-    }
-
-    private Object getPersistentObject( Object retValue, String methodName, Object[] args ) {
-        if ( retValue == null && ( CrudUtilsImpl.methodIsDelete( methodName ) || CrudUtilsImpl
-                .methodIsUpdate( methodName ) ) ) {
-
-            // Only deal with single-argument update methods.
-            if ( args.length > 1 )
-                return null;
-
-            assert args.length > 0;
-            return args[0];
-        }
-        return retValue;
-    }
-
-    private boolean isNullOrTransient( final AbstractAuditable auditable ) {
-        return auditable == null || auditable.getId() == null;
-    }
-
-    /**
-     * Check if the associated object needs to be 'create audited'. Example: gene products are created by cascade when
-     * calling update on a gene.
-     */
-    private void maybeAddCascadeCreateEvent( Object object, AbstractAuditable auditable, User user ) {
-        if ( AuditAdvice.log.isDebugEnabled() )
-            AuditAdvice.log.debug( "Checking for whether to cascade create event from " + auditable + " to " + object );
-
-        if ( auditable.getAuditTrail() == null || auditable.getAuditTrail().getEvents().isEmpty() ) {
-            this.addCreateAuditEvent( auditable, user, " - created by cascade from " + object );
+        // ensures that all created audit event happens at the same time
+        Date date = new Date();
+        for ( Auditable auditable : extractAuditables( arg ) ) {
+            this.processAuditable( signature, operationType, auditable, user, date );
         }
     }
 
     /**
      * Process auditing on the object.
      */
-    private void process( final String methodName, final AbstractAuditable auditable, User user ) {
-
-        // do this here, when we are sure to be in a transaction. But might be repetitive when working on a collection.
-        this.sessionFactory.getCurrentSession().setReadOnly( user, true );
-
+    private void processAuditable( Signature method, AuditAction auditAction, Auditable auditable, User user, Date date ) {
         if ( AuditAdvice.log.isTraceEnabled() ) {
-            AuditAdvice.log
-                    .trace( "***********  Start Audit of " + methodName + " on " + auditable + " *************" );
+            AuditAdvice.log.trace( String.format( "***********  Start Audit %s of %s by %s (via %s) *************", auditAction, auditable, user.getUserName(), method ) );
         }
-        assert auditable != null : "Null entity passed to auditing [" + methodName + " on " + null + "]";
-        assert auditable.getId() != null : "Transient instance passed to auditing [" + methodName + " on " + auditable + "]";
-
-        if ( AUDIT_CREATE && CrudUtilsImpl.methodIsCreate( methodName ) ) {
-            this.addCreateAuditEvent( auditable, user, "" );
-            this.processAssociations( methodName, auditable, user );
-        } else if ( AUDIT_UPDATE && CrudUtilsImpl.methodIsUpdate( methodName ) ) {
-            this.addUpdateAuditEvent( auditable, user );
-
-            /*
-             * Do not process associations during an update except to add creates to new objects. Otherwise this would
-             * result in update events getting added to all child objects, which is silly; and in any case they might be
-             * proxies.
-             */
-            this.processAssociations( methodName, auditable, user );
-        } else if ( AUDIT_DELETE && CrudUtilsImpl.methodIsDelete( methodName ) ) {
-            this.addDeleteAuditEvent( auditable, user );
+        if ( AuditAction.CREATE.equals( auditAction ) ) {
+            this.addCreateAuditEvent( method, auditable, user, date );
+        } else if ( AuditAction.UPDATE.equals( auditAction ) ) {
+            this.addUpdateAuditEvent( method, auditable, user, date );
+        } else if ( AuditAction.DELETE.equals( auditAction ) ) {
+            this.addDeleteAuditEvent( method, auditable, user, date );
+        } else {
+            throw new IllegalArgumentException( String.format( "Unsupported audit action %s.", auditAction ) );
         }
-
         if ( AuditAdvice.log.isTraceEnabled() )
-            AuditAdvice.log.trace( "============  End Audit ==============" );
+            AuditAdvice.log.trace( String.format( "============  End Audit %s of %s by %s (via %s) ==============", auditAction, auditable, user.getUserName(), method ) );
+    }
+
+
+    /**
+     * Adds 'create' AuditEvent to audit trail of the passed Auditable.
+     */
+    private void addCreateAuditEvent( Signature method, Auditable auditable, User user, Date date ) {
+        addAuditEvent( method, auditable, AuditAction.CREATE, "", user, date );
+        cascadeAuditEvent( method, AuditAction.CREATE, auditable, user, date, CascadingAction.PERSIST );
+    }
+
+    private void addUpdateAuditEvent( Signature method, Auditable auditable, User user, Date date ) {
+        if ( auditable.getId() == null ) {
+            throw new IllegalArgumentException( String.format( "Transient instance passed to update auditing [%s on %s by %s]", method, auditable, user.getUserName() ) );
+        }
+        addAuditEvent( method, auditable, AuditAction.UPDATE, "", user, date );
+        // we only propagate a CREATE event through cascade for entities that were created in the update
+        // Note: CREATE events are skipped if the audit trail already contains one
+        cascadeAuditEvent( method, AuditAction.CREATE, auditable, user, date, CascadingAction.SAVE_UPDATE );
+    }
+
+    private void addDeleteAuditEvent( Signature method, Auditable auditable, User user, Date date ) {
+        if ( auditable.getId() == null ) {
+            throw new IllegalArgumentException( String.format( "Transient instance passed to delete auditing [%s on %s by %s]", method, auditable, user.getUserName() ) );
+        }
+        addAuditEvent( method, auditable, AuditAction.DELETE, "", user, date );
+        cascadeAuditEvent( method, AuditAction.DELETE, auditable, user, date, CascadingAction.DELETE );
     }
 
     /**
      * Fills in audit trails on newly created child objects after a 'create' or 'update'. It does not add 'update'
      * events on the child objects.
-     * Thus if the update is on an expression experiment that has a new Characteristic, the Characteristic will have a
-     * 'create' event, and the EEE will get an added update event (via the addUpdateAuditEvent call elsewhere, not here)
+     * <p>
+     * Thus, if the update is on an expression experiment that has a new Characteristic, the Characteristic will have a
+     * 'create' event, and the EE will get an added update event (via the addUpdateAuditEvent call elsewhere, not here).
      *
-     * @see AclAdvice for similar code for ACLs
+     * @param cascadingAction the Hibernate {@link CascadingAction} that that should be used to determine how auditing
+     *                        should cascade to associated entities.
      */
-    private void processAssociations( String methodName, Object object, User user ) {
+    private void cascadeAuditEvent( Signature method, AuditAction auditAction, Auditable auditable, User user, Date date, CascadingAction cascadingAction ) {
+        String cascadedNote = String.format( " - %s by cascade from %s", auditAction.getValue(), auditable );
 
-        if ( object instanceof AuditTrail )
-            return; // don't audit audit trails.
+        // use identity hashcode since auditable might rely on a potentially null ID for hashing
+        Set<Auditable> visited = Collections.newSetFromMap( new IdentityHashMap<>() );
 
-        EntityPersister persister = crudUtils.getEntityPersister( object );
-        if ( persister == null ) {
-            throw new IllegalArgumentException( "No persister found for " + object.getClass().getName() );
-        }
-        CascadeStyle[] cascadeStyles = persister.getPropertyCascadeStyles();
-        String[] propertyNames = persister.getPropertyNames();
-        try {
+        Queue<Auditable> fringe = new ArrayDeque<>();
+        fringe.add( auditable );
+
+        while ( !fringe.isEmpty() ) {
+            Auditable object = fringe.remove();
+            if ( visited.contains( object ) ) {
+                continue;
+            }
+            visited.add( object );
+            EntityPersister persister = ( EntityPersister ) sessionFactory.getClassMetadata( Hibernate.getClass( object ) );
+            CascadeStyle[] cascadeStyles = persister.getPropertyCascadeStyles();
+            String[] propertyNames = persister.getPropertyNames();
+            Object[] propertyValues = persister.getPropertyValues( object, EntityMode.POJO );
+            Type[] propertyTypes = persister.getPropertyTypes();
             for ( int j = 0; j < propertyNames.length; j++ ) {
                 CascadeStyle cs = cascadeStyles[j];
-
-                String propertyName = propertyNames[j];
-
-                if ( this.canSkipAssociationCheck( object, propertyName ) || !crudUtils
-                                .needCascade( methodName, cs ) ) {
+                Object propertyValue = propertyValues[j];
+                Type propertyType = propertyTypes[j];
+                // ensure that the operation performed on the original object cascades as per JPA definition
+                if ( !cs.doCascade( cascadingAction ) ) {
                     continue;
                 }
-
-                PropertyDescriptor descriptor = BeanUtils.getPropertyDescriptor( object.getClass(), propertyName );
-                Object associatedObject = ReflectionUtil.getProperty( object, descriptor );
-
-                if ( associatedObject == null )
-                    continue;
-
-                Class<?> propertyType = descriptor.getPropertyType();
-
-                if ( AbstractAuditable.class.isAssignableFrom( propertyType ) ) {
-
-                    AbstractAuditable auditable = ( AbstractAuditable ) associatedObject;
-                    try {
-
-                        this.maybeAddCascadeCreateEvent( object, auditable, user );
-
-                        this.processAssociations( methodName, auditable, user );
-                    } catch ( LazyInitializationException e ) {
-                        // If this happens, it means the object can't be 'new' so adding audit trail can't
-                        // be necessary.
-                        if ( AuditAdvice.log.isDebugEnabled() )
-                            AuditAdvice.log.debug( "Caught lazy init error while processing " + auditable + ": " + e
-                                    .getMessage() + " - skipping creation of cascade event." );
+                // only cascade through associated auditable entities and collection of auditable entities
+                if ( propertyType.isEntityType() && Auditable.class.isAssignableFrom( propertyType.getReturnedClass() ) ) {
+                    fringe.add( ( Auditable ) propertyValue );
+                } else if ( propertyType.isCollectionType() ) {
+                    // check if the collection holds auditable entities before navigating it
+                    Type elementType = ( ( CollectionType ) propertyType ).getElementType( ( SessionFactoryImplementor ) sessionFactory );
+                    if ( !Auditable.class.isAssignableFrom( elementType.getReturnedClass() ) ) {
+                        continue;
                     }
-
-                } else if ( Collection.class.isAssignableFrom( propertyType ) ) {
-                    Collection<?> associatedObjects = ( Collection<?> ) associatedObject;
-
                     try {
-                        Hibernate.initialize( associatedObjects );
-                        for ( Object collectionMember : associatedObjects ) {
-
-                            if ( AbstractAuditable.class.isAssignableFrom( collectionMember.getClass() ) ) {
-                                AbstractAuditable auditable = ( AbstractAuditable ) collectionMember;
-                                try {
-                                    Hibernate.initialize( auditable );
-                                    this.maybeAddCascadeCreateEvent( object, auditable, user );
-                                    this.processAssociations( methodName, collectionMember, user );
-                                } catch ( LazyInitializationException e ) {
-
-                                    if ( AuditAdvice.log.isDebugEnabled() )
-                                        AuditAdvice.log
-                                                .debug( "Caught lazy init error while processing " + auditable + ": "
-                                                        + e.getMessage() + " - skipping creation of cascade event." );
-                                    // If this happens, it means the object can't be 'new' so adding audit trail can't
-                                    // be necessary. But keep checking.
-                                }
-
-                            }
-                        }
+                        //noinspection unchecked
+                        fringe.addAll( ( Collection<? extends Auditable> ) propertyValue );
                     } catch ( LazyInitializationException e ) {
-
-                        // If this happens, it means the object can't be 'new' so adding audit trail can't
-                        // be necessary.
-                        if ( AuditAdvice.log.isDebugEnabled() )
-                            AuditAdvice.log
-                                    .debug( "Caught lazy init error while processing " + object + ": " + e.getMessage()
-                                            + " - skipping creation of cascade event." );
+                        log.warn( String.format( "Failed to cascade audit event: %s. Enable debug logs for %s to see a full stacktrace.",
+                                e.getMessage(), AuditAdvice.class.getName() ) );
+                        log.debug( e.getMessage(), e );
                     }
-
                 }
             }
-        } catch ( IllegalAccessException | InvocationTargetException e ) {
-            throw new RuntimeException( e );
+        }
+
+        for ( Auditable object : visited ) {
+            this.addAuditEvent( method, object, auditAction, cascadedNote, user, date );
         }
     }
 
+    /**
+     * Add an audit event.
+     */
+    private void addAuditEvent( Signature method, Auditable auditable, AuditAction auditAction, String cascadedNote, User user, Date date ) {
+        String note = String.format( "%s event on entity %s:%d [%s] by %s via %s on %s%s", auditAction, auditable.getClass().getName(), auditable.getId(), auditable, user.getUserName(), method, date, cascadedNote );
+        if ( auditable.getAuditTrail() == null ) {
+            // transient
+            auditable.setAuditTrail( AuditTrail.Factory.newInstance() );
+        } else if ( auditable.getAuditTrail().getId() != null ) {
+            // persistent, but let's make sure it is part of this session
+            auditable.setAuditTrail( ( AuditTrail ) sessionFactory.getCurrentSession().merge( auditable.getAuditTrail() ) );
+        }
+        if ( auditAction.equals( AuditAction.CREATE ) && !auditable.getAuditTrail().getEvents().isEmpty() ) {
+            AuditAdvice.log.trace( String.format( "Skipped %s on %s since its audit trail has already been filled.",
+                    AuditAction.CREATE, auditable ) );
+            return;
+        }
+        auditable.getAuditTrail().getEvents().add( AuditEvent.Factory.newInstance( date, auditAction, note, null, user, null ) );
+        if ( AuditAdvice.log.isTraceEnabled() ) {
+            AuditAdvice.log.trace( String.format( "Audited event: %s on %s:%d by %s",
+                    note.length() > 0 ? note : "[no note]", auditable.getClass().getSimpleName(), auditable.getId(), user.getUserName() ) );
+        }
+    }
+
+    /**
+     * Efficiently extract all auditable of a given type in an object's tree.
+     * <p>
+     * This method traverses {@link Map}, {@link Collection}, {@link Iterable} and Java arrays, but not properties and
+     * fields of objects.
+     */
+    public static Collection<Auditable> extractAuditables( Object object ) {
+        Queue<Object> fringe = new ArrayDeque<>();
+        // use identity hashcode since auditable might rely on a potentially null ID for hashing
+        Set<Object> visited = Collections.newSetFromMap( new IdentityHashMap<>() );
+        Collection<Auditable> found = new ArrayList<>();
+        fringe.add( object );
+        while ( !fringe.isEmpty() ) {
+            Object o = fringe.remove();
+            if ( visited.contains( o ) )
+                continue;
+            visited.add( o );
+            if ( o instanceof Auditable ) {
+                found.add( ( Auditable ) o );
+            } else if ( o.getClass().isArray() ) {
+                Collections.addAll( fringe, ( Object[] ) o );
+            } else if ( o instanceof Collection ) {
+                fringe.addAll( ( Collection<?> ) o );
+            } else if ( o instanceof Iterable ) {
+                for ( Object elem : ( Iterable<?> ) o ) {
+                    fringe.add( elem );
+                }
+            } else if ( o instanceof Map ) {
+                fringe.addAll( ( ( Map<?, ?> ) o ).keySet() );
+                fringe.addAll( ( ( Map<?, ?> ) o ).values() );
+            }
+        }
+        return found;
+    }
 }

@@ -14,7 +14,7 @@
         </id>
         <many-to-one name="auditTrail" class="ubic.gemma.model.common.auditAndSecurity.AuditTrailImpl" cascade="all"
                      lazy="proxy" fetch="select">
-            <column name="AUDIT_TRAIL_FK" not-null="false" sql-type="BIGINT" unique="true"/>
+            <column name="AUDIT_TRAIL_FK" not-null="true" sql-type="BIGINT" unique="true"/>
         </many-to-one>
         <property name="name" type="java.lang.String">
             <column name="NAME" not-null="false" unique="false"

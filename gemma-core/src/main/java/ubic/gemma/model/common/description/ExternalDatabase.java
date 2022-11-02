@@ -166,9 +166,9 @@ public class ExternalDatabase extends Describable implements Auditable, Versione
             return new ubic.gemma.model.common.description.ExternalDatabase();
         }
 
-        public static ExternalDatabase newInstance( String gene2cs, DatabaseType other ) {
+        public static ExternalDatabase newInstance( String name, DatabaseType other ) {
             ExternalDatabase ed = new ExternalDatabase();
-            ed.setName( gene2cs );
+            ed.setName( name );
             ed.setType( other );
             return ed;
         }

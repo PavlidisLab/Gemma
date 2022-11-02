@@ -28,3 +28,11 @@ alter table EXTERNAL_DATABASE
     add column RELEASE_VERSION VARCHAR(255),
     add column RELEASE_URL     VARCHAR(255),
     add column LAST_UPDATED    DATETIME;
+
+-- make audit trail non-null in all models
+alter table INVESTIGATION modify column AUDIT_TRAIL_FK BIGINT not null;
+alter table EXPRESSION_EXPERIMENT_SET modify column AUDIT_TRAIL_FK BIGINT not null;
+alter table PHENOTYPE_ASSOCIATION modify column AUDIT_TRAIL_FK BIGINT not null;
+alter table USER_GROUP modify column AUDIT_TRAIL_FK BIGINT not null;
+alter table ARRAY_DESIGN modify column AUDIT_TRAIL_FK BIGINT not null;
+alter table GENE_SET modify column AUDIT_TRAIL_FK BIGINT not null;
