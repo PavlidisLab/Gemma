@@ -24,7 +24,7 @@
 			<column name="SECOND_GENE_FK" not-null="true" sql-type="BIGINT" unique="false" />
 		</property>
 		<many-to-one access="field" name="supportDetails"
-			class="ubic.gemma.model.analysis.expression.coexpression.MouseCoexpressionSupportDetailsImpl" lazy="proxy" fetch="join"
+			class="ubic.gemma.model.analysis.expression.coexpression.MouseCoexpressionSupportDetailsImpl" lazy="proxy" fetch="select"
 			cascade="none">
 			<column name="SUPPORT_DETAILS_FK" not-null="false" sql-type="BIGINT" />
 		</many-to-one>
