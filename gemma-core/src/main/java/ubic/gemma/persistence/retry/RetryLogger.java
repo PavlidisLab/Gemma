@@ -19,12 +19,15 @@
 
 package ubic.gemma.persistence.retry;
 
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.retry.RetryCallback;
 import org.springframework.retry.RetryContext;
 import org.springframework.retry.listener.RetryListenerSupport;
 import org.springframework.stereotype.Component;
+
+import javax.annotation.Nullable;
 
 /**
  * Provide logging when an operation has failed and is being retried. This would not be needed if there was better
@@ -37,40 +40,24 @@ public class RetryLogger extends RetryListenerSupport {
 
     private static final Log log = LogFactory.getLog( RetryLogger.class );
 
-    /**
-     * Called after the final attempt (successful or not).
-     *
-     * @param callback  the callback
-     * @param context   the context
-     * @param throwable throwable
-     */
     @Override
-    public <T> void close( RetryContext context, RetryCallback<T> callback, Throwable throwable ) {
-
-        if ( context.isExhaustedOnly() ) {
-            RetryLogger.log.error( "Retry attempts exhausted" );
-        } else if ( context.getRetryCount() > 0 && throwable == null ) {
-            RetryLogger.log.info( "Retry was successful! Attempts: " + context.getRetryCount() );
+    public <T> void close( RetryContext context, RetryCallback<T> callback, @Nullable Throwable throwable ) {
+        if ( context.getRetryCount() > 1 ) {
+            if ( throwable == null ) {
+                RetryLogger.log.info( String.format( "Retry was successful after %d attempts!", context.getRetryCount() ) );
+            } else {
+                // a full stacktrace is included here
+                RetryLogger.log.error( String.format( String.format( "Retry failed after %d attempts.", context.getRetryCount() ) ), throwable );
+            }
         }
-
-        super.close( context, callback, throwable );
     }
 
-    /**
-     * Called after every unsuccessful attempt at a retry.
-     *
-     * @param callback  the callback
-     * @param context   the context
-     * @param throwable throwable
-     */
     @Override
     public <T> void onError( RetryContext context, RetryCallback<T> callback, Throwable throwable ) {
         if ( context.getRetryCount() > 0 ) {
-            RetryLogger.log.warn( "Retry attempt # " + context.getRetryCount() + " failed " + ( throwable == null ?
-                    "" :
-                    ( "[ " + throwable.getClass().getName() + ": " + throwable.getMessage() + "]" ) ) );
+            // only include a brief & specific stacktrace
+            RetryLogger.log.warn( String.format( "Retry attempt #%d failed.", context.getRetryCount() ),
+                    ExceptionUtils.getRootCause( throwable ) );
         }
-        super.onError( context, callback, throwable );
     }
-
 }

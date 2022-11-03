@@ -10,10 +10,10 @@
 	<!-- Enable AspectJ autoproxy -->
 	<aop:aspectj-autoproxy/>
 
-	<!-- Automatically retry certain failed operations in transactions. FIXME use @Transactional to identify -->
+	<!-- Automatically retry certain failed operations (marked with @Transactional or explicitly with @Retry) -->
 	<aop:config>
 		<aop:pointcut id="retryable"
-					  expression="ubic.gemma.core.util.Pointcuts.serviceMethodWithArg()"/>
+					  expression="ubic.gemma.core.util.Pointcuts.retryOrTransactionalMethod()"/>
 		<aop:advisor pointcut-ref="retryable" advice-ref="retryAdvice" order="2"/>
 	</aop:config>
 
@@ -23,18 +23,7 @@
 				<property name="backOffPolicy">
 					<bean class="org.springframework.retry.backoff.ExponentialBackOffPolicy"/>
 				</property>
-				<property name="retryPolicy">
-					<bean class="ubic.gemma.persistence.retry.RetryPolicy">
-						<constructor-arg name="maxAttempts" value="${gemma.transaction.maxretries}"/>
-						<constructor-arg name="retryableExceptions">
-							<map>
-								<!-- FIXME we probably don't need all of these. -->
-								<entry key="org.hibernate.exception.LockAcquisitionException" value="true"/>
-								<entry key="org.springframework.dao.PessimisticLockingFailureException" value="true"/>
-								<entry key="org.springframework.dao.OptimisticLockingFailureException" value="true"/>
-							</map>
-						</constructor-arg>
-					</bean>
+				<property name="retryPolicy" ref="retryPolicy">
 				</property>
 				<property name="listeners">
 					<list>
@@ -43,6 +32,17 @@
 				</property>
 			</bean>
 		</property>
+	</bean>
+
+	<bean id="retryPolicy" class="org.springframework.retry.policy.SimpleRetryPolicy">
+		<constructor-arg name="maxAttempts" value="${gemma.transaction.maxretries}"/>
+		<constructor-arg name="retryableExceptions">
+			<map>
+				<entry key="org.springframework.dao.PessimisticLockingFailureException" value="true"/>
+				<entry key="org.springframework.dao.OptimisticLockingFailureException" value="true"/>
+			</map>
+		</constructor-arg>
+		<constructor-arg name="traverseCauses" value="true"/>
 	</bean>
 
 	<bean id="transactionManager" class="org.springframework.orm.hibernate3.HibernateTransactionManager"
@@ -79,7 +79,8 @@
 				<prop key="hibernate.cache.use_query_cache">${gemma.hibernate.use_query_cache}</prop>
 				<prop key="hibernate.cache.use_second_level_cache">${gemma.hibernate.use_second_level_cache}</prop>
 				<prop key="hibernate.generate_statistics">${gemma.hibernate.generate_statistics}</prop>
-				<prop key="hibernate.cache.use_structured_entries">${gemma.hibernate.cache_use_structured_entries}</prop>
+				<prop key="hibernate.cache.use_structured_entries">${gemma.hibernate.cache_use_structured_entries}
+				</prop>
 				<prop key="hibernate.order_updates">${gemma.hibernate.order_updates}</prop>
 				<prop key="hibernate.order_inserts">${gemma.hibernate.order_inserts}</prop>
 				<prop key="hibernate.format_sql">${gemma.hibernate.format_sql}</prop>

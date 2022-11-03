@@ -37,7 +37,9 @@ import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.TestExecutionListeners;
 import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
+import org.springframework.test.context.transaction.TransactionalTestExecutionListener;
 import org.springframework.test.jdbc.JdbcTestUtils;
 import ubic.gemma.core.util.test.category.SpringContextTest;
 import ubic.gemma.model.analysis.Analysis;
@@ -63,6 +65,7 @@ import ubic.gemma.persistence.persister.PersisterHelper;
 import ubic.gemma.persistence.service.common.description.ExternalDatabaseService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 
+import javax.annotation.OverridingMethodsMustInvokeSuper;
 import javax.sql.DataSource;
 import java.nio.charset.StandardCharsets;
 import java.util.Collection;
@@ -117,7 +120,8 @@ public abstract class BaseSpringContextTest extends AbstractJUnit4SpringContextT
     private TestAuthenticationUtils testAuthenticationUtils;
 
     @Override
-    final public void afterPropertiesSet() {
+    @OverridingMethodsMustInvokeSuper
+    public void afterPropertiesSet() {
         this.jdbcTemplate = new JdbcTemplate( dataSource );
     }
 
@@ -516,7 +520,7 @@ public abstract class BaseSpringContextTest extends AbstractJUnit4SpringContextT
         testAuthenticationUtils.runAsUser( userName );
     }
 
-    protected void runAsAnonymous( ) {
+    protected void runAsAnonymous() {
         testAuthenticationUtils.runAsAnonymous();
     }
 

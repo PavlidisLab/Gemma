@@ -20,7 +20,7 @@ package ubic.gemma.core.util;
 
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Pointcut;
-import org.springframework.transaction.annotation.Transactional;
+import ubic.gemma.persistence.retry.Retryable;
 
 /**
  * General-purpose pointcuts to recognize CRUD operations etc.
@@ -85,20 +85,33 @@ public class Pointcuts {
     public void deleter() {
     }
 
-    /**
-     * A service method, public and within a class annotated with {@link org.springframework.stereotype.Service}.
-     *<p>
-     * Using @target makes a proxy out of everything, which causes problems if services aren't implementing
-     * interfaces -- seems for InitializingBeans in particular. @within doesn't work, at least for the ACLs.
-     */
-    @Pointcut("inGemma() && @target(org.springframework.stereotype.Service) && anyPublicMethod()")
+    @Pointcut("inGemma() && @target(org.springframework.stereotype.Service)")
     public void serviceMethod() {
     }
 
     /**
-     * A service method with arguments.
+     * A transactional method.
      */
-    @Pointcut("serviceMethod() && (execution(* *(*)) || execution(* *(*,..)))")
-    public void serviceMethodWithArg() {
+    @Pointcut("inGemma() && @annotation(org.springframework.transaction.annotation.Transactional)")
+    public void transactionalMethod() {
+    }
+
+    /**
+     * A method that can be retried, annotated with {@link org.springframework.transaction.annotation.Transactional}
+     */
+    @Pointcut("inGemma() && @annotation(ubic.gemma.persistence.retry.Retryable)")
+    public void retryMethod() {
+
+    }
+
+    /**
+     * A retriable or transactional method.
+     * <p>
+     * @deprecated we should mark all retriable methods with {@link Retryable} and get rid of
+     * this pointcut.
+     */
+    @Deprecated
+    @Pointcut("retryMethod() || transactionalMethod()")
+    public void retryOrTransactionalMethod() {
     }
 }
