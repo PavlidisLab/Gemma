@@ -340,7 +340,7 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
         g.setName( toSplit.getShortName() + " splits" );
         g.setTaxon( toSplit.getBioAssays().iterator().next().getSampleUsed().getSourceTaxon() );
         g.getExperiments().addAll( result );
-        g = this.expressionExperimentSetService.create( g );
+        this.expressionExperimentSetService.create( g );
 
         // remove useless data files
 

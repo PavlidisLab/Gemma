@@ -126,8 +126,8 @@ public class AnnotationAssociationDaoImpl extends AbstractDao<AnnotationAssociat
 
     @Override
     @Transactional
-    public Collection<AnnotationAssociation> create( final Collection<AnnotationAssociation> entities ) {
-        return super.create( entities );
+    public void create( final Collection<AnnotationAssociation> entities ) {
+        super.create( entities );
     }
 
     @Override

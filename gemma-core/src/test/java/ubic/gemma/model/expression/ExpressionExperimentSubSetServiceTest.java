@@ -1,13 +1,13 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2010 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
@@ -49,15 +49,15 @@ public class ExpressionExperimentSubSetServiceTest extends BaseSpringContextTest
         subset.getBioAssays().addAll( ee.getBioAssays() );
         subset.setName( "foo" );
 
-        ExpressionExperimentSubSet persisted = expressionExperimentSubSetService.create( subset );
+        expressionExperimentSubSetService.create( subset );
 
-        assertNotNull( persisted );
+        assertNotNull( subset );
 
-        aclTestUtils.checkEESubSetAcls( persisted );
+        aclTestUtils.checkEESubSetAcls( subset );
 
-        ExpressionExperimentSubSet hit = expressionExperimentSubSetService.find( persisted );
+        ExpressionExperimentSubSet hit = expressionExperimentSubSetService.find( subset );
 
-        assertEquals( persisted, hit );
+        assertEquals( subset, hit );
 
     }
 

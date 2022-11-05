@@ -22,7 +22,6 @@ import org.springframework.security.access.annotation.Secured;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.core.analysis.sequence.GeneMappingSummary;
 import ubic.gemma.model.association.BioSequence2GeneProduct;
-import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.CompositeSequenceValueObject;
@@ -32,7 +31,6 @@ import ubic.gemma.persistence.service.FilteringVoEnabledService;
 import ubic.gemma.persistence.util.Slice;
 
 import java.util.Collection;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -52,7 +50,7 @@ public interface CompositeSequenceService
 
     @Override
     @Secured({ "GROUP_USER" })
-    CompositeSequence create( CompositeSequence compositeSequence );
+    void create( CompositeSequence compositeSequence );
 
     @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_ARRAYDESIGN_COLLECTION_READ" })

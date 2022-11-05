@@ -205,8 +205,8 @@ public abstract class DesignElementDataVectorDaoImpl<T extends DesignElementData
 
     @Override
     @Transactional
-    public Collection<T> create( final Collection<T> entities ) {
-        return super.create( entities );
+    public void create( final Collection<T> entities ) {
+        super.create( entities );
     }
 
     @Override

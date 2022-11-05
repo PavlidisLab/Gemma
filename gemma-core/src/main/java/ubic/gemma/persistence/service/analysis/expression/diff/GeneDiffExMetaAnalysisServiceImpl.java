@@ -28,6 +28,8 @@ import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.analysis.expression.diff.*;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.persistence.service.AbstractService;
+import ubic.gemma.persistence.service.BaseDao;
 
 import java.util.Collection;
 import java.util.HashSet;
@@ -37,15 +39,14 @@ import java.util.Map;
  * @author Paul
  */
 @Service
-public class GeneDiffExMetaAnalysisServiceImpl implements GeneDiffExMetaAnalysisService {
+public class GeneDiffExMetaAnalysisServiceImpl extends AbstractService<GeneDifferentialExpressionMetaAnalysis> implements GeneDiffExMetaAnalysisService {
+
+    private final GeneDiffExMetaAnalysisDao geneDiffExMetaAnalysisDao;
 
     @Autowired
-    private GeneDiffExMetaAnalysisDao geneDiffExMetaAnalysisDao;
-
-    @Override
-    @Transactional
-    public GeneDifferentialExpressionMetaAnalysis create( GeneDifferentialExpressionMetaAnalysis analysis ) {
-        return geneDiffExMetaAnalysisDao.create( analysis );
+    public GeneDiffExMetaAnalysisServiceImpl( GeneDiffExMetaAnalysisDao mainDao ) {
+        super( mainDao );
+        this.geneDiffExMetaAnalysisDao = mainDao;
     }
 
     @Override
@@ -116,8 +117,8 @@ public class GeneDiffExMetaAnalysisServiceImpl implements GeneDiffExMetaAnalysis
 
     @Override
     @Transactional
-    public void removeForExperiment( ExpressionExperiment ee ){
-        this.geneDiffExMetaAnalysisDao.removeForExperiment(ee);
+    public void removeForExperiment( ExpressionExperiment ee ) {
+        this.geneDiffExMetaAnalysisDao.removeForExperiment( ee );
     }
 
     @Override

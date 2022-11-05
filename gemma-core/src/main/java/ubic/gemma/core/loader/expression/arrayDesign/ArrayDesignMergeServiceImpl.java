@@ -23,6 +23,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.core.analysis.report.ArrayDesignReportService;
 import ubic.gemma.core.loader.expression.ExpressionExperimentPlatformSwitchService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;

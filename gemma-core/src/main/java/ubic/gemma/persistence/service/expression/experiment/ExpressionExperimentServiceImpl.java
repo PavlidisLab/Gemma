@@ -143,7 +143,7 @@ public class ExpressionExperimentServiceImpl
         }
         factor.setExperimentalDesign( experiment.getExperimentalDesign() );
         factor.setSecurityOwner( experiment );
-        factor = experimentalFactorDao.create( factor ); // to make sure we get acls.
+        experimentalFactorDao.create( factor ); // to make sure we get acls.
         experiment.getExperimentalDesign().getExperimentalFactors().add( factor );
         expressionExperimentDao.update( experiment );
         return factor;
@@ -156,7 +156,7 @@ public class ExpressionExperimentServiceImpl
         ExpressionExperiment experiment = Objects.requireNonNull( expressionExperimentDao.load( ee.getId() ) );
         fv.setSecurityOwner( experiment );
         Collection<ExperimentalFactor> efs = experiment.getExperimentalDesign().getExperimentalFactors();
-        fv = this.factorValueDao.create( fv );
+        this.factorValueDao.create( fv );
         for ( ExperimentalFactor ef : efs ) {
             if ( fv.getExperimentalFactor().equals( ef ) ) {
                 ef.getFactorValues().add( fv );
@@ -197,7 +197,7 @@ public class ExpressionExperimentServiceImpl
 
         QuantitationType newQt = qts.iterator().next();
         if ( newQt.getId() == null ) { // we try to re-use QTs, but if not:
-            newQt = this.quantitationTypeService.create( newQt );
+            this.quantitationTypeService.create( newQt );
         }
 
         /*
@@ -1020,8 +1020,6 @@ public class ExpressionExperimentServiceImpl
     @Override
     @Transactional
     public void remove( ExpressionExperiment ee ) {
-        // reload the EE as it might originate from a different session
-        ee = Objects.requireNonNull( this.load( ee.getId() ) );
         removeAssociations( ee );
         super.remove( ee );
     }

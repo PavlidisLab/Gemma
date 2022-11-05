@@ -73,14 +73,14 @@ public class GeneSetServiceImpl implements GeneSetService {
     @SuppressWarnings("unchecked")
     @Override
     @Transactional
-    public Collection<GeneSet> create( Collection<GeneSet> sets ) {
-        return this.geneSetDao.create( sets );
+    public void create( Collection<GeneSet> sets ) {
+        this.geneSetDao.create( sets );
     }
 
     @Override
     @Transactional
-    public GeneSet create( GeneSet geneset ) {
-        return this.geneSetDao.create( geneset );
+    public void create( GeneSet geneset ) {
+        this.geneSetDao.create( geneset );
     }
 
     @Override
@@ -200,7 +200,7 @@ public class GeneSetServiceImpl implements GeneSetService {
         this.geneSetDao.update( geneset );
 
     }
-    
+
 //    @Override
 //    @Transactional
 //    public void addGene(GeneSet geneset, Gene gene) {
@@ -249,17 +249,17 @@ public class GeneSetServiceImpl implements GeneSetService {
             newGeneSet.setMembers( geneMembers );
         }
 
-        GeneSet gset = this.create( newGeneSet );
+        this.create( newGeneSet );
 
         // make groups private by default
         // can't do this to newGeneSet variable because the entity's id needs to be non-null
         if ( geneSetVo.getIsPublic() ) {
-            securityService.makePublic( gset );
+            securityService.makePublic( newGeneSet );
         } else {
-            securityService.makePrivate( gset );
+            securityService.makePrivate( newGeneSet );
         }
 
-        return geneSetValueObjectHelper.convertToValueObject( this.load( gset.getId() ) );
+        return geneSetValueObjectHelper.convertToValueObject( this.load( newGeneSet.getId() ) );
     }
 
     @Override
@@ -577,7 +577,7 @@ public class GeneSetServiceImpl implements GeneSetService {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see ubic.gemma.core.genome.gene.service.GeneSetService#thaw(ubic.gemma.model.genome.gene.GeneSet)
      */
     @Override

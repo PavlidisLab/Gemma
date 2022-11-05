@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2012 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -80,10 +80,10 @@ public class ExpressionExperimentSetServiceTest extends BaseSpringContextTest {
         eeSet.getExperiments().addAll( ees );
         eeSet.setTaxon( tax1 );
 
-        eeSet = expressionExperimentSetService.create( eeSet );
+        expressionExperimentSetService.create( eeSet );
 
         eeSetAutoGen = expressionExperimentSetService.initAutomaticallyGeneratedExperimentSet( ees, tax1 );
-        eeSetAutoGen = expressionExperimentSetService.create( eeSetAutoGen );
+        expressionExperimentSetService.create( eeSetAutoGen );
 
     }
 

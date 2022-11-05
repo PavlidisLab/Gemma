@@ -139,16 +139,16 @@ public class ExpressionExperimentSetServiceImpl
             throw new IllegalArgumentException( "Unable to determine the taxon for the EESet" );
         }
 
-        ExpressionExperimentSet newEESet = this.create( newSet );
+        this.create( newSet );
 
         // make groups private by default
         if ( eesvo.getIsPublic() ) {
-            securityService.makePublic( newEESet );
+            securityService.makePublic( newSet );
         } else {
-            securityService.makePrivate( newEESet );
+            securityService.makePrivate( newSet );
         }
 
-        return newEESet;
+        return newSet;
 
     }
 

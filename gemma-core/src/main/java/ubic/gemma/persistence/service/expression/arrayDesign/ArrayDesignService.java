@@ -91,7 +91,7 @@ public interface ArrayDesignService extends FilteringVoEnabledService<ArrayDesig
 
     @Secured({ "GROUP_USER" })
     @Override
-    ArrayDesign create( ArrayDesign arrayDesign );
+    void create( ArrayDesign arrayDesign );
 
     /**
      * Given a collection of ID (longs) will return a collection of ArrayDesigns

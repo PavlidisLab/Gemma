@@ -53,7 +53,7 @@ public interface AuditTrailService extends BaseService<AuditTrail> {
 
     @Override
     @Secured({ "GROUP_USER" })
-    AuditTrail create( AuditTrail auditTrail );
+    void create( AuditTrail auditTrail );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
     List<AuditEvent> getEvents( Auditable auditable );

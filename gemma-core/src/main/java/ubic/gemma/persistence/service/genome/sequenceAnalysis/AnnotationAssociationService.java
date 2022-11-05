@@ -25,7 +25,7 @@ public interface AnnotationAssociationService extends BaseService<AnnotationAsso
 
     @Override
     @Secured({ "GROUP_USER" })
-    AnnotationAssociation create( AnnotationAssociation annotationAssociation );
+    void create( AnnotationAssociation annotationAssociation );
 
     @Override
     @Secured({ "GROUP_USER" })

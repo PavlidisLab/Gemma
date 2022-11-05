@@ -141,7 +141,7 @@ abstract public class ArrayDesignPersister extends GenomePersister {
 
             Collection<CompositeSequence> scs = new ArrayList<>( arrayDesign.getCompositeSequences() );
             arrayDesign.getCompositeSequences().clear();
-            arrayDesign = arrayDesignDao.create( arrayDesign );
+            arrayDesignDao.create( arrayDesign );
             arrayDesign.getCompositeSequences().addAll( scs );
             arrayDesign = this.persistArrayDesignCompositeSequenceAssociations( arrayDesign );
             arrayDesignDao.update( arrayDesign );

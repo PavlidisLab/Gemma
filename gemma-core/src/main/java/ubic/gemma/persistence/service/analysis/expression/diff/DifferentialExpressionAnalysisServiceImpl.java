@@ -36,6 +36,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentDetailsValueObject;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.persistence.service.AbstractService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentDao;
 import ubic.gemma.persistence.util.EntityUtils;
 
@@ -47,18 +48,23 @@ import java.util.*;
  * @see DifferentialExpressionAnalysisService
  */
 @Service
-public class DifferentialExpressionAnalysisServiceImpl implements DifferentialExpressionAnalysisService {
+public class DifferentialExpressionAnalysisServiceImpl extends AbstractService<DifferentialExpressionAnalysis> implements DifferentialExpressionAnalysisService {
 
     private static final Log log = LogFactory.getLog( DifferentialExpressionAnalysisTask.class.getName() );
 
+    private final DifferentialExpressionAnalysisDao differentialExpressionAnalysisDao;
+    private final ExpressionAnalysisResultSetDao expressionAnalysisResultSetDao;
+    private final ExpressionExperimentDao expressionExperimentDao;
+    private final GeneDiffExMetaAnalysisDao geneDiffExMetaAnalysisDao;
+
     @Autowired
-    private DifferentialExpressionAnalysisDao differentialExpressionAnalysisDao;
-    @Autowired
-    private ExpressionAnalysisResultSetDao expressionAnalysisResultSetDao;
-    @Autowired
-    private ExpressionExperimentDao expressionExperimentDao;
-    @Autowired
-    private GeneDiffExMetaAnalysisDao geneDiffExMetaAnalysisDao;
+    public DifferentialExpressionAnalysisServiceImpl( DifferentialExpressionAnalysisDao mainDao, ExpressionAnalysisResultSetDao expressionAnalysisResultSetDao, ExpressionExperimentDao expressionExperimentDao, GeneDiffExMetaAnalysisDao geneDiffExMetaAnalysisDao ) {
+        super( mainDao );
+        this.differentialExpressionAnalysisDao = mainDao;
+        this.expressionAnalysisResultSetDao = expressionAnalysisResultSetDao;
+        this.expressionExperimentDao = expressionExperimentDao;
+        this.geneDiffExMetaAnalysisDao = geneDiffExMetaAnalysisDao;
+    }
 
     @Override
     @Transactional(readOnly = true)
@@ -82,8 +88,8 @@ public class DifferentialExpressionAnalysisServiceImpl implements DifferentialEx
 
     @Override
     @Transactional
-    public DifferentialExpressionAnalysis create( DifferentialExpressionAnalysis analysis ) {
-        return this.differentialExpressionAnalysisDao.create( analysis );
+    public void create( DifferentialExpressionAnalysis analysis ) {
+        this.differentialExpressionAnalysisDao.create( analysis );
     }
 
     @Override

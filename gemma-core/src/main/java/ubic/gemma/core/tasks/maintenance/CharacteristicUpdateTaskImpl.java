@@ -168,7 +168,7 @@ public class CharacteristicUpdateTaskImpl extends AbstractTask<TaskResult, Chara
                 vc.setEvidenceCode( GOEvidenceCode.IC );
             }
 
-            vc = characteristicService.create( vc );
+            characteristicService.create( vc );
 
             fv.setValue( vc.getValue() );
             fv.getCharacteristics().add( vc );

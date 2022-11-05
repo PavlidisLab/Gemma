@@ -354,7 +354,7 @@ public class GeeqServiceImpl extends AbstractVoEnabledService<Geeq, GeeqValueObj
         Geeq gq = ee.getGeeq();
         if ( gq == null ) {
             gq = new Geeq();
-            gq = this.create( gq );
+            this.create( gq );
             ee.setGeeq( gq );
             expressionExperimentService.update( ee );
         }

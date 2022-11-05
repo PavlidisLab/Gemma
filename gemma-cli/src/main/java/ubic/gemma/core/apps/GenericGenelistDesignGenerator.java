@@ -124,7 +124,7 @@ public class GenericGenelistDesignGenerator extends AbstractCLIContextCLI {
 
         } else {
             AbstractCLI.log.info( "Creating new 'generic' platform" );
-            arrayDesign = arrayDesignService.create( arrayDesign );
+            arrayDesignService.create( arrayDesign );
         }
         arrayDesign = arrayDesignService.thaw( arrayDesign );
 
@@ -278,7 +278,7 @@ public class GenericGenelistDesignGenerator extends AbstractCLIContextCLI {
                     csForGene.setArrayDesign( arrayDesign );
                     csForGene.setBiologicalCharacteristic( bioSequence );
                     csForGene.setDescription( "Generic expression element for " + gene );
-                    csForGene = compositeSequenceService.create( csForGene );
+                    compositeSequenceService.create( csForGene );
                     assert csForGene.getId() != null : "No id for " + csForGene + " for " + gene;
                     arrayDesign.getCompositeSequences().add( csForGene );
                     numNewElements++;

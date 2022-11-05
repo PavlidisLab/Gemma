@@ -28,7 +28,7 @@ public interface DifferentialExpressionAnalysisHelperService {
 
     void addResults( DifferentialExpressionAnalysis entity, Collection<ExpressionAnalysisResultSet> resultSets );
 
-    ExpressionAnalysisResultSet create( ExpressionAnalysisResultSet rs );
+    void create( ExpressionAnalysisResultSet rs );
 
     DifferentialExpressionAnalysis persistStub( DifferentialExpressionAnalysis entity );
 

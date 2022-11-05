@@ -30,7 +30,6 @@ import ubic.gemma.model.genome.PhysicalLocationValueObject;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneProductValueObject;
 import ubic.gemma.model.genome.gene.GeneValueObject;
-import ubic.gemma.persistence.service.BaseVoEnabledService;
 import ubic.gemma.persistence.service.FilteringVoEnabledService;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -47,7 +46,7 @@ public interface GeneService extends FilteringVoEnabledService<Gene, GeneValueOb
 
     @Override
     @Secured({ "GROUP_ADMIN" })
-    Gene create( Gene gene );
+    void create( Gene gene );
 
     @Override
     @Secured({ "GROUP_ADMIN" })

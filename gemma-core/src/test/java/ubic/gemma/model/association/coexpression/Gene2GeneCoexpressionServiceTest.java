@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2007 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -64,12 +64,12 @@ public class Gene2GeneCoexpressionServiceTest extends BaseSpringContextTest {
         firstGene = Gene.Factory.newInstance();
         firstGene.setName( "test_gene2geneCoexpression" );
         firstGene.setTaxon( mouseTaxon );
-        firstGene = geneS.create( firstGene );
+        geneS.create( firstGene );
 
         Gene secondGene = Gene.Factory.newInstance();
         secondGene.setName( "test_gene2geneCoexpression2" );
         secondGene.setTaxon( mouseTaxon );
-        secondGene = geneS.create( secondGene );
+        geneS.create( secondGene );
 
         List<NonPersistentNonOrderedCoexpLink> links = new ArrayList<>();
         links.add( new NonPersistentNonOrderedCoexpLink( MouseGeneCoExpression.Factory.newInstance( 0.9,

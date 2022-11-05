@@ -39,7 +39,7 @@ public interface Gene2GOAssociationService extends BaseService<Gene2GOAssociatio
 
     @Override
     @Secured({ "GROUP_ADMIN" })
-    Gene2GOAssociation create( Gene2GOAssociation gene2GOAssociation );
+    void create( Gene2GOAssociation gene2GOAssociation );
 
     Collection<Gene2GOAssociation> findAssociationByGene( Gene gene );
 

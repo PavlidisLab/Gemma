@@ -33,7 +33,7 @@ import java.util.Collection;
 public interface GeneDiffExMetaAnalysisService extends AnalysisService<GeneDifferentialExpressionMetaAnalysis> {
 
     @Secured({ "GROUP_USER" })
-    GeneDifferentialExpressionMetaAnalysis create( GeneDifferentialExpressionMetaAnalysis analysis );
+    void create( GeneDifferentialExpressionMetaAnalysis analysis );
 
     @Secured({ "GROUP_USER" })
     BaseValueObject delete( Long id );

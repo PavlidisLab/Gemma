@@ -103,7 +103,7 @@ public class GeneSetServiceTest extends BaseSpringContextTest {
         gset.setName( "CreateTest" );
         gset.getMembers().add( gmember );
 
-        gset = geneSetService.create( gset );
+        geneSetService.create( gset );
 
         Long id = gset.getId();
         assertNotNull( id );
@@ -125,7 +125,7 @@ public class GeneSetServiceTest extends BaseSpringContextTest {
         gset.setName( "FindTest" );
         gset.getMembers().add( gmember );
 
-        gset = geneSetService.create( gset );
+        geneSetService.create( gset );
         assertNotNull( gset.getId() );
         assertNotNull( gset.getMembers().iterator().next().getId() );
 
@@ -166,7 +166,7 @@ public class GeneSetServiceTest extends BaseSpringContextTest {
         gset.setName( "FindTest" );
         gset.getMembers().add( gmember );
 
-        gset = geneSetService.create( gset );
+        geneSetService.create( gset );
         assertNotNull( gset.getId() );
         assertNotNull( gset.getMembers().iterator().next().getId() );
 
@@ -193,7 +193,7 @@ public class GeneSetServiceTest extends BaseSpringContextTest {
         gset.setName( "UpdateTest" );
         gset.getMembers().add( gmember );
 
-        gset = geneSetService.create( gset );
+        geneSetService.create( gset );
         assertNotNull( gset.getId() );
 
         Session session = sessionFactory.openSession();

@@ -110,7 +110,8 @@ public class GeneProductDaoImpl extends AbstractVoEnabledDao<GeneProduct, GenePr
         }
         if ( AbstractDao.log.isDebugEnabled() )
             AbstractDao.log.debug( "Creating new geneProduct: " + geneProduct.getName() );
-        return this.create( geneProduct );
+        this.create( geneProduct );
+        return geneProduct;
     }
 
     @Override

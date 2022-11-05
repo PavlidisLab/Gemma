@@ -343,7 +343,7 @@ public class VectorMergingServiceImpl extends ExpressionExperimentVectorManipula
         newBioAd.setName( StringUtils.abbreviate( newBioAd.getName(), 255 ) );
         newBioAd.setBioAssays( bioAssays );
 
-        newBioAd = bioAssayDimensionService.create( newBioAd );
+        bioAssayDimensionService.create( newBioAd );
         VectorMergingServiceImpl.log
                 .info( "Created new bioAssayDimension with " + newBioAd.getBioAssays().size() + " bioassays." );
         return newBioAd;

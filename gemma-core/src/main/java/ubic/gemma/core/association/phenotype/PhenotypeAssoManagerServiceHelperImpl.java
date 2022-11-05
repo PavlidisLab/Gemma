@@ -434,7 +434,7 @@ public class PhenotypeAssoManagerServiceHelperImpl implements PhenotypeAssoManag
         DatabaseEntry databaseEntry = DatabaseEntry.Factory.newInstance( externalDatabase );
         databaseEntry.setAccession( databaseEntryValueObject.getAccession() );
 
-        databaseEntry = this.databaseEntryDao.create( databaseEntry );
+        this.databaseEntryDao.create( databaseEntry );
 
         phe.setEvidenceSource( databaseEntry );
     }

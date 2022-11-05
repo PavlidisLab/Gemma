@@ -104,7 +104,8 @@ public class FactorValueDaoImpl extends AbstractQueryFilteringVoEnabledDao<Facto
         }
         if ( AbstractDao.log.isDebugEnabled() )
             AbstractDao.log.debug( "Creating new factorValue" );
-        return this.create( factorValue );
+        this.create( factorValue );
+        return factorValue;
     }
 
     @Override

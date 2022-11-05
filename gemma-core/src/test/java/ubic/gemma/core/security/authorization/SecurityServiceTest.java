@@ -97,7 +97,7 @@ public class SecurityServiceTest extends BaseSpringContextTest {
         cs2.setArrayDesign( this.arrayDesign );
         this.arrayDesign.setCompositeSequences( col );
 
-        this.arrayDesign = this.arrayDesignService.create( this.arrayDesign );
+        this.arrayDesignService.create( this.arrayDesign );
 
     }
 

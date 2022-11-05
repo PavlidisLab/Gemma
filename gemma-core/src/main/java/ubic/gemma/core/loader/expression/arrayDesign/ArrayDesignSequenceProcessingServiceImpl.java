@@ -660,7 +660,8 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
             result = bioSequenceService.find( found ); // there still might be a match.
 
             if ( result == null ) {
-                result = bioSequenceService.create( found );
+                bioSequenceService.create( found );
+                result = found;
             }
         } else {
             result = existing;

@@ -68,7 +68,8 @@ public class AbstractDaoTest {
     @Test
     public void testBatchSizeFlushRightAway() {
         myDao.setBatchSize( 1 );
-        Collection<MyEntity> entities = myDao.create( generateEntities( 10 ) );
+        Collection<MyEntity> entities = generateEntities( 10 );
+        myDao.create( entities );
         assertThat( entities ).hasSize( 10 );
         verify( session, times( 10 ) ).save( any( MyEntity.class ) );
         verify( session, times( 10 ) ).flush();
@@ -78,7 +79,8 @@ public class AbstractDaoTest {
     @Test
     public void testBatchSizeUnlimited() {
         myDao.setBatchSize( Integer.MAX_VALUE );
-        Collection<MyEntity> entities = myDao.create( generateEntities( 10 ) );
+        Collection<MyEntity> entities = generateEntities( 10 );
+        myDao.create( entities );
         assertThat( entities ).hasSize( 10 );
         verify( session, times( 10 ) ).save( any( MyEntity.class ) );
         verify( session, VerificationModeFactory.times( 0 ) ).flush();
@@ -88,7 +90,8 @@ public class AbstractDaoTest {
     @Test
     public void testBatchSizeSmall() {
         myDao.setBatchSize( 10 );
-        Collection<MyEntity> entities = myDao.create( generateEntities( 10 ) );
+        Collection<MyEntity> entities = generateEntities( 10 );
+        myDao.create( entities );
         assertThat( entities ).hasSize( 10 );
         verify( session, times( 10 ) ).save( any( MyEntity.class ) );
         verify( session, VerificationModeFactory.times( 1 ) ).flush();

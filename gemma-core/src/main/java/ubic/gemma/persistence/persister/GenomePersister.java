@@ -432,14 +432,15 @@ abstract public class GenomePersister extends CommonPersister {
     private BioSequence2GeneProduct persistBlatAssociation( BlatAssociation association ) {
         BlatResult blatResult = association.getBlatResult();
         if ( this.isTransient( blatResult ) ) {
-            blatResult = blatResultDao.create( blatResult );
+            blatResultDao.create( blatResult );
         }
         if ( AbstractPersister.log.isDebugEnabled() ) {
             AbstractPersister.log.debug( "Persisting " + association );
         }
         association.setGeneProduct( this.persistGeneProduct( association.getGeneProduct() ) );
         association.setBioSequence( this.persistBioSequence( association.getBioSequence() ) );
-        return blatAssociationDao.create( association );
+        blatAssociationDao.create( association );
+        return association;
     }
 
     private Gene persistGene( Gene gene, boolean checkFirst ) {
@@ -471,7 +472,7 @@ abstract public class GenomePersister extends CommonPersister {
 
         if ( AbstractPersister.log.isDebugEnabled() )
             AbstractPersister.log.debug( "New gene: " + gene );
-        gene = geneDao.create( gene );
+        geneDao.create( gene );
 
         Set<GeneProduct> geneProductsForNewGene = new HashSet<>();
         for ( GeneProduct product : tempGeneProduct ) {
@@ -505,7 +506,7 @@ abstract public class GenomePersister extends CommonPersister {
             // we do a separate create because the cascade doesn't trigger auditing correctly - otherwise the
             // products are not persistent until the session is flushed, later. There might be a better way around this,
             // but so far as I know this is the only place this happens.
-            gene.setProducts( new HashSet<>( geneProductDao.create( gene.getProducts() ) ) );
+            geneProductDao.create( gene.getProducts() );
             geneDao.update( gene );
             return gene;
         } catch ( Exception e ) {
@@ -541,11 +542,11 @@ abstract public class GenomePersister extends CommonPersister {
             // this results in the persistence of the gene products, but only if the gene is transient.
             geneProduct.setGene( this.persistGene( geneProduct.getGene() ) );
         } else {
-            geneProduct = geneProductDao.create( geneProduct );
+            geneProductDao.create( geneProduct );
         }
 
         if ( geneProduct.getId() == null ) {
-            return geneProductDao.create( geneProduct );
+            geneProductDao.create( geneProduct );
         }
 
         return geneProduct;
@@ -873,7 +874,8 @@ abstract public class GenomePersister extends CommonPersister {
         if ( blatResult.getTargetAlignedRegion() != null )
             blatResult.setTargetAlignedRegion(
                     this.fillPhysicalLocationAssociations( blatResult.getTargetAlignedRegion() ) );
-        return blatResultDao.create( blatResult );
+        blatResultDao.create( blatResult );
+        return blatResult;
     }
 
     private Chromosome persistChromosome( Chromosome chromosome, Taxon t ) {
@@ -919,7 +921,7 @@ abstract public class GenomePersister extends CommonPersister {
             } catch ( IllegalAccessException e ) {
                 e.printStackTrace();
             }
-            chromosome = chromosomeDao.create( chromosome );
+            chromosomeDao.create( chromosome );
         } else if ( chroms.size() == 1 ) {
             chromosome = chroms.iterator().next();
         } else {
@@ -940,7 +942,8 @@ abstract public class GenomePersister extends CommonPersister {
         this.persistBioSequenceAssociations( bioSequence );
 
         assert bioSequence.getTaxon().getId() != null;
-        return bioSequenceDao.create( bioSequence );
+        bioSequenceDao.create( bioSequence );
+        return bioSequence;
     }
 
     private SequenceSimilaritySearchResult persistSequenceSimilaritySearchResult(

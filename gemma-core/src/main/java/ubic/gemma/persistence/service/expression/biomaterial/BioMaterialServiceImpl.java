@@ -244,7 +244,7 @@ public class BioMaterialServiceImpl extends AbstractVoEnabledService<BioMaterial
 
                     fv.setMeasurement( m );
 
-                    fv = factorValueDao.create( fv );
+                    factorValueDao.create( fv );
                     updatedFactorValues.add( fv );
                     ef.getFactorValues().add( fv );
                     experimentalFactorDao.update( ef );

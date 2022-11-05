@@ -27,7 +27,6 @@ import ubic.gemma.persistence.service.BaseVoEnabledService;
 
 import javax.annotation.Nullable;
 import java.util.Collection;
-import java.util.Date;
 import java.util.Map;
 
 /**
@@ -57,7 +56,7 @@ public interface BioMaterialService extends BaseVoEnabledService<BioMaterial, Bi
 
     @Override
     @Secured({ "GROUP_USER" })
-    BioMaterial create( BioMaterial bioMaterial );
+    void create( BioMaterial bioMaterial );
 
     @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })

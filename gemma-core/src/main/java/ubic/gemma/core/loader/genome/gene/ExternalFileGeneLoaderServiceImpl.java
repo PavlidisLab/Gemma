@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -78,7 +78,7 @@ public class ExternalFileGeneLoaderServiceImpl implements ExternalFileGeneLoader
         Taxon taxon = validateTaxon( taxonName );
         log.info( "Taxon and file validation passed for " + geneFile + " for taxon " + taxonName );
 
-        try (BufferedReader bufferedReaderGene = readFile( geneFile )) {
+        try ( BufferedReader bufferedReaderGene = readFile( geneFile ) ) {
 
             return load( bufferedReaderGene, taxon );
         }
@@ -93,7 +93,7 @@ public class ExternalFileGeneLoaderServiceImpl implements ExternalFileGeneLoader
      *
      * @param  fields A string array containing gene symbol, gene name and uniprot id.
      * @param  taxon  Taxon relating to gene
-     * @return        Gene with associated gene product for loading into Gemma. Null if no gene was loaded (exists, or
+     * @return Gene with associated gene product for loading into Gemma. Null if no gene was loaded (exists, or
      *                invalid
      *                fields) or modified.
      */
@@ -124,7 +124,7 @@ public class ExternalFileGeneLoaderServiceImpl implements ExternalFileGeneLoader
                 log.warn( "Gene " + gene + " exists, but has no products; adding one" );
                 gene = geneService.thaw( gene );
                 GeneProduct newgp = createGeneProduct( gene );
-                newgp = geneProductService.create( newgp );
+                geneProductService.create( newgp );
                 gene.getProducts().add( newgp );
                 geneService.update( gene );
                 return gene;
@@ -150,7 +150,7 @@ public class ExternalFileGeneLoaderServiceImpl implements ExternalFileGeneLoader
      * details from the gene.
      *
      * @param  gene The gene associated to this gene product
-     * @return      Collection of gene products in this case just 1.
+     * @return Collection of gene products in this case just 1.
      */
     private GeneProduct createGeneProduct( Gene gene ) {
         GeneProduct geneProduct = GeneProduct.Factory.newInstance();
@@ -185,7 +185,7 @@ public class ExternalFileGeneLoaderServiceImpl implements ExternalFileGeneLoader
      * Creates a bufferedReader for gene file.
      *
      * @param  geneFile    GeneFile including full path
-     * @return             BufferedReader The bufferedReader for gene file.
+     * @return BufferedReader The bufferedReader for gene file.
      * @throws IOException File can not be opened for reading such as does not exist.
      */
     private BufferedReader readFile( String geneFile ) throws IOException {
@@ -203,7 +203,7 @@ public class ExternalFileGeneLoaderServiceImpl implements ExternalFileGeneLoader
      * Read a gene file line, splitting the line into 3 strings.
      *
      * @param  line        A line from the gene file
-     * @return             Array of strings representing a line in a gene file.
+     * @return Array of strings representing a line in a gene file.
      * @throws IOException Thrown if file is not readable
      */
     private String[] readLine( String line ) throws IOException {
@@ -240,7 +240,7 @@ public class ExternalFileGeneLoaderServiceImpl implements ExternalFileGeneLoader
      * Method to validate that taxon is held in system.
      *
      * @param  taxonName                Taxon common name
-     * @return                          Full Taxon details
+     * @return Full Taxon details
      * @throws IllegalArgumentException If taxon is not found in the system.
      */
     private Taxon validateTaxon( String taxonName ) throws IllegalArgumentException {

@@ -69,7 +69,7 @@ public interface BioAssayService extends BaseVoEnabledService<BioAssay, BioAssay
 
     @Override
     @Secured({ "GROUP_USER" })
-    BioAssay create( BioAssay bioAssay );
+    void create( BioAssay bioAssay );
 
     @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })

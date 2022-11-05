@@ -225,15 +225,15 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
             Collection<DifferentialExpressionAnalysisResult> results = rs.getResults();
 
             rs.setResults( new HashSet<DifferentialExpressionAnalysisResult>() );
-            ExpressionAnalysisResultSet prs = helperService.create( rs );
-            assert prs != null;
+            helperService.create( rs );
+            assert rs != null;
             for ( DifferentialExpressionAnalysisResult r : results ) {
-                r.setResultSet( prs );
+                r.setResultSet( rs );
             }
-            analysis.getResultSets().add( prs );
+            analysis.getResultSets().add( rs );
             rs.getResults().addAll( results );
 
-            this.addPvalueDistribution( prs );
+            this.addPvalueDistribution( rs );
 
         }
 

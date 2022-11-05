@@ -82,9 +82,9 @@ public class AuditTrailDaoTest extends BaseSpringContextTest {
     public void testCreate() {
         log.info( "Creating audit trail" );
         assert auditTrail != null;
-        AuditTrail t = auditTrailService.create( auditTrail );
-        assertNotNull( t );
-        assertNotNull( t.getId() );
+        auditTrailService.create( auditTrail );
+        assertNotNull( auditTrail );
+        assertNotNull( auditTrail.getId() );
     }
 
     @Test

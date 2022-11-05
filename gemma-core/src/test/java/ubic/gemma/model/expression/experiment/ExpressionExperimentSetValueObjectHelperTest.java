@@ -72,7 +72,7 @@ public class ExpressionExperimentSetValueObjectHelperTest extends BaseSpringCont
         eeSet.getExperiments().addAll( ees );
         eeSet.setTaxon( tax1 );
 
-        eeSet = expressionExperimentSetService.create( eeSet );
+        expressionExperimentSetService.create( eeSet );
 
     }
 

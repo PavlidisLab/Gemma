@@ -59,7 +59,7 @@ public interface BioSequenceService extends BaseVoEnabledService<BioSequence, Bi
 
     @Override
     @Secured({ "GROUP_USER" })
-    BioSequence create( BioSequence bioSequence );
+    void create( BioSequence bioSequence );
 
     @Override
     @Secured({ "GROUP_USER" })

@@ -390,7 +390,7 @@ public class PersistentDummyObjectHelper {
         condition.setValue( "sick" );
         ef.getFactorValues().add( condition );
 
-        ef = experimentalFactorService.create( ef );
+        experimentalFactorService.create( ef );
 
         DifferentialExpressionAnalysis dea = new DifferentialExpressionAnalysis();
         dea.setExperimentAnalyzed( ee );

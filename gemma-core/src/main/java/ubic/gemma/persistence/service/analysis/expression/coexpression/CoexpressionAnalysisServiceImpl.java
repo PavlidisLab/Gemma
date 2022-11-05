@@ -26,6 +26,8 @@ import ubic.gemma.model.analysis.expression.coexpression.CoexpCorrelationDistrib
 import ubic.gemma.model.analysis.expression.coexpression.CoexpressionAnalysis;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.persistence.service.AbstractService;
+import ubic.gemma.persistence.service.BaseDao;
 import ubic.gemma.persistence.service.association.coexpression.CoexpressionService;
 
 import java.util.Collection;
@@ -36,18 +38,16 @@ import java.util.Map;
  * @author paul
  */
 @Service
-public class CoexpressionAnalysisServiceImpl implements CoexpressionAnalysisService {
+public class CoexpressionAnalysisServiceImpl extends AbstractService<CoexpressionAnalysis> implements CoexpressionAnalysisService {
+
+    private final CoexpressionAnalysisDao coexpressionAnalysisDao;
+    private final CoexpressionService geneCoexpressionService;
 
     @Autowired
-    private CoexpressionAnalysisDao coexpressionAnalysisDao;
-
-    @Autowired
-    private CoexpressionService geneCoexpressionService;
-
-    @Override
-    @Transactional
-    public CoexpressionAnalysis create( CoexpressionAnalysis coexpressionAnalysis ) {
-        return this.coexpressionAnalysisDao.create( coexpressionAnalysis );
+    public CoexpressionAnalysisServiceImpl( CoexpressionAnalysisDao mainDao, CoexpressionService coexpressionService ) {
+        super( mainDao );
+        this.coexpressionAnalysisDao = mainDao;
+        this.geneCoexpressionService = coexpressionService;
     }
 
     @Override

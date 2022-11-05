@@ -41,8 +41,8 @@ public class GeneSetMemberDaoImpl extends AbstractDao<GeneSetMember> implements 
 
     @Override
     @Transactional
-    public Collection<GeneSetMember> create( final Collection<GeneSetMember> entities ) {
-        return super.create( entities );
+    public void create( final Collection<GeneSetMember> entities ) {
+        super.create( entities );
     }
 
     @Override

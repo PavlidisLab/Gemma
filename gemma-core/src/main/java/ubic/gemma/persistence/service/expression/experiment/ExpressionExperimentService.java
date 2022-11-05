@@ -113,7 +113,7 @@ public interface ExpressionExperimentService
 
     @Override
     @Secured({ "GROUP_USER" })
-    ExpressionExperiment create( ExpressionExperiment expressionExperiment );
+    void create( ExpressionExperiment expressionExperiment );
 
     @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })

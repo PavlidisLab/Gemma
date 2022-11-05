@@ -169,7 +169,7 @@ public class GeneServiceTest extends BaseSpringContextTest {
         pl1.setStrand( "-" );
         gene.setPhysicalLocation( pl1 );
 
-        gene = geneDao.create( gene );
+        geneDao.create( gene );
         Long idWeWant = gene.getId();
 
         Gene gene2 = Gene.Factory.newInstance();
@@ -190,7 +190,7 @@ public class GeneServiceTest extends BaseSpringContextTest {
         pl2.setStrand( "-" );
         gene2.setPhysicalLocation( pl2 );
 
-        gene2 = geneDao.create( gene2 );
+        geneDao.create( gene2 );
 
         gene.setId( null );
         Gene g = geneDao.find( gene );

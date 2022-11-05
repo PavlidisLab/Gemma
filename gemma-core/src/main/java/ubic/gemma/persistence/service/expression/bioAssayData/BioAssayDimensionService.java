@@ -35,7 +35,7 @@ public interface BioAssayDimensionService
 
     @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
-    BioAssayDimension create( BioAssayDimension bioAssayDimension );
+    void create( BioAssayDimension bioAssayDimension );
 
     @Override
     @Secured({ "GROUP_USER" })

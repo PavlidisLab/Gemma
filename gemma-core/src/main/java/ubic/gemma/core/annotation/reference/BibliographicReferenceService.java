@@ -59,7 +59,7 @@ public interface BibliographicReferenceService
 
     @Override
     @Secured({ "GROUP_USER" })
-    BibliographicReference create( BibliographicReference bibliographicReference );
+    void create( BibliographicReference bibliographicReference );
 
     @Override
     @Secured({ "GROUP_ADMIN" })

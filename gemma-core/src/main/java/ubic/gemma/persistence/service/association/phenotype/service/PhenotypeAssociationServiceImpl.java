@@ -94,8 +94,8 @@ public class PhenotypeAssociationServiceImpl extends AbstractService<PhenotypeAs
 
     @Override
     @Transactional
-    public GenericExperiment create( GenericExperiment genericExperiment ) {
-        return this.genericExperimentDao.create( genericExperiment );
+    public void create( GenericExperiment genericExperiment ) {
+        this.genericExperimentDao.create( genericExperiment );
     }
 
     /**

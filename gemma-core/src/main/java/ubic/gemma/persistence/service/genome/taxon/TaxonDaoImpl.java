@@ -62,7 +62,8 @@ public class TaxonDaoImpl extends AbstractQueryFilteringVoEnabledDao<Taxon, Taxo
         }
 
         AbstractDao.log.warn( "Creating new taxon: " + taxon );
-        return super.create( taxon );
+        super.create( taxon );
+        return taxon;
     }
 
     @Override

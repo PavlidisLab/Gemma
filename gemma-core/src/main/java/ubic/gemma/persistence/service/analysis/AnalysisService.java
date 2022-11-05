@@ -23,6 +23,7 @@ import ubic.gemma.model.analysis.Analysis;
 import ubic.gemma.model.analysis.Investigation;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.persistence.service.BaseService;
 
 import java.util.Collection;
 import java.util.Map;
@@ -33,7 +34,7 @@ import java.util.Map;
  * @author Gemma
  */
 @SuppressWarnings("unused") // Possible external use
-public interface AnalysisService<T extends Analysis> {
+public interface AnalysisService<T extends Analysis> extends BaseService<T> {
 
     /**
      * @param toDelete deletes the given analysis from the system

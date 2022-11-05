@@ -55,8 +55,8 @@ public class BlatResultDaoImpl extends AbstractVoEnabledDao<BlatResult, BlatResu
 
     @Override
     @Transactional
-    public Collection<BlatResult> create( final Collection<BlatResult> entities ) {
-        return super.create( entities );
+    public void create( final Collection<BlatResult> entities ) {
+        super.create( entities );
     }
 
     @Override

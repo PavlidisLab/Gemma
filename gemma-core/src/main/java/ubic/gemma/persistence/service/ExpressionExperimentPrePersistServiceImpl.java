@@ -191,8 +191,9 @@ public class ExpressionExperimentPrePersistServiceImpl implements ExpressionExpe
 
         // transaction.
 
-        return compositeSequenceService.create( designElement );
+        compositeSequenceService.create( designElement );
 
+        return designElement;
     }
 
     /**

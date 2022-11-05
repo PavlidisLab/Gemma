@@ -404,7 +404,7 @@ public class DataUpdater {
         Map<ArrayDesign, Collection<BioAssay>> targetPlats2BioAssays = this.determinePlatformsFromCELs( ee, files );
 
         QuantitationType qt = AffyPowerToolsProbesetSummarize.makeAffyQuantitationType();
-        qt = qtService.create( qt );
+        qtService.create( qt );
         Collection<RawExpressionDataVector> vectors = new HashSet<>();
         AffyPowerToolsProbesetSummarize apt = new AffyPowerToolsProbesetSummarize( qt );
 

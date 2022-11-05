@@ -54,15 +54,13 @@ public interface DesignElementDataVectorDao<T extends DesignElementDataVector> e
      * @return the created instances.
      */
     @Override
-    Collection<T> create( Collection<T> entities );
+    void create( Collection<T> entities );
 
     /**
      * @param designElementDataVector DE data vector
-     * @return Creates an instance of ubic.gemma.model.expression.bioAssayData.DesignElementDataVector and adds it to the
-     * persistent store.
      */
     @Override
-    T create( T designElementDataVector );
+    void create( T designElementDataVector );
 
     /**
      * @param id id

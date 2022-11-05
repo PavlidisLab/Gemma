@@ -59,7 +59,7 @@ public class GeneSetValueObjectHelperTest extends BaseSpringContextTest {
         gset.setName( "CreateTest" );
         gset.getMembers().add( gmember );
 
-        gset = geneSetService.create( gset );
+        geneSetService.create( gset );
     }
 
     @Test

@@ -28,7 +28,6 @@ import ubic.gemma.model.common.Identifiable;
 
 import javax.annotation.Nullable;
 import javax.annotation.OverridingMethodsMustInvokeSuper;
-import java.io.Serializable;
 import java.util.*;
 
 /**
@@ -64,25 +63,20 @@ public abstract class AbstractDao<T extends Identifiable> implements BaseDao<T> 
     }
 
     @Override
-    public Collection<T> create( Collection<T> entities ) {
-        Collection<T> results = new ArrayList<>( entities.size() );
+    public void create( Collection<T> entities ) {
         int i = 0;
         for ( T t : entities ) {
-            results.add( this.create( t ) );
+            this.create( t );
             if ( ++i % batchSize == 0 ) {
                 flushAndClear();
             }
         }
-        return results;
     }
 
     @Override
     @OverridingMethodsMustInvokeSuper
-    public T create( T entity ) {
-        Serializable id = this.getSessionFactory().getCurrentSession().save( entity );
-        assert entity.getId() != null : "No ID received for " + entity;
-        assert id.equals( entity.getId() );
-        return entity;
+    public void create( T entity ) {
+        this.getSessionFactory().getCurrentSession().persist( entity );
     }
 
     @Override
@@ -179,7 +173,12 @@ public abstract class AbstractDao<T extends Identifiable> implements BaseDao<T> 
     @Transactional
     public T findOrCreate( T entity ) {
         T found = this.find( entity );
-        return found == null ? this.create( entity ) : found;
+        if ( found != null ) {
+            return found;
+        } else {
+            this.create( entity );
+            return entity;
+        }
     }
 
     protected SessionFactory getSessionFactory() {

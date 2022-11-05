@@ -82,11 +82,11 @@ public interface GeneSetDao extends BaseDao<GeneSet> {
 
     @Override
     @Secured({ "GROUP_USER" })
-    Collection<GeneSet> create( final Collection<GeneSet> entities );
+    void create( final Collection<GeneSet> entities );
 
     @Secured({ "GROUP_USER" })
     @Override
-    GeneSet create( GeneSet geneset );
+    void create( GeneSet geneset );
 
     @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })

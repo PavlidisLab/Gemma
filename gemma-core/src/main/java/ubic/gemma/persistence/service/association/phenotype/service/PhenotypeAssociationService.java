@@ -43,7 +43,7 @@ public interface PhenotypeAssociationService extends BaseService<PhenotypeAssoci
     void remove( PhenotypeAssociation p );
 
     @Secured({ "GROUP_USER" })
-    PhenotypeAssociation create( PhenotypeAssociation p );
+    void create( PhenotypeAssociation p );
 
     Collection<GeneEvidenceValueObject> findGenesWithPhenotypes( Set<String> phenotypesValueUri, Taxon taxon,
             boolean showOnlyEditable, Collection<Long> externalDatabaseIds );
@@ -60,7 +60,7 @@ public interface PhenotypeAssociationService extends BaseService<PhenotypeAssoci
             boolean includeIEA );
 
     @Secured({ "GROUP_USER" })
-    GenericExperiment create( GenericExperiment genericExperiment );
+    void create( GenericExperiment genericExperiment );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     Collection<PhenotypeAssociation> loadAll();

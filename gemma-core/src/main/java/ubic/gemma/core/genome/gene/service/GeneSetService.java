@@ -42,10 +42,10 @@ import java.util.Collection;
 public interface GeneSetService {
 
     @Secured({ "GROUP_USER" })
-    Collection<GeneSet> create( Collection<GeneSet> sets );
+    void create( Collection<GeneSet> sets );
 
     @Secured({ "GROUP_USER" })
-    GeneSet create( GeneSet geneset );
+    void create( GeneSet geneset );
 
     /**
      * Return all sets that contain the given gene Security filtering done at DAO level see

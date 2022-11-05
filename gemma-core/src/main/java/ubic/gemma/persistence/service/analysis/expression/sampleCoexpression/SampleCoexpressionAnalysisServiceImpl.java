@@ -161,7 +161,8 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
 
         // Persist
         this.logCormatStatus( analysis, true );
-        return sampleCoexpressionAnalysisDao.create( analysis );
+        sampleCoexpressionAnalysisDao.create( analysis );
+        return analysis;
     }
 
     @Override

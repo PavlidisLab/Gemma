@@ -38,7 +38,7 @@ public interface GeneProductService extends BaseVoEnabledService<GeneProduct, Ge
 
     @Override
     @Secured({ "GROUP_USER" })
-    GeneProduct create( GeneProduct entity );
+    void create( GeneProduct entity );
 
     @Override
     @Secured({ "GROUP_ADMIN" })

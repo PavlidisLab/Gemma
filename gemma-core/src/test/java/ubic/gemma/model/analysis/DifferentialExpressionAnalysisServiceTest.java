@@ -65,15 +65,15 @@ public class DifferentialExpressionAnalysisServiceTest extends BaseSpringContext
 
         e1 = ExpressionExperiment.Factory.newInstance();
         e1.setShortName( RandomStringUtils.randomAlphabetic( 6 ) );
-        e1 = expressionExperimentService.create( e1 );
+        expressionExperimentService.create( e1 );
 
         e2 = ExpressionExperiment.Factory.newInstance();
         e2.setShortName( RandomStringUtils.randomAlphabetic( 6 ) );
-        e2 = expressionExperimentService.create( e2 );
+        expressionExperimentService.create( e2 );
 
         e3 = ExpressionExperiment.Factory.newInstance();
         e3.setShortName( RandomStringUtils.randomAlphabetic( 6 ) );
-        e3 = expressionExperimentService.create( e3 );
+        expressionExperimentService.create( e3 );
 
         ExpressionExperiment e4 = ExpressionExperiment.Factory.newInstance();
         e4.setShortName( RandomStringUtils.randomAlphabetic( 6 ) );

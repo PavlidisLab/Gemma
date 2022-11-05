@@ -36,7 +36,7 @@ public class TaxaWebServiceTest extends BaseSpringWebTest {
         taxon.setCommonName( "common_name_" + RandomUtils.nextInt() );
         taxon.setScientificName( "scientific_name_" + randomName() );
         taxon.setIsGenesUsable( false );
-        taxon = taxonService.create( taxon );
+        taxonService.create( taxon );
     }
 
     @After

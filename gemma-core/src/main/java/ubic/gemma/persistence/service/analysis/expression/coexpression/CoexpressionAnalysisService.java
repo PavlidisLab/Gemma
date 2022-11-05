@@ -36,7 +36,7 @@ public interface CoexpressionAnalysisService extends AnalysisService<Coexpressio
 
     @SuppressWarnings("unused") // Possible external use
     @Secured({ "GROUP_USER" })
-    CoexpressionAnalysis create( CoexpressionAnalysis coexpressionAnalysis );
+    void create( CoexpressionAnalysis coexpressionAnalysis );
 
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     void update( CoexpressionAnalysis o );

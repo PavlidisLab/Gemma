@@ -63,7 +63,8 @@ public class ChromosomeDaoImpl extends AbstractDao<Chromosome> implements Chromo
         Collection<Chromosome> hits = this.find( name, taxon );
         if ( hits == null || hits.isEmpty() ) {
             Chromosome c = new Chromosome( name, taxon );
-            return this.create( c );
+            this.create( c );
+            return c;
         }
         return hits.iterator().next();
     }

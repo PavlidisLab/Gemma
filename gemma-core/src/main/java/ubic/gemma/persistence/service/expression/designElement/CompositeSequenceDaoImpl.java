@@ -594,7 +594,8 @@ public class CompositeSequenceDaoImpl extends AbstractQueryFilteringVoEnabledDao
         }
         if ( AbstractDao.log.isDebugEnabled() )
             AbstractDao.log.debug( "Creating new compositeSequence: " + compositeSequence );
-        return this.create( compositeSequence );
+        this.create( compositeSequence );
+        return compositeSequence;
     }
 
     /**

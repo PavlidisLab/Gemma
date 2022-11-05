@@ -332,7 +332,7 @@ public class CoexpressionDaoImpl implements CoexpressionDao {
 
         progress = 0;
         for ( Gene2GeneCoexpression gl : newFlippedLinks ) {
-            sess.save( gl );
+            sess.persist( gl );
             if ( ++progress % 5000 == 0 ) {
                 CoexpressionDaoImpl.log.info( "Processed " + progress + "/" + newFlippedLinks.size()
                         + " new flipped gene-level links..." );
@@ -777,7 +777,7 @@ public class CoexpressionDaoImpl implements CoexpressionDao {
             } else {
                 // we haven't saved the flipped link already so make a new support details.
                 sd = c.createSupportDetails( geneIdMap.get( fgid ), geneIdMap.get( sgid ), eff > 0 );
-                sess.save( sd );
+                sess.persist( sd );
             }
 
             g2g.setNumDatasetsSupporting( 0 );
@@ -796,7 +796,7 @@ public class CoexpressionDaoImpl implements CoexpressionDao {
 
         for ( SupportDetails sd : linksToSave.keySet() ) {
             assert sd.getId() != null;
-            sess.save( linksToSave.get( sd ) );
+            sess.persist( linksToSave.get( sd ) );
             if ( i++ % BATCH_SIZE == 0 ) {
                 sess.flush();
                 sess.clear();
@@ -2152,7 +2152,7 @@ public class CoexpressionDaoImpl implements CoexpressionDao {
 
             assert g2g != null;
 
-            session.save( sd );
+            session.persist( sd );
             assert sd.getNumIds() > 0;
 
             g2g.setSupportDetails( sd );
@@ -2208,7 +2208,7 @@ public class CoexpressionDaoImpl implements CoexpressionDao {
              */
             flippedLinks.add( c.createEELink( bioAssaySet, linkid, link.getSecondGene(), link.getFirstGene() ) );
 
-            sess.save( ecl );
+            sess.persist( ecl );
 
             if ( ++progress % 50000 == 0 ) {
                 CoexpressionDaoImpl.log
@@ -2239,7 +2239,7 @@ public class CoexpressionDaoImpl implements CoexpressionDao {
          */
         progress = 0;
         for ( ExperimentCoexpressionLink fl : flippedLinks ) {
-            sess.save( fl );
+            sess.persist( fl );
 
             if ( ++progress % 50000 == 0 ) {
                 CoexpressionDaoImpl.log
@@ -2396,7 +2396,7 @@ public class CoexpressionDaoImpl implements CoexpressionDao {
 
             assert gcti.isIncluded( ee.getId() );
             assert gcti.getNumIds() == 1;
-            sess.save( gcti );
+            sess.persist( gcti );
 
             if ( ++count % 256 == 0 ) {
                 sess.flush();
@@ -2423,7 +2423,7 @@ public class CoexpressionDaoImpl implements CoexpressionDao {
 
             if ( gcti == null ) {
                 gcti = new GeneCoexpressedGenes( g );
-                sess.save( gcti );
+                sess.persist( gcti );
             }
 
             gcti.addEntities( coexpressions.get( g ) );

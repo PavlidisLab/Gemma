@@ -69,7 +69,7 @@
          </key>
          <one-to-many class="ubic.gemma.model.expression.arrayDesign.ArrayDesign"/>
       </set>
-      <set name="mergees"  lazy="true" fetch="select" inverse="true" cascade="save-update">
+      <set name="mergees"  lazy="true" fetch="select" inverse="true" cascade="persist,save-update">
          <cache usage="read-write" />
          <key foreign-key="ARRAY_DESIGN_MERGED_INTO_FKC">
             <column name="MERGED_INTO_FK" sql-type="BIGINT"/>

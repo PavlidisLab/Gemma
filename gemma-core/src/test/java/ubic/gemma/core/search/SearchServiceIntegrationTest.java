@@ -96,21 +96,21 @@ public class SearchServiceIntegrationTest extends BaseSpringContextTest {
         eeCharSpinalCord.setCategoryUri( SearchServiceIntegrationTest.SPINAL_CORD );
         eeCharSpinalCord.setValue( "spinal cord" );
         eeCharSpinalCord.setValueUri( SearchServiceIntegrationTest.SPINAL_CORD );
-        eeCharSpinalCord = characteristicService.create( eeCharSpinalCord );
+        characteristicService.create( eeCharSpinalCord );
 
         Characteristic eeCharGeneURI = Characteristic.Factory.newInstance();
         eeCharGeneURI.setCategory( SearchServiceIntegrationTest.GENE_URI );
         eeCharGeneURI.setCategoryUri( SearchServiceIntegrationTest.GENE_URI );
         eeCharGeneURI.setValue( SearchServiceIntegrationTest.GENE_URI );
         eeCharGeneURI.setValueUri( SearchServiceIntegrationTest.GENE_URI );
-        eeCharGeneURI = characteristicService.create( eeCharGeneURI );
+        characteristicService.create( eeCharGeneURI );
 
         Characteristic eeCharCortexURI = Characteristic.Factory.newInstance();
         eeCharCortexURI.setCategory( SearchServiceIntegrationTest.BRAIN_CAVITY );
         eeCharCortexURI.setCategoryUri( SearchServiceIntegrationTest.BRAIN_CAVITY );
         eeCharCortexURI.setValue( "cavity of brain" );
         eeCharCortexURI.setValueUri( SearchServiceIntegrationTest.BRAIN_CAVITY );
-        eeCharCortexURI = characteristicService.create( eeCharCortexURI );
+        characteristicService.create( eeCharCortexURI );
 
         Set<Characteristic> chars = new HashSet<>();
         chars.add( eeCharSpinalCord );

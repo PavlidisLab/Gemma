@@ -66,7 +66,7 @@ public interface QuantitationTypeService extends FilteringVoEnabledService<Quant
 
     @Override
     @Secured({ "GROUP_USER" })
-    QuantitationType create( QuantitationType quantitationType );
+    void create( QuantitationType quantitationType );
 
     @Override
     @Secured({ "GROUP_USER" })

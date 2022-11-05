@@ -34,7 +34,7 @@ public interface BlatAssociationService extends BaseService<BlatAssociation> {
 
     @Override
     @Secured({ "GROUP_USER" })
-    BlatAssociation create( BlatAssociation blatAssociation );
+    void create( BlatAssociation blatAssociation );
 
     @Override
     @Secured({ "GROUP_ADMIN" })

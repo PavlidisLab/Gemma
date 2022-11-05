@@ -337,7 +337,7 @@ public class ArrayDesignProbeMapperServiceImpl implements ArrayDesignProbeMapper
                     // Placeholder.
                     bs.setType( SequenceType.OTHER );
 
-                    bs = bioSequenceService.create( bs );
+                    bioSequenceService.create( bs );
 
                     c.setBiologicalCharacteristic( bs );
 

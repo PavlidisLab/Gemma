@@ -121,7 +121,8 @@ public class ExperimentalFactorDaoImpl extends AbstractVoEnabledDao<Experimental
             return existing;
         }
         AbstractDao.log.debug( "Creating new arrayDesign: " + experimentalFactor.getName() );
-        return this.create( experimentalFactor );
+        this.create( experimentalFactor );
+        return experimentalFactor;
     }
 
     @Override

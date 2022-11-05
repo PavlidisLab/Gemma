@@ -61,8 +61,8 @@ public class DifferentialExpressionAnalysisHelperServiceImpl implements Differen
 
     @Override
     @Transactional
-    public ExpressionAnalysisResultSet create( ExpressionAnalysisResultSet rs ) {
-        return this.expressionAnalysisResultSetDao.create( rs );
+    public void create( ExpressionAnalysisResultSet rs ) {
+        this.expressionAnalysisResultSetDao.create( rs );
     }
 
     @Override
@@ -76,7 +76,7 @@ public class DifferentialExpressionAnalysisHelperServiceImpl implements Differen
             entity.setExperimentAnalyzed( ( BioAssaySet ) persisterHelper.persist( entity.getExperimentAnalyzed() ) );
         }
 
-        entity = differentialExpressionAnalysisService.create( entity );
+        differentialExpressionAnalysisService.create( entity );
 
         return entity;
     }

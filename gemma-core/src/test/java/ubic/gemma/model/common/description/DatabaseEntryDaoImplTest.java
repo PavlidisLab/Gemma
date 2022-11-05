@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -28,6 +28,7 @@ import ubic.gemma.persistence.service.common.description.DatabaseEntryDao;
 import java.util.Collections;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 /**
  * @author pavlidis
@@ -41,8 +42,8 @@ public class DatabaseEntryDaoImplTest extends BaseSpringContextTest {
     @Transactional
     public void testCreateDatabaseEntry() {
         DatabaseEntry de = this.getTestPersistentDatabaseEntry();
-        DatabaseEntry actualReturn = databaseEntryDao.create( de );
-        assertEquals( de.getAccession(), actualReturn.getAccession() );
+        databaseEntryDao.create( de );
+        assertNotNull( de.getId() );
     }
 
     @Test
@@ -57,7 +58,7 @@ public class DatabaseEntryDaoImplTest extends BaseSpringContextTest {
     @Test
     @Transactional
     public void testLoadWithEmptyCollection() {
-        assertEquals(Collections.emptyList(), databaseEntryDao.load( Collections.emptySet() ));
+        assertEquals( Collections.emptyList(), databaseEntryDao.load( Collections.emptySet() ) );
     }
 
 }

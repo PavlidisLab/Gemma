@@ -104,12 +104,12 @@ public class DiffExMetaAnalyzerServiceImpl implements DiffExMetaAnalyzerService 
     }
 
     @Override
-    public GeneDifferentialExpressionMetaAnalysis persist( GeneDifferentialExpressionMetaAnalysis analysis ) {
+    public void persist( GeneDifferentialExpressionMetaAnalysis analysis ) {
         for ( ExpressionAnalysisResultSet r : analysis.getResultSetsIncluded() ) {
             expressionAnalysisResultSetService.update( r );
         }
 
-        return analysisService.create( analysis );
+        analysisService.create( analysis );
     }
 
     private Double aggregateFoldChangeForGeneWithinResultSet( Collection<DifferentialExpressionAnalysisResult> res ) {

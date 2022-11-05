@@ -43,7 +43,10 @@ public class CoexpressionNodeDegreeDaoImpl extends AbstractDao<GeneCoexpressionN
     @Transactional
     public GeneCoexpressionNodeDegree findOrCreate( Gene gene ) {
         GeneCoexpressionNodeDegree existing = this.findOneByProperty( "geneId", gene.getId() );
-        return existing == null ? this.create( GeneCoexpressionNodeDegree.Factory.newInstance( gene ) ) : existing;
-
+        if ( existing == null ) {
+            existing = GeneCoexpressionNodeDegree.Factory.newInstance( gene );
+            this.create( existing );
+        }
+        return existing;
     }
 }

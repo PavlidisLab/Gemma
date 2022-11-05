@@ -152,7 +152,9 @@ abstract public class CommonPersister extends AbstractPersister {
         }
 
         // events are persisted by composition.
-        return auditTrailDao.create( entity );
+        auditTrailDao.create( entity );
+
+        return entity;
     }
 
     Contact persistContact( Contact contact ) {
@@ -178,7 +180,7 @@ abstract public class CommonPersister extends AbstractPersister {
 
         // don't use findOrCreate to avoid flush.
         if ( existingDatabase == null ) {
-            database = externalDatabaseDao.create( database );
+            externalDatabaseDao.create( database );
         } else {
             database = existingDatabase;
         }
@@ -191,7 +193,8 @@ abstract public class CommonPersister extends AbstractPersister {
         if ( isTransient( entity.getExternalDatabase() ) ) {
             entity.setExternalDatabase( this.persistExternalDatabase( entity.getExternalDatabase() ) );
         }
-        return databaseEntryDao.create( entity );
+        databaseEntryDao.create( entity );
+        return entity;
     }
 
 
@@ -201,7 +204,8 @@ abstract public class CommonPersister extends AbstractPersister {
         this.fillInProtocol( protocol );
         // I changed this to create instead of findOrCreate because in
         // practice protocols are not shared; we use them to store information about analyses we run. PP2017
-        return protocolDao.create( protocol );
+        protocolDao.create( protocol );
+        return protocol;
     }
 
     QuantitationType persistQuantitationType( QuantitationType qType ) {
@@ -229,9 +233,9 @@ abstract public class CommonPersister extends AbstractPersister {
          * Note: we use 'create' here instead of 'findOrCreate' because we don't want quantitation types shared across
          * experiments.
          */
-        QuantitationType qt = quantitationTypeDao.create( qType );
-        quantitationTypeCache.put( key, qt );
-        return qt;
+        quantitationTypeDao.create( qType );
+        quantitationTypeCache.put( key, qType );
+        return qType;
     }
 
     Unit persistUnit( Unit unit ) {

@@ -130,8 +130,8 @@ public class DiffExMetaAnalyzerServiceTest extends AbstractGeoServiceTest {
          * Add genes.
          */
         if ( !loadedGenes ) {
-            try (InputStream geneFile = this.getClass().getResourceAsStream(
-                    "/data/loader/expression/geo/meta-analysis/human.genes.subset.for.import.txt" )) {
+            try ( InputStream geneFile = this.getClass().getResourceAsStream(
+                    "/data/loader/expression/geo/meta-analysis/human.genes.subset.for.import.txt" ) ) {
                 externalFileGeneLoaderService.load( geneFile, "human" );
                 loadedGenes = true;
             }
@@ -261,7 +261,7 @@ public class DiffExMetaAnalyzerServiceTest extends AbstractGeoServiceTest {
          * Test ancillary methods
          */
         metaAnalysis.setName( RandomStringUtils.random( 10 ) );
-        metaAnalysis = analyzerService.persist( metaAnalysis );
+        analyzerService.persist( metaAnalysis );
 
         assertNotNull( metaAnalysis.getId() );
 
@@ -301,7 +301,7 @@ public class DiffExMetaAnalyzerServiceTest extends AbstractGeoServiceTest {
                     foundTests++;
                     assertTrue( r.getUpperTail() );
                     assertEquals( this.logComponentResults( r, gene ), 0.003375654, r.getMetaPvalue(), 0.00001 );
-                    found[0]= true;
+                    found[0] = true;
                     break;
                 case "ABCF1":
                     fail( "Should have gotten removed due to conflicting results" );

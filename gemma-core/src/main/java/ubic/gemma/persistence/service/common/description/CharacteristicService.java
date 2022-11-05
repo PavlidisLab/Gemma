@@ -121,7 +121,7 @@ public interface CharacteristicService extends BaseVoEnabledService<Characterist
 
     @Override
     @Secured({ "GROUP_USER" })
-    Characteristic create( Characteristic c );
+    void create( Characteristic c );
 
     @Override
     @Secured({ "GROUP_USER" })

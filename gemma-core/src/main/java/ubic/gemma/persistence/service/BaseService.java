@@ -41,16 +41,15 @@ public interface BaseService<O extends Identifiable> {
      */
     @SuppressWarnings("unused") // Consistency
     @CheckReturnValue
-    Collection<O> create( Collection<O> entities );
+    void create( Collection<O> entities );
 
     /**
      * Creates the given entity in the persistent storage.
      *
      * @param entity the entity to be created.
-     * @return object referencing the persistent instance of the given entity.
      */
     @CheckReturnValue
-    O create( O entity );
+    void create( O entity );
 
     /**
      * Loads objects with given ids.

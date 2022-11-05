@@ -33,7 +33,7 @@ public class CharacteristicDaoImplTest extends BaseSpringContextTest {
                 createCharacteristic( "http://test/T0004", "untreated" ),
                 createCharacteristic( "http://test/T0005", "treated" ),
                 createCharacteristic( "http://test/T0006", "treated with sodium chloride" ) );
-        characteristics = characteristicDao.create( characteristics );
+        characteristicDao.create( characteristics );
     }
 
     @After

@@ -12,7 +12,7 @@ import ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaA
 
 /**
  * A differential expression meta-analysis space task
- * 
+ *
  * @author frances
  *
  */
@@ -37,7 +37,7 @@ public class DiffExMetaAnalyzerTaskImpl extends AbstractTask<TaskResult, DiffExM
             metaAnalysis.setDescription( taskCommand.getDescription() );
 
             if ( taskCommand.isPersist() ) {
-                metaAnalysis = this.diffExMetaAnalyzerService.persist( metaAnalysis );
+                this.diffExMetaAnalyzerService.persist( metaAnalysis );
             }
         }
 

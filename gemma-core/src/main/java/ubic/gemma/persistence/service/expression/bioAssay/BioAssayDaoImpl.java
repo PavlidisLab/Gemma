@@ -48,17 +48,14 @@ import java.util.*;
 public class BioAssayDaoImpl extends AbstractVoEnabledDao<BioAssay, BioAssayValueObject> implements BioAssayDao {
 
     @Autowired
-    private ArrayDesignDao arrayDesignDao;
-
-    @Autowired
     public BioAssayDaoImpl( SessionFactory sessionFactory ) {
         super( BioAssay.class, sessionFactory );
     }
 
     @Override
     @Transactional
-    public Collection<BioAssay> create( final Collection<BioAssay> entities ) {
-        return super.create( entities );
+    public void create( final Collection<BioAssay> entities ) {
+        super.create( entities );
     }
 
     @Override
@@ -84,7 +81,8 @@ public class BioAssayDaoImpl extends AbstractVoEnabledDao<BioAssay, BioAssayValu
         }
         if ( AbstractDao.log.isDebugEnabled() )
             AbstractDao.log.debug( "Creating new bioAssay: " + bioAssay );
-        return this.create( bioAssay );
+        this.create( bioAssay );
+        return bioAssay;
     }
 
     @Override

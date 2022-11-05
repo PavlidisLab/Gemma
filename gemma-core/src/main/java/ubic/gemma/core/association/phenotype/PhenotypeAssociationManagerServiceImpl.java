@@ -661,7 +661,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         phenotypeAssociation.setLastUpdated( new Date() );
         assert !phenotypeAssociation.getPhenotypes().isEmpty();
 
-        phenotypeAssociation = this.phenoAssocService.create( phenotypeAssociation );
+        this.phenoAssocService.create( phenotypeAssociation );
 
         Gene gene = phenotypeAssociation.getGene();
         gene.getPhenotypeAssociations().add( phenotypeAssociation );

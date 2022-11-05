@@ -108,7 +108,9 @@ public class PrincipalComponentAnalysisServiceImpl extends AbstractService<Princ
             pca.getEigenValues().add( eigenvalue );
         }
 
-        return this.principalComponentAnalysisDao.create( pca );
+        this.principalComponentAnalysisDao.create( pca );
+
+        return pca;
     }
 
     @Override

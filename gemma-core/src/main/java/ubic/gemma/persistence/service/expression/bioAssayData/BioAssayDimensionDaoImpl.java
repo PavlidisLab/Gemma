@@ -65,7 +65,8 @@ public class BioAssayDimensionDaoImpl extends AbstractVoEnabledDao<BioAssayDimen
         }
         if ( AbstractDao.log.isDebugEnabled() )
             AbstractDao.log.debug( "Creating new " + bioAssayDimension );
-        return this.create( bioAssayDimension );
+        this.create( bioAssayDimension );
+        return bioAssayDimension;
     }
 
     @Override

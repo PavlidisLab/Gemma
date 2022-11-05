@@ -28,7 +28,6 @@ import ubic.gemma.model.common.auditAndSecurity.UserGroup;
 import ubic.gemma.persistence.service.AbstractDao;
 
 import java.util.Collection;
-import java.util.Iterator;
 
 /**
  * @see ubic.gemma.model.common.auditAndSecurity.UserGroup
@@ -76,7 +75,7 @@ public class UserGroupDaoImpl extends AbstractDao<UserGroup> implements UserGrou
     }
 
     @Override
-    public UserGroup create( final UserGroup userGroup ) {
+    public void create( final UserGroup userGroup ) {
         if ( userGroup == null ) {
             throw new IllegalArgumentException( "UserGroup.create - 'userGroup' can not be null" );
         }
@@ -85,12 +84,7 @@ public class UserGroupDaoImpl extends AbstractDao<UserGroup> implements UserGrou
                 .equals( AuthorityConstants.AGENT_GROUP_NAME ) ) {
             throw new IllegalArgumentException( "Cannot create group with that name: " + userGroup.getName() );
         }
-        return super.create( userGroup );
-    }
-
-    @Override
-    public long countAll() {
-        return this.loadAll().size();
+        super.create( userGroup );
     }
 
     @Override
@@ -127,11 +121,4 @@ public class UserGroupDaoImpl extends AbstractDao<UserGroup> implements UserGrou
             return this.findByName( entity.getName() );
         }
     }
-
-    @Override
-    public UserGroup findOrCreate( UserGroup entity ) {
-        UserGroup found = this.find( entity );
-        return found != null ? found : this.create( entity );
-    }
-
 }

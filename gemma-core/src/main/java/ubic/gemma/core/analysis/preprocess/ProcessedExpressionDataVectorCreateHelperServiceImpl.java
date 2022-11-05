@@ -100,7 +100,7 @@ public class ProcessedExpressionDataVectorCreateHelperServiceImpl
             if ( existingQt != null ) {
                 qt = existingQt;
             } else {
-                qt = quantitationTypeService.create( qt );
+                quantitationTypeService.create( qt );
             }
         }
         for ( ProcessedExpressionDataVector v : vecs ) {
@@ -218,7 +218,7 @@ public class ProcessedExpressionDataVectorCreateHelperServiceImpl
             newBioAssayDimension.setName( "Processed data of ee " + ee.getShortName() + " ordered by design" );
             newBioAssayDimension.setDescription( "Data was reordered based on the experimental design." );
 
-            newBioAssayDimension = bioAssayDimensionService.create( newBioAssayDimension );
+            bioAssayDimensionService.create( newBioAssayDimension );
 
             old2new.put( bioAssayDimension, newBioAssayDimension );
 

@@ -82,7 +82,8 @@ public class UserServiceImpl implements UserService {
         }
 
         try {
-            return this.userDao.create( ( ubic.gemma.model.common.auditAndSecurity.User ) user );
+            this.userDao.create( ( ubic.gemma.model.common.auditAndSecurity.User ) user );
+            return ( ubic.gemma.model.common.auditAndSecurity.User ) user;
         } catch ( DataIntegrityViolationException | InvalidDataAccessResourceUsageException e ) {
             throw new UserExistsException( "User '" + user.getUserName() + "' already exists!" );
         }
@@ -91,7 +92,8 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserGroup create( gemma.gsec.model.UserGroup group ) {
-        return this.userGroupDao.create( ( ubic.gemma.model.common.auditAndSecurity.UserGroup ) group );
+        this.userGroupDao.create( ( ubic.gemma.model.common.auditAndSecurity.UserGroup ) group );
+        return ( ubic.gemma.model.common.auditAndSecurity.UserGroup ) group;
     }
 
     @Override

@@ -503,7 +503,9 @@ public class TwoChannelMissingValuesImpl implements TwoChannelMissingValues {
         present.setIsBatchCorrected( false );
         present.setIsRecomputedFromRawData( false );
 
-        return this.quantitationTypeService.create( present );
+        this.quantitationTypeService.create( present );
+
+        return present;
     }
 
     private void logTimeInfo( StopWatch timer, int size ) {

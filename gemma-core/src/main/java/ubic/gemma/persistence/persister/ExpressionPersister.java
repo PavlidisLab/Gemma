@@ -122,7 +122,7 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
             // This does most of the preparatory work.
             this.processBioAssays( ee, cachedArrays );
 
-            ee = expressionExperimentDao.create( ee );
+            expressionExperimentDao.create( ee );
 
         } finally {
             this.getSessionFactory().getCurrentSession().setFlushMode( FlushMode.AUTO );
@@ -423,7 +423,9 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
         AbstractPersister.log.debug( "Persisting " + assay );
         this.fillInBioAssayAssociations( assay, c );
 
-        return bioAssayDao.create( assay );
+        bioAssayDao.create( assay );
+
+        return assay;
     }
 
     private BioAssayDimension persistBioAssayDimension( BioAssayDimension bioAssayDimension,
@@ -495,7 +497,8 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
         }
 
         assert ( !this.isTransient( experimentalFactor.getExperimentalDesign() ) );
-        return experimentalFactorDao.create( experimentalFactor );
+        experimentalFactorDao.create( experimentalFactor );
+        return experimentalFactor;
     }
 
     private ExpressionExperimentSubSet persistExpressionExperimentSubSet( ExpressionExperimentSubSet entity ) {
@@ -561,7 +564,7 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
         experimentalDesign.setExperimentalFactors( null );
 
         // Note we use create because this is specific to the instance. (we're overriding a cascade)
-        experimentalDesign = experimentalDesignDao.create( experimentalDesign );
+        experimentalDesignDao.create( experimentalDesign );
 
         // Put back.
         experimentalDesign.setExperimentalFactors( factors );
@@ -591,7 +594,8 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
 
                 // this cascades from updates to the factor, but because auto-flush is off, we have to do this here to
                 // get ACLs populated.
-                createdFactorValues.add( factorValueDao.create( factorValue ) );
+                factorValueDao.create( factorValue );
+                createdFactorValues.add( factorValue );
             }
 
             experimentalFactor.setFactorValues( createdFactorValues );

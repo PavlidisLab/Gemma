@@ -43,7 +43,7 @@ public interface ExpressionExperimentSubSetService extends BaseService<Expressio
 
     @Override
     @Secured({ "GROUP_USER" })
-    ExpressionExperimentSubSet create( ExpressionExperimentSubSet expressionExperimentSubSet );
+    void create( ExpressionExperimentSubSet expressionExperimentSubSet );
 
     @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })

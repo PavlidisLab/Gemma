@@ -63,7 +63,7 @@ public class GeneSearchTest extends BaseSpringContextTest {
         pl1.setStrand( "-" );
         gene.setPhysicalLocation( pl1 );
 
-        gene = geneService.create( gene );
+        geneService.create( gene );
 
         Collection<GeneValueObject> searchResults = geneService.searchGenes( "test_search", 1L );
 

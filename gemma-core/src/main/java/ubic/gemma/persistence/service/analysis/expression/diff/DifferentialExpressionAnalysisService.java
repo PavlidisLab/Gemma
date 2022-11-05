@@ -63,7 +63,7 @@ public interface DifferentialExpressionAnalysisService extends AnalysisService<D
     Integer countUpregulated( ExpressionAnalysisResultSet par, double threshold );
 
     @Secured({ "GROUP_USER" })
-    DifferentialExpressionAnalysis create( DifferentialExpressionAnalysis analysis );
+    void create( DifferentialExpressionAnalysis analysis );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     Collection<DifferentialExpressionAnalysis> find( ubic.gemma.model.genome.Gene gene,

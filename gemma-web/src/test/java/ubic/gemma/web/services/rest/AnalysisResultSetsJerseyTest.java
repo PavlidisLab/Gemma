@@ -39,7 +39,7 @@ public class AnalysisResultSetsJerseyTest extends BaseJerseyIntegrationTest {
     public void setUp() throws Exception {
         super.setUp();
         ee = ExpressionExperiment.Factory.newInstance();
-        ee = expressionExperimentService.create( ee );
+        expressionExperimentService.create( ee );
     }
 
     @After

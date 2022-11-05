@@ -39,15 +39,15 @@ public abstract class AbstractService<O extends Identifiable> implements BaseSer
 
     @Override
     @Transactional
-    public Collection<O> create( Collection<O> entities ) {
-        return mainDao.create( entities );
+    public void create( Collection<O> entities ) {
+        mainDao.create( entities );
     }
 
     @Override
     @Transactional
     @OverridingMethodsMustInvokeSuper
-    public O create( O entity ) {
-        return mainDao.create( entity );
+    public void create( O entity ) {
+        mainDao.create( entity );
     }
 
     @Override

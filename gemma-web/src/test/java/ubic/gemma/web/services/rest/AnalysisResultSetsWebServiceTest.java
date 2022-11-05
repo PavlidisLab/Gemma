@@ -79,11 +79,11 @@ public class AnalysisResultSetsWebServiceTest extends BaseSpringWebTest {
 
         dea = new DifferentialExpressionAnalysis();
         dea.setExperimentAnalyzed( ee );
-        dea = differentialExpressionAnalysisService.create( dea );
+        differentialExpressionAnalysisService.create( dea );
 
         dears = new ExpressionAnalysisResultSet();
         dears.setAnalysis( dea );
-        dears = expressionAnalysisResultSetService.create( dears );
+        expressionAnalysisResultSetService.create( dears );
 
         arrayDesign = testHelper.getTestPersistentArrayDesign( 1, true, true );
         probe = arrayDesign.getCompositeSequences().stream().findFirst().orElse( null );
@@ -104,12 +104,12 @@ public class AnalysisResultSetsWebServiceTest extends BaseSpringWebTest {
         databaseEntry = DatabaseEntry.Factory.newInstance();
         databaseEntry.setAccession( "GEO123123" );
         databaseEntry.setExternalDatabase( geo );
-        databaseEntry = databaseEntryService.create( databaseEntry );
+        databaseEntryService.create( databaseEntry );
 
         databaseEntry2 = DatabaseEntry.Factory.newInstance();
         databaseEntry2.setAccession( "GEO1213121" );
         databaseEntry2.setExternalDatabase( geo );
-        databaseEntry2 = databaseEntryService.create( databaseEntry2 );
+        databaseEntryService.create( databaseEntry2 );
     }
 
     @After

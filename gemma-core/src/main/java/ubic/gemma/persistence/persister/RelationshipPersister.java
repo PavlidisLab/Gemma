@@ -29,6 +29,7 @@ import ubic.gemma.persistence.service.analysis.expression.ExpressionExperimentSe
 import ubic.gemma.persistence.service.analysis.expression.coexpression.CoexpressionAnalysisDao;
 import ubic.gemma.persistence.service.association.Gene2GOAssociationDao;
 
+import javax.persistence.PersistenceUnitUtil;
 import java.util.Collection;
 import java.util.HashSet;
 
@@ -88,7 +89,9 @@ public abstract class RelationshipPersister extends ExpressionPersister {
         entity.getExperiments().clear();
         entity.getExperiments().addAll( setMembers );
 
-        return expressionExperimentSetDao.create( entity );
+        expressionExperimentSetDao.create( entity );
+
+        return entity;
     }
 
     private Gene2GOAssociation persistGene2GOAssociation( Gene2GOAssociation association ) {
@@ -101,7 +104,8 @@ public abstract class RelationshipPersister extends ExpressionPersister {
         } catch ( IllegalAccessException e ) {
             e.printStackTrace();
         }
-        return gene2GoAssociationDao.create( association );
+        gene2GoAssociationDao.create( association );
+        return association;
     }
 
     private CoexpressionAnalysis persistCoexpressionAnalysis( CoexpressionAnalysis entity ) {
@@ -114,7 +118,8 @@ public abstract class RelationshipPersister extends ExpressionPersister {
             throw new IllegalArgumentException( "Persist the experiment before running analyses on it" );
         }
 
-        return coexpressionAnalysisDao.create( entity );
+        coexpressionAnalysisDao.create( entity );
+        return entity;
     }
 
 }

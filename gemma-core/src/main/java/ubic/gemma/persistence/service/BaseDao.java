@@ -32,21 +32,17 @@ public interface BaseDao<T> {
     /**
      * Crates all the given entities in the persistent storage.
      *
-     * @param entities the entities to be crated.
-     * @return collection of entities representing the instances in the persistent storage that were created.
+     * @param entities the entities to be created.
      */
-    @CheckReturnValue
-    Collection<T> create( Collection<T> entities );
+    void create( Collection<T> entities );
 
     /**
      * Create an object. If the entity type is immutable, this may also remove any existing entities identified by an
      * appropriate 'find' method.
      *
      * @param entity the entity to create
-     * @return the persistent version of the entity
      */
-    @CheckReturnValue
-    T create( T entity );
+    void create( T entity );
 
     /**
      * Loads entities with given ids form the persistent storage.

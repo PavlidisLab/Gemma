@@ -28,6 +28,6 @@ public interface DiffExMetaAnalyzerService {
 
     GeneDifferentialExpressionMetaAnalysis analyze( Collection<Long> analysisResultSetIds );
 
-    GeneDifferentialExpressionMetaAnalysis persist( GeneDifferentialExpressionMetaAnalysis analysis );
+    void persist( GeneDifferentialExpressionMetaAnalysis analysis );
 
 }

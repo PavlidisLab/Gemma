@@ -41,7 +41,7 @@ public interface ExpressionExperimentSetService
 
     @Override
     @Secured({ "GROUP_USER" })
-    ExpressionExperimentSet create( ExpressionExperimentSet expressionExperimentSet );
+    void create( ExpressionExperimentSet expressionExperimentSet );
 
     @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
