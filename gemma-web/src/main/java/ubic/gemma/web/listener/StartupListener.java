@@ -22,13 +22,13 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.quartz.impl.StdScheduler;
+import org.quartz.Scheduler;
 import org.springframework.context.ApplicationContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.context.ContextLoaderListener;
 import org.springframework.web.context.support.WebApplicationContextUtils;
 import ubic.gemma.core.loader.genome.gene.ncbi.homology.HomologeneService;
-import ubic.gemma.core.util.QuartzUtils;
+import ubic.gemma.web.scheduler.SchedulerUtils;
 import ubic.gemma.persistence.util.Settings;
 import ubic.gemma.web.util.Constants;
 
@@ -99,7 +99,7 @@ public class StartupListener extends ContextLoaderListener {
 
     private void configureScheduler( ApplicationContext ctx ) {
         if ( !Settings.isSchedulerEnabled() ) {
-            QuartzUtils.disableQuartzScheduler( ( StdScheduler ) ctx.getBean( "schedulerFactoryBean" ) );
+            SchedulerUtils.disableScheduler( ctx.getBean( "schedulerFactoryBean", Scheduler.class ) );
             StartupListener.log.info( "Quartz scheduling disabled.  Set quartzOn=true in Gemma.properties to enable" );
         } else {
             StartupListener.log.info( "Quartz scheduling enabled.  Set quartzOn=false in Gemma.properties to disable" );
