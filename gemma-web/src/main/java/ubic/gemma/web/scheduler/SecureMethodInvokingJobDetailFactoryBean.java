@@ -16,7 +16,7 @@
  * limitations under the License.
  *
  */
-package ubic.gemma.core.security.authentication;
+package ubic.gemma.web.scheduler;
 
 import gemma.gsec.authentication.ManualAuthenticationService;
 import org.slf4j.Logger;
@@ -27,6 +27,7 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import ubic.gemma.core.security.audit.AuditAdvice;
+import ubic.gemma.core.security.authentication.UserManager;
 import ubic.gemma.persistence.util.Settings;
 
 import java.lang.reflect.InvocationTargetException;

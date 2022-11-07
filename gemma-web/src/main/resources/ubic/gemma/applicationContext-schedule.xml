@@ -85,44 +85,44 @@
 
 
     <!-- Job details -->
-    <bean id="batchInfoDetail" class="ubic.gemma.core.security.authentication.SecureMethodInvokingJobDetailFactoryBean"
+    <bean id="batchInfoDetail" class="ubic.gemma.web.scheduler.SecureMethodInvokingJobDetailFactoryBean"
           p:targetObject-ref="expressionExperimentReportService">
         <property name="concurrent" value="false"/>
         <property name="targetMethod" value="recalculateBatchInfo"/>
     </bean>
-    <bean id="indexJobDetail" class="ubic.gemma.core.security.authentication.SecureMethodInvokingJobDetailFactoryBean">
+    <bean id="indexJobDetail" class="ubic.gemma.web.scheduler.SecureMethodInvokingJobDetailFactoryBean">
         <property name="targetObject" ref="indexService"/>
         <property name="concurrent" value="false"/>
         <property name="targetMethod" value="indexAll"/>
     </bean>
     <bean id="arrayDesignReportJobDetail"
-          class="ubic.gemma.core.security.authentication.SecureMethodInvokingJobDetailFactoryBean">
+          class="ubic.gemma.web.scheduler.SecureMethodInvokingJobDetailFactoryBean">
         <property name="targetObject" ref="arrayDesignReportService"/>
         <property name="concurrent" value="false"/>
         <property name="targetMethod" value="generateArrayDesignReport"/>
     </bean>
     <bean id="expressionExperimentReportJobDetail"
-          class="ubic.gemma.core.security.authentication.SecureMethodInvokingJobDetailFactoryBean"
+          class="ubic.gemma.web.scheduler.SecureMethodInvokingJobDetailFactoryBean"
           p:targetObject-ref="expressionExperimentReportService">
         <property name="concurrent" value="false"/>
         <property name="targetMethod" value="generateSummaryObjects"/>
     </bean>
     <bean id="whatsNewJobDetail"
-          class="ubic.gemma.core.security.authentication.SecureMethodInvokingJobDetailFactoryBean">
+          class="ubic.gemma.web.scheduler.SecureMethodInvokingJobDetailFactoryBean">
         <property name="targetObject" ref="whatsNewService"/>
         <property name="concurrent" value="false"/>
         <property name="targetMethod" value="generateWeeklyReport"/>
     </bean>
 
     <bean id="gene2CsUpdateJobDetail"
-          class="ubic.gemma.core.security.authentication.SecureMethodInvokingJobDetailFactoryBean"
+          class="ubic.gemma.web.scheduler.SecureMethodInvokingJobDetailFactoryBean"
           p:targetObject-ref="tableMaintenanceUtil">
         <property name="concurrent" value="false"/>
         <property name="targetMethod" value="updateGene2CsEntries"/>
     </bean>
  
     <bean id="neurocartaJobDetail"
-          class="ubic.gemma.core.security.authentication.SecureMethodInvokingJobDetailFactoryBean"
+          class="ubic.gemma.web.scheduler.SecureMethodInvokingJobDetailFactoryBean"
           p:targetObject-ref="phenotypeAssociationManagerService">
         <property name="concurrent" value="false"/>
         <property name="targetMethod" value="writeAllEvidenceToFile"/>

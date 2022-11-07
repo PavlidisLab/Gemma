@@ -261,14 +261,6 @@
 			<artifactId>ehcache-core</artifactId>
 		</dependency>
 
-		<!-- Scheduling -->
-		<!-- This is the latest Quartz release compatible with Spring 3 -->
-		<dependency>
-			<groupId>org.quartz-scheduler</groupId>
-			<artifactId>quartz</artifactId>
-			<version>1.8.6</version>
-		</dependency>
-
 		<!-- Utilities -->
 		<dependency>
 			<groupId>colt</groupId>
@@ -540,7 +532,7 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-javadoc-plugin</artifactId>
-				<version>3.3.1</version>
+				<version>3.3.2</version>
 				<configuration>
 					<quiet>true</quiet>
 					<source>8</source>
