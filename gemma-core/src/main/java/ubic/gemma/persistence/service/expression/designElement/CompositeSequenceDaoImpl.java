@@ -462,7 +462,7 @@ public class CompositeSequenceDaoImpl extends AbstractQueryFilteringVoEnabledDao
         int numToDo = compositeSequences.size();
         for ( CompositeSequence cs : compositeSequences ) {
 
-            session.buildLockRequest( LockOptions.NONE ).lock( cs.getArrayDesign() );
+            reattach( cs.getArrayDesign() );
             Hibernate.initialize( cs.getArrayDesign().getPrimaryTaxon() );
 
             BioSequence bs = cs.getBiologicalCharacteristic();
@@ -470,7 +470,7 @@ public class CompositeSequenceDaoImpl extends AbstractQueryFilteringVoEnabledDao
                 continue;
             }
 
-            session.buildLockRequest( LockOptions.NONE ).lock( bs );
+            reattach( bs );
             Hibernate.initialize( bs );
             Hibernate.initialize( bs.getTaxon() );
 

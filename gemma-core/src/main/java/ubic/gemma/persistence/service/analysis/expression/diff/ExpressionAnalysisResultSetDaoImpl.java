@@ -137,7 +137,7 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilterin
         Session session = this.getSessionFactory().getCurrentSession();
         session.flush();
         session.clear();
-        session.buildLockRequest( LockOptions.NONE ).lock( resultSet );
+        reattach( resultSet );
         int contrastsDone = 0;
         int resultsDone = 0;
 

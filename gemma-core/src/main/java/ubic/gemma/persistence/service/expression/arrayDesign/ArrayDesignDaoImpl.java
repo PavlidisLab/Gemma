@@ -777,7 +777,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     @Override
     public void removeBiologicalCharacteristics( final ArrayDesign arrayDesign ) {
         Session session = this.getSessionFactory().getCurrentSession();
-        session.buildLockRequest( LockOptions.NONE ).lock( arrayDesign );
+        reattach( arrayDesign );
 
         int count = 0;
         for ( CompositeSequence cs : arrayDesign.getCompositeSequences() ) {

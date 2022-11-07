@@ -82,7 +82,7 @@ public abstract class DesignElementDataVectorDaoImpl<T extends DesignElementData
         Map<BioAssayDimension, Collection<DesignElementDataVector>> dims = new HashMap<>();
         Collection<CompositeSequence> cs = new HashSet<>();
         for ( DesignElementDataVector vector : designElementDataVectors ) {
-            session.buildLockRequest( LockOptions.NONE ).lock( vector );
+            reattach( vector );
             Hibernate.initialize( vector );
             Hibernate.initialize( vector.getQuantitationType() );
 
@@ -153,7 +153,7 @@ public abstract class DesignElementDataVectorDaoImpl<T extends DesignElementData
             BioSequence seq = de.getBiologicalCharacteristic();
             if ( seq == null )
                 continue;
-            session.buildLockRequest( LockOptions.NONE ).lock( seq );
+            reattach( seq );
             Hibernate.initialize( seq );
 
             if ( ++count % 10000 == 0 ) {
@@ -182,7 +182,7 @@ public abstract class DesignElementDataVectorDaoImpl<T extends DesignElementData
         Session session = this.getSessionFactory().getCurrentSession();
         BioSequence seq = designElementDataVector.getDesignElement().getBiologicalCharacteristic();
         if ( seq != null ) {
-            session.buildLockRequest( LockOptions.NONE ).lock( seq );
+            reattach( seq );
             Hibernate.initialize( seq );
         }
 

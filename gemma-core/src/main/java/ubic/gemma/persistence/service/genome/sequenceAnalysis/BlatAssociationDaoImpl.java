@@ -113,7 +113,7 @@ public class BlatAssociationDaoImpl extends AbstractDao<BlatAssociation> impleme
         if ( blatAssociation.getId() == null )
             return;
         Session session = getSessionFactory().getCurrentSession();
-        session.buildLockRequest( LockOptions.NONE ).lock( blatAssociation );
+        reattach( blatAssociation );
         Hibernate.initialize( blatAssociation.getBioSequence() );
         Hibernate.initialize( blatAssociation.getGeneProduct() );
         Hibernate.initialize( blatAssociation.getBlatResult() );

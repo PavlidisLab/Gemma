@@ -743,7 +743,7 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
     public void thaw( final Collection<DifferentialExpressionAnalysisResult> results ) {
         Session session = this.getSessionFactory().getCurrentSession();
         for ( DifferentialExpressionAnalysisResult result : results ) {
-            session.buildLockRequest( LockOptions.NONE ).lock( result );
+            reattach( result );
             Hibernate.initialize( result );
             CompositeSequence cs = result.getProbe();
             Hibernate.initialize( cs );
@@ -756,7 +756,7 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
     public void thaw( final DifferentialExpressionAnalysisResult result ) {
         Session session = this.getSessionFactory().getCurrentSession();
 
-        session.buildLockRequest( LockOptions.NONE ).lock( result );
+        reattach( result );
         Hibernate.initialize( result );
 
         CompositeSequence cs = result.getProbe();

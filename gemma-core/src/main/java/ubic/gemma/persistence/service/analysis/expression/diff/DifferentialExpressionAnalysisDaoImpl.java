@@ -338,10 +338,10 @@ class DifferentialExpressionAnalysisDaoImpl extends AnalysisDaoBase<Differential
         session.flush();
         session.clear();
 
-        session.buildLockRequest( LockOptions.NONE ).lock( differentialExpressionAnalysis );
+        reattach( differentialExpressionAnalysis );
         Hibernate.initialize( differentialExpressionAnalysis );
         Hibernate.initialize( differentialExpressionAnalysis.getExperimentAnalyzed() );
-        session.buildLockRequest( LockOptions.NONE ).lock( differentialExpressionAnalysis.getExperimentAnalyzed() );
+        reattach( differentialExpressionAnalysis.getExperimentAnalyzed() );
         Hibernate.initialize( differentialExpressionAnalysis.getExperimentAnalyzed().getBioAssays() );
 
         Hibernate.initialize( differentialExpressionAnalysis.getProtocol() );
@@ -353,7 +353,7 @@ class DifferentialExpressionAnalysisDaoImpl extends AnalysisDaoBase<Differential
         Collection<ExpressionAnalysisResultSet> ears = differentialExpressionAnalysis.getResultSets();
         Hibernate.initialize( ears );
         for ( ExpressionAnalysisResultSet ear : ears ) {
-            session.buildLockRequest( LockOptions.NONE ).lock( ear );
+            reattach( ear );
             Hibernate.initialize( ear );
             Hibernate.initialize( ear.getExperimentalFactors() );
         }

@@ -127,7 +127,7 @@ public class BioAssayDimensionDaoImpl extends AbstractVoEnabledDao<BioAssayDimen
         if ( bioAssayDimension.getId() == null )
             return bioAssayDimension;
         Session session = getSessionFactory().getCurrentSession();
-        session.buildLockRequest( LockOptions.NONE ).lock( bioAssayDimension );
+        reattach( bioAssayDimension );
         Hibernate.initialize( bioAssayDimension );
         Hibernate.initialize( bioAssayDimension.getBioAssays() );
         return bioAssayDimension;
@@ -142,19 +142,19 @@ public class BioAssayDimensionDaoImpl extends AbstractVoEnabledDao<BioAssayDimen
             return bioAssayDimension;
 
         Session session = getSessionFactory().getCurrentSession();
-        session.buildLockRequest( LockOptions.NONE ).lock( bioAssayDimension );
+        reattach( bioAssayDimension );
         Hibernate.initialize( bioAssayDimension );
         Hibernate.initialize( bioAssayDimension.getBioAssays() );
 
         for ( BioAssay ba : bioAssayDimension.getBioAssays() ) {
             if ( ba != null ) {
-                session.buildLockRequest( LockOptions.NONE ).lock( ba );
+                reattach( ba );
                 Hibernate.initialize( ba );
                 Hibernate.initialize( ba.getSampleUsed() );
                 Hibernate.initialize( ba.getArrayDesignUsed() );
                 Hibernate.initialize( ba.getOriginalPlatform() );
                 BioMaterial bm = ba.getSampleUsed();
-                session.buildLockRequest( LockOptions.NONE ).lock( bm );
+                reattach( bm );
                 Hibernate.initialize( bm );
                 Hibernate.initialize( bm.getBioAssaysUsedIn() );
                 Hibernate.initialize( bm.getFactorValues() );

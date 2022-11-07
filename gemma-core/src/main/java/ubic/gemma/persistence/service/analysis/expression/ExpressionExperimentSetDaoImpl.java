@@ -82,8 +82,7 @@ public class ExpressionExperimentSetDaoImpl
 
     @Override
     public void thaw( final ExpressionExperimentSet expressionExperimentSet ) {
-        this.getSessionFactory().getCurrentSession().buildLockRequest( LockOptions.NONE )
-                .lock( expressionExperimentSet );
+        reattach( expressionExperimentSet );
         Hibernate.initialize( expressionExperimentSet );
         Hibernate.initialize( expressionExperimentSet.getTaxon() );
         Hibernate.initialize( expressionExperimentSet.getExperiments() );

@@ -20,6 +20,7 @@ package ubic.gemma.persistence.service;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.hibernate.LockOptions;
 import org.hibernate.SessionFactory;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
@@ -233,6 +234,20 @@ public abstract class AbstractDao<T extends Identifiable> implements BaseDao<T> 
             throw new IllegalArgumentException( "Batch size must be strictly positive." );
         }
         this.batchSize = batchSize;
+    }
+
+    /**
+     * Reattach an entity to the current persistence context.
+     * <p>
+     * This is a hack to avoid {@link org.hibernate.LazyInitializationException} when manipulating an unmanaged or
+     * detached entity. If you need this, it means that the session scope does not encompass loading and updating the
+     * entity, and can generally be better addressed by annotating a calling method with {@link Transactional}.
+     * <p>
+     * Note that this does not propagate to children entities even of lock cascading is set.
+     */
+    @Deprecated
+    protected void reattach( Object entity ) {
+        this.getSessionFactory().getCurrentSession().buildLockRequest( LockOptions.NONE ).lock( entity );
     }
 
     /**

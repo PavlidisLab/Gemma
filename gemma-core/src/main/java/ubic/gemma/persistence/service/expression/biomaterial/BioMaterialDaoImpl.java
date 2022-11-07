@@ -114,7 +114,7 @@ public class BioMaterialDaoImpl extends AbstractVoEnabledDao<BioMaterial, BioMat
     @Override
     public void thaw( final BioMaterial bioMaterial ) {
         Session session = this.getSessionFactory().getCurrentSession();
-        session.buildLockRequest( LockOptions.NONE ).lock( bioMaterial );
+        reattach( bioMaterial );
         Hibernate.initialize( bioMaterial );
         Hibernate.initialize( bioMaterial.getSourceTaxon() );
         Hibernate.initialize( bioMaterial.getBioAssaysUsedIn() );

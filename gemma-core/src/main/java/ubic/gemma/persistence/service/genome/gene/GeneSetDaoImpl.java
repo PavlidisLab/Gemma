@@ -226,14 +226,14 @@ public class GeneSetDaoImpl extends AbstractDao<GeneSet> implements GeneSetDao {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see ubic.gemma.persistence.service.genome.gene.GeneSetDao#thaw(ubic.gemma.model.genome.gene.GeneSet)
      */
     @Override
     @Transactional(readOnly = true)
     public void thaw( final GeneSet geneSet ) {
         if ( geneSet == null || geneSet.getId() == null ) return;
-        getSessionFactory().getCurrentSession().buildLockRequest( LockOptions.NONE ).lock( geneSet );
+        reattach( geneSet );
         Hibernate.initialize( geneSet );
         Hibernate.initialize( geneSet.getMembers() );
         for ( GeneSetMember gsm : geneSet.getMembers() ) {

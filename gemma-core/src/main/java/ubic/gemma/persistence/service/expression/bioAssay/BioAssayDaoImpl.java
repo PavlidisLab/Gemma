@@ -111,11 +111,11 @@ public class BioAssayDaoImpl extends AbstractVoEnabledDao<BioAssay, BioAssayValu
     public void thaw( final BioAssay bioAssay ) {
         try {
             Session session = getSessionFactory().getCurrentSession();
-            session.buildLockRequest( LockOptions.NONE ).lock( bioAssay );
+            reattach( bioAssay );
             Hibernate.initialize( bioAssay.getArrayDesignUsed() );
             Hibernate.initialize( bioAssay.getOriginalPlatform() );
             BioMaterial bm = bioAssay.getSampleUsed();
-            session.buildLockRequest( LockOptions.NONE ).lock( bm );
+            reattach( bm );
             Hibernate.initialize( bm );
             Hibernate.initialize( bm.getBioAssaysUsedIn() );
             Hibernate.initialize( bm.getFactorValues() );
