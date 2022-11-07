@@ -33,6 +33,7 @@ import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.persistence.service.BaseVoEnabledService;
 import ubic.gemma.persistence.service.FilteringVoEnabledService;
 
+import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.Collection;
 import java.util.List;
@@ -70,7 +71,7 @@ public interface GeneService extends FilteringVoEnabledService<Gene, GeneValueOb
      */
     Collection<Gene> find( PhysicalLocation physicalLocation );
 
-    Gene findByAccession( String accession, ExternalDatabase source );
+    Gene findByAccession( String accession, @Nullable ExternalDatabase source );
 
     Collection<Gene> findByAlias( String search );
 

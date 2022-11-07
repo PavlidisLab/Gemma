@@ -198,7 +198,7 @@ public class TTestAnalyzerTest extends BaseAnalyzerConfigurationTest {
 
     private void configureMocks() {
 
-        this.configureMockAnalysisServiceHelper( 1 );
+        this.configureMockAnalysisServiceHelper();
 
         analyzer.setExpressionDataMatrixService( expressionDataMatrixService );
 

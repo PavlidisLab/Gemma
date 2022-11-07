@@ -28,7 +28,7 @@ import ubic.gemma.persistence.service.common.auditAndSecurity.UserGroupDao;
 import java.util.Collection;
 import java.util.HashSet;
 
-import static org.easymock.EasyMock.*;
+import static org.mockito.Mockito.*;
 
 /**
  * @author pavlidis
@@ -41,10 +41,10 @@ public class UserServiceImplTest {
 
     @Before
     public void setUp() {
-        userDaoMock = createMock( UserDao.class );
+        userDaoMock = mock( UserDao.class );
         userService.userDao = userDaoMock;
 
-        userService.userGroupDao = createMock( UserGroupDao.class );
+        userService.userGroupDao = mock( UserGroupDao.class );
         testUser.setEmail( "foo@bar" );
         testUser.setName( "Foo" );
         testUser.setLastName( "Bar" );
@@ -62,36 +62,24 @@ public class UserServiceImplTest {
 
     @Test
     public void testHandleGetUser() {
-        userDaoMock.findByUserName( "foobar" );
-        expectLastCall().andReturn( testUser );
-        replay( userDaoMock );
+        when( userDaoMock.findByUserName( "foobar" ) ).thenReturn( testUser );
         userService.findByUserName( "foobar" );
-        verify( userDaoMock );
+        verify( userDaoMock ).findByUserName( "foobar" );
     }
 
     @Test
     public void testHandleSaveUser() throws Exception {
-        userDaoMock.findByUserName( "foobar" );
-        expectLastCall().andReturn( null );
-        userDaoMock.findByEmail( "foo@bar" );
-        expectLastCall().andReturn( null );
-        userDaoMock.create( testUser );
-        expectLastCall().andReturn( testUser );
-        replay( userDaoMock );
         userService.create( testUser );
-        verify( userDaoMock );
+        verify( userDaoMock ).findByUserName( "foobar" );
+        verify( userDaoMock ).findByEmail( "foo@bar" );
+        verify( userDaoMock ).create( testUser );
     }
 
     @Test
     public void testHandleRemoveUser() {
-
-        userDaoMock.loadGroups( testUser );
-        expectLastCall().andReturn( userGroups );
-        userDaoMock.remove( testUser );
-        expectLastCall().once();
-        replay( userDaoMock );
+        when( userDaoMock.loadGroups( testUser ) ).thenReturn( userGroups );
         userService.delete( testUser );
-        verify( userDaoMock );
+        verify( userDaoMock ).remove( testUser );
     }
 
 }

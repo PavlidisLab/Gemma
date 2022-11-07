@@ -75,7 +75,7 @@ public class TwoWayAnovaWithInteractionsAnalyzerTest extends BaseAnalyzerConfigu
 
     private void configureMocks() {
 
-        this.configureMockAnalysisServiceHelper( 1 );
+        this.configureMockAnalysisServiceHelper();
 
         analyzer.setExpressionDataMatrixService( expressionDataMatrixService );
 

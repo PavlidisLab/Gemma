@@ -75,7 +75,7 @@ public class SubsettedAnalysisTest extends BaseAnalyzerConfigurationTest {
     }
 
     private void configureMocks() {
-        this.configureMockAnalysisServiceHelper( 1 );
+        this.configureMockAnalysisServiceHelper();
         analyzer.setExpressionDataMatrixService( expressionDataMatrixService );
     }
 
