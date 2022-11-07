@@ -16,32 +16,33 @@
  * limitations under the License.
  *
  */
-package ubic.gemma.core.util;
+package ubic.gemma.web.scheduler;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.quartz.impl.StdScheduler;
+import org.quartz.Scheduler;
 
 /**
  * @author keshav
  */
-public class QuartzUtils {
-    private static final Log log = LogFactory.getLog( QuartzUtils.class );
+public class SchedulerUtils {
+    private static final Log log = LogFactory.getLog( SchedulerUtils.class );
 
     /**
      * Turn off a scheduler.
      *
      * @param stdScheduler the scheduler
      */
-    public static void disableQuartzScheduler( StdScheduler stdScheduler ) {
+    public static void disableScheduler( Scheduler stdScheduler ) {
 
-        QuartzUtils.log.debug( "Shutting down quartz" );
+        SchedulerUtils.log.debug( "Shutting down quartz" );
         try {
+            stdScheduler.shutdown();
             stdScheduler.shutdown( true );
             if ( stdScheduler.isShutdown() ) {
-                QuartzUtils.log.debug( "Scheduler shutdown successful" );
+                SchedulerUtils.log.debug( "Scheduler shutdown successful" );
             } else {
-                QuartzUtils.log.warn( "Scheduler could not be shutdown for some reason" );
+                SchedulerUtils.log.warn( "Scheduler could not be shutdown for some reason" );
             }
         } catch ( Exception e ) {
             throw new RuntimeException( "Cannot shutdown quartz. Error is: " + e );

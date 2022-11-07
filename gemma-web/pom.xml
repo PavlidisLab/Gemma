@@ -3,7 +3,7 @@
 	<parent>
 		<artifactId>gemma</artifactId>
 		<groupId>gemma</groupId>
-		<version>1.28.3</version>
+		<version>1.28.4</version>
 	</parent>
 	<modelVersion>4.0.0</modelVersion>
 	<artifactId>gemma-web</artifactId>
@@ -216,6 +216,14 @@
 			<groupId>commons-validator</groupId>
 			<artifactId>commons-validator</artifactId>
 			<version>1.7</version>
+		</dependency>
+
+		<!-- Scheduling -->
+		<!-- This is the latest Quartz release compatible with Spring 3 -->
+		<dependency>
+			<groupId>org.quartz-scheduler</groupId>
+			<artifactId>quartz</artifactId>
+			<version>1.8.6</version>
 		</dependency>
 
 		<!-- RSS feeds (depends on spring-web version) -->
