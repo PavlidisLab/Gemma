@@ -35,7 +35,6 @@ public interface BaseDao<T> {
      * @param entities the entities to be crated.
      * @return collection of entities representing the instances in the persistent storage that were created.
      */
-    @CheckReturnValue
     Collection<T> create( Collection<T> entities );
 
     /**
@@ -45,7 +44,6 @@ public interface BaseDao<T> {
      * @param entity the entity to create
      * @return the persistent version of the entity
      */
-    @CheckReturnValue
     T create( T entity );
 
     /**
@@ -63,7 +61,7 @@ public interface BaseDao<T> {
      * @return the entity with given ID, or null if such entity does not exist or if the passed ID was null
      */
     @Nullable
-    T load( @Nullable Long id );
+    T load( Long id );
 
     /**
      * Loads all instanced of specific class from the persistent storage.
@@ -113,6 +111,7 @@ public interface BaseDao<T> {
     /**
      * @param entity Update the entity. Not supported if the entity is immutable.
      */
+    @Deprecated
     void update( T entity );
 
     /**

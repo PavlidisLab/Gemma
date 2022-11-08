@@ -26,7 +26,6 @@ import org.apache.commons.logging.LogFactory;
 import org.hibernate.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
-import org.springframework.transaction.annotation.Transactional;
 import ubic.basecode.dataStructure.CountingMap;
 import ubic.basecode.io.ByteArrayConverter;
 import ubic.basecode.util.BatchIterator;
@@ -369,7 +368,6 @@ public class CoexpressionDaoImpl implements CoexpressionDao {
      *
      */
     @Override
-    @Transactional
     public void deleteLinks( Taxon t, BioAssaySet experiment ) {
         Session sess = sessionFactory.getCurrentSession();
         sess.setCacheMode( CacheMode.IGNORE );
@@ -491,7 +489,6 @@ public class CoexpressionDaoImpl implements CoexpressionDao {
     }
 
     @Override
-    @Transactional(readOnly = true)
     public List<CoexpressionValueObject> findCoexpressionRelationships( Gene gene, Collection<Long> bas, int maxResults,
             boolean quick ) {
         assert !bas.isEmpty();
@@ -511,7 +508,6 @@ public class CoexpressionDaoImpl implements CoexpressionDao {
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Map<Long, List<CoexpressionValueObject>> findCoexpressionRelationships( Taxon taxon, Collection<Long> genes,
             Collection<Long> bas, int maxResults, boolean quick ) {
         assert !bas.isEmpty();
@@ -534,7 +530,6 @@ public class CoexpressionDaoImpl implements CoexpressionDao {
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Map<Long, List<CoexpressionValueObject>> findCoexpressionRelationships( Taxon t, Collection<Long> genes,
             Collection<Long> bas, int stringency, int maxResults, boolean quick ) {
         assert !bas.isEmpty();
@@ -561,7 +556,6 @@ public class CoexpressionDaoImpl implements CoexpressionDao {
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Map<Long, List<CoexpressionValueObject>> findInterCoexpressionRelationships( Taxon taxon,
             Collection<Long> genes, Collection<Long> bas, int stringency, boolean quick ) {
 
@@ -599,7 +593,6 @@ public class CoexpressionDaoImpl implements CoexpressionDao {
     }
 
     @Override
-    @Transactional
     public GeneCoexpressionNodeDegreeValueObject updateNodeDegree( Gene g, GeneCoexpressionNodeDegree nd ) {
         Session sess = sessionFactory.getCurrentSession();
 
@@ -642,7 +635,6 @@ public class CoexpressionDaoImpl implements CoexpressionDao {
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Collection<CoexpressionValueObject> getCoexpression( Taxon taxon, BioAssaySet experiment, boolean quick ) {
 
         Session sess = sessionFactory.getCurrentSession();
@@ -680,7 +672,6 @@ public class CoexpressionDaoImpl implements CoexpressionDao {
     }
 
     @Override
-    @Transactional(readOnly = true)
     public int queryAndCache( Gene gene ) {
 
         if ( gene2GeneCoexpressionCache.get( gene.getId() ) != null ) {
@@ -809,7 +800,6 @@ public class CoexpressionDaoImpl implements CoexpressionDao {
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Map<Gene, Integer> countOldLinks( Collection<Gene> genes ) {
         Map<Gene, Integer> results = new HashMap<>();
         Gene g = genes.iterator().next();
@@ -830,7 +820,6 @@ public class CoexpressionDaoImpl implements CoexpressionDao {
     }
 
     @Override
-    @Transactional
     public void updateRelativeNodeDegrees( Map<Long, List<Double>> relRanksPerGenePositive,
             Map<Long, List<Double>> relRanksPerGeneNegative ) {
         Session session = sessionFactory.getCurrentSession();

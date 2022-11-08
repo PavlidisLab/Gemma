@@ -19,6 +19,7 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.context.annotation.ScopedProxyMode;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.curation.Curatable;
 import ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails;
@@ -32,6 +33,7 @@ import ubic.gemma.persistence.service.expression.experiment.ExpressionExperiment
 
 import java.beans.Expression;
 import java.util.Collection;
+import java.util.Date;
 
 /**
  * Service handling manipulation with Curation Details.
@@ -52,6 +54,16 @@ public class CurationDetailsService {
 
     @Autowired
     private ExpressionExperimentDao expressionExperimentDao;
+
+    /**
+     * Creates new CurationDetails object and persists it.
+     *
+     * @return the newly created CurationDetails object.
+     */
+    @Transactional
+    public CurationDetails create() {
+        return curationDetailsDao.create();
+    }
 
     /**
      * This method should only be called from {@link AuditTrailService}, as the passed event has to already exist in the

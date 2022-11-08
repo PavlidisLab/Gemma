@@ -21,11 +21,9 @@ package ubic.gemma.persistence.service.expression.bioAssayData;
 import org.apache.commons.lang3.StringUtils;
 import org.hibernate.*;
 import org.hibernate.criterion.CriteriaSpecification;
-import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
-import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimensionValueObject;
@@ -36,7 +34,6 @@ import ubic.gemma.persistence.service.AbstractVoEnabledDao;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.LinkedHashSet;
 
 /**
  * <p>
@@ -56,20 +53,10 @@ public class BioAssayDimensionDaoImpl extends AbstractVoEnabledDao<BioAssayDimen
     }
 
     @Override
-    public BioAssayDimension findOrCreate( BioAssayDimension bioAssayDimension ) {
+    public BioAssayDimension find( BioAssayDimension bioAssayDimension ) {
+
         if ( bioAssayDimension == null || bioAssayDimension.getBioAssays() == null )
             throw new IllegalArgumentException();
-        BioAssayDimension existingBioAssayDimension = this.find( bioAssayDimension );
-        if ( existingBioAssayDimension != null ) {
-            return existingBioAssayDimension;
-        }
-        if ( AbstractDao.log.isDebugEnabled() )
-            AbstractDao.log.debug( "Creating new " + bioAssayDimension );
-        return this.create( bioAssayDimension );
-    }
-
-    @Override
-    public BioAssayDimension find( BioAssayDimension bioAssayDimension ) {
 
         if ( bioAssayDimension.getBioAssays().isEmpty() ) {
             throw new IllegalArgumentException( "BioAssayDimension had no BioAssays" );
@@ -120,7 +107,6 @@ public class BioAssayDimensionDaoImpl extends AbstractVoEnabledDao<BioAssayDimen
     }
 
     @Override
-    @Transactional
     public BioAssayDimension thawLite( final BioAssayDimension bioAssayDimension ) {
         if ( bioAssayDimension == null )
             return null;
@@ -134,7 +120,6 @@ public class BioAssayDimensionDaoImpl extends AbstractVoEnabledDao<BioAssayDimen
     }
 
     @Override
-    @Transactional
     public BioAssayDimension thaw( final BioAssayDimension bioAssayDimension ) {
         if ( bioAssayDimension == null )
             return null;

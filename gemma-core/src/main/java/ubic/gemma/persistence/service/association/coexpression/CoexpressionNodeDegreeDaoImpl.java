@@ -21,8 +21,7 @@ package ubic.gemma.persistence.service.association.coexpression;
 
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.stereotype.Repository;
 import ubic.gemma.model.association.coexpression.GeneCoexpressionNodeDegree;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.persistence.service.AbstractDao;
@@ -30,7 +29,7 @@ import ubic.gemma.persistence.service.AbstractDao;
 /**
  * @author paul
  */
-@Component
+@Repository
 public class CoexpressionNodeDegreeDaoImpl extends AbstractDao<GeneCoexpressionNodeDegree>
         implements CoexpressionNodeDegreeDao {
 
@@ -40,10 +39,8 @@ public class CoexpressionNodeDegreeDaoImpl extends AbstractDao<GeneCoexpressionN
     }
 
     @Override
-    @Transactional
     public GeneCoexpressionNodeDegree findOrCreate( Gene gene ) {
         GeneCoexpressionNodeDegree existing = this.findOneByProperty( "geneId", gene.getId() );
         return existing == null ? this.create( GeneCoexpressionNodeDegree.Factory.newInstance( gene ) ) : existing;
-
     }
 }

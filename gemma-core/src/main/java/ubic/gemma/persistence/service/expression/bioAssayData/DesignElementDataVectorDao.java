@@ -69,7 +69,7 @@ public interface DesignElementDataVectorDao<T extends DesignElementDataVector> e
      * @return Loads an instance of ubic.gemma.model.expression.bioAssayData.DesignElementDataVector from the persistent store.
      */
     @Override
-    T load( @Nullable Long id );
+    T load( Long id );
 
     /**
      * Loads all entities of type {@link DesignElementDataVector}.

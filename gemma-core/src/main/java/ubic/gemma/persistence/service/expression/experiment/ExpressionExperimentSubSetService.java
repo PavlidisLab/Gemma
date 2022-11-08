@@ -47,7 +47,7 @@ public interface ExpressionExperimentSubSetService extends BaseService<Expressio
 
     @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
-    ExpressionExperimentSubSet load( @Nullable Long id );
+    ExpressionExperimentSubSet load( Long id );
 
     @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })

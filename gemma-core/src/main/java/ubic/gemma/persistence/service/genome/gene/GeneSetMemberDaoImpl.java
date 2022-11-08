@@ -38,17 +38,4 @@ public class GeneSetMemberDaoImpl extends AbstractDao<GeneSetMember> implements 
     public GeneSetMemberDaoImpl( SessionFactory sessionFactory ) {
         super( GeneSetMember.class, sessionFactory );
     }
-
-    @Override
-    @Transactional
-    public Collection<GeneSetMember> create( final Collection<GeneSetMember> entities ) {
-        return super.create( entities );
-    }
-
-    @Override
-    @Transactional
-    public void update( final Collection<GeneSetMember> entities ) {
-        super.update( entities );
-    }
-
 }

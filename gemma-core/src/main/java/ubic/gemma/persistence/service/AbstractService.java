@@ -5,7 +5,6 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.common.Identifiable;
 
-import javax.annotation.Nullable;
 import javax.annotation.OverridingMethodsMustInvokeSuper;
 import java.util.Collection;
 
@@ -51,25 +50,25 @@ public abstract class AbstractService<O extends Identifiable> implements BaseSer
     }
 
     @Override
-    @Transactional
+    @Transactional(readOnly = true)
     public Collection<O> load( Collection<Long> ids ) {
         return mainDao.load( ids );
     }
 
     @Override
-    @Transactional
-    public O load( @Nullable Long id ) {
+    @Transactional(readOnly = true)
+    public O load( Long id ) {
         return mainDao.load( id );
     }
 
     @Override
-    @Transactional
+    @Transactional(readOnly = true)
     public Collection<O> loadAll() {
         return mainDao.loadAll();
     }
 
     @Override
-    @Transactional
+    @Transactional(readOnly = true)
     public long countAll() {
         return this.mainDao.countAll();
     }

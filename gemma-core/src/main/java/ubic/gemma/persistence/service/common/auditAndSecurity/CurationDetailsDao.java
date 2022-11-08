@@ -1,7 +1,5 @@
 package ubic.gemma.persistence.service.common.auditAndSecurity;
 
-import org.springframework.beans.factory.InitializingBean;
-import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.curation.Curatable;
 import ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails;
@@ -14,10 +12,9 @@ import javax.annotation.Nullable;
  *
  * Interface extracted from CurationDetailsDaoImpl to satisfy spring autowiring requirements.
  */
-@Transactional
 public interface CurationDetailsDao extends BaseDao<CurationDetails> {
     @Override
-    CurationDetails load( @Nullable Long id );
+    CurationDetails load( Long id );
 
     CurationDetails create();
 

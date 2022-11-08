@@ -97,17 +97,6 @@ public class FactorValueDaoImpl extends AbstractQueryFilteringVoEnabledDao<Facto
     }
 
     @Override
-    public FactorValue findOrCreate( FactorValue factorValue ) {
-        FactorValue existingFactorValue = this.find( factorValue );
-        if ( existingFactorValue != null ) {
-            return existingFactorValue;
-        }
-        if ( AbstractDao.log.isDebugEnabled() )
-            AbstractDao.log.debug( "Creating new factorValue" );
-        return this.create( factorValue );
-    }
-
-    @Override
     public FactorValue find( FactorValue factorValue ) {
         Criteria queryObject = this.getSessionFactory().getCurrentSession().createCriteria( FactorValue.class );
 

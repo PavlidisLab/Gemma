@@ -26,7 +26,6 @@ import org.hibernate.type.LongType;
 import org.hibernate.type.StandardBasicTypes;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
-import org.springframework.transaction.annotation.Transactional;
 import ubic.basecode.util.BatchIterator;
 import ubic.gemma.model.association.BioSequence2GeneProduct;
 import ubic.gemma.model.common.description.DatabaseEntry;
@@ -455,7 +454,6 @@ public class CompositeSequenceDaoImpl extends AbstractQueryFilteringVoEnabledDao
     }
 
     @Override
-    @Transactional(readOnly = true)
     public void thaw( final Collection<CompositeSequence> compositeSequences ) {
         Session session = getSessionFactory().getCurrentSession();
         int i = 0;
@@ -578,23 +576,6 @@ public class CompositeSequenceDaoImpl extends AbstractQueryFilteringVoEnabledDao
                 .add( Restrictions.eq( "name", compositeSequence.getArrayDesign().getName() ) );
 
         return ( CompositeSequence ) queryObject.uniqueResult();
-    }
-
-    @Override
-    public CompositeSequence findOrCreate( CompositeSequence compositeSequence ) {
-        if ( compositeSequence.getName() == null || compositeSequence.getArrayDesign() == null ) {
-            throw new IllegalArgumentException( "compositeSequence must have name and arrayDesign." );
-        }
-
-        CompositeSequence existingCompositeSequence = this.find( compositeSequence );
-        if ( existingCompositeSequence != null ) {
-            if ( AbstractDao.log.isDebugEnabled() )
-                AbstractDao.log.debug( "Found existing compositeSequence: " + existingCompositeSequence );
-            return existingCompositeSequence;
-        }
-        if ( AbstractDao.log.isDebugEnabled() )
-            AbstractDao.log.debug( "Creating new compositeSequence: " + compositeSequence );
-        return this.create( compositeSequence );
     }
 
     /**

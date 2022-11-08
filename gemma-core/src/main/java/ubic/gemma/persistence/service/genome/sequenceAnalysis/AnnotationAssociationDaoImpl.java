@@ -22,7 +22,6 @@ import org.hibernate.classic.Session;
 import org.hibernate.criterion.Restrictions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
-import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.gene.GeneProduct;
@@ -87,7 +86,6 @@ public class AnnotationAssociationDaoImpl extends AbstractDao<AnnotationAssociat
     }
 
     @Override
-    @Transactional(readOnly = true)
     public void thaw( final AnnotationAssociation annotationAssociation ) {
         if ( annotationAssociation == null )
             return;
@@ -104,7 +102,6 @@ public class AnnotationAssociationDaoImpl extends AbstractDao<AnnotationAssociat
     }
 
     @Override
-    @Transactional(readOnly = true)
     public void thaw( final Collection<AnnotationAssociation> anCollection ) {
         if ( anCollection == null )
             return;
@@ -122,17 +119,5 @@ public class AnnotationAssociationDaoImpl extends AbstractDao<AnnotationAssociat
         return this.getSessionFactory().getCurrentSession()
                 .createQuery( "select b from AnnotationAssociation b join b.geneProduct gp where gp in (:gps)" )
                 .setParameterList( "gps", gps ).list();
-    }
-
-    @Override
-    @Transactional
-    public Collection<AnnotationAssociation> create( final Collection<AnnotationAssociation> entities ) {
-        return super.create( entities );
-    }
-
-    @Override
-    @Transactional
-    public void update( final Collection<AnnotationAssociation> entities ) {
-        super.update( entities );
     }
 }

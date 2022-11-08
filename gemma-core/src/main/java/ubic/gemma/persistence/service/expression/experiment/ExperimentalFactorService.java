@@ -63,7 +63,7 @@ public interface ExperimentalFactorService
 
     @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
-    ExperimentalFactor load( @Nullable Long id );
+    ExperimentalFactor load( Long id );
 
     @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })

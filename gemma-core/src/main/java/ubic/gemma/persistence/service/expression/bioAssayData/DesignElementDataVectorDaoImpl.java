@@ -203,18 +203,6 @@ public abstract class DesignElementDataVectorDaoImpl<T extends DesignElementData
         return new HashSet<>( this.findByProperty( "quantitationType", quantitationType ) );
     }
 
-    @Override
-    @Transactional
-    public Collection<T> create( final Collection<T> entities ) {
-        return super.create( entities );
-    }
-
-    @Override
-    @Transactional
-    public void update( final Collection<T> entities ) {
-        super.update( entities );
-    }
-
     /**
      * @param  ee      ee
      * @param  cs2gene Map of probes to genes.

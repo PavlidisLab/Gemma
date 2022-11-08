@@ -49,7 +49,7 @@ public interface ExpressionExperimentSetService
 
     @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
-    ExpressionExperimentSet load( @Nullable Long id );
+    ExpressionExperimentSet load( Long id );
 
     @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })

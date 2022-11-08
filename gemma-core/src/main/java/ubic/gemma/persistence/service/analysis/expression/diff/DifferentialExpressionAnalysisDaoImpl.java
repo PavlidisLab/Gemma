@@ -409,8 +409,8 @@ class DifferentialExpressionAnalysisDaoImpl extends AnalysisDaoBase<Differential
             // factor values for the experiments.
             //noinspection unchecked
             fvs = this.getSessionFactory().getCurrentSession().createQuery(
-                    "select distinct ee.id, fv from " + "ExpressionExperiment"
-                            + " ee join ee.bioAssays ba join ba.sampleUsed bm join bm.factorValues fv where ee.id in (:ees)" )
+                            "select distinct ee.id, fv from " + "ExpressionExperiment"
+                                    + " ee join ee.bioAssays ba join ba.sampleUsed bm join bm.factorValues fv where ee.id in (:ees)" )
                     .setParameterList( "ees", expressionExperimentIds ).list();
             this.addFactorValues( ee2fv, fvs );
 
@@ -424,8 +424,8 @@ class DifferentialExpressionAnalysisDaoImpl extends AnalysisDaoBase<Differential
             if ( !probableSubSetIds.isEmpty() ) {
                 //noinspection unchecked
                 fvs = this.getSessionFactory().getCurrentSession().createQuery(
-                        "select distinct ee.id, fv from " + "ExpressionExperimentSubSet"
-                                + " ee join ee.bioAssays ba join ba.sampleUsed bm join bm.factorValues fv where ee.id in (:ees)" )
+                                "select distinct ee.id, fv from " + "ExpressionExperimentSubSet"
+                                        + " ee join ee.bioAssays ba join ba.sampleUsed bm join bm.factorValues fv where ee.id in (:ees)" )
                         .setParameterList( "ees", probableSubSetIds ).list();
                 this.addFactorValues( ee2fv, fvs );
             }
@@ -455,8 +455,8 @@ class DifferentialExpressionAnalysisDaoImpl extends AnalysisDaoBase<Differential
             // experiment.
             //noinspection unchecked
             fvs = this.getSessionFactory().getCurrentSession().createQuery(
-                    "select distinct ee.id, fv from " + "ExpressionExperimentSubSet"
-                            + " ee join ee.bioAssays ba join ba.sampleUsed bm join bm.factorValues fv where ee.id in (:ees)" )
+                            "select distinct ee.id, fv from " + "ExpressionExperimentSubSet"
+                                    + " ee join ee.bioAssays ba join ba.sampleUsed bm join bm.factorValues fv where ee.id in (:ees)" )
                     .setParameterList( "ees", experimentSubsetIds ).list();
             this.addFactorValues( ee2fv, fvs );
         }
@@ -496,8 +496,7 @@ class DifferentialExpressionAnalysisDaoImpl extends AnalysisDaoBase<Differential
 
         super.remove( ( DifferentialExpressionAnalysis ) session.load( DifferentialExpressionAnalysis.class, analysis.getId() ) );
 
-        session.flush();
-        session.clear();
+        flushAndClear();
     }
 
     @Override
@@ -515,9 +514,9 @@ class DifferentialExpressionAnalysisDaoImpl extends AnalysisDaoBase<Differential
          */
         //noinspection unchecked
         results.addAll( this.getSessionFactory().getCurrentSession().createQuery(
-                "select distinct a from ExpressionExperimentSubSet eess, DifferentialExpressionAnalysis a "
-                        + "join eess.sourceExperiment see "
-                        + "join a.experimentAnalyzed eeanalyzed where see.id=:eeid and eess=eeanalyzed" )
+                        "select distinct a from ExpressionExperimentSubSet eess, DifferentialExpressionAnalysis a "
+                                + "join eess.sourceExperiment see "
+                                + "join a.experimentAnalyzed eeanalyzed where see.id=:eeid and eess=eeanalyzed" )
                 .setParameter( "eeid", id ).list() );
 
         return results;

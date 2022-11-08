@@ -38,7 +38,6 @@ import ubic.gemma.model.genome.gene.phenotype.valueObject.PhenotypeValueObject;
 import ubic.gemma.persistence.service.AbstractDao;
 import ubic.gemma.persistence.util.EntityUtils;
 
-import javax.annotation.Nullable;
 import java.math.BigInteger;
 import java.sql.Timestamp;
 import java.util.*;
@@ -64,12 +63,10 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
     }
 
     @Override
-    public PhenotypeAssociation load( @Nullable Long id ) {
-        if ( id == null ) {
-            return null;
-        }
+    public PhenotypeAssociation load( Long id ) {
         return ( PhenotypeAssociation ) this.getSessionFactory().getCurrentSession()
-                .createQuery( "from PhenotypeAssociation fetch all properties where id = :id" ).setParameter( "id", id )
+                .createQuery( "from PhenotypeAssociation fetch all properties where id = :id" )
+                .setParameter( "id", id )
                 .uniqueResult();
     }
 

@@ -242,24 +242,13 @@ public class BioSequenceDaoImpl extends AbstractVoEnabledDao<BioSequence, BioSeq
         return ( BioSequence ) result;
     }
 
-    @Override
-    public BioSequence findOrCreate( BioSequence bioSequence ) {
-        BioSequence existingBioSequence = this.find( bioSequence );
-        if ( existingBioSequence != null ) {
-            return existingBioSequence;
-        }
-        if ( AbstractDao.log.isDebugEnabled() )
-            AbstractDao.log.debug( "Creating new: " + bioSequence );
-        return this.create( bioSequence );
-    }
-
     private Collection<? extends BioSequence> doThawBatch( Collection<BioSequence> batch ) {
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession().createQuery( "select b from BioSequence b "
                         + " left join fetch b.taxon tax left join fetch tax.externalDatabase left join fetch b.sequenceDatabaseEntry s "
                         + " left join fetch s.externalDatabase" + " left join fetch b.bioSequence2GeneProduct bs2gp "
                         + " left join fetch bs2gp.geneProduct gp left join fetch gp.gene g"
-                        + " left join fetch g.aliases left join fetch g.accessions  where b.id in (:bids)")
+                        + " left join fetch g.aliases left join fetch g.accessions  where b.id in (:bids)" )
                 .setParameterList( "bids", EntityUtils.getIds( batch ) )
                 .list();
     }

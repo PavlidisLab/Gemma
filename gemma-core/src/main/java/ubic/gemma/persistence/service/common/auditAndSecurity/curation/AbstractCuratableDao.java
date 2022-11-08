@@ -2,6 +2,7 @@ package ubic.gemma.persistence.service.common.auditAndSecurity.curation;
 
 import gemma.gsec.util.SecurityUtil;
 import org.hibernate.SessionFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.curation.AbstractCuratableValueObject;
@@ -25,24 +26,19 @@ import java.util.Map;
 public abstract class AbstractCuratableDao<C extends Curatable, VO extends AbstractCuratableValueObject<C>>
         extends AbstractQueryFilteringVoEnabledDao<C, VO> implements CuratableDao<C, VO> {
 
+    @Autowired
+    private CurationDetailsDao curationDetailsDao;
+
     protected AbstractCuratableDao( String objectAlias, Class<C> elementClass, SessionFactory sessionFactory ) {
         super( objectAlias, elementClass, sessionFactory );
     }
 
     @Override
-    @Transactional
-    public Collection<C> create( final Collection<C> entities ) {
-        return super.create( entities );
-    }
-
-    @Override
     public C create( C entity ) {
-        entity = super.create( entity );
         if ( entity.getCurationDetails() == null ) {
-            CurationDetailsDao curationDetailsDao = new CurationDetailsDaoImpl( this.getSessionFactory() );
             entity.setCurationDetails( curationDetailsDao.create() );
         }
-        return entity;
+        return super.create( entity );
     }
 
     /**

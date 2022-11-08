@@ -30,7 +30,6 @@ import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.persistence.service.FilteringVoEnabledService;
 
-import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -105,7 +104,7 @@ public interface ArrayDesignService extends FilteringVoEnabledService<ArrayDesig
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ_QUIET" })
     @Override
-    ArrayDesign load( @Nullable Long id );
+    ArrayDesign load( Long id );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     @Override

@@ -27,7 +27,6 @@ import org.hibernate.classic.Session;
 import org.hibernate.criterion.Restrictions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
-import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.gene.GeneProduct;
@@ -96,7 +95,6 @@ public class BlatAssociationDaoImpl extends AbstractDao<BlatAssociation> impleme
     }
 
     @Override
-    @Transactional(readOnly = true)
     public void thaw( final Collection<BlatAssociation> blatAssociations ) {
         if ( blatAssociations == null )
             return;
@@ -106,7 +104,6 @@ public class BlatAssociationDaoImpl extends AbstractDao<BlatAssociation> impleme
     }
 
     @Override
-    @Transactional(readOnly = true)
     public void thaw( final BlatAssociation blatAssociation ) {
         if ( blatAssociation == null )
             return;

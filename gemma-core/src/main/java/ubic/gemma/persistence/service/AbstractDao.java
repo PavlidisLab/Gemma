@@ -24,7 +24,6 @@ import org.hibernate.LockOptions;
 import org.hibernate.SessionFactory;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
-import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.common.Identifiable;
 
 import javax.annotation.Nullable;
@@ -37,7 +36,6 @@ import java.util.*;
  *
  * @author Anton, Nicolas
  */
-@Transactional
 public abstract class AbstractDao<T extends Identifiable> implements BaseDao<T> {
 
     protected static final Log log = LogFactory.getLog( AbstractDao.class );
@@ -87,7 +85,6 @@ public abstract class AbstractDao<T extends Identifiable> implements BaseDao<T> 
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Collection<T> load( Collection<Long> ids ) {
         if ( ids.isEmpty() ) {
             return Collections.emptyList();
@@ -102,15 +99,13 @@ public abstract class AbstractDao<T extends Identifiable> implements BaseDao<T> 
 
     @SuppressWarnings("unchecked")
     @Override
-    @Transactional(readOnly = true)
-    public T load( @Nullable Long id ) {
+    public T load( Long id ) {
         // Don't use 'load' because if the object doesn't exist you can get an invalid proxy.
         //noinspection unchecked
-        return id == null ? null : ( T ) this.getSessionFactory().getCurrentSession().get( elementClass, id );
+        return ( T ) this.getSessionFactory().getCurrentSession().get( elementClass, id );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Collection<T> loadAll() {
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession().createCriteria( elementClass ).list();
@@ -171,13 +166,15 @@ public abstract class AbstractDao<T extends Identifiable> implements BaseDao<T> 
     }
 
     @Override
-    @Transactional(readOnly = true)
     public T find( T entity ) {
-        return this.load( entity.getId() );
+        if ( entity.getId() != null ) {
+            return this.load( entity.getId() );
+        } else {
+            return null;
+        }
     }
 
     @Override
-    @Transactional
     public T findOrCreate( T entity ) {
         T found = this.find( entity );
         return found == null ? this.create( entity ) : found;
@@ -241,7 +238,7 @@ public abstract class AbstractDao<T extends Identifiable> implements BaseDao<T> 
      * <p>
      * This is a hack to avoid {@link org.hibernate.LazyInitializationException} when manipulating an unmanaged or
      * detached entity. If you need this, it means that the session scope does not encompass loading and updating the
-     * entity, and can generally be better addressed by annotating a calling method with {@link Transactional}.
+     * entity, and can generally be better addressed by annotating a calling method with {@link org.springframework.transaction.annotation.Transactional}.
      * <p>
      * Note that this does not propagate to children entities even of lock cascading is set.
      */

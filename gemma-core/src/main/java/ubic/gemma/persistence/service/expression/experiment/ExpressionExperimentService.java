@@ -122,7 +122,7 @@ public interface ExpressionExperimentService
     @Override
     @Monitored
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ_QUIET" })
-    ExpressionExperiment load( @Nullable Long id );
+    ExpressionExperiment load( Long id );
 
     @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })

@@ -449,6 +449,7 @@ public class GeneServiceImpl extends AbstractFilteringVoEnabledService<Gene, Gen
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Gene thaw( Gene gene ) {
         return this.geneDao.thaw( gene );
     }
@@ -484,6 +485,7 @@ public class GeneServiceImpl extends AbstractFilteringVoEnabledService<Gene, Gen
      * @return Collection of Gene entity objects
      */
     @Override
+    @Transactional(readOnly = true)
     public Collection<GeneValueObject> searchGenes( String query, Long taxonId ) throws SearchException {
 
         Taxon taxon = null;

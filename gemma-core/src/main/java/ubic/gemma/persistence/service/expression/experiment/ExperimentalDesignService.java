@@ -37,7 +37,7 @@ public interface ExperimentalDesignService extends BaseService<ExperimentalDesig
 
     @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
-    ExperimentalDesign load( @Nullable Long id );
+    ExperimentalDesign load( Long id );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
     ExperimentalDesign loadWithExperimentalFactors( Long id );

@@ -346,6 +346,7 @@ public class ArrayDesignServiceImpl extends AbstractFilteringVoEnabledService<Ar
     }
 
     @Override
+    @Transactional(readOnly = true)
     public long numBioSequences( ArrayDesign arrayDesign ) {
         return this.arrayDesignDao.numBioSequences( arrayDesign );
     }
@@ -369,6 +370,7 @@ public class ArrayDesignServiceImpl extends AbstractFilteringVoEnabledService<Ar
     }
 
     @Override
+    @Transactional(readOnly = true)
     public long numCompositeSequenceWithGenes( ArrayDesign arrayDesign ) {
         return this.arrayDesignDao.numCompositeSequenceWithGenes( arrayDesign );
     }

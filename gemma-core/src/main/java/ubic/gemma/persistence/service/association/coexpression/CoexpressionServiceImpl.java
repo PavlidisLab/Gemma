@@ -44,7 +44,6 @@ import java.util.*;
  * @see CoexpressionService
  */
 @Service
-
 public class CoexpressionServiceImpl implements CoexpressionService {
 
     private static final Logger log = LoggerFactory.getLogger( CoexpressionServiceImpl.class );
@@ -91,6 +90,7 @@ public class CoexpressionServiceImpl implements CoexpressionService {
     }
 
     @Override
+    @Transactional
     public void deleteLinks( BioAssaySet experiment ) {
         this.coexpressionDao.deleteLinks( this.experimentDao.getTaxon( experiment ), experiment );
     }
@@ -110,6 +110,7 @@ public class CoexpressionServiceImpl implements CoexpressionService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<CoexpressionValueObject> findCoexpressionRelationships( Gene gene, Collection<Long> bas, int stringency,
             int maxResults, boolean quick ) {
         assert gene != null;
@@ -139,6 +140,7 @@ public class CoexpressionServiceImpl implements CoexpressionService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Map<Long, List<CoexpressionValueObject>> findCoexpressionRelationships( Taxon t, Collection<Long> genes,
             Collection<Long> bas, int stringency, int maxResults, boolean quick ) {
         // if ( stringency > CoexpressionCache.CACHE_QUERY_STRINGENCY || quick || maxResults > 0 ) {
@@ -149,6 +151,7 @@ public class CoexpressionServiceImpl implements CoexpressionService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Map<Long, List<CoexpressionValueObject>> findInterCoexpressionRelationships( Taxon t, Collection<Long> genes,
             Collection<Long> bas, int stringency, boolean quick ) {
         // these are always candidates for queuing since the constraint on genes is done at the query level.
@@ -164,6 +167,7 @@ public class CoexpressionServiceImpl implements CoexpressionService {
     }
 
     @Override
+    @Transactional
     public void updateNodeDegrees( Taxon t ) {
         CoexpressionServiceImpl.log.info( "Updating node degree for all genes from " + t );
 
@@ -222,6 +226,7 @@ public class CoexpressionServiceImpl implements CoexpressionService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Map<Gene, Integer> countOldLinks( Collection<Gene> genes ) {
         return this.coexpressionDao.countOldLinks( genes );
     }

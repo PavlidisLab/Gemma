@@ -103,17 +103,6 @@ public class GeneProductDaoImpl extends AbstractVoEnabledDao<GeneProduct, GenePr
     }
 
     @Override
-    public GeneProduct findOrCreate( GeneProduct geneProduct ) {
-        GeneProduct existingGeneProduct = this.find( geneProduct );
-        if ( existingGeneProduct != null ) {
-            return existingGeneProduct;
-        }
-        if ( AbstractDao.log.isDebugEnabled() )
-            AbstractDao.log.debug( "Creating new geneProduct: " + geneProduct.getName() );
-        return this.create( geneProduct );
-    }
-
-    @Override
     public GeneProduct find( GeneProduct geneProduct ) {
         Criteria queryObject = this.getSessionFactory().getCurrentSession().createCriteria( GeneProduct.class )
                 .setResultTransformer( CriteriaSpecification.DISTINCT_ROOT_ENTITY );

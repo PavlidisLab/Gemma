@@ -19,21 +19,16 @@
 package ubic.gemma.persistence.service.expression.bioAssay;
 
 import org.apache.commons.lang3.StringUtils;
-import org.hibernate.Criteria;
 import org.hibernate.Hibernate;
-import org.hibernate.LockOptions;
 import org.hibernate.SessionFactory;
 import org.hibernate.classic.Session;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
-import org.springframework.transaction.annotation.Transactional;
-import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
-import ubic.gemma.persistence.service.AbstractDao;
 import ubic.gemma.persistence.service.AbstractVoEnabledDao;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignDao;
 import ubic.gemma.persistence.util.BusinessKey;
@@ -56,35 +51,10 @@ public class BioAssayDaoImpl extends AbstractVoEnabledDao<BioAssay, BioAssayValu
     }
 
     @Override
-    @Transactional
-    public Collection<BioAssay> create( final Collection<BioAssay> entities ) {
-        return super.create( entities );
-    }
-
-    @Override
-    @Transactional
-    public void update( final Collection<BioAssay> entities ) {
-        super.update( entities );
-    }
-
-    @Override
     public BioAssay find( BioAssay bioAssay ) {
         return ( BioAssay ) BusinessKey
                 .createQueryObject( this.getSessionFactory().getCurrentSession(), bioAssay )
                 .uniqueResult();
-    }
-
-    @Override
-    public BioAssay findOrCreate( BioAssay bioAssay ) {
-        BioAssay newBioAssay = this.find( bioAssay );
-        if ( newBioAssay != null ) {
-            if ( AbstractDao.log.isDebugEnabled() )
-                AbstractDao.log.debug( "Found existing bioAssay: " + newBioAssay );
-            return newBioAssay;
-        }
-        if ( AbstractDao.log.isDebugEnabled() )
-            AbstractDao.log.debug( "Creating new bioAssay: " + bioAssay );
-        return this.create( bioAssay );
     }
 
     @Override
@@ -107,7 +77,6 @@ public class BioAssayDaoImpl extends AbstractVoEnabledDao<BioAssay, BioAssayValu
     }
 
     @Override
-    @Transactional(readOnly = true)
     public void thaw( final BioAssay bioAssay ) {
         try {
             Session session = getSessionFactory().getCurrentSession();

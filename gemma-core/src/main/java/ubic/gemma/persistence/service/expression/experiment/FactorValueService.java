@@ -42,7 +42,7 @@ public interface FactorValueService extends FilteringVoEnabledService<FactorValu
 
     @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
-    FactorValue load( @Nullable Long id );
+    FactorValue load( Long id );
 
     @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })

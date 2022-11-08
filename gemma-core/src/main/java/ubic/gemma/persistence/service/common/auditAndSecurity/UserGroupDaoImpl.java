@@ -89,11 +89,6 @@ public class UserGroupDaoImpl extends AbstractDao<UserGroup> implements UserGrou
     }
 
     @Override
-    public long countAll() {
-        return this.loadAll().size();
-    }
-
-    @Override
     public void remove( UserGroup userGroup ) {
         // FIXME: this should not be necessary, but we have cases where the group are obtained from a different Hibernate
         //  session
@@ -126,12 +121,6 @@ public class UserGroupDaoImpl extends AbstractDao<UserGroup> implements UserGrou
         } else {
             return this.findByName( entity.getName() );
         }
-    }
-
-    @Override
-    public UserGroup findOrCreate( UserGroup entity ) {
-        UserGroup found = this.find( entity );
-        return found != null ? found : this.create( entity );
     }
 
 }

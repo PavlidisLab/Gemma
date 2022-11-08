@@ -40,7 +40,6 @@ public interface BaseService<O extends Identifiable> {
      * @return collection of objects referencing the persistent instances of given entities.
      */
     @SuppressWarnings("unused") // Consistency
-    @CheckReturnValue
     Collection<O> create( Collection<O> entities );
 
     /**
@@ -49,7 +48,6 @@ public interface BaseService<O extends Identifiable> {
      * @param entity the entity to be created.
      * @return object referencing the persistent instance of the given entity.
      */
-    @CheckReturnValue
     O create( O entity );
 
     /**
@@ -67,7 +65,7 @@ public interface BaseService<O extends Identifiable> {
      * @return the entity with matching ID, or null if the entity does not exist or if the passed ID was null
      */
     @Nullable
-    O load( @Nullable Long id );
+    O load( Long id );
 
     /**
      * Loads all the entities of specific type.

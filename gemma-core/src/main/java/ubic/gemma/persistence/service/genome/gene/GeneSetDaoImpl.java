@@ -26,7 +26,6 @@ import org.hibernate.Query;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
-import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonValueObject;
@@ -230,7 +229,6 @@ public class GeneSetDaoImpl extends AbstractDao<GeneSet> implements GeneSetDao {
      * @see ubic.gemma.persistence.service.genome.gene.GeneSetDao#thaw(ubic.gemma.model.genome.gene.GeneSet)
      */
     @Override
-    @Transactional(readOnly = true)
     public void thaw( final GeneSet geneSet ) {
         if ( geneSet == null || geneSet.getId() == null ) return;
         reattach( geneSet );

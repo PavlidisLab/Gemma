@@ -122,8 +122,10 @@ public class ExpressionExperimentDaoImpl
             criteria.add( Restrictions.eq( "accession", entity.getAccession() ) );
         } else if ( entity.getShortName() != null ) {
             criteria.add( Restrictions.eq( "shortName", entity.getShortName() ) );
-        } else {
+        } else if ( entity.getName() != null ) {
             criteria.add( Restrictions.eq( "name", entity.getName() ) );
+        } else {
+            throw new IllegalArgumentException( "At least one of accession, shortName or name must be non-null to find an ExpressionExperiment." );
         }
 
         return ( ExpressionExperiment ) criteria.uniqueResult();
@@ -473,14 +475,6 @@ public class ExpressionExperimentDaoImpl
 
         //noinspection unchecked
         return q.list();
-    }
-
-    @Override
-    public ExpressionExperiment findOrCreate( ExpressionExperiment entity ) {
-        if ( entity.getShortName() == null && entity.getName() == null && entity.getAccession() == null ) {
-            throw new IllegalArgumentException( "ExpressionExperiment must have name or external accession." );
-        }
-        return super.findOrCreate( entity );
     }
 
     @Override

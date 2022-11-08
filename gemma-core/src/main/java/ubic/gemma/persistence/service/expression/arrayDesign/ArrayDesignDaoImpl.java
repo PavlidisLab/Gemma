@@ -26,7 +26,6 @@ import org.hibernate.*;
 import org.hibernate.collection.PersistentCollection;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
-import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
@@ -550,7 +549,6 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     }
 
     @Override
-    @Transactional
     public long numAllCompositeSequenceWithBioSequences() {
         //language=HQL
         final String queryString =
@@ -561,7 +559,6 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     }
 
     @Override
-    @Transactional
     public long numAllCompositeSequenceWithBioSequences( Collection<Long> ids ) {
 
         if ( ids.isEmpty() )
@@ -576,7 +573,6 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     }
 
     @Override
-    @Transactional
     public long numAllCompositeSequenceWithBlatResults() {
         //language=HQL
         final String queryString =
@@ -587,7 +583,6 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     }
 
     @Override
-    @Transactional
     public long numAllCompositeSequenceWithBlatResults( Collection<Long> ids ) {
         if ( ids.isEmpty() ) {
             return 0;
@@ -601,7 +596,6 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     }
 
     @Override
-    @Transactional
     public long numAllCompositeSequenceWithGenes() {
         //language=HQL
         final String queryString =
@@ -613,7 +607,6 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     }
 
     @Override
-    @Transactional
     public long numAllCompositeSequenceWithGenes( Collection<Long> ids ) {
         if ( ids.isEmpty() ) {
             return 0;
@@ -629,7 +622,6 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     }
 
     @Override
-    @Transactional
     public long numAllGenes() {
         //language=HQL
         final String queryString =
@@ -641,7 +633,6 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     }
 
     @Override
-    @Transactional
     public long numAllGenes( Collection<Long> ids ) {
         if ( ids.isEmpty() ) {
             return 0;
@@ -657,7 +648,6 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     }
 
     @Override
-    @Transactional
     public long numBioSequences( ArrayDesign arrayDesign ) {
         //language=HQL
         final String queryString =
@@ -668,7 +658,6 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     }
 
     @Override
-    @Transactional
     public long numBlatResults( ArrayDesign arrayDesign ) {
         //language=HQL
         final String queryString =
@@ -680,7 +669,6 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     }
 
     @Override
-    @Transactional
     public long numCompositeSequences( ArrayDesign arrayDesign ) {
         //language=HQL
         final String queryString = "select count (*) from  CompositeSequence as cs inner join cs.arrayDesign as ar where ar = :ad";
@@ -700,7 +688,6 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     }
 
     @Override
-    @Transactional
     public long numCompositeSequenceWithBlatResults( ArrayDesign arrayDesign ) {
         //language=HQL
         final String queryString =
@@ -711,7 +698,6 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     }
 
     @Override
-    @Transactional
     public long numCompositeSequenceWithGenes( ArrayDesign arrayDesign ) {
         //language=HQL
         final String queryString =
@@ -724,7 +710,6 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     }
 
     @Override
-    @Transactional
     public long numExperiments( ArrayDesign arrayDesign ) {
         //language=HQL
         final String queryString = "select distinct ee.id  from   "
@@ -743,7 +728,6 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     }
 
     @Override
-    @Transactional(readOnly = true)
     public long numGenes( ArrayDesign arrayDesign ) {
         //language=HQL
         return ( ( BigInteger ) getSessionFactory().getCurrentSession().createSQLQuery(
