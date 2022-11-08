@@ -18,6 +18,7 @@
  */
 package ubic.gemma.persistence.service;
 
+import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.LockOptions;
@@ -30,6 +31,7 @@ import javax.annotation.Nullable;
 import javax.annotation.OverridingMethodsMustInvokeSuper;
 import java.io.Serializable;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 /**
  * AbstractDao can find the generic type at runtime and simplify the code implementation of the BaseDao interface
@@ -64,14 +66,17 @@ public abstract class AbstractDao<T extends Identifiable> implements BaseDao<T> 
 
     @Override
     public Collection<T> create( Collection<T> entities ) {
+        StopWatch stopWatch = StopWatch.createStarted();
         Collection<T> results = new ArrayList<>( entities.size() );
         int i = 0;
         for ( T t : entities ) {
             results.add( this.create( t ) );
             if ( ++i % batchSize == 0 ) {
                 flushAndClear();
+                AbstractDao.log.debug( String.format( "Flushed and cleared after creating %d/%d %s entities.", i, entities.size(), elementClass ) );
             }
         }
+        AbstractDao.log.debug( String.format( "Created %d %s entities in %s ms.", results.size(), elementClass.getSimpleName(), stopWatch.getTime( TimeUnit.MILLISECONDS ) ) );
         return results;
     }
 
@@ -81,34 +86,42 @@ public abstract class AbstractDao<T extends Identifiable> implements BaseDao<T> 
         Serializable id = this.getSessionFactory().getCurrentSession().save( entity );
         assert entity.getId() != null : "No ID received for " + entity;
         assert id.equals( entity.getId() );
+        AbstractDao.log.trace( String.format( "Created %s.", formatEntity( entity ) ) );
         return entity;
     }
 
     @Override
     public Collection<T> load( Collection<Long> ids ) {
+        StopWatch timer = StopWatch.createStarted();
         if ( ids.isEmpty() ) {
             return Collections.emptyList();
         }
         String idPropertyName = getSessionFactory().getClassMetadata( elementClass ).getIdentifierPropertyName();
         //noinspection unchecked
-        return this.getSessionFactory().getCurrentSession()
+        List<T> results = this.getSessionFactory().getCurrentSession()
                 .createCriteria( elementClass )
                 .add( Restrictions.in( idPropertyName, new HashSet<>( ids ) ) )
                 .list();
+        AbstractDao.log.debug( String.format( "Loaded %d %s entities in %d ms.", results.size(), elementClass.getSimpleName(), timer.getTime( TimeUnit.MILLISECONDS ) ) );
+        return results;
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     public T load( Long id ) {
         // Don't use 'load' because if the object doesn't exist you can get an invalid proxy.
         //noinspection unchecked
-        return ( T ) this.getSessionFactory().getCurrentSession().get( elementClass, id );
+        T result = ( T ) this.getSessionFactory().getCurrentSession().get( elementClass, id );
+        AbstractDao.log.trace( String.format( String.format( "Loaded %s.", formatEntity( result ) ) ) );
+        return result;
     }
 
     @Override
     public Collection<T> loadAll() {
+        StopWatch timer = StopWatch.createStarted();
         //noinspection unchecked
-        return this.getSessionFactory().getCurrentSession().createCriteria( elementClass ).list();
+        Collection<T> results = this.getSessionFactory().getCurrentSession().createCriteria( elementClass ).list();
+        AbstractDao.log.debug( String.format( "Loaded all (%d) %s entities in %d ms.", results.size(), elementClass.getSimpleName(), timer.getTime( TimeUnit.MILLISECONDS ) ) );
+        return results;
     }
 
     @Override
@@ -120,13 +133,16 @@ public abstract class AbstractDao<T extends Identifiable> implements BaseDao<T> 
 
     @Override
     public void remove( Collection<T> entities ) {
+        StopWatch timer = StopWatch.createStarted();
         int i = 0;
         for ( T e : entities ) {
             this.remove( e );
             if ( ++i % batchSize == 0 ) {
                 flushAndClear();
+                AbstractDao.log.trace( String.format( "Flushed and cleared after removing %d/%d %s entities.", i, entities.size(), elementClass ) );
             }
         }
+        AbstractDao.log.debug( String.format( "Removed %d entities in %d ms.", entities.size(), timer.getTime( TimeUnit.MILLISECONDS ) ) );
     }
 
     @Override
@@ -134,6 +150,8 @@ public abstract class AbstractDao<T extends Identifiable> implements BaseDao<T> 
         T entity = this.load( id );
         if ( entity != null ) {
             this.remove( entity );
+        } else {
+            AbstractDao.log.trace( String.format( "No %s entity with ID %d, no need to remove anything.", elementClass.getSimpleName(), id ) );
         }
     }
 
@@ -141,22 +159,28 @@ public abstract class AbstractDao<T extends Identifiable> implements BaseDao<T> 
     @OverridingMethodsMustInvokeSuper
     public void remove( T entity ) {
         this.getSessionFactory().getCurrentSession().delete( entity );
+        AbstractDao.log.trace( String.format( "Removed %s.", formatEntity( entity ) ) );
     }
 
     @Override
     public void removeAll() {
+        StopWatch timer = StopWatch.createStarted();
         this.remove( this.loadAll() );
+        AbstractDao.log.debug( String.format( "Removed all %s entities in %d ms.", elementClass.getSimpleName(), timer.getTime( TimeUnit.MILLISECONDS ) ) );
     }
 
     @Override
     public void update( Collection<T> entities ) {
+        StopWatch timer = StopWatch.createStarted();
         int i = 0;
         for ( T entity : entities ) {
             this.update( entity );
             if ( ++i % batchSize == 0 ) {
                 flushAndClear();
+                AbstractDao.log.trace( String.format( "Flushed and cleared after updating %d/%d %s entities.", i, entities.size(), elementClass ) );
             }
         }
+        AbstractDao.log.debug( String.format( "Updated %d %s entities in %d ms.", entities.size(), elementClass.getSimpleName(), timer.getTime( TimeUnit.MILLISECONDS ) ) );
     }
 
     @Override
@@ -170,6 +194,7 @@ public abstract class AbstractDao<T extends Identifiable> implements BaseDao<T> 
         if ( entity.getId() != null ) {
             return this.load( entity.getId() );
         } else {
+            AbstractDao.log.trace( String.format( "No persistent entity found for %s, returning null.", formatEntity( entity ) ) );
             return null;
         }
     }
@@ -177,7 +202,12 @@ public abstract class AbstractDao<T extends Identifiable> implements BaseDao<T> 
     @Override
     public T findOrCreate( T entity ) {
         T found = this.find( entity );
-        return found == null ? this.create( entity ) : found;
+        if ( found != null ) {
+            return found;
+        } else {
+            AbstractDao.log.trace( String.format( "No persistent entity found for %s, creating a new one...", formatEntity( entity ) ) );
+            return this.create( entity );
+        }
     }
 
     protected SessionFactory getSessionFactory() {
@@ -194,7 +224,6 @@ public abstract class AbstractDao<T extends Identifiable> implements BaseDao<T> 
      * @param  propertyValue the value to look for.
      * @return an entity whose property matched the given value
      */
-    @SuppressWarnings("unchecked")
     protected T findOneByProperty( String propertyName, Object propertyValue ) {
         //noinspection unchecked
         return ( T ) this.getSessionFactory().getCurrentSession()
@@ -225,12 +254,12 @@ public abstract class AbstractDao<T extends Identifiable> implements BaseDao<T> 
      *
      * @param batchSize a strictly positive number
      */
-    @SuppressWarnings("unused")
     protected final void setBatchSize( int batchSize ) {
         if ( batchSize < 1 ) {
             throw new IllegalArgumentException( "Batch size must be strictly positive." );
         }
         this.batchSize = batchSize;
+        AbstractDao.log.debug( String.format( "Updated batch size to %d for %s.", batchSize, elementClass.getSimpleName() ) );
     }
 
     /**
@@ -243,8 +272,18 @@ public abstract class AbstractDao<T extends Identifiable> implements BaseDao<T> 
      * Note that this does not propagate to children entities even of lock cascading is set.
      */
     @Deprecated
+    protected void reattach( T entity ) {
+        this.getSessionFactory().getCurrentSession().buildLockRequest( LockOptions.NONE ).lock( entity );
+        AbstractDao.log.trace( String.format( "Reattached %s using a noop lock.", formatEntity( entity ) ) );
+    }
+
+    /**
+     * If you thought that {@link #remove(Identifiable)} was a bad idea, this is even worse.
+     */
+    @Deprecated
     protected void reattach( Object entity ) {
         this.getSessionFactory().getCurrentSession().buildLockRequest( LockOptions.NONE ).lock( entity );
+        AbstractDao.log.trace( "Reattached unknown entity using a noop lock." );
     }
 
     /**
@@ -262,5 +301,17 @@ public abstract class AbstractDao<T extends Identifiable> implements BaseDao<T> 
     protected void flushAndClear() {
         this.getSessionFactory().getCurrentSession().flush();
         this.getSessionFactory().getCurrentSession().clear();
+    }
+
+    private String formatEntity( @Nullable T entity ) {
+        if ( entity == null ) {
+            return String.format( "null %s", elementClass.getSimpleName() );
+        } else if ( entity.getId() == null ) {
+            return String.format( String.format( "transient %s entity", elementClass.getSimpleName() ) );
+        } else if ( sessionFactory.getCurrentSession().contains( entity ) ) {
+            return String.format( String.format( "persistent %s entity with ID %d", elementClass.getSimpleName(), entity.getId() ) );
+        } else {
+            return String.format( String.format( "detached %s entity with ID %d", elementClass.getSimpleName(), entity.getId() ) );
+        }
     }
 }
