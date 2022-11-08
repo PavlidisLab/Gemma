@@ -111,8 +111,6 @@ public class GeneProductDaoImpl extends AbstractVoEnabledDao<GeneProduct, GenePr
 
         BusinessKey.createQueryObject( queryObject, geneProduct );
 
-        AbstractDao.log.debug( queryObject );
-
         //noinspection unchecked
         List<GeneProduct> results = queryObject.list();
         GeneProduct result = null;
