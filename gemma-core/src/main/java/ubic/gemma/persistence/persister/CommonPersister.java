@@ -39,17 +39,13 @@ import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeDa
 
 import java.util.Collection;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Persister for ubic.gemma.model.common package classes.
  *
  * @author pavlidis
  */
-abstract public class CommonPersister extends AbstractPersister {
-
-    private final Map<Object, ExternalDatabase> seenDatabases = new ConcurrentHashMap<>();
-    private final Map<Object, QuantitationType> quantitationTypeCache = new ConcurrentHashMap<>();
+public abstract class CommonPersister extends AbstractPersister {
 
     @Autowired
     private AuditTrailDao auditTrailDao;
@@ -79,8 +75,7 @@ abstract public class CommonPersister extends AbstractPersister {
     private DatabaseEntryDao databaseEntryDao;
 
     @Override
-    public Object persist( Object entity ) {
-
+    protected Object doPersist( Object entity, Caches caches ) {
         if ( entity instanceof AuditTrail ) {
             return this.persistAuditTrail( ( AuditTrail ) entity );
         } else if ( entity instanceof User ) {
@@ -93,80 +88,51 @@ abstract public class CommonPersister extends AbstractPersister {
         } else if ( entity instanceof Unit ) {
             return this.persistUnit( ( Unit ) entity );
         } else if ( entity instanceof QuantitationType ) {
-            return this.persistQuantitationType( ( QuantitationType ) entity );
+            return this.persistQuantitationType( ( QuantitationType ) entity, caches );
         } else if ( entity instanceof ExternalDatabase ) {
-            return this.persistExternalDatabase( ( ExternalDatabase ) entity );
+            return this.persistExternalDatabase( ( ExternalDatabase ) entity, caches );
         } else if ( entity instanceof Protocol ) {
             return this.persistProtocol( ( Protocol ) entity );
         } else if ( entity instanceof Characteristic ) {
             return null; // cascade
         } else if ( entity instanceof Collection ) {
-            return super.persist( ( Collection<?> ) entity );
+            return super.doPersist( ( Collection<?> ) entity, caches );
         } else if ( entity instanceof BibliographicReference ) {
-            return this.persistBibliographicReference( ( BibliographicReference ) entity );
+            return this.persistBibliographicReference( ( BibliographicReference ) entity, caches );
         } else if ( entity instanceof DatabaseEntry ) {
-            return this.persistDatabaseEntry( ( DatabaseEntry ) entity );
+            return this.persistDatabaseEntry( ( DatabaseEntry ) entity, caches );
+        } else {
+            return super.doPersist( entity, caches );
         }
-        throw new UnsupportedOperationException( "Don't know how to persist a " + entity.getClass().getName() );
     }
 
-
-    @Override
-    public Object persistOrUpdate( Object entity ) {
-        if ( entity == null )
-            return null;
-        throw new UnsupportedOperationException( "Don't know how to persistOrUpdate a " + entity.getClass().getName() );
-    }
-
-    /**
-     * For clearing the cache.
-     */
-    void clearCommonCache() {
-        this.quantitationTypeCache.clear();
-    }
-
-    void fillInDatabaseEntry( DatabaseEntry databaseEntry ) {
-        if ( !this.isTransient( databaseEntry ) )
-            return;
-        if ( databaseEntry == null )
-            return;
+    protected void fillInDatabaseEntry( DatabaseEntry databaseEntry, Caches caches ) {
         ExternalDatabase tempExternalDb = databaseEntry.getExternalDatabase();
         databaseEntry.setExternalDatabase( null );
-        ExternalDatabase persistedDb = this.persistExternalDatabase( tempExternalDb );
+        ExternalDatabase persistedDb = this.persistExternalDatabase( tempExternalDb, caches );
         databaseEntry.setExternalDatabase( persistedDb );
         assert databaseEntry.getExternalDatabase().getId() != null;
     }
 
-    AuditTrail persistAuditTrail( AuditTrail entity ) {
-        if ( entity == null )
-            return null;
-        if ( !this.isTransient( entity ) )
-            return entity;
-
+    protected AuditTrail persistAuditTrail( AuditTrail entity ) {
         for ( AuditEvent event : entity.getEvents() ) {
             if ( event == null )
                 continue; // legacy of ordered-list which could end up with gaps; should not be needed
             // any more
             // event.setPerformer( ( User ) persistPerson( event.getPerformer() ) );
-            assert event.getPerformer() != null && !this.isTransient( event.getPerformer() );
+            assert event.getPerformer() != null;
         }
 
         // events are persisted by composition.
         return auditTrailDao.create( entity );
     }
 
-    Contact persistContact( Contact contact ) {
-        if ( contact == null )
-            return null;
+    protected Contact persistContact( Contact contact ) {
         return this.contactDao.findOrCreate( contact );
     }
 
-    ExternalDatabase persistExternalDatabase( ExternalDatabase database ) {
-
-        if ( database == null )
-            return null;
-        if ( !this.isTransient( database ) )
-            return database;
+    protected ExternalDatabase persistExternalDatabase( ExternalDatabase database, Caches caches ) {
+        Map<String, ExternalDatabase> seenDatabases = caches.getExternalDatabaseCache();
 
         String name = database.getName();
 
@@ -187,29 +153,22 @@ abstract public class CommonPersister extends AbstractPersister {
         return database;
     }
 
-    private DatabaseEntry persistDatabaseEntry( DatabaseEntry entity ) {
-        if ( isTransient( entity.getExternalDatabase() ) ) {
-            entity.setExternalDatabase( this.persistExternalDatabase( entity.getExternalDatabase() ) );
+    private DatabaseEntry persistDatabaseEntry( DatabaseEntry entity, Caches caches ) {
+        if ( entity.getExternalDatabase() == null ) {
+            throw new IllegalArgumentException( String.format( "DatabaseEntry %s must have an associated external database.", entity ) );
         }
+        entity.setExternalDatabase( this.persistExternalDatabase( entity.getExternalDatabase(), caches ) );
         return databaseEntryDao.create( entity );
     }
 
 
-    Protocol persistProtocol( Protocol protocol ) {
-        if ( protocol == null )
-            return null;
-        this.fillInProtocol( protocol );
+    protected Protocol persistProtocol( Protocol protocol ) {
         // I changed this to create instead of findOrCreate because in
         // practice protocols are not shared; we use them to store information about analyses we run. PP2017
         return protocolDao.create( protocol );
     }
 
-    QuantitationType persistQuantitationType( QuantitationType qType ) {
-        if ( qType == null )
-            return null;
-        if ( !this.isTransient( qType ) )
-            return qType;
-
+    protected QuantitationType persistQuantitationType( QuantitationType qType, Caches caches ) {
         /*
          * this cache is dangerous if run for multiple experiment loadings. For this reason we clear the cache
          * before persisting each experiment.
@@ -220,6 +179,8 @@ abstract public class CommonPersister extends AbstractPersister {
         key = qType.getName().hashCode();
         if ( qType.getDescription() != null )
             key += qType.getDescription().hashCode();
+
+        Map<Integer, QuantitationType> quantitationTypeCache = caches.getQuantitationTypeCache();
 
         if ( quantitationTypeCache.containsKey( key ) ) {
             return quantitationTypeCache.get( key );
@@ -234,31 +195,16 @@ abstract public class CommonPersister extends AbstractPersister {
         return qt;
     }
 
-    Unit persistUnit( Unit unit ) {
-        if ( unit == null )
-            return null;
-        if ( !this.isTransient( unit ) )
-            return unit;
+    protected Unit persistUnit( Unit unit ) {
         return this.unitDao.findOrCreate( unit );
     }
 
-    private void fillInProtocol( Protocol protocol ) {
-        if ( !this.isTransient( protocol ) )
-            return;
-        if ( protocol == null ) {
-            AbstractPersister.log.warn( "Null protocol" );
-        }
-
-    }
-
-    private Object persistBibliographicReference( BibliographicReference reference ) {
-        this.fillInDatabaseEntry( reference.getPubAccession() );
+    private Object persistBibliographicReference( BibliographicReference reference, Caches caches ) {
+        this.fillInDatabaseEntry( reference.getPubAccession(), caches );
         return this.bibliographicReferenceDao.findOrCreate( reference );
     }
 
     private Person persistPerson( Person person ) {
-        if ( person == null )
-            return null;
         return this.personDao.findOrCreate( person );
     }
 

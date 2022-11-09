@@ -59,6 +59,7 @@ import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.persistence.persister.Persister;
+import ubic.gemma.persistence.persister.PersisterHelper;
 import ubic.gemma.persistence.service.common.description.ExternalDatabaseService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 
@@ -104,7 +105,7 @@ public abstract class BaseSpringContextTest extends AbstractJUnit4SpringContextT
     @Autowired
     protected ExternalDatabaseService externalDatabaseService;
     @Autowired
-    protected Persister persisterHelper;
+    protected PersisterHelper persisterHelper;
     @Autowired
     protected TaxonService taxonService;
     @Autowired
@@ -171,7 +172,7 @@ public abstract class BaseSpringContextTest extends AbstractJUnit4SpringContextT
     /**
      * @param persisterHelper the persisterHelper to set
      */
-    public void setPersisterHelper( Persister persisterHelper ) {
+    public void setPersisterHelper( PersisterHelper persisterHelper ) {
         this.persisterHelper = persisterHelper;
     }
 

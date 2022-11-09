@@ -18,201 +18,161 @@
  */
 package ubic.gemma.persistence.persister;
 
-import org.apache.commons.beanutils.BeanUtils;
-import org.apache.commons.lang3.time.StopWatch;
+import lombok.Value;
+import lombok.With;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.FlushMode;
+import org.hibernate.Hibernate;
 import org.hibernate.SessionFactory;
-import org.hibernate.classic.Session;
-import org.hibernate.engine.ForeignKeys;
 import org.hibernate.engine.SessionImplementor;
+import org.hibernate.metadata.ClassMetadata;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
-import ubic.gemma.persistence.util.EntityUtils;
+import ubic.gemma.model.common.description.ExternalDatabase;
+import ubic.gemma.model.common.quantitationtype.QuantitationType;
+import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
+import ubic.gemma.model.genome.Chromosome;
+import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.persistence.util.ArrayDesignsForExperimentCache;
 
-import java.lang.reflect.InvocationTargetException;
-import java.util.Collection;
-import java.util.HashSet;
+import javax.annotation.Nullable;
+import javax.annotation.OverridingMethodsMustInvokeSuper;
+import java.io.Serializable;
+import java.util.*;
 
 /**
- * Base class for persisters.
+ * Base class for {@link Persister} implementations.
+ * <p>
+ * Important note: persisting is a somewhat complicated process, and for some reason we cannot afford to let Hibernate
+ * flush changes to the database until the whole operation is completed. This is why we use the {@link FlushMode#MANUAL},
+ * manually flush, and we subsequently restore it to the default {@link FlushMode#AUTO} when done.
  *
  * @author pavlidis
  */
 public abstract class AbstractPersister implements Persister {
 
-    static final Log log = LogFactory.getLog( AbstractPersister.class.getName() );
     /**
-     * Collections smaller than this don't result in logging about progress.
+     * Shared logger for all persisters.
      */
-    private static final int MINIMUM_COLLECTION_SIZE_FOR_NOTFICATIONS = 500;
+    protected static final Log log = LogFactory.getLog( AbstractPersister.class.getName() );
+
     /**
-     * How many times per collection to update us (at most)
+     * Size if batch to report when persisting multiple entities with {@link #doPersist(Collection, Caches)}.
+     * <p>
+     * Implementations can use this to have a consistent batch size when reporting.
      */
-    private static final int COLLECTION_INFO_FREQUENCY = 10;
+    protected static final int REPORT_BATCH_SIZE = 100;
+
+    /**
+     * Various caches to refer back to not-yet persisted entities (and thus not easily obtainable from the persistence
+     * context).
+     */
+    @With
+    @Value(staticConstructor = "empty")
+    protected static class Caches {
+        @Nullable
+        ArrayDesignsForExperimentCache arrayDesignCache;
+        Map<String, ExternalDatabase> externalDatabaseCache = new HashMap<>();
+        /**
+         * Keys are either string or integers.
+         */
+        Map<Object, Taxon> taxonCache = new HashMap<>();
+        /**
+         * Keys are custom hash codes.
+         */
+        Map<Integer, Chromosome> chromosomeCache = new HashMap<>();
+        /**
+         * Keys are custom hash codes.
+         */
+        Map<Integer, QuantitationType> quantitationTypeCache = new HashMap<>();
+        Map<String, BioAssayDimension> bioAssayDimensionCache = new HashMap<>();
+    }
 
     @Autowired
     private SessionFactory sessionFactory;
+
+    @Override
+    @Transactional
+    public Object persist( Object entity ) {
+        try {
+            sessionFactory.getCurrentSession().setFlushMode( FlushMode.MANUAL );
+            AbstractPersister.log.trace( String.format( "Persisting a %s.", formatEntity( entity ) ) );
+            Object persistedEntity = doPersist( entity, Caches.empty( null ) );
+            sessionFactory.getCurrentSession().flush();
+            return persistedEntity;
+        } finally {
+            sessionFactory.getCurrentSession().setFlushMode( FlushMode.AUTO );
+        }
+    }
+
+    @Override
+    @Transactional
+    public Object persistOrUpdate( Object entity ) {
+        try {
+            sessionFactory.getCurrentSession().setFlushMode( FlushMode.MANUAL );
+            AbstractPersister.log.trace( String.format( "Persisting or updating a %s.", formatEntity( entity ) ) );
+            Object persistedEntity = doPersistOrUpdate( entity, Caches.empty( null ) );
+            sessionFactory.getCurrentSession().flush();
+            return persistedEntity;
+        } finally {
+            sessionFactory.getCurrentSession().setFlushMode( FlushMode.AUTO );
+        }
+    }
+
+    @Override
+    @Transactional
+    public List<?> persist( Collection<?> col ) {
+        try {
+            sessionFactory.getCurrentSession().setFlushMode( FlushMode.MANUAL );
+            AbstractPersister.log.trace( String.format( "Persisting a collection of %d entities.", col.size() ) );
+            List<?> result = doPersist( col, Caches.empty( null ) );
+            sessionFactory.getCurrentSession().flush();
+            return result;
+        } finally {
+            sessionFactory.getCurrentSession().setFlushMode( FlushMode.AUTO );
+        }
+    }
 
     protected SessionFactory getSessionFactory() {
         return sessionFactory;
     }
 
-    @Override
-    @Transactional
-    public Collection<?> persist( Collection<?> col ) {
-        if ( col == null || col.size() == 0 )
-            return col;
+    @OverridingMethodsMustInvokeSuper
+    protected Object doPersist( Object entity, Caches caches ) {
+        throw new UnsupportedOperationException( String.format( "Don't know how to persist a %s.", formatEntity( entity ) ) );
+    }
 
-        Collection<Object> result = new HashSet<>();
-        try {
-            int count = 0;
-            AbstractPersister.log
-                    .debug( "Entering + " + this.getClass().getName() + ".persist() with " + col.size() + " objects." );
-            int numElementsPerUpdate = this.numElementsPerUpdate( col );
-            for ( Object entity : col ) {
-                if ( AbstractPersister.log.isDebugEnabled() ) {
-                    AbstractPersister.log.debug( "Persisting: " + entity );
-                }
-                result.add( this.persist( entity ) );
-                count = this.iteratorStatusUpdate( col, count, numElementsPerUpdate, true );
-
-                if ( Thread.interrupted() ) {
-                    AbstractPersister.log.debug( "Cancelled" );
-                    break;
-                }
-
+    protected final List<?> doPersist( Collection<?> entities, Caches caches ) {
+        List<Object> result = new ArrayList<>( entities.size() );
+        int i = 0;
+        for ( Object entity : entities ) {
+            result.add( this.doPersist( entity, caches ) );
+            if ( i++ % REPORT_BATCH_SIZE == 0 ) {
+                AbstractPersister.log.debug( String.format( "Persisted %d/%d entities.", result.size(), entities.size() ) );
             }
-            this.iteratorStatusUpdate( col, count, numElementsPerUpdate, false );
-        } catch ( Exception e ) {
-            AbstractPersister.log.fatal( "Error while persisting collection: ", e );
-            throw new RuntimeException( e );
         }
         return result;
     }
 
-    @Override
-    @Transactional
-    public boolean isTransient( Object entity ) {
-        if ( entity == null )
-            return true;
-        Long id = EntityUtils.getProperty( entity, "id" );
-
-        if ( id == null )
-            return true; // assume.
-
-        /*
-         * We normally won't get past this point; the case where it might is when the transaction has been rolled back
-         * and is being retried.
-         */
-
-        if ( EntityUtils.isProxy( entity ) ) {
-            if ( AbstractPersister.log.isDebugEnabled() )
-                AbstractPersister.log.debug( "Object is a proxy: " + entity.getClass().getSimpleName() + ":" + id );
-            return false;
-        }
-
-        org.hibernate.Session session = this.getSessionFactory().getCurrentSession();
-        if ( session.contains( entity ) ) {
-            if ( AbstractPersister.log.isDebugEnabled() )
-                AbstractPersister.log
-                        .debug( "Found object in session: " + entity.getClass().getSimpleName() + ":" + id );
-            return false;
-        }
-
-        //noinspection SynchronizationOnLocalVariableOrMethodParameter // Getting desperate ...
-        synchronized ( entity ) {
-            Session sess = this.getSessionFactory().openSession();
-            sess.setFlushMode( FlushMode.MANUAL );
-            Object pe = sess.get( entity.getClass(), id );
-            sess.close();
-            if ( pe != null ) {
-                // Common case.
-                if ( AbstractPersister.log.isDebugEnabled() )
-                    AbstractPersister.log
-                            .debug( "Found object in store: " + entity.getClass().getSimpleName() + ":" + id );
-                return false;
-            }
-        }
-
-        /*
-         * Hibernate has a method that, pretty much, does what we've done so far ... but probably does it better.
-         */
-        String bestGuessEntityName = ( ( SessionImplementor ) session ).bestGuessEntityName( entity );
-        if ( ForeignKeys.isNotTransient( bestGuessEntityName, entity, null, ( SessionImplementor ) session ) ) {
-            AbstractPersister.log.debug( "Hibernate says object is not transient: " + bestGuessEntityName + ":" + id );
-            return false;
-        }
-
-        /*
-         * The ID is filled in, but it probably is a survivor of a rolled-back transaction. It doesn't matter what we
-         * return, it's not guaranteed to be right.
-         */
-        AbstractPersister.log
-                .info( "Object has ID but we can't tell if it is persistent: " + entity.getClass().getSimpleName() + ":"
-                        + id );
-        return true;
-
+    @OverridingMethodsMustInvokeSuper
+    protected Object doPersistOrUpdate( Object entity, Caches caches ) {
+        throw new UnsupportedOperationException( String.format( "Don't know how to persist or update a %s.", formatEntity( entity ) ) );
     }
 
-    int numElementsPerUpdate( Collection<?> col ) {
-        if ( col == null || col.size() < AbstractPersister.COLLECTION_INFO_FREQUENCY )
-            return Integer.MAX_VALUE;
-        return Math.max( ( int ) Math.ceil( col.size() / ( double ) AbstractPersister.COLLECTION_INFO_FREQUENCY ), 20 );
-    }
-
-    void persistCollectionElements( Collection<?> collection ) {
-        if ( collection == null )
-            return;
-        if ( collection.size() == 0 )
-            return;
-
-        try {
-            StopWatch t = new StopWatch();
-            t.start();
-            int c = 0;
-            for ( Object object : collection ) {
-                if ( !this.isTransient( object ) )
-                    continue;
-                Object persistedObj = this.persist( object );
-
-                c++;
-
-                if ( t.getTime() > 5000 ) {
-                    AbstractPersister.log
-                            .info( "Persist " + c + " elements: " + t.getTime() + "ms since last check (last class="
-                                    + object.getClass().getSimpleName() + ")" );
-                    c = 0;
-                    t.reset();
-                    t.start();
-                }
-
-                if ( persistedObj == null )
-                    continue;
-                BeanUtils.setProperty( object, "id", BeanUtils.getSimpleProperty( persistedObj, "id" ) );
-                assert BeanUtils.getSimpleProperty( object, "id" ) != null;
-
-            }
-        } catch ( IllegalAccessException | NoSuchMethodException | InvocationTargetException e ) {
-            throw new RuntimeException( e );
+    private String formatEntity( Object entity ) {
+        Class<?> elementClass = Hibernate.getClass( entity );
+        ClassMetadata classMetadata = sessionFactory.getClassMetadata( elementClass );
+        if ( classMetadata == null ) {
+            throw new IllegalArgumentException( String.format( "Entity %s is not managed by Hibernate.", elementClass.getName() ) );
         }
-
-        // collection = persistedCollection;
-    }
-
-    private int iteratorStatusUpdate( Collection<?> col, int count, int numElementsPerUpdate, boolean increment ) {
-        assert col != null && col.size() > 0;
-        if ( increment )
-            ++count;
-
-        if ( col.size() >= AbstractPersister.MINIMUM_COLLECTION_SIZE_FOR_NOTFICATIONS && AbstractPersister.log
-                .isInfoEnabled() && ( !increment || count % numElementsPerUpdate == 0 ) ) {
-            String collectionItemsClassName = col.iterator().next().getClass().getName();
-            AbstractPersister.log
-                    .info( "Processed " + count + "/" + col.size() + " " + collectionItemsClassName + "'s" );
+        Serializable id = classMetadata.getIdentifier( entity, ( SessionImplementor ) getSessionFactory().getCurrentSession() );
+        if ( id == null ) {
+            return String.format( String.format( "transient %s entity", entity.getClass().getSimpleName() ) );
+        } else if ( sessionFactory.getCurrentSession().contains( entity ) ) {
+            return String.format( String.format( "persistent %s entity with ID %s", entity.getClass().getSimpleName(), id ) );
+        } else {
+            return String.format( String.format( "detached %s entity with ID %s", entity.getClass().getSimpleName(), id ) );
         }
-        return count;
     }
-
 }

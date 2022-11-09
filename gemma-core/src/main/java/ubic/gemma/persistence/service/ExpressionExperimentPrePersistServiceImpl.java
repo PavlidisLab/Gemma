@@ -20,6 +20,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
@@ -33,6 +34,7 @@ import ubic.gemma.persistence.service.expression.designElement.CompositeSequence
 import ubic.gemma.persistence.util.ArrayDesignsForExperimentCache;
 import ubic.gemma.persistence.util.Settings;
 
+import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -142,7 +144,7 @@ public class ExpressionExperimentPrePersistServiceImpl implements ExpressionExpe
 
                     probe = cache.getFromCache( probe );
 
-                    if ( probe == null || persisterHelper.isTransient( probe ) ) {
+                    if ( probe == null || probe.getId() == null ) {
                         throw new IllegalStateException( "All probes should be persistent by now" );
                     }
 
@@ -165,11 +167,11 @@ public class ExpressionExperimentPrePersistServiceImpl implements ExpressionExpe
     }
 
     private CompositeSequence addNewDesignElementToPersistentArrayDesign( ArrayDesign arrayDesign,
-            CompositeSequence designElement ) {
+            @Nullable CompositeSequence designElement ) {
         if ( designElement == null )
             return null;
 
-        if ( !persisterHelper.isTransient( designElement ) )
+        if ( designElement.getId() != null )
             return designElement;
 
         /*
@@ -182,7 +184,7 @@ public class ExpressionExperimentPrePersistServiceImpl implements ExpressionExpe
 
         designElement.setArrayDesign( arrayDesign );
 
-        if ( persisterHelper.isTransient( biologicalCharacteristic ) ) {
+        if ( biologicalCharacteristic.getId() == null ) {
             // transaction.
             designElement
                     .setBiologicalCharacteristic( ( BioSequence ) persisterHelper.persist( biologicalCharacteristic ) );
