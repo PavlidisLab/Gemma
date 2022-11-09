@@ -64,7 +64,7 @@ public class CurationDetailsServiceImpl implements CurationDetailsService {
          */
         if ( ArrayDesign.class.isAssignableFrom( curatable.getClass() ) ) {
 
-            if ( TroubledStatusFlagEvent.class.isAssignableFrom( auditEvent.getClass() ) ) {
+            if ( TroubledStatusFlagEvent.class.isAssignableFrom( auditEvent.getEventType().getClass() ) ) {
 
                 /*
                  * set the trouble status for all the experiments
@@ -77,7 +77,7 @@ public class CurationDetailsServiceImpl implements CurationDetailsService {
                     curationDetailsDao.update( curationDetails );
                 }
 
-            } else if ( NotTroubledStatusFlagEvent.class.isAssignableFrom( auditEvent.getClass() ) ) {
+            } else if ( NotTroubledStatusFlagEvent.class.isAssignableFrom( auditEvent.getEventType().getClass() ) ) {
 
                 /*
                  * unset the trouble status for all the experiments; be careful not to do this if
