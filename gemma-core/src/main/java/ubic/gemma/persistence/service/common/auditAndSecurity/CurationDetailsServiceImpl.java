@@ -49,6 +49,7 @@ public class CurationDetailsServiceImpl implements CurationDetailsService {
     }
 
     @Override
+    @Transactional
     public void update( Curatable curatable, AuditEvent auditEvent ) {
         this.curationDetailsDao.update( curatable, auditEvent );
 
