@@ -486,6 +486,7 @@
 					<excludes>
 						<exclude>**/*Abstract*</exclude>
 						<exclude>**/*IntegrationTest.java</exclude>
+						<exclude>**/*Tests.java</exclude>
 					</excludes>
 					<excludedGroups>ubic.gemma.core.util.test.category.SpringContextTest,${excludedGroups}</excludedGroups>
 				</configuration>
