@@ -38,8 +38,8 @@ public class AbstractDaoTest {
 
     public static class MyDao extends AbstractDao<MyEntity> {
 
-        public MyDao( SessionFactory sessionFactory ) {
-            super( MyEntity.class, sessionFactory );
+        public MyDao( SessionFactory sessionFactory, int batchSize ) {
+            super( MyEntity.class, sessionFactory, batchSize );
         }
     }
 
@@ -62,12 +62,11 @@ public class AbstractDaoTest {
             arg.getArgument( 0, MyEntity.class ).setId( i );
             return i;
         } );
-        myDao = new MyDao( sessionFactory );
     }
 
     @Test
     public void testBatchSizeFlushRightAway() {
-        myDao.setBatchSize( 1 );
+        myDao = new MyDao( sessionFactory, 1 );
         Collection<MyEntity> entities = myDao.create( generateEntities( 10 ) );
         assertThat( entities ).hasSize( 10 );
         verify( session, times( 10 ) ).save( any( MyEntity.class ) );
@@ -77,7 +76,7 @@ public class AbstractDaoTest {
 
     @Test
     public void testBatchSizeUnlimited() {
-        myDao.setBatchSize( Integer.MAX_VALUE );
+        myDao = new MyDao( sessionFactory, Integer.MAX_VALUE );
         Collection<MyEntity> entities = myDao.create( generateEntities( 10 ) );
         assertThat( entities ).hasSize( 10 );
         verify( session, times( 10 ) ).save( any( MyEntity.class ) );
@@ -87,7 +86,7 @@ public class AbstractDaoTest {
 
     @Test
     public void testBatchSizeSmall() {
-        myDao.setBatchSize( 10 );
+        myDao = new MyDao( sessionFactory, 10 );
         Collection<MyEntity> entities = myDao.create( generateEntities( 10 ) );
         assertThat( entities ).hasSize( 10 );
         verify( session, times( 10 ) ).save( any( MyEntity.class ) );
@@ -97,6 +96,7 @@ public class AbstractDaoTest {
 
     @Test
     public void testLoadByCollection() {
+        myDao = new MyDao( sessionFactory, MyDao.DEFAULT_BATCH_SIZE );
         Criteria mockCriteria = mock( Criteria.class );
         when( mockCriteria.add( any() ) ).thenReturn( mockCriteria );
         when( session.createCriteria( MyEntity.class ) ).thenReturn( mockCriteria );

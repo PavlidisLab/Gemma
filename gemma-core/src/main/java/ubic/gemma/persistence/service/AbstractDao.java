@@ -43,10 +43,10 @@ public abstract class AbstractDao<T extends Identifiable> implements BaseDao<T> 
     protected static final Log log = LogFactory.getLog( AbstractDao.class );
 
     /**
-     * Default batch size to reach before flushing the Hibernate session.
+     * Default batch size to reach before flushing and clearing the Hibernate session.
      * <p>
-     * You should use {@link #setBatchSize(int)} to adjust this value to an optimal one for the DAO. Large model should
-     * have a relatively small batch size to reduce memory usage.
+     * You should use {@link #AbstractDao(Class, SessionFactory, int)} to adjust this value to an optimal one for the
+     * DAO. Large model should have a relatively small batch size to reduce memory usage.
      * <p>
      * See <a href="https://docs.jboss.org/hibernate/core/3.6/reference/en-US/html/batch.html">Chapter 15. Batch processing</a>
      * for more details.
@@ -57,11 +57,22 @@ public abstract class AbstractDao<T extends Identifiable> implements BaseDao<T> 
 
     protected final Class<? extends T> elementClass;
 
-    private int batchSize = DEFAULT_BATCH_SIZE;
+    private final int batchSize;
 
     protected AbstractDao( Class<? extends T> elementClass, SessionFactory sessionFactory ) {
         this.sessionFactory = sessionFactory;
         this.elementClass = elementClass;
+        this.batchSize = DEFAULT_BATCH_SIZE;
+    }
+
+    /**
+     * @param batchSize a strictly positive batch size for creating, updating or deleting collection of entities. Use
+     *                  {@link Integer#MAX_VALUE} to effectively disable batching and '1' to flush changes right away.
+     */
+    protected AbstractDao( Class<? extends T> elementClass, SessionFactory sessionFactory, int batchSize ) {
+        this.sessionFactory = sessionFactory;
+        this.elementClass = elementClass;
+        this.batchSize = batchSize;
     }
 
     @Override
@@ -245,21 +256,6 @@ public abstract class AbstractDao<T extends Identifiable> implements BaseDao<T> 
                 .createCriteria( this.elementClass )
                 .add( Restrictions.eq( propertyName, propertyValue ) )
                 .list();
-    }
-
-    /**
-     * Set the batch size for batched creation, update and deletions.
-     * <p>
-     * Use {@link Integer#MAX_VALUE} to effectively disable batching and '1' to flush changes right away.
-     *
-     * @param batchSize a strictly positive number
-     */
-    protected final void setBatchSize( int batchSize ) {
-        if ( batchSize < 1 ) {
-            throw new IllegalArgumentException( "Batch size must be strictly positive." );
-        }
-        this.batchSize = batchSize;
-        AbstractDao.log.debug( String.format( "Updated batch size to %d for %s.", batchSize, elementClass.getSimpleName() ) );
     }
 
     /**
