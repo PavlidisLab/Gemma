@@ -105,6 +105,7 @@ public abstract class AbstractDao<T extends Identifiable> implements BaseDao<T> 
     public Collection<T> load( Collection<Long> ids ) {
         StopWatch timer = StopWatch.createStarted();
         if ( ids.isEmpty() ) {
+            AbstractDao.log.trace( String.format( "Loading %s with an empty collection of IDs, returning an empty collection.", elementClass.getSimpleName() ) );
             return Collections.emptyList();
         }
         String idPropertyName = getSessionFactory().getClassMetadata( elementClass ).getIdentifierPropertyName();
