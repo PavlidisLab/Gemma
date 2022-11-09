@@ -111,7 +111,6 @@ public interface BaseDao<T> {
     /**
      * @param entity Update the entity. Not supported if the entity is immutable.
      */
-    @Deprecated
     void update( T entity );
 
     /**
