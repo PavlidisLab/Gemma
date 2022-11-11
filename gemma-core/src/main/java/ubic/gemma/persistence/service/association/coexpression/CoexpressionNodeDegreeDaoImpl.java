@@ -38,6 +38,17 @@ public class CoexpressionNodeDegreeDaoImpl extends AbstractDao<GeneCoexpressionN
         super( GeneCoexpressionNodeDegree.class, sessionFactory );
     }
 
+    /**
+     * The coexpression node degree model has its ID assigned from its associated {@link Gene} and thus cannot be
+     * persisted with {@link org.hibernate.classic.Session#persist(Object)}.
+     */
+    @Override
+    @SuppressWarnings("MethodDoesntCallSuperMethod")
+    public GeneCoexpressionNodeDegree create( GeneCoexpressionNodeDegree entity ) {
+        this.getSessionFactory().getCurrentSession().save( entity );
+        return entity;
+    }
+
     @Override
     public GeneCoexpressionNodeDegree findOrCreate( Gene gene ) {
         GeneCoexpressionNodeDegree existing = this.findOneByProperty( "geneId", gene.getId() );

@@ -64,7 +64,6 @@ public class GeneServiceTest extends BaseSpringContextTest {
     public void testFindByAccessionNcbi() {
 
         Gene gene = Gene.Factory.newInstance();
-        gene.setId( ( long ) 1 );
         Integer id = Integer.parseInt( RandomStringUtils.randomNumeric( 5 ) );
         gene.setNcbiGeneId( id );
         gene.setName( GeneServiceTest.TEST_GENE_NAME );

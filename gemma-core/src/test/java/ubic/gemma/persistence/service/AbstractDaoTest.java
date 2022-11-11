@@ -57,11 +57,6 @@ public class AbstractDaoTest {
         when( myEntityClassMetadata.getIdentifierPropertyName() ).thenReturn( "id" );
         when( sessionFactory.getClassMetadata( MyEntity.class ) ).thenReturn( myEntityClassMetadata );
         when( sessionFactory.getCurrentSession() ).thenReturn( session );
-        when( session.save( any() ) ).thenAnswer( arg -> {
-            i++;
-            arg.getArgument( 0, MyEntity.class ).setId( i );
-            return i;
-        } );
     }
 
     @Test
@@ -69,7 +64,7 @@ public class AbstractDaoTest {
         myDao = new MyDao( sessionFactory, 1 );
         Collection<MyEntity> entities = myDao.create( generateEntities( 10 ) );
         assertThat( entities ).hasSize( 10 );
-        verify( session, times( 10 ) ).save( any( MyEntity.class ) );
+        verify( session, times( 10 ) ).persist( any( MyEntity.class ) );
         verify( session, times( 10 ) ).flush();
         verify( session, times( 10 ) ).clear();
     }
@@ -79,7 +74,7 @@ public class AbstractDaoTest {
         myDao = new MyDao( sessionFactory, Integer.MAX_VALUE );
         Collection<MyEntity> entities = myDao.create( generateEntities( 10 ) );
         assertThat( entities ).hasSize( 10 );
-        verify( session, times( 10 ) ).save( any( MyEntity.class ) );
+        verify( session, times( 10 ) ).persist( any( MyEntity.class ) );
         verify( session, VerificationModeFactory.times( 0 ) ).flush();
         verify( session, times( 0 ) ).clear();
     }
@@ -89,7 +84,7 @@ public class AbstractDaoTest {
         myDao = new MyDao( sessionFactory, 10 );
         Collection<MyEntity> entities = myDao.create( generateEntities( 10 ) );
         assertThat( entities ).hasSize( 10 );
-        verify( session, times( 10 ) ).save( any( MyEntity.class ) );
+        verify( session, times( 10 ) ).persist( any( MyEntity.class ) );
         verify( session, VerificationModeFactory.times( 1 ) ).flush();
         verify( session, times( 1 ) ).clear();
     }

@@ -94,9 +94,7 @@ public abstract class AbstractDao<T extends Identifiable> implements BaseDao<T> 
     @Override
     @OverridingMethodsMustInvokeSuper
     public T create( T entity ) {
-        Serializable id = this.getSessionFactory().getCurrentSession().save( entity );
-        assert entity.getId() != null : "No ID received for " + entity;
-        assert id.equals( entity.getId() );
+        this.getSessionFactory().getCurrentSession().persist( entity );
         AbstractDao.log.trace( String.format( "Created %s.", formatEntity( entity ) ) );
         return entity;
     }
