@@ -29,13 +29,6 @@ import ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails;
 public interface CurationDetailsService {
 
     /**
-     * Create a new persistent {@link CurationDetails} object.
-     *
-     * @return the newly created CurationDetails object.
-     */
-    CurationDetails create();
-
-    /**
      * This method should only be called from {@link AuditTrailService}, as the passed event has to already exist in the
      * audit trail of the curatable object.
      * Only use this method directly if you do not want the event to show up in the curatable objects audit trail.

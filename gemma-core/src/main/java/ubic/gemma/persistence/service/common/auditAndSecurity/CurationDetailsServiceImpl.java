@@ -15,13 +15,11 @@
 package ubic.gemma.persistence.service.common.auditAndSecurity;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.access.annotation.Secured;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.curation.Curatable;
 import ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails;
-import ubic.gemma.model.common.auditAndSecurity.eventType.CurationDetailsEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.NotTroubledStatusFlagEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.TroubledStatusFlagEvent;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -42,11 +40,6 @@ public class CurationDetailsServiceImpl implements CurationDetailsService {
 
     @Autowired
     private ExpressionExperimentDao expressionExperimentDao;
-
-    @Transactional
-    public CurationDetails create() {
-        return curationDetailsDao.create();
-    }
 
     @Override
     @Transactional

@@ -30,6 +30,7 @@ import ubic.gemma.core.analysis.service.ExpressionDataFileService;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataMatrix;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
+import ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.measurement.Measurement;
@@ -174,7 +175,7 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
             split.setDescription( "This experiment was created by Gemma splitting another: \n" + toSplit + toSplit.getDescription() );
 
             split.setCharacteristics( this.cloneCharacteristics( toSplit.getCharacteristics() ) );
-            split.setCurationDetails( curationDetailsService.create() ); // not sure anything we want to copy
+            split.setCurationDetails( new CurationDetails( new Date(), null, true, null, false, null, null ) ); // not sure anything we want to copy
             split.setMetadata( toSplit.getMetadata() ); // 
             split.setPrimaryPublication( toSplit.getPrimaryPublication() );
             split.getOtherRelevantPublications().addAll( toSplit.getOtherRelevantPublications() );
