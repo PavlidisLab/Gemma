@@ -32,17 +32,24 @@ import ubic.gemma.core.util.test.BaseSpringContextTest;
 import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.association.GOEvidenceCode;
 import ubic.gemma.model.association.Gene2GOAssociation;
+import ubic.gemma.model.common.auditAndSecurity.AuditAction;
+import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.LastUpdatedDateChangedEvent;
 import ubic.gemma.model.common.description.Characteristic;
+import ubic.gemma.model.common.description.ExternalDatabase;
+import ubic.gemma.model.common.description.ExternalDatabases;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.model.genome.gene.Multifunctionality;
 import ubic.gemma.persistence.service.association.Gene2GOAssociationService;
+import ubic.gemma.persistence.service.common.description.ExternalDatabaseService;
 
 import java.util.Collection;
+import java.util.Date;
+import java.util.List;
 import java.util.zip.GZIPInputStream;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.tuple;
 
 /**
  * @author paul
@@ -59,19 +66,15 @@ public class GeneMultifunctionalityPopulationServiceTest extends BaseSpringConte
     private GeneOntologyService goService;
     @Autowired
     private GeneService geneService;
+    @Autowired
+    private ExternalDatabaseService externalDatabaseService;
     private Taxon testTaxon;
 
     @After
     public void tearDown() {
         gene2GoService.removeAll();
         Collection<Gene> genes = geneService.loadAll( testTaxon );
-        for ( Gene gene : genes ) {
-            try {
-                geneService.remove( gene );
-            } catch ( Exception ignored ) {
-            }
-        }
-
+        geneService.remove( genes );
     }
 
     @Before
@@ -116,25 +119,32 @@ public class GeneMultifunctionalityPopulationServiceTest extends BaseSpringConte
     @Category(SlowTest.class)
     public void test() {
         log.info( "Updating multifunctionality" );
+        Date beforeUpdateDate = new Date();
         s.updateMultifunctionality( testTaxon );
 
         Collection<Gene> genes = geneService.loadAll( testTaxon );
 
         genes = geneService.thawLite( genes );
 
-        assertEquals( 120, genes.size() );
+        assertThat( genes ).hasSize( 120 );
 
-        boolean found = false;
-        for ( Gene gene : genes ) {
-            Multifunctionality mf = gene.getMultifunctionality();
-            if ( mf == null )
-                continue;
-            if ( mf.getNumGoTerms() == 5 ) {
-                // assertEquals( 0.245833, mf.getRank(), 0.001 );
-                found = true;
-            }
-        }
+        assertThat( genes )
+                .extracting( "multifunctionality" )
+                .extracting( "rank", "numGoTerms" )
+                .contains( tuple( 0.9125, 5 ) );
 
-        assertTrue( found );
+        ExternalDatabase ed = externalDatabaseService.findByNameWithAuditTrail( ExternalDatabases.MULTIFUNCTIONALITY );
+        assertThat( ed ).isNotNull();
+        assertThat( ed.getLastUpdated() )
+                .isBetween( beforeUpdateDate, new Date() );
+        List<AuditEvent> auditEvents = ed.getAuditTrail().getEvents();
+        assertThat( auditEvents ).hasSizeGreaterThanOrEqualTo( 2 );
+        assertThat( auditEvents.get( auditEvents.size() - 2 ).getEventType() )
+                .isInstanceOf( LastUpdatedDateChangedEvent.class );
+        assertThat( auditEvents.get( auditEvents.size() - 2 ) )
+                .hasFieldOrPropertyWithValue( "action", AuditAction.UPDATE );
+        assertThat( auditEvents.get( auditEvents.size() - 1 ) )
+                .hasFieldOrPropertyWithValue( "eventType", null )
+                .hasFieldOrPropertyWithValue( "action", AuditAction.UPDATE );
     }
 }

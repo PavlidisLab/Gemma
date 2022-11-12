@@ -679,8 +679,8 @@ public class GeeqServiceImpl extends AbstractVoEnabledService<Geeq, GeeqValueObj
      * Support methods and other stuff
      */
 
-    private AuditEvent createGeeqEvent( ExpressionExperiment ee, String note, String details ) {
-        return auditTrailService.addUpdateEvent( ee, GeeqEvent.class, note, details );
+    private void createGeeqEvent( ExpressionExperiment ee, String note, String details ) {
+        auditTrailService.addUpdateEvent( ee, GeeqEvent.class, note, details );
     }
 
     private String fromTo( Object from, Object to ) {

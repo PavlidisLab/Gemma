@@ -21,20 +21,27 @@ package ubic.gemma.core.apps;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.core.loader.association.NCBIGene2GOAssociationLoader;
 import ubic.gemma.core.loader.association.NCBIGene2GOAssociationParser;
 import ubic.gemma.core.loader.util.fetcher.HttpFetcher;
 import ubic.gemma.core.util.AbstractCLI;
 import ubic.gemma.core.util.AbstractCLIContextCLI;
+import ubic.gemma.model.common.description.ExternalDatabase;
+import ubic.gemma.model.common.description.ExternalDatabases;
 import ubic.gemma.model.common.description.LocalFile;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.persistence.persister.Persister;
 import ubic.gemma.persistence.service.association.Gene2GOAssociationService;
+import ubic.gemma.persistence.service.common.description.ExternalDatabaseService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
+import java.util.Date;
 import java.util.HashSet;
 
 /**
@@ -42,9 +49,20 @@ import java.util.HashSet;
  *
  * @author pavlidis
  */
+@Component
 public class NCBIGene2GOAssociationLoaderCLI extends AbstractCLIContextCLI {
 
     private static final String GENE2GO_FILE = "gene2go.gz";
+
+    @Autowired
+    private TaxonService taxonService;
+    @Autowired
+    private Persister persisterHelper;
+    @Autowired
+    private Gene2GOAssociationService gene2GOAssociationService;
+    @Autowired
+    private ExternalDatabaseService externalDatabaseService;
+
     private String filePath = null;
 
     @Override
@@ -52,7 +70,6 @@ public class NCBIGene2GOAssociationLoaderCLI extends AbstractCLIContextCLI {
         return "updateGOAnnots";
     }
 
-    @SuppressWarnings("static-access")
     @Override
     protected void buildOptions( Options options ) {
         Option pathOption = Option.builder( "f" ).hasArg().argName( "Input File Path" )
@@ -63,11 +80,9 @@ public class NCBIGene2GOAssociationLoaderCLI extends AbstractCLIContextCLI {
 
     @Override
     protected void doWork() throws Exception {
-        TaxonService taxonService = this.getBean( TaxonService.class );
-
         NCBIGene2GOAssociationLoader gene2GOAssLoader = new NCBIGene2GOAssociationLoader();
 
-        gene2GOAssLoader.setPersisterHelper( this.getPersisterHelper() );
+        gene2GOAssLoader.setPersisterHelper( persisterHelper );
 
         Collection<Taxon> taxa = taxonService.loadAll();
 
@@ -90,12 +105,18 @@ public class NCBIGene2GOAssociationLoaderCLI extends AbstractCLIContextCLI {
         }
         assert files.size() == 1;
         LocalFile gene2Gofile = files.iterator().next();
-        Gene2GOAssociationService ggoserv = this.getBean( Gene2GOAssociationService.class );
         AbstractCLI.log.info( "Removing all old GO associations" );
-        ggoserv.removeAll();
+        gene2GOAssociationService.removeAll();
 
         AbstractCLI.log.info( "Done, loading new ones" );
         gene2GOAssLoader.load( gene2Gofile );
+
+        ExternalDatabase ed = externalDatabaseService.findByNameWithAuditTrail( ExternalDatabases.GO );
+        if ( ed != null ) {
+            externalDatabaseService.updateReleaseLastUpdated( ed, null, new Date() );
+        } else {
+            log.warn( String.format( "No external database with name %s.", ExternalDatabases.GO ) );
+        }
 
         AbstractCLI.log.info( "Don't forget to update the annotation files for platforms." );
     }

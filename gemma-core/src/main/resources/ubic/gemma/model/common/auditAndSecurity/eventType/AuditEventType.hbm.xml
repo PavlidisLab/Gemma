@@ -163,8 +163,10 @@
 
         <subclass abstract="true" discriminator-value="VersionedEvent"
                   name="ubic.gemma.model.common.auditAndSecurity.eventType.VersionedEvent">
-            <subclass abstract="false" discriminator-value="VersionedUpdateEvent"
-                      name="ubic.gemma.model.common.auditAndSecurity.eventType.VersionedUpdateEvent"/>
+            <subclass abstract="false" discriminator-value="LastUpdatedDateChangedEvent"
+                      name="ubic.gemma.model.common.auditAndSecurity.eventType.LastUpdatedDateChangedEvent"/>
+            <subclass abstract="false" discriminator-value="ReleaseDetailsUpdateEvent"
+                      name="ubic.gemma.model.common.auditAndSecurity.eventType.ReleaseDetailsUpdateEvent"/>
         </subclass>
 
     </class>

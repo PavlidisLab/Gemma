@@ -1,9 +1,11 @@
 package ubic.gemma.core.util.test;
 
 import gemma.gsec.AuthorityConstants;
+import lombok.extern.apachecommons.CommonsLog;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.authentication.TestingAuthenticationProvider;
 import org.springframework.security.authentication.TestingAuthenticationToken;
@@ -13,6 +15,7 @@ import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
+import org.springframework.util.Assert;
 import ubic.gemma.core.security.authentication.UserManager;
 
 import java.util.ArrayList;
@@ -24,18 +27,23 @@ import java.util.List;
  * @author poirigui
  */
 @Service
+@CommonsLog
 public class TestAuthenticationUtilsImpl implements InitializingBean, TestAuthenticationUtils {
 
     @Autowired
     private UserManager userManager;
 
     @Autowired
-    @Qualifier("authenticationManager")
-    private ProviderManager providerManager;
+    private AuthenticationManager authenticationManager;
 
     @Override
     public void afterPropertiesSet() {
-        providerManager.getProviders().add( new TestingAuthenticationProvider() );
+        if ( authenticationManager instanceof ProviderManager ) {
+            ( ( ProviderManager ) authenticationManager ).getProviders().add( new TestingAuthenticationProvider() );
+        } else {
+            log.warn( String.format( "The authenticationManager bean is not implemented with %s, the testing authentication provider will not be registered.",
+                    ProviderManager.class.getName() ) );
+        }
     }
 
     /**

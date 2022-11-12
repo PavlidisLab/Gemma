@@ -21,11 +21,20 @@ package ubic.gemma.persistence.service.common.description;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ubic.gemma.core.security.authentication.UserManager;
 import ubic.gemma.core.util.ListUtils;
+import ubic.gemma.model.common.auditAndSecurity.AuditAction;
+import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
+import ubic.gemma.model.common.auditAndSecurity.User;
+import ubic.gemma.model.common.auditAndSecurity.eventType.LastUpdatedDateChangedEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.ReleaseDetailsUpdateEvent;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.persistence.service.AbstractService;
 
+import javax.annotation.Nullable;
+import java.net.URL;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -52,6 +61,44 @@ public class ExternalDatabaseServiceImpl extends AbstractService<ExternalDatabas
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public ExternalDatabase findByNameWithAuditTrail( String name ) {
+        return this.externalDatabaseDao.findByNameWithAuditTrail( name );
+    }
+
+    @Autowired
+    private UserManager userManager;
+
+    @Override
+    @Transactional
+    public void updateReleaseDetails( ExternalDatabase ed, String releaseVersion, @Nullable URL releaseUrl, @Nullable String releaseNote, Date lastUpdated ) {
+        User performer = userManager.getCurrentUser();
+        String detail;
+        if ( ed.getReleaseVersion() == null ) {
+            detail = String.format( "Initial release version set to %s.", releaseVersion );
+        } else if ( releaseVersion.equals( ed.getReleaseVersion() ) ) {
+            detail = String.format( "Release version has been updated from %s to %s.", ed.getReleaseVersion(), releaseVersion );
+        } else {
+            detail = null;
+        }
+        ed.setReleaseVersion( releaseVersion );
+        ed.setReleaseUrl( releaseUrl );
+        ed.setLastUpdated( lastUpdated );
+        ed.getAuditTrail().getEvents().add( AuditEvent.Factory.newInstance( lastUpdated, AuditAction.UPDATE, releaseNote, detail, performer, new ReleaseDetailsUpdateEvent() ) );
+        update( ed );
+    }
+
+    @Override
+    @Transactional
+    public void updateReleaseLastUpdated( ExternalDatabase ed, @Nullable String releaseNote, Date lastUpdated ) {
+        User performer = userManager.getCurrentUser();
+        ed.setLastUpdated( lastUpdated );
+        ed.getAuditTrail().getEvents().add( AuditEvent.Factory.newInstance( lastUpdated, AuditAction.UPDATE, releaseNote, null, performer, new LastUpdatedDateChangedEvent() ) );
+        update( ed );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public List<ExternalDatabase> findAllByNameIn( List<String> names ) {
         // the database is case insensitive...
         Map<String, Integer> namesIndex = ListUtils.indexOfCaseInsensitiveStringElements( names );

@@ -32,7 +32,7 @@
 		<property name="releaseVersion" type="java.lang.String">
 			<column name="RELEASE_VERSION" not-null="false" sql-type="VARCHAR(255)"/>
 		</property>
-		<property name="releaseUrl" type="java.lang.String">
+		<property name="releaseUrl" type="java.net.URL">
 			<column name="RELEASE_URL" not-null="false" unique="false" sql-type="VARCHAR(255)"/>
 		</property>
 		<property name="lastUpdated" type="java.util.Date">

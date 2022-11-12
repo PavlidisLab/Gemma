@@ -22,38 +22,46 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.core.loader.genome.gene.ncbi.NcbiGeneLoader;
 import ubic.gemma.core.util.AbstractCLI;
 import ubic.gemma.core.util.AbstractCLIContextCLI;
+import ubic.gemma.model.common.description.ExternalDatabase;
+import ubic.gemma.model.common.description.ExternalDatabases;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.persistence.persister.Persister;
+import ubic.gemma.persistence.service.common.description.ExternalDatabaseService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 
 import java.io.File;
+import java.util.Date;
 
 /**
  * Command line interface to gene parsing and loading
  *
  * @author joseph
  */
+@Component
 public class NcbiGeneLoaderCLI extends AbstractCLIContextCLI {
     private static final String GENE_INFO_FILE = "gene_info.gz";
     private static final String GENE2ACCESSION_FILE = "gene2accession.gz";
     private static final String GENE_HISTORY_FILE = "gene_history.gz";
     private static final String GENE2ENSEMBL_FILE = "gene2ensembl.gz";
+
+    @Autowired
+    private TaxonService taxonService;
+    @Autowired
+    private Persister persisterHelper;
+    @Autowired
+    private ExternalDatabaseService externalDatabaseService;
+
     private NcbiGeneLoader loader;
     private String filePath = null;
-
     private String taxonCommonName = null;
-
     private boolean skipDownload = false;
-
     private Integer startNcbiId = null;
-
-    @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
-    public NcbiGeneLoaderCLI() {
-        super();
-    }
 
     @Override
     public CommandGroup getCommandGroup() {
@@ -73,7 +81,6 @@ public class NcbiGeneLoaderCLI extends AbstractCLIContextCLI {
         return "geneUpdate";
     }
 
-    @SuppressWarnings("static-access")
     @Override
     protected void buildOptions( Options options ) {
         Option pathOption = Option.builder( "f" ).hasArg().argName( "Input File Path" )
@@ -95,13 +102,11 @@ public class NcbiGeneLoaderCLI extends AbstractCLIContextCLI {
         return true;
     }
 
-
     @Override
     protected void doWork() throws Exception {
         loader = new NcbiGeneLoader();
-        TaxonService taxonService = this.getBean( TaxonService.class );
         loader.setTaxonService( taxonService );
-        loader.setPersisterHelper( this.getPersisterHelper() );
+        loader.setPersisterHelper( persisterHelper );
         loader.setSkipDownload( this.skipDownload );
         loader.setStartingNcbiId( startNcbiId );
 
@@ -131,6 +136,13 @@ public class NcbiGeneLoaderCLI extends AbstractCLIContextCLI {
             } else {
                 loader.load( true );
             }
+        }
+
+        ExternalDatabase ed = externalDatabaseService.findByNameWithAuditTrail( ExternalDatabases.GENE );
+        if ( ed != null ) {
+            externalDatabaseService.updateReleaseLastUpdated( ed, null, new Date() );
+        } else {
+            log.warn( String.format( "No external database with name %s.", ExternalDatabases.GENE ) );
         }
     }
 

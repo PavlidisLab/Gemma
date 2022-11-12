@@ -31,5 +31,7 @@ public interface ExternalDatabaseDao extends BaseDao<ExternalDatabase> {
 
     ExternalDatabase findByName( String name );
 
+    ExternalDatabase findByNameWithAuditTrail( String name );
+
     List<ExternalDatabase> findAllByNameIn( Collection<String> names );
 }

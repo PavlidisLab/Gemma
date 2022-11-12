@@ -141,6 +141,7 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
         return ctx.getBean( clz );
     }
 
+    @Deprecated
     protected Persister getPersisterHelper() {
         return persisterHelper;
     }

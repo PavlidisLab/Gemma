@@ -18,8 +18,6 @@
  */
 package ubic.gemma.persistence.service.common.auditAndSecurity;
 
-import ubic.gemma.model.common.Auditable;
-import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
 import ubic.gemma.persistence.service.BaseDao;
 
@@ -27,15 +25,5 @@ import ubic.gemma.persistence.service.BaseDao;
  * @see ubic.gemma.model.common.auditAndSecurity.AuditTrail
  */
 public interface AuditTrailDao extends BaseDao<AuditTrail> {
-
-    /**
-     * Add the given event to the audit trail of the given AbstractAuditable entity. For efficiency, it is best to set the audit
-     * event performer before passing in.
-     *
-     * @param auditable  auditable
-     * @param auditEvent audit event
-     * @return created event
-     */
-    AuditEvent addEvent( Auditable auditable, AuditEvent auditEvent );
 
 }

@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -43,93 +43,5 @@ public class AuditTrailDaoImpl extends AbstractDao<AuditTrail> implements AuditT
     @Autowired
     public AuditTrailDaoImpl( SessionFactory sessionFactory ) {
         super( AuditTrailImpl.class, sessionFactory );
-    }
-
-    @Override
-    public AuditEvent addEvent( final Auditable auditable, final AuditEvent auditEvent ) {
-
-        if ( auditEvent.getAction() == null ) {
-            throw new IllegalArgumentException( "auditEvent was missing a required field" );
-        }
-
-        assert auditEvent.getDate() != null;
-
-        if ( auditEvent.getPerformer() == null ) {
-            User user = getUser(); // could be null, if anonymous.
-            Field f = FieldUtils.getField( AuditEvent.class, "performer", true );
-            assert f != null;
-            try {
-                f.set( auditEvent, user );
-            } catch ( IllegalArgumentException | IllegalAccessException e ) {
-                // shouldn't happen, but just in case...
-                throw new RuntimeException( e );
-            }
-        }
-
-        AuditTrail trail = auditable.getAuditTrail();
-
-        if ( trail == null ) {
-            /*
-             * Note: this step should be done by the AuditAdvice when the entity was first created, so this is just
-             * defensive.
-             */
-            log.warn(
-                    "AuditTrail was null. It should have been initialized by the AuditAdvice when the entity was first created." );
-            trail = AuditTrail.Factory.newInstance();
-            auditable.setAuditTrail( trail );
-        } else {
-
-            /*
-             * This assumes that nobody else in this session has modified this audit trail.
-             */
-            if ( trail.getId() != null )
-                trail = ( AuditTrail ) this.getSessionFactory().getCurrentSession()
-                        .get( AuditTrailImpl.class, trail.getId() );
-
-        }
-
-        trail.addEvent( auditEvent );
-
-        this.getSessionFactory().getCurrentSession().saveOrUpdate( trail );
-
-        auditable.setAuditTrail( trail );
-
-        return auditEvent;
-    }
-
-    private String getPrincipalName() {
-        Object obj = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-
-        String username;
-        if ( obj instanceof UserDetails ) {
-            username = ( ( UserDetails ) obj ).getUsername();
-        } else {
-            username = obj.toString();
-        }
-
-        return username;
-    }
-
-    private User getUser() {
-        String name = getPrincipalName();
-        assert name != null; // might be anonymous
-
-        /*
-         * Note: this name is defined in the applicationContext-security.xml file. Normally audit events would not be
-         * added by 'anonymous' using the methods in this class, but this allows the possibility.
-         */
-        if ( name.equals( "anonymous" ) ) {
-            return null;
-        }
-
-        String queryString = "from User where userName=:userName";
-
-        java.util.List<?> results = this.getSessionFactory().getCurrentSession().createQuery( queryString )
-                .setParameter( "userName", name ).list();
-
-        assert results.size() == 1;
-        Object result = results.iterator().next();
-        this.getSessionFactory().getCurrentSession().setReadOnly( result, true );
-        return ( User ) result;
     }
 }

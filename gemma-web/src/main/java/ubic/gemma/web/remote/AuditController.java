@@ -76,8 +76,8 @@ public class AuditController {
             throw new RuntimeException( "Unknown event type: " + auditEventType );
         }
 
-        AuditEvent auditEvent = auditTrailService
-                .addUpdateEvent( entity, ( Class<? extends AuditEventType> ) clazz, comment, detail );
+        auditTrailService.addUpdateEvent( entity, ( Class<? extends AuditEventType> ) clazz, comment, detail );
+        AuditEvent auditEvent = entity.getAuditTrail().getLast();
         if ( auditEvent == null ) {
             AuditController.log.error( "Persisting the audit event failed! On auditable id " + entity.getId() );
         } else {
