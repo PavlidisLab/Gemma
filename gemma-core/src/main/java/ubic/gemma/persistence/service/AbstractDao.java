@@ -21,6 +21,7 @@ package ubic.gemma.persistence.service;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.hibernate.FlushMode;
 import org.hibernate.LockOptions;
 import org.hibernate.SessionFactory;
 import org.hibernate.criterion.Projections;
@@ -29,7 +30,6 @@ import ubic.gemma.model.common.Identifiable;
 
 import javax.annotation.Nullable;
 import javax.annotation.OverridingMethodsMustInvokeSuper;
-import java.io.Serializable;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
@@ -78,11 +78,12 @@ public abstract class AbstractDao<T extends Identifiable> implements BaseDao<T> 
     @Override
     public Collection<T> create( Collection<T> entities ) {
         StopWatch stopWatch = StopWatch.createStarted();
+        warnIfBatchingIsNotAdvisable( "remove", entities );
         Collection<T> results = new ArrayList<>( entities.size() );
         int i = 0;
         for ( T t : entities ) {
             results.add( this.create( t ) );
-            if ( ++i % batchSize == 0 ) {
+            if ( ++i % batchSize == 0 && isBatchingAdvisable() ) {
                 flushAndClear();
                 AbstractDao.log.debug( String.format( "Flushed and cleared after creating %d/%d %s entities.", i, entities.size(), elementClass ) );
             }
@@ -144,10 +145,11 @@ public abstract class AbstractDao<T extends Identifiable> implements BaseDao<T> 
     @Override
     public void remove( Collection<T> entities ) {
         StopWatch timer = StopWatch.createStarted();
+        warnIfBatchingIsNotAdvisable( "remove", entities );
         int i = 0;
         for ( T e : entities ) {
             this.remove( e );
-            if ( ++i % batchSize == 0 ) {
+            if ( ++i % batchSize == 0 && isBatchingAdvisable() ) {
                 flushAndClear();
                 AbstractDao.log.trace( String.format( "Flushed and cleared after removing %d/%d %s entities.", i, entities.size(), elementClass ) );
             }
@@ -182,10 +184,11 @@ public abstract class AbstractDao<T extends Identifiable> implements BaseDao<T> 
     @Override
     public void update( Collection<T> entities ) {
         StopWatch timer = StopWatch.createStarted();
+        warnIfBatchingIsNotAdvisable( "update", entities );
         int i = 0;
         for ( T entity : entities ) {
             this.update( entity );
-            if ( ++i % batchSize == 0 ) {
+            if ( ++i % batchSize == 0 && isBatchingAdvisable() ) {
                 flushAndClear();
                 AbstractDao.log.trace( String.format( "Flushed and cleared after updating %d/%d %s entities.", i, entities.size(), elementClass ) );
             }
@@ -296,6 +299,29 @@ public abstract class AbstractDao<T extends Identifiable> implements BaseDao<T> 
     protected void flushAndClear() {
         this.getSessionFactory().getCurrentSession().flush();
         this.getSessionFactory().getCurrentSession().clear();
+    }
+
+    /**
+     * Emit a warning if the current flush mode does not allow batching the given collection.
+     */
+    private void warnIfBatchingIsNotAdvisable( String operation, Collection<?> entities ) {
+        if ( entities.size() >= DEFAULT_BATCH_SIZE && !isBatchingAdvisable() ) {
+            AbstractDao.log.warn( String.format( "Batching is not advisable with current flush mode %s, will proceed with %s on %d entities without invoking Session.flush() and Session.clear().",
+                    getSessionFactory().getCurrentSession().getFlushMode(),
+                    operation,
+                    entities.size() ) );
+        }
+    }
+
+    /**
+     * Check if batching is currently advisable.
+     * <p>
+     * In certain cases, such as when the flush mode is set to {@link FlushMode#MANUAL}, we would want to prevent any
+     * unintended flushes.
+     */
+    private boolean isBatchingAdvisable() {
+        FlushMode flushMode = getSessionFactory().getCurrentSession().getFlushMode();
+        return flushMode == FlushMode.AUTO || flushMode == FlushMode.ALWAYS;
     }
 
     private String formatEntity( @Nullable T entity ) {

@@ -1,6 +1,7 @@
 package ubic.gemma.persistence.service;
 
 import org.hibernate.Criteria;
+import org.hibernate.FlushMode;
 import org.hibernate.SessionFactory;
 import org.hibernate.classic.Session;
 import org.hibernate.criterion.Restrictions;
@@ -19,6 +20,7 @@ import java.util.stream.LongStream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
+import static org.mockito.internal.verification.VerificationModeFactory.noInteractions;
 
 public class AbstractDaoTest {
 
@@ -57,6 +59,7 @@ public class AbstractDaoTest {
         when( myEntityClassMetadata.getIdentifierPropertyName() ).thenReturn( "id" );
         when( sessionFactory.getClassMetadata( MyEntity.class ) ).thenReturn( myEntityClassMetadata );
         when( sessionFactory.getCurrentSession() ).thenReturn( session );
+        when( session.getFlushMode() ).thenReturn( FlushMode.AUTO );
     }
 
     @Test
@@ -87,6 +90,17 @@ public class AbstractDaoTest {
         verify( session, times( 10 ) ).persist( any( MyEntity.class ) );
         verify( session, VerificationModeFactory.times( 1 ) ).flush();
         verify( session, times( 1 ) ).clear();
+    }
+
+    @Test
+    public void testBatchingNotAdvisableWhenFlushModeIsManual() {
+        myDao = new MyDao( sessionFactory, 10 );
+        when( session.getFlushMode() ).thenReturn( FlushMode.MANUAL );
+        Collection<MyEntity> entities = myDao.create( generateEntities( 20 ) );
+        assertThat( entities ).hasSize( 20 );
+        verify( session, times( 20 ) ).persist( any( MyEntity.class ) );
+        verify( session, times( 0 ) ).flush();
+        verify( session, times( 0 ) ).clear();
     }
 
     @Test
