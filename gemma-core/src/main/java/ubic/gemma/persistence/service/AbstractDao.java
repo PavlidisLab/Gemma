@@ -70,6 +70,9 @@ public abstract class AbstractDao<T extends Identifiable> implements BaseDao<T> 
      *                  {@link Integer#MAX_VALUE} to effectively disable batching and '1' to flush changes right away.
      */
     protected AbstractDao( Class<? extends T> elementClass, SessionFactory sessionFactory, int batchSize ) {
+        if ( batchSize < 1 ) {
+            throw new IllegalArgumentException( "Batch size must be greater or equal to 1." );
+        }
         this.sessionFactory = sessionFactory;
         this.elementClass = elementClass;
         this.batchSize = batchSize;
