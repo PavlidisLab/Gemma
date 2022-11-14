@@ -42,7 +42,7 @@ public class AuditTrailDaoImpl extends AbstractDao<AuditTrail> implements AuditT
 
     @Autowired
     public AuditTrailDaoImpl( SessionFactory sessionFactory ) {
-        super( AuditTrail.class, sessionFactory );
+        super( AuditTrailImpl.class, sessionFactory );
     }
 
     @Override

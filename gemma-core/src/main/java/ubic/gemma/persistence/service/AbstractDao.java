@@ -26,6 +26,8 @@ import org.hibernate.LockOptions;
 import org.hibernate.SessionFactory;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
+import org.hibernate.metadata.ClassMetadata;
+import org.springframework.util.Assert;
 import ubic.gemma.model.common.Identifiable;
 
 import javax.annotation.Nullable;
@@ -53,16 +55,18 @@ public abstract class AbstractDao<T extends Identifiable> implements BaseDao<T> 
      */
     public static final int DEFAULT_BATCH_SIZE = 100;
 
-    private final SessionFactory sessionFactory;
-
     protected final Class<? extends T> elementClass;
 
+    private final SessionFactory sessionFactory;
     private final int batchSize;
+    private final ClassMetadata classMetadata;
 
     protected AbstractDao( Class<? extends T> elementClass, SessionFactory sessionFactory ) {
         this.sessionFactory = sessionFactory;
         this.elementClass = elementClass;
         this.batchSize = DEFAULT_BATCH_SIZE;
+        this.classMetadata = sessionFactory.getClassMetadata( elementClass );
+        Assert.notNull( classMetadata, String.format( "%s is missing from Hibernate mapping.", elementClass.getName() ) );
     }
 
     /**
@@ -70,12 +74,10 @@ public abstract class AbstractDao<T extends Identifiable> implements BaseDao<T> 
      *                  {@link Integer#MAX_VALUE} to effectively disable batching and '1' to flush changes right away.
      */
     protected AbstractDao( Class<? extends T> elementClass, SessionFactory sessionFactory, int batchSize ) {
+        this( elementClass, sessionFactory );
         if ( batchSize < 1 ) {
             throw new IllegalArgumentException( "Batch size must be greater or equal to 1." );
         }
-        this.sessionFactory = sessionFactory;
-        this.elementClass = elementClass;
-        this.batchSize = batchSize;
     }
 
     @Override
@@ -110,7 +112,7 @@ public abstract class AbstractDao<T extends Identifiable> implements BaseDao<T> 
             AbstractDao.log.trace( String.format( "Loading %s with an empty collection of IDs, returning an empty collection.", elementClass.getSimpleName() ) );
             return Collections.emptyList();
         }
-        String idPropertyName = getSessionFactory().getClassMetadata( elementClass ).getIdentifierPropertyName();
+        String idPropertyName = classMetadata.getIdentifierPropertyName();
         //noinspection unchecked
         List<T> results = this.getSessionFactory().getCurrentSession()
                 .createCriteria( elementClass )
