@@ -21,13 +21,14 @@ package ubic.gemma.core.util;
 import com.google.common.base.Charsets;
 import gemma.gsec.authentication.ManualAuthenticationService;
 import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.Option;
-import org.apache.commons.cli.Options;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.concurrent.DelegatingSecurityContextCallable;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import ubic.gemma.core.security.authentication.UserManager;
 import ubic.gemma.model.common.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.curation.Curatable;
@@ -113,7 +114,7 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
     @Override
     protected void processStandardOptions( CommandLine commandLine ) {
         super.processStandardOptions( commandLine );
-        this.authenticate( commandLine );
+        this.authenticate();
     }
 
     /**
@@ -205,12 +206,14 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
 
     /**
      * check username and password.
-     * @param commandLine
      */
-    private void authenticate( CommandLine commandLine ) {
-        if ( requireLogin() || System.getenv().containsKey( USERNAME_ENV ) ) {
-            String username = getUsername( commandLine );
-            String password = getPassword( commandLine );
+    private void authenticate() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if ( authentication != null && authentication.isAuthenticated() ) {
+            AbstractCLI.log.info( String.format( "Logged in as %s", authentication.getPrincipal() ) );
+        } else if ( requireLogin() || System.getenv().containsKey( USERNAME_ENV ) ) {
+            String username = getUsername();
+            String password = getPassword();
 
             if ( StringUtils.isBlank( username ) ) {
                 throw new IllegalArgumentException( "Not authenticated. Username was blank" );
@@ -231,18 +234,19 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
             AbstractCLI.log.info( "Logging in as anonymous guest with limited privileges" );
             manAuthentication.authenticateAnonymously();
         }
-
     }
 
-    private String getUsername( CommandLine commandLine ) {
+    private String getUsername() {
         if ( System.getenv().containsKey( USERNAME_ENV ) ) {
             return System.getenv().get( USERNAME_ENV );
-        } else {
+        } else if ( System.console() != null ) {
             return System.console().readLine( "Username: " );
+        } else {
+            throw new RuntimeException( String.format( "Could not read the username from the console. Please run Gemma CLI from an interactive shell or provide the %s environment variable.", USERNAME_ENV ) );
         }
     }
 
-    private String getPassword( CommandLine commandLine ) {
+    private String getPassword() {
         if ( System.getenv().containsKey( PASSWORD_ENV ) ) {
             return System.getenv().get( PASSWORD_ENV );
         }
@@ -270,7 +274,8 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
         if ( System.console() != null ) {
             return String.valueOf( System.console().readPassword( "Password: " ) );
         } else {
-            throw new IllegalArgumentException( "Could not read the password from the console. Please provide either " + PASSWORD_ENV + " or " + PASSWORD_CMD_ENV + " environment variables." );
+            throw new IllegalArgumentException( String.format( "Could not read the password from the console. Please run Gemma CLI from an interactive shell or provide either the %s or %s environment variables.",
+                    PASSWORD_ENV, PASSWORD_CMD_ENV ) );
         }
     }
 
@@ -278,7 +283,7 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
      * {@inheritDoc}
      * <p>
      * Tasks are wrapped with {@link DelegatingSecurityContextCallable} to ensure that they execute with the security
-     * context set up by {@link #authenticate(CommandLine)}.
+     * context set up by {@link #authenticate()}.
      */
     @Override
     protected <T> List<T> executeBatchTasks( Collection<? extends Callable<T>> tasks ) throws InterruptedException {
