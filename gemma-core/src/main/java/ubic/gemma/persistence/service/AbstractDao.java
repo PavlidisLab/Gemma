@@ -53,7 +53,7 @@ public abstract class AbstractDao<T extends Identifiable> implements BaseDao<T> 
      * See <a href="https://docs.jboss.org/hibernate/core/3.6/reference/en-US/html/batch.html">Chapter 15. Batch processing</a>
      * for more details.
      */
-    public static final int DEFAULT_BATCH_SIZE = 100;
+    private static final int DEFAULT_BATCH_SIZE = 100;
 
     protected final Class<? extends T> elementClass;
 
@@ -62,11 +62,7 @@ public abstract class AbstractDao<T extends Identifiable> implements BaseDao<T> 
     private final ClassMetadata classMetadata;
 
     protected AbstractDao( Class<? extends T> elementClass, SessionFactory sessionFactory ) {
-        this.sessionFactory = sessionFactory;
-        this.elementClass = elementClass;
-        this.batchSize = DEFAULT_BATCH_SIZE;
-        this.classMetadata = sessionFactory.getClassMetadata( elementClass );
-        Assert.notNull( classMetadata, String.format( "%s is missing from Hibernate mapping.", elementClass.getName() ) );
+        this( elementClass, sessionFactory, DEFAULT_BATCH_SIZE );
     }
 
     /**
@@ -74,10 +70,12 @@ public abstract class AbstractDao<T extends Identifiable> implements BaseDao<T> 
      *                  {@link Integer#MAX_VALUE} to effectively disable batching and '1' to flush changes right away.
      */
     protected AbstractDao( Class<? extends T> elementClass, SessionFactory sessionFactory, int batchSize ) {
-        this( elementClass, sessionFactory );
-        if ( batchSize < 1 ) {
-            throw new IllegalArgumentException( "Batch size must be greater or equal to 1." );
-        }
+        Assert.notNull( sessionFactory.getClassMetadata( elementClass ), String.format( "%s is missing from Hibernate mapping.", elementClass.getName() ) );
+        Assert.isTrue( batchSize >= 1, "Batch size must be greater or equal to 1." );
+        this.sessionFactory = sessionFactory;
+        this.elementClass = elementClass;
+        this.batchSize = batchSize;
+        this.classMetadata = sessionFactory.getClassMetadata( elementClass );
     }
 
     @Override

@@ -40,6 +40,10 @@ public class AbstractDaoTest {
 
     public static class MyDao extends AbstractDao<MyEntity> {
 
+        public MyDao( SessionFactory sessionFactory ) {
+            super( MyEntity.class, sessionFactory );
+        }
+
         public MyDao( SessionFactory sessionFactory, int batchSize ) {
             super( MyEntity.class, sessionFactory, batchSize );
         }
@@ -105,7 +109,7 @@ public class AbstractDaoTest {
 
     @Test
     public void testLoadByCollection() {
-        myDao = new MyDao( sessionFactory, MyDao.DEFAULT_BATCH_SIZE );
+        myDao = new MyDao( sessionFactory );
         Criteria mockCriteria = mock( Criteria.class );
         when( mockCriteria.add( any() ) ).thenReturn( mockCriteria );
         when( session.createCriteria( MyEntity.class ) ).thenReturn( mockCriteria );
