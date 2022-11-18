@@ -7,10 +7,13 @@
    http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-3.2.xsd
    http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-3.2.xsd">
 
+	<!-- Enable AspectJ autoproxy -->
+	<aop:aspectj-autoproxy/>
+
 	<!-- Automatically retry certain failed operations in transactions. FIXME use @Transactional to identify -->
 	<aop:config>
 		<aop:pointcut id="retryable"
-					  expression="ubic.gemma.core.util.SystemArchitectureAspect.serviceMethodWithArg()"/>
+					  expression="ubic.gemma.core.util.Pointcuts.serviceMethodWithArg()"/>
 		<aop:advisor pointcut-ref="retryable" advice-ref="retryAdvice" order="2"/>
 	</aop:config>
 

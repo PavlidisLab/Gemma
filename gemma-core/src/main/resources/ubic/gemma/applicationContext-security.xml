@@ -82,11 +82,14 @@
         <s:after-invocation-provider ref="postInvocationAdviceProvider"/><!-- for @Post... -->
     </s:global-method-security>
 
+    <!-- Enable AspectJ autoproxy -->
+    <aop:aspectj-autoproxy/>
+
     <!-- Aspect that adds ACLs for new entities, and deletes them for deleted entities. -->
     <aop:config>
         <aop:aspect id="aclAspect" ref="aclAdvice" order="4">
             <aop:after-returning method="doAclAdvice"
-                                 pointcut="ubic.gemma.core.util.SystemArchitectureAspect.modifier()"
+                                 pointcut="ubic.gemma.core.util.Pointcuts.modifier()"
                                  returning="retValue"/>
         </aop:aspect>
     </aop:config>
@@ -95,7 +98,7 @@
     <aop:config>
         <aop:aspect id="auditAspect" ref="auditAdvice" order="5">
             <aop:after-returning method="doAuditAdvice"
-                                 pointcut="ubic.gemma.core.util.SystemArchitectureAspect.modifier()"
+                                 pointcut="ubic.gemma.core.util.Pointcuts.modifier()"
                                  returning="retValue"/>
         </aop:aspect>
     </aop:config>

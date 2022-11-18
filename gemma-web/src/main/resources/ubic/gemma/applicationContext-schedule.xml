@@ -136,6 +136,4 @@
     <bean id="whatsNewService" class="ubic.gemma.core.analysis.report.WhatsNewServiceImpl"/>
     <bean id="arrayDesignReportService" class="ubic.gemma.core.analysis.report.ArrayDesignReportServiceImpl"/>
     <bean id="indexService" class="ubic.gemma.core.search.indexer.IndexServiceImpl"/>
-
-    <aop:aspectj-autoproxy proxy-target-class="false"/>
 </beans>

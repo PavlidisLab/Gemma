@@ -29,7 +29,6 @@ import org.springframework.security.acls.model.*;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Component;
-import ubic.gemma.core.util.SystemArchitectureAspect;
 import ubic.gemma.model.analysis.Investigation;
 import ubic.gemma.model.analysis.SingleExperimentAnalysis;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
@@ -43,7 +42,7 @@ import java.util.Collection;
 
 /**
  * For permissions modification to be triggered, the method name must match certain patterns, which include "create", or
- * "remove". These patterns are defined in the {@link SystemArchitectureAspect}. Other methods that would require
+ * "remove". These patterns are defined in the {@link ubic.gemma.core.util.Pointcuts}. Other methods that would require
  * changes to permissions will not work without modifying the source code. *
  *
  * @author Paul

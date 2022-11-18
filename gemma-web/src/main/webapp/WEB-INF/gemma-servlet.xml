@@ -14,8 +14,6 @@
     <!-- Note: the component-scan directive can be found in gemma-core's applicationContext-component-scan.xml -->
     <context:component-scan base-package="ubic.gemma.web" name-generator="ubic.gemma.persistence.util.BeanNameGenerator"/>
 
-    <aop:aspectj-autoproxy/>
-
     <!-- Mapping URLS to controllers -->
 
 
