@@ -50,6 +50,19 @@ public abstract class AbstractService<O extends Identifiable> implements BaseSer
     }
 
     @Override
+    @Transactional
+    public Collection<O> save( Collection<O> entities ) {
+        return mainDao.save( entities );
+    }
+
+    @Override
+    @Transactional
+    @OverridingMethodsMustInvokeSuper
+    public O save( O entity ) {
+        return mainDao.save( entity );
+    }
+
+    @Override
     @Transactional(readOnly = true)
     public Collection<O> load( Collection<Long> ids ) {
         return mainDao.load( ids );

@@ -47,6 +47,30 @@ public interface BaseDao<T> {
     T create( T entity );
 
     /**
+     * Save all the given entities in the persistent storage.
+     * <p>
+     * Unlike {@link #update(Collection)}, this method does not attach the given entities to the persistence context;
+     * the returned values must be used instead.
+     *
+     * @see org.hibernate.classic.Session#persist(Object)
+     * @see org.hibernate.classic.Session#merge(Object)
+     */
+    @CheckReturnValue
+    Collection<T> save( Collection<T> entities );
+
+    /**
+     * Create or update an entity whether it is transient.
+     * <p>
+     * Unlike {@link #update(Object)}, this method does not attach the given entity to the persistence context and the
+     * returned value must be used instead.
+     *
+     * @see org.hibernate.classic.Session#persist(Object)
+     * @see org.hibernate.classic.Session#merge(Object)
+     */
+    @CheckReturnValue
+    T save( T entity );
+
+    /**
      * Loads entities with given ids form the persistent storage.
      *
      * @param ids the IDs of entities to be loaded. If some IDs are not found or null, they are skipped.

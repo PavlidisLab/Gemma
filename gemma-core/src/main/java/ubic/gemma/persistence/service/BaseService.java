@@ -51,6 +51,16 @@ public interface BaseService<O extends Identifiable> {
     O create( O entity );
 
     /**
+     * @see BaseDao#save(Collection)
+     */
+    Collection<O> save( Collection<O> entities );
+
+    /**
+     * @see BaseDao#save(Object)
+     */
+    O save( O entity );
+
+    /**
      * Loads objects with given ids.
      *
      * @param ids the ids of objects to be loaded.

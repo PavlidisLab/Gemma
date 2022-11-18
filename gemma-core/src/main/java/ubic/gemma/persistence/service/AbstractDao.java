@@ -104,6 +104,37 @@ public abstract class AbstractDao<T extends Identifiable> implements BaseDao<T> 
     }
 
     @Override
+    public Collection<T> save( Collection<T> entities ) {
+        StopWatch timer = StopWatch.createStarted();
+        Collection<T> results = new ArrayList<>( entities.size() );
+        int i = 0;
+        for ( T entity : entities ) {
+            results.add( this.save( entity ) );
+            if ( ++i % batchSize == 0 && isBatchingAdvisable() ) {
+                flushAndClear();
+                AbstractDao.log.trace( String.format( "Flushed and cleared after saving %d/%d %s entities.", i, entities.size(), elementClass ) );
+            }
+        }
+        AbstractDao.log.debug( String.format( "Saved %d entities in %d ms.", entities.size(), timer.getTime( TimeUnit.MILLISECONDS ) ) );
+        return results;
+    }
+
+    @Override
+    @OverridingMethodsMustInvokeSuper
+    public T save( T entity ) {
+        if ( entity.getId() == null ) {
+            getSessionFactory().getCurrentSession().persist( entity );
+            AbstractDao.log.trace( String.format( "Created %s.", formatEntity( entity ) ) );
+            return entity;
+        } else {
+            //noinspection unchecked
+            T result = ( T ) getSessionFactory().getCurrentSession().merge( entity );
+            AbstractDao.log.trace( String.format( "Updated %s.", formatEntity( entity ) ) );
+            return result;
+        }
+    }
+
+    @Override
     public Collection<T> load( Collection<Long> ids ) {
         StopWatch timer = StopWatch.createStarted();
         if ( ids.isEmpty() ) {
