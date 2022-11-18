@@ -4,9 +4,6 @@
         "http://www.hibernate.org/dtd/hibernate-configuration-3.0.dtd">
 <hibernate-configuration>
     <session-factory>
-        <mapping resource="gemma/gsec/model/AclEntry.hbm.xml"/>
-        <mapping resource="gemma/gsec/model/AclObjectIdentity.hbm.xml"/>
-        <mapping resource="gemma/gsec/model/AclSid.hbm.xml"/>
         <mapping resource="ubic/gemma/model/analysis/Analysis.hbm.xml"/>
         <mapping resource="ubic/gemma/model/analysis/AnalysisResultSet.hbm.xml"/>
         <mapping resource="ubic/gemma/model/analysis/BlacklistedEntity.hbm.xml"/>
