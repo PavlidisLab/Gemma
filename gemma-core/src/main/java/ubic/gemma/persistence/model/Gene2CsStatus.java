@@ -20,6 +20,7 @@ package ubic.gemma.persistence.model;
 
 import ubic.gemma.persistence.service.TableMaintenanceUtil;
 
+import javax.annotation.Nullable;
 import java.io.Serializable;
 import java.util.Date;
 
@@ -36,6 +37,7 @@ public class Gene2CsStatus implements Serializable {
 
     private Date lastUpdate;
 
+    @Nullable
     private Exception error;
 
     private String annotation;
@@ -48,11 +50,12 @@ public class Gene2CsStatus implements Serializable {
         this.annotation = annotation;
     }
 
+    @Nullable
     public Exception getError() {
         return error;
     }
 
-    public void setError( Exception error ) {
+    public void setError( @Nullable Exception error ) {
         this.error = error;
     }
 

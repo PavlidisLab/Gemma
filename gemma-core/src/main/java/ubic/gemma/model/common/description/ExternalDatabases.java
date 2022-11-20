@@ -9,5 +9,6 @@ public final class ExternalDatabases {
     public static final String
             GENE = "gene",
             GO = "go",
-            MULTIFUNCTIONALITY = "multifunctionality";
+            MULTIFUNCTIONALITY = "multifunctionality",
+            GENE2CS = "gene2cs";
 }

@@ -60,6 +60,15 @@ public class TestAuthenticationUtilsImpl implements InitializingBean, TestAuthen
         createAndSetSecurityContext( token );
     }
 
+    @Override
+    public void runAsAgent() {
+        TestingAuthenticationToken token = new TestingAuthenticationToken( "administrator", "administrator",
+                Arrays.asList( new GrantedAuthority[] {
+                        new SimpleGrantedAuthority( AuthorityConstants.AGENT_GROUP_AUTHORITY ) } ) );
+        token.setAuthenticated( true );
+        createAndSetSecurityContext( token );
+    }
+
     /**
      * Run as a regular user.
      *

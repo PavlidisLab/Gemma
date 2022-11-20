@@ -516,6 +516,10 @@ public abstract class BaseSpringContextTest extends AbstractJUnit4SpringContextT
         testAuthenticationUtils.runAsAdmin();
     }
 
+    protected void runAsAgent() {
+        testAuthenticationUtils.runAsAgent();
+    }
+
     protected void runAsUser( String userName ) {
         testAuthenticationUtils.runAsUser( userName );
     }

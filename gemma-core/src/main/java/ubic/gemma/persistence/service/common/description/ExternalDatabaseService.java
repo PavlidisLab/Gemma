@@ -34,9 +34,17 @@ import java.util.List;
  */
 public interface ExternalDatabaseService extends BaseService<ExternalDatabase> {
 
+    @Override
+    @Secured({ "GROUP_ADMIN" })
+    Collection<ExternalDatabase> create( Collection<ExternalDatabase> entities );
+
+    @Override
+    @Secured({ "GROUP_ADMIN" })
+    ExternalDatabase create( ExternalDatabase entity );
+
     ExternalDatabase findByName( String name );
 
-    @Secured({ "GROUP_ADMIN" })
+    @Secured({ "GROUP_ADMIN", "GROUP_AGENT" })
     ExternalDatabase findByNameWithAuditTrail( String name );
 
     @Override
@@ -44,17 +52,17 @@ public interface ExternalDatabaseService extends BaseService<ExternalDatabase> {
     ExternalDatabase findOrCreate( ExternalDatabase externalDatabase );
 
     @Override
-    @Secured({ "GROUP_ADMIN" })
+    @Secured({ "GROUP_ADMIN", "GROUP_AGENT" })
     void update( ExternalDatabase entity );
 
     @Override
-    @Secured({ "GROUP_ADMIN" })
+    @Secured({ "GROUP_ADMIN", "GROUP_AGENT" })
     void update( Collection<ExternalDatabase> entities );
 
-    @Secured({ "GROUP_ADMIN" })
+    @Secured({ "GROUP_ADMIN", "GROUP_AGENT" })
     void updateReleaseDetails( ExternalDatabase externalDatabase, String releaseVersion, @Nullable URL releaseUrl, @Nullable String releaseNote, Date lastUpdated );
 
-    @Secured({ "GROUP_ADMIN" })
+    @Secured({ "GROUP_ADMIN", "GROUP_AGENT" })
     void updateReleaseLastUpdated( ExternalDatabase externalDatabase, @Nullable String note, Date lastUpdated );
 
     @Override
