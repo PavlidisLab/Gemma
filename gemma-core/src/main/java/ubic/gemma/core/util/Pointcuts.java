@@ -18,7 +18,6 @@
  */
 package ubic.gemma.core.util;
 
-import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Pointcut;
 import ubic.gemma.persistence.retry.Retryable;
 
@@ -29,7 +28,6 @@ import ubic.gemma.persistence.retry.Retryable;
  *
  * @author paul
  */
-@Aspect
 public class Pointcuts {
 
     /**
@@ -39,6 +37,9 @@ public class Pointcuts {
     public void inGemma() {
     }
 
+    /**
+     * A public method.
+     */
     @Pointcut("execution(public * *(..))")
     public void anyPublicMethod() {
     }
@@ -67,51 +68,49 @@ public class Pointcuts {
     /**
      * Methods that create new objects in the persistent store
      */
-    @Pointcut("daoMethod() && (execution(* save*(..)) || execution(* create*(..)) || execution(* findOrCreate*(..)) || execution(* persist*(..)) || execution(* add*(..)))")
+    @Pointcut("daoMethod() && (execution(* save*(*, ..)) || execution(* create*(*, ..)) || execution(* findOrCreate*(*, ..)) || execution(* persist*(*, ..)) || execution(* add*(*, ..)))")
     public void creator() {
     }
 
     /**
      * Methods that update items in the persistent store
      */
-    @Pointcut("daoMethod() && execution(* update*(..))")
+    @Pointcut("daoMethod() && execution(* update*(*, ..))")
     public void updater() {
     }
 
     /**
      * Methods that remove items in the persistent store
      */
-    @Pointcut("daoMethod() && (execution(* remove*(..)) || execution(* delete*(..)))")
+    @Pointcut("daoMethod() && (execution(* remove*(*, ..)) || execution(* delete*(*, ..)))")
     public void deleter() {
     }
 
-    @Pointcut("inGemma() && @target(org.springframework.stereotype.Service)")
+    /**
+     * A public method defined in a service.
+     */
+    @Pointcut("inGemma() && @target(org.springframework.stereotype.Service) && anyPublicMethod()")
     public void serviceMethod() {
     }
 
     /**
-     * A transactional method.
+     * A transactional method, public and annotated with {@link org.springframework.transaction.annotation.Transactional}.
      */
-    @Pointcut("inGemma() && @annotation(org.springframework.transaction.annotation.Transactional)")
+    @Pointcut("inGemma() && (@within(org.springframework.transaction.annotation.Transactional) ||  @annotation(org.springframework.transaction.annotation.Transactional)) && anyPublicMethod()")
     public void transactionalMethod() {
     }
 
     /**
-     * A method that can be retried, annotated with {@link org.springframework.transaction.annotation.Transactional}
+     * A method that can be retried, public and annotated with {@link Retryable}.
      */
-    @Pointcut("inGemma() && @annotation(ubic.gemma.persistence.retry.Retryable)")
-    public void retryMethod() {
-
+    @Pointcut("inGemma() && @annotation(ubic.gemma.persistence.retry.Retryable) && anyPublicMethod()")
+    public void retryableMethod() {
     }
 
     /**
-     * A retriable or transactional method.
-     * <p>
-     * @deprecated we should mark all retriable methods with {@link Retryable} and get rid of
-     * this pointcut.
+     * A retryable or transactional service method.
      */
-    @Deprecated
-    @Pointcut("retryMethod() || transactionalMethod()")
-    public void retryOrTransactionalMethod() {
+    @Pointcut("retryableMethod() || (serviceMethod() && transactionalMethod())")
+    public void retryableOrTransactionalServiceMethod() {
     }
 }
