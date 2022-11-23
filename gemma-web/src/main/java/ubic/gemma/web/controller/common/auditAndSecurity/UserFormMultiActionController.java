@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -19,10 +19,10 @@
 package ubic.gemma.web.controller.common.auditAndSecurity;
 
 import gemma.gsec.authentication.UserDetailsImpl;
-import gemma.gsec.util.JSONUtil;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.validator.routines.EmailValidator;
+import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.encoding.PasswordEncoder;
 import org.springframework.security.core.Authentication;
@@ -31,9 +31,11 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import ubic.gemma.core.security.authentication.UserManager;
 import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.web.controller.BaseController;
+import ubic.gemma.web.util.JsonUtil;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -62,20 +64,14 @@ public class UserFormMultiActionController extends BaseController {
      * Entry point for updates.
      */
     @RequestMapping("/editUser.html")
-    public void editUser( HttpServletRequest request, HttpServletResponse response ) throws Exception {
-
-        String email = request.getParameter( "email" );
-        String password = request.getParameter( "password" );
-        String passwordConfirm = request.getParameter( "passwordConfirm" );
-        String oldPassword = request.getParameter( "oldpassword" );
+    public void editUser( @RequestParam("email") String email, @RequestParam("password") String password,
+            @RequestParam("passwordConfirm") String passwordConfirm, @RequestParam("oldPassword") String oldPassword,
+            @RequestParam("username") String originalUserName,
+            HttpServletRequest request, HttpServletResponse response ) throws Exception {
 
         /*
          * I had this idea we could let users change their user names, but this turns out to be a PITA.
          */
-        String originalUserName = request.getParameter( "username" );
-
-        String jsonText = null;
-        JSONUtil jsonUtil = new JSONUtil( request, response );
 
         try {
             /*
@@ -93,8 +89,10 @@ public class UserFormMultiActionController extends BaseController {
 
             if ( StringUtils.isNotBlank( email ) && !user.getEmail().equals( email ) ) {
                 if ( !EmailValidator.getInstance().isValid( email ) ) {
-                    jsonText = "{success:false,message:'The email address does not look valid'}";
-                    jsonUtil.writeToResponse( jsonText );
+                    JSONObject json = new JSONObject()
+                            .put( "success", false )
+                            .put( "message", "The email address does not look valid" );
+                    JsonUtil.writeToResponse( json, response );
                     return;
                 }
                 user.setEmail( email );
@@ -114,14 +112,11 @@ public class UserFormMultiActionController extends BaseController {
             }
 
             saveMessage( request, "Changes saved." );
-            jsonText = "{success:true}";
+            JsonUtil.writeToResponse( new JSONObject().put( "success", true ), response );
 
         } catch ( Exception e ) {
-            log.error( e.getLocalizedMessage() );
-            jsonText = jsonUtil.getJSONErrorMessage( e );
-            log.info( jsonText );
-        } finally {
-            jsonUtil.writeToResponse( jsonText );
+            log.error( "Failed to update user profile", e );
+            JsonUtil.writeErrorToResponse( e, response );
         }
     }
 
@@ -129,7 +124,7 @@ public class UserFormMultiActionController extends BaseController {
      * AJAX entry point. Loads a user.
      */
     @RequestMapping("/loadUser.html")
-    public void loadUser( HttpServletRequest request, HttpServletResponse response ) {
+    public void loadUser( HttpServletResponse response ) throws IOException {
 
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         boolean isAuthenticated = authentication.isAuthenticated();
@@ -148,60 +143,40 @@ public class UserFormMultiActionController extends BaseController {
             username = o.toString();
         }
 
-        User user = userManager.findByUserName( username );
-
-        JSONUtil jsonUtil = new JSONUtil( request, response );
-
-        String jsonText = null;
+        User user;
         try {
-
-            if ( user == null ) {
-                // this shouldn't happen.
-                jsonText = "{success:false,message:'No user with name " + username + "}";
-            } else {
-                jsonText =
-                        "{success:true, data:{username:" + "\"" + username + "\"" + ",email:" + "\"" + user.getEmail()
-                                + "\"" + "}}";
-            }
-
+            user = userManager.findByUserName( username );
         } catch ( Exception e ) {
-            jsonText = "{success:false,message:" + e.getLocalizedMessage() + "}";
-        } finally {
-            try {
-                jsonUtil.writeToResponse( jsonText );
-            } catch ( IOException e ) {
-                e.printStackTrace();
-            }
+            log.error( "Error while retrieving user by username.", e );
+            JsonUtil.writeErrorToResponse( e, response );
+            return;
         }
 
+        JSONObject json = new JSONObject().put( "success", true )
+                .put( "data", new JSONObject()
+                        .put( "username", user.getUserName() )
+                        .put( "email", user.getEmail() ) );
+        JsonUtil.writeToResponse( json, response );
     }
 
     /**
      * Resets the password to a random alphanumeric (of length MIN_PASSWORD_LENGTH).
      */
     @RequestMapping("/resetPassword.html")
-    public void resetPassword( HttpServletRequest request, HttpServletResponse response ) {
+    public void resetPassword( @RequestParam("email") String email, @RequestParam("username") String username, HttpServletRequest request, HttpServletResponse response ) throws IOException {
         if ( log.isDebugEnabled() ) {
             log.debug( "entering 'resetPassword' method..." );
         }
 
-        String email = request.getParameter( "email" );
-        String username = request.getParameter( "username" );
-
-        JSONUtil jsonUtil = new JSONUtil( request, response );
-        String txt;
-        String jsonText = null;
+        /* make sure the email and username has been sent */
+        if ( StringUtils.isEmpty( email ) || StringUtils.isEmpty( username ) ) {
+            String txt = "Email or username not specified.  These are required fields.";
+            log.warn( txt );
+            throw new RuntimeException( txt );
+        }
 
         /* look up the user's information and reset password. */
         try {
-
-            /* make sure the email and username has been sent */
-            if ( StringUtils.isEmpty( email ) || StringUtils.isEmpty( username ) ) {
-                txt = "Email or username not specified.  These are required fields.";
-                log.warn( txt );
-                throw new RuntimeException( txt );
-            }
-
             /* Change the password. */
             String pwd = RandomStringUtils.randomAlphanumeric( UserFormMultiActionController.MIN_PASSWORD_LENGTH )
                     .toLowerCase();
@@ -210,20 +185,13 @@ public class UserFormMultiActionController extends BaseController {
 
             sendResetConfirmationEmail( request, token, username, pwd, email );
 
-            jsonText = "{success:true}";
-
+            JsonUtil.writeToResponse( new JSONObject().put( "success", true ), response );
         } catch ( AuthenticationException e ) {
             log.info( "Password could not be reset due to an authentication-related error.", e );
-            jsonText = jsonUtil.getJSONErrorMessage( e );
+            JsonUtil.writeErrorToResponse( e, response );
         } catch ( Exception e ) {
             log.error( "Unexpected exception when attempting to change password.", e );
-            jsonText = jsonUtil.getJSONErrorMessage( e );
-        } finally {
-            try {
-                jsonUtil.writeToResponse( jsonText );
-            } catch ( IOException e ) {
-                log.error( "Failed to write JSON response.", e );
-            }
+            JsonUtil.writeErrorToResponse( e, response );
         }
     }
 
