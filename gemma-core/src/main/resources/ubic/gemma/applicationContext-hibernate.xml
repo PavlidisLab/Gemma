@@ -70,6 +70,7 @@
 				<prop key="hibernate.dialect">org.hibernate.dialect.MySQL5InnoDBDialect</prop>
 				<prop key="hibernate.cache.query_cache_factory">org.hibernate.cache.StandardQueryCacheFactory</prop>
 				<!-- <prop key="hibernate.cache.region.factory_class">net.sf.ehcache.hibernate.EhCacheRegionFactory</prop> -->
+				<!--suppress SpringXmlModelInspection -->
 				<prop key="hibernate.hbm2ddl.auto">${gemma.hibernate.hbm2ddl.auto}</prop>
 				<prop key="hibernate.max_fetch_depth">${gemma.hibernate.max_fetch_depth}</prop>
 				<prop key="hibernate.jdbc.fetch_size">${gemma.hibernate.jdbc_fetch_size}</prop>
@@ -84,7 +85,6 @@
 				<prop key="hibernate.order_updates">${gemma.hibernate.order_updates}</prop>
 				<prop key="hibernate.order_inserts">${gemma.hibernate.order_inserts}</prop>
 				<prop key="hibernate.format_sql">${gemma.hibernate.format_sql}</prop>
-				<prop key="hibernate.use_sql_comments">${gemma.hibernate.use_sql_comments}</prop>
 				<prop key="hibernate.show_sql">${gemma.hibernate.show_sql}</prop>
 			</props>
 		</property>

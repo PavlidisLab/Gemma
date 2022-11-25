@@ -16,7 +16,7 @@
 	<parent>
 		<groupId>ubc.pavlab</groupId>
 		<artifactId>pavlab-starter-parent</artifactId>
-		<version>1.1.9</version>
+		<version>1.1.10</version>
 	</parent>
 	<modules>
 		<module>gemma-core</module>
@@ -555,13 +555,6 @@
 				<version>7.3.0</version>
 			</plugin>
 		</plugins>
-		<extensions>
-			<extension>
-				<groupId>org.apache.maven.wagon</groupId>
-				<artifactId>wagon-ssh-external</artifactId>
-				<version>3.4.2</version>
-			</extension>
-		</extensions>
 	</build>
 	<repositories>
 		<repository>
@@ -591,17 +584,16 @@
 			</activation>
 			<distributionManagement>
 				<site>
-					<id>localDeploy</id>
-					<name>localDeploy</name>
-					<url>file:///space/gemmaData/gemma-devsite</url>
+					<id>pavlab</id>
+					<url>file:///space/web/maven-sites/${project.groupId}/gemma-${project.version}</url>
 				</site>
 			</distributionManagement>
 		</profile>
 	</profiles>
 	<distributionManagement>
 		<site>
-			<id>website</id>
-			<url>/space/gemmaData/gemma-devsite</url>
+			<id>pavlab</id>
+			<url>scpexe://frink.msl.ubc.ca/space/web/maven-sites/${project.groupId}/gemma-${project.version}</url>
 		</site>
 	</distributionManagement>
 	<reporting>
@@ -614,7 +606,7 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-javadoc-plugin</artifactId>
-				<version>3.3.1</version>
+				<version>3.3.2</version>
 				<configuration>
 					<quiet>true</quiet>
 					<source>8</source>
@@ -637,12 +629,11 @@
 		<spring.version>3.2.18.RELEASE</spring.version>
 		<spring.security.version>3.2.10.RELEASE</spring.security.version>
 		<jersey.version>2.25.1</jersey.version>
-		<jackson.version>2.14.0</jackson.version>
-		<swagger.version>2.2.6</swagger.version>
+		<jackson.version>2.14.1</jackson.version>
+		<swagger.version>2.2.7</swagger.version>
 		<jawr.version>3.9</jawr.version>
 		<lucene.version>3.6.2</lucene.version>
-		<slack.version>1.25.1</slack.version>
-		<slack.version>1.26.1</slack.version>
+		<slack.version>1.27.1</slack.version>
 		<!-- this ensures that -DexcludedGroups works properly -->
 		<excludedGroups/>
 	</properties>
