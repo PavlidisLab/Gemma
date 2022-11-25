@@ -4,6 +4,7 @@ import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockServletConfig;
+import ubic.gemma.persistence.util.Settings;
 import ubic.gemma.web.services.rest.util.OpenApiUtils;
 import ubic.gemma.web.services.rest.util.ResponseDataObject;
 import ubic.gemma.web.util.BaseSpringWebTest;
@@ -25,6 +26,6 @@ public class RootWebServiceTest extends BaseSpringWebTest {
         assertThat( response.getData().getVersion() ).isEqualTo( expectedVersion );
         assertThat( response.getData().getDocs() ).isEqualTo( URI.create( "http://localhost/resources/restapidocs/" ) );
         assertThat( response.getData().getExternalDatabases() )
-                .extracting( "name" ).containsExactly( RootWebService.EXTERNAL_DATABASE_NAMES );
+                .extracting( "name" ).containsExactly( Settings.getStringArray( "gemma.externalDatabases.featured" ) );
     }
 }

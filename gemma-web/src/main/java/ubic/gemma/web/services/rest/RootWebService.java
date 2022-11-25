@@ -56,7 +56,7 @@ public class RootWebService {
      * endpoint.
      * TODO: use a {@link ubic.gemma.model.common.description.DatabaseType} to identify those.
      */
-    static final String[] EXTERNAL_DATABASE_NAMES = { "hg38", "mm10", "rn7", "gene", "go", "multifunctionality", "gene2cs" };
+    private static final String[] EXTERNAL_DATABASE_NAMES = Settings.getStringArray( "gemma.externalDatabases.featured" );
 
     @Autowired
     private ExternalDatabaseService externalDatabaseService;
