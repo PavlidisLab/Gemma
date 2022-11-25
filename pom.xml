@@ -16,7 +16,7 @@
 	<parent>
 		<groupId>ubc.pavlab</groupId>
 		<artifactId>pavlab-starter-parent</artifactId>
-		<version>1.1.9</version>
+		<version>1.1.10</version>
 	</parent>
 	<modules>
 		<module>gemma-core</module>
@@ -529,13 +529,6 @@
 				<version>7.1.1</version>
 			</plugin>
 		</plugins>
-		<extensions>
-			<extension>
-				<groupId>org.apache.maven.wagon</groupId>
-				<artifactId>wagon-ssh-external</artifactId>
-				<version>3.4.2</version>
-			</extension>
-		</extensions>
 	</build>
 	<repositories>
 		<repository>
@@ -565,17 +558,16 @@
 			</activation>
 			<distributionManagement>
 				<site>
-					<id>localDeploy</id>
-					<name>localDeploy</name>
-					<url>file:///space/gemmaData/gemma-devsite</url>
+					<id>pavlab</id>
+					<url>file:///space/web/maven-sites/${project.groupId}/gemma-${project.version}</url>
 				</site>
 			</distributionManagement>
 		</profile>
 	</profiles>
 	<distributionManagement>
 		<site>
-			<id>website</id>
-			<url>/space/gemmaData/gemma-devsite</url>
+			<id>pavlab</id>
+			<url>scpexe://frink.msl.ubc.ca/space/web/maven-sites/${project.groupId}/gemma-${project.version}</url>
 		</site>
 	</distributionManagement>
 	<reporting>
