@@ -1,7 +1,6 @@
 package ubic.gemma.persistence.service.common.description;
 
 import org.junit.After;
-import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.security.authentication.UserManager;
@@ -13,6 +12,7 @@ import ubic.gemma.model.common.description.ExternalDatabase;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Collections;
 import java.util.Date;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -26,23 +26,39 @@ public class ExternalDatabaseServiceTest extends BaseSpringContextTest {
     @Autowired
     private UserManager userManager;
 
-    private ExternalDatabase ed;
-
-    @Before
-    public void setUp() {
-        ed = externalDatabaseService.create( ExternalDatabase.Factory.newInstance( "test", DatabaseType.OTHER ) );
-    }
+    /* fixtures */
+    private ExternalDatabase ed, ed2;
 
     @After
     public void tearDown() {
-        externalDatabaseService.remove( ed );
+        if ( ed != null ) {
+            externalDatabaseService.remove( ed );
+        }
+        if ( ed2 != null ) {
+            externalDatabaseService.remove( ed2 );
+        }
     }
 
     @Test
-    public void test() throws MalformedURLException {
+    public void testCreateEnsureThatAuditTrailIsCreatedByAdvice() {
+        ExternalDatabase externalDatabase = ExternalDatabase.Factory.newInstance( "test", DatabaseType.OTHER );
+        assertThat( externalDatabase.getAuditTrail() ).isNull();
+        ed = externalDatabaseService.create( externalDatabase );
+        assertThat( ed.getAuditTrail() ).isNotNull();
+        assertThat( ed.getAuditTrail().getEvents() ).hasSize( 1 );
+        ed.setLastUpdated( new Date() );
+        externalDatabaseService.update( ed );
+        assertThat( ed.getAuditTrail().getEvents() ).hasSize( 2 );
+    }
+
+    @Test
+    public void testUpdateReleaseDetails() throws MalformedURLException {
+        ed = externalDatabaseService.create( ExternalDatabase.Factory.newInstance( "test", DatabaseType.OTHER ) );
         User currentUser = userManager.getCurrentUser();
         assertThat( currentUser ).isNotNull();
         ExternalDatabase externalDatabase = externalDatabaseService.findByNameWithAuditTrail( "test" );
+        assertThat( externalDatabase.getAuditTrail() ).isNotNull();
+        assertThat( externalDatabase.getAuditTrail().getEvents() ).hasSize( 1 );
         assertThat( externalDatabase ).isEqualTo( ed );
         externalDatabaseService.updateReleaseDetails( externalDatabase, "123", new URL( "http://example.com/test" ), "Yep", new Date() );
         assertThat( externalDatabase )
@@ -59,5 +75,27 @@ public class ExternalDatabaseServiceTest extends BaseSpringContextTest {
                         tuple( AuditAction.UPDATE, currentUser ) ); // from AuditAdvice on update()
         assertThat( externalDatabase.getAuditTrail().getEvents().get( 1 ).getNote() )
                 .isEqualTo( "Yep" );
+    }
+
+    @Test
+    public void testExternalDatabaseWithRelatedDatabases() {
+        ExternalDatabase hg19 = externalDatabaseService.findByName( "hg19" );
+        assertThat( hg19.getExternalDatabases() )
+                .hasSize( 2 )
+                .extracting( "name" ).contains( "hg19 annotations", "hg19 RNA-Seq annotations" );
+    }
+
+    @Test
+    public void testUpdateExternalDatabaseDontCascadeToRelatedDatabases() {
+        ed = externalDatabaseService.create( ExternalDatabase.Factory.newInstance( "ed", DatabaseType.OTHER ) );
+        ed2 = ExternalDatabase.Factory.newInstance( "ed2", DatabaseType.OTHER );
+        ed2.setExternalDatabases( Collections.singleton( ed ) );
+        ed2 = externalDatabaseService.create( ed2 );
+        ed2.setDescription( "1234" );
+        externalDatabaseService.update( ed2 );
+        assertThat( ed2.getExternalDatabases() ).contains( ed );
+        assertThat( ed2.getAuditTrail().getEvents() ).hasSize( 2 );
+        ed = externalDatabaseService.findByNameWithAuditTrail( ed.getName() );
+        assertThat( ed.getAuditTrail().getEvents() ).hasSize( 1 );
     }
 }

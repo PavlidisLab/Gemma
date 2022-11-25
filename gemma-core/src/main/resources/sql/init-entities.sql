@@ -89,8 +89,14 @@ call add_external_database('Entrez Gene', 'NCBI Gene database', 'https://www.ncb
 call add_external_database('Ensembl', 'EMBL - EBI/Sanger Institute genome annotations', 'https://www.ensembl.org/', 'ftp://ftp.ensembl.org/pub/', 'GENOME');
 call add_external_database('OBO_REL', 'Open Biomedical Ontologies Relationships', 'https://www.obofoundry.org/ro/', NULL, 'ONTOLOGY');
 call add_external_database('STRING', 'STRING - Known and Predicted Protein-Protein Interactions', 'https://string-db.org/version_8_2/newstring_cgi/show_network_section.pl?identifiers=', NULL, 'PROTEIN');
+call add_external_database('hg18', NULL, '', NULL, 'SEQUENCE');
+call add_external_database('hg19', NULL, '', NULL, 'SEQUENCE');
 call add_external_database('hg38', NULL, '', NULL, 'SEQUENCE');
+call add_external_database('mm8', NULL, '', NULL, 'SEQUENCE');
+call add_external_database('mm9', NULL, '', NULL, 'SEQUENCE');
 call add_external_database('mm10', NULL, '', NULL, 'SEQUENCE');
+call add_external_database('rn4', NULL, '', NULL, 'SEQUENCE');
+call add_external_database('rn6', NULL, '', NULL, 'SEQUENCE');
 call add_external_database('rn7', NULL, '', NULL, 'SEQUENCE');
 call add_external_database('hg18 annotations', NULL, 'https://hgdownload.cse.ucsc.edu/goldenpath/hg18/database/', NULL, 'OTHER');
 call add_external_database('hg19 annotations', NULL, 'https://hgdownload.cse.ucsc.edu/goldenpath/hg19/database/', NULL, 'OTHER');
@@ -114,7 +120,7 @@ call add_external_database('mm39 sequence alignments', NULL, NULL, NULL, 'OTHER'
 call add_external_database('rn4 sequence alignments', NULL, NULL, NULL, 'OTHER');
 call add_external_database('rn6 sequence alignments', NULL, NULL, NULL, 'OTHER');
 call add_external_database('rn7 sequence alignments', NULL, NULL, NULL, 'OTHER');
-call add_external_database('hg37 RNA-Seq annotations', NULL, NULL, NULL, 'OTHER');
+call add_external_database('hg19 RNA-Seq annotations', NULL, NULL, NULL, 'OTHER');
 call add_external_database('mm10 RNA-Seq annotations', NULL, NULL, NULL, 'OTHER');
 call add_external_database('rn6 RNA-Seq annotations', NULL, NULL, NULL, 'OTHER');
 call add_external_database('gene', NULL, NULL, 'https://ftp.ncbi.nih.gov/gene/DATA/gene_info.gz', 'OTHER');
@@ -123,6 +129,24 @@ call add_external_database('multifunctionality', NULL, NULL, NULL, 'OTHER');
 call add_external_database('gene2cs', NULL, NULL, NULL, 'OTHER');
 
 drop procedure add_external_database;
+
+create procedure add_external_database_relation(in parent_name varchar(255), in child_name varchar(255)) begin select @parent_id := ID from EXTERNAL_DATABASE where name = parent_name; update EXTERNAL_DATABASE set EXTERNAL_DATABASE_FK = @parent_id where NAME = child_name; end;
+
+call add_external_database_relation('hg38', 'hg38 annotations');
+call add_external_database_relation('hg19', 'hg19 annotations');
+call add_external_database_relation('hg18', 'hg18 annotations');
+call add_external_database_relation('mm10', 'mm10 annotations');
+call add_external_database_relation('mm9', 'mm9 annotations');
+call add_external_database_relation('mm8', 'mm8 annotations');
+call add_external_database_relation('rn7', 'rn7 annotations');
+call add_external_database_relation('rn6', 'rn4 annotations');
+call add_external_database_relation('rn4', 'rn6 annotations');
+
+call add_external_database_relation('hg19', 'hg19 RNA-Seq annotations');
+call add_external_database_relation('mm10', 'mm10 RNA-Seq annotations');
+call add_external_database_relation('rn6', 'rn6 RNA-Seq annotations');
+
+drop procedure add_external_database_relation;
 
 -- denormalized table joining genes and compositeSequences; maintained by TableMaintenanceUtil.
 drop table if exists GENE2CS;

@@ -36,3 +36,9 @@ alter table PHENOTYPE_ASSOCIATION modify column AUDIT_TRAIL_FK BIGINT not null;
 alter table USER_GROUP modify column AUDIT_TRAIL_FK BIGINT not null;
 alter table ARRAY_DESIGN modify column AUDIT_TRAIL_FK BIGINT not null;
 alter table GENE_SET modify column AUDIT_TRAIL_FK BIGINT not null;
+
+-- allow external databases to have related databases
+alter table EXTERNAL_DATABASE
+    add column EXTERNAL_DATABASE_FK BIGINT after DATABASE_SUPPLIER_FK;
+alter table EXTERNAL_DATABASE
+    add constraint EXTERNAL_DATABASE_FKC foreign key (EXTERNAL_DATABASE_FK) references EXTERNAL_DATABASE (ID);

@@ -31,6 +31,8 @@ import javax.persistence.Version;
 import java.net.URL;
 import java.util.Collection;
 import java.util.Date;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * @author Paul
@@ -46,6 +48,10 @@ public class ExternalDatabase extends Describable implements Auditable, Versione
     private String ftpUri;
     private DatabaseType type;
     private Contact databaseSupplier;
+    /**
+     * Related external databases.
+     */
+    private Set<ExternalDatabase> externalDatabases = new HashSet<>();
     private AuditTrail auditTrail;
     @Nullable
     private String releaseVersion;
@@ -118,6 +124,14 @@ public class ExternalDatabase extends Describable implements Auditable, Versione
 
     public void setWebUri( String webUri ) {
         this.webUri = webUri;
+    }
+
+    public Set<ExternalDatabase> getExternalDatabases() {
+        return this.externalDatabases;
+    }
+
+    public void setExternalDatabases( Set<ExternalDatabase> externalDatabases ) {
+        this.externalDatabases = externalDatabases;
     }
 
     @Override

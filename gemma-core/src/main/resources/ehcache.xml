@@ -681,4 +681,7 @@
     <cache name="ubic.gemma.model.analysis.Investigation.characteristics" maxElementsOnDisk="10000"
            maxElementsInMemory="1000" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false"/>
 
+    <cache name="ubic.gemma.model.common.description.ExternalDatabase.externalDatabases"
+           maxElementsInMemory="100" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false"/>
+
 </ehcache>
