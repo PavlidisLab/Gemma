@@ -56,6 +56,7 @@ public class AnnotationValueObject extends IdentifiableValueObject<Characteristi
     }
 
     public AnnotationValueObject( Characteristic c ) {
+        super( c );
         classUri = c.getCategoryUri();
         className = c.getCategory();
         termUri = c.getValueUri();
