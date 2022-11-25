@@ -80,7 +80,6 @@
 				<prop key="hibernate.order_updates">${gemma.hibernate.order_updates}</prop>
 				<prop key="hibernate.order_inserts">${gemma.hibernate.order_inserts}</prop>
 				<prop key="hibernate.format_sql">${gemma.hibernate.format_sql}</prop>
-				<prop key="hibernate.use_sql_comments">${gemma.hibernate.use_sql_comments}</prop>
 				<prop key="hibernate.show_sql">${gemma.hibernate.show_sql}</prop>
 			</props>
 		</property>
