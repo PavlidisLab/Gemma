@@ -166,6 +166,9 @@ public class QuantitationTypeDaoImpl extends AbstractCriteriaFilteringVoEnabledD
     }
 
     private void populateVectorType( Collection<QuantitationTypeValueObject> quantitationTypeValueObjects, ExpressionExperiment ee ) {
+        if ( quantitationTypeValueObjects.isEmpty() )
+            return;
+
         Set<Long> ids = quantitationTypeValueObjects.stream()
                 .map( QuantitationTypeValueObject::getId )
                 .collect( Collectors.toSet() );
