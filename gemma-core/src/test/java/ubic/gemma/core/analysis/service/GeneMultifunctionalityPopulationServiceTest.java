@@ -34,7 +34,7 @@ import ubic.gemma.model.association.GOEvidenceCode;
 import ubic.gemma.model.association.Gene2GOAssociation;
 import ubic.gemma.model.common.auditAndSecurity.AuditAction;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
-import ubic.gemma.model.common.auditAndSecurity.eventType.LastUpdatedDateChangedEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.ReleaseDetailsUpdateEvent;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.common.description.ExternalDatabases;
@@ -140,7 +140,7 @@ public class GeneMultifunctionalityPopulationServiceTest extends BaseSpringConte
         List<AuditEvent> auditEvents = ed.getAuditTrail().getEvents();
         assertThat( auditEvents ).hasSizeGreaterThanOrEqualTo( 2 );
         assertThat( auditEvents.get( auditEvents.size() - 2 ).getEventType() )
-                .isInstanceOf( LastUpdatedDateChangedEvent.class );
+                .isInstanceOf( ReleaseDetailsUpdateEvent.class );
         assertThat( auditEvents.get( auditEvents.size() - 2 ) )
                 .hasFieldOrPropertyWithValue( "action", AuditAction.UPDATE );
         assertThat( auditEvents.get( auditEvents.size() - 1 ) )

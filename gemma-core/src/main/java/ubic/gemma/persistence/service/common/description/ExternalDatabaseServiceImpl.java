@@ -26,7 +26,6 @@ import ubic.gemma.core.util.ListUtils;
 import ubic.gemma.model.common.auditAndSecurity.AuditAction;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.User;
-import ubic.gemma.model.common.auditAndSecurity.eventType.LastUpdatedDateChangedEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ReleaseDetailsUpdateEvent;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.persistence.service.AbstractService;
@@ -93,7 +92,8 @@ public class ExternalDatabaseServiceImpl extends AbstractService<ExternalDatabas
     public void updateReleaseLastUpdated( ExternalDatabase ed, @Nullable String releaseNote, Date lastUpdated ) {
         User performer = userManager.getCurrentUser();
         ed.setLastUpdated( lastUpdated );
-        ed.getAuditTrail().getEvents().add( AuditEvent.Factory.newInstance( lastUpdated, AuditAction.UPDATE, releaseNote, null, performer, new LastUpdatedDateChangedEvent() ) );
+        String detail = "Release last updated moment has been updated.";
+        ed.getAuditTrail().getEvents().add( AuditEvent.Factory.newInstance( lastUpdated, AuditAction.UPDATE, releaseNote, detail, performer, new ReleaseDetailsUpdateEvent() ) );
         update( ed );
     }
 
