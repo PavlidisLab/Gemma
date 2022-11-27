@@ -18,17 +18,15 @@
  */
 package ubic.gemma.core.security.audit;
 
+import org.apache.commons.collections4.CollectionUtils;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.Signature;
-import org.hibernate.EntityMode;
-import org.hibernate.Hibernate;
-import org.hibernate.LazyInitializationException;
-import org.hibernate.SessionFactory;
+import org.aspectj.lang.annotation.Aspect;
+import org.aspectj.lang.annotation.Before;
+import org.hibernate.*;
 import org.hibernate.engine.CascadeStyle;
 import org.hibernate.engine.CascadingAction;
-import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.type.CollectionType;
 import org.hibernate.type.Type;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -58,6 +56,7 @@ import java.util.*;
  *
  * @author pavlidis
  */
+@Aspect
 @Component
 @ParametersAreNonnullByDefault
 public class AuditAdvice {
@@ -71,17 +70,17 @@ public class AuditAdvice {
     @Autowired
     private SessionFactory sessionFactory;
 
-    @SuppressWarnings("unused")
+    @Before("ubic.gemma.core.util.Pointcuts.creator()")
     public void doCreateAdvice( JoinPoint pjp ) {
         doAuditAdvice( pjp, AuditAction.CREATE );
     }
 
-    @SuppressWarnings("unused")
+    @Before("ubic.gemma.core.util.Pointcuts.updater()")
     public void doUpdateAdvice( JoinPoint pjp ) {
         doAuditAdvice( pjp, AuditAction.UPDATE );
     }
 
-    @SuppressWarnings("unused")
+    @Before("ubic.gemma.core.util.Pointcuts.deleter()")
     public void doDeleteAdvice( JoinPoint pjp ) {
         doAuditAdvice( pjp, AuditAction.DELETE );
     }
@@ -138,6 +137,14 @@ public class AuditAdvice {
         cascadeAuditEvent( method, AuditAction.CREATE, auditable, user, date, CascadingAction.PERSIST );
     }
 
+    /**
+     * Add an 'update' AuditEvent to the audit trail of the given Auditable entity.
+     * <p>
+     * This method cascades a {@link AuditAction#CREATE} to make sure that entities created in the process have their
+     * initial create event. Thus, if the update is on an expression experiment that has a new Characteristic, the
+     * Characteristic will have a 'create' event, and the EE will get an added update event (via the addUpdateAuditEvent
+     * call elsewhere, not here).
+     */
     private void addUpdateAuditEvent( Signature method, Auditable auditable, User user, Date date ) {
         if ( auditable.getId() == null ) {
             throw new IllegalArgumentException( String.format( "Transient instance passed to update auditing [%s on %s by %s]", method, auditable, user.getUserName() ) );
@@ -157,29 +164,26 @@ public class AuditAdvice {
     }
 
     /**
-     * Fills in audit trails on newly created child objects after a 'create' or 'update'. It does not add 'update'
-     * events on the child objects.
-     * <p>
-     * Thus, if the update is on an expression experiment that has a new Characteristic, the Characteristic will have a
-     * 'create' event, and the EE will get an added update event (via the addUpdateAuditEvent call elsewhere, not here).
+     * Cascade a given audit event through the object structure by navigating auditable entities and collection of
+     * auditable entities.
      *
      * @param cascadingAction the Hibernate {@link CascadingAction} that that should be used to determine how auditing
      *                        should cascade to associated entities.
      */
     private void cascadeAuditEvent( Signature method, AuditAction auditAction, Auditable auditable, User user, Date date, CascadingAction cascadingAction ) {
-        String cascadedNote = String.format( " - %s by cascade from %s", auditAction.getValue(), auditable );
-
         // use identity hashcode since auditable might rely on a potentially null ID for hashing
-        Set<Auditable> visited = Collections.newSetFromMap( new IdentityHashMap<>() );
+        Set<Object> visited = Collections.newSetFromMap( new IdentityHashMap<>() );
 
-        Queue<Auditable> fringe = new ArrayDeque<>();
+        // necessary as ArrayQueue does not accept nulls
+        Queue<Object> fringe = new LinkedList<>();
         fringe.add( auditable );
 
         while ( !fringe.isEmpty() ) {
-            Auditable object = fringe.remove();
-            if ( visited.contains( object ) ) {
+            Object object = fringe.remove();
+            if ( object == null )
                 continue;
-            }
+            if ( visited.contains( object ) )
+                continue;
             visited.add( object );
             EntityPersister persister = ( EntityPersister ) sessionFactory.getClassMetadata( Hibernate.getClass( object ) );
             CascadeStyle[] cascadeStyles = persister.getPropertyCascadeStyles();
@@ -190,40 +194,33 @@ public class AuditAdvice {
                 CascadeStyle cs = cascadeStyles[j];
                 Object propertyValue = propertyValues[j];
                 Type propertyType = propertyTypes[j];
+
                 // ensure that the operation performed on the original object cascades as per JPA definition
-                if ( !cs.doCascade( cascadingAction ) ) {
+                // events don't cascade through uninitialized properties
+                if ( !cs.doCascade( cascadingAction ) || !Hibernate.isInitialized( propertyValue ) ) {
                     continue;
                 }
-                // only cascade through associated auditable entities and collection of auditable entities
-                if ( propertyType.isEntityType() && Auditable.class.isAssignableFrom( propertyType.getReturnedClass() ) ) {
-                    fringe.add( ( Auditable ) propertyValue );
+
+                if ( propertyType.isEntityType() ) {
+                    fringe.add( propertyValue );
                 } else if ( propertyType.isCollectionType() ) {
-                    // check if the collection holds auditable entities before navigating it
-                    Type elementType = ( ( CollectionType ) propertyType ).getElementType( ( SessionFactoryImplementor ) sessionFactory );
-                    if ( !Auditable.class.isAssignableFrom( elementType.getReturnedClass() ) ) {
-                        continue;
-                    }
-                    try {
-                        //noinspection unchecked
-                        fringe.addAll( ( Collection<? extends Auditable> ) propertyValue );
-                    } catch ( LazyInitializationException e ) {
-                        log.warn( String.format( "Failed to cascade audit event: %s. Enable debug logs for %s to see a full stacktrace.",
-                                e.getMessage(), AuditAdvice.class.getName() ) );
-                        log.debug( e.getMessage(), e );
-                    }
+                    fringe.addAll( ( Collection<?> ) propertyValue );
                 }
             }
         }
 
-        for ( Auditable object : visited ) {
-            this.addAuditEvent( method, object, auditAction, cascadedNote, user, date );
+        for ( Object object : visited ) {
+            if ( object instanceof Auditable ) {
+                this.addAuditEvent( method, ( Auditable ) object, auditAction, String.format( " - %s by cascade from %s", auditAction.getValue(), auditable ), user, date );
+            }
         }
     }
 
     /**
      * Add an audit event.
      */
-    private void addAuditEvent( Signature method, Auditable auditable, AuditAction auditAction, String cascadedNote, User user, Date date ) {
+    private void addAuditEvent( Signature method, Auditable auditable, AuditAction auditAction, String
+            cascadedNote, User user, Date date ) {
         String note = String.format( "%s event on entity %s:%d [%s] by %s via %s on %s%s", auditAction, auditable.getClass().getName(), auditable.getId(), auditable, user.getUserName(), method, date, cascadedNote );
         if ( auditable.getAuditTrail() == null ) {
             // transient
@@ -251,29 +248,28 @@ public class AuditAdvice {
      * fields of objects.
      */
     public static Collection<Auditable> extractAuditables( Object object ) {
-        Queue<Object> fringe = new ArrayDeque<>();
+        // necessary as ArrayQueue does not accept nulls
+        Queue<Object> fringe = new LinkedList<>();
         // use identity hashcode since auditable might rely on a potentially null ID for hashing
         Set<Object> visited = Collections.newSetFromMap( new IdentityHashMap<>() );
         Collection<Auditable> found = new ArrayList<>();
         fringe.add( object );
         while ( !fringe.isEmpty() ) {
             Object o = fringe.remove();
+            if ( o == null )
+                continue;
             if ( visited.contains( o ) )
                 continue;
             visited.add( o );
             if ( o instanceof Auditable ) {
                 found.add( ( Auditable ) o );
             } else if ( o.getClass().isArray() ) {
-                Collections.addAll( fringe, ( Object[] ) o );
-            } else if ( o instanceof Collection ) {
-                fringe.addAll( ( Collection<?> ) o );
+                CollectionUtils.addAll( fringe, ( Object[] ) o );
             } else if ( o instanceof Iterable ) {
-                for ( Object elem : ( Iterable<?> ) o ) {
-                    fringe.add( elem );
-                }
+                CollectionUtils.addAll( fringe, ( Iterable<?> ) o );
             } else if ( o instanceof Map ) {
-                fringe.addAll( ( ( Map<?, ?> ) o ).keySet() );
-                fringe.addAll( ( ( Map<?, ?> ) o ).values() );
+                CollectionUtils.addAll( fringe, ( ( Map<?, ?> ) o ).keySet() );
+                CollectionUtils.addAll( fringe, ( ( Map<?, ?> ) o ).values() );
             }
         }
         return found;
