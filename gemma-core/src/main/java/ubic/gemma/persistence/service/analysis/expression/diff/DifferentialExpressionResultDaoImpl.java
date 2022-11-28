@@ -77,8 +77,8 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
             + "inner join p.biologicalCharacteristic bs inner join bs2gp.geneProduct gp inner join gp.gene g"
             + " where g=:gene"; // no order by clause, we add it later
 
-    private static final String fetchResultsByGeneSQL = "select d.ID, d.PVALUE, d.CORRECTED_PVALUE, d.PROBE_FK, d.RESULT_SET_FK, "
-            + " c.FACTOR_VALUE_FK, c.PVALUE, c.LOG_FOLD_CHANGE, c.SECOND_FACTOR_VALUE_FK, c.ID  "
+    private static final String fetchResultsByGeneSQL = "select d.ID, d.PVALUE as D_PVALUE, d.CORRECTED_PVALUE, d.PROBE_FK, d.RESULT_SET_FK, "
+            + " c.FACTOR_VALUE_FK, c.PVALUE as C_PVALUE, c.LOG_FOLD_CHANGE, c.SECOND_FACTOR_VALUE_FK, c.ID as C_ID "
             + " from DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT d, GENE2CS g2s, CONTRAST_RESULT c "
             + " where g2s.CS = d.PROBE_FK and c.DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT_FK = d.ID and g2s.GENE = :gene_id ";
 
