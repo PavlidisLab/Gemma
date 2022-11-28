@@ -164,7 +164,7 @@ public class CharacteristicServiceImpl extends AbstractVoEnabledService<Characte
     }
 
     @Override
-    public Sort getSort( String property, Sort.Direction direction ) throws IllegalArgumentException {
+    public Sort getSort( String property, @Nullable Sort.Direction direction ) throws IllegalArgumentException {
         try {
             EntityUtils.getDeclaredFieldType( property, Characteristic.class );
             return Sort.by( CharacteristicDao.OBJECT_ALIAS, property, direction );

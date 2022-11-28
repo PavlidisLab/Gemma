@@ -3,10 +3,12 @@ package ubic.gemma.persistence.util;
 import lombok.*;
 import org.apache.commons.lang3.StringUtils;
 
+import javax.annotation.Nullable;
+
 /**
  * Represents a directed sort by a property.
  */
-@Data
+@Value
 public class Sort {
 
     /**
@@ -17,14 +19,14 @@ public class Sort {
      * @param propertyName a property of objectAlias to order by
      * @param direction    a direction, or null for default
      */
-    public static Sort by( String alias, String propertyName, Direction direction ) {
+    public static Sort by( @Nullable String alias, String propertyName, @Nullable Direction direction ) {
         return new Sort( alias, propertyName, direction );
     }
 
     /**
      * Create a {@link Sort} with the default direction for the property.
      */
-    public static Sort by( String alias, String propertyName ) {
+    public static Sort by( @Nullable String alias, String propertyName ) {
         return by( alias, propertyName, null );
     }
 
@@ -35,11 +37,13 @@ public class Sort {
         ASC, DESC
     }
 
-    private final String objectAlias;
-    private final String propertyName;
-    private final Direction direction;
+    @Nullable
+    String objectAlias;
+    String propertyName;
+    @Nullable
+    Direction direction;
 
-    private Sort( String objectAlias, String propertyName, Direction direction ) {
+    private Sort( @Nullable String objectAlias, String propertyName, @Nullable Direction direction ) {
         if ( objectAlias != null && StringUtils.isBlank( objectAlias ) ) {
             throw new IllegalArgumentException( "The object alias must be either null or non-empty." );
         }

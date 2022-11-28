@@ -41,7 +41,7 @@ public abstract class AbstractFilteringVoEnabledService<O extends Identifiable, 
     }
 
     @Override
-    public Sort getSort( String property, Sort.Direction direction ) {
+    public Sort getSort( String property, @Nullable Sort.Direction direction ) {
         // this only serves as a pre-condition to ensure that the propertyName exists
         try {
             return Sort.by( getPropertyAlias( property ), getPropertyName( property ), direction );
