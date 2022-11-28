@@ -17,7 +17,7 @@ set EXTERNAL_DATABASE.AUDIT_TRAIL_FK = @FIRST_AUDIT_TRAIL_ID + (@OFFSET := @OFFS
 where EXTERNAL_DATABASE.AUDIT_TRAIL_FK is NULL;
 commit;
 
--- make audit trail non-null now that all EDs are auditable
+-- make audit trail non-null now that all EDs are auditable (see https://github.com/PavlidisLab/Gemma/issues/486)
 alter table EXTERNAL_DATABASE
     modify column AUDIT_TRAIL_FK BIGINT NOT NULL;
 
