@@ -23,6 +23,7 @@ import org.apache.commons.lang3.time.StopWatch;
 import org.hibernate.*;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
+import org.hibernate.sql.JoinType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
@@ -212,8 +213,8 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilterin
                 // these two are necessary for ACL filtering, so we must use a (default) inner jointure
                 .createAlias( "analysis", "a" )
                 .createAlias( "analysis.experimentAnalyzed", "e" )
-                .createAlias( "experimentalFactors", "ef", Criteria.LEFT_JOIN )
-                .createAlias( "ef.factorValues", "fv", Criteria.LEFT_JOIN );
+                .createAlias( "experimentalFactors", "ef", JoinType.LEFT_OUTER_JOIN )
+                .createAlias( "ef.factorValues", "fv", JoinType.LEFT_OUTER_JOIN );
 
         // apply filtering
         query.add( ObjectFilterCriteriaUtils.formRestrictionClause( filters ) );
