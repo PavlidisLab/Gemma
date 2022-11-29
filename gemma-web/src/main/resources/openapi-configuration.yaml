@@ -8,7 +8,7 @@ openAPI:
       url: https://dev.gemma.msl.ubc.ca/rest/v2
   info:
     title: Gemma RESTful API
-    version: 2.5.2
+    version: 2.6.0
     description: |
       This website documents the usage of the [Gemma RESTful API](https://gemma.msl.ubc.ca/rest/v2/). Here you can find
       example script usage of the API, as well as graphical interface for each endpoint, with description of its
@@ -23,6 +23,8 @@ openAPI:
       in the specification which is not exposed elsewhere in the API.
 
       ## Updates
+
+      ### Update 2.6.0
 
       Add a new `externalDatabases` attribute to the main endpoint that displays version of some of the main external
       databases that we are using. This exposes versions and last updates for genomes, gene annotations, GO terms, and
