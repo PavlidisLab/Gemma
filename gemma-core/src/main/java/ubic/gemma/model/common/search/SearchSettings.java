@@ -166,7 +166,7 @@ public class SearchSettings implements Serializable {
     private boolean doHighlighting;
 
     /**
-     * Limit for the number of results.
+     * Limit for the number of results per result type in {@link ubic.gemma.core.search.SearchService.SearchResultMap}.
      * <p>
      * The default is relatively large and given by {@link #DEFAULT_MAX_RESULTS_PER_RESULT_TYPE}. Any value less than
      * one indicate no limit.
