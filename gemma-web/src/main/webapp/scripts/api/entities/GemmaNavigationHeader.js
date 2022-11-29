@@ -41,7 +41,7 @@ Gemma.GemmaNavigationHeader = Ext
             var w = new Ext.Window(
                {
                   width : 800,
-                  height : 700,
+                  height : 600,
                   title : "About Gemma",
                   items : [ {
                      xtype : 'panel',
@@ -67,7 +67,7 @@ Gemma.GemmaNavigationHeader = Ext
                   } ],
                   listeners : {
                      afterrender : function( win ) {
-                        var summary = 'Gemma is powered by the following external databases:';
+                        var summary = 'Gemma\'s expression platform and gene annotations are powered by:';
                         externalDatabasesStore.data.each( function( ed ) {
                            summary += '<dt>';
                            summary += Ext.util.Format.capitalize( ed.data.name );
@@ -95,7 +95,13 @@ Gemma.GemmaNavigationHeader = Ext
                               summary += '<br>'
                               summary += Ext.util.Format.capitalize( relatedEd.name );
                               if ( relatedEd.lastUpdated != null ) {
+                                 if ( relatedEd.releaseUrl != null ) {
+                                    summary += ' <a href="' + relatedEd.releaseUrl + '" target="_blank">' + relatedEd.releaseVersion + '&nbsp;<img src="' + ctxBasePath + '/images/icons/link_external_icon_tight.gif"/></a>';
+                                 }
                                  summary += ' last updated on ' + new Date( relatedEd.lastUpdated ).toLocaleDateString() + '.';
+                                 if ( relatedEd.uri != null ) {
+                                    summary += ' <a href="' + relatedEd.uri + '" target="_blank">link&nbsp;<img src="' + ctxBasePath + '/images/icons/link_external_icon_tight.gif"/></a>';
+                                 }
                               }
                            } );
                            summary += '</dd>';
