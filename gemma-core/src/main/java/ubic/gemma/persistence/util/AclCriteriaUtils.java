@@ -21,8 +21,8 @@ public class AclCriteriaUtils {
      * @see AclQueryUtils#formAclRestrictionClause()
      */
     public static Criterion formAclRestrictionClause( String alias, Class<? extends Securable> aoiType ) {
-        if ( StringUtils.isBlank( alias ) || aoiType == null )
-            throw new IllegalArgumentException( "Alias and aoiType can not be empty." );
+        if ( StringUtils.isBlank( alias ) )
+            throw new IllegalArgumentException( "Alias cannot be empty." );
 
         DetachedCriteria dc = DetachedCriteria.forClass( AclObjectIdentity.class, "aoi" )
                 .setProjection( Projections.property( "aoi.identifier" ) )

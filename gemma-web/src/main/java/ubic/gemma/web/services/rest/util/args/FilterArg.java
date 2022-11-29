@@ -24,6 +24,7 @@ import ubic.gemma.persistence.util.ObjectFilter;
 import ubic.gemma.persistence.util.Sort;
 import ubic.gemma.web.services.rest.util.MalformedArgException;
 
+import javax.annotation.Nullable;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -118,6 +119,7 @@ public class FilterArg extends AbstractArg<FilterArg.Filter> {
      * {@link ObjectFilter}, or null if the filter is empty.
      * @throws MalformedArgException if the filter cannot be parsed for the given {@link FilteringService}
      */
+    @Nullable
     public Filters getObjectFilters( FilteringService service ) throws MalformedArgException {
         Filter filter = getValue();
         if ( filter.propertyNames == null )

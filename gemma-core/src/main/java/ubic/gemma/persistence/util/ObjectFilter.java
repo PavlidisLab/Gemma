@@ -30,13 +30,16 @@ import org.springframework.core.convert.converter.Converter;
 import org.springframework.core.convert.support.ConfigurableConversionService;
 import org.springframework.core.convert.support.GenericConversionService;
 
+import javax.annotation.Nullable;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.Optional;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Holds the necessary information to filter an entity with a property, operator and right-hand side value.
@@ -88,7 +91,7 @@ public class ObjectFilter {
      *                                  desired propertyType.
      * @see #ObjectFilter(String, String, Class, Operator, Object)
      */
-    public static ObjectFilter parseObjectFilter( String alias, String propertyName, Class<?> propertyType, Operator operator, String requiredValue ) throws IllegalArgumentException {
+    public static ObjectFilter parseObjectFilter( @Nullable String alias, String propertyName, Class<?> propertyType, Operator operator, String requiredValue ) throws IllegalArgumentException {
         return new ObjectFilter( alias, propertyName, propertyType, operator, parseRequiredValue( requiredValue, propertyType ) );
     }
 
@@ -105,14 +108,15 @@ public class ObjectFilter {
      *                                  desired propertyType.
      * @see #ObjectFilter(String, String, Class, Operator, Object)
      */
-    public static ObjectFilter parseObjectFilter( String alias, String propertyName, Class<?> propertyType, Operator operator, Collection<String> requiredValues ) throws IllegalArgumentException {
+    public static ObjectFilter parseObjectFilter( @Nullable String alias, String propertyName, Class<?> propertyType, Operator operator, Collection<String> requiredValues ) throws IllegalArgumentException {
         return new ObjectFilter( alias, propertyName, propertyType, operator, parseRequiredValues( requiredValues, propertyType ) );
     }
 
+    @Getter
     public enum Operator {
         /**
-         * Note that in the case of a null requiredValue, the {@link #sqlToken} of this operator must be ignored and 'is'
-         * must be used instead.
+         * Note that in the case of a null requiredValue, the {@link #getSqlToken()} of this operator must be ignored
+         * and 'is' must be used instead.
          */
         eq( "=", false, null ),
         /**
@@ -147,11 +151,6 @@ public class ObjectFilter {
         private final String token;
 
         /**
-         * Token used in SQL/HQL query.
-         */
-        private final String sqlToken;
-
-        /**
          * THe required value must not be null.
          */
         private final boolean nonNullRequired;
@@ -159,39 +158,31 @@ public class ObjectFilter {
         /**
          * The required value must satisfy this type.
          */
+        @Nullable
         private final Class<?> requiredType;
 
-        Operator( String operator, boolean isNonNullRequired, Class<?> requiredType ) {
+        Operator( String operator, boolean isNonNullRequired, @Nullable Class<?> requiredType ) {
             this.token = operator;
-            this.sqlToken = operator;
             this.nonNullRequired = isNonNullRequired;
             this.requiredType = requiredType;
         }
 
-        public String getToken() {
-            return token;
-        }
-
         /**
+         * Token used in SQL/HQL query.
+         * <p>
          * This is package-private on purpose and is only meant for{@link ObjectFilterQueryUtils#formRestrictionClause(Filters)}.
          */
         String getSqlToken() {
-            return sqlToken;
-        }
-
-        public boolean isNonNullRequired() {
-            return nonNullRequired;
-        }
-
-        public Class<?> getRequiredType() {
-            return requiredType;
+            return token;
         }
     }
 
+    @Nullable
     private final String objectAlias;
     private final String propertyName;
     private final Class<?> propertyType;
     private final Operator operator;
+    @Nullable
     private final Object requiredValue;
 
     /**
@@ -207,7 +198,7 @@ public class ObjectFilter {
      * @param requiredValue a required value, or null to perform a null-check (i.e. <code>objectAlias.propertyName is null</code>)
      * @throws IllegalArgumentException if the type of the requiredValue does not match the propertyType
      */
-    public ObjectFilter( String objectAlias, String propertyName, Class<?> propertyType, Operator operator, Object requiredValue ) throws IllegalArgumentException {
+    public ObjectFilter( @Nullable String objectAlias, String propertyName, Class<?> propertyType, Operator operator, @Nullable Object requiredValue ) throws IllegalArgumentException {
         this.objectAlias = objectAlias;
         this.propertyName = propertyName;
         this.propertyType = propertyType;
@@ -255,7 +246,7 @@ public class ObjectFilter {
     private static Object parseRequiredValue( String rv, Class<?> pt ) throws IllegalArgumentException {
         if ( isCollection( rv ) ) {
             // convert individual elements
-            return parseCollection( rv ).stream()
+            return parseCollection( rv )
                     .map( item -> parseItem( item, pt ) )
                     .collect( Collectors.toList() );
         } else {
@@ -269,8 +260,12 @@ public class ObjectFilter {
                 .collect( Collectors.toList() );
     }
 
+    private static final Pattern
+            COLLECTION_PATTERN = Pattern.compile( "^\\((.+,)*.+\\)$" ),
+            COLLECTION_DELIMITER_PATTERN = Pattern.compile( "\\s*,\\s*" );
+
     private static boolean isCollection( String value ) {
-        return value.trim().matches( "^\\((.+,)*.+\\)$" );
+        return COLLECTION_PATTERN.matcher( value ).matches();
     }
 
     /**
@@ -279,11 +274,9 @@ public class ObjectFilter {
      *              of strings.
      * @return a collection of strings.
      */
-    private static Collection<String> parseCollection( String value ) {
-        return Arrays.asList( value
-                .trim()
-                .substring( 1, value.length() - 1 ) // these are the parenthesis
-                .split( "\\s*,\\s*" ) );
+    private static Stream<String> parseCollection( String value ) {
+        // these are the parenthesis, thus we skip the first and last non-blank character
+        return COLLECTION_DELIMITER_PATTERN.splitAsStream( value.trim().substring( 1, value.length() - 1 ) );
     }
 
     private static Object parseItem( String rv, Class<?> pt ) throws IllegalArgumentException {

@@ -1,7 +1,5 @@
 package ubic.gemma.persistence.util;
 
-import lombok.NonNull;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
@@ -13,11 +11,7 @@ import java.util.stream.Collectors;
  */
 public class Filters implements Iterable<ObjectFilter[]> {
 
-    private final ArrayList<ObjectFilter[]> internalFilters;
-
-    public Filters() {
-        internalFilters = new ArrayList<>();
-    }
+    private final ArrayList<ObjectFilter[]> internalFilters = new ArrayList<>();
 
     /**
      * Create a singleton {@link Filters} from a {@link ObjectFilter}.
@@ -34,7 +28,7 @@ public class Filters implements Iterable<ObjectFilter[]> {
     /**
      * Add a disjunction of one or more {@link ObjectFilter} clauses.
      */
-    public void add( @NonNull ObjectFilter... filters ) {
+    public void add( ObjectFilter... filters ) {
         internalFilters.add( filters );
     }
 

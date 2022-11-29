@@ -59,9 +59,7 @@ public class SpringContextUtil {
             paths.add( "classpath:ubic/gemma/dataSource.xml" );
         }
 
-        if ( additionalConfigurationLocations != null ) {
-            paths.addAll( Arrays.asList( additionalConfigurationLocations ) );
-        }
+        paths.addAll( Arrays.asList( additionalConfigurationLocations ) );
 
         StopWatch timer = StopWatch.createStarted();
         try {

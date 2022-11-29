@@ -1,9 +1,8 @@
 package ubic.gemma.persistence.util;
 
-import ubic.gemma.model.expression.experiment.ExpressionExperimentDetailsValueObject;
-
+import javax.annotation.Nullable;
 import java.util.AbstractList;
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -13,30 +12,32 @@ import java.util.stream.Collectors;
  */
 public class Slice<O> extends AbstractList<O> implements List<O> {
 
+    /**
+     * Create an empty slice with zero elements.
+     */
+    public static <O> Slice<O> empty() {
+        return new Slice<>( Collections.emptyList(), null, null, null, 0L );
+    }
+
+    /**
+     * Create a slice from a {@link List}.
+     */
     public static <O> Slice<O> fromList( List<O> list ) {
         return new Slice<>( list, null, null, null, ( long ) list.size() );
     }
 
     private final List<O> data;
-
     private final Sort sort;
-    public final Integer offset;
-    public final Integer limit;
+    private final Integer offset;
+    private final Integer limit;
     private final Long totalElements;
 
-    public Slice( List<O> elements, Sort sort, Integer offset, Integer limit, Long totalElements ) {
+    public Slice( List<O> elements, @Nullable Sort sort, @Nullable Integer offset, @Nullable Integer limit, Long totalElements ) {
         this.data = elements;
         this.sort = sort;
         this.offset = offset;
         this.limit = limit;
         this.totalElements = totalElements;
-    }
-
-    /**
-     * Creates an empty, unsorted slice.
-     */
-    public Slice() {
-        this( new ArrayList<>(), null, 0, 0, 0L );
     }
 
     @Override
@@ -101,6 +102,6 @@ public class Slice<O> extends AbstractList<O> implements List<O> {
     }
 
     public <S> Slice<S> map( Function<? super O, ? extends S> converter ) {
-        return new Slice( this.stream().map( converter ).collect( Collectors.toList() ), sort, offset, limit, totalElements );
+        return new Slice<>( this.stream().map( converter ).collect( Collectors.toList() ), sort, offset, limit, totalElements );
     }
 }
