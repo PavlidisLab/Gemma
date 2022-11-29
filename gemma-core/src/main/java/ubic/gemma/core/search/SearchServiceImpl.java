@@ -213,7 +213,7 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
     @Override
     @Transactional(readOnly = true)
     public SearchResultMap search( SearchSettings settings ) throws SearchException {
-        return this.search( settings, true /* fill objects */, false /* web speed search */ );
+        return doSearch( settings, true /* fill objects */, false /* web speed search */ );
     }
 
     /*
@@ -222,7 +222,7 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
     @Override
     @Transactional(readOnly = true)
     public SearchResultMap speedSearch( SearchSettings settings ) throws SearchException {
-        return this.search( settings, true, true );
+        return doSearch( settings, true, true );
     }
 
     /*
@@ -231,6 +231,11 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
     @Override
     @Transactional(readOnly = true)
     public SearchResultMap search( SearchSettings settings, boolean fillObjects,
+            boolean webSpeedSearch ) throws SearchException {
+        return doSearch( settings, fillObjects, webSpeedSearch );
+    }
+
+    private SearchResultMap doSearch( SearchSettings settings, boolean fillObjects,
             boolean webSpeedSearch ) throws SearchException {
         if ( !supportedResultTypes.containsAll( settings.getResultTypes() ) ) {
             throw new IllegalArgumentException( "The search settings contains unsupported result types:" + Sets.difference( settings.getResultTypes(), supportedResultTypes ) + "." );
