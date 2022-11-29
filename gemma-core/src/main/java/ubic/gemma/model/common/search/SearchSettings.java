@@ -29,6 +29,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 
+import javax.annotation.Nullable;
 import java.io.Serializable;
 import java.util.Set;
 
@@ -56,7 +57,7 @@ public class SearchSettings implements Serializable {
      * How many results per result type are allowed. This implies that if you search for multiple types of things, you
      * can get more than this.
      */
-    static final int DEFAULT_MAX_RESULTS_PER_RESULT_TYPE = 5000;
+    public static final int DEFAULT_MAX_RESULTS_PER_RESULT_TYPE = 5000;
 
     /**
      * Convenience method to get pre-configured settings.
@@ -164,8 +165,14 @@ public class SearchSettings implements Serializable {
      */
     private boolean doHighlighting;
 
+    /**
+     * Limit for the number of results.
+     * <p>
+     * The default is relatively large and given by {@link #DEFAULT_MAX_RESULTS_PER_RESULT_TYPE}. Any value less than
+     * one indicate no limit.
+     */
     @Builder.Default
-    private Integer maxResults = SearchSettings.DEFAULT_MAX_RESULTS_PER_RESULT_TYPE;
+    private int maxResults = SearchSettings.DEFAULT_MAX_RESULTS_PER_RESULT_TYPE;
 
     /**
      * Get this query, trimmed.

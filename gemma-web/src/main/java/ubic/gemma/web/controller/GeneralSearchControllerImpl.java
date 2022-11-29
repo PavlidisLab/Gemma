@@ -441,7 +441,7 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
                 .query( !StringUtils.isBlank( settingsValueObject.getQuery() ) ? settingsValueObject.getQuery() : settingsValueObject.getTermUri() )
                 .platformConstraint( settingsValueObject.getPlatformConstraint() )
                 .taxon( settingsValueObject.getTaxon() )
-                .maxResults( settingsValueObject.getMaxResults() )
+                .maxResults( settingsValueObject.getMaxResults() != null ? settingsValueObject.getMaxResults() : SearchSettings.DEFAULT_MAX_RESULTS_PER_RESULT_TYPE )
                 .resultTypes( resultTypesFromVo( settingsValueObject ) )
                 .useIndices( settingsValueObject.getUseIndices() )
                 .useDatabase( settingsValueObject.getUseDatabase() )

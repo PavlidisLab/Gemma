@@ -1181,7 +1181,7 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
 
         // searches for strings in associated free text including factorvalues and biomaterials 
         // we have toyed with having this be done before the characteristic search
-        if ( settings.getUseIndices() && results.size() < settings.getMaxResults() ) {
+        if ( settings.getUseIndices() && ( settings.getMaxResults() <= 0 || results.size() < settings.getMaxResults() ) ) {
             results.addAll( this.compassSearchSource.searchExpressionExperiment( settings ) );
             if ( watch.getTime() > 500 )
                 SearchServiceImpl.log
@@ -1579,7 +1579,7 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
             if ( !fillObjects ) {
                 sr.setResultObject( null );
             }
-            if ( settings.getMaxResults() != null && results.get( sr.getResultClass() ).size() < settings.getMaxResults() ) {
+            if ( settings.getMaxResults() <= 0 || results.get( sr.getResultClass() ).size() < settings.getMaxResults() ) {
                 results.add( sr );
             }
         }
