@@ -21,6 +21,8 @@ package ubic.gemma.core.util;
 import org.aspectj.lang.annotation.Pointcut;
 import ubic.gemma.persistence.retry.Retryable;
 
+import java.util.Collection;
+
 /**
  * General-purpose pointcuts to recognize CRUD operations etc.
  * <p>
@@ -54,7 +56,7 @@ public class Pointcuts {
     /**
      * CRUD-like method that modifies the database (i.e. not a read operation).
      */
-    @Pointcut("creator() || updater() || deleter()")
+    @Pointcut("creator() || updater() || saver() || deleter()")
     public void modifier() {
     }
 
@@ -68,7 +70,7 @@ public class Pointcuts {
     /**
      * Methods that create new objects in the persistent store
      */
-    @Pointcut("daoMethod() && (execution(* save*(*, ..)) || execution(* create*(*, ..)) || execution(* findOrCreate*(*, ..)) || execution(* persist*(*, ..)) || execution(* add*(*, ..)))")
+    @Pointcut("daoMethod() && (execution(* create*(*, ..)) || execution(* findOrCreate*(*, ..)) || execution(* persist*(*, ..)) || execution(* add*(*, ..)))")
     public void creator() {
     }
 
@@ -77,6 +79,14 @@ public class Pointcuts {
      */
     @Pointcut("daoMethod() && execution(* update*(*, ..))")
     public void updater() {
+    }
+
+    /**
+     * This is a specially behaved method that create transient entities or save persistent one.
+     * @see ubic.gemma.persistence.service.BaseDao#save(Object)
+     */
+    @Pointcut("daoMethod() && execution(* save*(*, ..))")
+    public void saver() {
     }
 
     /**

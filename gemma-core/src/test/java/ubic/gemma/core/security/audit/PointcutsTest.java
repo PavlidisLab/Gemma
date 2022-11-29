@@ -63,6 +63,10 @@ public class PointcutsTest extends AbstractJUnit4SpringContextTests {
         public void update( Object ee ) {
         }
 
+        public Object save( Object ee ) {
+            return new Object();
+        }
+
         public void delete( Object ee ) {
         }
 
@@ -155,6 +159,10 @@ public class PointcutsTest extends AbstractJUnit4SpringContextTests {
         public void doUpdateAdvice( JoinPoint jp ) {
         }
 
+        @Before("ubic.gemma.core.util.Pointcuts.saver()")
+        public void doSaveAdvice( JoinPoint jp ) {
+        }
+
         @Before("ubic.gemma.core.util.Pointcuts.deleter()")
         public void doDeleteAdvice( JoinPoint jp ) {
         }
@@ -212,6 +220,13 @@ public class PointcutsTest extends AbstractJUnit4SpringContextTests {
 
         dao.read( 1L );
         verify( myAspect ).doReadAdvice( any() );
+        verifyNoMoreInteractions( myAspect );
+    }
+
+    @Test
+    public void testCrudSave() {
+        dao.save( new Object() );
+        verify( myAspect ).doSaveAdvice( any() );
         verifyNoMoreInteractions( myAspect );
     }
 

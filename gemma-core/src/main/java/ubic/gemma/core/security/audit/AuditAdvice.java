@@ -48,13 +48,8 @@ import java.util.*;
  * <p>
  * When an auditable entity is created, updated or deleted, this advice will automatically populate the audit trail with
  * appropriate audit events before the operation occurs.
- * <p>
- * The propagation of audit events respects the cascading style. However, since there's no way to determine the cascade
- * style on the original entity, we use {@link CascadingAction#PERSIST} for a {@link Pointcuts#creator()},
- * {@link CascadingAction#SAVE_UPDATE} for an {@link Pointcuts#updater()} and {@link CascadingAction#DELETE} for a
- * {@link Pointcuts#deleter()}.
- *
  * @author pavlidis
+ * @author poirigui
  */
 @Aspect
 @Component
@@ -64,28 +59,77 @@ public class AuditAdvice {
     // Note that we have a special logger configured for this class, so remove events get stored.
     private static final Logger log = LoggerFactory.getLogger( AuditAdvice.class.getName() );
 
+    private enum OperationType {
+        CREATE,
+        UPDATE,
+        SAVE,
+        DELETE
+    }
+
     @Autowired
     private UserManager userManager;
 
     @Autowired
     private SessionFactory sessionFactory;
 
+    /**
+     * Perform the audit advice on when entities are created.
+     * <p>
+     * This audit will cascade on {@link CascadeStyle#PERSIST}.
+     *
+     * @see Pointcuts#creator()
+     * @see ubic.gemma.persistence.service.BaseDao#create(Object)
+     * @see ubic.gemma.persistence.service.BaseDao#create(Collection)
+     */
     @Before("ubic.gemma.core.util.Pointcuts.creator()")
     public void doCreateAdvice( JoinPoint pjp ) {
-        doAuditAdvice( pjp, AuditAction.CREATE );
+        doAuditAdvice( pjp, OperationType.CREATE );
     }
 
+    /**
+     * Perform auditing when entities are updated.
+     * <p>
+     * This audit will cascade on {@link CascadeStyle#UPDATE}.
+     *
+     * @see Pointcuts#updater()
+     * @see ubic.gemma.persistence.service.BaseDao#update(Object)
+     * @see ubic.gemma.persistence.service.BaseDao#update(Collection)
+     */
     @Before("ubic.gemma.core.util.Pointcuts.updater()")
     public void doUpdateAdvice( JoinPoint pjp ) {
-        doAuditAdvice( pjp, AuditAction.UPDATE );
+        doAuditAdvice( pjp, OperationType.UPDATE );
     }
 
+    /**
+     * Perform auditing when entities are saved.
+     * <p>
+     * This audit will cascade on {@link CascadeStyle#PERSIST} if the audited entity is transient else
+     * {@link CascadeStyle#MERGE}.
+     *
+     * @see Pointcuts#saver()
+     * @see ubic.gemma.persistence.service.BaseDao#save(Object)
+     * @see ubic.gemma.persistence.service.BaseDao#save(Collection)
+     */
+    @Before("ubic.gemma.core.util.Pointcuts.saver()")
+    public void doSaveAdvice( JoinPoint pjp ) {
+        doAuditAdvice( pjp, OperationType.SAVE );
+    }
+
+    /**
+     * Perform auditing when entities are deleted.
+     * <p>
+     * This audit will cascade on {@link CascadeStyle#DELETE}.
+     *
+     * @see Pointcuts#deleter()
+     * @see ubic.gemma.persistence.service.BaseDao#remove(Object)
+     * @see ubic.gemma.persistence.service.BaseDao#remove(Collection)
+     */
     @Before("ubic.gemma.core.util.Pointcuts.deleter()")
     public void doDeleteAdvice( JoinPoint pjp ) {
-        doAuditAdvice( pjp, AuditAction.DELETE );
+        doAuditAdvice( pjp, OperationType.DELETE );
     }
 
-    private void doAuditAdvice( JoinPoint pjp, AuditAction operationType ) {
+    private void doAuditAdvice( JoinPoint pjp, OperationType operationType ) {
         Signature signature = pjp.getSignature();
         Object[] args = pjp.getArgs();
         // only audit the first argument
@@ -111,21 +155,23 @@ public class AuditAdvice {
     /**
      * Process auditing on the object.
      */
-    private void processAuditable( Signature method, AuditAction auditAction, Auditable auditable, User user, Date date ) {
+    private void processAuditable( Signature method, OperationType operationType, Auditable auditable, User user, Date date ) {
         if ( AuditAdvice.log.isTraceEnabled() ) {
-            AuditAdvice.log.trace( String.format( "***********  Start Audit %s of %s by %s (via %s) *************", auditAction, auditable, user.getUserName(), method ) );
+            AuditAdvice.log.trace( String.format( "***********  Start Audit %s of %s by %s (via %s) *************", operationType, auditable, user.getUserName(), method ) );
         }
-        if ( AuditAction.CREATE.equals( auditAction ) ) {
+        if ( operationType == OperationType.CREATE ) {
             this.addCreateAuditEvent( method, auditable, user, date );
-        } else if ( AuditAction.UPDATE.equals( auditAction ) ) {
+        } else if ( operationType == OperationType.UPDATE ) {
             this.addUpdateAuditEvent( method, auditable, user, date );
-        } else if ( AuditAction.DELETE.equals( auditAction ) ) {
+        } else if ( operationType == OperationType.SAVE ) {
+            this.addSaveAuditEvent( method, auditable, user, date );
+        } else if ( operationType == OperationType.DELETE ) {
             this.addDeleteAuditEvent( method, auditable, user, date );
         } else {
-            throw new IllegalArgumentException( String.format( "Unsupported audit action %s.", auditAction ) );
+            throw new IllegalArgumentException( String.format( "Unsupported operation type %s.", operationType ) );
         }
         if ( AuditAdvice.log.isTraceEnabled() )
-            AuditAdvice.log.trace( String.format( "============  End Audit %s of %s by %s (via %s) ==============", auditAction, auditable, user.getUserName(), method ) );
+            AuditAdvice.log.trace( String.format( "============  End Audit %s of %s by %s (via %s) ==============", operationType, auditable, user.getUserName(), method ) );
     }
 
 
@@ -135,6 +181,22 @@ public class AuditAdvice {
     private void addCreateAuditEvent( Signature method, Auditable auditable, User user, Date date ) {
         addAuditEvent( method, auditable, AuditAction.CREATE, "", user, date );
         cascadeAuditEvent( method, AuditAction.CREATE, auditable, user, date, CascadingAction.PERSIST );
+    }
+
+    private void addSaveAuditEvent( Signature method, Auditable auditable, User user, Date date ) {
+        AuditAction auditAction;
+        CascadingAction cascadingAction;
+        if ( auditable.getId() != null ) {
+            auditAction = AuditAction.UPDATE;
+            cascadingAction = CascadingAction.MERGE;
+        } else {
+            auditAction = AuditAction.CREATE;
+            cascadingAction = CascadingAction.PERSIST;
+        }
+        addAuditEvent( method, auditable, auditAction, "", user, date );
+        // we only propagate a CREATE event through cascade for entities that were created in the save
+        // Note: CREATE events are skipped if the audit trail already contains one
+        cascadeAuditEvent( method, AuditAction.CREATE, auditable, user, date, cascadingAction );
     }
 
     /**
