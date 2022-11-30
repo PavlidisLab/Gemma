@@ -4,7 +4,6 @@
 <hibernate-mapping>
     <class mutable="false"
            name="ubic.gemma.model.common.auditAndSecurity.AuditEvent" table="AUDIT_EVENT">
-        <cache usage="read-write"/>
         <id access="field" name="id" type="java.lang.Long">
             <column name="ID" sql-type="BIGINT"/>
             <generator class="native"/>
