@@ -64,8 +64,7 @@
 		<property name="hibernateProperties">
 			<props>
 				<prop key="hibernate.dialect">org.hibernate.dialect.MySQL5InnoDBDialect</prop>
-				<!-- <prop key="hibernate.cache.query_cache_factory">org.hibernate.cache.ehcache.StandardQueryCacheFactory</prop> -->
-				<prop key="hibernate.cache.region.factory_class">org.hibernate.cache.ehcache.EhCacheRegionFactory</prop>
+				<prop key="hibernate.cache.region.factory_class">org.hibernate.cache.ehcache.SingletonEhCacheRegionFactory</prop>
 				<prop key="hibernate.hbm2ddl.auto">${gemma.hibernate.hbm2ddl.auto}</prop>
 				<prop key="hibernate.max_fetch_depth">${gemma.hibernate.max_fetch_depth}</prop>
 				<prop key="hibernate.jdbc.fetch_size">${gemma.hibernate.jdbc_fetch_size}</prop>
@@ -75,25 +74,23 @@
 				<prop key="hibernate.cache.use_query_cache">${gemma.hibernate.use_query_cache}</prop>
 				<prop key="hibernate.cache.use_second_level_cache">${gemma.hibernate.use_second_level_cache}</prop>
 				<prop key="hibernate.generate_statistics">${gemma.hibernate.generate_statistics}</prop>
-				<prop key="hibernate.cache.use_structured_entries">${gemma.hibernate.cache_use_structured_entries}
-				</prop>
+				<prop key="hibernate.cache.use_structured_entries">${gemma.hibernate.cache_use_structured_entries}</prop>
 				<prop key="hibernate.order_updates">${gemma.hibernate.order_updates}</prop>
 				<prop key="hibernate.order_inserts">${gemma.hibernate.order_inserts}</prop>
 				<prop key="hibernate.format_sql">${gemma.hibernate.format_sql}</prop>
 				<prop key="hibernate.show_sql">${gemma.hibernate.show_sql}</prop>
 			</props>
 		</property>
-
-		<!-- We have a annotation-configuubic.gemma.persistence.util.ExternalCacheRegionFactorytory -->
-		<!-- <property name="cacheProvider"> <ref bean="externalCacheProvider" /> </property> -->
-		<!-- <property name="cacheRegionFactory" ref="externalCacheRegionFactory"/> -->
-		<!-- <property name="cacheRegionFactory" ref="cacheRegionFactory" /> -->
 	</bean>
 
-	<bean id="cacheManager" class="org.springframework.cache.ehcache.EhCacheCacheManager"
-		  p:cache-manager-ref="ehcache"/>
+	<bean id="cacheManager" class="org.springframework.cache.ehcache.EhCacheCacheManager">
+		<constructor-arg ref="ehcache"/>
+	</bean>
 
-	<bean id="ehcache" class="org.springframework.cache.ehcache.EhCacheManagerFactoryBean"/>
+	<!-- the Ehcache cache manager is shared so that it can be reused by Hibernate -->
+	<!-- gsec expect this bean to be defined, otherwise it would be inlined in cacheManager -->
+	<bean id="ehcache" class="org.springframework.cache.ehcache.EhCacheManagerFactoryBean"
+		  p:shared="true"/>
 
 	<bean class="org.springframework.dao.annotation.PersistenceExceptionTranslationPostProcessor"/>
 
