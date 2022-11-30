@@ -18,7 +18,6 @@
  */
 package ubic.gemma.persistence.service.genome;
 
-import net.sf.ehcache.CacheManager;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.hibernate.Criteria;
@@ -26,6 +25,7 @@ import org.hibernate.Query;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.CacheManager;
 import org.springframework.stereotype.Repository;
 import ubic.basecode.util.BatchIterator;
 import ubic.gemma.model.common.Describable;
@@ -519,8 +519,7 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
 
     @Override
     public void afterPropertiesSet() {
-        CacheUtils.createOrLoadCache( cacheManager, GeneDaoImpl.G2CS_CACHE_NAME, 500000, false,
-                false, 0, 0 );
+        CacheUtils.getCache( cacheManager, GeneDaoImpl.G2CS_CACHE_NAME );
     }
 
     /**

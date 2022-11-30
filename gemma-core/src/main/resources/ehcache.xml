@@ -684,4 +684,26 @@
     <cache name="ubic.gemma.model.common.description.ExternalDatabase.externalDatabases"
            maxElementsInMemory="100" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false"/>
 
+    <cache name="ExpressionExperimentReportsCache" maxElementsInMemory="5000" timeToIdleSeconds="0"
+           timeToLiveSeconds="300" overflowToDisk="false"/>
+
+    <cache name="Gene2GeneCoexpressionCache" maxElementsInMemory="500" eternal="true" overflowToDisk="true"/>
+
+    <cache name="OntologyChildrenCache" maxElementsInMemory="30000" timeToIdleSeconds="3600" timeToLiveSeconds="10000"
+           overflowToDisk="false"/>
+
+    <cache name="TopDiffExResultCache" maxElementsInMemory="100000" overflowToDisk="false" eternal="true"/>
+
+    <cache name="DiffExResultCache" maxElementsInMemory="100000" overflowToDisk="false" eternal="true"/>
+
+    <cache name="Gene2GeneCoexpressionTestedInCache" maxElementsInMemory="100000" overflowToDisk="false"
+           eternal="true"/>
+
+    <cache name="Gene2GoServiceCache" maxElementsInMemory="5000" timeToIdleSeconds="1000" timeToLiveSeconds="1000"
+           overflowToDisk="false"/>
+
+    <cache name="ProcessedExpressionDataVectorCache" maxElementsInMemory="100000" overflowToDisk="true" eternal="true"/>
+
+    <cache name="Gene2CsCache" maxElementsInMemory="500000" timeToLiveSeconds="0" timeToIdleSeconds="0"
+           overflowToDisk="false"/>
 </ehcache>

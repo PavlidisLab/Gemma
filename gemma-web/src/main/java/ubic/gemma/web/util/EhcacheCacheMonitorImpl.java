@@ -18,18 +18,20 @@
  */
 package ubic.gemma.web.util;
 
-import java.util.Arrays;
-
+import net.sf.ehcache.Ehcache;
+import net.sf.ehcache.Statistics;
+import net.sf.ehcache.config.CacheConfiguration;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.Cache;
+import org.springframework.cache.ehcache.EhCacheCacheManager;
 import org.springframework.stereotype.Component;
-
-import net.sf.ehcache.Cache;
-import net.sf.ehcache.CacheManager;
-import net.sf.ehcache.Statistics;
-import net.sf.ehcache.config.CacheConfiguration;
 import ubic.gemma.persistence.util.Settings;
+
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
 
 /**
  * Get statistics about and manage caches.
@@ -37,25 +39,25 @@ import ubic.gemma.persistence.util.Settings;
  * @author paul
  */
 @Component
-public class CacheMonitorImpl implements CacheMonitor {
+public class EhcacheCacheMonitorImpl implements CacheMonitor {
 
-    private static final Log log = LogFactory.getLog( CacheMonitorImpl.class );
+    private static final Log log = LogFactory.getLog( EhcacheCacheMonitorImpl.class );
 
     @Autowired
-    private CacheManager cacheManager;
+    private EhCacheCacheManager cacheManager;
 
     @Override
     public void clearAllCaches() {
-        CacheMonitorImpl.log.info( "Clearing all caches" );
-        cacheManager.clearAll();
+        EhcacheCacheMonitorImpl.log.info( "Clearing all caches" );
+        cacheManager.getCacheManager().clearAll();
     }
 
     @Override
     public void clearCache( String cacheName ) {
         Cache cache = this.cacheManager.getCache( cacheName );
         if ( cache != null ) {
-            cache.removeAll();
-            CacheMonitorImpl.log.info( "Cleared cache: " + cache.getName() );
+            cache.clear();
+            EhcacheCacheMonitorImpl.log.info( "Cleared cache: " + cache.getName() );
         } else {
             throw new IllegalArgumentException( "No cache found with name=" + cacheName );
         }
@@ -63,48 +65,45 @@ public class CacheMonitorImpl implements CacheMonitor {
 
     @Override
     public void disableStatistics() {
-        CacheMonitorImpl.log.info( "Disabling statistics" );
+        EhcacheCacheMonitorImpl.log.info( "Disabling statistics" );
         this.setStatisticsEnabled( false );
     }
 
     @Override
     public void enableStatistics() {
-        CacheMonitorImpl.log.info( "Enabling statistics" );
+        EhcacheCacheMonitorImpl.log.info( "Enabling statistics" );
         this.setStatisticsEnabled( true );
-
     }
 
     @Override
     public String getStats() {
 
         StringBuilder buf = new StringBuilder();
-        String[] cacheNames = cacheManager.getCacheNames();
-        Arrays.sort( cacheNames );
+        List<String> cacheNames = new ArrayList<>( cacheManager.getCacheNames() );
+        cacheNames.sort( Comparator.naturalOrder() );
 
         int stop = 0;
         for ( String cacheName : cacheNames ) {
+            Cache cache = cacheManager.getCache( cacheName );
             // Terracotta clustered?
             // FIXME: this is not supported anymore, so it will always result in false, but there's no harm in looking
             // it up either way
-            boolean isTerracottaClustered = cacheManager.getCache( cacheName ).getCacheConfiguration().isTerracottaClustered();
+            boolean isTerracottaClustered = ( ( Ehcache ) cache.getNativeCache() ).getCacheConfiguration().isTerracottaClustered();
             buf.append( "Distributed caching is " );
             buf.append( isTerracottaClustered ? "enabled" : "disabled" );
-            buf.append( " in the configuration file for " + cacheName );
+            buf.append( " in the configuration file for " ).append( cacheName );
             buf.append( ".<br/>" );
-            if (++stop > 10 ) {
-                buf.append( "[Additional caches ommitted]<br/>" );
+            if ( ++stop > 10 ) {
+                buf.append( "[Additional caches omitted]<br/>" );
                 break;
             }
         }
 
-        buf.append( cacheNames.length ).append( " caches; only non-empty caches listed below." );
+        buf.append( cacheNames.size() ).append( " caches; only non-empty caches listed below." );
         // FIXME make these sortable.
-        buf.append( "<br/>&nbsp;To clear all caches click here: <img src='" + Settings.getRootContext()
-                + "/images/icons/arrow_rotate_anticlockwise.png' onClick=\"clearAllCaches()\" alt='Flush caches' title='Clear caches' />&nbsp;&nbsp;" );
-        buf.append( "<br/>&nbsp;To start statistics collection click here: <img src='" + Settings.getRootContext()
-                + "/images/icons/arrow_rotate_anticlockwise.png' onClick=\"enableStatistics()\" alt='Enable stats' title='Enable stats' />&nbsp;&nbsp;" );
-        buf.append( "<br/>&nbsp;To stop statistics collection click here: <img src='" + Settings.getRootContext()
-                + "/images/icons/arrow_rotate_anticlockwise.png' onClick=\"disableStatistics()\" alt='Disable stats' title='Disable stats' />&nbsp;&nbsp;" );
+        buf.append( "<br/>&nbsp;To clear all caches click here: <img src='" ).append( Settings.getRootContext() ).append( "/images/icons/arrow_rotate_anticlockwise.png' onClick=\"clearAllCaches()\" alt='Flush caches' title='Clear caches' />&nbsp;&nbsp;" );
+        buf.append( "<br/>&nbsp;To start statistics collection click here: <img src='" ).append( Settings.getRootContext() ).append( "/images/icons/arrow_rotate_anticlockwise.png' onClick=\"enableStatistics()\" alt='Enable stats' title='Enable stats' />&nbsp;&nbsp;" );
+        buf.append( "<br/>&nbsp;To stop statistics collection click here: <img src='" ).append( Settings.getRootContext() ).append( "/images/icons/arrow_rotate_anticlockwise.png' onClick=\"disableStatistics()\" alt='Disable stats' title='Disable stats' />&nbsp;&nbsp;" );
 
         buf.append( "<table style='font-size:small'  ><tr>" );
         String header = "<th>Name</th><th>HitRate</th><th>Hits</th><th>Misses</th><th>Count</th><th>MemHits</th><th>MemMiss</th><th>DiskHits</th><th>Evicted</th> <th>Eternal?</th><th>UseDisk?</th> <th>MaxInMem</th><th>LifeTime</th><th>IdleTime</th>";
@@ -114,7 +113,7 @@ public class CacheMonitorImpl implements CacheMonitor {
         int count = 0;
         for ( String rawCacheName : cacheNames ) {
             Cache cache = cacheManager.getCache( rawCacheName );
-            Statistics statistics = cache.getStatistics();
+            Statistics statistics = ( ( Ehcache ) cache.getNativeCache() ).getStatistics();
 
             long objectCount = statistics.getObjectCount();
 
@@ -150,7 +149,7 @@ public class CacheMonitorImpl implements CacheMonitor {
             buf.append( this.makeTableCellForStat( onDiskHits ) );
             buf.append( this.makeTableCellForStat( evictions ) );
 
-            CacheConfiguration cacheConfiguration = cache.getCacheConfiguration();
+            CacheConfiguration cacheConfiguration = ( ( Ehcache ) cache.getNativeCache() ).getCacheConfiguration();
             boolean eternal = cacheConfiguration.isEternal();
             buf.append( "<td>" ).append( eternal ? "&bull;" : "" ).append( "</td>" );
 
@@ -190,11 +189,9 @@ public class CacheMonitorImpl implements CacheMonitor {
     }
 
     private synchronized void setStatisticsEnabled( boolean b ) {
-        String[] cacheNames = cacheManager.getCacheNames();
-
-        for ( String rawCacheName : cacheNames ) {
+        for ( String rawCacheName : cacheManager.getCacheNames() ) {
             Cache cache = cacheManager.getCache( rawCacheName );
-            cache.setSampledStatisticsEnabled( b );
+            ( ( Ehcache ) cache.getNativeCache() ).setSampledStatisticsEnabled( b );
         }
     }
 

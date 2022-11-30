@@ -1,6 +1,6 @@
 package ubic.gemma.core.search;
 
-import net.sf.ehcache.CacheManager;
+import org.springframework.cache.CacheManager;
 import org.springframework.context.annotation.Bean;
 import ubic.gemma.core.annotation.reference.BibliographicReferenceService;
 import ubic.gemma.core.association.phenotype.PhenotypeAssociationManagerService;
@@ -11,7 +11,6 @@ import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.persistence.service.common.description.CharacteristicService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
-import ubic.gemma.persistence.service.expression.experiment.BlacklistedEntityDao;
 import ubic.gemma.persistence.service.expression.experiment.BlacklistedEntityService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSetService;

@@ -19,11 +19,10 @@
 
 package ubic.gemma.persistence.service.association;
 
-import net.sf.ehcache.Cache;
-import net.sf.ehcache.CacheManager;
-import net.sf.ehcache.Element;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.association.Gene2GOAssociation;
@@ -60,10 +59,7 @@ public class Gene2GOAssociationServiceImpl extends AbstractService<Gene2GOAssoci
 
     @Override
     public void afterPropertiesSet() {
-        this.gene2goCache = CacheUtils
-                .createOrLoadCache( cacheManager, Gene2GOAssociationServiceImpl.G2G_CACHE_NAME, 5000,
-                        false, false, 1000, 500 );
-
+        this.gene2goCache = CacheUtils.getCache( cacheManager, Gene2GOAssociationServiceImpl.G2G_CACHE_NAME );
     }
 
     @Override
@@ -76,14 +72,14 @@ public class Gene2GOAssociationServiceImpl extends AbstractService<Gene2GOAssoci
     @Transactional(readOnly = true)
     public Collection<Characteristic> findByGene( Gene gene ) {
 
-        Element element = this.gene2goCache.get( gene );
+        Cache.ValueWrapper element = this.gene2goCache.get( gene );
 
         if ( element != null ) //noinspection unchecked
-            return ( Collection<Characteristic> ) element.getObjectValue();
+            return ( Collection<Characteristic> ) element.get();
 
         Collection<Characteristic> re = this.gene2GOAssociationDao.findByGene( gene );
 
-        this.gene2goCache.put( new Element( gene, re ) );
+        this.gene2goCache.put( gene, re );
 
         return re;
 
@@ -97,10 +93,10 @@ public class Gene2GOAssociationServiceImpl extends AbstractService<Gene2GOAssoci
 
         Collection<Gene> needToFind = new HashSet<>();
         for ( Gene gene : genes ) {
-            Element element = this.gene2goCache.get( gene );
+            Cache.ValueWrapper element = this.gene2goCache.get( gene );
 
             if ( element != null )
-                result.put( gene, ( Collection<Characteristic> ) element.getObjectValue() );
+                result.put( gene, ( Collection<Characteristic> ) element.get() );
             else
                 needToFind.add( gene );
         }

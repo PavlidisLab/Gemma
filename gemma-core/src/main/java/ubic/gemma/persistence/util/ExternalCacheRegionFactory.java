@@ -19,14 +19,12 @@
 
 package ubic.gemma.persistence.util;
 
-import net.sf.ehcache.CacheManager;
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.ehcache.EhCacheRegionFactory;
 import org.hibernate.cfg.Settings;
-import org.springframework.beans.BeansException;
-import org.springframework.beans.factory.InitializingBean;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.ApplicationContextAware;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.CacheManager;
+import org.springframework.cache.ehcache.EhCacheCacheManager;
 import org.springframework.stereotype.Component;
 
 import java.util.Properties;
@@ -38,32 +36,16 @@ import java.util.Properties;
  * @author paul
  */
 @Component
-public class ExternalCacheRegionFactory extends EhCacheRegionFactory
-        implements ApplicationContextAware, InitializingBean {
+public class ExternalCacheRegionFactory extends EhCacheRegionFactory {
 
-    private ApplicationContext ctx;
-
-    public ExternalCacheRegionFactory() {
+    @Autowired
+    public ExternalCacheRegionFactory( CacheManager cacheManager ) {
         super( null );
-    }
-
-    @Override
-    public void afterPropertiesSet() {
-        /*
-         * I have to do this rather than @Autowire because the manager is already declared in the superclass (yes, I can
-         * re-implement the whole thing ...)
-         */
-        this.manager = ctx.getBean( CacheManager.class );
-    }
-
-    @Override
-    public void setApplicationContext( ApplicationContext applicationContext ) throws BeansException {
-        this.ctx = applicationContext;
+        this.manager = ( ( EhCacheCacheManager ) cacheManager ).getCacheManager();
     }
 
     @Override
     public void start( Settings s, Properties p ) throws CacheException {
-        assert this.manager != null;
         mbeanRegistrationHelper.registerMBean( manager, p );
     }
 
