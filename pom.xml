@@ -534,7 +534,7 @@
 						<link>https://gemma.msl.ubc.ca/resources/baseCode/apidocs/</link>
 						<link>https://dst.lbl.gov/ACSSoftware/colt/api/</link>
 						<link>https://static.springsource.org/spring/docs/${spring.version}/javadoc-api/</link>
-						<link>https://docs.jboss.org/hibernate/orm/3.6/javadocs/</link>
+						<link>https://docs.jboss.org/hibernate/orm/4.2/javadocs/</link>
 					</links>
 					<additionalJOptions>
 						<additionalJOption>-J-Xmx2g</additionalJOption>
