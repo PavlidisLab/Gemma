@@ -1,6 +1,7 @@
 package ubic.gemma.core.search;
 
 import org.springframework.cache.CacheManager;
+import org.springframework.cache.concurrent.ConcurrentMapCache;
 import org.springframework.context.annotation.Bean;
 import ubic.gemma.core.annotation.reference.BibliographicReferenceService;
 import ubic.gemma.core.association.phenotype.PhenotypeAssociationManagerService;
@@ -18,7 +19,9 @@ import ubic.gemma.persistence.service.genome.biosequence.BioSequenceService;
 import ubic.gemma.persistence.service.genome.gene.GeneProductService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 /**
  * Base class for mocking beans for
@@ -32,7 +35,9 @@ class SearchServiceTestContextConfiguration {
 
     @Bean
     public CacheManager cacheManager() {
-        return mock( CacheManager.class );
+        CacheManager cacheManager = mock( CacheManager.class );
+        when( cacheManager.getCache( any() ) ).thenAnswer( a -> new ConcurrentMapCache( a.getArgument( 0 ) ) );
+        return cacheManager;
     }
 
     @Bean
