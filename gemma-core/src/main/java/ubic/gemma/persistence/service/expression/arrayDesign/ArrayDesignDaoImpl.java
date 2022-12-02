@@ -499,7 +499,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
         final String queryString = "select cs from CompositeSequence as cs where cs.arrayDesign = :ad";
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession().createQuery( queryString ).setParameter( "ad", arrayDesign )
-                .setFirstResult( offset ).setMaxResults( limit > 0 ? limit : -1 ).list();
+                .setFirstResult( offset ).setMaxResults( limit ).list();
     }
 
     /**

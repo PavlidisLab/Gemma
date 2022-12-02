@@ -226,7 +226,7 @@ public class PhenotypeAssociationServiceImpl extends AbstractService<PhenotypeAs
     @Override
     @Transactional(readOnly = true)
     public Collection<PhenotypeAssociation> findEvidencesWithExternalDatabaseName( String externalDatabaseName,
-            Integer limit, int start ) {
+            int limit, int start ) {
         return this.phenotypeAssociationDao.findEvidencesWithExternalDatabaseName( externalDatabaseName, limit, start );
     }
 
@@ -269,7 +269,7 @@ public class PhenotypeAssociationServiceImpl extends AbstractService<PhenotypeAs
      */
     @Override
     @Transactional(readOnly = true)
-    public Set<Long> findPrivateEvidenceId( String userName, Collection<String> groups, Long taxonId, Integer limit ) {
+    public Set<Long> findPrivateEvidenceId( String userName, Collection<String> groups, Long taxonId, int limit ) {
         return this.phenotypeAssociationDao.findPrivateEvidenceId( taxonId, limit );
     }
 

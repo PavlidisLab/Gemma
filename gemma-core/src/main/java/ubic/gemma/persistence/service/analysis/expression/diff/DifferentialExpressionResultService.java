@@ -51,7 +51,7 @@ public interface DifferentialExpressionResultService extends BaseService<Differe
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
     Map<ExpressionExperimentValueObject, List<DifferentialExpressionValueObject>> find(
-            Collection<Long> experimentsAnalyzed, double threshold, Integer limit );
+            Collection<Long> experimentsAnalyzed, double threshold, int limit );
 
     /**
      * Returns a map of a collection of {@link DifferentialExpressionAnalysisResult}s keyed by
@@ -87,7 +87,7 @@ public interface DifferentialExpressionResultService extends BaseService<Differe
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
     Map<ExpressionExperimentValueObject, List<DifferentialExpressionValueObject>> find( Gene gene,
-            Collection<Long> experimentsAnalyzed, double threshold, Integer limit );
+            Collection<Long> experimentsAnalyzed, double threshold, int limit );
 
     /**
      * Find differential expression for a gene, exceeding a given significance level (using the corrected pvalue field)
@@ -99,7 +99,7 @@ public interface DifferentialExpressionResultService extends BaseService<Differe
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
     Map<ExpressionExperimentValueObject, List<DifferentialExpressionValueObject>> find( Gene gene, double threshold,
-            Integer limit );
+            int limit );
 
     /**
      * Retrieve differential expression results in bulk. This is an important method for the differential expression
@@ -113,10 +113,10 @@ public interface DifferentialExpressionResultService extends BaseService<Differe
             Collection<DiffExResultSetSummaryValueObject> resultSets, Collection<Long> geneIds );
 
     List<Double> findGeneInResultSet( Gene gene, ExpressionAnalysisResultSet resultSet, Collection<Long> arrayDesignIds,
-            Integer limit );
+            int limit );
 
     List<DifferentialExpressionValueObject> findInResultSet( ExpressionAnalysisResultSet ar, Double threshold,
-            Integer maxResultsToReturn, Integer minNumberOfResults );
+            int maxResultsToReturn, int minNumberOfResults );
 
     /**
      * Given a list of result sets finds the diff expression results that met the given threshold
@@ -127,7 +127,7 @@ public interface DifferentialExpressionResultService extends BaseService<Differe
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_MAP_READ" })
     Map<ExpressionAnalysisResultSet, List<DifferentialExpressionAnalysisResult>> findInResultSets(
-            Collection<ExpressionAnalysisResultSet> resultsAnalyzed, double threshold, Integer limit );
+            Collection<ExpressionAnalysisResultSet> resultsAnalyzed, double threshold, int limit );
 
     /**
      * Fetch the analysis associated with a result set.

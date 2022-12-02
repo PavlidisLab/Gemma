@@ -21,6 +21,7 @@ package ubic.gemma.persistence.service.expression.experiment;
 import gemma.gsec.acl.domain.AclObjectIdentity;
 import gemma.gsec.acl.domain.AclSid;
 import lombok.NonNull;
+import org.apache.commons.lang3.NotImplementedException;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.hibernate.*;
@@ -78,10 +79,9 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
-    public List<ExpressionExperiment> browse( Integer start, Integer limit ) {
+    public List<ExpressionExperiment> browse( int start, int limit ) {
         Query query = this.getSessionFactory().getCurrentSession().createQuery( "from ExpressionExperiment" );
-        if ( limit > 0 )
-            query.setMaxResults( limit );
+        query.setMaxResults( limit );
         query.setFirstResult( start );
 
         //noinspection unchecked
@@ -89,12 +89,17 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
-    public Integer countNotTroubled() {
+    public List<ExpressionExperiment> browse( int start, int limit, String orderField, boolean descending ) {
+        throw new NotImplementedException( "Browsing ExpressionExperiment in a specific order is not supported." );
+    }
+
+    @Override
+    public long countNotTroubled() {
         return ( ( Long ) this.getSessionFactory().getCurrentSession().createQuery(
                         "select count( distinct ee ) from ExpressionExperiment as ee left join "
                                 + " ee.bioAssays as ba left join ba.arrayDesignUsed as ad"
                                 + " where ee.curationDetails.troubled = false and ad.curationDetails.troubled = false" )
-                .uniqueResult() ).intValue();
+                .uniqueResult() );
     }
 
     @Override
@@ -423,28 +428,7 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
-    public List<ExpressionExperiment> findByTaxon( Taxon taxon, @Nullable Integer limit ) {
-        //language=HQL
-        //        final String queryString =
-        //                "select distinct ee from ExpressionExperiment as ee " + "inner join ee.bioAssays as ba "
-        //                        + "inner join ba.sampleUsed as sample join ee.curationDetails s where sample.sourceTaxon = :taxon"
-        //                        + " order by s.lastUpdated desc";
-        final String queryString =
-                "select ee from ExpressionExperiment as ee join ee.curationDetails s where ee.taxon = :taxon"
-                        + " order by s.lastUpdated desc";
-        Query query = this.getSessionFactory().getCurrentSession().createQuery( queryString )
-                .setParameter( "taxon", taxon );
-
-        if ( limit != null ) {
-            query.setMaxResults( limit );
-        }
-
-        //noinspection unchecked
-        return query.list();
-    }
-
-    @Override
-    public List<ExpressionExperiment> findByUpdatedLimit( Collection<Long> ids, Integer limit ) {
+    public List<ExpressionExperiment> findByUpdatedLimit( Collection<Long> ids, int limit ) {
         if ( ids.isEmpty() || limit <= 0 )
             return new ArrayList<>();
 
@@ -462,7 +446,7 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
-    public List<ExpressionExperiment> findByUpdatedLimit( Integer limit ) {
+    public List<ExpressionExperiment> findByUpdatedLimit( int limit ) {
         if ( limit == 0 )
             return new ArrayList<>();
         Session s = this.getSessionFactory().getCurrentSession();

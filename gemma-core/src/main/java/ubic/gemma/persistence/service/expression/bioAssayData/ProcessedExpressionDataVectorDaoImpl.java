@@ -1048,9 +1048,9 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
      * @param  ee    ee
      * @return       processed data vectors
      */
-    private Collection<ProcessedExpressionDataVector> getProcessedVectors( ExpressionExperiment ee, Integer limit ) {
+    private Collection<ProcessedExpressionDataVector> getProcessedVectors( ExpressionExperiment ee, int limit ) {
 
-        if ( limit == null || limit < 0 ) {
+        if ( limit <= 0 ) {
             return this.getProcessedVectors( ee );
         }
 

@@ -86,13 +86,13 @@ public class BibliographicReferenceServiceImpl
 
     @Override
     @Transactional(readOnly = true)
-    public List<BibliographicReference> browse( Integer start, Integer limit ) {
+    public List<BibliographicReference> browse( int start, int limit ) {
         return this.bibliographicReferenceDao.browse( start, limit );
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<BibliographicReference> browse( Integer start, Integer limit, String orderField, boolean descending ) {
+    public List<BibliographicReference> browse( int start, int limit, String orderField, boolean descending ) {
         return this.bibliographicReferenceDao.browse( start, limit, orderField, descending );
     }
 

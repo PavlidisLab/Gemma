@@ -109,7 +109,7 @@ public interface PhenotypeAssociationService extends BaseService<PhenotypeAssoci
 
     Collection<CharacteristicValueObject> findEvidenceCategoryTerms();
 
-    Collection<PhenotypeAssociation> findEvidencesWithExternalDatabaseName( String externalDatabaseName, Integer limit,
+    Collection<PhenotypeAssociation> findEvidencesWithExternalDatabaseName( String externalDatabaseName, int limit,
             int start );
 
     @Secured({ "GROUP_AGENT" })
@@ -119,7 +119,7 @@ public interface PhenotypeAssociationService extends BaseService<PhenotypeAssoci
             String userName, Collection<String> groups, boolean showOnlyEditable, Collection<Long> externalDatabaseIds,
             boolean noElectronicAnnotation );
 
-    Set<Long> findPrivateEvidenceId( String userName, Collection<String> groups, Long taxonId, Integer limit );
+    Set<Long> findPrivateEvidenceId( String userName, Collection<String> groups, Long taxonId, int limit );
 
     Map<String, Set<Integer>> findPrivatePhenotypesGenesAssociations( Taxon taxon, Set<String> valuesUri,
             String userName, Collection<String> groups, boolean showOnlyEditable, Collection<Long> externalDatabaseIds,

@@ -63,13 +63,13 @@ public class CharacteristicServiceImpl extends AbstractVoEnabledService<Characte
 
     @Override
     @Transactional(readOnly = true)
-    public List<Characteristic> browse( Integer start, Integer limit ) {
+    public List<Characteristic> browse( int start, int limit ) {
         return this.characteristicDao.browse( start, limit );
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<Characteristic> browse( Integer start, Integer limit, String sortField, boolean descending ) {
+    public List<Characteristic> browse( int start, int limit, String sortField, boolean descending ) {
         return this.characteristicDao.browse( start, limit, sortField, descending );
     }
 

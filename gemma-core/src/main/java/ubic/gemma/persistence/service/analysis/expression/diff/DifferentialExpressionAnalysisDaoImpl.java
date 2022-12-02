@@ -390,7 +390,7 @@ class DifferentialExpressionAnalysisDaoImpl extends AnalysisDaoBase<Differential
                                 + "where e.id in (:eeIds)" )
                 .setParameterList( "eeIds", expressionExperimentIds )
                 .setFirstResult( offset )
-                .setMaxResults( limit > 0 ? limit : -1 )
+                .setMaxResults( limit )
                 .list();
 
         // initialize result sets and hit list sizes

@@ -39,6 +39,7 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.model.genome.gene.phenotype.EvidenceFilter;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.*;
+import ubic.gemma.persistence.service.association.phenotype.PhenotypeAssociationDaoImpl;
 import ubic.gemma.persistence.service.association.phenotype.service.PhenotypeAssociationService;
 
 import java.util.*;
@@ -287,7 +288,7 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
     @Test
     public void testLoadEvidenceWithExternalDatabaseName() {
         assertTrue( !this.phenotypeAssociationManagerService
-                .loadEvidenceWithExternalDatabaseName( PhenotypeAssociationTest.TEST_EXTERNAL_DATABASE, null, 0 )
+                .loadEvidenceWithExternalDatabaseName( PhenotypeAssociationTest.TEST_EXTERNAL_DATABASE, PhenotypeAssociationDaoImpl.DEFAULT_PA_LIMIT, 0 )
                 .isEmpty() );
 
         assertTrue( this.phenotypeAssociationManagerService.loadEvidenceWithoutExternalDatabaseName().isEmpty() );

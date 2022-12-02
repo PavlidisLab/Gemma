@@ -52,7 +52,7 @@ public class DifferentialExpressionResultServiceImpl extends AbstractService<Dif
     @Override
     @Transactional(readOnly = true)
     public Map<ExpressionExperimentValueObject, List<DifferentialExpressionValueObject>> find(
-            Collection<Long> experimentsAnalyzed, double threshold, Integer limit ) {
+            Collection<Long> experimentsAnalyzed, double threshold, int limit ) {
         return this.DERDao.find( experimentsAnalyzed, threshold, limit );
     }
 
@@ -72,14 +72,14 @@ public class DifferentialExpressionResultServiceImpl extends AbstractService<Dif
     @Override
     @Transactional(readOnly = true)
     public Map<ExpressionExperimentValueObject, List<DifferentialExpressionValueObject>> find( Gene gene,
-            Collection<Long> experimentsAnalyzed, double threshold, Integer limit ) {
+            Collection<Long> experimentsAnalyzed, double threshold, int limit ) {
         return this.DERDao.find( gene, experimentsAnalyzed, threshold, limit );
     }
 
     @Override
     @Transactional(readOnly = true)
     public Map<ExpressionExperimentValueObject, List<DifferentialExpressionValueObject>> find( Gene gene,
-            double threshold, Integer limit ) {
+            double threshold, int limit ) {
         return this.DERDao.find( gene, threshold, limit );
     }
 
@@ -93,21 +93,21 @@ public class DifferentialExpressionResultServiceImpl extends AbstractService<Dif
     @Override
     @Transactional(readOnly = true)
     public List<Double> findGeneInResultSet( Gene gene, ExpressionAnalysisResultSet resultSet,
-            Collection<Long> arrayDesignIds, Integer limit ) {
+            Collection<Long> arrayDesignIds, int limit ) {
         return this.DERDao.findGeneInResultSets( gene, resultSet, arrayDesignIds, limit );
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<DifferentialExpressionValueObject> findInResultSet( ExpressionAnalysisResultSet resultSet,
-            Double threshold, Integer maxResultsToReturn, Integer minNumberOfResults ) {
+            Double threshold, int maxResultsToReturn, int minNumberOfResults ) {
         return this.DERDao.findInResultSet( resultSet, threshold, maxResultsToReturn, minNumberOfResults );
     }
 
     @Override
     @Transactional(readOnly = true)
     public Map<ExpressionAnalysisResultSet, List<DifferentialExpressionAnalysisResult>> findInResultSets(
-            Collection<ExpressionAnalysisResultSet> resultsAnalyzed, double threshold, Integer limit ) {
+            Collection<ExpressionAnalysisResultSet> resultsAnalyzed, double threshold, int limit ) {
         return this.DERDao.findInResultSets( resultsAnalyzed, threshold, limit );
     }
 

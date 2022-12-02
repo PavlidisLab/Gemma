@@ -61,7 +61,7 @@ public interface GeneDifferentialExpressionService {
      * @return DEA VOs
      */
     Collection<DifferentialExpressionValueObject> getDifferentialExpression( Gene gene, Collection<BioAssaySet> ees,
-            double threshold, Integer limit );
+            double threshold, int limit );
 
     /**
      * Get differential expression for a gene, constrained to a specific set of factors. Note that interactions are
@@ -84,7 +84,7 @@ public interface GeneDifferentialExpressionService {
      * @return DEA VOs
      */
     Collection<DifferentialExpressionValueObject> getDifferentialExpression( Gene gene, double threshold,
-            Integer limit );
+            int limit );
 
     /**
      * Get the differential expression analysis results for the gene in the activeExperiments.

@@ -45,7 +45,7 @@ public interface CharacteristicService extends BaseVoEnabledService<Characterist
      * @param  limit Maximum records to retrieve
      * @return characteristics
      */
-    List<Characteristic> browse( Integer start, Integer limit );
+    List<Characteristic> browse( int start, int limit );
 
     /**
      * Browse through the characteristics, excluding GO annotations.
@@ -56,7 +56,7 @@ public interface CharacteristicService extends BaseVoEnabledService<Characterist
      * @param  descending sor order
      * @return characteristics
      */
-    List<Characteristic> browse( Integer start, Integer limit, String sortField, boolean descending );
+    List<Characteristic> browse( int start, int limit, String sortField, boolean descending );
 
     /**
      * @see CharacteristicDao#findExperimentsByUris(Collection, Taxon, int)

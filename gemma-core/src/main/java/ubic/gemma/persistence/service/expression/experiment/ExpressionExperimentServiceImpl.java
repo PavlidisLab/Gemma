@@ -226,7 +226,7 @@ public class ExpressionExperimentServiceImpl
 
     @Override
     @Transactional(readOnly = true)
-    public List<ExpressionExperiment> browse( Integer start, Integer limit ) {
+    public List<ExpressionExperiment> browse( int start, int limit ) {
         return this.expressionExperimentDao.browse( start, limit );
     }
 
@@ -264,7 +264,7 @@ public class ExpressionExperimentServiceImpl
 
     @Override
     @Transactional(readOnly = true)
-    public Integer countNotTroubled() {
+    public long countNotTroubled() {
         return this.expressionExperimentDao.countNotTroubled();
     }
 
@@ -439,13 +439,7 @@ public class ExpressionExperimentServiceImpl
 
     @Override
     @Transactional(readOnly = true)
-    public Collection<ExpressionExperiment> findByTaxon( final Taxon taxon, @Nullable Integer limit ) {
-        return this.expressionExperimentDao.findByTaxon( taxon, limit );
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public List<ExpressionExperiment> findByUpdatedLimit( Integer limit ) {
+    public List<ExpressionExperiment> findByUpdatedLimit( int limit ) {
         return this.expressionExperimentDao.findByUpdatedLimit( limit );
     }
 

@@ -27,12 +27,16 @@ public class Slice<O> extends AbstractList<O> implements List<O> {
     }
 
     private final List<O> data;
+    @Nullable
     private final Sort sort;
+    @Nullable
     private final Integer offset;
+    @Nullable
     private final Integer limit;
+    @Nullable
     private final Long totalElements;
 
-    public Slice( List<O> elements, @Nullable Sort sort, @Nullable Integer offset, @Nullable Integer limit, Long totalElements ) {
+    public Slice( List<O> elements, @Nullable Sort sort, @Nullable Integer offset, @Nullable Integer limit, @Nullable Long totalElements ) {
         this.data = elements;
         this.sort = sort;
         this.offset = offset;
@@ -75,6 +79,7 @@ public class Slice<O> extends AbstractList<O> implements List<O> {
     /**
      * @return a sort, or null if unspecified
      */
+    @Nullable
     public Sort getSort() {
         return this.sort;
     }
@@ -82,6 +87,7 @@ public class Slice<O> extends AbstractList<O> implements List<O> {
     /**
      * @return an offset, or null if unspecified
      */
+    @Nullable
     public Integer getOffset() {
         return this.offset;
     }
@@ -89,14 +95,16 @@ public class Slice<O> extends AbstractList<O> implements List<O> {
     /**
      * @return a limit, or null if unspecified
      */
+    @Nullable
     public Integer getLimit() {
         return this.limit;
     }
 
     /**
      *
-     * @return the total number
+     * @return the total number of elements, or null if unspecified.
      */
+    @Nullable
     public Long getTotalElements() {
         return this.totalElements;
     }
