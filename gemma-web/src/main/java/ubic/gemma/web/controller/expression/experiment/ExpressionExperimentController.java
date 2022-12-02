@@ -1513,9 +1513,16 @@ public class ExpressionExperimentController {
             Integer limit, Integer filter, boolean showPublic ) {
         Collection<ExpressionExperimentDetailsValueObject> eeVos;
 
+        Taxon taxon;
+        if ( taxonId != null ) {
+            taxon = Objects.requireNonNull( taxonService.load( taxonId ), String.format( "No taxon with ID %d.", taxonId ) );
+        } else {
+            taxon = null;
+        }
+
         // Limit default desc - lastUpdated is a date and the most recent date is the largest one.
         eeVos = this
-                .getFilteredExpressionExperimentValueObjects( taxonService.load( taxonId ), ids, limit, showPublic );
+                .getFilteredExpressionExperimentValueObjects( taxon, ids, limit, showPublic );
 
         if ( filter != null && filter > 0 ) {
             eeVos = this.applyFilter( eeVos, filter );
