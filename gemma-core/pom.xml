@@ -154,8 +154,8 @@
                             <url>${gemma.testdb.build.url}</url>
                             <srcFiles>
                                 <srcFile>${project.build.directory}/schema/gemma-ddl.sql</srcFile>
-                                <srcFile>${project.build.directory}/schema/gsec-acl-ddl.sql</srcFile>
-                                <scrFile>${project.build.directory}/schema/sql/init-acl-indices.sql</scrFile>
+                                <srcFile>${project.build.directory}/schema/gemma/gsec/sql/gsec-acl-ddl.sql</srcFile>
+                                <scrFile>${project.build.directory}/schema/gemma/gsec/sql/init-acl-indices.sql</scrFile>
                                 <srcFile>${project.basedir}/src/main/resources/sql/init-acls.sql</srcFile>
                                 <scrFile>${project.basedir}/src/main/resources/sql/init-indices.sql</scrFile>
                                 <srcFile>${project.basedir}/src/main/resources/sql/init-entities.sql</srcFile>
