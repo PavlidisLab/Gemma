@@ -18,10 +18,10 @@
             <column name="FAILED_MESSAGE" not-null="false" unique="false" sql-type="text"/>
         </property>
         <property name="startTime" type="java.util.Date">
-            <column name="START_TIME" not-null="true" unique="false" sql-type="DATETIME"/>
+            <column name="START_TIME" not-null="true" unique="false" sql-type="DATETIME(3)"/>
         </property>
         <property name="endTime" type="java.util.Date">
-            <column name="END_TIME" not-null="false" unique="false" sql-type="DATETIME"/>
+            <column name="END_TIME" not-null="false" unique="false" sql-type="DATETIME(3)"/>
         </property>
         <property name="phases" type="java.lang.Integer">
             <column name="PHASES" not-null="true" unique="false" sql-type="INTEGER"/>

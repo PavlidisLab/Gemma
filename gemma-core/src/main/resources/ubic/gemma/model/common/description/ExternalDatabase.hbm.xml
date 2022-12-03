@@ -35,8 +35,8 @@
         <property name="releaseUrl" type="java.net.URL">
             <column name="RELEASE_URL" not-null="false" unique="false" sql-type="VARCHAR(255)"/>
         </property>
-        <property name="lastUpdated" type="java.util.Date">
-            <column name="LAST_UPDATED" not-null="false" unique="false" sql-type="DATETIME"/>
+        <property name="lastUpdated" type="java.util.Date" precision="4">
+            <column name="LAST_UPDATED" not-null="false" unique="false" sql-type="DATETIME(3)"/>
         </property>
         <many-to-one name="databaseSupplier" class="ubic.gemma.model.common.auditAndSecurity.Contact" cascade="none"
                      lazy="proxy" fetch="select">

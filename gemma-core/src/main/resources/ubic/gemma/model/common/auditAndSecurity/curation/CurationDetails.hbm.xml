@@ -26,7 +26,7 @@
             <column name="NOTE_AUDIT_EVENT_FK" not-null="false" sql-type="BIGINT" unique="true"/>
         </many-to-one>
         <property name="lastUpdated" type="java.util.Date">
-            <column name="LAST_UPDATED" not-null="false" unique="false" sql-type="DATETIME"/>
+            <column name="LAST_UPDATED" not-null="false" unique="false" sql-type="DATETIME(3)"/>
         </property>
         <property name="troubled" type="java.lang.Boolean">
             <column name="TROUBLED" not-null="true" unique="false" sql-type="TINYINT"/>

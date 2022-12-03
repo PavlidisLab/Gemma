@@ -42,3 +42,17 @@ alter table EXTERNAL_DATABASE
     add column EXTERNAL_DATABASE_FK BIGINT after DATABASE_SUPPLIER_FK;
 alter table EXTERNAL_DATABASE
     add constraint EXTERNAL_DATABASE_FKC foreign key (EXTERNAL_DATABASE_FK) references EXTERNAL_DATABASE (ID);
+
+-- add precision to our datetime to match that of java.util.Date
+alter table PHENOTYPE_ASSOCIATION modify column LAST_UPDATED DATETIME(3);
+alter table AUDIT_EVENT modify column DATE DATETIME(3);
+alter table CONTACT modify column SIGNUP_TOKEN_DATESTAMP DATETIME(3);
+alter table JOB_INFO
+    modify column START_TIME DATETIME(3),
+    modify column END_TIME DATETIME(3);
+alter table CURATION_DETAILS modify column LAST_UPDATED DATETIME(3);
+alter table EXTERNAL_DATABASE modify column LAST_UPDATED DATETIME(3);
+alter table BIO_ASSAY modify column PROCESSING_DATE DATETIME(3);
+
+-- initially stored as a DATETIME, but publication time is just not a thing
+alter table BIBLIOGRAPHIC_REFERENCE modify column PUBLICATION_DATE DATE;

@@ -139,7 +139,7 @@ public class GeneMultifunctionalityPopulationServiceTest extends BaseSpringConte
         assertThat( ed ).isNotNull();
         assertThat( ed.getLastUpdated() )
                 .isNotNull()
-                .isBetween( DateUtils.round( beforeUpdateDate, Calendar.SECOND ), DateUtils.round( new Date(), Calendar.SECOND ), true, true );
+                .isBetween( beforeUpdateDate, new Date(), true, true );
 
         List<AuditEvent> auditEvents = ed.getAuditTrail().getEvents();
         assertThat( auditEvents ).hasSizeGreaterThanOrEqualTo( 2 );

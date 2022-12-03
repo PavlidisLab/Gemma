@@ -9,7 +9,7 @@
             <generator class="native"/>
         </id>
         <property access="field" name="date" type="java.util.Date">
-            <column name="DATE" not-null="true" sql-type="DATETIME"/>
+            <column name="DATE" not-null="true" sql-type="DATETIME(3)"/>
         </property>
         <property access="field" name="action"
                   type="ubic.gemma.model.common.auditAndSecurity.AuditActionEnum">
