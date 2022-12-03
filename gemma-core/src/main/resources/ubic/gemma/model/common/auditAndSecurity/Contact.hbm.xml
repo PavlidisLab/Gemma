@@ -42,7 +42,7 @@
                     <column name="SIGNUP_TOKEN" not-null="false" unique="false" sql-type="VARCHAR(255)"/>
                 </property>
                 <property name="signupTokenDatestamp" type="java.util.Date">
-                    <column name="SIGNUP_TOKEN_DATESTAMP" not-null="false" unique="false" sql-type="DATETIME"/>
+                    <column name="SIGNUP_TOKEN_DATESTAMP" not-null="false" unique="false" sql-type="DATETIME(3)"/>
                 </property>
                 <set name="jobs" lazy="true" fetch="select" inverse="true">
                     <cache usage="read-write"/>

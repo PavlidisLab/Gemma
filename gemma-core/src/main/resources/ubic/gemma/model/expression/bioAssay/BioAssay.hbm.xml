@@ -18,7 +18,7 @@
          <column name="DESCRIPTION" not-null="false" unique="false" sql-type="text"/>
       </property>
       <property name="processingDate" type="java.util.Date">
-         <column name="PROCESSING_DATE" not-null="false" unique="false" sql-type="DATETIME"/>
+         <column name="PROCESSING_DATE" not-null="false" unique="false" sql-type="DATETIME(3)"/>
       </property>
       <property name="sequenceReadCount" type="java.lang.Integer">
          <column name="SEQUENCE_READ_COUNT" not-null="false" unique="false" sql-type="INTEGER"/>

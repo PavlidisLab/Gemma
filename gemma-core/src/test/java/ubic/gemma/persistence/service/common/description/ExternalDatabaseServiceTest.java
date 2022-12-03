@@ -75,6 +75,14 @@ public class ExternalDatabaseServiceTest extends BaseSpringContextTest {
                         tuple( AuditAction.UPDATE, currentUser ) ); // from AuditAdvice on update()
         assertThat( externalDatabase.getAuditTrail().getEvents().get( 1 ).getNote() )
                 .isEqualTo( "Yep" );
+        // make sure that the last updated date is properly stored
+        Date lastUpdated = externalDatabase.getLastUpdated();
+        assertThat( lastUpdated ).isNotNull();
+        externalDatabase = externalDatabaseService.find( externalDatabase );
+        assertThat( externalDatabase ).isNotNull();
+        assertThat( externalDatabase.getLastUpdated() ).isNotNull();
+        assertThat( externalDatabase.getLastUpdated().getTime() )
+                .isEqualTo( lastUpdated.getTime() );
     }
 
     @Test
