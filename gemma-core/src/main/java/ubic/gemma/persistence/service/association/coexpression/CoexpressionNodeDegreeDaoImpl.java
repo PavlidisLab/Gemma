@@ -40,7 +40,7 @@ public class CoexpressionNodeDegreeDaoImpl extends AbstractDao<GeneCoexpressionN
 
     /**
      * The coexpression node degree model has its ID assigned from its associated {@link Gene} and thus cannot be
-     * persisted with {@link org.hibernate.classic.Session#persist(Object)}.
+     * persisted with {@link org.hibernate.Session#persist(Object)}.
      */
     @Override
     @SuppressWarnings("MethodDoesntCallSuperMethod")
