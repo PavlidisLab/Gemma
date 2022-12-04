@@ -16,7 +16,7 @@
 	<parent>
 		<groupId>ubc.pavlab</groupId>
 		<artifactId>pavlab-starter-parent</artifactId>
-		<version>1.2.5</version>
+		<version>1.3.0-SNAPSHOT</version>
 	</parent>
 	<modules>
 		<module>gemma-core</module>
@@ -235,11 +235,10 @@
 		<dependency>
 			<groupId>org.hibernate</groupId>
 			<artifactId>hibernate-ehcache</artifactId>
-			<scope>compile</scope>
 		</dependency>
 		<dependency>
-			<groupId>mysql</groupId>
-			<artifactId>mysql-connector-java</artifactId>
+			<groupId>com.mysql</groupId>
+			<artifactId>mysql-connector-j</artifactId>
 		</dependency>
 		<!-- mitigate a vulnerability in mysql-connector-java dependency (see https://nvd.nist.gov/vuln/detail/CVE-2022-3171) -->
 		<dependency>
@@ -258,7 +257,7 @@
 		<!-- Caching (version is dictated by hibernate-ehcache) -->
 		<dependency>
 			<groupId>net.sf.ehcache</groupId>
-			<artifactId>ehcache-core</artifactId>
+			<artifactId>ehcache</artifactId>
 		</dependency>
 
 		<!-- Utilities -->
@@ -389,7 +388,7 @@
 		</dependency>
 		<dependency>
 			<groupId>org.apache.logging.log4j</groupId>
-			<artifactId>log4j-slf4j-impl</artifactId>
+			<artifactId>log4j-slf4j2-impl</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.logging.log4j</groupId>
@@ -644,10 +643,10 @@
 		</plugins>
 	</reporting>
 	<properties>
-		<gsec.version>0.0.10</gsec.version>
-		<spring.version>3.2.18.RELEASE</spring.version>
+		<gsec.version>0.0.11-SNAPSHOT</gsec.version>
+		<spring.version>4.3.30.RELEASE</spring.version>
 		<spring.security.version>3.2.10.RELEASE</spring.security.version>
-		<jersey.version>2.25.1</jersey.version>
+		<jersey.version>2.27</jersey.version>
 		<jackson.version>2.14.1</jackson.version>
 		<swagger.version>2.2.8</swagger.version>
 		<jawr.version>3.9</jawr.version>

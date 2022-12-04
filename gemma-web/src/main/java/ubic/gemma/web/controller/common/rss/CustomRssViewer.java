@@ -18,9 +18,9 @@
  */
 package ubic.gemma.web.controller.common.rss;
 
-import com.sun.syndication.feed.rss.Channel;
-import com.sun.syndication.feed.rss.Content;
-import com.sun.syndication.feed.rss.Item;
+import com.rometools.rome.feed.rss.Channel;
+import com.rometools.rome.feed.rss.Content;
+import com.rometools.rome.feed.rss.Item;
 import org.apache.commons.lang3.time.DateUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;

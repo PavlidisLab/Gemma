@@ -18,10 +18,9 @@
  */
 package ubic.gemma.web.remote;
 
+import org.directwebremoting.ConversionException;
 import org.directwebremoting.convert.StringConverter;
-import org.directwebremoting.extend.InboundContext;
 import org.directwebremoting.extend.InboundVariable;
-import org.directwebremoting.extend.MarshallException;
 import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
 
 /**
@@ -30,8 +29,8 @@ import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
  */
 public class StandardQuantitationTypeConverter extends StringConverter {
     @Override
-    public Object convertInbound( Class paramType, InboundVariable iv, InboundContext inctx ) throws MarshallException {
-        String value = ( String ) super.convertInbound( paramType, iv, inctx );
+    public Object convertInbound( Class<?> paramType, InboundVariable iv ) throws ConversionException {
+        String value = ( String ) super.convertInbound( paramType, iv );
         return StandardQuantitationType.valueOf( value );
     }
 }

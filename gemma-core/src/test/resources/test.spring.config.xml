@@ -5,9 +5,7 @@
 
     <bean id="configurationPropertyConfigurer"
           class="ubic.gemma.persistence.util.CommonsConfigurationPropertyPlaceholderConfigurer">
-        <property name="configuration">
-            <ref local="buildProperties"/>
-        </property>
+        <property name="configuration" ref="buildProperties"/>
         <property name="locations">
             <list>
                 <value>classpath:default.properties</value>
@@ -18,9 +16,7 @@
     </bean>
 
     <bean id="buildPropertiesFileHandler" class="org.apache.commons.configuration2.io.FileHandler" init-method="load">
-        <constructor-arg index="0">
-            <ref local="buildProperties"/>
-        </constructor-arg>
+        <constructor-arg index="0" ref="buildProperties"/>
         <property name="fileName" value="default.properties"/>
     </bean>
 

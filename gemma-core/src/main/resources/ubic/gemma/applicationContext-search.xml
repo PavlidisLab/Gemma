@@ -31,7 +31,7 @@
         <property name="compass" ref="compassExpression"/>
         <property name="gpsDevices">
             <list>
-                <ref local="hibernateGpsDevice"/>
+                <ref bean="hibernateGpsDevice"/>
             </list>
         </property>
     </bean>
@@ -40,7 +40,7 @@
         <property name="compass" ref="compassGene"/>
         <property name="gpsDevices">
             <list>
-                <ref local="hibernateGpsDevice"/>
+                <ref bean="hibernateGpsDevice"/>
             </list>
         </property>
     </bean>
@@ -49,7 +49,7 @@
         <property name="compass" ref="compassArray"/>
         <property name="gpsDevices">
             <list>
-                <ref local="hibernateGpsDevice"/>
+                <ref bean="hibernateGpsDevice"/>
             </list>
         </property>
     </bean>
@@ -58,7 +58,7 @@
         <property name="compass" ref="compassBibliographic"/>
         <property name="gpsDevices">
             <list>
-                <ref local="hibernateGpsDevice"/>
+                <ref bean="hibernateGpsDevice"/>
             </list>
         </property>
     </bean>
@@ -67,7 +67,7 @@
         <property name="compass" ref="compassProbe"/>
         <property name="gpsDevices">
             <list>
-                <ref local="hibernateGpsDevice"/>
+                <ref bean="hibernateGpsDevice"/>
             </list>
         </property>
     </bean>
@@ -76,7 +76,7 @@
         <property name="compass" ref="compassBiosequence"/>
         <property name="gpsDevices">
             <list>
-                <ref local="hibernateGpsDevice"/>
+                <ref bean="hibernateGpsDevice"/>
             </list>
         </property>
     </bean>
@@ -85,7 +85,7 @@
         <property name="compass" ref="compassGeneSet"/>
         <property name="gpsDevices">
             <list>
-                <ref local="hibernateGpsDevice"/>
+                <ref bean="hibernateGpsDevice"/>
             </list>
         </property>
     </bean>
@@ -94,7 +94,7 @@
         <property name="compass" ref="compassExperimentSet"/>
         <property name="gpsDevices">
             <list>
-                <ref local="hibernateGpsDevice"/>
+                <ref bean="hibernateGpsDevice"/>
             </list>
         </property>
     </bean>

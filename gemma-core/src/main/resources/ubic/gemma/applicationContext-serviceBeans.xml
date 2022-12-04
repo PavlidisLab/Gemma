@@ -22,9 +22,7 @@
         are listed in a resource. If the resource is in your classpath, list in in 'locations'. Other config files can be added by
         defining PropertiesConfiguration instances -->
     <bean id="userPropertiesFileHandler" class="org.apache.commons.configuration2.io.FileHandler" init-method="load">
-        <constructor-arg index="0">
-            <ref local="userProperties"/>
-        </constructor-arg>
+        <constructor-arg index="0" ref="userProperties"/>
         <property name="fileName" value="Gemma.properties"/>
     </bean>
 
@@ -33,9 +31,7 @@
     <bean id="configurationPropertyConfigurer"
           class="ubic.gemma.persistence.util.CommonsConfigurationPropertyPlaceholderConfigurer"
           depends-on="userPropertiesFileHandler">
-        <property name="configuration">
-            <ref local="userProperties"/>
-        </property>
+        <property name="configuration" ref="userProperties"/>
         <property name="locations">
             <list>
                 <value>classpath:default.properties</value>

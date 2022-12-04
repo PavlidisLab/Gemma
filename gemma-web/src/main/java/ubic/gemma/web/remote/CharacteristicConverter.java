@@ -19,30 +19,26 @@
 
 package ubic.gemma.web.remote;
 
+import org.directwebremoting.ConversionException;
 import org.directwebremoting.convert.BeanConverter;
-import org.directwebremoting.dwrp.ParseUtil;
-import org.directwebremoting.dwrp.ProtocolConstants;
 import org.directwebremoting.extend.*;
-import org.directwebremoting.util.LocalUtil;
-import org.directwebremoting.util.Messages;
-
 import ubic.gemma.model.common.description.Characteristic;
 
 import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import static org.directwebremoting.extend.ConvertUtil.splitInbound;
+
 /**
  * @author kelsey
- *
  */
 public class CharacteristicConverter extends BeanConverter {
 
     @SuppressWarnings("unchecked")
     @Override
-    public Object convertInbound( Class paramType, InboundVariable iv, InboundContext inctx ) throws MarshallException {
+    public Object convertInbound( Class<?> paramType, InboundVariable iv ) throws ConversionException {
         String value = iv.getValue();
 
         // If the text is null then the whole bean is null
@@ -51,13 +47,12 @@ public class CharacteristicConverter extends BeanConverter {
         }
 
         if ( !value.startsWith( ProtocolConstants.INBOUND_MAP_START ) ) {
-            throw new MarshallException( paramType, Messages.getString( "BeanConverter.FormatError",
-                    ProtocolConstants.INBOUND_MAP_START ) );
+            throw new ConversionException( paramType, String.format( "Inbound variable does not start with '%s'.", ProtocolConstants.INBOUND_MAP_START ) );
         }
 
         if ( !value.endsWith( ProtocolConstants.INBOUND_MAP_END ) ) {
-            throw new MarshallException( paramType, Messages.getString( "BeanConverter.FormatError",
-                    ProtocolConstants.INBOUND_MAP_START ) );
+            throw new ConversionException( paramType, String.format( "Inbound variable does not end with '%s'.", ProtocolConstants.INBOUND_MAP_END ) );
+            // ProtocolConstants.INBOUND_MAP_START ) );
         }
 
         value = value.substring( 1, value.length() - 1 );
@@ -68,17 +63,16 @@ public class CharacteristicConverter extends BeanConverter {
             Object bean = Characteristic.Factory.newInstance();
 
             if ( instanceType != null ) {
-                inctx.addConverted( iv, instanceType, bean );
+                iv.getContext().addConverted( iv, instanceType, bean );
             } else {
-                inctx.addConverted( iv, paramType, bean );
+                iv.getContext().addConverted( iv, paramType, bean );
             }
 
             Map<String, Property> properties = getPropertyMapFromObject( bean, false, true );
 
             // Loop through the properties passed in
 
-            for ( Iterator<Entry<String, String>> it = tokens.entrySet().iterator(); it.hasNext(); ) {
-                Map.Entry<String, String> entry = it.next();
+            for ( Entry<String, String> entry : tokens.entrySet() ) {
                 String key = entry.getKey();
                 String val = entry.getValue();
 
@@ -89,14 +83,14 @@ public class CharacteristicConverter extends BeanConverter {
 
                 Class<?> propType = property.getPropertyType();
 
-                String[] split = ParseUtil.splitInbound( val );
-                String splitValue = split[LocalUtil.INBOUND_INDEX_VALUE];
-                String splitType = split[LocalUtil.INBOUND_INDEX_TYPE];
+                String[] split = splitInbound( val );
+                String splitValue = split[ConvertUtil.INBOUND_INDEX_VALUE];
+                String splitType = split[ConvertUtil.INBOUND_INDEX_TYPE];
 
-                InboundVariable nested = new InboundVariable( iv.getLookup(), null, splitType, splitValue );
-                TypeHintContext incc = createTypeHintContext( inctx, property );
+                InboundVariable nested = new InboundVariable( iv.getContext(), null, splitType, splitValue );
+                Property incc = createTypeHintContext( iv.getContext(), property );
 
-                Object output = converterManager.convertInbound( propType, nested, inctx, incc );
+                Object output = converterManager.convertInbound( propType, nested, incc );
 
                 // Unfortunate hack. Change the properties association to be a Set instead of a Collection in the
                 // model; Model think this is a generic Collection, Hibernate thinks its a Set. DWR converts collections
@@ -111,10 +105,10 @@ public class CharacteristicConverter extends BeanConverter {
             }
 
             return bean;
-        } catch ( MarshallException ex ) {
+        } catch ( ConversionException ex ) {
             throw ex;
         } catch ( Exception ex ) {
-            throw new MarshallException( paramType, ex );
+            throw new ConversionException( paramType, ex );
         }
     }
 }

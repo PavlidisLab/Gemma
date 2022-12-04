@@ -59,7 +59,7 @@ public class Filter {
      */
     private static final ConfigurableConversionService conversionService = new GenericConversionService();
 
-    private static <T> void addConverter( Class<?> targetClass, Converter<String, T> converter, Converter<T, String> reverseConverter ) {
+    private static <T> void addConverter( Class<T> targetClass, Converter<String, T> converter, Converter<T, String> reverseConverter ) {
         conversionService.addConverter( String.class, targetClass, converter );
         conversionService.addConverter( targetClass, String.class, reverseConverter );
     }
