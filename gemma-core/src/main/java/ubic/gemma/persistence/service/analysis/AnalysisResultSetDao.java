@@ -8,9 +8,6 @@ import ubic.gemma.persistence.service.BaseVoEnabledDao;
 
 /**
  * Generic DAO for manipulating {@link AnalysisResultSet}.
- *
- * @param <O>
- * @param <VO>
  */
 public interface AnalysisResultSetDao<K extends AnalysisResult, O extends AnalysisResultSet<K>> extends BaseDao<O> {
 }

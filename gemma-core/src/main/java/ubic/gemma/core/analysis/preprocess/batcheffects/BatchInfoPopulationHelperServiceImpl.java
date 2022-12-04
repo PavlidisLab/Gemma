@@ -268,8 +268,6 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
      * @return                                          map of batch names to the headers (sample-specific) for that
      *                                                  batch. It will be empty if batches
      *                                                  couldn't be determined.
-     * @throws FASTQHeadersPresentButNotUsableException
-     * @throws SingletonBatchesException
      */
     Map<String, Collection<String>> convertHeadersToBatches( Collection<String> headers )
             throws FASTQHeadersPresentButNotUsableException, SingletonBatchesException {
@@ -474,23 +472,21 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
     /**
      * We expect something like: @SRR5938435.1.1 D8ZGT8Q1:199:C5GKYACXX:5:1101:1224:1885 length=100 but can have extra
      * fields like
-     * @SRR12623632.1.1 NB551168:228:HF7FFBGX7:1:11101:12626:1034_RX:Z:CGCTNTNN_QX:Z:36,36,36,36,2,36,2,2 length=75
-     * 
+     * <p>
+     * {@code @SRR12623632.1.1 NB551168:228:HF7FFBGX7:1:11101:12626:1034_RX:Z:CGCTNTNN_QX:Z:36,36,36,36,2,36,2,2 length=75}
+     * <p>
      * Only interested middle section (D8ZGT8Q1:199:C5GKYACXX:5 of the example);
-     * 
+     * <p>
      * Underscores can be used instead of ":", see https://www.ncbi.nlm.nih.gov/sra/docs/submitformats/ and
      * https://help.basespace.illumina.com/articles/descriptive/fastq-files/
-     * 
+     * <p>
      * We augment the original header with the GPL id, which is only used if the machine etc. cannot be read from the
      * rest of the header
-     * 
-     * Format 1: <platform id>;;;<machine_id>:<run number>:<flowcell ID>:<lane>:<tile>:<x-pos>:<y-pos> <read>:<is
-     * filtered>:<control
-     * number>:<index sequence>; we can use the first four fields
-     * 
-     * Format 2: <platform id>;;;<machine_id>:<lane>:<tile>:<x_coord>:<y_coord>; we can use machine and lane.
-     * 
-     * 
+     * <p>
+     * Format 1: {@code <platform id>;;;<machine_id>:<run number>:<flowcell ID>:<lane>:<tile>:<x-pos>:<y-pos> <read>:<is filtered>:<control number>:<index sequence>;} we can use the first four fields
+     * <p>
+     * Format 2: {@code <platform id>;;;<machine_id>:<lane>:<tile>:<x_coord>:<y_coord>;} we can use machine and lane.
+     *
      * @param  header FASTQ header (can be multi-headers for cases where there is more than on FASTQ file)
      * @return        representation of the batch info, which is going to be a portion of the header string
      */
@@ -638,7 +634,6 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
         }
 
         /**
-         * @return
          */
         private FastqHeaderData dropResolution() {
             // note that 'device' is the GPL if the header wasn't usable
@@ -744,10 +739,7 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
 
         /**
          * e.g. HW-ST997_0144_6_1101_1138_2179 - first three fields.
-         * 
-         * @param device
-         * @param flowcell
-         * @param lane
+         *
          */
         public FastqHeaderData( String device, String flowcell, String lane ) {
             this( device, lane );

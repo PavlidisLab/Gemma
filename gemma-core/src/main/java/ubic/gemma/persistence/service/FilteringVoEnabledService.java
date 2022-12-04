@@ -11,9 +11,6 @@ import java.util.List;
 
 /**
  * Interface VO-enabled service with filtering capabilities.
- *
- * @param <O>
- * @param <VO>
  */
 public interface FilteringVoEnabledService<O extends Identifiable, VO extends IdentifiableValueObject<O>>
         extends FilteringService<O>, BaseVoEnabledService<O, VO> {

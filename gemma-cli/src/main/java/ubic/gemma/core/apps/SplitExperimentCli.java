@@ -126,8 +126,6 @@ public class SplitExperimentCli extends ExpressionExperimentManipulatingCLI {
     /**
      * Adapted from code in DifferentialExpressionAnalysisCli
      *
-     * @param ee
-     * @return
      */
     private ExperimentalFactor guessFactor( ExpressionExperiment ee ) {
 

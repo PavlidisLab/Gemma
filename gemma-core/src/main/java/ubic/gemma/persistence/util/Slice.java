@@ -57,8 +57,6 @@ public class Slice<O> extends AbstractList<O> implements List<O> {
     /**
      * This is unfortunately necessary because it it blindly casted.
      * This is necessary
-     * @param elem
-     * @return
      */
     @Override
     @Deprecated

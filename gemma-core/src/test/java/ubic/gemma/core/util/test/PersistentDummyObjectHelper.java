@@ -370,7 +370,6 @@ public class PersistentDummyObjectHelper {
      *
      * Random statistics will be generated for all the probes defined in the provided {@link ArrayDesign}.
      *
-     * @return
      */
     public ExpressionExperiment getTestExpressionExperimentWithAnalysisAndResults() {
         ArrayDesign ad = getTestPersistentArrayDesign( 10, true, false );

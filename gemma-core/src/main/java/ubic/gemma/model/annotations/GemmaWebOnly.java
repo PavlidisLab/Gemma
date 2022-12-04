@@ -10,7 +10,7 @@ import java.lang.annotation.Target;
 
 /**
  * Indicate that a property is exclusively used for Gemma Web.
- * <p/>
+ * <p>
  * Fields and getters annotated with this are excluded from Jackson JSON serialization and will not appear in the Gemma
  * RESTful API.
  */

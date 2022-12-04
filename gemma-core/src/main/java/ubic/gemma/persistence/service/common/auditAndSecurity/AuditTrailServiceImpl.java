@@ -83,7 +83,6 @@ public class AuditTrailServiceImpl extends AbstractService<AuditTrail> implement
      * @param auditEventType the type of the event that should be created.
      * @param note           string displayed as a note for the event
      * @param detail         detailed description of the event.
-     * @return the new AuditEvent that was created in the audit trail of the given auditable object.
      * @see AuditTrailService#addUpdateEvent(Auditable, AuditEventType, String, String)
      */
     @Override

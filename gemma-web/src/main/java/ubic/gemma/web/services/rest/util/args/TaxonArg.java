@@ -60,7 +60,6 @@ public abstract class TaxonArg<T> extends AbstractEntityArg<T, Taxon, TaxonServi
     /**
      * Lists datasets on the taxon that this TaxonArg represents.
      *
-     * @param sortAsc                     see ExpressionExperimentDaoImpl#loadValueObjectsPreFilter
      * @param expressionExperimentService the service that will be used to retrieve the EEVOs.
      * @param taxonService                the service that will be used to retrieve the persistent Taxon object.
      * @param filters                     see ExpressionExperimentDaoImpl#loadValueObjectsPreFilter

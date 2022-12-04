@@ -77,7 +77,6 @@ public interface ArrayDesignAnnotationService {
      * 
      * @param  inputAd     platform to process
      * @param  overWrite   if true existing files will be clobbered
-     * @throws IOException
      */
     void create( ArrayDesign inputAd, Boolean overWrite ) throws IOException;
 

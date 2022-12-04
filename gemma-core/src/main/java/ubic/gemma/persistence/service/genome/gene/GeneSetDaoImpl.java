@@ -197,9 +197,7 @@ public class GeneSetDaoImpl extends AbstractDao<GeneSet> implements GeneSetDao {
 
     /**
      * Retrieve taxa for genesets
-     * 
-     * @param  ids
-     * @return
+     *
      */
     private Map<Long, Taxon> getTaxa( Collection<Long> ids ) {
         // fast

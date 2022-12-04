@@ -245,8 +245,6 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
     /**
      * Remove bioassays that are no longer needed
      *
-     * @param unusedBADs
-     * @param maxBAD
      */
     private void cleanupUnused( Collection<BioAssayDimension> unusedBADs, BioAssayDimension maxBAD ) {
         ExpressionExperimentPlatformSwitchService.log.info( "Checking for unused BioAssays after merge" );
@@ -279,9 +277,6 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
     /**
      * Find the bioassaydimension that covers all the biomaterials.
      *
-     * @param  ee
-     * @param  unusedBADs
-     * @return
      */
     private BioAssayDimension doMultiSample( ExpressionExperiment ee, Collection<BioAssayDimension> unusedBADs ) {
 
@@ -398,9 +393,6 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
     /**
      * Set up a map of sequences to elements for the platform we're switching to
      *
-     * @param arrayDesign
-     * @param designElementMap
-     * @param elsWithNoSeq
      */
     private void populateCSeq( ArrayDesign arrayDesign,
             Map<BioSequence, Collection<CompositeSequence>> designElementMap,
@@ -487,13 +479,8 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
     /**
      * Switch the vectors from one platform to the other, using the bioassaydimension passed if non-null
      *
-     * @param  ee
-     * @param  arrayDesign
-     * @param  designElementMap
      * @param  targetBioAssayDimension - if null we keep the current one; otherwise we rewrite data datavectors to use
      *                                 the new one.
-     * @param  usedDesignElements
-     * @param  oldAd
      * @return how many vectors were switched
      */
     private int switchDataForPlatform( ExpressionExperiment ee, ArrayDesign arrayDesign,

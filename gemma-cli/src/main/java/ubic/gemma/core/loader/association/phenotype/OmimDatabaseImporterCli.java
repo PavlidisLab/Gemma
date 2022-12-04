@@ -100,7 +100,6 @@ public class OmimDatabaseImporterCli extends ExternalDatabaseEvidenceImporterAbs
     /**
      * specific to OMIM we need to combine lines with the same ncbiGeneId + omimPhenotypeId
      *
-     * @throws IOException
      */
     private void combinePhenotypes() throws IOException {
 
@@ -162,9 +161,6 @@ public class OmimDatabaseImporterCli extends ExternalDatabaseEvidenceImporterAbs
     }
 
     /**
-     * @param valueUri
-     * @param valueUri2
-     * @return
      */
     private String combineUri( String valueUri, String valueUri2 ) {
 
@@ -190,10 +186,6 @@ public class OmimDatabaseImporterCli extends ExternalDatabaseEvidenceImporterAbs
     /**
      * return all common pubmed between an omimGeneId and a omimPhenotypeId
      *
-     * @param omimGeneId
-     * @param omimPhenotypeId
-     * @param omimIdToPubmeds
-     * @return
      */
     private Collection<Long> findCommonPubmed( Long omimGeneId, Long omimPhenotypeId,
             Map<Long, Collection<Long>> omimIdToPubmeds ) {
@@ -214,11 +206,6 @@ public class OmimDatabaseImporterCli extends ExternalDatabaseEvidenceImporterAbs
     /**
      * process all OMIM files to get the data out and manipulates it
      *
-     * @param morbidmap
-     * @return
-     * @throws NumberFormatException
-     * @throws IOException
-     * @throws InterruptedException
      */
     private Map<Long, Collection<Long>> findCommonPubmed( String morbidmap )
             throws NumberFormatException, IOException, InterruptedException {

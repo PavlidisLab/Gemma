@@ -423,8 +423,6 @@ public class GeeqServiceImpl extends AbstractVoEnabledService<Geeq, GeeqValueObj
 
     /**
      *
-     * @param ads
-     * @param gq
      */
     private void scoreAvgPlatformSize( Collection<ArrayDesign> ads, Geeq gq ) {
         double score;
@@ -466,8 +464,6 @@ public class GeeqServiceImpl extends AbstractVoEnabledService<Geeq, GeeqValueObj
 
     /**
      *
-     * @param ee
-     * @param gq
      */
     private void scoreSampleSize( ExpressionExperiment ee, Geeq gq ) {
         double score;

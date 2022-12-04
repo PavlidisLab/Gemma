@@ -36,7 +36,7 @@ public final class PrimitiveTypeEnum extends PrimitiveType implements org.hibern
     /**
      * Default constructor. Hibernate needs the default constructor to retrieve an instance of the enum from a JDBC
      * resultset. The instance will be converted to the correct enum instance in
-     * {@link #nullSafeGet(java.sql.ResultSet, String[], Object)}.
+     * {@link #nullSafeGet(java.sql.ResultSet, String[], SessionImplementor, Object)}.
      */
     public PrimitiveTypeEnum() {
         super();
@@ -98,9 +98,6 @@ public final class PrimitiveTypeEnum extends PrimitiveType implements org.hibern
         return value.hashCode();
     }
 
-    /**
-     * @see org.hibernate.usertype.UserType#nullSafeGet(java.sql.ResultSet, String[], Object)
-     */
     @Override
     public Object nullSafeGet( ResultSet resultSet, String[] values, SessionImplementor sessionImplementor, Object owner )
             throws HibernateException, SQLException {
@@ -108,9 +105,6 @@ public final class PrimitiveTypeEnum extends PrimitiveType implements org.hibern
         return resultSet.wasNull() ? null : PrimitiveType.fromString( value );
     }
 
-    /**
-     * @see org.hibernate.usertype.UserType#nullSafeSet(java.sql.PreparedStatement, Object, int)
-     */
     @Override
     public void nullSafeSet( PreparedStatement statement, Object value, int index, SessionImplementor sessionImplementor )
             throws HibernateException, SQLException {

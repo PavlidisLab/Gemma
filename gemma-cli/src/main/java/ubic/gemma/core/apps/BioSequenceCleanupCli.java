@@ -214,9 +214,6 @@ public class BioSequenceCleanupCli extends ArrayDesignSequenceManipulatingCli {
     /**
      * Test whether two sequences are effectively equal (ignore the ID)
      *
-     * @param  one
-     * @param  that
-     * @return
      */
     private boolean equals( BioSequence one, BioSequence that ) {
 
@@ -241,7 +238,6 @@ public class BioSequenceCleanupCli extends ArrayDesignSequenceManipulatingCli {
     }
 
     /**
-     * @param bioSequences
      */
     private void processSequences( Collection<BioSequence> bioSequences ) {
         // ///////////////////////////////
@@ -324,8 +320,6 @@ public class BioSequenceCleanupCli extends ArrayDesignSequenceManipulatingCli {
     }
 
     /**
-     * @param keeper
-     * @param toRemove
      */
     private void switchAndDeleteExtra( BioSequence keeper, BioSequence toRemove ) {
 

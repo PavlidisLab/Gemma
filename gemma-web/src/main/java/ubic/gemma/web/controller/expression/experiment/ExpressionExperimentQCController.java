@@ -285,7 +285,6 @@ public class ExpressionExperimentQCController extends BaseController {
      * @param size Multiplier on the cell size. 1 or null for standard small size.
      * @param text if true, output a tabbed file instead of a png
      * @param showLabels if the row and column labels of the matrix should be shown.
-     * @param contrVal
      * @param forceShowLabels forces the display of labels in the picture
      * @param reg uses the regressed matrix (if available).
      * @param os response output stream

@@ -1439,7 +1439,6 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
 
     /**
      * Linear models solved
-     * @param designMatrix
      * @param preparedData already filtered and on a log scale. For RNA-seq this will be log2cpm. For other types of platforms it will generally be log2 intensity.
      * @param rawResults Where the results will go
      * @param librarySize RNA-seq library sizes

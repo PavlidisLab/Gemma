@@ -48,8 +48,8 @@ public abstract class AbstractQueryFilteringVoEnabledDao<O extends Identifiable,
     /**
      * Produce a query for retrieving value objects after applying a set of filters and a given ordering.
      *
-     * Note that if your implementation does not produce a {@link List <O>} when {@link Query#list()} is invoked, you
-     * must override {@link FilteringVoEnabledDao#loadValueObjectsPreFilter(Filters, Sort, int, int)}.
+     * Note that if your implementation does not produce a {@link List} of {@link O} when {@link Query#list()} is invoked,
+     * you must override {@link AbstractQueryFilteringVoEnabledDao#processLoadValueObjectsQueryResult(Object)}.
      *
      * @return a {@link Query} that produce a list of {@link O}
      */
@@ -57,7 +57,6 @@ public abstract class AbstractQueryFilteringVoEnabledDao<O extends Identifiable,
 
     /**
      * Produce a query that will be used to retrieve the size of {@link #getLoadValueObjectsQuery(Filters, Sort, EnumSet)}.
-     * @param filters
      * @return a {@link Query} which must return a single {@link Long} value
      */
     protected Query getCountValueObjectsQuery( @Nullable Filters filters ) {

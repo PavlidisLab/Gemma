@@ -150,8 +150,6 @@ public class ArrayDesignSequenceAssociationCli extends ArrayDesignSequenceManipu
     }
 
     /**
-     * @param  taxon
-     * @return
      */
     private String[] chooseBLASTdbs( Taxon taxon ) {
         String[] databases = null;

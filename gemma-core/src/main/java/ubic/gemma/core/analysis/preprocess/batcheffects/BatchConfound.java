@@ -71,7 +71,6 @@ public class BatchConfound {
      * @param ee experiment or subset
      * @param bioMaterialFactorMap as per getBioMaterialFactorMap()
      * @return collection of BatchConfoundValueObjects
-     * @throws IllegalArgumentException
      */
     private static Collection<BatchConfoundValueObject> factorBatchConfoundTest( BioAssaySet ee,
             Map<ExperimentalFactor, Map<Long, Double>> bioMaterialFactorMap ) throws IllegalArgumentException {

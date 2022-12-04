@@ -109,7 +109,6 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
 
     /**
      * You must override this method to process any options you added.
-     * @param commandLine
      */
     @Override
     protected void processStandardOptions( CommandLine commandLine ) {

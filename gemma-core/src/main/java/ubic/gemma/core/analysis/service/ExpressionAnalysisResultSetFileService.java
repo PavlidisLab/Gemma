@@ -26,7 +26,6 @@ public interface ExpressionAnalysisResultSetFileService extends TsvFileService<E
      *  - corrected pvalue (a.k.a. qvalue)
      *  - rank
      *
-     * @throws IOException
      */
     void writeTsvToAppendable( ExpressionAnalysisResultSet analysisResultSet, Map<DifferentialExpressionAnalysisResult, List<Gene>> result2Genes, Appendable appendable ) throws IOException;
 }

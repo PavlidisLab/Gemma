@@ -293,9 +293,6 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
     /**
      * Populate the search results with the value objects - we generally only have the entity class and ID (or, in some
      * cases, possibly the entity)
-     * @param entityClass
-     * @param results
-     * @param settings
      */
     @SuppressWarnings("unchecked")
     private void fillValueObjects( Class<?> entityClass, List<SearchResult<?>> results, SearchSettings settings ) {

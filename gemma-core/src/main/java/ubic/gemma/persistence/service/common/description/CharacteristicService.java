@@ -140,8 +140,6 @@ public interface CharacteristicService extends BaseVoEnabledService<Characterist
      * parentClass
      *
      * @param  parentClass     the type of object sought associated with the characteristic
-     * @param  characteristics
-     * @return
      */
     Map<Characteristic, Long> getParentIds( Class<?> parentClass, @Nullable Collection<Characteristic> characteristics );
 }

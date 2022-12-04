@@ -317,8 +317,6 @@ public class ExpressionExperimentController {
 
     /**
      *
-     * @param  taxonId
-     * @return
      */
     public List<SearchResultDisplayObject> getAllTaxonExperimentGroup( Long taxonId ) {
         return expressionExperimentSearchService.getAllTaxonExperimentGroup( taxonId );

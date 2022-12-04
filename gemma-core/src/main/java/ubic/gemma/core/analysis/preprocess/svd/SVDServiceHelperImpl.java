@@ -88,9 +88,9 @@ public class SVDServiceHelperImpl implements SVDServiceHelper {
     /**
      * Retrieve relationships between factors, biomaterials and factorvalues.
      * 
-     * @param bioMaterialFactorMap to be populated, of experimental factor -> biomaterial ID -> ID of the factor value
+     * @param bioMaterialFactorMap to be populated, of experimental factor -&gt; biomaterial ID -&gt; ID of the factor value
      *                             (just an indicator)
-     * @param biomaterial          to populate for
+     * @param bm                   to populate for
      */
     public static void populateBMFMap( Map<ExperimentalFactor, Map<Long, Double>> bioMaterialFactorMap,
             BioMaterial bm ) {

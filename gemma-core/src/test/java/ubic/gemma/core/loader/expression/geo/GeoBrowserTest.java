@@ -95,7 +95,6 @@ public class GeoBrowserTest {
     /**
      * Exercises getting details
      *
-     * @throws Exception
      */
     @Test
     @Category(SlowTest.class)

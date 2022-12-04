@@ -22,7 +22,6 @@ public class ContrastResultValueObject extends IdentifiableValueObject<ContrastR
 
     /**
      * Create a contrast value object from a given {@link ContrastResult}.
-     * @param contrastResult
      */
     public ContrastResultValueObject( ContrastResult contrastResult ) {
         super( contrastResult );

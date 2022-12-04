@@ -115,9 +115,6 @@ public class SfariDatabaseImporterCli extends ExternalDatabaseEvidenceImporterAb
     /**
      * Parse pubmed IDs
      *
-     * @param linePubmedIds
-     * @param mySet
-     * @throws Exception
      */
     private void addAllPubmed( String linePubmedIds, Set<String> mySet ) throws NumberFormatException {
 
@@ -145,7 +142,6 @@ public class SfariDatabaseImporterCli extends ExternalDatabaseEvidenceImporterAb
     }
 
     /**
-     * @throws Exception
      */
     private void checkForSfariFiles() throws Exception {
 
@@ -173,7 +169,6 @@ public class SfariDatabaseImporterCli extends ExternalDatabaseEvidenceImporterAb
     /**
      * Parse the 'gene-summary.csv' file
      *
-     * @throws Exception
      */
     private void processSfariGeneFile() throws Exception {
 
@@ -280,7 +275,6 @@ public class SfariDatabaseImporterCli extends ExternalDatabaseEvidenceImporterAb
     /**
      * Parse the gene-score.csv file
      *
-     * @throws Exception
      */
     private void processSfariScoreFile() throws Exception {
 
@@ -416,8 +410,6 @@ public class SfariDatabaseImporterCli extends ExternalDatabaseEvidenceImporterAb
      * Format score information as required for downstream processing. Expected fields are ScoreType\tScore\tStrength
      * (see {@link PhenotypeProcessingUtil} initFinalOutputFile.
      *
-     * @param scoreVO
-     * @throws IOException
      */
     private void writeScore( ScoreValueObject scoreVO ) throws IOException {
 

@@ -298,7 +298,6 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
     /**
      * Filter the characteristicValues to those that we want to display in columns in the biomaterialvalue table.
      *
-     * @param result
      */
     private void filterCharacteristics( Collection<BioMaterialValueObject> result ) {
 

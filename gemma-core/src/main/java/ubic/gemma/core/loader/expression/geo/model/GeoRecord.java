@@ -96,7 +96,6 @@ public class GeoRecord extends GeoData {
     }
 
     /**
-     * @param meshheadings
      */
     public void setMeshHeadings( String meshheadings ) {
         this.meshHeadings = meshheadings;
@@ -181,7 +180,6 @@ public class GeoRecord extends GeoData {
     }
 
     /**
-     * @param relTo
      */
     public void setSubSeriesOf( String relTo ) {
         this.subSeriesOf = relTo;
@@ -200,7 +198,6 @@ public class GeoRecord extends GeoData {
     }
 
     /**
-     * @param b
      */
     public void setSubSeries( boolean b ) {
         this.subSeries = b;
@@ -211,7 +208,6 @@ public class GeoRecord extends GeoData {
     }
 
     /**
-     * @param contains
      */
     public void setSuperSeries( boolean isSuperSeries ) {
         this.superSeries = isSuperSeries;

@@ -38,8 +38,6 @@ public class MonitoredOutputStream extends OutputStream {
     private OutputStreamListener listener;
 
     /**
-     * @param target
-     * @param listener
      */
     public MonitoredOutputStream( OutputStream target, OutputStreamListener listener ) {
         this.target = target;

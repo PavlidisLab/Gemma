@@ -529,7 +529,8 @@
 				<configuration>
 					<quiet>true</quiet>
 					<source>8</source>
-					<doclint>none</doclint>
+					<!-- with lombok, some references are invalid in the original source code -->
+					<doclint>all,-reference,-missing</doclint>
 					<links>
 						<link>https://gemma.msl.ubc.ca/resources/baseCode/apidocs/</link>
 						<link>https://dst.lbl.gov/ACSSoftware/colt/api/</link>
@@ -602,7 +603,7 @@
 				<configuration>
 					<quiet>true</quiet>
 					<source>8</source>
-					<doclint>none</doclint>
+					<doclint>all,-reference,-missing</doclint>
 					<links>
 						<link>https://gemma.msl.ubc.ca/resources/baseCode/apidocs/</link>
 						<link>https://dst.lbl.gov/ACSSoftware/colt/api/</link>

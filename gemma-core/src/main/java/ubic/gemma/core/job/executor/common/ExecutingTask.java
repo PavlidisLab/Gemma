@@ -83,13 +83,11 @@ public class ExecutingTask<T extends TaskResult> implements Callable<T> {
 
         /**
          * When progress is made on the task.
-         * @param message
          */
         void onProgress( String message );
 
         /**
          * On failure.
-         * @param e
          */
         void onFailure( Exception e );
 

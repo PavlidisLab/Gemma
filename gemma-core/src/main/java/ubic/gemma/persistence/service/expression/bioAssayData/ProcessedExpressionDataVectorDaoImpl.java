@@ -1264,9 +1264,6 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
     /**
      * Mask missing values. This is mostly for two-color (ratiometric) data.
      *
-     * @param  preferredData
-     * @param  missingValueData
-     * @return
      */
     private Map<CompositeSequence, DoubleVectorValueObject> maskAndUnpack(
             Collection<RawExpressionDataVector> preferredData, Collection<RawExpressionDataVector> missingValueData ) {
@@ -1318,7 +1315,6 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
     }
 
     /**
-     * @param rawPreferredDataVectors
      */
     private void removeDuplicateElements( Collection<RawExpressionDataVector> rawPreferredDataVectors ) {
         /*

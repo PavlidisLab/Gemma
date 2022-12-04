@@ -51,8 +51,6 @@ public abstract class AbstractEntityArg<T, O extends Identifiable, S extends Fil
     /**
      * Obtain an {@link ObjectFilter} that restrict a query to this entity.
      *
-     * @param service
-     * @return
      */
     public ObjectFilter[] getObjectFilters( S service ) {
         if ( this.getValue() instanceof String ) {

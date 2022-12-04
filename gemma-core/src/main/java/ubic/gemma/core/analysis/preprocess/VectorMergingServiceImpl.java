@@ -410,7 +410,6 @@ public class VectorMergingServiceImpl extends ExpressionExperimentVectorManipula
     }
 
     /**
-     * @param sortedOldDims
      * @return persistent bioassaydimension (either re-used or a new one)
      */
     private BioAssayDimension getNewBioAssayDimension( List<BioAssayDimension> sortedOldDims ) {

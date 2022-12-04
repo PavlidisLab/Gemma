@@ -152,7 +152,6 @@ public abstract class AbstractCLI implements CLI {
 
     /**
      * You must implement the handling for this option.
-     * @param options
      */
     @SuppressWarnings("static-access")
     protected void addAutoOption( Options options ) {
@@ -177,7 +176,6 @@ public abstract class AbstractCLI implements CLI {
     /**
      * Convenience method to add a standard pair of options to intake a host name and port number. *
      *
-     * @param options
      * @param hostRequired Whether the host name is required
      * @param portRequired Whether the port is required
      */
@@ -201,7 +199,6 @@ public abstract class AbstractCLI implements CLI {
 
     /**
      * Convenience method to add an option for parallel processing option.
-     * @param options
      */
     @SuppressWarnings("static-access")
     protected void addThreadsOption( Options options ) {
@@ -217,7 +214,6 @@ public abstract class AbstractCLI implements CLI {
      * Implement this method to add options to your command line, using the OptionBuilder.
      *
      * This is called right after {@link #buildStandardOptions(Options)} so the options will be added after standard options.
-     * @param options
      */
     protected abstract void buildOptions( Options options );
 
@@ -370,7 +366,6 @@ public abstract class AbstractCLI implements CLI {
      *
      * @throws Exception in case of unrecoverable failure (i.e. missing option or invalid value), an exception can be
      *                   raised and will result in an exit code of {@link #FAILURE}.
-     * @param commandLine
      */
     protected abstract void processOptions( CommandLine commandLine ) throws Exception;
 
@@ -461,8 +456,6 @@ public abstract class AbstractCLI implements CLI {
     /**
      * Execute batch tasks using a preconfigured {@link ExecutorService} and return all the resulting tasks results.
      *
-     * @param tasks
-     * @throws InterruptedException
      */
     protected <T> List<T> executeBatchTasks( Collection<? extends Callable<T>> tasks ) throws InterruptedException {
         List<Future<T>> futures = executorService.invokeAll( tasks );

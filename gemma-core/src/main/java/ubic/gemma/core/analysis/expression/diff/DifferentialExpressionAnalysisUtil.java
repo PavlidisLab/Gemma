@@ -297,8 +297,6 @@ public class DifferentialExpressionAnalysisUtil {
     /**
      * Returns biomaterials with 'filtered' factor values. That is, each biomaterial will only contain those factor
      * values equivalent to a factor value from one of the input experimental factors.
-     *
-     * @return Collection<BioMaterial>
      */
     private static Collection<BioMaterial> filterFactorValuesFromBiomaterials( Collection<ExperimentalFactor> factors,
             Collection<BioMaterial> biomaterials ) {

@@ -528,7 +528,6 @@ public interface ExpressionExperimentService
     boolean isBlackListed( String geoAccession );
 
     /**
-     * @param ee
      * @return true if the experiment is not explicitly marked as unsuitable for DEA; false otherwise.
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })

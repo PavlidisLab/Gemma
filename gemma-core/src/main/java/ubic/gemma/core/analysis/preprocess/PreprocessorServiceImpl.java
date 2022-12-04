@@ -276,7 +276,6 @@ public class PreprocessorServiceImpl implements PreprocessorService {
     }
 
     /**
-     * @param ee
      */
     @Override
     public void processDiagnostics( ExpressionExperiment ee ) {
@@ -378,7 +377,6 @@ public class PreprocessorServiceImpl implements PreprocessorService {
 
     /**
      *
-     * @param  ee
      * @return    processed data vectors; if they don't exist, create them. They will be thawed in either case.
      */
     private Collection<ProcessedExpressionDataVector> getProcessedExpressionDataVectors( ExpressionExperiment ee ) {
