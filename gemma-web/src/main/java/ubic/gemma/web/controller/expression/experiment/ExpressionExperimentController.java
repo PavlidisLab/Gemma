@@ -781,6 +781,11 @@ public class ExpressionExperimentController {
             throw new AccessDeniedException( "User does not have access to experiment management" );
         }
 
+        // -1 is used in the frontend as a substitute for null
+        if ( taxonId == -1L ) {
+            taxonId = null;
+        }
+
         if ( limit == null ) {
             limit = 50;
         }
