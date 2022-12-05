@@ -175,16 +175,19 @@ public class CompositeSequenceServiceImpl
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Collection<Object[]> getRawSummary( Collection<CompositeSequence> compositeSequences, Integer numResults ) {
         return this.compositeSequenceDao.getRawSummary( compositeSequences );
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Collection<Object[]> getRawSummary( ArrayDesign arrayDesign, Integer numResults ) {
         return this.compositeSequenceDao.getRawSummary( arrayDesign, numResults );
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Collection<GeneMappingSummary> getGeneMappingSummary( BioSequence biologicalCharacteristic,
             CompositeSequenceValueObject cs ) {
 
