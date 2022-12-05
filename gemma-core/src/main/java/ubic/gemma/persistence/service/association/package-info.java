@@ -1,3 +1,6 @@
+/**
+ *
+ */
 @ParametersAreNonnullByDefault
 package ubic.gemma.persistence.service.association;
 
