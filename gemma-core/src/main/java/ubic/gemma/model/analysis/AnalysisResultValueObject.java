@@ -27,4 +27,7 @@ import ubic.gemma.model.IdentifiableValueObject;
  */
 public abstract class AnalysisResultValueObject<A extends AnalysisResult> extends IdentifiableValueObject<A> {
 
+    protected AnalysisResultValueObject( A entity ) {
+        super( entity );
+    }
 }
