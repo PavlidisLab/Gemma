@@ -151,7 +151,6 @@ public class DiffExResultSetSummaryValueObject implements java.io.Serializable {
 
     /**
      * Alias for {@link #getId()} kept for backward-compatibility in the Gemma Web frontend.
-     * @deprecated use {@link #getId()} instead
      */
     @GemmaWebOnly
     public Long getResultSetId() {
