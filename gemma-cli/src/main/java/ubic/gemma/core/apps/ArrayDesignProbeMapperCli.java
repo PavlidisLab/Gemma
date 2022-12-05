@@ -178,7 +178,6 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
      * See 'configure' for how the other options are handled. (non-Javadoc)
      *
      * @see AbstractCLI#processOptions(CommandLine)
-     * @param commandLine
      */
     @Override
     protected void processOptions( CommandLine commandLine ) {

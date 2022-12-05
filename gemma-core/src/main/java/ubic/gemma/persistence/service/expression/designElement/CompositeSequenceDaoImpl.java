@@ -354,7 +354,7 @@ public class CompositeSequenceDaoImpl extends AbstractQueryFilteringVoEnabledDao
         //noinspection unchecked
         List<Gene> list = this.getSessionFactory().getCurrentSession().createQuery( queryString )
                 .setParameter( "cs", compositeSequence ).setFirstResult( offset )
-                .setMaxResults( limit > 0 ? limit : -1 ).list();
+                .setMaxResults( limit ).list();
         return new Slice<>( list, null, offset, limit, null );
 
     }
@@ -425,7 +425,7 @@ public class CompositeSequenceDaoImpl extends AbstractQueryFilteringVoEnabledDao
 
     @SuppressWarnings("unchecked")
     @Override
-    public Collection<Object[]> getRawSummary( ArrayDesign arrayDesign, Integer numResults ) {
+    public Collection<Object[]> getRawSummary( ArrayDesign arrayDesign, int numResults ) {
         if ( arrayDesign.getId() == null ) {
             throw new IllegalArgumentException( "The ArrayDesign ID cannot be null." );
         }

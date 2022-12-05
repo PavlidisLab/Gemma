@@ -18,6 +18,7 @@ import org.springframework.security.access.annotation.Secured;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.curation.Curatable;
 import ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails;
+import ubic.gemma.model.common.auditAndSecurity.eventType.CurationDetailsEvent;
 
 /**
  * Service handling manipulation with Curation Details.

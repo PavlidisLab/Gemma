@@ -42,7 +42,7 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
 
     /**
      * {@inheritDoc}
-     * <p/>
+     * <p>
      * For consistency, this is redefined in terms of {@link #loadValueObjectsPreFilter(Filters, Sort)}.
      */
     @Override
@@ -54,7 +54,7 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
 
     /**
      * {@inheritDoc}
-     * <p/>
+     * <p>
      * For consistency, this is redefined in terms of {@link #loadValueObjectsPreFilter(Filters, Sort)}.
      */
     @Override
@@ -66,7 +66,7 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
 
     /**
      * {@inheritDoc}
-     * <p/>
+     * <p>
      * For consistency, this is redefined in terms of {@link #loadValueObjectsPreFilter(Filters, Sort)}.
      */
     @Override
@@ -79,7 +79,7 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
 
     /**
      * {@inheritDoc}
-     * <p/>
+     * <p>
      * For consistency, this is redefined in terms of {@link #loadValueObjectsPreFilter(Filters, Sort)}.
      */
     @Override
@@ -92,7 +92,7 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
 
     /**
      * {@inheritDoc}
-     * <p/>
+     * <p>
      * For consistency, this is redefined in terms of {@link #loadValueObjectsPreFilter(Filters, Sort)}.
      */
     @Override

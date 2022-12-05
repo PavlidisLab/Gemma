@@ -47,10 +47,6 @@ public class JavascriptLogger {
     /**
      * Write to log with severity = "debug"
      * 
-     * @param errorMessage
-     * @param url
-     * @param line
-     * @param href
      * @param userAgent details about user's browser, OS etc
      */
     public void writeToDebugLog( String errorMessage, String url, String line, String href, String userAgent ) {
@@ -62,10 +58,6 @@ public class JavascriptLogger {
     /**
      * Write to log with severity = "error"
      * 
-     * @param errorMessage
-     * @param url
-     * @param line
-     * @param href
      * @param userAgent details about user's browser, OS etc
      */
     public void writeToErrorLog( String errorMessage, String url, String line, String href, String userAgent ) {
@@ -77,10 +69,6 @@ public class JavascriptLogger {
     /**
      * Write to log with severity = "fatal"
      * 
-     * @param errorMessage
-     * @param url
-     * @param line
-     * @param href
      * @param userAgent details about user's browser, OS etc
      */
     public void writeToFatalLog( String errorMessage, String url, String line, String href, String userAgent ) {
@@ -92,10 +80,6 @@ public class JavascriptLogger {
     /**
      * Write to log with severity = "info"
      * 
-     * @param errorMessage
-     * @param url
-     * @param line
-     * @param href
      * @param userAgent details about user's browser, OS etc
      */
     public void writeToInfoLog( String errorMessage, String url, String line, String href, String userAgent ) {
@@ -107,10 +91,6 @@ public class JavascriptLogger {
     /**
      * Defaults to writing to log with severity = "info"
      * 
-     * @param errorMessage
-     * @param url
-     * @param line
-     * @param href
      * @param userAgent details about user's browser, OS etc
      */
     public void writeToLog( String errorMessage, String url, String line, String href, String userAgent ) {
@@ -122,10 +102,6 @@ public class JavascriptLogger {
     /**
      * Write to log with severity = "warn"
      * 
-     * @param errorMessage
-     * @param url
-     * @param line
-     * @param href
      * @param userAgent details about user's browser, OS etc
      */
     public void writeToWarnLog( String errorMessage, String url, String line, String href, String userAgent ) {
@@ -137,10 +113,6 @@ public class JavascriptLogger {
     /**
      * Format input from front end into an (error) message for the log
      * 
-     * @param errorMessage
-     * @param url
-     * @param line
-     * @param href
      * @param userAgent details about user's browser, OS etc
      * @return formatted string to write to log
      */

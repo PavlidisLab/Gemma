@@ -387,7 +387,6 @@ public interface ArrayDesignService extends FilteringVoEnabledService<ArrayDesig
 
     /**
      * @param geoAccession for a GEO series or platform
-     * @return
      */
     boolean isBlackListed( String geoAccession );
 

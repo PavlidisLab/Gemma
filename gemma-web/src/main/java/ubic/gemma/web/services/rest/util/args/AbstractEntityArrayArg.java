@@ -39,7 +39,6 @@ public abstract class AbstractEntityArrayArg<A, O extends Identifiable, S extend
      * By default, this is constructing a single,
      *
      * @param service a service which provide the
-     * @return
      */
     public ObjectFilter[] getObjectFilters( S service ) throws MalformedArgException {
         try {

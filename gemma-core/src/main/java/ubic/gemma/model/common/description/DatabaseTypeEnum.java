@@ -37,7 +37,7 @@ public final class DatabaseTypeEnum extends DatabaseType implements org.hibernat
     /**
      * Default constructor. Hibernate needs the default constructor to retrieve an instance of the enum from a JDBC
      * resultset. The instance will be converted to the correct enum instance in
-     * {@link #nullSafeGet(java.sql.ResultSet, String[], Object)}.
+     * {@link #nullSafeGet(java.sql.ResultSet, String[], SessionImplementor, Object)}.
      */
     public DatabaseTypeEnum() {
         super();

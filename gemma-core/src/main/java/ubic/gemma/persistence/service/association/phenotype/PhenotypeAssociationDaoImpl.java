@@ -38,6 +38,7 @@ import ubic.gemma.model.genome.gene.phenotype.valueObject.PhenotypeValueObject;
 import ubic.gemma.persistence.service.AbstractDao;
 import ubic.gemma.persistence.util.EntityUtils;
 
+import javax.annotation.Nullable;
 import java.math.BigInteger;
 import java.sql.Timestamp;
 import java.util.*;
@@ -150,14 +151,16 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
      */
     @Override
     public Collection<PhenotypeAssociation> findEvidencesWithExternalDatabaseName( String externalDatabaseName,
-            Integer limit, int start ) {
+            int limit, int start ) {
 
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession().createQuery(
                         "select p from PhenotypeAssociation as p fetch all properties where "
                                 + "lower(p.evidenceSource.externalDatabase.name)=:name" )
-                .setParameter( "name", externalDatabaseName.toLowerCase() ).setFirstResult( start )
-                .setMaxResults( limit != null ? limit : PhenotypeAssociationDaoImpl.DEFAULT_PA_LIMIT ).list();
+                .setParameter( "name", externalDatabaseName.toLowerCase() )
+                .setFirstResult( start )
+                .setMaxResults( limit )
+                .list();
     }
 
     /**
@@ -408,7 +411,7 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
     }
 
     @Override
-    public Set<Long> findPrivateEvidenceId( Long taxonId, Integer limit ) {
+    public Set<Long> findPrivateEvidenceId( Long taxonId, int limit ) {
 
         String limitAbs;
         String orderBy;

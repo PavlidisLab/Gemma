@@ -121,14 +121,14 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
 
     @Override
     public Map<ExpressionExperimentValueObject, List<DifferentialExpressionValueObject>> find( Gene gene,
-            Collection<Long> experimentsAnalyzed, double threshold, Integer limit ) {
+            Collection<Long> experimentsAnalyzed, double threshold, int limit ) {
 
         StopWatch timer = new StopWatch();
         timer.start();
         String qs = DifferentialExpressionResultDaoImpl.fetchResultsByGeneAndExperimentsQuery
                 + " and r.correctedPvalue < :threshold";
 
-        if ( limit != null ) {
+        if ( limit > 0 ) {
             qs += " order by r.correctedPvalue";
         }
 
@@ -143,7 +143,7 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
                 .setParameter( "gene", gene )
                 .setParameterList( "experimentsAnalyzed", experimentsAnalyzed )
                 .setParameter( "threshold", threshold )
-                .setMaxResults( limit != null ? limit : -1 )
+                .setMaxResults( limit )
                 .setCacheable( true )
                 .setCacheRegion( "diffExResult" )
                 .list();
@@ -175,7 +175,7 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
 
     @Override
     public Map<ExpressionExperimentValueObject, List<DifferentialExpressionValueObject>> find(
-            Collection<Long> experiments, double qvalueThreshold, Integer limit ) {
+            Collection<Long> experiments, double qvalueThreshold, int limit ) {
 
         Map<ExpressionExperimentValueObject, List<DifferentialExpressionValueObject>> results = new HashMap<>();
 
@@ -190,7 +190,7 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
                 .createQuery( DifferentialExpressionResultDaoImpl.fetchResultsByExperimentsQuery )
                 .setParameterList( "experimentsAnalyzed", experiments )
                 .setParameter( "threshold", qvalueThreshold )
-                .setMaxResults( limit != null ? limit : -1 )
+                .setMaxResults( limit )
                 .setCacheable( true )
                 .setCacheRegion( "diffExResult" )
                 .list();
@@ -447,7 +447,7 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
                     .info( "Fetching DiffEx from DB took total of " + timer.getTime() + " ms : geneIds=" + StringUtils
                             .abbreviate( StringUtils.join( geneIds, "," ), 50 ) + " result set="
                             + StringUtils
-                                    .abbreviate( StringUtils.join( resultSetsNeeded, "," ), 50 ) );
+                            .abbreviate( StringUtils.join( resultSetsNeeded, "," ), 50 ) );
             if ( timeForFillingNonSig > 100 ) {
                 AbstractDao.log.info( "Filling in non-significant values: " + timeForFillingNonSig + "ms in total" );
             }
@@ -470,7 +470,7 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
 
     @Override
     public List<Double> findGeneInResultSets( Gene gene, ExpressionAnalysisResultSet resultSet,
-            Collection<Long> arrayDesignIds, Integer limit ) {
+            Collection<Long> arrayDesignIds, int limit ) {
 
         StopWatch timer = new StopWatch();
         timer.start();
@@ -484,9 +484,7 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
         queryObject.setLong( "gene_id", gene.getId() );
         queryObject.setLong( "rs_id", resultSet.getId() );
 
-        if ( limit != null ) {
-            queryObject.setMaxResults( limit );
-        }
+        queryObject.setMaxResults( limit );
 
         queryObject.addScalar( "CORRECTED_PVALUE", new DoubleType() );
         //noinspection unchecked
@@ -503,10 +501,10 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
 
     @Override
     public List<DifferentialExpressionValueObject> findInResultSet( ExpressionAnalysisResultSet resultSet,
-            Double threshold, Integer limit, Integer minNumberOfResults ) {
+            Double threshold, int limit, int minNumberOfResults ) {
 
-        if ( minNumberOfResults == null || minNumberOfResults < 1) {
-            throw new IllegalArgumentException( "Minimum number of results must be positive" );
+        if ( minNumberOfResults < 1 ) {
+            throw new IllegalArgumentException( "Minimum number of results must be greater than one" );
         }
 
         List<DifferentialExpressionValueObject> results = new ArrayList<>();
@@ -536,7 +534,7 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
         List<?> qResult = getSessionFactory().getCurrentSession().createQuery( qs )
                 .setParameterList( "resultsSets", resultsSets )
                 .setParameter( "threshold", threshold )
-                .setMaxResults( limit != null ? limit : -1 )
+                .setMaxResults( limit )
                 .list();
 
         // If too few probes meet threshold, redo and just get top results.
@@ -573,7 +571,7 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
      */
     @Override
     public Map<ExpressionAnalysisResultSet, List<DifferentialExpressionAnalysisResult>> findInResultSets(
-            Collection<ExpressionAnalysisResultSet> resultsAnalyzed, double threshold, Integer limit ) {
+            Collection<ExpressionAnalysisResultSet> resultsAnalyzed, double threshold, int limit ) {
 
         Map<ExpressionAnalysisResultSet, List<DifferentialExpressionAnalysisResult>> results = new HashMap<>();
 
@@ -591,7 +589,7 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
         List<?> qResult = getSessionFactory().getCurrentSession().createQuery( qs )
                 .setParameterList( "resultsAnalyzed", resultsAnalyzed )
                 .setParameter( "threshold", threshold )
-                .setMaxResults( limit != null ? limit : -1 )
+                .setMaxResults( limit )
                 .list();
 
         for ( Object o : qResult ) {
@@ -628,7 +626,7 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
 
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession().createQuery( "select ef from ExpressionAnalysisResultSet rs"
-                + " inner join rs.results r inner join rs.experimentalFactors ef where r=:differentialExpressionAnalysisResult" )
+                        + " inner join rs.results r inner join rs.experimentalFactors ef where r=:differentialExpressionAnalysisResult" )
                 .setParameter( "differentialExpressionAnalysisResult", differentialExpressionAnalysisResult ).list();
 
     }
@@ -774,7 +772,7 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
 
     @Override
     public Map<ExpressionExperimentValueObject, List<DifferentialExpressionValueObject>> find( Gene gene,
-            double threshold, Integer limit ) {
+            double threshold, int limit ) {
 
         StopWatch timer = new StopWatch();
         timer.start();
@@ -786,16 +784,14 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
             sql = sql + " and d.CORRECTED_PVALUE < :threshold ";
         }
 
-        if ( limit != null ) {
+        if ( limit > 0 ) {
             sql = sql + "  order by d.PVALUE ASC ";
         }
 
         SQLQuery query = session.createSQLQuery( sql );
 
         query.setParameter( "gene_id", gene.getId() );
-        if ( limit != null ) {
-            query.setMaxResults( limit );
-        }
+        query.setMaxResults( limit );
         if ( threshold > 0.0 ) {
             query.setParameter( "threshold", threshold );
         }
@@ -857,8 +853,8 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
 
         //noinspection unchecked
         List<Object[]> ees = session.createQuery(
-                "select ee, rs from  ExpressionAnalysisResultSet rs join fetch rs.experimentalFactors join rs.analysis a join a.experimentAnalyzed ee"
-                        + " where rs.id in (:rsids)" )
+                        "select ee, rs from  ExpressionAnalysisResultSet rs join fetch rs.experimentalFactors join rs.analysis a join a.experimentAnalyzed ee"
+                                + " where rs.id in (:rsids)" )
                 .setParameterList( "rsids", resultSets ).list();
 
         /*

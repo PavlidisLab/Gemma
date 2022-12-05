@@ -271,7 +271,7 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
             }
         } else if ( taxon != null ) {
             // get all for taxon
-            eeIds = EntityUtils.getIds( expressionExperimentService.findByTaxon( taxon, /* MAX_LUCENE_HITS */ null ) );
+            eeIds = EntityUtils.getIds( expressionExperimentService.findByTaxon( taxon ) );
         }
         return eeIds;
     }

@@ -77,14 +77,14 @@ public interface ExpressionExperimentService
             Collection<RawExpressionDataVector> newVectors );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    List<ExpressionExperiment> browse( Integer start, Integer limit );
+    List<ExpressionExperiment> browse( int start, int limit );
 
     BatchInformationFetchingEvent checkBatchFetchStatus( ExpressionExperiment ee );
 
     boolean checkHasBatchInfo( ExpressionExperiment ee );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
-    Integer countNotTroubled();
+    long countNotTroubled();
 
     /**
      * returns ids of search results.
@@ -227,16 +227,8 @@ public interface ExpressionExperimentService
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     Collection<ExpressionExperiment> findByTaxon( Taxon taxon );
 
-    /**
-     * @param taxon
-     * @param limit max number of hits to return (null == no limit)
-     * @return
-     */
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    Collection<ExpressionExperiment> findByTaxon( Taxon taxon, @Nullable Integer limit );
-
     @Secured({ "GROUP_AGENT", "AFTER_ACL_COLLECTION_READ" })
-    List<ExpressionExperiment> findByUpdatedLimit( Integer limit );
+    List<ExpressionExperiment> findByUpdatedLimit( int limit );
 
     @Secured({ "GROUP_AGENT", "AFTER_ACL_COLLECTION_READ" })
     Collection<ExpressionExperiment> findUpdatedAfter( Date date );
@@ -536,7 +528,6 @@ public interface ExpressionExperimentService
     boolean isBlackListed( String geoAccession );
 
     /**
-     * @param ee
      * @return true if the experiment is not explicitly marked as unsuitable for DEA; false otherwise.
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })

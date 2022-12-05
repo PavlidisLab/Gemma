@@ -30,14 +30,12 @@ package ubic.gemma.web.util.upload;
 public interface OutputStreamListener {
 
     /**
-     * @param bytesRead
      */
     void bytesRead( int bytesRead );
 
     void done();
 
     /**
-     * @param message
      */
     void error( String message );
 

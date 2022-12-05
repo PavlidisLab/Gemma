@@ -296,9 +296,6 @@ public class SimpleExpressionDataLoaderServiceImpl implements SimpleExpressionDa
         return bad;
     }
 
-    /**
-     * @return Collection<DesignElementDataVector>
-     */
     private Collection<RawExpressionDataVector> convertDesignElementDataVectors(
             ExpressionExperiment expressionExperiment, BioAssayDimension bioAssayDimension, ArrayDesign arrayDesign,
             QuantitationType quantitationType, DoubleMatrix<String, String> matrix ) {

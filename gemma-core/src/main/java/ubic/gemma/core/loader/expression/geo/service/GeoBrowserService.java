@@ -50,7 +50,6 @@ public interface GeoBrowserService {
      * @param  count        how many records to retrieve
      * @param  detailed     if true, more information is retrieved (slow)
      * @return              collection of GeoRecords
-     * @throws IOException
      */
     List<GeoRecord> searchGeoRecords( String searchString, int start, int count, boolean detailed ) throws IOException;
 

@@ -209,7 +209,6 @@ public class CharacteristicUpdateTaskImpl extends AbstractTask<TaskResult, Chara
      * <p>
      * For experimental designs, see ExperimentalDesignController.
      *
-     * @return
      */
     private TaskResult doUpdate() {
         Collection<AnnotationValueObject> avos = taskCommand.getAnnotationValueObjects();

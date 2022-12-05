@@ -65,7 +65,8 @@ import ubic.gemma.persistence.util.Settings;
  * Gets records from GEO and compares them to Gemma. This is used to identify data sets that are new in GEO and not in
  * Gemma.
  *
- * See {@link <a href="http://www.ncbi.nlm.nih.gov/geo/info/geo_paccess.html">here</a>} for some information
+ * See <a href="https://www.ncbi.nlm.nih.gov/geo/info/geo_paccess.html">Programmatic access to GEO</a> for
+ * some information.
  *
  * @author pavlidis
  */
@@ -319,7 +320,6 @@ public class GeoBrowser {
      * 7/2021, this is sufficient (~8000 platforms)
      *
      * @return all relevant platforms up to single-query limit of NCBI
-     * @throws IOException
      */
     public Collection<GeoRecord> getAllGEOPlatforms() throws IOException {
 
@@ -741,12 +741,6 @@ public class GeoBrowser {
     /**
      * exposed for testing
      *
-     * @param  record
-     * @param  is
-     * @throws ParserConfigurationException
-     * @throws SAXException
-     * @throws IOException
-     * @throws XPathExpressionException
      */
     void parseMINiML( GeoRecord record, InputStream is ) {
 
@@ -782,12 +776,6 @@ public class GeoBrowser {
     /**
      * exposed for testing
      *
-     * @param  record
-     * @param  isd
-     * @throws ParserConfigurationException
-     * @throws SAXException
-     * @throws IOException
-     * @throws XPathExpressionException
      */
     void parseSampleMiNIML( GeoRecord record, InputStream isd )
             throws ParserConfigurationException, SAXException, IOException, XPathExpressionException {
@@ -839,12 +827,6 @@ public class GeoBrowser {
      * Do another query to NCBI to fetch additional information not present in the eutils. Specifically: whether this is
      * a subseries, and MeSH headings associated with any publication.
      *
-     * @param  record
-     * @throws MalformedURLException
-     * @throws IOException
-     * @throws XPathExpressionException
-     * @throws ParserConfigurationException
-     * @throws SAXException
      */
     private void getDetails( GeoRecord record ) {
         URL miniMLURL = null;
@@ -888,7 +870,6 @@ public class GeoBrowser {
 
     /**
      * @param  record      to process
-     * @throws IOException
      */
     private void getMeshHeadings( GeoRecord record ) throws IOException {
         try {
@@ -919,7 +900,6 @@ public class GeoBrowser {
     /**
      * Fetch and parse MINiML for samples.
      *
-     * @param record
      */
     private void getSampleDetails( GeoRecord record ) {
 

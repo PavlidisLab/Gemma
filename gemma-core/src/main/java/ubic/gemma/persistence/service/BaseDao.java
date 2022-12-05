@@ -52,8 +52,8 @@ public interface BaseDao<T> {
      * Unlike {@link #update(Collection)}, this method does not attach the given entities to the persistence context;
      * the returned values must be used instead.
      *
-     * @see org.hibernate.classic.Session#persist(Object)
-     * @see org.hibernate.classic.Session#merge(Object)
+     * @see org.hibernate.Session#persist(Object)
+     * @see org.hibernate.Session#merge(Object)
      */
     @CheckReturnValue
     Collection<T> save( Collection<T> entities );
@@ -64,8 +64,8 @@ public interface BaseDao<T> {
      * Unlike {@link #update(Object)}, this method does not attach the given entity to the persistence context and the
      * returned value must be used instead.
      *
-     * @see org.hibernate.classic.Session#persist(Object)
-     * @see org.hibernate.classic.Session#merge(Object)
+     * @see org.hibernate.Session#persist(Object)
+     * @see org.hibernate.Session#merge(Object)
      */
     @CheckReturnValue
     T save( T entity );

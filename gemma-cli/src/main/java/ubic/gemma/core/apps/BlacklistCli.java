@@ -226,12 +226,7 @@ public class BlacklistCli extends AbstractCLIContextCLI {
     }
 
     /**
-     * @param  geo
-     * @param  gbs
-     * @param  blacklistedEntityDao
-     * @param  candidates
      * @return number of actually blacklisted experiments in this batch.
-     * @throws InterruptedException
      */
     private int fetchAndBlacklist( ExternalDatabase geo, GeoBrowser gbs, BlacklistedEntityService blacklistedEntityDao, Collection<String> candidates )
             throws InterruptedException {

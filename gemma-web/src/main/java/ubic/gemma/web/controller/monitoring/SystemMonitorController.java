@@ -25,6 +25,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import ubic.gemma.persistence.util.monitor.HibernateMonitor;
 import ubic.gemma.web.util.CacheMonitor;
 
+import javax.servlet.ServletContext;
 import java.lang.management.ManagementFactory;
 import java.lang.management.OperatingSystemMXBean;
 
@@ -42,6 +43,9 @@ public class SystemMonitorController {
 
     @Autowired
     private HibernateMonitor hibernateMonitor;
+
+    @Autowired
+    private ServletContext servletContext;
 
     /**
      * Flush (clear) all caches. Exposed to AJAX

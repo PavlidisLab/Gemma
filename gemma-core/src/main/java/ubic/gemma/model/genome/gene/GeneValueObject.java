@@ -40,7 +40,7 @@ import java.util.stream.Collectors;
  * @author kelsey
  */
 @Data
-@EqualsAndHashCode(of = { "ncbiId", "officialSymbol", "taxonId" }, callSuper = true)
+@EqualsAndHashCode(of = { "ncbiId", "officialSymbol", "taxon" }, callSuper = true)
 public class GeneValueObject extends IdentifiableValueObject<Gene> implements Serializable {
     /**
      * The serial version UID of this class. Needed for serialization.

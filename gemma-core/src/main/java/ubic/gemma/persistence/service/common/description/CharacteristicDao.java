@@ -49,7 +49,7 @@ public interface CharacteristicDao
      * @return characteristics
      */
     @Override
-    List<Characteristic> browse( Integer start, Integer limit );
+    List<Characteristic> browse( int start, int limit );
 
     /**
      * Browse through the characteristics, excluding GO annotations, with sorting.
@@ -61,7 +61,7 @@ public interface CharacteristicDao
      * @return characteristics
      */
     @Override
-    List<Characteristic> browse( Integer start, Integer limit, String sortField, boolean descending );
+    List<Characteristic> browse( int start, int limit, String sortField, boolean descending );
 
     Collection<? extends Characteristic> findByCategory( String query );
 

@@ -226,7 +226,7 @@ public class ExpressionExperimentServiceImpl
 
     @Override
     @Transactional(readOnly = true)
-    public List<ExpressionExperiment> browse( Integer start, Integer limit ) {
+    public List<ExpressionExperiment> browse( int start, int limit ) {
         return this.expressionExperimentDao.browse( start, limit );
     }
 
@@ -264,7 +264,7 @@ public class ExpressionExperimentServiceImpl
 
     @Override
     @Transactional(readOnly = true)
-    public Integer countNotTroubled() {
+    public long countNotTroubled() {
         return this.expressionExperimentDao.countNotTroubled();
     }
 
@@ -439,13 +439,7 @@ public class ExpressionExperimentServiceImpl
 
     @Override
     @Transactional(readOnly = true)
-    public Collection<ExpressionExperiment> findByTaxon( final Taxon taxon, @Nullable Integer limit ) {
-        return this.expressionExperimentDao.findByTaxon( taxon, limit );
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public List<ExpressionExperiment> findByUpdatedLimit( Integer limit ) {
+    public List<ExpressionExperiment> findByUpdatedLimit( int limit ) {
         return this.expressionExperimentDao.findByUpdatedLimit( limit );
     }
 
@@ -845,7 +839,7 @@ public class ExpressionExperimentServiceImpl
 
     @Override
     @Transactional(readOnly = true)
-    public Slice<ExpressionExperimentDetailsValueObject> loadDetailsValueObjects( Collection<Long> ids, Taxon taxon, @Nullable Sort sort, int offset, int limit ) {
+    public Slice<ExpressionExperimentDetailsValueObject> loadDetailsValueObjects( Collection<Long> ids, @Nullable Taxon taxon, @Nullable Sort sort, int offset, int limit ) {
         return this.expressionExperimentDao.loadDetailsValueObjectsByIds( ids, taxon, sort, offset, limit );
     }
 

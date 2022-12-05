@@ -27,7 +27,6 @@ package ubic.gemma.core.analysis.preprocess.batcheffects;
 public class SingletonBatchesException extends BatchInfoPopulationException {
 
     /**
-     * @param message
      */
     public SingletonBatchesException( String message ) {
         super( message );

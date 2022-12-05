@@ -206,9 +206,6 @@
     <cache name="ubic.gemma.model.common.auditAndSecurity.Contact" maxElementsInMemory="10000"
            timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false"/>
 
-    <cache name="ubic.gemma.model.common.auditAndSecurity.AuditEvent" maxElementsInMemory="200000" eternal="true"
-           overflowToDisk="false"/>
-
     <cache name="ubic.gemma.model.common.auditAndSecurity.User" maxElementsInMemory="10000"
            timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false"/>
 
@@ -224,20 +221,11 @@
     <cache name="ubic.gemma.model.common.auditAndSecurity.UserQuery" maxElementsInMemory="10000"
            timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false"/>
 
-    <cache name="ubic.gemma.model.common.auditAndSecurity.AuditTrailImpl" maxElementsInMemory="1200"
-           timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false"/>
-
-    <cache name="ubic.gemma.model.common.auditAndSecurity.AuditTrailImpl.events" maxElementsInMemory="1"
-           timeToIdleSeconds="1" timeToLiveSeconds="1" overflowToDisk="false"/>
-
     <cache name="ubic.gemma.model.common.auditAndSecurity.GroupAuthorityImpl" maxElementsInMemory="10000"
            timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false"/>
 
     <cache name="ubic.gemma.model.common.auditAndSecurity.JobInfo" maxElementsInMemory="10000"
            timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false"/>
-
-    <cache name="ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType" maxElementsInMemory="100000"
-           timeToIdleSeconds="6000" timeToLiveSeconds="6000" overflowToDisk="false"/>
 
     <cache name="ubic.gemma.model.common.auditAndSecurity.eventType.MissingValueAnalysisEvent"
            maxElementsInMemory="10000" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false"/>
@@ -360,9 +348,6 @@
            timeToLiveSeconds="1200" overflowToDisk="false"/>
 
     <cache name="ubic.gemma.model.common.SecurableImpl" maxElementsInMemory="10000" timeToIdleSeconds="1200"
-           timeToLiveSeconds="1200" overflowToDisk="false"/>
-
-    <cache name="ubic.gemma.model.common.AbstractAuditable" maxElementsInMemory="10000" timeToIdleSeconds="1200"
            timeToLiveSeconds="1200" overflowToDisk="false"/>
 
     <cache name="ubic.gemma.model.expression.BlacklistedEntity" maxElementsInMemory="1000"

@@ -698,9 +698,6 @@ public class GeneSearchServiceImpl implements GeneSearchService {
     /**
      * if query is blank, return list of public sets, user-owned sets (if logged in) and user's recent session-bound
      * sets called by ubic.gemma.web.controller.genome.gene.GenePickerController.searchGenesAndGeneGroups(String, Long)
-     *
-     * @param taxonId taxon id
-     * @return Collection<SearchResultDisplayObject>
      */
     private Collection<SearchResultDisplayObject> searchGenesAndGeneGroupsBlankQuery( Long taxonId ) {
 

@@ -7,9 +7,6 @@ public interface TsvFileService<T> {
 
     /**
      * Write the given entity to tabular format.
-     * @param entity
-     * @param appendable
-     * @throws IOException
      */
     void writeTsvToAppendable( T entity, Appendable appendable ) throws IOException;
 }

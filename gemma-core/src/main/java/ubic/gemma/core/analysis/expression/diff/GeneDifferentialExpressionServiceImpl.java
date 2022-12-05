@@ -123,7 +123,7 @@ public class GeneDifferentialExpressionServiceImpl implements GeneDifferentialEx
 
     @Override
     public Collection<DifferentialExpressionValueObject> getDifferentialExpression( Gene gene,
-            Collection<BioAssaySet> ees, double threshold, Integer limit ) {
+            Collection<BioAssaySet> ees, double threshold, int limit ) {
         StopWatch timer = new StopWatch();
         timer.start();
         Collection<DifferentialExpressionValueObject> devos = new ArrayList<>();
@@ -151,7 +151,7 @@ public class GeneDifferentialExpressionServiceImpl implements GeneDifferentialEx
             return result;
 
         Map<ExpressionExperimentValueObject, List<DifferentialExpressionValueObject>> rawDiffEx = differentialExpressionResultService
-                .find( gene, threshold, null );
+                .find( gene, threshold, -1 );
 
         // Collection<DifferentialExpressionValueObject> rawProcResults = postProcessDiffExResults( gene, threshold,
         // rawDiffEx );
@@ -190,7 +190,7 @@ public class GeneDifferentialExpressionServiceImpl implements GeneDifferentialEx
 
     @Override
     public Collection<DifferentialExpressionValueObject> getDifferentialExpression( Gene gene, double threshold,
-            Integer limit ) {
+            int limit ) {
 
         Collection<DifferentialExpressionValueObject> devos = new ArrayList<>();
 

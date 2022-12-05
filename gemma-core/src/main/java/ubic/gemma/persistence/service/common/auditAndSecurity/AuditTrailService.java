@@ -47,7 +47,6 @@ public interface AuditTrailService extends BaseService<AuditTrail> {
      *
      * @param auditable auditable
      * @param note      note
-     * @return created event
      */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     void addUpdateEvent( Auditable auditable, @Nullable String note );

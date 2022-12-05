@@ -170,8 +170,6 @@ public class BatchInfoPopulationServiceImpl implements BatchInfoPopulationServic
      *
      * @param  accession             GEO accession
      * @return                       map of GEO id to headers, including the platform ID
-     * @throws IOException
-     * @throws FileNotFoundException
      */
     Map<String, String> readFastqHeaders( String accession ) throws IOException, FileNotFoundException {
         Map<String, String> result = new HashMap<>();
@@ -218,7 +216,6 @@ public class BatchInfoPopulationServiceImpl implements BatchInfoPopulationServic
     /**
      * Look for batch information and create a Factor for batch if there is more than one batch.
      *
-     * @param  ee
      * @throws IOException if there was a problem reading the FASTQ headers
      */
     private void getBatchDataFromFASTQHeaders( ExpressionExperiment ee ) throws IOException {
@@ -261,7 +258,6 @@ public class BatchInfoPopulationServiceImpl implements BatchInfoPopulationServic
      *
      * @param  files Local copies of raw data files obtained from the data provider (e.g. GEO), adds audit event.
      * @param  ee    ee
-     * @return       boolean
      */
     private void getBatchDataFromRawFiles( ExpressionExperiment ee, Collection<LocalFile> files ) throws BatchInfoPopulationException {
         BatchInfoParser batchInfoParser = new BatchInfoParser();
@@ -354,8 +350,6 @@ public class BatchInfoPopulationServiceImpl implements BatchInfoPopulationServic
     }
 
     /**
-     * @param  accession
-     * @return
      */
     private final File locateFASTQheadersForBatchInfo( String accession ) {
         String fhd = Settings.getString( GEMMA_FASTQ_HEADERS_DIR_CONFIG );

@@ -49,7 +49,7 @@ public class ExpressionExperimentFilter {
      * than this are always removed. This can be increased by the use of the min fraction present filter which sets a
      * fraction.
      */
-    private static final int MIN_NUMBER_OF_SAMPLES_PRESENT = 7;
+    static final int MIN_NUMBER_OF_SAMPLES_PRESENT = 7;
 
     private static final Log log = LogFactory.getLog( ExpressionExperimentFilter.class.getName() );
     private final FilterConfig config;
@@ -108,10 +108,7 @@ public class ExpressionExperimentFilter {
     }
 
     /**
-     * @param matrix
-     * @param threshold
      * @param tolerance differences smaller than this are counted as "the same value".
-     * @return
      */
     public static ExpressionDataDoubleMatrix tooFewDistinctValues( ExpressionDataDoubleMatrix matrix,
             double threshold, double tolerance ) {

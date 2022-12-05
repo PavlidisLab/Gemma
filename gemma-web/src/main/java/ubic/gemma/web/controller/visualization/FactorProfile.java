@@ -63,8 +63,6 @@ public class FactorProfile {
     }
 
     /**
-     * @param values
-     * @param isContinuous
      */
     public FactorProfile( List<Double> values, boolean isContinuous ) {
         super();

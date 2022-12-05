@@ -28,7 +28,6 @@ package ubic.gemma.core.analysis.preprocess.batcheffects;
 public class FASTQHeadersPresentButNotUsableException extends BatchInfoPopulationException {
 
     /**
-     * @param message
      */
     public FASTQHeadersPresentButNotUsableException( String message ) {
         super( message );

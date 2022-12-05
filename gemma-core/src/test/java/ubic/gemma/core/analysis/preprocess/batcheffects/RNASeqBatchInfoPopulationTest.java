@@ -103,7 +103,6 @@ public class RNASeqBatchInfoPopulationTest extends AbstractGeoServiceTest {
     /**
      * Test of creating batch factor. GSE71229 has two lanes
      *
-     * @throws Exception
      */
     @Test
     public void testGetBatches() throws Exception {
@@ -248,8 +247,7 @@ public class RNASeqBatchInfoPopulationTest extends AbstractGeoServiceTest {
 
     /**
      * See https://github.com/PavlidisLab/GemmaCuration/issues/64
-     * 
-     * @throws Exception
+     *
      */
     @Test
     public void testBatchMixedHeaders() throws Exception {

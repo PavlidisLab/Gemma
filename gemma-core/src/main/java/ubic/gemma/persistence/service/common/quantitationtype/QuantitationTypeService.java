@@ -37,8 +37,6 @@ public interface QuantitationTypeService extends FilteringVoEnabledService<Quant
      * Locate a QT associated with the given ee matching the specification of the passed quantitationType, or null if
      * there isn't one.
      * 
-     * @param  ee
-     * @param  quantitationType
      * @return                  found QT
      */
     @Secured({ "GROUP_USER" })
@@ -54,9 +52,6 @@ public interface QuantitationTypeService extends FilteringVoEnabledService<Quant
 
     /**
      * Locate a QT by name.
-     * @param ee
-     * @param name
-     * @return
      */
     QuantitationType findByNameAndDataVectorType( ExpressionExperiment ee, String name, Class<? extends DesignElementDataVector> dataVectorType );
 

@@ -90,7 +90,6 @@ public class AclQueryUtils {
 
     /**
      * Add ACL restriction parameters defined in {@link #formAclRestrictionClause()}.
-     * @param query
      * @throws QueryParameterException if any defined parameters are missing, which is typically due to a missing {@link #formAclRestrictionClause()}.
      */
     public static void addAclRestrictionParameters( Query query ) throws QueryParameterException {

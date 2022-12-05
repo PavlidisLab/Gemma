@@ -1489,8 +1489,6 @@ public class GeoFamilyParser implements Parser<Object> {
     }
 
     /**
-     * @param accession
-     * @param string
      */
     private void sampleSetLibSource( String accession, String string ) {
         GeoSample sample = results.getSampleMap().get( accession );
@@ -1505,8 +1503,6 @@ public class GeoFamilyParser implements Parser<Object> {
     }
 
     /**
-     * @param accession
-     * @param string
      */
     private void sampleSetLibStrategy( String accession, String string ) {
         GeoSample sample = results.getSampleMap().get( accession );

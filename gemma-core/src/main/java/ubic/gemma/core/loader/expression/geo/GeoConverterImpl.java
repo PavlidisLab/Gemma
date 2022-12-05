@@ -470,7 +470,6 @@ public class GeoConverterImpl implements GeoConverter {
     /**
      * Form title (will be experiment name) and ensure is valid length
      * 
-     * @param  title
      * @param  appendix can be null; e.g. species or platform name added when we are splitting up a record.
      * @return          title
      */
@@ -854,10 +853,7 @@ public class GeoConverterImpl implements GeoConverter {
     /**
      * Attempt to identify a preset value (ontology term) for certain strings found in GEO data sets. The presets are
      * stored in valueStringToOntologyTermMappings.txt.
-     * 
-     * @param  value
-     * @param  category
-     * @return
+     *
      */
     private CharacteristicBasicValueObject ontologyLookupSampleCharacteristic( String value, String category ) {
         if ( term2OntologyMappings.isEmpty() ) {
@@ -1867,7 +1863,6 @@ public class GeoConverterImpl implements GeoConverter {
     /**
      * Main method that converts a single (mono-species) GEO series to an ExpressionExperiment.
      *
-     * @param  series
      * @return        ExpressionExperiment, or null if the series cannot be converted (wrong sample type, etc.)
      */
     private ExpressionExperiment convertSeriesSingle( GeoSeries series ) {

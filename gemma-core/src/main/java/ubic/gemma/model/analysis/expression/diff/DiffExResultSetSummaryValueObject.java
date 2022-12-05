@@ -59,7 +59,7 @@ public class DiffExResultSetSummaryValueObject implements java.io.Serializable {
 
     /**
      * Analyzed {@link ubic.gemma.model.expression.experiment.BioAssaySet} ID.
-     * <p/>
+     * <p>
      * This is redundant because of {@link DifferentialExpressionAnalysisValueObject#getBioAssaySetId()}, and always
      * displayed in that context in the RESTful API.
      */
@@ -151,7 +151,6 @@ public class DiffExResultSetSummaryValueObject implements java.io.Serializable {
 
     /**
      * Alias for {@link #getId()} kept for backward-compatibility in the Gemma Web frontend.
-     * @deprecated use {@link #getId()} instead
      */
     @GemmaWebOnly
     public Long getResultSetId() {

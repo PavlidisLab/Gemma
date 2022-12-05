@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2010 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -28,8 +28,8 @@ import java.util.List;
  */
 public interface BrowsingDao<T> extends BaseDao<T> {
 
-    List<T> browse( Integer start, Integer limit );
+    List<T> browse( int start, int limit );
 
-    List<T> browse( Integer start, Integer limit, String orderField, boolean descending );
+    List<T> browse( int start, int limit, String orderField, boolean descending );
 
 }

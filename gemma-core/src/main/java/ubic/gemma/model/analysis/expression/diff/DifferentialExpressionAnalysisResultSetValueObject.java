@@ -29,7 +29,6 @@ public class DifferentialExpressionAnalysisResultSetValueObject extends Analysis
 
     /**
      * Create a simple analysis results set VO with limited data.
-     * @param analysisResultSet
      */
     public DifferentialExpressionAnalysisResultSetValueObject( ExpressionAnalysisResultSet analysisResultSet ) {
         super( analysisResultSet );
@@ -46,8 +45,6 @@ public class DifferentialExpressionAnalysisResultSetValueObject extends Analysis
      * Create an expression analysis result set VO with all its associated results.
      *
      * Note: this constructor assumes that {@link ExpressionAnalysisResultSet#getResults()} has already been initialized.
-     *  @param analysisResultSet
-     * @param result2Gene
      */
     public DifferentialExpressionAnalysisResultSetValueObject( ExpressionAnalysisResultSet analysisResultSet, Map<DifferentialExpressionAnalysisResult, List<Gene>> result2Genes ) {
         this( analysisResultSet );

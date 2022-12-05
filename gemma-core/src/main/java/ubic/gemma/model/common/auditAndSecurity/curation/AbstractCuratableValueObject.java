@@ -54,7 +54,6 @@ public abstract class AbstractCuratableValueObject<C extends Curatable> extends 
 
     /**
      * Copy constructor.
-     * @param curatable
      */
     protected AbstractCuratableValueObject( AbstractCuratableValueObject<C> curatable ) {
         super( curatable );

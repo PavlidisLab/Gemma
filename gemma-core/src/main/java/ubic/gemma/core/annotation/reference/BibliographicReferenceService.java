@@ -40,9 +40,9 @@ import java.util.Map;
 public interface BibliographicReferenceService
         extends BaseVoEnabledService<BibliographicReference, BibliographicReferenceValueObject> {
 
-    List<BibliographicReference> browse( Integer start, Integer limit );
+    List<BibliographicReference> browse( int start, int limit );
 
-    List<BibliographicReference> browse( Integer start, Integer limit, String orderField, boolean descending );
+    List<BibliographicReference> browse( int start, int limit, String orderField, boolean descending );
 
     /**
      * check to see if the object already exists

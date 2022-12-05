@@ -74,7 +74,6 @@ public class GeneExpressionProfile {
     private Double rank = null;
 
     /**
-     * @param vector
      */
     public GeneExpressionProfile( DoubleVectorValueObject vector ) {
         this( vector, null, null, null, null, true );
@@ -82,7 +81,6 @@ public class GeneExpressionProfile {
     }
 
     /**
-     * @param vector
      */
     public GeneExpressionProfile( DoubleVectorValueObject vector, Collection<GeneValueObject> genes ) {
         this( vector, genes, null, null, null, true );
@@ -90,10 +88,6 @@ public class GeneExpressionProfile {
     }
 
     /**
-     * @param vector
-     * @param color
-     * @param factor
-     * @param pValue
      */
     public GeneExpressionProfile( DoubleVectorValueObject vector, Collection<GeneValueObject> genes, String color,
             Integer factor, Double pValue ) {
@@ -101,12 +95,6 @@ public class GeneExpressionProfile {
     }
 
     /**
-     * @param vector
-     * @param genes
-     * @param color
-     * @param factor
-     * @param pValue
-     * @param standardize
      */
     public GeneExpressionProfile( DoubleVectorValueObject vector, Collection<GeneValueObject> genes, String color,
             Integer factor, Double pValue, boolean standardize ) {

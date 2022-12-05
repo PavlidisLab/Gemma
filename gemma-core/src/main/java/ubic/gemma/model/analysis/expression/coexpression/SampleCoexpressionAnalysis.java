@@ -44,10 +44,8 @@ public class SampleCoexpressionAnalysis extends SingleExperimentAnalysis {
     }
 
     /**
-     * Note that since you get a full square matrix, all correlations
-     * are represented twice, and values on the main diagonal will always be 1. Method for extracting the lower triangle
-     * to a linear array is here: {@link  ubic.gemma.persistence.service.expression.experiment.GeeqServiceImpl#getLowerTriangle(double[][])};
-     * Also observe that the matrix may contain NaN values, as dealt with here: {@link GeeqServiceImpl#getLowerTriCormat(ubic.basecode.dataStructure.matrix.DoubleMatrix)}
+     * Note that since you get a full square matrix, all correlations are represented twice, and values on the main
+     * diagonal will always be 1.
      *
      * @return a coexpression matrix with all factors (none regressed out), and including outliers.
      */
@@ -60,10 +58,8 @@ public class SampleCoexpressionAnalysis extends SingleExperimentAnalysis {
     }
 
     /**
-     * Note that since you get a full square matrix, all correlations
-     * are represented twice, and values on the main diagonal will always be 1. Method for extracting the lower triangle
-     * to a linear array is here: {@link  ubic.gemma.persistence.service.expression.experiment.GeeqServiceImpl#getLowerTriangle(double[][])};
-     * Also observe that the matrix may contain NaN values, as dealt with here: {@link GeeqServiceImpl#getLowerTriCormat(ubic.basecode.dataStructure.matrix.DoubleMatrix)}
+     * Note that since you get a full square matrix, all correlations are represented twice, and values on the main
+     * diagonal will always be 1.
      *
      * @return a coexpression matrix with regressed out major factors.
      */
