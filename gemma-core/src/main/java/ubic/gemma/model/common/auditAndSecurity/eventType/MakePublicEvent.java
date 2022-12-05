@@ -25,17 +25,5 @@ package ubic.gemma.model.common.auditAndSecurity.eventType;
 public class MakePublicEvent extends PermissionChangeEvent {
 
     private static final long serialVersionUID = -2250506177437626685L;
-    
-    public MakePublicEvent() {
-    }
-    
-    @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
-    public static final class Factory {
-        public static ubic.gemma.model.common.auditAndSecurity.eventType.MakePublicEvent newInstance() {
-            return new ubic.gemma.model.common.auditAndSecurity.eventType.MakePublicEvent();
-        }
-
-    }
-
 
 }

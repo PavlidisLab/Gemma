@@ -144,7 +144,7 @@ public class CuratableValueObjectTest extends BaseSpringWebTest {
         // Make array design troubled
         this.curationDetailsService.update( this.arrayDesign, AuditEvent.Factory
                 .newInstance( new Date(), AuditAction.UPDATE, "testing trouble update on platform",
-                        "trouble update details", null, TroubledStatusFlagEvent.Factory.newInstance() ) );
+                        "trouble update details", null, new TroubledStatusFlagEvent() ) );
 
         adVO = this.arrayDesignService.loadValueObject( arrayDesign );
         assertTrue( adVO.getTroubled() );
@@ -160,7 +160,7 @@ public class CuratableValueObjectTest extends BaseSpringWebTest {
         // Make expression experiment troubled
         this.curationDetailsService.update( this.expressionExperiment, AuditEvent.Factory
                 .newInstance( new Date(), AuditAction.UPDATE, "testing trouble update on expression experiment",
-                        "trouble update details", null, TroubledStatusFlagEvent.Factory.newInstance() ) );
+                        "trouble update details", null, new TroubledStatusFlagEvent() ) );
 
         eeDVO = new ExpressionExperimentDetailsValueObject(
                 this.expressionExperimentService.loadValueObject( expressionExperiment ) );

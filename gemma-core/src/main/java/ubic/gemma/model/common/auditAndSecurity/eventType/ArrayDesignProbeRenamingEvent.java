@@ -32,21 +32,4 @@ public class ArrayDesignProbeRenamingEvent
      */
     private static final long serialVersionUID = -5458770150436736181L;
 
-    /**
-     * No-arg constructor added to satisfy javabean contract
-     *
-     * @author Paul
-     */
-    public ArrayDesignProbeRenamingEvent() {
-    }
-
-    @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
-    public static final class Factory {
-
-        public static ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignProbeRenamingEvent newInstance() {
-            return new ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignProbeRenamingEvent();
-        }
-
-    }
-
 }

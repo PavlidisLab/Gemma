@@ -45,14 +45,4 @@ public class DoesNotNeedAttentionEvent extends CurationDetailsEvent {
         curatable.getCurationDetails().setNeedsAttention( false );
         curatable.getCurationDetails().setLastNeedsAttentionEvent( auditEvent );
     }
-
-    @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
-    public static final class Factory {
-
-        public static DoesNotNeedAttentionEvent newInstance() {
-            return new DoesNotNeedAttentionEvent();
-        }
-
-    }
-
 }

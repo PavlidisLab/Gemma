@@ -32,21 +32,4 @@ public class ProcessedVectorComputationEvent
      */
     private static final long serialVersionUID = 3380481220417398475L;
 
-    /**
-     * No-arg constructor added to satisfy javabean contract
-     *
-     * @author Paul
-     */
-    public ProcessedVectorComputationEvent() {
-    }
-
-    @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
-    public static final class Factory {
-
-        public static ubic.gemma.model.common.auditAndSecurity.eventType.ProcessedVectorComputationEvent newInstance() {
-            return new ubic.gemma.model.common.auditAndSecurity.eventType.ProcessedVectorComputationEvent();
-        }
-
-    }
-
 }

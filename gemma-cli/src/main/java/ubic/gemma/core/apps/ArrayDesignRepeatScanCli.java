@@ -130,8 +130,7 @@ public class ArrayDesignRepeatScanCli extends ArrayDesignSequenceManipulatingCli
     }
 
     private void audit( ArrayDesign arrayDesign, String note ) {
-        AuditEventType eventType = ArrayDesignRepeatAnalysisEvent.Factory.newInstance();
-        auditTrailService.addUpdateEvent( arrayDesign, eventType, note );
+        auditTrailService.addUpdateEvent( arrayDesign, ArrayDesignRepeatAnalysisEvent.class, note );
     }
 
     private void processArrayDesign( ArrayDesign design ) {

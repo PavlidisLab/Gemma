@@ -39,13 +39,4 @@ public class LinkAnalysisEvent
     public LinkAnalysisEvent() {
     }
 
-    @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
-    public static final class Factory {
-
-        public static ubic.gemma.model.common.auditAndSecurity.eventType.LinkAnalysisEvent newInstance() {
-            return new ubic.gemma.model.common.auditAndSecurity.eventType.LinkAnalysisEvent();
-        }
-
-    }
-
 }

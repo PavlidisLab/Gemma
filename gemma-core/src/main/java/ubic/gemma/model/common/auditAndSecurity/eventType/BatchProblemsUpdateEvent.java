@@ -26,20 +26,4 @@ public class BatchProblemsUpdateEvent extends ExpressionExperimentAnalysisEvent 
 
     private static final long serialVersionUID = -3061045506228031201L;
 
-    /**
-     * No-arg constructor added to satisfy javabean contract
-     *
-     * @author Paul
-     */
-    public BatchProblemsUpdateEvent() {
-    }
-
-    @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
-    public static final class Factory {
-
-        public static BatchProblemsUpdateEvent newInstance() {
-            return new BatchProblemsUpdateEvent();
-        }
-
-    }
 }

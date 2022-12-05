@@ -36,7 +36,7 @@ public class MakeExperimentsPublicCli extends ExpressionExperimentManipulatingCL
         SecurityService securityService = this.getBean( SecurityService.class );
         for ( BioAssaySet ee : this.expressionExperiments ) {
             securityService.makePublic( ee );
-            this.auditTrailService.addUpdateEvent( ee, MakePublicEvent.class, "Made public from command line", null );
+            this.auditTrailService.addUpdateEvent( ee, MakePublicEvent.class, "Made public from command line" );
         }
     }
 

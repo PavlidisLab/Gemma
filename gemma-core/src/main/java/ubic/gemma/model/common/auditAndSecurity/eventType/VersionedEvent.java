@@ -5,4 +5,5 @@ package ubic.gemma.model.common.auditAndSecurity.eventType;
  * @author poirigui
  */
 public abstract class VersionedEvent extends AuditEventType {
+
 }

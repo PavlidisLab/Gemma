@@ -360,8 +360,7 @@ public class ProcessedExpressionDataVectorCreateHelperServiceImpl
     }
 
     private void audit( ExpressionExperiment ee ) {
-        AuditEventType eventType = ProcessedVectorComputationEvent.Factory.newInstance();
-        auditTrailService.addUpdateEvent( ee, eventType, "" );
+        auditTrailService.addUpdateEvent( ee, ProcessedVectorComputationEvent.class, String.format( "Created processed expression data for %s.", ee ) );
     }
 
     /**

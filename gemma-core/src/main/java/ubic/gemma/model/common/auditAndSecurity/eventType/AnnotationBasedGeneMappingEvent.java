@@ -29,21 +29,4 @@ public class AnnotationBasedGeneMappingEvent
      */
     private static final long serialVersionUID = 6216699496744292404L;
 
-    /**
-     * No-arg constructor added to satisfy javabean contract
-     *
-     * @author Paul
-     */
-    public AnnotationBasedGeneMappingEvent() {
-    }
-
-    @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
-    public static final class Factory {
-
-        public static ubic.gemma.model.common.auditAndSecurity.eventType.AnnotationBasedGeneMappingEvent newInstance() {
-            return new ubic.gemma.model.common.auditAndSecurity.eventType.AnnotationBasedGeneMappingEvent();
-        }
-
-    }
-
 }

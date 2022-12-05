@@ -25,21 +25,4 @@ public class FailedProcessedVectorComputationEvent extends NeedsAttentionEvent {
      */
     private static final long serialVersionUID = -3296770035025801791L;
 
-    /**
-     * No-arg constructor added to satisfy javabean contract
-     *
-     * @author Paul
-     */
-    public FailedProcessedVectorComputationEvent() {
-    }
-
-    @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
-    public static final class Factory {
-
-        public static ubic.gemma.model.common.auditAndSecurity.eventType.FailedProcessedVectorComputationEvent newInstance() {
-            return new ubic.gemma.model.common.auditAndSecurity.eventType.FailedProcessedVectorComputationEvent();
-        }
-
-    }
-
 }

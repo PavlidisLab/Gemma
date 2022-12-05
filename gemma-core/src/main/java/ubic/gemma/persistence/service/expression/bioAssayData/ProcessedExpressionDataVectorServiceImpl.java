@@ -75,8 +75,7 @@ public class ProcessedExpressionDataVectorServiceImpl
             assert ee.getNumberOfDataVectors() != null;
             return ee;
         } catch ( Exception e ) {
-            auditTrailService.addUpdateEvent( ee, FailedProcessedVectorComputationEvent.Factory.newInstance(),
-                    ExceptionUtils.getStackTrace( e ) );
+            auditTrailService.addUpdateEvent( ee, FailedProcessedVectorComputationEvent.class, "Failed to create processed expression data vectors.", e );
             throw new RuntimeException( e );
         }
 
@@ -306,8 +305,7 @@ public class ProcessedExpressionDataVectorServiceImpl
             assert ee.getNumberOfDataVectors() != null;
             return ee.getProcessedExpressionDataVectors();
         } catch ( Exception e ) {
-            auditTrailService.addUpdateEvent( ee, FailedProcessedVectorComputationEvent.Factory.newInstance(),
-                    ExceptionUtils.getStackTrace( e ) );
+            auditTrailService.addUpdateEvent( ee, FailedProcessedVectorComputationEvent.class, "Failed to create processed expression data vectors.", e );
             throw new RuntimeException( e );
         }
 

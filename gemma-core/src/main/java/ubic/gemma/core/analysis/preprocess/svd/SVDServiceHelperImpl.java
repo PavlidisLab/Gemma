@@ -87,7 +87,7 @@ public class SVDServiceHelperImpl implements SVDServiceHelper {
 
     /**
      * Retrieve relationships between factors, biomaterials and factorvalues.
-     * 
+     *
      * @param bioMaterialFactorMap to be populated, of experimental factor -&gt; biomaterial ID -&gt; ID of the factor value
      *                             (just an indicator)
      * @param bm                   to populate for
@@ -589,7 +589,7 @@ public class SVDServiceHelperImpl implements SVDServiceHelper {
                         SVDServiceHelperImpl.MAX_LOADINGS_TO_PERSIST );
 
         ee = expressionExperimentService.thawLite( ee ); // I wish this wasn't needed.
-        auditTrailService.addUpdateEvent( ee, PCAAnalysisEvent.class, "SVD computation", null );
+        auditTrailService.addUpdateEvent( ee, PCAAnalysisEvent.class, "SVD computation" );
         return pca;
     }
 

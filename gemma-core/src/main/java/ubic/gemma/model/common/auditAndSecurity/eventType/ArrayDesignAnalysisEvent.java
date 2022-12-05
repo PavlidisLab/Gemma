@@ -25,12 +25,4 @@ public abstract class ArrayDesignAnalysisEvent extends AuditEventType {
 
     private static final long serialVersionUID = -8391873112717801492L;
 
-    /**
-     * No-arg constructor added to satisfy javabean contract
-     *
-     * @author Paul
-     */
-    public ArrayDesignAnalysisEvent() {
-    }
-
 }

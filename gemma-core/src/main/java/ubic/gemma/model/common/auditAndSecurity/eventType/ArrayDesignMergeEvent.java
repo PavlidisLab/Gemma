@@ -25,21 +25,4 @@ public class ArrayDesignMergeEvent extends ubic.gemma.model.common.auditAndSecur
      */
     private static final long serialVersionUID = 8243373027784116451L;
 
-    /**
-     * No-arg constructor added to satisfy javabean contract
-     *
-     * @author Paul
-     */
-    public ArrayDesignMergeEvent() {
-    }
-
-    @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
-    public static final class Factory {
-
-        public static ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignMergeEvent newInstance() {
-            return new ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignMergeEvent();
-        }
-
-    }
-
 }

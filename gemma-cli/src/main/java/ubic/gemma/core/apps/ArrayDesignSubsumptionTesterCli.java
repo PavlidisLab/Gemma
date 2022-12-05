@@ -152,8 +152,7 @@ public class ArrayDesignSubsumptionTesterCli extends ArrayDesignSequenceManipula
     }
 
     private void audit( ArrayDesign arrayDesign, String note ) {
-        AuditEventType eventType = ArrayDesignSubsumeCheckEvent.Factory.newInstance();
-        auditTrailService.addUpdateEvent( arrayDesign, eventType, note );
+        auditTrailService.addUpdateEvent( arrayDesign, ArrayDesignSubsumeCheckEvent.class, note );
     }
 
 }

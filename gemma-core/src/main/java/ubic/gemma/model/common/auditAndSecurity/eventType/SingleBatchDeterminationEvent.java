@@ -32,20 +32,4 @@ public class SingleBatchDeterminationEvent extends BatchInformationFetchingEvent
      */
     private static final long serialVersionUID = -6544162258733474787L;
 
-    /**
-     * No-arg constructor added to satisfy javabean contract
-     *
-     * @author Paul
-     */
-    public SingleBatchDeterminationEvent() {
-    }
-
-    @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
-    public static final class Factory {
-        public static SingleBatchDeterminationEvent newInstance() {
-            return new SingleBatchDeterminationEvent();
-        }
-
-    }
-
 }

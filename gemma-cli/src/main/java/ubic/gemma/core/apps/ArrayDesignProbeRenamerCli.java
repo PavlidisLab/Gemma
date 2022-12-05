@@ -139,8 +139,7 @@ public class ArrayDesignProbeRenamerCli extends ArrayDesignSequenceManipulatingC
 
     private void audit( ArrayDesign arrayDesign, String note ) {
         super.getArrayDesignReportService().generateArrayDesignReport( arrayDesign.getId() );
-        AuditEventType eventType = ArrayDesignProbeRenamingEvent.Factory.newInstance();
-        auditTrailService.addUpdateEvent( arrayDesign, eventType, note );
+        auditTrailService.addUpdateEvent( arrayDesign, ArrayDesignProbeRenamingEvent.class, note );
     }
 
     private Map<String, String> parseIdFile( InputStream newIdFile ) throws IOException {

@@ -1,8 +1,8 @@
 /*
  * The gemma project
- * 
+ *
  * Copyright (c) 2014 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -27,19 +27,5 @@ package ubic.gemma.model.common.auditAndSecurity.eventType;
 public class PermissionChangeEvent extends AuditEventType {
 
     private static final long serialVersionUID = -7205154783209555418L;
-    
-    public PermissionChangeEvent() {
-        
-    }
-    
-    @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
-    public static final class Factory {
-
-        public static ubic.gemma.model.common.auditAndSecurity.eventType.PermissionChangeEvent newInstance() {
-            return new ubic.gemma.model.common.auditAndSecurity.eventType.PermissionChangeEvent();
-        }
-
-    }
-
 
 }

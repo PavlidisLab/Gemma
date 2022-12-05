@@ -31,21 +31,4 @@ public class CommentedEvent extends ubic.gemma.model.common.auditAndSecurity.eve
      */
     private static final long serialVersionUID = -9053488530090657730L;
 
-    /**
-     * No-arg constructor added to satisfy javabean contract
-     *
-     * @author Paul
-     */
-    public CommentedEvent() {
-    }
-
-    @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
-    public static final class Factory {
-
-        public static ubic.gemma.model.common.auditAndSecurity.eventType.CommentedEvent newInstance() {
-            return new ubic.gemma.model.common.auditAndSecurity.eventType.CommentedEvent();
-        }
-
-    }
-
 }

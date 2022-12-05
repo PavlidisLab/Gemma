@@ -7,19 +7,4 @@ public class GeeqEvent extends AuditEventType {
      */
     private static final long serialVersionUID = 6621758826080039878L;
 
-    /**
-     * No-arg constructor added to satisfy javabean contract
-     */
-    public GeeqEvent() {
-    }
-
-    @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
-    public static final class Factory {
-
-        public static GeeqEvent newInstance() {
-            return new GeeqEvent();
-        }
-
-    }
-
 }

@@ -66,8 +66,8 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
         super.buildOptions( options );
 
         Option blatResultOption = Option.builder( "b" ).hasArg().argName( "PSL file" ).desc(
-                "Blat result file in PSL format (if supplied, BLAT will not be run; will not work with settings that indicate "
-                        + "multiple platforms to run); -t option overrides" )
+                        "Blat result file in PSL format (if supplied, BLAT will not be run; will not work with settings that indicate "
+                                + "multiple platforms to run); -t option overrides" )
                 .longOpt( "blatfile" )
                 .build();
 
@@ -80,13 +80,13 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
         options.addOption( Option.builder( "sensitive" ).desc( "Run on more sensitive server, if available" ).build() );
 
         Option taxonOption = Option.builder( "t" ).hasArg().argName( "taxon" ).desc(
-                "Taxon common name (e.g., human); if platform name not given (analysis will be "
-                        + "restricted to sequences on that platform for taxon given), blat "
-                        + "will be run for all ArrayDesigns from that taxon (overrides -a and -b)" )
+                        "Taxon common name (e.g., human); if platform name not given (analysis will be "
+                                + "restricted to sequences on that platform for taxon given), blat "
+                                + "will be run for all ArrayDesigns from that taxon (overrides -a and -b)" )
                 .build();
 
         options.addOption( taxonOption );
-       // this.addThreadsOption( options );
+        // this.addThreadsOption( options );
         options.addOption( blatScoreThresholdOption );
         options.addOption( blatResultOption );
     }
@@ -143,7 +143,7 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
 
             for ( ArrayDesign arrayDesign : this.getArrayDesignsToProcess() ) {
                 if ( !this.shouldRun( skipIfLastRunLaterThan, arrayDesign, ArrayDesignSequenceAnalysisEvent.class ) ) {
-                    AbstractCLI.log.warn( arrayDesign + " does not meet criteria to be processed");
+                    AbstractCLI.log.warn( arrayDesign + " does not meet criteria to be processed" );
                     return;
                 }
 
@@ -204,8 +204,7 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
 
     private void audit( ArrayDesign arrayDesign, String note ) {
         getArrayDesignReportService().generateArrayDesignReport( arrayDesign.getId() );
-        AuditEventType eventType = ArrayDesignSequenceAnalysisEvent.Factory.newInstance();
-        auditTrailService.addUpdateEvent( arrayDesign, eventType, note );
+        auditTrailService.addUpdateEvent( arrayDesign, ArrayDesignSequenceAnalysisEvent.class, note );
     }
 
     /**

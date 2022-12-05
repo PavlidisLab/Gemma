@@ -31,21 +31,4 @@ public class ExpressionExperimentPlatformSwitchEvent
      */
     private static final long serialVersionUID = 2918272498309052073L;
 
-    /**
-     * No-arg constructor added to satisfy javabean contract
-     *
-     * @author Paul
-     */
-    public ExpressionExperimentPlatformSwitchEvent() {
-    }
-
-    @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
-    public static final class Factory {
-
-        public static ubic.gemma.model.common.auditAndSecurity.eventType.ExpressionExperimentPlatformSwitchEvent newInstance() {
-            return new ubic.gemma.model.common.auditAndSecurity.eventType.ExpressionExperimentPlatformSwitchEvent();
-        }
-
-    }
-
 }

@@ -29,21 +29,4 @@ public class ExperimentalDesignUpdatedEvent extends AuditEventType {
      */
     private static final long serialVersionUID = 6359338763821876809L;
 
-    /**
-     * No-arg constructor added to satisfy javabean contract
-     *
-     * @author Paul
-     */
-    public ExperimentalDesignUpdatedEvent() {
-    }
-
-    @SuppressWarnings({ "unused", "WeakerAccess" }) // Used in frontend
-    public static final class Factory {
-
-        public static ExperimentalDesignUpdatedEvent newInstance() {
-            return new ExperimentalDesignUpdatedEvent();
-        }
-
-    }
-
 }

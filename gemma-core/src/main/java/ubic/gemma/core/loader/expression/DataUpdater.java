@@ -160,8 +160,7 @@ public class DataUpdater {
             // Switch ALL bioassays to the target platform.
             int numSwitched = this.switchBioAssaysToTargetPlatform( ee, targetPlatform, null );
 
-            AuditEventType eventType = ExpressionExperimentPlatformSwitchEvent.Factory.newInstance();
-            auditTrailService.addUpdateEvent( ee, eventType,
+            auditTrailService.addUpdateEvent( ee, ExpressionExperimentPlatformSwitchEvent.class,
                     "Switched " + numSwitched + " bioassays in course of updating vectors using AffyPowerTools (from "
                             + originalPlatform.getShortName() + " to " + targetPlatform.getShortName() + ")" );
         }
@@ -381,7 +380,7 @@ public class DataUpdater {
             isOnMergedPlatform = merged.get( ad.getId() );
             if ( isOnMergedPlatform && associatedPlats.size() > 1 ) {
                 // should be rare; normally after merge we have just one platform
-                auditTrailService.addUpdateEvent( ee, FailedDataReplacedEvent.Factory.newInstance(), "Cannot reprocess datasets that include a "
+                auditTrailService.addUpdateEvent( ee, FailedDataReplacedEvent.class, "Cannot reprocess datasets that include a "
                         + "merged platform and is still on multiple platforms" );
 
                 throw new IllegalArgumentException( "Cannot reprocess datasets that include a "
@@ -396,7 +395,7 @@ public class DataUpdater {
         Collection<LocalFile> files = f.fetch( ee.getAccession().getAccession() );
 
         if ( files == null || files.isEmpty() ) {
-            auditTrailService.addUpdateEvent( ee, FailedDataReplacedEvent.Factory.newInstance(), "Data was apparently not available" );
+            auditTrailService.addUpdateEvent( ee, FailedDataReplacedEvent.class, "Data was apparently not available" );
             throw new RuntimeException( "Data was apparently not available" );
         }
         ee = experimentService.thawLite( ee );
@@ -468,8 +467,7 @@ public class DataUpdater {
                         .info( "Switched " + numSwitched + " bioassays from " + originalPlatform.getShortName() + " to "
                                 + targetPlatform.getShortName() );
 
-                AuditEventType eventType = ExpressionExperimentPlatformSwitchEvent.Factory.newInstance();
-                auditTrailService.addUpdateEvent( ee, eventType, "Switched " + numSwitched
+                auditTrailService.addUpdateEvent( ee, ExpressionExperimentPlatformSwitchEvent.class, "Switched " + numSwitched
                         + " bioassays in course of updating vectors using AffyPowerTools (from " + originalPlatform
                         .getShortName()
                         + " to " + targetPlatform.getShortName() + ")" );
@@ -656,8 +654,7 @@ public class DataUpdater {
 
             this.switchBioAssaysToTargetPlatform( ee, targetPlatform, ee.getBioAssays() );
 
-            AuditEventType eventType = ExpressionExperimentPlatformSwitchEvent.Factory.newInstance();
-            auditTrailService.addUpdateEvent( ee, eventType,
+            auditTrailService.addUpdateEvent( ee, ExpressionExperimentPlatformSwitchEvent.class,
                     "Switched in course of updating vectors using data input (from " + originalArrayDesign
                             .getShortName() + " to " + targetPlatform.getShortName() + ")" );
         }
@@ -708,12 +705,12 @@ public class DataUpdater {
      * @param note    note
      */
     private void audit( ExpressionExperiment ee, String note, boolean replace ) {
-        AuditEventType eventType;
+        Class<? extends AuditEventType> eventType;
 
         if ( replace ) {
-            eventType = DataReplacedEvent.Factory.newInstance();
+            eventType = DataReplacedEvent.class;
         } else {
-            eventType = DataAddedEvent.Factory.newInstance();
+            eventType = DataAddedEvent.class;
         }
 
         auditTrailService.addUpdateEvent( ee, eventType, note );

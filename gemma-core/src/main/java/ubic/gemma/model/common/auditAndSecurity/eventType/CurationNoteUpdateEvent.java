@@ -36,12 +36,6 @@ public class CurationNoteUpdateEvent extends CurationDetailsEvent {
     private static final long serialVersionUID = -1180281595664872508L;
 
     /**
-     * No-arg constructor added to satisfy javabean contract
-     */
-    public CurationNoteUpdateEvent() {
-    }
-
-    /**
      * @param curatable  the curatable object to do the curation action on.
      * @param auditEvent the audit event containing information about the action that should be made.
      *                   With the CurationNoteUpdateEvent, this method expects the auditEvent Note property to
@@ -51,15 +45,6 @@ public class CurationNoteUpdateEvent extends CurationDetailsEvent {
     public void setCurationDetails( Curatable curatable, AuditEvent auditEvent ) {
         curatable.getCurationDetails().setCurationNote( auditEvent.getNote() );
         curatable.getCurationDetails().setLastNoteUpdateEvent( auditEvent );
-    }
-
-    @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
-    public static final class Factory {
-
-        public static CurationNoteUpdateEvent newInstance() {
-            return new CurationNoteUpdateEvent();
-        }
-
     }
 
 }

@@ -25,12 +25,4 @@ public abstract class AnnotationEvent extends ubic.gemma.model.common.auditAndSe
      */
     private static final long serialVersionUID = -7488448191665314917L;
 
-    /**
-     * No-arg constructor added to satisfy javabean contract
-     *
-     * @author Paul
-     */
-    public AnnotationEvent() {
-    }
-
 }

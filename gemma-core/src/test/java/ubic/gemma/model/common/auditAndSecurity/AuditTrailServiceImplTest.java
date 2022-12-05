@@ -66,8 +66,7 @@ public class AuditTrailServiceImplTest extends BaseSpringContextTest {
 
     @Test
     public final void testAddOKEvent() {
-        AuditEventType eventType = NotTroubledStatusFlagEvent.Factory.newInstance();
-        auditTrailService.addUpdateEvent( auditable, eventType, "nothing special, just testing" );
+        auditTrailService.addUpdateEvent( auditable, NotTroubledStatusFlagEvent.class, "nothing special, just testing" );
         AuditEvent ev = auditable.getAuditTrail().getLast();
         assertNotNull( ev );
         assertNotNull( ev.getId() );
@@ -84,8 +83,7 @@ public class AuditTrailServiceImplTest extends BaseSpringContextTest {
 
     @Test
     public final void testAddTroubleEvent() {
-        AuditEventType eventType = TroubledStatusFlagEvent.Factory.newInstance();
-        auditTrailService.addUpdateEvent( auditable, eventType, "nothing special, just testing" );
+        auditTrailService.addUpdateEvent( auditable, TroubledStatusFlagEvent.class, "nothing special, just testing" );
         AuditEvent ev = auditable.getAuditTrail().getLast();
         assertNotNull( ev );
         assertNotNull( ev.getId() );
@@ -104,8 +102,7 @@ public class AuditTrailServiceImplTest extends BaseSpringContextTest {
 
     @Test
     public final void testAddUpdateEventAuditableAuditEventTypeString() {
-        AuditEventType f = AlignmentBasedGeneMappingEvent.Factory.newInstance();
-        auditTrailService.addUpdateEvent( auditable, f, "nothing special, just testing" );
+        auditTrailService.addUpdateEvent( auditable, AlignmentBasedGeneMappingEvent.class, "nothing special, just testing" );
         AuditTrail auditTrail = auditable.getAuditTrail();
         assertNotNull( auditTrail );
         AuditEvent ev = auditable.getAuditTrail().getLast();
@@ -128,8 +125,7 @@ public class AuditTrailServiceImplTest extends BaseSpringContextTest {
 
     @Test
     public final void testAddNeedsAttentionEvent() {
-        AuditEventType eventType = NeedsAttentionEvent.Factory.newInstance();
-        auditTrailService.addUpdateEvent( auditable, eventType, "nothing special, just testing" );
+        auditTrailService.addUpdateEvent( auditable, NeedsAttentionEvent.class, "nothing special, just testing" );
         AuditEvent ev = auditable.getAuditTrail().getLast();
         assertNotNull( ev );
         assertNotNull( ev.getId() );
@@ -152,8 +148,7 @@ public class AuditTrailServiceImplTest extends BaseSpringContextTest {
 
     @Test
     public final void testAddDoesNotNeedsAttentionEvent() {
-        AuditEventType eventType = DoesNotNeedAttentionEvent.Factory.newInstance();
-        auditTrailService.addUpdateEvent( auditable, eventType, "nothing special, just testing" );
+        auditTrailService.addUpdateEvent( auditable, DoesNotNeedAttentionEvent.class, "nothing special, just testing" );
         AuditEvent ev = auditable.getAuditTrail().getLast();
         assertNotNull( ev );
         assertNotNull( ev.getId() );
@@ -176,8 +171,7 @@ public class AuditTrailServiceImplTest extends BaseSpringContextTest {
 
     @Test
     public final void testGetEntitiesWithEvent() {
-        AuditEventType eventType = SampleRemovalEvent.Factory.newInstance();
-        auditTrailService.addUpdateEvent( auditable, eventType, "nothing special, just testing" );
+        auditTrailService.addUpdateEvent( auditable, SampleRemovalEvent.class, "nothing special, just testing" );
         AuditEvent ev = auditable.getAuditTrail().getLast();
         assertNotNull( ev );
         assertNotNull( ev.getId() );
@@ -189,17 +183,5 @@ public class AuditTrailServiceImplTest extends BaseSpringContextTest {
 
         events = auditTrailService.getEvents( auditable );
         assertTrue( events.contains( ev ) );
-    }
-
-    @Test
-    public final void testReflectionOnFactory() throws Exception {
-        Class<? extends AuditEventType> type = DoesNotNeedAttentionEvent.class;
-        AuditEventType auditEventType;
-
-        Class<?> factory = Class.forName( type.getName() + "$Factory" );
-        Method method = factory.getMethod( "newInstance" );
-        auditEventType = ( AuditEventType ) method.invoke( type );
-        assertNotNull( auditEventType );
-        assertTrue( auditEventType instanceof DoesNotNeedAttentionEvent );
     }
 }

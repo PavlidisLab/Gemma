@@ -45,13 +45,4 @@ public class NotTroubledStatusFlagEvent extends CurationDetailsEvent {
         curatable.getCurationDetails().setLastTroubledEvent( auditEvent );
     }
 
-    @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
-    public static final class Factory {
-
-        public static NotTroubledStatusFlagEvent newInstance() {
-            return new NotTroubledStatusFlagEvent();
-        }
-
-    }
-
 }

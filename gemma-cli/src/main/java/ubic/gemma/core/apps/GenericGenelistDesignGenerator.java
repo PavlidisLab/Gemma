@@ -352,7 +352,7 @@ public class GenericGenelistDesignGenerator extends AbstractCLIContextCLI {
         log.info( count + " genes processed; " + numNewElements + " new elements; " + numUpdatedElements
                 + " updated elements; " + numWithNoTranscript + " genes had no transcript and were skipped." );
 
-        auditTrailService.addUpdateEvent( arrayDesign, AnnotationBasedGeneMappingEvent.Factory.newInstance(),
+        auditTrailService.addUpdateEvent( arrayDesign, AnnotationBasedGeneMappingEvent.class,
                 count + " genes processed; " + numNewElements + " new elements; " + numUpdatedElements
                         + " updated elements; " + numWithNoTranscript + " genes had no transcript and were skipped." );
         arrayDesignAnnotationService.deleteExistingFiles( arrayDesign );

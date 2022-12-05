@@ -25,21 +25,4 @@ public class FailedDifferentialExpressionAnalysisEvent extends NeedsAttentionEve
      */
     private static final long serialVersionUID = 6904992064998125083L;
 
-    /**
-     * No-arg constructor added to satisfy javabean contract
-     *
-     * @author Paul
-     */
-    public FailedDifferentialExpressionAnalysisEvent() {
-    }
-
-    @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
-    public static final class Factory {
-
-        public static ubic.gemma.model.common.auditAndSecurity.eventType.FailedDifferentialExpressionAnalysisEvent newInstance() {
-            return new ubic.gemma.model.common.auditAndSecurity.eventType.FailedDifferentialExpressionAnalysisEvent();
-        }
-
-    }
-
 }
