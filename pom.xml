@@ -466,6 +466,7 @@
 				<artifactId>gitflow-maven-plugin</artifactId>
 				<configuration>
 					<skipTestProject>true</skipTestProject>
+					<versionDigitToIncrement>1</versionDigitToIncrement>
 				</configuration>
 			</plugin>
 			<plugin>
