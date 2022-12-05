@@ -31,21 +31,4 @@ public class ArrayDesignSequenceUpdateEvent
      */
     private static final long serialVersionUID = 2502989996801972836L;
 
-    /**
-     * No-arg constructor added to satisfy javabean contract
-     *
-     * @author Paul
-     */
-    public ArrayDesignSequenceUpdateEvent() {
-    }
-
-    @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
-    public static final class Factory {
-
-        public static ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignSequenceUpdateEvent newInstance() {
-            return new ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignSequenceUpdateEvent();
-        }
-
-    }
-
 }

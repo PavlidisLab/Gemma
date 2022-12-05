@@ -31,21 +31,4 @@ public class RankComputationEvent
      */
     private static final long serialVersionUID = 7396366160834308993L;
 
-    /**
-     * No-arg constructor added to satisfy javabean contract
-     *
-     * @author Paul
-     */
-    public RankComputationEvent() {
-    }
-
-    @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
-    public static final class Factory {
-
-        public static ubic.gemma.model.common.auditAndSecurity.eventType.RankComputationEvent newInstance() {
-            return new ubic.gemma.model.common.auditAndSecurity.eventType.RankComputationEvent();
-        }
-
-    }
-
 }

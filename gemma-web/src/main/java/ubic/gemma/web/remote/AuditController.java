@@ -22,7 +22,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import ubic.gemma.model.common.AbstractAuditable;
 import ubic.gemma.model.common.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.AuditAction;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
@@ -63,7 +62,7 @@ public class AuditController {
 
     @SuppressWarnings("unchecked")
     public void addAuditEvent( EntityDelegator e, String auditEventType, String comment, String detail ) {
-        AbstractAuditable entity = this.getAuditable( e );
+        Auditable entity = this.getAuditable( e );
         if ( entity == null ) {
             AuditController.log.warn( "Couldn't find Auditable represented by " + e );
             return;
@@ -76,12 +75,11 @@ public class AuditController {
             throw new RuntimeException( "Unknown event type: " + auditEventType );
         }
 
-        auditTrailService.addUpdateEvent( entity, ( Class<? extends AuditEventType> ) clazz, comment, detail );
-        AuditEvent auditEvent = entity.getAuditTrail().getLast();
+        AuditEvent auditEvent = auditTrailService.addUpdateEvent( entity, ( Class<? extends AuditEventType> ) clazz, comment, detail );
         if ( auditEvent == null ) {
             AuditController.log.error( "Persisting the audit event failed! On auditable id " + entity.getId() );
         } else {
-            AuditController.log.info( "created new event: " + auditEvent );
+            AuditController.log.info( String.format( "created new event: %s on %s.", auditEvent, entity ) );
         }
     }
 
@@ -111,14 +109,14 @@ public class AuditController {
         return result;
     }
 
-    private AbstractAuditable getAuditable( EntityDelegator e ) {
+    private Auditable getAuditable( EntityDelegator e ) {
         if ( e == null || e.getId() == null )
             return null;
         if ( e.getClassDelegatingFor() == null )
             return null;
 
         Class<?> clazz;
-        AbstractAuditable result;
+        Auditable result;
         try {
             clazz = Class.forName( e.getClassDelegatingFor() );
         } catch ( ClassNotFoundException e1 ) {

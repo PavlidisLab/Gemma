@@ -32,21 +32,4 @@ public class DataReplacedEvent
      */
     private static final long serialVersionUID = -3239733956797015820L;
 
-    /**
-     * No-arg constructor added to satisfy javabean contract
-     *
-     * @author Paul
-     */
-    public DataReplacedEvent() {
-    }
-
-    @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
-    public static final class Factory {
-
-        public static ubic.gemma.model.common.auditAndSecurity.eventType.DataReplacedEvent newInstance() {
-            return new ubic.gemma.model.common.auditAndSecurity.eventType.DataReplacedEvent();
-        }
-
-    }
-
 }

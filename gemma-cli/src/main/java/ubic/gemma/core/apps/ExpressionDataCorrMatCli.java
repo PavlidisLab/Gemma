@@ -67,7 +67,7 @@ public class ExpressionDataCorrMatCli extends ExpressionExperimentManipulatingCL
     }
 
     private void audit( ExpressionExperiment ee ) {
-        auditTrailService.addUpdateEvent( ee, null, "Generated sample correlation matrix" );
+        auditTrailService.addUpdateEvent( ee, "Generated sample correlation matrix" );
         addSuccessObject( ee, "Successfully processed " + ee.getShortName() );
     }
 

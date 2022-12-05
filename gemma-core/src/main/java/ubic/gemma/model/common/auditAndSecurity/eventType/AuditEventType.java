@@ -18,26 +18,24 @@
  */
 package ubic.gemma.model.common.auditAndSecurity.eventType;
 
+import lombok.EqualsAndHashCode;
+import ubic.gemma.model.common.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.curation.Curatable;
 
 import java.io.Serializable;
 import java.util.Date;
+import java.util.Objects;
 
 public abstract class AuditEventType implements Serializable {
 
     private static final long serialVersionUID = -7397754091918396538L;
-    final private Long id = null;
+
+    private Long id;
 
     /**
-     * No-arg constructor added to satisfy javabean contract
-     *
-     * @author Paul
+     * @deprecated you should never use this property, rely instead on the actual type via {@link #getClass()}.
      */
-    @SuppressWarnings("WeakerAccess") // required by spring
-    public AuditEventType() {
-    }
-
-    @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
+    @Deprecated
     public Long getId() {
         return this.id;
     }
@@ -53,23 +51,16 @@ public abstract class AuditEventType implements Serializable {
 
     @Override
     public int hashCode() {
-        int hashCode = 0;
-        //noinspection ConstantConditions // Hibernate populates id through reflection
-        hashCode = 29 * ( hashCode + ( id == null ? 0 : id.hashCode() ) );
-        return hashCode;
+        return Objects.hashCode( getClass() );
     }
 
     @Override
     public boolean equals( Object object ) {
-        if ( this == object ) {
-            return true;
-        }
-        if ( !( object instanceof AuditEventType ) ) {
-            return false;
-        }
-        final AuditEventType that = ( AuditEventType ) object;
-        //noinspection ConstantConditions // Hibernate populates id through reflection
-        return this.id != null && that.getId() != null && this.id.equals( that.getId() );
+        return object != null && Objects.equals( getClass(), object.getClass() );
     }
 
+    @Override
+    public String toString() {
+        return this.getClass().getName();
+    }
 }

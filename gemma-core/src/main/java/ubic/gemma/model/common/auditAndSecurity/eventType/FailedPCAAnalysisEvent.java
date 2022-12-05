@@ -25,21 +25,4 @@ public class FailedPCAAnalysisEvent extends NeedsAttentionEvent {
      */
     private static final long serialVersionUID = -7055117029646665872L;
 
-    /**
-     * No-arg constructor added to satisfy javabean contract
-     *
-     * @author Paul
-     */
-    public FailedPCAAnalysisEvent() {
-    }
-
-    @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
-    public static final class Factory {
-
-        public static ubic.gemma.model.common.auditAndSecurity.eventType.FailedPCAAnalysisEvent newInstance() {
-            return new ubic.gemma.model.common.auditAndSecurity.eventType.FailedPCAAnalysisEvent();
-        }
-
-    }
-
 }

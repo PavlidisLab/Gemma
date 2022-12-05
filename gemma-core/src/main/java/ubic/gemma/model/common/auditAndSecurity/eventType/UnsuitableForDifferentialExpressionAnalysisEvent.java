@@ -1,8 +1,8 @@
 /*
  * The gemma-core project
- * 
+ *
  * Copyright (c) 2021 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -24,30 +24,13 @@ package ubic.gemma.model.common.auditAndSecurity.eventType;
  * event to document this determination, to avoid unnecessary repeat visits for curation and re-determination. This
  * event can
  * be effectively reverted by adding a {@link ResetSuitabilityForDifferentialExpressionAnalysisEvent}.
- * 
+ *
  * @author paul
  */
 public class UnsuitableForDifferentialExpressionAnalysisEvent extends DifferentialExpressionSuitabilityEvent {
 
     /**
-     * 
-     */
-    private static final long serialVersionUID = 4296161562091100967L;
-
-    /**
-     * No-arg constructor added to satisfy javabean contract
      *
      */
-    public UnsuitableForDifferentialExpressionAnalysisEvent() {
-    }
-
-    @SuppressWarnings({ "unused", "WeakerAccess" }) // Used in frontend
-    public static final class Factory {
-
-        public static ubic.gemma.model.common.auditAndSecurity.eventType.UnsuitableForDifferentialExpressionAnalysisEvent newInstance() {
-            return new ubic.gemma.model.common.auditAndSecurity.eventType.UnsuitableForDifferentialExpressionAnalysisEvent();
-        }
-
-    }
-
+    private static final long serialVersionUID = 4296161562091100967L;
 }

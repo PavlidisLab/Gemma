@@ -223,7 +223,7 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
         }
     }
 
-    private void audit( ExpressionExperiment ee, String note, AuditEventType eventType ) {
+    private void audit( ExpressionExperiment ee, String note, Class<? extends AuditEventType> eventType ) {
         expressionExperimentReportService.generateSummary( ee.getId() );
         ee = this.eeService.thawLite( ee );
         auditTrailService.addUpdateEvent( ee, eventType, note );
@@ -384,13 +384,13 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
     private void logFailure( ExpressionExperiment expressionExperiment, Exception e ) {
 
         if ( e instanceof InsufficientSamplesException ) {
-            this.audit( expressionExperiment, e.getMessage(), TooSmallDatasetLinkAnalysisEvent.Factory.newInstance() );
+            this.audit( expressionExperiment, e.getMessage(), TooSmallDatasetLinkAnalysisEvent.class );
         } else if ( e instanceof InsufficientProbesException ) {
-            this.audit( expressionExperiment, e.getMessage(), TooSmallDatasetLinkAnalysisEvent.Factory.newInstance() );
+            this.audit( expressionExperiment, e.getMessage(), TooSmallDatasetLinkAnalysisEvent.class );
         } else {
             LinkAnalysisServiceImpl.log.error( "While processing " + expressionExperiment, e );
             this.audit( expressionExperiment, ExceptionUtils.getStackTrace( e ),
-                    FailedLinkAnalysisEvent.Factory.newInstance() );
+                    FailedLinkAnalysisEvent.class );
         }
     }
 
@@ -471,7 +471,7 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
 
             if ( linkAnalysisConfig.isUseDb() && !linkAnalysisConfig.isTextOut() ) {
                 persister.saveLinksToDb( la );
-                this.audit( ee, "", LinkAnalysisEvent.Factory.newInstance() );
+                this.audit( ee, "", LinkAnalysisEvent.class );
             } else if ( linkAnalysisConfig.isTextOut() ) {
                 try {
                     PrintWriter w;

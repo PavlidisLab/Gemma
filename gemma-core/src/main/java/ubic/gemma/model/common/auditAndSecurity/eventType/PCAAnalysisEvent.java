@@ -26,21 +26,4 @@ public class PCAAnalysisEvent
      */
     private static final long serialVersionUID = -7387174169412782003L;
 
-    /**
-     * No-arg constructor added to satisfy javabean contract
-     *
-     * @author Paul
-     */
-    public PCAAnalysisEvent() {
-    }
-
-    @SuppressWarnings({ "unused", "WeakerAccess" }) // Used in frontend
-    public static final class Factory {
-
-        public static ubic.gemma.model.common.auditAndSecurity.eventType.PCAAnalysisEvent newInstance() {
-            return new ubic.gemma.model.common.auditAndSecurity.eventType.PCAAnalysisEvent();
-        }
-
-    }
-
 }

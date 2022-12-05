@@ -26,21 +26,4 @@ public class ArrayDesignRepeatAnalysisEvent
      */
     private static final long serialVersionUID = -1315594279851821201L;
 
-    /**
-     * No-arg constructor added to satisfy javabean contract
-     *
-     * @author Paul
-     */
-    public ArrayDesignRepeatAnalysisEvent() {
-    }
-
-    @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
-    public static final class Factory {
-
-        public static ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignRepeatAnalysisEvent newInstance() {
-            return new ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignRepeatAnalysisEvent();
-        }
-
-    }
-
 }

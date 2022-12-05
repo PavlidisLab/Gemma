@@ -187,15 +187,13 @@ public class PreprocessorServiceImpl implements PreprocessorService {
             processedExpressionDataVectorService
                     .createProcessedDataVectors( ee, correctedData.toProcessedDataVectors() );
 
-            AuditEventType eventType = BatchCorrectionEvent.Factory.newInstance();
-
             String bConf = expressionExperimentService.getBatchConfound( ee );
             if ( bConf != null && force ) {
                 String add = "Batch correction forced over a detected confound: " + bConf;
                 //noinspection ConstantConditions // That is simply false.
                 detail = ( detail == null ) ? add : detail + "\n" + add;
             }
-            auditTrailService.addUpdateEvent( ee, eventType, note, detail );
+            auditTrailService.addUpdateEvent( ee, BatchCorrectionEvent.class, note, detail );
 
             this.removeInvalidatedData( ee );
             this.processExceptForVectorCreate( ee, false ); // don't batch correct again!
@@ -210,7 +208,7 @@ public class PreprocessorServiceImpl implements PreprocessorService {
      * Checks all the given expression experiments bio assays for outlier flags and returns them in a collection
      *
      * @param  ee the expression experiment to be checked
-     * @return    a collection of outlier details that contains all the outliers that the expression experiment is aware
+     * @return a collection of outlier details that contains all the outliers that the expression experiment is aware
      *            of.
      */
     private Collection<OutlierDetails> getAlreadyKnownOutliers( ExpressionExperiment ee ) {
@@ -229,10 +227,10 @@ public class PreprocessorServiceImpl implements PreprocessorService {
     /**
      * Do all processing steps except making the vectors (so it uses the vectors that are there) including batch
      * correction, diagnostics, and refreshing of old analyses.
-     * 
+     *
      * @param  ee           the experiment
      * @param  batchCorrect if true, attempt to do batch correction (should always be true really)
-     * @return              the experiment
+     * @return the experiment
      */
     private ExpressionExperiment processExceptForVectorCreate( ExpressionExperiment ee, Boolean batchCorrect ) {
         // refresh into context.
@@ -377,7 +375,7 @@ public class PreprocessorServiceImpl implements PreprocessorService {
 
     /**
      *
-     * @return    processed data vectors; if they don't exist, create them. They will be thawed in either case.
+     * @return processed data vectors; if they don't exist, create them. They will be thawed in either case.
      */
     private Collection<ProcessedExpressionDataVector> getProcessedExpressionDataVectors( ExpressionExperiment ee ) {
         Collection<ProcessedExpressionDataVector> vecs = processedExpressionDataVectorService

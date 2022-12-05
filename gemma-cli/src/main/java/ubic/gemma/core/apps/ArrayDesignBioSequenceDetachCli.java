@@ -103,7 +103,6 @@ public class ArrayDesignBioSequenceDetachCli extends ArrayDesignSequenceManipula
         }
 
 
-
     }
 
     @Override
@@ -114,8 +113,7 @@ public class ArrayDesignBioSequenceDetachCli extends ArrayDesignSequenceManipula
 
     private void audit( ArrayDesign arrayDesign, String message ) {
         super.getArrayDesignReportService().generateArrayDesignReport( arrayDesign.getId() );
-        AuditEventType eventType = ArrayDesignSequenceRemoveEvent.Factory.newInstance();
-        auditTrailService.addUpdateEvent( arrayDesign, eventType, message );
+        auditTrailService.addUpdateEvent( arrayDesign, ArrayDesignSequenceRemoveEvent.class, message );
     }
 
 }

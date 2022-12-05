@@ -29,21 +29,4 @@ public class TooSmallDatasetLinkAnalysisEvent
      */
     private static final long serialVersionUID = 3051344049635374788L;
 
-    /**
-     * No-arg constructor added to satisfy javabean contract
-     *
-     * @author Paul
-     */
-    public TooSmallDatasetLinkAnalysisEvent() {
-    }
-
-    @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
-    public static final class Factory {
-
-        public static ubic.gemma.model.common.auditAndSecurity.eventType.TooSmallDatasetLinkAnalysisEvent newInstance() {
-            return new ubic.gemma.model.common.auditAndSecurity.eventType.TooSmallDatasetLinkAnalysisEvent();
-        }
-
-    }
-
 }

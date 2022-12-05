@@ -19,6 +19,7 @@
 
 package ubic.gemma.model.common.auditAndSecurity;
 
+import lombok.ToString;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
@@ -29,16 +30,17 @@ import java.util.Date;
 /**
  * An event in the life of an object.
  */
+@ToString(of = { "id", "eventType", "action", "date", "performer" })
 public class AuditEvent implements Identifiable, Serializable {
 
     private static final long serialVersionUID = -1212093157703833905L;
-    private final AuditAction action = null;
-    private final Date date = null;
-    private final String detail = null;
-    private final AuditEventType eventType = null;
-    private final Long id = null;
-    private final String note = null;
-    private final User performer = null;
+    private AuditAction action = null;
+    private Date date = null;
+    private String detail = null;
+    private AuditEventType eventType = null;
+    private Long id = null;
+    private String note = null;
+    private User performer = null;
 
     @Override
     public int hashCode() {
@@ -93,30 +95,18 @@ public class AuditEvent implements Identifiable, Serializable {
 
     @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
     public static final class Factory {
-
-        public static AuditEvent newInstance() {
-            return new AuditEvent();
-        }
-
+        /**
+         * Create a new, immutable audit event.
+         */
         public static AuditEvent newInstance( Date date, AuditAction action, String note, String detail, User performer,
                 AuditEventType eventType ) {
-            final AuditEvent entity = new AuditEvent();
-            try {
-                if ( date != null )
-                    FieldUtils.writeField( entity, "date", date, true );
-                if ( action != null )
-                    FieldUtils.writeField( entity, "action", action, true );
-                if ( note != null )
-                    FieldUtils.writeField( entity, "note", note, true );
-                if ( detail != null )
-                    FieldUtils.writeField( entity, "detail", detail, true );
-                if ( performer != null )
-                    FieldUtils.writeField( entity, "performer", performer, true );
-                if ( eventType != null )
-                    FieldUtils.writeField( entity, "eventType", eventType, true );
-            } catch ( IllegalAccessException e ) {
-                e.printStackTrace();
-            }
+            AuditEvent entity = new AuditEvent();
+            entity.date = date;
+            entity.action = action;
+            entity.note = note;
+            entity.detail = detail;
+            entity.performer = performer;
+            entity.eventType = eventType;
             return entity;
         }
     }

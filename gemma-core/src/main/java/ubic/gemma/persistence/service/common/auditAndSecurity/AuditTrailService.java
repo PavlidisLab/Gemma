@@ -23,6 +23,8 @@ import ubic.gemma.model.common.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
+import ubic.gemma.model.common.auditAndSecurity.eventType.FailedBatchInformationFetchingEvent;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.BaseService;
 
 import javax.annotation.Nullable;
@@ -33,23 +35,35 @@ import java.util.List;
  */
 public interface AuditTrailService extends BaseService<AuditTrail> {
 
+    /**
+     * Add an update audit event of a specific type to the passed auditable entity.
+     *
+     * @param auditable the entity
+     * @param type      the audit event type
+     * @param note      a short note (optional)
+     * @param detail    full details for that event (optional)
+     * @return the newly created event, which will be somewhere in the auditable's {@link AuditTrail#getEvents()}
+     * collection.
+     */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    void addUpdateEvent( Auditable auditable, AuditEventType auditEventType, @Nullable String note );
-
-    @Secured({ "GROUP_AGENT", "ACL_SECURABLE_EDIT" })
-    void addUpdateEvent( Auditable auditable, AuditEventType auditEventType, @Nullable String note, @Nullable String detail );
+    AuditEvent addUpdateEvent( Auditable auditable, Class<? extends AuditEventType> type, String note, String detail );
 
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    void addUpdateEvent( Auditable auditable, Class<? extends AuditEventType> type, @Nullable String note, @Nullable String detail );
+    AuditEvent addUpdateEvent( Auditable auditable, Class<? extends AuditEventType> type, String note );
+
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    AuditEvent addUpdateEvent( Auditable auditable, Class<? extends AuditEventType> type, String message, Throwable throwable );
 
     /**
      * Add an update event defined by the given parameters, to the given auditable. Returns the generated event.
      *
-     * @param auditable auditable
-     * @param note      note
+     * @param auditable the entity
+     * @param note      a short note (optional)
+     * @return the newly created event, which will be somewhere in the auditable's {@link AuditTrail#getEvents()}
+     * collection.
      */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    void addUpdateEvent( Auditable auditable, @Nullable String note );
+    AuditEvent addUpdateEvent( Auditable auditable, String note );
 
     @Override
     @Secured({ "GROUP_USER" })
@@ -57,5 +71,4 @@ public interface AuditTrailService extends BaseService<AuditTrail> {
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
     List<AuditEvent> getEvents( Auditable auditable );
-
 }

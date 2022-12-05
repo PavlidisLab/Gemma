@@ -32,21 +32,4 @@ public class FailedBatchInformationFetchingEvent
      */
     private static final long serialVersionUID = -3776787605548724345L;
 
-    /**
-     * No-arg constructor added to satisfy javabean contract
-     *
-     * @author Paul
-     */
-    public FailedBatchInformationFetchingEvent() {
-    }
-
-    @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
-    public static final class Factory {
-
-        public static ubic.gemma.model.common.auditAndSecurity.eventType.FailedBatchInformationFetchingEvent newInstance() {
-            return new ubic.gemma.model.common.auditAndSecurity.eventType.FailedBatchInformationFetchingEvent();
-        }
-
-    }
-
 }

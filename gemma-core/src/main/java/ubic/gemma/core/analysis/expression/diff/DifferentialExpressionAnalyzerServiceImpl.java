@@ -189,7 +189,7 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
                     .error( "Error during differential expression analysis: " + e.getMessage(), e );
             try {
                 auditTrailService.addUpdateEvent( expressionExperiment,
-                        FailedDifferentialExpressionAnalysisEvent.Factory.newInstance(),
+                        FailedDifferentialExpressionAnalysisEvent.class,
                         ExceptionUtils.getStackTrace( e ) );
             } catch ( Exception e2 ) {
                 DifferentialExpressionAnalyzerServiceImpl.log.error( "Could not attach failure audit event" );
@@ -244,7 +244,7 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
         // get a clean copy of the analysis object from the DB.
         analysis = differentialExpressionAnalysisService.load( analysis.getId() );
         // we do this here because now we have IDs for everything.
-        if (config.getMakeArchiveFile() ) {
+        if ( config.getMakeArchiveFile() ) {
             try {
                 expressionDataFileService.writeDiffExArchiveFile( expressionExperiment, analysis, config );
             } catch ( IOException e ) {
@@ -256,7 +256,7 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
         // final transaction: audit.
         try {
             auditTrailService
-                    .addUpdateEvent( expressionExperiment, DifferentialExpressionAnalysisEvent.Factory.newInstance(),
+                    .addUpdateEvent( expressionExperiment, DifferentialExpressionAnalysisEvent.class,
                             persistentAnalysis.getDescription() + "; analysis id=" + persistentAnalysis.getId() );
         } catch ( Exception e ) {
             DifferentialExpressionAnalyzerServiceImpl.log

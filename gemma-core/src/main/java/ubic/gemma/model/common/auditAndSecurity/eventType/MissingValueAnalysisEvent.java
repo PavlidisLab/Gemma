@@ -31,21 +31,4 @@ public class MissingValueAnalysisEvent
      */
     private static final long serialVersionUID = -4000136638329943603L;
 
-    /**
-     * No-arg constructor added to satisfy javabean contract
-     *
-     * @author Paul
-     */
-    public MissingValueAnalysisEvent() {
-    }
-
-    @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
-    public static final class Factory {
-
-        public static ubic.gemma.model.common.auditAndSecurity.eventType.MissingValueAnalysisEvent newInstance() {
-            return new ubic.gemma.model.common.auditAndSecurity.eventType.MissingValueAnalysisEvent();
-        }
-
-    }
-
 }

@@ -54,7 +54,7 @@ public class TwoChannelMissingValueHelperServiceImpl implements TwoChannelMissin
         TwoChannelMissingValueHelperServiceImpl.log.info( "Persisting " + results.size() + " vectors ... " );
         source.getRawExpressionDataVectors().addAll( results );
         expressionExperimentService.update( source ); // this is needed to get the QT filled in properly.
-        auditTrailService.addUpdateEvent( source, MissingValueAnalysisEvent.Factory.newInstance(),
+        auditTrailService.addUpdateEvent( source, MissingValueAnalysisEvent.class,
                 "Computed missing value data" );
         return results;
 

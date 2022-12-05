@@ -31,21 +31,4 @@ public class BatchInformationFetchingEvent
      */
     private static final long serialVersionUID = 4635587632131568136L;
 
-    /**
-     * No-arg constructor added to satisfy javabean contract
-     *
-     * @author Paul
-     */
-    public BatchInformationFetchingEvent() {
-    }
-
-    @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
-    public static final class Factory {
-
-        public static ubic.gemma.model.common.auditAndSecurity.eventType.BatchInformationFetchingEvent newInstance() {
-            return new ubic.gemma.model.common.auditAndSecurity.eventType.BatchInformationFetchingEvent();
-        }
-
-    }
-
 }

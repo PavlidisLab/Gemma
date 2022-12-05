@@ -28,18 +28,4 @@ public class FailedDataReplacedEvent extends DataReplacedEvent {
 
     private static final long serialVersionUID = 304758117763492676L;
 
-    /**
-     * No-arg constructor added to satisfy javabean contract
-     */
-    public FailedDataReplacedEvent() {
-    }
-
-    @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
-    public static final class Factory {
-
-        public static ubic.gemma.model.common.auditAndSecurity.eventType.FailedDataReplacedEvent newInstance() {
-            return new ubic.gemma.model.common.auditAndSecurity.eventType.FailedDataReplacedEvent();
-        }
-
-    }
 }

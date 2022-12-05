@@ -38,33 +38,10 @@ public abstract class CurationDetailsEvent extends AuditEventType {
     private static final long serialVersionUID = 6621758826080039878L;
 
     /**
-     * No-arg constructor added to satisfy javabean contract
-     */
-    public CurationDetailsEvent() {
-    }
-
-    /**
      * This method should be overloaded in all of the extensions of this class to do the specific actions they wre designed for.
      *
      * @param curatable  the curatable object to do the curation action on.
      * @param auditEvent the audit event containing information about the action that should be made.
      */
     public abstract void setCurationDetails( Curatable curatable, AuditEvent auditEvent );
-
-    /**
-     * Throws an exception, as CurationDetailsEvent can not be instantiated.
-     */
-    @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
-    public static final class Factory {
-        /**
-         * @return Throws an UnsupportedOperationException
-         * {@link CurationDetailsEvent}.
-         */
-        public static CurationDetailsEvent newInstance() {
-            throw new UnsupportedOperationException(
-                    "CurationDetailsEvent can not be instantiated. It only serves as a wrapper class for its descendants. Use a more specific event type." );
-        }
-
-    }
-
 }

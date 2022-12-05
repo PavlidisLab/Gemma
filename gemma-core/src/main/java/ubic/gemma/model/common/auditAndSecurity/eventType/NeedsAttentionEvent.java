@@ -47,13 +47,4 @@ public class NeedsAttentionEvent extends CurationDetailsEvent {
         curatable.getCurationDetails().setLastNeedsAttentionEvent( auditEvent );
     }
 
-    @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
-    public static final class Factory {
-
-        public static NeedsAttentionEvent newInstance() {
-            return new NeedsAttentionEvent();
-        }
-
-    }
-
 }

@@ -1118,8 +1118,7 @@ public class ExpressionExperimentController {
 
         if ( changed ) {
             ExpressionExperimentController.log.info( "Updating " + ee );
-            auditTrailService
-                    .addUpdateEvent( ee, CommentedEvent.Factory.newInstance(), "Updated experiment details", details );
+            auditTrailService.addUpdateEvent( ee, CommentedEvent.class, "Updated experiment details", details );
             expressionExperimentService.update( ee );
         }
 

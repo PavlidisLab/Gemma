@@ -70,7 +70,7 @@ public class ExpressionExperimentPlatformSwitchCli extends ExpressionExperimentM
     protected void buildOptions( Options options ) {
         super.buildOptions( options );
         Option arrayDesignOption = Option.builder( "a" ).hasArg().argName( "Array design" ).desc(
-                "Array design name (or short name) - no need to specifiy if the platforms used by the EE are merged" )
+                        "Array design name (or short name) - no need to specifiy if the platforms used by the EE are merged" )
                 .longOpt( "array" ).build();
 
         options.addOption( arrayDesignOption );
@@ -92,7 +92,6 @@ public class ExpressionExperimentPlatformSwitchCli extends ExpressionExperimentM
             ee = this.eeService.thawLite( ee );
 
             AuditTrailService ats = this.getBean( AuditTrailService.class );
-            AuditEventType type = ExpressionExperimentPlatformSwitchEvent.Factory.newInstance();
             if ( this.arrayDesignName != null ) {
                 ArrayDesign ad = this.locateArrayDesign( this.arrayDesignName, arrayDesignService );
                 if ( ad == null ) {
@@ -101,12 +100,12 @@ public class ExpressionExperimentPlatformSwitchCli extends ExpressionExperimentM
                 ad = arrayDesignService.thaw( ad );
                 ee = serv.switchExperimentToArrayDesign( ee, ad );
 
-                ats.addUpdateEvent( ee, type, "Switched to use " + ad );
+                ats.addUpdateEvent( ee, ExpressionExperimentPlatformSwitchEvent.class, "Switched to use " + ad );
 
             } else {
                 // Identify merged platform automatically; not really recommended as it might not make the optimal choice.
                 ee = serv.switchExperimentToMergedPlatform( ee );
-                ats.addUpdateEvent( ee, type, "Switched to use merged array Design " );
+                ats.addUpdateEvent( ee, ExpressionExperimentPlatformSwitchEvent.class, "Switched to use merged array Design " );
             }
 
             addSuccessObject( ee, "Successfully processed " + ee.getShortName() );
