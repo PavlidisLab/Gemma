@@ -20,7 +20,6 @@ package ubic.gemma.persistence.persister;
 
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.analysis.expression.coexpression.CoexpressionAnalysis;
 import ubic.gemma.model.association.Gene2GOAssociation;
@@ -49,39 +48,24 @@ public abstract class RelationshipPersister extends ExpressionPersister {
     private ExpressionExperimentSetDao expressionExperimentSetDao;
 
     @Override
-    @Transactional
-    public Object persist( Object entity ) {
-        if ( entity == null )
-            return null;
-
+    protected Object doPersist( Object entity, Caches caches ) {
         if ( entity instanceof Gene2GOAssociation ) {
-            return this.persistGene2GOAssociation( ( Gene2GOAssociation ) entity );
+            return this.persistGene2GOAssociation( ( Gene2GOAssociation ) entity, caches );
         } else if ( entity instanceof CoexpressionAnalysis ) {
             return this.persistCoexpressionAnalysis( ( CoexpressionAnalysis ) entity );
         } else if ( entity instanceof ExpressionExperimentSet ) {
-            return this.persistExpressionExperimentSet( ( ExpressionExperimentSet ) entity );
+            return this.persistExpressionExperimentSet( ( ExpressionExperimentSet ) entity, caches );
+        } else {
+            return super.doPersist( entity, caches );
         }
-        return super.persist( entity );
-
     }
 
-    @Override
-    @Transactional
-    public Object persistOrUpdate( Object entity ) {
-        if ( entity == null )
-            return null;
-        return super.persistOrUpdate( entity );
-    }
-
-    private ExpressionExperimentSet persistExpressionExperimentSet( ExpressionExperimentSet entity ) {
-        if ( !this.isTransient( entity ) )
-            return entity;
-
+    private ExpressionExperimentSet persistExpressionExperimentSet( ExpressionExperimentSet entity, Caches caches ) {
         Collection<BioAssaySet> setMembers = new HashSet<>();
 
         for ( BioAssaySet baSet : entity.getExperiments() ) {
-            if ( this.isTransient( baSet ) ) {
-                baSet = ( BioAssaySet ) this.persist( baSet );
+            if ( baSet.getId() == null ) {
+                baSet = ( BioAssaySet ) this.doPersist( baSet, caches );
             }
             setMembers.add( baSet );
         }
@@ -91,13 +75,9 @@ public abstract class RelationshipPersister extends ExpressionPersister {
         return expressionExperimentSetDao.create( entity );
     }
 
-    private Gene2GOAssociation persistGene2GOAssociation( Gene2GOAssociation association ) {
-        if ( association == null )
-            return null;
-        if ( !this.isTransient( association ) )
-            return association;
+    private Gene2GOAssociation persistGene2GOAssociation( Gene2GOAssociation association, Caches caches ) {
         try {
-            FieldUtils.writeField( association, "gene", this.persistGene( association.getGene() ), true );
+            FieldUtils.writeField( association, "gene", this.persistGene( association.getGene(), caches ), true );
         } catch ( IllegalAccessException e ) {
             e.printStackTrace();
         }
@@ -105,15 +85,10 @@ public abstract class RelationshipPersister extends ExpressionPersister {
     }
 
     private CoexpressionAnalysis persistCoexpressionAnalysis( CoexpressionAnalysis entity ) {
-        if ( entity == null )
-            return null;
-        if ( !this.isTransient( entity ) )
-            return entity;
         entity.setProtocol( this.persistProtocol( entity.getProtocol() ) );
-        if ( this.isTransient( entity.getExperimentAnalyzed() ) ) {
+        if ( entity.getExperimentAnalyzed().getId() == null ) {
             throw new IllegalArgumentException( "Persist the experiment before running analyses on it" );
         }
-
         return coexpressionAnalysisDao.create( entity );
     }
 

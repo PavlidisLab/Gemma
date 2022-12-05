@@ -293,9 +293,6 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
     /**
      * Populate the search results with the value objects - we generally only have the entity class and ID (or, in some
      * cases, possibly the entity)
-     * @param entityClass
-     * @param results
-     * @param settings
      */
     @SuppressWarnings("unchecked")
     private void fillValueObjects( Class<?> entityClass, List<SearchResult<?>> results, SearchSettings settings ) {
@@ -441,7 +438,7 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
                 .query( !StringUtils.isBlank( settingsValueObject.getQuery() ) ? settingsValueObject.getQuery() : settingsValueObject.getTermUri() )
                 .platformConstraint( settingsValueObject.getPlatformConstraint() )
                 .taxon( settingsValueObject.getTaxon() )
-                .maxResults( settingsValueObject.getMaxResults() )
+                .maxResults( settingsValueObject.getMaxResults() != null ? settingsValueObject.getMaxResults() : SearchSettings.DEFAULT_MAX_RESULTS_PER_RESULT_TYPE )
                 .resultTypes( resultTypesFromVo( settingsValueObject ) )
                 .useIndices( settingsValueObject.getUseIndices() )
                 .useDatabase( settingsValueObject.getUseDatabase() )

@@ -74,7 +74,6 @@ import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.persistence.util.Sort;
 
 import javax.annotation.Nullable;
-import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -85,7 +84,6 @@ import java.util.stream.Collectors;
  */
 @Service
 @Transactional
-@ParametersAreNonnullByDefault
 public class ExpressionExperimentServiceImpl
         extends AbstractFilteringVoEnabledService<ExpressionExperiment, ExpressionExperimentValueObject>
         implements ExpressionExperimentService {
@@ -228,7 +226,7 @@ public class ExpressionExperimentServiceImpl
 
     @Override
     @Transactional(readOnly = true)
-    public List<ExpressionExperiment> browse( Integer start, Integer limit ) {
+    public List<ExpressionExperiment> browse( int start, int limit ) {
         return this.expressionExperimentDao.browse( start, limit );
     }
 
@@ -266,7 +264,7 @@ public class ExpressionExperimentServiceImpl
 
     @Override
     @Transactional(readOnly = true)
-    public Integer countNotTroubled() {
+    public long countNotTroubled() {
         return this.expressionExperimentDao.countNotTroubled();
     }
 
@@ -441,13 +439,7 @@ public class ExpressionExperimentServiceImpl
 
     @Override
     @Transactional(readOnly = true)
-    public Collection<ExpressionExperiment> findByTaxon( final Taxon taxon, @Nullable Integer limit ) {
-        return this.expressionExperimentDao.findByTaxon( taxon, limit );
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public List<ExpressionExperiment> findByUpdatedLimit( Integer limit ) {
+    public List<ExpressionExperiment> findByUpdatedLimit( int limit ) {
         return this.expressionExperimentDao.findByUpdatedLimit( limit );
     }
 
@@ -847,7 +839,7 @@ public class ExpressionExperimentServiceImpl
 
     @Override
     @Transactional(readOnly = true)
-    public Slice<ExpressionExperimentDetailsValueObject> loadDetailsValueObjects( Collection<Long> ids, Taxon taxon, @Nullable Sort sort, int offset, int limit ) {
+    public Slice<ExpressionExperimentDetailsValueObject> loadDetailsValueObjects( Collection<Long> ids, @Nullable Taxon taxon, @Nullable Sort sort, int offset, int limit ) {
         return this.expressionExperimentDao.loadDetailsValueObjectsByIds( ids, taxon, sort, offset, limit );
     }
 
@@ -1014,21 +1006,17 @@ public class ExpressionExperimentServiceImpl
     @Override
     @Transactional
     public void remove( Long id ) {
-        ExpressionExperiment ee = Objects.requireNonNull( this.load( id ) );
-        removeAssociations( ee );
-        super.remove( ee ); // save a reload in the DAO layer
+        ExpressionExperiment ee = this.load( id );
+        if ( ee == null ) {
+            log.warn( "ExpressionExperiment was null after reloading, skipping removal altogether." );
+            return;
+        }
+        remove( ee );
     }
 
     @Override
     @Transactional
     public void remove( ExpressionExperiment ee ) {
-        // reload the EE as it might originate from a different session
-        ee = Objects.requireNonNull( this.load( ee.getId() ) );
-        removeAssociations( ee );
-        super.remove( ee );
-    }
-
-    private void removeAssociations( ExpressionExperiment ee ) {
         if ( !securityService.isEditable( ee ) ) {
             throw new SecurityException(
                     "Error performing 'ExpressionExperimentService.remove(ExpressionExperiment expressionExperiment)' --> "
@@ -1070,6 +1058,8 @@ public class ExpressionExperimentServiceImpl
                 this.expressionExperimentSetService.update( eeSet ); // update set to not reference this experiment.
             }
         }
+
+        super.remove( ee );
     }
 
     private Collection<? extends AnnotationValueObject> getAnnotationsByFactorValues( Long eeId ) {

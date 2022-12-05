@@ -79,7 +79,7 @@ public interface CompositeSequenceDao extends FilteringVoEnabledDao<CompositeSeq
 
     Collection<Object[]> getRawSummary( Collection<CompositeSequence> compositeSequences );
 
-    Collection<Object[]> getRawSummary( ArrayDesign arrayDesign, Integer numResults );
+    Collection<Object[]> getRawSummary( ArrayDesign arrayDesign, int numResults );
 
     void thaw( Collection<CompositeSequence> compositeSequences );
 

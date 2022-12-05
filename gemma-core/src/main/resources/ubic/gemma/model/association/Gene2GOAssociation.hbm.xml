@@ -4,7 +4,7 @@
     "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
 
 <hibernate-mapping>
-	<class name="ubic.gemma.model.association.Gene2GOAssociationImpl" table="GENE2GO_ASSOCIATION"
+	<class name="ubic.gemma.model.association.Gene2GOAssociation" table="GENE2GO_ASSOCIATION"
            mutable="false">
 		<cache usage="read-write" />
 		<id access="field" name="id" type="java.lang.Long" unsaved-value="null">

@@ -23,6 +23,7 @@ import ubic.gemma.model.expression.experiment.ExperimentalDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.BaseService;
 
+import javax.annotation.Nullable;
 import java.util.Collection;
 
 /**

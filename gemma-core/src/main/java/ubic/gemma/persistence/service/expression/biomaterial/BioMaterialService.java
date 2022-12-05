@@ -26,7 +26,6 @@ import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.persistence.service.BaseVoEnabledService;
 
 import java.util.Collection;
-import java.util.Date;
 import java.util.Map;
 
 /**

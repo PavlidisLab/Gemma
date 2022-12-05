@@ -125,14 +125,14 @@ public class BibliographicReferenceDaoImpl
     }
 
     @Override
-    public List<BibliographicReference> browse( Integer start, Integer limit ) {
+    public List<BibliographicReference> browse( int start, int limit ) {
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession().createQuery( "from BibliographicReference" )
                 .setMaxResults( limit ).setFirstResult( start ).list();
     }
 
     @Override
-    public List<BibliographicReference> browse( Integer start, Integer limit, String orderField, boolean descending ) {
+    public List<BibliographicReference> browse( int start, int limit, String orderField, boolean descending ) {
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession()
                 .createQuery( "from BibliographicReference order by :orderField " + ( descending ? "desc" : "" ) )

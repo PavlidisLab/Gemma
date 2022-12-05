@@ -12,7 +12,7 @@
          </generator>
       </id>
       <many-to-one name="auditTrail" class="ubic.gemma.model.common.auditAndSecurity.AuditTrailImpl"  cascade="all" lazy="proxy" fetch="select">
-         <column name="AUDIT_TRAIL_FK" not-null="false" sql-type="BIGINT" unique="true"/>
+         <column name="AUDIT_TRAIL_FK" not-null="true" sql-type="BIGINT" unique="true"/>
       </many-to-one>
       <!-- This is assumed readily available in AbstractCuratableValueObject -->
       <!-- The curation details are a single-row thing with only eagerly join-fetched many-to-one relationships, so it's no big deal -->
@@ -22,7 +22,7 @@
       <property name="name" type="java.lang.String">
          <column name="NAME" not-null="false" unique="false" sql-type="VARCHAR(255)"/>
       </property>
-      <property name="description" type="org.springframework.orm.hibernate3.support.ClobStringType">
+      <property name="description" type="org.hibernate.type.MaterializedClobType">
          <column name="DESCRIPTION" not-null="false" unique="false" sql-type="text"/>
       </property>
       <property name="advertisedNumberOfDesignElements" type="java.lang.Integer">

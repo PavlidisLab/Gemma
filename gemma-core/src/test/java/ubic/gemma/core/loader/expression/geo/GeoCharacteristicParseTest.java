@@ -94,7 +94,6 @@ public class GeoCharacteristicParseTest {
     }
 
     /**
-     * @param t
      */
     void check2chars( BioMaterial t ) {
         assertEquals( 2, t.getCharacteristics().size() );

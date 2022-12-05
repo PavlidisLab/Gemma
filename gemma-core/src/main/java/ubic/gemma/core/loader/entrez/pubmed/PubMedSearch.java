@@ -165,10 +165,7 @@ public class PubMedSearch {
     }
 
     /**
-     * 
-     * @param  ids
-     * @return
-     * @throws IOException
+     *
      */
     private Collection<BibliographicReference> fetchById( Collection<String> ids ) throws IOException {
         Collection<BibliographicReference> results = new HashSet<>();

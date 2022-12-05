@@ -89,8 +89,10 @@ public class AuditTrailDaoTest extends BaseSpringContextTest {
 
     @Test
     public void testHandleAddEventAuditableAuditEvent() {
-        AuditEvent auditEvent = auditTrailService.addUpdateEvent( auditable, "this is a test" );
-        assertNotNull( auditEvent.getId() );
+        auditTrailService.addUpdateEvent( auditable, "this is a test" );
+        AuditEvent ev = auditable.getAuditTrail().getLast();
+        assertNotNull( ev );
+        assertNotNull( ev.getId() );
         assertTrue( auditable.getAuditTrail().getEvents().size() > 1 );
 
     }

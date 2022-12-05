@@ -21,9 +21,11 @@ package ubic.gemma.core.loader.expression.geo;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import ubic.gemma.core.loader.expression.geo.model.GeoPlatform;
 import ubic.gemma.core.loader.expression.geo.model.GeoSample;
 import ubic.gemma.core.loader.expression.geo.model.GeoSeries;
+import ubic.gemma.core.util.test.category.SlowTest;
 
 import java.io.InputStream;
 import java.util.zip.GZIPInputStream;
@@ -31,6 +33,7 @@ import java.util.zip.GZIPInputStream;
 /**
  * @author pavlidis
  */
+@Category(SlowTest.class)
 public class GeoFamilyParserTest {
 
     private InputStream is;

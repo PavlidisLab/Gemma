@@ -160,7 +160,7 @@ public class DifferentialExpressionProbeResultEndpoint extends AbstractGemmaEndp
 
         for ( Gene gene : geneCol ) {
             Map<ExpressionExperimentValueObject, List<DifferentialExpressionValueObject>> results = differentialExpressionResultService
-                    .find( gene, EntityUtils.getIds( bioAssaySets ), Double.parseDouble( threshold ), null );
+                    .find( gene, EntityUtils.getIds( bioAssaySets ), Double.parseDouble( threshold ), -1 );
 
             for ( ExpressionExperimentValueObject ee : results.keySet() ) {
                 // main call to the DifferentialExpressionAnalysisService to retrieve

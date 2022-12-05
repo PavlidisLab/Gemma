@@ -31,6 +31,7 @@ import ubic.gemma.persistence.util.EntityUtils;
 import ubic.gemma.persistence.util.ObjectFilter;
 import ubic.gemma.persistence.util.Sort;
 
+import javax.annotation.Nullable;
 import java.util.*;
 import java.util.function.Function;
 import java.util.regex.Matcher;
@@ -195,7 +196,7 @@ public class BioAssayServiceImpl extends AbstractVoEnabledService<BioAssay, BioA
     }
 
     @Override
-    public Sort getSort( String property, Sort.Direction direction ) throws IllegalArgumentException {
+    public Sort getSort( String property, @Nullable Sort.Direction direction ) throws IllegalArgumentException {
         try {
             EntityUtils.getDeclaredFieldType( property, Characteristic.class );
             return Sort.by( BioAssayDao.OBJECT_ALIAS, property, direction );

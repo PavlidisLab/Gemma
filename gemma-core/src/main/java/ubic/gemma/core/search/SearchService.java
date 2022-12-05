@@ -35,9 +35,6 @@ public interface SearchService {
         /**
          * Specialization of {@link #get(Object)} that correctly types the output.
          *
-         * @param searchResultType
-         * @return
-         * @param <T>
          */
         @Nonnull
         <T extends Identifiable> List<SearchResult<T>> get( Class<T> searchResultType );

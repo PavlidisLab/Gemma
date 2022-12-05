@@ -22,10 +22,6 @@ package ubic.gemma.core.search;
 import com.google.common.collect.Sets;
 import gemma.gsec.util.SecurityUtil;
 import lombok.extern.apachecommons.CommonsLog;
-import net.sf.ehcache.Cache;
-import net.sf.ehcache.CacheException;
-import net.sf.ehcache.CacheManager;
-import net.sf.ehcache.Element;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.text.StringEscapeUtils;
@@ -33,6 +29,8 @@ import org.hibernate.Hibernate;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
 import org.springframework.core.convert.ConverterNotFoundException;
 import org.springframework.core.convert.support.ConfigurableConversionService;
 import org.springframework.core.convert.support.GenericConversionService;
@@ -141,22 +139,7 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
 
     private static final String NCBI_GENE = "ncbi_gene";
 
-    /**
-     * How long after creation before an object is evicted, no matter what (seconds)
-     */
-    private static final int ONTOLOGY_CACHE_TIME_TO_DIE = 10000;
-
-    /**
-     * How long an item in the cache lasts when it is not accessed.
-     */
-    private static final int ONTOLOGY_CACHE_TIME_TO_IDLE = 3600;
-
     private static final String ONTOLOGY_CHILDREN_CACHE_NAME = "OntologyChildrenCache";
-
-    /**
-     * How many term children can stay in memory
-     */
-    private static final int ONTOLOGY_INFO_CACHE_SIZE = 30000;
 
     private final Map<String, Taxon> nameToTaxonMap = new LinkedHashMap<>();
 
@@ -213,7 +196,7 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
     @Override
     @Transactional(readOnly = true)
     public SearchResultMap search( SearchSettings settings ) throws SearchException {
-        return this.search( settings, true /* fill objects */, false /* web speed search */ );
+        return doSearch( settings, true /* fill objects */, false /* web speed search */ );
     }
 
     /*
@@ -222,7 +205,7 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
     @Override
     @Transactional(readOnly = true)
     public SearchResultMap speedSearch( SearchSettings settings ) throws SearchException {
-        return this.search( settings, true, true );
+        return doSearch( settings, true, true );
     }
 
     /*
@@ -231,6 +214,11 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
     @Override
     @Transactional(readOnly = true)
     public SearchResultMap search( SearchSettings settings, boolean fillObjects,
+            boolean webSpeedSearch ) throws SearchException {
+        return doSearch( settings, fillObjects, webSpeedSearch );
+    }
+
+    private SearchResultMap doSearch( SearchSettings settings, boolean fillObjects,
             boolean webSpeedSearch ) throws SearchException {
         if ( !supportedResultTypes.containsAll( settings.getResultTypes() ) ) {
             throw new IllegalArgumentException( "The search settings contains unsupported result types:" + Sets.difference( settings.getResultTypes(), supportedResultTypes ) + "." );
@@ -283,7 +271,7 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
             }
         } else if ( taxon != null ) {
             // get all for taxon
-            eeIds = EntityUtils.getIds( expressionExperimentService.findByTaxon( taxon, /* MAX_LUCENE_HITS */ null ) );
+            eeIds = EntityUtils.getIds( expressionExperimentService.findByTaxon( taxon ) );
         }
         return eeIds;
     }
@@ -323,11 +311,7 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
     public void afterPropertiesSet() throws Exception {
         initializeSupportedResultTypes();
         initializeResultObjectConversionService();
-        try {
-            this.initializeCache();
-        } catch ( CacheException e ) {
-            throw new RuntimeException( e );
-        }
+        this.childTermCache = CacheUtils.getCache( cacheManager, SearchServiceImpl.ONTOLOGY_CHILDREN_CACHE_NAME );
         this.initializeNameToTaxonMap();
     }
 
@@ -369,13 +353,6 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
     private <O extends Identifiable, VO extends IdentifiableValueObject<O>> void addVoConverter( Class<O> fromClass, BaseVoEnabledService<O, VO> service ) {
         //noinspection unchecked
         resultObjectConversionService.addConverter( fromClass, IdentifiableValueObject.class, o -> service.loadValueObject( ( O ) o ) );
-    }
-
-    private void initializeCache() throws CacheException {
-        this.childTermCache = CacheUtils
-                .createOrLoadCache( cacheManager, SearchServiceImpl.ONTOLOGY_CHILDREN_CACHE_NAME,
-                        SearchServiceImpl.ONTOLOGY_INFO_CACHE_SIZE, false, false,
-                        SearchServiceImpl.ONTOLOGY_CACHE_TIME_TO_IDLE, SearchServiceImpl.ONTOLOGY_CACHE_TIME_TO_DIE );
     }
 
     /**
@@ -1181,7 +1158,7 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
 
         // searches for strings in associated free text including factorvalues and biomaterials 
         // we have toyed with having this be done before the characteristic search
-        if ( settings.getUseIndices() && results.size() < settings.getMaxResults() ) {
+        if ( settings.getUseIndices() && ( settings.getMaxResults() <= 0 || results.size() < settings.getMaxResults() ) ) {
             results.addAll( this.compassSearchSource.searchExpressionExperiment( settings ) );
             if ( watch.getTime() > 500 )
                 SearchServiceImpl.log
@@ -1519,17 +1496,17 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
             return new HashSet<>();
         }
 
-        Element cachedChildren = this.childTermCache.get( uri );
+        Cache.ValueWrapper cachedChildren = this.childTermCache.get( uri );
         if ( cachedChildren == null ) {
             try {
                 children = term.getChildren( true );
-                childTermCache.put( new Element( uri, children ) );
+                childTermCache.put( uri, children );
             } catch ( com.hp.hpl.jena.ontology.ConversionException ce ) {
                 SearchServiceImpl.log.warn( "getting children for term: " + term
                         + " caused com.hp.hpl.jena.ontology.ConversionException. " + ce.getMessage() );
             }
         } else {
-            children = ( Collection<OntologyTerm> ) cachedChildren.getObjectValue();
+            children = ( Collection<OntologyTerm> ) cachedChildren.get();
         }
 
         return children;
@@ -1579,7 +1556,7 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
             if ( !fillObjects ) {
                 sr.setResultObject( null );
             }
-            if ( settings.getMaxResults() != null && results.get( sr.getResultClass() ).size() < settings.getMaxResults() ) {
+            if ( settings.getMaxResults() <= 0 || results.get( sr.getResultClass() ).size() < settings.getMaxResults() ) {
                 results.add( sr );
             }
         }

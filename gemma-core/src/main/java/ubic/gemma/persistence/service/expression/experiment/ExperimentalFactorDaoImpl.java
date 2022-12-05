@@ -24,17 +24,15 @@ import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
-import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.*;
-import ubic.gemma.persistence.service.AbstractDao;
 import ubic.gemma.persistence.service.AbstractVoEnabledDao;
 import ubic.gemma.persistence.util.BusinessKey;
 
+import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.LinkedHashSet;
 import java.util.List;
 
 /**
@@ -57,13 +55,16 @@ public class ExperimentalFactorDaoImpl extends AbstractVoEnabledDao<Experimental
     }
 
     @Override
-    @Transactional
     public void remove( ExperimentalFactor experimentalFactor ) {
         ExperimentalDesign ed = experimentalFactor.getExperimentalDesign();
 
         //language=HQL
         final String queryString = "select distinct ee from ExpressionExperiment as ee where ee.experimentalDesign = :ed";
-        List<ExpressionExperiment> results = this.getHibernateTemplate().findByNamedParam( queryString, "ed", ed );
+        //noinspection unchecked
+        List<ExpressionExperiment> results = getSessionFactory().getCurrentSession()
+                .createQuery( queryString )
+                .setParameter( "ed", ed )
+                .list();
 
         if ( results.isEmpty() ) {
             log.warn( "No expression experiment for experimental design " + ed );
@@ -103,17 +104,6 @@ public class ExperimentalFactorDaoImpl extends AbstractVoEnabledDao<Experimental
         Criteria queryObject = super.getSessionFactory().getCurrentSession().createCriteria( ExperimentalFactor.class );
         BusinessKey.addRestrictions( queryObject, experimentalFactor );
         return ( ExperimentalFactor ) queryObject.uniqueResult();
-    }
-
-    @Override
-    public ExperimentalFactor findOrCreate( ExperimentalFactor experimentalFactor ) {
-        ExperimentalFactor existing = this.find( experimentalFactor );
-        if ( existing != null ) {
-            assert existing.getId() != null;
-            return existing;
-        }
-        AbstractDao.log.debug( "Creating new arrayDesign: " + experimentalFactor.getName() );
-        return this.create( experimentalFactor );
     }
 
     @Override

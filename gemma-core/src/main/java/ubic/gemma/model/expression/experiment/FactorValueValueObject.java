@@ -77,7 +77,6 @@ public class FactorValueValueObject extends IdentifiableValueObject<FactorValue>
      *                   confuses things.
      *                   If c is null, the plain "value" is used.
      * @param      value value
-     * @deprecated see class deprecated note
      */
     public FactorValueValueObject( FactorValue value, @Nullable Characteristic c ) {
         super( value.getId() );

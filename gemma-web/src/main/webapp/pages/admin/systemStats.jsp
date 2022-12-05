@@ -38,11 +38,6 @@ input[type=button] {
 
 			<hr class="normal">
 
-			<h2>Space stats</h2>
-			<div id="spaceStats" class="v-padded">Waiting ...</div>
-
-			<hr class="normal">
-
 
 		</div>
 	</security:authorize>

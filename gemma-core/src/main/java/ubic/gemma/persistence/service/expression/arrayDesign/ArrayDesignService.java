@@ -30,13 +30,11 @@ import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.persistence.service.FilteringVoEnabledService;
 
-import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
 @SuppressWarnings("unused") // Possible external use
-@ParametersAreNonnullByDefault
 public interface ArrayDesignService extends FilteringVoEnabledService<ArrayDesign, ArrayDesignValueObject> {
 
     @Secured({ "GROUP_ADMIN" })
@@ -389,7 +387,6 @@ public interface ArrayDesignService extends FilteringVoEnabledService<ArrayDesig
 
     /**
      * @param geoAccession for a GEO series or platform
-     * @return
      */
     boolean isBlackListed( String geoAccession );
 

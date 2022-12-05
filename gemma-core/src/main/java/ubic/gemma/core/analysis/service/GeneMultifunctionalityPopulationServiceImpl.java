@@ -29,16 +29,16 @@ import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.core.ontology.providers.GeneOntologyService;
 import ubic.gemma.model.common.description.Characteristic;
+import ubic.gemma.model.common.description.ExternalDatabase;
+import ubic.gemma.model.common.description.ExternalDatabases;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.Multifunctionality;
 import ubic.gemma.persistence.service.association.Gene2GOAssociationService;
+import ubic.gemma.persistence.service.common.description.ExternalDatabaseService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Compute gene multifunctionality and store it in the database.
@@ -63,18 +63,37 @@ public class GeneMultifunctionalityPopulationServiceImpl implements GeneMultifun
     private OntologyService ontologyService;
 
     @Autowired
+    private ExternalDatabaseService externalDatabaseService;
+
+    @Autowired
     private TaxonService taxonService;
 
     @Override
     public void updateMultifunctionality() {
         for ( Taxon t : taxonService.loadAll() ) {
             GeneMultifunctionalityPopulationServiceImpl.log.info( "Processing multifunctionality for " + t );
-            this.updateMultifunctionality( t );
+            doUpdateMultifunctionality( t );
+        }
+        ExternalDatabase ed = externalDatabaseService.findByNameWithAuditTrail( ExternalDatabases.MULTIFUNCTIONALITY );
+        if ( ed != null ) {
+            externalDatabaseService.updateReleaseLastUpdated( ed, "Updated multifunctionality scores for all taxa.", new Date() );
+        } else {
+            log.warn( String.format( "No external database with name %s.", ExternalDatabases.MULTIFUNCTIONALITY ) );
         }
     }
 
     @Override
-    public void updateMultifunctionality( Taxon taxon ) {
+    public void updateMultifunctionality( Taxon t ) {
+        doUpdateMultifunctionality( t );
+        ExternalDatabase ed = externalDatabaseService.findByNameWithAuditTrail( ExternalDatabases.MULTIFUNCTIONALITY );
+        if ( ed != null ) {
+            externalDatabaseService.updateReleaseLastUpdated( ed, String.format( "Updated multifunctionality scores for %s.", t ), new Date() );
+        } else {
+            log.warn( String.format( "No external database with name %s.", ExternalDatabases.MULTIFUNCTIONALITY ) );
+        }
+    }
+
+    private void doUpdateMultifunctionality( Taxon taxon ) {
         Collection<Gene> genes = geneService.loadAll( taxon );
 
         if ( genes.isEmpty() ) {
@@ -117,7 +136,7 @@ public class GeneMultifunctionalityPopulationServiceImpl implements GeneMultifun
      * Implementation of multifunctionality computations as described in Gillis and Pavlidis (2011) PLoS ONE 6:2:e17258.
      *
      * @param  gomap gomap
-     * @return       map
+     * @return map
      */
     private Map<Gene, Multifunctionality> computeMultifunctionality( Map<Gene, Collection<String>> gomap ) {
 

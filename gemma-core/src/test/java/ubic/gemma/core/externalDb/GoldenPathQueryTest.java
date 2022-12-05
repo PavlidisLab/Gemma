@@ -18,8 +18,6 @@
  */
 package ubic.gemma.core.externalDb;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.junit.Assert;
 import org.junit.Assume;
 import org.junit.Before;
@@ -29,7 +27,6 @@ import org.springframework.jdbc.CannotGetJdbcConnectionException;
 import ubic.gemma.core.util.test.category.GoldenPathTest;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
-import ubic.gemma.persistence.util.Settings;
 
 import java.util.Collection;
 
@@ -41,8 +38,21 @@ import java.util.Collection;
 @Category(GoldenPathTest.class)
 public class GoldenPathQueryTest {
 
-    private static final Log log = LogFactory.getLog( GoldenPathQueryTest.class.getName() );
+    /* fixtures */
     private GoldenPathQuery queryer;
+
+    @Before
+    public void setUp() throws Exception {
+        Taxon t = Taxon.Factory.newInstance();
+        t.setCommonName( "human" );
+        t.setIsGenesUsable( true );
+        try {
+            queryer = new GoldenPathQuery( t );
+            queryer.getJdbcTemplate().queryForObject( "select 1", Integer.class );
+        } catch ( CannotGetJdbcConnectionException e ) {
+            Assume.assumeNoException( "Skipping test because hg could not be configured", e );
+        }
+    }
 
     @Test
     public final void testQueryEst() {
@@ -63,22 +73,5 @@ public class GoldenPathQueryTest {
     public final void testQueryNoResult() {
         Collection<BlatResult> actualValue = queryer.findAlignments( "YYYYYUUYUYUYUY" );
         Assert.assertEquals( 0, actualValue.size() );
-    }
-
-    @Before
-    public void setUp() throws Exception {
-        Taxon t = Taxon.Factory.newInstance();
-        t.setCommonName( "human" );
-        t.setIsGenesUsable( true );
-        try {
-            String databaseHost = Settings.getString( "gemma.testdb.host" );
-            String databaseUser = Settings.getString( "gemma.testdb.user" );
-            String databasePassword = Settings.getString( "gemma.testdb.password" );
-            queryer = new GoldenPathQuery( Settings.getString( "gemma.goldenpath.db.human" ), databaseHost,
-                    databaseUser, databasePassword );
-            queryer.getJdbcTemplate().queryForObject( "select 1", Integer.class );
-        } catch ( CannotGetJdbcConnectionException e ) {
-            Assume.assumeNoException( "Skipping test because hg could not be configured", e );
-        }
     }
 }

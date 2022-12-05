@@ -156,7 +156,7 @@ public class SearchWebService {
         private final TaxonValueObject taxon;
         private final ArrayDesignValueObject platform;
 
-        private final Integer maxResults;
+        private final int maxResults;
 
         public SearchSettingsValueObject( SearchSettings searchSettings ) {
             this.query = searchSettings.getQuery();

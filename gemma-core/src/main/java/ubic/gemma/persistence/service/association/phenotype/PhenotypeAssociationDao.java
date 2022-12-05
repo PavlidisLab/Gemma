@@ -57,7 +57,7 @@ public interface PhenotypeAssociationDao extends BaseDao<PhenotypeAssociation> {
      * @param start start
      * @return all evidences from a specific external database
      */
-    Collection<PhenotypeAssociation> findEvidencesWithExternalDatabaseName( String externalDatabaseName, Integer limit,
+    Collection<PhenotypeAssociation> findEvidencesWithExternalDatabaseName( String externalDatabaseName, int limit,
             int start );
 
     /**
@@ -133,7 +133,7 @@ public interface PhenotypeAssociationDao extends BaseDao<PhenotypeAssociation> {
      * @param taxonId taxon id
      * @return private evidence id that the user can modify or owns
      */
-    Set<Long> findPrivateEvidenceId( Long taxonId, Integer limit );
+    Set<Long> findPrivateEvidenceId( Long taxonId, int limit );
 
     /**
      * @param externalDatabaseIds    external db ids

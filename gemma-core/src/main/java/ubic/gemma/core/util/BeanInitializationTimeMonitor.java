@@ -68,6 +68,9 @@ public class BeanInitializationTimeMonitor implements BeanPostProcessor, Ordered
 
     @Override
     public void onApplicationEvent( ContextRefreshedEvent contextRefreshedEvent ) {
+        if ( stopWatches.isEmpty() ) {
+            return;
+        }
         long totalTime = stopWatches.values().stream().mapToLong( StopWatch::getTime ).sum();
         String worstOffenders =
                 stopWatches.entrySet().stream()
@@ -88,6 +91,8 @@ public class BeanInitializationTimeMonitor implements BeanPostProcessor, Ordered
                     .collect( Collectors.joining( ", " ) );
             log.debug( "Complete breakdown of bean initialization time: " + completeBreakdown );
         }
+        // clear already reported startup times
+        stopWatches.clear();
     }
 
     private String formatBeanInitializationTime( String beanName, StopWatch stopWatch, boolean includeBean ) {

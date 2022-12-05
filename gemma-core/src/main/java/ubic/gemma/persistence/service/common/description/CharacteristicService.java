@@ -28,7 +28,6 @@ import ubic.gemma.persistence.service.BaseVoEnabledService;
 import ubic.gemma.persistence.service.FilteringService;
 
 import javax.annotation.Nullable;
-import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -37,7 +36,6 @@ import java.util.Set;
 /**
  * @author paul
  */
-@ParametersAreNonnullByDefault
 public interface CharacteristicService extends BaseVoEnabledService<Characteristic, CharacteristicValueObject>, FilteringService<Characteristic> {
 
     /**
@@ -47,7 +45,7 @@ public interface CharacteristicService extends BaseVoEnabledService<Characterist
      * @param  limit Maximum records to retrieve
      * @return characteristics
      */
-    List<Characteristic> browse( Integer start, Integer limit );
+    List<Characteristic> browse( int start, int limit );
 
     /**
      * Browse through the characteristics, excluding GO annotations.
@@ -58,7 +56,7 @@ public interface CharacteristicService extends BaseVoEnabledService<Characterist
      * @param  descending sor order
      * @return characteristics
      */
-    List<Characteristic> browse( Integer start, Integer limit, String sortField, boolean descending );
+    List<Characteristic> browse( int start, int limit, String sortField, boolean descending );
 
     /**
      * @see CharacteristicDao#findExperimentsByUris(Collection, Taxon, int)
@@ -142,8 +140,6 @@ public interface CharacteristicService extends BaseVoEnabledService<Characterist
      * parentClass
      *
      * @param  parentClass     the type of object sought associated with the characteristic
-     * @param  characteristics
-     * @return
      */
     Map<Characteristic, Long> getParentIds( Class<?> parentClass, @Nullable Collection<Characteristic> characteristics );
 }

@@ -296,7 +296,6 @@ public class ExperimentalDesignVisualizationServiceImpl implements ExperimentalD
      * layout to include more bioassays. Because the ordering is defined by the factor values associated with the
      * underlying biomaterials, this is going to be okay.
      *
-     * @param vec
      * @param eeId - could be a subset?
      */
     private LinkedHashMap<BioAssayValueObject, LinkedHashMap<ExperimentalFactor, Double>> extendLayout(

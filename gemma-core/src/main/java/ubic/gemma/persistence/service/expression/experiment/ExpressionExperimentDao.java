@@ -1,11 +1,9 @@
 package ubic.gemma.persistence.service.expression.experiment;
 
-import org.springframework.beans.factory.InitializingBean;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.description.AnnotationValueObject;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
-import ubic.gemma.model.common.quantitationtype.QuantitationTypeValueObject;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
@@ -14,6 +12,7 @@ import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.persistence.service.BrowsingDao;
 import ubic.gemma.persistence.service.FilteringVoEnabledDao;
 import ubic.gemma.persistence.service.common.auditAndSecurity.curation.CuratableDao;
 import ubic.gemma.persistence.util.Filters;
@@ -30,14 +29,12 @@ import java.util.*;
  */
 @SuppressWarnings("unused") // Possible external use
 public interface ExpressionExperimentDao
-        extends InitializingBean, CuratableDao<ExpressionExperiment, ExpressionExperimentValueObject>,
-        FilteringVoEnabledDao<ExpressionExperiment, ExpressionExperimentValueObject> {
+        extends CuratableDao<ExpressionExperiment, ExpressionExperimentValueObject>,
+        FilteringVoEnabledDao<ExpressionExperiment, ExpressionExperimentValueObject>, BrowsingDao<ExpressionExperiment> {
 
     String OBJECT_ALIAS = "ee";
 
-    List<ExpressionExperiment> browse( Integer start, Integer limit );
-
-    Integer countNotTroubled();
+    long countNotTroubled();
 
     Collection<Long> filterByTaxon( Collection<Long> ids, Taxon taxon );
 
@@ -69,11 +66,9 @@ public interface ExpressionExperimentDao
 
     Collection<ExpressionExperiment> findByTaxon( Taxon taxon );
 
-    List<ExpressionExperiment> findByTaxon( Taxon taxon, @Nullable Integer limit );
+    List<ExpressionExperiment> findByUpdatedLimit( Collection<Long> ids, int limit );
 
-    List<ExpressionExperiment> findByUpdatedLimit( Collection<Long> ids, Integer limit );
-
-    List<ExpressionExperiment> findByUpdatedLimit( Integer limit );
+    List<ExpressionExperiment> findByUpdatedLimit( int limit );
 
     Collection<ExpressionExperiment> findUpdatedAfter( Date date );
 

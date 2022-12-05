@@ -31,7 +31,6 @@ import ubic.gemma.persistence.util.ObjectFilterQueryUtils;
 import ubic.gemma.persistence.util.Sort;
 
 import javax.annotation.Nullable;
-import javax.annotation.ParametersAreNonnullByDefault;
 import java.text.MessageFormat;
 import java.util.Collection;
 import java.util.EnumSet;
@@ -42,7 +41,6 @@ import java.util.List;
  * @see Taxon
  */
 @Repository
-@ParametersAreNonnullByDefault
 public class TaxonDaoImpl extends AbstractQueryFilteringVoEnabledDao<Taxon, TaxonValueObject> implements TaxonDao {
 
     @Autowired
@@ -51,19 +49,10 @@ public class TaxonDaoImpl extends AbstractQueryFilteringVoEnabledDao<Taxon, Taxo
     }
 
     @Override
-    public Taxon findOrCreate( Taxon taxon ) {
-        Taxon existingTaxon = this.find( taxon );
-        if ( existingTaxon != null ) {
-            if ( AbstractDao.log.isDebugEnabled() )
-                AbstractDao.log.debug( "Found existing taxon: " + taxon );
-            return existingTaxon;
-        }
-
+    public Taxon create( Taxon taxon ) {
         if ( StringUtils.isBlank( taxon.getCommonName() ) && StringUtils.isBlank( taxon.getScientificName() ) ) {
             throw new IllegalArgumentException( "Cannot create a taxon without names: " + taxon );
         }
-
-        AbstractDao.log.warn( "Creating new taxon: " + taxon );
         return super.create( taxon );
     }
 

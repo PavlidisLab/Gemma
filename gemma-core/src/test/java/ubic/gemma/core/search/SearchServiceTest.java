@@ -50,7 +50,7 @@ public class SearchServiceTest extends AbstractJUnit4SpringContextTests {
 
     @After
     public void tearDown() {
-        reset( databaseSearchSource );
+        reset( databaseSearchSource, ontologyService );
     }
 
     @Test

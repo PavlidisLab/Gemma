@@ -18,9 +18,7 @@
  */
 package ubic.gemma.persistence.persister;
 
-import org.hibernate.FlushMode;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
@@ -34,149 +32,98 @@ import java.util.Collection;
 /**
  * This class handles persisting array designs. This is a bit of a special case, because ArrayDesigns are very large
  * (with associated reporters, CompositeSequences, and BioSequences), and also very likely to be submitted more than
- * once to the system. Therefore we want to take care not to get multiple slightly different copies of them, but we also
+ * once to the system. Therefore, we want to take care not to get multiple slightly different copies of them, but we also
  * don't want to have to spend an inordinate amount of time checking a submitted version against the database.
- * The association between ArrayDesign and DesignElement is compositional - the lifecycle of a designelement is tied to
- * the arraydesign. However, designelements have associations with biosequence, which have their own lifecycle, in
- * general.
+ * The association between ArrayDesign and DesignElement is compositional - the lifecycle of a {@link ubic.gemma.model.expression.bioAssayData.DesignElementDataVector}
+ * is tied to the {@link ArrayDesign}. However, {@link ubic.gemma.model.expression.bioAssayData.DesignElementDataVector}
+ * have associations with {@link BioSequence}, which have their own lifecycle, in general.
  *
  * @author pavlidis
  */
-abstract public class ArrayDesignPersister extends GenomePersister {
+public abstract class ArrayDesignPersister extends GenomePersister {
 
     @Autowired
     private ArrayDesignDao arrayDesignDao;
 
     @Override
-    @Transactional
-    public Object persist( Object entity ) {
-        Object result;
-
+    protected Object doPersist( Object entity, Caches caches ) {
         if ( entity instanceof ArrayDesign ) {
-            result = this.findOrPersistArrayDesign( ( ArrayDesign ) entity );
-            return result;
+            return this.findOrPersistArrayDesign( ( ArrayDesign ) entity, caches );
+        } else {
+            return super.doPersist( entity, caches );
         }
-
-        return super.persist( entity );
-
-    }
-
-    @Override
-    @Transactional
-    public Object persistOrUpdate( Object entity ) {
-        if ( entity == null )
-            return null;
-        return super.persistOrUpdate( entity );
     }
 
     /**
      * Persist an array design.
      */
-    private ArrayDesign findOrPersistArrayDesign( ArrayDesign arrayDesign ) {
-        if ( arrayDesign == null )
-            return null;
-
-        if ( !this.isTransient( arrayDesign ) )
-            return arrayDesign;
-
-        /*
-         * Note we don't do a full find here.
-         */
-        ArrayDesign existing = arrayDesignDao.find( arrayDesign );
-
-        if ( existing == null ) {
-
-            /*
-             * Try less stringent search.
-             */
-            existing = arrayDesignDao.findByShortName( arrayDesign.getShortName() );
-
-            if ( existing == null ) {
-                AbstractPersister.log.debug( arrayDesign + " is new, processing..." );
-                return this.persistNewArrayDesign( arrayDesign );
-            }
-
-            AbstractPersister.log
-                    .info( "Platform exactly matching " + arrayDesign + " doesn't exist, but found " + existing
-                            + "; returning" );
-
-        } else {
+    private ArrayDesign findOrPersistArrayDesign( ArrayDesign arrayDesign, Caches caches ) {
+        if ( arrayDesign.getId() != null ) {
             AbstractPersister.log.debug( "Platform " + arrayDesign + " already exists, returning..." );
+            return arrayDesign;
         }
 
-        return existing;
+        // Try less stringent search using the short name
+        ArrayDesign existing = arrayDesignDao.findByShortName( arrayDesign.getShortName() );
+        if ( existing != null ) {
+            AbstractPersister.log.info( String.format( "Platform exactly matching %s doesn't exist, but found %s; returning",
+                    arrayDesign, existing ) );
+            return existing;
+        }
 
+        AbstractPersister.log.debug( arrayDesign + " is new, processing..." );
+        return this.persistNewArrayDesign( arrayDesign, caches );
     }
 
     /**
      * Persist an entirely new array design, including composite sequences and any associated new sequences.
      */
-    private ArrayDesign persistNewArrayDesign( ArrayDesign arrayDesign ) {
-
-        if ( arrayDesign == null )
-            return null;
-
+    private ArrayDesign persistNewArrayDesign( ArrayDesign arrayDesign, Caches caches ) {
         AbstractPersister.log.debug( "Persisting new platform " + arrayDesign.getName() );
 
-        try {
-            this.getSessionFactory().getCurrentSession().setFlushMode( FlushMode.COMMIT );
+        if ( arrayDesign.getDesignProvider() != null )
+            arrayDesign.setDesignProvider( this.persistContact( arrayDesign.getDesignProvider() ) );
 
-            if ( arrayDesign.getDesignProvider() != null )
-                arrayDesign.setDesignProvider( this.persistContact( arrayDesign.getDesignProvider() ) );
-
-            if ( arrayDesign.getPrimaryTaxon() == null ) {
-                throw new IllegalArgumentException( "Primary taxon cannot be null" );
-            }
-
-            arrayDesign.setPrimaryTaxon( ( Taxon ) this.persist( arrayDesign.getPrimaryTaxon() ) );
-
-            for ( DatabaseEntry externalRef : arrayDesign.getExternalReferences() ) {
-                externalRef.setExternalDatabase( this.persistExternalDatabase( externalRef.getExternalDatabase() ) );
-            }
-
-            AbstractPersister.log.debug( "Persisting " + arrayDesign );
-
-            if ( arrayDesign.getAuditTrail() != null && this.isTransient( arrayDesign.getAuditTrail() ) )
-                arrayDesign.getAuditTrail().setId( null );
-
-            Collection<CompositeSequence> scs = new ArrayList<>( arrayDesign.getCompositeSequences() );
-            arrayDesign.getCompositeSequences().clear();
-            arrayDesign = arrayDesignDao.create( arrayDesign );
-            arrayDesign.getCompositeSequences().addAll( scs );
-            arrayDesign = this.persistArrayDesignCompositeSequenceAssociations( arrayDesign );
-            arrayDesignDao.update( arrayDesign );
-
-        } finally {
-            this.getSessionFactory().getCurrentSession().setFlushMode( FlushMode.AUTO );
+        if ( arrayDesign.getPrimaryTaxon() == null ) {
+            throw new IllegalArgumentException( "Primary taxon cannot be null" );
         }
+
+        arrayDesign.setPrimaryTaxon( ( Taxon ) this.doPersist( arrayDesign.getPrimaryTaxon(), caches ) );
+
+        for ( DatabaseEntry externalRef : arrayDesign.getExternalReferences() ) {
+            externalRef.setExternalDatabase( this.persistExternalDatabase( externalRef.getExternalDatabase(), caches ) );
+        }
+
+        AbstractPersister.log.debug( "Persisting " + arrayDesign );
+
+        Collection<CompositeSequence> scs = new ArrayList<>( arrayDesign.getCompositeSequences() );
+        arrayDesign.getCompositeSequences().clear();
+        arrayDesign = arrayDesignDao.create( arrayDesign );
+        arrayDesign.getCompositeSequences().addAll( scs );
+        this.persistArrayDesignCompositeSequenceAssociations( arrayDesign, caches );
+        arrayDesignDao.update( arrayDesign );
+
         return arrayDesign;
     }
 
-    private ArrayDesign persistArrayDesignCompositeSequenceAssociations( ArrayDesign arrayDesign ) {
+    private void persistArrayDesignCompositeSequenceAssociations( ArrayDesign arrayDesign, Caches caches ) {
         int numElements = arrayDesign.getCompositeSequences().size();
         if ( numElements == 0 )
-            return arrayDesign;
-        AbstractPersister.log.debug( "Filling in or updating sequences in composite seqences for " + arrayDesign );
+            return;
+        AbstractPersister.log.debug( "Filling in or updating sequences in composite sequences for " + arrayDesign );
 
         int persistedBioSequences = 0;
-        int numElementsPerUpdate = this.numElementsPerUpdate( arrayDesign.getCompositeSequences() );
         for ( CompositeSequence compositeSequence : arrayDesign.getCompositeSequences() ) {
-
-            if ( !this.isTransient( compositeSequence ) ) {
-                // in case of retry (not used?)
-                continue;
-            }
-            compositeSequence.setId( null );
 
             compositeSequence.setArrayDesign( arrayDesign );
 
             BioSequence biologicalCharacteristic = compositeSequence.getBiologicalCharacteristic();
 
-            BioSequence persistedBs = this.persistBioSequence( biologicalCharacteristic );
+            if ( compositeSequence.getBiologicalCharacteristic() != null ) {
+                compositeSequence.setBiologicalCharacteristic( this.persistBioSequence( biologicalCharacteristic, caches ) );
+            }
 
-            compositeSequence.setBiologicalCharacteristic( persistedBs );
-
-            if ( ++persistedBioSequences % numElementsPerUpdate == 0 && numElements > 1000 ) {
+            if ( ++persistedBioSequences % REPORT_BATCH_SIZE == 0 ) {
                 AbstractPersister.log
                         .info( persistedBioSequences + "/" + numElements + " compositeSequence sequences examined for "
                                 + arrayDesign );
@@ -189,8 +136,6 @@ abstract public class ArrayDesignPersister extends GenomePersister {
                     .info( "Total of " + persistedBioSequences + " compositeSequence sequences examined for "
                             + arrayDesign );
         }
-
-        return arrayDesign;
     }
 
 }

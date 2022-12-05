@@ -168,8 +168,10 @@ public class SplitExperimentTest extends BaseSpringContextTest {
         if ( ee != null ) {
             eeService.remove( ee );
         }
-        for ( BioAssaySet splitEE : results.getExperiments() ) {
-            eeService.remove( ( ExpressionExperiment ) splitEE );
+        if ( results != null ) {
+            for ( BioAssaySet splitEE : results.getExperiments() ) {
+                eeService.remove( ( ExpressionExperiment ) splitEE );
+            }
         }
     }
 

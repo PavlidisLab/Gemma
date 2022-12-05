@@ -30,6 +30,7 @@ import ubic.gemma.core.analysis.service.ExpressionDataFileService;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataMatrix;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
+import ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.measurement.Measurement;
@@ -45,7 +46,7 @@ import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.persistence.persister.Persister;
-import ubic.gemma.persistence.service.common.auditAndSecurity.CurationDetailsDao;
+import ubic.gemma.persistence.service.common.auditAndSecurity.CurationDetailsService;
 import ubic.gemma.persistence.service.expression.bioAssayData.RawExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSetService;
@@ -75,7 +76,7 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
     private RawExpressionDataVectorService rawExpressionDataVectorService;
 
     @Autowired
-    private CurationDetailsDao curationDetailsDao;
+    private CurationDetailsService curationDetailsService;
 
     @Autowired
     private Persister persister;
@@ -174,7 +175,7 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
             split.setDescription( "This experiment was created by Gemma splitting another: \n" + toSplit + toSplit.getDescription() );
 
             split.setCharacteristics( this.cloneCharacteristics( toSplit.getCharacteristics() ) );
-            split.setCurationDetails( curationDetailsDao.create() ); // not sure anything we want to copy
+            split.setCurationDetails( new CurationDetails( new Date(), null, true, null, false, null, null ) ); // not sure anything we want to copy
             split.setMetadata( toSplit.getMetadata() ); // 
             split.setPrimaryPublication( toSplit.getPrimaryPublication() );
             split.getOtherRelevantPublications().addAll( toSplit.getOtherRelevantPublications() );

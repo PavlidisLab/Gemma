@@ -42,12 +42,12 @@ public class RawExpressionDataVectorDaoImpl extends DesignElementDataVectorDaoIm
 
     @Override
     public ExpressionExperiment addVectors( Long eeId, Collection<RawExpressionDataVector> vectors ) {
-        ExpressionExperiment ee = this.getHibernateTemplate().load( ExpressionExperiment.class, eeId );
+        ExpressionExperiment ee = ( ExpressionExperiment ) this.getSessionFactory().getCurrentSession().load( ExpressionExperiment.class, eeId );
         if ( ee == null ) {
             throw new IllegalArgumentException( "Experiment with id=" + eeId + " not found" );
         }
         ee.getRawExpressionDataVectors().addAll( vectors );
-        this.getHibernateTemplate().update( ee );
+        this.getSessionFactory().getCurrentSession().update( ee );
         return ee;
     }
 
@@ -107,14 +107,20 @@ public class RawExpressionDataVectorDaoImpl extends DesignElementDataVectorDaoIm
     @Override
     public void removeDataForCompositeSequence( final CompositeSequence compositeSequence ) {
         final String dedvRemovalQuery = "delete RawExpressionDataVector dedv where dedv.designElement = ?";
-        int deleted = this.getHibernateTemplate().bulkUpdate( dedvRemovalQuery, compositeSequence );
+        int deleted = this.getSessionFactory().getCurrentSession()
+                .createQuery( dedvRemovalQuery )
+                .setParameter( 0, compositeSequence )
+                .executeUpdate();
         AbstractDao.log.info( "Deleted: " + deleted );
     }
 
     @Override
     public void removeDataForQuantitationType( final QuantitationType quantitationType ) {
         final String dedvRemovalQuery = "delete from RawExpressionDataVector as dedv where dedv.quantitationType = ?";
-        int deleted = this.getHibernateTemplate().bulkUpdate( dedvRemovalQuery, quantitationType );
+        int deleted = this.getSessionFactory().getCurrentSession()
+                .createQuery( dedvRemovalQuery )
+                .setParameter( 0, quantitationType )
+                .executeUpdate();
         AbstractDao.log.info( "Deleted " + deleted + " data vector elements" );
     }
 
@@ -123,16 +129,20 @@ public class RawExpressionDataVectorDaoImpl extends DesignElementDataVectorDaoIm
 
         BusinessKey.checkKey( designElementDataVector );
 
-        return ( RawExpressionDataVector ) this.getSessionFactory().getCurrentSession().createCriteria( RawExpressionDataVector.class )
-                .createCriteria( "designElement" )
-                    .add( Restrictions.eq( "name", designElementDataVector.getDesignElement().getName() ) )
-                .createCriteria( "arrayDesign" )
-                    .add( Restrictions.eq( "name", designElementDataVector.getDesignElement().getArrayDesign().getName() ) )
-                .createCriteria( "quantitationType" )
-                    .add( Restrictions.eq( "name", designElementDataVector.getQuantitationType().getName() ) )
-                .createCriteria( "expressionExperiment" )
-                    .add( Restrictions.eq( "name", designElementDataVector.getExpressionExperiment().getName() ) )
-                .uniqueResult();
-}
+        DetachedCriteria crit = DetachedCriteria.forClass( RawExpressionDataVector.class );
+
+        crit.createCriteria( "designElement" )
+                .add( Restrictions.eq( "name", designElementDataVector.getDesignElement().getName() ) )
+                .createCriteria( "arrayDesign" ).add( Restrictions
+                .eq( "name", designElementDataVector.getDesignElement().getArrayDesign().getName() ) );
+
+        crit.createCriteria( "quantitationType" )
+                .add( Restrictions.eq( "name", designElementDataVector.getQuantitationType().getName() ) );
+
+        crit.createCriteria( "expressionExperiment" )
+                .add( Restrictions.eq( "name", designElementDataVector.getExpressionExperiment().getName() ) );
+
+        return ( RawExpressionDataVector ) crit.getExecutableCriteria( getSessionFactory().getCurrentSession() ).uniqueResult();
+    }
 
 }

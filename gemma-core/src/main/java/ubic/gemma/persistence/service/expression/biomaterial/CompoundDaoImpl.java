@@ -24,6 +24,8 @@ import org.springframework.stereotype.Repository;
 import ubic.gemma.model.expression.biomaterial.Compound;
 import ubic.gemma.persistence.service.AbstractDao;
 
+import java.util.Comparator;
+
 /**
  * <p>
  * Base Spring DAO Class: is able to create, update, remove, load, and find objects of type
@@ -42,6 +44,9 @@ public class CompoundDaoImpl extends AbstractDao<Compound> implements CompoundDa
 
     @Override
     public Compound find( Compound compound ) {
-        return this.findOneByProperty( "name", compound.getName() );
+        return this.findByProperty( "name", compound.getName() )
+                .stream()
+                .max( Comparator.comparing( Compound::getId ) )
+                .orElse( null );
     }
 }

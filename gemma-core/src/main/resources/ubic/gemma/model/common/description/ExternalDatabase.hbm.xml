@@ -12,9 +12,9 @@
             </generator>
         </id>
         <property name="name" type="java.lang.String">
-            <column name="NAME" not-null="false" unique="false" sql-type="VARCHAR(255)"/>
+            <column name="NAME" not-null="true" unique="true" sql-type="VARCHAR(255)"/>
         </property>
-        <property name="description" type="org.springframework.orm.hibernate3.support.ClobStringType">
+        <property name="description" type="org.hibernate.type.MaterializedClobType">
             <column name="DESCRIPTION" not-null="false" unique="false" sql-type="text"/>
         </property>
         <property name="localInstallDbName" type="java.lang.String">
@@ -29,9 +29,29 @@
         <property name="type" type="ubic.gemma.model.common.description.DatabaseTypeEnum">
             <column name="TYPE" not-null="false" unique="false" sql-type="VARCHAR(255)"/>
         </property>
+        <property name="releaseVersion" type="java.lang.String">
+            <column name="RELEASE_VERSION" not-null="false" sql-type="VARCHAR(255)"/>
+        </property>
+        <property name="releaseUrl" type="java.net.URL">
+            <column name="RELEASE_URL" not-null="false" unique="false" sql-type="VARCHAR(255)"/>
+        </property>
+        <property name="lastUpdated" type="java.util.Date" precision="4">
+            <column name="LAST_UPDATED" not-null="false" unique="false" sql-type="DATETIME(3)"/>
+        </property>
         <many-to-one name="databaseSupplier" class="ubic.gemma.model.common.auditAndSecurity.Contact" cascade="none"
                      lazy="proxy" fetch="select">
             <column name="DATABASE_SUPPLIER_FK" not-null="false" sql-type="BIGINT"/>
         </many-to-one>
+        <many-to-one name="auditTrail" class="ubic.gemma.model.common.auditAndSecurity.AuditTrailImpl" cascade="all"
+                     lazy="proxy" fetch="select">
+            <column name="AUDIT_TRAIL_FK" not-null="true" sql-type="BIGINT" unique="true"/>
+        </many-to-one>
+        <set name="externalDatabases" lazy="false" fetch="select" cascade="none">
+            <cache usage="read-write"/>
+            <key foreign-key="EXTERNAL_DATABASE_FKC">
+                <column name="EXTERNAL_DATABASE_FK" not-null="false" sql-type="BIGINT"/>
+            </key>
+            <one-to-many class="ubic.gemma.model.common.description.ExternalDatabase"/>
+        </set>
     </class>
 </hibernate-mapping>

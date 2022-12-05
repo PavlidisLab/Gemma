@@ -45,9 +45,6 @@ public class Responder {
 
     /**
      * Produce a {@link PaginatedResponseDataObject} for a given {@link Slice}.
-     * @param payload
-     * @param <T>
-     * @return
      */
     public static <T> PaginatedResponseDataObject<T> paginate( Slice<T> payload ) throws NotFoundException {
         if ( payload == null ) {

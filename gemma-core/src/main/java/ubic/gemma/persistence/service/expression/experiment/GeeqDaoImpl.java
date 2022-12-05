@@ -25,18 +25,11 @@ import org.springframework.stereotype.Repository;
 import ubic.gemma.model.expression.experiment.Geeq;
 import ubic.gemma.model.expression.experiment.GeeqValueObject;
 import ubic.gemma.persistence.service.AbstractVoEnabledDao;
-import ubic.gemma.persistence.util.EntityUtils;
-
-import javax.annotation.ParametersAreNonnullByDefault;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
 
 /**
  * @author paul, tesarst
  */
 @Repository
-@ParametersAreNonnullByDefault
 public class GeeqDaoImpl extends AbstractVoEnabledDao<Geeq, GeeqValueObject> implements GeeqDao {
 
     @Autowired

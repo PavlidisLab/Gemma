@@ -27,7 +27,6 @@ import java.util.Collection;
  * @param <T> type
  * @author paul
  */
-@ParametersAreNonnullByDefault
 public interface BaseDao<T> {
 
     /**
@@ -36,7 +35,6 @@ public interface BaseDao<T> {
      * @param entities the entities to be crated.
      * @return collection of entities representing the instances in the persistent storage that were created.
      */
-    @CheckReturnValue
     Collection<T> create( Collection<T> entities );
 
     /**
@@ -46,8 +44,31 @@ public interface BaseDao<T> {
      * @param entity the entity to create
      * @return the persistent version of the entity
      */
-    @CheckReturnValue
     T create( T entity );
+
+    /**
+     * Save all the given entities in the persistent storage.
+     * <p>
+     * Unlike {@link #update(Collection)}, this method does not attach the given entities to the persistence context;
+     * the returned values must be used instead.
+     *
+     * @see org.hibernate.Session#persist(Object)
+     * @see org.hibernate.Session#merge(Object)
+     */
+    @CheckReturnValue
+    Collection<T> save( Collection<T> entities );
+
+    /**
+     * Create or update an entity whether it is transient.
+     * <p>
+     * Unlike {@link #update(Object)}, this method does not attach the given entity to the persistence context and the
+     * returned value must be used instead.
+     *
+     * @see org.hibernate.Session#persist(Object)
+     * @see org.hibernate.Session#merge(Object)
+     */
+    @CheckReturnValue
+    T save( T entity );
 
     /**
      * Loads entities with given ids form the persistent storage.
@@ -64,7 +85,7 @@ public interface BaseDao<T> {
      * @return the entity with given ID, or null if such entity does not exist or if the passed ID was null
      */
     @Nullable
-    T load( @Nullable Long id );
+    T load( Long id );
 
     /**
      * Loads all instanced of specific class from the persistent storage.

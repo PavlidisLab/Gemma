@@ -213,6 +213,8 @@ public class DatabaseSearchSource implements SearchSource {
         }
 
         for ( SearchResult<Gene> g : geneSet ) {
+            // results from the database are always pre-filled
+            assert g.getResultObject() != null;
             if ( settings.getPlatformConstraint() != null ) {
                 matchedCs.addAll( toSearchResults( compositeSequenceService.findByGene( g.getResultObject(), settings.getPlatformConstraint() ), INDIRECT_HIT_PENALTY * g.getScore(), "CompositeSequenceService.findByGene with platform constraint" ) );
             } else {

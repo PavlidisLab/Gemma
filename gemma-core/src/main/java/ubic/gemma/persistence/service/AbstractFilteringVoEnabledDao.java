@@ -9,7 +9,6 @@ import ubic.gemma.persistence.util.ObjectFilter;
 import ubic.gemma.persistence.util.Sort;
 
 import javax.annotation.Nullable;
-import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -21,7 +20,6 @@ import java.util.List;
  * @param <VO> the corresponding VO type
  * @author poirigui
  */
-@ParametersAreNonnullByDefault
 public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO extends IdentifiableValueObject<O>> extends AbstractVoEnabledDao<O, VO> implements FilteringVoEnabledDao<O, VO> {
 
     private final String objectAlias;
@@ -44,7 +42,7 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
 
     /**
      * {@inheritDoc}
-     * <p/>
+     * <p>
      * For consistency, this is redefined in terms of {@link #loadValueObjectsPreFilter(Filters, Sort)}.
      */
     @Override
@@ -56,7 +54,7 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
 
     /**
      * {@inheritDoc}
-     * <p/>
+     * <p>
      * For consistency, this is redefined in terms of {@link #loadValueObjectsPreFilter(Filters, Sort)}.
      */
     @Override
@@ -68,7 +66,7 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
 
     /**
      * {@inheritDoc}
-     * <p/>
+     * <p>
      * For consistency, this is redefined in terms of {@link #loadValueObjectsPreFilter(Filters, Sort)}.
      */
     @Override
@@ -81,7 +79,7 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
 
     /**
      * {@inheritDoc}
-     * <p/>
+     * <p>
      * For consistency, this is redefined in terms of {@link #loadValueObjectsPreFilter(Filters, Sort)}.
      */
     @Override
@@ -94,7 +92,7 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
 
     /**
      * {@inheritDoc}
-     * <p/>
+     * <p>
      * For consistency, this is redefined in terms of {@link #loadValueObjectsPreFilter(Filters, Sort)}.
      */
     @Override

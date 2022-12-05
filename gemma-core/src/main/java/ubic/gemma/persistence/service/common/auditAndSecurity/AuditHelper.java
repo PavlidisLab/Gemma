@@ -27,18 +27,6 @@ import ubic.gemma.model.common.auditAndSecurity.User;
 public interface AuditHelper {
 
     /**
-     * Add AuditAction.CREATE event and update Status.
-     *
-     * @param auditable auditable
-     * @param note      note
-     * @param user      user
-     * @return new event
-     */
-    @SuppressWarnings("UnusedReturnValue")
-    // Possible external use
-    AuditEvent addCreateAuditEvent( Auditable auditable, String note, User user );
-
-    /**
      * Add AuditAction.UPDATE event and update Status.
      *
      * @param auditable auditable

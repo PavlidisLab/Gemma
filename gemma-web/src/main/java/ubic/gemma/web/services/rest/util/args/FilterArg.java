@@ -24,6 +24,7 @@ import ubic.gemma.persistence.util.ObjectFilter;
 import ubic.gemma.persistence.util.Sort;
 import ubic.gemma.web.services.rest.util.MalformedArgException;
 
+import javax.annotation.Nullable;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -95,13 +96,13 @@ import java.util.List;
 public class FilterArg extends AbstractArg<FilterArg.Filter> {
 
     /**
-     * @param propertyNames     names of properties to filter by. <br/> Elements in each array will be in a disjunction
-     *                          (OR) with each other.<br/> Arrays will then be in a conjunction (AND) with each
-     *                          other.<br/>
+     * @param propertyNames     names of properties to filter by. <br> Elements in each array will be in a disjunction
+     *                          (OR) with each other.<br> Arrays will then be in a conjunction (AND) with each
+     *                          other.<br>
      * @param propertyValues    values to compare the given property names to.
      * @param propertyOperators the operation used for comparison of the given value and the value of the object. The
-     *                          propertyValues will be the right operand of each given operator. <br/> E.g:
-     *                          <code>object.propertyName[0] isNot propertyValues[0];</code><br/>
+     *                          propertyValues will be the right operand of each given operator. <br> E.g:
+     *                          <code>object.propertyName[0] isNot propertyValues[0];</code><br>
      */
     private FilterArg( List<String[]> propertyNames, List<String[]> propertyValues, List<ObjectFilter.Operator[]> propertyOperators ) {
         super( new Filter( propertyNames, propertyValues, propertyOperators ) );
@@ -118,6 +119,7 @@ public class FilterArg extends AbstractArg<FilterArg.Filter> {
      * {@link ObjectFilter}, or null if the filter is empty.
      * @throws MalformedArgException if the filter cannot be parsed for the given {@link FilteringService}
      */
+    @Nullable
     public Filters getObjectFilters( FilteringService service ) throws MalformedArgException {
         Filter filter = getValue();
         if ( filter.propertyNames == null )

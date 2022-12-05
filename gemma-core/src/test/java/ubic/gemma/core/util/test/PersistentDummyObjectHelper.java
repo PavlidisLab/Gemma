@@ -58,7 +58,7 @@ import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
-import ubic.gemma.persistence.persister.Persister;
+import ubic.gemma.persistence.persister.PersisterHelper;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.persistence.service.analysis.expression.diff.ExpressionAnalysisResultSetService;
 import ubic.gemma.persistence.service.common.description.ExternalDatabaseService;
@@ -78,6 +78,7 @@ import java.util.*;
  */
 @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
 @Component
+@Transactional
 public class PersistentDummyObjectHelper {
 
     private static final int DEFAULT_TEST_ELEMENT_COLLECTION_SIZE = 6;
@@ -97,7 +98,7 @@ public class PersistentDummyObjectHelper {
     private ExternalDatabaseService externalDatabaseService;
 
     @Autowired
-    private Persister persisterHelper;
+    private PersisterHelper persisterHelper;
 
     @Autowired
     private ExpressionExperimentService eeService;
@@ -253,7 +254,6 @@ public class PersistentDummyObjectHelper {
         return this.getTestExpressionExperimentWithAllDependencies( true );
     }
 
-    @Transactional
     public ExpressionExperiment getTestExpressionExperimentWithAllDependencies( ExpressionExperiment prototype ) {
 
         ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
@@ -370,9 +370,7 @@ public class PersistentDummyObjectHelper {
      *
      * Random statistics will be generated for all the probes defined in the provided {@link ArrayDesign}.
      *
-     * @return
      */
-    @Transactional
     public ExpressionExperiment getTestExpressionExperimentWithAnalysisAndResults() {
         ArrayDesign ad = getTestPersistentArrayDesign( 10, true, false );
         ExpressionExperiment ee = getTestPersistentBasicExpressionExperiment( ad );
@@ -636,7 +634,7 @@ public class PersistentDummyObjectHelper {
         b2gCol.add( b2g );
 
         //noinspection unchecked
-        return ( Set<BioSequence2GeneProduct> ) persisterHelper.persist( b2gCol );
+        return new HashSet<>( ( List<BioSequence2GeneProduct> ) persisterHelper.persist( b2gCol ) );
     }
 
     public BlatResult getTestPersistentBlatResult( BioSequence querySequence, Taxon taxon ) {
@@ -832,7 +830,7 @@ public class PersistentDummyObjectHelper {
         this.testElementCollectionSize = PersistentDummyObjectHelper.DEFAULT_TEST_ELEMENT_COLLECTION_SIZE;
     }
 
-    protected Set<ExperimentalFactor> getExperimentalFactors( ExperimentalDesign ed,
+    private Set<ExperimentalFactor> getExperimentalFactors( ExperimentalDesign ed,
             Collection<FactorValue> allFactorValues ) {
         Set<ExperimentalFactor> efCol = new HashSet<>();
         for ( int i = 0; i < PersistentDummyObjectHelper.NUM_EXPERIMENTAL_FACTORS; i++ ) {

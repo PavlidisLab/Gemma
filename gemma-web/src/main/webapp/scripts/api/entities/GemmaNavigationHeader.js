@@ -4,6 +4,14 @@
  */
 Ext.namespace( 'Gemma', 'Gemma.AjaxLogin', 'Gemma.Application' );
 
+var externalDatabasesStore = new Ext.data.JsonStore( {
+   autoLoad : true,
+   url : ctxBasePath + '/rest/v2',
+   root : 'data.externalDatabases',
+   idProperty : 'id',
+   fields : [ 'id', 'name', 'description', 'uri', 'releaseVersion', 'releaseUrl', 'lastUpdated', 'externalDatabases' ]
+} );
+
 Gemma.GemmaNavigationHeader = Ext
    .extend(
       Ext.Toolbar,
@@ -32,10 +40,9 @@ Gemma.GemmaNavigationHeader = Ext
          showAbout : function() {
             var w = new Ext.Window(
                {
-                  width : 500,
-                  height : 300,
+                  width : 800,
+                  height : 600,
                   title : "About Gemma",
-                  layout : 'fit',
                   items : [ {
                      xtype : 'panel',
                      html : '<div style="margin:10px;padding:5px;"><p>Gemma is a web site, database and a set of tools for the meta-analysis, re-use and '
@@ -57,7 +64,54 @@ Gemma.GemmaNavigationHeader = Ext
                         w.destroy();
                      },
                      scope : w
-                  } ]
+                  } ],
+                  listeners : {
+                     afterrender : function( win ) {
+                        var summary = 'Gemma\'s expression platform and gene annotations are powered by:';
+                        externalDatabasesStore.data.each( function( ed ) {
+                           summary += '<dt>';
+                           summary += Ext.util.Format.capitalize( ed.data.name );
+                           summary += '</dt>';
+                           summary += '<dd>';
+                           summary += ed.data.description;
+                           if ( ed.data.uri !== null ) {
+
+                              summary += ' <a href="' + ed.data.uri + '" target="_blank">link&nbsp;<img src="' + ctxBasePath + '/images/icons/link_external_icon_tight.gif"/></a>';
+                           }
+                           summary += '<br>';
+                           if ( ed.data.releaseVersion != null ) {
+                              summary += 'Release used: ';
+                              if ( ed.data.releaseUrl !== null ) {
+                                 summary += '<a href="' + ed.data.releaseUrl + '">' + ed.data.releaseVersion + '</a>' + '.<br>';
+                              } else {
+                                 summary += ed.data.releaseVersion + '.<br>';
+                              }
+                           }
+                           if ( ed.data.lastUpdated !== null ) {
+                              summary += 'Last updated on ' + new Date( ed.data.lastUpdated ).toLocaleDateString() + '.';
+                           }
+                           // extra information from related databases
+                           ed.data.externalDatabases.forEach( function( relatedEd ) {
+                              summary += '<br>'
+                              summary += Ext.util.Format.capitalize( relatedEd.name );
+                              if ( relatedEd.lastUpdated != null ) {
+                                 if ( relatedEd.releaseUrl != null ) {
+                                    summary += ' <a href="' + relatedEd.releaseUrl + '" target="_blank">' + relatedEd.releaseVersion + '&nbsp;<img src="' + ctxBasePath + '/images/icons/link_external_icon_tight.gif"/></a>';
+                                 }
+                                 summary += ' last updated on ' + new Date( relatedEd.lastUpdated ).toLocaleDateString() + '.';
+                                 if ( relatedEd.uri != null ) {
+                                    summary += ' <a href="' + relatedEd.uri + '" target="_blank">link&nbsp;<img src="' + ctxBasePath + '/images/icons/link_external_icon_tight.gif"/></a>';
+                                 }
+                              }
+                           } );
+                           summary += '</dd>';
+                        } );
+                        win.add( {
+                           xtype : 'panel',
+                           html : '<dl style="margin:10px;padding:5px;">' + summary + '</dl>'
+                        } );
+                     }
+                  }
                } );
 
             w.show();

@@ -5,9 +5,7 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.common.Identifiable;
 
-import javax.annotation.Nullable;
 import javax.annotation.OverridingMethodsMustInvokeSuper;
-import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.Collection;
 
 /**
@@ -16,7 +14,6 @@ import java.util.Collection;
  * @param <O> the Identifiable Object type that this service is handling.
  * @author tesarst
  */
-@ParametersAreNonnullByDefault
 public abstract class AbstractService<O extends Identifiable> implements BaseService<O> {
 
     protected static final Log log = LogFactory.getLog( AbstractService.class );
@@ -54,24 +51,37 @@ public abstract class AbstractService<O extends Identifiable> implements BaseSer
 
     @Override
     @Transactional
+    public Collection<O> save( Collection<O> entities ) {
+        return mainDao.save( entities );
+    }
+
+    @Override
+    @Transactional
+    @OverridingMethodsMustInvokeSuper
+    public O save( O entity ) {
+        return mainDao.save( entity );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public Collection<O> load( Collection<Long> ids ) {
         return mainDao.load( ids );
     }
 
     @Override
-    @Transactional
-    public O load( @Nullable Long id ) {
+    @Transactional(readOnly = true)
+    public O load( Long id ) {
         return mainDao.load( id );
     }
 
     @Override
-    @Transactional
+    @Transactional(readOnly = true)
     public Collection<O> loadAll() {
         return mainDao.loadAll();
     }
 
     @Override
-    @Transactional
+    @Transactional(readOnly = true)
     public long countAll() {
         return this.mainDao.countAll();
     }

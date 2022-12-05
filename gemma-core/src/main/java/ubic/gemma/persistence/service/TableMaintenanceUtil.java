@@ -21,6 +21,8 @@ package ubic.gemma.persistence.service;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.nio.file.Path;
+
 /**
  * @author paul
  */
@@ -33,8 +35,10 @@ public interface TableMaintenanceUtil {
     @Secured({ "GROUP_AGENT" })
     void updateGene2CsEntries();
 
+    @Secured({ "GROUP_ADMIN" })
+    void setGene2CsInfoPath( Path gene2CsInfoPath );
+
     // for tests only, to keep from getting emails.
     @Secured({ "GROUP_ADMIN" })
     void disableEmail();
-
 }

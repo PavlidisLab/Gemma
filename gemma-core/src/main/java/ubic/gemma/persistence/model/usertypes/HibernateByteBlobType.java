@@ -19,6 +19,7 @@
 package ubic.gemma.persistence.model.usertypes;
 
 import org.hibernate.HibernateException;
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.usertype.UserType;
 
 import java.io.ByteArrayInputStream;
@@ -64,15 +65,15 @@ public class HibernateByteBlobType implements UserType {
     }
 
     /**
-     * @see org.hibernate.usertype.UserType#nullSafeGet(java.sql.ResultSet, java.lang.String[], java.lang.Object)
+     * @see org.hibernate.usertype.UserType#nullSafeGet(ResultSet, String[], SessionImplementor, Object)
      */
     @Override
-    public Object nullSafeGet( ResultSet resultSet, String[] names, Object owner )
+    public Object nullSafeGet( ResultSet resultSet, String[] names, SessionImplementor sessionImplementor, Object owner )
             throws HibernateException, SQLException {
         final Object object;
 
-        try (final InputStream inputStream = resultSet.getBinaryStream( names[0] );
-                final ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
+        try ( final InputStream inputStream = resultSet.getBinaryStream( names[0] );
+                final ByteArrayOutputStream outputStream = new ByteArrayOutputStream() ) {
             if ( inputStream == null ) {
                 object = null;
             } else {
@@ -95,10 +96,10 @@ public class HibernateByteBlobType implements UserType {
     }
 
     /**
-     * @see org.hibernate.usertype.UserType#nullSafeSet(java.sql.PreparedStatement, java.lang.Object, int)
+     * @see org.hibernate.usertype.UserType#nullSafeSet(PreparedStatement, Object, int, SessionImplementor)
      */
     @Override
-    public void nullSafeSet( PreparedStatement statement, Object value, int index ) throws SQLException {
+    public void nullSafeSet( PreparedStatement statement, Object value, int index, SessionImplementor sessionImplementor ) throws SQLException {
         final byte[] bytes = ( byte[] ) value;
         if ( bytes == null ) {
             try {

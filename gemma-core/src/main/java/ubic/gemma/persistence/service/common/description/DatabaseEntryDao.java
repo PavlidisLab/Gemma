@@ -24,6 +24,8 @@ import ubic.gemma.persistence.service.BaseVoEnabledDao;
 import ubic.gemma.persistence.service.FilteringVoEnabledDao;
 import ubic.gemma.persistence.util.ObjectFilter;
 
+import java.util.List;
+
 /**
  * @see DatabaseEntry
  */
@@ -31,6 +33,6 @@ public interface DatabaseEntryDao extends FilteringVoEnabledDao<DatabaseEntry, D
 
     String OBJECT_ALIAS = "accession";
 
-    DatabaseEntry findByAccession( String accession );
+    List<DatabaseEntry> findByAccession( String accession );
 
 }

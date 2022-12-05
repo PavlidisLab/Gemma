@@ -35,6 +35,7 @@ import ubic.gemma.persistence.service.expression.designElement.CompositeSequence
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
 import java.util.Collection;
+import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -81,7 +82,11 @@ public class DesignElementDataVectorServiceTest extends AbstractGeoServiceTest {
             newee = ( ExpressionExperiment ) results.iterator().next();
 
         } catch ( AlreadyExistsInSystemException e ) {
-            newee = ( ExpressionExperiment ) e.getData();
+            if ( e.getData() instanceof List ) {
+                newee = ( ExpressionExperiment ) ( ( List<?> ) e.getData() ).iterator().next();
+            } else {
+                newee = ( ExpressionExperiment ) e.getData();
+            }
         }
 
         newee.setShortName( RandomStringUtils.randomAlphabetic( 12 ) );

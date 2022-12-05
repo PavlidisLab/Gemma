@@ -18,18 +18,23 @@
  */
 package ubic.gemma.web.util;
 
-import java.util.Arrays;
-
+import lombok.SneakyThrows;
+import net.sf.ehcache.Ehcache;
+import net.sf.ehcache.Statistics;
+import net.sf.ehcache.config.CacheConfiguration;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
 import org.springframework.stereotype.Component;
 
-import net.sf.ehcache.Cache;
-import net.sf.ehcache.CacheManager;
-import net.sf.ehcache.Statistics;
-import net.sf.ehcache.config.CacheConfiguration;
-import ubic.gemma.persistence.util.Settings;
+import javax.servlet.ServletContext;
+import java.io.IOException;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import static org.apache.commons.text.StringEscapeUtils.escapeHtml4;
 
 /**
  * Get statistics about and manage caches.
@@ -41,20 +46,30 @@ public class CacheMonitorImpl implements CacheMonitor {
 
     private static final Log log = LogFactory.getLog( CacheMonitorImpl.class );
 
+    /**
+     * Header used when displaying cache statistics.
+     */
+    private static final String CACHE_STATS_HEADER = "<th>Name</th><th>HitRate</th><th>Hits</th><th>Misses</th><th>Count</th><th>MemHits</th><th>MemMiss</th><th>DiskHits</th><th>Evicted</th><th>Eternal?</th><th>UseDisk?</th><th>MaxInMem</th><th>LifeTime</th><th>IdleTime</th>";
+
     @Autowired
     private CacheManager cacheManager;
+
+    @Autowired
+    private ServletContext servletContext;
 
     @Override
     public void clearAllCaches() {
         CacheMonitorImpl.log.info( "Clearing all caches" );
-        cacheManager.clearAll();
+        for ( String cacheName : cacheManager.getCacheNames() ) {
+            cacheManager.getCache( cacheName ).clear();
+        }
     }
 
     @Override
     public void clearCache( String cacheName ) {
         Cache cache = this.cacheManager.getCache( cacheName );
         if ( cache != null ) {
-            cache.removeAll();
+            cache.clear();
             CacheMonitorImpl.log.info( "Cleared cache: " + cache.getName() );
         } else {
             throw new IllegalArgumentException( "No cache found with name=" + cacheName );
@@ -71,103 +86,49 @@ public class CacheMonitorImpl implements CacheMonitor {
     public void enableStatistics() {
         CacheMonitorImpl.log.info( "Enabling statistics" );
         this.setStatisticsEnabled( true );
-
     }
 
     @Override
     public String getStats() {
-
         StringBuilder buf = new StringBuilder();
-        String[] cacheNames = cacheManager.getCacheNames();
-        Arrays.sort( cacheNames );
+        List<String> cacheNames = cacheManager.getCacheNames().stream()
+                .sorted()
+                .collect( Collectors.toList() );
 
-        int stop = 0;
-        for ( String cacheName : cacheNames ) {
-            // Terracotta clustered?
-            // FIXME: this is not supported anymore, so it will always result in false, but there's no harm in looking
-            // it up either way
-            boolean isTerracottaClustered = cacheManager.getCache( cacheName ).getCacheConfiguration().isTerracottaClustered();
-            buf.append( "Distributed caching is " );
-            buf.append( isTerracottaClustered ? "enabled" : "disabled" );
-            buf.append( " in the configuration file for " + cacheName );
-            buf.append( ".<br/>" );
-            if (++stop > 10 ) {
-                buf.append( "[Additional caches ommitted]<br/>" );
-                break;
-            }
-        }
+        buf.append( "<p>" )
+                .append( cacheNames.size() ).append( " caches; only non-empty caches listed below." )
+                .append( "</p>" );
 
-        buf.append( cacheNames.length ).append( " caches; only non-empty caches listed below." );
-        // FIXME make these sortable.
-        buf.append( "<br/>&nbsp;To clear all caches click here: <img src='" + Settings.getRootContext()
-                + "/images/icons/arrow_rotate_anticlockwise.png' onClick=\"clearAllCaches()\" alt='Flush caches' title='Clear caches' />&nbsp;&nbsp;" );
-        buf.append( "<br/>&nbsp;To start statistics collection click here: <img src='" + Settings.getRootContext()
-                + "/images/icons/arrow_rotate_anticlockwise.png' onClick=\"enableStatistics()\" alt='Enable stats' title='Enable stats' />&nbsp;&nbsp;" );
-        buf.append( "<br/>&nbsp;To stop statistics collection click here: <img src='" + Settings.getRootContext()
-                + "/images/icons/arrow_rotate_anticlockwise.png' onClick=\"disableStatistics()\" alt='Disable stats' title='Disable stats' />&nbsp;&nbsp;" );
+        String anticlockwiseIconUrl = servletContext.getContextPath() + "/images/icons/arrow_rotate_anticlockwise.png";
 
-        buf.append( "<table style='font-size:small'  ><tr>" );
-        String header = "<th>Name</th><th>HitRate</th><th>Hits</th><th>Misses</th><th>Count</th><th>MemHits</th><th>MemMiss</th><th>DiskHits</th><th>Evicted</th> <th>Eternal?</th><th>UseDisk?</th> <th>MaxInMem</th><th>LifeTime</th><th>IdleTime</th>";
-        buf.append( header );
-        buf.append( "</tr>" );
+        buf.append( "<p>" )
+                .append( "To clear all caches click here: " )
+                .append( "<img src=\"" ).append( anticlockwiseIconUrl ).append( "\" " )
+                .append( "onClick=\"clearAllCaches()\" alt=\"Flush caches\" title=\"Clear caches\"/>" )
+                .append( "</p>" );
+        buf.append( "<p>" )
+                .append( "To start statistics collection click here: " )
+                .append( "<img src=\"" ).append( anticlockwiseIconUrl ).append( "\" " )
+                .append( "onClick=\"enableStatistics()\" alt=\"Enable stats\" title=\"Enable stats\"/>" )
+                .append( "</p>" );
+        buf.append( "<p>" )
+                .append( "To stop statistics collection click here: " )
+                .append( "<img src=\"" ).append( anticlockwiseIconUrl ).append( "\" " )
+                .append( "onClick=\"disableStatistics()\" alt=\"Disable stats\" title=\"Disable stats\"/>" )
+                .append( "</p>" );
 
+        buf.append( "<table>" );
+        buf.append( "<tr>" )
+                .append( CACHE_STATS_HEADER )
+                .append( "</tr>" );
         int count = 0;
         for ( String rawCacheName : cacheNames ) {
             Cache cache = cacheManager.getCache( rawCacheName );
-            Statistics statistics = cache.getStatistics();
-
-            long objectCount = statistics.getObjectCount();
-
-            if ( objectCount == 0 ) {
-                continue;
+            if ( cache.getNativeCache() instanceof Ehcache ) {
+                addEhcacheRow( rawCacheName, ( Ehcache ) cache.getNativeCache(), buf );
             }
-
-            // a little shorter...
-            String cacheName = rawCacheName.replaceFirst( "ubic.gemma.model.", "u.g.m." );
-
-            buf.append( "<tr><td>" ).append( this.getClearCacheHtml( rawCacheName ) ).append( cacheName )
-                    .append( "</td>" );
-            long hits = statistics.getCacheHits();
-            long misses = statistics.getCacheMisses();
-            long inMemoryHits = statistics.getInMemoryHits();
-            long inMemoryMisses = statistics.getInMemoryMisses();
-
-            long onDiskHits = statistics.getOnDiskHits();
-            long evictions = statistics.getEvictionCount();
-
-            if ( hits + misses > 0 ) {
-
-                buf.append( this.makeTableCellForStat( String.format( "%.2f", ( double ) hits / ( hits + misses ) ) ) );
-            } else {
-                buf.append( "<td></td>" );
-            }
-            buf.append( this.makeTableCellForStat( hits ) );
-
-            buf.append( this.makeTableCellForStat( misses ) );
-            buf.append( this.makeTableCellForStat( objectCount ) );
-            buf.append( this.makeTableCellForStat( inMemoryHits ) );
-            buf.append( this.makeTableCellForStat( inMemoryMisses ) );
-            buf.append( this.makeTableCellForStat( onDiskHits ) );
-            buf.append( this.makeTableCellForStat( evictions ) );
-
-            CacheConfiguration cacheConfiguration = cache.getCacheConfiguration();
-            boolean eternal = cacheConfiguration.isEternal();
-            buf.append( "<td>" ).append( eternal ? "&bull;" : "" ).append( "</td>" );
-
-            buf.append( "<td>" ).append( cacheConfiguration.getMaxElementsInMemory() ).append( "</td>" );
-
-            if ( eternal ) {
-                // timeouts are irrelevant.
-                buf.append( "<td>-</td>" );
-                buf.append( "<td>-</td>" );
-            } else {
-                buf.append( "<td>" ).append( cacheConfiguration.getTimeToIdleSeconds() ).append( "</td>" );
-                buf.append( "<td>" ).append( cacheConfiguration.getTimeToLiveSeconds() ).append( "</td>" );
-            }
-            buf.append( "</tr>" );
-
             if ( ++count % 25 == 0 ) {
-                buf.append( "<tr>" ).append( header ).append( "</tr>" );
+                buf.append( "<tr>" ).append( CACHE_STATS_HEADER ).append( "</tr>" );
             }
         }
         buf.append( "</table>" );
@@ -175,27 +136,72 @@ public class CacheMonitorImpl implements CacheMonitor {
 
     }
 
-    private String getClearCacheHtml( String cacheName ) {
-        return "<img src='" + Settings.getRootContext()
-                + "/images/icons/arrow_rotate_anticlockwise.png' onClick=\"clearCache('" + cacheName
-                + "')\" alt='Clear cache' title='Clear cache' />&nbsp;&nbsp;";
+    @SneakyThrows(IOException.class)
+    private void addEhcacheRow( String rawCacheName, Ehcache cache, Appendable buf ) {
+        Statistics statistics = cache.getStatistics();
+
+        long objectCount = statistics.getObjectCount();
+
+        if ( objectCount == 0 ) {
+            return;
+        }
+
+        // a little shorter...
+        String cacheName = rawCacheName.replaceFirst( "ubic\\.gemma\\.model\\.", "u.g.m." );
+
+        String anticlockwiseIconUrl = servletContext.getContextPath() + "/images/icons/arrow_rotate_anticlockwise.png";
+        buf.append( "<tr><td>" )
+                .append( "<img src=\"" ).append( anticlockwiseIconUrl ).append( "\" onClick=\"clearCache('" ).append( escapeHtml4( rawCacheName ) ).append( "')\" alt=\"Clear cache\" title=\"Clear cache\"/> " )
+                .append( escapeHtml4( cacheName ) )
+                .append( "</td>" );
+        long hits = statistics.getCacheHits();
+        long misses = statistics.getCacheMisses();
+        long inMemoryHits = statistics.getInMemoryHits();
+        long inMemoryMisses = statistics.getInMemoryMisses();
+
+        long onDiskHits = statistics.getOnDiskHits();
+        long evictions = statistics.getEvictionCount();
+
+        buf.append( this.makeTableCellForStat( ( double ) hits / ( hits + misses ) ) );
+        buf.append( this.makeTableCellForStat( hits ) );
+        buf.append( this.makeTableCellForStat( misses ) );
+        buf.append( this.makeTableCellForStat( objectCount ) );
+        buf.append( this.makeTableCellForStat( inMemoryHits ) );
+        buf.append( this.makeTableCellForStat( inMemoryMisses ) );
+        buf.append( this.makeTableCellForStat( onDiskHits ) );
+        buf.append( this.makeTableCellForStat( evictions ) );
+
+        CacheConfiguration cacheConfiguration = cache.getCacheConfiguration();
+        boolean eternal = cacheConfiguration.isEternal();
+        buf.append( "<td>" ).append( eternal ? "&bull;" : "" ).append( "</td>" );
+
+        buf.append( "<td>" ).append( String.format( "%d", cacheConfiguration.getMaxElementsInMemory() ) ).append( "</td>" );
+
+        if ( eternal ) {
+            // timeouts are irrelevant.
+            buf.append( "<td>-</td>" );
+            buf.append( "<td>-</td>" );
+        } else {
+            buf.append( "<td>" ).append( String.format( "%d", cacheConfiguration.getTimeToIdleSeconds() ) ).append( "</td>" );
+            buf.append( "<td>" ).append( String.format( "%d", cacheConfiguration.getTimeToLiveSeconds() ) ).append( "</td>" );
+        }
+        buf.append( "</tr>" );
     }
 
     private String makeTableCellForStat( long hits ) {
-        return "<td>" + ( hits > 0 ? hits : "" ) + "</td>";
+        return "<td>" + ( hits > 0 ? String.format( "%d", hits ) : "" ) + "</td>";
     }
 
-    private String makeTableCellForStat( String s ) {
-        return "<td>" + s + "</td>";
+    private String makeTableCellForStat( double hits ) {
+        return "<td>" + ( hits > 0 ? String.format( "%.2f", hits ) : "" ) + "</td>";
     }
 
-    private synchronized void setStatisticsEnabled( boolean b ) {
-        String[] cacheNames = cacheManager.getCacheNames();
-
-        for ( String rawCacheName : cacheNames ) {
+    private void setStatisticsEnabled( boolean b ) {
+        for ( String rawCacheName : cacheManager.getCacheNames() ) {
             Cache cache = cacheManager.getCache( rawCacheName );
-            cache.setSampledStatisticsEnabled( b );
+            if ( cache.getNativeCache() instanceof Ehcache ) {
+                ( ( Ehcache ) cache.getNativeCache() ).setSampledStatisticsEnabled( b );
+            }
         }
     }
-
 }

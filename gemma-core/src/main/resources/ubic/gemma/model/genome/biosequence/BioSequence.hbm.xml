@@ -15,14 +15,14 @@
 			<column name="NAME" not-null="false" unique="false"
 				sql-type="VARCHAR(255)" />
 		</property>
-		<property name="description" type="org.springframework.orm.hibernate3.support.ClobStringType">
+		<property name="description" type="org.hibernate.type.MaterializedClobType">
 			<column name="DESCRIPTION" not-null="false" unique="false"
 				sql-type="text" />
 		</property>
 		<property name="length" type="java.lang.Long">
 			<column name="LENGTH" not-null="false" unique="false" sql-type="BIGINT" />
 		</property>
-		<property name="sequence" type="org.springframework.orm.hibernate3.support.ClobStringType">
+		<property name="sequence" type="org.hibernate.type.MaterializedClobType">
 			<column name="SEQUENCE" not-null="false" unique="false"
 				sql-type="longtext" />
 		</property>

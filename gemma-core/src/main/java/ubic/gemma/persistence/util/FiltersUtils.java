@@ -2,6 +2,8 @@ package ubic.gemma.persistence.util;
 
 import org.apache.commons.lang3.ArrayUtils;
 
+import javax.annotation.Nullable;
+
 /**
  * Utilities for working with {@link Filters} and {@link ObjectFilter}.
  */
@@ -12,11 +14,9 @@ public class FiltersUtils {
      *
      * This should be used to eliminate parts of an HQL query that are not mentioned in the filters.
      *
-     * @param filters
-     * @param aliases
      * @return true if any provided alias is mentioned anywhere in the set of filters
      */
-    public static boolean containsAnyAlias( Filters filters, String... aliases ) {
+    public static boolean containsAnyAlias( @Nullable Filters filters, String... aliases ) {
         if ( filters == null )
             return false;
         for ( ObjectFilter[] filter : filters ) {

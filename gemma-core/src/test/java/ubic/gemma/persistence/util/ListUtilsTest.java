@@ -25,4 +25,12 @@ public class ListUtilsTest {
         assertThat( id2position.get( 7L ) ).isEqualTo( 5 );
         assertThat( id2position ).doesNotContainKey( 6L );
     }
+
+    @Test
+    public void testIndexOfCaseInsensitiveStringElements() {
+        Map<String, Integer> str2position = ListUtils.indexOfCaseInsensitiveStringElements( Arrays.asList( "a", "A", "baba", "BABA", "C", "c" ) );
+        assertThat( str2position.get( "a" ) ).isEqualTo( 0 );
+        assertThat( str2position.get( "A" ) ).isEqualTo( 0 );
+        assertThat( str2position.get( "baBa" ) ).isEqualTo( 2 );
+    }
 }

@@ -19,6 +19,7 @@
 
 package ubic.gemma.persistence.service;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -28,18 +29,25 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ubic.basecode.util.FileTools;
 import ubic.gemma.model.common.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignGeneMappingEvent;
+import ubic.gemma.model.common.description.ExternalDatabase;
+import ubic.gemma.model.common.description.ExternalDatabases;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.persistence.model.Gene2CsStatus;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
+import ubic.gemma.persistence.service.common.description.ExternalDatabaseService;
 import ubic.gemma.persistence.service.genome.GeneDao;
 import ubic.gemma.persistence.util.MailEngine;
 import ubic.gemma.persistence.util.Settings;
 
+import javax.annotation.Nullable;
 import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
@@ -54,7 +62,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
  */
 @Service
 public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
-
     private static final AtomicBoolean running = new AtomicBoolean( false );
 
     /**
@@ -66,12 +73,7 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
                     + " WHERE geneprod.GENE_FK = gene.ID AND bsgp.GENE_PRODUCT_FK = geneprod.ID AND "
                     + " bsgp.BIO_SEQUENCE_FK = cs.BIOLOGICAL_CHARACTERISTIC_FK ORDER BY gene.ID,cs.ARRAY_DESIGN_FK";
 
-    private static final String HOME_DIR = Settings.getString( "gemma.appdata.home" );
-
-    /**
-     * The location where reports are stored.
-     */
-    private static final String DB_INFO_DIR = "DbReports";
+    private static final Path DEFAULT_GENE2CS_INFO_PATH = Paths.get( Settings.getString( "gemma.appdata.home" ), "DbReports", "gene2cs.info" );
     private static final Log log = LogFactory.getLog( TableMaintenanceUtil.class.getName() );
     @Autowired
     private AuditEventService auditEventService;
@@ -80,8 +82,12 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
     private MailEngine mailEngine;
 
     @Autowired
+    private ExternalDatabaseService externalDatabaseService;
+
+    @Autowired
     private SessionFactory sessionFactory;
 
+    private Path gene2CsInfoPath = DEFAULT_GENE2CS_INFO_PATH;
     private boolean sendEmail = true;
 
     @Override
@@ -142,6 +148,7 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
                 TableMaintenanceUtilImpl.log.debug( "Update of GENE2CS initiated" );
                 this.generateGene2CsEntries();
                 Gene2CsStatus updatedStatus = this.writeUpdateStatus( annotation, null );
+                this.updateGene2csExternalDatabaseLastUpdated( updatedStatus );
                 this.sendEmail( updatedStatus );
 
             } else {
@@ -159,6 +166,14 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
         } finally {
             TableMaintenanceUtilImpl.running.set( false );
         }
+    }
+
+    /**
+     * For use in tests.
+     */
+    @Override
+    public void setGene2CsInfoPath( Path gene2CsInfoPath ) {
+        this.gene2CsInfoPath = gene2CsInfoPath;
     }
 
     /**
@@ -196,32 +211,17 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
 
     }
 
-    private File getGene2CsInfopath() {
-        return new File( TableMaintenanceUtilImpl.HOME_DIR + File.separatorChar + TableMaintenanceUtilImpl.DB_INFO_DIR
-                + File.separatorChar + "gene2cs.info" );
-    }
-
     /**
      * Reads previous run information from disk.
      *
      * @return null if there is no update information available.
      */
     private Gene2CsStatus getLastGene2CsUpdateStatus() throws IOException, ClassNotFoundException {
-        File gene2CsInfopath = this.getGene2CsInfopath();
-        if ( !gene2CsInfopath.canRead() ) {
+        try ( ObjectInputStream ois = new ObjectInputStream( Files.newInputStream( gene2CsInfoPath ) ) ) {
+            return ( Gene2CsStatus ) ois.readObject();
+        } catch ( NoSuchFileException e ) {
             return null;
         }
-        try (FileInputStream fis = new FileInputStream( gene2CsInfopath );
-                ObjectInputStream ois = new ObjectInputStream( fis )) {
-            return ( Gene2CsStatus ) ois.readObject();
-        }
-
-    }
-
-    private void initDirectories() {
-        FileTools.createDir( TableMaintenanceUtilImpl.HOME_DIR );
-        FileTools.createDir(
-                TableMaintenanceUtilImpl.HOME_DIR + File.separatorChar + TableMaintenanceUtilImpl.DB_INFO_DIR );
     }
 
     private void sendEmail( Gene2CsStatus results ) {
@@ -244,8 +244,7 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
     /**
      * @param annotation extra text that describes the status
      */
-    private Gene2CsStatus writeUpdateStatus( String annotation, Exception e ) throws IOException {
-        this.initDirectories();
+    private Gene2CsStatus writeUpdateStatus( String annotation, @Nullable Exception e ) throws IOException {
         Gene2CsStatus status = new Gene2CsStatus();
         Calendar c = Calendar.getInstance();
         Date date = c.getTime();
@@ -253,11 +252,20 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
         status.setError( e );
         status.setAnnotation( annotation );
 
-        try (FileOutputStream fos = new FileOutputStream( this.getGene2CsInfopath() );
-                ObjectOutputStream oos = new ObjectOutputStream( fos )) {
+        FileUtils.forceMkdirParent( gene2CsInfoPath.toFile() );
+        try ( ObjectOutputStream oos = new ObjectOutputStream( Files.newOutputStream( gene2CsInfoPath ) ) ) {
             oos.writeObject( status );
         }
+
         return status;
     }
 
+    private void updateGene2csExternalDatabaseLastUpdated( Gene2CsStatus status ) {
+        ExternalDatabase ed = externalDatabaseService.findByNameWithAuditTrail( ExternalDatabases.GENE2CS );
+        if ( ed != null ) {
+            externalDatabaseService.updateReleaseLastUpdated( ed, status.getAnnotation(), status.getLastUpdate() );
+        } else {
+            log.warn( String.format( "External database with name %s is missing, no audit event will be recorded.", ExternalDatabases.GENE2CS ) );
+        }
+    }
 }

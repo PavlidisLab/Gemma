@@ -39,6 +39,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author pavlidis
  */
+@Category(SlowTest.class)
 public class DatasetCombinerTest {
 
     private static final Log log = LogFactory.getLog( DatasetCombinerTest.class.getName() );

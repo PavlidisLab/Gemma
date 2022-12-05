@@ -18,14 +18,13 @@
  */
 package ubic.gemma.core.analysis.report;
 
-import net.sf.ehcache.Cache;
-import net.sf.ehcache.CacheManager;
-import net.sf.ehcache.Element;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.stereotype.Service;
 import ubic.gemma.core.visualization.ExperimentalDesignVisualizationService;
@@ -91,15 +90,12 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
 
     @Override
     public void afterPropertiesSet() {
-        this.statsCache = CacheUtils
-                .createOrLoadCache( cacheManager, ExpressionExperimentReportServiceImpl.EESTATS_CACHE_NAME,
-                        5000, false, false, 0, 300 );
-
+        this.statsCache = Objects.requireNonNull( cacheManager.getCache( ExpressionExperimentReportServiceImpl.EESTATS_CACHE_NAME ) );
     }
 
     @Override
     public void evictFromCache( Long id ) {
-        this.statsCache.remove( id );
+        this.statsCache.evict( id );
 
         processedDataVectorCache.clearCache( id );
         experimentalDesignVisualizationService.clearCaches( id );
@@ -317,10 +313,10 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
         int incache = 0;
         for ( Long id : filteredIds ) {
 
-            Element cachedElement = this.statsCache.get( id );
+            Cache.ValueWrapper cachedElement = this.statsCache.get( id );
             if ( cachedElement != null ) {
                 incache++;
-                Object el = cachedElement.getObjectValue();
+                Object el = cachedElement.get();
                 assert el instanceof ExpressionExperimentDetailsValueObject;
 
                 eeValueObjects.add( ( ExpressionExperimentDetailsValueObject ) el );
@@ -408,7 +404,7 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
 
         for ( ExpressionExperimentValueObject vo : vos ) {
             this.evictFromCache( vo.getId() );
-            statsCache.put( new Element( vo.getId(), vo ) );
+            statsCache.put( vo.getId(), vo );
         }
         return vos;
     }

@@ -88,33 +88,18 @@ public class GeneProductDaoImpl extends AbstractVoEnabledDao<GeneProduct, GenePr
                                 + "left join fetch gp.physicalLocation pl left join fetch gp.accessions"
                                 + " left join fetch pl.chromosome ch left join fetch ch.taxon left join fetch g.aliases "
                                 + "where gp.name = :name and g.taxon = :taxon" ).setParameter( "name", name )
-                .setParameter( "taxon", taxon ).list();
+                .setParameter( "taxon", taxon )
+                .list();
     }
 
     @Override
     public GeneProduct thaw( GeneProduct existing ) {
-        List<?> re = this.getHibernateTemplate().findByNamedParam(
-                "select distinct gp from GeneProduct gp left join fetch gp.gene g left join fetch g.taxon "
-                        + "left join fetch gp.physicalLocation pl left join fetch gp.accessions left join fetch pl.chromosome ch left join fetch ch.taxon "
-                        + "left join fetch g.aliases  where gp = :gp", "gp", existing );
-
-        if ( re.isEmpty() )
-            return null;
-
-        assert re.size() == 1;
-
-        return ( GeneProduct ) re.iterator().next();
-    }
-
-    @Override
-    public GeneProduct findOrCreate( GeneProduct geneProduct ) {
-        GeneProduct existingGeneProduct = this.find( geneProduct );
-        if ( existingGeneProduct != null ) {
-            return existingGeneProduct;
-        }
-        if ( AbstractDao.log.isDebugEnabled() )
-            AbstractDao.log.debug( "Creating new geneProduct: " + geneProduct.getName() );
-        return this.create( geneProduct );
+        return ( GeneProduct ) this.getSessionFactory().getCurrentSession().createQuery(
+                        "select distinct gp from GeneProduct gp left join fetch gp.gene g left join fetch g.taxon "
+                                + "left join fetch gp.physicalLocation pl left join fetch gp.accessions left join fetch pl.chromosome ch left join fetch ch.taxon "
+                                + "left join fetch g.aliases  where gp = :gp" )
+                .setParameter( "gp", existing )
+                .uniqueResult();
     }
 
     @Override
@@ -126,18 +111,16 @@ public class GeneProductDaoImpl extends AbstractVoEnabledDao<GeneProduct, GenePr
 
         BusinessKey.createQueryObject( queryObject, geneProduct );
 
-        AbstractDao.log.debug( queryObject );
-
         //noinspection unchecked
         List<GeneProduct> results = queryObject.list();
-        Object result = null;
+        GeneProduct result = null;
         if ( results.size() > 1 ) {
 
             /*
              * At this point we can trust that the genes are from the same taxon. This kind of confusion should
              * reduce with cruft-reduction.
              */
-            Collections.sort( results, GeneProductDaoImpl.c ); // we tend to want to keep the one with the lowest ID
+            results.sort( GeneProductDaoImpl.c ); // we tend to want to keep the one with the lowest ID
             Gene gene = geneProduct.getGene();
             if ( gene != null ) {
                 GeneProduct keeper = null;
@@ -185,7 +168,7 @@ public class GeneProductDaoImpl extends AbstractVoEnabledDao<GeneProduct, GenePr
         if ( result == null )
             return null;
         AbstractDao.log.debug( "Found: " + result );
-        return ( GeneProduct ) result;
+        return result;
     }
 
     @Override

@@ -142,7 +142,6 @@ public interface ArrayDesignSequenceProcessingService {
      * @param sequenceIdentifierFile two columns of probe ids and sequence IDs (the same ones in the sequenceFile)
      * @param taxon - if null, attempt to determine it from the array design
      * @return biosequences
-     * @throws IOException
      */
     Collection<BioSequence> processArrayDesign( ArrayDesign arrayDesign, InputStream sequenceFile, InputStream sequenceIdentifierFile,
             SequenceType sequenceType, Taxon taxon ) throws IOException;

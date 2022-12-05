@@ -18,15 +18,12 @@
  */
 package ubic.gemma.persistence.service.expression.bioAssay;
 
-import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.persistence.service.BaseVoEnabledDao;
 
-import javax.annotation.Nullable;
-import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -34,7 +31,6 @@ import java.util.Map;
 /**
  * @see BioAssay
  */
-@ParametersAreNonnullByDefault
 public interface BioAssayDao extends BaseVoEnabledDao<BioAssay, BioAssayValueObject> {
 
     String OBJECT_ALIAS = "ba";

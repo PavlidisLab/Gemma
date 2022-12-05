@@ -51,7 +51,6 @@ public class BioMaterialDaoImpl extends AbstractVoEnabledDao<BioMaterial, BioMat
 
     @Override
     public BioMaterial find( BioMaterial bioMaterial ) {
-        AbstractDao.log.debug( "Start find" );
         Criteria queryObject = this.getSessionFactory().getCurrentSession().createCriteria( BioMaterial.class );
 
         BusinessKey.addRestrictions( queryObject, bioMaterial );
@@ -114,7 +113,7 @@ public class BioMaterialDaoImpl extends AbstractVoEnabledDao<BioMaterial, BioMat
     @Override
     public void thaw( final BioMaterial bioMaterial ) {
         Session session = this.getSessionFactory().getCurrentSession();
-        session.buildLockRequest( LockOptions.NONE ).lock( bioMaterial );
+        reattach( bioMaterial );
         Hibernate.initialize( bioMaterial );
         Hibernate.initialize( bioMaterial.getSourceTaxon() );
         Hibernate.initialize( bioMaterial.getBioAssaysUsedIn() );

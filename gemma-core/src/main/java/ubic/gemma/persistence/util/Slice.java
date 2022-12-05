@@ -1,9 +1,8 @@
 package ubic.gemma.persistence.util;
 
-import ubic.gemma.model.expression.experiment.ExpressionExperimentDetailsValueObject;
-
+import javax.annotation.Nullable;
 import java.util.AbstractList;
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -13,30 +12,36 @@ import java.util.stream.Collectors;
  */
 public class Slice<O> extends AbstractList<O> implements List<O> {
 
+    /**
+     * Create an empty slice with zero elements.
+     */
+    public static <O> Slice<O> empty() {
+        return new Slice<>( Collections.emptyList(), null, null, null, 0L );
+    }
+
+    /**
+     * Create a slice from a {@link List}.
+     */
     public static <O> Slice<O> fromList( List<O> list ) {
         return new Slice<>( list, null, null, null, ( long ) list.size() );
     }
 
     private final List<O> data;
-
+    @Nullable
     private final Sort sort;
-    public final Integer offset;
-    public final Integer limit;
+    @Nullable
+    private final Integer offset;
+    @Nullable
+    private final Integer limit;
+    @Nullable
     private final Long totalElements;
 
-    public Slice( List<O> elements, Sort sort, Integer offset, Integer limit, Long totalElements ) {
+    public Slice( List<O> elements, @Nullable Sort sort, @Nullable Integer offset, @Nullable Integer limit, @Nullable Long totalElements ) {
         this.data = elements;
         this.sort = sort;
         this.offset = offset;
         this.limit = limit;
         this.totalElements = totalElements;
-    }
-
-    /**
-     * Creates an empty, unsorted slice.
-     */
-    public Slice() {
-        this( new ArrayList<>(), null, 0, 0, 0L );
     }
 
     @Override
@@ -52,8 +57,6 @@ public class Slice<O> extends AbstractList<O> implements List<O> {
     /**
      * This is unfortunately necessary because it it blindly casted.
      * This is necessary
-     * @param elem
-     * @return
      */
     @Override
     @Deprecated
@@ -74,6 +77,7 @@ public class Slice<O> extends AbstractList<O> implements List<O> {
     /**
      * @return a sort, or null if unspecified
      */
+    @Nullable
     public Sort getSort() {
         return this.sort;
     }
@@ -81,6 +85,7 @@ public class Slice<O> extends AbstractList<O> implements List<O> {
     /**
      * @return an offset, or null if unspecified
      */
+    @Nullable
     public Integer getOffset() {
         return this.offset;
     }
@@ -88,19 +93,21 @@ public class Slice<O> extends AbstractList<O> implements List<O> {
     /**
      * @return a limit, or null if unspecified
      */
+    @Nullable
     public Integer getLimit() {
         return this.limit;
     }
 
     /**
      *
-     * @return the total number
+     * @return the total number of elements, or null if unspecified.
      */
+    @Nullable
     public Long getTotalElements() {
         return this.totalElements;
     }
 
     public <S> Slice<S> map( Function<? super O, ? extends S> converter ) {
-        return new Slice( this.stream().map( converter ).collect( Collectors.toList() ), sort, offset, limit, totalElements );
+        return new Slice<>( this.stream().map( converter ).collect( Collectors.toList() ), sort, offset, limit, totalElements );
     }
 }

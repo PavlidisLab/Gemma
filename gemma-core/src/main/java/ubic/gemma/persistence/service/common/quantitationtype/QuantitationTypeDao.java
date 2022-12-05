@@ -39,8 +39,6 @@ public interface QuantitationTypeDao extends FilteringVoEnabledDao<QuantitationT
      * Locate a QT associated with the given ee matching the specification of the passed quantitationType, or null if
      * there isn't one.
      * 
-     * @param  ee
-     * @param  quantitationType
      * @return                  found QT
      */
     QuantitationType find( ExpressionExperiment ee, QuantitationType quantitationType );

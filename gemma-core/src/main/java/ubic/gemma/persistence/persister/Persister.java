@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -19,10 +19,10 @@
 package ubic.gemma.persistence.persister;
 
 import org.springframework.security.access.annotation.Secured;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.persistence.util.ArrayDesignsForExperimentCache;
 
+import javax.annotation.CheckReturnValue;
 import java.util.Collection;
+import java.util.List;
 
 /**
  * Interface defining the ability to create domain objects in bulk or singly. Classes that implement this interface
@@ -38,36 +38,28 @@ import java.util.Collection;
 public interface Persister {
 
     /**
+     * Persist a single object. Non-nullable dependencies are checked and persisted first, if the reference is detached,
+     * or converted into a reference to a persistent object identified by the objects business key. If a matching object
+     * already exists, it will not be changed.
+     *
+     * @param  obj the object
+     * @return the persistent version of the object.
+     */
+    @Secured({ "GROUP_USER" })
+    @CheckReturnValue
+    Object persist( Object obj );
+
+    /**
      * Persist all the objects in a collection. Non-nullable dependencies are checked and persisted first, if the
      * reference is detached, or converted into a reference to a persistent object identified by the objects business
      * key. Matching instances are not changed.
      *
      * @param  col the collection of objects
-     * @return     The persistent versions of the objects.
+     * @return The persistent versions of the objects.
      */
     @Secured({ "GROUP_USER" })
-    Collection<?> persist( Collection<?> col );
-
-    /**
-     * Persist a single object. Non-nullable dependencies are checked and persisted first, if the reference is detached,
-     * or converted into a reference to a persistent object identified by the objects business key. If a matching object
-     * already exists, it will not be changed.
-     * 
-     * @param  obj the object
-     * @return     the persistent version of the object.
-     */
-    @Secured({ "GROUP_USER" })
-    Object persist( Object obj );
-
-    /**
-     * Special case for experiments.
-     * 
-     * @param  ee experiment
-     * @param  c  array design cache (see caller)
-     * @return    persisted experiment
-     */
-    @Secured({ "GROUP_USER" })
-    ExpressionExperiment persist( ExpressionExperiment ee, ArrayDesignsForExperimentCache c );
+    @CheckReturnValue
+    List<?> persist( Collection<?> col );
 
     /**
      * Persist or update a single object. If the object already exists in the system, it will be replaced with the
@@ -77,22 +69,11 @@ public interface Persister {
      * method has limited usefulness: when the provided object has new data but the associated objects are either new or
      * already existing. If you want to update associated objects you must update them explicitly (perhaps with a call
      * to persistOrUpdate on them).
-     * 
-     * @param  obj the object
-     * @return     the persistent version of the object.
-     */
-    @Secured({ "GROUP_USER" })
-    Object persistOrUpdate( Object obj );
-
-    /**
-     * Determine if a entity is transient (not persistent).
      *
-     * @param  entity the entity to test
-     * @return        true if the object is not (as far as we can tell) already persisted.
+     * @param  obj the object
+     * @return the persistent version of the object.
      */
-    boolean isTransient( Object entity );
-
     @Secured({ "GROUP_USER" })
-    ArrayDesignsForExperimentCache prepare( ExpressionExperiment entity );
-
+    @CheckReturnValue
+    Object persistOrUpdate( Object obj );
 }

@@ -34,9 +34,9 @@ import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.model.genome.sequenceAnalysis.ThreePrimeDistanceMethod;
-import ubic.gemma.persistence.util.Settings;
 
 import java.io.InputStream;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -55,6 +55,35 @@ public class ProbeMapperTest {
     private List<Double> tester;
     private GoldenPathSequenceAnalysis mousegp = null;
     private GoldenPathSequenceAnalysis humangp = null;
+
+    @Before
+    public void setUp() throws Exception {
+        Taxon mouseTaxon = Taxon.Factory.newInstance( "mouse" );
+        Taxon humanTaxon = Taxon.Factory.newInstance( "human" );
+        mousegp = new GoldenPathSequenceAnalysis( mouseTaxon );
+        humangp = new GoldenPathSequenceAnalysis( humanTaxon );
+
+        try {
+            mousegp.getJdbcTemplate().queryForObject( "select 1", Integer.class );
+            humangp.getJdbcTemplate().queryForObject( "select 1", Integer.class );
+        } catch ( CannotGetJdbcConnectionException e ) {
+            Assume.assumeNoException( e );
+        }
+
+        tester = new ArrayList<>();
+        tester.add( 400d );
+        tester.add( 200d );
+        tester.add( 100d );
+        tester.add( 50d );
+
+        try ( InputStream is = this.getClass().getResourceAsStream( "/data/loader/genome/col8a1.blatresults.txt" ) ) {
+            BlatResultParser brp = new BlatResultParser();
+            brp.setTaxon( mouseTaxon );
+            brp.parse( is );
+            blatres = brp.getResults();
+            assert blatres != null && blatres.size() > 0;
+        }
+    }
 
     @Test
     public void testComputeSpecificityA() {
@@ -146,42 +175,6 @@ public class ProbeMapperTest {
             if ( blatAssociation.getGeneProduct().getGene().getOfficialSymbol().equals( "NBPF10" ) ) {
                 Assert.fail( "Should not have gotten NBPF10" );
             }
-        }
-    }
-
-    @Before
-    public void setUp() throws Exception {
-        tester = new ArrayList<>();
-        tester.add( 400d );
-        tester.add( 200d );
-        tester.add( 100d );
-        tester.add( 50d );
-
-        try ( InputStream is = this.getClass().getResourceAsStream( "/data/loader/genome/col8a1.blatresults.txt" ) ) {
-            BlatResultParser brp = new BlatResultParser();
-            Taxon m = Taxon.Factory.newInstance();
-            m.setCommonName( "mouse" );
-            brp.setTaxon( m );
-            brp.parse( is );
-            blatres = brp.getResults();
-
-            assert blatres != null && blatres.size() > 0;
-        }
-        String databaseHost = Settings.getString( "gemma.testdb.host" );
-        String databaseUser = Settings.getString( "gemma.testdb.user" );
-        String databasePassword = Settings.getString( "gemma.testdb.password" );
-
-        mousegp = new GoldenPathSequenceAnalysis( 3306, Settings.getString( "gemma.goldenpath.db.mouse" ), databaseHost,
-                databaseUser, databasePassword );
-
-        humangp = new GoldenPathSequenceAnalysis( 3306, Settings.getString( "gemma.goldenpath.db.human" ), databaseHost,
-                databaseUser, databasePassword );
-
-        try {
-            mousegp.getJdbcTemplate().queryForObject( "select 1", Integer.class );
-            humangp.getJdbcTemplate().queryForObject( "select 1", Integer.class );
-        } catch ( CannotGetJdbcConnectionException e ) {
-            Assume.assumeNoException( e );
         }
     }
 }

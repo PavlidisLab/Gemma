@@ -565,14 +565,20 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
     @Override
     public void removeDataForCompositeSequence( final CompositeSequence compositeSequence ) {
         final String dedvRemovalQuery = "delete ProcessedExpressionDataVector dedv where dedv.designElement = ?";
-        int deleted = this.getHibernateTemplate().bulkUpdate( dedvRemovalQuery, compositeSequence );
+        int deleted = this.getSessionFactory().getCurrentSession()
+                .createQuery( dedvRemovalQuery )
+                .setParameter( 0, compositeSequence )
+                .executeUpdate();
         AbstractDao.log.info( "Deleted: " + deleted );
     }
 
     @Override
     public void removeDataForQuantitationType( final QuantitationType quantitationType ) {
         final String dedvRemovalQuery = "delete from ProcessedExpressionDataVector as dedv where dedv.quantitationType = ?";
-        int deleted = this.getHibernateTemplate().bulkUpdate( dedvRemovalQuery, quantitationType );
+        int deleted = this.getSessionFactory().getCurrentSession()
+                .createQuery( dedvRemovalQuery )
+                .setParameter( 0, quantitationType )
+                .executeUpdate();
         AbstractDao.log.info( "Deleted " + deleted + " data vector elements" );
     }
     //
@@ -1042,9 +1048,9 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
      * @param  ee    ee
      * @return       processed data vectors
      */
-    private Collection<ProcessedExpressionDataVector> getProcessedVectors( ExpressionExperiment ee, Integer limit ) {
+    private Collection<ProcessedExpressionDataVector> getProcessedVectors( ExpressionExperiment ee, int limit ) {
 
-        if ( limit == null || limit < 0 ) {
+        if ( limit <= 0 ) {
             return this.getProcessedVectors( ee );
         }
 
@@ -1258,9 +1264,6 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
     /**
      * Mask missing values. This is mostly for two-color (ratiometric) data.
      *
-     * @param  preferredData
-     * @param  missingValueData
-     * @return
      */
     private Map<CompositeSequence, DoubleVectorValueObject> maskAndUnpack(
             Collection<RawExpressionDataVector> preferredData, Collection<RawExpressionDataVector> missingValueData ) {
@@ -1312,7 +1315,6 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
     }
 
     /**
-     * @param rawPreferredDataVectors
      */
     private void removeDuplicateElements( Collection<RawExpressionDataVector> rawPreferredDataVectors ) {
         /*
@@ -1396,7 +1398,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
         if ( obs == null || obs.isEmpty() )
             return sliced;
 
-        this.getSessionFactory().getCurrentSession().buildLockRequest( LockOptions.NONE ).lock( ee );
+        reattach( ee );
         Hibernate.initialize( ee.getBioAssays() );
         List<BioAssayValueObject> sliceBioAssays = new ArrayList<>();
 

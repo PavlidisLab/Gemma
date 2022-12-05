@@ -22,7 +22,7 @@ import ubic.gemma.model.common.Identifiable;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Collection;
+import java.util.List;
 
 /**
  * The trail of events (create or update) that occurred in an objects lifetime. The first event added must be a "Create"
@@ -33,7 +33,7 @@ public abstract class AuditTrail implements Identifiable, Serializable {
 
     private static final long serialVersionUID = -7450755789163303140L;
     private Long id;
-    private Collection<AuditEvent> events = new ArrayList<>();
+    private List<AuditEvent> events = new ArrayList<>();
 
     /**
      * Add an event to the AuditTrail
@@ -67,12 +67,12 @@ public abstract class AuditTrail implements Identifiable, Serializable {
      */
     public abstract AuditEvent getCreationEvent();
 
-    public Collection<AuditEvent> getEvents() {
+    public List<AuditEvent> getEvents() {
         return this.events;
     }
 
     @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
-    public void setEvents( Collection<AuditEvent> events ) {
+    public void setEvents( List<AuditEvent> events ) {
         this.events = events;
     }
 

@@ -31,7 +31,6 @@ import ubic.gemma.persistence.service.AbstractFilteringVoEnabledService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventDao;
 import ubic.gemma.persistence.service.expression.experiment.BlacklistedEntityService;
 
-import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.*;
 
 /**
@@ -39,7 +38,6 @@ import java.util.*;
  * @see ArrayDesignService
  */
 @Service
-@ParametersAreNonnullByDefault
 public class ArrayDesignServiceImpl extends AbstractFilteringVoEnabledService<ArrayDesign, ArrayDesignValueObject>
         implements ArrayDesignService {
 
@@ -348,6 +346,7 @@ public class ArrayDesignServiceImpl extends AbstractFilteringVoEnabledService<Ar
     }
 
     @Override
+    @Transactional(readOnly = true)
     public long numBioSequences( ArrayDesign arrayDesign ) {
         return this.arrayDesignDao.numBioSequences( arrayDesign );
     }
@@ -371,6 +370,7 @@ public class ArrayDesignServiceImpl extends AbstractFilteringVoEnabledService<Ar
     }
 
     @Override
+    @Transactional(readOnly = true)
     public long numCompositeSequenceWithGenes( ArrayDesign arrayDesign ) {
         return this.arrayDesignDao.numCompositeSequenceWithGenes( arrayDesign );
     }

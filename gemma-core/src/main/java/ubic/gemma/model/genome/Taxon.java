@@ -196,6 +196,11 @@ public class Taxon implements Identifiable, java.io.Serializable {
 
             return entity;
         }
-    }
 
+        public static Taxon newInstance( String commonName ) {
+            Taxon entity = new Taxon();
+            entity.setCommonName( commonName );
+            return entity;
+        }
+    }
 }

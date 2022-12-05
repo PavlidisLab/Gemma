@@ -19,22 +19,63 @@
 package ubic.gemma.persistence.service.common.description;
 
 import org.springframework.security.access.annotation.Secured;
+import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.persistence.service.BaseService;
+
+import javax.annotation.Nullable;
+import java.net.URL;
+import java.util.Collection;
+import java.util.Date;
+import java.util.List;
 
 /**
  * @author Gemma
  */
 public interface ExternalDatabaseService extends BaseService<ExternalDatabase> {
 
-    ExternalDatabase findByName( String name );
+    @Override
+    @Secured({ "GROUP_ADMIN" })
+    Collection<ExternalDatabase> create( Collection<ExternalDatabase> entities );
 
     @Override
-    @Secured({ "GROUP_USER" })
+    @Secured({ "GROUP_ADMIN" })
+    ExternalDatabase create( ExternalDatabase entity );
+
+    ExternalDatabase findByName( String name );
+
+    @Secured({ "GROUP_ADMIN", "GROUP_AGENT" })
+    ExternalDatabase findByNameWithAuditTrail( String name );
+
+    @Override
+    @Secured({ "GROUP_ADMIN" })
     ExternalDatabase findOrCreate( ExternalDatabase externalDatabase );
 
     @Override
-    @Secured({ "GROUP_USER" })
+    @Secured({ "GROUP_ADMIN", "GROUP_AGENT" })
+    void update( ExternalDatabase entity );
+
+    @Override
+    @Secured({ "GROUP_ADMIN", "GROUP_AGENT" })
+    void update( Collection<ExternalDatabase> entities );
+
+    @Secured({ "GROUP_ADMIN", "GROUP_AGENT" })
+    void updateReleaseDetails( ExternalDatabase externalDatabase, String releaseVersion, @Nullable URL releaseUrl, @Nullable String releaseNote, Date lastUpdated );
+
+    @Secured({ "GROUP_ADMIN", "GROUP_AGENT" })
+    void updateReleaseLastUpdated( ExternalDatabase externalDatabase, @Nullable String note, Date lastUpdated );
+
+    @Override
+    @Secured({ "GROUP_ADMIN" })
     void remove( ExternalDatabase externalDatabase );
 
+    @Override
+    @Secured({ "GROUP_ADMIN" })
+    void remove( Collection<ExternalDatabase> entities );
+
+    @Override
+    @Secured({ "GROUP_ADMIN" })
+    void removeAll();
+
+    List<ExternalDatabase> findAllByNameIn( List<String> names );
 }

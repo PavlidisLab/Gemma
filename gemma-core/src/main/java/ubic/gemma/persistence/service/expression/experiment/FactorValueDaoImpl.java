@@ -35,7 +35,6 @@ import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Sort;
 
 import javax.annotation.Nullable;
-import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.Collection;
 import java.util.EnumSet;
 import java.util.List;
@@ -47,7 +46,6 @@ import java.util.List;
  * </p>
  */
 @Repository
-@ParametersAreNonnullByDefault
 public class FactorValueDaoImpl extends AbstractQueryFilteringVoEnabledDao<FactorValue, FactorValueValueObject>
         implements FactorValueDao {
 
@@ -83,9 +81,10 @@ public class FactorValueDaoImpl extends AbstractQueryFilteringVoEnabledDao<Facto
             }
         }
 
-        List<?> efs = this.getHibernateTemplate()
-                .findByNamedParam( "select ef from ExperimentalFactor ef join ef.factorValues fv where fv = :fv", "fv",
-                        factorValue );
+        List<?> efs = this.getSessionFactory().getCurrentSession()
+                .createQuery( "select ef from ExperimentalFactor ef join ef.factorValues fv where fv = :fv" )
+                .setParameter( "fv", factorValue )
+                .list();
 
         ExperimentalFactor ef = ( ExperimentalFactor ) efs.iterator().next();
         ef.getFactorValues().remove( factorValue );
@@ -95,17 +94,6 @@ public class FactorValueDaoImpl extends AbstractQueryFilteringVoEnabledDao<Facto
         flushAndClear();
 
         super.remove( factorValue );
-    }
-
-    @Override
-    public FactorValue findOrCreate( FactorValue factorValue ) {
-        FactorValue existingFactorValue = this.find( factorValue );
-        if ( existingFactorValue != null ) {
-            return existingFactorValue;
-        }
-        if ( AbstractDao.log.isDebugEnabled() )
-            AbstractDao.log.debug( "Creating new factorValue" );
-        return this.create( factorValue );
     }
 
     @Override

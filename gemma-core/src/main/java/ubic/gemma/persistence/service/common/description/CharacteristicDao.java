@@ -28,7 +28,6 @@ import ubic.gemma.persistence.service.BaseVoEnabledDao;
 import ubic.gemma.persistence.service.BrowsingDao;
 
 import javax.annotation.Nullable;
-import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -37,7 +36,6 @@ import java.util.Set;
 /**
  * @see ubic.gemma.model.common.description.Characteristic
  */
-@ParametersAreNonnullByDefault
 public interface CharacteristicDao
         extends BrowsingDao<Characteristic>, BaseVoEnabledDao<Characteristic, CharacteristicValueObject> {
 
@@ -51,7 +49,7 @@ public interface CharacteristicDao
      * @return characteristics
      */
     @Override
-    List<Characteristic> browse( Integer start, Integer limit );
+    List<Characteristic> browse( int start, int limit );
 
     /**
      * Browse through the characteristics, excluding GO annotations, with sorting.
@@ -63,7 +61,7 @@ public interface CharacteristicDao
      * @return characteristics
      */
     @Override
-    List<Characteristic> browse( Integer start, Integer limit, String sortField, boolean descending );
+    List<Characteristic> browse( int start, int limit, String sortField, boolean descending );
 
     Collection<? extends Characteristic> findByCategory( String query );
 

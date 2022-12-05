@@ -25,6 +25,7 @@ import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.persistence.service.BaseService;
 
+import javax.annotation.Nullable;
 import java.util.List;
 
 /**
@@ -33,23 +34,22 @@ import java.util.List;
 public interface AuditTrailService extends BaseService<AuditTrail> {
 
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    AuditEvent addUpdateEvent( Auditable auditable, AuditEventType auditEventType, String note );
+    void addUpdateEvent( Auditable auditable, AuditEventType auditEventType, @Nullable String note );
 
     @Secured({ "GROUP_AGENT", "ACL_SECURABLE_EDIT" })
-    AuditEvent addUpdateEvent( Auditable auditable, AuditEventType auditEventType, String note, String detail );
+    void addUpdateEvent( Auditable auditable, AuditEventType auditEventType, @Nullable String note, @Nullable String detail );
 
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    AuditEvent addUpdateEvent( Auditable auditable, Class<? extends AuditEventType> type, String note, String detail );
+    void addUpdateEvent( Auditable auditable, Class<? extends AuditEventType> type, @Nullable String note, @Nullable String detail );
 
     /**
      * Add an update event defined by the given parameters, to the given auditable. Returns the generated event.
      *
      * @param auditable auditable
      * @param note      note
-     * @return created event
      */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    AuditEvent addUpdateEvent( Auditable auditable, String note );
+    void addUpdateEvent( Auditable auditable, @Nullable String note );
 
     @Override
     @Secured({ "GROUP_USER" })

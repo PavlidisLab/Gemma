@@ -23,10 +23,9 @@ import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import ubic.gemma.model.common.measurement.Unit;
+import ubic.gemma.model.common.measurement.UnitImpl;
 import ubic.gemma.persistence.service.AbstractDao;
 import ubic.gemma.persistence.util.BusinessKey;
-
-import java.util.List;
 
 /**
  * <p>
@@ -42,7 +41,7 @@ public class UnitDaoImpl extends AbstractDao<Unit> implements UnitDao {
 
     @Autowired
     public UnitDaoImpl( SessionFactory sessionFactory ) {
-        super( Unit.class, sessionFactory );
+        super( UnitImpl.class, sessionFactory );
     }
 
     @Override

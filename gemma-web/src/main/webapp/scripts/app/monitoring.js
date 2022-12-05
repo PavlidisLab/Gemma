@@ -21,8 +21,6 @@ Ext.onReady( function() {
       if ( !pauseBx.getValue() ) {
          SystemMonitorController.getCacheStatus( handleCacheData );
       }
-
-      SystemMonitorController.getSpaceStatus( handleSpaceStatus );
    }
    function handleSuccess( data ) {
       Ext.DomHelper.overwrite( "hibernateStats", data );
@@ -30,10 +28,6 @@ Ext.onReady( function() {
 
    function handleCacheData( data ) {
       Ext.DomHelper.overwrite( "cacheStats", data );
-   }
-
-   function handleSpaceStatus( data ) {
-      Ext.DomHelper.overwrite( "spaceStats", data );
    }
 
 } );

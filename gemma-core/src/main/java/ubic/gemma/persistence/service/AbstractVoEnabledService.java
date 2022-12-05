@@ -4,8 +4,6 @@ import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.common.Identifiable;
 
-import javax.annotation.Nullable;
-import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.Collection;
 import java.util.List;
 
@@ -13,7 +11,6 @@ import java.util.List;
  * Created by tesarst on 01/06/17.
  * A special case of Service that also provides value object functionality.
  */
-@ParametersAreNonnullByDefault
 public abstract class AbstractVoEnabledService<O extends Identifiable, VO extends IdentifiableValueObject<O>>
         extends AbstractService<O> implements BaseVoEnabledService<O, VO> {
 

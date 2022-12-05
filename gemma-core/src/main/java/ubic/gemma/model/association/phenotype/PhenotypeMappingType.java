@@ -15,6 +15,7 @@
 package ubic.gemma.model.association.phenotype;
 
 import org.hibernate.HibernateException;
+import org.hibernate.engine.spi.SessionImplementor;
 
 import java.io.Serializable;
 import java.sql.PreparedStatement;
@@ -32,7 +33,7 @@ public class PhenotypeMappingType
     public static final PhenotypeMappingType CURATED = new PhenotypeMappingType( "Curated" );
     public static final PhenotypeMappingType INFERRED_XREF = new PhenotypeMappingType( "Inferred Cross Reference" );
     public static final PhenotypeMappingType INFERRED_CURATED = new PhenotypeMappingType( "Inferred Curated" );
-    public static final PhenotypeMappingType DIRECT = new PhenotypeMappingType("Direct"); // when we are given a useable term right without mapping needed
+    public static final PhenotypeMappingType DIRECT = new PhenotypeMappingType( "Direct" ); // when we are given a useable term right without mapping needed
     private static final long serialVersionUID = -3336933794060950406L;
     private static final int[] SQL_TYPES = { Types.VARCHAR };
     private static final java.util.Map<String, PhenotypeMappingType> values = new java.util.LinkedHashMap<>();
@@ -44,7 +45,7 @@ public class PhenotypeMappingType
         PhenotypeMappingType.values
                 .put( PhenotypeMappingType.INFERRED_CURATED.value, PhenotypeMappingType.INFERRED_CURATED );
         PhenotypeMappingType.values
-        .put( PhenotypeMappingType.DIRECT.value, PhenotypeMappingType.DIRECT );
+                .put( PhenotypeMappingType.DIRECT.value, PhenotypeMappingType.DIRECT );
     }
 
     private String value;
@@ -154,20 +155,20 @@ public class PhenotypeMappingType
     }
 
     /**
-     * @see org.hibernate.usertype.UserType#nullSafeGet(java.sql.ResultSet, String[], Object)
+     * @see org.hibernate.usertype.UserType#nullSafeGet(java.sql.ResultSet, String[], SessionImplementor, Object)
      */
     @Override
-    public Object nullSafeGet( ResultSet resultSet, String[] vs, Object owner )
+    public Object nullSafeGet( ResultSet resultSet, String[] vs, SessionImplementor sessionImplementor, Object owner )
             throws HibernateException, SQLException {
         final String v = ( String ) resultSet.getObject( vs[0] );
         return resultSet.wasNull() ? null : PhenotypeMappingType.fromString( v );
     }
 
     /**
-     * @see org.hibernate.usertype.UserType#nullSafeSet(java.sql.PreparedStatement, Object, int)
+     * @see org.hibernate.usertype.UserType#nullSafeSet(java.sql.PreparedStatement, Object, int, SessionImplementor)
      */
     @Override
-    public void nullSafeSet( PreparedStatement statement, Object v, int index )
+    public void nullSafeSet( PreparedStatement statement, Object v, int index, SessionImplementor sessionImplementor )
             throws HibernateException, SQLException {
         if ( v == null ) {
             statement.setNull( index, Types.VARCHAR );

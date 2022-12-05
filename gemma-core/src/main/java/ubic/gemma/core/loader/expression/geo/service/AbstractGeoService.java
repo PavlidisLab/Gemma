@@ -26,6 +26,7 @@ import org.springframework.beans.factory.BeanFactoryAware;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGenerator;
 import ubic.gemma.persistence.persister.Persister;
+import ubic.gemma.persistence.persister.PersisterHelper;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 
 import java.util.Collection;
@@ -37,7 +38,7 @@ public abstract class AbstractGeoService implements BeanFactoryAware, GeoService
 
     static final Log log = LogFactory.getLog( AbstractGeoService.class );
     @Autowired
-    protected Persister persisterHelper;
+    protected PersisterHelper persisterHelper;
     @Autowired
     protected ArrayDesignService arrayDesignService;
     GeoDomainObjectGenerator geoDomainObjectGenerator;

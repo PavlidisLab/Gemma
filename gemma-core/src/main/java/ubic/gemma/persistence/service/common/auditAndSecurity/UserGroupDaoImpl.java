@@ -71,14 +71,8 @@ public class UserGroupDaoImpl extends AbstractDao<UserGroup> implements UserGrou
 
     @Override
     public void removeAuthority( UserGroup group, String authority ) {
-        for ( Iterator<gemma.gsec.model.GroupAuthority> iterator = group.getAuthorities().iterator(); iterator
-                .hasNext(); ) {
-            gemma.gsec.model.GroupAuthority ga = iterator.next();
-            if ( ga.getAuthority().equals( authority ) ) {
-                iterator.remove();
-            }
-        }
-        this.getHibernateTemplate().update( group );
+        group.getAuthorities().removeIf( ga -> ga.getAuthority().equals( authority ) );
+        this.update( group );
     }
 
     @Override
@@ -92,11 +86,6 @@ public class UserGroupDaoImpl extends AbstractDao<UserGroup> implements UserGrou
             throw new IllegalArgumentException( "Cannot create group with that name: " + userGroup.getName() );
         }
         return super.create( userGroup );
-    }
-
-    @Override
-    public long countAll() {
-        return this.loadAll().size();
     }
 
     @Override
@@ -132,12 +121,6 @@ public class UserGroupDaoImpl extends AbstractDao<UserGroup> implements UserGrou
         } else {
             return this.findByName( entity.getName() );
         }
-    }
-
-    @Override
-    public UserGroup findOrCreate( UserGroup entity ) {
-        UserGroup found = this.find( entity );
-        return found != null ? found : this.create( entity );
     }
 
 }

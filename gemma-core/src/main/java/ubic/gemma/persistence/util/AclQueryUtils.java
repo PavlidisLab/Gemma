@@ -7,12 +7,10 @@ import org.hibernate.QueryParameterException;
 import org.springframework.security.acls.domain.BasePermission;
 
 import javax.annotation.Nullable;
-import javax.annotation.ParametersAreNonnullByDefault;
 
 /**
  * Utilities for integrating ACL into {@link Query}.
  */
-@ParametersAreNonnullByDefault
 public class AclQueryUtils {
 
     public static final String AOI_ALIAS = "aoi", SID_ALIAS = "sid";
@@ -92,7 +90,6 @@ public class AclQueryUtils {
 
     /**
      * Add ACL restriction parameters defined in {@link #formAclRestrictionClause()}.
-     * @param query
      * @throws QueryParameterException if any defined parameters are missing, which is typically due to a missing {@link #formAclRestrictionClause()}.
      */
     public static void addAclRestrictionParameters( Query query ) throws QueryParameterException {

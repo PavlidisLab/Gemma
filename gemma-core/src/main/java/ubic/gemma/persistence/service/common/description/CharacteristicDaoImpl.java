@@ -26,7 +26,7 @@ import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import ubic.basecode.util.BatchIterator;
-import ubic.gemma.model.association.Gene2GOAssociationImpl;
+import ubic.gemma.model.association.Gene2GOAssociation;
 import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.description.Characteristic;
@@ -43,7 +43,6 @@ import ubic.gemma.persistence.util.AclQueryUtils;
 import ubic.gemma.persistence.util.EntityUtils;
 
 import javax.annotation.Nullable;
-import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -53,7 +52,6 @@ import java.util.stream.Collectors;
  * @see    Characteristic
  */
 @Repository
-@ParametersAreNonnullByDefault
 public class CharacteristicDaoImpl extends AbstractVoEnabledDao<Characteristic, CharacteristicValueObject>
         implements CharacteristicDao {
 
@@ -65,7 +63,7 @@ public class CharacteristicDaoImpl extends AbstractVoEnabledDao<Characteristic, 
     }
 
     @Override
-    public List<Characteristic> browse( Integer start, Integer limit ) {
+    public List<Characteristic> browse( int start, int limit ) {
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession()
                 .createQuery( "from Characteristic where value not like 'GO_%'" ).setMaxResults( limit )
@@ -73,7 +71,7 @@ public class CharacteristicDaoImpl extends AbstractVoEnabledDao<Characteristic, 
     }
 
     @Override
-    public List<Characteristic> browse( Integer start, Integer limit, String orderField, boolean descending ) {
+    public List<Characteristic> browse( int start, int limit, String orderField, boolean descending ) {
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession().createQuery(
                         "from Characteristic where value not like 'GO_%' order by " + orderField + " " + ( descending ? "desc" : "" ) ).setMaxResults( limit )
@@ -143,7 +141,7 @@ public class CharacteristicDaoImpl extends AbstractVoEnabledDao<Characteristic, 
     }
 
     private Map<String, Set<ExpressionExperiment>> queryAndMarkAsSeen( String query, Collection<String> uris, @Nullable Taxon taxon, Set<ExpressionExperiment> seenEEs, int limit ) {
-        if ( limit != 0 && seenEEs.size() > limit ) {
+        if ( limit > 0 && seenEEs.size() > limit ) {
             return Collections.emptyMap();
         }
 
@@ -387,7 +385,7 @@ public class CharacteristicDaoImpl extends AbstractVoEnabledDao<Characteristic, 
         String field = "characteristics";
         if ( parentClass.isAssignableFrom( ExperimentalFactor.class ) )
             field = "category";
-        else if ( parentClass.isAssignableFrom( Gene2GOAssociationImpl.class ) )
+        else if ( parentClass.isAssignableFrom( Gene2GOAssociation.class ) )
             field = "ontologyEntry";
         else if ( parentClass.isAssignableFrom( PhenotypeAssociation.class ) ) {
             field = "phenotypes";

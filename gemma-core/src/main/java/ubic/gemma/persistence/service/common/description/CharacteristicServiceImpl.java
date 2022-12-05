@@ -21,7 +21,7 @@ package ubic.gemma.persistence.service.common.description;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ubic.gemma.model.association.Gene2GOAssociationImpl;
+import ubic.gemma.model.association.Gene2GOAssociation;
 import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.description.Characteristic;
@@ -37,7 +37,6 @@ import ubic.gemma.persistence.util.ObjectFilter;
 import ubic.gemma.persistence.util.Sort;
 
 import javax.annotation.Nullable;
-import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.*;
 
 /**
@@ -45,7 +44,6 @@ import java.util.*;
  * @see    CharacteristicService
  */
 @Service
-@ParametersAreNonnullByDefault
 public class CharacteristicServiceImpl extends AbstractVoEnabledService<Characteristic, CharacteristicValueObject>
         implements CharacteristicService {
 
@@ -53,7 +51,7 @@ public class CharacteristicServiceImpl extends AbstractVoEnabledService<Characte
      * Classes examined when getting the "parents" of characteristics.
      */
     private static final Class<?>[] CLASSES_WITH_CHARACTERISTICS = new Class[] { ExpressionExperiment.class,
-            BioMaterial.class, FactorValue.class, ExperimentalFactor.class, Gene2GOAssociationImpl.class,
+            BioMaterial.class, FactorValue.class, ExperimentalFactor.class, Gene2GOAssociation.class,
             PhenotypeAssociation.class };
     private final CharacteristicDao characteristicDao;
 
@@ -65,13 +63,13 @@ public class CharacteristicServiceImpl extends AbstractVoEnabledService<Characte
 
     @Override
     @Transactional(readOnly = true)
-    public List<Characteristic> browse( Integer start, Integer limit ) {
+    public List<Characteristic> browse( int start, int limit ) {
         return this.characteristicDao.browse( start, limit );
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<Characteristic> browse( Integer start, Integer limit, String sortField, boolean descending ) {
+    public List<Characteristic> browse( int start, int limit, String sortField, boolean descending ) {
         return this.characteristicDao.browse( start, limit, sortField, descending );
     }
 
@@ -166,7 +164,7 @@ public class CharacteristicServiceImpl extends AbstractVoEnabledService<Characte
     }
 
     @Override
-    public Sort getSort( String property, Sort.Direction direction ) throws IllegalArgumentException {
+    public Sort getSort( String property, @Nullable Sort.Direction direction ) throws IllegalArgumentException {
         try {
             EntityUtils.getDeclaredFieldType( property, Characteristic.class );
             return Sort.by( CharacteristicDao.OBJECT_ALIAS, property, direction );

@@ -1,7 +1,9 @@
 # Gemma code repository
 
-If you are looking for the public instance of Gemma, you can either access it through the
-[Gemma Website](https://gemma.msl.ubc.ca/), or check out our [RESTful API](https://gemma.msl.ubc.ca/resources/restapidocs/).
+This repository is for the Gemma software system.
+
+If you are looking to access the genomics data in Gemma, please see the
+[Gemma Website](https://gemma.msl.ubc.ca/), the Bioconductor package [Gemma.R](https://doi.org/doi:10.18129/B9.bioc.gemma.R), or our [RESTful API](https://gemma.msl.ubc.ca/resources/restapidocs/).
 
 Please see the end-user documentation at our [GitHub Pages](https://pavlidislab.github.io/Gemma/) for more information
 on how to use Gemma and related tools, and to credits and contact information.

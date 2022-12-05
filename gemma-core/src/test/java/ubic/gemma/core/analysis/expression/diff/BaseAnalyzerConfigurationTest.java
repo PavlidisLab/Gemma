@@ -20,7 +20,6 @@ package ubic.gemma.core.analysis.expression.diff;
 
 import lombok.SneakyThrows;
 import org.apache.commons.lang3.RandomStringUtils;
-import org.easymock.EasyMock;
 import org.junit.After;
 import org.junit.Before;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -51,6 +50,9 @@ import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressio
 import ubic.gemma.persistence.util.Settings;
 
 import java.util.*;
+
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 /**
  * Other tests can extend this class if they want an expression experiment with complete block design and biological
@@ -378,14 +380,12 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
     /**
      * Mocks the method getVectors in the {@link ExpressionDataMatrixService}.
      *
-     * @param numMethodCalls The number of times the mocked method will be called.
      */
     @SneakyThrows(NoProcessedExpressionDataVectorsException.class)
-    void configureMockAnalysisServiceHelper( int numMethodCalls ) {
-        this.expressionDataMatrixService = EasyMock.createMock( ExpressionDataMatrixService.class );
-        EasyMock.expect( expressionDataMatrixService.getProcessedExpressionDataMatrix( expressionExperiment ) )
-                .andReturn( new ExpressionDataDoubleMatrix( this.vectors ) ).times( numMethodCalls );
-        EasyMock.replay( expressionDataMatrixService );
+    void configureMockAnalysisServiceHelper() {
+        this.expressionDataMatrixService = mock( ExpressionDataMatrixService.class );
+        when( expressionDataMatrixService.getProcessedExpressionDataMatrix( expressionExperiment ) )
+                .thenReturn( new ExpressionDataDoubleMatrix( this.vectors ) );
     }
 
     /**

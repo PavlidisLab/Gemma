@@ -53,18 +53,11 @@ public class ChromosomeDaoImpl extends AbstractDao<Chromosome> implements Chromo
 
     @Override
     public Chromosome find( Chromosome entity ) {
-        return this.find( entity.getName(), entity.getSequence().getTaxon() ).iterator().next();
-    }
-
-    @Override
-    public Chromosome findOrCreate( Chromosome entity ) {
-        String name = entity.getName();
-        Taxon taxon = entity.getSequence().getTaxon();
-        Collection<Chromosome> hits = this.find( name, taxon );
-        if ( hits == null || hits.isEmpty() ) {
-            Chromosome c = new Chromosome( name, taxon );
-            return this.create( c );
+        Collection<Chromosome> hits = this.find( entity.getName(), entity.getSequence().getTaxon() );
+        if ( hits.isEmpty() ) {
+            return null;
+        } else {
+            return hits.iterator().next();
         }
-        return hits.iterator().next();
     }
 }

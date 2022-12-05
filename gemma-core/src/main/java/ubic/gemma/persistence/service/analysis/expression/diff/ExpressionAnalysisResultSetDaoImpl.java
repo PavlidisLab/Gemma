@@ -23,13 +23,13 @@ import org.apache.commons.lang3.time.StopWatch;
 import org.hibernate.*;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
+import org.hibernate.sql.JoinType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
-import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
-import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResultSetValueObject;
+import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -40,7 +40,6 @@ import ubic.gemma.persistence.service.AbstractDao;
 import ubic.gemma.persistence.util.*;
 
 import javax.annotation.Nullable;
-import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
@@ -53,7 +52,6 @@ import java.util.stream.Collectors;
  */
 @Repository
 @CommonsLog
-@ParametersAreNonnullByDefault
 public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilteringVoEnabledDao<ExpressionAnalysisResultSet, DifferentialExpressionAnalysisResultSetValueObject>
         implements ExpressionAnalysisResultSetDao {
 
@@ -140,7 +138,7 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilterin
         Session session = this.getSessionFactory().getCurrentSession();
         session.flush();
         session.clear();
-        session.buildLockRequest( LockOptions.NONE ).lock( resultSet );
+        reattach( resultSet );
         int contrastsDone = 0;
         int resultsDone = 0;
 
@@ -176,7 +174,7 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilterin
     }
 
     @Override
-    public Slice<DifferentialExpressionAnalysisResultSetValueObject> findByBioAssaySetInAndDatabaseEntryInLimit( @Nullable Collection<BioAssaySet> bioAssaySets, @Nullable Collection<DatabaseEntry> databaseEntries, Filters objectFilters, int offset, int limit, Sort sort ) {
+    public Slice<DifferentialExpressionAnalysisResultSetValueObject> findByBioAssaySetInAndDatabaseEntryInLimit( @Nullable Collection<BioAssaySet> bioAssaySets, @Nullable Collection<DatabaseEntry> databaseEntries, @Nullable Filters objectFilters, int offset, int limit, @Nullable Sort sort ) {
         Criteria query = getLoadValueObjectsCriteria( objectFilters );
         Criteria totalElementsQuery = getLoadValueObjectsCriteria( objectFilters );
 
@@ -215,8 +213,8 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilterin
                 // these two are necessary for ACL filtering, so we must use a (default) inner jointure
                 .createAlias( "analysis", "a" )
                 .createAlias( "analysis.experimentAnalyzed", "e" )
-                .createAlias( "experimentalFactors", "ef", Criteria.LEFT_JOIN )
-                .createAlias( "ef.factorValues", "fv", Criteria.LEFT_JOIN );
+                .createAlias( "experimentalFactors", "ef", JoinType.LEFT_OUTER_JOIN )
+                .createAlias( "ef.factorValues", "fv", JoinType.LEFT_OUTER_JOIN );
 
         // apply filtering
         query.add( ObjectFilterCriteriaUtils.formRestrictionClause( filters ) );

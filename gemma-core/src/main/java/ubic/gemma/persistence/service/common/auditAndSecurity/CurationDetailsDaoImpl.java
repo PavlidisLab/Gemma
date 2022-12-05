@@ -22,6 +22,7 @@ import org.hibernate.Hibernate;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Repository;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.curation.Curatable;
 import ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails;
@@ -35,7 +36,7 @@ import java.util.Date;
  *
  * @author tesarst
  */
-@Component
+@Repository
 public class CurationDetailsDaoImpl extends AbstractDao<CurationDetails> implements CurationDetailsDao {
 
     @Autowired

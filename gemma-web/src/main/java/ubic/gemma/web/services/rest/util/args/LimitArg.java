@@ -33,7 +33,6 @@ public class LimitArg extends AbstractArg<Integer> {
      * Use {@link #getValue()} to accept any limit.
      *
      * @param maximum a maximum the limit must not exceeed, otherwise a {@link MalformedArgException} will be raised
-     * @return
      * @throws MalformedArgException of the limit is exceeded, or the argument was malformed in the first place.
      */
     public Integer getValue( Integer maximum ) throws MalformedArgException {
@@ -47,7 +46,6 @@ public class LimitArg extends AbstractArg<Integer> {
     /**
      * Obtain the value of the limit, explicitly disregarding the maximum defined by {@link #MAXIMUM}.
      *
-     * @return
      */
     public Integer getValueNoMaximum() {
         return super.getValue();

@@ -43,7 +43,7 @@ class SpringSupport {
         }
 
         // scan for beans, but exclude jms, web
-        ctx = SpringContextUtil.getApplicationContext(false, false, null)
+        ctx = SpringContextUtil.getApplicationContext(false)
         b.set(true)
         t.join()
 

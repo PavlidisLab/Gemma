@@ -1,10 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
-        "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+    "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
 <hibernate-mapping>
     <class mutable="false" name="ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType"
            table="AUDIT_EVENT_TYPE">
-        <cache usage="read-write"/>
         <id access="field" name="id" type="java.lang.Long">
             <column name="ID" sql-type="BIGINT"/>
             <generator class="native"/>
@@ -155,10 +154,16 @@
             <subclass abstract="true" discriminator-value="DifferentialExpressionSuitabilityEvent"
                       name="ubic.gemma.model.common.auditAndSecurity.eventType.DifferentialExpressionSuitabilityEvent">
                 <subclass abstract="false" discriminator-value="UnsuitableForDifferentialExpressionAnalysisEvent"
-                          name="ubic.gemma.model.common.auditAndSecurity.eventType.UnsuitableForDifferentialExpressionAnalysisEvent"></subclass>
+                          name="ubic.gemma.model.common.auditAndSecurity.eventType.UnsuitableForDifferentialExpressionAnalysisEvent"/>
                 <subclass abstract="false" discriminator-value="ResetSuitabilityForDifferentialExpressionAnalysisEvent"
-                          name="ubic.gemma.model.common.auditAndSecurity.eventType.ResetSuitabilityForDifferentialExpressionAnalysisEvent"></subclass>
+                          name="ubic.gemma.model.common.auditAndSecurity.eventType.ResetSuitabilityForDifferentialExpressionAnalysisEvent"/>
             </subclass>
+        </subclass>
+
+        <subclass abstract="true" discriminator-value="VersionedEvent"
+                  name="ubic.gemma.model.common.auditAndSecurity.eventType.VersionedEvent">
+            <subclass abstract="false" discriminator-value="ReleaseDetailsUpdateEvent"
+                      name="ubic.gemma.model.common.auditAndSecurity.eventType.ReleaseDetailsUpdateEvent"/>
         </subclass>
 
     </class>

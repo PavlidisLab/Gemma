@@ -23,6 +23,7 @@ import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExperimentalFactorValueObject;
 import ubic.gemma.persistence.service.BaseVoEnabledService;
 
+import javax.annotation.Nullable;
 import java.util.Collection;
 
 /**
@@ -62,7 +63,7 @@ public interface ExperimentalFactorService
 
     @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
-    ExperimentalFactor load( java.lang.Long id );
+    ExperimentalFactor load( Long id );
 
     @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })

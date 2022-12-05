@@ -83,7 +83,7 @@ public interface PhenotypeAssociationManagerService {
      * @param  userName user name
      * @return          evidence satisfying the specified filters
      */
-    Collection<EvidenceValueObject<? extends PhenotypeAssociation>> findEvidenceByFilters( Long taxonId, Integer limit,
+    Collection<EvidenceValueObject<? extends PhenotypeAssociation>> findEvidenceByFilters( Long taxonId, int limit,
             String userName );
 
     /**
@@ -200,7 +200,7 @@ public interface PhenotypeAssociationManagerService {
      * @return                      evidence VOs
      */
     Set<EvidenceValueObject<? extends PhenotypeAssociation>> loadEvidenceWithExternalDatabaseName(
-            String externalDatabaseName, Integer limit, int start );
+            String externalDatabaseName, int limit, int start );
 
     /**
      * returns an DifferentialExpressionEvidence for a geneDifferentialExpressionMetaAnalysisId if one exists (used to

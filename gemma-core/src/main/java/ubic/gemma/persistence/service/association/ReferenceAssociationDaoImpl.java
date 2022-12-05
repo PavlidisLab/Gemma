@@ -22,6 +22,7 @@ import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import ubic.gemma.model.association.ReferenceAssociation;
+import ubic.gemma.model.association.ReferenceAssociationImpl;
 import ubic.gemma.persistence.service.AbstractDao;
 
 /**
@@ -35,6 +36,6 @@ public class ReferenceAssociationDaoImpl extends AbstractDao<ReferenceAssociatio
 
     @Autowired
     public ReferenceAssociationDaoImpl( SessionFactory sessionFactory ) {
-        super( ReferenceAssociation.class, sessionFactory );
+        super( ReferenceAssociationImpl.class, sessionFactory );
     }
 }

@@ -18,6 +18,7 @@
  */
 package ubic.gemma.core.externalDb;
 
+import lombok.Getter;
 import org.apache.commons.dbcp2.BasicDataSource;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
@@ -28,160 +29,82 @@ import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.util.Settings;
 
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
-
 /**
  * Perform useful queries against GoldenPath (UCSC) databases.
  *
  * @author pavlidis
  */
 @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
-public class GoldenPath {
+@Getter
+public abstract class GoldenPath {
 
-    static final Log log = LogFactory.getLog( GoldenPath.class );
-    JdbcTemplate jdbcTemplate;
-    private ExternalDatabase searchedDatabase;
-    private String databaseName = null;
-    private Taxon taxon;
-    private int port;
-    private String host;
-    private String user;
-    private String password;
-    private String url;
+    protected static final Log log = LogFactory.getLog( GoldenPath.class );
+
+    private final JdbcTemplate jdbcTemplate;
+    private final ExternalDatabase searchedDatabase;
+    private final Taxon taxon;
 
     /**
-     * Get golden path for the default database (human);
+     * Create a GoldenPath database for a given taxon.
      */
-    public GoldenPath() {
-        this.taxon = Taxon.Factory.newInstance();
-        taxon.setCommonName( "human" );
-        this.readConfig();
-    }
-
-    public GoldenPath( int port, String databaseName, String host, String user, String password ) {
-        this.databaseName = databaseName;
-
-        this.getTaxonForDbName( databaseName );
-
-        this.port = port;
-        this.host = host;
-        this.user = user;
-        this.password = password;
-
-        this.init();
-    }
-
-    public GoldenPath( String databaseName ) {
-        this.getTaxonForDbName( databaseName );
-        this.readConfig();
-    }
-
     public GoldenPath( Taxon taxon ) {
+        this.jdbcTemplate = createJdbcTemplateFromConfig( taxon );
+        this.searchedDatabase = createExternalDatabase( taxon );
         this.taxon = taxon;
-        this.readConfig();
     }
 
-    public String getDatabaseName() {
-        return databaseName;
-    }
+    private static JdbcTemplate createJdbcTemplateFromConfig( Taxon taxon ) {
+        String host;
+        int port;
+        String user;
+        String password;
+        String databaseName = getDbNameForTaxon( taxon );
+        host = Settings.getString( "gemma.goldenpath.db.host" );
+        port = Settings.getInt( "gemma.goldenpath.db.port", 3306 );
 
-    public JdbcTemplate getJdbcTemplate() {
-        return jdbcTemplate;
-    }
+        user = Settings.getString( "gemma.goldenpath.db.user" );
+        password = Settings.getString( "gemma.goldenpath.db.password" );
 
-    public ExternalDatabase getSearchedDatabase() {
-        return searchedDatabase;
-    }
-
-    public Taxon getTaxon() {
-        return taxon;
-    }
-
-    protected Connection getConnection() {
-        try {
-            return DriverManager.getConnection( url, user, password );
-        } catch ( SQLException e ) {
-            throw new RuntimeException( e );
-        }
-    }
-
-    void init() {
-        assert databaseName != null;
         BasicDataSource dataSource = new BasicDataSource();
 
-        this.url = "jdbc:mysql://" + host + ":" + port + "/" + databaseName + "?relaxAutoCommit=true&useSSL=false";
+        String url = "jdbc:mysql://" + host + ":" + port + "/" + databaseName + "?relaxAutoCommit=true&useSSL=false";
         GoldenPath.log.info( "Connecting to " + databaseName );
         GoldenPath.log.debug( "Connecting to Golden Path : " + url + " as " + user );
 
-        dataSource.setDriverClassName( this.getDriver() );
-        dataSource.setUrl( url );
-        dataSource.setUsername( user );
-        dataSource.setPassword( password );
-
-        jdbcTemplate = new JdbcTemplate( dataSource );
-        jdbcTemplate.setFetchSize( 50 );
-
-    }
-
-    private String getDriver() {
         String driver = Settings.getString( "gemma.goldenpath.db.driver" );
         if ( StringUtils.isBlank( driver ) ) {
             driver = Settings.getString( "gemma.db.driver" );
             GoldenPath.log.warn( "No DB driver configured for GoldenPath, falling back on gemma.db.driver=" + driver );
         }
-        return driver;
+        dataSource.setDriverClassName( driver );
+        dataSource.setUrl( url );
+        dataSource.setUsername( user );
+        dataSource.setPassword( password );
+
+        JdbcTemplate jdbcTemplate = new JdbcTemplate( dataSource );
+        jdbcTemplate.setFetchSize( 50 );
+
+        return jdbcTemplate;
     }
 
-    private void getTaxonForDbName( String dbname ) {
-        // This is a little dumb
-        this.taxon = Taxon.Factory.newInstance();
-        if ( dbname.startsWith( "hg" ) ) {
-            taxon.setCommonName( "human" );
-        } else if ( dbname.startsWith( "mm" ) ) {
-            taxon.setCommonName( "mouse" );
-        } else if ( dbname.startsWith( "rn" ) ) {
-            taxon.setCommonName( "rat" );
-        } else {
-            throw new IllegalArgumentException( "Cannot infer taxon for " + dbname );
-        }
+    private static ExternalDatabase createExternalDatabase( Taxon taxon ) {
+        ExternalDatabase externalDatabase = ExternalDatabase.Factory.newInstance();
+        externalDatabase.setName( getDbNameForTaxon( taxon ) );
+        externalDatabase.setType( DatabaseType.SEQUENCE );
+        return externalDatabase;
     }
 
-    private void readConfig() {
-        if ( taxon == null )
-            throw new IllegalStateException( "Taxon cannot be null" );
-        String commonName = taxon.getCommonName();
-        switch ( commonName ) {
-            case "mouse":
-                databaseName = Settings.getString( "gemma.goldenpath.db.mouse" );
-                break;
-            case "human":
-                databaseName = Settings.getString( "gemma.goldenpath.db.human" );
-                break;
-            case "rat":
-                databaseName = Settings.getString( "gemma.goldenpath.db.rat" );
-                break;
-            default:
-                throw new IllegalArgumentException( "No GoldenPath database for  " + taxon );
+    private static String getDbNameForTaxon( Taxon taxon ) {
+        if ( taxon == null ) {
+            throw new IllegalArgumentException( "Taxon cannot be null" );
         }
-
-        this.host = Settings.getString( "gemma.goldenpath.db.host" );
-        try {
-            this.port = Integer.valueOf( Settings.getString( "gemma.goldenpath.db.port" ) );
-        } catch ( NumberFormatException e ) {
-            throw new RuntimeException( "Could not get configuration of port for goldenpath database" );
+        if ( taxon.getCommonName() == null ) {
+            throw new IllegalArgumentException( "Taxon common name cannot be null." );
         }
-
-        this.user = Settings.getString( "gemma.goldenpath.db.user" );
-        this.password = Settings.getString( "gemma.goldenpath.db.password" );
-
-        searchedDatabase = ExternalDatabase.Factory.newInstance();
-        searchedDatabase.setName( databaseName );
-        searchedDatabase.setType( DatabaseType.SEQUENCE );
-
-        this.init();
-
+        String databaseName = Settings.getString( "gemma.goldenpath.db." + taxon.getCommonName() );
+        if ( databaseName == null ) {
+            throw new IllegalStateException( String.format( "No GoldenPath database for %s.", taxon ) );
+        }
+        return databaseName;
     }
-
 }

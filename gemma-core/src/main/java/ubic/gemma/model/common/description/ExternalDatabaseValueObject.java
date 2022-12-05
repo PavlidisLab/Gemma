@@ -20,8 +20,12 @@ import lombok.EqualsAndHashCode;
 import ubic.gemma.model.IdentifiableValueObject;
 
 import java.io.Serializable;
+import java.net.URL;
 import java.util.Collection;
+import java.util.Date;
+import java.util.Set;
 import java.util.TreeSet;
+import java.util.stream.Collectors;
 
 /**
  * @author Paul
@@ -29,11 +33,16 @@ import java.util.TreeSet;
 @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
 @Data
 @EqualsAndHashCode(of = { "name" }, callSuper = false)
-public class ExternalDatabaseValueObject extends IdentifiableValueObject<ExternalDatabase> implements Serializable, Comparable<ExternalDatabaseValueObject> {
+public class ExternalDatabaseValueObject extends IdentifiableValueObject<ExternalDatabase> implements Serializable, Comparable<ExternalDatabaseValueObject>, Versioned {
 
     private static final long serialVersionUID = -1714429166594162374L;
     private String name;
+    private String description;
     private String uri;
+    private String releaseVersion;
+    private URL releaseUrl;
+    private Date lastUpdated;
+    private Set<ExternalDatabaseValueObject> externalDatabases;
     @JsonIgnore
     private boolean checked = false;
 
@@ -50,7 +59,26 @@ public class ExternalDatabaseValueObject extends IdentifiableValueObject<Externa
     public ExternalDatabaseValueObject( ExternalDatabase ed ) {
         super( ed );
         this.name = ed.getName();
+        this.description = ed.getDescription();
         this.uri = ed.getWebUri();
+        this.releaseUrl = ed.getReleaseUrl();
+        this.releaseVersion = ed.getReleaseVersion();
+        this.lastUpdated = ed.getLastUpdated();
+        this.externalDatabases = ed.getExternalDatabases()
+                .stream()
+                .map( ced -> new ExternalDatabaseValueObject( ced, ed ) )
+                .collect( Collectors.toSet() );
+    }
+
+    private ExternalDatabaseValueObject( ExternalDatabase ed, ExternalDatabase parentDatabase ) {
+        this( ed );
+        if ( ed.getReleaseVersion() == null ) {
+            this.releaseVersion = parentDatabase.getReleaseVersion();
+            this.releaseUrl = parentDatabase.getReleaseUrl();
+        }
+        if ( ed.getLastUpdated() == null ) {
+            this.lastUpdated = parentDatabase.getLastUpdated();
+        }
     }
 
     public static Collection<ExternalDatabaseValueObject> fromEntity( Collection<ExternalDatabase> eds ) {

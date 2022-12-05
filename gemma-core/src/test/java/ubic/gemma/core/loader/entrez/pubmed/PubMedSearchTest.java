@@ -22,6 +22,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import ubic.gemma.core.util.test.category.PubMedTest;
 import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.common.description.BibliographicReference;
 
@@ -36,6 +37,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author pavlidis
  */
+@Category(PubMedTest.class)
 public class PubMedSearchTest {
 
     private static final Log log = LogFactory.getLog( PubMedSearchTest.class.getName() );
@@ -114,7 +116,7 @@ public class PubMedSearchTest {
     }
 
     @Test
-    public void testSearchAndRetrievIdsByHTTP() throws Exception {
+    public void testSearchAndRetrieveIdsByHTTP() throws Exception {
         try {
             PubMedSearch pms = new PubMedSearch();
             Collection<String> searchTerms = new HashSet<>();

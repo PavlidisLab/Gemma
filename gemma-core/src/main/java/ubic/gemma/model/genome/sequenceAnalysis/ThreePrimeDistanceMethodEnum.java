@@ -20,6 +20,7 @@
 package ubic.gemma.model.genome.sequenceAnalysis;
 
 import org.hibernate.HibernateException;
+import org.hibernate.engine.spi.SessionImplementor;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -37,7 +38,7 @@ public final class ThreePrimeDistanceMethodEnum extends ThreePrimeDistanceMethod
     /**
      * Default constructor. Hibernate needs the default constructor to retrieve an instance of the enum from a JDBC
      * resultset. The instance will be converted to the correct enum instance in
-     * {@link #nullSafeGet(java.sql.ResultSet, String[], Object)}.
+     * {@link #nullSafeGet(java.sql.ResultSet, String[], SessionImplementor, Object)}.
      */
     public ThreePrimeDistanceMethodEnum() {
         super();
@@ -102,20 +103,20 @@ public final class ThreePrimeDistanceMethodEnum extends ThreePrimeDistanceMethod
     }
 
     /**
-     * @see org.hibernate.usertype.UserType#nullSafeGet(java.sql.ResultSet, String[], Object)
+     * @see org.hibernate.usertype.UserType#nullSafeGet(java.sql.ResultSet, String[], SessionImplementor, Object)
      */
     @Override
-    public Object nullSafeGet( ResultSet resultSet, String[] values, Object owner )
+    public Object nullSafeGet( ResultSet resultSet, String[] values, SessionImplementor sessionImplementor, Object owner )
             throws HibernateException, SQLException {
         final String value = ( String ) resultSet.getObject( values[0] );
         return resultSet.wasNull() ? null : ThreePrimeDistanceMethod.fromString( value );
     }
 
     /**
-     * @see org.hibernate.usertype.UserType#nullSafeSet(java.sql.PreparedStatement, Object, int)
+     * @see org.hibernate.usertype.UserType#nullSafeSet(java.sql.PreparedStatement, Object, int, SessionImplementor)
      */
     @Override
-    public void nullSafeSet( PreparedStatement statement, Object value, int index )
+    public void nullSafeSet( PreparedStatement statement, Object value, int index, SessionImplementor sessionImplementor )
             throws HibernateException, SQLException {
         if ( value == null ) {
             statement.setNull( index, Types.VARCHAR );

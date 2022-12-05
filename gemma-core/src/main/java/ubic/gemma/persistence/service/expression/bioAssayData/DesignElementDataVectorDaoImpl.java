@@ -82,7 +82,7 @@ public abstract class DesignElementDataVectorDaoImpl<T extends DesignElementData
         Map<BioAssayDimension, Collection<DesignElementDataVector>> dims = new HashMap<>();
         Collection<CompositeSequence> cs = new HashSet<>();
         for ( DesignElementDataVector vector : designElementDataVectors ) {
-            session.buildLockRequest( LockOptions.NONE ).lock( vector );
+            reattach( vector );
             Hibernate.initialize( vector );
             Hibernate.initialize( vector.getQuantitationType() );
 
@@ -153,7 +153,7 @@ public abstract class DesignElementDataVectorDaoImpl<T extends DesignElementData
             BioSequence seq = de.getBiologicalCharacteristic();
             if ( seq == null )
                 continue;
-            session.buildLockRequest( LockOptions.NONE ).lock( seq );
+            reattach( seq );
             Hibernate.initialize( seq );
 
             if ( ++count % 10000 == 0 ) {
@@ -179,10 +179,10 @@ public abstract class DesignElementDataVectorDaoImpl<T extends DesignElementData
 
     @Override
     public void thaw( T designElementDataVector ) {
-        Session session = this.getHibernateTemplate().getSessionFactory().getCurrentSession();
+        Session session = this.getSessionFactory().getCurrentSession();
         BioSequence seq = designElementDataVector.getDesignElement().getBiologicalCharacteristic();
         if ( seq != null ) {
-            session.buildLockRequest( LockOptions.NONE ).lock( seq );
+            reattach( seq );
             Hibernate.initialize( seq );
         }
 
@@ -201,18 +201,6 @@ public abstract class DesignElementDataVectorDaoImpl<T extends DesignElementData
     @Override
     public Collection<T> find( QuantitationType quantitationType ) {
         return new HashSet<>( this.findByProperty( "quantitationType", quantitationType ) );
-    }
-
-    @Override
-    @Transactional
-    public Collection<T> create( final Collection<T> entities ) {
-        return super.create( entities );
-    }
-
-    @Override
-    @Transactional
-    public void update( final Collection<T> entities ) {
-        super.update( entities );
     }
 
     /**
@@ -296,20 +284,22 @@ public abstract class DesignElementDataVectorDaoImpl<T extends DesignElementData
         queryObject.setReadOnly( true );
         ScrollableResults results = queryObject.scroll( ScrollMode.FORWARD_ONLY );
 
-        while ( results.next() ) {
-            @SuppressWarnings("unchecked")
-            T dedv = ( T ) results.get( 0 );
-            Long cs = ( Long ) results.get( 1 );
-            Collection<Long> associatedGenes = cs2gene.get( cs );
-            if ( !dedv2genes.containsKey( dedv ) ) {
-                dedv2genes.put( dedv, associatedGenes );
-            } else {
-                Collection<Long> mappedGenes = dedv2genes.get( dedv );
-                mappedGenes.addAll( associatedGenes );
+        try {
+            while ( results.next() ) {
+                @SuppressWarnings("unchecked")
+                T dedv = ( T ) results.get( 0 );
+                Long cs = ( Long ) results.get( 1 );
+                Collection<Long> associatedGenes = cs2gene.get( cs );
+                if ( !dedv2genes.containsKey( dedv ) ) {
+                    dedv2genes.put( dedv, associatedGenes );
+                } else {
+                    Collection<Long> mappedGenes = dedv2genes.get( dedv );
+                    mappedGenes.addAll( associatedGenes );
+                }
             }
+        } finally {
+            results.close();
         }
-
-        results.close();
     }
 
 }

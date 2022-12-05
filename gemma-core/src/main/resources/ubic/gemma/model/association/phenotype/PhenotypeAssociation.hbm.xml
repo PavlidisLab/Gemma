@@ -14,13 +14,13 @@
         <discriminator column="class"/>
         <many-to-one name="auditTrail" class="ubic.gemma.model.common.auditAndSecurity.AuditTrailImpl" cascade="all"
                      lazy="proxy" fetch="select">
-            <column name="AUDIT_TRAIL_FK" not-null="false" sql-type="BIGINT" unique="true"/>
+            <column name="AUDIT_TRAIL_FK" not-null="true" sql-type="BIGINT" unique="true"/>
         </many-to-one>
         <property name="name" type="java.lang.String">
             <column name="NAME" not-null="false" unique="false"
                     sql-type="VARCHAR(255)"/>
         </property>
-        <property name="description" type="org.springframework.orm.hibernate3.support.ClobStringType">
+        <property name="description" type="org.hibernate.type.MaterializedClobType">
             <column name="DESCRIPTION" not-null="false" unique="false"
                     sql-type="text"/>
         </property>
@@ -51,7 +51,7 @@
             <column name="STRENGTH" not-null="false" unique="false" sql-type="DOUBLE"/>
         </property>
         <property name="lastUpdated" type="java.util.Date">
-            <column name="LAST_UPDATED" not-null="true" unique="false" sql-type="DATETIME"/>
+            <column name="LAST_UPDATED" not-null="true" unique="false" sql-type="DATETIME(3)"/>
         </property>
         <many-to-one name="gene" class="ubic.gemma.model.genome.Gene" cascade="none" lazy="false" fetch="join">
             <column name="GENE_FK" not-null="false" sql-type="BIGINT"/>

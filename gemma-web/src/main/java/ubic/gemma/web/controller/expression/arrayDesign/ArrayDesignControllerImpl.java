@@ -324,11 +324,11 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
         // Filter...
         Collection<ArrayDesignValueObject> toHide = new HashSet<>();
         for ( ArrayDesignValueObject a : result ) {
-            if ( !showMergees && a.getIsMergee() && a.getExpressionExperimentCount() == 0 ) {
+            if ( !showMergees && a.getIsMergee() && a.getNumberOfExpressionExperiments() == 0 ) {
                 toHide.add( a );
             }
-            if ( !showOrphans && ( a.getExpressionExperimentCount() == null
-                    || a.getExpressionExperimentCount() == 0 ) ) {
+            if ( !showOrphans && ( a.getNumberOfExpressionExperiments() == null
+                    || a.getNumberOfExpressionExperiments() == 0 ) ) {
                 toHide.add( a );
             }
         }
@@ -423,7 +423,7 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
 
         long numExpressionExperiments = arrayDesignService.numExperiments( arrayDesign );
 
-        Collection<DatabaseEntryValueObject> externalReferences = new HashSet<>();
+        Set<DatabaseEntryValueObject> externalReferences = new HashSet<>();
         for ( DatabaseEntry en : arrayDesign.getExternalReferences() ) {
             externalReferences.add( new DatabaseEntryValueObject( en ) );
         }

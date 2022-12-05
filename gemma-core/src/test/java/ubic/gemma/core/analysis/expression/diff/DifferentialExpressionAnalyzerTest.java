@@ -57,7 +57,7 @@ public class DifferentialExpressionAnalyzerTest extends BaseAnalyzerConfiguratio
     }
 
     private void configureMocks() {
-        this.configureMockAnalysisServiceHelper( 2 );
+        this.configureMockAnalysisServiceHelper();
     }
 
 }

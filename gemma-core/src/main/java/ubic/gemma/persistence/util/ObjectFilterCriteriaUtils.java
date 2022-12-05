@@ -3,7 +3,9 @@ package ubic.gemma.persistence.util;
 import org.hibernate.Criteria;
 import org.hibernate.criterion.*;
 
+import javax.annotation.Nullable;
 import java.util.Collection;
+import java.util.Objects;
 
 /**
  * Utilities for integrating {@link ObjectFilter} with Hibernate {@link Criteria} API.
@@ -17,7 +19,7 @@ public class ObjectFilterCriteriaUtils {
      * @param objectFilters the filters to use to create the clause
      * @return a restriction clause that can be appended to a {@link Criteria} using {@link Criteria#add(Criterion)}
      */
-    public static Criterion formRestrictionClause( Filters objectFilters ) {
+    public static Criterion formRestrictionClause( @Nullable Filters objectFilters ) {
         Conjunction c = Restrictions.conjunction();
         if ( objectFilters == null || objectFilters.isEmpty() )
             return c;
@@ -64,7 +66,8 @@ public class ObjectFilterCriteriaUtils {
             case greaterOrEq:
                 return Restrictions.ge( propertyName, filter.getRequiredValue() );
             case in:
-                return Restrictions.in( propertyName, ( Collection<?> ) filter.getRequiredValue() );
+                return Restrictions.in( propertyName, ( Collection<?> ) Objects.requireNonNull( filter.getRequiredValue(),
+                        "Required value cannot be null for a collection." ) );
             default:
                 throw new IllegalStateException( "Unexpected operator for filter: " + filter.getOperator() );
         }

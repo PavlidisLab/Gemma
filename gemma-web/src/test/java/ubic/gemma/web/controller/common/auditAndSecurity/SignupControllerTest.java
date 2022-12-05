@@ -97,7 +97,7 @@ public class SignupControllerTest extends BaseSpringWebTest {
                             req.addParameter( "email", email );
 
                             req.addParameter( "emailConfirm", email );
-                            suc.signup( req, new MockHttpServletResponse() );
+                            suc.signup( password, password, uname, email, email, req, new MockHttpServletResponse() );
 
                             /*
                              * Extra torture.

@@ -26,9 +26,9 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 
-import static org.easymock.EasyMock.*;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.*;
 
 /**
  * @author paul
@@ -150,23 +150,20 @@ public class GeoBrowserServiceParseTest {
                 + "  <Item Name=\"Projects\" Type=\"List\"></Item> </DocSum>  </eSummaryResult>";
         GeoBrowserServiceImpl serv = new GeoBrowserServiceImpl();
         serv.afterPropertiesSet();
-        ArrayDesignService ads = createMock( ArrayDesignService.class );
-        ExpressionExperimentService ees = createMock( ExpressionExperimentService.class );
+        ArrayDesignService ads = mock( ArrayDesignService.class );
+        ExpressionExperimentService ees = mock( ExpressionExperimentService.class );
         serv.arrayDesignService = ads;
         serv.expressionExperimentService = ees;
-        expect( ads.findByShortName( "GPL1708" ) ).andReturn( null );
-        expect( ees.findByShortName( "GSE4595" ) ).andReturn( null );
-        // expect( ads.thawLite( null ) ).andReturn( null );
-        replay( ads );
         serv.formatDetails( response );
-
+        verify( ads ).findByShortName( "GPL1708" );
+        verify( ees ).findByShortName( "GSE4595" );
     }
 
     @Test
     public void testParse2() throws Exception {
-        try (InputStream is = this.getClass()
+        try ( InputStream is = this.getClass()
                 .getResourceAsStream( "/data/loader/expression/geo/geo.esummary.test1.xml" );
-                BufferedReader r = new BufferedReader( new InputStreamReader( is ) )) {
+                BufferedReader r = new BufferedReader( new InputStreamReader( is ) ) ) {
 
             String l;
             StringBuilder buf = new StringBuilder();
@@ -179,22 +176,21 @@ public class GeoBrowserServiceParseTest {
             GeoBrowserServiceImpl serv = new GeoBrowserServiceImpl();
             serv.afterPropertiesSet();
 
-            ArrayDesignService ads = createMock( ArrayDesignService.class );
-            ExpressionExperimentService ees = createMock( ExpressionExperimentService.class );
+            ArrayDesignService ads = mock( ArrayDesignService.class );
+            ExpressionExperimentService ees = mock( ExpressionExperimentService.class );
             serv.arrayDesignService = ads;
             serv.expressionExperimentService = ees;
-            expect( ads.findByShortName( "GPL570" ) ).andReturn( null );
-            expect( ees.findByShortName( "GSE27128" ) ).andReturn( null );
-            replay( ads );
             serv.formatDetails( response );
+            verify( ads ).findByShortName( "GPL570" );
+            verify( ees ).findByShortName( "GSE27128" );
         }
     }
 
     @Test
     public void testParse3() throws Exception {
-        try (InputStream is = this.getClass()
+        try ( InputStream is = this.getClass()
                 .getResourceAsStream( "/data/loader/expression/geo/geo.esummary.test2.xml" );
-                BufferedReader r = new BufferedReader( new InputStreamReader( is ) )) {
+                BufferedReader r = new BufferedReader( new InputStreamReader( is ) ) ) {
 
             String l;
             StringBuilder buf = new StringBuilder();
@@ -206,23 +202,22 @@ public class GeoBrowserServiceParseTest {
             GeoBrowserServiceImpl serv = new GeoBrowserServiceImpl();
             serv.afterPropertiesSet();
 
-            ArrayDesignService ads = createMock( ArrayDesignService.class );
-            ExpressionExperimentService ees = createMock( ExpressionExperimentService.class );
+            ArrayDesignService ads = mock( ArrayDesignService.class );
+            ExpressionExperimentService ees = mock( ExpressionExperimentService.class );
             serv.arrayDesignService = ads;
             serv.expressionExperimentService = ees;
-            expect( ads.findByShortName( "GPL3829" ) ).andReturn( null );
-            expect( ees.findByShortName( "GSE21230" ) ).andReturn( null );
-            replay( ads );
             serv.formatDetails( response );
+            verify( ads ).findByShortName( "GPL3829" );
+            verify( ees ).findByShortName( "GSE21230" );
         }
 
     }
 
     @Test
     public void testMINiMLParse() throws Exception {
-        try (InputStream is = this.getClass()
+        try ( InputStream is = this.getClass()
                 .getResourceAsStream( "/data/loader/expression/geo/GSE180363.miniml.xml" );
-                BufferedReader r = new BufferedReader( new InputStreamReader( is ) )) {
+                BufferedReader r = new BufferedReader( new InputStreamReader( is ) ) ) {
 
             String l;
             StringBuilder buf = new StringBuilder();
@@ -241,9 +236,9 @@ public class GeoBrowserServiceParseTest {
     @Test
     public void testSampleMINiMLParse() throws Exception {
 
-        try (InputStream is = this.getClass()
+        try ( InputStream is = this.getClass()
                 .getResourceAsStream( "/data/loader/expression/geo/GSE171682.xml" );
-                BufferedReader r = new BufferedReader( new InputStreamReader( is ) )) {
+                BufferedReader r = new BufferedReader( new InputStreamReader( is ) ) ) {
 
             String l;
             StringBuilder buf = new StringBuilder();
@@ -257,7 +252,7 @@ public class GeoBrowserServiceParseTest {
 
             assertTrue( rec.getSampleDetails().contains( "colorectal cancer" ) );
             assertTrue( rec.getSampleDetails().contains( "Large intestine" ) );
-            assertEquals("RNA-Seq", rec.getLibraryStrategy());
+            assertEquals( "RNA-Seq", rec.getLibraryStrategy() );
         }
 
     }

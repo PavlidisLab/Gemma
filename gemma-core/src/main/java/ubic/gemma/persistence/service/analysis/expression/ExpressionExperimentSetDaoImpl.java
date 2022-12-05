@@ -82,8 +82,7 @@ public class ExpressionExperimentSetDaoImpl
 
     @Override
     public void thaw( final ExpressionExperimentSet expressionExperimentSet ) {
-        this.getSessionFactory().getCurrentSession().buildLockRequest( LockOptions.NONE )
-                .lock( expressionExperimentSet );
+        reattach( expressionExperimentSet );
         Hibernate.initialize( expressionExperimentSet );
         Hibernate.initialize( expressionExperimentSet.getTaxon() );
         Hibernate.initialize( expressionExperimentSet.getExperiments() );
@@ -137,9 +136,9 @@ public class ExpressionExperimentSetDaoImpl
 
     private Collection<Long> getExperimentIdsInSet( Long setId ) {
         //noinspection unchecked
-        return this.getHibernateTemplate().findByNamedParam(
-                "select i.id from ExpressionExperimentSet eset join eset.experiments i where eset.id = :id", "id",
-                setId );
+        return getSessionFactory().getCurrentSession().createQuery( "select i.id from ExpressionExperimentSet eset join eset.experiments i where eset.id = :id" )
+                .setParameter( "id", setId )
+                .list();
     }
 
     private void populateAnalysisInformation( Collection<ExpressionExperimentSetValueObject> vo ) {

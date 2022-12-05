@@ -62,8 +62,6 @@ public class FileUploadController extends AbstractController {
     /**
      * Ajax. DWR can handle this.
      *
-     * @throws IOException
-     * @throws FileNotFoundException
      */
     public String upload( InputStream is ) throws IOException {
         File copiedFile = FileUploadUtil.copyUploadedInputStream( is );

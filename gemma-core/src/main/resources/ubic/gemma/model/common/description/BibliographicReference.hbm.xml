@@ -14,13 +14,13 @@
         <property name="name" type="java.lang.String">
             <column name="NAME" not-null="false" unique="false" sql-type="VARCHAR(255)"/>
         </property>
-        <property name="description" type="org.springframework.orm.hibernate3.support.ClobStringType">
+        <property name="description" type="org.hibernate.type.MaterializedClobType">
             <column name="DESCRIPTION" not-null="false" unique="false" sql-type="text"/>
         </property>
-        <property name="authorList" type="org.springframework.orm.hibernate3.support.ClobStringType">
+        <property name="authorList" type="org.hibernate.type.MaterializedClobType">
             <column name="AUTHOR_LIST" not-null="false" unique="false" sql-type="text"/>
         </property>
-        <property name="title" type="org.springframework.orm.hibernate3.support.ClobStringType">
+        <property name="title" type="org.hibernate.type.MaterializedClobType">
             <column name="TITLE" not-null="false" unique="false" sql-type="text"/>
         </property>
         <property name="publisher" type="java.lang.String">
@@ -44,16 +44,16 @@
         <property name="fullTextUri" type="java.lang.String">
             <column name="FULL_TEXT_URI" not-null="false" unique="false" sql-type="VARCHAR(255)"/>
         </property>
-        <property name="abstractText" type="org.springframework.orm.hibernate3.support.ClobStringType">
+        <property name="abstractText" type="org.hibernate.type.MaterializedClobType">
             <column name="ABSTRACT_TEXT" not-null="false" unique="false" sql-type="text"/>
         </property>
-        <property name="citation" type="org.springframework.orm.hibernate3.support.ClobStringType">
+        <property name="citation" type="org.hibernate.type.MaterializedClobType">
             <column name="CITATION" not-null="false" unique="false" sql-type="text"/>
         </property>
         <property name="publicationDate" type="java.util.Date">
-            <column name="PUBLICATION_DATE" not-null="false" unique="false" sql-type="DATETIME"/>
+            <column name="PUBLICATION_DATE" not-null="false" unique="false" sql-type="DATE"/>
         </property>
-        <property name="annotatedAbstract" type="org.springframework.orm.hibernate3.support.ClobStringType">
+        <property name="annotatedAbstract" type="org.hibernate.type.MaterializedClobType">
             <column name="ANNOTATED_ABSTRACT" not-null="false" unique="false" sql-type="text"/>
         </property>
         <property name="retracted" type="java.lang.Boolean">

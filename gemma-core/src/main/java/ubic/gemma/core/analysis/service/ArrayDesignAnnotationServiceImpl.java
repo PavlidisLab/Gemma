@@ -653,13 +653,7 @@ public class ArrayDesignAnnotationServiceImpl implements ArrayDesignAnnotationSe
     }
 
     /**
-     * 
-     * @param  arrayDesign
-     * @param  fileBaseName
-     * @param  outputType
-     * @param  genesWithSpecificity
-     * @param  overWrite
-     * @throws IOException
+     *
      */
     private void processCompositeSequences( ArrayDesign arrayDesign, String fileBaseName, OutputType outputType,
             Map<CompositeSequence, Collection<BioSequence2GeneProduct>> genesWithSpecificity, Boolean overWrite ) throws IOException {

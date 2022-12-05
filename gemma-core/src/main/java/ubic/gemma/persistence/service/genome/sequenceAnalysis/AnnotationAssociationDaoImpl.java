@@ -16,12 +16,11 @@ package ubic.gemma.persistence.service.genome.sequenceAnalysis;
 
 import org.apache.commons.lang3.StringUtils;
 import org.hibernate.Criteria;
+import org.hibernate.Hibernate;
 import org.hibernate.SessionFactory;
 import org.hibernate.criterion.Restrictions;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.orm.hibernate3.HibernateTemplate;
 import org.springframework.stereotype.Repository;
-import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.gene.GeneProduct;
@@ -91,36 +90,23 @@ public class AnnotationAssociationDaoImpl extends AbstractDao<AnnotationAssociat
             return;
         if ( annotationAssociation.getId() == null )
             return;
-        HibernateTemplate template = this.getHibernateTemplate();
-        template.executeWithNativeSession( new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
-            @Override
-            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                AnnotationAssociationDaoImpl.this.thawAssociation( session, annotationAssociation );
-                return null;
-            }
-        } );
+        Hibernate.initialize( annotationAssociation );
+        Hibernate.initialize( annotationAssociation.getBioSequence() );
+        Hibernate.initialize( annotationAssociation.getGeneProduct() );
+        Hibernate.initialize( annotationAssociation.getGeneProduct().getGene() );
+        Hibernate.initialize( annotationAssociation.getGeneProduct().getGene().getPhysicalLocation() );
+        Hibernate.initialize( annotationAssociation.getGeneProduct().getGene().getProducts() );
+        Hibernate.initialize( annotationAssociation.getBioSequence() );
+        Hibernate.initialize( annotationAssociation.getBioSequence().getSequenceDatabaseEntry() );
     }
 
     @Override
     public void thaw( final Collection<AnnotationAssociation> anCollection ) {
         if ( anCollection == null )
             return;
-        HibernateTemplate template = this.getHibernateTemplate();
-        template.executeWithNativeSession( new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
-            @Override
-            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                for ( Object object : anCollection ) {
-                    AnnotationAssociation blatAssociation = ( AnnotationAssociation ) object;
-                    if ( blatAssociation.getId() == null )
-                        continue;
-                    AnnotationAssociationDaoImpl.this.thawAssociation( session, blatAssociation );
-                }
-
-                return null;
-            }
-
-        } );
-
+        for ( AnnotationAssociation object : anCollection ) {
+            this.thaw( object );
+        }
     }
 
     @Override
@@ -133,29 +119,4 @@ public class AnnotationAssociationDaoImpl extends AbstractDao<AnnotationAssociat
                 .createQuery( "select b from AnnotationAssociation b join b.geneProduct gp where gp in (:gps)" )
                 .setParameterList( "gps", gps ).list();
     }
-
-    @Override
-    @Transactional
-    public Collection<AnnotationAssociation> create( final Collection<AnnotationAssociation> entities ) {
-        return super.create( entities );
-    }
-
-    @Override
-    @Transactional
-    public void update( final Collection<AnnotationAssociation> entities ) {
-        super.update( entities );
-    }
-
-    private void thawAssociation( org.hibernate.Session session, AnnotationAssociation association ) {
-        session.update( association );
-        session.update( association.getBioSequence() );
-        session.update( association.getGeneProduct() );
-        session.update( association.getGeneProduct().getGene() );
-        session.update( association.getGeneProduct().getGene().getPhysicalLocation() );
-        association.getGeneProduct().getGene().getProducts().size();
-        session.update( association.getBioSequence() );
-        //noinspection ResultOfMethodCallIgnored called so that the collection is initialised.
-        association.getBioSequence().getSequenceDatabaseEntry();
-    }
-
 }

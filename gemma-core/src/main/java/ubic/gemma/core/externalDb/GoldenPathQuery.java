@@ -39,15 +39,13 @@ import java.util.Collection;
 public class GoldenPathQuery extends GoldenPath {
 
     private static final int TEST_PORT = 3306;
-    private EstQuery estQuery;
-    private MrnaQuery mrnaQuery;
-
-    GoldenPathQuery( String databaseName, String host, String user, String password ) {
-        super( GoldenPathQuery.TEST_PORT, databaseName, host, user, password );
-    }
+    private final EstQuery estQuery;
+    private final MrnaQuery mrnaQuery;
 
     public GoldenPathQuery( Taxon taxon ) {
         super( taxon );
+        estQuery = new EstQuery( this.getJdbcTemplate().getDataSource() );
+        mrnaQuery = new MrnaQuery( this.getJdbcTemplate().getDataSource() );
     }
 
     /**
@@ -64,13 +62,6 @@ public class GoldenPathQuery extends GoldenPath {
         }
 
         return mrnaQuery.execute( accession );
-    }
-
-    @Override
-    protected void init() {
-        super.init();
-        estQuery = new EstQuery( this.jdbcTemplate.getDataSource() );
-        mrnaQuery = new MrnaQuery( this.jdbcTemplate.getDataSource() );
     }
 
     private BlatResult convertResult( ResultSet rs ) throws SQLException {

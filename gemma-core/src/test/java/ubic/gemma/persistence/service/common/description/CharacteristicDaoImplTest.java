@@ -4,6 +4,9 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.context.TestExecutionListeners;
+import org.springframework.test.context.transaction.TransactionalTestExecutionListener;
+import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.core.util.test.BaseSpringContextTest;
 import ubic.gemma.model.common.description.Characteristic;
 
@@ -13,6 +16,7 @@ import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+@TestExecutionListeners(TransactionalTestExecutionListener.class)
 public class CharacteristicDaoImplTest extends BaseSpringContextTest {
 
     @Autowired
@@ -42,6 +46,7 @@ public class CharacteristicDaoImplTest extends BaseSpringContextTest {
     }
 
     @Test
+    @Transactional
     public void testCountByValueLike() {
         Map<String, CharacteristicDao.CharacteristicByValueUriOrValueCount> results = characteristicDao.countCharacteristicValueLikeByNormalizedValue( "male%" );
         assertThat( results ).containsKeys( "http://test/T0001".toLowerCase(), "http://test/T0002".toLowerCase(), "male reproductive system (unknown term)" );
@@ -50,6 +55,7 @@ public class CharacteristicDaoImplTest extends BaseSpringContextTest {
     }
 
     @Test
+    @Transactional
     public void testCountByValueUriIn() {
         Collection<String> uris = Arrays.asList( "http://test/T0006", "http://test/T0002" );
         Map<String, CharacteristicDao.CharacteristicByValueUriOrValueCount> results = characteristicDao.countCharacteristicValueUriInByNormalizedValue( uris );

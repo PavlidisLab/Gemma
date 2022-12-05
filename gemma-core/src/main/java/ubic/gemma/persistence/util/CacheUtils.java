@@ -1,7 +1,11 @@
 package ubic.gemma.persistence.util;
 
-import net.sf.ehcache.Cache;
-import net.sf.ehcache.CacheManager;
+import net.sf.ehcache.Ehcache;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
+
+import java.util.Objects;
+import java.util.function.Predicate;
 
 /**
  * Created by tesarst on 04/04/17.
@@ -10,25 +14,27 @@ import net.sf.ehcache.CacheManager;
 public class CacheUtils {
 
     /**
-     * Either creates new Cache instance of given name, or retrieves it from the CacheManager, if it already exists.
-     *
-     * @param cacheManager      cache manager
-     * @param cacheName         cache name
-     * @param eternal           eternal
-     * @param maxElements       max elements
-     * @param overFlowToDisk    overflow to disk
-     * @param timeToIdle        time to idle
-     * @param timeToLive        time to live
-     * @return newly created Cache instance, or existing one with given name.
+     * Obtain a cache by its name, raising an exception if unavailable.
+     * @throws RuntimeException if the cache identified by name is missing
      */
-    public static Cache createOrLoadCache( CacheManager cacheManager, String cacheName,
-            int maxElements, boolean overFlowToDisk, boolean eternal, int timeToIdle, int timeToLive ) {
-        if ( !cacheManager.cacheExists( cacheName ) ) {
-            Cache cache = new Cache( cacheName, maxElements, overFlowToDisk, eternal, timeToLive, timeToIdle );
-            cacheManager.addCache( cache );
-            return cache;
+    public static Cache getCache( CacheManager cacheManager, String cacheName ) throws RuntimeException {
+        return Objects.requireNonNull( cacheManager.getCache( cacheName ), String.format( "Cache with name %s does not exist.", cacheName ) );
+    }
+
+    /**
+     * Evict entries from the cache where the key is matching a given predicate.
+     * <p>
+     * If keys cannot be enumerated by the cache provider, all entries are cleared.
+     */
+    public static void evictIf( Cache cache, Predicate<Object> predicate ) {
+        if ( cache.getNativeCache() instanceof Ehcache ) {
+            for ( Object key : ( ( Ehcache ) cache.getNativeCache() ).getKeys() ) {
+                if ( predicate.test( key ) ) {
+                    cache.evict( key );
+                }
+            }
         } else {
-            return cacheManager.getCache( cacheName );
+            cache.clear();
         }
     }
 }

@@ -21,7 +21,9 @@ package ubic.gemma.core.loader.util;
 import junit.framework.TestCase;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.junit.experimental.categories.Category;
 import ubic.gemma.core.loader.util.fetcher.HttpFetcher;
+import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.common.description.LocalFile;
 
 import java.io.File;
@@ -31,6 +33,7 @@ import java.util.Collection;
 /**
  * @author pavlidis
  */
+@Category(SlowTest.class)
 public class HttpFetcherTest extends TestCase {
 
     private static final Log log = LogFactory.getLog( HttpFetcherTest.class.getName() );

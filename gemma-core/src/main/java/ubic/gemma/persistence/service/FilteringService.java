@@ -5,6 +5,7 @@ import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.ObjectFilter;
 import ubic.gemma.persistence.util.Sort;
 
+import javax.annotation.Nullable;
 import java.util.Collection;
 
 /**
@@ -48,5 +49,5 @@ public interface FilteringService<O extends Identifiable> extends BaseService<O>
      * @return a {@link Sort} object that can be used, for example, on {@link FilteringVoEnabledDao#loadValueObjectsPreFilter(Filters, Sort, int, int)}
      * @throws IllegalArgumentException if no such field exists in {@link O}
      */
-    Sort getSort( String property, Sort.Direction direction ) throws IllegalArgumentException;
+    Sort getSort( String property, @Nullable Sort.Direction direction ) throws IllegalArgumentException;
 }

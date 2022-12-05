@@ -22,32 +22,31 @@ import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.core.genome.gene.service.GeneServiceImpl;
-import ubic.gemma.core.util.test.BaseSpringContextTest;
 import ubic.gemma.model.genome.Chromosome;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.PhysicalLocation;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.genome.GeneDao;
-import ubic.gemma.persistence.service.genome.GeneDaoImpl;
 
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
-import static org.easymock.EasyMock.*;
+import static org.mockito.Mockito.*;
 
 /**
  * @author daq2101
  */
 @SuppressWarnings({ "MismatchedQueryAndUpdateOfCollection", "FieldCanBeLocal" }) // In a test it makes sense
-public class GeneServiceImplTest extends BaseSpringContextTest {
+public class GeneServiceImplTest {
 
     private static final String STRAND = "+";
     private final Collection<Gene> allThree = new HashSet<>();
     private final Collection<Gene> justRab = new HashSet<>();
     private final Collection<Gene> justRabble = new HashSet<>();
-    private GeneServiceImpl svc;
+    private GeneService svc;
     private Gene g = null;
     private Gene g2 = null;
     private Gene g3 = null;
@@ -56,7 +55,7 @@ public class GeneServiceImplTest extends BaseSpringContextTest {
     @Before
     public void setUp() throws Exception {
 
-        geneDaoMock = createMock( GeneDaoImpl.class );
+        geneDaoMock = mock( GeneDao.class );
         svc = new GeneServiceImpl( geneDaoMock );
 
         Taxon t = Taxon.Factory.newInstance();
@@ -167,6 +166,7 @@ public class GeneServiceImplTest extends BaseSpringContextTest {
 
     @After
     public void tearDown() {
+        reset( geneDaoMock );
         justRab.clear();
         justRabble.clear();
         allThree.clear();
@@ -175,62 +175,44 @@ public class GeneServiceImplTest extends BaseSpringContextTest {
     @SuppressWarnings("Duplicates") // Not effective to extract
     @Test
     public void testFindAll() {
-        reset( geneDaoMock );
-        geneDaoMock.loadAll();
-        expectLastCall().andReturn( allThree );
-        replay( geneDaoMock );
+        when( geneDaoMock.loadAll() ).thenReturn( allThree );
         svc.loadAll();
-        verify( geneDaoMock );
+        verify( geneDaoMock ).loadAll();
     }
 
     @Test
     public void testFindByAccessionNoSource() {
-        reset( geneDaoMock );
-        geneDaoMock.findByAccession( "12345", null );
-        expectLastCall().andReturn( g3 );
-        replay( geneDaoMock );
+        when( geneDaoMock.findByAccession( "12345", null ) ).thenReturn( g3 );
         svc.findByAccession( "12345", null );
-        verify( geneDaoMock );
+        verify( geneDaoMock ).findByAccession( "12345", null );
     }
 
     @Test
     public void testFindByNcbiId() {
-        reset( geneDaoMock );
-        geneDaoMock.findByNcbiId( 12345 );
-        expectLastCall().andReturn( g3 );
-        replay( geneDaoMock );
+        when( geneDaoMock.findByNcbiId( 12345 ) ).thenReturn( g3 );
         svc.findByNCBIId( 12345 );
-        verify( geneDaoMock );
+        verify( geneDaoMock ).findByNcbiId( 12345 );
     }
 
     @Test
     public void testFindByOfficialName() {
-        reset( geneDaoMock );
-        geneDaoMock.findByOfficialName( "rabble" );
-        expectLastCall().andReturn( justRab );
-        replay( geneDaoMock );
+        when( geneDaoMock.findByOfficialName( "rabble" ) ).thenReturn( justRab );
         svc.findByOfficialName( "rabble" );
-        verify( geneDaoMock );
+        verify( geneDaoMock ).findByOfficialName( "rabble" );
     }
 
     @Test
     public void testFindByOfficialSymbol() {
-        reset( geneDaoMock );
-        geneDaoMock.findByOfficialSymbol( "rabble" );
-        expectLastCall().andReturn( justRab );
-        replay( geneDaoMock );
+        when( geneDaoMock.findByOfficialSymbol( "rabble" ) ).thenReturn( justRab );
         svc.findByOfficialSymbol( "rabble" );
-        verify( geneDaoMock );
+        verify( geneDaoMock ).findByOfficialSymbol( "rabble" );
     }
 
     @Test
     public void testFindByOfficialSymbolInexact() {
-        reset( geneDaoMock );
-        geneDaoMock.findByOfficialSymbolInexact( "ra%" );
-        expectLastCall().andReturn( allThree );
-        replay( geneDaoMock );
+        when( geneDaoMock.findByOfficialSymbolInexact( "ra%" ) ).thenReturn( allThree );
         svc.findByOfficialSymbolInexact( "ra%" );
-        verify( geneDaoMock );
+        verify( geneDaoMock ).findByOfficialSymbolInexact( "ra%" );
     }
 
 }

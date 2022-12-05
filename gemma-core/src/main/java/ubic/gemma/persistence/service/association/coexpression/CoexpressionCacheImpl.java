@@ -18,23 +18,18 @@
  */
 package ubic.gemma.persistence.service.association.coexpression;
 
-import net.sf.ehcache.Cache;
-import net.sf.ehcache.CacheManager;
-import net.sf.ehcache.Element;
 import org.apache.commons.lang3.time.StopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
 import org.springframework.stereotype.Component;
 import ubic.gemma.persistence.util.CacheUtils;
 import ubic.gemma.persistence.util.Settings;
 
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -46,11 +41,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 @Component
 public class CoexpressionCacheImpl implements InitializingBean, CoexpressionCache {
 
-    private static final boolean GENE_COEXPRESSION_CACHE_DEFAULT_ETERNAL = true;
-    private static final int GENE_COEXPRESSION_CACHE_DEFAULT_MAX_ELEMENTS = 500;
-    private static final boolean GENE_COEXPRESSION_CACHE_DEFAULT_OVERFLOW_TO_DISK = true;
-    private static final int GENE_COEXPRESSION_CACHE_DEFAULT_TIME_TO_IDLE = 6048;
-    private static final int GENE_COEXPRESSION_CACHE_DEFAULT_TIME_TO_LIVE = 9600;
     private static final String GENE_COEXPRESSION_CACHE_NAME = "Gene2GeneCoexpressionCache";
     private static final Logger log = LoggerFactory.getLogger( CoexpressionCacheImpl.class );
     private final AtomicBoolean enabled = new AtomicBoolean(
@@ -64,19 +54,7 @@ public class CoexpressionCacheImpl implements InitializingBean, CoexpressionCach
      */
     @Override
     public void afterPropertiesSet() {
-        int maxElements = Settings.getInt( "gemma.cache.gene2gene.maxelements",
-                CoexpressionCacheImpl.GENE_COEXPRESSION_CACHE_DEFAULT_MAX_ELEMENTS );
-        int timeToLive = Settings.getInt( "gemma.cache.gene2gene.timetolive",
-                CoexpressionCacheImpl.GENE_COEXPRESSION_CACHE_DEFAULT_TIME_TO_LIVE );
-        int timeToIdle = Settings.getInt( "gemma.cache.gene2gene.timetoidle",
-                CoexpressionCacheImpl.GENE_COEXPRESSION_CACHE_DEFAULT_TIME_TO_IDLE );
-        boolean overFlowToDisk = Settings.getBoolean( "gemma.cache.gene2gene.usedisk",
-                CoexpressionCacheImpl.GENE_COEXPRESSION_CACHE_DEFAULT_OVERFLOW_TO_DISK );
-        boolean eternal = Settings.getBoolean( "gemma.cache.gene2gene.eternal",
-                CoexpressionCacheImpl.GENE_COEXPRESSION_CACHE_DEFAULT_ETERNAL ) && timeToLive == 0;
-        this.cache = CacheUtils
-                .createOrLoadCache( cacheManager, CoexpressionCacheImpl.GENE_COEXPRESSION_CACHE_NAME,
-                        maxElements, overFlowToDisk, eternal, timeToIdle, timeToLive );
+        this.cache = CacheUtils.getCache( cacheManager, CoexpressionCacheImpl.GENE_COEXPRESSION_CACHE_NAME );
     }
 
     @Override
@@ -96,7 +74,7 @@ public class CoexpressionCacheImpl implements InitializingBean, CoexpressionCach
             forCache.add( new CoexpressionCacheValueObject( g2g ) );
         }
         synchronized ( cache ) {
-            this.cache.put( new Element( new GeneCached( geneId ), forCache ) );
+            this.cache.put( geneId, forCache );
         }
     }
 
@@ -105,9 +83,8 @@ public class CoexpressionCacheImpl implements InitializingBean, CoexpressionCach
         if ( !this.enabled.get() )
             return;
 
-        StopWatch timer = new StopWatch();
+        StopWatch timer = StopWatch.createStarted();
 
-        timer.start();
         for ( Long id : r.keySet() ) {
             List<CoexpressionValueObject> res = r.get( id );
             assert res != null;
@@ -117,7 +94,6 @@ public class CoexpressionCacheImpl implements InitializingBean, CoexpressionCach
         if ( timer.getTime() > 100 ) {
             CoexpressionCacheImpl.log.debug( "Caching " + r.size() + " results took: " + timer.getTime() + "ms" );
         }
-
     }
 
     @Override
@@ -125,25 +101,24 @@ public class CoexpressionCacheImpl implements InitializingBean, CoexpressionCach
         if ( !this.enabled.get() )
             return;
 
-        CacheManager manager = CacheManager.getInstance();
         synchronized ( cache ) {
-            manager.getCache( CoexpressionCacheImpl.GENE_COEXPRESSION_CACHE_NAME ).removeAll();
+            cache.clear();
         }
     }
 
     @SuppressWarnings("unchecked")
     @Override
-    public List<CoexpressionValueObject> get( Long g ) {
+    public List<CoexpressionValueObject> get( Long geneId ) {
         if ( !this.enabled.get() )
             return null;
 
         synchronized ( cache ) {
-            Element element = this.cache.get( new GeneCached( g ) );
+            Cache.ValueWrapper element = this.cache.get( geneId );
             if ( element == null )
                 return null;
             List<CoexpressionValueObject> result = new ArrayList<>();
 
-            for ( CoexpressionCacheValueObject co : ( List<CoexpressionCacheValueObject> ) element.getObjectValue() ) {
+            for ( CoexpressionCacheValueObject co : ( List<CoexpressionCacheValueObject> ) element.get() ) {
                 CoexpressionValueObject vo = co.toModifiable();
                 vo.setFromCache( true );
                 assert vo.getNumDatasetsSupporting() > 0;
@@ -165,8 +140,10 @@ public class CoexpressionCacheImpl implements InitializingBean, CoexpressionCach
         synchronized ( cache ) {
             int affected = 0;
             for ( Long long1 : genes ) {
-                if ( this.cache.remove( long1 ) )
+                if ( this.cache.get( long1 ) != null ) {
+                    this.cache.evict( long1 );
                     affected++;
+                }
             }
             return affected;
         }
@@ -177,53 +154,17 @@ public class CoexpressionCacheImpl implements InitializingBean, CoexpressionCach
         if ( !this.enabled.get() )
             return false;
         synchronized ( cache ) {
-            return this.cache.remove( new GeneCached( id ) );
+            if ( this.cache.get( id ) != null ) {
+                this.cache.evict( id );
+                return true;
+            } else {
+                return false;
+            }
         }
     }
 
     @Override
     public void shutdown() {
-        synchronized ( cache ) {
-            this.enabled.set( false );
-            this.cache.dispose();
-        }
+        this.enabled.set( false );
     }
-
-    /**
-     * For storing information about gene results that are cached.
-     */
-    private static class GeneCached implements Serializable {
-
-        private static final long serialVersionUID = 915877171652447101L;
-
-        final long geneId;
-
-        GeneCached( long geneId ) {
-            super();
-            this.geneId = geneId;
-        }
-
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = 1;
-            result = prime * result + ( int ) ( geneId ^ ( geneId >>> 32 ) );
-            return result;
-        }
-
-        @Override
-        public boolean equals( Object obj ) {
-            if ( this == obj )
-                return true;
-            if ( obj == null )
-                return false;
-            if ( this.getClass() != obj.getClass() )
-                return false;
-            GeneCached other = ( GeneCached ) obj;
-
-            return geneId == other.geneId;
-        }
-
-    }
-
 }

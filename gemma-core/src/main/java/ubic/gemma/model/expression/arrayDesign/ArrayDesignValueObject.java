@@ -22,15 +22,23 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.extern.apachecommons.CommonsLog;
+import org.hibernate.Hibernate;
 import ubic.gemma.model.annotations.GemmaWebOnly;
 import ubic.gemma.model.common.auditAndSecurity.curation.AbstractCuratableValueObject;
+import ubic.gemma.model.common.description.DatabaseEntryValueObject;
+import ubic.gemma.model.common.description.Versioned;
 import ubic.gemma.model.genome.TaxonValueObject;
 
 import javax.annotation.Nullable;
 import java.io.Serializable;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Value object for quickly displaying varied information about Array Designs.
@@ -40,7 +48,8 @@ import java.util.HashSet;
 @SuppressWarnings("unused") // Used in front end
 @Data
 @EqualsAndHashCode(of = { "shortName" }, callSuper = true)
-public class ArrayDesignValueObject extends AbstractCuratableValueObject<ArrayDesign> implements Serializable {
+@CommonsLog
+public class ArrayDesignValueObject extends AbstractCuratableValueObject<ArrayDesign> implements Serializable, Versioned {
     /**
      * The serial version UID of this class. Needed for serialization.
      */
@@ -123,11 +132,20 @@ public class ArrayDesignValueObject extends AbstractCuratableValueObject<ArrayDe
     private String numProbesToGenes;
     private String shortName;
     @JsonProperty("numberOfSwitchedExpressionExperiments")
-    private Long switchedExpressionExperimentCount = 0L; // how many "hidden" assocations there are.
+    private Long switchedExpressionExperimentCount = 0L; // how many "hidden" associations there are.
     @Nullable
     @JsonProperty("taxon")
     private TaxonValueObject taxonObject;
     private String technologyType;
+
+    // for the Versioned interface
+    private String releaseVersion;
+    private URL releaseUrl;
+
+    /**
+     * Main external reference.
+     */
+    private Set<DatabaseEntryValueObject> externalReferences;
 
     public ArrayDesignValueObject( Long id ) {
         super( id );
@@ -161,6 +179,22 @@ public class ArrayDesignValueObject extends AbstractCuratableValueObject<ArrayDe
         // no need to initialize them to know if the entities exist
         this.isMergee = ad.getMergedInto() != null;
         this.isAffymetrixAltCdf = ad.getAlternativeTo() != null;
+
+        if ( Hibernate.isInitialized( ad.getExternalReferences() ) ) {
+            this.externalReferences = ad.getExternalReferences().stream()
+                    .map( DatabaseEntryValueObject::new )
+                    .collect( Collectors.toSet() );
+            for ( DatabaseEntryValueObject de : externalReferences ) {
+                if ( de.getAccession().startsWith( "GPL" ) ) {
+                    try {
+                        releaseUrl = new URL( "https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=" + de.getAccession() );
+                        break;
+                    } catch ( MalformedURLException e ) {
+                        log.warn( String.format( "Failed to form release URL for %s: %s.", ad, e.getMessage() ) );
+                    }
+                }
+            }
+        }
     }
 
     /**
@@ -194,6 +228,10 @@ public class ArrayDesignValueObject extends AbstractCuratableValueObject<ArrayDe
         this.technologyType = arrayDesignValueObject.technologyType;
         this.isAffymetrixAltCdf = arrayDesignValueObject.isAffymetrixAltCdf;
         this.blackListed = arrayDesignValueObject.blackListed;
+        this.externalReferences = arrayDesignValueObject.externalReferences;
+        this.switchedExpressionExperimentCount = arrayDesignValueObject.switchedExpressionExperimentCount;
+        this.releaseVersion = arrayDesignValueObject.releaseVersion;
+        this.releaseUrl = arrayDesignValueObject.releaseUrl;
     }
 
     /**

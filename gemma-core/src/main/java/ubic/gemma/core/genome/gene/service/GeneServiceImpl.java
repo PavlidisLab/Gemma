@@ -53,6 +53,8 @@ import ubic.gemma.persistence.service.genome.GeneDao;
 import ubic.gemma.persistence.service.genome.sequenceAnalysis.AnnotationAssociationService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 
+import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.*;
 import java.util.Map.Entry;
 
@@ -62,6 +64,7 @@ import java.util.Map.Entry;
  * @see    GeneService
  */
 @Service
+@ParametersAreNonnullByDefault
 public class GeneServiceImpl extends AbstractFilteringVoEnabledService<Gene, GeneValueObject> implements GeneService {
 
     private final GeneDao geneDao;
@@ -99,7 +102,7 @@ public class GeneServiceImpl extends AbstractFilteringVoEnabledService<Gene, Gen
 
     @Override
     @Transactional(readOnly = true)
-    public Gene findByAccession( final String accession, final ExternalDatabase source ) {
+    public Gene findByAccession( final String accession, @Nullable final ExternalDatabase source ) {
         return this.geneDao.findByAccession( accession, source );
     }
 
@@ -446,6 +449,7 @@ public class GeneServiceImpl extends AbstractFilteringVoEnabledService<Gene, Gen
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Gene thaw( Gene gene ) {
         return this.geneDao.thaw( gene );
     }
@@ -481,6 +485,7 @@ public class GeneServiceImpl extends AbstractFilteringVoEnabledService<Gene, Gen
      * @return Collection of Gene entity objects
      */
     @Override
+    @Transactional(readOnly = true)
     public Collection<GeneValueObject> searchGenes( String query, Long taxonId ) throws SearchException {
 
         Taxon taxon = null;

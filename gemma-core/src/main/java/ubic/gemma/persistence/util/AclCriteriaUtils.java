@@ -21,17 +21,17 @@ public class AclCriteriaUtils {
      * @see AclQueryUtils#formAclRestrictionClause()
      */
     public static Criterion formAclRestrictionClause( String alias, Class<? extends Securable> aoiType ) {
-        if ( StringUtils.isBlank( alias ) || aoiType == null )
-            throw new IllegalArgumentException( "Alias and aoiType can not be empty." );
+        if ( StringUtils.isBlank( alias ) )
+            throw new IllegalArgumentException( "Alias cannot be empty." );
 
         DetachedCriteria dc = DetachedCriteria.forClass( AclObjectIdentity.class, "aoi" )
                 .setProjection( Projections.property( "aoi.identifier" ) )
                 .add( Restrictions.eqProperty( "aoi.identifier", alias + ".id" ) )
                 .add( Restrictions.eq( "aoi.type", aoiType.getCanonicalName() ) );
         if ( SecurityUtil.isUserAdmin() ) {
-            dc.createAlias( "aoi.ownerSid", "sid", Criteria.INNER_JOIN );
+            dc.createAlias( "aoi.ownerSid", "sid" );
         } else {
-            dc.createAlias( "aoi.entries", "ace", Criteria.INNER_JOIN );
+            dc.createAlias( "aoi.entries", "ace" );
         }
 
         String userName = SecurityUtil.getCurrentUsername();

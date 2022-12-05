@@ -4,7 +4,6 @@ import ubic.gemma.model.common.Identifiable;
 
 import javax.annotation.CheckReturnValue;
 import javax.annotation.Nullable;
-import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.Collection;
 
 /**
@@ -13,7 +12,6 @@ import java.util.Collection;
  * @param <O> the Object type that this service is handling.
  * @author tesarst
  */
-@ParametersAreNonnullByDefault
 public interface BaseService<O extends Identifiable> {
 
     /**
@@ -42,7 +40,6 @@ public interface BaseService<O extends Identifiable> {
      * @return collection of objects referencing the persistent instances of given entities.
      */
     @SuppressWarnings("unused") // Consistency
-    @CheckReturnValue
     Collection<O> create( Collection<O> entities );
 
     /**
@@ -51,8 +48,17 @@ public interface BaseService<O extends Identifiable> {
      * @param entity the entity to be created.
      * @return object referencing the persistent instance of the given entity.
      */
-    @CheckReturnValue
     O create( O entity );
+
+    /**
+     * @see BaseDao#save(Collection)
+     */
+    Collection<O> save( Collection<O> entities );
+
+    /**
+     * @see BaseDao#save(Object)
+     */
+    O save( O entity );
 
     /**
      * Loads objects with given ids.
@@ -69,7 +75,7 @@ public interface BaseService<O extends Identifiable> {
      * @return the entity with matching ID, or null if the entity does not exist or if the passed ID was null
      */
     @Nullable
-    O load( @Nullable Long id );
+    O load( Long id );
 
     /**
      * Loads all the entities of specific type.

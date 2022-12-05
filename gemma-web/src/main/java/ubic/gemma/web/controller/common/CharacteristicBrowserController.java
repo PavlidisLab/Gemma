@@ -229,7 +229,6 @@ public class CharacteristicBrowserController {
     }
 
     /**
-     * @param avo
      * @param annotatedItem - the object that has the annotation, we want to find who "owns" it.
      */
     private void populateParentInformation( AnnotationValueObject avo, Object annotatedItem ) {

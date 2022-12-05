@@ -65,14 +65,6 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
      */
     private final LRUMap cache = new LRUMap( 2000 );
 
-    public GoldenPathSequenceAnalysis( int port, String databaseName, String host, String user, String password ) {
-        super( port, databaseName, host, user, password );
-    }
-
-    public GoldenPathSequenceAnalysis( String databaseName ) {
-        super( databaseName );
-    }
-
     public GoldenPathSequenceAnalysis( Taxon taxon ) {
         super( taxon );
     }

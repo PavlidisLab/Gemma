@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -20,18 +20,21 @@ package ubic.gemma.web.controller.common.auditAndSecurity;
 
 import gemma.gsec.authentication.LoginDetailsValueObject;
 import gemma.gsec.authentication.UserDetailsImpl;
-import gemma.gsec.util.JSONUtil;
 import gemma.gsec.util.SecurityUtil;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.encoding.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import ubic.gemma.core.security.authentication.UserManager;
 import ubic.gemma.persistence.util.Settings;
 import ubic.gemma.web.controller.BaseController;
 import ubic.gemma.web.controller.common.auditAndSecurity.recaptcha.ReCaptcha;
+import ubic.gemma.web.util.JsonUtil;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -57,40 +60,30 @@ public class SignupController extends BaseController {
     private ReCaptcha reCaptcha = new ReCaptcha( Settings.getString( "gemma.recaptcha.privateKey" ) );
 
     @RequestMapping(value = "/ajaxLoginCheck.html")
-    public void ajaxLoginCheck( HttpServletRequest request, HttpServletResponse response ) throws Exception {
-
-        JSONUtil jsonUtil = new JSONUtil( request, response );
-
-        String jsonText = "{success:false}";
-        String userName;
-
+    public void ajaxLoginCheck( HttpServletResponse response ) throws Exception {
+        JSONObject json;
         try {
-
             if ( userManager.loggedIn() ) {
-                userName = userManager.getCurrentUsername();
-                jsonText = "{success:true,user:\'" + userName + "\',isAdmin:" + SecurityUtil.isUserAdmin() + "}";
+                json = new JSONObject().put( "success", true )
+                        .put( "user", userManager.getCurrentUsername() )
+                        .put( "isAdmin", SecurityUtil.isUserAdmin() );
             } else {
-                jsonText = "{success:false}";
+                json = new JSONObject().put( "success", false );
             }
         } catch ( Exception e ) {
-
-            log.error( e, e );
-            jsonText = jsonUtil.getJSONErrorMessage( e );
-            log.info( jsonText );
-        } finally {
-            jsonUtil.writeToResponse( jsonText );
+            log.error( "Error while checking if the current user is logged in.", e );
+            JsonUtil.writeErrorToResponse( e, response );
+            return;
         }
-
+        JsonUtil.writeToResponse( json, response );
     }
 
     /*
      * This is hit when a user clicks on the confirmation link they received by email.
      */
     @RequestMapping("/confirmRegistration.html")
-    public void confirmRegistration( HttpServletRequest request, HttpServletResponse response ) throws Exception {
-        String username = request.getParameter( "username" );
-        String key = request.getParameter( "key" );
-
+    public void confirmRegistration( @RequestParam("username") String username, @RequestParam("key") String key,
+            HttpServletRequest request, HttpServletResponse response ) throws Exception {
         if ( StringUtils.isBlank( username ) || StringUtils.isBlank( key ) ) {
             throw new IllegalArgumentException(
                     "The confirmation url was not valid; it must contain the key and username" );
@@ -146,21 +139,21 @@ public class SignupController extends BaseController {
      * Used when a user signs themselves up.
      */
     @RequestMapping(value = "/signup.html", method = RequestMethod.POST)
-    public void signup( HttpServletRequest request, HttpServletResponse response ) throws Exception {
-
-        JSONUtil jsonUtil = new JSONUtil( request, response );
-        String jsonText = null;
-
-        String password = request.getParameter( "password" );
-
-        String cPass = request.getParameter( "passwordConfirm" );
-
+    public void signup(
+            @RequestParam("password") String password,
+            @RequestParam("passwordConfirm") String cPass,
+            @RequestParam("username") String username,
+            @RequestParam("email") String email,
+            @RequestParam("emailConfirm") String cEmail,
+            HttpServletRequest request, HttpServletResponse response ) throws Exception {
 
         if ( reCaptcha.isPrivateKeySet() ) {
 
             if ( !reCaptcha.validateRequest( request ).isValid() ) {
-                jsonText = "{success:false,message:'Captcha was not entered correctly.'}";
-                jsonUtil.writeToResponse( jsonText );
+                JSONObject json = new JSONObject();
+                json.put( "success", false );
+                json.put( "message", "Captcha was not entered correctly." );
+                JsonUtil.writeToResponse( json, response );
                 return;
             }
 
@@ -169,18 +162,14 @@ public class SignupController extends BaseController {
         }
 
         if ( password.length() < UserFormMultiActionController.MIN_PASSWORD_LENGTH || !password.equals( cPass ) ) {
-            jsonText = "{success:false,message:'Password was not valid or didn't match'}";
-            jsonUtil.writeToResponse( jsonText );
+            JSONObject json = new JSONObject();
+            json.put( "success", false );
+            json.put( "message", "Password was not valid or didn't match" );
+            JsonUtil.writeToResponse( json, response );
             return;
         }
 
-        String username = request.getParameter( "username" );
-
         String encodedPassword = passwordEncoder.encodePassword( password, username );
-
-        String email = request.getParameter( "email" );
-
-        String cEmail = request.getParameter( "emailConfirm" );
 
         /*
          * Validate that it is a valid email....this regex adapted from extjs; a word possibly containing '-', '+' or
@@ -188,8 +177,10 @@ public class SignupController extends BaseController {
          */
         if ( !email.matches( "^(\\w+)([-+.][\\w]+)*@(\\w[-\\w]*\\.){1,5}([A-Za-z]){2,4}$" ) || !email
                 .equals( cEmail ) ) {
-            jsonText = "{success:false,message:'Email was not valid or didn't match'}";
-            jsonUtil.writeToResponse( jsonText );
+            JSONObject json = new JSONObject();
+            json.put( "success", false );
+            json.put( "message", "Email was not valid or didn't match" );
+            JsonUtil.writeToResponse( json, response );
             return;
         }
 
@@ -202,18 +193,16 @@ public class SignupController extends BaseController {
         try {
             userManager.createUser( u );
             sendSignupConfirmationEmail( request, u );
-
-            jsonText = "{success:true}";
         } catch ( Exception e ) {
             /*
              * Most common cause: user exists already.
              */
-            log.error( e, e );
-            jsonText = jsonUtil.getJSONErrorMessage( e );
-            log.info( jsonText );
-        } finally {
-            jsonUtil.writeToResponse( jsonText );
+            log.error( String.format( "User registration failed: %s", ExceptionUtils.getRootCauseMessage( e ) ), e );
+            JsonUtil.writeErrorToResponse( e, response );
+            return;
         }
+
+        JsonUtil.writeToResponse( new JSONObject().put( "success", true ), response );
     }
 
     @RequestMapping(value = "/signup.html", method = RequestMethod.GET)

@@ -4,14 +4,12 @@ import com.google.common.base.Strings;
 import org.hibernate.Query;
 
 import javax.annotation.Nullable;
-import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.*;
 import java.util.stream.Collectors;
 
 /**
  * Utilities for integrating {@link ObjectFilter} into {@link org.hibernate.Query}.
  */
-@ParametersAreNonnullByDefault
 public class ObjectFilterQueryUtils {
 
     /**
@@ -175,7 +173,8 @@ public class ObjectFilterQueryUtils {
                 String paramName = formParamName( filter.getObjectAlias(), filter.getPropertyName() ) + ( ++i );
                 if ( filter.getOperator().equals( ObjectFilter.Operator.in ) ) {
                     // order is unimportant for this operation, so we can ensure that it is consistent and therefore cacheable
-                    query.setParameterList( paramName, ( ( Collection<?> ) filter.getRequiredValue() ).stream().sorted().distinct().collect( Collectors.toList() ) );
+                    query.setParameterList( paramName, Objects.requireNonNull( ( Collection<?> ) filter.getRequiredValue(), "Required value cannot be null for a collection.." )
+                            .stream().sorted().distinct().collect( Collectors.toList() ) );
                 } else if ( filter.getOperator().equals( ObjectFilter.Operator.like ) ) {
                     query.setParameter( paramName, "%" + filter.getRequiredValue() + "%" );
                 } else {

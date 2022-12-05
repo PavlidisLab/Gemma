@@ -47,7 +47,7 @@ public interface DifferentialExpressionResultDao extends BaseDao<DifferentialExp
      * @return                     map to diff exp VOs
      */
     Map<ExpressionExperimentValueObject, List<DifferentialExpressionValueObject>> find( Gene gene,
-            Collection<Long> experimentsAnalyzed, double threshold, Integer limit );
+            Collection<Long> experimentsAnalyzed, double threshold, int limit );
 
     /**
      * Given a list of experiments and a threshold value finds all the probes that met the cut off in the given
@@ -59,7 +59,7 @@ public interface DifferentialExpressionResultDao extends BaseDao<DifferentialExp
      * @return                     map to diff exp VOs
      */
     Map<ExpressionExperimentValueObject, List<DifferentialExpressionValueObject>> find(
-            Collection<Long> experimentsAnalyzed, double threshold, Integer limit );
+            Collection<Long> experimentsAnalyzed, double threshold, int limit );
 
     /**
      * @param  gene gene
@@ -85,10 +85,10 @@ public interface DifferentialExpressionResultDao extends BaseDao<DifferentialExp
             Collection<DiffExResultSetSummaryValueObject> resultSets, Collection<Long> geneIds );
 
     List<Double> findGeneInResultSets( Gene gene, ExpressionAnalysisResultSet resultSet,
-            Collection<Long> arrayDesignIds, Integer limit );
+            Collection<Long> arrayDesignIds, int limit );
 
     List<DifferentialExpressionValueObject> findInResultSet( ExpressionAnalysisResultSet resultSet, Double threshold,
-            Integer maxResultsToReturn, Integer minNumberOfResults );
+            int maxResultsToReturn, int minNumberOfResults );
 
     /**
      * Given a list of result sets finds the diff expression results that met the given threshold
@@ -99,7 +99,7 @@ public interface DifferentialExpressionResultDao extends BaseDao<DifferentialExp
      * @return                 map to diff exp VOs
      */
     Map<ExpressionAnalysisResultSet, List<DifferentialExpressionAnalysisResult>> findInResultSets(
-            Collection<ExpressionAnalysisResultSet> resultsAnalyzed, double threshold, Integer limit );
+            Collection<ExpressionAnalysisResultSet> resultsAnalyzed, double threshold, int limit );
 
     DifferentialExpressionAnalysis getAnalysis( ExpressionAnalysisResultSet rs );
 
@@ -124,7 +124,7 @@ public interface DifferentialExpressionResultDao extends BaseDao<DifferentialExp
      * @return           map to diff exp VOs
      */
     Map<ExpressionExperimentValueObject, List<DifferentialExpressionValueObject>> find( Gene gene, double threshold,
-            Integer limit );
+            int limit );
 
     Histogram loadPvalueDistribution( Long resultSetId );
 

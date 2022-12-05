@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -20,8 +20,10 @@ package ubic.gemma.model.common.description;
 
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.transaction.annotation.Transactional;
 
+import org.springframework.test.context.TestExecutionListeners;
+import org.springframework.test.context.transaction.TransactionalTestExecutionListener;
+import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.core.util.test.BaseSpringContextTest;
 import ubic.gemma.persistence.service.common.description.DatabaseEntryDao;
 
@@ -32,6 +34,7 @@ import static org.junit.Assert.assertEquals;
 /**
  * @author pavlidis
  */
+@TestExecutionListeners(TransactionalTestExecutionListener.class)
 public class DatabaseEntryDaoImplTest extends BaseSpringContextTest {
 
     @Autowired
@@ -57,7 +60,7 @@ public class DatabaseEntryDaoImplTest extends BaseSpringContextTest {
     @Test
     @Transactional
     public void testLoadWithEmptyCollection() {
-        assertEquals(Collections.emptyList(), databaseEntryDao.load( Collections.emptySet() ));
+        assertEquals( Collections.emptyList(), databaseEntryDao.load( Collections.emptySet() ) );
     }
 
 }

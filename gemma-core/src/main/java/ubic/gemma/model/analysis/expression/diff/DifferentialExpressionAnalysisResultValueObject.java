@@ -15,6 +15,7 @@
 package ubic.gemma.model.analysis.expression.diff;
 
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import org.hibernate.Hibernate;
 import ubic.gemma.model.analysis.AnalysisResultValueObject;
 import ubic.gemma.model.genome.Gene;
@@ -27,6 +28,7 @@ import java.util.stream.Collectors;
  * Unlike {@link DiffExResultSetSummaryValueObject}, this value object is meant for the public API.
  */
 @Data
+@EqualsAndHashCode(of = { "probeId" }, callSuper = true)
 public class DifferentialExpressionAnalysisResultValueObject extends AnalysisResultValueObject<DifferentialExpressionAnalysisResult> {
 
     private final Long probeId;
@@ -38,6 +40,7 @@ public class DifferentialExpressionAnalysisResultValueObject extends AnalysisRes
     private final List<ContrastResultValueObject> contrasts;
 
     public DifferentialExpressionAnalysisResultValueObject( DifferentialExpressionAnalysisResult result, List<Gene> genes ) {
+        super( result );
         this.probeId = result.getProbe().getId();
         this.probeName = result.getProbe().getName();
         this.genes = genes.stream().map( GeneValueObject::new ).collect( Collectors.toList() );

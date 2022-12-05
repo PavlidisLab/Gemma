@@ -2,16 +2,16 @@ package ubic.gemma.persistence.service.common.auditAndSecurity.curation;
 
 import gemma.gsec.util.SecurityUtil;
 import org.hibernate.SessionFactory;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.curation.AbstractCuratableValueObject;
 import ubic.gemma.model.common.auditAndSecurity.curation.Curatable;
 import ubic.gemma.persistence.service.AbstractQueryFilteringVoEnabledDao;
 import ubic.gemma.persistence.service.common.auditAndSecurity.CurationDetailsDao;
-import ubic.gemma.persistence.service.common.auditAndSecurity.CurationDetailsDaoImpl;
 import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.ObjectFilter;
 
+import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map;
@@ -25,24 +25,19 @@ import java.util.Map;
 public abstract class AbstractCuratableDao<C extends Curatable, VO extends AbstractCuratableValueObject<C>>
         extends AbstractQueryFilteringVoEnabledDao<C, VO> implements CuratableDao<C, VO> {
 
+    @Autowired
+    private CurationDetailsDao curationDetailsDao;
+
     protected AbstractCuratableDao( String objectAlias, Class<C> elementClass, SessionFactory sessionFactory ) {
         super( objectAlias, elementClass, sessionFactory );
     }
 
     @Override
-    @Transactional
-    public Collection<C> create( final Collection<C> entities ) {
-        return super.create( entities );
-    }
-
-    @Override
     public C create( C entity ) {
-        entity = super.create( entity );
         if ( entity.getCurationDetails() == null ) {
-            CurationDetailsDao curationDetailsDao = new CurationDetailsDaoImpl( this.getSessionFactory() );
             entity.setCurationDetails( curationDetailsDao.create() );
         }
-        return entity;
+        return super.create( entity );
     }
 
     /**
@@ -82,7 +77,7 @@ public abstract class AbstractCuratableDao<C extends Curatable, VO extends Abstr
     /**
      * Restrict results to non-troubled curatable entities for non-administrators
      */
-    protected void addNonTroubledFilter( Filters filters, String objectAlias ) {
+    protected void addNonTroubledFilter( Filters filters, @Nullable String objectAlias ) {
         if ( !SecurityUtil.isUserAdmin() ) {
             filters.add( ObjectFilter.parseObjectFilter( objectAlias, "curationDetails.troubled", Boolean.class, ObjectFilter.Operator.eq, "false" ) );
         }

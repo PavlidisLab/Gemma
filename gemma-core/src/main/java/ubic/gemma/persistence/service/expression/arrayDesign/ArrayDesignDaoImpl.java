@@ -23,10 +23,9 @@ import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.hibernate.*;
-import org.hibernate.collection.PersistentCollection;
+import org.hibernate.collection.spi.PersistentCollection;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
-import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
@@ -43,7 +42,6 @@ import ubic.gemma.persistence.service.common.auditAndSecurity.curation.AbstractC
 import ubic.gemma.persistence.util.*;
 
 import javax.annotation.Nullable;
-import javax.annotation.ParametersAreNonnullByDefault;
 import java.math.BigInteger;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
@@ -54,7 +52,6 @@ import java.util.stream.Collectors;
  * @see ubic.gemma.model.expression.arrayDesign.ArrayDesign
  */
 @Repository
-@ParametersAreNonnullByDefault
 public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayDesignValueObject>
         implements ArrayDesignDao {
 
@@ -502,7 +499,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
         final String queryString = "select cs from CompositeSequence as cs where cs.arrayDesign = :ad";
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession().createQuery( queryString ).setParameter( "ad", arrayDesign )
-                .setFirstResult( offset ).setMaxResults( limit > 0 ? limit : -1 ).list();
+                .setFirstResult( offset ).setMaxResults( limit ).list();
     }
 
     /**
@@ -552,7 +549,6 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     }
 
     @Override
-    @Transactional
     public long numAllCompositeSequenceWithBioSequences() {
         //language=HQL
         final String queryString =
@@ -563,7 +559,6 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     }
 
     @Override
-    @Transactional
     public long numAllCompositeSequenceWithBioSequences( Collection<Long> ids ) {
 
         if ( ids.isEmpty() )
@@ -578,7 +573,6 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     }
 
     @Override
-    @Transactional
     public long numAllCompositeSequenceWithBlatResults() {
         //language=HQL
         final String queryString =
@@ -589,7 +583,6 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     }
 
     @Override
-    @Transactional
     public long numAllCompositeSequenceWithBlatResults( Collection<Long> ids ) {
         if ( ids.isEmpty() ) {
             return 0;
@@ -603,7 +596,6 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     }
 
     @Override
-    @Transactional
     public long numAllCompositeSequenceWithGenes() {
         //language=HQL
         final String queryString =
@@ -615,7 +607,6 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     }
 
     @Override
-    @Transactional
     public long numAllCompositeSequenceWithGenes( Collection<Long> ids ) {
         if ( ids.isEmpty() ) {
             return 0;
@@ -631,7 +622,6 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     }
 
     @Override
-    @Transactional
     public long numAllGenes() {
         //language=HQL
         final String queryString =
@@ -643,7 +633,6 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     }
 
     @Override
-    @Transactional
     public long numAllGenes( Collection<Long> ids ) {
         if ( ids.isEmpty() ) {
             return 0;
@@ -659,7 +648,6 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     }
 
     @Override
-    @Transactional
     public long numBioSequences( ArrayDesign arrayDesign ) {
         //language=HQL
         final String queryString =
@@ -670,7 +658,6 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     }
 
     @Override
-    @Transactional
     public long numBlatResults( ArrayDesign arrayDesign ) {
         //language=HQL
         final String queryString =
@@ -682,7 +669,6 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     }
 
     @Override
-    @Transactional
     public long numCompositeSequences( ArrayDesign arrayDesign ) {
         //language=HQL
         final String queryString = "select count (*) from  CompositeSequence as cs inner join cs.arrayDesign as ar where ar = :ad";
@@ -702,7 +688,6 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     }
 
     @Override
-    @Transactional
     public long numCompositeSequenceWithBlatResults( ArrayDesign arrayDesign ) {
         //language=HQL
         final String queryString =
@@ -713,7 +698,6 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     }
 
     @Override
-    @Transactional
     public long numCompositeSequenceWithGenes( ArrayDesign arrayDesign ) {
         //language=HQL
         final String queryString =
@@ -726,7 +710,6 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     }
 
     @Override
-    @Transactional
     public long numExperiments( ArrayDesign arrayDesign ) {
         //language=HQL
         final String queryString = "select distinct ee.id  from   "
@@ -745,7 +728,6 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     }
 
     @Override
-    @Transactional(readOnly = true)
     public long numGenes( ArrayDesign arrayDesign ) {
         //language=HQL
         return ( ( BigInteger ) getSessionFactory().getCurrentSession().createSQLQuery(
@@ -779,7 +761,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     @Override
     public void removeBiologicalCharacteristics( final ArrayDesign arrayDesign ) {
         Session session = this.getSessionFactory().getCurrentSession();
-        session.buildLockRequest( LockOptions.NONE ).lock( arrayDesign );
+        reattach( arrayDesign );
 
         int count = 0;
         for ( CompositeSequence cs : arrayDesign.getCompositeSequences() ) {

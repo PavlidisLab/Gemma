@@ -21,6 +21,7 @@ package ubic.gemma.persistence.service.expression.experiment;
 import gemma.gsec.acl.domain.AclObjectIdentity;
 import gemma.gsec.acl.domain.AclSid;
 import lombok.NonNull;
+import org.apache.commons.lang3.NotImplementedException;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.hibernate.*;
@@ -57,7 +58,6 @@ import ubic.gemma.persistence.service.genome.taxon.TaxonDao;
 import ubic.gemma.persistence.util.*;
 
 import javax.annotation.Nullable;
-import javax.annotation.ParametersAreNonnullByDefault;
 import java.text.MessageFormat;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -67,7 +67,6 @@ import java.util.stream.Collectors;
  * @see ubic.gemma.model.expression.experiment.ExpressionExperiment
  */
 @Repository
-@ParametersAreNonnullByDefault
 public class ExpressionExperimentDaoImpl
         extends AbstractCuratableDao<ExpressionExperiment, ExpressionExperimentValueObject>
         implements ExpressionExperimentDao {
@@ -80,10 +79,9 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
-    public List<ExpressionExperiment> browse( Integer start, Integer limit ) {
+    public List<ExpressionExperiment> browse( int start, int limit ) {
         Query query = this.getSessionFactory().getCurrentSession().createQuery( "from ExpressionExperiment" );
-        if ( limit > 0 )
-            query.setMaxResults( limit );
+        query.setMaxResults( limit );
         query.setFirstResult( start );
 
         //noinspection unchecked
@@ -91,12 +89,17 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
-    public Integer countNotTroubled() {
+    public List<ExpressionExperiment> browse( int start, int limit, String orderField, boolean descending ) {
+        throw new NotImplementedException( "Browsing ExpressionExperiment in a specific order is not supported." );
+    }
+
+    @Override
+    public long countNotTroubled() {
         return ( ( Long ) this.getSessionFactory().getCurrentSession().createQuery(
                         "select count( distinct ee ) from ExpressionExperiment as ee left join "
                                 + " ee.bioAssays as ba left join ba.arrayDesignUsed as ad"
                                 + " where ee.curationDetails.troubled = false and ad.curationDetails.troubled = false" )
-                .uniqueResult() ).intValue();
+                .uniqueResult() );
     }
 
     @Override
@@ -124,8 +127,10 @@ public class ExpressionExperimentDaoImpl
             criteria.add( Restrictions.eq( "accession", entity.getAccession() ) );
         } else if ( entity.getShortName() != null ) {
             criteria.add( Restrictions.eq( "shortName", entity.getShortName() ) );
-        } else {
+        } else if ( entity.getName() != null ) {
             criteria.add( Restrictions.eq( "name", entity.getName() ) );
+        } else {
+            throw new IllegalArgumentException( "At least one of accession, shortName or name must be non-null to find an ExpressionExperiment." );
         }
 
         return ( ExpressionExperiment ) criteria.uniqueResult();
@@ -257,7 +262,6 @@ public class ExpressionExperimentDaoImpl
 
     @Override
     public Collection<ExpressionExperiment> findByExpressedGene( Gene gene, Double rank ) {
-
         //language=MySQL
         final String queryString = "SELECT DISTINCT ee.ID AS eeID FROM "
                 + "GENE2CS g2s, COMPOSITE_SEQUENCE cs, PROCESSED_EXPRESSION_DATA_VECTOR dedv, INVESTIGATION ee "
@@ -271,13 +275,10 @@ public class ExpressionExperimentDaoImpl
         queryObject.setLong( "geneID", gene.getId() );
         queryObject.setDouble( "rank", rank );
         queryObject.addScalar( "eeID", new LongType() );
-        ScrollableResults results = queryObject.scroll();
+        //noinspection unchecked
+        List<Long> results = queryObject.list();
 
-        eeIds = new HashSet<>();
-
-        // Post Processing
-        while ( results.next() )
-            eeIds.add( results.getLong( 0 ) );
+        eeIds = new HashSet<>( results );
 
         session.flush();
         session.clear();
@@ -387,13 +388,10 @@ public class ExpressionExperimentDaoImpl
         org.hibernate.SQLQuery queryObject = session.createSQLQuery( queryString );
         queryObject.setLong( "geneID", gene.getId() );
         queryObject.addScalar( "eeID", new LongType() );
-        ScrollableResults results = queryObject.scroll();
+        //noinspection unchecked
+        List<Long> results = queryObject.list();
 
-        eeIds = new HashSet<>();
-
-        while ( results.next() ) {
-            eeIds.add( results.getLong( 0 ) );
-        }
+        eeIds = new HashSet<>( results );
 
         return this.load( eeIds );
     }
@@ -430,28 +428,7 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
-    public List<ExpressionExperiment> findByTaxon( Taxon taxon, @Nullable Integer limit ) {
-        //language=HQL
-        //        final String queryString =
-        //                "select distinct ee from ExpressionExperiment as ee " + "inner join ee.bioAssays as ba "
-        //                        + "inner join ba.sampleUsed as sample join ee.curationDetails s where sample.sourceTaxon = :taxon"
-        //                        + " order by s.lastUpdated desc";
-        final String queryString =
-                "select ee from ExpressionExperiment as ee join ee.curationDetails s where ee.taxon = :taxon"
-                        + " order by s.lastUpdated desc";
-        Query query = this.getSessionFactory().getCurrentSession().createQuery( queryString )
-                .setParameter( "taxon", taxon );
-
-        if ( limit != null ) {
-            query.setMaxResults( limit );
-        }
-
-        //noinspection unchecked
-        return query.list();
-    }
-
-    @Override
-    public List<ExpressionExperiment> findByUpdatedLimit( Collection<Long> ids, Integer limit ) {
+    public List<ExpressionExperiment> findByUpdatedLimit( Collection<Long> ids, int limit ) {
         if ( ids.isEmpty() || limit <= 0 )
             return new ArrayList<>();
 
@@ -469,7 +446,7 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
-    public List<ExpressionExperiment> findByUpdatedLimit( Integer limit ) {
+    public List<ExpressionExperiment> findByUpdatedLimit( int limit ) {
         if ( limit == 0 )
             return new ArrayList<>();
         Session s = this.getSessionFactory().getCurrentSession();
@@ -482,14 +459,6 @@ public class ExpressionExperimentDaoImpl
 
         //noinspection unchecked
         return q.list();
-    }
-
-    @Override
-    public ExpressionExperiment findOrCreate( ExpressionExperiment entity ) {
-        if ( entity.getShortName() == null && entity.getName() == null && entity.getAccession() == null ) {
-            throw new IllegalArgumentException( "ExpressionExperiment must have name or external accession." );
-        }
-        return super.findOrCreate( entity );
     }
 
     @Override
@@ -1146,7 +1115,7 @@ public class ExpressionExperimentDaoImpl
 
         if ( ids != null ) {
             if ( ids.isEmpty() )
-                return new Slice<>();
+                Slice.empty();
             List<Long> idList = new ArrayList<>( ids );
             Collections.sort( idList );
             filters.add( new ObjectFilter( getObjectAlias(), "id", Long.class, ObjectFilter.Operator.in, idList ) );
@@ -1515,7 +1484,7 @@ public class ExpressionExperimentDaoImpl
     private List<Long> getExpressionExperimentIdsWithDifferentialExpressionAnalysis() {
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession().createQuery(
-                        "select experimentAnalyzed.id from CoexpressionAnalysis" )
+                        "select experimentAnalyzed.id from DifferentialExpressionAnalysis" )
                 .setCacheable( true )
                 .list();
     }

@@ -24,7 +24,7 @@
 			<column name="NAME" not-null="false" unique="false"
 				sql-type="VARCHAR(255)" />
 		</property>
-		<property name="description" type="org.springframework.orm.hibernate3.support.ClobStringType">
+		<property name="description" type="org.hibernate.type.MaterializedClobType">
 			<column name="DESCRIPTION" not-null="false" unique="false"
 				sql-type="text" />
 		</property>
@@ -34,7 +34,7 @@
 			<column name="ACCESSION_FK" not-null="false" sql-type="BIGINT" unique="true" />
 		</many-to-one>
 
-		<property name="reason" type="org.springframework.orm.hibernate3.support.ClobStringType">
+		<property name="reason"  type="org.hibernate.type.MaterializedClobType">
 			<column name="REASON" not-null="false" unique="false"
 				sql-type="text" />
 		</property>

@@ -21,7 +21,6 @@ package ubic.gemma.persistence.service.expression.bioAssayData;
 import org.apache.commons.lang3.StringUtils;
 import org.hibernate.*;
 import org.hibernate.criterion.CriteriaSpecification;
-import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
@@ -35,7 +34,6 @@ import ubic.gemma.persistence.service.AbstractVoEnabledDao;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.LinkedHashSet;
 
 /**
  * <p>
@@ -55,20 +53,10 @@ public class BioAssayDimensionDaoImpl extends AbstractVoEnabledDao<BioAssayDimen
     }
 
     @Override
-    public BioAssayDimension findOrCreate( BioAssayDimension bioAssayDimension ) {
+    public BioAssayDimension find( BioAssayDimension bioAssayDimension ) {
+
         if ( bioAssayDimension == null || bioAssayDimension.getBioAssays() == null )
             throw new IllegalArgumentException();
-        BioAssayDimension existingBioAssayDimension = this.find( bioAssayDimension );
-        if ( existingBioAssayDimension != null ) {
-            return existingBioAssayDimension;
-        }
-        if ( AbstractDao.log.isDebugEnabled() )
-            AbstractDao.log.debug( "Creating new " + bioAssayDimension );
-        return this.create( bioAssayDimension );
-    }
-
-    @Override
-    public BioAssayDimension find( BioAssayDimension bioAssayDimension ) {
 
         if ( bioAssayDimension.getBioAssays().isEmpty() ) {
             throw new IllegalArgumentException( "BioAssayDimension had no BioAssays" );
@@ -124,16 +112,10 @@ public class BioAssayDimensionDaoImpl extends AbstractVoEnabledDao<BioAssayDimen
             return null;
         if ( bioAssayDimension.getId() == null )
             return bioAssayDimension;
-
-        this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
-            @Override
-            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                session.buildLockRequest( LockOptions.NONE ).lock( bioAssayDimension );
-                Hibernate.initialize( bioAssayDimension );
-                Hibernate.initialize( bioAssayDimension.getBioAssays() );
-                return null;
-            }
-        } );
+        Session session = getSessionFactory().getCurrentSession();
+        reattach( bioAssayDimension );
+        Hibernate.initialize( bioAssayDimension );
+        Hibernate.initialize( bioAssayDimension.getBioAssays() );
         return bioAssayDimension;
     }
 
@@ -144,30 +126,26 @@ public class BioAssayDimensionDaoImpl extends AbstractVoEnabledDao<BioAssayDimen
         if ( bioAssayDimension.getId() == null )
             return bioAssayDimension;
 
-        this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
-            @Override
-            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                session.buildLockRequest( LockOptions.NONE ).lock( bioAssayDimension );
-                Hibernate.initialize( bioAssayDimension );
-                Hibernate.initialize( bioAssayDimension.getBioAssays() );
+        Session session = getSessionFactory().getCurrentSession();
+        reattach( bioAssayDimension );
+        Hibernate.initialize( bioAssayDimension );
+        Hibernate.initialize( bioAssayDimension.getBioAssays() );
 
-                for ( BioAssay ba : bioAssayDimension.getBioAssays() ) {
-                    if ( ba != null ) {
-                        session.buildLockRequest( LockOptions.NONE ).lock( ba );
-                        Hibernate.initialize( ba );
-                        Hibernate.initialize( ba.getSampleUsed() );
-                        Hibernate.initialize( ba.getArrayDesignUsed() );
-                        Hibernate.initialize( ba.getOriginalPlatform() );
-                        BioMaterial bm = ba.getSampleUsed();
-                        session.buildLockRequest( LockOptions.NONE ).lock( bm );
-                        Hibernate.initialize( bm );
-                        Hibernate.initialize( bm.getBioAssaysUsedIn() );
-                        Hibernate.initialize( bm.getFactorValues() );
-                    }
-                }
-                return null;
+        for ( BioAssay ba : bioAssayDimension.getBioAssays() ) {
+            if ( ba != null ) {
+                reattach( ba );
+                Hibernate.initialize( ba );
+                Hibernate.initialize( ba.getSampleUsed() );
+                Hibernate.initialize( ba.getArrayDesignUsed() );
+                Hibernate.initialize( ba.getOriginalPlatform() );
+                BioMaterial bm = ba.getSampleUsed();
+                reattach( bm );
+                Hibernate.initialize( bm );
+                Hibernate.initialize( bm.getBioAssaysUsedIn() );
+                Hibernate.initialize( bm.getFactorValues() );
             }
-        } );
+        }
+
         return bioAssayDimension;
     }
 

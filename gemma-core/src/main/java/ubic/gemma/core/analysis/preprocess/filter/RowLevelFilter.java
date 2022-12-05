@@ -194,7 +194,7 @@ public class RowLevelFilter implements Filter<ExpressionDataDoubleMatrix> {
      * Set the value considered to be an insignificant difference between two numbers. Default is Constants.SMALL. Used
      * by DISTINCTVALUE filter.
      *
-     * @implNote Changed to ignore NAs in distinct value counting mode. All the other methods already did that.
+     * Changed to ignore NAs in distinct value counting mode. All the other methods already did that.
      *
      * @param tolerance tolerance
      */

@@ -256,6 +256,10 @@ public class CompassSearchSource implements SearchSource {
         // Note that hits come in decreasing score order, so it makes sense to limit ourselves to a few first results
         int maxHits = Math.min( CompassSearchSource.MAX_LUCENE_HITS, hits.getLength() );
 
+        if ( settings.getMaxResults() > 0 ) {
+            maxHits = Math.min( maxHits, settings.getMaxResults() );
+        }
+
         // highlighting, if desired & supported by Compass (always!)
         if ( settings.isDoHighlighting() ) {
             if ( session instanceof InternalCompassSession ) {
