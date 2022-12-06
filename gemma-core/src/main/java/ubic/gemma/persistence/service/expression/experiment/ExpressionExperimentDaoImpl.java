@@ -1114,8 +1114,9 @@ public class ExpressionExperimentDaoImpl
         Filters filters = new Filters();
 
         if ( ids != null ) {
-            if ( ids.isEmpty() )
-                Slice.empty();
+            if ( ids.isEmpty() ) {
+                return Slice.empty();
+            }
             List<Long> idList = new ArrayList<>( ids );
             Collections.sort( idList );
             filters.add( new ObjectFilter( getObjectAlias(), "id", Long.class, ObjectFilter.Operator.in, idList ) );
