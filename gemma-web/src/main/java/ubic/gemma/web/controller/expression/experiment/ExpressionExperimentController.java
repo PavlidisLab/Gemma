@@ -781,6 +781,11 @@ public class ExpressionExperimentController {
             throw new AccessDeniedException( "User does not have access to experiment management" );
         }
 
+        // -1 is used in the frontend as a substitute for null
+        if ( taxonId == -1L ) {
+            taxonId = null;
+        }
+
         if ( limit == null ) {
             limit = 50;
         }
@@ -1113,8 +1118,7 @@ public class ExpressionExperimentController {
 
         if ( changed ) {
             ExpressionExperimentController.log.info( "Updating " + ee );
-            auditTrailService
-                    .addUpdateEvent( ee, CommentedEvent.Factory.newInstance(), "Updated experiment details", details );
+            auditTrailService.addUpdateEvent( ee, CommentedEvent.class, "Updated experiment details", details );
             expressionExperimentService.update( ee );
         }
 

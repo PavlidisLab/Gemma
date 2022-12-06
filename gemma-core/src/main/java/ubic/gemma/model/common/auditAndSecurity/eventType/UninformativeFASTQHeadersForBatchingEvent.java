@@ -33,17 +33,4 @@ public class UninformativeFASTQHeadersForBatchingEvent extends FailedBatchInform
      */
     private static final long serialVersionUID = 8836148437542742955L;
 
-    public UninformativeFASTQHeadersForBatchingEvent() {
-
-    }
-
-    @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
-    public static final class Factory {
-
-        public static ubic.gemma.model.common.auditAndSecurity.eventType.UninformativeFASTQHeadersForBatchingEvent newInstance() {
-            return new ubic.gemma.model.common.auditAndSecurity.eventType.UninformativeFASTQHeadersForBatchingEvent();
-        }
-
-    }
-
 }

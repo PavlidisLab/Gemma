@@ -26,21 +26,4 @@ public class OutliersNotFoundAnalysisEvent
      */
     private static final long serialVersionUID = -1857664606860041995L;
 
-    /**
-     * No-arg constructor added to satisfy javabean contract
-     *
-     * @author Paul
-     */
-    public OutliersNotFoundAnalysisEvent() {
-    }
-
-    @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
-    public static final class Factory {
-
-        public static ubic.gemma.model.common.auditAndSecurity.eventType.OutliersNotFoundAnalysisEvent newInstance() {
-            return new ubic.gemma.model.common.auditAndSecurity.eventType.OutliersNotFoundAnalysisEvent();
-        }
-
-    }
-
 }

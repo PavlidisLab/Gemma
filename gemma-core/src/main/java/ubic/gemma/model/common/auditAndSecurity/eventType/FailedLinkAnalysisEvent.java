@@ -25,21 +25,4 @@ public class FailedLinkAnalysisEvent extends NeedsAttentionEvent {
      */
     private static final long serialVersionUID = 1234186759038122633L;
 
-    /**
-     * No-arg constructor added to satisfy javabean contract
-     *
-     * @author Paul
-     */
-    public FailedLinkAnalysisEvent() {
-    }
-
-    @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
-    public static final class Factory {
-
-        public static ubic.gemma.model.common.auditAndSecurity.eventType.FailedLinkAnalysisEvent newInstance() {
-            return new ubic.gemma.model.common.auditAndSecurity.eventType.FailedLinkAnalysisEvent();
-        }
-
-    }
-
 }

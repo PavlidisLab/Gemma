@@ -87,7 +87,7 @@ public class BatchInfoPopulationServiceImpl implements BatchInfoPopulationServic
 
     /**
      * @param  ef ef
-     * @return    true if the factor seems to be a 'batch' factor.
+     * @return true if the factor seems to be a 'batch' factor.
      */
     public static boolean isBatchFactor( ExperimentalFactor ef ) {
         Characteristic c = ef.getCategory();
@@ -146,15 +146,14 @@ public class BatchInfoPopulationServiceImpl implements BatchInfoPopulationServic
             files = this.fetchRawDataFiles( ee );
             if ( files == null || files.isEmpty() ) {
                 this.auditTrailService
-                        .addUpdateEvent( ee, FailedBatchInformationMissingEvent.class, "No files were found", "" );
+                        .addUpdateEvent( ee, FailedBatchInformationMissingEvent.class, "No files were found" );
                 throw new BatchInfoPopulationException( "No file were found." );
             }
             this.getBatchDataFromRawFiles( ee, files );
 
         } catch ( Exception e ) {
             BatchInfoPopulationServiceImpl.log.info( e, e );
-            this.auditTrailService.addUpdateEvent( ee, FailedBatchInformationFetchingEvent.class, e.getMessage(),
-                    ExceptionUtils.getStackTrace( e ) );
+            this.auditTrailService.addUpdateEvent( ee, FailedBatchInformationFetchingEvent.class, e.getMessage(), e );
             throw new BatchInfoPopulationException( "", e );
         } finally {
             if ( BatchInfoPopulationServiceImpl.CLEAN_UP && files != null ) {
@@ -169,13 +168,13 @@ public class BatchInfoPopulationServiceImpl implements BatchInfoPopulationServic
      * Exposed for testing
      *
      * @param  accession             GEO accession
-     * @return                       map of GEO id to headers, including the platform ID
+     * @return map of GEO id to headers, including the platform ID
      */
     Map<String, String> readFastqHeaders( String accession ) throws IOException, FileNotFoundException {
         Map<String, String> result = new HashMap<>();
         File headerFile = new File( Settings.getString( GEMMA_FASTQ_HEADERS_DIR_CONFIG ) + File.separator
                 + accession + FASTQHEADERSFILE_SUFFIX );
-        try (BufferedReader br = new BufferedReader( new FileReader( headerFile ) )) {
+        try ( BufferedReader br = new BufferedReader( new FileReader( headerFile ) ) ) {
             String line = null;
             while ( ( line = br.readLine() ) != null ) {
 
@@ -201,7 +200,7 @@ public class BatchInfoPopulationServiceImpl implements BatchInfoPopulationServic
      * Currently only supports GEO
      *
      * @param  ee ee
-     * @return    local file
+     * @return local file
      */
     private Collection<LocalFile> fetchRawDataFiles( ExpressionExperiment ee ) {
         RawDataFetcher fetcher = new RawDataFetcher();
@@ -247,7 +246,7 @@ public class BatchInfoPopulationServiceImpl implements BatchInfoPopulationServic
                         "RNA-seq experiment (most likely a single lane)" );
             } else {
                 this.auditTrailService.addUpdateEvent( ee, BatchInformationFetchingEvent.class, bf.getFactorValues().size()
-                        + " batches.", "" );
+                        + " batches." );
             }
         }
 
@@ -305,7 +304,7 @@ public class BatchInfoPopulationServiceImpl implements BatchInfoPopulationServic
      * Finds FASTQ headers
      *
      * @param  ee          experiment
-     * @return             map of Biomaterial to header
+     * @return map of Biomaterial to header
      * @throws IOException if any files could not be read
      */
     private Map<BioMaterial, String> getFastqHeaders( ExpressionExperiment ee ) throws IOException {
@@ -366,7 +365,7 @@ public class BatchInfoPopulationServiceImpl implements BatchInfoPopulationServic
     /**
      * @param  ee     ee
      * @param  rnaSeq if the data set is RNAseq
-     * @return        true if it needs processing and data is available
+     * @return true if it needs processing and data is available
      */
     private boolean needToRun( ExpressionExperiment ee, boolean rnaSeq ) {
 
@@ -426,7 +425,7 @@ public class BatchInfoPopulationServiceImpl implements BatchInfoPopulationServic
      * </pre>
      *
      * @param  ee experiment
-     * @return    map of GEO id to headers, including the platform ID
+     * @return map of GEO id to headers, including the platform ID
      */
     private Map<String, String> readFastqHeaders( ExpressionExperiment ee ) throws IOException {
         String accession = ee.getAccession().getAccession();

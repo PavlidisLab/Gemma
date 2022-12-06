@@ -33,20 +33,4 @@ public class ResetSuitabilityForDifferentialExpressionAnalysisEvent extends Diff
      */
     private static final long serialVersionUID = 5909581992797452478L;
 
-    /**
-     * No-arg constructor added to satisfy javabean contract
-     *
-     */
-    public ResetSuitabilityForDifferentialExpressionAnalysisEvent() {
-    }
-
-    @SuppressWarnings({ "unused", "WeakerAccess" }) // Used in frontend
-    public static final class Factory {
-
-        public static ubic.gemma.model.common.auditAndSecurity.eventType.ResetSuitabilityForDifferentialExpressionAnalysisEvent newInstance() {
-            return new ubic.gemma.model.common.auditAndSecurity.eventType.ResetSuitabilityForDifferentialExpressionAnalysisEvent();
-        }
-
-    }
-
 }

@@ -29,21 +29,4 @@ public class ArrayDesignGeneMappingEvent
      */
     private static final long serialVersionUID = -7566135203525054499L;
 
-    /**
-     * No-arg constructor added to satisfy javabean contract
-     *
-     * @author Paul
-     */
-    public ArrayDesignGeneMappingEvent() {
-    }
-
-    @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
-    public static final class Factory {
-
-        public static ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignGeneMappingEvent newInstance() {
-            return new ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignGeneMappingEvent();
-        }
-
-    }
-
 }

@@ -33,25 +33,10 @@ public class TroubledStatusFlagEvent extends CurationDetailsEvent {
      */
     private static final long serialVersionUID = 7335601529423635731L;
 
-    /**
-     * No-arg constructor added to satisfy javabean contract
-     */
-    public TroubledStatusFlagEvent() {
-    }
-
     @Override
     public final void setCurationDetails( Curatable curatable, AuditEvent auditEvent ) {
         curatable.getCurationDetails().setTroubled( true );
         curatable.getCurationDetails().setLastTroubledEvent( auditEvent );
-    }
-
-    @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
-    public static final class Factory {
-
-        public static TroubledStatusFlagEvent newInstance() {
-            return new TroubledStatusFlagEvent();
-        }
-
     }
 
 }

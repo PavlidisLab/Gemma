@@ -116,12 +116,11 @@ public class ExpressionExperimentDataFileGeneratorCli extends ExpressionExperime
             ee = this.eeService.thawLite( ee );
 
             AuditTrailService ats = this.getBean( AuditTrailService.class );
-            AuditEventType type = CommentedEvent.Factory.newInstance();
 
             expressionDataFileService.writeOrLocateCoexpressionDataFile( ee, force_write );
             expressionDataFileService.writeOrLocateDiffExpressionDataFiles( ee, force_write );
 
-            ats.addUpdateEvent( ee, type, "Generated Flat data files for downloading" );
+            ats.addUpdateEvent( ee, CommentedEvent.class, "Generated Flat data files for downloading" );
             addSuccessObject( ee, "Success:  generated data file for " + ee.getShortName() + " ID=" + ee.getId() );
 
         } catch ( Exception e ) {

@@ -26,20 +26,4 @@ public class BatchCorrectionEvent extends ExpressionExperimentAnalysisEvent {
 
     private static final long serialVersionUID = -3061045506228031201L;
 
-    /**
-     * No-arg constructor added to satisfy javabean contract
-     *
-     * @author Paul
-     */
-    public BatchCorrectionEvent() {
-    }
-
-    @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
-    public static final class Factory {
-
-        public static ubic.gemma.model.common.auditAndSecurity.eventType.BatchCorrectionEvent newInstance() {
-            return new ubic.gemma.model.common.auditAndSecurity.eventType.BatchCorrectionEvent();
-        }
-
-    }
 }

@@ -64,8 +64,7 @@ public class ExperimentPlatformSwitchHelperServiceImpl implements ExperimentPlat
     }
 
     private void audit( ExpressionExperiment ee, String note ) {
-        AuditEventType eventType = ExpressionExperimentPlatformSwitchEvent.Factory.newInstance();
-        auditTrailService.addUpdateEvent( ee, eventType, note );
+        auditTrailService.addUpdateEvent( ee, ExpressionExperimentPlatformSwitchEvent.class, note );
     }
 
 }

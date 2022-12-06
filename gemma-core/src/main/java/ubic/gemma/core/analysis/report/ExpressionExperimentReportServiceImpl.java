@@ -378,13 +378,13 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
 
         if ( !Objects.equals( confound, ee.getBatchConfound() ) ) {
             ee.setBatchConfound( confound );
-            auditTrailService.addUpdateEvent( ee, BatchProblemsUpdateEvent.Factory.newInstance(),
+            auditTrailService.addUpdateEvent( ee, BatchProblemsUpdateEvent.class,
                     ExpressionExperimentReportServiceImpl.NOTE_UPDATED_CONFOUND, confound );
             update = true;
         }
 
         if ( !Objects.equals( effect, ee.getBatchEffect() ) ) {
-            auditTrailService.addUpdateEvent( ee, BatchProblemsUpdateEvent.Factory.newInstance(),
+            auditTrailService.addUpdateEvent( ee, BatchProblemsUpdateEvent.class,
                     ExpressionExperimentReportServiceImpl.NOTE_UPDATED_EFFECT, effect );
             ee.setBatchEffect( effect );
             update = true;

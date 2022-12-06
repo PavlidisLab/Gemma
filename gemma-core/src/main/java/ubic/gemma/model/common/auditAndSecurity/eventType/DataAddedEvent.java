@@ -31,21 +31,4 @@ public class DataAddedEvent
      */
     private static final long serialVersionUID = -492849538043540166L;
 
-    /**
-     * No-arg constructor added to satisfy javabean contract
-     *
-     * @author Paul
-     */
-    public DataAddedEvent() {
-    }
-
-    @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
-    public static final class Factory {
-
-        public static ubic.gemma.model.common.auditAndSecurity.eventType.DataAddedEvent newInstance() {
-            return new ubic.gemma.model.common.auditAndSecurity.eventType.DataAddedEvent();
-        }
-
-    }
-
 }

@@ -247,7 +247,7 @@ public class ExpressionExperimentFormController extends BaseFormController {
                         + "/expressionExperiment/showExpressionExperiment.html?id=" + eeCommand.getId() ) );
     }
 
-    private void audit( ExpressionExperiment ee, AuditEventType eventType, String note ) {
+    private void audit( ExpressionExperiment ee, Class<? extends AuditEventType> eventType, String note ) {
         auditTrailService.addUpdateEvent( ee, eventType, note );
     }
 
@@ -331,7 +331,7 @@ public class ExpressionExperimentFormController extends BaseFormController {
              * fouled up.
              */
             BaseFormController.log.info( "There were changes to the BioMaterial -> BioAssay map" );
-            this.audit( expressionExperiment, BioMaterialMappingUpdate.Factory.newInstance(),
+            this.audit( expressionExperiment, BioMaterialMappingUpdate.class,
                     newBioMaterialCount + " biomaterials" ); // remove unnecessary biomaterial associations
             Collection<BioAssay> deleteKeys = deleteAssociations.keySet();
             for ( BioAssay assay : deleteKeys ) {

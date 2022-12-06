@@ -32,22 +32,4 @@ public class AutomatedAnnotationEvent extends ubic.gemma.model.common.auditAndSe
      */
     private static final long serialVersionUID = 8510568858539453569L;
 
-    /**
-     * No-arg constructor added to satisfy javabean contract
-     *
-     * @author Paul
-     */
-    public AutomatedAnnotationEvent() {
-    }
-
-    @SuppressWarnings({ "unused", "WeakerAccess" }) // Still present in database
-    @Deprecated
-    public static final class Factory {
-
-        public static ubic.gemma.model.common.auditAndSecurity.eventType.AutomatedAnnotationEvent newInstance() {
-            return new ubic.gemma.model.common.auditAndSecurity.eventType.AutomatedAnnotationEvent();
-        }
-
-    }
-
 }

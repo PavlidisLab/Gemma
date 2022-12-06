@@ -26,21 +26,4 @@ public class ArrayDesignSubsumeCheckEvent
      */
     private static final long serialVersionUID = -6105886398033742202L;
 
-    /**
-     * No-arg constructor added to satisfy javabean contract
-     *
-     * @author Paul
-     */
-    public ArrayDesignSubsumeCheckEvent() {
-    }
-
-    @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
-    public static final class Factory {
-
-        public static ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignSubsumeCheckEvent newInstance() {
-            return new ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignSubsumeCheckEvent();
-        }
-
-    }
-
 }

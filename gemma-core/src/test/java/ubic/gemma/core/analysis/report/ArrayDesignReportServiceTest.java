@@ -51,18 +51,18 @@ public class ArrayDesignReportServiceTest extends BaseSpringContextTest {
             ArrayDesignReportServiceTest.ad = this
                     .getTestPersistentArrayDesign( 5, true, false, false ); // not read only.
 
-            ads.addUpdateEvent( ArrayDesignReportServiceTest.ad, new ArrayDesignSequenceUpdateEvent(), "sequences" );
+            ads.addUpdateEvent( ArrayDesignReportServiceTest.ad, ArrayDesignSequenceUpdateEvent.class, "sequences");
 
-            ads.addUpdateEvent( ArrayDesignReportServiceTest.ad, new ArrayDesignSequenceAnalysisEvent(), "alignment" );
+            ads.addUpdateEvent( ArrayDesignReportServiceTest.ad, ArrayDesignSequenceAnalysisEvent.class, "alignment" );
 
-            ads.addUpdateEvent( ArrayDesignReportServiceTest.ad, new AlignmentBasedGeneMappingEvent(), "mapping" );
+            ads.addUpdateEvent( ArrayDesignReportServiceTest.ad, AlignmentBasedGeneMappingEvent.class, "mapping" );
 
             Thread.sleep( 100 );
 
-            ads.addUpdateEvent( ArrayDesignReportServiceTest.ad, new ArrayDesignSequenceAnalysisEvent(),
+            ads.addUpdateEvent( ArrayDesignReportServiceTest.ad, ArrayDesignSequenceAnalysisEvent.class,
                     "alignment 2" );
 
-            ads.addUpdateEvent( ArrayDesignReportServiceTest.ad, new AlignmentBasedGeneMappingEvent(), "mapping 2" );
+            ads.addUpdateEvent( ArrayDesignReportServiceTest.ad, AlignmentBasedGeneMappingEvent.class, "mapping 2" );
             Thread.sleep( 100 );
             ArrayDesignReportServiceTest.persisted = true;
         }

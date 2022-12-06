@@ -87,7 +87,7 @@ public class OutlierFlaggingServiceImpl extends ExpressionExperimentVectorManipu
             return;
         }
         ExpressionExperiment expExp = expressionExperimentService.findByBioAssay( bioAssays.iterator().next() );
-        auditTrailService.addUpdateEvent( expExp, SampleRemovalEvent.Factory.newInstance(),
+        auditTrailService.addUpdateEvent( expExp, SampleRemovalEvent.class,
                 bioAssays.size() + " flagged as outliers", StringUtils.join( bioAssays, "," ) );
 
         try {
@@ -121,7 +121,7 @@ public class OutlierFlaggingServiceImpl extends ExpressionExperimentVectorManipu
         }
 
         ExpressionExperiment expExp = expressionExperimentService.findByBioAssay( bioAssays.iterator().next() );
-        auditTrailService.addUpdateEvent( expExp, SampleRemovalReversionEvent.Factory.newInstance(),
+        auditTrailService.addUpdateEvent( expExp, SampleRemovalReversionEvent.class,
                 "Marked " + bioAssays.size() + " bioassays as non-missing", StringUtils.join( bioAssays, "" ) );
 
         assert expExp != null;

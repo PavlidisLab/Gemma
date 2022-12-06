@@ -34,21 +34,4 @@ public class ArrayDesignSequenceRemoveEvent
      */
     private static final long serialVersionUID = -3044700012305059422L;
 
-    /**
-     * No-arg constructor added to satisfy javabean contract
-     *
-     * @author Paul
-     */
-    public ArrayDesignSequenceRemoveEvent() {
-    }
-
-    @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
-    public static final class Factory {
-
-        public static ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignSequenceRemoveEvent newInstance() {
-            return new ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignSequenceRemoveEvent();
-        }
-
-    }
-
 }

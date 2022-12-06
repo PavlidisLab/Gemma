@@ -31,21 +31,4 @@ public class SampleRemovalReversionEvent
      */
     private static final long serialVersionUID = -2893496636576496129L;
 
-    /**
-     * No-arg constructor added to satisfy javabean contract
-     *
-     * @author Paul
-     */
-    public SampleRemovalReversionEvent() {
-    }
-
-    @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
-    public static final class Factory {
-
-        public static ubic.gemma.model.common.auditAndSecurity.eventType.SampleRemovalReversionEvent newInstance() {
-            return new ubic.gemma.model.common.auditAndSecurity.eventType.SampleRemovalReversionEvent();
-        }
-
-    }
-
 }

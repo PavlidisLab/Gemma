@@ -31,21 +31,4 @@ public class ExpressionExperimentVectorMergeEvent
      */
     private static final long serialVersionUID = 3635469819668645913L;
 
-    /**
-     * No-arg constructor added to satisfy javabean contract
-     *
-     * @author Paul
-     */
-    public ExpressionExperimentVectorMergeEvent() {
-    }
-
-    @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
-    public static final class Factory {
-
-        public static ubic.gemma.model.common.auditAndSecurity.eventType.ExpressionExperimentVectorMergeEvent newInstance() {
-            return new ubic.gemma.model.common.auditAndSecurity.eventType.ExpressionExperimentVectorMergeEvent();
-        }
-
-    }
-
 }

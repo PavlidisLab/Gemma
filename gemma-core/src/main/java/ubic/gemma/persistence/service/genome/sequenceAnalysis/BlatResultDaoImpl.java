@@ -77,8 +77,9 @@ public class BlatResultDaoImpl extends AbstractVoEnabledDao<BlatResult, BlatResu
                                 + " left join fetch b.searchedDatabase left join fetch b.targetChromosome tc left join tc.taxon left join fetch tc.sequence"
                                 + " left join fetch qs.taxon t "
                                 + " left join fetch t.externalDatabase left join fetch qs.sequenceDatabaseEntry s "
-                                + " left join fetch s.externalDatabase" + " where b.id in ( :ids)" )
-                .setParameter( "ids", EntityUtils.getIds( blatResults ) )
+                                + " left join fetch s.externalDatabase"
+                                + " where b in :blatResults" )
+                .setParameterList( "blatResults", blatResults )
                 .list();
     }
 

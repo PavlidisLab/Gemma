@@ -25,21 +25,4 @@ public class OutlierFoundAnalysisEvent extends ubic.gemma.model.common.auditAndS
      */
     private static final long serialVersionUID = -3797610069227351691L;
 
-    /**
-     * No-arg constructor added to satisfy javabean contract
-     *
-     * @author Paul
-     */
-    public OutlierFoundAnalysisEvent() {
-    }
-
-    @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
-    public static final class Factory {
-
-        public static ubic.gemma.model.common.auditAndSecurity.eventType.OutlierFoundAnalysisEvent newInstance() {
-            return new ubic.gemma.model.common.auditAndSecurity.eventType.OutlierFoundAnalysisEvent();
-        }
-
-    }
-
 }

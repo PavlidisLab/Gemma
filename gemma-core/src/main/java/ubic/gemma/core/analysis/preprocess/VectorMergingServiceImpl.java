@@ -258,8 +258,7 @@ public class VectorMergingServiceImpl extends ExpressionExperimentVectorManipula
     }
 
     private void audit( ExpressionExperiment ee, String note ) {
-        AuditEventType eventType = ExpressionExperimentVectorMergeEvent.Factory.newInstance();
-        auditTrailService.addUpdateEvent( ee, eventType, note );
+        auditTrailService.addUpdateEvent( ee, ExpressionExperimentVectorMergeEvent.class, note );
     }
 
     private void cleanUp( ExpressionExperiment expExp, Collection<BioAssayDimension> allOldBioAssayDims,

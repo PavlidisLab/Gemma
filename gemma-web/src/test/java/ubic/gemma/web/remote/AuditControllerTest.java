@@ -19,6 +19,7 @@
 
 package ubic.gemma.web.remote;
 
+import org.assertj.core.api.Assertions;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
@@ -31,6 +32,7 @@ import ubic.gemma.web.util.BaseSpringWebTest;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * @author Paul
@@ -57,13 +59,10 @@ public class AuditControllerTest extends BaseSpringWebTest {
         assertNotNull( e );
         e = expressionExperimentService.thawLite( e );
         assertNotNull( e );
-        AuditTrail auditTrail = e.getAuditTrail();
-        assertNotNull( auditTrail );
-        AuditEvent lastEvent = auditTrail.getLast();
-        assertNotNull( lastEvent );
-        AuditEventType eventType = lastEvent.getEventType();
-        assertNotNull( eventType );
-        assertEquals( CommentedEvent.class, eventType.getClass() );
+
+        assertThat( e.getAuditTrail().getEvents() )
+                .extracting( "eventType" )
+                .containsExactly( null, new CommentedEvent(), null );
 
     }
 }

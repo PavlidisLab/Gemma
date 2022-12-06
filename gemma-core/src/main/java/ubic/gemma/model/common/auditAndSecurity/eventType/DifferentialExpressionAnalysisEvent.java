@@ -31,21 +31,4 @@ public class DifferentialExpressionAnalysisEvent
      */
     private static final long serialVersionUID = -2254124666542924604L;
 
-    /**
-     * No-arg constructor added to satisfy javabean contract
-     *
-     * @author Paul
-     */
-    public DifferentialExpressionAnalysisEvent() {
-    }
-
-    @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
-    public static final class Factory {
-
-        public static ubic.gemma.model.common.auditAndSecurity.eventType.DifferentialExpressionAnalysisEvent newInstance() {
-            return new ubic.gemma.model.common.auditAndSecurity.eventType.DifferentialExpressionAnalysisEvent();
-        }
-
-    }
-
 }
