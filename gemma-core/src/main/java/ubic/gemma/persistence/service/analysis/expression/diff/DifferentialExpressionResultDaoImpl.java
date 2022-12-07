@@ -543,7 +543,6 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
             qs = DifferentialExpressionResultDaoImpl.fetchResultsBySingleResultSetQuery + " order by r.correctedPvalue";
             qResult = getSessionFactory().getCurrentSession().createQuery( qs )
                     .setParameterList( "resultsSets", resultsSets )
-                    .setParameter( "threshold", threshold )
                     .setMaxResults( minNumberOfResults )
                     .list();
         }
