@@ -107,7 +107,7 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
     private static final String fetchResultsBySingleResultSetQuery = "select distinct r "
             + " from DifferentialExpressionAnalysis a inner join a.experimentAnalyzed e  "
             + " inner join a.resultSets rs inner  join  rs.results r inner join fetch r.probe p "
-            + " where rs in (:resultsSets)"; // no order by clause, we add it later; 'e' is not used in this query.
+            + " where rs = :resultSet"; // no order by clause, we add it later; 'e' is not used in this query.
 
     private final DifferentialExpressionResultCache differentialExpressionResultCache;
 
@@ -523,16 +523,13 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
 
         // get it.
 
-        Collection<ExpressionAnalysisResultSet> resultsSets = new ArrayList<>();
-        resultsSets.add( resultSet );
-
         StopWatch timer = new StopWatch();
         timer.start();
         String qs = DifferentialExpressionResultDaoImpl.fetchResultsBySingleResultSetQuery
                 + " and r.correctedPvalue <= :threshold order by r.correctedPvalue";
 
         List<?> qResult = getSessionFactory().getCurrentSession().createQuery( qs )
-                .setParameterList( "resultsSets", resultsSets )
+                .setParameter( "resultSet", resultSet )
                 .setParameter( "threshold", threshold )
                 .setMaxResults( limit )
                 .list();
@@ -542,7 +539,7 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
             AbstractDao.log.info( "No results met threshold, repeating to just get the top hits" );
             qs = DifferentialExpressionResultDaoImpl.fetchResultsBySingleResultSetQuery + " order by r.correctedPvalue";
             qResult = getSessionFactory().getCurrentSession().createQuery( qs )
-                    .setParameterList( "resultsSets", resultsSets )
+                    .setParameter( "resultSet", resultSet )
                     .setMaxResults( minNumberOfResults )
                     .list();
         }
