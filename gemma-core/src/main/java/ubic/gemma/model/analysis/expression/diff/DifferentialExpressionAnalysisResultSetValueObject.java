@@ -16,8 +16,8 @@ import java.util.stream.Collectors;
  */
 public class DifferentialExpressionAnalysisResultSetValueObject extends AnalysisResultSetValueObject<DifferentialExpressionAnalysisResult, ExpressionAnalysisResultSet> {
 
-    private final DifferentialExpressionAnalysisValueObject analysis;
-    private final Collection<ExperimentalFactorValueObject> experimentalFactors;
+    private DifferentialExpressionAnalysisValueObject analysis;
+    private Collection<ExperimentalFactorValueObject> experimentalFactors;
 
     /**
      * Related analysis results.
@@ -26,6 +26,10 @@ public class DifferentialExpressionAnalysisResultSetValueObject extends Analysis
      */
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private Collection<DifferentialExpressionAnalysisResultValueObject> results;
+
+    public DifferentialExpressionAnalysisResultSetValueObject() {
+        super();
+    }
 
     /**
      * Create a simple analysis results set VO with limited data.
@@ -58,12 +62,24 @@ public class DifferentialExpressionAnalysisResultSetValueObject extends Analysis
         return analysis;
     }
 
+    public void setAnalysis( DifferentialExpressionAnalysisValueObject analysis ) {
+        this.analysis = analysis;
+    }
+
     public Collection<ExperimentalFactorValueObject> getExperimentalFactors() {
         return experimentalFactors;
+    }
+
+    public void setExperimentalFactors( Collection<ExperimentalFactorValueObject> experimentalFactors ) {
+        this.experimentalFactors = experimentalFactors;
     }
 
     @Override
     public Collection<DifferentialExpressionAnalysisResultValueObject> getResults() {
         return results;
+    }
+
+    public void setResults( Collection<DifferentialExpressionAnalysisResultValueObject> results ) {
+        this.results = results;
     }
 }

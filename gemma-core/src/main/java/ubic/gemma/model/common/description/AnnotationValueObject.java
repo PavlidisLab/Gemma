@@ -51,6 +51,10 @@ public class AnnotationValueObject extends IdentifiableValueObject<Characteristi
     @GemmaWebOnly
     private String parentOfParentLink;
 
+    public AnnotationValueObject() {
+        super();
+    }
+
     public AnnotationValueObject( Long id ) {
         super( id );
     }

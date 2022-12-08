@@ -42,7 +42,7 @@ import java.io.Serializable;
 @Data
 @EqualsAndHashCode(of = { "expressionExperimentId" }, callSuper = true)
 @ToString(of = { "name" }, callSuper = true)
-public class QuantitationTypeValueObject extends IdentifiableValueObject<QuantitationType> implements Serializable {
+public class QuantitationTypeValueObject extends IdentifiableValueObject<QuantitationType> {
 
     private static final long serialVersionUID = 7537853492100102404L;
     private String description;
@@ -77,8 +77,12 @@ public class QuantitationTypeValueObject extends IdentifiableValueObject<Quantit
     @Nullable
     private String vectorType = null;
 
+    public QuantitationTypeValueObject() {
+        super();
+    }
+
     public QuantitationTypeValueObject( QuantitationType qt ) {
-        super( qt.getId() );
+        super( qt );
         this.name = qt.getName();
         this.description = qt.getDescription();
         this.generalType = qt.getGeneralType().toString();

@@ -44,6 +44,7 @@ public class TreeCharacteristicValueObject extends CharacteristicValueObject {
      * Required when using the class as a spring bean.
      */
     public TreeCharacteristicValueObject() {
+        super();
     }
 
     public TreeCharacteristicValueObject( Long id, String value, String valueUri ) {

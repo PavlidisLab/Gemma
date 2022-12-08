@@ -1,8 +1,8 @@
 /*
  * The gemma project
- * 
+ *
  * Copyright (c) 2014 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -25,6 +25,10 @@ package ubic.gemma.model.analysis.expression.coexpression;
 public class IdArrayValueObject extends IdArray {
 
     private static final long serialVersionUID = 3449107398932831708L;
+
+    public IdArrayValueObject() {
+        super();
+    }
 
     public IdArrayValueObject( byte[] data ) {
         this.setBytes( data );

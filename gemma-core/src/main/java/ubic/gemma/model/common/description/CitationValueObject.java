@@ -21,6 +21,7 @@ package ubic.gemma.model.common.description;
 import org.apache.commons.lang3.StringUtils;
 import org.hibernate.Hibernate;
 
+import java.io.Serializable;
 import java.util.*;
 
 /**
@@ -32,7 +33,7 @@ import java.util.*;
  * @see BibliographicReferenceValueObject for a more comprehensive alternative representation of BibliographicReference
  */
 @SuppressWarnings({ "WeakerAccess", "unused" }) // Used in frontend
-public class CitationValueObject implements Comparable<CitationValueObject> {
+public class CitationValueObject implements Comparable<CitationValueObject>, Serializable {
 
     // for constructing pubmedURLs
     @SuppressWarnings("WeakerAccess") // Might be accessed in the front end

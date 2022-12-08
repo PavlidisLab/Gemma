@@ -24,8 +24,8 @@ import org.apache.commons.math3.exception.NotStrictlyPositiveException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ubic.gemma.core.analysis.preprocess.batcheffects.BatchConfoundUtils;
 import ubic.gemma.core.analysis.preprocess.batcheffects.BatchConfound;
-import ubic.gemma.core.analysis.preprocess.batcheffects.BatchConfoundValueObject;
 import ubic.gemma.core.analysis.preprocess.batcheffects.BatchEffectDetails;
 import ubic.gemma.core.analysis.preprocess.batcheffects.BatchInfoPopulationServiceImpl;
 import ubic.gemma.core.analysis.preprocess.svd.SVDService;
@@ -509,9 +509,9 @@ public class ExpressionExperimentServiceImpl
             return null;
         }
 
-        Collection<BatchConfoundValueObject> confounds;
+        Collection<BatchConfound> confounds;
         try {
-            confounds = BatchConfound.test( ee );
+            confounds = BatchConfoundUtils.test( ee );
         } catch ( NotStrictlyPositiveException e ) {
             AbstractService.log.error( "Batch confound test threw a NonStrictlyPositiveException! Returning null." );
             return null;
@@ -519,10 +519,10 @@ public class ExpressionExperimentServiceImpl
 
         StringBuilder result = new StringBuilder();
         // Confounds have to be sorted in order to always get the same string
-        List<BatchConfoundValueObject> listConfounds = new ArrayList<>( confounds );
-        listConfounds.sort( Comparator.comparing( BatchConfoundValueObject::toString ) );
+        List<BatchConfound> listConfounds = new ArrayList<>( confounds );
+        listConfounds.sort( Comparator.comparing( BatchConfound::toString ) );
 
-        for ( BatchConfoundValueObject c : listConfounds ) {
+        for ( BatchConfound c : listConfounds ) {
             if ( c.getP() < ExpressionExperimentServiceImpl.BATCH_CONFOUND_THRESHOLD ) {
                 String factorName = c.getEf().getName();
                 if ( result.toString().isEmpty() ) {
@@ -542,8 +542,8 @@ public class ExpressionExperimentServiceImpl
             if ( !subSets.isEmpty() ) {
                 for ( ExpressionExperimentSubSet subset : subSets ) {
                     try {
-                        confounds = BatchConfound.test( subset );
-                        for ( BatchConfoundValueObject c : confounds ) {
+                        confounds = BatchConfoundUtils.test( subset );
+                        for ( BatchConfound c : confounds ) {
                             if ( c.getP() < ExpressionExperimentServiceImpl.BATCH_CONFOUND_THRESHOLD ) {
                                 result.append( "<br/><br/>Confound still exists for " + c.getEf().getName() + " in " + subset );
                             }

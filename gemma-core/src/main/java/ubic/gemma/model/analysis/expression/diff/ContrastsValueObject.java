@@ -14,6 +14,7 @@
  */
 package ubic.gemma.model.analysis.expression.diff;
 
+import java.io.Serializable;
 import java.util.List;
 import java.util.Vector;
 
@@ -22,11 +23,15 @@ import java.util.Vector;
  *
  * @author Paul
  */
-public class ContrastsValueObject {
+public class ContrastsValueObject implements Serializable {
 
     private final List<ContrastVO> contrasts = new Vector<>( 2 ); // commonly only have one.
 
-    private final Long resultId;
+    private Long resultId;
+
+    public ContrastsValueObject() {
+        super();
+    }
 
     public ContrastsValueObject( Long resultId ) {
         this.resultId = resultId;
@@ -45,4 +50,7 @@ public class ContrastsValueObject {
         return resultId;
     }
 
+    public void setResultId( Long resultId ) {
+        this.resultId = resultId;
+    }
 }

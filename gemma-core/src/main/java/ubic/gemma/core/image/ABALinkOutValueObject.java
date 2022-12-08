@@ -73,6 +73,10 @@ public class ABALinkOutValueObject implements Serializable {
         this.geneSymbol = geneSymbol;
     }
 
+    public Collection<String> getAbaGeneImageUrl() {
+        return abaGeneImageUrls;
+    }
+
     public void setAbaGeneImageUrl( Collection<String> abaGeneImageUrls ) {
         this.abaGeneImageUrls = abaGeneImageUrls;
     }

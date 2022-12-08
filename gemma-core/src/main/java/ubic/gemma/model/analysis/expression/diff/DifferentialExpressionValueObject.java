@@ -23,6 +23,7 @@ import ubic.gemma.model.expression.experiment.ExperimentalFactorValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.gene.GeneValueObject;
 
+import java.io.Serializable;
 import java.util.Collection;
 import java.util.HashSet;
 
@@ -32,9 +33,9 @@ import java.util.HashSet;
  * @author keshav
  */
 @SuppressWarnings({ "unused", "WeakerAccess" }) // Used in frontend
-public class DifferentialExpressionValueObject {
+public class DifferentialExpressionValueObject implements Serializable {
 
-    private final ContrastsValueObject contrasts;
+    private ContrastsValueObject contrasts;
     private Double corrP;
     private Direction direction;
     private Collection<ExperimentalFactorValueObject> experimentalFactors = new HashSet<>();
@@ -48,6 +49,10 @@ public class DifferentialExpressionValueObject {
     private Long probeId;
     private Long resultSetId = null;
     private String sortKey;
+
+    public DifferentialExpressionValueObject() {
+        super();
+    }
 
     public DifferentialExpressionValueObject( DifferentialExpressionAnalysisResult o ) {
         this.p = o.getPvalue();
@@ -82,6 +87,10 @@ public class DifferentialExpressionValueObject {
 
     public ContrastsValueObject getContrasts() {
         return contrasts;
+    }
+
+    public void setContrasts( ContrastsValueObject contrasts ) {
+        this.contrasts = contrasts;
     }
 
     public Double getCorrP() {

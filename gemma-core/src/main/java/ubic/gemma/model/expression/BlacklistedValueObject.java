@@ -1,8 +1,8 @@
 /*
  * The gemma-core project
- * 
+ *
  * Copyright (c) 2018 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -25,10 +25,10 @@ import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.common.description.ExternalDatabaseValueObject;
 
 /**
- * 
+ *
  * @author paul
  */
-public class BlacklistedValueObject extends IdentifiableValueObject<BlacklistedEntity> implements Serializable {
+public class BlacklistedValueObject extends IdentifiableValueObject<BlacklistedEntity> {
     private static final long serialVersionUID = -4817418347388923905L;
 
     public static BlacklistedValueObject fromEntity( BlacklistedEntity e ) {
@@ -41,7 +41,7 @@ public class BlacklistedValueObject extends IdentifiableValueObject<BlacklistedE
         result.setType( e.getClass().getSimpleName() );
         return result;
     }
-    
+
     private String accession;
     private ExternalDatabaseValueObject externalDatabase;
     private String name;
@@ -53,6 +53,7 @@ public class BlacklistedValueObject extends IdentifiableValueObject<BlacklistedE
      * Required when using the class as a spring bean.
      */
     public BlacklistedValueObject() {
+        super();
     }
 
     @SuppressWarnings("unused")

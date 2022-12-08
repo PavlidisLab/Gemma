@@ -44,7 +44,6 @@ import java.util.Collection;
 /**
  * @author tvrossum
  */
-@SuppressWarnings("unused") // Possible external use
 public class GOGroupValueObject extends SessionBoundGeneSetValueObject {
 
     private static final long serialVersionUID = -185326197992950287L;

@@ -26,7 +26,7 @@ import java.io.Serializable;
  */
 @Deprecated
 @SuppressWarnings({ "unused", "WeakerAccess" }) // Used in frontend
-public class FactorValueValueObject extends IdentifiableValueObject<FactorValue> implements Serializable {
+public class FactorValueValueObject extends IdentifiableValueObject<FactorValue> {
 
     private static final long serialVersionUID = 3378801249808036785L;
 
@@ -50,6 +50,7 @@ public class FactorValueValueObject extends IdentifiableValueObject<FactorValue>
      * Required when using the class as a spring bean.
      */
     public FactorValueValueObject() {
+        super();
     }
 
     public FactorValueValueObject( Long id ) {
@@ -57,7 +58,7 @@ public class FactorValueValueObject extends IdentifiableValueObject<FactorValue>
     }
 
     public FactorValueValueObject( FactorValue fv ) {
-        super( fv.getId() );
+        super( fv );
         if ( fv.getCharacteristics().size() == 1 ) {
             this.init( fv, fv.getCharacteristics().iterator().next() );
         } else if ( fv.getCharacteristics().size() > 1 ) {
@@ -79,7 +80,7 @@ public class FactorValueValueObject extends IdentifiableValueObject<FactorValue>
      * @param      value value
      */
     public FactorValueValueObject( FactorValue value, @Nullable Characteristic c ) {
-        super( value.getId() );
+        super( value );
         this.init( value, c );
     }
 

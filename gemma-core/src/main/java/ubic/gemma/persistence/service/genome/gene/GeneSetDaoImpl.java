@@ -239,11 +239,8 @@ public class GeneSetDaoImpl extends AbstractDao<GeneSet> implements GeneSetDao {
     }
 
     private DatabaseBackedGeneSetValueObject fillValueObject( GeneSet geneSet, Taxon taxon, Long membersCount ) {
-        DatabaseBackedGeneSetValueObject dvo = new DatabaseBackedGeneSetValueObject();
+        DatabaseBackedGeneSetValueObject dvo = new DatabaseBackedGeneSetValueObject( geneSet );
         dvo.setSize( membersCount.intValue() );
-        dvo.setId( geneSet.getId() );
-        dvo.setName( geneSet.getName() );
-        dvo.setDescription( geneSet.getDescription() );
         if ( taxon != null ) {
             dvo.setTaxon( new TaxonValueObject( taxon ) );
         } else {

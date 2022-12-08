@@ -44,11 +44,14 @@ public class DatabaseBackedGeneSetValueObject extends GeneSetValueObject {
 
     private static final long serialVersionUID = -1360523793656012770L;
 
-    /**
-     * default constructor to satisfy java bean contract
-     */
     public DatabaseBackedGeneSetValueObject() {
         super();
     }
 
+    /**
+     * default constructor to satisfy java bean contract
+     */
+    public DatabaseBackedGeneSetValueObject( GeneSet geneSet ) {
+        super( geneSet );
+    }
 }

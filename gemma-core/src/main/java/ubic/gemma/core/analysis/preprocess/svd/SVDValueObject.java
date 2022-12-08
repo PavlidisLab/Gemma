@@ -70,6 +70,10 @@ public class SVDValueObject implements Serializable {
     private double[] variances;
     private DoubleMatrix<Long, Integer> vMatrix;
 
+    public SVDValueObject() {
+
+    }
+
     public SVDValueObject( Long id, List<Long> bioMaterialIds, double[] variances,
             DoubleMatrix<Long, Integer> vMatrix ) {
         super();

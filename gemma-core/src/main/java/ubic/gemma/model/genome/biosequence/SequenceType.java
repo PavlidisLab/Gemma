@@ -1,7 +1,5 @@
 package ubic.gemma.model.genome.biosequence;
 
-import com.fasterxml.jackson.annotation.JsonValue;
-
 import java.util.*;
 
 @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
@@ -171,7 +169,6 @@ public class SequenceType implements java.io.Serializable, Comparable<SequenceTy
      * @return the underlying value.
      */
     @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
-    @JsonValue
     public String getValue() {
         return this.value;
     }

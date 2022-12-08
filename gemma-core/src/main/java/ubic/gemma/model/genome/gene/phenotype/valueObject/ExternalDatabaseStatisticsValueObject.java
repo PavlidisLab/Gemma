@@ -14,10 +14,11 @@
  */
 package ubic.gemma.model.genome.gene.phenotype.valueObject;
 
+import java.io.Serializable;
 import java.util.Date;
 
 @SuppressWarnings({ "unused", "WeakerAccess" }) // Used in frontend
-public class ExternalDatabaseStatisticsValueObject implements Comparable<ExternalDatabaseStatisticsValueObject> {
+public class ExternalDatabaseStatisticsValueObject implements Comparable<ExternalDatabaseStatisticsValueObject>, Serializable {
 
     private String name = "";
     private String description = "";

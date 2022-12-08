@@ -23,13 +23,14 @@ import org.slf4j.LoggerFactory;
 import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.persistence.util.Settings;
 
+import java.io.Serializable;
 import java.util.*;
 
 /**
  * @author luke
  */
 @SuppressWarnings({ "unused", "WeakerAccess" }) // Frontend use
-public class CoexpressionMetaValueObject {
+public class CoexpressionMetaValueObject implements Serializable {
 
     /**
      * The default maximum number of edges to send to the client.

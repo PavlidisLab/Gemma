@@ -17,6 +17,7 @@ package ubic.gemma.model.genome.gene.phenotype.valueObject;
 import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
 import ubic.gemma.model.common.description.Characteristic;
 
+import java.io.Serializable;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
@@ -26,7 +27,7 @@ import java.util.TreeSet;
  * @author Nicolas
  */
 @SuppressWarnings({ "unused", "WeakerAccess" }) // Used in frontend
-public class BibliographicPhenotypesValueObject implements Comparable<BibliographicPhenotypesValueObject> {
+public class BibliographicPhenotypesValueObject implements Comparable<BibliographicPhenotypesValueObject>, Serializable {
 
     private Integer geneNCBI = 0;
     private String geneName = "";

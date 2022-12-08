@@ -56,6 +56,7 @@ public class ExpressionExperimentSetValueObject extends IdentifiableValueObject<
      * Required when using the class as a spring bean.
      */
     public ExpressionExperimentSetValueObject() {
+        super();
     }
 
     public ExpressionExperimentSetValueObject( Long id ) {

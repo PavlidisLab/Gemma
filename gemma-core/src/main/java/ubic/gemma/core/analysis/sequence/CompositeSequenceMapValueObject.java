@@ -22,6 +22,7 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.genome.gene.GeneProductValueObject;
 import ubic.gemma.model.genome.gene.GeneValueObject;
 
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -29,7 +30,7 @@ import java.util.Map;
  * @author jsantos
  */
 @SuppressWarnings({ "WeakerAccess", "unused" }) // Frontend use
-public class CompositeSequenceMapValueObject implements Comparable<CompositeSequenceMapValueObject> {
+public class CompositeSequenceMapValueObject implements Comparable<CompositeSequenceMapValueObject>, Serializable {
 
     private Long arrayDesignId = null;
     private String arrayDesignName = null;
@@ -45,6 +46,7 @@ public class CompositeSequenceMapValueObject implements Comparable<CompositeSequ
     private Integer numBlatHits = null;
 
     public CompositeSequenceMapValueObject() {
+        super();
     }
 
     public static CompositeSequenceMapValueObject fromEntity( CompositeSequence cs ) {

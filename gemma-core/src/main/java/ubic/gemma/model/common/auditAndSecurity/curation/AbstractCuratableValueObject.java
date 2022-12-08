@@ -19,18 +19,19 @@ public abstract class AbstractCuratableValueObject<C extends Curatable> extends 
 
     private static final String TROUBLE_DETAILS_NONE = "No trouble details provided.";
 
-    protected Date lastUpdated;
-    protected Boolean troubled = false;
-    protected AuditEventValueObject lastTroubledEvent;
-    protected Boolean needsAttention = false;
-    protected AuditEventValueObject lastNeedsAttentionEvent;
-    protected String curationNote;
-    protected AuditEventValueObject lastNoteUpdateEvent;
+    private Date lastUpdated;
+    private Boolean troubled = false;
+    private AuditEventValueObject lastTroubledEvent;
+    private Boolean needsAttention = false;
+    private AuditEventValueObject lastNeedsAttentionEvent;
+    private String curationNote;
+    private AuditEventValueObject lastNoteUpdateEvent;
 
     /**
      * Required when using the implementing classes as a spring beans.
      */
-    public AbstractCuratableValueObject() {
+    protected AbstractCuratableValueObject() {
+        super();
     }
 
     protected AbstractCuratableValueObject( Long id ) {

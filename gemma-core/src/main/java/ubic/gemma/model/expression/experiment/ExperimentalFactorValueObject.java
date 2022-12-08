@@ -36,7 +36,7 @@ import java.util.HashSet;
 @Getter
 @Setter
 @ToString
-public class ExperimentalFactorValueObject extends IdentifiableValueObject<ExperimentalFactor> implements Serializable {
+public class ExperimentalFactorValueObject extends IdentifiableValueObject<ExperimentalFactor> {
 
     private static final long serialVersionUID = -2615804031123874251L;
 
@@ -55,6 +55,7 @@ public class ExperimentalFactorValueObject extends IdentifiableValueObject<Exper
      * Required when using the class as a spring bean.
      */
     public ExperimentalFactorValueObject() {
+        super();
     }
 
     public ExperimentalFactorValueObject( Long id ) {
@@ -62,7 +63,7 @@ public class ExperimentalFactorValueObject extends IdentifiableValueObject<Exper
     }
 
     public ExperimentalFactorValueObject( ExperimentalFactor factor ) {
-        super( factor.getId() );
+        super( factor );
         this.name = factor.getName();
         this.description = factor.getDescription();
 

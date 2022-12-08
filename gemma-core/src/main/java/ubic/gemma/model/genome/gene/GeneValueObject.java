@@ -108,6 +108,7 @@ public class GeneValueObject extends IdentifiableValueObject<Gene> implements Se
      * Required when using the class as a spring bean.
      */
     public GeneValueObject() {
+        super();
     }
 
     public GeneValueObject( Long id ) {
@@ -120,7 +121,7 @@ public class GeneValueObject extends IdentifiableValueObject<Gene> implements Se
      * @param gene gene
      */
     public GeneValueObject( Gene gene ) {
-        super( gene.getId() );
+        super( gene );
         this.ncbiId = gene.getNcbiGeneId();
         this.officialName = gene.getOfficialName();
         this.officialSymbol = gene.getOfficialSymbol();
@@ -153,7 +154,7 @@ public class GeneValueObject extends IdentifiableValueObject<Gene> implements Se
      */
     @SuppressWarnings("CopyConstructorMissesField") // Only copying constructor argument fields
     public GeneValueObject( GeneValueObject otherBean ) {
-        super( otherBean.id );
+        super( otherBean );
         this.name = otherBean.name;
         this.ncbiId = otherBean.ncbiId;
         this.officialSymbol = otherBean.officialSymbol;

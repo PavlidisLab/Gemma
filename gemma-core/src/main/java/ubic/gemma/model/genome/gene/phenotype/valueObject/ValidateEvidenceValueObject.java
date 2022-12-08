@@ -1,10 +1,11 @@
 package ubic.gemma.model.genome.gene.phenotype.valueObject;
 
+import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Set;
 
 @SuppressWarnings({ "unused", "WeakerAccess" }) // Used in frontend
-public class ValidateEvidenceValueObject {
+public class ValidateEvidenceValueObject implements Serializable {
 
     private boolean sameGeneAnnotated = false;
     private boolean lastUpdateDifferent = false;

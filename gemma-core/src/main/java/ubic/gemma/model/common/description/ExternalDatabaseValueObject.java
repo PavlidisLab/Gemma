@@ -33,7 +33,7 @@ import java.util.stream.Collectors;
 @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
 @Data
 @EqualsAndHashCode(of = { "name" }, callSuper = false)
-public class ExternalDatabaseValueObject extends IdentifiableValueObject<ExternalDatabase> implements Serializable, Comparable<ExternalDatabaseValueObject>, Versioned {
+public class ExternalDatabaseValueObject extends IdentifiableValueObject<ExternalDatabase> implements Comparable<ExternalDatabaseValueObject>, Versioned {
 
     private static final long serialVersionUID = -1714429166594162374L;
     private String name;

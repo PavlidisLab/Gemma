@@ -96,6 +96,7 @@ public class ExpressionExperimentDetailsValueObject extends ExpressionExperiment
      * Required when using the class as a spring bean.
      */
     public ExpressionExperimentDetailsValueObject() {
+        super();
     }
 
     public ExpressionExperimentDetailsValueObject( ExpressionExperiment ee ) {

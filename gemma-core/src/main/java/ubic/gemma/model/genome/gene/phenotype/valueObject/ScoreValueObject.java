@@ -1,6 +1,8 @@
 package ubic.gemma.model.genome.gene.phenotype.valueObject;
 
-public class ScoreValueObject {
+import java.io.Serializable;
+
+public class ScoreValueObject implements Serializable {
 
     // possible values: 0, 0.2, 0.4, 0.6, 0.8, 1
     // indicate the strength of the evidence
@@ -11,7 +13,7 @@ public class ScoreValueObject {
     private String scoreName = "";
 
     public ScoreValueObject() {
-
+        super();
     }
 
     public ScoreValueObject( Double strength, String scoreValue, String scoreName ) {
