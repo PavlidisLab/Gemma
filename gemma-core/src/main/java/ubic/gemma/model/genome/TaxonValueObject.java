@@ -35,6 +35,10 @@ public class TaxonValueObject extends IdentifiableValueObject<Taxon> implements 
     private Boolean isGenesUsable;
     private ExternalDatabaseValueObject externalDatabase;
 
+    public TaxonValueObject() {
+        super();
+    }
+
     public TaxonValueObject( Taxon taxon ) {
         super( taxon.getId() );
         this.setScientificName( taxon.getScientificName() );
