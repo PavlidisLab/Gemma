@@ -331,7 +331,7 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
             Collection<Gene> genes = geneService.load( ids );
             genes = geneService.thawLite( genes );
             vos = geneService.loadValueObjects( genes );
-        } else if ( CharacteristicValueObject.class.isAssignableFrom( entityClass ) ) {
+        } else if ( PhenotypeAssociation.class.isAssignableFrom( entityClass ) ) {
             // This is used for phenotypes.
             Collection<CharacteristicValueObject> cvos = new ArrayList<>();
             for ( SearchResult<?> sr : results ) {
