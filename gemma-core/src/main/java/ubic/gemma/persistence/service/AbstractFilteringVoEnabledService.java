@@ -1,5 +1,6 @@
 package ubic.gemma.persistence.service;
 
+import lombok.Value;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.common.Identifiable;
@@ -25,7 +26,8 @@ public abstract class AbstractFilteringVoEnabledService<O extends Identifiable, 
     @Override
     public ObjectFilter getObjectFilter( String property, ObjectFilter.Operator operator, String value ) {
         try {
-            return ObjectFilter.parseObjectFilter( getPropertyAlias( property ), getPropertyName( property ), getPropertyType( property ), operator, value );
+            ObjectFilterPropertyMeta propertyMeta = getObjectFilterPropertyMeta( property );
+            return ObjectFilter.parseObjectFilter( propertyMeta.objectAlias, propertyMeta.propertyName, propertyMeta.propertyType, operator, value );
         } catch ( NoSuchFieldException e ) {
             throw new IllegalArgumentException( "Could not create object filter for " + property + " on " + voDao.getElementClass().getName() + ".", e );
         }
@@ -34,7 +36,8 @@ public abstract class AbstractFilteringVoEnabledService<O extends Identifiable, 
     @Override
     public ObjectFilter getObjectFilter( String property, ObjectFilter.Operator operator, Collection<String> values ) {
         try {
-            return ObjectFilter.parseObjectFilter( getPropertyAlias( property ), getPropertyName( property ), getPropertyType( property ), operator, values );
+            ObjectFilterPropertyMeta propertyMeta = getObjectFilterPropertyMeta( property );
+            return ObjectFilter.parseObjectFilter( propertyMeta.objectAlias, propertyMeta.propertyName, propertyMeta.propertyType, operator, values );
         } catch ( NoSuchFieldException e ) {
             throw new IllegalArgumentException( "Could not create object filter for " + property + " on " + voDao.getElementClass().getName() + ".", e );
         }
@@ -44,7 +47,8 @@ public abstract class AbstractFilteringVoEnabledService<O extends Identifiable, 
     public Sort getSort( String property, @Nullable Sort.Direction direction ) {
         // this only serves as a pre-condition to ensure that the propertyName exists
         try {
-            return Sort.by( getPropertyAlias( property ), getPropertyName( property ), direction );
+            ObjectFilterPropertyMeta propertyMeta = getObjectFilterPropertyMeta( property );
+            return Sort.by( propertyMeta.objectAlias, propertyMeta.propertyName, direction );
         } catch ( NoSuchFieldException e ) {
             throw new IllegalArgumentException( String.format( "Could not resolve propertyName '%s' on %s.", property, voDao.getElementClass().getName() ), e );
         }
@@ -62,39 +66,25 @@ public abstract class AbstractFilteringVoEnabledService<O extends Identifiable, 
         return voDao.loadValueObjectsPreFilter( filters, sort );
     }
 
-    /**
-     * Obtain the alias that refers to the entity.
-     *
-     * Defaults to {@link FilteringVoEnabledDao#getElementClass()}.
-     *
-     * @throws NoSuchFieldException if no such propertyName exists in {@link O}
-     */
-    protected String getPropertyAlias( String propertyName ) throws NoSuchFieldException {
-        EntityUtils.getDeclaredField( voDao.getElementClass(), propertyName );
-        return voDao.getObjectAlias();
+    @Value
+    protected static class ObjectFilterPropertyMeta {
+        String objectAlias;
+        String propertyName;
+        Class<?> propertyType;
     }
 
     /**
-     * Obtain the propertyName on {@link O} that correspond to the passed propertyName name.
+     * Obtain various meta-information used to infer what to use in a {@link ObjectFilter} or {@link Sort}.
      *
-     * Defaults to the propertyName name itself.
+     * This is used by {@link #getObjectFilter(String, ObjectFilter.Operator, String)} and {@link #getSort(String, Sort.Direction)}.
      *
      * @throws NoSuchFieldException if no such propertyName exists in {@link O}
+     * @see #getObjectFilter(String, ObjectFilter.Operator, String)
+     * @see #getObjectFilter(String, ObjectFilter.Operator, Collection)
+     * @see #getSort(String, Sort.Direction)
      */
-    protected String getPropertyName( String propertyName ) throws NoSuchFieldException {
+    protected ObjectFilterPropertyMeta getObjectFilterPropertyMeta( String propertyName ) throws NoSuchFieldException {
         EntityUtils.getDeclaredField( voDao.getElementClass(), propertyName );
-        return propertyName;
-    }
-
-    /**
-     * Obtain the propertyName type on {@link O} that correspond to the passed propertyName name.
-     *
-     * Defaults to {@link EntityUtils#getDeclaredFieldType(String, Class)} invoked with {@link #getPropertyName(String)}
-     * and {@link FilteringVoEnabledDao#getElementClass()}.
-     *
-     * @throws NoSuchFieldException if no such propertyName exists in {@link O}
-     */
-    protected Class<?> getPropertyType( String propertyName ) throws NoSuchFieldException {
-        return EntityUtils.getDeclaredFieldType( getPropertyName( propertyName ), voDao.getElementClass() );
+        return new ObjectFilterPropertyMeta( voDao.getObjectAlias(), propertyName, EntityUtils.getDeclaredFieldType( propertyName, voDao.getElementClass() ) );
     }
 }

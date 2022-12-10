@@ -20,7 +20,6 @@ package ubic.gemma.persistence.service.expression.experiment;
 
 import com.google.common.base.Strings;
 import gemma.gsec.SecurityService;
-import lombok.Data;
 import org.apache.commons.math3.exception.NotStrictlyPositiveException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -1128,58 +1127,37 @@ public class ExpressionExperimentServiceImpl
      * {@inheritDoc}
      */
     @Override
-    protected String getPropertyAlias( String propertyName ) throws NoSuchFieldException {
-        return getAliasForProperty( propertyName ).objectAlias;
-    }
-
-    @Override
-    protected String getPropertyName( String propertyName ) throws NoSuchFieldException {
-        return getAliasForProperty( propertyName ).propertyName;
-    }
-
-    @Override
-    protected Class<?> getPropertyType( String propertyName ) throws NoSuchFieldException {
-        return getAliasForProperty( propertyName ).propertyType;
-    }
-
-    private AliasPropertyNameType getAliasForProperty( String propertyName ) throws NoSuchFieldException {
+    protected ObjectFilterPropertyMeta getObjectFilterPropertyMeta( String propertyName ) throws NoSuchFieldException {
         if ( propertyName.startsWith( "characteristics." ) ) {
-            String fieldName = propertyName.replaceFirst( "characteristics.", "" );
-            return new AliasPropertyNameType( CharacteristicDao.OBJECT_ALIAS, fieldName, EntityUtils.getDeclaredFieldType( fieldName, Characteristic.class ) );
+            String fieldName = propertyName.replaceFirst( "^characteristics\\.", "" );
+            return new ObjectFilterPropertyMeta( CharacteristicDao.OBJECT_ALIAS, fieldName, EntityUtils.getDeclaredFieldType( fieldName, Characteristic.class ) );
         }
 
         if ( propertyName.startsWith( "bioAssays." ) ) {
-            String fieldName = propertyName.replaceFirst( "bioAssays.", "" );
-            return new AliasPropertyNameType( BioAssayDao.OBJECT_ALIAS, fieldName, EntityUtils.getDeclaredFieldType( fieldName, BioAssay.class ) );
+            String fieldName = propertyName.replaceFirst( "^bioAssays\\.", "" );
+            return new ObjectFilterPropertyMeta( BioAssayDao.OBJECT_ALIAS, fieldName, EntityUtils.getDeclaredFieldType( fieldName, BioAssay.class ) );
         }
 
         if ( propertyName.equals( "taxon" ) ) {
-            return new AliasPropertyNameType( TaxonDao.OBJECT_ALIAS, "id", Long.class );
+            return new ObjectFilterPropertyMeta( TaxonDao.OBJECT_ALIAS, "id", Long.class );
         }
 
         if ( propertyName.equals( "bioAssayCount" ) ) {
-            return new AliasPropertyNameType( expressionExperimentDao.getObjectAlias(), "bioAssays.size", Integer.class );
+            return new ObjectFilterPropertyMeta( expressionExperimentDao.getObjectAlias(), "bioAssays.size", Integer.class );
         }
 
         if ( propertyName.equals( "lastUpdated" ) ) {
-            return new AliasPropertyNameType( "s", "lastUpdated", Date.class );
+            return new ObjectFilterPropertyMeta( "s", "lastUpdated", Date.class );
         }
 
         if ( propertyName.equals( "troubled" ) ) {
-            return new AliasPropertyNameType( "s", "troubled", Boolean.class );
+            return new ObjectFilterPropertyMeta( "s", "troubled", Boolean.class );
         }
 
         if ( propertyName.equals( "needsAttention" ) ) {
-            return new AliasPropertyNameType( "s", "needsAttention", Boolean.class );
+            return new ObjectFilterPropertyMeta( "s", "needsAttention", Boolean.class );
         }
 
-        return new AliasPropertyNameType( expressionExperimentDao.getObjectAlias(), propertyName, EntityUtils.getDeclaredFieldType( propertyName, expressionExperimentDao.getElementClass() ) );
-    }
-
-    @Data
-    private static class AliasPropertyNameType {
-        private final String objectAlias;
-        private final String propertyName;
-        private final Class<?> propertyType;
+        return super.getObjectFilterPropertyMeta( propertyName );
     }
 }
