@@ -92,18 +92,6 @@ public interface SearchService {
     SearchResultMap search( SearchSettings settings, boolean fillObjects, boolean webSpeedSearch ) throws SearchException;
 
     /**
-     * A search of experiments only. At least one of the arguments must be non-null.
-     *
-     * @param  query   if non-blank, used to search for experiments; filters and limits may be applied.
-     * @param  taxonId can be null; if non-null, used to filter results. If query is blank, all experiments for the
-     *                 taxon are returned.
-     * @return Collection of ids.
-     * @deprecated use {@link #search(SearchSettings, Class)} with {@link ExpressionExperiment#getClass()} instead.
-     */
-    @Deprecated
-    Collection<Long> searchExpressionExperiments( String query, Long taxonId ) throws SearchException;
-
-    /**
      * Search results for a specific class.
      *
      * Note: the {@link SearchSettings#getResultTypes()} is entirely ignored, and a narrow search in {@link T} is

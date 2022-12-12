@@ -25,10 +25,8 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import ubic.gemma.core.search.SearchException;
-import ubic.gemma.core.search.SearchResult;
-import ubic.gemma.core.search.SearchResultDisplayObject;
-import ubic.gemma.core.search.SearchService;
+import org.springframework.transaction.annotation.Transactional;
+import ubic.gemma.core.search.*;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.search.SearchSettings;
@@ -44,6 +42,7 @@ import ubic.gemma.persistence.service.expression.experiment.ExpressionExperiment
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.persistence.util.EntityUtils;
 
+import javax.annotation.Nullable;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -57,6 +56,7 @@ public class ExpressionExperimentSearchServiceImpl implements ExpressionExperime
 
     private static final Log log = LogFactory.getLog( ExpressionExperimentSearchServiceImpl.class );
     private static final String MASTER_SET_PREFIX = "Master set for";
+    private static final int MINIMUM_EE_QUERY_LENGTH = 3;
 
     private final ExpressionExperimentSetService expressionExperimentSetService;
     private final CoexpressionAnalysisService coexpressionAnalysisService;
@@ -251,6 +251,37 @@ public class ExpressionExperimentSearchServiceImpl implements ExpressionExperime
         Collections.sort( setResults );
 
         return setResults;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Collection<Long> searchExpressionExperiments( String query, @Nullable Long taxonId ) throws SearchException {
+        Taxon taxon = null;
+        if ( taxonId != null ) {
+            taxon = taxonService.load( taxonId );
+        }
+        Collection<Long> eeIds = new HashSet<>();
+        if ( StringUtils.isNotBlank( query ) ) {
+
+            if ( query.length() < MINIMUM_EE_QUERY_LENGTH )
+                return eeIds;
+
+            // Initial list
+            List<SearchResult<ExpressionExperiment>> results = searchService.search( SearchSettings.expressionExperimentSearch( query, taxon ),
+                            false /* no fill */, false /*
+                             * speed
+                             * search,
+                             * irrelevant
+                             */ )
+                    .get( ExpressionExperiment.class );
+            for ( SearchResult<ExpressionExperiment> result : results ) {
+                eeIds.add( result.getResultId() );
+            }
+        } else if ( taxon != null ) {
+            // get all for taxon
+            eeIds = EntityUtils.getIds( expressionExperimentService.findByTaxon( taxon ) );
+        }
+        return eeIds;
     }
 
     private List<SearchResultDisplayObject> getExpressionExperimentResults( SearchService.SearchResultMap results ) {

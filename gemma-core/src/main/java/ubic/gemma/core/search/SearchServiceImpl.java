@@ -135,8 +135,6 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
      */
     private static final double INDIRECT_HIT_PENALTY = 0.8;
 
-    private static final int MINIMUM_EE_QUERY_LENGTH = 3;
-
     private static final String NCBI_GENE = "ncbi_gene";
 
     private static final String ONTOLOGY_CHILDREN_CACHE_NAME = "OntologyChildrenCache";
@@ -245,36 +243,6 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
     /*
      * NOTE used via the DataSetSearchAndGrabToolbar -> DatasetGroupEditor
      */
-    @Override
-    @Transactional(readOnly = true)
-    public Collection<Long> searchExpressionExperiments( String query, @Nullable Long taxonId ) throws SearchException {
-        Taxon taxon = null;
-        if ( taxonId != null ) {
-            taxon = taxonService.load( taxonId );
-        }
-        Collection<Long> eeIds = new HashSet<>();
-        if ( StringUtils.isNotBlank( query ) ) {
-
-            if ( query.length() < SearchServiceImpl.MINIMUM_EE_QUERY_LENGTH )
-                return eeIds;
-
-            // Initial list
-            List<SearchResult<ExpressionExperiment>> results = this
-                    .search( SearchSettings.expressionExperimentSearch( query, taxon ), false /* no fill */, false /*
-                     * speed
-                     * search,
-                     * irrelevant
-                     */ )
-                    .get( ExpressionExperiment.class );
-            for ( SearchResult<ExpressionExperiment> result : results ) {
-                eeIds.add( result.getResultId() );
-            }
-        } else if ( taxon != null ) {
-            // get all for taxon
-            eeIds = EntityUtils.getIds( expressionExperimentService.findByTaxon( taxon ) );
-        }
-        return eeIds;
-    }
 
     @Override
     @Transactional(readOnly = true)

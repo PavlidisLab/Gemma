@@ -49,7 +49,6 @@ import ubic.gemma.core.job.executor.webapp.TaskRunningService;
 import ubic.gemma.core.loader.entrez.pubmed.PubMedSearch;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.search.SearchResultDisplayObject;
-import ubic.gemma.core.search.SearchService;
 import ubic.gemma.core.tasks.AbstractTask;
 import ubic.gemma.core.tasks.analysis.expression.UpdateEEDetailsCommand;
 import ubic.gemma.core.tasks.analysis.expression.UpdatePubMedCommand;
@@ -134,8 +133,6 @@ public class ExpressionExperimentController {
     private ExpressionExperimentSubSetService expressionExperimentSubSetService;
     @Autowired
     private Persister persisterHelper;
-    @Autowired
-    private SearchService searchService;
     @Autowired
     private SecurityService securityService;
     @Autowired
@@ -309,7 +306,7 @@ public class ExpressionExperimentController {
     public Collection<Long> find( String query, Long taxonId ) {
         ExpressionExperimentController.log.info( "Search: query='" + query + "' taxon=" + taxonId );
         try {
-            return searchService.searchExpressionExperiments( query, taxonId );
+            return expressionExperimentSearchService.searchExpressionExperiments( query, taxonId );
         } catch ( SearchException e ) {
             throw new IllegalArgumentException( "Invalid search settings.", e );
         }
