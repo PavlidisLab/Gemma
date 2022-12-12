@@ -15,10 +15,11 @@ public class MeasurementValueObject extends IdentifiableValueObject {
     private String representation;
 
     public MeasurementValueObject() {
+        super();
     }
 
     public MeasurementValueObject( Measurement measurement ) {
-        super( measurement.getId() );
+        super( measurement );
         this.value = measurement.getValue();
         if ( measurement.getUnit() != null ) {
             this.unit = measurement.getUnit().getUnitNameCV();
@@ -47,5 +48,25 @@ public class MeasurementValueObject extends IdentifiableValueObject {
 
     public String getRepresentation() {
         return representation;
+    }
+
+    public void setValue( String value ) {
+        this.value = value;
+    }
+
+    public void setUnit( String unit ) {
+        this.unit = unit;
+    }
+
+    public void setUnitId( Long unitId ) {
+        this.unitId = unitId;
+    }
+
+    public void setType( String type ) {
+        this.type = type;
+    }
+
+    public void setRepresentation( String representation ) {
+        this.representation = representation;
     }
 }

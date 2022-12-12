@@ -30,6 +30,7 @@ import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.persistence.service.AbstractFilteringVoEnabledService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventDao;
 import ubic.gemma.persistence.service.expression.experiment.BlacklistedEntityService;
+import ubic.gemma.persistence.util.EntityUtils;
 
 import java.util.*;
 
@@ -416,6 +417,21 @@ public class ArrayDesignServiceImpl extends AbstractFilteringVoEnabledService<Ar
     @Transactional
     public Boolean updateSubsumingStatus( ArrayDesign candidateSubsumer, ArrayDesign candidateSubsumee ) {
         return this.arrayDesignDao.updateSubsumingStatus( candidateSubsumer, candidateSubsumee );
+    }
+
+    @Override
+    protected ObjectFilterPropertyMeta getObjectFilterPropertyMeta( String propertyName ) throws NoSuchFieldException {
+        // handle cases such as taxon = 1
+        if ( propertyName.equals( "taxon" ) ) {
+            return new ObjectFilterPropertyMeta( "t", "id", Long.class );
+        }
+        // handles taxon.{propertyName} {op} {value}
+        else if ( propertyName.startsWith( "taxon." ) ) {
+            String fieldName = propertyName.replaceFirst( "^taxon\\.", "" );
+            return new ObjectFilterPropertyMeta( "t", fieldName, EntityUtils.getDeclaredFieldType( fieldName, Taxon.class ) );
+        } else {
+            return super.getObjectFilterPropertyMeta( propertyName );
+        }
     }
 
     private void checkForMoreRecentMethod( Map<Long, AuditEvent> lastEventMap,

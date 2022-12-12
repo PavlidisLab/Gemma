@@ -70,6 +70,7 @@ public class EvidenceValueObject<E extends PhenotypeAssociation> extends Identif
      * Required when using the class as a spring bean.
      */
     public EvidenceValueObject() {
+        super();
     }
 
     public EvidenceValueObject( Long id ) {
@@ -93,8 +94,8 @@ public class EvidenceValueObject<E extends PhenotypeAssociation> extends Identif
      *
      * @param phenotypeAssociation phenotype association
      */
-    protected EvidenceValueObject( PhenotypeAssociation phenotypeAssociation ) {
-        super( phenotypeAssociation.getId() );
+    protected EvidenceValueObject( E phenotypeAssociation ) {
+        super( phenotypeAssociation );
         this.className = this.getClass().getSimpleName();
         this.description = phenotypeAssociation.getDescription();
         this.evidenceCode = phenotypeAssociation.getEvidenceCode().getValue();
@@ -421,7 +422,7 @@ public class EvidenceValueObject<E extends PhenotypeAssociation> extends Identif
             return PhenotypeMappingType.INFERRED_XREF;
         } else if ( phenotypeMapping.equalsIgnoreCase( "Inferred Curated" ) ) {
             return PhenotypeMappingType.INFERRED_CURATED;
-        } else if (  phenotypeMapping.equalsIgnoreCase( "Direct" ) ) {
+        } else if ( phenotypeMapping.equalsIgnoreCase( "Direct" ) ) {
             return PhenotypeMappingType.DIRECT;
         }
         return null;

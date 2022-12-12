@@ -31,7 +31,7 @@ import org.apache.commons.lang3.StringUtils;
 @SuppressWarnings("unused") // Used in json serialization
 @Data
 @EqualsAndHashCode(of = { "characteristics" }, callSuper = true)
-public class FactorValueBasicValueObject extends IdentifiableValueObject<FactorValue> implements Serializable {
+public class FactorValueBasicValueObject extends IdentifiableValueObject<FactorValue> {
 
     private static final long serialVersionUID = 3378801249808036785L;
 
@@ -48,6 +48,7 @@ public class FactorValueBasicValueObject extends IdentifiableValueObject<FactorV
      * Required when using the class as a spring bean.
      */
     public FactorValueBasicValueObject() {
+        super();
     }
 
     public FactorValueBasicValueObject( Long id ) {
@@ -55,7 +56,7 @@ public class FactorValueBasicValueObject extends IdentifiableValueObject<FactorV
     }
 
     public FactorValueBasicValueObject( FactorValue fv ) {
-        super( fv.getId() );
+        super( fv );
         this.summary = getSummaryString( fv );
         this.experimentalFactorId = fv.getExperimentalFactor().getId();
         this.isBaseline = fv.getIsBaseline() != null ? fv.getIsBaseline() : false;

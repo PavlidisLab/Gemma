@@ -53,6 +53,7 @@ public class SessionBoundExpressionExperimentSetValueObject extends ExpressionEx
      */
     @SuppressWarnings("WeakerAccess") // Required by Spring
     public SessionBoundExpressionExperimentSetValueObject() {
+        super();
     }
 
     /**

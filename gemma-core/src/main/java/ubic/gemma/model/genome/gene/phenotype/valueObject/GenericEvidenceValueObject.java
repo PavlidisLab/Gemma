@@ -31,6 +31,7 @@ public class GenericEvidenceValueObject extends EvidenceValueObject<GenericEvide
      * Required when using the class as a spring bean.
      */
     public GenericEvidenceValueObject() {
+        super();
     }
 
     public GenericEvidenceValueObject( Long id ) {

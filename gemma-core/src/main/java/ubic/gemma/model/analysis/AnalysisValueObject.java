@@ -9,6 +9,6 @@ public abstract class AnalysisValueObject<T extends Analysis> extends Identifiab
     }
 
     protected AnalysisValueObject( T analysis ) {
-        super( analysis.getId() );
+        super( analysis );
     }
 }

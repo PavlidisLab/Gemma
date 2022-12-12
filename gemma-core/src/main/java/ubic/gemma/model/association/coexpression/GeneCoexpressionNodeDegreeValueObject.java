@@ -25,6 +25,7 @@ import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import ubic.basecode.io.ByteArrayConverter;
 
+import java.io.Serializable;
 import java.util.List;
 import java.util.TreeMap;
 
@@ -33,14 +34,18 @@ import java.util.TreeMap;
  *
  * @author Paul
  */
-public class GeneCoexpressionNodeDegreeValueObject {
+public class GeneCoexpressionNodeDegreeValueObject implements Serializable {
 
     private static final ByteArrayConverter bac = new ByteArrayConverter();
-    private final Long geneId;
+    private Long geneId;
     private TreeMap<Integer, Integer> nodeDegreesNeg = new TreeMap<>();
     private TreeMap<Integer, Integer> nodeDegreesPos = new TreeMap<>();
     private TreeMap<Integer, Double> relDegreesNeg = new TreeMap<>();
     private TreeMap<Integer, Double> relDegreesPos = new TreeMap<>();
+
+    public GeneCoexpressionNodeDegreeValueObject() {
+        super();
+    }
 
     public GeneCoexpressionNodeDegreeValueObject( GeneCoexpressionNodeDegree entity ) {
         this.geneId = entity.getGeneId();
@@ -79,7 +84,7 @@ public class GeneCoexpressionNodeDegreeValueObject {
     /**
      * @param  support  value
      * @param  positive positive
-     * @return          how many links have this much support (specifically).
+     * @return how many links have this much support (specifically).
      */
     public Integer getLinksWithExactSupport( Integer support, boolean positive ) {
         if ( positive ) {
@@ -91,7 +96,7 @@ public class GeneCoexpressionNodeDegreeValueObject {
 
     /**
      * @param  i support
-     * @return   total number of links (this is just the total of positive and negative; if some of those are with the
+     * @return total number of links (this is just the total of positive and negative; if some of those are with the
      *           same genes it's a double count, sorry)
      */
     public Integer getLinksWithMinimumSupport( int i ) {
@@ -101,7 +106,7 @@ public class GeneCoexpressionNodeDegreeValueObject {
     /**
      * @param  support  threshold
      * @param  positive positive
-     * @return          how many links have at least this much support (cumulative)
+     * @return how many links have at least this much support (cumulative)
      */
     public Integer getLinksWithMinimumSupport( Integer support, boolean positive ) {
         assert support >= 0;

@@ -26,15 +26,19 @@ import java.util.Collection;
 public class CoexpressionCacheValueObject implements Serializable {
 
     private static final long serialVersionUID = 184287422449009209L;
-    private final Long queryGene;
-    private final Long coexpGene;
-    private final int support;
-    private final boolean positiveCorrelation;
+    private Long queryGene;
+    private Long coexpGene;
+    private int support;
+    private boolean positiveCorrelation;
     private String coexGeneSymbol; // possibly don't store here?
     private String queryGeneSymbol; // possibly don't store here?
     private Long supportDetailsId;
     private Collection<Long> supportingDatasets;
     private CompressedLongSet testedInDatasets;
+
+    public CoexpressionCacheValueObject() {
+        super();
+    }
 
     /**
      * @param vo coexpression VO

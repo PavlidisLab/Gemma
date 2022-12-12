@@ -27,6 +27,7 @@ import ubic.gemma.model.expression.experiment.ExperimentalFactorValueObject;
 import ubic.gemma.model.expression.experiment.FactorValueValueObject;
 import ubic.gemma.persistence.util.EntityUtils;
 
+import java.io.Serializable;
 import java.util.Collection;
 import java.util.HashSet;
 
@@ -39,7 +40,7 @@ import java.util.HashSet;
 @SuppressWarnings({ "unused", "WeakerAccess" }) // Used in frontend
 @Data
 @EqualsAndHashCode(of = { "id" })
-public class DiffExResultSetSummaryValueObject implements java.io.Serializable {
+public class DiffExResultSetSummaryValueObject implements Serializable {
 
     private static final long serialVersionUID = 2063274043081170625L;
 
@@ -95,6 +96,10 @@ public class DiffExResultSetSummaryValueObject implements java.io.Serializable {
      * Number of diffex probes in the {@link Direction#DOWN} hit list if available.
      */
     private Integer downregulatedCount;
+
+    public DiffExResultSetSummaryValueObject() {
+        super();
+    }
 
     public DiffExResultSetSummaryValueObject( ExpressionAnalysisResultSet resultSet ) {
         this.setId( resultSet.getId() );

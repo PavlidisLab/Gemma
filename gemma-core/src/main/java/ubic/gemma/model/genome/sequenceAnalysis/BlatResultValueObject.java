@@ -56,6 +56,7 @@ public class BlatResultValueObject extends IdentifiableValueObject<BlatResult> {
      * Required when using the class as a spring bean.
      */
     public BlatResultValueObject() {
+        super();
     }
 
     public BlatResultValueObject( Long id ) {

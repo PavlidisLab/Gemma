@@ -93,6 +93,12 @@ public class GeneSetValueObject extends IdentifiableValueObject<GeneSet> impleme
         super( id );
     }
 
+    public GeneSetValueObject( GeneSet geneSet ) {
+        super( geneSet );
+        setName( geneSet.getName() );
+        setDescription( geneSet.getDescription() );
+    }
+
     @GemmaWebOnly
     public Long getTaxonId() {
         return this.taxon != null ? this.taxon.getId() : null;

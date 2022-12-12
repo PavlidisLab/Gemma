@@ -11,6 +11,10 @@ public class EvidenceSourceValueObject extends DatabaseEntryValueObject {
     // used by neurocarta to find the url of an evidence source
     private String externalUrl = "";
 
+    public EvidenceSourceValueObject() {
+        super();
+    }
+
     public EvidenceSourceValueObject( DatabaseEntry de ) {
         super( de );
         this.externalUrl = de.getExternalDatabase().getWebUri() + de.getAccession();

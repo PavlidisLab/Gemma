@@ -56,6 +56,21 @@ public class SearchResult<T extends Identifiable> implements Comparable<SearchRe
     }
 
     /**
+     * Create a search result whose result class differ from the object.
+     * <p>
+     * This can be useful if you wrap a proxy, or don't want to expose the object class publicly. For example, our
+     * {@link ubic.gemma.model.association.phenotype.PhenotypeAssociation} use a {@link ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject}
+     * for the result object.
+     */
+    public static <T extends Identifiable> SearchResult<T> from( Class<? extends Identifiable> resultClass, T entity, double score, @Nullable String highlightedText, Object source ) {
+        SearchResult<T> sr = new SearchResult<>( resultClass, entity.getId(), source );
+        sr.setResultObject( entity );
+        sr.setScore( score );
+        sr.setHighlightedText( highlightedText );
+        return sr;
+    }
+
+    /**
      * Create a search result from an existing one, replacing the result object with the target one.
      * <p>
      * This is useful if you need to convert the result object (i.e. to a VO) while preserving the metadata (score,

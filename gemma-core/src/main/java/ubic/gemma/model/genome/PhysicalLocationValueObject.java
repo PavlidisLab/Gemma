@@ -18,7 +18,12 @@ public class PhysicalLocationValueObject extends IdentifiableValueObject<Physica
     private String chromosome;
     private TaxonValueObject taxon;
 
+    public PhysicalLocationValueObject() {
+        super();
+    }
+
     public PhysicalLocationValueObject( PhysicalLocation location ) {
+        super( location );
         this.nucleotide = location.getNucleotide();
         this.nucleotideLength = location.getNucleotideLength();
         this.strand = location.getStrand();
@@ -74,5 +79,29 @@ public class PhysicalLocationValueObject extends IdentifiableValueObject<Physica
 
     public TaxonValueObject getTaxon() {
         return taxon;
+    }
+
+    public void setNucleotideLength( Integer nucleotideLength ) {
+        this.nucleotideLength = nucleotideLength;
+    }
+
+    public void setStrand( String strand ) {
+        this.strand = strand;
+    }
+
+    public void setBin( Integer bin ) {
+        this.bin = bin;
+    }
+
+    public void setChromosome( String chromosome ) {
+        this.chromosome = chromosome;
+    }
+
+    public void setTaxon( TaxonValueObject taxon ) {
+        this.taxon = taxon;
+    }
+
+    public void setNucleotide( Long nucleotide ) {
+        this.nucleotide = nucleotide;
     }
 }

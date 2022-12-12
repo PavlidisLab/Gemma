@@ -4,8 +4,10 @@ import ubic.gemma.model.association.phenotype.PhenotypeAssociationPublication;
 import ubic.gemma.model.common.description.BibliographicReferenceValueObject;
 import ubic.gemma.model.common.description.CitationValueObject;
 
+import java.io.Serializable;
+
 @SuppressWarnings({ "unused", "WeakerAccess" }) // Used in frontend
-public class PhenotypeAssPubValueObject implements Comparable<PhenotypeAssPubValueObject> {
+public class PhenotypeAssPubValueObject implements Comparable<PhenotypeAssPubValueObject>, Serializable {
 
     public static final String PRIMARY = "Primary";
     public static final String RELEVANT = "Relevant";
@@ -13,7 +15,7 @@ public class PhenotypeAssPubValueObject implements Comparable<PhenotypeAssPubVal
     private CitationValueObject citationValueObject = null;
 
     public PhenotypeAssPubValueObject() {
-
+        super();
     }
 
     public PhenotypeAssPubValueObject( PhenotypeAssociationPublication assocationPublication ) {

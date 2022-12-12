@@ -22,6 +22,7 @@ package ubic.gemma.persistence.service.association.coexpression;
 import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.model.association.coexpression.Gene2GeneCoexpression;
 
+import java.io.Serializable;
 import java.util.Collection;
 import java.util.Set;
 
@@ -35,11 +36,11 @@ import java.util.Set;
  * @author Paul
  */
 @SuppressWarnings({ "unused", "WeakerAccess" }) // Used in frontend
-public class CoexpressionValueObject implements Comparable<CoexpressionValueObject> {
+public class CoexpressionValueObject implements Comparable<CoexpressionValueObject>, Serializable {
 
-    private final Long coexGeneId;
-    private final boolean positiveCorrelation;
-    private final Long queryGeneId;
+    private Long coexGeneId;
+    private boolean positiveCorrelation;
+    private Long queryGeneId;
     private String coexGeneSymbol;
     /**
      * If true, this means the results were trimmed to a subset.
@@ -79,6 +80,10 @@ public class CoexpressionValueObject implements Comparable<CoexpressionValueObje
      * the query.
      */
     private Set<Long> testedInDatasets = null;
+
+    public CoexpressionValueObject() {
+        super();
+    }
 
     /**
      * Construct a value object. The "tested-in" component is not filled in, it must be done later.

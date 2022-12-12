@@ -18,12 +18,13 @@ public class BioSequenceValueObject extends IdentifiableValueObject<BioSequence>
     private String sequence;
     private DatabaseEntryValueObject sequenceDatabaseEntry;
     private TaxonValueObject taxon;
-    private ubic.gemma.model.genome.biosequence.SequenceType type;
+    private SequenceTypeValueObject type;
 
     /**
      * Required when using the class as a spring bean.
      */
     public BioSequenceValueObject() {
+        super();
     }
 
     private BioSequenceValueObject( Long id ) {
@@ -47,7 +48,7 @@ public class BioSequenceValueObject extends IdentifiableValueObject<BioSequence>
             vo.setSequenceDatabaseEntry( new DatabaseEntryValueObject( bs.getSequenceDatabaseEntry() ) );
         }
         vo.setLength( bs.getLength() );
-        vo.setType( bs.getType() );
+        vo.setType( new SequenceTypeValueObject( bs.getType() ) );
         vo.setFractionRepeats( bs.getFractionRepeats() );
         // FIXME: BioSequence returned by the SearchService might have a null taxon
         if ( bs.getTaxon() != null ) {
@@ -145,11 +146,11 @@ public class BioSequenceValueObject extends IdentifiableValueObject<BioSequence>
         this.taxon = taxon;
     }
 
-    public ubic.gemma.model.genome.biosequence.SequenceType getType() {
+    public SequenceTypeValueObject getType() {
         return this.type;
     }
 
-    public void setType( ubic.gemma.model.genome.biosequence.SequenceType type ) {
+    public void setType( SequenceTypeValueObject type ) {
         this.type = type;
     }
 

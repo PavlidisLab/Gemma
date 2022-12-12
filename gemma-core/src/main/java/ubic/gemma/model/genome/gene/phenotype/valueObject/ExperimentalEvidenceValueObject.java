@@ -35,6 +35,7 @@ public class ExperimentalEvidenceValueObject extends EvidenceValueObject<Experim
      * Required when using the class as a spring bean.
      */
     public ExperimentalEvidenceValueObject() {
+        super();
     }
 
     public ExperimentalEvidenceValueObject( Long id ) {

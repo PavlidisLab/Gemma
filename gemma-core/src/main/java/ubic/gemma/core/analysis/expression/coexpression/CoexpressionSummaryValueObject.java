@@ -19,19 +19,26 @@
 package ubic.gemma.core.analysis.expression.coexpression;
 
 import ubic.gemma.model.association.coexpression.GeneCoexpressionNodeDegreeValueObject;
+import ubic.gemma.persistence.service.association.coexpression.CoexpressionValueObject;
+
+import java.io.Serializable;
 
 /**
  * @author luke
  */
 @SuppressWarnings({ "unused", "WeakerAccess" }) // Used in frontend
-public class CoexpressionSummaryValueObject {
+public class CoexpressionSummaryValueObject implements Serializable {
 
-    private final long geneId;
+    private long geneId;
     // node degree info for this gene, genome wide.
     private GeneCoexpressionNodeDegreeValueObject coexpNodeDegree = null;
     private int datasetsAvailable;
     private int datasetsTested;
     private int linksFound;
+
+    public CoexpressionSummaryValueObject() {
+        super();
+    }
 
     public CoexpressionSummaryValueObject( Long geneId ) {
         this.geneId = geneId;
@@ -69,6 +76,10 @@ public class CoexpressionSummaryValueObject {
 
     public long getGeneId() {
         return geneId;
+    }
+
+    public void setGeneId( long geneId ) {
+        this.geneId = geneId;
     }
 
     public int getLinksFound() {

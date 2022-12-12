@@ -48,6 +48,7 @@ public class DiffExpressionEvidenceValueObject extends EvidenceValueObject<Diffe
      * Required when using the class as a spring bean.
      */
     public DiffExpressionEvidenceValueObject() {
+        super();
     }
 
     public DiffExpressionEvidenceValueObject( Long id ) {

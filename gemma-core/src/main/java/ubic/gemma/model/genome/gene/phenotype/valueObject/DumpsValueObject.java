@@ -14,11 +14,13 @@
  */
 package ubic.gemma.model.genome.gene.phenotype.valueObject;
 
+import java.io.Serializable;
+
 /**
  * @author jleong
  */
 @SuppressWarnings({ "unused", "WeakerAccess" }) // Used in frontend
-public class DumpsValueObject {
+public class DumpsValueObject implements Serializable {
 
     private String name;
     private String url;

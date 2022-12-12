@@ -699,11 +699,8 @@ public class ExpressionExperimentController {
      */
     public Collection<ExpressionExperimentDetailsValueObject> loadDetailedExpressionExperiments(
             Collection<Long> ids ) {
-        if ( ids.isEmpty() ) {
-            return new HashSet<>();
-        }
         Collection<ExpressionExperimentDetailsValueObject> result = this
-                .getFilteredExpressionExperimentValueObjects( null, null, 0, true );
+                .getFilteredExpressionExperimentValueObjects( null, ids, 0, true );
         this.expressionExperimentReportService.populateReportInformation( result );
         return result;
     }
@@ -782,7 +779,7 @@ public class ExpressionExperimentController {
         }
 
         // -1 is used in the frontend as a substitute for null
-        if ( taxonId == -1L ) {
+        if ( taxonId != null && taxonId == -1L ) {
             taxonId = null;
         }
 
@@ -1522,6 +1519,10 @@ public class ExpressionExperimentController {
             taxon = null;
         }
 
+        if ( limit == null ) {
+            limit = 0;
+        }
+
         // Limit default desc - lastUpdated is a date and the most recent date is the largest one.
         eeVos = this
                 .getFilteredExpressionExperimentValueObjects( taxon, ids, limit, showPublic );
@@ -1605,10 +1606,13 @@ public class ExpressionExperimentController {
      * @return Collection<ExpressionExperimentValueObject>
      */
     private Collection<ExpressionExperimentDetailsValueObject> getFilteredExpressionExperimentValueObjects( Taxon taxon,
-            Collection<Long> eeIds, Integer limit, boolean showPublic ) {
+            Collection<Long> eeIds, int limit, boolean showPublic ) {
 
+        Sort.Direction direction = limit < 0 ? Sort.Direction.ASC : Sort.Direction.DESC;
         Slice<ExpressionExperimentDetailsValueObject> vos = expressionExperimentService
-                .loadDetailsValueObjects( eeIds, taxon, expressionExperimentService.getSort( "curationDetails.lastUpdated", Sort.Direction.DESC ), 0, Math.abs( limit ) );
+                .loadDetailsValueObjects( eeIds, taxon,
+                        expressionExperimentService.getSort( "curationDetails.lastUpdated", direction ),
+                        0, Math.abs( limit ) );
         // Hide public data sets if desired.
         if ( !vos.isEmpty() && !showPublic ) {
             Collection<ExpressionExperimentDetailsValueObject> publicEEs = securityService.choosePublic( vos );

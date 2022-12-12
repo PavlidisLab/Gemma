@@ -22,12 +22,21 @@ package ubic.gemma.core.genome.gene;
 import ubic.gemma.model.GemmaSessionBackedValueObject;
 import ubic.gemma.model.genome.gene.GeneSetValueObject;
 
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
+
 /**
  * @author tvrossum
  */
 public class SessionBoundGeneSetValueObject extends GeneSetValueObject implements GemmaSessionBackedValueObject {
 
     private static final long serialVersionUID = 5073203626044664184L;
+
+    /**
+     * Counter to assign unique IDs to session-bounds gene sets.
+     */
+    private static final AtomicLong counter = new AtomicLong( 1L );
+
     private boolean modified = false;
 
     /**
@@ -35,9 +44,8 @@ public class SessionBoundGeneSetValueObject extends GeneSetValueObject implement
      */
     @SuppressWarnings("WeakerAccess") // Frontend use
     public SessionBoundGeneSetValueObject() {
-        super();
+        super( counter.getAndIncrement() );
         this.setModified( false );
-        this.setId( new Long( this.hashCode() ) );
     }
 
     /**

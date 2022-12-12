@@ -4,7 +4,11 @@ import gemma.gsec.model.Securable;
 
 public class ExpressionExperimentSubsetValueObject extends ExpressionExperimentValueObject {
 
-    private final Long sourceExperiment;
+    private Long sourceExperiment;
+
+    public ExpressionExperimentSubsetValueObject() {
+        super();
+    }
 
     public ExpressionExperimentSubsetValueObject( ExpressionExperimentSubSet ees ) {
         super( ees.getId() );
@@ -21,5 +25,9 @@ public class ExpressionExperimentSubsetValueObject extends ExpressionExperimentV
 
     public Long getSourceExperiment() {
         return sourceExperiment;
+    }
+
+    public void setSourceExperiment( Long sourceExperiment ) {
+        this.sourceExperiment = sourceExperiment;
     }
 }

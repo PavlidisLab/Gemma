@@ -49,7 +49,7 @@ import java.util.stream.Collectors;
 @Data
 @EqualsAndHashCode(of = { "shortName" }, callSuper = true)
 @CommonsLog
-public class ArrayDesignValueObject extends AbstractCuratableValueObject<ArrayDesign> implements Serializable, Versioned {
+public class ArrayDesignValueObject extends AbstractCuratableValueObject<ArrayDesign> implements Versioned {
     /**
      * The serial version UID of this class. Needed for serialization.
      */
@@ -146,6 +146,10 @@ public class ArrayDesignValueObject extends AbstractCuratableValueObject<ArrayDe
      * Main external reference.
      */
     private Set<DatabaseEntryValueObject> externalReferences;
+
+    public ArrayDesignValueObject() {
+        super();
+    }
 
     public ArrayDesignValueObject( Long id ) {
         super( id );
