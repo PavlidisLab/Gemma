@@ -29,7 +29,6 @@ import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObj
 import ubic.gemma.model.genome.sequenceAnalysis.BioSequenceValueObject;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
-import ubic.gemma.web.services.rest.swagger.resolvers.SearchResultTypeAllowableValuesModelResolver;
 import ubic.gemma.web.services.rest.util.ResponseDataObject;
 import ubic.gemma.web.services.rest.util.args.LimitArg;
 import ubic.gemma.web.services.rest.util.args.PlatformArg;
@@ -75,7 +74,7 @@ public class SearchWebService {
     /**
      * Search everything subject to taxon and platform constraints.
      * <p>
-     * Naming the schema in for the result types is necessary so that it can be resolved in {@link SearchResultTypeAllowableValuesModelResolver}.
+     * Naming the schema in for the result types is necessary so that it can be resolved in {@link ubic.gemma.web.services.rest.swagger.resolver.CustomModelResolver}.
      */
     @GET
     @Produces(MediaType.APPLICATION_JSON_VALUE)
