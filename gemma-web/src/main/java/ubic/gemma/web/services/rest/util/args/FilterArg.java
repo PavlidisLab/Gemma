@@ -15,6 +15,8 @@
 package ubic.gemma.web.services.rest.util.args;
 
 import io.swagger.v3.oas.annotations.ExternalDocumentation;
+import io.swagger.v3.oas.annotations.extensions.Extension;
+import io.swagger.v3.oas.annotations.extensions.ExtensionProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.persistence.service.FilteringService;
@@ -30,10 +32,10 @@ import java.util.List;
 
 /**
  * Represent a filter argument designed to generate a {@link Filters} from user input.
- *
+ * <p>
  * Filtering can be done on any property or nested property of an entity managed by a {@link FilteringService}. E.g:
  * 'curationDetails' or 'curationDetails.lastTroubledEvent.date'.
- *
+ * <p>
  * Any property of a supported type. Currently, supported types are:
  * <ul>
  * <li>String - property of {@link String} type, required value can be any String.</li>
@@ -45,7 +47,7 @@ import java.util.List;
  * <li>Collection - property of a {@link java.util.Collection} of any type aforementioned, nested collections are not
  * supported</li>
  * </ul>
- *
+ * <p>
  * Accepted operator keywords are:
  * <ul>
  * <li>'=' - equality</li>
@@ -54,36 +56,36 @@ import java.util.List;
  * <li>'&gt;' - larger than (only Number and Date types)</li>
  * <li>'&lt;=' - smaller or equal (only Number and Date types)</li>
  * <li>'&gt;=' - larger or equal (only Number and Date types)</li>
- * <li>'like' - similar string, effectively means 'contains', translates to the SQL <code>LIKE</code> operator where the
+ * <li>'like' - similar string, effectively means 'contains', translates to the SQL {@code LIKE} operator where the
  * given value is surrounded by '%' signs</li>
  * <li>'in' - required value in the given collection with the semantic of the '=' equality operator (only for Collection
  * types)</li>
  * </ul>
- *
+ * <p>
  * See {@link ObjectFilter.Operator} for more details on the available operators.
- *
+ * <p>
  * Properties, operators and required values must be delimited by spaces.
- *
+ * <p>
  * Multiple filters can be chained using 'AND' or 'OR' keywords.
  * Example:
- * <code>property1 &lt; value1 AND property2 like value2</code>
+ * {@code property1 < value1 AND property2 like value2}
  *
  * If chained filters are mixed conjunctions and disjunctions, the query must be in conjunctive normal form (CNF)
  * without any parentheses. Every AND conjunctions separates blocks of OR disjunctions.
- *
+ * <p>
  * Example:
- * <code>p1 = v1 OR p1 != v2 AND p2 &lt;=v2 AND p3 &gt; v3 OR p3 &lt; v4</code>
+ * {@code p1 = v1 OR p1 != v2 AND p2 <=v2 AND p3 > v3 OR p3 < v4}
  * Above query will translate to:
- * <code>(p1 = v1 OR p1 != v2) AND (p2 &lt;=v2) AND (p3 &gt; v3 OR p3 &lt; v4;)</code>
+ * {@code (p1 = v1 OR p1 != v2) AND (p2 <=v2) AND (p3 > v3 OR p3 < v4;)}
  *
  * The format of collection is a sequence of comma-delimited  values surrounded by parenthesis. The values must be
  * compatible with the type contained in the collection. No space can be used to separate elements of a collection.
- *
+ * <p>
  * Example:
- * <code>id in (1,2,3,4)</code>
+ * {@code id in (1,2,3,4)}
  *
  * Breaking the CNF results in an error.
- *
+ * <p>
  * The available properties on an entity can be restricted by the service layer via {@link FilteringService#getObjectFilter(String, ObjectFilter.Operator, String)}.
  *
  * @author tesarst
@@ -120,7 +122,7 @@ public class FilterArg extends AbstractArg<FilterArg.Filter> {
      * @throws MalformedArgException if the filter cannot be parsed for the given {@link FilteringService}
      */
     @Nullable
-    public Filters getObjectFilters( FilteringService service ) throws MalformedArgException {
+    public Filters getObjectFilters( FilteringService<?> service ) throws MalformedArgException {
         Filter filter = getValue();
         if ( filter.propertyNames == null )
             return null;

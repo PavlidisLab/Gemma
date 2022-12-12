@@ -5,7 +5,6 @@ import com.fasterxml.jackson.databind.util.StdDateFormat;
 import io.swagger.v3.core.util.Json;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import ubic.gemma.web.services.rest.swagger.CustomModelConverter;
 
 /**
  * Configure the various beans injected in Swagger's components relating to Jackson's JSON serialization.
@@ -24,7 +23,7 @@ public class JacksonConfig {
 
     /**
      * This is the ObjectMapper used by Swagger to generate the /openapi.json endpoint. It is defined here so that it
-     * can be accessed from {@link CustomModelConverter} implementations.
+     * can be accessed from {@link ubic.gemma.web.services.rest.swagger.resolver.CustomModelResolver}.
      */
     @Bean
     public ObjectMapper swaggerObjectMapper() {

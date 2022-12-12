@@ -115,7 +115,7 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
 
     @Override
     public Class<?> getFilterablePropertyType( String propertyName ) throws IllegalArgumentException {
-        return resolveObjectFilterPropertyType( propertyName, elementClass );
+        return getFilterablePropertyMeta( propertyName ).propertyType;
     }
 
     @Override
