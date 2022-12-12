@@ -43,7 +43,7 @@ import java.util.*;
 @SuppressWarnings({ "unused", "WeakerAccess" }) // Used in frontend
 @Data
 @EqualsAndHashCode(of = { "name" }, callSuper = true)
-public class BioMaterialValueObject extends IdentifiableValueObject<BioMaterial> implements Serializable {
+public class BioMaterialValueObject extends IdentifiableValueObject<BioMaterial> {
 
     private static final String CHARACTERISTIC_DELIMITER = "::::";
     private static final long serialVersionUID = -145137827948521045L;
@@ -102,6 +102,7 @@ public class BioMaterialValueObject extends IdentifiableValueObject<BioMaterial>
      * Required when using the class as a spring bean.
      */
     public BioMaterialValueObject() {
+        super();
     }
 
     public BioMaterialValueObject( Long id ) {
@@ -113,7 +114,7 @@ public class BioMaterialValueObject extends IdentifiableValueObject<BioMaterial>
     }
 
     public BioMaterialValueObject( BioMaterial bm, boolean basic ) {
-        super( bm.getId() );
+        super( bm );
         this.name = bm.getName();
         this.description = bm.getDescription();
 

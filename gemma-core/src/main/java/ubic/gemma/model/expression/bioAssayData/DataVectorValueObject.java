@@ -33,17 +33,13 @@ import java.util.List;
  * @author paul
  */
 @SuppressWarnings({ "unused", "WeakerAccess" }) // Used in frontend
-public abstract class DataVectorValueObject extends IdentifiableValueObject<DataVector> implements Serializable {
+public abstract class DataVectorValueObject extends IdentifiableValueObject<DataVector> {
 
     private static final long serialVersionUID = 4291090102921066018L;
 
-    static ByteArrayConverter byteArrayConverter;
+    protected static final ByteArrayConverter byteArrayConverter = new ByteArrayConverter();
 
-    static {
-        DataVectorValueObject.byteArrayConverter = new ByteArrayConverter();
-    }
-
-    ExpressionExperimentValueObject expressionExperiment;
+    private ExpressionExperimentValueObject expressionExperiment;
     private CompositeSequenceValueObject designElement;
     private QuantitationTypeValueObject quantitationType;
     private Collection<Long> genes;
@@ -52,15 +48,16 @@ public abstract class DataVectorValueObject extends IdentifiableValueObject<Data
     /**
      * Required when using the class as a spring bean.
      */
-    public DataVectorValueObject() {
+    protected DataVectorValueObject() {
+        super();
     }
 
-    public DataVectorValueObject( Long id ) {
+    protected DataVectorValueObject( Long id ) {
         super( id );
     }
 
-    public DataVectorValueObject( DesignElementDataVector dedv, BioAssayDimensionValueObject badvo ) {
-        super( dedv.getId() );
+    protected DataVectorValueObject( DesignElementDataVector dedv, BioAssayDimensionValueObject badvo ) {
+        super( dedv );
         if ( badvo == null ) {
             BioAssayDimension badim = dedv.getBioAssayDimension();
             this.bioAssayDimension = new BioAssayDimensionValueObject( badim );
@@ -73,7 +70,7 @@ public abstract class DataVectorValueObject extends IdentifiableValueObject<Data
         this.expressionExperiment = new ExpressionExperimentValueObject( dedv.getExpressionExperiment() );
     }
 
-    public DataVectorValueObject( DesignElementDataVector dedv, Collection<Long> genes,
+    protected DataVectorValueObject( DesignElementDataVector dedv, Collection<Long> genes,
             BioAssayDimensionValueObject badvo ) {
         this( dedv, badvo );
         this.genes = genes;

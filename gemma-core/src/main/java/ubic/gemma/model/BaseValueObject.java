@@ -32,7 +32,7 @@ public class BaseValueObject implements Serializable {
      */
     private static final long serialVersionUID = -5290562301261202171L;
 
-    private Object valueObject;
+    private Serializable valueObject;
 
     private boolean errorFound;
 
@@ -40,11 +40,11 @@ public class BaseValueObject implements Serializable {
     private boolean userNotLoggedIn;
     private boolean objectAlreadyRemoved;
 
-    public Object getValueObject() {
+    public Serializable getValueObject() {
         return this.valueObject;
     }
 
-    public void setValueObject( Object valueObject ) {
+    public void setValueObject( Serializable valueObject ) {
         this.valueObject = valueObject;
     }
 

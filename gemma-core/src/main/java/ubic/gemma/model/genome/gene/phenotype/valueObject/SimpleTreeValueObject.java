@@ -16,12 +16,13 @@ package ubic.gemma.model.genome.gene.phenotype.valueObject;
 
 import org.apache.commons.lang3.StringUtils;
 
+import java.io.Serializable;
 import java.util.List;
 import java.util.Vector;
 
 // simple way to represent a phenotype for the tree, sending the minimal information
 @SuppressWarnings("unused") // Possibly used in front end
-public class SimpleTreeValueObject implements Comparable<SimpleTreeValueObject> {
+public class SimpleTreeValueObject implements Comparable<SimpleTreeValueObject>, Serializable {
 
     // private String _id = "";
     private String _parent;
@@ -33,6 +34,10 @@ public class SimpleTreeValueObject implements Comparable<SimpleTreeValueObject> 
     private String urlId;
     private boolean dbPhenotype;
     private List<String> children = new Vector<>();
+
+    public SimpleTreeValueObject() {
+        super();
+    }
 
     /**
      * @param treeCharacteristicValueObject tree characteristic VO

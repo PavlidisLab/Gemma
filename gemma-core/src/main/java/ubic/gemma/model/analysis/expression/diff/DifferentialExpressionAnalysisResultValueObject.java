@@ -31,13 +31,17 @@ import java.util.stream.Collectors;
 @EqualsAndHashCode(of = { "probeId" }, callSuper = true)
 public class DifferentialExpressionAnalysisResultValueObject extends AnalysisResultValueObject<DifferentialExpressionAnalysisResult> {
 
-    private final Long probeId;
-    private final String probeName;
-    private final List<GeneValueObject> genes;
-    private final Double pValue;
-    private final Double correctedPvalue;
-    private final Double rank;
-    private final List<ContrastResultValueObject> contrasts;
+    private Long probeId;
+    private String probeName;
+    private List<GeneValueObject> genes;
+    private Double pValue;
+    private Double correctedPvalue;
+    private Double rank;
+    private List<ContrastResultValueObject> contrasts;
+
+    public DifferentialExpressionAnalysisResultValueObject() {
+        super();
+    }
 
     public DifferentialExpressionAnalysisResultValueObject( DifferentialExpressionAnalysisResult result, List<Gene> genes ) {
         super( result );

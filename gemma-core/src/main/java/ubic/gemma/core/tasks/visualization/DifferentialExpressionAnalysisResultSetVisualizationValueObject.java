@@ -1,5 +1,9 @@
 package ubic.gemma.core.tasks.visualization;
 
+import lombok.Value;
+import ubic.gemma.model.ValueObject;
+
+import java.io.Serializable;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -10,7 +14,8 @@ import java.util.Map;
  * This class contains data for a column in metaheatmap visualization.
  */
 @SuppressWarnings("unused") // Used in frontend
-public class DifferentialExpressionAnalysisResultSetVisualizationValueObject {
+@ValueObject
+public class DifferentialExpressionAnalysisResultSetVisualizationValueObject implements Serializable {
 
     private String datasetName;
     private String datasetShortName;
@@ -45,6 +50,10 @@ public class DifferentialExpressionAnalysisResultSetVisualizationValueObject {
     private List<Long> contrastsFactorValueIds;
     private String baselineFactorValue;
     private Long baselineFactorValueId;
+
+    public DifferentialExpressionAnalysisResultSetVisualizationValueObject() {
+        super();
+    }
 
     public DifferentialExpressionAnalysisResultSetVisualizationValueObject( int[] geneGroupSizes ) {
         int numberOfGeneGroups = geneGroupSizes.length;

@@ -15,8 +15,10 @@
 
 package ubic.gemma.model.genome.gene.phenotype.valueObject;
 
+import java.io.Serializable;
+
 @SuppressWarnings({ "unused", "WeakerAccess" }) // Used in frontend
-public class EvidenceSecurityValueObject {
+public class EvidenceSecurityValueObject implements Serializable {
 
     private boolean currentUserHasWritePermission = false;
 

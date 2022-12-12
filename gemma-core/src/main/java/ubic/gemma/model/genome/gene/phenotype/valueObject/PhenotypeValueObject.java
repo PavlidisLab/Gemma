@@ -14,11 +14,19 @@
  */
 package ubic.gemma.model.genome.gene.phenotype.valueObject;
 
+import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
+
+import java.io.Serializable;
+
 @SuppressWarnings({ "unused", "WeakerAccess" }) // Used in frontend
-public class PhenotypeValueObject {
+public class PhenotypeValueObject implements Serializable {
 
     private String value;
     private String valueUri;
+
+    public PhenotypeValueObject() {
+        super();
+    }
 
     public PhenotypeValueObject( String value, String valueUri ) {
         super();

@@ -31,7 +31,7 @@ import java.util.Collection;
  * @author anton
  */
 @SuppressWarnings({ "unused", "WeakerAccess" }) // Used in frontend
-public class CompositeSequenceValueObject extends IdentifiableValueObject<CompositeSequence> implements Serializable {
+public class CompositeSequenceValueObject extends IdentifiableValueObject<CompositeSequence> {
 
     private static final long serialVersionUID = 4915680501039784666L;
 
@@ -45,6 +45,7 @@ public class CompositeSequenceValueObject extends IdentifiableValueObject<Compos
      * Required when using the class as a spring bean.
      */
     public CompositeSequenceValueObject() {
+        super();
     }
 
     public CompositeSequenceValueObject( Long id ) {
@@ -52,7 +53,7 @@ public class CompositeSequenceValueObject extends IdentifiableValueObject<Compos
     }
 
     public CompositeSequenceValueObject( CompositeSequence cs ) {
-        super( cs.getId() );
+        super( cs );
         this.name = cs.getName();
         this.description = cs.getDescription();
         // eagerly fetched in entity definition

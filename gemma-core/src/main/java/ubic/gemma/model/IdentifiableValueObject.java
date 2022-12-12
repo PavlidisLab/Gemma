@@ -7,19 +7,24 @@ import java.io.Serializable;
 import java.util.Objects;
 
 /**
+ * Base implementations for value objects representing persistent objects
+ * <p>
  * Created by tesarst on 31/05/17.
- * Interface for value objects representing persistent objects
+ *
+ * @author tesarst
+ * @author poirigui
  */
-@SuppressWarnings({ "unused", "WeakerAccess" }) // Frontend use
+@ValueObject
 @EqualsAndHashCode(of = { "id" })
-public abstract class IdentifiableValueObject<O extends Identifiable> implements Identifiable {
+public abstract class IdentifiableValueObject<O extends Identifiable> implements Identifiable, Serializable {
 
     protected Long id = null;
 
     /**
-     * Required when using the implementing classes as a spring beans.
+     * Default empty constructor for bean-style initialization.
      */
-    public IdentifiableValueObject() {
+    protected IdentifiableValueObject() {
+        super();
     }
 
     /**
@@ -31,11 +36,17 @@ public abstract class IdentifiableValueObject<O extends Identifiable> implements
         this.id = id;
     }
 
+    /**
+     * Constructor for a given entity.
+     */
     protected IdentifiableValueObject( O identifiable ) {
         this( identifiable.getId() );
     }
 
-    protected IdentifiableValueObject( IdentifiableValueObject vo ) {
+    /**
+     * Copy constructor.
+     */
+    protected IdentifiableValueObject( IdentifiableValueObject<O> vo ) {
         this( vo.getId() );
     }
 

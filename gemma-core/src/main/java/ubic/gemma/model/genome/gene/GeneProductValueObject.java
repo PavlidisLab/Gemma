@@ -20,7 +20,7 @@ import ubic.gemma.model.IdentifiableValueObject;
  * @author paul
  */
 @SuppressWarnings({ "unused", "WeakerAccess" }) // Used in frontend
-public class GeneProductValueObject extends IdentifiableValueObject<GeneProduct> implements java.io.Serializable {
+public class GeneProductValueObject extends IdentifiableValueObject<GeneProduct> {
     /**
      * The serial version UID of this class. Needed for serialization.
      */
@@ -40,6 +40,7 @@ public class GeneProductValueObject extends IdentifiableValueObject<GeneProduct>
      * Required when using the class as a spring bean.
      */
     public GeneProductValueObject() {
+        super();
     }
 
     public GeneProductValueObject( Long id ) {
@@ -53,7 +54,7 @@ public class GeneProductValueObject extends IdentifiableValueObject<GeneProduct>
      * @param entity the GeneProduct to load the values from.
      */
     public GeneProductValueObject( GeneProduct entity ) {
-        super( entity.getId() );
+        super( entity );
         this.name = entity.getName();
         this.ncbiId = entity.getNcbiGi();
         if ( entity.getPhysicalLocation() != null ) {

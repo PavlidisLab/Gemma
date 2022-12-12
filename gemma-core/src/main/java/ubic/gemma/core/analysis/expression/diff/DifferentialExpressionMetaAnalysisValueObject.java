@@ -18,6 +18,7 @@ import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionValueObje
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.genome.gene.GeneValueObject;
 
+import java.io.Serializable;
 import java.util.Collection;
 
 /**
@@ -26,7 +27,7 @@ import java.util.Collection;
  * @author keshav
  */
 @SuppressWarnings({ "WeakerAccess", "unused" }) // Frontend use
-public class DifferentialExpressionMetaAnalysisValueObject {
+public class DifferentialExpressionMetaAnalysisValueObject implements Serializable {
 
     private GeneValueObject gene = null;
 

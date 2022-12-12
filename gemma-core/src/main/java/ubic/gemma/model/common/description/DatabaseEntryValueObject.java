@@ -29,14 +29,18 @@ import java.util.Date;
 @SuppressWarnings("WeakerAccess") // Used in frontend
 @Data
 @EqualsAndHashCode(of = { "accession", "externalDatabase" }, callSuper = false)
-public class DatabaseEntryValueObject extends IdentifiableValueObject<DatabaseEntry> implements Serializable {
+public class DatabaseEntryValueObject extends IdentifiableValueObject<DatabaseEntry> {
 
     private static final long serialVersionUID = -527323410580090L;
     private String accession;
     private ExternalDatabaseValueObject externalDatabase;
 
+    public DatabaseEntryValueObject() {
+        super();
+    }
+
     public DatabaseEntryValueObject( DatabaseEntry de ) {
-        super( de.getId() );
+        super( de );
         this.accession = de.getAccession();
         this.externalDatabase =
                 de.getExternalDatabase() != null ? new ExternalDatabaseValueObject( de.getExternalDatabase() ) : null;

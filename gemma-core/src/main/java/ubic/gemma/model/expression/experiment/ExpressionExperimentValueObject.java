@@ -68,10 +68,11 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
     /**
      * Required when using the class as a spring bean.
      */
-    protected ExpressionExperimentValueObject() {
+    public ExpressionExperimentValueObject() {
+        super();
     }
 
-    protected ExpressionExperimentValueObject( Long id ) {
+    public ExpressionExperimentValueObject( Long id ) {
         super( id );
     }
 

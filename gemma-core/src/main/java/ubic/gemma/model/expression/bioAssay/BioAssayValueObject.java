@@ -33,7 +33,7 @@ import java.util.Map;
  * @author Paul
  */
 @SuppressWarnings("unused") // ValueObject accessed from JS
-public class BioAssayValueObject extends IdentifiableValueObject<BioAssay> implements Serializable {
+public class BioAssayValueObject extends IdentifiableValueObject<BioAssay> {
 
     private static final long serialVersionUID = 9164284536309673585L;
 
@@ -71,6 +71,7 @@ public class BioAssayValueObject extends IdentifiableValueObject<BioAssay> imple
      * Required when using the class as a spring bean.
      */
     public BioAssayValueObject() {
+        super();
     }
 
     /**
@@ -78,7 +79,7 @@ public class BioAssayValueObject extends IdentifiableValueObject<BioAssay> imple
      *                                    initialized via {@link ArrayDesignValueObject#ArrayDesignValueObject(ArrayDesign)}
      */
     public BioAssayValueObject( BioAssay bioAssay, @Nullable Map<Long, ArrayDesignValueObject> arrayDesignValueObjectsById, boolean basic ) {
-        super( bioAssay.getId() );
+        super( bioAssay );
         this.name = bioAssay.getName();
         this.description = bioAssay.getDescription();
 

@@ -46,7 +46,6 @@ import java.util.Collection;
  *
  * @author tvrossum
  */
-@SuppressWarnings({ "WeakerAccess", "unused" }) // Frontend use
 public class FreeTextGeneResultsValueObject extends SessionBoundGeneSetValueObject {
 
     private static final long serialVersionUID = 3557304710219740029L;

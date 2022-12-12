@@ -27,18 +27,17 @@ import ubic.gemma.model.expression.experiment.FactorType;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.expression.experiment.FactorValueValueObject;
 
-import java.io.Serializable;
 import java.util.*;
 
 /**
  * @author Paul
  */
 @SuppressWarnings({ "unused", "WeakerAccess" }) // Used in frontend
-public class BioAssayDimensionValueObject extends IdentifiableValueObject<BioAssayDimension> implements Serializable {
+public class BioAssayDimensionValueObject extends IdentifiableValueObject<BioAssayDimension> {
 
     private static final long serialVersionUID = -8686807689616396835L;
     private final List<BioAssayValueObject> bioAssays = new LinkedList<>();
-    private BioAssayDimension bioAssayDimension = null;
+    private transient BioAssayDimension bioAssayDimension = null;
     private String description;
     private String name;
     private boolean isReordered = false;
@@ -53,6 +52,7 @@ public class BioAssayDimensionValueObject extends IdentifiableValueObject<BioAss
      * Required when using the class as a spring bean.
      */
     public BioAssayDimensionValueObject() {
+        super();
     }
 
     /**
@@ -68,13 +68,13 @@ public class BioAssayDimensionValueObject extends IdentifiableValueObject<BioAss
      * @param entity to be converted
      */
     public BioAssayDimensionValueObject( BioAssayDimension entity ) {
-        super( entity.getId() );
+        super( entity );
         this.bioAssayDimension = entity;
         this.name = entity.getName();
         this.description = entity.getDescription();
         for ( BioAssay bv : entity.getBioAssays() ) {
-            if (bv == null) {
-                throw new IllegalArgumentException("Null bioassay in " + entity);
+            if ( bv == null ) {
+                throw new IllegalArgumentException( "Null bioassay in " + entity );
             }
             bioAssays.add( new BioAssayValueObject( bv, false ) );
         }
@@ -98,10 +98,6 @@ public class BioAssayDimensionValueObject extends IdentifiableValueObject<BioAss
         this.bioAssays.addAll( bvos );
     }
 
-    public void setBioAssayDimension( BioAssayDimension bioAssayDimension ) {
-        this.bioAssayDimension = bioAssayDimension;
-    }
-
     public void setSubset( boolean subset ) {
         isSubset = subset;
     }
@@ -119,7 +115,7 @@ public class BioAssayDimensionValueObject extends IdentifiableValueObject<BioAss
      * then the return will be a "fake" entity that has minimal information stored. This is a kludge to avoid
      * having to make the DataMatrix code use ValueObjects.
      */
-    public BioAssayDimension getEntity() {
+    BioAssayDimension getBioAssayDimension() {
         if ( this.bioAssayDimension == null ) {
             if ( !isSubset )
                 throw new IllegalStateException( "Entity was not set, not allowed unless isSubset=true" );

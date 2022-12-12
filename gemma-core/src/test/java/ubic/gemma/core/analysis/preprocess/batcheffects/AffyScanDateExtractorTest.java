@@ -21,6 +21,7 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
+import java.util.TimeZone;
 import java.util.zip.GZIPInputStream;
 
 import static org.junit.Assert.assertEquals;
@@ -39,6 +40,7 @@ public class AffyScanDateExtractorTest {
         Date actual = extractor.extract( is );
 
         DateFormat formatter = new SimpleDateFormat( "MM/dd/yy hh:mm:ss", Locale.ENGLISH );
+        formatter.setTimeZone( TimeZone.getTimeZone( "America/Vancouver" ) );
         Date expected = formatter.parse( "08/15/08 7:15:36" );
 
         assertEquals( expected, actual );

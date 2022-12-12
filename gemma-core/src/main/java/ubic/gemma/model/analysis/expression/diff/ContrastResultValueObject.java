@@ -13,12 +13,16 @@ import ubic.gemma.model.expression.experiment.FactorValueBasicValueObject;
 @ToString
 public class ContrastResultValueObject extends IdentifiableValueObject<ContrastResult> {
 
-    private final Double pvalue;
-    private final Double tStat;
-    private final Double coefficient;
-    private final Double logFoldChange;
-    private final FactorValueBasicValueObject factorValue;
-    private final FactorValueBasicValueObject secondFactorValue;
+    private Double pvalue;
+    private Double tStat;
+    private Double coefficient;
+    private Double logFoldChange;
+    private FactorValueBasicValueObject factorValue;
+    private FactorValueBasicValueObject secondFactorValue;
+
+    public ContrastResultValueObject() {
+        super();
+    }
 
     /**
      * Create a contrast value object from a given {@link ContrastResult}.

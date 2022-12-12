@@ -24,7 +24,7 @@ import java.io.Serializable;
  * @author Paul
  */
 @SuppressWarnings({ "WeakerAccess", "unused" }) // Used in frontend
-public class TaxonValueObject extends IdentifiableValueObject<Taxon> implements Serializable {
+public class TaxonValueObject extends IdentifiableValueObject<Taxon> {
 
     private String scientificName;
     private String commonName;
@@ -35,8 +35,12 @@ public class TaxonValueObject extends IdentifiableValueObject<Taxon> implements 
     private Boolean isGenesUsable;
     private ExternalDatabaseValueObject externalDatabase;
 
+    public TaxonValueObject() {
+        super();
+    }
+
     public TaxonValueObject( Taxon taxon ) {
-        super( taxon.getId() );
+        super( taxon );
         this.setScientificName( taxon.getScientificName() );
         this.setCommonName( taxon.getCommonName() );
 

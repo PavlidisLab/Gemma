@@ -84,6 +84,7 @@ public class CharacteristicValueObject extends IdentifiableValueObject<Character
      * Required when using the class as a spring bean.
      */
     public CharacteristicValueObject() {
+        super();
     }
 
     public CharacteristicValueObject( Long id ) {
@@ -91,7 +92,7 @@ public class CharacteristicValueObject extends IdentifiableValueObject<Character
     }
 
     public CharacteristicValueObject( Characteristic characteristic ) {
-        super( characteristic.getId() );
+        super( characteristic );
         {
             this.valueUri = characteristic.getValueUri();
             if ( this.valueUri != null )

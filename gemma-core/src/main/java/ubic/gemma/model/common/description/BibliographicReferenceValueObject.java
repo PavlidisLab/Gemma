@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2007 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -56,6 +56,7 @@ public class BibliographicReferenceValueObject extends IdentifiableValueObject<B
      * Required when using the class as a spring bean.
      */
     public BibliographicReferenceValueObject() {
+        super();
     }
 
     public BibliographicReferenceValueObject( Long id ) {
@@ -68,7 +69,7 @@ public class BibliographicReferenceValueObject extends IdentifiableValueObject<B
      * @param ref bib ref
      */
     public BibliographicReferenceValueObject( BibliographicReference ref ) {
-        super( ref.getId() );
+        super( ref );
         this.abstractText = ref.getAbstractText();
         this.authorList = ref.getAuthorList();
         this.pubAccession = ref.getPubAccession().getAccession();

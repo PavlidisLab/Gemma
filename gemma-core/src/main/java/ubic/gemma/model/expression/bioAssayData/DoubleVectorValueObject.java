@@ -60,6 +60,7 @@ public class DoubleVectorValueObject extends DataVectorValueObject {
      * Required when using the class as a spring bean.
      */
     public DoubleVectorValueObject() {
+        super();
     }
 
     /**
@@ -83,9 +84,9 @@ public class DoubleVectorValueObject extends DataVectorValueObject {
         this.setDesignElement( vec.getDesignElement() );
 
         if ( !bioassaySet.getId().equals( vec.getExpressionExperiment().getId() ) ) {
-            this.expressionExperiment = new ExpressionExperimentSubsetValueObject( bioassaySet );
+            this.setExpressionExperiment( new ExpressionExperimentSubsetValueObject( bioassaySet ) );
         } else {
-            this.expressionExperiment = vec.getExpressionExperiment();
+            this.setExpressionExperiment( vec.getExpressionExperiment() );
         }
 
         this.setQuantitationType( vec.getQuantitationType() );
@@ -276,7 +277,7 @@ public class DoubleVectorValueObject extends DataVectorValueObject {
         }
         result.setExpressionExperiment( ee );
 
-        result.setBioAssayDimension( this.getBioAssayDimension().getEntity() );
+        result.setBioAssayDimension( this.getBioAssayDimension().getBioAssayDimension() );
         assert this.getBioAssays().size() > 0;
 
         result.setQuantitationType( updatedQuantitationType );

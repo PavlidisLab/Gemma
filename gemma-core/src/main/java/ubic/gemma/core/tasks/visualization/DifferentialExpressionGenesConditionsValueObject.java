@@ -23,6 +23,7 @@ import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisV
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.expression.experiment.FactorValueValueObject;
 
+import java.io.Serializable;
 import java.util.*;
 
 /**
@@ -31,7 +32,7 @@ import java.util.*;
  *
  * @author anton
  */
-public class DifferentialExpressionGenesConditionsValueObject {
+public class DifferentialExpressionGenesConditionsValueObject implements Serializable {
     /**
      * Map of Condition IDs to map of Genes to the Cell holding the information for the results for that Gene x
      * Condition combination.

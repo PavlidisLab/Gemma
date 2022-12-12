@@ -55,6 +55,7 @@ public class GeeqAdminValueObject extends GeeqValueObject {
      * Required when using the class as a spring bean
      */
     public GeeqAdminValueObject() {
+        super();
     }
 
     public GeeqAdminValueObject( Geeq g ) {

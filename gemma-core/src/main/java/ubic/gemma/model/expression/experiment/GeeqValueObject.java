@@ -96,10 +96,11 @@ public class GeeqValueObject extends IdentifiableValueObject<Geeq> {
      */
     @SuppressWarnings("WeakerAccess") //Spring needs it to be public
     public GeeqValueObject() {
+        super();
     }
 
     public GeeqValueObject( Geeq g ) {
-        super( g.getId() );
+        super( g );
         this.setPublicQualityScore( g.getDetectedQualityScore(), g.getManualQualityScore(),
                 g.isManualQualityOverride() );
         this.setPublicSuitabilityScore( g.getDetectedSuitabilityScore(), g.getManualSuitabilityScore(),

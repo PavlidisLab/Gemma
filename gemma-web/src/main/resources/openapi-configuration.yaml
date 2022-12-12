@@ -8,7 +8,7 @@ openAPI:
       url: https://dev.gemma.msl.ubc.ca/rest/v2
   info:
     title: Gemma RESTful API
-    version: 2.6.0
+    version: 2.6.1
     description: |
       This website documents the usage of the [Gemma RESTful API](https://gemma.msl.ubc.ca/rest/v2/). Here you can find
       example script usage of the API, as well as graphical interface for each endpoint, with description of its
@@ -17,12 +17,11 @@ openAPI:
       Use of this webpage and the Gemma Web services, including the REST API, is subject to [these terms and conditions](https://pavlidislab.github.io/Gemma/terms.html).
       Please read these in full before continuing to use this webpage or any other part of the Gemma system.
 
-      Fix return type for `getResultSets` which was incorrectly referring to a renamed VO.
-
-      Annotate all possible types for `SearchResult.resultObject`. This incidentally includes the `GeneSetValueObject`
-      in the specification which is not exposed elsewhere in the API.
-
       ## Updates
+
+      ### Update 2.6.1
+
+      Add support for filtering platforms by taxon ID, common name, scientific name, etc. for the `/platforms` endpoint.
 
       ### Update 2.6.0
 
@@ -41,6 +40,11 @@ openAPI:
       data by quantitation type to `getDatasetProcessedExpression` and `getDatasetRawExpression`. As it was too difficult
       to extends `getDatasetExpression` to also support quantitation type while retaining the filter feature, we decided
       to deprecate it and reintroduce filtering for both raw and processed expression in the future.
+
+      Fix return type for `getResultSets` which was incorrectly referring to a renamed VO.
+
+      Annotate all possible types for `SearchResult.resultObject`. This incidentally includes the `GeneSetValueObject`
+      in the specification which is not exposed elsewhere in the API.
 
       ### Update 2.5.1
 
