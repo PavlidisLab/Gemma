@@ -84,7 +84,6 @@ public abstract class AbstractFilteringVoEnabledService<O extends Identifiable, 
      * @see #getSort(String, Sort.Direction)
      */
     protected ObjectFilterPropertyMeta getObjectFilterPropertyMeta( String propertyName ) throws NoSuchFieldException {
-        EntityUtils.getDeclaredField( voDao.getElementClass(), propertyName );
         return new ObjectFilterPropertyMeta( voDao.getObjectAlias(), propertyName, EntityUtils.getDeclaredFieldType( propertyName, voDao.getElementClass() ) );
     }
 }
