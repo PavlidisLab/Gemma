@@ -51,7 +51,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 /**
  * Endpoint for {@link ubic.gemma.model.analysis.AnalysisResultSet}
@@ -62,17 +61,18 @@ public class AnalysisResultSetsWebService {
 
     private static final String TEXT_TAB_SEPARATED_VALUE_Q9_MEDIA_TYPE = MediaTypeUtils.TEXT_TAB_SEPARATED_VALUES_UTF8 + "; q=0.9";
 
-    @Autowired
-    private ExpressionAnalysisResultSetService expressionAnalysisResultSetService;
+    private final ExpressionAnalysisResultSetService expressionAnalysisResultSetService;
+    private final ExpressionExperimentService expressionExperimentService;
+    private final DatabaseEntryService databaseEntryService;
+    private final ExpressionAnalysisResultSetFileService expressionAnalysisResultSetFileService;
 
     @Autowired
-    private ExpressionExperimentService expressionExperimentService;
-
-    @Autowired
-    private DatabaseEntryService databaseEntryService;
-
-    @Autowired
-    private ExpressionAnalysisResultSetFileService expressionAnalysisResultSetFileService;
+    public AnalysisResultSetsWebService( ExpressionAnalysisResultSetService expressionAnalysisResultSetService, ExpressionExperimentService expressionExperimentService, DatabaseEntryService databaseEntryService, ExpressionAnalysisResultSetFileService expressionAnalysisResultSetFileService ) {
+        this.expressionAnalysisResultSetService = expressionAnalysisResultSetService;
+        this.expressionExperimentService = expressionExperimentService;
+        this.databaseEntryService = databaseEntryService;
+        this.expressionAnalysisResultSetFileService = expressionAnalysisResultSetFileService;
+    }
 
     /**
      * Retrieve all {@link AnalysisResultSet} matching a set of criteria.

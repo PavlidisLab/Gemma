@@ -5,14 +5,12 @@ import io.swagger.v3.oas.annotations.enums.SecuritySchemeIn;
 import io.swagger.v3.oas.annotations.enums.SecuritySchemeType;
 import io.swagger.v3.oas.annotations.security.SecurityScheme;
 import io.swagger.v3.oas.models.OpenAPI;
-import lombok.Getter;
 import lombok.Value;
 import lombok.extern.apachecommons.CommonsLog;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
-import org.springframework.web.util.UriComponentsBuilder;
 import ubic.gemma.core.security.authentication.UserManager;
 import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.model.common.description.ExternalDatabaseValueObject;
@@ -58,11 +56,14 @@ public class RootWebService {
      */
     private static final String[] EXTERNAL_DATABASE_NAMES = Settings.getStringArray( "gemma.externalDatabases.featured" );
 
-    @Autowired
-    private ExternalDatabaseService externalDatabaseService;
+    private final ExternalDatabaseService externalDatabaseService;
+    private final UserManager userManager;
 
     @Autowired
-    private UserManager userManager;
+    public RootWebService( ExternalDatabaseService externalDatabaseService, UserManager userManager ) {
+        this.externalDatabaseService = externalDatabaseService;
+        this.userManager = userManager;
+    }
 
     /**
      * Returns an object with API information.

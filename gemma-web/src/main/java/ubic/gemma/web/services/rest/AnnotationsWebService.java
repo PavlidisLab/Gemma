@@ -68,17 +68,11 @@ public class AnnotationsWebService {
 
     private static final String URL_PREFIX = "http://";
 
-    private OntologyService ontologyService;
-    private SearchService searchService;
-    private CharacteristicService characteristicService;
-    private ExpressionExperimentService expressionExperimentService;
-    private TaxonService taxonService;
-
-    /**
-     * Required by spring
-     */
-    public AnnotationsWebService() {
-    }
+    private final OntologyService ontologyService;
+    private final SearchService searchService;
+    private final CharacteristicService characteristicService;
+    private final ExpressionExperimentService expressionExperimentService;
+    private final TaxonService taxonService;
 
     /**
      * Constructor for service autowiring

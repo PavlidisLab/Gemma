@@ -58,17 +58,11 @@ public class PlatformsWebService {
     private static final Log log = LogFactory.getLog( PlatformsWebService.class.getName() );
     private static final String ERROR_ANNOTATION_FILE_NOT_AVAILABLE = "Annotation file for platform %s does not exist or can not be accessed.";
 
-    private GeneService geneService;
-    private ArrayDesignService arrayDesignService;
-    private ExpressionExperimentService expressionExperimentService;
-    private CompositeSequenceService compositeSequenceService;
-    private ArrayDesignAnnotationService annotationFileService;
-
-    /**
-     * Required by spring
-     */
-    public PlatformsWebService() {
-    }
+    private final GeneService geneService;
+    private final ArrayDesignService arrayDesignService;
+    private final ExpressionExperimentService expressionExperimentService;
+    private final CompositeSequenceService compositeSequenceService;
+    private final ArrayDesignAnnotationService annotationFileService;
 
     /**
      * Constructor for service autowiring

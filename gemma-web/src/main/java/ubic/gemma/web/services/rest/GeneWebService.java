@@ -53,17 +53,11 @@ import java.util.List;
 @Path("/genes")
 public class GeneWebService {
 
-    private GeneService geneService;
-    private GeneOntologyService geneOntologyService;
-    private CompositeSequenceService compositeSequenceService;
-    private PhenotypeAssociationManagerService phenotypeAssociationManagerService;
-    private GeneCoexpressionSearchService geneCoexpressionSearchService;
-
-    /**
-     * Required by spring
-     */
-    public GeneWebService() {
-    }
+    private final GeneService geneService;
+    private final GeneOntologyService geneOntologyService;
+    private final CompositeSequenceService compositeSequenceService;
+    private final PhenotypeAssociationManagerService phenotypeAssociationManagerService;
+    private final GeneCoexpressionSearchService geneCoexpressionSearchService;
 
     /**
      * Constructor for service autowiring

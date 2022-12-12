@@ -81,24 +81,18 @@ public class DatasetsWebService {
     private static final String ERROR_DATA_FILE_NOT_AVAILABLE = "Data file for experiment %s can not be created.";
     private static final String ERROR_DESIGN_FILE_NOT_AVAILABLE = "Design file for experiment %s can not be created.";
 
-    private ExpressionExperimentService service;
-    private ExpressionExperimentService expressionExperimentService;
-    private ExpressionDataFileService expressionDataFileService;
-    private ArrayDesignService arrayDesignService;
-    private BioAssayService bioAssayService;
-    private ProcessedExpressionDataVectorService processedExpressionDataVectorService;
-    private GeneService geneService;
-    private SVDService svdService;
-    private DifferentialExpressionAnalysisService differentialExpressionAnalysisService;
-    private AuditEventService auditEventService;
-    private OutlierDetectionService outlierDetectionService;
-    private QuantitationTypeService quantitationTypeService;
-
-    /**
-     * Required by spring
-     */
-    public DatasetsWebService() {
-    }
+    private final ExpressionExperimentService service;
+    private final ExpressionExperimentService expressionExperimentService;
+    private final ExpressionDataFileService expressionDataFileService;
+    private final ArrayDesignService arrayDesignService;
+    private final BioAssayService bioAssayService;
+    private final ProcessedExpressionDataVectorService processedExpressionDataVectorService;
+    private final GeneService geneService;
+    private final SVDService svdService;
+    private final DifferentialExpressionAnalysisService differentialExpressionAnalysisService;
+    private final AuditEventService auditEventService;
+    private final OutlierDetectionService outlierDetectionService;
+    private final QuantitationTypeService quantitationTypeService;
 
     /**
      * Constructor for service autowiring
