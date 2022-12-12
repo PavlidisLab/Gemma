@@ -30,7 +30,6 @@ import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.persistence.service.AbstractFilteringVoEnabledService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventDao;
 import ubic.gemma.persistence.service.expression.experiment.BlacklistedEntityService;
-import ubic.gemma.persistence.util.EntityUtils;
 
 import java.util.*;
 
@@ -420,7 +419,7 @@ public class ArrayDesignServiceImpl extends AbstractFilteringVoEnabledService<Ar
     }
 
     @Override
-    protected ObjectFilterPropertyMeta getObjectFilterPropertyMeta( String propertyName ) throws NoSuchFieldException {
+    protected ObjectFilterPropertyMeta getObjectFilterPropertyMeta( String propertyName ) {
         // handle cases such as taxon = 1
         if ( propertyName.equals( "taxon" ) ) {
             return new ObjectFilterPropertyMeta( "t", "id", Long.class );
@@ -428,7 +427,7 @@ public class ArrayDesignServiceImpl extends AbstractFilteringVoEnabledService<Ar
         // handles taxon.{propertyName} {op} {value}
         else if ( propertyName.startsWith( "taxon." ) ) {
             String fieldName = propertyName.replaceFirst( "^taxon\\.", "" );
-            return new ObjectFilterPropertyMeta( "t", fieldName, EntityUtils.getDeclaredFieldType( fieldName, Taxon.class ) );
+            return new ObjectFilterPropertyMeta( "t", fieldName, resolveObjectFilterPropertyType( fieldName, Taxon.class ) );
         } else {
             return super.getObjectFilterPropertyMeta( propertyName );
         }

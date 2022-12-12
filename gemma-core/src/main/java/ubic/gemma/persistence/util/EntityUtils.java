@@ -416,54 +416,5 @@ public class EntityUtils {
             e.printStackTrace();
         }
     }
-
-    /**
-     * Checks if property of given name exists in the given class. If the given string specifies
-     * nested properties (E.g. curationDetails.troubled), only the substring before the first dot is evaluated and the
-     * rest of the string is processed in a new recursive iteration.
-     *
-     * @param property the property to check for. If the string contains dot characters ('.'), only the part
-     *                 before the first dot will be evaluated. Substring after the dot will be checked against the
-     *                 type of the field retrieved from the substring before the dot.
-     * @param cls      the class to check the property on.
-     * @return the class of the property last in the line of nesting.
-     */
-    public static Class getDeclaredFieldType( String property, Class cls ) throws NoSuchFieldException {
-        String[] parts = property.split( "\\.", 2 );
-        Field field = getDeclaredField( cls, parts[0] );
-        Class<?> subCls = field.getType();
-
-        if ( Collection.class.isAssignableFrom( subCls ) ) {
-            ParameterizedType pt = ( ParameterizedType ) field.getGenericType();
-            for ( Type type : pt.getActualTypeArguments() ) {
-                if ( type instanceof Class ) {
-                    subCls = ( Class<?> ) type;
-                    break;
-                }
-            }
-        }
-
-        if ( parts.length > 1 ) {
-            return getDeclaredFieldType( parts[1], subCls );
-        } else {
-            return subCls;
-        }
-    }
-
-    /**
-     * Recursive version of {@link Class#getDeclaredField(String)} that also checks in the superclass hierarchy.
-     * @see Class#getDeclaredField(String)
-     */
-    public static Field getDeclaredField( Class<?> cls, String field ) throws NoSuchFieldException {
-        try {
-            return cls.getDeclaredField( field );
-        } catch ( NoSuchFieldException e ) {
-            if ( cls.getSuperclass() != null ) {
-                return getDeclaredField( cls.getSuperclass(), field );
-            } else {
-                throw e;
-            }
-        }
-    }
 }
 

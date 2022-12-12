@@ -24,6 +24,7 @@ import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
+import ubic.gemma.persistence.service.AbstractFilteringVoEnabledService;
 import ubic.gemma.persistence.service.AbstractVoEnabledService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignDao;
 import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialDao;
@@ -45,7 +46,7 @@ import java.util.stream.Collectors;
  * @see BioAssayService
  */
 @Service
-public class BioAssayServiceImpl extends AbstractVoEnabledService<BioAssay, BioAssayValueObject>
+public class BioAssayServiceImpl extends AbstractFilteringVoEnabledService<BioAssay, BioAssayValueObject>
         implements BioAssayService {
 
     private final BioAssayDao bioAssayDao;
@@ -176,33 +177,4 @@ public class BioAssayServiceImpl extends AbstractVoEnabledService<BioAssay, BioA
         }
 
     }
-
-    @Override
-    public ObjectFilter getObjectFilter( String property, ObjectFilter.Operator operator, String value ) throws IllegalArgumentException {
-        try {
-            return ObjectFilter.parseObjectFilter( BioAssayDao.OBJECT_ALIAS, property, EntityUtils.getDeclaredFieldType( property, Characteristic.class ), operator, value );
-        } catch ( NoSuchFieldException e ) {
-            throw new IllegalArgumentException( e );
-        }
-    }
-
-    @Override
-    public ObjectFilter getObjectFilter( String property, ObjectFilter.Operator operator, Collection<String> values ) throws IllegalArgumentException {
-        try {
-            return ObjectFilter.parseObjectFilter( BioAssayDao.OBJECT_ALIAS, property, EntityUtils.getDeclaredFieldType( property, Characteristic.class ), operator, values );
-        } catch ( NoSuchFieldException e ) {
-            throw new IllegalArgumentException( e );
-        }
-    }
-
-    @Override
-    public Sort getSort( String property, @Nullable Sort.Direction direction ) throws IllegalArgumentException {
-        try {
-            EntityUtils.getDeclaredFieldType( property, Characteristic.class );
-            return Sort.by( BioAssayDao.OBJECT_ALIAS, property, direction );
-        } catch ( NoSuchFieldException e ) {
-            throw new IllegalArgumentException( e );
-        }
-    }
-
 }

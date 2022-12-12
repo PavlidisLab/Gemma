@@ -19,6 +19,7 @@
 package ubic.gemma.persistence.service.common.description;
 
 import org.apache.commons.collections4.ListUtils;
+import org.apache.commons.lang3.NotImplementedException;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.hibernate.Query;
@@ -38,9 +39,10 @@ import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 import ubic.gemma.persistence.service.AbstractDao;
+import ubic.gemma.persistence.service.AbstractFilteringVoEnabledDao;
+import ubic.gemma.persistence.service.AbstractFilteringVoEnabledService;
 import ubic.gemma.persistence.service.AbstractVoEnabledDao;
-import ubic.gemma.persistence.util.AclQueryUtils;
-import ubic.gemma.persistence.util.EntityUtils;
+import ubic.gemma.persistence.util.*;
 
 import javax.annotation.Nullable;
 import java.util.*;
@@ -52,14 +54,14 @@ import java.util.stream.Collectors;
  * @see    Characteristic
  */
 @Repository
-public class CharacteristicDaoImpl extends AbstractVoEnabledDao<Characteristic, CharacteristicValueObject>
+public class CharacteristicDaoImpl extends AbstractFilteringVoEnabledDao<Characteristic, CharacteristicValueObject>
         implements CharacteristicDao {
 
     private static final int BATCH_SIZE = 500;
 
     @Autowired
     public CharacteristicDaoImpl( SessionFactory sessionFactory ) {
-        super( Characteristic.class, sessionFactory );
+        super( OBJECT_ALIAS, Characteristic.class, sessionFactory );
     }
 
     @Override
@@ -395,5 +397,15 @@ public class CharacteristicDaoImpl extends AbstractVoEnabledDao<Characteristic, 
             field = "characteristics";
         }
         return field;
+    }
+
+    @Override
+    public Slice<CharacteristicValueObject> loadValueObjectsPreFilter( @Nullable Filters filters, @Nullable Sort sort, int offset, int limit ) {
+        throw new NotImplementedException( "Filtering Characteristic VOs is not supported." );
+    }
+
+    @Override
+    public List<CharacteristicValueObject> loadValueObjectsPreFilter( @Nullable Filters filters, @Nullable Sort sort ) {
+        throw new NotImplementedException( "Filtering Characteristic VOs is not supported." );
     }
 }

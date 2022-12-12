@@ -193,7 +193,7 @@ public class ObjectFilter {
      *
      * @param objectAlias   the alias that refers to the entity subject to the filter
      * @param propertyName  the property in the entity
-     * @param propertyType  the type of the property, which can be conveniently retrieved with {@link EntityUtils#getDeclaredFieldType(String, Class)}.
+     * @param propertyType  the type of the property
      * @param operator      a valid operator for the property and the requiredValue
      * @param requiredValue a required value, or null to perform a null-check (i.e. <code>objectAlias.propertyName is null</code>)
      * @throws IllegalArgumentException if the type of the requiredValue does not match the propertyType

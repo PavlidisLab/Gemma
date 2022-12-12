@@ -18,6 +18,7 @@
  */
 package ubic.gemma.persistence.service.expression.bioAssay;
 
+import org.apache.commons.lang3.NotImplementedException;
 import org.apache.commons.lang3.StringUtils;
 import org.hibernate.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,25 +28,27 @@ import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
+import ubic.gemma.persistence.service.AbstractFilteringVoEnabledDao;
+import ubic.gemma.persistence.service.AbstractFilteringVoEnabledService;
 import ubic.gemma.persistence.service.AbstractVoEnabledDao;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignDao;
-import ubic.gemma.persistence.util.BusinessKey;
-import ubic.gemma.persistence.util.EntityUtils;
+import ubic.gemma.persistence.util.*;
 
+import javax.annotation.Nullable;
 import java.util.*;
 
 /**
  * @author pavlidis
  */
 @Repository
-public class BioAssayDaoImpl extends AbstractVoEnabledDao<BioAssay, BioAssayValueObject> implements BioAssayDao {
+public class BioAssayDaoImpl extends AbstractFilteringVoEnabledDao<BioAssay, BioAssayValueObject> implements BioAssayDao {
 
     @Autowired
     private ArrayDesignDao arrayDesignDao;
 
     @Autowired
     public BioAssayDaoImpl( SessionFactory sessionFactory ) {
-        super( BioAssay.class, sessionFactory );
+        super( OBJECT_ALIAS, BioAssay.class, sessionFactory );
     }
 
     @Override
@@ -129,4 +132,13 @@ public class BioAssayDaoImpl extends AbstractVoEnabledDao<BioAssay, BioAssayValu
         return new BioAssayValueObject( entity, null, false );
     }
 
+    @Override
+    public Slice<BioAssayValueObject> loadValueObjectsPreFilter( @Nullable Filters filters, @Nullable Sort sort, int offset, int limit ) {
+        throw new NotImplementedException( "Filtering BioAssay VOs is not supported." );
+    }
+
+    @Override
+    public List<BioAssayValueObject> loadValueObjectsPreFilter( @Nullable Filters filters, @Nullable Sort sort ) {
+        throw new NotImplementedException( "Filtering BioAssay VOs is not supported." );
+    }
 }

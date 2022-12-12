@@ -68,7 +68,6 @@ import ubic.gemma.persistence.service.expression.bioAssay.BioAssayDao;
 import ubic.gemma.persistence.service.expression.bioAssayData.BioAssayDimensionService;
 import ubic.gemma.persistence.service.expression.bioAssayData.RawExpressionDataVectorDao;
 import ubic.gemma.persistence.service.genome.taxon.TaxonDao;
-import ubic.gemma.persistence.util.EntityUtils;
 import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.persistence.util.Sort;
 
@@ -1127,15 +1126,15 @@ public class ExpressionExperimentServiceImpl
      * {@inheritDoc}
      */
     @Override
-    protected ObjectFilterPropertyMeta getObjectFilterPropertyMeta( String propertyName ) throws NoSuchFieldException {
+    protected ObjectFilterPropertyMeta getObjectFilterPropertyMeta( String propertyName ) {
         if ( propertyName.startsWith( "characteristics." ) ) {
             String fieldName = propertyName.replaceFirst( "^characteristics\\.", "" );
-            return new ObjectFilterPropertyMeta( CharacteristicDao.OBJECT_ALIAS, fieldName, EntityUtils.getDeclaredFieldType( fieldName, Characteristic.class ) );
+            return new ObjectFilterPropertyMeta( CharacteristicDao.OBJECT_ALIAS, fieldName, resolveObjectFilterPropertyType( fieldName, Characteristic.class ) );
         }
 
         if ( propertyName.startsWith( "bioAssays." ) ) {
             String fieldName = propertyName.replaceFirst( "^bioAssays\\.", "" );
-            return new ObjectFilterPropertyMeta( BioAssayDao.OBJECT_ALIAS, fieldName, EntityUtils.getDeclaredFieldType( fieldName, BioAssay.class ) );
+            return new ObjectFilterPropertyMeta( BioAssayDao.OBJECT_ALIAS, fieldName, resolveObjectFilterPropertyType( fieldName, BioAssay.class ) );
         }
 
         if ( propertyName.equals( "taxon" ) ) {

@@ -26,6 +26,8 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 import ubic.gemma.persistence.service.BaseVoEnabledDao;
 import ubic.gemma.persistence.service.BrowsingDao;
+import ubic.gemma.persistence.service.FilteringDao;
+import ubic.gemma.persistence.service.FilteringVoEnabledDao;
 
 import javax.annotation.Nullable;
 import java.util.Collection;
@@ -37,7 +39,7 @@ import java.util.Set;
  * @see ubic.gemma.model.common.description.Characteristic
  */
 public interface CharacteristicDao
-        extends BrowsingDao<Characteristic>, BaseVoEnabledDao<Characteristic, CharacteristicValueObject> {
+        extends BrowsingDao<Characteristic>, FilteringVoEnabledDao<Characteristic, CharacteristicValueObject> {
 
     String OBJECT_ALIAS = "ch";
 
