@@ -65,16 +65,12 @@ public class SearchWebService {
      */
     public static final int MAX_SEARCH_RESULTS = 1000;
 
-    private final SearchService searchService;
-    private final TaxonService taxonService;
-    private final ArrayDesignService arrayDesignService;
-
     @Autowired
-    public SearchWebService( SearchService searchService, TaxonService taxonService, ArrayDesignService arrayDesignService ) {
-        this.searchService = searchService;
-        this.taxonService = taxonService;
-        this.arrayDesignService = arrayDesignService;
-    }
+    private SearchService searchService;
+    @Autowired
+    private TaxonService taxonService;
+    @Autowired
+    private ArrayDesignService arrayDesignService;
 
     /**
      * Search everything subject to taxon and platform constraints.

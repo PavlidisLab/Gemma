@@ -61,11 +61,17 @@ import static ubic.gemma.web.services.rest.util.ArgUtils.requiredArg;
 public class TaxaWebService {
 
     protected static final Log log = LogFactory.getLog( TaxaWebService.class.getName() );
-    private final TaxonService taxonService;
-    private final GeneService geneService;
-    private final ExpressionExperimentService expressionExperimentService;
-    private final PhenotypeAssociationManagerService phenotypeAssociationManagerService;
-    private final ChromosomeService chromosomeService;
+    private TaxonService taxonService;
+    private GeneService geneService;
+    private ExpressionExperimentService expressionExperimentService;
+    private PhenotypeAssociationManagerService phenotypeAssociationManagerService;
+    private ChromosomeService chromosomeService;
+
+    /**
+     * Required by spring
+     */
+    public TaxaWebService() {
+    }
 
     /**
      * Constructor for service autowiring

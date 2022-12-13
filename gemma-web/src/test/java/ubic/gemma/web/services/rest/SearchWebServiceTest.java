@@ -40,8 +40,8 @@ public class SearchWebServiceTest extends AbstractJUnit4SpringContextTests {
     public static class SearchWebServiceTestContextConfiguration {
 
         @Bean
-        public SearchWebService searchWebService( SearchService searchService, TaxonService taxonService, ArrayDesignService arrayDesignService ) {
-            return new SearchWebService( searchService, taxonService, arrayDesignService );
+        public SearchWebService searchWebService() {
+            return new SearchWebService();
         }
 
         @Bean

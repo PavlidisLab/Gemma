@@ -42,7 +42,13 @@ import java.util.Set;
 @Path("/phenotypes")
 public class PhenotypeWebService {
 
-    private final PhenotypeAssociationManagerService phenotypeAssociationManagerService;
+    private PhenotypeAssociationManagerService phenotypeAssociationManagerService;
+
+    /**
+     * Required by spring
+     */
+    public PhenotypeWebService() {
+    }
 
     /**
      * Constructor for service autowiring
