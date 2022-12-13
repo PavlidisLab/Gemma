@@ -211,6 +211,17 @@ public class ExpressionExperimentServiceTest extends BaseSpringContextTest {
 
     }
 
+    @Test
+    public void testGetFilterableProperties() {
+        assertThat( expressionExperimentService.getFilterableProperties() )
+                .contains( "id", "characteristics.valueUri", "taxon", "taxon.id", "bioAssayCount" );
+    }
+
+    @Test
+    public void testGetFilterablePropertyType() {
+        assertThat( expressionExperimentService.getFilterablePropertyType( "id" ) ).isEqualTo( Long.class );
+    }
+
     /**
      * EE service has a few extensions for supporting various filtering strategies in the frontend, so we need to test
      * them here.

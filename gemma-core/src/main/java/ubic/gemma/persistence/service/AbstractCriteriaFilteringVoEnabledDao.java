@@ -41,7 +41,7 @@ public abstract class AbstractCriteriaFilteringVoEnabledDao<O extends Identifiab
      */
     protected Criteria getLoadValueObjectsCriteria( @Nullable Filters filters ) {
         return this.getSessionFactory().getCurrentSession()
-                .createCriteria( elementClass, getObjectAlias() )
+                .createCriteria( elementClass )
                 .add( ObjectFilterCriteriaUtils.formRestrictionClause( filters ) );
     }
 

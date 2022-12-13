@@ -418,22 +418,6 @@ public class ArrayDesignServiceImpl extends AbstractCuratableService<ArrayDesign
         return this.arrayDesignDao.updateSubsumingStatus( candidateSubsumer, candidateSubsumee );
     }
 
-    @Override
-    protected ObjectFilterPropertyMeta getObjectFilterPropertyMeta( String propertyName ) {
-        // alias for primaryTaxon which is not discoverable in the VO
-        if ( propertyName.startsWith( "taxon." ) ) {
-            String fieldName = propertyName.replaceFirst( "^taxon\\.", "" );
-            return new ObjectFilterPropertyMeta( "t", fieldName, resolveObjectFilterPropertyType( fieldName, Taxon.class ) );
-        }
-
-        // handle cases such as taxon = 1
-        if ( propertyName.equals( "taxon" ) ) {
-            return new ObjectFilterPropertyMeta( "t", "id", Long.class );
-        }
-
-        return super.getObjectFilterPropertyMeta( propertyName );
-    }
-
     private void checkForMoreRecentMethod( Map<Long, AuditEvent> lastEventMap,
             Class<? extends ArrayDesignAnalysisEvent> eventclass, Long arrayDesignId, ArrayDesign subsumedInto ) {
         AuditEvent lastSubsumerEvent = this.auditEventDao.getLastEvent( subsumedInto, eventclass );

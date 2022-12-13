@@ -109,7 +109,7 @@ public class TaxonDaoImpl extends AbstractQueryFilteringVoEnabledDao<Taxon, Taxo
         String queryString = MessageFormat.format( "select {0} "
                 + "from Taxon as {0} " // taxon
                 + "left join {0}.externalDatabase as ED " // external db
-                + "where {0}.id is not null ", getObjectAlias() ); // needed to use formRestrictionCause()
+                + "where {0}.id is not null ", OBJECT_ALIAS ); // needed to use formRestrictionCause()
 
         queryString += ObjectFilterQueryUtils.formRestrictionAndGroupByAndOrderByClauses( filters, null, sort );
 
@@ -129,7 +129,7 @@ public class TaxonDaoImpl extends AbstractQueryFilteringVoEnabledDao<Taxon, Taxo
         String queryString = MessageFormat.format( "select count({0}) "
                 + "from Taxon as {0} " // taxon
                 + "left join {0}.externalDatabase as ED " // external db
-                + "where {0}.id is not null ", getObjectAlias() ); // needed to use formRestrictionCause()
+                + "where {0}.id is not null ", OBJECT_ALIAS ); // needed to use formRestrictionCause()
 
         if ( filters != null ) {
             queryString += ObjectFilterQueryUtils.formRestrictionClause( filters );

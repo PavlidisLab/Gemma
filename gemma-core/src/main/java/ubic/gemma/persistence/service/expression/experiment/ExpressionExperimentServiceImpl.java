@@ -1121,31 +1121,4 @@ public class ExpressionExperimentServiceImpl
     public Collection<ExpressionExperiment> getExperimentsLackingPublications() {
         return this.expressionExperimentDao.getExperimentsLackingPublications();
     }
-
-    /**
-     * Checks for special properties that are allowed to be referenced on certain objects. E.g. characteristics on EEs.
-     * {@inheritDoc}
-     */
-    @Override
-    protected ObjectFilterPropertyMeta getObjectFilterPropertyMeta( String propertyName ) {
-        if ( propertyName.startsWith( "characteristics." ) ) {
-            String fieldName = propertyName.replaceFirst( "^characteristics\\.", "" );
-            return new ObjectFilterPropertyMeta( CharacteristicDao.OBJECT_ALIAS, fieldName, resolveObjectFilterPropertyType( fieldName, Characteristic.class ) );
-        }
-
-        if ( propertyName.startsWith( "bioAssays." ) ) {
-            String fieldName = propertyName.replaceFirst( "^bioAssays\\.", "" );
-            return new ObjectFilterPropertyMeta( BioAssayDao.OBJECT_ALIAS, fieldName, resolveObjectFilterPropertyType( fieldName, BioAssay.class ) );
-        }
-
-        if ( propertyName.equals( "taxon" ) ) {
-            return new ObjectFilterPropertyMeta( TaxonDao.OBJECT_ALIAS, "id", Long.class );
-        }
-
-        if ( propertyName.equals( "bioAssayCount" ) ) {
-            return new ObjectFilterPropertyMeta( expressionExperimentDao.getObjectAlias(), "bioAssays.size", Integer.class );
-        }
-
-        return super.getObjectFilterPropertyMeta( propertyName );
-    }
 }

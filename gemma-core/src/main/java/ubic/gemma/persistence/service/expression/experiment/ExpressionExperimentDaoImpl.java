@@ -1119,7 +1119,7 @@ public class ExpressionExperimentDaoImpl
             }
             List<Long> idList = new ArrayList<>( ids );
             Collections.sort( idList );
-            filters.add( new ObjectFilter( getObjectAlias(), "id", Long.class, ObjectFilter.Operator.in, idList ) );
+            filters.add( new ObjectFilter( OBJECT_ALIAS, "id", Long.class, ObjectFilter.Operator.in, idList ) );
         }
 
         if ( taxon != null ) {
@@ -1135,7 +1135,7 @@ public class ExpressionExperimentDaoImpl
             return Collections.emptyList();
         }
 
-        Filters filters = Filters.singleFilter( new ObjectFilter( getObjectAlias(), "id", Long.class, ObjectFilter.Operator.in, ids ) );
+        Filters filters = Filters.singleFilter( new ObjectFilter( OBJECT_ALIAS, "id", Long.class, ObjectFilter.Operator.in, ids ) );
 
         return this.loadDetailsValueObjects( filters, null, 0, 0 );
     }
@@ -1163,7 +1163,7 @@ public class ExpressionExperimentDaoImpl
     @Override
     public List<ExpressionExperimentValueObject> loadValueObjectsPreFilter( @Nullable Filters filters, @Nullable Sort sort ) {
         if ( sort == null ) {
-            sort = Sort.by( getObjectAlias(), "id" );
+            sort = Sort.by( OBJECT_ALIAS, "id" );
         }
         List<ExpressionExperimentValueObject> results = super.loadValueObjectsPreFilter( filters, sort );
         populateArrayDesignCount( results );
@@ -1173,7 +1173,7 @@ public class ExpressionExperimentDaoImpl
     @Override
     public Slice<ExpressionExperimentValueObject> loadValueObjectsPreFilter( @Nullable Filters filters, @Nullable Sort sort, int offset, int limit ) {
         if ( sort == null ) {
-            sort = Sort.by( getObjectAlias(), "id" );
+            sort = Sort.by( OBJECT_ALIAS, "id" );
         }
         Slice<ExpressionExperimentValueObject> results = super.loadValueObjectsPreFilter( filters, sort, offset, limit );
         populateArrayDesignCount( results );
@@ -1339,7 +1339,7 @@ public class ExpressionExperimentDaoImpl
         }
 
         // Restrict to non-troubled EEs for non-administrators
-        addNonTroubledFilter( filters, getObjectAlias() );
+        addNonTroubledFilter( filters, OBJECT_ALIAS );
 
         // FIXME: this is triggering an AD jointure that simply we cannot afford, so we only perform it if necessary
         if ( FiltersUtils.containsAnyAlias( filters, ArrayDesignDao.OBJECT_ALIAS ) ) {
@@ -1360,7 +1360,7 @@ public class ExpressionExperimentDaoImpl
                         + "left join fetch s.lastTroubledEvent as eTrbl "
                         + "left join fetch {0}.geeq as geeq "
                         + "left join fetch {0}.taxon as {3}",
-                getObjectAlias(), AclQueryUtils.AOI_ALIAS, AclQueryUtils.SID_ALIAS, TaxonDao.OBJECT_ALIAS );
+                OBJECT_ALIAS, AclQueryUtils.AOI_ALIAS, AclQueryUtils.SID_ALIAS, TaxonDao.OBJECT_ALIAS );
 
         // fetching characteristics, bioAssays and arrayDesignUsed is costly, so we reserve these operations only if it
         // is mentioned in the filters
@@ -1381,13 +1381,13 @@ public class ExpressionExperimentDaoImpl
         }
 
         // parts of this query (above) are only needed for administrators: the notes, so it could theoretically be sped up even more
-        queryString += AclQueryUtils.formAclJoinClause( getObjectAlias() );
+        queryString += AclQueryUtils.formAclJoinClause( OBJECT_ALIAS );
 
         queryString += AclQueryUtils.formAclRestrictionClause();
 
         // FIXME: this is necessary because of the ACL jointure, it can also become necessary if bioAssays are included as well
         // unlike in ArrayDesignDaoImpl, a distinct is not possible because we select the ACL AOI and SID
-        queryString += ObjectFilterQueryUtils.formRestrictionAndGroupByAndOrderByClauses( filters, getObjectAlias(), sort );
+        queryString += ObjectFilterQueryUtils.formRestrictionAndGroupByAndOrderByClauses( filters, OBJECT_ALIAS, sort );
 
         Query query = this.getSessionFactory().getCurrentSession().createQuery( queryString );
 
@@ -1405,7 +1405,7 @@ public class ExpressionExperimentDaoImpl
         }
 
         // Restrict to non-troubled EEs for non-administrators
-        addNonTroubledFilter( filters, getObjectAlias() );
+        addNonTroubledFilter( filters, OBJECT_ALIAS );
         if ( FiltersUtils.containsAnyAlias( filters, ArrayDesignDao.OBJECT_ALIAS ) ) {
             addNonTroubledFilter( filters, ArrayDesignDao.OBJECT_ALIAS );
         }
@@ -1442,7 +1442,7 @@ public class ExpressionExperimentDaoImpl
         }
 
         // parts of this query (above) are only needed for administrators: the notes, so it could theoretically be sped up even more
-        queryString += AclQueryUtils.formAclJoinClause( getObjectAlias() );
+        queryString += AclQueryUtils.formAclJoinClause( OBJECT_ALIAS );
 
         queryString += AclQueryUtils.formAclRestrictionClause();
         queryString += ObjectFilterQueryUtils.formRestrictionClause( filters );
@@ -1454,6 +1454,45 @@ public class ExpressionExperimentDaoImpl
         ObjectFilterQueryUtils.addRestrictionParameters( query, filters );
 
         return query;
+    }
+
+    @Override
+    public Set<String> getFilterableProperties() {
+        Set<String> results = new HashSet<>();
+        addFilterableProperties( "characteristics.", Characteristic.class, results, FILTERABLE_PROPERTIES_MAX_DEPTH - 1 );
+        addFilterableProperties( "bioAssays.", BioAssay.class, results, FILTERABLE_PROPERTIES_MAX_DEPTH - 1 );
+        results.add( "taxon" );
+        addFilterableProperties( "taxon.", Taxon.class, results, FILTERABLE_PROPERTIES_MAX_DEPTH - 1 );
+        results.add( "bioAssayCount" );
+        results.addAll( super.getFilterableProperties() );
+        return results;
+    }
+
+    /**
+     * Checks for special properties that are allowed to be referenced on certain objects. E.g. characteristics on EEs.
+     * {@inheritDoc}
+     */
+    @Override
+    protected FilterablePropertyMeta getFilterablePropertyMeta( String propertyName ) {
+        if ( propertyName.startsWith( "characteristics." ) ) {
+            String fieldName = propertyName.replaceFirst( "^characteristics\\.", "" );
+            return new FilterablePropertyMeta( CharacteristicDao.OBJECT_ALIAS, fieldName, resolveObjectFilterPropertyType( fieldName, Characteristic.class ) );
+        }
+
+        if ( propertyName.startsWith( "bioAssays." ) ) {
+            String fieldName = propertyName.replaceFirst( "^bioAssays\\.", "" );
+            return new FilterablePropertyMeta( BioAssayDao.OBJECT_ALIAS, fieldName, resolveObjectFilterPropertyType( fieldName, BioAssay.class ) );
+        }
+
+        if ( propertyName.equals( "taxon" ) ) {
+            return new FilterablePropertyMeta( TaxonDao.OBJECT_ALIAS, "id", Long.class );
+        }
+
+        if ( propertyName.equals( "bioAssayCount" ) ) {
+            return new FilterablePropertyMeta( OBJECT_ALIAS, "bioAssays.size", Integer.class );
+        }
+
+        return super.getFilterablePropertyMeta( propertyName );
     }
 
     /**

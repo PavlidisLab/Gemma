@@ -109,7 +109,7 @@ public class CompositeSequenceDaoImpl extends AbstractQueryFilteringVoEnabledDao
         String queryString = MessageFormat.format( "select {0} from CompositeSequence as {0} "
                         + "left join fetch {0}.arrayDesign as {1} "
                         + "where {0}.id is not null ", // needed to use formRestrictionCause()
-                getObjectAlias(), ArrayDesignDao.OBJECT_ALIAS );
+                OBJECT_ALIAS, ArrayDesignDao.OBJECT_ALIAS );
 
         queryString += ObjectFilterQueryUtils.formRestrictionAndGroupByAndOrderByClauses( filters, null, sort );
 
@@ -129,7 +129,7 @@ public class CompositeSequenceDaoImpl extends AbstractQueryFilteringVoEnabledDao
                         + "from CompositeSequence as {0} "
                         + "left join {0}.arrayDesign as " + ArrayDesignDao.OBJECT_ALIAS + " "
                         + "where {0}.id is not null ", // needed to use formRestrictionCause()
-                getObjectAlias(), ArrayDesignDao.OBJECT_ALIAS );
+                OBJECT_ALIAS, ArrayDesignDao.OBJECT_ALIAS );
 
         if ( filters != null ) {
             queryString += ObjectFilterQueryUtils.formRestrictionClause( filters );

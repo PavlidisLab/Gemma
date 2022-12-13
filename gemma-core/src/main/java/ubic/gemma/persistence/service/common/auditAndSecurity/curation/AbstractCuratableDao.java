@@ -14,6 +14,7 @@ import ubic.gemma.persistence.util.ObjectFilter;
 import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Date;
 import java.util.Map;
 
 /**
@@ -81,5 +82,28 @@ public abstract class AbstractCuratableDao<C extends Curatable, VO extends Abstr
         if ( !SecurityUtil.isUserAdmin() ) {
             filters.add( ObjectFilter.parseObjectFilter( objectAlias, "curationDetails.troubled", Boolean.class, ObjectFilter.Operator.eq, "false" ) );
         }
+    }
+
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Include filtering by {@code lastUpdated}, {@code troubled} and {@code needsAttention} from the associated
+     * curation details.
+     */
+    @Override
+    protected FilterablePropertyMeta getFilterablePropertyMeta( String propertyName ) throws IllegalArgumentException {
+        if ( propertyName.equals( "lastUpdated" ) ) {
+            return new FilterablePropertyMeta( "s", "lastUpdated", Date.class );
+        }
+
+        if ( propertyName.equals( "troubled" ) ) {
+            return new FilterablePropertyMeta( "s", "troubled", Boolean.class );
+        }
+
+        if ( propertyName.equals( "needsAttention" ) ) {
+            return new FilterablePropertyMeta( "s", "needsAttention", Boolean.class );
+        }
+
+        return super.getFilterablePropertyMeta( propertyName );
     }
 }

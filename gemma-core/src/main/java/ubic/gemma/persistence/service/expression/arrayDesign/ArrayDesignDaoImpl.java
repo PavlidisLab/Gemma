@@ -975,9 +975,9 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
         }
 
         // Restrict to non-troubled ADs for non-administrators
-        addNonTroubledFilter( filters, getObjectAlias() );
+        addNonTroubledFilter( filters, OBJECT_ALIAS );
 
-        queryString += AclQueryUtils.formAclJoinClause( "ad" );
+        queryString += AclQueryUtils.formAclJoinClause( OBJECT_ALIAS );
         queryString += AclQueryUtils.formAclRestrictionClause();
         queryString += ObjectFilterQueryUtils.formRestrictionAndGroupByAndOrderByClauses( filters, null, sort );
 
@@ -1008,9 +1008,9 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
         }
 
         // Restrict to non-troubled ADs for non-administrators
-        addNonTroubledFilter( filters, getObjectAlias() );
+        addNonTroubledFilter( filters, OBJECT_ALIAS );
 
-        queryString += AclQueryUtils.formAclJoinClause( getObjectAlias() );
+        queryString += AclQueryUtils.formAclJoinClause( OBJECT_ALIAS );
         queryString += AclQueryUtils.formAclRestrictionClause();
         queryString += ObjectFilterQueryUtils.formRestrictionClause( filters );
 
@@ -1021,6 +1021,31 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
         ObjectFilterQueryUtils.addRestrictionParameters( query, filters );
 
         return query;
+    }
+
+    @Override
+    public Set<String> getFilterableProperties() {
+        Set<String> result = new HashSet<>();
+        result.add( "taxon" );
+        addFilterableProperties( "taxon.", Taxon.class, result, FILTERABLE_PROPERTIES_MAX_DEPTH - 1 );
+        result.addAll( super.getFilterableProperties() );
+        return result;
+    }
+
+    @Override
+    protected FilterablePropertyMeta getFilterablePropertyMeta( String propertyName ) {
+        // alias for primaryTaxon which is not discoverable in the VO
+        if ( propertyName.startsWith( "taxon." ) ) {
+            String fieldName = propertyName.replaceFirst( "^taxon\\.", "" );
+            return new FilterablePropertyMeta( "t", fieldName, resolveObjectFilterPropertyType( fieldName, Taxon.class ) );
+        }
+
+        // handle cases such as taxon = 1
+        if ( propertyName.equals( "taxon" ) ) {
+            return new FilterablePropertyMeta( "t", "id", Long.class );
+        }
+
+        return super.getFilterablePropertyMeta( propertyName );
     }
 
     private void populateIsMerged( Collection<ArrayDesignValueObject> results ) {

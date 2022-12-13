@@ -1,53 +1,23 @@
 package ubic.gemma.persistence.service.expression.arrayDesign;
 
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
-import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
-import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventDao;
-import ubic.gemma.persistence.service.expression.experiment.BlacklistedEntityService;
+import ubic.gemma.core.util.test.BaseSpringContextTest;
 import ubic.gemma.persistence.util.ObjectFilter;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.InstanceOfAssertFactories.array;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-@ContextConfiguration
-@RunWith(SpringJUnit4ClassRunner.class)
-public class ArrayDesignServiceTest {
-
-    @Configuration
-    static class ArrayDesignServiceTestContextConfiguration {
-
-        @Bean
-        public ArrayDesignDao arrayDesignDao() {
-            ArrayDesignDao arrayDesignDao = mock( ArrayDesignDao.class );
-            when( arrayDesignDao.getElementClass() ).thenAnswer( a -> ArrayDesign.class );
-            when( arrayDesignDao.getObjectAlias() ).thenReturn( "ad" );
-            return arrayDesignDao;
-        }
-
-        @Bean
-        public BlacklistedEntityService blacklistedEntityService() {
-            return mock( BlacklistedEntityService.class );
-        }
-
-        @Bean
-        public ArrayDesignService arrayDesignService( ArrayDesignDao arrayDesignDao ) {
-            return new ArrayDesignServiceImpl( arrayDesignDao, mock( AuditEventDao.class ) );
-        }
-    }
-
-    @Autowired
-    private ArrayDesignDao arrayDesignDao;
+public class ArrayDesignServiceTest extends BaseSpringContextTest {
 
     @Autowired
     private ArrayDesignService arrayDesignService;
+
+    @Test
+    public void testGetFilterableProperties() {
+        assertThat( arrayDesignService.getFilterableProperties() )
+                .contains( "taxon", "taxon.ncbiId" );
+    }
 
     @Test
     public void testGetObjectFilter() {
@@ -55,6 +25,21 @@ public class ArrayDesignServiceTest {
                 .hasFieldOrPropertyWithValue( "objectAlias", "ad" )
                 .hasFieldOrPropertyWithValue( "propertyName", "id" )
                 .hasFieldOrPropertyWithValue( "requiredValue", 1L );
+    }
+
+    @Test
+    public void testGetObjectFilterWhenPropertyDoesNotExist() {
+        assertThatThrownBy( () -> arrayDesignService.getObjectFilter( "foo.bar", ObjectFilter.Operator.eq, "joe" ) )
+                .isInstanceOf( IllegalArgumentException.class )
+                .hasMessageContainingAll( "taxon", "taxon.ncbiId", "alternativeTo" );
+    }
+
+    @Test
+    public void testGetObjectFilterWhenPropertyExceedsMaxDepth() {
+        assertThatThrownBy( () -> arrayDesignService.getObjectFilter( "primaryTaxon.externalDatabase.contact.name", ObjectFilter.Operator.eq, "joe" ) )
+                .isInstanceOf( IllegalArgumentException.class )
+                .hasMessageContaining( "At most 3 levels can be used for filtering." )
+                .hasNoCause();
     }
 
     @Test

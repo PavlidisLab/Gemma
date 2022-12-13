@@ -209,7 +209,7 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilterin
     @Override
     protected Criteria getLoadValueObjectsCriteria( @Nullable Filters filters ) {
         Criteria query = this.getSessionFactory().getCurrentSession()
-                .createCriteria( ExpressionAnalysisResultSet.class, getObjectAlias() )
+                .createCriteria( ExpressionAnalysisResultSet.class )
                 // these two are necessary for ACL filtering, so we must use a (default) inner jointure
                 .createAlias( "analysis", "a" )
                 .createAlias( "analysis.experimentAnalyzed", "e" )

@@ -20,27 +20,4 @@ public abstract class AbstractCuratableService<O extends Identifiable, VO extend
     protected AbstractCuratableService( FilteringVoEnabledDao<O, VO> voDao ) {
         super( voDao );
     }
-
-    /**
-     * {@inheritDoc}
-     * <p>
-     * Include filtering by {@code lastUpdated}, {@code troubled} and {@code needsAttention} from the associated
-     * curation details.
-     */
-    @Override
-    protected ObjectFilterPropertyMeta getObjectFilterPropertyMeta( String propertyName ) throws IllegalArgumentException {
-        if ( propertyName.equals( "lastUpdated" ) ) {
-            return new ObjectFilterPropertyMeta( "s", "lastUpdated", Date.class );
-        }
-
-        if ( propertyName.equals( "troubled" ) ) {
-            return new ObjectFilterPropertyMeta( "s", "troubled", Boolean.class );
-        }
-
-        if ( propertyName.equals( "needsAttention" ) ) {
-            return new ObjectFilterPropertyMeta( "s", "needsAttention", Boolean.class );
-        }
-
-        return super.getObjectFilterPropertyMeta( propertyName );
-    }
 }
