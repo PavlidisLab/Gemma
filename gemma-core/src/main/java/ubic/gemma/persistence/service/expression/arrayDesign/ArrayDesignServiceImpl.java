@@ -38,7 +38,7 @@ import java.util.*;
  * @see ArrayDesignService
  */
 @Service
-public class ArrayDesignServiceImpl extends AbstractFilteringVoEnabledService<ArrayDesign, ArrayDesignValueObject>
+public class ArrayDesignServiceImpl extends AbstractCuratableService<ArrayDesign, ArrayDesignValueObject>
         implements ArrayDesignService {
 
     private final ArrayDesignDao arrayDesignDao;
@@ -420,17 +420,18 @@ public class ArrayDesignServiceImpl extends AbstractFilteringVoEnabledService<Ar
 
     @Override
     protected ObjectFilterPropertyMeta getObjectFilterPropertyMeta( String propertyName ) {
+        // alias for primaryTaxon which is not discoverable in the VO
+        if ( propertyName.startsWith( "taxon." ) ) {
+            String fieldName = propertyName.replaceFirst( "^taxon\\.", "" );
+            return new ObjectFilterPropertyMeta( "t", fieldName, resolveObjectFilterPropertyType( fieldName, Taxon.class ) );
+        }
+
         // handle cases such as taxon = 1
         if ( propertyName.equals( "taxon" ) ) {
             return new ObjectFilterPropertyMeta( "t", "id", Long.class );
         }
-        // handles taxon.{propertyName} {op} {value}
-        else if ( propertyName.startsWith( "taxon." ) ) {
-            String fieldName = propertyName.replaceFirst( "^taxon\\.", "" );
-            return new ObjectFilterPropertyMeta( "t", fieldName, resolveObjectFilterPropertyType( fieldName, Taxon.class ) );
-        } else {
-            return super.getObjectFilterPropertyMeta( propertyName );
-        }
+
+        return super.getObjectFilterPropertyMeta( propertyName );
     }
 
     private void checkForMoreRecentMethod( Map<Long, AuditEvent> lastEventMap,

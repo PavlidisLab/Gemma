@@ -64,6 +64,7 @@ import ubic.gemma.persistence.service.analysis.expression.sampleCoexpression.Sam
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventDao;
 import ubic.gemma.persistence.service.common.description.CharacteristicDao;
 import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeService;
+import ubic.gemma.persistence.service.expression.arrayDesign.AbstractCuratableService;
 import ubic.gemma.persistence.service.expression.bioAssay.BioAssayDao;
 import ubic.gemma.persistence.service.expression.bioAssayData.BioAssayDimensionService;
 import ubic.gemma.persistence.service.expression.bioAssayData.RawExpressionDataVectorDao;
@@ -83,7 +84,7 @@ import java.util.stream.Collectors;
 @Service
 @Transactional
 public class ExpressionExperimentServiceImpl
-        extends AbstractFilteringVoEnabledService<ExpressionExperiment, ExpressionExperimentValueObject>
+        extends AbstractCuratableService<ExpressionExperiment, ExpressionExperimentValueObject>
         implements ExpressionExperimentService {
 
     private static final double BATCH_CONFOUND_THRESHOLD = 0.01;
@@ -1143,18 +1144,6 @@ public class ExpressionExperimentServiceImpl
 
         if ( propertyName.equals( "bioAssayCount" ) ) {
             return new ObjectFilterPropertyMeta( expressionExperimentDao.getObjectAlias(), "bioAssays.size", Integer.class );
-        }
-
-        if ( propertyName.equals( "lastUpdated" ) ) {
-            return new ObjectFilterPropertyMeta( "s", "lastUpdated", Date.class );
-        }
-
-        if ( propertyName.equals( "troubled" ) ) {
-            return new ObjectFilterPropertyMeta( "s", "troubled", Boolean.class );
-        }
-
-        if ( propertyName.equals( "needsAttention" ) ) {
-            return new ObjectFilterPropertyMeta( "s", "needsAttention", Boolean.class );
         }
 
         return super.getObjectFilterPropertyMeta( propertyName );

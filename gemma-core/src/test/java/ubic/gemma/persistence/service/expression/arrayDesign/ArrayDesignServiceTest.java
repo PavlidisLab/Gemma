@@ -71,6 +71,10 @@ public class ArrayDesignServiceTest {
                 .hasFieldOrPropertyWithValue( "objectAlias", "t" )
                 .hasFieldOrPropertyWithValue( "propertyName", "commonName" )
                 .hasFieldOrPropertyWithValue( "requiredValue", "human" );
+        assertThat( arrayDesignService.getObjectFilter( "needsAttention", ObjectFilter.Operator.eq, "true" ) )
+                .hasFieldOrPropertyWithValue( "objectAlias", "s" )
+                .hasFieldOrPropertyWithValue( "propertyName", "needsAttention" )
+                .hasFieldOrPropertyWithValue( "requiredValue", true );
     }
 
 }
