@@ -82,4 +82,16 @@ public class ObjectFilterQueryUtilsTest {
         assertThat( formRestrictionAndGroupByAndOrderByClauses( filters, "ee", Sort.by( "ee", "shortName" ) ) )
                 .isEqualTo( " and (id = :id1) group by ee order by ee.shortName" );
     }
+
+    @Test
+    public void testFormRestriction() {
+        assertThat( formRestrictionClause( Filters.singleFilter( new ObjectFilter( "ee", "bioAssays.size", Integer.class, ObjectFilter.Operator.greaterThan, 4 ) ) ) )
+                .isEqualTo( " and (size(ee.bioAssays) > :ee_bioAssays_size1)" );
+    }
+
+    @Test
+    public void testSortByCollectionSize() {
+        assertThat( formOrderByClause( Sort.by( "ee", "bioAssays.size" ) ) )
+                .isEqualTo( " order by count(distinct ee.bioAssays)" );
+    }
 }

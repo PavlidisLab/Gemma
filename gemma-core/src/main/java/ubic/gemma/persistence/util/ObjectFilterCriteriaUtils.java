@@ -42,6 +42,29 @@ public class ObjectFilterCriteriaUtils {
         } else {
             propertyName = filter.getPropertyName();
         }
+        if ( propertyName.endsWith( ".size" ) ) {
+            if ( !( filter.getRequiredValue() instanceof Integer ) ) {
+                throw new IllegalArgumentException( "Right hand size for a size-check must be a non-null integer." );
+            }
+            propertyName = propertyName.replaceFirst( "\\.size$", "" );
+            int size = ( Integer ) filter.getRequiredValue();
+            switch ( filter.getOperator() ) {
+                case eq:
+                    return Restrictions.sizeEq( propertyName, size );
+                case notEq:
+                    return Restrictions.sizeNe( propertyName, size );
+                case lessThan:
+                    return Restrictions.sizeLt( propertyName, size );
+                case lessOrEq:
+                    return Restrictions.sizeLe( propertyName, size );
+                case greaterThan:
+                    return Restrictions.sizeGt( propertyName, size );
+                case greaterOrEq:
+                    return Restrictions.sizeGe( propertyName, size );
+                default:
+                    throw new IllegalArgumentException( String.format( "Unsupported operator %s for a size-check.", filter.getOperator() ) );
+            }
+        }
         switch ( filter.getOperator() ) {
             case eq:
                 if ( filter.getRequiredValue() == null ) {

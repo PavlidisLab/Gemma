@@ -22,7 +22,7 @@ public class ObjectFilterQueryUtils {
      * @return a well-formed property name suitable for an HQL query
      */
     public static String formPropertyName( @Nullable String alias, String propertyName ) {
-        return alias == null ? propertyName : alias + "." + propertyName;
+        return alias == null ? propertyName : alias + "." + propertyName.replaceFirst( "\\.size$", "" );
     }
 
     /**
@@ -94,9 +94,13 @@ public class ObjectFilterQueryUtils {
                     continue;
                 if ( !first )
                     disjunction.append( " or " );
-                disjunction
-                        .append( formPropertyName( filter.getObjectAlias(), filter.getPropertyName() ) ).append( " " );
 
+                if ( filter.getPropertyName().endsWith( ".size" ) ) {
+                    disjunction.append( "size(" ).append( formPropertyName( filter.getObjectAlias(), filter.getPropertyName() ) ).append( ')' ).append( " " );
+                } else {
+                    disjunction
+                            .append( formPropertyName( filter.getObjectAlias(), filter.getPropertyName() ) ).append( " " );
+                }
                 String paramName = formParamName( filter.getObjectAlias(), filter.getPropertyName() ) + ( ++i );
 
                 // we need to handle two special cases when comparing to NULL which cannot use == or != operators.
