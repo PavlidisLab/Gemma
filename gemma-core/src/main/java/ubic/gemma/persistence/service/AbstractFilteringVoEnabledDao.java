@@ -150,9 +150,11 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
         }
         for ( int i = 0; i < propertyNames.length; i++ ) {
             if ( propertyTypes[i].isCollectionType() ) {
-                addFilterableProperties( prefix + propertyNames[i] + ".",
-                        ( ( CollectionType ) propertyTypes[i] ).getElementType( ( SessionFactoryImplementor ) getSessionFactory() ).getReturnedClass(),
-                        destination, maxDepth - 1 );
+                // only collection of supported scalars
+                Class<?> elementClass = ( ( CollectionType ) propertyTypes[i] ).getElementType( ( SessionFactoryImplementor ) getSessionFactory() ).getReturnedClass();
+                if ( ObjectFilter.getConversionService().canConvert( String.class, elementClass ) ) {
+                    destination.add( prefix + propertyNames[i] );
+                }
             } else if ( propertyTypes[i].isEntityType() ) {
                 addFilterableProperties( prefix + propertyNames[i] + ".", propertyTypes[i].getReturnedClass(), destination, maxDepth - 1 );
             } else if ( ObjectFilter.getConversionService().canConvert( String.class, propertyTypes[i].getReturnedClass() ) ) {
@@ -236,6 +238,11 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
         if ( parts.length > 1 ) {
             if ( propertyType.isCollectionType() ) {
                 subCls = ( ( CollectionType ) propertyType ).getElementType( ( SessionFactoryImplementor ) getSessionFactory() ).getReturnedClass();
+                if ( ObjectFilter.getConversionService().canConvert( String.class, subCls ) ) {
+                    return subCls;
+                } else {
+                    throw new NoSuchFieldException( String.format( "element type of %s in %s is not supported.", property, cls.getName() ) );
+                }
             } else if ( propertyType.isEntityType() ) {
                 subCls = propertyType.getReturnedClass();
             } else {
