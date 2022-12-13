@@ -92,7 +92,7 @@ import java.util.List;
  * @see ObjectFilter.Operator
  */
 @Schema(type = "string", description = "Filter results by matching the expression. The exact syntax is described in the attached external documentation.",
-        externalDocs = @ExternalDocumentation(url = "https://gemma.msl.ubc.ca/resources/apidocs/index.html"))
+        externalDocs = @ExternalDocumentation(url = "https://gemma.msl.ubc.ca/resources/apidocs/ubic/gemma/web/services/rest/util/args/FilterArg.html"))
 public class FilterArg extends AbstractArg<FilterArg.Filter> {
 
     /**
