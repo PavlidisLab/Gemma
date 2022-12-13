@@ -101,6 +101,11 @@ public class CustomModelResolver extends ModelResolver {
     protected String resolveDescription( Annotated a, Annotation[] annotations, io.swagger.v3.oas.annotations.media.Schema schema ) {
         String description = super.resolveDescription( a, annotations, schema );
 
+        // lookup classpath (fallback)
+        if ( description == null ) {
+            description = resolveDescriptionFromClassPath( a );
+        }
+
         // append available properties to the description
         if ( FilterArg.class.isAssignableFrom( a.getRawType() ) && getGemmaExtensionProperty( schema, "filteringService" ) != null ) {
             String availableProperties = resolveAvailableProperties( schema );
@@ -116,6 +121,23 @@ public class CustomModelResolver extends ModelResolver {
         FilteringService<?> filteringService = beanFactory.getBean( filteringServiceName, FilteringService.class );
         return String.format( "Available properties:\n\n%s.",
                 filteringService.getFilterableProperties().stream().map( p -> String.format( "- %s %s", p, filteringService.getFilterablePropertyType( p ).getSimpleName() ) ).collect( Collectors.joining( "\n" ) ) );
+    }
+
+    private String resolveDescriptionFromClassPath( Annotated a ) {
+        if ( descriptionsCache.containsKey( a.getName() ) ) {
+            return descriptionsCache.get( a.getName() );
+        }
+        ClassPathResource cpr = new ClassPathResource( "restapidocs/models/" + a.getName() + ".md" );
+        if ( cpr.exists() ) {
+            try ( InputStream in = cpr.getInputStream() ) {
+                String description = StreamUtils.copyToString( in, StandardCharsets.UTF_8 );
+                descriptionsCache.put( a.getName(), description );
+                return description;
+            } catch ( IOException e ) {
+                throw new RuntimeException( e );
+            }
+        }
+        return null;
     }
 
     /**
