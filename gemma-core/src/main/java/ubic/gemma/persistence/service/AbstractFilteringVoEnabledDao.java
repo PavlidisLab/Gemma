@@ -149,14 +149,14 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
             destination.add( prefix + classMetadata.getIdentifierPropertyName() );
         }
         for ( int i = 0; i < propertyNames.length; i++ ) {
-            if ( propertyTypes[i].isCollectionType() ) {
+            if ( propertyTypes[i].isEntityType() ) {
+                addFilterableProperties( prefix + propertyNames[i] + ".", propertyTypes[i].getReturnedClass(), destination, maxDepth - 1 );
+            } else if ( propertyTypes[i].isCollectionType() ) {
                 // only collection of supported scalars
                 Class<?> elementClass = ( ( CollectionType ) propertyTypes[i] ).getElementType( ( SessionFactoryImplementor ) getSessionFactory() ).getReturnedClass();
                 if ( ObjectFilter.getConversionService().canConvert( String.class, elementClass ) ) {
                     destination.add( prefix + propertyNames[i] );
                 }
-            } else if ( propertyTypes[i].isEntityType() ) {
-                addFilterableProperties( prefix + propertyNames[i] + ".", propertyTypes[i].getReturnedClass(), destination, maxDepth - 1 );
             } else if ( ObjectFilter.getConversionService().canConvert( String.class, propertyTypes[i].getReturnedClass() ) ) {
                 destination.add( prefix + propertyNames[i] );
             }
@@ -233,26 +233,26 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
 
         Type propertyType = propertyTypes[i];
 
-        Class<?> subCls;
-
+        // recurse only on entity type
         if ( parts.length > 1 ) {
-            if ( propertyType.isCollectionType() ) {
-                subCls = ( ( CollectionType ) propertyType ).getElementType( ( SessionFactoryImplementor ) getSessionFactory() ).getReturnedClass();
-                if ( ObjectFilter.getConversionService().canConvert( String.class, subCls ) ) {
-                    return subCls;
-                } else {
-                    throw new NoSuchFieldException( String.format( "element type of %s in %s is not supported.", property, cls.getName() ) );
-                }
-            } else if ( propertyType.isEntityType() ) {
-                subCls = propertyType.getReturnedClass();
+            if ( propertyType.isEntityType() ) {
+                return getFilterablePropertyType( parts[1], propertyType.getReturnedClass() );
             } else {
-                throw new NoSuchFieldException( String.format( "%s is not an entity or collection type in %s.", property, cls.getName() ) );
+                throw new NoSuchFieldException( String.format( "%s is not an entity type in %s.", property, cls.getName() ) );
             }
-            return getFilterablePropertyType( parts[1], subCls );
-        } else if ( ObjectFilter.getConversionService().canConvert( String.class, propertyType.getReturnedClass() ) ) {
-            return propertyType.getReturnedClass();
+        }
+
+        Class<?> subCls;
+        if ( propertyType.isCollectionType() ) {
+            subCls = ( ( CollectionType ) propertyType ).getElementType( ( SessionFactoryImplementor ) getSessionFactory() ).getReturnedClass();
         } else {
-            throw new NoSuchFieldException( String.format( "%s is not an entity or collection type in %s.", property, cls.getName() ) );
+            subCls = propertyType.getReturnedClass();
+        }
+
+        if ( ObjectFilter.getConversionService().canConvert( String.class, subCls ) ) {
+            return subCls;
+        } else {
+            throw new NoSuchFieldException( String.format( "%s is not of a supported type or a collection of supported types %s.", property, cls.getName() ) );
         }
     }
 
