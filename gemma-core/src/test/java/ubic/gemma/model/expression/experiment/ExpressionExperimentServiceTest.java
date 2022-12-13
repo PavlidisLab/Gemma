@@ -239,6 +239,12 @@ public class ExpressionExperimentServiceTest extends BaseSpringContextTest {
                 .hasFieldOrPropertyWithValue( "operator", ObjectFilter.Operator.greaterOrEq )
                 .hasFieldOrPropertyWithValue( "requiredValue", 4 );
 
+        assertThat( expressionExperimentService.getObjectFilter( "bioAssays.size", ObjectFilter.Operator.greaterOrEq, "4" ) )
+                .hasFieldOrPropertyWithValue( "objectAlias", "ee" )
+                .hasFieldOrPropertyWithValue( "propertyName", "bioAssays.size" )
+                .hasFieldOrPropertyWithValue( "operator", ObjectFilter.Operator.greaterOrEq )
+                .hasFieldOrPropertyWithValue( "requiredValue", 4 );
+
         Calendar calendar = new GregorianCalendar( 2020, Calendar.JANUARY, 10 );
         calendar.setTimeZone( TimeZone.getTimeZone( "UTC" ) );
         assertThat( expressionExperimentService.getObjectFilter( "lastUpdated", ObjectFilter.Operator.greaterOrEq, "2020-01-10" ) )

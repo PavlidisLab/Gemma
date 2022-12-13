@@ -158,6 +158,8 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
             if ( propertyTypes[i].isEntityType() ) {
                 addFilterableProperties( prefix + propertyNames[i] + ".", propertyTypes[i].getReturnedClass(), destination, maxDepth - 1 );
             } else if ( propertyTypes[i].isCollectionType() ) {
+                // special case for collection size, regardless of its type
+                destination.add( prefix + propertyNames[i] + ".size" );
                 // only collection of supported scalars
                 Class<?> elementClass = ( ( CollectionType ) propertyTypes[i] ).getElementType( ( SessionFactoryImplementor ) getSessionFactory() ).getReturnedClass();
                 if ( ObjectFilter.getConversionService().canConvert( String.class, elementClass ) ) {
@@ -188,7 +190,7 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
 
     /**
      * Obtain various meta-information used to infer what to use in a {@link ObjectFilter} or {@link Sort}.
-     *
+     * <p>
      * This is used by {@link #getObjectFilter(String, ObjectFilter.Operator, String)} and {@link #getSort(String, Sort.Direction)}.
      *
      * @throws IllegalArgumentException if no such propertyName exists in {@link O}
@@ -204,12 +206,8 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
      * Helper to resolve the type of a property in a given class.
      */
     protected Class<?> resolveObjectFilterPropertyType( String propertyName, Class<?> clazz ) {
-        if ( ( StringUtils.countMatches( propertyName, '.' ) + 1 ) > FILTERABLE_PROPERTIES_MAX_DEPTH ) {
-            throw new IllegalArgumentException( String.format( "At most %d levels can be used for filtering.",
-                    FILTERABLE_PROPERTIES_MAX_DEPTH ) );
-        }
         try {
-            return getFilterablePropertyType( propertyName, clazz );
+            return getFilterablePropertyType( propertyName, clazz, FILTERABLE_PROPERTIES_MAX_DEPTH );
         } catch ( NoSuchFieldException e ) {
             String availableProperties = getFilterableProperties().stream().sorted().collect( Collectors.joining( ", " ) );
             throw new IllegalArgumentException( String.format( "Could not resolve property '%s' on %s. Available properties are: %s.", propertyName, clazz.getName(), availableProperties ), e );
@@ -227,7 +225,12 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
      * @param cls      the class to check the property on.
      * @return the class of the property last in the line of nesting.
      */
-    private Class<?> getFilterablePropertyType( String property, Class<?> cls ) throws NoSuchFieldException {
+    private Class<?> getFilterablePropertyType( String property, Class<?> cls, int maxDepth ) throws NoSuchFieldException {
+        if ( maxDepth == 0 ) {
+            throw new IllegalArgumentException( String.format( "At most %d levels can be used for filtering.",
+                    FILTERABLE_PROPERTIES_MAX_DEPTH ) );
+        }
+
         ClassMetadata classMetadata = getSessionFactory().getClassMetadata( cls );
 
         String[] parts = property.split( "\\.", 2 );
@@ -249,7 +252,9 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
         // recurse only on entity type
         if ( parts.length > 1 ) {
             if ( propertyType.isEntityType() ) {
-                return getFilterablePropertyType( parts[1], propertyType.getReturnedClass() );
+                return getFilterablePropertyType( parts[1], propertyType.getReturnedClass(), maxDepth - 1 );
+            } else if ( propertyType.isCollectionType() && "size".equals( parts[1] ) ) {
+                return Integer.class; /* special case for collection size */
             } else {
                 throw new NoSuchFieldException( String.format( "%s is not an entity type in %s.", property, cls.getName() ) );
             }

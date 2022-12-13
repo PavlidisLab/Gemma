@@ -1474,12 +1474,12 @@ public class ExpressionExperimentDaoImpl
      */
     @Override
     protected FilterablePropertyMeta getFilterablePropertyMeta( String propertyName ) {
-        if ( propertyName.startsWith( "characteristics." ) ) {
+        if ( propertyName.startsWith( "characteristics." ) && !propertyName.equals( "characteristics.size" ) ) {
             String fieldName = propertyName.replaceFirst( "^characteristics\\.", "" );
             return new FilterablePropertyMeta( CharacteristicDao.OBJECT_ALIAS, fieldName, resolveObjectFilterPropertyType( fieldName, Characteristic.class ), null );
         }
 
-        if ( propertyName.startsWith( "bioAssays." ) ) {
+        if ( propertyName.startsWith( "bioAssays." ) && !propertyName.equals( "bioAssays.size" ) ) {
             String fieldName = propertyName.replaceFirst( "^bioAssays\\.", "" );
             return new FilterablePropertyMeta( BioAssayDao.OBJECT_ALIAS, fieldName, resolveObjectFilterPropertyType( fieldName, BioAssay.class ), null );
         }
