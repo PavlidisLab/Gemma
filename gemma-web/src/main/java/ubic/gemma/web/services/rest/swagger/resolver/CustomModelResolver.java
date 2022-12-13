@@ -114,7 +114,7 @@ public class CustomModelResolver extends ModelResolver {
         String filteringServiceName = Objects.requireNonNull( getGemmaExtensionProperty( schema, "filteringService" ),
                 "A FilterArg must have a x-gemma-filtering-service extension field to resolve its available values." );
         FilteringService<?> filteringService = beanFactory.getBean( filteringServiceName, FilteringService.class );
-        return String.format( "Available properties:\n\n%s.",
+        return String.format( "Available properties:\n\n%s",
                 filteringService.getFilterableProperties().stream().sorted().map( p -> String.format( "- %s%s `%s`",
                         p,
                         filteringService.getFilterablePropertyDescription( p ) != null ? " " + filteringService.getFilterablePropertyDescription( p ) : "",
