@@ -25,6 +25,7 @@ import lombok.ToString;
 import org.apache.commons.lang3.ClassUtils;
 import org.springframework.core.convert.ConversionException;
 import org.springframework.core.convert.ConversionFailedException;
+import org.springframework.core.convert.ConversionService;
 import org.springframework.core.convert.TypeDescriptor;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.core.convert.support.ConfigurableConversionService;
@@ -80,6 +81,13 @@ public class ObjectFilter {
                 throw new ConversionFailedException( TypeDescriptor.valueOf( Date.class ), TypeDescriptor.valueOf( String.class ), s, e );
             }
         } );
+    }
+
+    /**
+     * Obtain the conversion service used for parsing values.
+     */
+    public static ConversionService getConversionService() {
+        return conversionService;
     }
 
     /**

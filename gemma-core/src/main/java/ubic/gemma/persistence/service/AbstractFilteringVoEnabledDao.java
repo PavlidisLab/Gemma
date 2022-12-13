@@ -150,13 +150,12 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
         }
         for ( int i = 0; i < propertyNames.length; i++ ) {
             if ( propertyTypes[i].isCollectionType() ) {
-                addFilterableProperties( propertyNames[i] + ".",
+                addFilterableProperties( prefix + propertyNames[i] + ".",
                         ( ( CollectionType ) propertyTypes[i] ).getElementType( ( SessionFactoryImplementor ) getSessionFactory() ).getReturnedClass(),
                         destination, maxDepth - 1 );
             } else if ( propertyTypes[i].isEntityType() ) {
-                addFilterableProperties( propertyNames[i] + ".", propertyTypes[i].getReturnedClass(), destination, maxDepth - 1 );
-            } else {
-                // FIXME: are these basic types?
+                addFilterableProperties( prefix + propertyNames[i] + ".", propertyTypes[i].getReturnedClass(), destination, maxDepth - 1 );
+            } else if ( ObjectFilter.getConversionService().canConvert( String.class, propertyTypes[i].getReturnedClass() ) ) {
                 destination.add( prefix + propertyNames[i] );
             }
         }
@@ -230,7 +229,6 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
             throw new NoSuchFieldException( String.format( "No such field %s in %s.", property, cls.getName() ) );
         }
 
-        String propertyName = propertyNames[i];
         Type propertyType = propertyTypes[i];
 
         Class<?> subCls;
@@ -244,8 +242,10 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
                 throw new NoSuchFieldException( String.format( "%s is not an entity or collection type in %s.", property, cls.getName() ) );
             }
             return getFilterablePropertyType( parts[1], subCls );
-        } else {
+        } else if ( ObjectFilter.getConversionService().canConvert( String.class, propertyType.getReturnedClass() ) ) {
             return propertyType.getReturnedClass();
+        } else {
+            throw new NoSuchFieldException( String.format( "%s is not an entity or collection type in %s.", property, cls.getName() ) );
         }
     }
 
