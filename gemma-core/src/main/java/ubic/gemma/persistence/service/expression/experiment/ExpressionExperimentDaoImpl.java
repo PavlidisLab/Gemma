@@ -1476,20 +1476,20 @@ public class ExpressionExperimentDaoImpl
     protected FilterablePropertyMeta getFilterablePropertyMeta( String propertyName ) {
         if ( propertyName.startsWith( "characteristics." ) ) {
             String fieldName = propertyName.replaceFirst( "^characteristics\\.", "" );
-            return new FilterablePropertyMeta( CharacteristicDao.OBJECT_ALIAS, fieldName, resolveObjectFilterPropertyType( fieldName, Characteristic.class ) );
+            return new FilterablePropertyMeta( CharacteristicDao.OBJECT_ALIAS, fieldName, resolveObjectFilterPropertyType( fieldName, Characteristic.class ), null );
         }
 
         if ( propertyName.startsWith( "bioAssays." ) ) {
             String fieldName = propertyName.replaceFirst( "^bioAssays\\.", "" );
-            return new FilterablePropertyMeta( BioAssayDao.OBJECT_ALIAS, fieldName, resolveObjectFilterPropertyType( fieldName, BioAssay.class ) );
+            return new FilterablePropertyMeta( BioAssayDao.OBJECT_ALIAS, fieldName, resolveObjectFilterPropertyType( fieldName, BioAssay.class ), null );
         }
 
         if ( propertyName.equals( "taxon" ) ) {
-            return new FilterablePropertyMeta( TaxonDao.OBJECT_ALIAS, "id", Long.class );
+            return new FilterablePropertyMeta( TaxonDao.OBJECT_ALIAS, "id", Long.class, "alias for taxon.id" );
         }
 
         if ( propertyName.equals( "bioAssayCount" ) ) {
-            return new FilterablePropertyMeta( OBJECT_ALIAS, "bioAssays.size", Integer.class );
+            return new FilterablePropertyMeta( OBJECT_ALIAS, "bioAssays.size", Integer.class, null );
         }
 
         return super.getFilterablePropertyMeta( propertyName );

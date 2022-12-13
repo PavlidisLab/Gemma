@@ -31,6 +31,13 @@ public interface FilteringDao<O extends Identifiable> extends BaseDao<O> {
     Class<?> getFilterablePropertyType( String propertyName ) throws IllegalArgumentException;
 
     /**
+     * Obtain a short description for a given filterable property.
+     * @throws IllegalArgumentException if no such property exists
+     */
+    @Nullable
+    String getFilterablePropertyDescription( String propertyName ) throws IllegalArgumentException;
+
+    /**
      * Obtain an {@link ObjectFilter} for the entity this DAO is providing.
      * <p>
      * It is the responsibility of the DAO to infer the ObjectFilter property type as well as the alias to use.

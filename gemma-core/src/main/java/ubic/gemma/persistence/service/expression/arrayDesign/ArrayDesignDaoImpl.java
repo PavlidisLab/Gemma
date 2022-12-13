@@ -1037,12 +1037,12 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
         // alias for primaryTaxon which is not discoverable in the VO
         if ( propertyName.startsWith( "taxon." ) ) {
             String fieldName = propertyName.replaceFirst( "^taxon\\.", "" );
-            return new FilterablePropertyMeta( "t", fieldName, resolveObjectFilterPropertyType( fieldName, Taxon.class ) );
+            return new FilterablePropertyMeta( "t", fieldName, resolveObjectFilterPropertyType( fieldName, Taxon.class ), "alias for primaryTaxon." + fieldName );
         }
 
         // handle cases such as taxon = 1
         if ( propertyName.equals( "taxon" ) ) {
-            return new FilterablePropertyMeta( "t", "id", Long.class );
+            return new FilterablePropertyMeta( "t", "id", Long.class, "alias for taxon.id" );
         }
 
         return super.getFilterablePropertyMeta( propertyName );

@@ -118,6 +118,12 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
         return getFilterablePropertyMeta( propertyName ).propertyType;
     }
 
+    @Nullable
+    @Override
+    public String getFilterablePropertyDescription( String propertyName ) throws IllegalArgumentException {
+        return getFilterablePropertyMeta( propertyName ).description;
+    }
+
     @Override
     public final ObjectFilter getObjectFilter( String property, ObjectFilter.Operator operator, String value ) {
         FilterablePropertyMeta propertyMeta = getFilterablePropertyMeta( property );
@@ -171,6 +177,13 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
         String objectAlias;
         String propertyName;
         Class<?> propertyType;
+        /**
+         * A short description for this parameter if clarifications are needed.
+         * <p>
+         * This will appear in the generated OpenAPI specification.
+         */
+        @Nullable
+        String description;
     }
 
     /**
@@ -184,7 +197,7 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
      * @see #getSort(String, Sort.Direction)
      */
     protected FilterablePropertyMeta getFilterablePropertyMeta( String propertyName ) throws IllegalArgumentException {
-        return new FilterablePropertyMeta( objectAlias, propertyName, resolveObjectFilterPropertyType( propertyName, elementClass ) );
+        return new FilterablePropertyMeta( objectAlias, propertyName, resolveObjectFilterPropertyType( propertyName, elementClass ), null );
     }
 
     /**

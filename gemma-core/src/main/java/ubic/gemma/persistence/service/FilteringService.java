@@ -25,6 +25,12 @@ public interface FilteringService<O extends Identifiable> extends BaseService<O>
     Class<?> getFilterablePropertyType( String property );
 
     /**
+     * @see FilteringDao#getFilterablePropertyDescription(String)
+     */
+    @Nullable
+    String getFilterablePropertyDescription( String property );
+
+    /**
      * @see FilteringDao#getFilterableProperties()
      */
     ObjectFilter getObjectFilter( String property, ObjectFilter.Operator operator, String value ) throws IllegalArgumentException;

@@ -27,6 +27,12 @@ public abstract class AbstractFilteringService<O extends Identifiable> extends A
         return mainDao.getFilterablePropertyType( property );
     }
 
+    @Nullable
+    @Override
+    public String getFilterablePropertyDescription( String property ) {
+        return mainDao.getFilterablePropertyDescription( property );
+    }
+
     @Override
     public ObjectFilter getObjectFilter( String property, ObjectFilter.Operator operator, String value ) throws IllegalArgumentException {
         return mainDao.getObjectFilter( property, operator, value );
