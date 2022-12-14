@@ -35,6 +35,7 @@ public class ObjectFilterTest {
         ObjectFilter of = ObjectFilter.parseObjectFilter( "ee", "id", String.class, ObjectFilter.Operator.greaterOrEq, "just a string" );
         assertThat( of.getRequiredValue() )
                 .isEqualTo( "just a string" );
+        assertThat( of ).hasToString( "ee.id >= just a string" );
     }
 
     @Test
@@ -42,6 +43,7 @@ public class ObjectFilterTest {
         ObjectFilter of = ObjectFilter.parseObjectFilter( "ee", "id", Integer.class, ObjectFilter.Operator.greaterOrEq, "12321" );
         assertThat( of.getRequiredValue() )
                 .isEqualTo( 12321 );
+        assertThat( of ).hasToString( "ee.id >= 12321" );
     }
 
     @Test
@@ -90,6 +92,7 @@ public class ObjectFilterTest {
     @Test
     public void testParseCollectionOfDates() {
         ObjectFilter of = ObjectFilter.parseObjectFilter( "ee", "lastUpdated", Date.class, ObjectFilter.Operator.in, "(2021-10-01, 2021-10-02)" );
+        assertThat( of ).hasToString( "ee.lastUpdated in [Thu Sep 30 20:00:00 EDT 2021, Fri Oct 01 20:00:00 EDT 2021]" );
     }
 
     @Test

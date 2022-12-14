@@ -971,7 +971,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
                         + "left join fetch ad.alternativeTo alt";
 
         if ( filters == null ) {
-            filters = new Filters();
+            filters = Filters.empty();
         }
 
         // Restrict to non-troubled ADs for non-administrators
@@ -1004,7 +1004,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
                         + "left join ad.alternativeTo alt";
 
         if ( filters == null ) {
-            filters = new Filters();
+            filters = Filters.empty();
         }
 
         // Restrict to non-troubled ADs for non-administrators

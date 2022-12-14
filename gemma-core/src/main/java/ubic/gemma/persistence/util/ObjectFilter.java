@@ -50,7 +50,6 @@ import java.util.stream.Stream;
  */
 @Getter
 @EqualsAndHashCode
-@ToString
 public class ObjectFilter {
 
     /**
@@ -213,6 +212,11 @@ public class ObjectFilter {
         this.operator = operator;
         this.requiredValue = requiredValue;
         this.checkTypeCorrect();
+    }
+
+    @Override
+    public String toString() {
+        return String.format( "%s%s %s %s", objectAlias != null ? objectAlias + "." : "", propertyName, operator.getToken(), requiredValue );
     }
 
     private void checkTypeCorrect() throws IllegalArgumentException {

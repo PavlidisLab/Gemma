@@ -170,9 +170,9 @@ public class DatasetsWebService {
     ) {
         Filters filters = filter.getObjectFilters( expressionExperimentService );
         if ( filters == null ) {
-            filters = new Filters();
+            filters = Filters.empty();
         }
-        filters.add( datasetsArg.getObjectFilters( service ) );
+        filters.and( datasetsArg.getObjectFilters( service ) );
         return Responder.paginate( service.loadValueObjectsPreFilter( filters, sort.getSort( expressionExperimentService ), offset.getValue(), limit.getValue() ) );
     }
 

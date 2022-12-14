@@ -37,7 +37,6 @@ import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.search.SearchResult;
 import ubic.gemma.core.search.SearchService;
-import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
@@ -192,11 +191,11 @@ public class AnnotationsWebService {
 
         // FIXME: this is not necessary since FilterArg.valueOf("") returns an empty Filters object
         if ( filters == null ) {
-            filters = new Filters();
+            filters = Filters.empty();
         }
 
         // If there are filters other than the search query, intersect the results.
-        filters.add( DatasetArrayArg.valueOf( StringUtils.join( foundIds, ',' ) ).getObjectFilters( expressionExperimentService ) );
+        filters.and( DatasetArrayArg.valueOf( StringUtils.join( foundIds, ',' ) ).getObjectFilters( expressionExperimentService ) );
         return Responder.paginate( expressionExperimentService.loadValueObjectsPreFilter( filters, sort, offset.getValue(), limit.getValue() ) );
     }
 
@@ -255,10 +254,10 @@ public class AnnotationsWebService {
         // We always have to do filtering, because we always have at least the taxon argument (otherwise this#datasets method is used)
         Filters filters = filter.getObjectFilters( expressionExperimentService );
         if ( filters == null ) {
-            filters = new Filters();
+            filters = Filters.empty();
         }
 
-        filters.add( DatasetArrayArg.valueOf( StringUtils.join( foundIds, ',' ) ).getObjectFilters( expressionExperimentService ) );
+        filters.and( DatasetArrayArg.valueOf( StringUtils.join( foundIds, ',' ) ).getObjectFilters( expressionExperimentService ) );
 
         return Responder.paginate( taxonArg.getTaxonDatasets( expressionExperimentService, taxonService,
                 filters, offset.getValue(),

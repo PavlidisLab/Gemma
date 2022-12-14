@@ -28,7 +28,7 @@ public class CompositeSequenceServiceTest extends BaseSpringContextTest {
 
     @Test
     public void testLoadValueObjetsPreFilterByArrayDesign() {
-        Filters filters = Filters.singleFilter( new ObjectFilter( ArrayDesignDao.OBJECT_ALIAS, "id", Long.class, ObjectFilter.Operator.eq, arrayDesign.getId() ) );
+        Filters filters = Filters.singleFilter( ArrayDesignDao.OBJECT_ALIAS, "id", Long.class, ObjectFilter.Operator.eq, arrayDesign.getId() );
         Slice<CompositeSequenceValueObject> results = compositeSequenceService.loadValueObjectsPreFilter( filters, null, 0, 10 );
         assertThat( results ).hasSize( 10 )
                 .extracting( "arrayDesign" )

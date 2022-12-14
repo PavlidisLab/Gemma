@@ -55,7 +55,7 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
      */
     @Override
     public final VO loadValueObject( O entity ) {
-        return loadValueObjectsPreFilter( Filters.singleFilter( new ObjectFilter( objectAlias, getIdPropertyName(), Long.class, ObjectFilter.Operator.eq, entity.getId() ) ), null ).stream()
+        return loadValueObjectsPreFilter( Filters.singleFilter( objectAlias, getIdPropertyName(), Long.class, ObjectFilter.Operator.eq, entity.getId() ), null ).stream()
                 .findFirst()
                 .orElse( null );
     }
@@ -67,7 +67,7 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
      */
     @Override
     public final VO loadValueObjectById( Long id ) {
-        return loadValueObjectsPreFilter( Filters.singleFilter( new ObjectFilter( objectAlias, getIdPropertyName(), Long.class, ObjectFilter.Operator.eq, id ) ), null ).stream()
+        return loadValueObjectsPreFilter( Filters.singleFilter( objectAlias, getIdPropertyName(), Long.class, ObjectFilter.Operator.eq, id ), null ).stream()
                 .findFirst()
                 .orElse( null );
     }
@@ -82,7 +82,7 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
         if ( entities.isEmpty() ) {
             return Collections.emptyList();
         }
-        return loadValueObjectsPreFilter( Filters.singleFilter( new ObjectFilter( objectAlias, getIdPropertyName(), Long.class, ObjectFilter.Operator.in, EntityUtils.getIds( entities ) ) ), null );
+        return loadValueObjectsPreFilter( Filters.singleFilter( objectAlias, getIdPropertyName(), Long.class, ObjectFilter.Operator.in, EntityUtils.getIds( entities ) ), null );
     }
 
     /**
@@ -95,7 +95,7 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
         if ( ids.isEmpty() ) {
             return Collections.emptyList();
         }
-        return loadValueObjectsPreFilter( Filters.singleFilter( new ObjectFilter( objectAlias, getIdPropertyName(), Long.class, ObjectFilter.Operator.in, ids ) ), null );
+        return loadValueObjectsPreFilter( Filters.singleFilter( objectAlias, getIdPropertyName(), Long.class, ObjectFilter.Operator.in, ids ), null );
     }
 
     /**

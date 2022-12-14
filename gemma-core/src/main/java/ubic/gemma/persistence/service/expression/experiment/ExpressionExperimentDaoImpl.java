@@ -1111,7 +1111,7 @@ public class ExpressionExperimentDaoImpl
 
     @Override
     public Slice<ExpressionExperimentDetailsValueObject> loadDetailsValueObjectsByIds( @Nullable Collection<Long> ids, @Nullable Taxon taxon, @Nullable Sort sort, int offset, int limit ) {
-        Filters filters = new Filters();
+        Filters filters = Filters.empty();
 
         if ( ids != null ) {
             if ( ids.isEmpty() ) {
@@ -1119,11 +1119,11 @@ public class ExpressionExperimentDaoImpl
             }
             List<Long> idList = new ArrayList<>( ids );
             Collections.sort( idList );
-            filters.add( new ObjectFilter( OBJECT_ALIAS, "id", Long.class, ObjectFilter.Operator.in, idList ) );
+            filters.and( OBJECT_ALIAS, "id", Long.class, ObjectFilter.Operator.in, idList );
         }
 
         if ( taxon != null ) {
-            filters.add( new ObjectFilter( TaxonDao.OBJECT_ALIAS, "id", Long.class, ObjectFilter.Operator.eq, taxon.getId() ) );
+            filters.and( TaxonDao.OBJECT_ALIAS, "id", Long.class, ObjectFilter.Operator.eq, taxon.getId() );
         }
 
         return this.loadDetailsValueObjects( filters, sort, offset, limit );
@@ -1135,7 +1135,7 @@ public class ExpressionExperimentDaoImpl
             return Collections.emptyList();
         }
 
-        Filters filters = Filters.singleFilter( new ObjectFilter( OBJECT_ALIAS, "id", Long.class, ObjectFilter.Operator.in, ids ) );
+        Filters filters = Filters.singleFilter(  OBJECT_ALIAS, "id", Long.class, ObjectFilter.Operator.in, ids  );
 
         return this.loadDetailsValueObjects( filters, null, 0, 0 );
     }
@@ -1335,7 +1335,7 @@ public class ExpressionExperimentDaoImpl
     @Override
     protected Query getLoadValueObjectsQuery( @Nullable Filters filters, @Nullable Sort sort, EnumSet<QueryHint> hints ) {
         if ( filters == null ) {
-            filters = new Filters();
+            filters = Filters.empty();
         }
 
         // Restrict to non-troubled EEs for non-administrators
@@ -1401,7 +1401,7 @@ public class ExpressionExperimentDaoImpl
     @Override
     protected Query getCountValueObjectsQuery( @Nullable Filters filters ) {
         if ( filters == null ) {
-            filters = new Filters();
+            filters = Filters.empty();
         }
 
         // Restrict to non-troubled EEs for non-administrators

@@ -77,7 +77,7 @@ public abstract class AbstractCuratableDao<C extends Curatable, VO extends Abstr
      */
     protected void addNonTroubledFilter( Filters filters, @Nullable String objectAlias ) {
         if ( !SecurityUtil.isUserAdmin() ) {
-            filters.add( ObjectFilter.parseObjectFilter( objectAlias, "curationDetails.troubled", Boolean.class, ObjectFilter.Operator.eq, "false" ) );
+            filters.and( objectAlias, "curationDetails.troubled", Boolean.class, ObjectFilter.Operator.eq, false );
         }
     }
 

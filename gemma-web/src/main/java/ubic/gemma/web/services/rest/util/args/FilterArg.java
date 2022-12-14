@@ -15,8 +15,6 @@
 package ubic.gemma.web.services.rest.util.args;
 
 import io.swagger.v3.oas.annotations.ExternalDocumentation;
-import io.swagger.v3.oas.annotations.extensions.Extension;
-import io.swagger.v3.oas.annotations.extensions.ExtensionProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.persistence.service.FilteringService;
@@ -125,7 +123,7 @@ public class FilterArg extends AbstractArg<FilterArg.Filter> {
         Filter filter = getValue();
         if ( filter.propertyNames == null )
             return null;
-        Filters filterList = new Filters();
+        Filters filterList = Filters.empty();
 
         for ( int i = 0; i < filter.propertyNames.size(); i++ ) {
             String[] properties = filter.propertyNames.get( i );
@@ -143,7 +141,7 @@ public class FilterArg extends AbstractArg<FilterArg.Filter> {
                     throw new MalformedArgException( String.format( "The entity cannot be filtered by %s: %s", properties[j], e.getMessage() ), e );
                 }
             }
-            filterList.add( filterArray );
+            filterList.and( filterArray );
         }
 
         return filterList;

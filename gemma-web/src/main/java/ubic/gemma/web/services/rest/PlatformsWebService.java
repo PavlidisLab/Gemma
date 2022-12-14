@@ -126,10 +126,10 @@ public class PlatformsWebService {
     ) {
         Filters filters = filter.getObjectFilters( arrayDesignService );
         if ( filters == null ) {
-            filters = new Filters();
+            filters = Filters.empty();
         }
 
-        filters.add( datasetsArg.getObjectFilters( arrayDesignService ) );
+        filters.and( datasetsArg.getObjectFilters( arrayDesignService ) );
 
         return Responder.paginate( arrayDesignService.loadValueObjectsPreFilter( filters, sort.getSort( arrayDesignService ), offset.getValue(), limit.getValue() ) );
     }

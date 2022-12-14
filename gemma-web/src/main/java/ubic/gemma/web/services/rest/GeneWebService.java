@@ -98,8 +98,8 @@ public class GeneWebService {
             @PathParam("genes") GeneArrayArg genes // Required
     ) {
         SortArg sort = SortArg.valueOf( "+id" );
-        Filters filters = new Filters();
-        filters.add( genes.getObjectFilters( geneService ) );
+        Filters filters = Filters.empty();
+        filters.and( genes.getObjectFilters( geneService ) );
         return Responder.respond( geneService.loadValueObjectsPreFilter( filters, sort.getSort( geneService ), IntArg.valueOf( "0" ).getValue(), IntArg.valueOf( "-1" ).getValue() ) );
     }
 

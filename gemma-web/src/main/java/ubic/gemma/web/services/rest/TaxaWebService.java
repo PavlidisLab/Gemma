@@ -118,8 +118,8 @@ public class TaxaWebService {
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve taxa by their identifiers")
     public ResponseDataObject<List<TaxonValueObject>> getTaxaByIds( @PathParam("taxa") TaxonArrayArg taxaArg ) {
-        Filters filters = new Filters();
-        filters.add( taxaArg.getObjectFilters( taxonService ) );
+        Filters filters = Filters.empty();
+        filters.and( taxaArg.getObjectFilters( taxonService ) );
         Sort sort = taxonService.getSort( "id", null );
         return Responder.respond( taxonService.loadValueObjectsPreFilter( filters, sort ) );
     }

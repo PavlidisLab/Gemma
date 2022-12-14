@@ -29,6 +29,7 @@ import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
@@ -279,26 +280,28 @@ public class ExpressionExperimentServiceTest extends BaseSpringContextTest {
     @Test
     public void testLoadValueObjectsPreFilterByCharacteristic() {
         Collection<Long> ids = new HashSet<>();
-        Filters filters = Filters.singleFilter( expressionExperimentService.getObjectFilter( "characteristics.id", ObjectFilter.Operator.eq, ee.getCharacteristics().stream().findFirst().orElse( null ).getId().toString() ) );
-        ObjectFilter of = filters.iterator().next()[0];
+        Characteristic c = ee.getCharacteristics().stream().findFirst().orElse( null );
+        assertThat( c ).isNotNull();
+        ObjectFilter of = expressionExperimentService.getObjectFilter( "characteristics.id", ObjectFilter.Operator.eq, c.getId().toString() );
         assertEquals( CharacteristicDao.OBJECT_ALIAS, of.getObjectAlias() );
         assertEquals( "id", of.getPropertyName() );
         Long id = ee.getId();
         ids.add( id );
-        Collection<ExpressionExperimentValueObject> list = expressionExperimentService.loadValueObjectsPreFilter( filters, null, 0, 0 );
+        Collection<ExpressionExperimentValueObject> list = expressionExperimentService.loadValueObjectsPreFilter( Filters.singleFilter( of ), null, 0, 0 );
         assertEquals( 1, list.size() );
     }
 
     @Test
     public void testLoadValueObjectsPreFilterByBioAssay() {
         Collection<Long> ids = new HashSet<>();
-        Filters filters = Filters.singleFilter( expressionExperimentService.getObjectFilter( "bioAssays.id", ObjectFilter.Operator.eq, ee.getBioAssays().stream().findFirst().orElse( null ).getId().toString() ) );
-        ObjectFilter of = filters.iterator().next()[0];
+        BioAssay ba = ee.getBioAssays().stream().findFirst().orElse( null );
+        assertThat( ba ).isNotNull();
+        ObjectFilter of = expressionExperimentService.getObjectFilter( "bioAssays.id", ObjectFilter.Operator.eq, ba.getId().toString() );
         assertEquals( BioAssayDao.OBJECT_ALIAS, of.getObjectAlias() );
         assertEquals( "id", of.getPropertyName() );
         Long id = ee.getId();
         ids.add( id );
-        Collection<ExpressionExperimentValueObject> list = expressionExperimentService.loadValueObjectsPreFilter( filters, null, 0, 0 );
+        Collection<ExpressionExperimentValueObject> list = expressionExperimentService.loadValueObjectsPreFilter( Filters.singleFilter( of ), null, 0, 0 );
         assertEquals( 1, list.size() );
     }
 

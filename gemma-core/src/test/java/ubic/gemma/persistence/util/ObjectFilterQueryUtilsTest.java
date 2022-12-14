@@ -1,7 +1,6 @@
 package ubic.gemma.persistence.util;
 
 import org.hibernate.Query;
-import org.junit.Before;
 import org.junit.Test;
 
 import java.util.Arrays;
@@ -22,12 +21,14 @@ public class ObjectFilterQueryUtilsTest {
 
     @Test
     public void testComplexClause() {
-        Filters filters = new Filters();
-        filters.add( ObjectFilter.parseObjectFilter( "ee", "shortName", String.class, ObjectFilter.Operator.like, "GSE" ) );
-        filters.add( ObjectFilter.parseObjectFilter( "ee", "id", Long.class, ObjectFilter.Operator.in, "(1,2,3,4)" ) );
-        filters.add( ObjectFilter.parseObjectFilter( "ad", "taxonId", Long.class, ObjectFilter.Operator.eq, "9606" ) );
-        filters.add( ObjectFilter.parseObjectFilter( "ee", "id", Long.class, ObjectFilter.Operator.in, "(1,2,3,4)" ),
-                ObjectFilter.parseObjectFilter( "ee", "id", Long.class, ObjectFilter.Operator.in, "(5,6,7,8)" ) );
+        Filters filters = Filters.empty()
+                .and( ObjectFilter.parseObjectFilter( "ee", "shortName", String.class, ObjectFilter.Operator.like, "GSE" ) )
+                .and( ObjectFilter.parseObjectFilter( "ee", "id", Long.class, ObjectFilter.Operator.in, "(1,2,3,4)" ) )
+                .and( ObjectFilter.parseObjectFilter( "ad", "taxonId", Long.class, ObjectFilter.Operator.eq, "9606" ) )
+                .and()
+                .or( ObjectFilter.parseObjectFilter( "ee", "id", Long.class, ObjectFilter.Operator.in, "(1,2,3,4)" ) )
+                .or( ObjectFilter.parseObjectFilter( "ee", "id", Long.class, ObjectFilter.Operator.in, "(5,6,7,8)" ) )
+                .build();
         assertThat( formRestrictionClause( filters ) )
                 .isEqualTo( " and (ee.shortName like :ee_shortName1) and (ee.id in (:ee_id2)) and (ad.taxonId = :ad_taxonId3) and (ee.id in (:ee_id4) or ee.id in (:ee_id5))" );
 
@@ -53,9 +54,11 @@ public class ObjectFilterQueryUtilsTest {
 
     @Test
     public void testRestrictionClauseWithNullRequiredValue() {
-        Filters filters = new Filters();
-        filters.add( new ObjectFilter( "ee", "id", Long.class, ObjectFilter.Operator.eq, null ),
-                new ObjectFilter( "ee", "id", Long.class, ObjectFilter.Operator.notEq, null ) );
+        Filters filters = Filters.empty()
+                .and()
+                .or( new ObjectFilter( "ee", "id", Long.class, ObjectFilter.Operator.eq, null ) )
+                .or( new ObjectFilter( "ee", "id", Long.class, ObjectFilter.Operator.notEq, null ) )
+                .build();
         assertThat( formRestrictionClause( filters ) )
                 .isEqualTo( " and (ee.id is :ee_id1 or ee.id is not :ee_id2)" );
 
@@ -67,7 +70,7 @@ public class ObjectFilterQueryUtilsTest {
 
     @Test
     public void testRestrictionClauseWithNullObjectAlias() {
-        Filters filters = Filters.singleFilter( new ObjectFilter( null, "id", Long.class, ObjectFilter.Operator.eq, 12L ) );
+        Filters filters = Filters.singleFilter( null, "id", Long.class, ObjectFilter.Operator.eq, 12L );
         assertThat( formRestrictionClause( filters ) )
                 .isEqualTo( " and (id = :id1)" );
 
@@ -78,14 +81,14 @@ public class ObjectFilterQueryUtilsTest {
 
     @Test
     public void testFormRestrictionAndGroupByAndOrderByClauses() {
-        Filters filters = Filters.singleFilter( new ObjectFilter( null, "id", Long.class, ObjectFilter.Operator.eq, 12L ) );
+        Filters filters = Filters.singleFilter( null, "id", Long.class, ObjectFilter.Operator.eq, 12L );
         assertThat( formRestrictionAndGroupByAndOrderByClauses( filters, "ee", Sort.by( "ee", "shortName" ) ) )
                 .isEqualTo( " and (id = :id1) group by ee order by ee.shortName" );
     }
 
     @Test
     public void testFormRestriction() {
-        assertThat( formRestrictionClause( Filters.singleFilter( new ObjectFilter( "ee", "bioAssays.size", Integer.class, ObjectFilter.Operator.greaterThan, 4 ) ) ) )
+        assertThat( formRestrictionClause( Filters.singleFilter( "ee", "bioAssays.size", Integer.class, ObjectFilter.Operator.greaterThan, 4 ) ) )
                 .isEqualTo( " and (size(ee.bioAssays) > :ee_bioAssays_size1)" );
     }
 
