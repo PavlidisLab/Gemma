@@ -30,8 +30,10 @@ import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Sort;
 
 import javax.annotation.Nullable;
+import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Base Spring DAO Class: is able to create, update, remove, load, and find objects of type
@@ -51,6 +53,11 @@ public class DatabaseEntryDaoImpl extends AbstractQueryFilteringVoEnabledDao<Dat
     @Override
     public List<DatabaseEntry> findByAccession( String accession ) {
         return this.findByProperty( "accession", accession );
+    }
+
+    @Override
+    public Set<String> getFilterableProperties() {
+        return Collections.emptySet();
     }
 
     @Override

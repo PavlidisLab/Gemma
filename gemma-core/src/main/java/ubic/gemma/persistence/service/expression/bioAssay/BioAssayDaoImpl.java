@@ -133,6 +133,11 @@ public class BioAssayDaoImpl extends AbstractFilteringVoEnabledDao<BioAssay, Bio
     }
 
     @Override
+    public Set<String> getFilterableProperties() {
+        return Collections.emptySet();
+    }
+
+    @Override
     public Slice<BioAssayValueObject> loadValueObjectsPreFilter( @Nullable Filters filters, @Nullable Sort sort, int offset, int limit ) {
         throw new NotImplementedException( "Filtering BioAssay VOs is not supported." );
     }

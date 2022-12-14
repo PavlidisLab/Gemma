@@ -1,20 +1,26 @@
 package ubic.gemma.persistence.service;
 
+import lombok.Value;
 import org.apache.commons.lang3.time.StopWatch;
 import org.hibernate.Criteria;
 import org.hibernate.SessionFactory;
 import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Projections;
+import org.hibernate.internal.CriteriaImpl;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.common.Identifiable;
-import ubic.gemma.persistence.util.Filters;
-import ubic.gemma.persistence.util.ObjectFilterCriteriaUtils;
-import ubic.gemma.persistence.util.Slice;
-import ubic.gemma.persistence.util.Sort;
+import ubic.gemma.persistence.util.*;
 
 import javax.annotation.Nullable;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Pattern;
+
+import static ubic.gemma.persistence.util.ObjectFilterQueryUtils.formPropertyName;
 
 /**
  * Partial implementation of {@link FilteringVoEnabledDao} based on the Hibernate {@link Criteria} API.
@@ -101,7 +107,11 @@ public abstract class AbstractCriteriaFilteringVoEnabledDao<O extends Identifiab
         Criteria query = getLoadValueObjectsCriteria( objectFilters );
 
         if ( sort != null ) {
-            query.addOrder( getOrderFromSort( sort ) );
+            if ( sort.getPropertyName().endsWith( ".size" ) ) {
+                log.warn( "Ordering by collection size is not supported." );
+            } else {
+                query.addOrder( getOrderFromSort( sort ) );
+            }
         }
 
         queryStopWatch.start();
@@ -126,7 +136,52 @@ public abstract class AbstractCriteriaFilteringVoEnabledDao<O extends Identifiab
         return results;
     }
 
+    @Value
+    protected static class FilterablePropertyAlias {
+        String propertyName;
+        String alias;
+    }
+
+    @Autowired
+    private PlatformTransactionManager platformTransactionManager;
+
+    /**
+     * Unfortunately, because of how criteria API works, you have to explicitly list all aliases.
+     * TODO: infer this from the criteria.
+     */
+    protected List<FilterablePropertyAlias> getFilterablePropertyAliases() {
+        // FIXME: unfortunately, this requires a session...
+        Criteria criteria = new TransactionTemplate( platformTransactionManager ).execute( ( ts ) -> getLoadValueObjectsCriteria( Filters.empty() ) );
+        if ( criteria instanceof CriteriaImpl ) {
+            //noinspection unchecked
+            Iterator<CriteriaImpl.Subcriteria> it = ( ( CriteriaImpl ) criteria ).iterateSubcriteria();
+            List<FilterablePropertyAlias> result = new ArrayList<>();
+            while ( it.hasNext() ) {
+                CriteriaImpl.Subcriteria sc = it.next();
+                result.add( new FilterablePropertyAlias( sc.getPath(), sc.getAlias() ) );
+            }
+            return result;
+        }
+        return Collections.emptyList();
+    }
+
+    @Override
+    protected FilterablePropertyMeta getFilterablePropertyMeta( String propertyName ) throws IllegalArgumentException {
+        FilterablePropertyMeta meta = super.getFilterablePropertyMeta( propertyName );
+        List<FilterablePropertyAlias> aliases = getFilterablePropertyAliases();
+        // substitute longest path first
+        aliases.sort( Comparator.comparing( a -> a.propertyName.length(), Comparator.reverseOrder() ) );
+        for ( FilterablePropertyAlias alias : aliases ) {
+            if ( propertyName.startsWith( alias.propertyName + "." ) ) {
+                propertyName = propertyName.replaceFirst( "^" + Pattern.quote( alias.propertyName + "." ), "" );
+                return new FilterablePropertyMeta( alias.alias, propertyName, meta.getPropertyType(), meta.getDescription() );
+            }
+        }
+        return meta;
+    }
+
     private Order getOrderFromSort( Sort sort ) {
-        return sort.getDirection() == Sort.Direction.DESC ? Order.desc( sort.getPropertyName() ) : Order.asc( sort.getPropertyName() );
+        String propertyName = formPropertyName( sort.getObjectAlias(), sort.getPropertyName() );
+        return sort.getDirection() == Sort.Direction.DESC ? Order.desc( propertyName ) : Order.asc( propertyName );
     }
 }

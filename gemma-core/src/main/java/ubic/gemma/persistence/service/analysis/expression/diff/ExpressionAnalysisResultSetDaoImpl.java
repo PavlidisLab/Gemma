@@ -23,6 +23,7 @@ import org.apache.commons.lang3.time.StopWatch;
 import org.hibernate.*;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
+import org.hibernate.internal.CriteriaImpl;
 import org.hibernate.sql.JoinType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
@@ -40,10 +41,7 @@ import ubic.gemma.persistence.service.AbstractDao;
 import ubic.gemma.persistence.util.*;
 
 import javax.annotation.Nullable;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -213,6 +211,14 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilterin
                 // these two are necessary for ACL filtering, so we must use a (default) inner jointure
                 .createAlias( "analysis", "a" )
                 .createAlias( "analysis.experimentAnalyzed", "e" )
+                //
+                .createAlias( "analysis.protocol", "p" )
+                .createAlias( "analysis.subsetFactorValue", "sfv" )
+                .createAlias( "baselineGroup", "b" )
+                .createAlias( "baselineGroup.experimentalFactor", "bef" )
+                .createAlias( "baselineGroup.measurement", "bm" )
+                .createAlias( "pvalueDistribution", "pvd" )
+                // these are used for filtering
                 .createAlias( "experimentalFactors", "ef", JoinType.LEFT_OUTER_JOIN )
                 .createAlias( "ef.factorValues", "fv", JoinType.LEFT_OUTER_JOIN );
 
@@ -225,6 +231,16 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilterin
                 AclCriteriaUtils.formAclRestrictionClause( "e", ExpressionExperimentSubSet.class ) ) );
 
         return query;
+    }
+
+    @Override
+    public Set<String> getFilterableProperties() {
+        Set<String> results = new HashSet<>( super.getFilterableProperties() );
+        // these cause a org.hibernate.MappingException: Unknown collection role exception (see https://github.com/PavlidisLab/Gemma/issues/518)
+        results.remove( "analysis.experimentAnalyzed.characteristics.size" );
+        results.remove( "analysis.experimentAnalyzed.otherRelevantPublications.size" );
+        results.remove( "experimentalFactors.size" );
+        return results;
     }
 
     @Override

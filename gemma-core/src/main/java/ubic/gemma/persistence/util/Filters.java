@@ -76,7 +76,7 @@ public class Filters implements Iterable<ObjectFilter[]> {
     /**
      * Create a singleton {@link Filters} from an explicit clause.
      */
-    public static Filters singleFilter( @Nullable String objectAlias, String propertyName, Class<?> propertyType, ObjectFilter.Operator operator, Object requiredValue ) {
+    public static Filters singleFilter( @Nullable String objectAlias, String propertyName, Class<?> propertyType, ObjectFilter.Operator operator, @Nullable Object requiredValue ) {
         return singleFilter( new ObjectFilter( objectAlias, propertyName, propertyType, operator, requiredValue ) );
     }
 

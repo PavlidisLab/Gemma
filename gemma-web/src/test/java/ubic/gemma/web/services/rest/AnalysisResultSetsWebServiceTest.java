@@ -5,8 +5,10 @@ import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.orm.hibernate3.HibernateSystemException;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
@@ -21,6 +23,8 @@ import ubic.gemma.persistence.service.analysis.expression.diff.ExpressionAnalysi
 import ubic.gemma.persistence.service.common.description.DatabaseEntryService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.persistence.util.Filters;
+import ubic.gemma.persistence.util.ObjectFilter;
 import ubic.gemma.web.services.rest.util.MalformedArgException;
 import ubic.gemma.web.services.rest.util.ResponseDataObject;
 import ubic.gemma.web.services.rest.util.args.*;
@@ -282,5 +286,20 @@ public class AnalysisResultSetsWebServiceTest extends BaseSpringWebTest {
         assertEquals( record.get( "corrected_pvalue" ), "1E-4" );
         // rank is null, it should appear as an empty string
         assertEquals( record.get( "rank" ), "" );
+    }
+
+    @Test
+    public void testFilterVosByNumberOfResults() {
+        expressionAnalysisResultSetService.loadValueObjectsPreFilter(
+                Filters.singleFilter( null, "results.size", Integer.class, ObjectFilter.Operator.greaterOrEq, 2 ),
+                null );
+    }
+
+    @Test
+    @Ignore("See https://github.com/PavlidisLab/Gemma/issues/518")
+    public void testFilterVosByNumberOfCharacteristics() {
+        expressionAnalysisResultSetService.loadValueObjectsPreFilter(
+                Filters.singleFilter( null, "analysis.experimentAnalyzed.characteristics.size", Integer.class, ObjectFilter.Operator.greaterOrEq, 2 ),
+                null );
     }
 }

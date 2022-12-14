@@ -400,6 +400,11 @@ public class CharacteristicDaoImpl extends AbstractFilteringVoEnabledDao<Charact
     }
 
     @Override
+    public Set<String> getFilterableProperties() {
+        return Collections.emptySet();
+    }
+
+    @Override
     public Slice<CharacteristicValueObject> loadValueObjectsPreFilter( @Nullable Filters filters, @Nullable Sort sort, int offset, int limit ) {
         throw new NotImplementedException( "Filtering Characteristic VOs is not supported." );
     }
