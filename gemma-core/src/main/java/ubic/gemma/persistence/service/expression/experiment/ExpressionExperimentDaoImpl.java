@@ -1458,13 +1458,12 @@ public class ExpressionExperimentDaoImpl
 
     @Override
     public Set<String> getFilterableProperties() {
-        Set<String> results = new HashSet<>();
+        Set<String> results = new HashSet<>( super.getFilterableProperties() );
         addFilterableProperties( "characteristics.", Characteristic.class, results, FILTERABLE_PROPERTIES_MAX_DEPTH - 1 );
         addFilterableProperties( "bioAssays.", BioAssay.class, results, FILTERABLE_PROPERTIES_MAX_DEPTH - 1 );
         results.add( "taxon" );
         addFilterableProperties( "taxon.", Taxon.class, results, FILTERABLE_PROPERTIES_MAX_DEPTH - 1 );
         results.add( "bioAssayCount" );
-        results.addAll( super.getFilterableProperties() );
         return results;
     }
 

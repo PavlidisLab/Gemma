@@ -1025,10 +1025,9 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
 
     @Override
     public Set<String> getFilterableProperties() {
-        Set<String> result = new HashSet<>();
+        Set<String> result = new HashSet<>( super.getFilterableProperties() );
         result.add( "taxon" );
         addFilterableProperties( "taxon.", Taxon.class, result, FILTERABLE_PROPERTIES_MAX_DEPTH - 1 );
-        result.addAll( super.getFilterableProperties() );
         return result;
     }
 

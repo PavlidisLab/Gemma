@@ -12,10 +12,7 @@ import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.ObjectFilter;
 
 import javax.annotation.Nullable;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Date;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Created by tesarst on 07/03/17.
@@ -82,6 +79,13 @@ public abstract class AbstractCuratableDao<C extends Curatable, VO extends Abstr
         if ( !SecurityUtil.isUserAdmin() ) {
             filters.add( ObjectFilter.parseObjectFilter( objectAlias, "curationDetails.troubled", Boolean.class, ObjectFilter.Operator.eq, "false" ) );
         }
+    }
+
+    @Override
+    public Set<String> getFilterableProperties() {
+        Set<String> result = new HashSet<>( super.getFilterableProperties() );
+        result.addAll( Arrays.asList( "lastUpdated", "troubled", "needsAttention" ) );
+        return result;
     }
 
     /**
