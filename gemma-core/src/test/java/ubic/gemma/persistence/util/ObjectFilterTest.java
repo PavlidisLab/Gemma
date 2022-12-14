@@ -21,9 +21,7 @@ package ubic.gemma.persistence.util;
 import org.junit.Test;
 import org.springframework.core.convert.ConversionFailedException;
 
-import java.time.Instant;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
+import java.time.*;
 import java.time.temporal.TemporalAccessor;
 import java.util.*;
 
@@ -63,25 +61,30 @@ public class ObjectFilterTest {
     @Test
     public void testParseDate() {
         ObjectFilter of = ObjectFilter.parseObjectFilter( "ee", "lastUpdated", Date.class, ObjectFilter.Operator.greaterOrEq, "2021-10-01" );
-        Calendar calendar = new GregorianCalendar( 2021, Calendar.OCTOBER, 1 );
-        calendar.setTimeZone( TimeZone.getTimeZone( "UTC" ) );
-        assertThat( of.getRequiredValue() ).isEqualTo( calendar.getTime() );
+        OffsetDateTime odf = OffsetDateTime.of( LocalDateTime.of( 2021, Month.OCTOBER, 1, 0, 0, 0 ), ZoneOffset.UTC );
+        assertThat( ( Date ) of.getRequiredValue() ).isEqualTo( odf.toInstant() );
     }
 
     @Test
     public void testParseDateTime() {
         ObjectFilter of = ObjectFilter.parseObjectFilter( "ee", "lastUpdated", Date.class, ObjectFilter.Operator.greaterOrEq, "2021-10-01T22:00:03Z" );
-        Calendar calendar = new GregorianCalendar( 2021, Calendar.OCTOBER, 1, 22, 0, 3 );
-        calendar.setTimeZone( TimeZone.getTimeZone( "UTC" ) );
-        assertThat( of.getRequiredValue() ).isEqualTo( calendar.getTime() );
+        OffsetDateTime odf = OffsetDateTime.of( LocalDateTime.of( 2021, Month.OCTOBER, 1, 22, 0, 3 ), ZoneOffset.UTC );
+        assertThat( ( Date ) of.getRequiredValue() ).isEqualTo( odf.toInstant() );
     }
 
     @Test
     public void testParseDateTimeWithoutZuluSuffix() {
         ObjectFilter of = ObjectFilter.parseObjectFilter( "ee", "lastUpdated", Date.class, ObjectFilter.Operator.greaterOrEq, "2021-10-01T22:00:03" );
-        Calendar calendar = new GregorianCalendar( 2021, Calendar.OCTOBER, 1, 22, 0, 3 );
-        calendar.setTimeZone( TimeZone.getTimeZone( "UTC" ) );
-        assertThat( of.getRequiredValue() ).isEqualTo( calendar.getTime() );
+        OffsetDateTime odf = OffsetDateTime.of( LocalDateTime.of( 2021, Month.OCTOBER, 1, 22, 0, 3 ), ZoneOffset.UTC );
+        assertThat( ( Date ) of.getRequiredValue() ).isEqualTo( odf.toInstant() );
+    }
+
+    @Test
+    public void testParseDateTimeWithNonUtcTimeZone() {
+        ObjectFilter of = ObjectFilter.parseObjectFilter( "ee", "lastUpdated", Date.class, ObjectFilter.Operator.greaterOrEq, "2021-10-01T22:00:03+05:00" );
+        OffsetDateTime odf = OffsetDateTime.of( LocalDateTime.of( 2021, Month.OCTOBER, 1, 22, 0, 3 ), ZoneOffset.ofHours( 5 ) );
+        assertThat( ( Date ) of.getRequiredValue() )
+                .isEqualTo( odf.toInstant() );
     }
 
     @Test

@@ -42,8 +42,7 @@ import java.util.List;
  * <li>Number - any Number implementation (i.e. {@link Float}, {@link Double}, {@link Integer}, {@link Long}, and their
  * corresponding primitive types). Required value must be a string parseable to the specific Number type.</li>
  * <li>Boolean - required value will be parsed to true only if the string matches 'true', ignoring case.</li>
- * <li>Date - property of {@link java.util.Date}, required value must be an ISO 8601 formatted date or date-time with
- * UTC timezone</li>
+ * <li>Date - property of {@link java.util.Date}, required value must be an ISO 8601 formatted date or datetime, UTC is assumed of no timezone is supplied</li>
  * <li>Collection - property of a {@link java.util.Collection} of any type aforementioned, nested collections are not
  * supported</li>
  * </ul>
