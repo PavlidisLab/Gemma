@@ -900,7 +900,7 @@
             <dwr:include method="value"/>
         </dwr:convert>
 
-        <dwr:convert type="bean" class="ubic.gemma.model.genome.biosequence.SequenceType">
+        <dwr:convert type="bean" class="ubic.gemma.model.genome.sequenceAnalysis.SequenceTypeValueObject">
             <dwr:include method="value"/>
         </dwr:convert>
 

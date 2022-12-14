@@ -13,6 +13,7 @@ public class SequenceTypeValueObject implements Serializable {
 
     private String value;
 
+    @SuppressWarnings("unused")
     public SequenceTypeValueObject() {
 
     }
