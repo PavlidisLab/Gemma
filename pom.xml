@@ -627,7 +627,7 @@
 		<swagger.version>2.2.7</swagger.version>
 		<jawr.version>3.9</jawr.version>
 		<lucene.version>3.6.2</lucene.version>
-		<slack.version>1.27.1</slack.version>
+		<slack.version>1.27.2</slack.version>
 		<!-- this ensures that -DexcludedGroups works properly -->
 		<excludedGroups/>
 	</properties>
