@@ -42,16 +42,10 @@ import java.util.stream.Stream;
  */
 @Component
 @CommonsLog
-@SuppressWarnings("DefaultAnnotationParam")
 public class CustomModelResolver extends ModelResolver {
 
     private final SearchService searchService;
     private final BeanFactory beanFactory;
-
-    /**
-     * Cached descriptions.
-     */
-    private final Map<String, String> descriptionsCache = new HashMap<String, String>();
 
     @Autowired
     public CustomModelResolver( @Qualifier("swaggerObjectMapper") ObjectMapper objectMapper, SearchService searchService, BeanFactory beanFactory ) {
@@ -102,7 +96,7 @@ public class CustomModelResolver extends ModelResolver {
         String description = super.resolveDescription( a, annotations, schema );
 
         // append available properties to the description
-        if ( FilterArg.class.isAssignableFrom( a.getRawType() ) && getGemmaExtensionProperty( schema, "filteringService" ) != null ) {
+        if ( FilterArg.class.isAssignableFrom( a.getRawType() ) ) {
             String availableProperties = resolveAvailableProperties( schema );
             return description == null ? availableProperties : description + "\n\n" + availableProperties;
         }
@@ -111,8 +105,8 @@ public class CustomModelResolver extends ModelResolver {
     }
 
     private String resolveAvailableProperties( io.swagger.v3.oas.annotations.media.Schema schema ) {
-        String filteringServiceName = Objects.requireNonNull( getGemmaExtensionProperty( schema, "filteringService" ),
-                "A FilterArg must have a x-gemma-filtering-service extension field to resolve its available values." );
+        String filteringServiceName = getGemmaExtensionProperty( schema, "filteringService" )
+                .orElseThrow( () -> new IllegalArgumentException( "A FilterArg must have an x-gemma extension with the filteringService field to resolve its available values." ) );
         FilteringService<?> filteringService = beanFactory.getBean( filteringServiceName, FilteringService.class );
         return String.format( "Available properties:\n\n%s",
                 filteringService.getFilterableProperties().stream().sorted().map( p -> String.format( "- %s%s `%s`",
@@ -125,16 +119,15 @@ public class CustomModelResolver extends ModelResolver {
     /**
      * Retrieve the value of an OpenAPI Gemma extension property.
      * <p>
-     * Gemma extensions appear as {@code x-gemma-{property}} in the generated specification.
+     * Gemma extensions appear under {@code x-gemma} in the generated specification.
      */
-    private static String getGemmaExtensionProperty( io.swagger.v3.oas.annotations.media.Schema schema, String property ) {
+    private static Optional<String> getGemmaExtensionProperty( io.swagger.v3.oas.annotations.media.Schema schema, String property ) {
         return Stream.of( schema.extensions() )
                 .filter( e1 -> "gemma".equals( e1.name() ) )
                 .findFirst()
                 .flatMap( e -> Stream.of( e.properties() )
                         .filter( p -> property.equals( p.name() ) )
                         .map( ExtensionProperty::value )
-                        .findFirst() )
-                .orElse( null );
+                        .findFirst() );
     }
 }
