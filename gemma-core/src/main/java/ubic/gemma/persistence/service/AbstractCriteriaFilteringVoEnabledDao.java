@@ -134,6 +134,22 @@ public abstract class AbstractCriteriaFilteringVoEnabledDao<O extends Identifiab
         return results;
     }
 
+    @Override
+    public long countValueObjectsPreFilter( @Nullable Filters filters ) {
+        StopWatch timer = StopWatch.createStarted();
+        try {
+            return ( Long ) getLoadValueObjectsCriteria( filters )
+                    .setProjection( Projections.countDistinct( "id" ) )
+                    .uniqueResult();
+        } finally {
+            timer.stop();
+            if ( timer.getTime() > REPORT_SLOW_QUERY_AFTER_MS ) {
+                log.info( String.format( "Count VOs for %s took %d ms.",
+                        elementClass.getName(), timer.getTime( TimeUnit.MILLISECONDS ) ) );
+            }
+        }
+    }
+
     @Value
     protected static class FilterablePropertyAlias {
         String propertyName;

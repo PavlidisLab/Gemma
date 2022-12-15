@@ -40,8 +40,6 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 import ubic.gemma.persistence.service.AbstractDao;
 import ubic.gemma.persistence.service.AbstractFilteringVoEnabledDao;
-import ubic.gemma.persistence.service.AbstractFilteringVoEnabledService;
-import ubic.gemma.persistence.service.AbstractVoEnabledDao;
 import ubic.gemma.persistence.util.*;
 
 import javax.annotation.Nullable;
@@ -411,6 +409,11 @@ public class CharacteristicDaoImpl extends AbstractFilteringVoEnabledDao<Charact
 
     @Override
     public List<CharacteristicValueObject> loadValueObjectsPreFilter( @Nullable Filters filters, @Nullable Sort sort ) {
+        throw new NotImplementedException( "Filtering Characteristic VOs is not supported." );
+    }
+
+    @Override
+    public long countValueObjectsPreFilter( @Nullable Filters filters ) {
         throw new NotImplementedException( "Filtering Characteristic VOs is not supported." );
     }
 }

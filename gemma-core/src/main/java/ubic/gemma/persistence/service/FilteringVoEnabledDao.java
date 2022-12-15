@@ -43,4 +43,9 @@ public interface FilteringVoEnabledDao<O extends Identifiable, VO extends Identi
      * @see #loadValueObjectsPreFilter(Filters, Sort, int, int)
      */
     List<VO> loadValueObjectsPreFilter( @Nullable Filters filters, @Nullable Sort sort );
+
+    /**
+     * Count VOs matching the given filters.
+     */
+    long countValueObjectsPreFilter( @Nullable Filters filters );
 }

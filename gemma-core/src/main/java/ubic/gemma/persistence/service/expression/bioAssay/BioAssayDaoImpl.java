@@ -20,7 +20,9 @@ package ubic.gemma.persistence.service.expression.bioAssay;
 
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.commons.lang3.StringUtils;
-import org.hibernate.*;
+import org.hibernate.Hibernate;
+import org.hibernate.Session;
+import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
@@ -29,8 +31,6 @@ import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.persistence.service.AbstractFilteringVoEnabledDao;
-import ubic.gemma.persistence.service.AbstractFilteringVoEnabledService;
-import ubic.gemma.persistence.service.AbstractVoEnabledDao;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignDao;
 import ubic.gemma.persistence.util.*;
 
@@ -144,6 +144,11 @@ public class BioAssayDaoImpl extends AbstractFilteringVoEnabledDao<BioAssay, Bio
 
     @Override
     public List<BioAssayValueObject> loadValueObjectsPreFilter( @Nullable Filters filters, @Nullable Sort sort ) {
+        throw new NotImplementedException( "Filtering BioAssay VOs is not supported." );
+    }
+
+    @Override
+    public long countValueObjectsPreFilter( @Nullable Filters filters ) {
         throw new NotImplementedException( "Filtering BioAssay VOs is not supported." );
     }
 }

@@ -154,4 +154,18 @@ public abstract class AbstractQueryFilteringVoEnabledDao<O extends Identifiable,
 
         return vos;
     }
+
+    @Override
+    public long countValueObjectsPreFilter( @Nullable Filters filters ) {
+        StopWatch timer = StopWatch.createStarted();
+        try {
+            return ( Long ) this.getCountValueObjectsQuery( filters ).uniqueResult();
+        } finally {
+            timer.stop();
+            if ( timer.getTime( TimeUnit.MILLISECONDS ) > REPORT_SLOW_QUERY_AFTER_MS ) {
+                log.info( String.format( "Count VOs for %s took %d ms.",
+                        elementClass.getName(), timer.getTime( TimeUnit.MILLISECONDS ) ) );
+            }
+        }
+    }
 }
