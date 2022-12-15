@@ -1366,17 +1366,17 @@ public class ExpressionExperimentDaoImpl
         // is mentioned in the filters
 
         if ( FiltersUtils.containsAnyAlias( filters, sort, CharacteristicDao.OBJECT_ALIAS ) ) {
-            log.warn( "Querying ee.characteristics, this might take some time..." );
+            log.debug( "Querying ee.characteristics, this might take some time..." );
             queryString += MessageFormat.format( " left join ee.characteristics as {0}", CharacteristicDao.OBJECT_ALIAS );
         }
 
         if ( FiltersUtils.containsAnyAlias( filters, sort, BioAssayDao.OBJECT_ALIAS, ArrayDesignDao.OBJECT_ALIAS ) ) {
-            log.warn( "Querying ee.bioAssays, this might take some time..." );
+            log.debug( "Querying ee.bioAssays, this might take some time..." );
             queryString += MessageFormat.format( " left join ee.bioAssays as {0}", BioAssayDao.OBJECT_ALIAS );
         }
 
         if ( FiltersUtils.containsAnyAlias( filters, sort, ArrayDesignDao.OBJECT_ALIAS ) ) {
-            log.warn( "Querying ee.bioAssays.arrayDesignUsed, this might take some time..." );
+            log.debug( "Querying ee.bioAssays.arrayDesignUsed, this might take some time..." );
             queryString += MessageFormat.format( " left join {0}.arrayDesignUsed as {1}", BioAssayDao.OBJECT_ALIAS, ArrayDesignDao.OBJECT_ALIAS );
         }
 
