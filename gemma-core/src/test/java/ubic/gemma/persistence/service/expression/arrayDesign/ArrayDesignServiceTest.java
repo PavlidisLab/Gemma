@@ -60,6 +60,9 @@ public class ArrayDesignServiceTest extends BaseSpringContextTest {
                 .hasFieldOrPropertyWithValue( "objectAlias", "s" )
                 .hasFieldOrPropertyWithValue( "propertyName", "needsAttention" )
                 .hasFieldOrPropertyWithValue( "requiredValue", true );
+        assertThat( arrayDesignService.getFilter( "technologyType", Filter.Operator.eq, "ONECOLOR" ) )
+                .hasFieldOrPropertyWithValue( "objectAlias", "ad" )
+                .hasFieldOrPropertyWithValue( "propertyName", "technologyType" )
+                .hasFieldOrPropertyWithValue( "requiredValue", "ONECOLOR" );
     }
-
 }

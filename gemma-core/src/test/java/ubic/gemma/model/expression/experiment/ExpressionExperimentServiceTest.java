@@ -265,6 +265,12 @@ public class ExpressionExperimentServiceTest extends BaseSpringContextTest {
                 .hasFieldOrPropertyWithValue( "propertyName", "needsAttention" )
                 .hasFieldOrPropertyWithValue( "operator", Filter.Operator.eq )
                 .hasFieldOrPropertyWithValue( "requiredValue", false );
+
+        assertThat( expressionExperimentService.getFilter( "bioAssays.arrayDesignUsed.technologyType", Filter.Operator.eq, "SEQUENCE" ) )
+                .hasFieldOrPropertyWithValue( "objectAlias", "ba" )
+                .hasFieldOrPropertyWithValue( "propertyName", "arrayDesignUsed.technologyType" )
+                .hasFieldOrPropertyWithValue( "operator", Filter.Operator.eq )
+                .hasFieldOrPropertyWithValue( "requiredValue", "SEQUENCE" );
     }
 
     @Test

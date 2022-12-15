@@ -1462,6 +1462,8 @@ public class ExpressionExperimentDaoImpl
         Set<String> results = new HashSet<>( super.getFilterableProperties() );
         addFilterableProperties( "characteristics.", Characteristic.class, results, FILTERABLE_PROPERTIES_MAX_DEPTH - 1 );
         addFilterableProperties( "bioAssays.", BioAssay.class, results, FILTERABLE_PROPERTIES_MAX_DEPTH - 1 );
+        // TODO: handle these in a generic manner (see https://github.com/PavlidisLab/Gemma/issues/522)
+        results.add( "bioAssays.arrayDesignUsed.technologyType" );
         results.add( "taxon" );
         addFilterableProperties( "taxon.", Taxon.class, results, FILTERABLE_PROPERTIES_MAX_DEPTH - 1 );
         results.add( "bioAssayCount" );
@@ -1477,6 +1479,11 @@ public class ExpressionExperimentDaoImpl
         if ( propertyName.startsWith( "characteristics." ) && !propertyName.equals( "characteristics.size" ) ) {
             String fieldName = propertyName.replaceFirst( "^characteristics\\.", "" );
             return new FilterablePropertyMeta( CharacteristicDao.OBJECT_ALIAS, fieldName, resolveFilterPropertyType( fieldName, Characteristic.class ), null );
+        }
+
+        if ( propertyName.equals( "bioAssays.arrayDesignUsed.technologyType" ) ) {
+            String fieldName = propertyName.replaceFirst( "^bioAssays\\.", "" );
+            return new FilterablePropertyMeta( BioAssayDao.OBJECT_ALIAS, fieldName, String.class, null );
         }
 
         if ( propertyName.startsWith( "bioAssays." ) && !propertyName.equals( "bioAssays.size" ) ) {
