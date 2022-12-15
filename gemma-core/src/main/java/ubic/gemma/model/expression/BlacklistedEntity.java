@@ -19,14 +19,14 @@
 
 package ubic.gemma.model.expression;
 
-import ubic.gemma.model.common.Describable;
+import ubic.gemma.model.common.AbstractDescribable;
 import ubic.gemma.model.common.description.DatabaseEntry;
 
 /**
  * 
  * @author paul
  */
-public abstract class BlacklistedEntity extends Describable {
+public abstract class BlacklistedEntity extends AbstractDescribable {
 
     /**
      * The external accession

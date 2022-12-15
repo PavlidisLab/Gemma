@@ -21,7 +21,7 @@ package ubic.gemma.model.expression.experiment;
 
 import gemma.gsec.model.Securable;
 import gemma.gsec.model.SecuredChild;
-import ubic.gemma.model.common.Describable;
+import ubic.gemma.model.common.AbstractDescribable;
 import ubic.gemma.model.common.description.Characteristic;
 
 import javax.annotation.Nullable;
@@ -34,7 +34,7 @@ import java.util.HashSet;
  *
  * @author Paul
  */
-public class ExperimentalFactor extends Describable implements SecuredChild {
+public class ExperimentalFactor extends AbstractDescribable implements SecuredChild {
 
     /**
      * The serial version UID of this class. Needed for serialization.

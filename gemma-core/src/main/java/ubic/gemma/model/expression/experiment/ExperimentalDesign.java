@@ -19,13 +19,13 @@
 package ubic.gemma.model.expression.experiment;
 
 import gemma.gsec.model.Securable;
-import ubic.gemma.model.common.Describable;
+import ubic.gemma.model.common.AbstractDescribable;
 import ubic.gemma.model.common.description.Characteristic;
 
 import javax.persistence.Transient;
 import java.util.Set;
 
-public class ExperimentalDesign extends Describable implements gemma.gsec.model.SecuredChild {
+public class ExperimentalDesign extends AbstractDescribable implements gemma.gsec.model.SecuredChild {
 
     private static final long serialVersionUID = 1734101852541885497L;
     private String replicateDescription;

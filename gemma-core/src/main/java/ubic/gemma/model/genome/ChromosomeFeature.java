@@ -18,12 +18,12 @@
  */
 package ubic.gemma.model.genome;
 
-import ubic.gemma.model.common.Describable;
+import ubic.gemma.model.common.AbstractDescribable;
 
 /**
  * Some part of a chromosome
  */
-public abstract class ChromosomeFeature extends Describable {
+public abstract class ChromosomeFeature extends AbstractDescribable {
 
     /**
      * The serial version UID of this class. Needed for serialization.

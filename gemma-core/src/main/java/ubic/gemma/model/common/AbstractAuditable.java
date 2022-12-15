@@ -25,7 +25,7 @@ import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
  *
  * @author Paul
  */
-public abstract class AbstractAuditable extends Describable implements Auditable {
+public abstract class AbstractAuditable extends AbstractDescribable implements Auditable {
 
     /**
      * The serial version UID of this class. Needed for serialization.
