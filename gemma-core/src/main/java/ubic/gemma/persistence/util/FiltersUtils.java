@@ -16,7 +16,10 @@ public class FiltersUtils {
      *
      * @return true if any provided alias is mentioned anywhere in the set of filters
      */
-    public static boolean containsAnyAlias( @Nullable Filters filters, String... aliases ) {
+    public static boolean containsAnyAlias( @Nullable Filters filters, @Nullable Sort sort, String... aliases ) {
+        if ( sort != null && ArrayUtils.contains( aliases, sort.getObjectAlias() ) ) {
+            return true;
+        }
         if ( filters == null )
             return false;
         for ( ObjectFilter[] filter : filters ) {

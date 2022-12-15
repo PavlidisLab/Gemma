@@ -1135,7 +1135,7 @@ public class ExpressionExperimentDaoImpl
             return Collections.emptyList();
         }
 
-        Filters filters = Filters.singleFilter(  OBJECT_ALIAS, "id", Long.class, ObjectFilter.Operator.in, ids  );
+        Filters filters = Filters.singleFilter( OBJECT_ALIAS, "id", Long.class, ObjectFilter.Operator.in, ids );
 
         return this.loadDetailsValueObjects( filters, null, 0, 0 );
     }
@@ -1342,7 +1342,7 @@ public class ExpressionExperimentDaoImpl
         addNonTroubledFilter( filters, OBJECT_ALIAS );
 
         // FIXME: this is triggering an AD jointure that simply we cannot afford, so we only perform it if necessary
-        if ( FiltersUtils.containsAnyAlias( filters, ArrayDesignDao.OBJECT_ALIAS ) ) {
+        if ( FiltersUtils.containsAnyAlias( filters, sort, ArrayDesignDao.OBJECT_ALIAS ) ) {
             addNonTroubledFilter( filters, ArrayDesignDao.OBJECT_ALIAS );
         }
 
@@ -1365,17 +1365,17 @@ public class ExpressionExperimentDaoImpl
         // fetching characteristics, bioAssays and arrayDesignUsed is costly, so we reserve these operations only if it
         // is mentioned in the filters
 
-        if ( FiltersUtils.containsAnyAlias( filters, CharacteristicDao.OBJECT_ALIAS ) ) {
+        if ( FiltersUtils.containsAnyAlias( filters, sort, CharacteristicDao.OBJECT_ALIAS ) ) {
             log.warn( "Querying ee.characteristics, this might take some time..." );
             queryString += MessageFormat.format( " left join ee.characteristics as {0}", CharacteristicDao.OBJECT_ALIAS );
         }
 
-        if ( FiltersUtils.containsAnyAlias( filters, BioAssayDao.OBJECT_ALIAS, ArrayDesignDao.OBJECT_ALIAS ) ) {
+        if ( FiltersUtils.containsAnyAlias( filters, sort, BioAssayDao.OBJECT_ALIAS, ArrayDesignDao.OBJECT_ALIAS ) ) {
             log.warn( "Querying ee.bioAssays, this might take some time..." );
             queryString += MessageFormat.format( " left join ee.bioAssays as {0}", BioAssayDao.OBJECT_ALIAS );
         }
 
-        if ( FiltersUtils.containsAnyAlias( filters, ArrayDesignDao.OBJECT_ALIAS ) ) {
+        if ( FiltersUtils.containsAnyAlias( filters, sort, ArrayDesignDao.OBJECT_ALIAS ) ) {
             log.warn( "Querying ee.bioAssays.arrayDesignUsed, this might take some time..." );
             queryString += MessageFormat.format( " left join {0}.arrayDesignUsed as {1}", BioAssayDao.OBJECT_ALIAS, ArrayDesignDao.OBJECT_ALIAS );
         }
@@ -1406,7 +1406,7 @@ public class ExpressionExperimentDaoImpl
 
         // Restrict to non-troubled EEs for non-administrators
         addNonTroubledFilter( filters, OBJECT_ALIAS );
-        if ( FiltersUtils.containsAnyAlias( filters, ArrayDesignDao.OBJECT_ALIAS ) ) {
+        if ( FiltersUtils.containsAnyAlias( filters, null, ArrayDesignDao.OBJECT_ALIAS ) ) {
             addNonTroubledFilter( filters, ArrayDesignDao.OBJECT_ALIAS );
         }
 
@@ -1426,17 +1426,17 @@ public class ExpressionExperimentDaoImpl
         // fetching characteristics, bioAssays and arrayDesignUsed is costly, so we reserve these operations only if it
         // is mentioned in the filters
 
-        if ( FiltersUtils.containsAnyAlias( filters, CharacteristicDao.OBJECT_ALIAS ) ) {
+        if ( FiltersUtils.containsAnyAlias( filters, null, CharacteristicDao.OBJECT_ALIAS ) ) {
             log.warn( "Querying ee.characteristics, this might take some time..." );
             queryString += MessageFormat.format( "left join ee.characteristics as {0} ", CharacteristicDao.OBJECT_ALIAS );
         }
 
-        if ( FiltersUtils.containsAnyAlias( filters, BioAssayDao.OBJECT_ALIAS, ArrayDesignDao.OBJECT_ALIAS ) ) {
+        if ( FiltersUtils.containsAnyAlias( filters, null, BioAssayDao.OBJECT_ALIAS, ArrayDesignDao.OBJECT_ALIAS ) ) {
             log.warn( "Querying ee.bioAssays, this might take some time..." );
             queryString += MessageFormat.format( "left join ee.bioAssays as {0} ", BioAssayDao.OBJECT_ALIAS );
         }
 
-        if ( FiltersUtils.containsAnyAlias( filters, ArrayDesignDao.OBJECT_ALIAS ) ) {
+        if ( FiltersUtils.containsAnyAlias( filters, null, ArrayDesignDao.OBJECT_ALIAS ) ) {
             log.warn( "Querying ee.bioAssays.arrayDesignUsed, this might take some time..." );
             queryString += MessageFormat.format( "left join {0}.arrayDesignUsed as {1} ", BioAssayDao.OBJECT_ALIAS, ArrayDesignDao.OBJECT_ALIAS );
         }
