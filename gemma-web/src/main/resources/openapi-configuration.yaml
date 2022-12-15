@@ -19,6 +19,10 @@ openAPI:
 
       ## Updates
 
+      Enumerate all properties available for filtering and sorting in the description of the corresponding parameter.
+      There's been a number of fixes and additional tests performed to ensure that all advertised properties are working
+      as expected.
+
       ### Update 2.6.1
 
       Add support for filtering platforms by taxon ID, common name, scientific name, etc. for the `/platforms` endpoint.
