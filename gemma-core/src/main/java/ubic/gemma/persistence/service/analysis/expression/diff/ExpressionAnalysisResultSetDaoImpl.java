@@ -211,13 +211,14 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilterin
                 // these two are necessary for ACL filtering, so we must use a (default) inner jointure
                 .createAlias( "analysis", "a" )
                 .createAlias( "analysis.experimentAnalyzed", "e" )
-                //
-                .createAlias( "analysis.protocol", "p" )
-                .createAlias( "analysis.subsetFactorValue", "sfv" )
-                .createAlias( "baselineGroup", "b" )
-                .createAlias( "baselineGroup.experimentalFactor", "bef" )
-                .createAlias( "baselineGroup.measurement", "bm" )
-                .createAlias( "pvalueDistribution", "pvd" )
+                // we need a left outer jointure so that we do not miss any result set that lacks one of these associations
+                // these aliases are necessary to resolve filterable properties
+                .createAlias( "analysis.protocol", "p", JoinType.LEFT_OUTER_JOIN )
+                .createAlias( "analysis.subsetFactorValue", "sfv", JoinType.LEFT_OUTER_JOIN )
+                .createAlias( "baselineGroup", "b", JoinType.LEFT_OUTER_JOIN )
+                .createAlias( "baselineGroup.experimentalFactor", "bef", JoinType.LEFT_OUTER_JOIN )
+                .createAlias( "baselineGroup.measurement", "bm", JoinType.LEFT_OUTER_JOIN )
+                .createAlias( "pvalueDistribution", "pvd", JoinType.LEFT_OUTER_JOIN )
                 // these are used for filtering
                 .createAlias( "experimentalFactors", "ef", JoinType.LEFT_OUTER_JOIN )
                 .createAlias( "ef.factorValues", "fv", JoinType.LEFT_OUTER_JOIN );
