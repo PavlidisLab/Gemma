@@ -20,7 +20,7 @@
 package ubic.gemma.model.expression.biomaterial;
 
 import gemma.gsec.model.Securable;
-import ubic.gemma.model.common.Describable;
+import ubic.gemma.model.common.AbstractDescribable;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -37,7 +37,7 @@ import java.util.HashSet;
  * through a directed acyclic graph (represented by treatment(s)). In our implementation, we don't care so much about
  * the experimental procedures and we just lump all of the BioMaterial into one class.
  */
-public class BioMaterial extends Describable implements gemma.gsec.model.SecuredChild {
+public class BioMaterial extends AbstractDescribable implements gemma.gsec.model.SecuredChild {
 
     private static final long serialVersionUID = 4374359557498220256L;
     private ubic.gemma.model.genome.Taxon sourceTaxon;

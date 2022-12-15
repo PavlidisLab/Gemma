@@ -18,6 +18,7 @@
  */
 package ubic.gemma.model.expression.designElement;
 
+import ubic.gemma.model.common.AbstractDescribable;
 import ubic.gemma.model.common.Describable;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.genome.biosequence.BioSequence;
@@ -26,7 +27,7 @@ import ubic.gemma.model.genome.biosequence.BioSequence;
  * A "Probe set" (Affymetrix) or a "Probe" (other types of arrays). The sequence referred to is a "target sequence"
  * (Affymetrix), oligo (oligo arrays) or cDNA clone/EST (cDNA arrays)
  */
-public class CompositeSequence extends ubic.gemma.model.common.Describable {
+public class CompositeSequence extends AbstractDescribable {
 
     /**
      * The serial version UID of this class. Needed for serialization.

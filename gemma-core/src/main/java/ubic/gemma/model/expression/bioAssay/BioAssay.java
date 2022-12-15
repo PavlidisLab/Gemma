@@ -19,7 +19,7 @@
 package ubic.gemma.model.expression.bioAssay;
 
 import gemma.gsec.model.Securable;
-import ubic.gemma.model.common.Describable;
+import ubic.gemma.model.common.AbstractDescribable;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
@@ -32,7 +32,7 @@ import java.util.Date;
  * don't distinguish between "physical" and "computational" BioAssays, so this is a concrete class. This has several
  * slots that are used specifically to support sequence-based data, but is intended to be generic.
  */
-public class BioAssay extends Describable implements gemma.gsec.model.SecuredChild {
+public class BioAssay extends AbstractDescribable implements gemma.gsec.model.SecuredChild {
 
     private static final long serialVersionUID = -7868768731812964045L;
 

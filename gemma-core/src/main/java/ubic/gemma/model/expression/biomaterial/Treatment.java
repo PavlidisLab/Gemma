@@ -19,13 +19,13 @@
 
 package ubic.gemma.model.expression.biomaterial;
 
-import ubic.gemma.model.common.Describable;
+import ubic.gemma.model.common.AbstractDescribable;
 
 /**
  * @author Paul
  */
 @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
-public class Treatment extends Describable {
+public class Treatment extends AbstractDescribable {
 
     /**
      * The serial version UID of this class. Needed for serialization.

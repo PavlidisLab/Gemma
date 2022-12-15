@@ -14,7 +14,7 @@
  */
 package ubic.gemma.core.loader.expression.arrayDesign;
 
-import ubic.gemma.model.common.Describable;
+import ubic.gemma.model.common.AbstractDescribable;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 
 /**
@@ -24,7 +24,7 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
  * etc. of Affymetrix platform sequence files.
  */
 @SuppressWarnings("unused") // Possible external use
-public class Reporter extends Describable {
+public class Reporter extends AbstractDescribable {
 
     /**
      * The serial version UID of this class. Needed for serialization.

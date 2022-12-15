@@ -22,7 +22,7 @@ package ubic.gemma.model.common.description;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import ubic.gemma.model.association.GOEvidenceCode;
-import ubic.gemma.model.common.Describable;
+import ubic.gemma.model.common.AbstractDescribable;
 
 import java.util.Objects;
 
@@ -32,7 +32,7 @@ import java.util.Objects;
  *
  * @author Paul
  */
-public class Characteristic extends Describable {
+public class Characteristic extends AbstractDescribable {
 
     private static final long serialVersionUID = -7242166109264718620L;
     private String category;

@@ -18,7 +18,7 @@
  */
 package ubic.gemma.model.expression.bioAssayData;
 
-import ubic.gemma.model.common.Describable;
+import ubic.gemma.model.common.AbstractDescribable;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 
 import java.util.List;
@@ -27,7 +27,7 @@ import java.util.List;
  * Stores the order of BioAssays referred to in DataVectors.
  * Note: Not a SecuredChild - maybe should be?
  */
-public class BioAssayDimension extends Describable {
+public class BioAssayDimension extends AbstractDescribable {
 
     private static final long serialVersionUID = -3786404705366085672L;
 
