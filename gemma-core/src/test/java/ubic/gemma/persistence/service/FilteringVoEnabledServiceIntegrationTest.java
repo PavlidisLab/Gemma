@@ -18,7 +18,7 @@ import java.util.List;
 public class FilteringVoEnabledServiceIntegrationTest extends BaseSpringContextTest {
 
     @Autowired
-    private List<FilteringVoEnabledService> filteringServices;
+    private List<FilteringVoEnabledService<?, ?>> filteringServices;
 
 
     @Test
