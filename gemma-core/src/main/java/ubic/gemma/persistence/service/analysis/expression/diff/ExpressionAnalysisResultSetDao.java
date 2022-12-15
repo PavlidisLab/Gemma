@@ -79,7 +79,7 @@ public interface ExpressionAnalysisResultSetDao extends AnalysisResultSetDao<Dif
      *
      * @param bioAssaySets related {@link BioAssaySet}, or any if null
      * @param databaseEntries related external identifier associated to the {@link BioAssaySet}, or any if null
-     * @param filters list of object filters
+     * @param filters filters for restricting results
      * @param limit maximum number of results to return
      * @param sort field and direction by which the collection is ordered
      */

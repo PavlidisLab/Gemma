@@ -168,7 +168,7 @@ public class Filter {
         }
 
         /**
-         * Token used when parsing object filter input.
+         * Token used when parsing filter input.
          */
         private final String token;
 

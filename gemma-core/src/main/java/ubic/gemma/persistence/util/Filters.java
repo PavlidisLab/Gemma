@@ -67,7 +67,7 @@ public class Filters implements Iterable<Filter[]> {
      * Create a singleton {@link Filters} from a {@link Filter}.
      *
      * @param subClauses an array of sub-clause to create the {@link Filters} with
-     * @return a {@link Filters} with the given object filter as only clause
+     * @return a {@link Filters} with the given filter as only clause
      */
     public static Filters by( Filter... subClauses ) {
         return new Filters().and( subClauses );

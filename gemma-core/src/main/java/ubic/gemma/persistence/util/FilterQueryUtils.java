@@ -157,8 +157,8 @@ public class FilterQueryUtils {
      * Adds all parameters contained in the filters argument to the query by calling {@link Query#setParameter(String, Object)}
      * or {@link Query#setParameterList(String, Collection)} as needed.
      * <p>
-     * Use this if you've appended {@link #formRestrictionClause(Filters)} to the query so that the provided
-     * object filters will be bound.
+     * Use this if you've appended {@link #formRestrictionClause(Filters)} to the query so that the provided filters
+     * will be bound.
      * <p>
      * If the {@link Filter#getRequiredValue()} is a {@link Collection}, it will be sorted and duplicates will be
      * excluded.

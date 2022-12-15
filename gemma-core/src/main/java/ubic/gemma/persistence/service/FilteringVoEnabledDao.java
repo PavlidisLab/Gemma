@@ -19,9 +19,9 @@ public interface FilteringVoEnabledDao<O extends Identifiable, VO extends Identi
 
     /**
      * Load VOs with ordering, filtering and offset/limit.
-     *
+     * <p>
      * Consider using {@link FilteringService#getFilter(String, Filter.Operator, String)} and {@link FilteringService#getSort(String, Sort.Direction)}
-     * to produce the object filters and sort safely from user input.
+     * to produce the filters and sort safely from user input.
      *
      * @param filters filters applied on the search. The properties mentioned in the {@link Filter}
      *                must exist and be visible to Hibernate. You can use nested properties such as "curationDetails.lastUpdated".
