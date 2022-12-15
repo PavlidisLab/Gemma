@@ -51,7 +51,7 @@ public class ObjectFilterQueryUtils {
 
         if ( sort.getPropertyName().endsWith( ".size" ) ) {
             // This will crate an order by count clause, stripping the object alias and size suffix
-            ret.append( " count(distinct " ).append( formPropertyName( sort.getObjectAlias(), sort.getPropertyName() ) ).append( ')' );
+            ret.append( " size(" ).append( formPropertyName( sort.getObjectAlias(), sort.getPropertyName() ) ).append( ')' );
         } else {
             ret.append( " " );
             ret.append( formPropertyName( sort.getObjectAlias(), sort.getPropertyName() ) );

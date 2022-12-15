@@ -95,6 +95,6 @@ public class ObjectFilterQueryUtilsTest {
     @Test
     public void testSortByCollectionSize() {
         assertThat( formOrderByClause( Sort.by( "ee", "bioAssays.size" ) ) )
-                .isEqualTo( " order by count(distinct ee.bioAssays)" );
+                .isEqualTo( " order by size(ee.bioAssays)" );
     }
 }
