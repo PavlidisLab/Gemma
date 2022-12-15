@@ -17,7 +17,6 @@ package ubic.gemma.web.services.rest.util.args;
 import io.swagger.v3.oas.annotations.ExternalDocumentation;
 import io.swagger.v3.oas.annotations.media.Schema;
 import org.apache.commons.lang3.StringUtils;
-import ubic.gemma.persistence.service.FilteringService;
 import ubic.gemma.persistence.service.FilteringVoEnabledService;
 import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Sort;
@@ -30,7 +29,7 @@ import java.util.List;
 /**
  * Represent a filter argument designed to generate a {@link Filters} from user input.
  * <p>
- * Filtering can be done on any property or nested property of an entity managed by a {@link FilteringService}. E.g:
+ * Filtering can be done on any property or nested property of an entity managed by a {@link FilteringVoEnabledService}. E.g:
  * 'curationDetails' or 'curationDetails.lastTroubledEvent.date'.
  * <p>
  * Any property of a supported type. Currently, supported types are:
@@ -82,7 +81,7 @@ import java.util.List;
  *
  * Breaking the CNF results in an error.
  * <p>
- * The available properties on an entity can be restricted by the service layer via {@link FilteringService#getFilter(String, ubic.gemma.persistence.util.Filter.Operator, String)}.
+ * The available properties on an entity can be restricted by the service layer via {@link FilteringVoEnabledService#getFilter(String, ubic.gemma.persistence.util.Filter.Operator, String)}.
  *
  * @author tesarst
  * @see Filters
@@ -115,10 +114,10 @@ public class FilterArg extends AbstractArg<FilterArg.Filter> {
      * @param service a filtering service that can resolve the properties types and relevant object alias to use
      * @return a {@link Filters} structure that is actually an iterable over a sequence of conjunction of disjunction of
      * {@link ubic.gemma.persistence.util.Filter}, or null if the filter is empty.
-     * @throws MalformedArgException if the filter cannot be parsed for the given {@link FilteringService}
+     * @throws MalformedArgException if the filter cannot be parsed for the given {@link FilteringVoEnabledService}
      */
     @Nullable
-    public Filters getFilters( FilteringService<?> service ) throws MalformedArgException {
+    public Filters getFilters( FilteringVoEnabledService<?, ?> service ) throws MalformedArgException {
         Filter filter = getValue();
         if ( filter.propertyNames == null )
             return null;

@@ -2,7 +2,6 @@ package ubic.gemma.web.services.rest.util.args;
 
 import org.apache.commons.lang3.NotImplementedException;
 import ubic.gemma.model.common.Identifiable;
-import ubic.gemma.persistence.service.FilteringService;
 import ubic.gemma.persistence.util.Filter;
 import ubic.gemma.web.util.EntityNotFoundException;
 
@@ -18,7 +17,7 @@ import javax.ws.rs.NotFoundException;
  * @param <S> the service for the object type.
  * @author tesarst
  */
-public abstract class AbstractEntityArg<T, O extends Identifiable, S extends FilteringService<O>> extends AbstractArg<T> {
+public abstract class AbstractEntityArg<T, O extends Identifiable, S extends ubic.gemma.persistence.service.BaseService<O>> extends AbstractArg<T> {
 
     private static final String ERROR_FORMAT_ENTITY_NOT_FOUND = "The identifier was recognised to be '%1$s', but entity of type '%2$s' with '%1$s' equal to '%3$s' does not exist or is not accessible.";
     private static final String ERROR_MSG_ENTITY_NOT_FOUND = "Entity with the given identifier does not exist or is not accessible.";

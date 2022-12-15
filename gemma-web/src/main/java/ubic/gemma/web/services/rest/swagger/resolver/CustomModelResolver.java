@@ -15,19 +15,14 @@ import lombok.extern.apachecommons.CommonsLog;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
-import org.springframework.util.StreamUtils;
 import ubic.gemma.core.search.SearchService;
-import ubic.gemma.persistence.service.FilteringService;
+import ubic.gemma.persistence.service.FilteringVoEnabledService;
 import ubic.gemma.web.services.rest.SearchWebService;
 import ubic.gemma.web.services.rest.util.args.*;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Modifier;
-import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -107,7 +102,7 @@ public class CustomModelResolver extends ModelResolver {
     private String resolveAvailableProperties( io.swagger.v3.oas.annotations.media.Schema schema ) {
         String filteringServiceName = getGemmaExtensionProperty( schema, "filteringService" )
                 .orElseThrow( () -> new IllegalArgumentException( "A FilterArg must have an x-gemma extension with the filteringService field to resolve its available values." ) );
-        FilteringService<?> filteringService = beanFactory.getBean( filteringServiceName, FilteringService.class );
+        FilteringVoEnabledService<?, ?> filteringService = beanFactory.getBean( filteringServiceName, FilteringVoEnabledService.class );
         return String.format( "Available properties:\n\n%s",
                 filteringService.getFilterableProperties().stream().sorted().map( p -> String.format( "- %s%s `%s`",
                         p,

@@ -3,6 +3,7 @@ package ubic.gemma.persistence.service;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.common.Identifiable;
+import ubic.gemma.persistence.util.Filter;
 import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.persistence.util.Sort;
@@ -10,12 +11,13 @@ import ubic.gemma.persistence.util.Sort;
 import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Base implementation for {@link FilteringVoEnabledService}.
  */
 public abstract class AbstractFilteringVoEnabledService<O extends Identifiable, VO extends IdentifiableValueObject<O>>
-        extends AbstractFilteringService<O> implements FilteringVoEnabledService<O, VO> {
+        extends AbstractService<O> implements FilteringVoEnabledService<O, VO>, BaseService<O> {
 
     private final FilteringVoEnabledDao<O, VO> voDao;
 
@@ -64,5 +66,30 @@ public abstract class AbstractFilteringVoEnabledService<O extends Identifiable, 
     @Transactional(readOnly = true)
     public List<VO> loadValueObjectsPreFilter( @Nullable Filters filters, @Nullable Sort sort ) {
         return voDao.loadValueObjectsPreFilter( filters, sort );
+    }
+
+    public Set<String> getFilterableProperties() {
+        return voDao.getFilterableProperties();
+    }
+
+    public Class<?> getFilterablePropertyType( String property ) {
+        return voDao.getFilterablePropertyType( property );
+    }
+
+    @Nullable
+    public String getFilterablePropertyDescription( String property ) {
+        return voDao.getFilterablePropertyDescription( property );
+    }
+
+    public Filter getFilter( String property, Filter.Operator operator, String value ) throws IllegalArgumentException {
+        return voDao.getFilter( property, operator, value );
+    }
+
+    public Filter getFilter( String property, Filter.Operator operator, Collection<String> values ) throws IllegalArgumentException {
+        return voDao.getFilter( property, operator, values );
+    }
+
+    public Sort getSort( String property, @Nullable Sort.Direction direction ) throws IllegalArgumentException {
+        return voDao.getSort( property, direction );
     }
 }

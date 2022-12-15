@@ -24,9 +24,7 @@ import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
-import ubic.gemma.persistence.service.BaseVoEnabledDao;
 import ubic.gemma.persistence.service.BrowsingDao;
-import ubic.gemma.persistence.service.FilteringDao;
 import ubic.gemma.persistence.service.FilteringVoEnabledDao;
 
 import javax.annotation.Nullable;

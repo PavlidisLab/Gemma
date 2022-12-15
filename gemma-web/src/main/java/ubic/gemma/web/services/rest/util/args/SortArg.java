@@ -16,7 +16,7 @@ package ubic.gemma.web.services.rest.util.args;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import org.apache.commons.lang3.StringUtils;
-import ubic.gemma.persistence.service.FilteringService;
+import ubic.gemma.persistence.service.FilteringVoEnabledService;
 import ubic.gemma.web.services.rest.util.MalformedArgException;
 
 import javax.annotation.Nullable;
@@ -39,12 +39,12 @@ public class SortArg extends AbstractArg<SortArg.Sort> {
     /**
      * Obtain the {@link Sort} underlying this argument.
      *
-     * @param service a {@link FilteringService} that knows how to build a sort object
+     * @param service a {@link FilteringVoEnabledService} that knows how to build a sort object
      * @return the sorting object in question
      * @throws MalformedArgException in case the orderBy property cannot be applied for the given class, or if the
      *                               argument was malformed in the first place
      */
-    public ubic.gemma.persistence.util.Sort getSort( FilteringService service ) throws MalformedArgException {
+    public ubic.gemma.persistence.util.Sort getSort( FilteringVoEnabledService<?, ?> service ) throws MalformedArgException {
         ubic.gemma.persistence.util.Sort.Direction direction;
         if ( getValue().direction == Sort.Direction.ASC ) {
             direction = ubic.gemma.persistence.util.Sort.Direction.ASC;
