@@ -63,7 +63,7 @@ public abstract class AbstractCriteriaFilteringVoEnabledDao<O extends Identifiab
 
         // setup sorting
         if ( sort != null ) {
-            query.addOrder( getOrderFromSort( sort ) );
+            addOrder( query, sort );
         }
 
         // setup offset/limit
@@ -107,11 +107,7 @@ public abstract class AbstractCriteriaFilteringVoEnabledDao<O extends Identifiab
         Criteria query = getLoadValueObjectsCriteria( objectFilters );
 
         if ( sort != null ) {
-            if ( sort.getPropertyName().endsWith( ".size" ) ) {
-                log.warn( "Ordering by collection size is not supported." );
-            } else {
-                query.addOrder( getOrderFromSort( sort ) );
-            }
+            addOrder( query, sort );
         }
 
         queryStopWatch.start();
@@ -180,8 +176,13 @@ public abstract class AbstractCriteriaFilteringVoEnabledDao<O extends Identifiab
         return meta;
     }
 
-    private Order getOrderFromSort( Sort sort ) {
+    private static void addOrder( Criteria query, Sort sort ) {
         String propertyName = formPropertyName( sort.getObjectAlias(), sort.getPropertyName() );
-        return sort.getDirection() == Sort.Direction.DESC ? Order.desc( propertyName ) : Order.asc( propertyName );
+        // handle .size ordering
+        if ( propertyName.endsWith( ".size" ) ) {
+            // FIXME: find a workaround for sorting by collection size (see https://github.com/PavlidisLab/Gemma/issues/520)
+            throw new UnsupportedOperationException( "Ordering by collection size is not supported for the Criteria API." );
+        }
+        query.addOrder( sort.getDirection() == Sort.Direction.DESC ? Order.desc( propertyName ) : Order.asc( propertyName ) );
     }
 }

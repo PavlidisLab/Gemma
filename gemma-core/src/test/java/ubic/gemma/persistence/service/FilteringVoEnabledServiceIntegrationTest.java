@@ -3,6 +3,7 @@ package ubic.gemma.persistence.service;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.util.test.BaseSpringContextTest;
+import ubic.gemma.persistence.service.analysis.expression.diff.ExpressionAnalysisResultSetService;
 import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.ObjectFilter;
 import ubic.gemma.persistence.util.Sort;
@@ -34,6 +35,10 @@ public class FilteringVoEnabledServiceIntegrationTest extends BaseSpringContextT
     public void testSortingByAllFilterableProperties() {
         for ( FilteringVoEnabledService<?, ?> filteringService : filteringServices ) {
             for ( String property : filteringService.getFilterableProperties() ) {
+                if ( filteringService instanceof ExpressionAnalysisResultSetService && property.endsWith( ".size" ) ) {
+                    log.warn( "Skipping collection size test with the Criteria API." );
+                    continue;
+                }
                 Sort sort = filteringService.getSort( property, Sort.Direction.ASC );
                 filteringService.loadValueObjectsPreFilter( null, sort, 0, 1 );
             }
