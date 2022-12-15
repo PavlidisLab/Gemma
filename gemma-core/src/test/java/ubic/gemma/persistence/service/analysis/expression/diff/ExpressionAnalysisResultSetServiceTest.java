@@ -1,6 +1,7 @@
 package ubic.gemma.persistence.service.analysis.expression.diff;
 
 import com.google.common.collect.Lists;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.util.test.BaseSpringContextTest;
@@ -32,10 +33,26 @@ public class ExpressionAnalysisResultSetServiceTest extends BaseSpringContextTes
         assertThat( results ).isEmpty();
     }
 
+    @Test
     public void testLoadValueObjectsPreFilterWithPagination() {
         Filters filters = Filters.singleFilter( expressionAnalysisResultSetService.getObjectFilter( "id", ObjectFilter.Operator.in, Lists.newArrayList( "1123898912" ) ) );
         Sort sort = expressionAnalysisResultSetService.getSort( "id", Sort.Direction.DESC );
         Slice<DifferentialExpressionAnalysisResultSetValueObject> results = expressionAnalysisResultSetService.loadValueObjectsPreFilter( filters, sort, 10, 20 );
         assertThat( results ).isEmpty();
+    }
+
+    @Test
+    public void testFilterVosByNumberOfResults() {
+        expressionAnalysisResultSetService.loadValueObjectsPreFilter(
+                Filters.singleFilter( null, "results.size", Integer.class, ObjectFilter.Operator.greaterOrEq, 2 ),
+                null );
+    }
+
+    @Test
+    @Ignore("See https://github.com/PavlidisLab/Gemma/issues/518")
+    public void testFilterVosByNumberOfCharacteristics() {
+        expressionAnalysisResultSetService.loadValueObjectsPreFilter(
+                Filters.singleFilter( null, "analysis.experimentAnalyzed.characteristics.size", Integer.class, ObjectFilter.Operator.greaterOrEq, 2 ),
+                null );
     }
 }
