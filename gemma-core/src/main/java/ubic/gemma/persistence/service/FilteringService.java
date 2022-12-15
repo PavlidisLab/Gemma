@@ -1,7 +1,7 @@
 package ubic.gemma.persistence.service;
 
 import ubic.gemma.model.common.Identifiable;
-import ubic.gemma.persistence.util.ObjectFilter;
+import ubic.gemma.persistence.util.Filter;
 import ubic.gemma.persistence.util.Sort;
 
 import javax.annotation.Nullable;
@@ -33,12 +33,12 @@ public interface FilteringService<O extends Identifiable> extends BaseService<O>
     /**
      * @see FilteringDao#getFilterableProperties()
      */
-    ObjectFilter getObjectFilter( String property, ObjectFilter.Operator operator, String value ) throws IllegalArgumentException;
+    Filter getFilter( String property, Filter.Operator operator, String value ) throws IllegalArgumentException;
 
     /**
-     * @see FilteringDao#getObjectFilter(String, ObjectFilter.Operator, Collection)
+     * @see FilteringDao#getFilter(String, Filter.Operator, Collection)
      */
-    ObjectFilter getObjectFilter( String property, ObjectFilter.Operator operator, Collection<String> values ) throws IllegalArgumentException;
+    Filter getFilter( String property, Filter.Operator operator, Collection<String> values ) throws IllegalArgumentException;
 
     /**
      * @see FilteringDao#getSort(String, Sort.Direction)

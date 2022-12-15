@@ -9,7 +9,7 @@ import ubic.gemma.model.common.auditAndSecurity.curation.Curatable;
 import ubic.gemma.persistence.service.AbstractQueryFilteringVoEnabledDao;
 import ubic.gemma.persistence.service.common.auditAndSecurity.CurationDetailsDao;
 import ubic.gemma.persistence.util.Filters;
-import ubic.gemma.persistence.util.ObjectFilter;
+import ubic.gemma.persistence.util.Filter;
 
 import javax.annotation.Nullable;
 import java.util.*;
@@ -77,7 +77,7 @@ public abstract class AbstractCuratableDao<C extends Curatable, VO extends Abstr
      */
     protected void addNonTroubledFilter( Filters filters, @Nullable String objectAlias ) {
         if ( !SecurityUtil.isUserAdmin() ) {
-            filters.and( objectAlias, "curationDetails.troubled", Boolean.class, ObjectFilter.Operator.eq, false );
+            filters.and( objectAlias, "curationDetails.troubled", Boolean.class, Filter.Operator.eq, false );
         }
     }
 

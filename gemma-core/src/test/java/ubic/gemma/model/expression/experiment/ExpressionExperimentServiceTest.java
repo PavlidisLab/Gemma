@@ -39,7 +39,7 @@ import ubic.gemma.persistence.service.expression.bioAssay.BioAssayDao;
 import ubic.gemma.persistence.service.expression.bioAssayData.RawExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.util.Filters;
-import ubic.gemma.persistence.util.ObjectFilter;
+import ubic.gemma.persistence.util.Filter;
 
 import java.util.*;
 
@@ -228,42 +228,42 @@ public class ExpressionExperimentServiceTest extends BaseSpringContextTest {
      * them here.
      */
     @Test
-    public final void testGetObjectFilter() {
-        assertThat( expressionExperimentService.getObjectFilter( "taxon", ObjectFilter.Operator.eq, "9606" ) )
+    public final void testGetFilter() {
+        assertThat( expressionExperimentService.getFilter( "taxon", Filter.Operator.eq, "9606" ) )
                 .hasFieldOrPropertyWithValue( "objectAlias", "taxon" )
                 .hasFieldOrPropertyWithValue( "propertyName", "id" )
                 .hasFieldOrPropertyWithValue( "requiredValue", 9606L );
 
-        assertThat( expressionExperimentService.getObjectFilter( "bioAssayCount", ObjectFilter.Operator.greaterOrEq, "4" ) )
+        assertThat( expressionExperimentService.getFilter( "bioAssayCount", Filter.Operator.greaterOrEq, "4" ) )
                 .hasFieldOrPropertyWithValue( "objectAlias", "ee" )
                 .hasFieldOrPropertyWithValue( "propertyName", "bioAssays.size" )
-                .hasFieldOrPropertyWithValue( "operator", ObjectFilter.Operator.greaterOrEq )
+                .hasFieldOrPropertyWithValue( "operator", Filter.Operator.greaterOrEq )
                 .hasFieldOrPropertyWithValue( "requiredValue", 4 );
 
-        assertThat( expressionExperimentService.getObjectFilter( "bioAssays.size", ObjectFilter.Operator.greaterOrEq, "4" ) )
+        assertThat( expressionExperimentService.getFilter( "bioAssays.size", Filter.Operator.greaterOrEq, "4" ) )
                 .hasFieldOrPropertyWithValue( "objectAlias", "ee" )
                 .hasFieldOrPropertyWithValue( "propertyName", "bioAssays.size" )
-                .hasFieldOrPropertyWithValue( "operator", ObjectFilter.Operator.greaterOrEq )
+                .hasFieldOrPropertyWithValue( "operator", Filter.Operator.greaterOrEq )
                 .hasFieldOrPropertyWithValue( "requiredValue", 4 );
 
         Calendar calendar = new GregorianCalendar( 2020, Calendar.JANUARY, 10 );
         calendar.setTimeZone( TimeZone.getTimeZone( "UTC" ) );
-        assertThat( expressionExperimentService.getObjectFilter( "lastUpdated", ObjectFilter.Operator.greaterOrEq, "2020-01-10" ) )
+        assertThat( expressionExperimentService.getFilter( "lastUpdated", Filter.Operator.greaterOrEq, "2020-01-10" ) )
                 .hasFieldOrPropertyWithValue( "objectAlias", "s" )
                 .hasFieldOrPropertyWithValue( "propertyName", "lastUpdated" )
-                .hasFieldOrPropertyWithValue( "operator", ObjectFilter.Operator.greaterOrEq )
+                .hasFieldOrPropertyWithValue( "operator", Filter.Operator.greaterOrEq )
                 .hasFieldOrPropertyWithValue( "requiredValue", calendar.getTime() );
 
-        assertThat( expressionExperimentService.getObjectFilter( "troubled", ObjectFilter.Operator.eq, "true" ) )
+        assertThat( expressionExperimentService.getFilter( "troubled", Filter.Operator.eq, "true" ) )
                 .hasFieldOrPropertyWithValue( "objectAlias", "s" )
                 .hasFieldOrPropertyWithValue( "propertyName", "troubled" )
-                .hasFieldOrPropertyWithValue( "operator", ObjectFilter.Operator.eq )
+                .hasFieldOrPropertyWithValue( "operator", Filter.Operator.eq )
                 .hasFieldOrPropertyWithValue( "requiredValue", true );
 
-        assertThat( expressionExperimentService.getObjectFilter( "needsAttention", ObjectFilter.Operator.eq, "false" ) )
+        assertThat( expressionExperimentService.getFilter( "needsAttention", Filter.Operator.eq, "false" ) )
                 .hasFieldOrPropertyWithValue( "objectAlias", "s" )
                 .hasFieldOrPropertyWithValue( "propertyName", "needsAttention" )
-                .hasFieldOrPropertyWithValue( "operator", ObjectFilter.Operator.eq )
+                .hasFieldOrPropertyWithValue( "operator", Filter.Operator.eq )
                 .hasFieldOrPropertyWithValue( "requiredValue", false );
     }
 
@@ -282,12 +282,12 @@ public class ExpressionExperimentServiceTest extends BaseSpringContextTest {
         Collection<Long> ids = new HashSet<>();
         Characteristic c = ee.getCharacteristics().stream().findFirst().orElse( null );
         assertThat( c ).isNotNull();
-        ObjectFilter of = expressionExperimentService.getObjectFilter( "characteristics.id", ObjectFilter.Operator.eq, c.getId().toString() );
+        Filter of = expressionExperimentService.getFilter( "characteristics.id", Filter.Operator.eq, c.getId().toString() );
         assertEquals( CharacteristicDao.OBJECT_ALIAS, of.getObjectAlias() );
         assertEquals( "id", of.getPropertyName() );
         Long id = ee.getId();
         ids.add( id );
-        Collection<ExpressionExperimentValueObject> list = expressionExperimentService.loadValueObjectsPreFilter( Filters.singleFilter( of ), null, 0, 0 );
+        Collection<ExpressionExperimentValueObject> list = expressionExperimentService.loadValueObjectsPreFilter( Filters.by( of ), null, 0, 0 );
         assertEquals( 1, list.size() );
     }
 
@@ -296,12 +296,12 @@ public class ExpressionExperimentServiceTest extends BaseSpringContextTest {
         Collection<Long> ids = new HashSet<>();
         BioAssay ba = ee.getBioAssays().stream().findFirst().orElse( null );
         assertThat( ba ).isNotNull();
-        ObjectFilter of = expressionExperimentService.getObjectFilter( "bioAssays.id", ObjectFilter.Operator.eq, ba.getId().toString() );
+        Filter of = expressionExperimentService.getFilter( "bioAssays.id", Filter.Operator.eq, ba.getId().toString() );
         assertEquals( BioAssayDao.OBJECT_ALIAS, of.getObjectAlias() );
         assertEquals( "id", of.getPropertyName() );
         Long id = ee.getId();
         ids.add( id );
-        Collection<ExpressionExperimentValueObject> list = expressionExperimentService.loadValueObjectsPreFilter( Filters.singleFilter( of ), null, 0, 0 );
+        Collection<ExpressionExperimentValueObject> list = expressionExperimentService.loadValueObjectsPreFilter( Filters.by( of ), null, 0, 0 );
         assertEquals( 1, list.size() );
     }
 

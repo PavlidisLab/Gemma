@@ -19,9 +19,8 @@
 package ubic.gemma.persistence.util;
 
 import com.fasterxml.jackson.databind.util.StdDateFormat;
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import lombok.ToString;
+import lombok.Value;
 import org.apache.commons.lang3.ClassUtils;
 import org.springframework.core.convert.ConversionException;
 import org.springframework.core.convert.ConversionFailedException;
@@ -34,7 +33,6 @@ import org.springframework.core.convert.support.GenericConversionService;
 import javax.annotation.Nullable;
 import java.text.DateFormat;
 import java.text.ParseException;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.Optional;
@@ -48,9 +46,8 @@ import java.util.stream.Stream;
  * @author tesarst
  * @author poirigui
  */
-@Getter
-@EqualsAndHashCode
-public class ObjectFilter {
+@Value
+public class Filter {
 
     /**
      * This is only the date part of the ISO 8601 standard.
@@ -90,33 +87,51 @@ public class ObjectFilter {
     }
 
     /**
-     * Parse an ObjectFilter where the right-hand side is a scalar.
+     * Create a new filter.
+     * <p>
+     * If you need to parse the right-hand side, consider using {@link #parse(String, String, Class, Operator, String)}
+     * for a scalar or {@link #parse(String, String, Class, Operator, Collection)} for a collection type.
+     *
+     * @param objectAlias the alias that refers to the entity subject to the filter
+     * @param propertyName  the property in the entity
+     * @param propertyType  the type of the property
+     * @param operator      a valid operator for the property and the requiredValue
+     * @param requiredValue a required value, or null to perform a null-check (i.e. <code>objectAlias.propertyName is null</code>)
+     * @throws IllegalArgumentException if the type of the requiredValue does not match the propertyType
+     */
+    public static Filter by( @Nullable String objectAlias, String propertyName, Class<?> propertyType, Operator operator, @Nullable Object requiredValue ) {
+        return new Filter( objectAlias, propertyName, propertyType, operator, requiredValue );
+    }
+
+
+    /**
+     * Parse filter where the right-hand side is a scalar.
      *
      * @param requiredValue a right-hand side to be parsed according to the propertyType and operator
      * @throws IllegalArgumentException if the right-hand side cannot be parsed, which is generally caused by a
      *                                  {@link ConversionException} when attempting to convert the requiredValue to the
      *                                  desired propertyType.
-     * @see #ObjectFilter(String, String, Class, Operator, Object)
+     * @see #Filter(String, String, Class, Operator, Object)
      */
-    public static ObjectFilter parseObjectFilter( @Nullable String alias, String propertyName, Class<?> propertyType, Operator operator, String requiredValue ) throws IllegalArgumentException {
-        return new ObjectFilter( alias, propertyName, propertyType, operator, parseRequiredValue( requiredValue, propertyType ) );
+    public static Filter parse( @Nullable String objectAlias, String propertyName, Class<?> propertyType, Operator operator, String requiredValue ) throws IllegalArgumentException {
+        return new Filter( objectAlias, propertyName, propertyType, operator, parseRequiredValue( requiredValue, propertyType ) );
     }
 
 
     /**
-     * Parse an ObjectFilter where the right-hand side is a {@link Collection} of scalar right-hand side to be parsed.
-     *
+     * Parse a filter where the right-hand side is a {@link Collection} of scalar right-hand side to be parsed.
+     * <p>
      * If you need to parse a collection held in a {@link String} (i.e. <code>"(1,2,3,4)"</code>), you should use
-     * {@link #parseObjectFilter(String, String, Class, Operator, String)} instead.
+     * {@link #parse(String, String, Class, Operator, String)} instead.
      *
      * @param requiredValues a collection of right-hand side to be parsed
      * @throws IllegalArgumentException if the right-hand side cannot be parsed, which is generally caused by a
      *                                  {@link ConversionException} when attempting to convert the requiredValue to the
      *                                  desired propertyType.
-     * @see #ObjectFilter(String, String, Class, Operator, Object)
+     * @see #Filter(String, String, Class, Operator, Object)
      */
-    public static ObjectFilter parseObjectFilter( @Nullable String alias, String propertyName, Class<?> propertyType, Operator operator, Collection<String> requiredValues ) throws IllegalArgumentException {
-        return new ObjectFilter( alias, propertyName, propertyType, operator, parseRequiredValues( requiredValues, propertyType ) );
+    public static Filter parse( @Nullable String objectAlias, String propertyName, Class<?> propertyType, Operator operator, Collection<String> requiredValues ) throws IllegalArgumentException {
+        return new Filter( objectAlias, propertyName, propertyType, operator, parseRequiredValues( requiredValues, propertyType ) );
     }
 
     @Getter
@@ -177,7 +192,7 @@ public class ObjectFilter {
         /**
          * Token used in SQL/HQL query.
          * <p>
-         * This is package-private on purpose and is only meant for{@link ObjectFilterQueryUtils#formRestrictionClause(Filters)}.
+         * This is package-private on purpose and is only meant for{@link FilterQueryUtils#formRestrictionClause(Filters)}.
          */
         String getSqlToken() {
             return token;
@@ -185,27 +200,14 @@ public class ObjectFilter {
     }
 
     @Nullable
-    private final String objectAlias;
-    private final String propertyName;
-    private final Class<?> propertyType;
-    private final Operator operator;
+    String objectAlias;
+    String propertyName;
+    Class<?> propertyType;
+    Operator operator;
     @Nullable
-    private final Object requiredValue;
+    Object requiredValue;
 
-    /**
-     * Create a new ObjectFilter.
-     *
-     * If you need to parse the right-hand side, consider using {@link #parseObjectFilter(String, String, Class, Operator, String)}
-     * for a scalar or {@link #parseObjectFilter(String, String, Class, Operator, Collection)} for a collection type.
-     *
-     * @param objectAlias   the alias that refers to the entity subject to the filter
-     * @param propertyName  the property in the entity
-     * @param propertyType  the type of the property
-     * @param operator      a valid operator for the property and the requiredValue
-     * @param requiredValue a required value, or null to perform a null-check (i.e. <code>objectAlias.propertyName is null</code>)
-     * @throws IllegalArgumentException if the type of the requiredValue does not match the propertyType
-     */
-    public ObjectFilter( @Nullable String objectAlias, String propertyName, Class<?> propertyType, Operator operator, @Nullable Object requiredValue ) throws IllegalArgumentException {
+    private Filter( @Nullable String objectAlias, String propertyName, Class<?> propertyType, Operator operator, @Nullable Object requiredValue ) throws IllegalArgumentException {
         this.objectAlias = objectAlias;
         this.propertyName = propertyName;
         this.propertyType = propertyType;

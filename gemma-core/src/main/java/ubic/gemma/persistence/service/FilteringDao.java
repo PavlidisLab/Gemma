@@ -1,8 +1,9 @@
 package ubic.gemma.persistence.service;
 
 import ubic.gemma.model.common.Identifiable;
+import ubic.gemma.persistence.util.FilterQueryUtils;
 import ubic.gemma.persistence.util.Filters;
-import ubic.gemma.persistence.util.ObjectFilter;
+import ubic.gemma.persistence.util.Filter;
 import ubic.gemma.persistence.util.Sort;
 
 import javax.annotation.Nullable;
@@ -10,10 +11,10 @@ import java.util.Collection;
 import java.util.Set;
 
 /**
- * Interface for DAO that provide filtering capabilities on their entity using {@link ObjectFilter}.
+ * Interface for DAO that provide filtering capabilities on their entity using {@link Filter}.
  *
  * This interface does not yet provide loading capabilities using filters, but you can use {@link FilteringVoEnabledDao}
- * meanwhile or {@link ubic.gemma.persistence.util.ObjectFilterQueryUtils} utilities to generate the corresponding HQL.
+ * meanwhile or {@link FilterQueryUtils} utilities to generate the corresponding HQL.
  *
  * @param <O> the entity type being filtered
  */
@@ -38,13 +39,13 @@ public interface FilteringDao<O extends Identifiable> extends BaseDao<O> {
     String getFilterablePropertyDescription( String propertyName ) throws IllegalArgumentException;
 
     /**
-     * Obtain an {@link ObjectFilter} for the entity this DAO is providing.
+     * Obtain an {@link Filter} for the entity this DAO is providing.
      * <p>
-     * It is the responsibility of the DAO to infer the ObjectFilter property type as well as the alias to use.
+     * It is the responsibility of the DAO to infer the filter property type as well as the alias to use.
      * <p>
-     * If the ObjectFilter refers to a related entity (i.e. a {@link ubic.gemma.model.expression.bioAssay.BioAssay} of an
+     * If the filter refers to a related entity (i.e. a {@link ubic.gemma.model.expression.bioAssay.BioAssay} of an
      * {@link ubic.gemma.model.expression.experiment.ExpressionExperiment}), then the DAO should inject the corresponding
-     * DAO and delegate it the work of creating the ObjectFilter.
+     * DAO and delegate it the work of creating the filter.
      * <p>
      * In the frontend, that correspond to a FilterArg, but since the definition is not available here, we unpack its
      * attributes.
@@ -54,15 +55,15 @@ public interface FilteringDao<O extends Identifiable> extends BaseDao<O> {
      * @param value the corresponding, unparsed value, to the right-hand side of the operator
      * @return an object filter filled with the object alias, property, inferred type, operator and parsed value
      * @throws IllegalArgumentException if the property does not exist in {@link O}, or if the operator cannot be applied,
-     * or if the value cannot apply to the property an operator see {@link ObjectFilter#parseObjectFilter(String, String, Class, ObjectFilter.Operator, String)}
+     * or if the value cannot apply to the property an operator see {@link Filter#parse(String, String, Class, Filter.Operator, String)}
      * for more details
      */
-    ObjectFilter getObjectFilter( String property, ObjectFilter.Operator operator, String value ) throws IllegalArgumentException;
+    Filter getFilter( String property, Filter.Operator operator, String value ) throws IllegalArgumentException;
 
     /**
-     * Similar to {@link #getObjectFilter(String, ObjectFilter.Operator, String)}, but with a collection of values.
+     * Similar to {@link #getFilter(String, Filter.Operator, String)}, but with a collection of values.
      */
-    ObjectFilter getObjectFilter( String property, ObjectFilter.Operator operator, Collection<String> values ) throws IllegalArgumentException;
+    Filter getFilter( String property, Filter.Operator operator, Collection<String> values ) throws IllegalArgumentException;
 
     /**
      * Obtain a {@link Sort} object for a property of the {@link O}.

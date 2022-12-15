@@ -11,7 +11,7 @@ import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.persistence.util.EntityUtils;
 import ubic.gemma.persistence.util.Filters;
-import ubic.gemma.persistence.util.ObjectFilter;
+import ubic.gemma.persistence.util.Filter;
 import ubic.gemma.persistence.util.Sort;
 
 import javax.annotation.Nullable;
@@ -54,7 +54,7 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
      */
     @Override
     public final VO loadValueObject( O entity ) {
-        return loadValueObjectsPreFilter( Filters.singleFilter( objectAlias, getIdPropertyName(), Long.class, ObjectFilter.Operator.eq, entity.getId() ), null ).stream()
+        return loadValueObjectsPreFilter( Filters.by( objectAlias, getIdPropertyName(), Long.class, Filter.Operator.eq, entity.getId() ), null ).stream()
                 .findFirst()
                 .orElse( null );
     }
@@ -66,7 +66,7 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
      */
     @Override
     public final VO loadValueObjectById( Long id ) {
-        return loadValueObjectsPreFilter( Filters.singleFilter( objectAlias, getIdPropertyName(), Long.class, ObjectFilter.Operator.eq, id ), null ).stream()
+        return loadValueObjectsPreFilter( Filters.by( objectAlias, getIdPropertyName(), Long.class, Filter.Operator.eq, id ), null ).stream()
                 .findFirst()
                 .orElse( null );
     }
@@ -81,7 +81,7 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
         if ( entities.isEmpty() ) {
             return Collections.emptyList();
         }
-        return loadValueObjectsPreFilter( Filters.singleFilter( objectAlias, getIdPropertyName(), Long.class, ObjectFilter.Operator.in, EntityUtils.getIds( entities ) ), null );
+        return loadValueObjectsPreFilter( Filters.by( objectAlias, getIdPropertyName(), Long.class, Filter.Operator.in, EntityUtils.getIds( entities ) ), null );
     }
 
     /**
@@ -94,7 +94,7 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
         if ( ids.isEmpty() ) {
             return Collections.emptyList();
         }
-        return loadValueObjectsPreFilter( Filters.singleFilter( objectAlias, getIdPropertyName(), Long.class, ObjectFilter.Operator.in, ids ), null );
+        return loadValueObjectsPreFilter( Filters.by( objectAlias, getIdPropertyName(), Long.class, Filter.Operator.in, ids ), null );
     }
 
     /**
@@ -124,15 +124,15 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
     }
 
     @Override
-    public final ObjectFilter getObjectFilter( String property, ObjectFilter.Operator operator, String value ) {
+    public final Filter getFilter( String property, Filter.Operator operator, String value ) {
         FilterablePropertyMeta propertyMeta = getFilterablePropertyMeta( property );
-        return ObjectFilter.parseObjectFilter( propertyMeta.objectAlias, propertyMeta.propertyName, propertyMeta.propertyType, operator, value );
+        return Filter.parse( propertyMeta.objectAlias, propertyMeta.propertyName, propertyMeta.propertyType, operator, value );
     }
 
     @Override
-    public final ObjectFilter getObjectFilter( String property, ObjectFilter.Operator operator, Collection<String> values ) {
+    public final Filter getFilter( String property, Filter.Operator operator, Collection<String> values ) {
         FilterablePropertyMeta propertyMeta = getFilterablePropertyMeta( property );
-        return ObjectFilter.parseObjectFilter( propertyMeta.objectAlias, propertyMeta.propertyName, propertyMeta.propertyType, operator, values );
+        return Filter.parse( propertyMeta.objectAlias, propertyMeta.propertyName, propertyMeta.propertyType, operator, values );
     }
 
     @Override
@@ -161,10 +161,10 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
                 destination.add( prefix + propertyNames[i] + ".size" );
                 // only collection of supported scalars
                 Class<?> elementClass = ( ( CollectionType ) propertyTypes[i] ).getElementType( ( SessionFactoryImplementor ) getSessionFactory() ).getReturnedClass();
-                if ( ObjectFilter.getConversionService().canConvert( String.class, elementClass ) ) {
+                if ( Filter.getConversionService().canConvert( String.class, elementClass ) ) {
                     destination.add( prefix + propertyNames[i] );
                 }
-            } else if ( ObjectFilter.getConversionService().canConvert( String.class, propertyTypes[i].getReturnedClass() ) ) {
+            } else if ( Filter.getConversionService().canConvert( String.class, propertyTypes[i].getReturnedClass() ) ) {
                 destination.add( prefix + propertyNames[i] );
             }
         }
@@ -188,23 +188,23 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
     }
 
     /**
-     * Obtain various meta-information used to infer what to use in a {@link ObjectFilter} or {@link Sort}.
+     * Obtain various meta-information used to infer what to use in a {@link Filter} or {@link Sort}.
      * <p>
-     * This is used by {@link #getObjectFilter(String, ObjectFilter.Operator, String)} and {@link #getSort(String, Sort.Direction)}.
+     * This is used by {@link #getFilter(String, Filter.Operator, String)} and {@link #getSort(String, Sort.Direction)}.
      *
      * @throws IllegalArgumentException if no such propertyName exists in {@link O}
-     * @see #getObjectFilter(String, ObjectFilter.Operator, String)
-     * @see #getObjectFilter(String, ObjectFilter.Operator, Collection)
+     * @see #getFilter(String, Filter.Operator, String)
+     * @see #getFilter(String, Filter.Operator, Collection)
      * @see #getSort(String, Sort.Direction)
      */
     protected FilterablePropertyMeta getFilterablePropertyMeta( String propertyName ) throws IllegalArgumentException {
-        return new FilterablePropertyMeta( objectAlias, propertyName, resolveObjectFilterPropertyType( propertyName, elementClass ), null );
+        return new FilterablePropertyMeta( objectAlias, propertyName, resolveFilterPropertyType( propertyName, elementClass ), null );
     }
 
     /**
      * Helper to resolve the type of a property in a given class.
      */
-    protected Class<?> resolveObjectFilterPropertyType( String propertyName, Class<?> clazz ) {
+    protected Class<?> resolveFilterPropertyType( String propertyName, Class<?> clazz ) {
         try {
             return getFilterablePropertyType( propertyName, clazz, FILTERABLE_PROPERTIES_MAX_DEPTH );
         } catch ( NoSuchFieldException e ) {
@@ -266,7 +266,7 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
             subCls = propertyType.getReturnedClass();
         }
 
-        if ( ObjectFilter.getConversionService().canConvert( String.class, subCls ) ) {
+        if ( Filter.getConversionService().canConvert( String.class, subCls ) ) {
             return subCls;
         } else {
             throw new NoSuchFieldException( String.format( "%s is not of a supported type or a collection of supported types %s.", property, cls.getName() ) );

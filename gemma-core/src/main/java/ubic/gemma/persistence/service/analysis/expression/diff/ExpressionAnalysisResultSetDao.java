@@ -79,9 +79,9 @@ public interface ExpressionAnalysisResultSetDao extends AnalysisResultSetDao<Dif
      *
      * @param bioAssaySets related {@link BioAssaySet}, or any if null
      * @param databaseEntries related external identifier associated to the {@link BioAssaySet}, or any if null
-     * @param objectFilters list of object filters
+     * @param filters list of object filters
      * @param limit maximum number of results to return
      * @param sort field and direction by which the collection is ordered
      */
-    Slice<DifferentialExpressionAnalysisResultSetValueObject> findByBioAssaySetInAndDatabaseEntryInLimit( @Nullable Collection<BioAssaySet> bioAssaySets, @Nullable Collection<DatabaseEntry> databaseEntries, @Nullable Filters objectFilters, int offset, int limit, @Nullable Sort sort );
+    Slice<DifferentialExpressionAnalysisResultSetValueObject> findByBioAssaySetInAndDatabaseEntryInLimit( @Nullable Collection<BioAssaySet> bioAssaySets, @Nullable Collection<DatabaseEntry> databaseEntries, @Nullable Filters filters, int offset, int limit, @Nullable Sort sort );
 }

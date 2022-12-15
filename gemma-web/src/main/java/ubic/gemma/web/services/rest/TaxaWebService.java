@@ -118,8 +118,7 @@ public class TaxaWebService {
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve taxa by their identifiers")
     public ResponseDataObject<List<TaxonValueObject>> getTaxaByIds( @PathParam("taxa") TaxonArrayArg taxaArg ) {
-        Filters filters = Filters.empty();
-        filters.and( taxaArg.getObjectFilters( taxonService ) );
+        Filters filters = Filters.by( taxaArg.getClause( taxonService ) );
         Sort sort = taxonService.getSort( "id", null );
         return Responder.respond( taxonService.loadValueObjectsPreFilter( filters, sort ) );
     }
@@ -234,7 +233,7 @@ public class TaxaWebService {
             @QueryParam("sort") @DefaultValue("+id") SortArg sort // Optional, default +id
     ) {
         return Responder.paginate(
-                taxonArg.getTaxonDatasets( expressionExperimentService, taxonService, filter.getObjectFilters( expressionExperimentService ),
+                taxonArg.getTaxonDatasets( expressionExperimentService, taxonService, filter.getFilters( expressionExperimentService ),
                         offset.getValue(), limit.getValue(), sort.getSort( taxonService ) ) );
     }
 

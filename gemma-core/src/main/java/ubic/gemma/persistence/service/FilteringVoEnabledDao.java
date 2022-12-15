@@ -3,7 +3,7 @@ package ubic.gemma.persistence.service;
 import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.persistence.util.Filters;
-import ubic.gemma.persistence.util.ObjectFilter;
+import ubic.gemma.persistence.util.Filter;
 import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.persistence.util.Sort;
 
@@ -20,10 +20,10 @@ public interface FilteringVoEnabledDao<O extends Identifiable, VO extends Identi
     /**
      * Load VOs with ordering, filtering and offset/limit.
      *
-     * Consider using {@link FilteringService#getObjectFilter(String, ObjectFilter.Operator, String)} and {@link FilteringService#getSort(String, Sort.Direction)}
+     * Consider using {@link FilteringService#getFilter(String, Filter.Operator, String)} and {@link FilteringService#getSort(String, Sort.Direction)}
      * to produce the object filters and sort safely from user input.
      *
-     * @param filters filters applied on the search. The properties mentioned in the {@link ubic.gemma.persistence.util.ObjectFilter}
+     * @param filters filters applied on the search. The properties mentioned in the {@link Filter}
      *                must exist and be visible to Hibernate. You can use nested properties such as "curationDetails.lastUpdated".
      * @param sort    an object property and direction to order by. This property must exist and be visible to
      *                Hibernate. You can use nested properties such as "curationDetails.lastUpdated".

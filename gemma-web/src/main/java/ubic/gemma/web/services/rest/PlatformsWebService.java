@@ -96,7 +96,7 @@ public class PlatformsWebService {
             @QueryParam("limit") @DefaultValue("20") LimitArg limit, // Optional, default 20
             @QueryParam("sort") @DefaultValue("+id") SortArg sort // Optional, default +id
     ) {
-        return Responder.paginate( arrayDesignService.loadValueObjectsPreFilter( filter.getObjectFilters( arrayDesignService ), sort.getSort( arrayDesignService ), offset.getValue(), limit.getValue() ) );
+        return Responder.paginate( arrayDesignService.loadValueObjectsPreFilter( filter.getFilters( arrayDesignService ), sort.getSort( arrayDesignService ), offset.getValue(), limit.getValue() ) );
     }
 
     /**
@@ -124,12 +124,12 @@ public class PlatformsWebService {
             @QueryParam("limit") @DefaultValue("20") LimitArg limit, // Optional, default 20
             @QueryParam("sort") @DefaultValue("+id") SortArg sort // Optional, default +id
     ) {
-        Filters filters = filter.getObjectFilters( arrayDesignService );
+        Filters filters = filter.getFilters( arrayDesignService );
         if ( filters == null ) {
             filters = Filters.empty();
         }
 
-        filters.and( datasetsArg.getObjectFilters( arrayDesignService ) );
+        filters.and( datasetsArg.getClause( arrayDesignService ) );
 
         return Responder.paginate( arrayDesignService.loadValueObjectsPreFilter( filters, sort.getSort( arrayDesignService ), offset.getValue(), limit.getValue() ) );
     }
@@ -202,7 +202,7 @@ public class PlatformsWebService {
             @QueryParam("limit") @DefaultValue("20") LimitArg limit // Optional, default 20
     ) {
         probesArg.setPlatform( platformArg.getEntity( arrayDesignService ) );
-        return Responder.paginate( compositeSequenceService.loadValueObjectsPreFilter( Filters.singleFilter( probesArg.getPlatformFilter() ), null, offset.getValue(), limit.getValue() ) );
+        return Responder.paginate( compositeSequenceService.loadValueObjectsPreFilter( Filters.by( probesArg.getPlatformFilter() ), null, offset.getValue(), limit.getValue() ) );
     }
 
     /**

@@ -5,7 +5,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.util.test.BaseSpringContextTest;
 import ubic.gemma.persistence.service.analysis.expression.diff.ExpressionAnalysisResultSetService;
 import ubic.gemma.persistence.util.Filters;
-import ubic.gemma.persistence.util.ObjectFilter;
+import ubic.gemma.persistence.util.Filter;
 import ubic.gemma.persistence.util.Sort;
 
 import java.util.Date;
@@ -25,8 +25,8 @@ public class FilteringVoEnabledServiceIntegrationTest extends BaseSpringContextT
     public void testFilteringByAllFilterableProperties() {
         for ( FilteringVoEnabledService<?, ?> filteringService : filteringServices ) {
             for ( String property : filteringService.getFilterableProperties() ) {
-                ObjectFilter filter = filteringService.getObjectFilter( property, ObjectFilter.Operator.eq, getStubForPropType( filteringService.getFilterablePropertyType( property ) ) );
-                filteringService.loadValueObjectsPreFilter( Filters.singleFilter( filter ), null, 0, 1 );
+                Filter filter = filteringService.getFilter( property, Filter.Operator.eq, getStubForPropType( filteringService.getFilterablePropertyType( property ) ) );
+                filteringService.loadValueObjectsPreFilter( Filters.by( filter ), null, 0, 1 );
             }
         }
     }

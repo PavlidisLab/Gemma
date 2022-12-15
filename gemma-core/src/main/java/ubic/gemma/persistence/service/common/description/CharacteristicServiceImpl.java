@@ -32,10 +32,6 @@ import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 import ubic.gemma.persistence.service.AbstractFilteringVoEnabledService;
-import ubic.gemma.persistence.service.AbstractVoEnabledService;
-import ubic.gemma.persistence.util.EntityUtils;
-import ubic.gemma.persistence.util.ObjectFilter;
-import ubic.gemma.persistence.util.Sort;
 
 import javax.annotation.Nullable;
 import java.util.*;

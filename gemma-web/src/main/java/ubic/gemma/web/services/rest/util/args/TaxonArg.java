@@ -12,7 +12,7 @@ import ubic.gemma.persistence.service.expression.experiment.ExpressionExperiment
 import ubic.gemma.persistence.service.genome.ChromosomeService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.persistence.util.Filters;
-import ubic.gemma.persistence.util.ObjectFilter;
+import ubic.gemma.persistence.util.Filter;
 import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.persistence.util.Sort;
 import ubic.gemma.web.services.rest.util.MalformedArgException;
@@ -74,7 +74,7 @@ public abstract class TaxonArg<T> extends AbstractEntityArg<T, Taxon, TaxonServi
         if ( filters == null ) {
             filters = Filters.empty();
         }
-        filters.and( taxonService.getObjectFilter( "id", ObjectFilter.Operator.eq, this.getEntity( taxonService ).getId().toString() ) );
+        filters.and( taxonService.getFilter( "id", Filter.Operator.eq, this.getEntity( taxonService ).getId().toString() ) );
         return expressionExperimentService.loadValueObjectsPreFilter( filters, sort, offset, limit );
     }
 

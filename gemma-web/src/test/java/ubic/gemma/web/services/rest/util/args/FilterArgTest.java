@@ -8,7 +8,7 @@ import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 import ubic.gemma.persistence.service.FilteringService;
 import ubic.gemma.persistence.util.Filters;
-import ubic.gemma.persistence.util.ObjectFilter;
+import ubic.gemma.persistence.util.Filter;
 import ubic.gemma.web.services.rest.util.MalformedArgException;
 
 import java.util.Iterator;
@@ -29,33 +29,33 @@ public class FilterArgTest {
 
     @Test
     public void testNullFilter() {
-        Filters filters = FilterArg.valueOf( null ).getObjectFilters( mockVoService );
+        Filters filters = FilterArg.valueOf( null ).getFilters( mockVoService );
         assertThat( filters.isEmpty() ).isTrue();
     }
 
     @Test
     public void testEmptyFilter() {
-        Filters filters = FilterArg.valueOf( "" ).getObjectFilters( mockVoService );
+        Filters filters = FilterArg.valueOf( "" ).getFilters( mockVoService );
         assertThat( filters.isEmpty() ).isTrue();
     }
 
     @Before
     public void setUp() {
-        when( mockVoService.getObjectFilter( any(), any(), any( String.class ) ) )
-                .thenAnswer( arg -> ObjectFilter.parseObjectFilter( "alias", arg.getArgument( 0, String.class ),
+        when( mockVoService.getFilter( any(), any(), any( String.class ) ) )
+                .thenAnswer( arg -> Filter.parse( "alias", arg.getArgument( 0, String.class ),
                         String.class,
-                        arg.getArgument( 1, ObjectFilter.Operator.class ),
+                        arg.getArgument( 1, Filter.Operator.class ),
                         arg.getArgument( 2, String.class ) ) );
     }
 
     @Test
     public void testSimpleEquality() {
-        Filters filters = FilterArg.valueOf( "a = b" ).getObjectFilters( mockVoService );
+        Filters filters = FilterArg.valueOf( "a = b" ).getFilters( mockVoService );
         assertThat( filters )
                 .extracting( of -> of[0] )
                 .first()
                 .hasFieldOrPropertyWithValue( "propertyName", "a" )
-                .hasFieldOrPropertyWithValue( "operator", ObjectFilter.Operator.eq )
+                .hasFieldOrPropertyWithValue( "operator", Filter.Operator.eq )
                 .hasFieldOrPropertyWithValue( "requiredValue", "b" );
     }
 
@@ -79,7 +79,7 @@ public class FilterArgTest {
 
     @Test
     public void testInvalidFilter() {
-        assertThatThrownBy( () -> FilterArg.valueOf( "a =b" ).getObjectFilters( mockVoService ) )
+        assertThatThrownBy( () -> FilterArg.valueOf( "a =b" ).getFilters( mockVoService ) )
                 .isInstanceOf( MalformedArgException.class )
                 .hasCauseInstanceOf( FilterArgParseException.class )
                 .extracting( "cause" )
@@ -88,83 +88,83 @@ public class FilterArgTest {
 
     @Test
     public void testConjunction() {
-        Filters filters = FilterArg.valueOf( "a = b and c = d" ).getObjectFilters( mockVoService );
+        Filters filters = FilterArg.valueOf( "a = b and c = d" ).getFilters( mockVoService );
         assertThat( filters ).hasSize( 2 );
         assertThat( filters )
                 .extracting( of -> of[0] )
                 .first()
                 .hasFieldOrPropertyWithValue( "propertyName", "a" )
-                .hasFieldOrPropertyWithValue( "operator", ObjectFilter.Operator.eq )
+                .hasFieldOrPropertyWithValue( "operator", Filter.Operator.eq )
                 .hasFieldOrPropertyWithValue( "requiredValue", "b" );
         assertThat( filters )
                 .extracting( of -> of[0] )
                 .last()
                 .hasFieldOrPropertyWithValue( "propertyName", "c" )
-                .hasFieldOrPropertyWithValue( "operator", ObjectFilter.Operator.eq )
+                .hasFieldOrPropertyWithValue( "operator", Filter.Operator.eq )
                 .hasFieldOrPropertyWithValue( "requiredValue", "d" );
     }
 
     @Test
     public void testDisjunction() {
-        Filters filters = FilterArg.valueOf( "a = b, c = d" ).getObjectFilters( mockVoService );
+        Filters filters = FilterArg.valueOf( "a = b, c = d" ).getFilters( mockVoService );
         assertThat( filters ).hasSize( 1 );
         assertThat( filters.iterator().next() )
                 .hasSize( 2 );
 
         assertThat( filters.iterator().next()[0] )
                 .hasFieldOrPropertyWithValue( "propertyName", "a" )
-                .hasFieldOrPropertyWithValue( "operator", ObjectFilter.Operator.eq )
+                .hasFieldOrPropertyWithValue( "operator", Filter.Operator.eq )
                 .hasFieldOrPropertyWithValue( "requiredValue", "b" );
 
         assertThat( filters.iterator().next()[1] )
                 .hasFieldOrPropertyWithValue( "propertyName", "c" )
-                .hasFieldOrPropertyWithValue( "operator", ObjectFilter.Operator.eq )
+                .hasFieldOrPropertyWithValue( "operator", Filter.Operator.eq )
                 .hasFieldOrPropertyWithValue( "requiredValue", "d" );
 
-        FilterArg.valueOf( "a = b or c = d" ).getObjectFilters( mockVoService );
+        FilterArg.valueOf( "a = b or c = d" ).getFilters( mockVoService );
 
         assertThat( filters.iterator().next()[0] )
                 .hasFieldOrPropertyWithValue( "propertyName", "a" )
-                .hasFieldOrPropertyWithValue( "operator", ObjectFilter.Operator.eq )
+                .hasFieldOrPropertyWithValue( "operator", Filter.Operator.eq )
                 .hasFieldOrPropertyWithValue( "requiredValue", "b" );
 
         assertThat( filters.iterator().next()[1] )
                 .hasFieldOrPropertyWithValue( "propertyName", "c" )
-                .hasFieldOrPropertyWithValue( "operator", ObjectFilter.Operator.eq )
+                .hasFieldOrPropertyWithValue( "operator", Filter.Operator.eq )
                 .hasFieldOrPropertyWithValue( "requiredValue", "d" );
     }
 
     @Test
     public void testConjunctionOfDisjunctions() {
-        Filters filters = FilterArg.valueOf( "a = b or g = h and c = d or e = f" ).getObjectFilters( mockVoService );
+        Filters filters = FilterArg.valueOf( "a = b or g = h and c = d or e = f" ).getFilters( mockVoService );
 
         assertThat( filters ).hasSize( 2 );
 
-        Iterator<ObjectFilter[]> iterator = filters.iterator();
-        ObjectFilter[] of;
+        Iterator<Filter[]> iterator = filters.iterator();
+        Filter[] of;
 
         of = iterator.next();
         assertThat( of )
                 .hasSize( 2 );
         assertThat( of[0] )
                 .hasFieldOrPropertyWithValue( "propertyName", "a" )
-                .hasFieldOrPropertyWithValue( "operator", ObjectFilter.Operator.eq )
+                .hasFieldOrPropertyWithValue( "operator", Filter.Operator.eq )
                 .hasFieldOrPropertyWithValue( "requiredValue", "b" );
 
         assertThat( of[1] )
                 .hasFieldOrPropertyWithValue( "propertyName", "g" )
-                .hasFieldOrPropertyWithValue( "operator", ObjectFilter.Operator.eq )
+                .hasFieldOrPropertyWithValue( "operator", Filter.Operator.eq )
                 .hasFieldOrPropertyWithValue( "requiredValue", "h" );
 
         of = iterator.next();
         assertThat( of[0] )
                 .hasFieldOrPropertyWithValue( "propertyName", "c" )
-                .hasFieldOrPropertyWithValue( "operator", ObjectFilter.Operator.eq )
+                .hasFieldOrPropertyWithValue( "operator", Filter.Operator.eq )
                 .hasFieldOrPropertyWithValue( "requiredValue", "d" );
 
         assertThat( of[1] )
                 .hasFieldOrPropertyWithValue( "propertyName", "e" )
-                .hasFieldOrPropertyWithValue( "operator", ObjectFilter.Operator.eq )
+                .hasFieldOrPropertyWithValue( "operator", Filter.Operator.eq )
                 .hasFieldOrPropertyWithValue( "requiredValue", "f" );
     }
 }

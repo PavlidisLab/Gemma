@@ -38,11 +38,11 @@ public class AclQueryUtils {
     public static String formAclJoinClause( @Nullable String alias ) {
         if ( SecurityUtil.isUserAdmin() ) {
             return ", AclObjectIdentity as aoi inner join aoi.ownerSid sid "
-                    + "where aoi.identifier = " + ObjectFilterQueryUtils.formPropertyName( alias, "id" ) + " "
+                    + "where aoi.identifier = " + FilterQueryUtils.formPropertyName( alias, "id" ) + " "
                     + "and aoi.type = :aoiType";
         } else {
             return ", AclObjectIdentity as aoi inner join aoi.entries ace inner join aoi.ownerSid sid "
-                    + "where aoi.identifier = " + ObjectFilterQueryUtils.formPropertyName( alias, "id" ) + " "
+                    + "where aoi.identifier = " + FilterQueryUtils.formPropertyName( alias, "id" ) + " "
                     + "and aoi.type = :aoiType";
         }
     }

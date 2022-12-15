@@ -17,7 +17,7 @@ package ubic.gemma.web.services.rest.util.args;
 import io.swagger.v3.oas.annotations.media.Schema;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
-import ubic.gemma.persistence.util.ObjectFilter;
+import ubic.gemma.persistence.util.Filter;
 import ubic.gemma.web.services.rest.util.MalformedArgException;
 
 /**
@@ -45,11 +45,11 @@ public class TaxonNameArg extends TaxonArg<String> {
     }
 
     @Override
-    public ObjectFilter[] getObjectFilters( TaxonService taxonService ) throws MalformedArgException {
-        ObjectFilter commonNameFilter = taxonService.getObjectFilter( "commonName", ObjectFilter.Operator.eq, getValue() );
-        ObjectFilter scientificNameFilter = taxonService.getObjectFilter( "scientificName", ObjectFilter.Operator.eq, getValue() );
+    public Filter[] getClause( TaxonService taxonService ) throws MalformedArgException {
+        Filter commonNameFilter = taxonService.getFilter( "commonName", Filter.Operator.eq, getValue() );
+        Filter scientificNameFilter = taxonService.getFilter( "scientificName", Filter.Operator.eq, getValue() );
         // this creates a disjunction clause in the HQL query
-        return new ObjectFilter[] { commonNameFilter, scientificNameFilter };
+        return new Filter[] { commonNameFilter, scientificNameFilter };
     }
 
     /**

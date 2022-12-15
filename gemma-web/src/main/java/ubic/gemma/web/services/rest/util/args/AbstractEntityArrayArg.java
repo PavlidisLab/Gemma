@@ -4,7 +4,7 @@ import com.google.common.base.Strings;
 import org.apache.commons.lang3.NotImplementedException;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.persistence.service.FilteringService;
-import ubic.gemma.persistence.util.ObjectFilter;
+import ubic.gemma.persistence.util.Filter;
 import ubic.gemma.web.services.rest.util.MalformedArgException;
 
 import javax.ws.rs.BadRequestException;
@@ -32,7 +32,7 @@ public abstract class AbstractEntityArrayArg<A, O extends Identifiable, S extend
     }
 
     /**
-     * Obtain an {@link ObjectFilter} disjunction clause for this entity.
+     * Obtain an {@link Filter} disjunction clause for this entity.
      *
      * By applying this to a query, only the entities defined in this argument will be retrieved.
      *
@@ -40,10 +40,10 @@ public abstract class AbstractEntityArrayArg<A, O extends Identifiable, S extend
      *
      * @param service a service which provide the
      */
-    public ObjectFilter[] getObjectFilters( S service ) throws MalformedArgException {
+    public Filter[] getClause( S service ) throws MalformedArgException {
         try {
             //noinspection unchecked
-            return new ObjectFilter[] { service.getObjectFilter( this.getPropertyName( service ), ObjectFilter.Operator.in, ( Collection<String> ) this.getValue() ) };
+            return new Filter[] { service.getFilter( this.getPropertyName( service ), Filter.Operator.in, ( Collection<String> ) this.getValue() ) };
         } catch ( ClassCastException e ) {
             throw new NotImplementedException( "Filtering with non-string values is not supported.", e );
         }

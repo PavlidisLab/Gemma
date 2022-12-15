@@ -42,7 +42,7 @@ import ubic.gemma.persistence.service.AbstractDao;
 import ubic.gemma.persistence.service.AbstractQueryFilteringVoEnabledDao;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignDao;
 import ubic.gemma.persistence.util.Filters;
-import ubic.gemma.persistence.util.ObjectFilterQueryUtils;
+import ubic.gemma.persistence.util.FilterQueryUtils;
 import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.persistence.util.Sort;
 
@@ -111,12 +111,12 @@ public class CompositeSequenceDaoImpl extends AbstractQueryFilteringVoEnabledDao
                         + "where {0}.id is not null ", // needed to use formRestrictionCause()
                 OBJECT_ALIAS, ArrayDesignDao.OBJECT_ALIAS );
 
-        queryString += ObjectFilterQueryUtils.formRestrictionAndGroupByAndOrderByClauses( filters, null, sort );
+        queryString += FilterQueryUtils.formRestrictionAndGroupByAndOrderByClauses( filters, null, sort );
 
         Query query = this.getSessionFactory().getCurrentSession().createQuery( queryString );
 
         if ( filters != null ) {
-            ObjectFilterQueryUtils.addRestrictionParameters( query, filters );
+            FilterQueryUtils.addRestrictionParameters( query, filters );
         }
 
         return query;
@@ -132,13 +132,13 @@ public class CompositeSequenceDaoImpl extends AbstractQueryFilteringVoEnabledDao
                 OBJECT_ALIAS, ArrayDesignDao.OBJECT_ALIAS );
 
         if ( filters != null ) {
-            queryString += ObjectFilterQueryUtils.formRestrictionClause( filters );
+            queryString += FilterQueryUtils.formRestrictionClause( filters );
         }
 
         Query query = this.getSessionFactory().getCurrentSession().createQuery( queryString );
 
         if ( filters != null ) {
-            ObjectFilterQueryUtils.addRestrictionParameters( query, filters );
+            FilterQueryUtils.addRestrictionParameters( query, filters );
         }
 
         return query;

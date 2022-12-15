@@ -53,7 +53,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 /**
  * Endpoint for {@link ubic.gemma.model.analysis.AnalysisResultSet}
@@ -107,7 +106,7 @@ public class AnalysisResultSetsWebService {
             des = databaseEntries.getEntities( databaseEntryService );
         }
         return Responder.paginate( expressionAnalysisResultSetService.findByBioAssaySetInAndDatabaseEntryInLimit(
-                bas, des, filters.getObjectFilters( expressionAnalysisResultSetService ), offset.getValue(), limit.getValue(), sort.getSort( expressionAnalysisResultSetService ) ) );
+                bas, des, filters.getFilters( expressionAnalysisResultSetService ), offset.getValue(), limit.getValue(), sort.getSort( expressionAnalysisResultSetService ) ) );
     }
 
     private static final String TSV_EXAMPLE = "# If you use this file for your research, please cite:\n" +

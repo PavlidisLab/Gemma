@@ -21,11 +21,8 @@ package ubic.gemma.persistence.service.genome.taxon;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonValueObject;
 import ubic.gemma.persistence.service.FilteringVoEnabledDao;
-import ubic.gemma.persistence.util.ObjectFilter;
-import ubic.gemma.persistence.util.Slice;
 
 import java.util.Collection;
-import java.util.List;
 
 /**
  * @see ubic.gemma.model.genome.Taxon

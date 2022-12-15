@@ -8,9 +8,9 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 /**
- * Utilities for integrating {@link ObjectFilter} into {@link org.hibernate.Query}.
+ * Utilities for integrating {@link Filter} into {@link org.hibernate.Query}.
  */
-public class ObjectFilterQueryUtils {
+public class FilterQueryUtils {
 
     /**
      * Form a property name with an alias.
@@ -84,36 +84,36 @@ public class ObjectFilterQueryUtils {
             return "";
         int i = 0;
         StringBuilder conjunction = new StringBuilder();
-        for ( ObjectFilter[] filterArray : filters ) {
-            if ( filterArray == null || filterArray.length == 0 )
+        for ( Filter[] clause : filters ) {
+            if ( clause == null || clause.length == 0 )
                 continue;
             StringBuilder disjunction = new StringBuilder();
             boolean first = true;
-            for ( ObjectFilter filter : filterArray ) {
-                if ( filter == null )
+            for ( Filter subClause : clause ) {
+                if ( subClause == null )
                     continue;
                 if ( !first )
                     disjunction.append( " or " );
 
-                if ( filter.getPropertyName().endsWith( ".size" ) ) {
-                    disjunction.append( "size(" ).append( formPropertyName( filter.getObjectAlias(), filter.getPropertyName() ) ).append( ')' ).append( " " );
+                if ( subClause.getPropertyName().endsWith( ".size" ) ) {
+                    disjunction.append( "size(" ).append( formPropertyName( subClause.getObjectAlias(), subClause.getPropertyName() ) ).append( ')' ).append( " " );
                 } else {
                     disjunction
-                            .append( formPropertyName( filter.getObjectAlias(), filter.getPropertyName() ) ).append( " " );
+                            .append( formPropertyName( subClause.getObjectAlias(), subClause.getPropertyName() ) ).append( " " );
                 }
-                String paramName = formParamName( filter.getObjectAlias(), filter.getPropertyName() ) + ( ++i );
+                String paramName = formParamName( subClause.getObjectAlias(), subClause.getPropertyName() ) + ( ++i );
 
                 // we need to handle two special cases when comparing to NULL which cannot use == or != operators.
-                if ( filter.getOperator().equals( ObjectFilter.Operator.eq ) && filter.getRequiredValue() == null ) {
+                if ( subClause.getOperator().equals( Filter.Operator.eq ) && subClause.getRequiredValue() == null ) {
                     disjunction.append( "is" );
-                } else if ( filter.getOperator().equals( ObjectFilter.Operator.notEq ) && filter.getRequiredValue() == null ) {
+                } else if ( subClause.getOperator().equals( Filter.Operator.notEq ) && subClause.getRequiredValue() == null ) {
                     disjunction.append( "is not" );
                 } else {
-                    disjunction.append( filter.getOperator().getSqlToken() );
+                    disjunction.append( subClause.getOperator().getSqlToken() );
                 }
 
                 disjunction.append( " " );
-                if ( filter.getRequiredValue() instanceof Collection<?> ) {
+                if ( subClause.getRequiredValue() instanceof Collection<?> ) {
                     disjunction
                             .append( "(" ).append( ":" ).append( paramName ).append( ")" );
                 } else {
@@ -142,13 +142,13 @@ public class ObjectFilterQueryUtils {
     public static String formRestrictionAndGroupByAndOrderByClauses( @Nullable Filters filters, @Nullable String groupBy, @Nullable Sort sort ) {
         String queryString = "";
         if ( filters != null ) {
-            queryString += ObjectFilterQueryUtils.formRestrictionClause( filters );
+            queryString += FilterQueryUtils.formRestrictionClause( filters );
         }
         if ( groupBy != null ) {
             queryString += " group by " + groupBy;
         }
         if ( sort != null ) {
-            queryString += ObjectFilterQueryUtils.formOrderByClause( sort );
+            queryString += FilterQueryUtils.formOrderByClause( sort );
         }
         return queryString;
     }
@@ -160,7 +160,7 @@ public class ObjectFilterQueryUtils {
      * Use this if you've appended {@link #formRestrictionClause(Filters)} to the query so that the provided
      * object filters will be bound.
      * <p>
-     * If the {@link ObjectFilter#getRequiredValue()} is a {@link Collection}, it will be sorted and duplicates will be
+     * If the {@link Filter#getRequiredValue()} is a {@link Collection}, it will be sorted and duplicates will be
      * excluded.
      *
      * @param query   the query that needs parameters populated.
@@ -168,21 +168,21 @@ public class ObjectFilterQueryUtils {
      */
     public static void addRestrictionParameters( Query query, Filters filters ) {
         int i = 0;
-        for ( ObjectFilter[] filterArray : filters ) {
-            if ( filterArray == null )
+        for ( Filter[] clause : filters ) {
+            if ( clause == null )
                 continue;
-            for ( ObjectFilter filter : filterArray ) {
-                if ( filter == null )
+            for ( Filter subClause : clause ) {
+                if ( subClause == null )
                     continue;
-                String paramName = formParamName( filter.getObjectAlias(), filter.getPropertyName() ) + ( ++i );
-                if ( filter.getOperator().equals( ObjectFilter.Operator.in ) ) {
+                String paramName = formParamName( subClause.getObjectAlias(), subClause.getPropertyName() ) + ( ++i );
+                if ( subClause.getOperator().equals( Filter.Operator.in ) ) {
                     // order is unimportant for this operation, so we can ensure that it is consistent and therefore cacheable
-                    query.setParameterList( paramName, Objects.requireNonNull( ( Collection<?> ) filter.getRequiredValue(), "Required value cannot be null for a collection.." )
+                    query.setParameterList( paramName, Objects.requireNonNull( ( Collection<?> ) subClause.getRequiredValue(), "Required value cannot be null for a collection.." )
                             .stream().sorted().distinct().collect( Collectors.toList() ) );
-                } else if ( filter.getOperator().equals( ObjectFilter.Operator.like ) ) {
-                    query.setParameter( paramName, "%" + filter.getRequiredValue() + "%" );
+                } else if ( subClause.getOperator().equals( Filter.Operator.like ) ) {
+                    query.setParameter( paramName, "%" + subClause.getRequiredValue() + "%" );
                 } else {
-                    query.setParameter( paramName, filter.getRequiredValue() );
+                    query.setParameter( paramName, subClause.getRequiredValue() );
                 }
             }
         }

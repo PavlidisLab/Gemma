@@ -23,7 +23,6 @@ import org.apache.commons.lang3.time.StopWatch;
 import org.hibernate.*;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
-import org.hibernate.internal.CriteriaImpl;
 import org.hibernate.sql.JoinType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
@@ -172,9 +171,9 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilterin
     }
 
     @Override
-    public Slice<DifferentialExpressionAnalysisResultSetValueObject> findByBioAssaySetInAndDatabaseEntryInLimit( @Nullable Collection<BioAssaySet> bioAssaySets, @Nullable Collection<DatabaseEntry> databaseEntries, @Nullable Filters objectFilters, int offset, int limit, @Nullable Sort sort ) {
-        Criteria query = getLoadValueObjectsCriteria( objectFilters );
-        Criteria totalElementsQuery = getLoadValueObjectsCriteria( objectFilters );
+    public Slice<DifferentialExpressionAnalysisResultSetValueObject> findByBioAssaySetInAndDatabaseEntryInLimit( @Nullable Collection<BioAssaySet> bioAssaySets, @Nullable Collection<DatabaseEntry> databaseEntries, @Nullable Filters filters, int offset, int limit, @Nullable Sort sort ) {
+        Criteria query = getLoadValueObjectsCriteria( filters );
+        Criteria totalElementsQuery = getLoadValueObjectsCriteria( filters );
 
         if ( bioAssaySets != null ) {
             query.add( Restrictions.in( "a.experimentAnalyzed", bioAssaySets ) );
@@ -224,7 +223,7 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilterin
                 .createAlias( "ef.factorValues", "fv", JoinType.LEFT_OUTER_JOIN );
 
         // apply filtering
-        query.add( ObjectFilterCriteriaUtils.formRestrictionClause( filters ) );
+        query.add( FilterCriteriaUtils.formRestrictionClause( filters ) );
 
         // apply the ACL on the associated EE (or EE subset)
         query.add( Restrictions.or(

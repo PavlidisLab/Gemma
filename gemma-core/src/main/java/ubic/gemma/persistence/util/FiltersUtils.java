@@ -5,12 +5,12 @@ import org.apache.commons.lang3.ArrayUtils;
 import javax.annotation.Nullable;
 
 /**
- * Utilities for working with {@link Filters} and {@link ObjectFilter}.
+ * Utilities for working with {@link Filters} and {@link Filter}.
  */
 public class FiltersUtils {
 
     /**
-     * Check if an alias is mentioned in a set of {@link ObjectFilter}.
+     * Check if an alias is mentioned in a set of {@link Filter}.
      *
      * This should be used to eliminate parts of an HQL query that are not mentioned in the filters.
      *
@@ -22,13 +22,13 @@ public class FiltersUtils {
         }
         if ( filters == null )
             return false;
-        for ( ObjectFilter[] filter : filters ) {
-            if ( filter == null )
+        for ( Filter[] clause : filters ) {
+            if ( clause == null )
                 continue;
-            for ( ObjectFilter f : filter ) {
-                if ( f == null )
+            for ( Filter subClause : clause ) {
+                if ( subClause == null )
                     continue;
-                if ( ArrayUtils.contains( aliases, f.getObjectAlias() ) ) {
+                if ( ArrayUtils.contains( aliases, subClause.getObjectAlias() ) ) {
                     return true;
                 }
             }

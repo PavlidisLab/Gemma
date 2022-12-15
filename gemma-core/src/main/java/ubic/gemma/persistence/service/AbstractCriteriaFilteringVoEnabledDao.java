@@ -13,7 +13,7 @@ import org.springframework.transaction.support.TransactionTemplate;
 import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.persistence.util.Filters;
-import ubic.gemma.persistence.util.ObjectFilterCriteriaUtils;
+import ubic.gemma.persistence.util.FilterCriteriaUtils;
 import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.persistence.util.Sort;
 
@@ -22,12 +22,12 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
-import static ubic.gemma.persistence.util.ObjectFilterQueryUtils.formPropertyName;
+import static ubic.gemma.persistence.util.FilterQueryUtils.formPropertyName;
 
 /**
  * Partial implementation of {@link FilteringVoEnabledDao} based on the Hibernate {@link Criteria} API.
  *
- * @see ubic.gemma.persistence.util.ObjectFilterCriteriaUtils to obtain {@link org.hibernate.criterion.DetachedCriteria}
+ * @see FilterCriteriaUtils to obtain {@link org.hibernate.criterion.DetachedCriteria}
  * from a {@link Filters}.
  * @see ubic.gemma.persistence.util.AclCriteriaUtils for utilities to include ACL constraints on the VOs at the
  * database-level.
@@ -44,13 +44,13 @@ public abstract class AbstractCriteriaFilteringVoEnabledDao<O extends Identifiab
     /**
      * Obtain a {@link Criteria} for loading VOs.
      *
-     * @see ObjectFilterCriteriaUtils#formRestrictionClause(Filters) to obtain a {@link org.hibernate.criterion.DetachedCriteria}
+     * @see FilterCriteriaUtils#formRestrictionClause(Filters) to obtain a {@link org.hibernate.criterion.DetachedCriteria}
      * from a set of filter clauses.
      */
     protected Criteria getLoadValueObjectsCriteria( @Nullable Filters filters ) {
         return this.getSessionFactory().getCurrentSession()
                 .createCriteria( elementClass )
-                .add( ObjectFilterCriteriaUtils.formRestrictionClause( filters ) );
+                .add( FilterCriteriaUtils.formRestrictionClause( filters ) );
     }
 
     @Override
@@ -101,12 +101,12 @@ public abstract class AbstractCriteriaFilteringVoEnabledDao<O extends Identifiab
     }
 
     @Override
-    public List<VO> loadValueObjectsPreFilter( @Nullable Filters objectFilters, @Nullable Sort sort ) {
+    public List<VO> loadValueObjectsPreFilter( @Nullable Filters filters, @Nullable Sort sort ) {
         StopWatch stopWatch = StopWatch.createStarted();
         StopWatch queryStopWatch = StopWatch.create();
         StopWatch postProcessingStopWatch = StopWatch.create();
 
-        Criteria query = getLoadValueObjectsCriteria( objectFilters );
+        Criteria query = getLoadValueObjectsCriteria( filters );
 
         if ( sort != null ) {
             addOrder( query, sort );

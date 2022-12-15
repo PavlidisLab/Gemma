@@ -9,10 +9,10 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * Represents a conjunction of disjunctions of {@link ObjectFilter}.
+ * Represents a conjunction of disjunctions of {@link Filter}.
  * @author poirigui
  */
-public class Filters implements Iterable<ObjectFilter[]> {
+public class Filters implements Iterable<Filter[]> {
 
     /**
      * Builder for a disjunctive sub-clause.
@@ -21,7 +21,7 @@ public class Filters implements Iterable<ObjectFilter[]> {
 
         private final Filters filters;
 
-        private final List<ObjectFilter> subClauses = new ArrayList<>();
+        private final List<Filter> subClauses = new ArrayList<>();
 
         private FiltersClauseBuilder( Filters filters ) {
             this.filters = filters;
@@ -31,8 +31,8 @@ public class Filters implements Iterable<ObjectFilter[]> {
          * Add a sub-clause.
          */
         @CheckReturnValue
-        public FiltersClauseBuilder or( ObjectFilter objectFilter ) {
-            subClauses.add( objectFilter );
+        public FiltersClauseBuilder or( Filter filter ) {
+            subClauses.add( filter );
             return this;
         }
 
@@ -40,12 +40,12 @@ public class Filters implements Iterable<ObjectFilter[]> {
          * Add a sub-clause explicitly.
          */
         @CheckReturnValue
-        public FiltersClauseBuilder or( @Nullable String objectAlias, String propertyName, Class<?> propertyType, ObjectFilter.Operator operator, Object requiredValue ) {
-            return or( new ObjectFilter( objectAlias, propertyName, propertyType, operator, requiredValue ) );
+        public FiltersClauseBuilder or( @Nullable String objectAlias, String propertyName, Class<?> propertyType, Filter.Operator operator, Object requiredValue ) {
+            return or( Filter.by( objectAlias, propertyName, propertyType, operator, requiredValue ) );
         }
 
         public Filters build() {
-            return this.filters.and( subClauses.toArray( new ObjectFilter[0] ) );
+            return this.filters.and( subClauses.toArray( new Filter[0] ) );
         }
 
         /**
@@ -64,23 +64,23 @@ public class Filters implements Iterable<ObjectFilter[]> {
     }
 
     /**
-     * Create a singleton {@link Filters} from a {@link ObjectFilter}.
+     * Create a singleton {@link Filters} from a {@link Filter}.
      *
-     * @param  filter the filter to create the {@link Filters} with
+     * @param subClauses an array of sub-clause to create the {@link Filters} with
      * @return a {@link Filters} with the given object filter as only clause
      */
-    public static Filters singleFilter( ObjectFilter filter ) {
-        return new Filters().and( filter );
+    public static Filters by( Filter... subClauses ) {
+        return new Filters().and( subClauses );
     }
 
     /**
      * Create a singleton {@link Filters} from an explicit clause.
      */
-    public static Filters singleFilter( @Nullable String objectAlias, String propertyName, Class<?> propertyType, ObjectFilter.Operator operator, @Nullable Object requiredValue ) {
-        return singleFilter( new ObjectFilter( objectAlias, propertyName, propertyType, operator, requiredValue ) );
+    public static Filters by( @Nullable String objectAlias, String propertyName, Class<?> propertyType, Filter.Operator operator, @Nullable Object requiredValue ) {
+        return by( Filter.by( objectAlias, propertyName, propertyType, operator, requiredValue ) );
     }
 
-    private final ArrayList<ObjectFilter[]> clauses;
+    private final ArrayList<Filter[]> clauses;
 
     private Filters() {
         this.clauses = new ArrayList<>();
@@ -94,9 +94,9 @@ public class Filters implements Iterable<ObjectFilter[]> {
     }
 
     /**
-     * Add a clause of one or more {@link ObjectFilter} sub-clauses to the conjunction.
+     * Add a clause of one or more {@link Filter} sub-clauses to the conjunction.
      */
-    public Filters and( ObjectFilter... filters ) {
+    public Filters and( Filter... filters ) {
         clauses.add( filters );
         return this;
     }
@@ -104,8 +104,8 @@ public class Filters implements Iterable<ObjectFilter[]> {
     /**
      * Add a clause of one explicit clause to the conjunction.
      */
-    public Filters and( @Nullable String objectAlias, String propertyName, Class<?> propertyType, ObjectFilter.Operator operator, Object requiredValue ) {
-        return and( new ObjectFilter( objectAlias, propertyName, propertyType, operator, requiredValue ) );
+    public Filters and( @Nullable String objectAlias, String propertyName, Class<?> propertyType, Filter.Operator operator, Object requiredValue ) {
+        return and( Filter.by( objectAlias, propertyName, propertyType, operator, requiredValue ) );
     }
 
     /**
@@ -122,7 +122,7 @@ public class Filters implements Iterable<ObjectFilter[]> {
      * Obtain an iterator over the clauses contained in this conjunction.
      */
     @Override
-    public Iterator<ObjectFilter[]> iterator() {
+    public Iterator<Filter[]> iterator() {
         return clauses.iterator();
     }
 
@@ -135,7 +135,7 @@ public class Filters implements Iterable<ObjectFilter[]> {
                         return conjunction[0].toString();
                     } else {
                         return "(" + Arrays.stream( conjunction )
-                                .map( ObjectFilter::toString )
+                                .map( Filter::toString )
                                 .collect( Collectors.joining( " or " ) ) + ")";
                     }
                 } )

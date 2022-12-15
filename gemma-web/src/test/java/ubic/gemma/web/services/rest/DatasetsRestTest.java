@@ -120,7 +120,7 @@ public class DatasetsRestTest extends BaseSpringWebTest {
     @Category(SlowTest.class)
     public void testAllFilterByIdIn() {
         FilterArg filterArg = FilterArg.valueOf( "id in (" + ees.get( 0 ).getId() + ")" );
-        assertThat( filterArg.getObjectFilters( expressionExperimentService ) )
+        assertThat( filterArg.getFilters( expressionExperimentService ) )
                 .extracting( of -> of[0] )
                 .first()
                 .hasFieldOrPropertyWithValue( "objectAlias", ExpressionExperimentDao.OBJECT_ALIAS )
@@ -144,7 +144,7 @@ public class DatasetsRestTest extends BaseSpringWebTest {
     @Category(SlowTest.class)
     public void testAllFilterByShortName() {
         FilterArg filterArg = FilterArg.valueOf( "shortName = " + ees.get( 0 ).getShortName() );
-        assertThat( filterArg.getObjectFilters( expressionExperimentService ) )
+        assertThat( filterArg.getFilters( expressionExperimentService ) )
                 .extracting( of -> of[0] )
                 .first()
                 .hasFieldOrPropertyWithValue( "objectAlias", ExpressionExperimentDao.OBJECT_ALIAS )
@@ -168,7 +168,7 @@ public class DatasetsRestTest extends BaseSpringWebTest {
     @Category(SlowTest.class)
     public void testAllFilterByShortNameIn() {
         FilterArg filterArg = FilterArg.valueOf( "shortName in (" + ees.get( 0 ).getShortName() + ")" );
-        assertThat( filterArg.getObjectFilters( expressionExperimentService ) )
+        assertThat( filterArg.getFilters( expressionExperimentService ) )
                 .extracting( of -> of[0] )
                 .first()
                 .hasFieldOrPropertyWithValue( "objectAlias", ExpressionExperimentDao.OBJECT_ALIAS )
@@ -192,16 +192,16 @@ public class DatasetsRestTest extends BaseSpringWebTest {
     @Category(SlowTest.class)
     public void testAllFilterByIdInOrShortNameIn() {
         FilterArg filterArg = FilterArg.valueOf( "id in (" + ees.get( 0 ).getId() + ") or shortName in (" + ees.get( 1 ).getShortName() + ")" );
-        assertThat( filterArg.getObjectFilters( expressionExperimentService ) )
+        assertThat( filterArg.getFilters( expressionExperimentService ) )
                 .hasSize( 1 );
         /*
-        assertThat( filterArg.getObjectFilters( expressionExperimentService ).get( 0 ) )
+        assertThat( filterArg.getFilters( expressionExperimentService ).get( 0 ) )
                 .hasSize( 2 );
-        assertThat( filterArg.getObjectFilters( expressionExperimentService ).get( 0 )[0] )
+        assertThat( filterArg.getFilters( expressionExperimentService ).get( 0 )[0] )
                 .hasFieldOrPropertyWithValue( "objectAlias", ExpressionExperimentDao.OBJECT_ALIAS )
                 .hasFieldOrPropertyWithValue( "propertyName", "id" )
                 .hasFieldOrPropertyWithValue( "requiredValue", Collections.singletonList( ees.get( 0 ).getId() ) );
-        assertThat( filterArg.getObjectFilters( expressionExperimentService ).get( 0 )[1] )
+        assertThat( filterArg.getFilters( expressionExperimentService ).get( 0 )[1] )
                 .hasFieldOrPropertyWithValue( "objectAlias", ExpressionExperimentDao.OBJECT_ALIAS )
                 .hasFieldOrPropertyWithValue( "propertyName", "shortName" )
                 .hasFieldOrPropertyWithValue( "requiredValue", Collections.singletonList( ees.get( 1 ).getShortName() ) );

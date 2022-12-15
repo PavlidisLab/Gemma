@@ -23,18 +23,16 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonValueObject;
-import ubic.gemma.persistence.service.AbstractDao;
 import ubic.gemma.persistence.service.AbstractQueryFilteringVoEnabledDao;
 import ubic.gemma.persistence.util.BusinessKey;
 import ubic.gemma.persistence.util.Filters;
-import ubic.gemma.persistence.util.ObjectFilterQueryUtils;
+import ubic.gemma.persistence.util.FilterQueryUtils;
 import ubic.gemma.persistence.util.Sort;
 
 import javax.annotation.Nullable;
 import java.text.MessageFormat;
 import java.util.Collection;
 import java.util.EnumSet;
-import java.util.List;
 
 /**
  * @author pavlidis
@@ -111,12 +109,12 @@ public class TaxonDaoImpl extends AbstractQueryFilteringVoEnabledDao<Taxon, Taxo
                 + "left join {0}.externalDatabase as ED " // external db
                 + "where {0}.id is not null ", OBJECT_ALIAS ); // needed to use formRestrictionCause()
 
-        queryString += ObjectFilterQueryUtils.formRestrictionAndGroupByAndOrderByClauses( filters, null, sort );
+        queryString += FilterQueryUtils.formRestrictionAndGroupByAndOrderByClauses( filters, null, sort );
 
         Query query = this.getSessionFactory().getCurrentSession().createQuery( queryString );
 
         if ( filters != null ) {
-            ObjectFilterQueryUtils.addRestrictionParameters( query, filters );
+            FilterQueryUtils.addRestrictionParameters( query, filters );
         }
 
         return query;
@@ -132,13 +130,13 @@ public class TaxonDaoImpl extends AbstractQueryFilteringVoEnabledDao<Taxon, Taxo
                 + "where {0}.id is not null ", OBJECT_ALIAS ); // needed to use formRestrictionCause()
 
         if ( filters != null ) {
-            queryString += ObjectFilterQueryUtils.formRestrictionClause( filters );
+            queryString += FilterQueryUtils.formRestrictionClause( filters );
         }
 
         Query query = this.getSessionFactory().getCurrentSession().createQuery( queryString );
 
         if ( filters != null ) {
-            ObjectFilterQueryUtils.addRestrictionParameters( query, filters );
+            FilterQueryUtils.addRestrictionParameters( query, filters );
         }
 
         return query;

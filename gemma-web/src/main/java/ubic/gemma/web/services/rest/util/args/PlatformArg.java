@@ -9,7 +9,7 @@ import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.util.Filters;
-import ubic.gemma.persistence.util.ObjectFilter;
+import ubic.gemma.persistence.util.Filter;
 import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.web.services.rest.util.MalformedArgException;
 
@@ -53,7 +53,7 @@ public abstract class PlatformArg<T> extends AbstractEntityArg<T, ArrayDesign, A
     public Slice<ExpressionExperimentValueObject> getExperiments( ArrayDesignService service,
             ExpressionExperimentService eeService, int limit, int offset ) {
         ArrayDesign ad = this.getEntity( service );
-        Filters filters = Filters.singleFilter( service.getObjectFilter( "id", ObjectFilter.Operator.eq, ad.getId().toString() ) );
+        Filters filters = Filters.by( service.getFilter( "id", Filter.Operator.eq, ad.getId().toString() ) );
         return eeService.loadValueObjectsPreFilter( filters, service.getSort( "id", null ), offset, limit );
     }
 
@@ -66,7 +66,7 @@ public abstract class PlatformArg<T> extends AbstractEntityArg<T, ArrayDesign, A
     public Slice<CompositeSequenceValueObject> getElements( ArrayDesignService service,
             CompositeSequenceService csService, int limit, int offset ) {
         final ArrayDesign ad = this.getEntity( service );
-        Filters filters = Filters.singleFilter( service.getObjectFilter( "id", ObjectFilter.Operator.eq, ad.getId().toString() ) );
+        Filters filters = Filters.by( service.getFilter( "id", Filter.Operator.eq, ad.getId().toString() ) );
         return csService.loadValueObjectsPreFilter( filters, null, offset, limit );
 
     }

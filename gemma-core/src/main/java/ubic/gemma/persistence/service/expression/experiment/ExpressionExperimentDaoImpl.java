@@ -56,6 +56,7 @@ import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignDao;
 import ubic.gemma.persistence.service.expression.bioAssay.BioAssayDao;
 import ubic.gemma.persistence.service.genome.taxon.TaxonDao;
 import ubic.gemma.persistence.util.*;
+import ubic.gemma.persistence.util.Filter;
 
 import javax.annotation.Nullable;
 import java.text.MessageFormat;
@@ -1119,11 +1120,11 @@ public class ExpressionExperimentDaoImpl
             }
             List<Long> idList = new ArrayList<>( ids );
             Collections.sort( idList );
-            filters.and( OBJECT_ALIAS, "id", Long.class, ObjectFilter.Operator.in, idList );
+            filters.and( OBJECT_ALIAS, "id", Long.class, Filter.Operator.in, idList );
         }
 
         if ( taxon != null ) {
-            filters.and( TaxonDao.OBJECT_ALIAS, "id", Long.class, ObjectFilter.Operator.eq, taxon.getId() );
+            filters.and( TaxonDao.OBJECT_ALIAS, "id", Long.class, Filter.Operator.eq, taxon.getId() );
         }
 
         return this.loadDetailsValueObjects( filters, sort, offset, limit );
@@ -1135,7 +1136,7 @@ public class ExpressionExperimentDaoImpl
             return Collections.emptyList();
         }
 
-        Filters filters = Filters.singleFilter( OBJECT_ALIAS, "id", Long.class, ObjectFilter.Operator.in, ids );
+        Filters filters = Filters.by( OBJECT_ALIAS, "id", Long.class, Filter.Operator.in, ids );
 
         return this.loadDetailsValueObjects( filters, null, 0, 0 );
     }
@@ -1387,13 +1388,13 @@ public class ExpressionExperimentDaoImpl
 
         // FIXME: this is necessary because of the ACL jointure, it can also become necessary if bioAssays are included as well
         // unlike in ArrayDesignDaoImpl, a distinct is not possible because we select the ACL AOI and SID
-        queryString += ObjectFilterQueryUtils.formRestrictionAndGroupByAndOrderByClauses( filters, OBJECT_ALIAS, sort );
+        queryString += FilterQueryUtils.formRestrictionAndGroupByAndOrderByClauses( filters, OBJECT_ALIAS, sort );
 
         Query query = this.getSessionFactory().getCurrentSession().createQuery( queryString );
 
         AclQueryUtils.addAclJoinParameters( query, ExpressionExperiment.class );
         AclQueryUtils.addAclRestrictionParameters( query );
-        ObjectFilterQueryUtils.addRestrictionParameters( query, filters );
+        FilterQueryUtils.addRestrictionParameters( query, filters );
 
         return query;
     }
@@ -1445,13 +1446,13 @@ public class ExpressionExperimentDaoImpl
         queryString += AclQueryUtils.formAclJoinClause( OBJECT_ALIAS );
 
         queryString += AclQueryUtils.formAclRestrictionClause();
-        queryString += ObjectFilterQueryUtils.formRestrictionClause( filters );
+        queryString += FilterQueryUtils.formRestrictionClause( filters );
 
         Query query = this.getSessionFactory().getCurrentSession().createQuery( queryString );
 
         AclQueryUtils.addAclJoinParameters( query, ExpressionExperiment.class );
         AclQueryUtils.addAclRestrictionParameters( query );
-        ObjectFilterQueryUtils.addRestrictionParameters( query, filters );
+        FilterQueryUtils.addRestrictionParameters( query, filters );
 
         return query;
     }
@@ -1475,12 +1476,12 @@ public class ExpressionExperimentDaoImpl
     protected FilterablePropertyMeta getFilterablePropertyMeta( String propertyName ) {
         if ( propertyName.startsWith( "characteristics." ) && !propertyName.equals( "characteristics.size" ) ) {
             String fieldName = propertyName.replaceFirst( "^characteristics\\.", "" );
-            return new FilterablePropertyMeta( CharacteristicDao.OBJECT_ALIAS, fieldName, resolveObjectFilterPropertyType( fieldName, Characteristic.class ), null );
+            return new FilterablePropertyMeta( CharacteristicDao.OBJECT_ALIAS, fieldName, resolveFilterPropertyType( fieldName, Characteristic.class ), null );
         }
 
         if ( propertyName.startsWith( "bioAssays." ) && !propertyName.equals( "bioAssays.size" ) ) {
             String fieldName = propertyName.replaceFirst( "^bioAssays\\.", "" );
-            return new FilterablePropertyMeta( BioAssayDao.OBJECT_ALIAS, fieldName, resolveObjectFilterPropertyType( fieldName, BioAssay.class ), null );
+            return new FilterablePropertyMeta( BioAssayDao.OBJECT_ALIAS, fieldName, resolveFilterPropertyType( fieldName, BioAssay.class ), null );
         }
 
         if ( propertyName.equals( "taxon" ) ) {

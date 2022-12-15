@@ -7,7 +7,7 @@ import org.springframework.test.context.transaction.TransactionalTestExecutionLi
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.core.util.test.BaseSpringContextTest;
 import ubic.gemma.persistence.util.Filters;
-import ubic.gemma.persistence.util.ObjectFilter;
+import ubic.gemma.persistence.util.Filter;
 
 @TestExecutionListeners(TransactionalTestExecutionListener.class)
 public class QuantitationTypeDaoTest extends BaseSpringContextTest {
@@ -18,7 +18,7 @@ public class QuantitationTypeDaoTest extends BaseSpringContextTest {
     @Test
     @Transactional
     public void testLoadValueObjectsPreFilter() {
-        Filters filters = Filters.singleFilter( ObjectFilter.parseObjectFilter( null, "name", String.class, ObjectFilter.Operator.eq, "FPKM" ) );
+        Filters filters = Filters.by( Filter.parse( null, "name", String.class, Filter.Operator.eq, "FPKM" ) );
         quantitationTypeDao.loadValueObjectsPreFilter( filters, null );
     }
 }

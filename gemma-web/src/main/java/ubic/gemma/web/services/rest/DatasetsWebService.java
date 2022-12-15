@@ -137,7 +137,7 @@ public class DatasetsWebService {
             @QueryParam("sort") @DefaultValue("+id") SortArg sort // Optional, default +id
     ) {
         return Responder.paginate( service.loadValueObjectsPreFilter(
-                filter.getObjectFilters( expressionExperimentService ),
+                filter.getFilters( expressionExperimentService ),
                 sort.getSort( expressionExperimentService ),
                 offset.getValue(),
                 limit.getValue() ) );
@@ -168,11 +168,11 @@ public class DatasetsWebService {
             @QueryParam("limit") @DefaultValue("20") LimitArg limit, // Optional, default 20
             @QueryParam("sort") @DefaultValue("+id") SortArg sort // Optional, default +id
     ) {
-        Filters filters = filter.getObjectFilters( expressionExperimentService );
+        Filters filters = filter.getFilters( expressionExperimentService );
         if ( filters == null ) {
             filters = Filters.empty();
         }
-        filters.and( datasetsArg.getObjectFilters( service ) );
+        filters.and( datasetsArg.getClause( service ) );
         return Responder.paginate( service.loadValueObjectsPreFilter( filters, sort.getSort( expressionExperimentService ), offset.getValue(), limit.getValue() ) );
     }
 

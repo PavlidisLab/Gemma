@@ -979,13 +979,13 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
 
         queryString += AclQueryUtils.formAclJoinClause( OBJECT_ALIAS );
         queryString += AclQueryUtils.formAclRestrictionClause();
-        queryString += ObjectFilterQueryUtils.formRestrictionAndGroupByAndOrderByClauses( filters, null, sort );
+        queryString += FilterQueryUtils.formRestrictionAndGroupByAndOrderByClauses( filters, null, sort );
 
         Query query = this.getSessionFactory().getCurrentSession().createQuery( queryString );
 
         AclQueryUtils.addAclJoinParameters( query, ArrayDesign.class );
         AclQueryUtils.addAclRestrictionParameters( query );
-        ObjectFilterQueryUtils.addRestrictionParameters( query, filters );
+        FilterQueryUtils.addRestrictionParameters( query, filters );
 
         return query;
     }
@@ -1012,13 +1012,13 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
 
         queryString += AclQueryUtils.formAclJoinClause( OBJECT_ALIAS );
         queryString += AclQueryUtils.formAclRestrictionClause();
-        queryString += ObjectFilterQueryUtils.formRestrictionClause( filters );
+        queryString += FilterQueryUtils.formRestrictionClause( filters );
 
         Query query = this.getSessionFactory().getCurrentSession().createQuery( queryString );
 
         AclQueryUtils.addAclJoinParameters( query, ArrayDesign.class );
         AclQueryUtils.addAclRestrictionParameters( query );
-        ObjectFilterQueryUtils.addRestrictionParameters( query, filters );
+        FilterQueryUtils.addRestrictionParameters( query, filters );
 
         return query;
     }
@@ -1036,7 +1036,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
         // alias for primaryTaxon which is not discoverable in the VO
         if ( propertyName.startsWith( "taxon." ) ) {
             String fieldName = propertyName.replaceFirst( "^taxon\\.", "" );
-            return new FilterablePropertyMeta( "t", fieldName, resolveObjectFilterPropertyType( fieldName, Taxon.class ), "alias for primaryTaxon." + fieldName );
+            return new FilterablePropertyMeta( "t", fieldName, resolveFilterPropertyType( fieldName, Taxon.class ), "alias for primaryTaxon." + fieldName );
         }
 
         // handle cases such as taxon = 1

@@ -20,7 +20,6 @@ import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.persistence.service.FilteringService;
 import ubic.gemma.persistence.service.FilteringVoEnabledService;
 import ubic.gemma.persistence.util.Filters;
-import ubic.gemma.persistence.util.ObjectFilter;
 import ubic.gemma.persistence.util.Sort;
 import ubic.gemma.web.services.rest.util.MalformedArgException;
 
@@ -59,7 +58,7 @@ import java.util.List;
  * types)</li>
  * </ul>
  * <p>
- * See {@link ObjectFilter.Operator} for more details on the available operators.
+ * See {@link ubic.gemma.persistence.util.Filter.Operator} for more details on the available operators.
  * <p>
  * Properties, operators and required values must be delimited by spaces.
  * <p>
@@ -83,12 +82,12 @@ import java.util.List;
  *
  * Breaking the CNF results in an error.
  * <p>
- * The available properties on an entity can be restricted by the service layer via {@link FilteringService#getObjectFilter(String, ObjectFilter.Operator, String)}.
+ * The available properties on an entity can be restricted by the service layer via {@link FilteringService#getFilter(String, ubic.gemma.persistence.util.Filter.Operator, String)}.
  *
  * @author tesarst
  * @see Filters
- * @see ObjectFilter
- * @see ObjectFilter.Operator
+ * @see ubic.gemma.persistence.util.Filter
+ * @see ubic.gemma.persistence.util.Filter.Operator
  */
 @Schema(type = "string", description = "Filter results by matching the expression. The exact syntax is described in the attached external documentation.",
         externalDocs = @ExternalDocumentation(url = "https://gemma.msl.ubc.ca/resources/apidocs/ubic/gemma/web/services/rest/util/args/FilterArg.html"))
@@ -103,7 +102,7 @@ public class FilterArg extends AbstractArg<FilterArg.Filter> {
      *                          propertyValues will be the right operand of each given operator. <br> E.g:
      *                          <code>object.propertyName[0] isNot propertyValues[0];</code><br>
      */
-    private FilterArg( List<String[]> propertyNames, List<String[]> propertyValues, List<ObjectFilter.Operator[]> propertyOperators ) {
+    private FilterArg( List<String[]> propertyNames, List<String[]> propertyValues, List<ubic.gemma.persistence.util.Filter.Operator[]> propertyOperators ) {
         super( new Filter( propertyNames, propertyValues, propertyOperators ) );
     }
 
@@ -115,11 +114,11 @@ public class FilterArg extends AbstractArg<FilterArg.Filter> {
      *
      * @param service a filtering service that can resolve the properties types and relevant object alias to use
      * @return a {@link Filters} structure that is actually an iterable over a sequence of conjunction of disjunction of
-     * {@link ObjectFilter}, or null if the filter is empty.
+     * {@link ubic.gemma.persistence.util.Filter}, or null if the filter is empty.
      * @throws MalformedArgException if the filter cannot be parsed for the given {@link FilteringService}
      */
     @Nullable
-    public Filters getObjectFilters( FilteringService<?> service ) throws MalformedArgException {
+    public Filters getFilters( FilteringService<?> service ) throws MalformedArgException {
         Filter filter = getValue();
         if ( filter.propertyNames == null )
             return null;
@@ -127,16 +126,16 @@ public class FilterArg extends AbstractArg<FilterArg.Filter> {
 
         for ( int i = 0; i < filter.propertyNames.size(); i++ ) {
             String[] properties = filter.propertyNames.get( i );
-            ObjectFilter.Operator[] operators = filter.propertyOperators.get( i );
+            ubic.gemma.persistence.util.Filter.Operator[] operators = filter.propertyOperators.get( i );
             String[] values = filter.propertyValues.get( i );
             // this is guaranteed by how the filter array is constructed below
             assert properties.length == operators.length;
             assert properties.length == values.length;
-            ObjectFilter[] filterArray = new ObjectFilter[properties.length];
+            ubic.gemma.persistence.util.Filter[] filterArray = new ubic.gemma.persistence.util.Filter[properties.length];
             for ( int j = 0; j < properties.length; j++ ) {
                 try {
                     // these are user-supplied filters, so we need to do basic exception checking
-                    filterArray[j] = service.getObjectFilter( properties[j], operators[j], values[j] );
+                    filterArray[j] = service.getFilter( properties[j], operators[j], values[j] );
                 } catch ( IllegalArgumentException e ) {
                     throw new MalformedArgException( String.format( "The entity cannot be filtered by %s: %s", properties[j], e.getMessage() ), e );
                 }
@@ -154,9 +153,9 @@ public class FilterArg extends AbstractArg<FilterArg.Filter> {
 
         private final List<String[]> propertyNames;
         private final List<String[]> propertyValues;
-        private final List<ObjectFilter.Operator[]> propertyOperators;
+        private final List<ubic.gemma.persistence.util.Filter.Operator[]> propertyOperators;
 
-        private Filter( List<String[]> propertyNames, List<String[]> propertyValues, List<ObjectFilter.Operator[]> propertyOperators ) {
+        private Filter( List<String[]> propertyNames, List<String[]> propertyValues, List<ubic.gemma.persistence.util.Filter.Operator[]> propertyOperators ) {
             this.propertyNames = propertyNames;
             this.propertyValues = propertyValues;
             this.propertyOperators = propertyOperators;
@@ -186,13 +185,13 @@ public class FilterArg extends AbstractArg<FilterArg.Filter> {
     private static FilterArg parseFilterString( String s ) throws FilterArgParseException {
         List<String[]> propertyNames = new LinkedList<>();
         List<String[]> propertyValues = new LinkedList<>();
-        List<ObjectFilter.Operator[]> propertyOperators = new LinkedList<>();
+        List<ubic.gemma.persistence.util.Filter.Operator[]> propertyOperators = new LinkedList<>();
 
         // TODO: have a nicer way to tokenize the filter
         String[] parts = StringUtils.isBlank( s ) ? new String[0] : s.split( "\\s*,?\\s+" );
 
         List<String> propertyNamesDisjunction = new LinkedList<>();
-        List<ObjectFilter.Operator> propertyOperatorsDisjunction = new LinkedList<>();
+        List<ubic.gemma.persistence.util.Filter.Operator> propertyOperatorsDisjunction = new LinkedList<>();
         List<String> propertyValuesDisjunction = new LinkedList<>();
 
         int i = 0;
@@ -206,7 +205,7 @@ public class FilterArg extends AbstractArg<FilterArg.Filter> {
 
             // parse operator
             final int j = i++;
-            propertyOperatorsDisjunction.add( ObjectFilter.Operator.fromToken( parts[j] )
+            propertyOperatorsDisjunction.add( ubic.gemma.persistence.util.Filter.Operator.fromToken( parts[j] )
                     .orElseThrow( () -> new FilterArgParseException( String.format( "%s is not an accepted operator.", parts[j] ), j ) ) );
 
             // parse required value
@@ -216,7 +215,7 @@ public class FilterArg extends AbstractArg<FilterArg.Filter> {
                 // We either reached an 'AND', or the end of the string.
                 // Add the current disjunction.
                 propertyNames.add( propertyNamesDisjunction.toArray( new String[0] ) );
-                propertyOperators.add( propertyOperatorsDisjunction.toArray( new ObjectFilter.Operator[0] ) );
+                propertyOperators.add( propertyOperatorsDisjunction.toArray( new ubic.gemma.persistence.util.Filter.Operator[0] ) );
                 propertyValues.add( propertyValuesDisjunction.toArray( new String[0] ) );
                 // Start new disjunction lists
                 propertyNamesDisjunction = new LinkedList<>();

@@ -8,34 +8,34 @@ import java.util.Collection;
 import java.util.Objects;
 
 /**
- * Utilities for integrating {@link ObjectFilter} with Hibernate {@link Criteria} API.
+ * Utilities for integrating {@link Filter} with Hibernate {@link Criteria} API.
  * @author poirigui
  */
-public class ObjectFilterCriteriaUtils {
+public class FilterCriteriaUtils {
 
     /**
      * Form a restriction clause using a {@link Criterion}.
-     * @see ObjectFilterQueryUtils#formRestrictionClause(Filters)
-     * @param objectFilters the filters to use to create the clause
+     * @see FilterQueryUtils#formRestrictionClause(Filters)
+     * @param filters the filters to use to create the clause
      * @return a restriction clause that can be appended to a {@link Criteria} using {@link Criteria#add(Criterion)}
      */
-    public static Criterion formRestrictionClause( @Nullable Filters objectFilters ) {
+    public static Criterion formRestrictionClause( @Nullable Filters filters ) {
         Conjunction c = Restrictions.conjunction();
-        if ( objectFilters == null || objectFilters.isEmpty() )
+        if ( filters == null || filters.isEmpty() )
             return c;
-        for ( ObjectFilter[] filters : objectFilters ) {
-            if ( filters == null || filters.length == 0 )
+        for ( Filter[] clause : filters ) {
+            if ( clause == null || clause.length == 0 )
                 continue;
             Disjunction d = Restrictions.disjunction();
-            for ( ObjectFilter filter : filters ) {
-                d.add( formRestrictionClause( filter ) );
+            for ( Filter subClause : clause ) {
+                d.add( formRestrictionClause( subClause ) );
             }
             c.add( d );
         }
         return c;
     }
 
-    private static Criterion formRestrictionClause( ObjectFilter filter ) {
+    private static Criterion formRestrictionClause( Filter filter ) {
         String propertyName;
         if ( filter.getObjectAlias() != null ) {
             propertyName = filter.getObjectAlias() + "." + filter.getPropertyName();

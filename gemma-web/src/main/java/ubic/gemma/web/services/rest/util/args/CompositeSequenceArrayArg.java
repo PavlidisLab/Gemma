@@ -7,7 +7,7 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceDao;
 import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
-import ubic.gemma.persistence.util.ObjectFilter;
+import ubic.gemma.persistence.util.Filter;
 import ubic.gemma.web.services.rest.util.MalformedArgException;
 import ubic.gemma.web.services.rest.util.StringUtils;
 
@@ -49,7 +49,7 @@ public class CompositeSequenceArrayArg
         this.arrayDesign = arrayDesign;
     }
 
-    public ObjectFilter getPlatformFilter() {
-        return ObjectFilter.parseObjectFilter( CompositeSequenceDao.OBJECT_ALIAS, "arrayDesign.id", Long.class, ObjectFilter.Operator.eq, this.arrayDesign.getId().toString() );
+    public Filter getPlatformFilter() {
+        return Filter.parse( CompositeSequenceDao.OBJECT_ALIAS, "arrayDesign.id", Long.class, Filter.Operator.eq, this.arrayDesign.getId().toString() );
     }
 }

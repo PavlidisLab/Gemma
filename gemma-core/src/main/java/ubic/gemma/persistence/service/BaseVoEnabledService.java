@@ -1,9 +1,7 @@
 package ubic.gemma.persistence.service;
 
-import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.common.Identifiable;
-import ubic.gemma.persistence.util.ObjectFilter;
 
 import java.util.Collection;
 import java.util.List;

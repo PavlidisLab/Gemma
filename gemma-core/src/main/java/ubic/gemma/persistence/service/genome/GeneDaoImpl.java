@@ -523,7 +523,7 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
     }
 
     /**
-     * @param filters         see {@link ObjectFilterQueryUtils#formRestrictionClause(Filters)} filters argument for
+     * @param filters         see {@link FilterQueryUtils#formRestrictionClause(Filters)} filters argument for
      *                        description.
      * @return a Hibernated Query object ready to be used for TaxonVO retrieval.
      */
@@ -538,12 +538,12 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
                 + "left join fetch " + OBJECT_ALIAS + ".aliases " // aliases
                 + "where " + OBJECT_ALIAS + ".id is not null "; // needed to use formRestrictionCause()
 
-        queryString += ObjectFilterQueryUtils.formRestrictionAndGroupByAndOrderByClauses( filters, OBJECT_ALIAS, sort );
+        queryString += FilterQueryUtils.formRestrictionAndGroupByAndOrderByClauses( filters, OBJECT_ALIAS, sort );
 
         Query query = this.getSessionFactory().getCurrentSession().createQuery( queryString );
 
         if ( filters != null ) {
-            ObjectFilterQueryUtils.addRestrictionParameters( query, filters );
+            FilterQueryUtils.addRestrictionParameters( query, filters );
         }
 
         return query;
@@ -556,12 +556,12 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
                 + "left join " + OBJECT_ALIAS + ".taxon as " + "taxon" + " "// taxon
                 + "where " + OBJECT_ALIAS + ".id is not null "; // needed to use formRestrictionCause()
 
-        queryString += ObjectFilterQueryUtils.formRestrictionAndGroupByAndOrderByClauses( filters, OBJECT_ALIAS, null );
+        queryString += FilterQueryUtils.formRestrictionAndGroupByAndOrderByClauses( filters, OBJECT_ALIAS, null );
 
         Query query = this.getSessionFactory().getCurrentSession().createQuery( queryString );
 
         if ( filters != null ) {
-            ObjectFilterQueryUtils.addRestrictionParameters( query, filters );
+            FilterQueryUtils.addRestrictionParameters( query, filters );
         }
 
         return query;

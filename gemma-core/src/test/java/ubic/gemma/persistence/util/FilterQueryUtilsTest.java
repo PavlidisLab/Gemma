@@ -8,9 +8,9 @@ import java.util.Arrays;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
-import static ubic.gemma.persistence.util.ObjectFilterQueryUtils.*;
+import static ubic.gemma.persistence.util.FilterQueryUtils.*;
 
-public class ObjectFilterQueryUtilsTest {
+public class FilterQueryUtilsTest {
 
     @Test
     public void testFormParamName() {
@@ -22,12 +22,12 @@ public class ObjectFilterQueryUtilsTest {
     @Test
     public void testComplexClause() {
         Filters filters = Filters.empty()
-                .and( ObjectFilter.parseObjectFilter( "ee", "shortName", String.class, ObjectFilter.Operator.like, "GSE" ) )
-                .and( ObjectFilter.parseObjectFilter( "ee", "id", Long.class, ObjectFilter.Operator.in, "(1,2,3,4)" ) )
-                .and( ObjectFilter.parseObjectFilter( "ad", "taxonId", Long.class, ObjectFilter.Operator.eq, "9606" ) )
+                .and( Filter.parse( "ee", "shortName", String.class, Filter.Operator.like, "GSE" ) )
+                .and( Filter.parse( "ee", "id", Long.class, Filter.Operator.in, "(1,2,3,4)" ) )
+                .and( Filter.parse( "ad", "taxonId", Long.class, Filter.Operator.eq, "9606" ) )
                 .and()
-                .or( ObjectFilter.parseObjectFilter( "ee", "id", Long.class, ObjectFilter.Operator.in, "(1,2,3,4)" ) )
-                .or( ObjectFilter.parseObjectFilter( "ee", "id", Long.class, ObjectFilter.Operator.in, "(5,6,7,8)" ) )
+                .or( Filter.parse( "ee", "id", Long.class, Filter.Operator.in, "(1,2,3,4)" ) )
+                .or( Filter.parse( "ee", "id", Long.class, Filter.Operator.in, "(5,6,7,8)" ) )
                 .build();
         assertThat( formRestrictionClause( filters ) )
                 .isEqualTo( " and (ee.shortName like :ee_shortName1) and (ee.id in (:ee_id2)) and (ad.taxonId = :ad_taxonId3) and (ee.id in (:ee_id4) or ee.id in (:ee_id5))" );
@@ -43,7 +43,7 @@ public class ObjectFilterQueryUtilsTest {
 
     @Test
     public void testRestrictionClauseWithCollection() {
-        Filters filters = Filters.singleFilter( ObjectFilter.parseObjectFilter( "ee", "id", Long.class, ObjectFilter.Operator.in, "(1,2,3,4)" ) );
+        Filters filters = Filters.by( Filter.parse( "ee", "id", Long.class, Filter.Operator.in, "(1,2,3,4)" ) );
         assertThat( formRestrictionClause( filters ) )
                 .isEqualTo( " and (ee.id in (:ee_id1))" );
 
@@ -56,8 +56,8 @@ public class ObjectFilterQueryUtilsTest {
     public void testRestrictionClauseWithNullRequiredValue() {
         Filters filters = Filters.empty()
                 .and()
-                .or( new ObjectFilter( "ee", "id", Long.class, ObjectFilter.Operator.eq, null ) )
-                .or( new ObjectFilter( "ee", "id", Long.class, ObjectFilter.Operator.notEq, null ) )
+                .or( "ee", "id", Long.class, Filter.Operator.eq, null )
+                .or( "ee", "id", Long.class, Filter.Operator.notEq, null )
                 .build();
         assertThat( formRestrictionClause( filters ) )
                 .isEqualTo( " and (ee.id is :ee_id1 or ee.id is not :ee_id2)" );
@@ -70,7 +70,7 @@ public class ObjectFilterQueryUtilsTest {
 
     @Test
     public void testRestrictionClauseWithNullObjectAlias() {
-        Filters filters = Filters.singleFilter( null, "id", Long.class, ObjectFilter.Operator.eq, 12L );
+        Filters filters = Filters.by( null, "id", Long.class, Filter.Operator.eq, 12L );
         assertThat( formRestrictionClause( filters ) )
                 .isEqualTo( " and (id = :id1)" );
 
@@ -81,14 +81,14 @@ public class ObjectFilterQueryUtilsTest {
 
     @Test
     public void testFormRestrictionAndGroupByAndOrderByClauses() {
-        Filters filters = Filters.singleFilter( null, "id", Long.class, ObjectFilter.Operator.eq, 12L );
+        Filters filters = Filters.by( null, "id", Long.class, Filter.Operator.eq, 12L );
         assertThat( formRestrictionAndGroupByAndOrderByClauses( filters, "ee", Sort.by( "ee", "shortName" ) ) )
                 .isEqualTo( " and (id = :id1) group by ee order by ee.shortName" );
     }
 
     @Test
     public void testFormRestriction() {
-        assertThat( formRestrictionClause( Filters.singleFilter( "ee", "bioAssays.size", Integer.class, ObjectFilter.Operator.greaterThan, 4 ) ) )
+        assertThat( formRestrictionClause( Filters.by( "ee", "bioAssays.size", Integer.class, Filter.Operator.greaterThan, 4 ) ) )
                 .isEqualTo( " and (size(ee.bioAssays) > :ee_bioAssays_size1)" );
     }
 

@@ -6,6 +6,7 @@ import org.hibernate.Query;
 import org.hibernate.SessionFactory;
 import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.common.Identifiable;
+import ubic.gemma.persistence.util.FilterQueryUtils;
 import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.persistence.util.Sort;
@@ -20,7 +21,7 @@ import java.util.stream.Collectors;
 /**
  * Partial implementation of {@link FilteringVoEnabledDao} based on the Hibernate {@link Query} API.
  *
- * @see ubic.gemma.persistence.util.ObjectFilterQueryUtils for utilities to generate HQL clauses from a {@link Filters}
+ * @see FilterQueryUtils for utilities to generate HQL clauses from a {@link Filters}
  * @see ubic.gemma.persistence.util.AclQueryUtils for utilities to generate ACL clauses to filter VOs by ACL at the
  * database-level
  * @see AbstractCriteriaFilteringVoEnabledDao as an alternative
