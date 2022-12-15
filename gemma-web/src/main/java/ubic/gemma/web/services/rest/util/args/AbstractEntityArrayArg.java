@@ -3,6 +3,7 @@ package ubic.gemma.web.services.rest.util.args;
 import com.google.common.base.Strings;
 import org.apache.commons.lang3.NotImplementedException;
 import ubic.gemma.model.common.Identifiable;
+import ubic.gemma.persistence.service.FilteringVoEnabledService;
 import ubic.gemma.persistence.util.Filter;
 import ubic.gemma.web.services.rest.util.MalformedArgException;
 
@@ -20,7 +21,7 @@ import java.util.Optional;
  * @param <O> the type of the resulting entity
  * @param <S> the type of the filtering service providing the entity
  */
-public abstract class AbstractEntityArrayArg<A, O extends Identifiable, S extends ubic.gemma.persistence.service.BaseService<O>> extends AbstractArrayArg<A> {
+public abstract class AbstractEntityArrayArg<A, O extends Identifiable, S extends FilteringVoEnabledService<O, ?>> extends AbstractArrayArg<A> {
 
     private final Class<? extends AbstractEntityArg> entityArgClass;
     private String argValueName = null;
