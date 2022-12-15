@@ -1,10 +1,11 @@
 package ubic.gemma.persistence.service;
 
-import lombok.Value;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.common.Identifiable;
-import ubic.gemma.persistence.util.*;
+import ubic.gemma.persistence.util.Filters;
+import ubic.gemma.persistence.util.Slice;
+import ubic.gemma.persistence.util.Sort;
 
 import javax.annotation.Nullable;
 import java.util.Collection;
@@ -26,7 +27,7 @@ public abstract class AbstractFilteringVoEnabledService<O extends Identifiable, 
     @Override
     @Transactional(readOnly = true)
     public VO loadValueObject( O entity ) {
-        return entity == null ? null : voDao.loadValueObject( entity );
+        return voDao.loadValueObject( entity );
     }
 
     @Override
