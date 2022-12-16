@@ -160,8 +160,16 @@ public class SearchWebService {
         public SearchSettingsValueObject( SearchSettings searchSettings ) {
             this.query = searchSettings.getQuery();
             this.resultTypes = searchSettings.getResultTypes().stream().map( Class::getName ).collect( Collectors.toSet() );
-            this.taxon = taxonService.loadValueObject( searchSettings.getTaxon() );
-            this.platform = arrayDesignService.loadValueObject( searchSettings.getPlatformConstraint() );
+            if ( searchSettings.getTaxon() != null ) {
+                this.taxon = taxonService.loadValueObject( searchSettings.getTaxon() );
+            } else {
+                this.taxon = null;
+            }
+            if ( searchSettings.getPlatformConstraint() != null ) {
+                this.platform = arrayDesignService.loadValueObject( searchSettings.getPlatformConstraint() );
+            } else {
+                this.platform = null;
+            }
             this.maxResults = searchSettings.getMaxResults();
         }
     }
