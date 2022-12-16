@@ -1,22 +1,26 @@
 package ubic.gemma.web.services.rest.util.args;
 
-import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 import ubic.gemma.persistence.service.FilteringVoEnabledService;
-import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Filter;
+import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.web.services.rest.util.MalformedArgException;
 
+import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 public class FilterArgTest {
@@ -27,29 +31,32 @@ public class FilterArgTest {
     @Mock
     private FilteringVoEnabledService<?, ?> mockVoService;
 
-    @Test
-    public void testNullFilter() {
-        Filters filters = FilterArg.valueOf( null ).getFilters( mockVoService );
-        assertThat( filters.isEmpty() ).isTrue();
-    }
-
-    @Test
-    public void testEmptyFilter() {
-        Filters filters = FilterArg.valueOf( "" ).getFilters( mockVoService );
-        assertThat( filters.isEmpty() ).isTrue();
-    }
-
-    @Before
-    public void setUp() {
+    private void setUpMockVoService() {
         when( mockVoService.getFilter( any(), any(), any( String.class ) ) )
-                .thenAnswer( arg -> Filter.parse( "alias", arg.getArgument( 0, String.class ),
+                .thenAnswer( arg -> Filter.parse( "alias",
+                        arg.getArgument( 0, String.class ),
                         String.class,
                         arg.getArgument( 1, Filter.Operator.class ),
                         arg.getArgument( 2, String.class ) ) );
     }
 
     @Test
+    public void testNullFilter() {
+        Filters filters = FilterArg.valueOf( null ).getFilters( mockVoService );
+        assertThat( filters ).isEmpty();
+        verifyNoInteractions( mockVoService );
+    }
+
+    @Test
+    public void testEmptyFilter() {
+        Filters filters = FilterArg.valueOf( "" ).getFilters( mockVoService );
+        assertThat( filters ).isEmpty();
+        verifyNoInteractions( mockVoService );
+    }
+
+    @Test
     public void testSimpleEquality() {
+        setUpMockVoService();
         Filters filters = FilterArg.valueOf( "a = b" ).getFilters( mockVoService );
         assertThat( filters )
                 .extracting( of -> of[0] )
@@ -84,10 +91,12 @@ public class FilterArgTest {
                 .hasCauseInstanceOf( FilterArgParseException.class )
                 .extracting( "cause" )
                 .hasFieldOrPropertyWithValue( "part", Optional.of( 0 ) );
+        verifyNoInteractions( mockVoService );
     }
 
     @Test
     public void testConjunction() {
+        setUpMockVoService();
         Filters filters = FilterArg.valueOf( "a = b and c = d" ).getFilters( mockVoService );
         assertThat( filters ).hasSize( 2 );
         assertThat( filters )
@@ -106,6 +115,7 @@ public class FilterArgTest {
 
     @Test
     public void testDisjunction() {
+        setUpMockVoService();
         Filters filters = FilterArg.valueOf( "a = b, c = d" ).getFilters( mockVoService );
         assertThat( filters ).hasSize( 1 );
         assertThat( filters.iterator().next() )
@@ -136,6 +146,7 @@ public class FilterArgTest {
 
     @Test
     public void testConjunctionOfDisjunctions() {
+        setUpMockVoService();
         Filters filters = FilterArg.valueOf( "a = b or g = h and c = d or e = f" ).getFilters( mockVoService );
 
         assertThat( filters ).hasSize( 2 );
@@ -166,5 +177,32 @@ public class FilterArgTest {
                 .hasFieldOrPropertyWithValue( "propertyName", "e" )
                 .hasFieldOrPropertyWithValue( "operator", Filter.Operator.eq )
                 .hasFieldOrPropertyWithValue( "requiredValue", "f" );
+    }
+
+    @Test
+    public void testParseDate() {
+        when( mockVoService.getFilter( any(), any(), any( String.class ) ) )
+                .thenAnswer( a -> Filter.parse( "alias", a.getArgument( 0 ), Date.class, a.getArgument( 1 ), a.getArgument( 2, String.class ) ) );
+        FilterArg fa = FilterArg.valueOf( "lastUpdated >= 2022-01-01" );
+        Filters f = fa.getFilters( mockVoService );
+        assertThat( f ).isNotNull();
+        Filter subClause = f.iterator().next()[0];
+        assertThat( subClause )
+                .hasFieldOrPropertyWithValue( "objectAlias", "alias" )
+                .hasFieldOrPropertyWithValue( "propertyName", "lastUpdated" );
+        assertThat( ( Date ) subClause.getRequiredValue() )
+                .isEqualTo( OffsetDateTime.of( LocalDateTime.of( 2022, 1, 1, 0, 0, 0 ), ZoneOffset.UTC ).toInstant() );
+
+        // let's reparse the toString() representation to ensure it's still a valid filter string
+        // the only caveat is that the objectAlias will be prefixed again
+        FilterArg fa2 = FilterArg.valueOf( subClause.toString() );
+        Filters f2 = fa2.getFilters( mockVoService );
+        assertThat( f2 ).isNotNull();
+        Filter subClause2 = f2.iterator().next()[0];
+        assertThat( subClause2 )
+                .hasFieldOrPropertyWithValue( "objectAlias", "alias" )
+                .hasFieldOrPropertyWithValue( "propertyName", "alias.lastUpdated" );
+        assertThat( ( Date ) subClause2.getRequiredValue() )
+                .isEqualTo( OffsetDateTime.of( LocalDateTime.of( 2022, 1, 1, 0, 0, 0 ), ZoneOffset.UTC ).toInstant() );
     }
 }
