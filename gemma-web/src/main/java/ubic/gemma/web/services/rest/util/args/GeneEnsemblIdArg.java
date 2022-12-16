@@ -23,11 +23,11 @@ public class GeneEnsemblIdArg extends GeneAnyIdArg<String> {
 
     @Override
     public Gene getEntity( GeneService service ) {
-        return checkEntity( service.findByEnsemblId( this.getValue() ) );
+        return checkEntity( service, service.findByEnsemblId( this.getValue() ) );
     }
 
     @Override
-    public String getPropertyName() {
+    public String getPropertyName( GeneService service ) {
         return "ensemblId";
     }
 

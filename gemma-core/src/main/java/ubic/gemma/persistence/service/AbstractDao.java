@@ -71,11 +71,17 @@ public abstract class AbstractDao<T extends Identifiable> implements BaseDao<T> 
      */
     protected AbstractDao( Class<? extends T> elementClass, SessionFactory sessionFactory, int batchSize ) {
         Assert.notNull( sessionFactory.getClassMetadata( elementClass ), String.format( "%s is missing from Hibernate mapping.", elementClass.getName() ) );
+        Assert.notNull( sessionFactory.getClassMetadata( elementClass ).getIdentifierPropertyName(), String.format( "%s does not have a ID.", elementClass.getName() ) );
         Assert.isTrue( batchSize >= 1, "Batch size must be greater or equal to 1." );
         this.sessionFactory = sessionFactory;
         this.elementClass = elementClass;
         this.batchSize = batchSize;
         this.classMetadata = sessionFactory.getClassMetadata( elementClass );
+    }
+
+    @Override
+    public String getIdentifierPropertyName() {
+        return this.classMetadata.getIdentifierPropertyName();
     }
 
     @Override

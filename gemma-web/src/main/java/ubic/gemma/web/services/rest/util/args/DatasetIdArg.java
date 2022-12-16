@@ -20,12 +20,12 @@ public class DatasetIdArg extends DatasetArg<Long> {
     }
 
     @Override
-    public ExpressionExperiment getEntity( ExpressionExperimentService service ) {
-        return checkEntity( service.load( this.getValue() ) );
+    protected String getPropertyName( ExpressionExperimentService service ) {
+        return service.getIdentifierPropertyName();
     }
 
     @Override
-    public String getPropertyName() {
-        return "id";
+    public ExpressionExperiment getEntity( ExpressionExperimentService service ) {
+        return checkEntity( service, service.load( this.getValue() ) );
     }
 }

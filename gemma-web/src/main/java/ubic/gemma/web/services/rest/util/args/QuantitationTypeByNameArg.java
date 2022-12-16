@@ -17,12 +17,17 @@ public class QuantitationTypeByNameArg extends QuantitationTypeArg<String> {
     }
 
     @Override
+    protected String getPropertyName( QuantitationTypeService service ) {
+        return service.getIdentifierPropertyName();
+    }
+
+    @Override
     public QuantitationType getEntity( QuantitationTypeService service ) throws NotFoundException, BadRequestException {
         throw new UnsupportedOperationException( "A name is insufficient to retrieve a unique quantitation type." );
     }
 
     @Override
     public QuantitationType getEntityForExpressionExperimentAndDataVectorType( ExpressionExperiment ee, Class<? extends DesignElementDataVector> dataVectorType, QuantitationTypeService service ) {
-        return checkEntity( service.findByNameAndDataVectorType( ee, getValue(), dataVectorType ) );
+        return checkEntity( service, service.findByNameAndDataVectorType( ee, getValue(), dataVectorType ) );
     }
 }

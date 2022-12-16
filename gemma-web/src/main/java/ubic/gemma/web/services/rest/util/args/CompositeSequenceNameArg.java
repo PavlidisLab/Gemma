@@ -23,11 +23,11 @@ public class CompositeSequenceNameArg extends CompositeSequenceArg<String> {
     public CompositeSequence getEntity( CompositeSequenceService service ) {
         if ( platform == null )
             throw new BadRequestException( "Platform not set for composite sequence retrieval" );
-        return checkEntity( this.getValue() == null ? null : service.findByName( platform, this.getValue() ) );
+        return checkEntity( service, this.getValue() == null ? null : service.findByName( platform, this.getValue() ) );
     }
 
     @Override
-    public String getPropertyName() {
+    public String getPropertyName( CompositeSequenceService service ) {
         return "name";
     }
 

@@ -23,11 +23,11 @@ public class GeneNcbiIdArg extends GeneAnyIdArg<Integer> {
 
     @Override
     public Gene getEntity( GeneService service ) {
-        return checkEntity( service.findByNCBIId( this.getValue() ) );
+        return checkEntity( service, service.findByNCBIId( this.getValue() ) );
     }
 
     @Override
-    public String getPropertyName() {
+    public String getPropertyName( GeneService service ) {
         return "ncbiGeneId";
     }
 

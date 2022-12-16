@@ -26,7 +26,7 @@ public class TaxonArrayArg extends AbstractEntityArrayArg<String, Taxon, TaxonSe
 
     @Override
     public Filters getFilters( TaxonService service ) throws MalformedArgException {
-        if ( getPropertyName().equals( "commonName" ) ) {
+        if ( getPropertyName( service ).equals( "commonName" ) ) {
             return Filters.by(
                     service.getFilter( "commonName", Filter.Operator.in, this.getValue() ),
                     service.getFilter( "scientificName", Filter.Operator.in, this.getValue() ) );

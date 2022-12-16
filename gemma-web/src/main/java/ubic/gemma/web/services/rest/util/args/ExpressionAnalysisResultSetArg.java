@@ -17,12 +17,17 @@ public class ExpressionAnalysisResultSetArg extends AbstractEntityArg<Long, Expr
     }
 
     @Override
+    protected String getPropertyName( ExpressionAnalysisResultSetService service ) {
+        return service.getIdentifierPropertyName();
+    }
+
+    @Override
     public ExpressionAnalysisResultSet getEntity( ExpressionAnalysisResultSetService service ) {
-        return checkEntity( service.loadWithExperimentAnalyzed( getValue() ) );
+        return checkEntity( service, service.loadWithExperimentAnalyzed( getValue() ) );
     }
 
     public ExpressionAnalysisResultSet getEntityWithContrastsAndResults( ExpressionAnalysisResultSetService service ) {
-        return checkEntity( service.loadWithResultsAndContrasts( getValue() ) );
+        return checkEntity( service, service.loadWithResultsAndContrasts( getValue() ) );
     }
 
     public static ExpressionAnalysisResultSetArg valueOf( String s ) {

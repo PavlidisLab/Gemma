@@ -38,18 +38,18 @@ public class GeneSymbolArg extends GeneArg<String> {
         } else {
             gene = genes.iterator().next();
         }
-        return checkEntity( gene );
+        return checkEntity( service, gene );
     }
 
     @Override
-    public String getPropertyName() {
+    public String getPropertyName( GeneService service ) {
         return "officialSymbol";
     }
 
     @Override
     public List<GeneValueObject> getValueObjects( GeneService service ) {
         Collection<Gene> genes = service.findByOfficialSymbol( this.getValue() );
-        checkEntity( genes == null || genes.size() < 1 ? null : genes.iterator().next() );
+        checkEntity( service, genes == null || genes.size() < 1 ? null : genes.iterator().next() );
         return service.loadValueObjects( genes );
     }
 

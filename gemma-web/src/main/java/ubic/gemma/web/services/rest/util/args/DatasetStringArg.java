@@ -19,11 +19,11 @@ public class DatasetStringArg extends DatasetArg<String> {
 
     @Override
     public ExpressionExperiment getEntity( ExpressionExperimentService service ) {
-        return this.checkEntity( Strings.isNullOrEmpty( this.getValue() ) ? null : service.findByShortName( this.getValue() ) );
+        return this.checkEntity( service, Strings.isNullOrEmpty( this.getValue() ) ? null : service.findByShortName( this.getValue() ) );
     }
 
     @Override
-    public String getPropertyName() {
+    public String getPropertyName( ExpressionExperimentService service ) {
         return "shortName";
     }
 

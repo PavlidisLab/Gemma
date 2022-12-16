@@ -18,11 +18,11 @@ public class FactorValueIdArg extends FactorValueArg<Long> {
 
     @Override
     public FactorValue getEntity( FactorValueService service ) {
-        return checkEntity( service.load( this.getValue() ) );
+        return checkEntity( service, service.load( this.getValue() ) );
     }
 
     @Override
-    public String getPropertyName() {
+    public String getPropertyName( FactorValueService service ) {
         return "factorValueId";
     }
 }

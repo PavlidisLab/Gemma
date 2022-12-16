@@ -74,7 +74,7 @@ public abstract class TaxonArg<T> extends AbstractEntityArg<T, Taxon, TaxonServi
         if ( filters == null ) {
             filters = Filters.empty();
         }
-        filters.and( taxonService.getFilter( "id", Filter.Operator.eq, this.getEntity( taxonService ).getId().toString() ) );
+        filters.and( taxonService.getFilter( taxonService.getIdentifierPropertyName(), Filter.Operator.eq, this.getEntity( taxonService ).getId().toString() ) );
         return expressionExperimentService.loadValueObjectsPreFilter( filters, sort, offset, limit );
     }
 

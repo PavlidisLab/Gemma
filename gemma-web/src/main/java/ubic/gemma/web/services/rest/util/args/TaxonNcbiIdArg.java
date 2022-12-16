@@ -37,11 +37,11 @@ public class TaxonNcbiIdArg extends TaxonArg<Integer> {
 
     @Override
     public Taxon getEntity( TaxonService service ) {
-        return checkEntity( service.findByNcbiId( this.getValue() ) );
+        return checkEntity( service, service.findByNcbiId( this.getValue() ) );
     }
 
     @Override
-    public String getPropertyName() {
+    public String getPropertyName( TaxonService service ) {
         return "ncbiId";
     }
 }

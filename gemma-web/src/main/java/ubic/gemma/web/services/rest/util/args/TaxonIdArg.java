@@ -20,12 +20,12 @@ public class TaxonIdArg extends TaxonArg<Long> {
     }
 
     @Override
-    public Taxon getEntity( TaxonService service ) {
-        return checkEntity( service.load( this.getValue() ) );
+    protected String getPropertyName( TaxonService service ) {
+        return service.getIdentifierPropertyName();
     }
 
     @Override
-    public String getPropertyName() {
-        return "id";
+    public Taxon getEntity( TaxonService service ) {
+        return checkEntity( service, service.load( this.getValue() ) );
     }
 }

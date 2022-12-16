@@ -19,11 +19,11 @@ public class PlatformStringArg extends PlatformArg<String> {
     @Override
     public ArrayDesign getEntity( ArrayDesignService service ) {
         String value = this.getValue();
-        return checkEntity( value == null ? null : service.findByShortName( value ) );
+        return checkEntity( service, value == null ? null : service.findByShortName( value ) );
     }
 
     @Override
-    public String getPropertyName() {
+    public String getPropertyName( ArrayDesignService service ) {
         return "shortName";
     }
 

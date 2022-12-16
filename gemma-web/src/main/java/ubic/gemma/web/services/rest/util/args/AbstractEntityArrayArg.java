@@ -64,7 +64,7 @@ public abstract class AbstractEntityArrayArg<A, O extends Identifiable, S extend
             } else {
                 throw new NotImplementedException( "Obtaining entities is only supported for string values." );
             }
-            objects.add( arg.checkEntity( arg.getEntity( service ) ) );
+            objects.add( arg.checkEntity( service, arg.getEntity( service ) ) );
         }
         return objects;
     }
@@ -79,7 +79,7 @@ public abstract class AbstractEntityArrayArg<A, O extends Identifiable, S extend
      * @return the name of the property that the values in this arrayArg refer to.
      */
     private <T extends AbstractEntityArg<?, O, S>> String checkPropertyNameString( T arg, A value, S service ) {
-        String identifier = arg.getPropertyName();
+        String identifier = arg.getPropertyName( service );
         if ( Strings.isNullOrEmpty( identifier ) ) {
             throw new BadRequestException( "Identifier " + value + " not recognized." );
         }
@@ -109,7 +109,7 @@ public abstract class AbstractEntityArrayArg<A, O extends Identifiable, S extend
                 this.argValueName = this.checkPropertyNameString( arg, value.get(), service );
             } else {
                 /* assumed since {@link O} is identifiable */
-                this.argValueName = "id";
+                this.argValueName = service.getIdentifierPropertyName();
             }
         }
         return this.argValueName;

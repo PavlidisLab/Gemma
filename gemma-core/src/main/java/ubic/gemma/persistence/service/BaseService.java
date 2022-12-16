@@ -15,6 +15,11 @@ import java.util.Collection;
 public interface BaseService<O extends Identifiable> {
 
     /**
+     * @see BaseDao#getIdentifierPropertyName()
+     */
+    String getIdentifierPropertyName();
+
+    /**
      * Does a search for the entity in the persistent storage
      *
      * @param entity the entity to be searched for

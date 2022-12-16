@@ -18,13 +18,18 @@ public class CompositeSequenceIdArg extends CompositeSequenceArg<Long> {
     }
 
     @Override
+    protected String getPropertyName( CompositeSequenceService service ) {
+        return service.getIdentifierPropertyName();
+    }
+
+    @Override
     public CompositeSequence getEntity( CompositeSequenceService service ) {
         if ( platform == null )
             throw new BadRequestException( "Platform not set for composite sequence retrieval" );
         CompositeSequence cs = service.load( this.getValue() );
-        if ( !Objects.equals( cs.getArrayDesign().getId(), this.platform.getId() ) ) {
+        if ( cs != null && !Objects.equals( cs.getArrayDesign().getId(), this.platform.getId() ) ) {
             throw new BadRequestException( "Platform does not match the sequence's platform." );
         }
-        return checkEntity( this.getValue() == null ? null : cs );
+        return checkEntity( service, cs );
     }
 }

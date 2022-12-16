@@ -20,13 +20,13 @@ public class PlatformIdArg extends PlatformArg<Long> {
     }
 
     @Override
-    public ArrayDesign getEntity( ArrayDesignService service ) {
-        return checkEntity( service.load( this.getValue() ) );
+    protected String getPropertyName( ArrayDesignService service ) {
+        return service.getIdentifierPropertyName();
     }
 
     @Override
-    public String getPropertyName() {
-        return "id";
+    public ArrayDesign getEntity( ArrayDesignService service ) {
+        return checkEntity( service, service.load( this.getValue() ) );
     }
 
 }

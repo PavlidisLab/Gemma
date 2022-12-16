@@ -36,11 +36,11 @@ public class TaxonNameArg extends TaxonArg<String> {
 
     @Override
     public Taxon getEntity( TaxonService service ) {
-        return checkEntity( this.getValue() == null ? null : this.tryAllNameProperties( service ) );
+        return checkEntity( service, this.getValue() == null ? null : this.tryAllNameProperties( service ) );
     }
 
     @Override
-    public String getPropertyName() {
+    public String getPropertyName( TaxonService service ) {
         // FIXME: this should also return scientificName
         return "commonName";
     }

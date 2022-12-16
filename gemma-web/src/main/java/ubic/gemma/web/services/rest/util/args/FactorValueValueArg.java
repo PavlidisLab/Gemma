@@ -19,11 +19,11 @@ public class FactorValueValueArg extends FactorValueArg<String> {
 
     @Override
     public FactorValue getEntity( FactorValueService service ) {
-        return checkEntity( service.findByValue( getValue() ).stream().findFirst().orElse( null ) );
+        return checkEntity( service, service.findByValue( getValue() ).stream().findFirst().orElse( null ) );
     }
 
     @Override
-    public String getPropertyName() {
+    public String getPropertyName( FactorValueService service ) {
         return "value";
     }
 }

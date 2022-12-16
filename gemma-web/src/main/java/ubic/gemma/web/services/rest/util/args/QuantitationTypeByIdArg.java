@@ -16,12 +16,17 @@ public class QuantitationTypeByIdArg extends QuantitationTypeArg<Long> {
     }
 
     @Override
+    protected String getPropertyName( QuantitationTypeService service ) {
+        return service.getIdentifierPropertyName();
+    }
+
+    @Override
     public QuantitationType getEntity( QuantitationTypeService service ) throws NotFoundException, BadRequestException {
-        return checkEntity( service.load( getValue() ) );
+        return checkEntity( service, service.load( getValue() ) );
     }
 
     @Override
     public QuantitationType getEntityForExpressionExperimentAndDataVectorType( ExpressionExperiment ee, Class<? extends DesignElementDataVector> dataVectorType, QuantitationTypeService service ) {
-        return checkEntity( service.findByIdAndDataVectorType( ee, getValue(), dataVectorType ) );
+        return checkEntity( service, service.findByIdAndDataVectorType( ee, getValue(), dataVectorType ) );
     }
 }

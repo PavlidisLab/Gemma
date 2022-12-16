@@ -81,7 +81,7 @@ public abstract class AbstractCriteriaFilteringVoEnabledDao<O extends Identifiab
 
         countingStopWatch.start();
         Long totalElements = ( Long ) totalElementsQuery
-                .setProjection( Projections.countDistinct( "id" ) )
+                .setProjection( Projections.countDistinct( getIdentifierPropertyName() ) )
                 .uniqueResult();
         countingStopWatch.stop();
 
@@ -139,7 +139,7 @@ public abstract class AbstractCriteriaFilteringVoEnabledDao<O extends Identifiab
         StopWatch timer = StopWatch.createStarted();
         try {
             return ( Long ) getLoadValueObjectsCriteria( filters )
-                    .setProjection( Projections.countDistinct( "id" ) )
+                    .setProjection( Projections.countDistinct( getIdentifierPropertyName() ) )
                     .uniqueResult();
         } finally {
             timer.stop();

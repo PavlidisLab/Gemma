@@ -17,12 +17,12 @@ public class DatabaseEntryIdArg extends DatabaseEntryArg<Long> {
     }
 
     @Override
-    public DatabaseEntry getEntity( DatabaseEntryService service ) {
-        return checkEntity( service.load( getValue() ) );
+    protected String getPropertyName( DatabaseEntryService service ) {
+        return service.getIdentifierPropertyName();
     }
 
     @Override
-    public String getPropertyName() {
-        return "id";
+    public DatabaseEntry getEntity( DatabaseEntryService service ) {
+        return checkEntity( service, service.load( getValue() ) );
     }
 }
