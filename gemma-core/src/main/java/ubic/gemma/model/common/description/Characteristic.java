@@ -24,6 +24,7 @@ import org.apache.commons.lang3.builder.HashCodeBuilder;
 import ubic.gemma.model.association.GOEvidenceCode;
 import ubic.gemma.model.common.AbstractDescribable;
 
+import java.io.Serializable;
 import java.util.Objects;
 
 /**
@@ -32,7 +33,7 @@ import java.util.Objects;
  *
  * @author Paul
  */
-public class Characteristic extends AbstractDescribable {
+public class Characteristic extends AbstractDescribable implements Serializable {
 
     private static final long serialVersionUID = -7242166109264718620L;
     private String category;

@@ -23,11 +23,13 @@ import ubic.gemma.model.common.Describable;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 
+import java.io.Serializable;
+
 /**
  * A "Probe set" (Affymetrix) or a "Probe" (other types of arrays). The sequence referred to is a "target sequence"
  * (Affymetrix), oligo (oligo arrays) or cDNA clone/EST (cDNA arrays)
  */
-public class CompositeSequence extends AbstractDescribable {
+public class CompositeSequence extends AbstractDescribable implements Serializable {
 
     /**
      * The serial version UID of this class. Needed for serialization.

@@ -25,6 +25,7 @@ import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
 import ubic.gemma.model.common.auditAndSecurity.Contact;
 
 import javax.annotation.Nullable;
+import java.io.Serializable;
 import java.net.URL;
 import java.util.Date;
 import java.util.HashSet;
@@ -33,7 +34,7 @@ import java.util.Set;
 /**
  * @author Paul
  */
-public class ExternalDatabase extends AbstractDescribable implements Auditable, Versioned {
+public class ExternalDatabase extends AbstractDescribable implements Auditable, Versioned, Serializable {
 
     /**
      * The serial version UID of this class. Needed for serialization.

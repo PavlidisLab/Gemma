@@ -22,11 +22,13 @@ package ubic.gemma.model.expression;
 import ubic.gemma.model.common.AbstractDescribable;
 import ubic.gemma.model.common.description.DatabaseEntry;
 
+import java.io.Serializable;
+
 /**
  * 
  * @author paul
  */
-public abstract class BlacklistedEntity extends AbstractDescribable {
+public abstract class BlacklistedEntity extends AbstractDescribable implements Serializable {
 
     /**
      * The external accession
