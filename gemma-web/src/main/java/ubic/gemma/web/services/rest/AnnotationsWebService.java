@@ -195,7 +195,7 @@ public class AnnotationsWebService {
         }
 
         // If there are filters other than the search query, intersect the results.
-        filters.and( DatasetArrayArg.valueOf( StringUtils.join( foundIds, ',' ) ).getClause( expressionExperimentService ) );
+        filters.and( DatasetArrayArg.valueOf( StringUtils.join( foundIds, ',' ) ).getFilters( expressionExperimentService ) );
         return Responder.paginate( expressionExperimentService.loadValueObjectsPreFilter( filters, sort, offset.getValue(), limit.getValue() ) );
     }
 
@@ -252,12 +252,8 @@ public class AnnotationsWebService {
         }
 
         // We always have to do filtering, because we always have at least the taxon argument (otherwise this#datasets method is used)
-        Filters filters = filter.getFilters( expressionExperimentService );
-        if ( filters == null ) {
-            filters = Filters.empty();
-        }
-
-        filters.and( DatasetArrayArg.valueOf( StringUtils.join( foundIds, ',' ) ).getClause( expressionExperimentService ) );
+        Filters filters = filter.getFilters( expressionExperimentService )
+                .and( DatasetArrayArg.valueOf( StringUtils.join( foundIds, ',' ) ).getFilters( expressionExperimentService ) );
 
         return Responder.paginate( taxonArg.getTaxonDatasets( expressionExperimentService, taxonService,
                 filters, offset.getValue(),

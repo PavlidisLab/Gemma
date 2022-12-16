@@ -109,6 +109,14 @@ public class Filters implements Iterable<Filter[]> {
     }
 
     /**
+     * Add all the clauses of another filter to this.
+     */
+    public Filters and( Filters filters ) {
+        clauses.addAll( filters.clauses );
+        return this;
+    }
+
+    /**
      * Check if this contains an empty conjunction, or if all its clauses are empty.
      * <p>
      * An empty {@link Filters} has no effect whatsoever on the result of a query.

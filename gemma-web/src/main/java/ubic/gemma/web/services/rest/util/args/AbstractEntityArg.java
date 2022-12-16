@@ -4,6 +4,7 @@ import org.apache.commons.lang3.NotImplementedException;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.persistence.service.FilteringVoEnabledService;
 import ubic.gemma.persistence.util.Filter;
+import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.web.util.EntityNotFoundException;
 
 import javax.ws.rs.BadRequestException;
@@ -49,11 +50,11 @@ public abstract class AbstractEntityArg<T, O extends Identifiable, S extends Fil
     public abstract O getEntity( S service ) throws NotFoundException, BadRequestException;
 
     /**
-     * Obtain a clause of {@link Filter} that restrict a query to this entity.
+     * Obtain a {@link Filters} that restrict a query to the entity represented by this argument.
      */
-    public Filter[] getClause( S service ) {
+    public Filters getFilters( S service ) {
         if ( this.getValue() instanceof String ) {
-            return new Filter[] { service.getFilter( this.getPropertyName(), Filter.Operator.eq, ( String ) this.getValue() ) };
+            return Filters.by( service.getFilter( this.getPropertyName(), Filter.Operator.eq, ( String ) this.getValue() ) );
         } else {
             throw new NotImplementedException( "Filtering with non-string values is not supported." );
         }

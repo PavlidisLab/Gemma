@@ -6,6 +6,7 @@ import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.persistence.util.Filter;
+import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.web.services.rest.util.MalformedArgException;
 
 import java.util.List;
@@ -24,13 +25,13 @@ public class TaxonArrayArg extends AbstractEntityArrayArg<String, Taxon, TaxonSe
     }
 
     @Override
-    public Filter[] getClause( TaxonService service ) throws MalformedArgException {
-        if ( getPropertyName( service ).equals( "commonName" ) ) {
-            return new Filter[] {
+    public Filters getFilters( TaxonService service ) throws MalformedArgException {
+        if ( getPropertyName().equals( "commonName" ) ) {
+            return Filters.by(
                     service.getFilter( "commonName", Filter.Operator.in, this.getValue() ),
-                    service.getFilter( "scientificName", Filter.Operator.in, this.getValue() ) };
+                    service.getFilter( "scientificName", Filter.Operator.in, this.getValue() ) );
         } else {
-            return super.getClause( service );
+            return super.getFilters( service );
         }
     }
 

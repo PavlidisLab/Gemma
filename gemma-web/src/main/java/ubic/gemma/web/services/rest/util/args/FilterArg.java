@@ -116,11 +116,8 @@ public class FilterArg extends AbstractArg<FilterArg.Filter> {
      * {@link ubic.gemma.persistence.util.Filter}, or null if the filter is empty.
      * @throws MalformedArgException if the filter cannot be parsed for the given {@link FilteringVoEnabledService}
      */
-    @Nullable
     public Filters getFilters( FilteringVoEnabledService<?, ?> service ) throws MalformedArgException {
         Filter filter = getValue();
-        if ( filter.propertyNames == null )
-            return null;
         Filters filterList = Filters.empty();
 
         for ( int i = 0; i < filter.propertyNames.size(); i++ ) {

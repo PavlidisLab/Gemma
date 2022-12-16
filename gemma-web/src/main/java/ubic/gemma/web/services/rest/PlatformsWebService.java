@@ -124,13 +124,8 @@ public class PlatformsWebService {
             @QueryParam("limit") @DefaultValue("20") LimitArg limit, // Optional, default 20
             @QueryParam("sort") @DefaultValue("+id") SortArg sort // Optional, default +id
     ) {
-        Filters filters = filter.getFilters( arrayDesignService );
-        if ( filters == null ) {
-            filters = Filters.empty();
-        }
-
-        filters.and( datasetsArg.getClause( arrayDesignService ) );
-
+        Filters filters = filter.getFilters( arrayDesignService )
+                .and( datasetsArg.getFilters( arrayDesignService ) );
         return Responder.paginate( arrayDesignService.loadValueObjectsPreFilter( filters, sort.getSort( arrayDesignService ), offset.getValue(), limit.getValue() ) );
     }
 

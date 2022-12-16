@@ -99,7 +99,7 @@ public class GeneWebService {
     ) {
         SortArg sort = SortArg.valueOf( "+id" );
         Filters filters = Filters.empty();
-        filters.and( genes.getClause( geneService ) );
+        filters.and( genes.getFilters( geneService ) );
         return Responder.respond( geneService.loadValueObjectsPreFilter( filters, sort.getSort( geneService ), IntArg.valueOf( "0" ).getValue(), IntArg.valueOf( "-1" ).getValue() ) );
     }
 
