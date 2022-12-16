@@ -143,6 +143,16 @@ public class DatasetsWebService {
                 limit.getValue() ) );
     }
 
+    @GET
+    @Path("/count")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(summary = "Count datasets matching the provided filters")
+    public ResponseDataObject<Long> getNumberOfDatasets(
+            @Schema(extensions = { @Extension(name = "gemma", properties = { @ExtensionProperty(name = "filteringService", value = "expressionExperimentService") }) })
+            @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filter ) {
+        return Responder.respond( service.countValueObjectsPreFilter( filter.getFilters( expressionExperimentService ) ) );
+    }
+
     /**
      * Retrieves all datasets matching the given identifiers.
      *
