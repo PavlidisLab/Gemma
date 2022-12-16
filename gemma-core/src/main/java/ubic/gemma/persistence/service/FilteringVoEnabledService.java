@@ -58,4 +58,6 @@ public interface FilteringVoEnabledService<O extends Identifiable, VO extends Id
      * @see FilteringVoEnabledDao#loadValueObjectsPreFilter(Filters, Sort)
      */
     List<VO> loadValueObjectsPreFilter( @Nullable Filters filters, @Nullable Sort sort );
+
+    long countValueObjectsPreFilter( @Nullable Filters filters );
 }

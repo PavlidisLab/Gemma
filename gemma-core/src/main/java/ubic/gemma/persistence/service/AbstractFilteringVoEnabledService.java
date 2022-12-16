@@ -68,6 +68,12 @@ public abstract class AbstractFilteringVoEnabledService<O extends Identifiable, 
         return voDao.loadValueObjectsPreFilter( filters, sort );
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public long countValueObjectsPreFilter( @Nullable Filters filters ) {
+        return voDao.countValueObjectsPreFilter( filters );
+    }
+
     public Set<String> getFilterableProperties() {
         return voDao.getFilterableProperties();
     }
