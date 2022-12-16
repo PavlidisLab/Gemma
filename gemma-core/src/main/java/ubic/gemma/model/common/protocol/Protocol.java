@@ -21,7 +21,9 @@ package ubic.gemma.model.common.protocol;
 import gemma.gsec.model.Securable;
 import ubic.gemma.model.common.AbstractDescribable;
 
-public class Protocol extends AbstractDescribable implements Securable {
+import java.io.Serializable;
+
+public class Protocol extends AbstractDescribable implements Securable, Serializable {
 
     private static final long serialVersionUID = -1902891452989019766L;
 

@@ -20,8 +20,10 @@ package ubic.gemma.model.expression.biomaterial;
 
 import ubic.gemma.model.common.AbstractDescribable;
 
+import java.io.Serializable;
+
 @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
-public class Compound extends AbstractDescribable {
+public class Compound extends AbstractDescribable implements Serializable {
 
     /**
      * The serial version UID of this class. Needed for serialization.

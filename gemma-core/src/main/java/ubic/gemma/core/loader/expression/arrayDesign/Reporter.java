@@ -17,6 +17,8 @@ package ubic.gemma.core.loader.expression.arrayDesign;
 import ubic.gemma.model.common.AbstractDescribable;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 
+import java.io.Serializable;
+
 /**
  * A "probe" (Affymetrix); for other types of arrays, there is no practical distinction between compositesequences and
  * reporters, and all analysis would take place at the level of CompositeSequences.
@@ -24,7 +26,7 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
  * etc. of Affymetrix platform sequence files.
  */
 @SuppressWarnings("unused") // Possible external use
-public class Reporter extends AbstractDescribable {
+public class Reporter extends AbstractDescribable implements Serializable {
 
     /**
      * The serial version UID of this class. Needed for serialization.

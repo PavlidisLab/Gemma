@@ -20,11 +20,6 @@ package ubic.gemma.model.common;
 
 public abstract class AbstractDescribable implements Describable {
 
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = 7790873116871536780L;
-
     private String name;
     private String description;
     private Long id;

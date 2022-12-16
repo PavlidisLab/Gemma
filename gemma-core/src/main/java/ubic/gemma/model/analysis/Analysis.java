@@ -22,13 +22,15 @@ package ubic.gemma.model.analysis;
 import ubic.gemma.model.common.AbstractDescribable;
 import ubic.gemma.model.common.protocol.Protocol;
 
+import java.io.Serializable;
+
 /**
  * An analysis of one or more Investigations. The manner in which the analysis was done is described in the Protocol and
  * Description associations. Analyses which use more than one Investigation are meta-analyses.
  *
  * @author Paul
  */
-public abstract class Analysis extends AbstractDescribable {
+public abstract class Analysis extends AbstractDescribable implements Serializable {
 
     private static final long serialVersionUID = -7666181528240555473L;
     private Protocol protocol;

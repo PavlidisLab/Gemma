@@ -1,8 +1,6 @@
 package ubic.gemma.model.common;
 
-import java.io.Serializable;
-
-public interface Describable extends Identifiable, Serializable {
+public interface Describable extends Identifiable {
 
     /**
      * Obtain a human-readable description of the object
