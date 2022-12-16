@@ -238,7 +238,7 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
         Type[] propertyTypes = classMetadata.getPropertyTypes();
         int i = ArrayUtils.indexOf( propertyNames, parts[0] );
         if ( i == -1 ) {
-            throw new NoSuchFieldException( String.format( "No such field %s in %s.", property, cls.getName() ) );
+            throw new NoSuchFieldException( String.format( "No such field %s in %s.", parts[0], cls.getName() ) );
         }
 
         Type propertyType = propertyTypes[i];
