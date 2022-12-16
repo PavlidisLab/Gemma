@@ -36,7 +36,7 @@ public class ArrayDesignServiceTest extends BaseSpringContextTest {
 
     @Test
     public void testGetFilterWhenPropertyExceedsMaxDepth() {
-        assertThatThrownBy( () -> arrayDesignService.getFilter( "primaryTaxon.externalDatabase.contact.name", Filter.Operator.eq, "joe" ) )
+        assertThatThrownBy( () -> arrayDesignService.getFilter( "primaryTaxon.externalDatabase.databaseSupplier.name", Filter.Operator.eq, "joe" ) )
                 .isInstanceOf( IllegalArgumentException.class )
                 .hasMessageContaining( "At most 3 levels can be used for filtering." )
                 .hasNoCause();
