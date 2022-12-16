@@ -3,10 +3,8 @@ package ubic.gemma.web.services.rest.swagger.resolver;
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.introspect.Annotated;
-import io.swagger.v3.core.converter.AnnotatedType;
-import io.swagger.v3.core.converter.ModelConverter;
-import io.swagger.v3.core.converter.ModelConverterContext;
-import io.swagger.v3.core.converter.ModelConverters;
+import com.fasterxml.jackson.databind.type.SimpleType;
+import io.swagger.v3.core.converter.*;
 import io.swagger.v3.core.jackson.ModelResolver;
 import io.swagger.v3.core.util.Json;
 import io.swagger.v3.oas.annotations.extensions.ExtensionProperty;
@@ -103,11 +101,36 @@ public class CustomModelResolver extends ModelResolver {
                 .orElseThrow( () -> new IllegalArgumentException( "A FilterArg must have an x-gemma extension with the filteringService field to resolve its available values." ) );
         FilteringVoEnabledService<?, ?> filteringService = beanFactory.getBean( filteringServiceName, FilteringVoEnabledService.class );
         return String.format( "Available properties:\n\n%s",
-                filteringService.getFilterableProperties().stream().sorted().map( p -> String.format( "- %s%s `%s`",
+                filteringService.getFilterableProperties().stream().sorted().map( p -> String.format( "- %s `%s`%s",
                         p,
-                        filteringService.getFilterablePropertyDescription( p ) != null ? " " + filteringService.getFilterablePropertyDescription( p ) : "",
-                        filteringService.getFilterablePropertyType( p ).getSimpleName()
+                        resolveType( SimpleType.constructUnsafe( filteringService.getFilterablePropertyType( p ) ) ),
+                        filteringService.getFilterablePropertyDescription( p ) != null ? " (" + filteringService.getFilterablePropertyDescription( p ) + ")" : ""
                 ) ).collect( Collectors.joining( "\n" ) ) );
+    }
+
+    /**
+     * Quick 'n dirty conversion, this can also be done more correctly via {@link #resolve(AnnotatedType, ModelConverterContext, Iterator)},
+     * but that would be unnecessarily expensive.
+     * <p>
+     * See <a href="https://swagger.io/docs/specification/data-models/data-types/">Data Types</a> for more details about
+     * available OpenAPI data types.
+     * <p>
+     * TODO: also resolve the format
+     */
+    private String resolveType( JavaType type ) {
+        if ( type.isTypeOrSubTypeOf( Boolean.class ) ) {
+            return "boolean";
+        } else if ( type.isTypeOrSubTypeOf( Integer.class ) || type.isTypeOrSubTypeOf( Long.class ) ) {
+            return "integer";
+        } else if ( type.isTypeOrSubTypeOf( Float.class ) || type.isTypeOrSubTypeOf( Double.class ) ) {
+            return "number";
+        } else if ( type.isTypeOrSubTypeOf( Date.class ) || type.isTypeOrSubTypeOf( String.class ) ) {
+            return "string";
+        } else if ( type.isArrayType() || type.isCollectionLikeType() ) {
+            return "array";
+        } else {
+            return "object";
+        }
     }
 
     /**
