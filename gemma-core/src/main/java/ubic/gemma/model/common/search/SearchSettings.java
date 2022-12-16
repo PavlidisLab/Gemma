@@ -145,7 +145,9 @@ public class SearchSettings implements Serializable {
     private Set<Class<? extends Identifiable>> resultTypes;
 
     /* optional search constraints */
+    @Nullable
     private ArrayDesign platformConstraint;
+    @Nullable
     private Taxon taxon;
 
     /* sources */
