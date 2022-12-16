@@ -4,6 +4,7 @@ import com.google.common.base.Strings;
 import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
 import ubic.gemma.model.genome.Gene;
 
+import javax.annotation.Nullable;
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -29,7 +30,7 @@ public class ExperimentExpressionLevelsValueObject implements Serializable {
 
     public ExperimentExpressionLevelsValueObject( long datasetId,
             Map<Gene, List<DoubleVectorValueObject>> vectorsPerGene, boolean keepGeneNonSpecific,
-            String conslidationMode ) {
+            @Nullable String conslidationMode ) {
         this.datasetId = datasetId;
 
         for ( Gene g : vectorsPerGene.keySet() ) {
@@ -64,7 +65,7 @@ public class ExperimentExpressionLevelsValueObject implements Serializable {
         }
 
         public GeneElementExpressionsValueObject( String geneOfficialSymbol, Integer geneNcbiId,
-                List<DoubleVectorValueObject> vectors, boolean keepGeneNonSpecific, String mode ) {
+                List<DoubleVectorValueObject> vectors, boolean keepGeneNonSpecific, @Nullable String mode ) {
             this.geneOfficialSymbol = geneOfficialSymbol;
             this.geneNcbiId = geneNcbiId;
 
