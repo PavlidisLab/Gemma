@@ -59,24 +59,25 @@ public class Filter {
      */
     private static final ConfigurableConversionService conversionService = new GenericConversionService();
 
-    private static <T> void addConverter( Class<?> targetClass, Converter<String, T> converter ) {
+    private static <T> void addConverter( Class<?> targetClass, Converter<String, T> converter, Converter<T, String> reverseConverter ) {
         conversionService.addConverter( String.class, targetClass, converter );
+        conversionService.addConverter( targetClass, String.class, reverseConverter );
     }
 
     static {
-        addConverter( String.class, s -> s );
-        addConverter( Boolean.class, Boolean::parseBoolean );
-        addConverter( Double.class, Double::parseDouble );
-        addConverter( Float.class, Float::parseFloat );
-        addConverter( Long.class, Long::parseLong );
-        addConverter( Integer.class, Integer::parseInt );
+        addConverter( String.class, s -> s, s -> s );
+        addConverter( Boolean.class, Boolean::parseBoolean, Object::toString );
+        addConverter( Double.class, Double::parseDouble, Object::toString );
+        addConverter( Float.class, Float::parseFloat, Object::toString );
+        addConverter( Long.class, Long::parseLong, Object::toString );
+        addConverter( Integer.class, Integer::parseInt, Object::toString );
         addConverter( Date.class, s -> {
             try {
                 return DATE_FORMAT.parse( s );
             } catch ( ParseException e ) {
                 throw new ConversionFailedException( TypeDescriptor.valueOf( Date.class ), TypeDescriptor.valueOf( String.class ), s, e );
             }
-        } );
+        }, DATE_FORMAT::format );
     }
 
     /**
@@ -218,7 +219,15 @@ public class Filter {
 
     @Override
     public String toString() {
-        return String.format( "%s%s %s %s", objectAlias != null ? objectAlias + "." : "", propertyName, operator.getToken(), requiredValue );
+        String requiredValueString;
+        if ( requiredValue instanceof Collection ) {
+            requiredValueString = "(" + ( ( Collection<?> ) requiredValue ).stream()
+                    .map( e -> conversionService.convert( e, String.class ) )
+                    .collect( Collectors.joining( ", " ) ) + ")";
+        } else {
+            requiredValueString = conversionService.convert( requiredValue, String.class );
+        }
+        return String.format( "%s%s %s %s", objectAlias != null ? objectAlias + "." : "", propertyName, operator.getToken(), requiredValueString );
     }
 
     private void checkTypeCorrect() throws IllegalArgumentException {

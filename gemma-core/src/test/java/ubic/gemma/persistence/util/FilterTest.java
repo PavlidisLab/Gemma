@@ -91,19 +91,19 @@ public class FilterTest {
     @Test
     public void testParseCollectionOfDates() {
         Filter of = Filter.parse( "ee", "lastUpdated", Date.class, Filter.Operator.in, "(2021-10-01, 2021-10-02)" );
-        assertThat( of ).hasToString( "ee.lastUpdated in [Thu Sep 30 20:00:00 EDT 2021, Fri Oct 01 20:00:00 EDT 2021]" );
+        assertThat( of ).hasToString( "ee.lastUpdated in (2021-10-01T00:00:00.000+00:00, 2021-10-02T00:00:00.000+00:00)" );
     }
 
     @Test
     public void testParseCollectionOfDateTimes() {
         Filter of = Filter.parse( "ee", "lastUpdated", Date.class, Filter.Operator.in, "(2021-10-01T00:00:01, 2021-10-02T01:00:00Z)" );
-        assertThat( of ).hasToString( "ee.lastUpdated in [Thu Sep 30 20:00:01 EDT 2021, Fri Oct 01 21:00:00 EDT 2021]" );
+        assertThat( of ).hasToString( "ee.lastUpdated in (2021-10-01T00:00:01.000+00:00, 2021-10-02T01:00:00.000+00:00)" );
     }
 
     @Test
     public void testParseMixtureOfDateAndDateTime() {
         Filter of = Filter.parse( "ee", "lastUpdated", Date.class, Filter.Operator.in, "(2021-10-01, 2021-10-02T01:00:00Z)" );
-        assertThat( of ).hasToString( "ee.lastUpdated in [Thu Sep 30 20:00:00 EDT 2021, Fri Oct 01 21:00:00 EDT 2021]" );
+        assertThat( of ).hasToString( "ee.lastUpdated in (2021-10-01T00:00:00.000+00:00, 2021-10-02T01:00:00.000+00:00)" );
     }
 
     @Test
