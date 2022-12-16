@@ -53,7 +53,6 @@ public class CustomModelResolver extends ModelResolver {
     public Schema resolve( AnnotatedType type, ModelConverterContext context, Iterator<ModelConverter> chain ) {
         JavaType t = Json.mapper().constructType( type.getType() );
         if ( FilterArg.class.isAssignableFrom( t.getRawClass() ) ) {
-            type.resolveAsRef( false );
             return super.resolve( type, context, chain ).type( "string" ).properties( null );
         } else if ( Arg.class.isAssignableFrom( t.getRawClass() ) ) {
             // I'm suspecting there's a bug in Swagger that causes request parameters annotations to shadow the

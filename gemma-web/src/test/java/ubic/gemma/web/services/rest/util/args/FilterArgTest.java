@@ -5,6 +5,7 @@ import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
+import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.persistence.service.FilteringVoEnabledService;
 import ubic.gemma.persistence.util.Filter;
 import ubic.gemma.persistence.util.Filters;
@@ -29,7 +30,7 @@ public class FilterArgTest {
     public MockitoRule mockitoRule = MockitoJUnit.rule();
 
     @Mock
-    private FilteringVoEnabledService<?, ?> mockVoService;
+    private FilteringVoEnabledService<Identifiable, ?> mockVoService;
 
     private void setUpMockVoService() {
         when( mockVoService.getFilter( any(), any(), any( String.class ) ) )

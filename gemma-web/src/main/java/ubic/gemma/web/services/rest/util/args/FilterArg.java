@@ -17,6 +17,7 @@ package ubic.gemma.web.services.rest.util.args;
 import io.swagger.v3.oas.annotations.ExternalDocumentation;
 import io.swagger.v3.oas.annotations.media.Schema;
 import org.apache.commons.lang3.StringUtils;
+import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.persistence.service.FilteringVoEnabledService;
 import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Sort;
@@ -90,7 +91,7 @@ import java.util.List;
  */
 @Schema(type = "string", description = "Filter results by matching the expression. The exact syntax is described in the attached external documentation.",
         externalDocs = @ExternalDocumentation(url = "https://gemma.msl.ubc.ca/resources/apidocs/ubic/gemma/web/services/rest/util/args/FilterArg.html"))
-public class FilterArg extends AbstractArg<FilterArg.Filter> {
+public class FilterArg<O extends Identifiable> extends AbstractArg<FilterArg.Filter> {
 
     /**
      * @param propertyNames     names of properties to filter by. <br> Elements in each array will be in a disjunction
@@ -116,7 +117,7 @@ public class FilterArg extends AbstractArg<FilterArg.Filter> {
      * {@link ubic.gemma.persistence.util.Filter}, or null if the filter is empty.
      * @throws MalformedArgException if the filter cannot be parsed for the given {@link FilteringVoEnabledService}
      */
-    public Filters getFilters( FilteringVoEnabledService<?, ?> service ) throws MalformedArgException {
+    public Filters getFilters( FilteringVoEnabledService<O, ?> service ) throws MalformedArgException {
         Filter filter = getValue();
         Filters filterList = Filters.empty();
 
@@ -165,7 +166,7 @@ public class FilterArg extends AbstractArg<FilterArg.Filter> {
      * @return an instance of DatasetFilterArg representing the filtering options in the given string.
      */
     @SuppressWarnings("unused")
-    public static FilterArg valueOf( final String s ) {
+    public static <O extends Identifiable> FilterArg<O> valueOf( final String s ) {
         try {
             return parseFilterString( s );
         } catch ( FilterArgParseException e ) {
@@ -178,7 +179,7 @@ public class FilterArg extends AbstractArg<FilterArg.Filter> {
      *
      * @param s the string to be parsed.
      */
-    private static FilterArg parseFilterString( String s ) throws FilterArgParseException {
+    private static <O extends Identifiable> FilterArg<O> parseFilterString( String s ) throws FilterArgParseException {
         List<String[]> propertyNames = new LinkedList<>();
         List<String[]> propertyValues = new LinkedList<>();
         List<ubic.gemma.persistence.util.Filter.Operator[]> propertyOperators = new LinkedList<>();
@@ -224,7 +225,7 @@ public class FilterArg extends AbstractArg<FilterArg.Filter> {
             }
         }
 
-        return new FilterArg( propertyNames, propertyValues, propertyOperators );
+        return new FilterArg<>( propertyNames, propertyValues, propertyOperators );
     }
 
 }
