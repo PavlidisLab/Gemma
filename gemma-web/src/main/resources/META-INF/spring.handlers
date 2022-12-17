@@ -1,3 +1,0 @@
-http\://www.springframework.org/schema/mvc=org.springframework.web.servlet.config.MvcNamespaceHandler
-http\://www.directwebremoting.org/schema/dwr=org.directwebremoting.spring.DwrNamespaceHandler
-http\://www.springframework.org/schema/web-services=org.springframework.ws.config.WebServicesNamespaceHandler
