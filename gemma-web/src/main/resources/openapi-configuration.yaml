@@ -19,6 +19,10 @@ openAPI:
 
       ## Updates
 
+      New endpoints for counting the number of results: `getNumberOfDatasets`, `getNumberOfPlatforms`,
+      `getNumberOfResultSets`. These endpoints are faster than looking up `totalElements` as no data is retrieved or
+      converted.
+
       Enumerate all properties available for filtering and sorting in the description of the corresponding parameter.
       There's been a number of fixes and additional tests performed to ensure that all advertised properties are working
       as expected.
