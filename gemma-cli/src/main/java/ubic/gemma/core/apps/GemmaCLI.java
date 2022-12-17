@@ -28,6 +28,7 @@ import ubic.gemma.core.util.AbstractCLI;
 import ubic.gemma.core.util.CLI;
 import ubic.gemma.persistence.util.Settings;
 import ubic.gemma.persistence.util.SpringContextUtil;
+import ubic.gemma.persistence.util.SpringProfiles;
 
 import javax.annotation.Nullable;
 import java.io.PrintWriter;
@@ -85,10 +86,15 @@ public class GemmaCLI {
             return;
         }
 
+        List<String> profiles = new ArrayList<>();
+        profiles.add( "cli" );
+        if ( commandLine.hasOption( TESTING_OPTION ) ) {
+            profiles.add( SpringProfiles.TEST );
+        }
+
         // check for the -testing flag to load the appropriate application context
         /* webapp */
-        ApplicationContext ctx = SpringContextUtil.getApplicationContext( commandLine.hasOption( TESTING_OPTION ),
-                "classpath*:ubic/gemma/cliContext-component-scan.xml" );
+        ApplicationContext ctx = SpringContextUtil.getApplicationContext( profiles.toArray( new String[0] ) );
 
         /*
          * Guarantee that the security settings are uniform throughout the application (all threads).

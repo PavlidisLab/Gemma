@@ -5,6 +5,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import ubic.gemma.core.util.test.TestAuthenticationUtils;
 
@@ -13,9 +14,9 @@ import ubic.gemma.core.util.test.TestAuthenticationUtils;
  *
  * @author poirigui
  */
+@ActiveProfiles({ "web", "test" })
 @ContextConfiguration(locations = { "classpath*:ubic/gemma/applicationContext-*.xml",
-        "classpath*:gemma/gsec/applicationContext-*.xml",
-        "classpath:ubic/gemma/testDataSource.xml" })
+        "classpath*:gemma/gsec/applicationContext-*.xml" })
 public abstract class BaseJerseyIntegrationTest extends BaseJerseyTest {
 
     @Autowired

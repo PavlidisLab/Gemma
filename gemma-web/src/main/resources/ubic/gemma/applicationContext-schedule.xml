@@ -6,7 +6,8 @@
        xsi:schemaLocation="http://www.springframework.org/schema/beans
             http://www.springframework.org/schema/beans/spring-beans.xsd
             http://www.springframework.org/schema/task
-            http://www.springframework.org/schema/task/spring-task.xsd">
+            http://www.springframework.org/schema/task/spring-task.xsd"
+       profile="web">
 
     <!-- author: keshav -->
 
@@ -116,7 +117,7 @@
         <property name="concurrent" value="false"/>
         <property name="targetMethod" value="updateGene2CsEntries"/>
     </bean>
- 
+
     <bean id="neurocartaJobDetail"
           class="ubic.gemma.web.scheduler.SecureMethodInvokingJobDetailFactoryBean"
           p:targetObject-ref="phenotypeAssociationManagerService">

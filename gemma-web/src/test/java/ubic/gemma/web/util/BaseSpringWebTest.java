@@ -21,6 +21,7 @@ package ubic.gemma.web.util;
 import org.junit.Before;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.web.WebAppConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
@@ -39,6 +40,7 @@ import ubic.gemma.core.util.test.BaseSpringContextTest;
  *
  * @author pavlidis
  */
+@ActiveProfiles({ "web" })
 @WebAppConfiguration
 @ContextConfiguration(locations = { "classpath*:WEB-INF/gemma-servlet.xml" })
 public abstract class BaseSpringWebTest extends BaseSpringContextTest {

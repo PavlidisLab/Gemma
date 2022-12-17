@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+   http://www.springframework.org/schema/context  http://www.springframework.org/schema/context/spring-context-3.2.xsd"
+       profile="cli">
+
+    <!-- Standard CLI tools -->
+    <context:component-scan base-package="ubic.gemma.core.apps"
+                            name-generator="ubic.gemma.persistence.util.BeanNameGenerator">
+        <!-- FIXME: we should use @Component on each CLI, or maybe introduce a @CLI annotation -->
+        <context:include-filter type="assignable" expression="ubic.gemma.core.util.CLI"/>
+    </context:component-scan>
+
+    <!-- Non-standard CLI tools used to load data into Gemma database -->
+    <context:component-scan base-package="ubic.gemma.core.loader"
+                            name-generator="ubic.gemma.persistence.util.BeanNameGenerator">
+        <context:include-filter type="assignable" expression="ubic.gemma.core.util.CLI"/>
+    </context:component-scan>
+
+    <!-- CLI tools from contrib packages -->
+    <context:component-scan base-package="ubic.gemma.contrib.apps"
+                            name-generator="ubic.gemma.persistence.util.BeanNameGenerator">
+        <context:include-filter type="assignable" expression="ubic.gemma.core.util.CLI"/>
+    </context:component-scan>
+</beans>

@@ -23,6 +23,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
+import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 
 import java.util.ArrayList;
@@ -42,29 +43,32 @@ public class SpringContextUtil {
     /**
      * Obtain an application context for Gemma.
      *
-     * @param testing                           If true, it will get a test-configured application context
-     * @param additionalConfigurationLocations, like "classpath*:/myproject/applicationContext-mine.xml"
+     * @param activeProfiles list of active profiles, for testing use {@link SpringProfiles#TEST}
+     * @param additionalConfigurationLocations a list of additional configuration location to load beans from
      * @return a fully initialized {@link ApplicationContext}
      * @throws org.springframework.beans.BeansException if the creation of the context fails
      */
-    public static ApplicationContext getApplicationContext( boolean testing, String... additionalConfigurationLocations ) throws BeansException {
+    public static ApplicationContext getApplicationContext( String[] activeProfiles, String... additionalConfigurationLocations ) throws BeansException {
         List<String> paths = new ArrayList<>();
 
         paths.add( "classpath*:gemma/gsec/applicationContext-*.xml" );
         paths.add( "classpath*:ubic/gemma/applicationContext-*.xml" );
 
-        if ( testing ) {
-            paths.add( "classpath:ubic/gemma/testDataSource.xml" );
-        } else {
-            paths.add( "classpath:ubic/gemma/dataSource.xml" );
-        }
-
         paths.addAll( Arrays.asList( additionalConfigurationLocations ) );
 
         StopWatch timer = StopWatch.createStarted();
         try {
-            SpringContextUtil.log.info( "Loading Gemma" + ( testing ? " test " : " " ) + "context, hold on!" );
-            return new ClassPathXmlApplicationContext( paths.toArray( new String[0] ) );
+            ConfigurableApplicationContext context = new ClassPathXmlApplicationContext( paths.toArray( new String[0] ), false );
+            for ( String activeProfile : activeProfiles ) {
+                context.getEnvironment().addActiveProfile( activeProfile );
+            }
+            if ( !context.getEnvironment().acceptsProfiles( SpringProfiles.PRODUCTION, SpringProfiles.DEV, SpringProfiles.TEST ) ) {
+                log.warn( "No profiles were detected, activating the 'dev' profile as a fallback. Use -Dspring.profiles.active=dev explicitly to remove this warning." );
+                context.getEnvironment().addActiveProfile( SpringProfiles.DEV );
+            }
+            SpringContextUtil.log.info( "Loading Gemma context (active profiles: " + String.join( ", ", context.getEnvironment().getActiveProfiles() ) + "), hold on!" );
+            context.refresh();
+            return context;
         } finally {
             SpringContextUtil.log.info( "Got Gemma context in " + timer.getTime( TimeUnit.MILLISECONDS ) + " ms." );
         }
@@ -72,18 +76,18 @@ public class SpringContextUtil {
 
     /**
      * @deprecated this method does not support producing Gemma Web contexts, please migrate existing code to use
-     * {@link #getApplicationContext(boolean, String...)} instead.
+     * {@link #getApplicationContext(String[], String...)} instead.
      *
      * @param isWebApp If true, a {@link UnsupportedOperationException} will be raised since retrieving the Web
      *                 application context is not supported from here. Use WebApplicationContextUtils.getWebApplicationContext()
      *                 instead. This is only kept for backward-compatibility with external scripts.
-     * @see #getApplicationContext(boolean, String...)
+     * @see #getApplicationContext(String[], String...)
      */
     @Deprecated
     public static ApplicationContext getApplicationContext( boolean testing, boolean isWebApp, String[] additionalConfigurationLocations ) throws BeansException {
         if ( isWebApp ) {
             throw new UnsupportedOperationException( "The Web app context cannot be retrieved from here, use WebApplicationContextUtils.getWebApplicationContext() instead." );
         }
-        return getApplicationContext( testing, additionalConfigurationLocations );
+        return getApplicationContext( testing ? new String[] { "testing" } : new String[0], additionalConfigurationLocations );
     }
 }
