@@ -25,6 +25,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -37,6 +38,7 @@ import ubic.gemma.core.annotation.reference.BibliographicReferenceService;
 import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.core.loader.entrez.pubmed.PubMedXMLFetcher;
 import ubic.gemma.core.loader.genome.gene.ncbi.homology.HomologeneService;
+import ubic.gemma.core.loader.genome.gene.ncbi.homology.HomologeneServiceFactory;
 import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.search.SearchResult;
@@ -103,9 +105,6 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     private GeneService geneService;
 
     @Autowired
-    private HomologeneService homologeneService;
-
-    @Autowired
     private PhenotypeAssoOntologyHelper ontologyHelper = null;
 
     @Autowired
@@ -130,6 +129,9 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
+
+    @Autowired
+    private BeanFactory beanFactory;
 
     @Override
     public void afterPropertiesSet() {
@@ -1814,7 +1816,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         // Get the Gene object for finding homologues' evidence.
         Gene gene = this.geneService.load( geneId );
 
-        Collection<Gene> homologues = this.homologeneService.getHomologues( gene );
+        Collection<Gene> homologues = beanFactory.getBean( HomologeneService.class ).getHomologues( gene );
 
         Collection<PhenotypeAssociation> homologuePhenotypeAssociations = new HashSet<>();
 
@@ -2131,7 +2133,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
                             geneSymbols.add( gene.getOfficialSymbol() );
                             cacheMap.put( geneNCBI, gene.getOfficialSymbol() );
                         } else {
-                            Gene homoGene = this.homologeneService.getHomologue( gene, taxon );
+                            Gene homoGene = this.beanFactory.getBean( HomologeneService.class ).getHomologue( gene, taxon );
 
                             if ( homoGene != null ) {
                                 geneSymbols.add( homoGene.getOfficialSymbol() );

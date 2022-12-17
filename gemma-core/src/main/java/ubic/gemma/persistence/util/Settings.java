@@ -23,11 +23,17 @@ import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.FileSystemResource;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.UrlResource;
+import org.springframework.util.ResourceUtils;
 import ubic.basecode.util.ConfigUtils;
 
 import java.io.File;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.net.MalformedURLException;
 import java.util.*;
 
 /**
@@ -452,4 +458,20 @@ public class Settings {
         Settings.config.setProperty( key, value );
     }
 
+    public static Resource getResource( String key ) {
+        String val = getString( key );
+        if ( val == null ) {
+            return null;
+        } else if ( val.startsWith( "classpath:" ) ) {
+            return new ClassPathResource( getString( key ) );
+        } else if ( val.startsWith( "file:" ) || val.startsWith( "http:" ) || val.startsWith( "https:" ) || val.startsWith( "ftp:" ) ) {
+            try {
+                return new UrlResource( val );
+            } catch ( MalformedURLException e ) {
+                throw new RuntimeException( e );
+            }
+        } else {
+            return new FileSystemResource( val );
+        }
+    }
 }

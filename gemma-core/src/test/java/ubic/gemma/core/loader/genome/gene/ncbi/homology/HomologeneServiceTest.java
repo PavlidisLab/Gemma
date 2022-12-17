@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2009 Columbia University
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -22,6 +22,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import org.springframework.core.io.ClassPathResource;
 import ubic.gemma.core.util.test.BaseSpringContextTest;
 
 import java.io.InputStream;
@@ -38,30 +39,26 @@ import static org.junit.Assert.assertNotNull;
 public class HomologeneServiceTest extends BaseSpringContextTest {
 
     @Autowired
-    private HomologeneService hgs;
+    private HomologeneServiceFactory hgs;
+
+    @Before
+    public void setUp() throws Exception {
+        hgs.setHomologeneFile( new ClassPathResource( "/data/loader/genome/homologene/homologene.testdata.txt" ) );
+    }
 
     @Test
-    public final void testGetHomologues() {
+    public final void testGetHomologues() throws Exception {
         long id = 34;
-        Collection<Long> homologenes = hgs.getHomologues( id );
+        Collection<Long> homologenes = hgs.getObject().getHomologues( id );
         assertNotNull( homologenes );
         assertEquals( 11, homologenes.size() );
     }
 
     @Test
-    public final void testGetHomologues2() {
-        Collection<Long> homologenes = hgs.getNCBIGeneIdsInGroup( 3 );
+    public final void testGetHomologues2() throws Exception {
+        Collection<Long> homologenes = hgs.getObject().getNCBIGeneIdsInGroup( 3 );
         assertNotNull( homologenes );
         assertEquals( 12, homologenes.size() );
-    }
-
-    @Before
-    public void setUp() throws Exception {
-        try (InputStream is = this.getClass()
-                .getResourceAsStream( "/data/loader/genome/homologene/homologene.testdata.txt" )) {
-            assert is != null;
-            hgs.parseHomologeneFile( is );
-        }
     }
 
 }

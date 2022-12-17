@@ -19,11 +19,13 @@
 
 package ubic.gemma.core.genome.gene.service;
 
+import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.core.genome.gene.GeneSetValueObjectHelper;
 import ubic.gemma.core.loader.genome.gene.ncbi.homology.HomologeneService;
+import ubic.gemma.core.loader.genome.gene.ncbi.homology.HomologeneServiceFactory;
 import ubic.gemma.core.ontology.providers.GeneOntologyService;
 import ubic.gemma.core.search.GeneSetSearch;
 import ubic.gemma.core.search.SearchException;
@@ -32,7 +34,6 @@ import ubic.gemma.core.search.SearchService;
 import ubic.gemma.model.association.Gene2GOAssociation;
 import ubic.gemma.model.association.coexpression.GeneCoexpressionNodeDegreeValueObject;
 import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
-import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.description.AnnotationValueObject;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.common.search.SearchSettings;
@@ -82,11 +83,11 @@ public class GeneServiceImpl extends AbstractFilteringVoEnabledService<Gene, Gen
     @Autowired
     private GeneSetValueObjectHelper geneSetValueObjectHelper;
     @Autowired
-    private HomologeneService homologeneService;
-    @Autowired
     private SearchService searchService;
     @Autowired
     private TaxonService taxonService;
+    @Autowired
+    private BeanFactory beanFactory;
 
     @Autowired
     public GeneServiceImpl( GeneDao geneDao ) {
@@ -329,7 +330,7 @@ public class GeneServiceImpl extends AbstractFilteringVoEnabledService<Gene, Gen
 
         gvo.setGeneSets( gsVos );
 
-        Collection<Gene> geneHomologues = this.homologeneService.getHomologues( gene );
+        Collection<Gene> geneHomologues = this.beanFactory.getBean( HomologeneService.class ).getHomologues( gene );
         geneHomologues = this.thawLite( geneHomologues );
         Collection<GeneValueObject> homologues = this.loadValueObjects( geneHomologues );
 
@@ -398,7 +399,7 @@ public class GeneServiceImpl extends AbstractFilteringVoEnabledService<Gene, Gen
         gsVos.addAll( geneSetValueObjectHelper.convertToValueObjects( geneSets, false ) );
         details.setGeneSets( gsVos );
 
-        Collection<Gene> geneHomologues = homologeneService.getHomologues( gene );
+        Collection<Gene> geneHomologues = beanFactory.getBean( HomologeneService.class ).getHomologues( gene );
         geneHomologues = this.thawLite( geneHomologues );
         Collection<GeneValueObject> homologues = this.loadValueObjects( geneHomologues );
         details.setHomologues( homologues );
