@@ -27,9 +27,9 @@ import ubic.gemma.model.genome.gene.phenotype.valueObject.ExternalDatabaseStatis
 import ubic.gemma.model.genome.gene.phenotype.valueObject.GeneEvidenceValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.PhenotypeValueObject;
 import ubic.gemma.persistence.service.AbstractService;
-import ubic.gemma.persistence.service.BaseDao;
 import ubic.gemma.persistence.service.association.phenotype.*;
 
+import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
@@ -79,8 +79,8 @@ public class PhenotypeAssociationServiceImpl extends AbstractService<PhenotypeAs
      */
     @Override
     @Transactional(readOnly = true)
-    public Collection<GeneEvidenceValueObject> findGenesWithPhenotypes( Set<String> phenotypesValueUris, Taxon taxon,
-            boolean showOnlyEditable, Collection<Long> externalDatabaseIds ) {
+    public Collection<GeneEvidenceValueObject> findGenesWithPhenotypes( Set<String> phenotypesValueUris, @Nullable Taxon taxon,
+            boolean showOnlyEditable, @Nullable Collection<Long> externalDatabaseIds ) {
         return this.phenotypeAssociationDao
                 .findGenesWithPhenotypes( phenotypesValueUris, taxon, showOnlyEditable, externalDatabaseIds );
     }
@@ -181,7 +181,7 @@ public class PhenotypeAssociationServiceImpl extends AbstractService<PhenotypeAs
     @Override
     @Transactional(readOnly = true)
     public Collection<PhenotypeAssociation> findPhenotypeAssociationForGeneIdAndDatabases( Long geneId,
-            Collection<Long> externalDatabaseIds ) {
+            @Nullable Collection<Long> externalDatabaseIds ) {
         return this.phenotypeAssociationDao
                 .findPhenotypeAssociationForGeneIdAndDatabases( geneId, externalDatabaseIds );
     }
@@ -251,8 +251,8 @@ public class PhenotypeAssociationServiceImpl extends AbstractService<PhenotypeAs
      */
     @Override
     @Transactional(readOnly = true)
-    public Map<String, Set<Integer>> findPublicPhenotypesGenesAssociations( Taxon taxon, Set<String> valuesUri,
-            String userName, Collection<String> groups, boolean showOnlyEditable, Collection<Long> externalDatabaseIds,
+    public Map<String, Set<Integer>> findPublicPhenotypesGenesAssociations( @Nullable Taxon taxon, @Nullable Set<String> valuesUri,
+            @Nullable String userName, @Nullable Collection<String> groups, boolean showOnlyEditable, @Nullable Collection<Long> externalDatabaseIds,
             boolean noElectronicAnnotation ) {
         // FIXME bug 4349 - userName is not used!
         return this.phenotypeAssociationDao
@@ -269,7 +269,7 @@ public class PhenotypeAssociationServiceImpl extends AbstractService<PhenotypeAs
      */
     @Override
     @Transactional(readOnly = true)
-    public Set<Long> findPrivateEvidenceId( String userName, Collection<String> groups, Long taxonId, int limit ) {
+    public Set<Long> findPrivateEvidenceId( @Nullable String userName, @Nullable Collection<String> groups, Long taxonId, int limit ) {
         return this.phenotypeAssociationDao.findPrivateEvidenceId( taxonId, limit );
     }
 
@@ -285,8 +285,8 @@ public class PhenotypeAssociationServiceImpl extends AbstractService<PhenotypeAs
      */
     @Override
     @Transactional(readOnly = true)
-    public Map<String, Set<Integer>> findPrivatePhenotypesGenesAssociations( Taxon taxon, Set<String> valuesUri,
-            String userName, Collection<String> groups, boolean showOnlyEditable, Collection<Long> externalDatabaseIds,
+    public Map<String, Set<Integer>> findPrivatePhenotypesGenesAssociations( @Nullable Taxon taxon, @Nullable Set<String> valuesUri,
+            @Nullable String userName, @Nullable Collection<String> groups, boolean showOnlyEditable, @Nullable Collection<Long> externalDatabaseIds,
             boolean noElectronicAnnotation ) {
         // FIXME bug 4349 - userName is not used!
         return this.phenotypeAssociationDao
