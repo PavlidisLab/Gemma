@@ -60,7 +60,6 @@ import ubic.gemma.persistence.service.analysis.expression.diff.GeneDiffExMetaAna
 import ubic.gemma.persistence.service.association.phenotype.PhenotypeAssociationDaoImpl;
 import ubic.gemma.persistence.service.association.phenotype.service.PhenotypeAssociationService;
 import ubic.gemma.persistence.service.common.description.CharacteristicService;
-import ubic.gemma.persistence.service.common.description.DatabaseEntryDao;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.persistence.util.EntityUtils;
@@ -94,9 +93,6 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
     @Autowired
     private CharacteristicService characteristicService;
-
-    @Autowired
-    private DatabaseEntryDao databaseEntryDao;
 
     @Autowired
     private GeneDiffExMetaAnalysisService geneDiffExMetaAnalysisService;
@@ -746,11 +742,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         timer.start();
         List<CharacteristicValueObject> orderedPhenotypesFromOntology = new ArrayList<>();
 
-        boolean geneProvided = true;
-
-        if ( geneId == null ) {
-            geneProvided = false;
-        }
+        boolean geneProvided = geneId != null;
 
         // prepare the searchQuery to correctly query the Ontology
         String newSearchQuery = this.prepareOntologyQuery( searchQuery );
@@ -1165,7 +1157,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
                     .debug( "After symlink code; symlink now exists: " + symbolicLink.exists() );
             PhenotypeAssociationManagerServiceImpl.log
                     .debug( "Right before ErmineJ; latest dir exists: " + mainFolder.exists() + " and is: " + mainFolder
-                            .toPath().toString() );
+                            .toPath() );
 
             this.writeErmineJFile( ermineJFolderPath, disclaimer, this.taxonService.findByCommonName( "mouse" ),
                     false );
@@ -1401,6 +1393,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
                         if ( !bibliographicPhenotypesValueObject.getPhenotypesValues().contains( phenotype ) ) {
                             containsExact = false;
+                            break;
                         }
                     }
 
@@ -1503,6 +1496,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
                 for ( String pheno : possiblePheno ) {
                     if ( allPhenotypesOnGene.contains( pheno ) ) {
                         foundSpecificPheno = true;
+                        break;
                     }
                 }
 
@@ -1527,9 +1521,9 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
         for ( PhenotypeAssociation p : phenotypeAssociations ) {
 
-            Boolean currentUserHasWritePermission = false;
-            Boolean isShared = this.securityService.isShared( p );
-            Boolean currentUserIsOwner = this.securityService.isOwnedByCurrentUser( p );
+            boolean currentUserHasWritePermission = false;
+            boolean isShared = this.securityService.isShared( p );
+            boolean currentUserIsOwner = this.securityService.isOwnedByCurrentUser( p );
 
             if ( isShared ) {
                 currentUserHasWritePermission = this.securityService.isEditable( p );
@@ -1779,11 +1773,11 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
     private void findEvidencePermissions( PhenotypeAssociation p, EvidenceValueObject<?> evidenceValueObject ) {
 
-        Boolean currentUserHasWritePermission = false;
+        boolean currentUserHasWritePermission = false;
         String owner = null;
-        Boolean isPublic = this.securityService.isPublic( p );
-        Boolean isShared = this.securityService.isShared( p );
-        Boolean currentUserIsOwner = this.securityService.isOwnedByCurrentUser( p );
+        boolean isPublic = this.securityService.isPublic( p );
+        boolean isShared = this.securityService.isShared( p );
+        boolean currentUserIsOwner = this.securityService.isOwnedByCurrentUser( p );
 
         if ( currentUserIsOwner || isPublic || isShared || SecurityUtil.isUserAdmin() ) {
 
@@ -1827,7 +1821,6 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         }
 
         if ( evidenceFilter != null && evidenceFilter.isShowOnlyEditable() ) {
-            //noinspection unchecked
             homologuePhenotypeAssociations = this
                     .filterPhenotypeAssociationsMyAnnotation( homologuePhenotypeAssociations );
         }
@@ -2058,7 +2051,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
      */
     private String prepareOntologyQuery( String query ) {
         if ( query == null )
-            return query;
+            return null;
         String newSearchQuery = query.trim();
         if ( !query.endsWith( "\"" ) && !query.endsWith( "*" ) ) {
             newSearchQuery = newSearchQuery + "*";

@@ -195,8 +195,6 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
             uris.put( c.getUri(), c );
         }
 
-        assert !uris.isEmpty();
-
         Session sess = this.getSessionFactory().getCurrentSession();
 
         String q = "select distinct ph.gene, p.valueUri, p.evidenceCode "
@@ -250,8 +248,8 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
      * </ul>
      */
     @Override
-    public Collection<GeneEvidenceValueObject> findGenesWithPhenotypes( Set<String> phenotypeUris, Taxon taxon,
-            boolean showOnlyEditable, Collection<Long> externalDatabaseIds ) {
+    public Collection<GeneEvidenceValueObject> findGenesWithPhenotypes( Set<String> phenotypeUris, @Nullable Taxon taxon,
+            boolean showOnlyEditable, @Nullable Collection<Long> externalDatabaseIds ) {
 
         if ( phenotypeUris.isEmpty() ) {
             return new HashSet<>();
@@ -279,7 +277,7 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
         SQLQuery queryObject = this.getSessionFactory().getCurrentSession().createSQLQuery( sqlQuery );
         queryObject.setParameterList( "valueUris", phenotypeUris );
 
-        if ( sqlQuery.contains( ":taxonId" ) ) {
+        if ( taxon != null ) {
             queryObject.setParameter( "taxonId", taxon.getId() );
         }
         EntityUtils.addUserAndGroupParameters( queryObject, this.getSessionFactory() );
@@ -304,7 +302,7 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
      */
     @Override
     public Collection<PhenotypeAssociation> findPhenotypeAssociationForGeneIdAndDatabases( Long geneId,
-            Collection<Long> externalDatabaseIds ) {
+            @Nullable Collection<Long> externalDatabaseIds ) {
 
         boolean excludeManualCuration = false;
         boolean excludeExternalDatabase = false;
@@ -387,7 +385,7 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
     @Override
     public Collection<PhenotypeAssociation> findPhenotypeAssociationWithIds( Collection<Long> paIds ) {
 
-        if ( paIds == null || paIds.isEmpty() ) {
+        if ( paIds.isEmpty() ) {
             return new HashSet<>();
         }
 
@@ -411,7 +409,7 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
     }
 
     @Override
-    public Set<Long> findPrivateEvidenceId( Long taxonId, int limit ) {
+    public Set<Long> findPrivateEvidenceId( @Nullable Long taxonId, int limit ) {
 
         String limitAbs;
         String orderBy;
@@ -471,8 +469,8 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
      * find all private phenotypes associated with genes on a specific taxon and containing the valuesUri
      */
     @Override
-    public Map<String, Set<Integer>> findPrivatePhenotypesGenesAssociations( Taxon taxon, Set<String> valuesUri,
-            boolean showOnlyEditable, Collection<Long> externalDatabaseIds, boolean noElectronicAnnotation ) {
+    public Map<String, Set<Integer>> findPrivatePhenotypesGenesAssociations( @Nullable Taxon taxon, @Nullable Set<String> valuesUri,
+            boolean showOnlyEditable, @Nullable Collection<Long> externalDatabaseIds, boolean noElectronicAnnotation ) {
 
         /*
          * At this level of the application, we can't access acls. The reason for this so we don't get uneven page
@@ -507,7 +505,7 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
             queryObject.setParameterList( "valueUris", valuesUri );
         }
 
-        if ( sqlQuery.contains( ":taxonId" ) ) {
+        if ( taxon != null ) {
             queryObject.setParameter( "taxonId", taxon.getId() );
         }
 
@@ -520,8 +518,8 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
      * find all public phenotypes associated with genes on a specific taxon and containing the valuesUri
      */
     @Override
-    public Map<String, Set<Integer>> findPublicPhenotypesGenesAssociations( Taxon taxon, Set<String> valuesUri,
-            boolean showOnlyEditable, Collection<Long> externalDatabaseIds, boolean noElectronicAnnotation ) {
+    public Map<String, Set<Integer>> findPublicPhenotypesGenesAssociations( @Nullable Taxon taxon, @Nullable Set<String> valuesUri,
+            boolean showOnlyEditable, @Nullable Collection<Long> externalDatabaseIds, boolean noElectronicAnnotation ) {
 
         String sqlQuery = "select gene.NCBI_GENE_ID, charac.VALUE_URI ";
         sqlQuery += this.getPhenotypesGenesAssociationsBeginQuery( true );
@@ -555,7 +553,7 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
             queryObject.setParameterList( "valueUris", valuesUri );
         }
 
-        if ( sqlQuery.contains( ":taxonId" ) ) {
+        if ( taxon != null ) {
             queryObject.setParameter( "taxonId", taxon.getId() );
         }
 
@@ -600,8 +598,8 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
      */
     @Override
     public Set<String> loadAllPhenotypesUri() {
-        //noinspection unchecked
-        return new HashSet<>( this.getSessionFactory().getCurrentSession()
+        // noinspection unchecked
+        return new HashSet<>( ( List<String> ) this.getSessionFactory().getCurrentSession()
                 .createQuery( "select distinct c.valueUri from PhenotypeAssociation p join p.phenotypes c" )
                 .setCacheable( true ).setCacheRegion( null ).list() );
     }
@@ -771,12 +769,12 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
     }
 
     @SuppressWarnings("ConstantConditions") // Better readability
-    private String addExternalDatabaseQuery( Collection<Long> externalDatabaseIds ) {
+    private String addExternalDatabaseQuery( @Nullable Collection<Long> externalDatabaseIds ) {
 
         String externalDatabaseSqlQuery = "";
         StringBuilder listIds = new StringBuilder();
-        Boolean excludeManualCuration = false;
-        Boolean excludeExternalDatabase = false;
+        boolean excludeManualCuration = false;
+        boolean excludeExternalDatabase = false;
 
         if ( externalDatabaseIds != null && !externalDatabaseIds.isEmpty() ) {
 
@@ -811,11 +809,11 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
 
     }
 
-    private String addTaxonToQuery( Taxon taxon ) {
+    private String addTaxonToQuery( @Nullable Taxon taxon ) {
         return this.addTaxonToQuery( taxon, true );
     }
 
-    private String addTaxonToQuery( Taxon taxon, boolean useAnd ) {
+    private String addTaxonToQuery( @Nullable Taxon taxon, boolean useAnd ) {
         String taxonSqlQuery = "";
         if ( taxon != null && taxon.getId() != null && !taxon.getId().equals( 0L ) ) {
             taxonSqlQuery = ( useAnd ? "and" : "" ) + " tax.ID = :taxonId ";
@@ -830,7 +828,7 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
      * @param valuesUris uris
      * @return complete string
      */
-    private String addValuesUriToQuery( String keyWord, Set<String> valuesUris ) {
+    private String addValuesUriToQuery( String keyWord, @Nullable Set<String> valuesUris ) {
 
         String query = "";
         if ( valuesUris != null && !valuesUris.isEmpty() ) {
