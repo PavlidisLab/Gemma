@@ -39,6 +39,7 @@ import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.web.services.rest.util.MediaTypeUtils;
 import ubic.gemma.web.services.rest.util.PaginatedResponseDataObject;
 import ubic.gemma.web.services.rest.util.Responder;
+import ubic.gemma.web.services.rest.util.ResponseDataObject;
 import ubic.gemma.web.services.rest.util.args.*;
 
 import javax.ws.rs.*;
@@ -97,6 +98,16 @@ public class PlatformsWebService {
             @QueryParam("sort") @DefaultValue("+id") SortArg sort // Optional, default +id
     ) {
         return Responder.paginate( arrayDesignService.loadValueObjectsPreFilter( filter.getFilters( arrayDesignService ), sort.getSort( arrayDesignService ), offset.getValue(), limit.getValue() ) );
+    }
+
+    @GET
+    @Path("/count")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(summary = "Count platforms matching a given set of filters")
+    public ResponseDataObject<Long> getNumberOfPlatforms(
+            @Schema(extensions = { @Extension(name = "gemma", properties = { @ExtensionProperty(name = "filteringService", value = "arrayDesignService") }) })
+            @QueryParam("filter") @DefaultValue("") FilterArg<ArrayDesign> filter ) {
+        return Responder.respond( arrayDesignService.countValueObjectsPreFilter( filter.getFilters( arrayDesignService ) ) );
     }
 
     /**
