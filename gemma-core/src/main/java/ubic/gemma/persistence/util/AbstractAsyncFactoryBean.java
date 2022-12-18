@@ -69,6 +69,11 @@ public abstract class AbstractAsyncFactoryBean<T> implements AsyncFactoryBean<T>
     }
 
     @Override
+    public final boolean isInitialized() {
+        return isSingleton() && singletonBean != null;
+    }
+
+    @Override
     @OverridingMethodsMustInvokeSuper
     public void destroy() {
         for ( Future<T> f : pendingBeans ) {

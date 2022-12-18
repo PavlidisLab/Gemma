@@ -32,6 +32,9 @@ public class HomologeneServiceFactory extends AbstractAsyncFactoryBean<Homologen
      * {@link HomologeneFetcher} for legacy reasons.
      */
     public void setHomologeneFile( Resource homologeneFile ) {
+        if ( isInitialized() ) {
+            throw new IllegalStateException( "The Homologene service has already been initialized, changing the resource is not allowed." );
+        }
         this.homologeneFile = homologeneFile;
     }
 
