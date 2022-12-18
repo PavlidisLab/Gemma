@@ -28,6 +28,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.context.ContextLoaderListener;
 import org.springframework.web.context.support.WebApplicationContextUtils;
 import ubic.gemma.core.loader.genome.gene.ncbi.homology.HomologeneServiceFactory;
+import ubic.gemma.persistence.util.AsyncBeanFactory;
 import ubic.gemma.persistence.util.Settings;
 import ubic.gemma.web.scheduler.SchedulerUtils;
 import ubic.gemma.web.util.Constants;
@@ -127,8 +128,8 @@ public class StartupListener extends ContextLoaderListener {
 
     private void initializeHomologene( ApplicationContext ctx ) {
         // this is a lazy bean, so obtaining it will trigger its initialization
-        HomologeneServiceFactory homologeneServiceFactory = ctx.getBean( HomologeneServiceFactory.class );
-        homologeneServiceFactory.getObjectAsync();
+        AsyncBeanFactory asyncCtx = ctx.getBean( AsyncBeanFactory.class );
+        asyncCtx.getBeanAsync( HomologeneServiceFactory.class );
     }
 
     /**

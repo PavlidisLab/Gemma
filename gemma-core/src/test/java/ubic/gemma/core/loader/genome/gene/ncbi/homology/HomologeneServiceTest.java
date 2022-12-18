@@ -23,11 +23,15 @@ import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.test.annotation.DirtiesContext;
 import ubic.gemma.core.util.test.BaseSpringContextTest;
+import ubic.gemma.persistence.util.AsyncBeanFactory;
 
 import java.io.InputStream;
 import java.util.Collection;
+import java.util.concurrent.TimeUnit;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
@@ -36,14 +40,28 @@ import static org.junit.Assert.assertNotNull;
  *
  * @author klc
  */
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 public class HomologeneServiceTest extends BaseSpringContextTest {
 
     @Autowired
     private HomologeneServiceFactory hgs;
 
+    @Autowired
+    private AsyncBeanFactory asyncBeanFactory;
+
     @Before
     public void setUp() throws Exception {
         hgs.setHomologeneFile( new ClassPathResource( "/data/loader/genome/homologene/homologene.testdata.txt" ) );
+    }
+
+    @Test
+    public void testGetServiceAsync() {
+        assertThat( hgs.getObjectAsync() ).succeedsWithin( 10, TimeUnit.SECONDS );
+    }
+
+    @Test
+    public void testGetServiceAsyncUsingAsyncFactoryBean() {
+        assertThat( asyncBeanFactory.getBeanAsync( HomologeneServiceFactory.class ) ).succeedsWithin( 10, TimeUnit.SECONDS );
     }
 
     @Test
