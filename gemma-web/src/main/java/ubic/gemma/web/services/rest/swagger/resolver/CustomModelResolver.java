@@ -50,7 +50,7 @@ public class CustomModelResolver extends ModelResolver {
     @Override
     public Schema resolve( AnnotatedType type, ModelConverterContext context, Iterator<ModelConverter> chain ) {
         JavaType t = Json.mapper().constructType( type.getType() );
-        if ( FilterArg.class.isAssignableFrom( t.getRawClass() ) ) {
+        if ( FilterArg.class.isAssignableFrom( t.getRawClass() ) || SortArg.class.isAssignableFrom( t.getRawClass() ) ) {
             return super.resolve( type, context, chain ).type( "string" ).properties( null );
         } else if ( Arg.class.isAssignableFrom( t.getRawClass() ) ) {
             // I'm suspecting there's a bug in Swagger that causes request parameters annotations to shadow the
@@ -88,17 +88,18 @@ public class CustomModelResolver extends ModelResolver {
         String description = super.resolveDescription( a, annotations, schema );
 
         // append available properties to the description
-        if ( FilterArg.class.isAssignableFrom( a.getRawType() ) ) {
-            String availableProperties = resolveAvailableProperties( schema );
+        if ( FilterArg.class.isAssignableFrom( a.getRawType() ) || SortArg.class.isAssignableFrom( a.getRawType() ) ) {
+            String availableProperties = resolveAvailableProperties( a, schema );
             return description == null ? availableProperties : description + "\n\n" + availableProperties;
         }
 
         return description;
     }
 
-    private String resolveAvailableProperties( io.swagger.v3.oas.annotations.media.Schema schema ) {
+    private String resolveAvailableProperties( Annotated a, io.swagger.v3.oas.annotations.media.Schema schema ) {
         String filteringServiceName = getGemmaExtensionProperty( schema, "filteringService" )
-                .orElseThrow( () -> new IllegalArgumentException( "A FilterArg must have an x-gemma extension with the filteringService field to resolve its available values." ) );
+                .orElseThrow( () -> new IllegalArgumentException( String.format( "A %s must have an x-gemma extension with the filteringService field to resolve its available values.",
+                        a.getRawType().getSimpleName() ) ) );
         FilteringVoEnabledService<?, ?> filteringService = beanFactory.getBean( filteringServiceName, FilteringVoEnabledService.class );
         return String.format( "Available properties:\n\n%s",
                 filteringService.getFilterableProperties().stream().sorted().map( p -> String.format( "- %s `%s`%s",

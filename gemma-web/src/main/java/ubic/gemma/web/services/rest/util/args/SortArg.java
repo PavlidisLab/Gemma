@@ -16,6 +16,7 @@ package ubic.gemma.web.services.rest.util.args;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import org.apache.commons.lang3.StringUtils;
+import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.persistence.service.FilteringVoEnabledService;
 import ubic.gemma.web.services.rest.util.MalformedArgException;
 
@@ -27,7 +28,7 @@ import javax.annotation.Nullable;
  * @author tesarst
  */
 @Schema(type = "string", pattern = "^(\\+|-?)(\\w+)$", description = "Order results by the given property and direction. The '+' sign indicate ascending order whereas the '-' indicate descending.")
-public class SortArg extends AbstractArg<SortArg.Sort> {
+public class SortArg<O extends Identifiable> extends AbstractArg<SortArg.Sort> {
     private static final String ERROR_MSG =
             "Value '%s' can not be interpreted as a sort argument. Correct syntax is: [+,-][field]. E.g: '-id' means 'order by ID descending. "
                     + "Make sure you URL encode the arguments, for example '+' has to be encoded to '%%2B'.";
@@ -44,7 +45,7 @@ public class SortArg extends AbstractArg<SortArg.Sort> {
      * @throws MalformedArgException in case the orderBy property cannot be applied for the given class, or if the
      *                               argument was malformed in the first place
      */
-    public ubic.gemma.persistence.util.Sort getSort( FilteringVoEnabledService<?, ?> service ) throws MalformedArgException {
+    public ubic.gemma.persistence.util.Sort getSort( FilteringVoEnabledService<O, ?> service ) throws MalformedArgException {
         ubic.gemma.persistence.util.Sort.Direction direction;
         if ( getValue().direction == Sort.Direction.ASC ) {
             direction = ubic.gemma.persistence.util.Sort.Direction.ASC;
@@ -68,11 +69,11 @@ public class SortArg extends AbstractArg<SortArg.Sort> {
      * throw a {@link javax.ws.rs.BadRequestException}, if the given string was not well-formed.
      */
     @SuppressWarnings("unused")
-    public static SortArg valueOf( final String s ) throws MalformedArgException {
+    public static <T extends Identifiable> SortArg<T> valueOf( final String s ) throws MalformedArgException {
         try {
             Sort.Direction direction = parseDirection( s.charAt( 0 ) );
             String orderBy = direction == null ? s : s.substring( 1 );
-            return new SortArg( orderBy, direction );
+            return new SortArg<>( orderBy, direction );
         } catch ( NullPointerException | IndexOutOfBoundsException | IllegalArgumentException e ) {
             throw new MalformedArgException( String.format( ERROR_MSG, s ), e );
         }
@@ -82,7 +83,7 @@ public class SortArg extends AbstractArg<SortArg.Sort> {
      * Decides whether the given char represents a true or false.
      *
      * @param c '+' or '-' character.
-     * @return true if character was '+', false if it was '-'. Null in any other case.
+     * @return {@link Sort.Direction#ASC} if character was '+', {@link Sort.Direction#DESC} if it was '-'. Null in any other case.
      */
     private static Sort.Direction parseDirection( char c ) {
         if ( c == ' ' ) {

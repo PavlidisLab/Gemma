@@ -24,6 +24,7 @@ import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.core.ontology.providers.GeneOntologyService;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.model.expression.designElement.CompositeSequenceValueObject;
+import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.GeneOntologyTermValueObject;
 import ubic.gemma.model.genome.PhysicalLocationValueObject;
 import ubic.gemma.model.genome.gene.GeneValueObject;
@@ -97,7 +98,7 @@ public class GeneWebService {
     public ResponseDataObject<List<GeneValueObject>> getGenes( // Params:
             @PathParam("genes") GeneArrayArg genes // Required
     ) {
-        SortArg sort = SortArg.valueOf( "+id" );
+        SortArg<Gene> sort = SortArg.valueOf( "+id" );
         Filters filters = Filters.empty();
         filters.and( genes.getFilters( geneService ) );
         return Responder.respond( geneService.loadValueObjectsPreFilter( filters, sort.getSort( geneService ), IntArg.valueOf( "0" ).getValue(), IntArg.valueOf( "-1" ).getValue() ) );

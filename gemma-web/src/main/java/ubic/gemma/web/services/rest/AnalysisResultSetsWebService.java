@@ -92,7 +92,8 @@ public class AnalysisResultSetsWebService {
             @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionAnalysisResultSet> filters,
             @QueryParam("offset") @DefaultValue("0") OffsetArg offset,
             @QueryParam("limit") @DefaultValue("20") LimitArg limit,
-            @QueryParam("sort") @DefaultValue("+id") SortArg sort ) {
+            @Schema(extensions = { @Extension(name = "gemma", properties = { @ExtensionProperty(name = "filteringService", value = "expressionAnalysisResultSetService") }) })
+            @QueryParam("sort") @DefaultValue("+id") SortArg<ExpressionAnalysisResultSet> sort ) {
         Collection<BioAssaySet> bas = null;
         if ( datasets != null ) {
             Collection<ExpressionExperiment> ees = new ArrayList<>( datasets.getEntities( expressionExperimentService ) );
@@ -116,7 +117,7 @@ public class AnalysisResultSetsWebService {
     @Operation(summary = "Count platforms matching a given set of filters")
     public ResponseDataObject<Long> getNumberOfResultSets(
             @Schema(extensions = { @Extension(name = "gemma", properties = { @ExtensionProperty(name = "filteringService", value = "arrayDesignService") }) })
-            @QueryParam("filter") @DefaultValue("") FilterArg<ArrayDesign> filter ) {
+            @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionAnalysisResultSet> filter ) {
         return Responder.respond( expressionAnalysisResultSetService.countValueObjectsPreFilter( filter.getFilters( expressionAnalysisResultSetService ) ) );
     }
 

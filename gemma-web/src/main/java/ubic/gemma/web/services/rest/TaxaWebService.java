@@ -231,7 +231,8 @@ public class TaxaWebService {
             @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filter, // Optional, default null
             @QueryParam("offset") @DefaultValue("0") OffsetArg offset, // Optional, default 0
             @QueryParam("limit") @DefaultValue("20") LimitArg limit, // Optional, default 20
-            @QueryParam("sort") @DefaultValue("+id") SortArg sort // Optional, default +id
+            @Schema(extensions = { @Extension(name = "gemma", properties = { @ExtensionProperty(name = "filteringService", value = "taxonService") }) })
+            @QueryParam("sort") @DefaultValue("+id") SortArg<Taxon> sort // Optional, default +id
     ) {
         return Responder.paginate(
                 taxonArg.getTaxonDatasets( expressionExperimentService, taxonService, filter.getFilters( expressionExperimentService ),
