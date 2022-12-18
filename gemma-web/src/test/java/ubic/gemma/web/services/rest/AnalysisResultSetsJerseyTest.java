@@ -6,7 +6,9 @@ import lombok.extern.apachecommons.CommonsLog;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
+import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.web.services.rest.util.BaseJerseyIntegrationTest;
@@ -26,6 +28,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  *
  * @author poirigui
  */
+@Category(SlowTest.class)
 @CommonsLog
 public class AnalysisResultSetsJerseyTest extends BaseJerseyIntegrationTest {
 

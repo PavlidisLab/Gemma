@@ -1,6 +1,7 @@
 package ubic.gemma.core.apps;
 
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -8,6 +9,7 @@ import org.springframework.test.context.ContextConfiguration;
 import ubic.gemma.core.util.test.BaseCliTest;
 import ubic.gemma.core.util.test.TestAuthenticationUtils;
 import ubic.gemma.core.util.test.TestAuthenticationUtilsImpl;
+import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.common.description.DatabaseType;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.persistence.service.association.Gene2GOAssociationService;
@@ -16,6 +18,7 @@ import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 
 import static org.mockito.Mockito.*;
 
+@Category(SlowTest.class)
 @ContextConfiguration
 public class NCBIGene2GOAssociationLoaderCLITest extends BaseCliTest {
 

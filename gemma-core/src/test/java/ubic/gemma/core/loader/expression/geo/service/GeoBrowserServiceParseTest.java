@@ -16,7 +16,9 @@ package ubic.gemma.core.loader.expression.geo.service;
 
 import org.junit.Test;
 
+import org.junit.experimental.categories.Category;
 import ubic.gemma.core.loader.expression.geo.model.GeoRecord;
+import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
@@ -33,6 +35,7 @@ import static org.mockito.Mockito.*;
 /**
  * @author paul
  */
+@Category(SlowTest.class)
 public class GeoBrowserServiceParseTest {
 
     @Test

@@ -38,7 +38,7 @@ import static org.junit.Assert.assertEquals;
 /**
  * @author pavlidis
  */
-@Category(GeoTest.class)
+@Category({ GeoTest.class, SlowTest.class })
 public class GeoBrowserTest {
 
     private static final Log log = LogFactory.getLog( GeoBrowserTest.class );

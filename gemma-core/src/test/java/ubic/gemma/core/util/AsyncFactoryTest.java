@@ -24,7 +24,7 @@ public class AsyncFactoryTest extends AbstractJUnit4SpringContextTests {
     public static class MyService {
         public MyService() throws InterruptedException {
             try {
-                Thread.sleep( 1000 );
+                Thread.sleep( 200 );
             } catch ( InterruptedException e ) {
                 System.out.println( "Got interrupted!" );
                 throw e;
@@ -88,7 +88,7 @@ public class AsyncFactoryTest extends AbstractJUnit4SpringContextTests {
         }
         stopWatch.stop();
         // loading them all sequentially would take 10s
-        Assert.assertTrue( stopWatch.getTotalTimeMillis() < 4000 );
+        Assert.assertTrue( stopWatch.getTotalTimeMillis() < 1000 );
     }
 
     @Test

@@ -21,6 +21,9 @@ package ubic.gemma.core.loader.expression.arrayExpress;
 import junit.framework.TestCase;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.junit.Assume;
+import org.junit.experimental.categories.Category;
+import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.common.description.LocalFile;
 
 import java.util.Collection;
@@ -28,6 +31,7 @@ import java.util.Collection;
 /**
  * @author paul
  */
+@Category(SlowTest.class)
 public class SDRFFetcherTest extends TestCase {
 
     private static final Log log = LogFactory.getLog( SDRFFetcherTest.class.getName() );
@@ -39,9 +43,9 @@ public class SDRFFetcherTest extends TestCase {
             TestCase.assertEquals( 1, fetch.size() );
         } catch ( RuntimeException e ) {
             if ( e.getCause() instanceof java.net.ConnectException ) {
-                SDRFFetcherTest.log.warn( "Test skipped due to connection exception" );
+                Assume.assumeNoException( "Test skipped due to connection exception", e );
             } else if ( e.getCause() instanceof java.net.UnknownHostException ) {
-                SDRFFetcherTest.log.warn( "Test skipped due to unknown host exception" );
+                Assume.assumeNoException( "Test skipped due to unknown host exception", e );
             } else {
                 throw ( e );
             }
