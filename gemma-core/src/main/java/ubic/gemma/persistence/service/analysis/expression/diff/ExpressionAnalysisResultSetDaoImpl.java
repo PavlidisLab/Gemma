@@ -172,8 +172,8 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilterin
 
     @Override
     public Slice<DifferentialExpressionAnalysisResultSetValueObject> findByBioAssaySetInAndDatabaseEntryInLimit( @Nullable Collection<BioAssaySet> bioAssaySets, @Nullable Collection<DatabaseEntry> databaseEntries, @Nullable Filters filters, int offset, int limit, @Nullable Sort sort ) {
-        Criteria query = getLoadValueObjectsCriteria( filters );
-        Criteria totalElementsQuery = getLoadValueObjectsCriteria( filters );
+        Criteria query = getFilteringCriteria( filters );
+        Criteria totalElementsQuery = getFilteringCriteria( filters );
 
         if ( bioAssaySets != null ) {
             query.add( Restrictions.in( "a.experimentAnalyzed", bioAssaySets ) );
@@ -204,7 +204,7 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilterin
     }
 
     @Override
-    protected Criteria getLoadValueObjectsCriteria( @Nullable Filters filters ) {
+    protected Criteria getFilteringCriteria( @Nullable Filters filters ) {
         Criteria query = this.getSessionFactory().getCurrentSession()
                 .createCriteria( ExpressionAnalysisResultSet.class )
                 // these two are necessary for ACL filtering, so we must use a (default) inner jointure

@@ -2,6 +2,7 @@ package ubic.gemma.persistence.service.expression.experiment;
 
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.description.AnnotationValueObject;
+import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -168,6 +169,22 @@ public interface ExpressionExperimentDao
     Collection<? extends AnnotationValueObject> getAnnotationsByBioMaterials( Long eeId );
 
     Collection<? extends AnnotationValueObject> getAnnotationsByFactorvalues( Long eeId );
+
+    /**
+     * Obtain usage frequency for all annotations.
+     * @param maxResults maximum number of characteristics to return
+     */
+    Map<Characteristic, Long> getAnnotationsFrequency( int maxResults );
+
+    /**
+     * Obtain a set of annotations for all the given {@link ExpressionExperiment} IDs.
+     * <p>
+     * This is meant as a counterpart to {@link ExpressionExperimentService#getAnnotationsFrequency(Long)} which return
+     * annotations for a single EE.
+     * This is meant as a counterpart to {@link ubic.gemma.persistence.service.common.description.CharacteristicService#findExperimentsByUris(Collection, Taxon, int)}
+     * to answer the reverse question: which annotations can be used to.
+     */
+    Map<Characteristic, Long> getAnnotationsFrequency( Collection<Long> expressionExperimentIds, int maxResults );
 
     Collection<ExpressionExperiment> getExperimentsLackingPublications();
 }

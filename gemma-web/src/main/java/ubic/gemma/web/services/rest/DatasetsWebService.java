@@ -14,12 +14,14 @@
  */
 package ubic.gemma.web.services.rest;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.extensions.Extension;
 import io.swagger.v3.oas.annotations.extensions.ExtensionProperty;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import lombok.EqualsAndHashCode;
 import lombok.Value;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.io.FilenameUtils;
@@ -37,6 +39,7 @@ import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisValueObject;
 import ubic.gemma.model.common.auditAndSecurity.eventType.BatchInformationFetchingEvent;
 import ubic.gemma.model.common.description.AnnotationValueObject;
+import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.QuantitationTypeValueObject;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
@@ -69,6 +72,7 @@ import java.io.File;
 import java.io.OutputStreamWriter;
 import java.net.URI;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * RESTful interface for datasets.
@@ -83,48 +87,28 @@ public class DatasetsWebService {
     private static final String ERROR_DATA_FILE_NOT_AVAILABLE = "Data file for experiment %s can not be created.";
     private static final String ERROR_DESIGN_FILE_NOT_AVAILABLE = "Design file for experiment %s can not be created.";
 
-    private ExpressionExperimentService service;
-    private ExpressionExperimentService expressionExperimentService;
-    private ExpressionDataFileService expressionDataFileService;
-    private ArrayDesignService arrayDesignService;
-    private BioAssayService bioAssayService;
-    private ProcessedExpressionDataVectorService processedExpressionDataVectorService;
-    private GeneService geneService;
-    private SVDService svdService;
-    private DifferentialExpressionAnalysisService differentialExpressionAnalysisService;
-    private AuditEventService auditEventService;
-    private OutlierDetectionService outlierDetectionService;
-    private QuantitationTypeService quantitationTypeService;
-
-    /**
-     * Required by spring
-     */
-    public DatasetsWebService() {
-    }
-
-    /**
-     * Constructor for service autowiring
-     */
     @Autowired
-    public DatasetsWebService( ExpressionExperimentService expressionExperimentService,
-            ExpressionDataFileService expressionDataFileService, ArrayDesignService arrayDesignService,
-            BioAssayService bioAssayService, ProcessedExpressionDataVectorService processedExpressionDataVectorService,
-            GeneService geneService, SVDService svdService,
-            DifferentialExpressionAnalysisService differentialExpressionAnalysisService, AuditEventService auditEventService,
-            OutlierDetectionService outlierDetectionService, QuantitationTypeService quantitationTypeService ) {
-        this.service = expressionExperimentService;
-        this.expressionExperimentService = expressionExperimentService;
-        this.expressionDataFileService = expressionDataFileService;
-        this.arrayDesignService = arrayDesignService;
-        this.bioAssayService = bioAssayService;
-        this.processedExpressionDataVectorService = processedExpressionDataVectorService;
-        this.geneService = geneService;
-        this.svdService = svdService;
-        this.differentialExpressionAnalysisService = differentialExpressionAnalysisService;
-        this.auditEventService = auditEventService;
-        this.outlierDetectionService = outlierDetectionService;
-        this.quantitationTypeService = quantitationTypeService;
-    }
+    private ExpressionExperimentService expressionExperimentService;
+    @Autowired
+    private ExpressionDataFileService expressionDataFileService;
+    @Autowired
+    private ArrayDesignService arrayDesignService;
+    @Autowired
+    private BioAssayService bioAssayService;
+    @Autowired
+    private ProcessedExpressionDataVectorService processedExpressionDataVectorService;
+    @Autowired
+    private GeneService geneService;
+    @Autowired
+    private SVDService svdService;
+    @Autowired
+    private DifferentialExpressionAnalysisService differentialExpressionAnalysisService;
+    @Autowired
+    private AuditEventService auditEventService;
+    @Autowired
+    private OutlierDetectionService outlierDetectionService;
+    @Autowired
+    private QuantitationTypeService quantitationTypeService;
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
@@ -137,7 +121,7 @@ public class DatasetsWebService {
             @Schema(extensions = { @Extension(name = "gemma", properties = { @ExtensionProperty(name = "filteringService", value = "expressionExperimentService") }) })
             @QueryParam("sort") @DefaultValue("+id") SortArg<ExpressionExperiment> sort // Optional, default +id
     ) {
-        return Responder.paginate( service.loadValueObjectsPreFilter(
+        return Responder.paginate( expressionExperimentService.loadValueObjectsPreFilter(
                 filter.getFilters( expressionExperimentService ),
                 sort.getSort( expressionExperimentService ),
                 offset.getValue(),
@@ -151,7 +135,42 @@ public class DatasetsWebService {
     public ResponseDataObject<Long> getNumberOfDatasets(
             @Schema(extensions = { @Extension(name = "gemma", properties = { @ExtensionProperty(name = "filteringService", value = "expressionExperimentService") }) })
             @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filter ) {
-        return Responder.respond( service.countValueObjectsPreFilter( filter.getFilters( expressionExperimentService ) ) );
+        return Responder.respond( expressionExperimentService.countPreFilter( filter.getFilters( expressionExperimentService ) ) );
+    }
+
+    @GET
+    @Path("/annotations")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(summary = "Retrieve usage statistics of annotations among datasets matching the provided filter",
+            description = "Usage statistics are aggregated across experiment tags, samples and factor values mentioned in the experimental design.")
+    public ResponseDataObject<List<AnnotationWithUsageStatisticsValueObject>> getDatasetsAnnotationsUsageStatistics(
+            @Schema(extensions = { @Extension(name = "gemma", properties = { @ExtensionProperty(name = "filteringService", value = "expressionExperimentService") }) })
+            @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filter, @QueryParam("limit") @DefaultValue("50") LimitArg limit ) {
+        List<AnnotationWithUsageStatisticsValueObject> results = expressionExperimentService.getAnnotationsFrequencyPreFilter( filter.getFilters( expressionExperimentService ), limit.getValue( 50 ) )
+                .entrySet()
+                .stream().map( e -> new AnnotationWithUsageStatisticsValueObject( e.getKey(), e.getValue() ) )
+                .sorted( Comparator.comparing( AnnotationWithUsageStatisticsValueObject::getNumberOfExpressionExperiments, Comparator.reverseOrder() ) )
+                .collect( Collectors.toList() );
+        return Responder.respond( results );
+    }
+
+    /**
+     * This is an aggregated entity across value URI and value, thus the {@code id} and {@code objectClass} are omitted.
+     */
+    @Value
+    @EqualsAndHashCode(callSuper = true)
+    @JsonIgnoreProperties(value = { "id", "objectClass" })
+    public static class AnnotationWithUsageStatisticsValueObject extends AnnotationValueObject {
+
+        /**
+         * Number of times the characteristic is mentioned among matching datasets.
+         */
+        Long numberOfExpressionExperiments;
+
+        public AnnotationWithUsageStatisticsValueObject( Characteristic c, Long numberOfExpressionExperiments ) {
+            super( c );
+            this.numberOfExpressionExperiments = numberOfExpressionExperiments;
+        }
     }
 
     /**
@@ -181,8 +200,8 @@ public class DatasetsWebService {
             @QueryParam("sort") @DefaultValue("+id") SortArg<ExpressionExperiment> sort // Optional, default +id
     ) {
         Filters filters = filter.getFilters( expressionExperimentService )
-                .and( datasetsArg.getFilters( service ) );
-        return Responder.paginate( service.loadValueObjectsPreFilter( filters, sort.getSort( expressionExperimentService ), offset.getValue(), limit.getValue() ) );
+                .and( datasetsArg.getFilters( expressionExperimentService ) );
+        return Responder.paginate( expressionExperimentService.loadValueObjectsPreFilter( filters, sort.getSort( expressionExperimentService ), offset.getValue(), limit.getValue() ) );
     }
 
     /**

@@ -28,6 +28,23 @@ public abstract class AbstractFilteringVoEnabledService<O extends Identifiable, 
 
     @Override
     @Transactional(readOnly = true)
+    public List<Long> loadIdsPreFilter( @Nullable Filters filters, @Nullable Sort sort ) {
+        return voDao.loadIdsPreFilter( filters, sort );
+    }
+
+    @Override
+    public List<O> loadValuePreFilter( @Nullable Filters filters, @Nullable Sort sort ) {
+        return voDao.loadPreFilter( filters, sort );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Slice<O> loadValuePreFilter( @Nullable Filters filters, @Nullable Sort sort, int offset, int limit ) {
+        return voDao.loadPreFilter( filters, sort, offset, limit );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public VO loadValueObject( O entity ) {
         return voDao.loadValueObject( entity );
     }
@@ -70,8 +87,8 @@ public abstract class AbstractFilteringVoEnabledService<O extends Identifiable, 
 
     @Override
     @Transactional(readOnly = true)
-    public long countValueObjectsPreFilter( @Nullable Filters filters ) {
-        return voDao.countValueObjectsPreFilter( filters );
+    public long countPreFilter( @Nullable Filters filters ) {
+        return voDao.countPreFilter( filters );
     }
 
     public Set<String> getFilterableProperties() {

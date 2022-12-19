@@ -28,6 +28,9 @@ import org.hibernate.*;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.type.LongType;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.task.AsyncTaskExecutor;
+import org.springframework.core.task.SimpleAsyncTaskExecutor;
+import org.springframework.security.task.DelegatingSecurityContextAsyncTaskExecutor;
 import org.springframework.stereotype.Repository;
 import ubic.gemma.core.analysis.expression.diff.BaselineSelection;
 import ubic.gemma.core.analysis.util.ExperimentalDesignUtils;
@@ -55,12 +58,17 @@ import ubic.gemma.persistence.service.common.description.CharacteristicDao;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignDao;
 import ubic.gemma.persistence.service.expression.bioAssay.BioAssayDao;
 import ubic.gemma.persistence.service.genome.taxon.TaxonDao;
-import ubic.gemma.persistence.util.*;
 import ubic.gemma.persistence.util.Filter;
+import ubic.gemma.persistence.util.*;
 
 import javax.annotation.Nullable;
+import java.sql.SQLException;
 import java.text.MessageFormat;
 import java.util.*;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
 /**
@@ -575,10 +583,218 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
+    public Map<Characteristic, Long> getAnnotationsFrequency( int maxResults ) {
+        return doGetAnnotationsFrequency( null, maxResults );
+    }
+
+    @Override
+    public Map<Characteristic, Long> getAnnotationsFrequency( Collection<Long> eeIds, int maxResults ) {
+        return doGetAnnotationsFrequency( eeIds, maxResults );
+    }
+
+    /**
+     * We're making two assumptions: a dataset cannot have a characteristic more than once and a dataset cannot have
+     * the same characteristic at multiple levels to make counting more efficient.
+     */
+    private Map<Characteristic, Long> doGetAnnotationsFrequency( @Nullable Collection<Long> eeIds, int maxResults ) {
+        Map<Characteristic, Long> result = new HashMap<>();
+
+        if ( eeIds != null && eeIds.isEmpty() ) {
+            return result;
+        }
+
+        // reuses cached value if the same IDs are requested in a different order
+        final Set<Long> uniqueIds = eeIds != null ? new HashSet<>( eeIds ) : null;
+
+        int MAX_RESULT_FOR_CACHING = 50;
+        long MAX_WAIT_TIME_FOR_BIOMATERIAL_MS = 2000L;
+
+        // 0 < maxResults < 50 ->  50, since all queries are essentially subsets
+        // unlimited results are not cached, so they just follow the regular expansion
+        // note that the cache key will use 500 due to the expansion
+        int expandedMaxResults = 10 * ( maxResults > 0 && maxResults < MAX_RESULT_FOR_CACHING ? MAX_RESULT_FOR_CACHING : maxResults );
+        boolean cacheable = maxResults > 0 && maxResults <= MAX_RESULT_FOR_CACHING;
+
+        // we're assuming that a dataset cannot have the same characteristic more than once at different levels
+        // we're also assuming that the top 10 * maxResults contain results from a previous pass
+        StopWatch timer = StopWatch.createStarted();
+
+        // now we'll submit 3 background jobs for collecting the stats
+        AsyncTaskExecutor taskExecutor = new DelegatingSecurityContextAsyncTaskExecutor( new SimpleAsyncTaskExecutor() );
+
+        // direct tags
+        StopWatch directTagTimer = StopWatch.create();
+        Future<List<Object[]>> directTagFuture = runQueryInBackground( taskExecutor, ( session ) -> {
+            directTagTimer.start();
+            try {
+                //noinspection unchecked
+                return ( List<Object[]> ) getAnnotationsFrequencyFromTagsQuery( session, uniqueIds )
+                        .setMaxResults( expandedMaxResults )
+                        .setCacheable( cacheable )
+                        .list();
+            } finally {
+                directTagTimer.stop();
+            }
+        } );
+
+        // factor values
+        StopWatch factorValueTimer = StopWatch.create();
+        Future<List<Object[]>> factorValueFuture = runQueryInBackground( taskExecutor, ( session ) -> {
+            factorValueTimer.start();
+            try {
+                //noinspection unchecked
+                return ( List<Object[]> ) getAnnotationsFrequencyFromFactorValueQuery( session, uniqueIds )
+                        .setMaxResults( expandedMaxResults )
+                        .setCacheable( cacheable )
+                        .list();
+            } finally {
+                factorValueTimer.stop();
+            }
+        } );
+
+        // biomaterial
+        final StopWatch bioMaterialTimer = StopWatch.create();
+        Future<List<Object[]>> futureBioMaterial = runQueryInBackground( taskExecutor, ( session ) -> {
+            bioMaterialTimer.start();
+            try {
+                //noinspection unchecked
+                return ( List<Object[]> ) getAnnotationsFrequencyFromBioMaterialQuery( session, uniqueIds )
+                        .setMaxResults( expandedMaxResults )
+                        .setCacheable( cacheable )
+                        .list();
+            } finally {
+                bioMaterialTimer.stop();
+                if ( cacheable && timer.getTime( TimeUnit.MILLISECONDS ) > MAX_WAIT_TIME_FOR_BIOMATERIAL_MS ) {
+                    log.warn( String.format( "Loading characteristics usage by BioMaterial took %s ms. It is reported here because the doGetAnnotationsFrequency() almost certainly bailed on us.",
+                            bioMaterialTimer.getTime( TimeUnit.MILLISECONDS ) ) );
+                }
+            }
+        } );
+
+        boolean bioMaterialSkipped;
+        try {
+            addCounts( directTagFuture.get(), result );
+            addCounts( factorValueFuture.get(), result );
+            if ( cacheable ) {
+                // we wait 2 seconds (minus the elapsed time), but if it does not complete, we let it run in the
+                // background and get cached for the next execution
+                addCounts( futureBioMaterial.get( Math.max( 0, MAX_WAIT_TIME_FOR_BIOMATERIAL_MS - timer.getTime( TimeUnit.MILLISECONDS ) ), TimeUnit.MILLISECONDS ), result );
+            } else {
+                addCounts( futureBioMaterial.get(), result );
+            }
+            bioMaterialSkipped = false;
+        } catch ( InterruptedException | ExecutionException e ) {
+            throw new RuntimeException( e );
+        } catch ( TimeoutException e ) {
+            log.warn( String.format( "Loading characteristics usage statistics by BioMaterial is taking more than %d ms, it will not be included in the returned statistics.",
+                    MAX_WAIT_TIME_FOR_BIOMATERIAL_MS ) );
+            bioMaterialSkipped = true;
+        }
+
+        timer.stop();
+
+        if ( timer.getTime( TimeUnit.MILLISECONDS ) > MAX_WAIT_TIME_FOR_BIOMATERIAL_MS ) {
+            log.warn( String.format( "Loading and aggregating annotations usage frequency for %s datasets took %d ms (%d ms by direct tags, %s ms by biomaterials, %d ms by factor values).",
+                    eeIds == null ? "all" : eeIds.size(),
+                    timer.getTime( TimeUnit.MILLISECONDS ),
+                    directTagTimer.getTime( TimeUnit.MILLISECONDS ),
+                    bioMaterialSkipped ? "?" : String.valueOf( bioMaterialTimer.getTime( TimeUnit.MILLISECONDS ) ),
+                    factorValueTimer.getTime( TimeUnit.MILLISECONDS ) ) );
+        }
+
+        // resort and retain top
+        if ( maxResults > 0 ) {
+            return result.entrySet().stream().sorted( Map.Entry.comparingByValue( Comparator.reverseOrder() ) )
+                    .limit( maxResults )
+                    .collect( Collectors.toMap( Map.Entry::getKey, Map.Entry::getValue ) );
+        }
+
+        return result;
+    }
+
+    @FunctionalInterface
+    private interface HibernateCallback<T> {
+        T doInHibernate( Session session ) throws HibernateException, SQLException;
+    }
+
+    private <T> Future<T> runQueryInBackground( AsyncTaskExecutor taskExecutor, HibernateCallback<T> querySupplier ) {
+        return taskExecutor.submit( () -> {
+            Session session = getSessionFactory().openSession();
+            try {
+                return querySupplier.doInHibernate( session );
+            } finally {
+                session.close();
+            }
+        } );
+    }
+
+    private void addCounts( List<Object[]> result, Map<Characteristic, Long> counts ) {
+        for ( Object[] row : result ) {
+            Characteristic c = ( Characteristic ) row[0];
+            Long eeCounts = ( Long ) row[1];
+            counts.put( c, counts.getOrDefault( c, 0L ) + eeCounts );
+        }
+    }
+
+    private Query getAnnotationsFrequencyFromTagsQuery( Session session, @Nullable Collection<Long> eeIds ) {
+        Query query = session.createQuery( "select c, count(distinct e) from ExpressionExperiment e "
+                + "join e.characteristics c "
+                + AclQueryUtils.formAclJoinClause( "e" )
+                + AclQueryUtils.formAclRestrictionClause()
+                + ( eeIds != null ? " and e.id in :eeIds " : "" )
+                + "group by c.valueUri, c.value "
+                + "order by count(distinct e) desc" );
+        if ( eeIds != null ) {
+            query.setParameterList( "eeIds", eeIds );
+        }
+        AclQueryUtils.addAclJoinParameters( query, ExpressionExperiment.class );
+        AclQueryUtils.addAclRestrictionParameters( query );
+        return query;
+    }
+
+    private Query getAnnotationsFrequencyFromFactorValueQuery( Session session, @Nullable Collection<Long> eeIds ) {
+        Query query = session.createQuery( "select c, count(distinct e) from ExpressionExperiment e "
+                + "join e.experimentalDesign ed "
+                + "join ed.experimentalFactors ef "
+                + "join ef.factorValues fv "
+                + "join fv.characteristics c "
+                + AclQueryUtils.formAclJoinClause( "e" )
+                + AclQueryUtils.formAclRestrictionClause()
+                + ( eeIds != null ? " and e.id in :eeIds " : "" )
+                + "group by c.valueUri, c.value "
+                + "order by count(distinct e) desc" );
+        if ( eeIds != null ) {
+            query.setParameterList( "eeIds", eeIds );
+        }
+        AclQueryUtils.addAclJoinParameters( query, ExpressionExperiment.class );
+        AclQueryUtils.addAclRestrictionParameters( query );
+        return query;
+    }
+
+    private Query getAnnotationsFrequencyFromBioMaterialQuery( Session session, @Nullable Collection<Long> eeIds ) {
+        Query query = session.createQuery( "select c, count(distinct e) from ExpressionExperiment e "
+                + "join e.bioAssays ba "
+                + "join ba.sampleUsed s "
+                + "join s.characteristics c "
+                + AclQueryUtils.formAclJoinClause( "e" )
+                + AclQueryUtils.formAclRestrictionClause()
+                + ( eeIds != null ? " and e.id in :eeIds " : "" )
+                + "group by c.valueUri, c.value "
+                + "order by count(distinct e) desc" );
+        if ( eeIds != null ) {
+            query.setParameterList( "eeIds", eeIds );
+        }
+        AclQueryUtils.addAclJoinParameters( query, ExpressionExperiment.class );
+        AclQueryUtils.addAclRestrictionParameters( query );
+        return query;
+    }
+
+    @Override
     public Collection<ExpressionExperiment> getExperimentsLackingPublications() {
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession().createQuery( "select e from ExpressionExperiment e where e.primaryPublication = null and e.shortName like 'GSE%'" ).list();
     }
+
 
     @Override
     public Collection<ArrayDesign> getArrayDesignsUsed( BioAssaySet bas ) {
@@ -869,7 +1085,8 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
-    public Optional<QuantitationType> getPreferredQuantitationTypeForDataVectorType( ExpressionExperiment ee, Class<? extends DesignElementDataVector> vectorType ) {
+    public Optional<QuantitationType> getPreferredQuantitationTypeForDataVectorType( ExpressionExperiment
+            ee, Class<? extends DesignElementDataVector> vectorType ) {
         //noinspection unchecked
         List<QuantitationType> quantitationTypes = this.getSessionFactory().getCurrentSession()
                 .createQuery( "select distinct v.quantitationType from " + vectorType.getName() + " v where v.quantitationType.isPreferred = true and v.expressionExperiment = :ee" )
@@ -977,14 +1194,15 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
-    public Slice<ExpressionExperimentDetailsValueObject> loadDetailsValueObjects( @Nullable Filters filters, @Nullable Sort sort, int offset, int limit ) {
+    public Slice<ExpressionExperimentDetailsValueObject> loadDetailsValueObjects( @Nullable Filters
+            filters, @Nullable Sort sort, int offset, int limit ) {
         EnumSet<QueryHint> hints = EnumSet.noneOf( QueryHint.class );
 
         if ( offset > 0 || limit > 0 )
             hints.add( QueryHint.PAGINATED );
 
         // Compose query
-        Query query = this.getLoadValueObjectsQuery( filters, sort, hints );
+        Query query = this.getFilteringQuery( filters, sort, hints );
 
         if ( offset > 0 ) {
             query.setFirstResult( offset );
@@ -1009,7 +1227,7 @@ public class ExpressionExperimentDaoImpl
         queryTimer.stop();
 
         countingTimer.start();
-        Long totalElements = ( Long ) this.getCountValueObjectsQuery( filters ).uniqueResult();
+        Long totalElements = ( Long ) this.getFilteringCountQuery( filters ).uniqueResult();
         countingTimer.stop();
 
         // sort + distinct for cache consistency
@@ -1092,7 +1310,8 @@ public class ExpressionExperimentDaoImpl
         return new Slice<>( vos, sort, offset, limit, totalElements );
     }
 
-    private Map<ExpressionExperiment, List<Object[]>> loadDetailsByEE( Collection<ExpressionExperiment> expressionExperiments ) {
+    private Map<ExpressionExperiment, List<Object[]>> loadDetailsByEE
+            ( Collection<ExpressionExperiment> expressionExperiments ) {
         if ( expressionExperiments.isEmpty() )
             return Collections.emptyMap();
         //noinspection unchecked
@@ -1111,7 +1330,8 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
-    public Slice<ExpressionExperimentDetailsValueObject> loadDetailsValueObjectsByIds( @Nullable Collection<Long> ids, @Nullable Taxon taxon, @Nullable Sort sort, int offset, int limit ) {
+    public Slice<ExpressionExperimentDetailsValueObject> loadDetailsValueObjectsByIds
+            ( @Nullable Collection<Long> ids, @Nullable Taxon taxon, @Nullable Sort sort, int offset, int limit ) {
         Filters filters = Filters.empty();
 
         if ( ids != null ) {
@@ -1131,7 +1351,8 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
-    public List<ExpressionExperimentDetailsValueObject> loadDetailsValueObjectsByIds( @NonNull Collection<Long> ids ) {
+    public List<ExpressionExperimentDetailsValueObject> loadDetailsValueObjectsByIds
+            ( @NonNull Collection<Long> ids ) {
         if ( ids.isEmpty() ) {
             return Collections.emptyList();
         }
@@ -1162,7 +1383,8 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
-    public List<ExpressionExperimentValueObject> loadValueObjectsPreFilter( @Nullable Filters filters, @Nullable Sort sort ) {
+    public List<ExpressionExperimentValueObject> loadValueObjectsPreFilter( @Nullable Filters
+            filters, @Nullable Sort sort ) {
         if ( sort == null ) {
             sort = Sort.by( OBJECT_ALIAS, "id" );
         }
@@ -1172,7 +1394,8 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
-    public Slice<ExpressionExperimentValueObject> loadValueObjectsPreFilter( @Nullable Filters filters, @Nullable Sort sort, int offset, int limit ) {
+    public Slice<ExpressionExperimentValueObject> loadValueObjectsPreFilter( @Nullable Filters
+            filters, @Nullable Sort sort, int offset, int limit ) {
         if ( sort == null ) {
             sort = Sort.by( OBJECT_ALIAS, "id" );
         }
@@ -1182,7 +1405,13 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
-    protected ExpressionExperimentValueObject processLoadValueObjectsQueryResult( Object result ) {
+    protected ExpressionExperiment processFilteringQueryResultToEntity( Object result ) {
+        Object[] row = ( Object[] ) result;
+        return ( ExpressionExperiment ) row[0];
+    }
+
+    @Override
+    protected ExpressionExperimentValueObject processFilteringQueryResultToValueObject( Object result ) {
         Object[] row = ( Object[] ) result;
 
         ExpressionExperiment ee = ( ExpressionExperiment ) row[0];
@@ -1333,8 +1562,9 @@ public class ExpressionExperimentDaoImpl
         }
     }
 
+
     @Override
-    protected Query getLoadValueObjectsQuery( @Nullable Filters filters, @Nullable Sort sort, EnumSet<QueryHint> hints ) {
+    protected Query getFilteringQuery( @Nullable Filters filters, @Nullable Sort sort, EnumSet<QueryHint> hints ) {
         if ( filters == null ) {
             filters = Filters.empty();
         }
@@ -1400,7 +1630,75 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
-    protected Query getCountValueObjectsQuery( @Nullable Filters filters ) {
+    protected Query getFilteringIdQuery( @Nullable Filters filters ) {
+        if ( filters == null ) {
+            filters = Filters.empty();
+        }
+
+        Sort sort = null;
+
+        // Restrict to non-troubled EEs for non-administrators
+        addNonTroubledFilter( filters, OBJECT_ALIAS );
+
+        // FIXME: this is triggering an AD jointure that simply we cannot afford, so we only perform it if necessary
+        if ( FiltersUtils.containsAnyAlias( filters, sort, ArrayDesignDao.OBJECT_ALIAS ) ) {
+            addNonTroubledFilter( filters, ArrayDesignDao.OBJECT_ALIAS );
+        }
+
+        // the constants for aliases are messing with the inspector
+        //language=HQL
+        String queryString = MessageFormat.format(
+                "select {0}.id "
+                        + "from ExpressionExperiment as {0} "
+                        + "left join {0}.accession acc "
+                        + "left join acc.externalDatabase as ED "
+                        + "left join {0}.experimentalDesign as EDES "
+                        + "left join {0}.curationDetails as s " /* needed for trouble status */
+                        + "left join s.lastNeedsAttentionEvent as eAttn "
+                        + "left join s.lastNoteUpdateEvent as eNote "
+                        + "left join s.lastTroubledEvent as eTrbl "
+                        + "left join {0}.geeq as geeq "
+                        + "left join {0}.taxon as {3}",
+                OBJECT_ALIAS, AclQueryUtils.AOI_ALIAS, AclQueryUtils.SID_ALIAS, TaxonDao.OBJECT_ALIAS );
+
+        // fetching characteristics, bioAssays and arrayDesignUsed is costly, so we reserve these operations only if it
+        // is mentioned in the filters
+
+        if ( FiltersUtils.containsAnyAlias( filters, sort, CharacteristicDao.OBJECT_ALIAS ) ) {
+            log.debug( "Querying ee.characteristics, this might take some time..." );
+            queryString += MessageFormat.format( " left join ee.characteristics as {0}", CharacteristicDao.OBJECT_ALIAS );
+        }
+
+        if ( FiltersUtils.containsAnyAlias( filters, sort, BioAssayDao.OBJECT_ALIAS, ArrayDesignDao.OBJECT_ALIAS ) ) {
+            log.debug( "Querying ee.bioAssays, this might take some time..." );
+            queryString += MessageFormat.format( " left join ee.bioAssays as {0}", BioAssayDao.OBJECT_ALIAS );
+        }
+
+        if ( FiltersUtils.containsAnyAlias( filters, sort, ArrayDesignDao.OBJECT_ALIAS ) ) {
+            log.debug( "Querying ee.bioAssays.arrayDesignUsed, this might take some time..." );
+            queryString += MessageFormat.format( " left join {0}.arrayDesignUsed as {1}", BioAssayDao.OBJECT_ALIAS, ArrayDesignDao.OBJECT_ALIAS );
+        }
+
+        // parts of this query (above) are only needed for administrators: the notes, so it could theoretically be sped up even more
+        queryString += AclQueryUtils.formAclJoinClause( OBJECT_ALIAS );
+
+        queryString += AclQueryUtils.formAclRestrictionClause();
+
+        // FIXME: this is necessary because of the ACL jointure, it can also become necessary if bioAssays are included as well
+        // unlike in ArrayDesignDaoImpl, a distinct is not possible because we select the ACL AOI and SID
+        queryString += FilterQueryUtils.formRestrictionAndGroupByAndOrderByClauses( filters, OBJECT_ALIAS, sort );
+
+        Query query = this.getSessionFactory().getCurrentSession().createQuery( queryString );
+
+        AclQueryUtils.addAclJoinParameters( query, ExpressionExperiment.class );
+        AclQueryUtils.addAclRestrictionParameters( query );
+        FilterQueryUtils.addRestrictionParameters( query, filters );
+
+        return query;
+    }
+
+    @Override
+    protected Query getFilteringCountQuery( @Nullable Filters filters ) {
         if ( filters == null ) {
             filters = Filters.empty();
         }
@@ -1591,7 +1889,8 @@ public class ExpressionExperimentDaoImpl
         return count;
     }
 
-    private void removeProcessedVectors( Session session, Set<BioAssayDimension> dims, Set<QuantitationType> qts,
+    private void removeProcessedVectors( Session
+            session, Set<BioAssayDimension> dims, Set<QuantitationType> qts,
             int count, Collection<ProcessedExpressionDataVector> processedVectors ) {
         for ( ProcessedExpressionDataVector dv : processedVectors ) {
             BioAssayDimension bad = dv.getBioAssayDimension();

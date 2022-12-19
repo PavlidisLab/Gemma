@@ -15,6 +15,7 @@ import javax.annotation.Nullable;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -36,7 +37,7 @@ public abstract class AbstractQueryFilteringVoEnabledDao<O extends Identifiable,
     protected enum QueryHint {
         /**
          * Indicate that the elements of the query will be paginated with {@link Query#setFirstResult(int)} and {@link Query#setMaxResults(int)}.
-         *
+         * <p>
          * This is useful to queries that perform 'join fetch' on one-to-many and many-to-many relationships.
          */
         PAGINATED
@@ -48,36 +49,105 @@ public abstract class AbstractQueryFilteringVoEnabledDao<O extends Identifiable,
 
     /**
      * Produce a query for retrieving value objects after applying a set of filters and a given ordering.
-     *
+     * <p>
      * Note that if your implementation does not produce a {@link List} of {@link O} when {@link Query#list()} is invoked,
-     * you must override {@link AbstractQueryFilteringVoEnabledDao#processLoadValueObjectsQueryResult(Object)}.
+     * you must override {@link AbstractQueryFilteringVoEnabledDao#processFilteringQueryResultToValueObject(Object)}.
      *
      * @return a {@link Query} that produce a list of {@link O}
      */
-    protected abstract Query getLoadValueObjectsQuery( @Nullable Filters filters, @Nullable Sort sort, EnumSet<QueryHint> hints );
+    protected abstract Query getFilteringQuery( @Nullable Filters filters, @Nullable Sort sort, EnumSet<QueryHint> hints );
 
     /**
-     * Produce a query that will be used to retrieve the size of {@link #getLoadValueObjectsQuery(Filters, Sort, EnumSet)}.
+     * Produce a query that will be used to retrieve IDs of {@link #getFilteringQuery(Filters, Sort, EnumSet)}.
+     */
+    protected Query getFilteringIdQuery( @Nullable Filters filters ) {
+        throw new NotImplementedException( "Retrieving IDs for " + elementClass + " is not supported." );
+    }
+
+    /**
+     * Produce a query that will be used to retrieve the size of {@link #getFilteringQuery(Filters, Sort, EnumSet)}.
      * @return a {@link Query} which must return a single {@link Long} value
      */
-    protected Query getCountValueObjectsQuery( @Nullable Filters filters ) {
+    protected Query getFilteringCountQuery( @Nullable Filters filters ) {
         throw new NotImplementedException( "Counting " + elementClass + " is not supported." );
     }
 
     /**
-     * Process a result from Hibernate into a value object.
-     *
+     * Process a result from {@link #getFilteringQuery(Filters, Sort, EnumSet)} into a {@link O}.
+     * <p>
+     * The default is to simply cast the result to {@link O}, assuming that it is the only return value of the query.
+     */
+    protected O processFilteringQueryResultToEntity( Object result ) {
+        //noinspection unchecked
+        return ( O ) result;
+    }
+
+    /**
+     * Process a result from {@link #getFilteringQuery(Filters, Sort, EnumSet)} into a {@link VO} value object.
+     * <p>
      * The result is obtained from {@link Query#list()}.
-     *
-     * By default, it will cast the result into a {@link O} and then apply {@link #doLoadValueObject(Identifiable)} to
-     * obtain a value object.
+     * <p>
+     * By default, it will process the result with {@link #processFilteringQueryResultToEntity(Object)} and then apply
+     * {@link #doLoadValueObject(Identifiable)} to obtain a value object.
      *
      * @return a value object, or null, and it will be ignored when constructing the {@link Slice} in {@link #loadValueObjectsPreFilter(Filters, Sort, int, int)}
      */
-    @Nullable
-    protected VO processLoadValueObjectsQueryResult( Object result ) {
+    protected VO processFilteringQueryResultToValueObject( Object result ) {
+        return doLoadValueObject( processFilteringQueryResultToEntity( result ) );
+    }
+
+    /**
+     * FIXME: this could be far more efficient with a specialized query
+     */
+    @Override
+    public List<Long> loadIdsPreFilter( @Nullable Filters filters, @Nullable Sort sort ) {
+        StopWatch timer = StopWatch.createStarted();
         //noinspection unchecked
-        return doLoadValueObject( ( O ) result );
+        List<Long> result = getFilteringIdQuery( filters ).list();
+        timer.stop();
+        if ( timer.getTime( TimeUnit.MILLISECONDS ) > REPORT_SLOW_QUERY_AFTER_MS ) {
+            log.warn( String.format( "Loading %d IDs for %s took %s ms.", result.size(), elementClass.getName(), timer.getTime( TimeUnit.MILLISECONDS ) ) );
+        }
+        return result;
+    }
+
+    @Override
+    public List<O> loadPreFilter( @Nullable Filters filters, @Nullable Sort sort ) {
+        StopWatch timer = StopWatch.createStarted();
+        //noinspection unchecked
+        List<Object> result = getFilteringQuery( filters, sort, EnumSet.noneOf( QueryHint.class ) ).list();
+        List<O> r = result.stream()
+                .map( this::processFilteringQueryResultToEntity )
+                .collect( Collectors.toList() );
+        if ( timer.getTime( TimeUnit.MILLISECONDS ) > REPORT_SLOW_QUERY_AFTER_MS ) {
+            log.warn( String.format( "Loading %d entities for %s took %s ms.", r.size(), elementClass.getName(), timer.getTime( TimeUnit.MILLISECONDS ) ) );
+        }
+        return r;
+    }
+
+    @Override
+    public Slice<O> loadPreFilter( @Nullable Filters filters, @Nullable Sort sort, int offset, int limit ) {
+        StopWatch timer = StopWatch.createStarted();
+        EnumSet<QueryHint> hints = EnumSet.noneOf( QueryHint.class );
+        if ( offset > 0 || limit > 0 ) {
+            hints.add( QueryHint.PAGINATED );
+        }
+        Query query = this.getFilteringQuery( filters, sort, hints );
+        Query totalElementsQuery = getFilteringCountQuery( filters );
+        // setup offset/limit
+        if ( offset > 0 )
+            query.setFirstResult( offset );
+        if ( limit > 0 )
+            query.setMaxResults( limit );
+        List<?> result = getFilteringQuery( filters, sort, EnumSet.noneOf( QueryHint.class ) ).list();
+        List<O> os = result.stream()
+                .map( this::processFilteringQueryResultToEntity )
+                .collect( Collectors.toList() );
+        Long totalElements = ( Long ) totalElementsQuery.uniqueResult();
+        if ( timer.getTime( TimeUnit.MILLISECONDS ) > REPORT_SLOW_QUERY_AFTER_MS ) {
+            log.warn( String.format( "Loading %d entities for %s took %s ms.", os.size(), elementClass.getName(), timer.getTime( TimeUnit.MILLISECONDS ) ) );
+        }
+        return new Slice<>( os, sort, offset, limit, totalElements );
     }
 
     @Override
@@ -89,8 +159,8 @@ public abstract class AbstractQueryFilteringVoEnabledDao<O extends Identifiable,
             hints.add( QueryHint.PAGINATED );
         }
 
-        Query query = this.getLoadValueObjectsQuery( filters, sort, hints );
-        Query totalElementsQuery = getCountValueObjectsQuery( filters );
+        Query query = this.getFilteringQuery( filters, sort, hints );
+        Query totalElementsQuery = getFilteringCountQuery( filters );
 
         // setup offset/limit
         if ( offset > 0 )
@@ -104,7 +174,7 @@ public abstract class AbstractQueryFilteringVoEnabledDao<O extends Identifiable,
 
         StopWatch postProcessingStopWatch = StopWatch.createStarted();
         List<VO> vos = list.stream()
-                .map( this::processLoadValueObjectsQueryResult )
+                .map( this::processFilteringQueryResultToValueObject )
                 .filter( Objects::nonNull )
                 .collect( Collectors.toList() );
         postProcessingStopWatch.stop();
@@ -131,7 +201,7 @@ public abstract class AbstractQueryFilteringVoEnabledDao<O extends Identifiable,
         StopWatch queryStopWatch = StopWatch.create();
         StopWatch postProcessingStopWatch = StopWatch.create();
 
-        Query query = this.getLoadValueObjectsQuery( filters, sort, EnumSet.noneOf( QueryHint.class ) );
+        Query query = this.getFilteringQuery( filters, sort, EnumSet.noneOf( QueryHint.class ) );
 
         queryStopWatch.start();
         List<?> list = query.list();
@@ -139,7 +209,7 @@ public abstract class AbstractQueryFilteringVoEnabledDao<O extends Identifiable,
 
         postProcessingStopWatch.start();
         List<VO> vos = list.stream()
-                .map( this::processLoadValueObjectsQueryResult )
+                .map( this::processFilteringQueryResultToValueObject )
                 .filter( Objects::nonNull )
                 .collect( Collectors.toList() );
         postProcessingStopWatch.stop();
@@ -156,10 +226,10 @@ public abstract class AbstractQueryFilteringVoEnabledDao<O extends Identifiable,
     }
 
     @Override
-    public long countValueObjectsPreFilter( @Nullable Filters filters ) {
+    public long countPreFilter( @Nullable Filters filters ) {
         StopWatch timer = StopWatch.createStarted();
         try {
-            return ( Long ) this.getCountValueObjectsQuery( filters ).uniqueResult();
+            return ( Long ) this.getFilteringCountQuery( filters ).uniqueResult();
         } finally {
             timer.stop();
             if ( timer.getTime( TimeUnit.MILLISECONDS ) > REPORT_SLOW_QUERY_AFTER_MS ) {

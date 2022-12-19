@@ -50,6 +50,26 @@ public interface FilteringVoEnabledService<O extends Identifiable, VO extends Id
     Sort getSort( String property, @Nullable Sort.Direction direction ) throws IllegalArgumentException;
 
     /**
+     * @see FilteringVoEnabledDao#loadIdsPreFilter(Filters, Sort)
+     */
+    List<Long> loadIdsPreFilter( @Nullable Filters filters, @Nullable Sort sort );
+
+    /**
+     * @see FilteringVoEnabledDao#loadPreFilter(Filters, Sort, int, int)
+     */
+    Slice<O> loadValuePreFilter( @Nullable Filters filters, @Nullable Sort sort, int offset, int limit );
+
+    /**
+     * @see FilteringVoEnabledDao#loadPreFilter(Filters, Sort)
+     */
+    List<O> loadValuePreFilter( @Nullable Filters filters, @Nullable Sort sort );
+
+    /**
+     * @see FilteringVoEnabledDao#countPreFilter(Filters)
+     */
+    long countPreFilter( @Nullable Filters filters );
+
+    /**
      * @see FilteringVoEnabledDao#loadValueObjectsPreFilter(Filters, Sort, int, int)
      */
     Slice<VO> loadValueObjectsPreFilter( @Nullable Filters filters, @Nullable Sort sort, int offset, int limit );
@@ -58,6 +78,4 @@ public interface FilteringVoEnabledService<O extends Identifiable, VO extends Id
      * @see FilteringVoEnabledDao#loadValueObjectsPreFilter(Filters, Sort)
      */
     List<VO> loadValueObjectsPreFilter( @Nullable Filters filters, @Nullable Sort sort );
-
-    long countValueObjectsPreFilter( @Nullable Filters filters );
 }

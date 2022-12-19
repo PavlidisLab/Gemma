@@ -18,22 +18,14 @@
  */
 package ubic.gemma.persistence.service.common.description;
 
-import org.apache.commons.lang3.NotImplementedException;
-import org.hibernate.Query;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.DatabaseEntryValueObject;
-import ubic.gemma.persistence.service.AbstractQueryFilteringVoEnabledDao;
-import ubic.gemma.persistence.util.Filters;
-import ubic.gemma.persistence.util.Sort;
+import ubic.gemma.persistence.service.AbstractNoopFilteringVoEnabledDao;
 
-import javax.annotation.Nullable;
-import java.util.Collections;
-import java.util.EnumSet;
 import java.util.List;
-import java.util.Set;
 
 /**
  * Base Spring DAO Class: is able to create, update, remove, load, and find objects of type
@@ -42,12 +34,12 @@ import java.util.Set;
  * @see DatabaseEntry
  */
 @Repository
-public class DatabaseEntryDaoImpl extends AbstractQueryFilteringVoEnabledDao<DatabaseEntry, DatabaseEntryValueObject>
+public class DatabaseEntryDaoImpl extends AbstractNoopFilteringVoEnabledDao<DatabaseEntry, DatabaseEntryValueObject>
         implements DatabaseEntryDao {
 
     @Autowired
     public DatabaseEntryDaoImpl( SessionFactory sessionFactory ) {
-        super( DatabaseEntryDao.OBJECT_ALIAS, DatabaseEntry.class, sessionFactory );
+        super( DatabaseEntry.class, sessionFactory );
     }
 
     @Override
@@ -56,17 +48,7 @@ public class DatabaseEntryDaoImpl extends AbstractQueryFilteringVoEnabledDao<Dat
     }
 
     @Override
-    public Set<String> getFilterableProperties() {
-        return Collections.emptySet();
-    }
-
-    @Override
     protected DatabaseEntryValueObject doLoadValueObject( DatabaseEntry entity ) {
         return new DatabaseEntryValueObject( entity );
-    }
-
-    @Override
-    protected Query getLoadValueObjectsQuery( @Nullable Filters filters, @Nullable Sort sort, EnumSet<QueryHint> hints ) {
-        throw new NotImplementedException( "This is not implemented yet!" );
     }
 }
