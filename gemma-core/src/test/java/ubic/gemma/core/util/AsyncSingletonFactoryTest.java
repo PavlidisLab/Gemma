@@ -11,6 +11,8 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
 import ubic.gemma.persistence.util.AbstractAsyncFactoryBean;
 
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
@@ -19,26 +21,15 @@ public class AsyncSingletonFactoryTest extends AbstractJUnit4SpringContextTests 
 
     public static class MyService {
         public MyService() throws InterruptedException {
-            try {
-                Thread.sleep( 1000 );
-            } catch ( InterruptedException e ) {
-                System.out.println( "Got interrupted!" );
-                throw e;
-            }
+            Thread.sleep( 200 );
         }
-
     }
 
     public static class MyServiceFactory extends AbstractAsyncFactoryBean<MyService> {
 
         @Override
-        public MyService getObject() throws Exception {
+        public MyService createObject() throws Exception {
             return new MyService();
-        }
-
-        @Override
-        public Class<?> getObjectType() {
-            return MyService.class;
         }
 
         @Override
@@ -61,22 +52,42 @@ public class AsyncSingletonFactoryTest extends AbstractJUnit4SpringContextTests 
 
     @Test
     public void testGetBeanAsync() {
-        Future<MyService> future = beanFactory.getBean( MyServiceFactory.class ).getObjectAsync();
-        Future<MyService> future2 = beanFactory.getBean( MyServiceFactory.class ).getObjectAsync();
+        Future<MyService> future = beanFactory.getBean( MyServiceFactory.class ).getObject();
+        Future<MyService> future2 = beanFactory.getBean( MyServiceFactory.class ).getObject();
         Assert.assertSame( future, future2 );
     }
 
     @Test
+    public void testGetBeanAndGetBeanAsync() throws Exception {
+        Future<MyService> future = beanFactory.getBean( MyServiceFactory.class ).getObject();
+        MyService myService = beanFactory.getBean( MyServiceFactory.class ).getObject().get();
+        Assert.assertSame( future.get(), myService );
+    }
+
+    @Test
+    public void testGetBeanThenCancel() throws Exception {
+        MyServiceFactory factory = beanFactory.getBean( MyServiceFactory.class );
+        Future<Future<MyService>> myServiceFuture = Executors.newSingleThreadExecutor().submit( factory::getObject );
+        Thread.sleep( 10 );
+        Assert.assertTrue( factory.isInitialized() );
+        Assert.assertTrue( myServiceFuture.isDone() );
+        Assert.assertFalse( myServiceFuture.get().isDone() );
+        factory.destroy();
+        // this should raise a
+        Assert.assertTrue( myServiceFuture.get().isCancelled() );
+    }
+
+    @Test
     public void testGetBeanAsyncThenCancel() {
-        Future<MyService> future = beanFactory.getBean( MyServiceFactory.class ).getObjectAsync();
+        Future<MyService> future = beanFactory.getBean( MyServiceFactory.class ).getObject();
         beanFactory.destroySingletons();
         Assert.assertTrue( future.isCancelled() );
     }
 
     @Test
-    public void testGetBean() {
-        MyService myService = beanFactory.getBean( MyService.class );
-        MyService myService1 = beanFactory.getBean( MyService.class );
+    public void testGetBean() throws ExecutionException, InterruptedException {
+        MyService myService = beanFactory.getBean( MyServiceFactory.class ).getObject().get();
+        MyService myService1 = beanFactory.getBean( MyServiceFactory.class ).getObject().get();
         Assert.assertSame( myService, myService1 );
     }
 }

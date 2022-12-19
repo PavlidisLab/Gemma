@@ -8,13 +8,14 @@ import java.util.concurrent.Future;
  * Async extension of the {@link FactoryBean} interface.
  * @author poirigui
  */
-public interface AsyncFactoryBean<T> extends FactoryBean<T> {
+public interface AsyncFactoryBean<T> extends FactoryBean<Future<T>> {
 
     /**
      * Obtain a bean asynchronously.
      * @return a future that completes when the bean is ready
      */
-    Future<T> getObjectAsync();
+    @Override
+    Future<T> getObject();
 
     /**
      * Indicate if this bean has been initialized or if its initialization is pending.

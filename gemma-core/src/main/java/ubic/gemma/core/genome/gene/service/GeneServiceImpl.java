@@ -19,13 +19,11 @@
 
 package ubic.gemma.core.genome.gene.service;
 
-import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.core.genome.gene.GeneSetValueObjectHelper;
 import ubic.gemma.core.loader.genome.gene.ncbi.homology.HomologeneService;
-import ubic.gemma.core.loader.genome.gene.ncbi.homology.HomologeneServiceFactory;
 import ubic.gemma.core.ontology.providers.GeneOntologyService;
 import ubic.gemma.core.search.GeneSetSearch;
 import ubic.gemma.core.search.SearchException;
@@ -58,6 +56,8 @@ import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.*;
 import java.util.Map.Entry;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 
 /**
  * @author pavlidis
@@ -87,7 +87,7 @@ public class GeneServiceImpl extends AbstractFilteringVoEnabledService<Gene, Gen
     @Autowired
     private TaxonService taxonService;
     @Autowired
-    private BeanFactory beanFactory;
+    private Future<HomologeneService> homologeneService;
 
     @Autowired
     public GeneServiceImpl( GeneDao geneDao ) {
@@ -330,7 +330,12 @@ public class GeneServiceImpl extends AbstractFilteringVoEnabledService<Gene, Gen
 
         gvo.setGeneSets( gsVos );
 
-        Collection<Gene> geneHomologues = this.beanFactory.getBean( HomologeneService.class ).getHomologues( gene );
+        Collection<Gene> geneHomologues;
+        try {
+            geneHomologues = this.homologeneService.get().getHomologues( gene );
+        } catch ( InterruptedException | ExecutionException e ) {
+            throw new RuntimeException( e );
+        }
         geneHomologues = this.thawLite( geneHomologues );
         Collection<GeneValueObject> homologues = this.loadValueObjects( geneHomologues );
 
@@ -399,7 +404,12 @@ public class GeneServiceImpl extends AbstractFilteringVoEnabledService<Gene, Gen
         gsVos.addAll( geneSetValueObjectHelper.convertToValueObjects( geneSets, false ) );
         details.setGeneSets( gsVos );
 
-        Collection<Gene> geneHomologues = beanFactory.getBean( HomologeneService.class ).getHomologues( gene );
+        Collection<Gene> geneHomologues;
+        try {
+            geneHomologues = homologeneService.get().getHomologues( gene );
+        } catch ( InterruptedException | ExecutionException e ) {
+            throw new RuntimeException( e );
+        }
         geneHomologues = this.thawLite( geneHomologues );
         Collection<GeneValueObject> homologues = this.loadValueObjects( geneHomologues );
         details.setHomologues( homologues );

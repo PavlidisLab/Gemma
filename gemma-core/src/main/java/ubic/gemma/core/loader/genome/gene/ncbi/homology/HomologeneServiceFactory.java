@@ -39,13 +39,8 @@ public class HomologeneServiceFactory extends AbstractAsyncFactoryBean<Homologen
     }
 
     @Override
-    public HomologeneService getObject() throws Exception {
+    protected HomologeneService createObject() throws Exception {
         return new HomologeneServiceImpl( geneService, taxonService, homologeneFile, LOAD_HOMOLOGENE );
-    }
-
-    @Override
-    public Class<?> getObjectType() {
-        return HomologeneService.class;
     }
 
     @Override
