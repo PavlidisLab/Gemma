@@ -85,15 +85,15 @@ public class GemmaCLI {
             return;
         }
 
-        // check for the -testing flag to load the appropriate application context
-        /* webapp */
-        ApplicationContext ctx = SpringContextUtil.getApplicationContext( commandLine.hasOption( TESTING_OPTION ),
-                "classpath*:ubic/gemma/cliContext-component-scan.xml" );
-
         /*
          * Guarantee that the security settings are uniform throughout the application (all threads).
          */
         SecurityContextHolder.setStrategyName( SecurityContextHolder.MODE_INHERITABLETHREADLOCAL );
+
+        // check for the -testing flag to load the appropriate application context
+        /* webapp */
+        ApplicationContext ctx = SpringContextUtil.getApplicationContext( commandLine.hasOption( TESTING_OPTION ),
+                "classpath*:ubic/gemma/cliContext-component-scan.xml" );
 
         /*
          * Build a map from command names to classes.
