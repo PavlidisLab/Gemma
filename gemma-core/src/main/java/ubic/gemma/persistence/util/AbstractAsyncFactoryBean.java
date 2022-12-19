@@ -3,7 +3,6 @@ package ubic.gemma.persistence.util;
 import lombok.extern.apachecommons.CommonsLog;
 import org.springframework.beans.factory.DisposableBean;
 
-import javax.annotation.OverridingMethodsMustInvokeSuper;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
@@ -94,8 +93,7 @@ public abstract class AbstractAsyncFactoryBean<T> implements AsyncFactoryBean<T>
     }
 
     @Override
-    @OverridingMethodsMustInvokeSuper
-    public void destroy() {
+    public final void destroy() {
         if ( !pendingBeans.isEmpty() ) {
             log.info( String.format( "There are pending beans creation in %s, they will be cancelled.", getClass().getName() ) );
         }

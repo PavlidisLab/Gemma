@@ -1,4 +1,4 @@
-package ubic.gemma.core.util;
+package ubic.gemma.persistence.util;
 
 import org.assertj.core.api.Assertions;
 import org.junit.Test;
@@ -10,7 +10,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
-import ubic.gemma.persistence.util.AbstractAsyncFactoryBean;
 
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
