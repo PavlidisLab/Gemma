@@ -32,12 +32,12 @@ public class CustomModelResolverRegistrationListener implements ServletContextLi
         // these must be sorted by ascending precedence because addConverter prepends
         customModelResolver = applicationContext.getBean( CustomModelResolver.class );
         ModelConverters.getInstance().addConverter( customModelResolver );
-        log.info( String.format( "Registered %s to Swagger's custom model converters.", customModelResolver ) );
+        log.info( String.format( "Registered %s to Swagger's custom model converters.", CustomModelResolver.class.getName() ) );
     }
 
     @Override
     public void contextDestroyed( ServletContextEvent servletContextEvent ) {
         ModelConverters.getInstance().removeConverter( customModelResolver );
-        log.info( String.format( "Unregistered %s to Swagger's custom model converters.", customModelResolver ) );
+        log.info( String.format( "Unregistered %s to Swagger's custom model converters.", CustomModelResolver.class.getName() ) );
     }
 }
