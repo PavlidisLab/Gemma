@@ -19,6 +19,7 @@ import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.search.SearchSource;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.persistence.service.genome.biosequence.BioSequenceService;
+import ubic.gemma.persistence.util.TestComponent;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
@@ -27,6 +28,7 @@ import static org.mockito.Mockito.*;
 public class CompassSearchSourceTest extends AbstractJUnit4SpringContextTests {
 
     @Configuration
+    @TestComponent
     static class CompassSearchSourceTestContextConfiguration {
         @Bean
         public SearchSource compassSearchSource() {

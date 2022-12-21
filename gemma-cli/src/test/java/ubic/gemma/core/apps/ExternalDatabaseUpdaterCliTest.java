@@ -13,6 +13,7 @@ import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.model.common.description.DatabaseType;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.persistence.service.common.description.ExternalDatabaseService;
+import ubic.gemma.persistence.util.TestComponent;
 
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -24,6 +25,7 @@ import static org.mockito.Mockito.*;
 public class ExternalDatabaseUpdaterCliTest extends BaseCliTest {
 
     @Configuration
+    @TestComponent
     static class ExternalDatabaseUpdaterCliTestContextConfiguration extends BaseCliTestContextConfiguration {
 
         @Bean

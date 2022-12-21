@@ -13,6 +13,7 @@ import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.persistence.service.association.Gene2GOAssociationService;
 import ubic.gemma.persistence.service.common.description.ExternalDatabaseService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
+import ubic.gemma.persistence.util.TestComponent;
 
 import static org.mockito.Mockito.*;
 
@@ -20,6 +21,7 @@ import static org.mockito.Mockito.*;
 public class NCBIGene2GOAssociationLoaderCLITest extends BaseCliTest {
 
     @Configuration
+    @TestComponent
     static class NCBIGene2GOAssociationLoaderCLITestContextConfiguration extends BaseCliTestContextConfiguration {
 
         @Bean

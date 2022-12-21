@@ -17,6 +17,7 @@ import ubic.gemma.persistence.model.Gene2CsStatus;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.persistence.service.common.description.ExternalDatabaseService;
 import ubic.gemma.persistence.util.MailEngine;
+import ubic.gemma.persistence.util.TestComponent;
 
 import java.io.File;
 import java.io.IOException;
@@ -32,6 +33,7 @@ import static org.mockito.Mockito.*;
 public class TableMaintenanceUtilTest extends AbstractJUnit4SpringContextTests {
 
     @Configuration
+    @TestComponent
     static class TableMaintenanceUtilTestContextConfiguration {
 
         @Bean
