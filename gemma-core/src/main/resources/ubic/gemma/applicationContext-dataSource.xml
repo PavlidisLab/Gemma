@@ -28,7 +28,8 @@
             <property name="username" value="${gemma.testdb.user}"/>
             <property name="password" value="${gemma.testdb.password}"/>
             <property name="url" value="${gemma.testdb.url}"/>
-            <property name="connectionProperties" value="sessionVariables=sql_mode='${gemma.testdb.sqlMode}'"/>
+            <property name="connectionProperties"
+                      value="connectionTimeZone=${gemma.db.timezone};sessionVariables=sql_mode='${gemma.db.sqlMode}'"/>
         </bean>
     </beans>
 
