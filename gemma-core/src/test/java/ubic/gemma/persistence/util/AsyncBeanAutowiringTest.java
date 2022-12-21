@@ -51,6 +51,7 @@ public class AsyncBeanAutowiringTest extends AbstractJUnit4SpringContextTests {
     }
 
     @Configuration
+    @TestComponent
     static class AsyncBeanAutowiringTestContextConfiguration {
         @Bean
         public MyServiceFactory myService() {

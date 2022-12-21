@@ -38,6 +38,7 @@ public class AsyncSingletonFactoryTest extends AbstractJUnit4SpringContextTests 
     }
 
     @Configuration
+    @TestComponent
     static class AsyncFactoryBeanTestContextConfiguration {
 
         @Bean

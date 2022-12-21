@@ -13,7 +13,10 @@
    http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd">
 
     <!-- Note: the component-scan directive can be found in gemma-core's applicationContext-component-scan.xml -->
-    <context:component-scan base-package="ubic.gemma.web" name-generator="ubic.gemma.persistence.util.BeanNameGenerator"/>
+    <context:component-scan base-package="ubic.gemma.web"
+                            name-generator="ubic.gemma.persistence.util.BeanNameGenerator">
+        <context:exclude-filter type="annotation" expression="ubic.gemma.persistence.util.TestComponent"/>
+    </context:component-scan>
 
     <!-- Mapping URLS to controllers -->
 
@@ -771,7 +774,8 @@
             <dwr:exclude method="securableClass"/>
         </dwr:convert>
 
-        <dwr:convert type="bean" class="ubic.gemma.model.expression.BlacklistedValueObject" javascript="BlacklistedValueObject" />
+        <dwr:convert type="bean" class="ubic.gemma.model.expression.BlacklistedValueObject"
+                     javascript="BlacklistedValueObject"/>
 
         <dwr:convert type="bean" class="ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject"
                      javascript="ExpressionExperimentValueObject"/>

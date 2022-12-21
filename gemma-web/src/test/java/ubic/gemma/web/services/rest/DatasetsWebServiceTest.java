@@ -26,6 +26,7 @@ import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.persistence.util.TestComponent;
 import ubic.gemma.web.services.rest.util.BaseJerseyTest;
 
 import javax.ws.rs.core.Response;
@@ -41,6 +42,7 @@ import static org.mockito.Mockito.*;
 public class DatasetsWebServiceTest extends BaseJerseyTest {
 
     @Configuration
+    @TestComponent
     static class DatasetsWebServiceTestContextConfiguration {
 
         @Bean

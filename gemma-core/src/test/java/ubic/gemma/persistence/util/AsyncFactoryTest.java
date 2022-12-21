@@ -43,6 +43,7 @@ public class AsyncFactoryTest extends AbstractJUnit4SpringContextTests {
     }
 
     @Configuration
+    @TestComponent
     static class AsyncFactoryBeanTestContextConfiguration {
 
         @Bean
