@@ -62,6 +62,7 @@ public class CharacteristicValueObject extends IdentifiableValueObject<Character
     /**
      * what Ontology uses this term
      */
+    @GemmaWebOnly
     private String ontologyUsed = null;
     @GemmaWebOnly
     private long privateGeneCount = 0L;
