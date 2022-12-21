@@ -62,6 +62,7 @@ import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.persistence.persister.PersisterHelper;
 import ubic.gemma.persistence.service.common.description.ExternalDatabaseService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
+import ubic.gemma.persistence.util.SpringProfiles;
 
 import javax.annotation.OverridingMethodsMustInvokeSuper;
 import javax.sql.DataSource;
@@ -75,7 +76,7 @@ import java.util.Set;
  *
  * @author pavlidis
  */
-@ActiveProfiles("test")
+@ActiveProfiles(SpringProfiles.TEST)
 @Category(SpringContextTest.class)
 @SuppressWarnings({ "WeakerAccess", "SameParameterValue", "unused" }) // Better left as is for future convenience
 @ContextConfiguration(locations = { "classpath*:ubic/gemma/applicationContext-*.xml",

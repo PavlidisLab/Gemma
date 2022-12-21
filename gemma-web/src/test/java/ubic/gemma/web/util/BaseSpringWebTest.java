@@ -40,7 +40,7 @@ import ubic.gemma.core.util.test.BaseSpringContextTest;
  *
  * @author pavlidis
  */
-@ActiveProfiles({ "web" })
+@ActiveProfiles("web")
 @WebAppConfiguration
 @ContextConfiguration(locations = { "classpath*:WEB-INF/gemma-servlet.xml" })
 public abstract class BaseSpringWebTest extends BaseSpringContextTest {

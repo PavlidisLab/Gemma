@@ -14,7 +14,7 @@ import ubic.gemma.core.util.test.TestAuthenticationUtils;
  *
  * @author poirigui
  */
-@ActiveProfiles({ "web", "test" })
+@ActiveProfiles({ "web", SpringProfiles.TEST })
 @ContextConfiguration(locations = { "classpath*:ubic/gemma/applicationContext-*.xml",
         "classpath*:gemma/gsec/applicationContext-*.xml" })
 public abstract class BaseJerseyIntegrationTest extends BaseJerseyTest {

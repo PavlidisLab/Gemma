@@ -18,7 +18,7 @@ import static org.mockito.Mockito.mock;
 /**
  * Minimal setup
  */
-@ActiveProfiles({ "cli", "test" })
+@ActiveProfiles({ "cli", SpringProfiles.TEST })
 public abstract class BaseCliTest extends AbstractJUnit4SpringContextTests {
 
     /**
