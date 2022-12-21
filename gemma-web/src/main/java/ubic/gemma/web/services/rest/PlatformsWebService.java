@@ -108,7 +108,7 @@ public class PlatformsWebService {
     public ResponseDataObject<Long> getNumberOfPlatforms(
             @Schema(extensions = { @Extension(name = "gemma", properties = { @ExtensionProperty(name = "filteringService", value = "arrayDesignService") }) })
             @QueryParam("filter") @DefaultValue("") FilterArg<ArrayDesign> filter ) {
-        return Responder.respond( arrayDesignService.countValueObjectsPreFilter( filter.getFilters( arrayDesignService ) ) );
+        return Responder.respond( arrayDesignService.countPreFilter( filter.getFilters( arrayDesignService ) ) );
     }
 
     /**

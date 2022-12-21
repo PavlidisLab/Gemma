@@ -35,7 +35,6 @@ import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisR
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResultSetValueObject;
 import ubic.gemma.model.common.description.DatabaseEntry;
-import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
@@ -121,7 +120,7 @@ public class AnalysisResultSetsWebService {
     public ResponseDataObject<Long> getNumberOfResultSets(
             @Schema(extensions = { @Extension(name = "gemma", properties = { @ExtensionProperty(name = "filteringService", value = "arrayDesignService") }) })
             @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionAnalysisResultSet> filter ) {
-        return Responder.respond( expressionAnalysisResultSetService.countValueObjectsPreFilter( filter.getFilters( expressionAnalysisResultSetService ) ) );
+        return Responder.respond( expressionAnalysisResultSetService.countPreFilter( filter.getFilters( expressionAnalysisResultSetService ) ) );
     }
 
     private static final String TSV_EXAMPLE = "# If you use this file for your research, please cite:\n" +

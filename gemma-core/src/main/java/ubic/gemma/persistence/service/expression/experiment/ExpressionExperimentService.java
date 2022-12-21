@@ -19,6 +19,7 @@
 package ubic.gemma.persistence.service.expression.experiment;
 
 import org.springframework.security.access.annotation.Secured;
+import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.core.analysis.preprocess.batcheffects.BatchEffectDetails;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
@@ -245,6 +246,8 @@ public interface ExpressionExperimentService
      */
     Set<AnnotationValueObject> getAnnotations( Long eeId );
 
+    Map<Characteristic, Long> getAnnotationsFrequencyPreFilter( @Nullable Filters filters, int maxResults );
+
     /**
      * @param expressionExperiment experiment
      * @return a collection of ArrayDesigns referenced by any of the BioAssays that make up the
@@ -431,8 +434,24 @@ public interface ExpressionExperimentService
     boolean isTroubled( ExpressionExperiment expressionExperiment );
 
     @Override
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_READ" })
+    ExpressionExperimentValueObject loadValueObject( ExpressionExperiment entity );
+
+    @Override
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_READ" })
+    ExpressionExperimentValueObject loadValueObjectById( Long entityId );
+
+    @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
     List<ExpressionExperimentValueObject> loadAllValueObjects();
+
+    @Override
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
+    List<ExpressionExperimentValueObject> loadValueObjects( Collection<ExpressionExperiment> entities );
+
+    @Override
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
+    List<ExpressionExperimentValueObject> loadValueObjectsPreFilter( @Nullable Filters filters, @Nullable Sort sort );
 
     /**
      * @see FilteringVoEnabledDao#loadValueObjectsPreFilter(Filters, Sort, int, int) for

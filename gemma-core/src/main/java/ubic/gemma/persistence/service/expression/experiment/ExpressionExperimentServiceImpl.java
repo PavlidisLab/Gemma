@@ -22,6 +22,7 @@ import com.google.common.base.Strings;
 import gemma.gsec.SecurityService;
 import org.apache.commons.math3.exception.NotStrictlyPositiveException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.core.analysis.preprocess.batcheffects.BatchConfoundUtils;
@@ -55,26 +56,26 @@ import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.persistence.service.AbstractFilteringVoEnabledService;
 import ubic.gemma.persistence.service.AbstractService;
 import ubic.gemma.persistence.service.analysis.expression.coexpression.CoexpressionAnalysisService;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.persistence.service.analysis.expression.pca.PrincipalComponentAnalysisService;
 import ubic.gemma.persistence.service.analysis.expression.sampleCoexpression.SampleCoexpressionAnalysisService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventDao;
-import ubic.gemma.persistence.service.common.description.CharacteristicDao;
+import ubic.gemma.persistence.service.common.description.CharacteristicService;
 import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeService;
 import ubic.gemma.persistence.service.expression.arrayDesign.AbstractCuratableService;
-import ubic.gemma.persistence.service.expression.bioAssay.BioAssayDao;
 import ubic.gemma.persistence.service.expression.bioAssayData.BioAssayDimensionService;
 import ubic.gemma.persistence.service.expression.bioAssayData.RawExpressionDataVectorDao;
-import ubic.gemma.persistence.service.genome.taxon.TaxonDao;
+import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.persistence.util.Sort;
 
 import javax.annotation.Nullable;
 import java.util.*;
 import java.util.stream.Collectors;
+
+import static ubic.gemma.persistence.service.expression.experiment.ValueObjectUtils.remap;
 
 /**
  * @author pavlidis
@@ -126,6 +127,8 @@ public class ExpressionExperimentServiceImpl
     private SampleCoexpressionAnalysisService sampleCoexpressionAnalysisService;
     @Autowired
     private BlacklistedEntityService blacklistedEntityService;
+    @Autowired
+    private CharacteristicService characteristicService;
 
     @Autowired
     public ExpressionExperimentServiceImpl( ExpressionExperimentDao expressionExperimentDao ) {
@@ -492,6 +495,17 @@ public class ExpressionExperimentServiceImpl
         }
 
         return annotations;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Map<Characteristic, Long> getAnnotationsFrequencyPreFilter( @Nullable Filters filters, int maxResults ) {
+        if ( filters == null || filters.isEmpty() ) {
+            return expressionExperimentDao.getAnnotationsFrequency( maxResults );
+        } else {
+            List<Long> eeIds = expressionExperimentDao.loadIdsPreFilter( filters, null );
+            return expressionExperimentDao.getAnnotationsFrequency( eeIds, maxResults );
+        }
     }
 
     @Override

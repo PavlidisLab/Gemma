@@ -27,12 +27,11 @@ import static ubic.gemma.persistence.util.FilterQueryUtils.formPropertyName;
 /**
  * Partial implementation of {@link FilteringVoEnabledDao} based on the Hibernate {@link Criteria} API.
  *
+ * @author poirigui
  * @see FilterCriteriaUtils to obtain {@link org.hibernate.criterion.DetachedCriteria}
  * from a {@link Filters}.
  * @see ubic.gemma.persistence.util.AclCriteriaUtils for utilities to include ACL constraints on the VOs at the
  * database-level.
- *
- * @author poirigui
  */
 public abstract class AbstractCriteriaFilteringVoEnabledDao<O extends Identifiable, VO extends IdentifiableValueObject<O>> extends AbstractFilteringVoEnabledDao<O, VO> {
 
@@ -47,10 +46,94 @@ public abstract class AbstractCriteriaFilteringVoEnabledDao<O extends Identifiab
      * @see FilterCriteriaUtils#formRestrictionClause(Filters) to obtain a {@link org.hibernate.criterion.DetachedCriteria}
      * from a set of filter clauses.
      */
-    protected Criteria getLoadValueObjectsCriteria( @Nullable Filters filters ) {
+    protected Criteria getFilteringCriteria( @Nullable Filters filters ) {
         return this.getSessionFactory().getCurrentSession()
                 .createCriteria( elementClass )
                 .add( FilterCriteriaUtils.formRestrictionClause( filters ) );
+    }
+
+    @Override
+    public List<Long> loadIdsPreFilter( @Nullable Filters filters, @Nullable Sort sort ) {
+        StopWatch stopWatch = StopWatch.createStarted();
+
+        Criteria criteria = getFilteringCriteria( filters )
+                .setProjection( Projections.id() );
+
+        if ( sort != null ) {
+            addOrder( criteria, sort );
+        }
+
+        //noinspection unchecked
+        List<Long> result = criteria.list();
+
+        if ( stopWatch.getTime( TimeUnit.MILLISECONDS ) > REPORT_SLOW_QUERY_AFTER_MS ) {
+            log.info( String.format( "Loading %d IDs for %s took %d ms.",
+                    result.size(), elementClass.getName(),
+                    stopWatch.getTime( TimeUnit.MILLISECONDS ) ) );
+        }
+
+        return result;
+    }
+
+    @Override
+    public List<O> loadPreFilter( @Nullable Filters filters, @Nullable Sort sort ) {
+        StopWatch stopWatch = StopWatch.createStarted();
+
+        Criteria criteria = getFilteringCriteria( filters );
+
+        if ( sort != null ) {
+            addOrder( criteria, sort );
+        }
+
+        //noinspection unchecked
+        List<O> result = criteria.list();
+
+        if ( stopWatch.getTime( TimeUnit.MILLISECONDS ) > REPORT_SLOW_QUERY_AFTER_MS ) {
+            log.info( String.format( "Loading %d entities for %s took %d ms.",
+                    result.size(), elementClass.getName(),
+                    stopWatch.getTime( TimeUnit.MILLISECONDS ) ) );
+        }
+
+        return result;
+    }
+
+    @Override
+    public Slice<O> loadPreFilter( @Nullable Filters filters, @Nullable Sort sort, int offset, int limit ) {
+        StopWatch stopWatch = StopWatch.createStarted();
+        StopWatch queryStopWatch = StopWatch.create();
+        StopWatch countingStopWatch = StopWatch.create();
+
+        Criteria criteria = getFilteringCriteria( filters );
+        Criteria totalElementsQuery = getFilteringCriteria( filters );
+
+        // setup sorting
+        if ( sort != null ) {
+            addOrder( criteria, sort );
+        }
+
+        // setup offset/limit
+        if ( offset > 0 )
+            criteria.setFirstResult( offset );
+        if ( limit > 0 )
+            criteria.setMaxResults( limit );
+
+        queryStopWatch.start();
+        //noinspection unchecked
+        List<O> results = criteria.list();
+        queryStopWatch.stop();
+
+        countingStopWatch.start();
+        Long totalElements = ( Long ) totalElementsQuery.setProjection( Projections.countDistinct( getIdentifierPropertyName() ) ).uniqueResult();
+        countingStopWatch.stop();
+
+        if ( stopWatch.getTime( TimeUnit.MILLISECONDS ) > REPORT_SLOW_QUERY_AFTER_MS ) {
+            log.info( String.format( "Loading and counting %d entities for %s took %d ms (querying: %d, counting: %d).",
+                    totalElements, elementClass.getName(),
+                    stopWatch.getTime( TimeUnit.MILLISECONDS ), queryStopWatch.getTime( TimeUnit.MILLISECONDS ),
+                    countingStopWatch.getTime( TimeUnit.MILLISECONDS ) ) );
+        }
+
+        return new Slice<>( results, sort, offset, limit, totalElements );
     }
 
     @Override
@@ -60,8 +143,8 @@ public abstract class AbstractCriteriaFilteringVoEnabledDao<O extends Identifiab
         StopWatch countingStopWatch = StopWatch.create();
         StopWatch postProcessingStopWatch = StopWatch.create();
 
-        Criteria query = getLoadValueObjectsCriteria( filters );
-        Criteria totalElementsQuery = getLoadValueObjectsCriteria( filters );
+        Criteria query = getFilteringCriteria( filters );
+        Criteria totalElementsQuery = getFilteringCriteria( filters );
 
         // setup sorting
         if ( sort != null ) {
@@ -92,7 +175,8 @@ public abstract class AbstractCriteriaFilteringVoEnabledDao<O extends Identifiab
         stopWatch.stop();
 
         if ( stopWatch.getTime( TimeUnit.MILLISECONDS ) > REPORT_SLOW_QUERY_AFTER_MS ) {
-            log.info( String.format( "Loading and counting VOs took %d ms (querying: %d, counting: %d, post-processing: %d).",
+            log.info( String.format( "Loading and counting %d VOs for %s took %d ms (querying: %d, counting: %d, post-processing: %d).",
+                    totalElements, elementClass.getName(),
                     stopWatch.getTime( TimeUnit.MILLISECONDS ), queryStopWatch.getTime( TimeUnit.MILLISECONDS ),
                     countingStopWatch.getTime( TimeUnit.MILLISECONDS ), postProcessingStopWatch.getTime( TimeUnit.MILLISECONDS ) ) );
         }
@@ -106,7 +190,7 @@ public abstract class AbstractCriteriaFilteringVoEnabledDao<O extends Identifiab
         StopWatch queryStopWatch = StopWatch.create();
         StopWatch postProcessingStopWatch = StopWatch.create();
 
-        Criteria query = getLoadValueObjectsCriteria( filters );
+        Criteria query = getFilteringCriteria( filters );
 
         if ( sort != null ) {
             addOrder( query, sort );
@@ -126,28 +210,26 @@ public abstract class AbstractCriteriaFilteringVoEnabledDao<O extends Identifiab
         stopWatch.stop();
 
         if ( stopWatch.getTime() > REPORT_SLOW_QUERY_AFTER_MS ) {
-            log.info( String.format( "Loading VOs for %s took %d ms (querying: %d ms, post-processing: %d ms).",
-                    elementClass.getName(), stopWatch.getTime( TimeUnit.MILLISECONDS ), queryStopWatch.getTime( TimeUnit.MILLISECONDS ),
-                    postProcessingStopWatch.getTime( TimeUnit.MILLISECONDS ) ) );
+            log.info( String.format( "Loading %d VOs for %s took %d ms (querying: %d ms, post-processing: %d ms).",
+                    results.size(), elementClass.getName(), stopWatch.getTime( TimeUnit.MILLISECONDS ),
+                    queryStopWatch.getTime( TimeUnit.MILLISECONDS ), postProcessingStopWatch.getTime( TimeUnit.MILLISECONDS ) ) );
         }
 
         return results;
     }
 
     @Override
-    public long countValueObjectsPreFilter( @Nullable Filters filters ) {
+    public long countPreFilter( @Nullable Filters filters ) {
         StopWatch timer = StopWatch.createStarted();
-        try {
-            return ( Long ) getLoadValueObjectsCriteria( filters )
-                    .setProjection( Projections.countDistinct( getIdentifierPropertyName() ) )
-                    .uniqueResult();
-        } finally {
-            timer.stop();
-            if ( timer.getTime() > REPORT_SLOW_QUERY_AFTER_MS ) {
-                log.info( String.format( "Count VOs for %s took %d ms.",
-                        elementClass.getName(), timer.getTime( TimeUnit.MILLISECONDS ) ) );
-            }
+        Long ret = ( Long ) getFilteringCriteria( filters )
+                .setProjection( Projections.countDistinct( getIdentifierPropertyName() ) )
+                .uniqueResult();
+        timer.stop();
+        if ( timer.getTime() > REPORT_SLOW_QUERY_AFTER_MS ) {
+            log.info( String.format( "Counting %d entities for %s took %d ms.",
+                    ret, elementClass.getName(), timer.getTime( TimeUnit.MILLISECONDS ) ) );
         }
+        return ret;
     }
 
     @Value
@@ -165,7 +247,7 @@ public abstract class AbstractCriteriaFilteringVoEnabledDao<O extends Identifiab
      */
     protected List<FilterablePropertyAlias> getFilterablePropertyAliases() {
         // FIXME: unfortunately, this requires a session...
-        Criteria criteria = new TransactionTemplate( platformTransactionManager ).execute( ( ts ) -> getLoadValueObjectsCriteria( Filters.empty() ) );
+        Criteria criteria = new TransactionTemplate( platformTransactionManager ).execute( ( ts ) -> getFilteringCriteria( Filters.empty() ) );
         if ( criteria instanceof CriteriaImpl ) {
             //noinspection unchecked
             Iterator<CriteriaImpl.Subcriteria> it = ( ( CriteriaImpl ) criteria ).iterateSubcriteria();

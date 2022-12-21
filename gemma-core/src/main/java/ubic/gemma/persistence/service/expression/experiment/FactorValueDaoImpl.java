@@ -18,9 +18,7 @@
  */
 package ubic.gemma.persistence.service.expression.experiment;
 
-import org.apache.commons.lang3.NotImplementedException;
 import org.hibernate.Criteria;
-import org.hibernate.Query;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
@@ -29,13 +27,12 @@ import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.expression.experiment.FactorValueValueObject;
 import ubic.gemma.persistence.service.AbstractDao;
-import ubic.gemma.persistence.service.AbstractQueryFilteringVoEnabledDao;
+import ubic.gemma.persistence.service.AbstractNoopFilteringVoEnabledDao;
 import ubic.gemma.persistence.util.BusinessKey;
-import ubic.gemma.persistence.util.Filters;
-import ubic.gemma.persistence.util.Sort;
 
 import javax.annotation.Nullable;
-import java.util.*;
+import java.util.Collection;
+import java.util.List;
 
 /**
  * <p>
@@ -44,12 +41,12 @@ import java.util.*;
  * </p>
  */
 @Repository
-public class FactorValueDaoImpl extends AbstractQueryFilteringVoEnabledDao<FactorValue, FactorValueValueObject>
+public class FactorValueDaoImpl extends AbstractNoopFilteringVoEnabledDao<FactorValue, FactorValueValueObject>
         implements FactorValueDao {
 
     @Autowired
     public FactorValueDaoImpl( SessionFactory sessionFactory ) {
-        super( "fv", FactorValue.class, sessionFactory );
+        super( FactorValue.class, sessionFactory );
     }
 
     @Override
@@ -117,15 +114,5 @@ public class FactorValueDaoImpl extends AbstractQueryFilteringVoEnabledDao<Facto
             sb.append( object ).append( "\n" );
         }
         AbstractDao.log.error( sb.toString() );
-    }
-
-    @Override
-    public Set<String> getFilterableProperties() {
-        return Collections.emptySet();
-    }
-
-    @Override
-    protected Query getLoadValueObjectsQuery( @Nullable Filters filters, @Nullable Sort sort, EnumSet<QueryHint> hints ) {
-        throw new NotImplementedException( "This is ont implemented yet!" );
     }
 }

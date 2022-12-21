@@ -104,7 +104,7 @@ public class CompositeSequenceDaoImpl extends AbstractQueryFilteringVoEnabledDao
     }
 
     @Override
-    protected Query getLoadValueObjectsQuery( @Nullable Filters filters, @Nullable Sort sort, EnumSet<QueryHint> hints ) {
+    protected Query getFilteringQuery( @Nullable Filters filters, @Nullable Sort sort, EnumSet<QueryHint> hints ) {
         //language=HQL
         String queryString = MessageFormat.format( "select {0} from CompositeSequence as {0} "
                         + "left join fetch {0}.arrayDesign as {1} "
@@ -123,7 +123,7 @@ public class CompositeSequenceDaoImpl extends AbstractQueryFilteringVoEnabledDao
     }
 
     @Override
-    protected Query getCountValueObjectsQuery( @Nullable Filters filters ) {
+    protected Query getFilteringCountQuery( @Nullable Filters filters ) {
         //language=HQL
         String queryString = MessageFormat.format( "select count(distinct {0}) "
                         + "from CompositeSequence as {0} "

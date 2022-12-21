@@ -75,6 +75,28 @@ public interface FilteringVoEnabledDao<O extends Identifiable, VO extends Identi
     Sort getSort( String property, @Nullable Sort.Direction direction ) throws IllegalArgumentException;
 
     /**
+     * Load IDs of entities matching the given filters.
+     */
+    List<Long> loadIdsPreFilter( @Nullable Filters filters, @Nullable Sort sort );
+
+    /**
+     * Load entities matching the given filters.
+     * @see #loadValueObjectsPreFilter(Filters, Sort)
+     */
+    List<O> loadPreFilter( @Nullable Filters filters, @Nullable Sort sort );
+
+    /**
+     * Load a slice of entities matching the given filters.
+     * @see #loadValueObjectsPreFilter(Filters, Sort, int, int)
+     */
+    Slice<O> loadPreFilter( @Nullable Filters filters, @Nullable Sort sort, int offset, int limit );
+
+    /**
+     * Count VOs matching the given filters.
+     */
+    long countPreFilter( @Nullable Filters filters );
+
+    /**
      * Load VOs with ordering, filtering and offset/limit.
      * <p>
      * Consider using {@link FilteringVoEnabledService#getFilter(String, Filter.Operator, String)} and {@link FilteringVoEnabledService#getSort(String, Sort.Direction)}
@@ -100,9 +122,4 @@ public interface FilteringVoEnabledDao<O extends Identifiable, VO extends Identi
      * @see #loadValueObjectsPreFilter(Filters, Sort, int, int)
      */
     List<VO> loadValueObjectsPreFilter( @Nullable Filters filters, @Nullable Sort sort );
-
-    /**
-     * Count VOs matching the given filters.
-     */
-    long countValueObjectsPreFilter( @Nullable Filters filters );
 }
