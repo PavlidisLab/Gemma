@@ -38,7 +38,7 @@ import java.util.*;
  * @see ArrayDesignService
  */
 @Service
-public class ArrayDesignServiceImpl extends AbstractCuratableService<ArrayDesign, ArrayDesignValueObject>
+public class ArrayDesignServiceImpl extends AbstractFilteringVoEnabledService<ArrayDesign, ArrayDesignValueObject>
         implements ArrayDesignService {
 
     private final ArrayDesignDao arrayDesignDao;

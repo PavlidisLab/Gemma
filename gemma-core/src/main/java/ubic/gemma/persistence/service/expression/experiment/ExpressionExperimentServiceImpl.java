@@ -22,7 +22,6 @@ import com.google.common.base.Strings;
 import gemma.gsec.SecurityService;
 import org.apache.commons.math3.exception.NotStrictlyPositiveException;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.core.analysis.preprocess.batcheffects.BatchConfoundUtils;
@@ -64,7 +63,6 @@ import ubic.gemma.persistence.service.analysis.expression.sampleCoexpression.Sam
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventDao;
 import ubic.gemma.persistence.service.common.description.CharacteristicService;
 import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeService;
-import ubic.gemma.persistence.service.expression.arrayDesign.AbstractCuratableService;
 import ubic.gemma.persistence.service.expression.bioAssayData.BioAssayDimensionService;
 import ubic.gemma.persistence.service.expression.bioAssayData.RawExpressionDataVectorDao;
 import ubic.gemma.persistence.util.Filters;
@@ -75,8 +73,6 @@ import javax.annotation.Nullable;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static ubic.gemma.persistence.service.expression.experiment.ValueObjectUtils.remap;
-
 /**
  * @author pavlidis
  * @author keshav
@@ -85,7 +81,7 @@ import static ubic.gemma.persistence.service.expression.experiment.ValueObjectUt
 @Service
 @Transactional
 public class ExpressionExperimentServiceImpl
-        extends AbstractCuratableService<ExpressionExperiment, ExpressionExperimentValueObject>
+        extends ubic.gemma.persistence.service.AbstractFilteringVoEnabledService<ExpressionExperiment, ExpressionExperimentValueObject>
         implements ExpressionExperimentService {
 
     private static final double BATCH_CONFOUND_THRESHOLD = 0.01;
