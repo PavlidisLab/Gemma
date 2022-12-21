@@ -20,9 +20,6 @@ import ubic.gemma.persistence.util.Slice;
 import javax.annotation.Nullable;
 import java.util.List;
 
-/**
- * @param <T>
- */
 public class PaginatedResponseDataObject<T> extends FilteringResponseDataObject<T> {
 
     private final Integer offset;
