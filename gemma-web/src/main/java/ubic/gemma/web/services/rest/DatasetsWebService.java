@@ -55,6 +55,7 @@ import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.util.Filters;
+import ubic.gemma.persistence.util.Sort;
 import ubic.gemma.web.services.rest.annotations.GZIP;
 import ubic.gemma.web.services.rest.util.*;
 import ubic.gemma.web.services.rest.util.args.*;
@@ -137,11 +138,11 @@ public class DatasetsWebService {
             @Schema(extensions = { @Extension(name = "gemma", properties = { @ExtensionProperty(name = "filteringService", value = "expressionExperimentService") }) })
             @QueryParam("sort") @DefaultValue("+id") SortArg<ExpressionExperiment> sort // Optional, default +id
     ) {
-        return Responder.paginate( service.loadValueObjectsPreFilter(
+        return Responder.paginate( expressionExperimentService,
                 filter.getFilters( expressionExperimentService ),
                 sort.getSort( expressionExperimentService ),
                 offset.getValue(),
-                limit.getValue() ) );
+                limit.getValue() );
     }
 
     @GET
@@ -181,8 +182,8 @@ public class DatasetsWebService {
             @QueryParam("sort") @DefaultValue("+id") SortArg<ExpressionExperiment> sort // Optional, default +id
     ) {
         Filters filters = filter.getFilters( expressionExperimentService )
-                .and( datasetsArg.getFilters( service ) );
-        return Responder.paginate( service.loadValueObjectsPreFilter( filters, sort.getSort( expressionExperimentService ), offset.getValue(), limit.getValue() ) );
+                .and( datasetsArg.getFilters( expressionExperimentService ) );
+        return Responder.paginate( expressionExperimentService, filters, sort.getSort( expressionExperimentService ), offset.getValue(), limit.getValue() );
     }
 
     /**
@@ -249,7 +250,7 @@ public class DatasetsWebService {
 
     /**
      * Retrieves the result sets of all the differential expression analyses of a dataset.
-     *
+     * <p>
      * This is actually performing a 302 Found redirection to point the HTTP client to the corresponding result sets
      * endpoint.
      *
@@ -392,7 +393,7 @@ public class DatasetsWebService {
 
     /**
      * Retrieve raw expression data.
-     *
+     * <p>
      * The payload is transparently compressed via a <code>Content-Encoding</code> header and streamed to avoid dumping
      * the whole payload in memory.
      */

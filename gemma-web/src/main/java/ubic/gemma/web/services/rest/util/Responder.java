@@ -14,9 +14,15 @@
  */
 package ubic.gemma.web.services.rest.util;
 
+import ubic.gemma.model.IdentifiableValueObject;
+import ubic.gemma.persistence.service.FilteringVoEnabledService;
+import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Slice;
+import ubic.gemma.persistence.util.Sort;
 
+import javax.annotation.Nullable;
 import javax.ws.rs.NotFoundException;
+import java.util.List;
 
 /**
  * Handles setting of the response status code and composing a proper payload structure.
@@ -30,10 +36,10 @@ public class Responder {
     /**
      * Produce a {@link ResponseDataObject} that wraps the given argument.
      *
-     * @param payload           an object to be wrapped and published to the API
+     * @param payload an object to be wrapped and published to the API
+     * @return a {@link ResponseDataObject} containing the argument
      * @throws NotFoundException if the argument is null, a suitable {@link ResponseErrorObject} will be subsequently
      *                           produced by {@link ubic.gemma.web.services.rest.providers.NotFoundExceptionMapper}
-     * @return a {@link ResponseDataObject} containing the argument
      */
     public static <T> ResponseDataObject<T> respond( T payload ) throws NotFoundException {
         if ( payload == null ) { // object is null.
@@ -43,14 +49,40 @@ public class Responder {
         }
     }
 
-    /**
-     * Produce a {@link PaginatedResponseDataObject} for a given {@link Slice}.
-     */
-    public static <T> PaginatedResponseDataObject<T> paginate( Slice<T> payload ) throws NotFoundException {
+    public static <T> FilteringResponseDataObject<T> filter( List<T> payload, @Nullable Filters filters, @Nullable Sort sort ) {
         if ( payload == null ) {
             throw new NotFoundException( Responder.DEFAULT_ERR_MSG_NULL_OBJECT );
         } else {
-            return new PaginatedResponseDataObject<>( payload );
+            return new FilteringResponseDataObject<>( payload, filters, sort );
+        }
+    }
+
+    public static <T> LimitedResponseDataObject<T> limit( List<T> payload, @Nullable Filters filters, @Nullable Sort sort, int limit ) {
+        if ( payload == null ) {
+            throw new NotFoundException( Responder.DEFAULT_ERR_MSG_NULL_OBJECT );
+        } else {
+            return new LimitedResponseDataObject<>( payload, filters, sort, limit );
+        }
+    }
+
+    /**
+     * Produce a {@link PaginatedResponseDataObject} for a given {@link Slice}.
+     */
+    public static <T extends IdentifiableValueObject<?>> PaginatedResponseDataObject<T> paginate( Slice<T> payload, @Nullable Filters filters ) throws NotFoundException {
+        if ( payload == null ) {
+            throw new NotFoundException( Responder.DEFAULT_ERR_MSG_NULL_OBJECT );
+        } else {
+            return new PaginatedResponseDataObject<>( payload, filters );
+        }
+    }
+
+    public static <T extends IdentifiableValueObject<?>> PaginatedResponseDataObject<T> paginate(
+            FilteringVoEnabledService<?, T> service, Filters filters, Sort sort, int offset, int limit ) throws NotFoundException {
+        Slice<T> payload = service.loadValueObjectsPreFilter( filters, sort, offset, limit );
+        if ( payload == null ) {
+            throw new NotFoundException( Responder.DEFAULT_ERR_MSG_NULL_OBJECT );
+        } else {
+            return new PaginatedResponseDataObject<>( payload, filters );
         }
     }
 }

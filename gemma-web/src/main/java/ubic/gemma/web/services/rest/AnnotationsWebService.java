@@ -173,31 +173,26 @@ public class AnnotationsWebService {
             throw new BadRequestException( "Invalid search settings.", e );
         }
 
-        if ( foundIds.isEmpty() ) {
-            return Responder.paginate( Slice.fromList( Collections.emptyList() ) );
-        }
-
         Filters filters = filterArg.getFilters( expressionExperimentService );
         Sort sort = sortArg.getSort( expressionExperimentService );
 
-        if ( filters == null
+        if ( foundIds.isEmpty() ) {
+            return Responder.paginate( Slice.empty(), filters );
+        }
+
+        if ( filters.isEmpty()
                 && offset.getValue() == 0
                 && foundIds.size() < limit.getValue()
                 && sort.getPropertyName().equals( "id" )
                 && sort.getDirection() == Sort.Direction.ASC ) {
             // Otherwise there is no need to go the pre-filter path since we already know exactly what IDs we want.
-            return Responder.paginate( Slice.fromList( expressionExperimentService.loadValueObjectsByIds( foundIds ) ) );
+            return Responder.paginate( Slice.fromList( expressionExperimentService.loadValueObjectsByIds( foundIds ) ), filters );
 
-        }
-
-        // FIXME: this is not necessary since FilterArg.valueOf("") returns an empty Filters object
-        if ( filters == null ) {
-            filters = Filters.empty();
         }
 
         // If there are filters other than the search query, intersect the results.
         filters.and( DatasetArrayArg.valueOf( StringUtils.join( foundIds, ',' ) ).getFilters( expressionExperimentService ) );
-        return Responder.paginate( expressionExperimentService.loadValueObjectsPreFilter( filters, sort, offset.getValue(), limit.getValue() ) );
+        return Responder.paginate( expressionExperimentService, filters, sort, offset.getValue(), limit.getValue() );
     }
 
     @GET
@@ -251,7 +246,7 @@ public class AnnotationsWebService {
         }
 
         if ( foundIds.isEmpty() ) {
-            return Responder.paginate( Slice.fromList( Collections.emptyList() ) );
+            return Responder.paginate( Slice.empty(), null );
         }
 
         // We always have to do filtering, because we always have at least the taxon argument (otherwise this#datasets method is used)
@@ -260,7 +255,7 @@ public class AnnotationsWebService {
 
         return Responder.paginate( taxonArg.getTaxonDatasets( expressionExperimentService, taxonService,
                 filters, offset.getValue(),
-                limit.getValue(), sort.getSort( expressionExperimentService ) ) );
+                limit.getValue(), sort.getSort( expressionExperimentService ) ), filters );
     }
 
     /**

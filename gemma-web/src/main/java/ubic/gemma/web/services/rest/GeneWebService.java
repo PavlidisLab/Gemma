@@ -158,7 +158,7 @@ public class GeneWebService {
     ) {
         return Responder.paginate( compositeSequenceService
                 .loadValueObjectsForGene( geneArg.getEntity( geneService ), offset.getValue(),
-                        limit.getValue() ) );
+                        limit.getValue() ), geneArg.getFilters( geneService ) );
     }
 
     /**

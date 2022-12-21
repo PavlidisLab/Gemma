@@ -98,7 +98,7 @@ public class PlatformsWebService {
             @Schema(extensions = { @Extension(name = "gemma", properties = { @ExtensionProperty(name = "filteringService", value = "arrayDesignService") }) })
             @QueryParam("sort") @DefaultValue("+id") SortArg<ArrayDesign> sort // Optional, default +id
     ) {
-        return Responder.paginate( arrayDesignService.loadValueObjectsPreFilter( filter.getFilters( arrayDesignService ), sort.getSort( arrayDesignService ), offset.getValue(), limit.getValue() ) );
+        return Responder.paginate( arrayDesignService, filter.getFilters( arrayDesignService ), sort.getSort( arrayDesignService ), offset.getValue(), limit.getValue() );
     }
 
     @GET
@@ -139,12 +139,13 @@ public class PlatformsWebService {
     ) {
         Filters filters = filter.getFilters( arrayDesignService )
                 .and( datasetsArg.getFilters( arrayDesignService ) );
-        return Responder.paginate( arrayDesignService.loadValueObjectsPreFilter( filters, sort.getSort( arrayDesignService ), offset.getValue(), limit.getValue() ) );
+        return Responder.paginate( arrayDesignService, filters, sort.getSort( arrayDesignService ), offset.getValue(), limit.getValue() );
     }
 
     /**
      * Retrieves experiments in the given platform.
-     *  @param platformArg can either be the ArrayDesign ID or its short name (e.g. "GPL1355" ). Retrieval by ID
+     *
+     * @param platformArg can either be the ArrayDesign ID or its short name (e.g. "GPL1355" ). Retrieval by ID
      *                    is more efficient. Only platforms that user has access to will be available.
      * @param offset      optional parameter (defaults to 0) skips the specified amount of datasets when retrieving them
      *                    from the database.
@@ -159,14 +160,13 @@ public class PlatformsWebService {
             @QueryParam("offset") @DefaultValue("0") OffsetArg offset, // Optional, default 0
             @QueryParam("limit") @DefaultValue("20") LimitArg limit // Optional, default 20
     ) {
-        return Responder.paginate( platformArg
-                .getExperiments( arrayDesignService, expressionExperimentService, limit.getValue(), offset.getValue() )
-        );
+        return Responder.paginate( platformArg.getExperiments( arrayDesignService, expressionExperimentService, limit.getValue(), offset.getValue() ), null );
     }
 
     /**
      * Retrieves the composite sequences (elements) for the given platform.
-     *  @param platformArg can either be the ArrayDesign ID or its short name (e.g. "GPL1355" ). Retrieval by ID
+     *
+     * @param platformArg can either be the ArrayDesign ID or its short name (e.g. "GPL1355" ). Retrieval by ID
      *                    is more efficient. Only platforms that user has access to will be available.
      * @param offset      optional parameter (defaults to 0) skips the specified amount of datasets when retrieving them
      *                    from the database.
@@ -181,8 +181,7 @@ public class PlatformsWebService {
             @QueryParam("offset") @DefaultValue("0") OffsetArg offset, // Optional, default 0
             @QueryParam("limit") @DefaultValue("20") LimitArg limit // Optional, default 20
     ) {
-        return Responder.paginate( platformArg
-                .getElements( arrayDesignService, compositeSequenceService, limit.getValue(), offset.getValue() ) );
+        return Responder.paginate( platformArg.getElements( arrayDesignService, compositeSequenceService, limit.getValue(), offset.getValue() ), null );
     }
 
     /**
@@ -210,7 +209,7 @@ public class PlatformsWebService {
             @QueryParam("limit") @DefaultValue("20") LimitArg limit // Optional, default 20
     ) {
         probesArg.setPlatform( platformArg.getEntity( arrayDesignService ) );
-        return Responder.paginate( compositeSequenceService.loadValueObjectsPreFilter( Filters.by( probesArg.getPlatformFilter() ), null, offset.getValue(), limit.getValue() ) );
+        return Responder.paginate( compositeSequenceService, Filters.by( probesArg.getPlatformFilter() ), null, offset.getValue(), limit.getValue() );
     }
 
     /**
@@ -241,14 +240,14 @@ public class PlatformsWebService {
         return Responder.paginate( compositeSequenceService
                 .getGenes( probeArg.getEntity( compositeSequenceService ), offset.getValue(),
                         limit.getValue() )
-                .map( geneService::loadValueObject ) );
+                .map( geneService::loadValueObject ), probeArg.getFilters( compositeSequenceService ) );
     }
 
     /**
      * Retrieves the annotation file for the given platform.
      *
-     * @param  platformArg can either be the ArrayDesign ID or its short name (e.g. "GPL1355" ). Retrieval by ID
-     *                     is more efficient. Only platforms that user has access to will be available.
+     * @param platformArg can either be the ArrayDesign ID or its short name (e.g. "GPL1355" ). Retrieval by ID
+     *                    is more efficient. Only platforms that user has access to will be available.
      * @return the content of the annotation file of the given platform.
      */
     @GET
@@ -265,7 +264,7 @@ public class PlatformsWebService {
     /**
      * Creates a response with the annotation file for given array design
      *
-     * @param  arrayDesign the platform to fetch and output the annotation file for.
+     * @param arrayDesign the platform to fetch and output the annotation file for.
      * @return a Response object containing the annotation file.
      */
     private Response outputAnnotationFile( ArrayDesign arrayDesign ) {

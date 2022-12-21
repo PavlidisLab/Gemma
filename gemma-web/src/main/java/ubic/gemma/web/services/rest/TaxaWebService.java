@@ -234,9 +234,9 @@ public class TaxaWebService {
             @Schema(extensions = { @Extension(name = "gemma", properties = { @ExtensionProperty(name = "filteringService", value = "taxonService") }) })
             @QueryParam("sort") @DefaultValue("+id") SortArg<Taxon> sort // Optional, default +id
     ) {
-        return Responder.paginate(
-                taxonArg.getTaxonDatasets( expressionExperimentService, taxonService, filter.getFilters( expressionExperimentService ),
-                        offset.getValue(), limit.getValue(), sort.getSort( taxonService ) ) );
+        Filters filters = filter.getFilters( expressionExperimentService );
+        return Responder.paginate( taxonArg.getTaxonDatasets( expressionExperimentService, taxonService, filters,
+                offset.getValue(), limit.getValue(), sort.getSort( taxonService ) ), filters );
     }
 
     /**

@@ -42,6 +42,7 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.persistence.service.analysis.expression.diff.ExpressionAnalysisResultSetService;
 import ubic.gemma.persistence.service.common.description.DatabaseEntryService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.web.services.rest.annotations.GZIP;
 import ubic.gemma.web.services.rest.util.*;
 import ubic.gemma.web.services.rest.util.args.*;
@@ -107,8 +108,10 @@ public class AnalysisResultSetsWebService {
         if ( databaseEntries != null ) {
             des = databaseEntries.getEntities( databaseEntryService );
         }
+        Filters filters2 = filters.getFilters( expressionAnalysisResultSetService );
         return Responder.paginate( expressionAnalysisResultSetService.findByBioAssaySetInAndDatabaseEntryInLimit(
-                bas, des, filters.getFilters( expressionAnalysisResultSetService ), offset.getValue(), limit.getValue(), sort.getSort( expressionAnalysisResultSetService ) ) );
+                        bas, des, filters2, offset.getValue(), limit.getValue(), sort.getSort( expressionAnalysisResultSetService ) ),
+                filters2 );
     }
 
     @GET
@@ -168,7 +171,7 @@ public class AnalysisResultSetsWebService {
 
     /**
      * Retrieve an {@link AnalysisResultSet} in a tabular format.
-     *
+     * <p>
      * This is intentionally using a slightly different parameter name for the {@link Path} to create a distinct entry
      * in the OpenAPI specification as a workaround to Swagger's codegen incapability to treat multiple media types per
      * endpoint.

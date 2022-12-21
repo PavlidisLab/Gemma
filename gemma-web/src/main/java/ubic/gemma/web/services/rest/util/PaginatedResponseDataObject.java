@@ -14,28 +14,30 @@
  */
 package ubic.gemma.web.services.rest.util;
 
+import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Slice;
 
+import javax.annotation.Nullable;
 import java.util.List;
 
-public class PaginatedResponseDataObject<T> extends ResponseDataObject<List<T>> {
+/**
+ * @param <T>
+ */
+public class PaginatedResponseDataObject<T> extends FilteringResponseDataObject<T> {
 
     private final Integer offset;
 
     private final Integer limit;
-
-    private final SortValueObject sort;
 
     private final Long totalElements;
 
     /**
      * @param payload the data to be serialised and returned as the response payload.
      */
-    public PaginatedResponseDataObject( Slice<T> payload ) {
-        super( payload );
+    public PaginatedResponseDataObject( Slice<T> payload, @Nullable Filters filters ) {
+        super( payload, filters, payload.getSort() );
         this.offset = payload.getOffset();
         this.limit = payload.getLimit();
-        this.sort = payload.getSort() != null ? new SortValueObject( payload.getSort() ) : null;
         this.totalElements = payload.getTotalElements();
     }
 
@@ -45,10 +47,6 @@ public class PaginatedResponseDataObject<T> extends ResponseDataObject<List<T>> 
 
     public Integer getLimit() {
         return limit;
-    }
-
-    public SortValueObject getSort() {
-        return sort;
     }
 
     public Long getTotalElements() {
