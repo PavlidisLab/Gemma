@@ -4,7 +4,8 @@
 	   xmlns:s="http://www.springframework.org/schema/security"
 	   xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
             http://www.springframework.org/schema/security
-            http://www.springframework.org/schema/security/spring-security.xsd">
+            http://www.springframework.org/schema/security/spring-security.xsd"
+	   profile="web">
 
 	<bean id="ajaxAuthenticationSuccessHandler" class="gemma.gsec.authentication.AjaxAuthenticationSuccessHandler">
 		<property name="alwaysUseDefaultTargetUrl" value="false"/>

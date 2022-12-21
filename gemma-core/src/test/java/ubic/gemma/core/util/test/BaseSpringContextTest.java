@@ -36,10 +36,9 @@ import org.springframework.core.io.support.EncodedResource;
 import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.TestExecutionListeners;
 import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
-import org.springframework.test.context.transaction.TransactionalTestExecutionListener;
 import org.springframework.test.jdbc.JdbcTestUtils;
 import ubic.gemma.core.util.test.category.SpringContextTest;
 import ubic.gemma.model.analysis.Analysis;
@@ -60,7 +59,6 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
-import ubic.gemma.persistence.persister.Persister;
 import ubic.gemma.persistence.persister.PersisterHelper;
 import ubic.gemma.persistence.service.common.description.ExternalDatabaseService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
@@ -77,10 +75,11 @@ import java.util.Set;
  *
  * @author pavlidis
  */
+@ActiveProfiles("test")
 @Category(SpringContextTest.class)
 @SuppressWarnings({ "WeakerAccess", "SameParameterValue", "unused" }) // Better left as is for future convenience
 @ContextConfiguration(locations = { "classpath*:ubic/gemma/applicationContext-*.xml",
-        "classpath*:gemma/gsec/applicationContext-*.xml", "classpath:ubic/gemma/testDataSource.xml" })
+        "classpath*:gemma/gsec/applicationContext-*.xml" })
 public abstract class BaseSpringContextTest extends AbstractJUnit4SpringContextTests implements InitializingBean {
 
     /* shared fixtures */
@@ -101,7 +100,7 @@ public abstract class BaseSpringContextTest extends AbstractJUnit4SpringContextT
     protected JdbcTemplate jdbcTemplate;
 
     /**
-     * The data source as defined in testDataSource.xml
+     * The data source as defined in ubic/gemma/applicationContext-dataSource.xml
      */
     @Autowired
     private DataSource dataSource;

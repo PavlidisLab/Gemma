@@ -5,6 +5,7 @@ import org.junit.Before;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
 import ubic.gemma.core.security.authentication.UserManager;
 import ubic.gemma.persistence.persister.Persister;
@@ -17,6 +18,7 @@ import static org.mockito.Mockito.mock;
 /**
  * Minimal setup
  */
+@ActiveProfiles({ "cli", "test" })
 public abstract class BaseCliTest extends AbstractJUnit4SpringContextTests {
 
     /**

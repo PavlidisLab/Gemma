@@ -16,26 +16,46 @@ package ubic.gemma.core.util;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.beans.factory.InitializingBean;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.env.Environment;
 import org.springframework.mail.MailException;
 import org.springframework.mail.MailSender;
 import org.springframework.mail.SimpleMailMessage;
+import ubic.gemma.persistence.util.SpringProfiles;
 
 /**
  * Mock mail sender for testing.
  *
  * @author Paul
  */
-public class DummyMailSender implements MailSender {
+public class DummyMailSender implements MailSender, InitializingBean {
 
     private static final Log log = LogFactory.getLog( DummyMailSender.class );
 
+    @Autowired
+    private Environment environment;
+
+    @Override
+    public void afterPropertiesSet() throws Exception {
+        if ( environment.acceptsProfiles( SpringProfiles.DEV ) ) {
+            log.warn( "Emails will be sent to a dummy mail sender. If this is not intended, activate the 'production' profile by setting -Dspring.profiles.active=production." );
+        }
+    }
+
     @Override
     public void send( SimpleMailMessage simpleMessage ) throws MailException {
-        DummyMailSender.log.debug( "Sent" );
+        doSend( simpleMessage );
     }
 
     @Override
     public void send( SimpleMailMessage[] simpleMessages ) throws MailException {
-        DummyMailSender.log.debug( "Sent" );
+        for ( SimpleMailMessage m : simpleMessages ) {
+            doSend( m );
+        }
+    }
+
+    private void doSend( SimpleMailMessage m ) {
+        DummyMailSender.log.info( m );
     }
 }

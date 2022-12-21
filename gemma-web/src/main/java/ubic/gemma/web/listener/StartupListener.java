@@ -24,10 +24,13 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.quartz.Scheduler;
 import org.springframework.context.ApplicationContext;
+import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.context.ContextLoaderListener;
+import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.context.support.WebApplicationContextUtils;
 import ubic.gemma.persistence.util.Settings;
+import ubic.gemma.persistence.util.SpringProfiles;
 import ubic.gemma.web.scheduler.SchedulerUtils;
 import ubic.gemma.web.util.Constants;
 
@@ -36,6 +39,7 @@ import javax.servlet.ServletContextEvent;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 /**
  * StartupListener class used to initialize the spring context and make it available to the servlet context, so filters
@@ -61,10 +65,31 @@ public class StartupListener extends ContextLoaderListener {
     private static final Log log = LogFactory.getLog( StartupListener.class );
 
     @Override
+    protected WebApplicationContext createWebApplicationContext( ServletContext servletContext ) {
+        WebApplicationContext ctx = super.createWebApplicationContext( servletContext );
+
+        // setup active profiles
+        if ( ctx instanceof ConfigurableApplicationContext ) {
+            ConfigurableApplicationContext cac = ( ConfigurableApplicationContext ) ctx;
+            // FIXME: I think this is added in a later version of Spring (maybe https://github.com/PavlidisLab/Gemma/pull/508 will fix this?)
+            if ( servletContext.getInitParameter( "spring.profiles.active" ) != null ) {
+                for ( String activeProfile : servletContext.getInitParameter( "spring.profiles.active" ).split( "," ) ) {
+                    cac.getEnvironment().addActiveProfile( activeProfile.trim() );
+                }
+            }
+            if ( !cac.getEnvironment().acceptsProfiles( SpringProfiles.PRODUCTION, SpringProfiles.DEV, SpringProfiles.TEST ) ) {
+                log.warn( "No profiles were detected, activating the 'dev' profile as a fallback. Use -Dspring.profiles.active=dev explicitly to remove this warning." );
+                cac.getEnvironment().addActiveProfile( SpringProfiles.DEV );
+            }
+        }
+
+        return ctx;
+    }
+
+    @Override
     public void contextInitialized( ServletContextEvent event ) {
         StartupListener.log.info( "Initializing Gemma Web context..." );
-        StopWatch sw = new StopWatch();
-        sw.start();
+        StopWatch sw = StopWatch.createStarted();
 
         SecurityContextHolder.setStrategyName( SecurityContextHolder.MODE_INHERITABLETHREADLOCAL );
 
@@ -90,8 +115,9 @@ public class StartupListener extends ContextLoaderListener {
 
         sw.stop();
 
-        double time = sw.getTime() / 1000.00;
-        StartupListener.log.info( "Initialization of Gemma Spring web context in " + time + " s " );
+        StartupListener.log.info( String.format( "Initialization of Gemma Web context took %d s. The following profiles are active: %s.",
+                sw.getTime( TimeUnit.SECONDS ),
+                String.join( ", ", ctx.getEnvironment().getActiveProfiles() ) ) );
     }
 
     private void configureScheduler( ApplicationContext ctx ) {
