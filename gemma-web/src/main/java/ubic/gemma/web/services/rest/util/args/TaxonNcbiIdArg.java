@@ -19,6 +19,8 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 
+import javax.annotation.Nonnull;
+
 /**
  * Long argument type for taxon API, referencing the Taxon ID.
  *
@@ -35,6 +37,7 @@ public class TaxonNcbiIdArg extends TaxonArg<Integer> {
         super( l );
     }
 
+    @Nonnull
     @Override
     public Taxon getEntity( TaxonService service ) {
         return checkEntity( service, service.findByNcbiId( this.getValue() ) );

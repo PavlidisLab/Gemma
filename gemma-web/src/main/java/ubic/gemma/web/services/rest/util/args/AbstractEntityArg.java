@@ -7,6 +7,8 @@ import ubic.gemma.persistence.util.Filter;
 import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.web.util.EntityNotFoundException;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.NotFoundException;
 
@@ -45,6 +47,7 @@ public abstract class AbstractEntityArg<T, O extends Identifiable, S extends Fil
      * @throws BadRequestException if the service lacks the ability of providing the entity, which is typically due to
      *                             an incomplete request
      */
+    @Nonnull
     public abstract O getEntity( S service ) throws NotFoundException, BadRequestException;
 
     /**
@@ -66,7 +69,7 @@ public abstract class AbstractEntityArg<T, O extends Identifiable, S extends Fil
      * @return the same object as given.
      * @throws NotFoundException if the given entity is null.
      */
-    protected O checkEntity( S service, O entity ) throws NotFoundException {
+    protected O checkEntity( S service, @Nullable O entity ) throws NotFoundException {
         if ( entity == null ) {
             EntityNotFoundException cause = new EntityNotFoundException( String.format( ERROR_FORMAT_ENTITY_NOT_FOUND, getPropertyName( service ), entityClass.getName(), this.getValue() ) );
             throw new NotFoundException( ERROR_MSG_ENTITY_NOT_FOUND, cause );

@@ -6,6 +6,7 @@ import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeService;
 
+import javax.annotation.Nonnull;
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.NotFoundException;
 
@@ -20,6 +21,7 @@ public class QuantitationTypeByIdArg extends QuantitationTypeArg<Long> {
         return service.getIdentifierPropertyName();
     }
 
+    @Nonnull
     @Override
     public QuantitationType getEntity( QuantitationTypeService service ) throws NotFoundException, BadRequestException {
         return checkEntity( service, service.load( getValue() ) );

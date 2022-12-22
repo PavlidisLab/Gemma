@@ -5,6 +5,8 @@ import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.persistence.service.analysis.expression.diff.ExpressionAnalysisResultSetService;
 import ubic.gemma.web.services.rest.util.MalformedArgException;
 
+import javax.annotation.Nonnull;
+
 /**
  * Represents an expression analysis result set identifier.
  */
@@ -21,6 +23,7 @@ public class ExpressionAnalysisResultSetArg extends AbstractEntityArg<Long, Expr
         return service.getIdentifierPropertyName();
     }
 
+    @Nonnull
     @Override
     public ExpressionAnalysisResultSet getEntity( ExpressionAnalysisResultSetService service ) {
         return checkEntity( service, service.loadWithExperimentAnalyzed( getValue() ) );

@@ -7,6 +7,7 @@ import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeService;
 
+import javax.annotation.Nonnull;
 import javax.ws.rs.BadRequestException;
 
 @Schema(type = "string", description = "A quantitation type numerical identifier.")
@@ -21,6 +22,7 @@ public class QuantitationTypeByNameArg extends QuantitationTypeArg<String> {
         return service.getIdentifierPropertyName();
     }
 
+    @Nonnull
     @Override
     public QuantitationType getEntity( QuantitationTypeService service ) throws NotFoundException, BadRequestException {
         throw new UnsupportedOperationException( "A name is insufficient to retrieve a unique quantitation type." );

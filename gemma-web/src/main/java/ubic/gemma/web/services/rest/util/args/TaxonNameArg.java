@@ -21,6 +21,8 @@ import ubic.gemma.persistence.util.Filter;
 import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.web.services.rest.util.MalformedArgException;
 
+import javax.annotation.Nonnull;
+
 /**
  * String argument type for taxon API, referencing the Taxon scientific name or common name. Can also be
  * null.
@@ -34,6 +36,7 @@ public class TaxonNameArg extends TaxonArg<String> {
         super( s );
     }
 
+    @Nonnull
     @Override
     public Taxon getEntity( TaxonService service ) {
         return checkEntity( service, this.getValue() == null ? null : this.tryAllNameProperties( service ) );

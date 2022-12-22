@@ -5,6 +5,8 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
+import javax.annotation.Nonnull;
+
 /**
  * String argument type for dataset API, referencing the Dataset short name. Can also be null.
  *
@@ -17,6 +19,7 @@ public class DatasetStringArg extends DatasetArg<String> {
         super( s );
     }
 
+    @Nonnull
     @Override
     public ExpressionExperiment getEntity( ExpressionExperimentService service ) {
         return this.checkEntity( service, Strings.isNullOrEmpty( this.getValue() ) ? null : service.findByShortName( this.getValue() ) );

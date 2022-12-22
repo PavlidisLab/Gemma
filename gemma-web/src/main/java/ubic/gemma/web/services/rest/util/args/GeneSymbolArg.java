@@ -8,6 +8,7 @@ import ubic.gemma.model.genome.PhysicalLocationValueObject;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneValueObject;
 
+import javax.annotation.Nonnull;
 import javax.ws.rs.BadRequestException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -27,6 +28,7 @@ public class GeneSymbolArg extends GeneArg<String> {
         super( s );
     }
 
+    @Nonnull
     @Override
     public Gene getEntity( GeneService service ) {
         String value = getValue();

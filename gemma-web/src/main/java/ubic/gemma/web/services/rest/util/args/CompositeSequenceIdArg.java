@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
 
+import javax.annotation.Nonnull;
 import javax.ws.rs.BadRequestException;
 import java.util.Objects;
 
@@ -22,6 +23,7 @@ public class CompositeSequenceIdArg extends CompositeSequenceArg<Long> {
         return service.getIdentifierPropertyName();
     }
 
+    @Nonnull
     @Override
     public CompositeSequence getEntity( CompositeSequenceService service ) {
         if ( platform == null )
