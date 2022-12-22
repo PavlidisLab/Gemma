@@ -112,7 +112,7 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
             throw new IllegalArgumentException( "Cannot read from file:" + f );
         }
 
-        try (InputStream is = new FileInputStream( f )) {
+        try ( InputStream is = new FileInputStream( f ) ) {
             // removed dry run code, validation and object creation is done before any commits to DB
             // So if validation fails no rollback needed. However, this call is wrapped in a transaction
             // as a fail safe.
@@ -202,9 +202,9 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
         if ( fv == null ) {
             throw new EntityNotFoundException( "No such factor value with id=" + e.getId() );
         }
-        
+
         if ( StringUtils.isBlank( c.getCategory() ) ) {
-            throw new IllegalArgumentException("The category cannot be blank for " + c);
+            throw new IllegalArgumentException( "The category cannot be blank for " + c );
         }
 
         if ( fv.getCharacteristics() == null ) {
@@ -637,9 +637,9 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
             // String originalCategoryUri = vc.getCategoryUri();
 
             vc.setCategory( efvo.getCategory() );
-            vc.setCategoryUri( efvo.getCategoryUri() );
+            vc.setCategoryUri( StringUtils.stripToNull( efvo.getCategoryUri() ) );
             vc.setValue( efvo.getCategory() );
-            vc.setValueUri( efvo.getCategoryUri() );
+            vc.setValueUri( StringUtils.stripToNull( efvo.getCategoryUri() ) );
 
             ef.setCategory( vc );
 
@@ -715,8 +715,8 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
 
             c.setCategory( fvvo.getCategory() );
             c.setValue( fvvo.getValue() );
-            c.setCategoryUri( fvvo.getCategoryUri() );
-            c.setValueUri( fvvo.getValueUri() );
+            c.setCategoryUri( StringUtils.stripToNull( fvvo.getCategoryUri() ) );
+            c.setValueUri( StringUtils.stripToNull( fvvo.getValueUri() ) );
 
             c.setEvidenceCode( GOEvidenceCode.IC ); // characteristic has been manually updated
 
@@ -741,8 +741,8 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
         Characteristic c;
         if ( categoryUri != null ) {
             Characteristic vc = Characteristic.Factory.newInstance();
-            vc.setCategoryUri( categoryUri );
-            vc.setValueUri( categoryUri );
+            vc.setCategoryUri( StringUtils.stripToNull( categoryUri ) );
+            vc.setValueUri( StringUtils.stripToNull( categoryUri ) );
             c = vc;
         } else {
             c = Characteristic.Factory.newInstance();

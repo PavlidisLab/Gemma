@@ -2035,7 +2035,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
             // found an update, same database id
             if ( updatedPhenotype != null ) {
-                phenotype.setValueUri( updatedPhenotype.getValueUri() );
+                phenotype.setValueUri( StringUtils.stripToNull( updatedPhenotype.getValueUri() ) );
                 phenotype.setValue( updatedPhenotype.getValue() );
                 finalPhenotypes.add( phenotype );
             }

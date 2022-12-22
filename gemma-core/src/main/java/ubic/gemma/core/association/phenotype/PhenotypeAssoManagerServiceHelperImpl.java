@@ -18,6 +18,7 @@
  */
 package ubic.gemma.core.association.phenotype;
 
+import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import ubic.gemma.core.annotation.reference.BibliographicReferenceService;
@@ -338,8 +339,8 @@ public class PhenotypeAssoManagerServiceHelperImpl implements PhenotypeAssoManag
 
                 experimentCha.setValue( chaValueObject.getValue() );
                 experimentCha.setCategory( chaValueObject.getCategory() );
-                experimentCha.setValueUri( chaValueObject.getValueUri() );
-                experimentCha.setCategoryUri( chaValueObject.getCategoryUri() );
+                experimentCha.setValueUri( StringUtils.stripToNull( chaValueObject.getValueUri() ) );
+                experimentCha.setCategoryUri( StringUtils.stripToNull( chaValueObject.getCategoryUri() ) );
 
                 characteristics.add( experimentCha );
             }

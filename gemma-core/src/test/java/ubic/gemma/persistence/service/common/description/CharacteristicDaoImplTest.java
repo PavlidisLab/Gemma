@@ -1,5 +1,6 @@
 package ubic.gemma.persistence.service.common.description;
 
+import org.apache.commons.lang.StringUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -64,7 +65,7 @@ public class CharacteristicDaoImplTest extends BaseSpringContextTest {
 
     private Characteristic createCharacteristic( String valueUri, String value ) {
         Characteristic c = new Characteristic();
-        c.setValueUri( valueUri );
+        c.setValueUri( StringUtils.stripToNull( valueUri ) );
         c.setValue( value );
         return c;
     }

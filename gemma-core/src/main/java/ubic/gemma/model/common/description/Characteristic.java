@@ -24,6 +24,7 @@ import org.apache.commons.lang3.builder.HashCodeBuilder;
 import ubic.gemma.model.association.GOEvidenceCode;
 import ubic.gemma.model.common.AbstractDescribable;
 
+import javax.annotation.Nullable;
 import java.io.Serializable;
 import java.util.Objects;
 
@@ -37,6 +38,7 @@ public class Characteristic extends AbstractDescribable implements Serializable 
 
     private static final long serialVersionUID = -7242166109264718620L;
     private String category;
+    @Nullable
     private String categoryUri;
     private GOEvidenceCode evidenceCode;
     /**
@@ -44,6 +46,7 @@ public class Characteristic extends AbstractDescribable implements Serializable 
      */
     private String originalValue = null;
     private String value;
+    @Nullable
     private String valueUri;
 
     /**
@@ -76,11 +79,12 @@ public class Characteristic extends AbstractDescribable implements Serializable 
      * as
      * associations with this.
      */
+    @Nullable
     public String getCategoryUri() {
         return this.categoryUri;
     }
 
-    public void setCategoryUri( String categoryUri ) {
+    public void setCategoryUri( @Nullable String categoryUri ) {
         this.categoryUri = categoryUri;
     }
 
@@ -121,11 +125,12 @@ public class Characteristic extends AbstractDescribable implements Serializable 
      * the
      * abstract class.
      */
+    @Nullable
     public String getValueUri() {
         return this.valueUri;
     }
 
-    public void setValueUri( String uri ) {
+    public void setValueUri( @Nullable String uri ) {
         this.valueUri = uri;
     }
 
@@ -177,15 +182,15 @@ public class Characteristic extends AbstractDescribable implements Serializable 
             return new Characteristic();
         }
 
-        public static Characteristic newInstance( String name, String description, String value, String valueUri,
-                String category, String categoryUri, GOEvidenceCode evidenceCode ) {
+        public static Characteristic newInstance( String name, String description, String value, @Nullable String valueUri,
+                String category, @Nullable String categoryUri, GOEvidenceCode evidenceCode ) {
             final Characteristic entity = new Characteristic();
             entity.setName( name );
             entity.setDescription( description );
             entity.setValue( value );
-            entity.setValueUri( valueUri );
+            entity.setValueUri( StringUtils.stripToNull( valueUri ) );
             entity.setCategory( category );
-            entity.setCategoryUri( categoryUri );
+            entity.setCategoryUri( StringUtils.stripToNull( categoryUri ) );
             entity.setEvidenceCode( evidenceCode );
             return entity;
         }

@@ -116,7 +116,7 @@ public class PhenotypeAssoOntologyHelperImpl implements InitializingBean, Phenot
 
         Characteristic characteristic = Characteristic.Factory.newInstance();
         characteristic.setCategory( characteristicValueObject.getCategory() );
-        characteristic.setCategoryUri( characteristicValueObject.getCategoryUri() );
+        characteristic.setCategoryUri( StringUtils.stripToNull( characteristicValueObject.getCategoryUri() ) );
         characteristic.setValue( characteristicValueObject.getValue() );
 
         if ( StringUtils.isNotBlank( characteristicValueObject.getValueUri() ) ) {

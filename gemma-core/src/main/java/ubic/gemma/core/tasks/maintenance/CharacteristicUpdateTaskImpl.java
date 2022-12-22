@@ -105,9 +105,9 @@ public class CharacteristicUpdateTaskImpl extends AbstractTask<TaskResult, Chara
         Characteristic vc = Characteristic.Factory.newInstance();
         vc.setId( avo.getId() );
         vc.setCategory( avo.getClassName() );
-        vc.setCategoryUri( avo.getClassUri() );
+        vc.setCategoryUri( StringUtils.stripToNull( avo.getClassUri() ) );
         vc.setValue( avo.getTermName() );
-        vc.setValueUri( avo.getTermUri() );
+        vc.setValueUri( StringUtils.stripToNull( avo.getTermUri() ) );
         if ( StringUtils.isNotBlank( avo.getEvidenceCode() ) )
             vc.setEvidenceCode( GOEvidenceCode.fromString( avo.getEvidenceCode() ) );
         return vc;

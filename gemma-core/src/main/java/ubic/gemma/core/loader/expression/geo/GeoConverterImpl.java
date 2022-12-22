@@ -830,9 +830,9 @@ public class GeoConverterImpl implements GeoConverter {
                 try {
                     if ( mappedValueTerm != null ) {
                         gemmaChar.setValue( mappedValueTerm.getValue() );
-                        gemmaChar.setValueUri( mappedValueTerm.getValueUri() );
+                        gemmaChar.setValueUri( StringUtils.stripToNull( mappedValueTerm.getValueUri() ) );
                         gemmaChar.setCategory( mappedValueTerm.getCategory() );
-                        gemmaChar.setCategoryUri( mappedValueTerm.getCategoryUri() );
+                        gemmaChar.setCategoryUri( StringUtils.stripToNull( mappedValueTerm.getCategoryUri() ) );
                     } else {
                         gemmaChar.setValue( value );
                         // There may not be a category, but that's okay.
