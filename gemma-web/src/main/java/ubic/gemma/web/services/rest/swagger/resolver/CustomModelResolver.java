@@ -16,6 +16,8 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 import ubic.gemma.core.search.SearchService;
 import ubic.gemma.persistence.service.FilteringVoEnabledService;
+import ubic.gemma.persistence.service.analysis.expression.diff.ExpressionAnalysisResultSetService;
+import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeService;
 import ubic.gemma.web.services.rest.SearchWebService;
 import ubic.gemma.web.services.rest.util.args.*;
 
@@ -102,11 +104,21 @@ public class CustomModelResolver extends ModelResolver {
                         a.getRawType().getSimpleName() ) ) );
         FilteringVoEnabledService<?, ?> filteringService = beanFactory.getBean( filteringServiceName, FilteringVoEnabledService.class );
         return String.format( "Available properties:\n\n%s",
-                filteringService.getFilterableProperties().stream().sorted().map( p -> String.format( "- %s `%s`%s",
-                        p,
-                        resolveType( SimpleType.constructUnsafe( filteringService.getFilterablePropertyType( p ) ) ),
-                        filteringService.getFilterablePropertyDescription( p ) != null ? " (" + filteringService.getFilterablePropertyDescription( p ) + ")" : ""
-                ) ).collect( Collectors.joining( "\n" ) ) );
+                filteringService.getFilterableProperties().stream()
+                        // FIXME: The Criteria-based services don't support ordering results by collection size, see https://github.com/PavlidisLab/Gemma/issues/520
+                        .filter( p -> !isCriteriaBased( filteringService ) || !p.endsWith( ".size" ) )
+                        .sorted()
+                        .map( p -> String.format( "- %s `%s`%s",
+                                p,
+                                resolveType( SimpleType.constructUnsafe( filteringService.getFilterablePropertyType( p ) ) ),
+                                filteringService.getFilterablePropertyDescription( p ) != null ? " (" + filteringService.getFilterablePropertyDescription( p ) + ")" : ""
+                        ) ).collect( Collectors.joining( "\n" ) ) );
+    }
+
+    private static boolean isCriteriaBased( FilteringVoEnabledService<?, ?> service ) {
+        // this is a temporary fix, there's no way to tell if the DAO is implemented with AbstractCriteriaFilteringVoEnabledDao
+        // from the service layer
+        return service instanceof ExpressionAnalysisResultSetService || service instanceof QuantitationTypeService;
     }
 
     /**
