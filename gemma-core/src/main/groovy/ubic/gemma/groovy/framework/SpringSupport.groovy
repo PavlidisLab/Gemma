@@ -1,10 +1,10 @@
 package ubic.gemma.groovy.framework
 
 import gemma.gsec.authentication.ManualAuthenticationService
-import org.apache.commons.lang3.time.StopWatch
+import org.springframework.context.ApplicationContext
+import org.springframework.context.ConfigurableApplicationContext
+import org.springframework.security.core.context.SecurityContextHolder
 import ubic.gemma.persistence.util.SpringContextUtil
-
-import java.util.concurrent.atomic.AtomicBoolean
 
 /**
  * Class for creation of a spring context. Example usage:
@@ -21,34 +21,25 @@ import java.util.concurrent.atomic.AtomicBoolean
  */
 class SpringSupport {
 
-    private ctx
+    private final ApplicationContext ctx
 
     SpringSupport() {
-        this(null, null)
+        this(null, null, [])
     }
 
     SpringSupport(String userName, String password) {
+        this(userName, password, [])
+    }
 
-        def b = new AtomicBoolean(false)
-        System.err.print "Loading Spring context "
-        //noinspection GroovyAssignabilityCheck
-        def t = Thread.start {
-            def timer = new StopWatch()
-            timer.start()
-            while (!b.get()) {
-                sleep 1000
-                System.err.print '.'
-            }
-            System.err.println "Ready in ${timer.getTime()}ms"
-        }
+    SpringSupport(String userName, String password, List<String> activeProfiles) {
+        System.err.print "Loading Spring context"
+        SecurityContextHolder.setStrategyName(SecurityContextHolder.MODE_INHERITABLETHREADLOCAL)
+        ctx = SpringContextUtil.getApplicationContext(activeProfiles as String[])
+        authenticate(userName, password);
+    }
 
-        // scan for beans, but exclude jms, web
-        ctx = SpringContextUtil.getApplicationContext(false)
-        b.set(true)
-        t.join()
-
-        ManualAuthenticationService manAuthentication = (ManualAuthenticationService) ctx.getBean("manualAuthenticationService")
-
+    private void authenticate(String userName, String password) {
+        ManualAuthenticationService manAuthentication = ctx.getBean(ManualAuthenticationService.class)
         if (userName == null && password == null) {
             manAuthentication.authenticateAnonymously()
         } else {
@@ -66,8 +57,14 @@ class SpringSupport {
         return ctx.getBean(beanName)
     }
 
-    def shutdown() {
-        ctx.close()
+    def <T> T getBean(Class<T> requiredType) {
+        return ctx.getBean(requiredType)
+    }
+
+    void shutdown() {
+        if (ctx instanceof ConfigurableApplicationContext) {
+            ctx.close();
+        }
     }
 }
 
