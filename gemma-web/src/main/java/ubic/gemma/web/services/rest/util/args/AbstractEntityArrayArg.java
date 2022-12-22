@@ -6,7 +6,6 @@ import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.persistence.service.FilteringVoEnabledService;
 import ubic.gemma.persistence.util.Filter;
 import ubic.gemma.persistence.util.Filters;
-import ubic.gemma.web.services.rest.util.MalformedArgException;
 
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.NotFoundException;
@@ -16,13 +15,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
-/**
- * Array of identifiers of an Identifiable entity
- * @param <A> the type of the value used to retrieve the entity, which is typically a {@link String}
- * @param <O> the type of the resulting entity
- * @param <S> the type of the filtering service providing the entity
- */
-public abstract class AbstractEntityArrayArg<A, O extends Identifiable, S extends FilteringVoEnabledService<O, ?>> extends AbstractArrayArg<A> {
+public abstract class AbstractEntityArrayArg<A, O extends Identifiable, S extends FilteringVoEnabledService<O, ?>> extends AbstractArrayArg<A> implements EntityArrayArg<A, O, S> {
 
     private final Class<? extends AbstractEntityArg> entityArgClass;
     private String argValueName = null;
@@ -32,12 +25,8 @@ public abstract class AbstractEntityArrayArg<A, O extends Identifiable, S extend
         this.entityArgClass = entityArgClass;
     }
 
-    /**
-     * Obtain a {@link Filters} for all the entities represented by this argument.
-     * <p>
-     * By applying this to a query, only the entities defined in this argument will be retrieved.
-     */
-    public Filters getFilters( S service ) throws MalformedArgException {
+    @Override
+    public Filters getFilters( S service ) throws BadRequestException {
         try {
             //noinspection unchecked
             return Filters.by( service.getFilter( this.getPropertyName( service ), Filter.Operator.in, ( Collection<String> ) this.getValue() ) );
@@ -46,17 +35,9 @@ public abstract class AbstractEntityArrayArg<A, O extends Identifiable, S extend
         }
     }
 
-    /**
-     * Retrieves the persistent objects for all the identifiers in this array arg.
-     * Note that if any of the values in the array do not map to an object (i.e. an object with such identifier does not
-     * exist),
-     * a 404 error will be thrown.
-     *
-     * @param  service the service that will be used to retrieve the persistent objects.
-     * @return a collection of persistent objects matching the identifiers on this array arg.
-     */
-    public Collection<O> getEntities( S service ) throws NotFoundException {
-        Collection<O> objects = new ArrayList<>( this.getValue().size() );
+    @Override
+    public List<O> getEntities( S service ) throws NotFoundException, BadRequestException {
+        List<O> objects = new ArrayList<>( this.getValue().size() );
         for ( A s : this.getValue() ) {
             AbstractEntityArg<?, O, S> arg;
             if ( s instanceof String ) {
@@ -72,13 +53,13 @@ public abstract class AbstractEntityArrayArg<A, O extends Identifiable, S extend
     /**
      * Reads the given MutableArgs property name and checks whether it is null or empty.
      *
-     * @param  arg     the MutableArg to retrieve the property name from.
-     * @param  value   one of the values of the property that has been passed into this array arg.
-     * @param  service service that may be used to retrieve the property from the MutableArg.
-     * @param          <T> type of the given MutableArg.
+     * @param arg     the MutableArg to retrieve the property name from.
+     * @param value   one of the values of the property that has been passed into this array arg.
+     * @param service service that may be used to retrieve the property from the MutableArg.
+     * @param <T>     type of the given MutableArg.
      * @return the name of the property that the values in this arrayArg refer to.
      */
-    private <T extends AbstractEntityArg<?, O, S>> String checkPropertyNameString( T arg, A value, S service ) {
+    private <T extends AbstractEntityArg<?, O, S>> String checkPropertyNameString( T arg, A value, S service ) throws BadRequestException {
         String identifier = arg.getPropertyName( service );
         if ( Strings.isNullOrEmpty( identifier ) ) {
             throw new BadRequestException( "Identifier " + value + " not recognized." );
@@ -93,10 +74,10 @@ public abstract class AbstractEntityArrayArg<A, O extends Identifiable, S extend
      *
      * This routine only works if the type of this array is {@link String}.
      *
-     * @param  service the service used to guess the type and name of the property that this arrayEntityArg represents.
+     * @param service the service used to guess the type and name of the property that this arrayEntityArg represents.
      * @return the name of the property that the values in this array represent.
      */
-    protected String getPropertyName( S service ) {
+    protected String getPropertyName( S service ) throws BadRequestException {
         if ( this.argValueName == null ) {
             Optional<A> value = this.getValue().stream().findFirst();
             if ( value.isPresent() ) {
@@ -118,7 +99,7 @@ public abstract class AbstractEntityArrayArg<A, O extends Identifiable, S extend
     /**
      * Call the valueOf method of the entity arg that consititute the elements of this array.
      */
-    private AbstractEntityArg<?, O, S> entityArgValueOf( String s ) {
+    private AbstractEntityArg<?, O, S> entityArgValueOf( String s ) throws NotFoundException, BadRequestException {
         try {
             // noinspection unchecked // Could not avoid using reflection, because java does not allow abstract static methods.
             return ( AbstractEntityArg<?, O, S> ) entityArgClass.getMethod( "valueOf", String.class ).invoke( null, s );
