@@ -94,13 +94,14 @@ public abstract class AbstractAsyncFactoryBean<T> implements AsyncFactoryBean<T>
 
     @Override
     public final void destroy() {
+        pendingBeans.removeIf( Future::isDone );
         if ( !pendingBeans.isEmpty() ) {
             log.info( String.format( "There are pending beans creation in %s, they will be cancelled.", getClass().getName() ) );
+            for ( Future<T> f : pendingBeans ) {
+                f.cancel( true );
+            }
+            // after cancel, the futures are guaranteed to be done, so we can clear then right away
+            pendingBeans.clear();
         }
-        for ( Future<T> f : pendingBeans ) {
-            f.cancel( true );
-        }
-        // after cancel, the futures are guaranteed to be done, so we can clear then right away
-        pendingBeans.clear();
     }
 }
