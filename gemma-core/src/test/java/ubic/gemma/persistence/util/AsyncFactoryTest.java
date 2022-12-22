@@ -89,7 +89,7 @@ public class AsyncFactoryTest extends AbstractJUnit4SpringContextTests {
         }
         executor.shutdown();
         // this should finish very quickly, but the future creation will still be pending
-        Assert.assertTrue( executor.awaitTermination( 1, TimeUnit.SECONDS ) );
+        Assert.assertTrue( executor.awaitTermination( 5, TimeUnit.SECONDS ) );
         // cancel all pending creation
         factory.destroy();
         // wait after all the pending bean creation
