@@ -1,7 +1,5 @@
 package ubic.gemma.web.services.rest.util.args;
 
-import org.apache.commons.lang3.NotImplementedException;
-import org.apache.commons.lang3.exception.ExceptionUtils;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.persistence.service.FilteringVoEnabledService;
 import ubic.gemma.persistence.util.Filter;
@@ -9,7 +7,6 @@ import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.web.services.rest.util.MalformedArgException;
 import ubic.gemma.web.util.EntityNotFoundException;
 
-import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.NotFoundException;
@@ -35,18 +32,21 @@ public abstract class AbstractEntityArg<T, O extends Identifiable, S extends Fil
     protected abstract String getPropertyName( S service );
 
     /**
+     * Convert a given value to string so that it can be passed to {@link FilteringVoEnabledService#getFilter(String, Filter.Operator, String)}
+     */
+    protected String getFilterRequiredValue() {
+        return String.valueOf( getValue() );
+    }
+
+    /**
      * Obtain a {@link Filters} that restrict a query to the entity represented by this argument.
      */
     @Override
     public Filters getFilters( S service ) throws BadRequestException {
-        if ( this.getValue() instanceof String ) {
-            try {
-                return Filters.by( service.getFilter( this.getPropertyName( service ), Filter.Operator.eq, ( String ) this.getValue() ) );
-            } catch ( IllegalArgumentException e ) {
-                throw new MalformedArgException( e );
-            }
-        } else {
-            throw new NotImplementedException( "Filtering with non-string values is not supported." );
+        try {
+            return Filters.by( service.getFilter( this.getPropertyName( service ), Filter.Operator.eq, getFilterRequiredValue() ) );
+        } catch ( IllegalArgumentException e ) {
+            throw new MalformedArgException( e );
         }
     }
 

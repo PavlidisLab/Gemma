@@ -6,14 +6,15 @@ import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.persistence.service.FilteringVoEnabledService;
 import ubic.gemma.persistence.util.Filter;
 import ubic.gemma.persistence.util.Filters;
+import ubic.gemma.web.services.rest.util.MalformedArgException;
 
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.NotFoundException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 public abstract class AbstractEntityArrayArg<A, O extends Identifiable, S extends FilteringVoEnabledService<O, ?>> extends AbstractArrayArg<A> implements EntityArrayArg<A, O, S> {
 
@@ -28,10 +29,9 @@ public abstract class AbstractEntityArrayArg<A, O extends Identifiable, S extend
     @Override
     public Filters getFilters( S service ) throws BadRequestException {
         try {
-            //noinspection unchecked
-            return Filters.by( service.getFilter( this.getPropertyName( service ), Filter.Operator.in, ( Collection<String> ) this.getValue() ) );
-        } catch ( ClassCastException e ) {
-            throw new NotImplementedException( "Filtering with non-string values is not supported.", e );
+            return Filters.by( service.getFilter( this.getPropertyName( service ), Filter.Operator.in, getFilterRequiredValues() ) );
+        } catch ( IllegalArgumentException e ) {
+            throw new MalformedArgException( e );
         }
     }
 
@@ -48,6 +48,13 @@ public abstract class AbstractEntityArrayArg<A, O extends Identifiable, S extend
             objects.add( arg.checkEntity( service, arg.getEntity( service ) ) );
         }
         return objects;
+    }
+
+    /**
+     * Convert a given value to string so that it can be passed to {@link FilteringVoEnabledService#getFilter(String, Filter.Operator, String)}
+     */
+    protected List<String> getFilterRequiredValues() {
+        return this.getValue().stream().map( String::valueOf ).collect( Collectors.toList() );
     }
 
     /**
