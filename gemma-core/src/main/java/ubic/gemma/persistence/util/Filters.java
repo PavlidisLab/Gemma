@@ -40,7 +40,7 @@ public class Filters implements Iterable<Filter[]> {
          * Add a sub-clause explicitly.
          */
         @CheckReturnValue
-        public FiltersClauseBuilder or( @Nullable String objectAlias, String propertyName, Class<?> propertyType, Filter.Operator operator, Object requiredValue ) {
+        public FiltersClauseBuilder or( @Nullable String objectAlias, String propertyName, Class<?> propertyType, Filter.Operator operator, @Nullable Object requiredValue ) {
             return or( Filter.by( objectAlias, propertyName, propertyType, operator, requiredValue ) );
         }
 
@@ -104,7 +104,7 @@ public class Filters implements Iterable<Filter[]> {
     /**
      * Add a clause of one explicit clause to the conjunction.
      */
-    public Filters and( @Nullable String objectAlias, String propertyName, Class<?> propertyType, Filter.Operator operator, Object requiredValue ) {
+    public Filters and( @Nullable String objectAlias, String propertyName, Class<?> propertyType, Filter.Operator operator, @Nullable Object requiredValue ) {
         return and( Filter.by( objectAlias, propertyName, propertyType, operator, requiredValue ) );
     }
 
