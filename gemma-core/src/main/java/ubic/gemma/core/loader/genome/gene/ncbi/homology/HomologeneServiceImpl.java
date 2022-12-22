@@ -23,19 +23,20 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
-import ubic.basecode.util.FileTools;
 import ubic.gemma.core.genome.gene.service.GeneService;
-import ubic.gemma.model.common.description.LocalFile;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.*;
-import java.util.concurrent.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Reads in the homologene list as specified in the Gemmea.properties file. Loads the list at startup and keeps a
@@ -124,45 +125,12 @@ public class HomologeneServiceImpl implements HomologeneService {
         // Load the homologene groups for searching
         StopWatch loadTime = new StopWatch();
         loadTime.start();
-        if ( homologeneFile instanceof FileSystemResource ) {
-            HomologeneServiceImpl.log.info( String.format( "Loading Homologene from %s on NCBI FTP server...", homologeneFile.getFilename() ) );
-            refreshFromFtpServer();
-        } else {
-            HomologeneServiceImpl.log.info( String.format( "Loading Homologene from %s...", homologeneFile ) );
-            parseHomologeneFile( homologeneFile.getInputStream() );
+        HomologeneServiceImpl.log.info( String.format( "Loading Homologene from %s...", homologeneFile ) );
+        try ( InputStream is = homologeneFile.getInputStream() ) {
+            parseHomologeneFile( is );
         }
         HomologeneServiceImpl.log.info( String.format( "Gene Homology successfully loaded: %d genes covered in %d groups in %d ms.",
                 gene2Group.keySet().size(), group2Gene.keySet().size(), loadTime.getTime( TimeUnit.MILLISECONDS ) ) );
-    }
-
-    /**
-     * In this mode, we assume that the filename of the resource is available from NCBI FTP server.
-     */
-    private void refreshFromFtpServer() throws IOException {
-        HomologeneFetcher hf = new HomologeneFetcher();
-        Collection<LocalFile> downloadedFiles = hf.fetch( homologeneFile.getFilename() );
-
-        if ( downloadedFiles == null || downloadedFiles.isEmpty() ) {
-            HomologeneServiceImpl.log.warn( "Unable to download Homologene File. Aborting" );
-            return;
-        }
-
-        if ( downloadedFiles.size() > 1 )
-            HomologeneServiceImpl.log.info( "Downloaded more than 1 file for homologene.  Using 1st.  " );
-
-        File f;
-        f = downloadedFiles.iterator().next().asFile();
-        if ( !f.canRead() ) {
-            HomologeneServiceImpl.log.warn( "Downloaded Homologene File. But unable to read Aborting" );
-            return;
-        }
-
-        try ( InputStream is = FileTools.getInputStreamFromPlainOrCompressedFile( f.getAbsolutePath() ) ) {
-            HomologeneServiceImpl.this.parseHomologeneFile( is );
-        } catch ( IOException ioe ) {
-            HomologeneServiceImpl.log.error( "Unable to parse homologene file. Error is " + ioe );
-            throw ioe;
-        }
     }
 
     public GeneValueObject getHomologueValueObject( Long geneId, String taxonCommonName ) {

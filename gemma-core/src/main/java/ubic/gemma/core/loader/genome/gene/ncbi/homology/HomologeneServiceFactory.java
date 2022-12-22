@@ -22,14 +22,10 @@ public class HomologeneServiceFactory extends AbstractAsyncFactoryBean<Homologen
     private GeneService geneService;
     @Autowired
     private TaxonService taxonService;
-    private Resource homologeneFile = Settings.getResource( HOMOLOGENE_FILE_CONFIG );
+    private Resource homologeneFile = new HomologeneNcbiFtpResource( Settings.getString( HOMOLOGENE_FILE_CONFIG ) );
 
     /**
      * Set the resource used for loading Homologene.
-     * <p>
-     * If a {@link org.springframework.core.io.FileSystemResource} is used, which is the default for values via
-     * {@link Settings#getResource(String)}, it will be assumed to be resolved from NCBI FTP server via
-     * {@link HomologeneFetcher} for legacy reasons.
      */
     public void setHomologeneFile( Resource homologeneFile ) {
         if ( isInitialized() ) {

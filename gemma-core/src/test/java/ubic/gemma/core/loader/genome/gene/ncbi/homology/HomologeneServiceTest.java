@@ -20,12 +20,19 @@ package ubic.gemma.core.loader.genome.gene.ncbi.homology;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
-
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.test.annotation.DirtiesContext;
-import ubic.gemma.core.util.test.BaseSpringContextTest;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
+import ubic.gemma.core.genome.gene.service.GeneService;
+import ubic.gemma.core.util.test.category.SlowTest;
+import ubic.gemma.persistence.service.genome.taxon.TaxonService;
+import ubic.gemma.persistence.util.TestComponent;
 
 import java.util.Collection;
 import java.util.concurrent.Future;
@@ -35,15 +42,48 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.mockito.Mockito.mock;
 
 /**
  * Tests the homologeneService but only access methods that don't require a DB connection (using the gemma db).
  *
  * @author klc
  */
+@ContextConfiguration
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
-public class HomologeneServiceTest extends BaseSpringContextTest {
+public class HomologeneServiceTest extends AbstractJUnit4SpringContextTests {
 
+    @Configuration
+    @TestComponent
+    static class HomologeneServiceTestContextConfiguration {
+
+        @Bean
+        public HomologeneServiceFactory homologeneServiceFactory() {
+            return new HomologeneServiceFactory() {
+                @Override
+                protected HomologeneService createObject() throws Exception {
+                    // otherwise some test might fail because the object is created too quickly
+                    Thread.sleep( 10 );
+                    return super.createObject();
+                }
+            };
+        }
+
+        @Bean
+        public GeneService geneService() {
+            return mock( GeneService.class );
+        }
+
+        @Bean
+        public TaxonService taxonService() {
+            return mock( TaxonService.class );
+        }
+    }
+
+    /**
+     * Note: injecting {@link Future<HomologeneService>} works too, but would trigger the bean initialization and
+     * prevent us from setting the mocked resource.
+     */
     @Autowired
     private HomologeneServiceFactory hgs;
 
@@ -86,4 +126,20 @@ public class HomologeneServiceTest extends BaseSpringContextTest {
         assertEquals( 12, homologenes.size() );
     }
 
+    @Test
+    @Category(SlowTest.class)
+    public final void testHomologeneFromFtpServer() {
+        hgs.setHomologeneFile( new HomologeneNcbiFtpResource( "homologene.data" ) );
+        Future<HomologeneService> homologeneService = hgs.getObject();
+        assertThat( homologeneService ).succeedsWithin( 30, TimeUnit.SECONDS );
+    }
+
+    @Test
+    public final void testHomologeneFromFtpServerThenCancel() {
+        hgs.setHomologeneFile( new HomologeneNcbiFtpResource( "homologene.data" ) );
+        Future<HomologeneService> homologeneService = hgs.getObject();
+        assertThat( homologeneService ).isNotCancelled().isNotDone();
+        hgs.destroy();
+        assertThat( homologeneService ).isCancelled();
+    }
 }
