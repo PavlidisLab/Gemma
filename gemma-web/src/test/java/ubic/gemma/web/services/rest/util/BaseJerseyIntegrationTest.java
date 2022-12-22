@@ -8,6 +8,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import ubic.gemma.core.util.test.TestAuthenticationUtils;
+import ubic.gemma.persistence.util.SpringProfiles;
 
 /**
  * Base class for Jersey-based integration tests.
