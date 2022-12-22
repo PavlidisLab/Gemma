@@ -1,5 +1,6 @@
+package ubic.gemma.groovy.framework
+
 import org.junit.Test
-import ubic.gemma.groovy.framework.SpringSupport
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService
 import ubic.gemma.persistence.util.SpringProfiles
 
