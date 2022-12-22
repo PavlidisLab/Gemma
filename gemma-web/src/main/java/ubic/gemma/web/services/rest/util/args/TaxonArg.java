@@ -3,18 +3,12 @@ package ubic.gemma.web.services.rest.util.args;
 import io.swagger.v3.oas.annotations.media.Schema;
 import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.core.genome.gene.service.GeneService;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.Chromosome;
 import ubic.gemma.model.genome.PhysicalLocation;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneValueObject;
-import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.genome.ChromosomeService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
-import ubic.gemma.persistence.util.Filters;
-import ubic.gemma.persistence.util.Filter;
-import ubic.gemma.persistence.util.Slice;
-import ubic.gemma.persistence.util.Sort;
 import ubic.gemma.web.services.rest.util.MalformedArgException;
 
 import javax.ws.rs.NotFoundException;
@@ -58,27 +52,6 @@ public abstract class TaxonArg<T> extends AbstractEntityArg<T, Taxon, TaxonServi
     }
 
     /**
-     * Lists datasets on the taxon that this TaxonArg represents.
-     *
-     * @param expressionExperimentService the service that will be used to retrieve the EEVOs.
-     * @param taxonService                the service that will be used to retrieve the persistent Taxon object.
-     * @param filters                     see ExpressionExperimentDaoImpl#loadValueObjectsPreFilter
-     * @param offset                      see ExpressionExperimentDaoImpl#loadValueObjectsPreFilter
-     * @param limit                       see ExpressionExperimentDaoImpl#loadValueObjectsPreFilter
-     * @param sort                        see ExpressionExperimentDaoImpl#loadValueObjectsPreFilter
-     * @return a collection of EEVOs matching the input parameters.
-     */
-    public Slice<ExpressionExperimentValueObject> getTaxonDatasets(
-            ExpressionExperimentService expressionExperimentService, TaxonService taxonService,
-            Filters filters, int offset, int limit, Sort sort ) {
-        if ( filters == null ) {
-            filters = Filters.empty();
-        }
-        filters.and( taxonService.getFilter( taxonService.getIdentifierPropertyName(), Filter.Operator.eq, this.getEntity( taxonService ).getId().toString() ) );
-        return expressionExperimentService.loadValueObjectsPreFilter( filters, sort, offset, limit );
-    }
-
-    /**
      * Lists Genes overlapping a location on a specific chromosome on a taxon that this TaxonArg represents.
      *
      * @param taxonService      the service that will be used to retrieve the persistent Taxon object.
@@ -88,10 +61,11 @@ public abstract class TaxonArg<T> extends AbstractEntityArg<T, Taxon, TaxonServi
      * @param start             the start nucleotide denoting the location to look for genes at.
      * @param size              the size (in nucleotides) of the location from the 'start' nucleotide.
      * @return collection of Gene VOs overlapping the location defined by the 'start' and 'size' parameters.
+     * @throws NotFoundException if the taxon cannot retrieved as per {@link #getEntity(TaxonService)}
      */
     public List<GeneValueObject> getGenesOnChromosome( TaxonService taxonService,
             ChromosomeService chromosomeService, GeneService geneService, String chromosomeName, long start,
-            int size ) {
+            int size ) throws NotFoundException {
         // Taxon argument
         Taxon taxon = this.getEntity( taxonService );
 

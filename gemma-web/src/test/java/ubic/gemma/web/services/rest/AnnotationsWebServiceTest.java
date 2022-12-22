@@ -3,6 +3,7 @@ package ubic.gemma.web.services.rest;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.ArgumentMatchers;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -20,14 +21,15 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.common.description.CharacteristicService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
-import ubic.gemma.persistence.util.Filters;
-import ubic.gemma.persistence.util.Slice;
-import ubic.gemma.persistence.util.Sort;
-import ubic.gemma.persistence.util.TestComponent;
+import ubic.gemma.persistence.util.*;
+import ubic.gemma.web.services.rest.util.PaginatedResponseDataObject;
+import ubic.gemma.web.services.rest.util.SortValueObject;
 import ubic.gemma.web.services.rest.util.args.*;
 
+import java.util.Collection;
 import java.util.Collections;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
 
 /**
@@ -106,17 +108,30 @@ public class AnnotationsWebServiceTest extends AbstractJUnit4SpringContextTests 
         when( srm.get( ExpressionExperiment.class ) ).thenReturn( Collections.singletonList( new SearchResult<>( ee, "test object" ) ) );
         when( searchService.search( any( SearchSettings.class ), eq( false ), eq( false ) ) )
                 .thenReturn( srm );
+        when( taxonService.getFilter( eq( "commonName" ), eq( Filter.Operator.eq ), any( String.class ) ) ).thenAnswer( a -> Filter.by( "t", "commonName", String.class, Filter.Operator.eq, a.getArgument( 2 ) ) );
+        when( taxonService.getFilter( eq( "scientificName" ), eq( Filter.Operator.eq ), any( String.class ) ) ).thenAnswer( a -> Filter.by( "t", "scientificName", String.class, Filter.Operator.eq, a.getArgument( 2 ) ) );
+        when( expressionExperimentService.getIdentifierPropertyName() ).thenReturn( "id" );
+        when( expressionExperimentService.getFilter( "id", Filter.Operator.in, Collections.singletonList( "1" ) ) ).thenReturn( Filter.by( "ee", "id", Long.class, Filter.Operator.in, Collections.singleton( 1L ) ) );
         when( expressionExperimentService.getSort( "id", Sort.Direction.ASC ) ).thenReturn( Sort.by( "ee", "id", Sort.Direction.ASC ) );
         when( expressionExperimentService.loadValueObjectsPreFilter( any( Filters.class ), eq( Sort.by( "ee", "id", Sort.Direction.ASC ) ), eq( 0 ), eq( 20 ) ) )
-                .thenReturn( Slice.fromList( Collections.singletonList( new ExpressionExperimentValueObject( ee ) ) ) );
-        annotationsWebService.searchTaxonDatasets(
+                .thenAnswer( a -> new Slice<>( Collections.singletonList( new ExpressionExperimentValueObject( ee ) ), a.getArgument( 1 ), a.getArgument( 2, Integer.class ), a.getArgument( 3, Integer.class ), 10000L ) );
+        PaginatedResponseDataObject<ExpressionExperimentValueObject> payload = annotationsWebService.searchTaxonDatasets(
                 TaxonArg.valueOf( "human" ),
                 StringArrayArg.valueOf( "bipolar" ),
                 FilterArg.valueOf( "" ),
                 OffsetArg.valueOf( "0" ),
                 LimitArg.valueOf( "20" ),
                 SortArg.valueOf( "+id" ) );
+        assertThat( payload )
+                .hasFieldOrPropertyWithValue( "filter", "ee.id in (1) and (t.commonName = human or t.scientificName = human)" )
+                .hasFieldOrPropertyWithValue( "sort", new SortValueObject( Sort.by( "ee", "id", Sort.Direction.ASC ) ) )
+                .hasFieldOrPropertyWithValue( "offset", 0 )
+                .hasFieldOrPropertyWithValue( "limit", 20 )
+                .hasFieldOrPropertyWithValue( "totalElements", 10000L );
         verify( searchService ).search( any( SearchSettings.class ), eq( false ), eq( false ) );
+        verify( taxonService ).getFilter( "commonName", Filter.Operator.eq, "human" );
+        verify( taxonService ).getFilter( "scientificName", Filter.Operator.eq, "human" );
+        verify( expressionExperimentService ).getFilter( "id", Filter.Operator.in, Collections.singletonList( "1" ) );
         verify( expressionExperimentService ).getSort( "id", Sort.Direction.ASC );
         verify( expressionExperimentService ).loadValueObjectsPreFilter( any( Filters.class ), eq( Sort.by( "ee", "id", Sort.Direction.ASC ) ), eq( 0 ), eq( 20 ) );
     }

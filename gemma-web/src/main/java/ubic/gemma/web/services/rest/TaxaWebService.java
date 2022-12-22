@@ -234,9 +234,11 @@ public class TaxaWebService {
             @Schema(extensions = { @Extension(name = "gemma", properties = { @ExtensionProperty(name = "filteringService", value = "taxonService") }) })
             @QueryParam("sort") @DefaultValue("+id") SortArg<Taxon> sort // Optional, default +id
     ) {
-        Filters filters = filter.getFilters( expressionExperimentService );
-        return Responder.paginate( taxonArg.getTaxonDatasets( expressionExperimentService, taxonService, filters,
-                offset.getValue(), limit.getValue(), sort.getSort( taxonService ) ), filters );
+        // will raise a NotFoundException if the taxon is not found
+        taxonArg.getEntity( taxonService );
+        Filters filters = filter.getFilters( expressionExperimentService )
+                .and( taxonArg.getFilters( taxonService ) );
+        return Responder.paginate( expressionExperimentService, filters, sort.getSort( taxonService ), offset.getValue(), limit.getValue() );
     }
 
     /**

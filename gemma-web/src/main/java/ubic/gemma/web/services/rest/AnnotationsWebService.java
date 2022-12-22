@@ -238,6 +238,10 @@ public class AnnotationsWebService {
         if ( query == null || query.getValue().isEmpty() ) {
             throw new BadRequestException( "Search query cannot be empty." );
         }
+
+        // will raise a NotFoundException early if not found
+        taxonArg.getEntity( taxonService );
+
         Collection<Long> foundIds;
         try {
             foundIds = this.searchEEs( query.getValue() );
@@ -251,11 +255,10 @@ public class AnnotationsWebService {
 
         // We always have to do filtering, because we always have at least the taxon argument (otherwise this#datasets method is used)
         Filters filters = filter.getFilters( expressionExperimentService )
-                .and( DatasetArrayArg.valueOf( StringUtils.join( foundIds, ',' ) ).getFilters( expressionExperimentService ) );
+                .and( DatasetArrayArg.valueOf( StringUtils.join( foundIds, ',' ) ).getFilters( expressionExperimentService ) )
+                .and( taxonArg.getFilters( taxonService ) );
 
-        return Responder.paginate( taxonArg.getTaxonDatasets( expressionExperimentService, taxonService,
-                filters, offset.getValue(),
-                limit.getValue(), sort.getSort( expressionExperimentService ) ), filters );
+        return Responder.paginate( expressionExperimentService, filters, sort.getSort( expressionExperimentService ), offset.getValue(), limit.getValue() );
     }
 
     /**
