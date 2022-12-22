@@ -5,6 +5,7 @@ import org.springframework.context.ApplicationContext
 import org.springframework.context.ConfigurableApplicationContext
 import org.springframework.security.core.context.SecurityContextHolder
 import ubic.gemma.persistence.util.SpringContextUtil
+import ubic.gemma.persistence.util.SpringProfiles
 
 /**
  * Class for creation of a spring context. Example usage:
@@ -21,6 +22,13 @@ import ubic.gemma.persistence.util.SpringContextUtil
  */
 class SpringSupport {
 
+    /**
+     * Available profiles for initializing a new {@link SpringSupport}.
+     */
+    public static final String PRODUCTION = SpringProfiles.PRODUCTION,
+                        DEV = SpringProfiles.DEV,
+                        TEST = SpringProfiles.TEST;
+
     private final ApplicationContext ctx
 
     SpringSupport() {
@@ -32,7 +40,6 @@ class SpringSupport {
     }
 
     SpringSupport(String userName, String password, List<String> activeProfiles) {
-        System.err.print "Loading Spring context"
         SecurityContextHolder.setStrategyName(SecurityContextHolder.MODE_INHERITABLETHREADLOCAL)
         ctx = SpringContextUtil.getApplicationContext(activeProfiles as String[])
         authenticate(userName, password);
