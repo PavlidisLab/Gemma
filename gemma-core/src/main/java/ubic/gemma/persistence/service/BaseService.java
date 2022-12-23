@@ -14,6 +14,8 @@ import java.util.Collection;
  */
 public interface BaseService<O extends Identifiable> {
 
+    Class<? extends O> getElementClass();
+
     /**
      * @see BaseDao#getIdentifierPropertyName()
      */

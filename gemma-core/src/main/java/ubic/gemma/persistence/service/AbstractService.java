@@ -25,6 +25,11 @@ public abstract class AbstractService<O extends Identifiable> implements BaseSer
     }
 
     @Override
+    public Class<? extends O> getElementClass() {
+        return mainDao.getElementClass();
+    }
+
+    @Override
     public String getIdentifierPropertyName() {
         return mainDao.getIdentifierPropertyName();
     }

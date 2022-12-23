@@ -115,11 +115,9 @@ public class DatasetsWebService {
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve all datasets")
     public PaginatedResponseDataObject<ExpressionExperimentValueObject> getDatasets( // Params:
-            @Schema(extensions = { @Extension(name = "gemma", properties = { @ExtensionProperty(name = "filteringService", value = "expressionExperimentService") }) })
             @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filter, // Optional, default null
             @QueryParam("offset") @DefaultValue("0") OffsetArg offset, // Optional, default 0
             @QueryParam("limit") @DefaultValue("20") LimitArg limit, // Optional, default 20
-            @Schema(extensions = { @Extension(name = "gemma", properties = { @ExtensionProperty(name = "filteringService", value = "expressionExperimentService") }) })
             @QueryParam("sort") @DefaultValue("+id") SortArg<ExpressionExperiment> sort // Optional, default +id
     ) {
         return Responder.paginate( expressionExperimentService,
@@ -134,7 +132,6 @@ public class DatasetsWebService {
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Count datasets matching the provided filters")
     public ResponseDataObject<Long> getNumberOfDatasets(
-            @Schema(extensions = { @Extension(name = "gemma", properties = { @ExtensionProperty(name = "filteringService", value = "expressionExperimentService") }) })
             @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filter ) {
         return Responder.respond( expressionExperimentService.countPreFilter( filter.getFilters( expressionExperimentService ) ) );
     }
@@ -145,7 +142,6 @@ public class DatasetsWebService {
     @Operation(summary = "Retrieve usage statistics of annotations among datasets matching the provided filter",
             description = "Usage statistics are aggregated across experiment tags, samples and factor values mentioned in the experimental design.")
     public ResponseDataObject<List<AnnotationWithUsageStatisticsValueObject>> getDatasetsAnnotationsUsageStatistics(
-            @Schema(extensions = { @Extension(name = "gemma", properties = { @ExtensionProperty(name = "filteringService", value = "expressionExperimentService") }) })
             @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filter, @QueryParam("limit") @DefaultValue("50") LimitArg limit ) {
         List<AnnotationWithUsageStatisticsValueObject> results = expressionExperimentService.getAnnotationsFrequencyPreFilter( filter.getFilters( expressionExperimentService ), limit.getValue( 50 ) )
                 .entrySet()
@@ -193,11 +189,9 @@ public class DatasetsWebService {
     @Operation(summary = "Retrieve datasets by their identifiers")
     public PaginatedResponseDataObject<ExpressionExperimentValueObject> getDatasetsByIds( // Params:
             @PathParam("dataset") DatasetArrayArg datasetsArg, // Optional
-            @Schema(extensions = { @Extension(name = "gemma", properties = { @ExtensionProperty(name = "filteringService", value = "expressionExperimentService") }) })
             @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filter, // Optional, default null
             @QueryParam("offset") @DefaultValue("0") OffsetArg offset, // Optional, default 0
             @QueryParam("limit") @DefaultValue("20") LimitArg limit, // Optional, default 20
-            @Schema(extensions = { @Extension(name = "gemma", properties = { @ExtensionProperty(name = "filteringService", value = "expressionExperimentService") }) })
             @QueryParam("sort") @DefaultValue("+id") SortArg<ExpressionExperiment> sort // Optional, default +id
     ) {
         Filters filters = filter.getFilters( expressionExperimentService )

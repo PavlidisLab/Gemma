@@ -13,8 +13,10 @@ import lombok.extern.apachecommons.CommonsLog;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 import ubic.gemma.core.search.SearchService;
+import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.persistence.service.FilteringVoEnabledService;
 import ubic.gemma.persistence.service.analysis.expression.diff.ExpressionAnalysisResultSetService;
 import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeService;
@@ -40,27 +42,25 @@ import java.util.stream.Stream;
 public class CustomModelResolver extends ModelResolver {
 
     private final SearchService searchService;
-    private final BeanFactory beanFactory;
 
     @Autowired
-    public CustomModelResolver( @Qualifier("swaggerObjectMapper") ObjectMapper objectMapper, SearchService searchService, BeanFactory beanFactory ) {
+    public CustomModelResolver( @Qualifier("swaggerObjectMapper") ObjectMapper objectMapper, SearchService searchService ) {
         super( objectMapper );
         this.searchService = searchService;
-        this.beanFactory = beanFactory;
     }
 
     @Override
     public Schema resolve( AnnotatedType type, ModelConverterContext context, Iterator<ModelConverter> chain ) {
-        JavaType t = Json.mapper().constructType( type.getType() );
-        if ( FilterArg.class.isAssignableFrom( t.getRawClass() ) || SortArg.class.isAssignableFrom( t.getRawClass() ) ) {
-            return super.resolve( type, context, chain ).type( "string" ).properties( null );
-        } else if ( Arg.class.isAssignableFrom( t.getRawClass() ) ) {
+        JavaType t = objectMapper().constructType( type.getType() );
+        if ( t.isTypeOrSubTypeOf( FilterArg.class ) || t.isTypeOrSubTypeOf( SortArg.class ) ) {
+            return super.resolve( type, context, chain );
+        } else if ( t.isTypeOrSubTypeOf( Arg.class ) ) {
             // I'm suspecting there's a bug in Swagger that causes request parameters annotations to shadow the
             // definitions in the class's Schema annotation
-            Schema resolvedSchema = super.resolve( new AnnotatedType( ( t.getRawClass() ) ), context, chain );
+            Schema resolvedSchema = super.resolve( new AnnotatedType( t.getRawClass() ), context, chain );
             // There's a bug with abstract class such as TaxonArg and GeneArg that result in the schema containing 'type'
             // and 'properties' fields instead of solely emiting the oneOf
-            if ( Modifier.isAbstract( t.getRawClass().getModifiers() ) ) {
+            if ( t.isAbstract() ) {
                 return resolvedSchema.type( null ).properties( null );
             } else {
                 return resolvedSchema;
@@ -91,22 +91,30 @@ public class CustomModelResolver extends ModelResolver {
 
         // append available properties to the description
         if ( FilterArg.class.isAssignableFrom( a.getRawType() ) || SortArg.class.isAssignableFrom( a.getRawType() ) ) {
-            String availableProperties = resolveAvailableProperties( a, schema );
+            String availableProperties = resolveAvailableProperties( a );
             return description == null ? availableProperties : description + "\n\n" + availableProperties;
         }
 
         return description;
     }
 
-    private String resolveAvailableProperties( Annotated a, io.swagger.v3.oas.annotations.media.Schema schema ) {
-        String filteringServiceName = getGemmaExtensionProperty( schema, "filteringService" )
-                .orElseThrow( () -> new IllegalArgumentException( String.format( "A %s must have an x-gemma extension with the filteringService field to resolve its available values.",
-                        a.getRawType().getSimpleName() ) ) );
-        FilteringVoEnabledService<?, ?> filteringService = beanFactory.getBean( filteringServiceName, FilteringVoEnabledService.class );
+    @Autowired
+    private List<FilteringVoEnabledService<?, ?>> filteringServices;
+
+    private String resolveAvailableProperties( Annotated a ) {
+        // this is the case for FilterArg and SortArg
+        JavaType[] candidateServiceTypes = a.getType().findTypeParameters( a.getRawType() );
+        //noinspection unchecked
+        Class<Identifiable> clazz = ( Class<Identifiable> ) candidateServiceTypes[0].getRawClass();
+        // kind of silly, this can be done with Spring 4+ with generic injection
+        FilteringVoEnabledService<?, ?> filteringService = filteringServices.stream()
+                .filter( s -> clazz.isAssignableFrom( s.getElementClass() ) )
+                .findAny()
+                .orElseThrow( () -> new IllegalArgumentException( String.format( "Could not find filtering service for %s.", clazz.getName() ) ) );
         return String.format( "Available properties:\n\n%s",
                 filteringService.getFilterableProperties().stream()
                         // FIXME: The Criteria-based services don't support ordering results by collection size, see https://github.com/PavlidisLab/Gemma/issues/520
-                        .filter( p -> !isCriteriaBased( filteringService ) || !p.endsWith( ".size" ) )
+                        .filter( p -> !SortArg.class.isAssignableFrom( a.getRawType() ) || !isCriteriaBased( filteringService ) || !p.endsWith( ".size" ) )
                         .sorted()
                         .map( p -> String.format( "- %s `%s`%s",
                                 p,
@@ -144,20 +152,5 @@ public class CustomModelResolver extends ModelResolver {
         } else {
             return "object";
         }
-    }
-
-    /**
-     * Retrieve the value of an OpenAPI Gemma extension property.
-     * <p>
-     * Gemma extensions appear under {@code x-gemma} in the generated specification.
-     */
-    private static Optional<String> getGemmaExtensionProperty( io.swagger.v3.oas.annotations.media.Schema schema, String property ) {
-        return Stream.of( schema.extensions() )
-                .filter( e1 -> "gemma".equals( e1.name() ) )
-                .findFirst()
-                .flatMap( e -> Stream.of( e.properties() )
-                        .filter( p -> property.equals( p.name() ) )
-                        .map( ExtensionProperty::value )
-                        .findFirst() );
     }
 }

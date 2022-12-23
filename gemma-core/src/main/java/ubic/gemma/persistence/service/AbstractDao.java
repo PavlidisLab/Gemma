@@ -80,6 +80,11 @@ public abstract class AbstractDao<T extends Identifiable> implements BaseDao<T> 
     }
 
     @Override
+    public Class<? extends T> getElementClass() {
+        return elementClass;
+    }
+
+    @Override
     public String getIdentifierPropertyName() {
         return this.classMetadata.getIdentifierPropertyName();
     }

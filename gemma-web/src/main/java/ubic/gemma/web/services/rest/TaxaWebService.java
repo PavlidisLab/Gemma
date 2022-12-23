@@ -227,11 +227,9 @@ public class TaxaWebService {
     @Operation(summary = "Retrieve the datasets for a given taxon")
     public PaginatedResponseDataObject<ExpressionExperimentValueObject> getTaxonDatasets( // Params:
             @PathParam("taxon") TaxonArg<?> taxonArg, // Required
-            @Schema(extensions = { @Extension(name = "gemma", properties = { @ExtensionProperty(name = "filteringService", value = "expressionExperimentService") }) })
             @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filter, // Optional, default null
             @QueryParam("offset") @DefaultValue("0") OffsetArg offset, // Optional, default 0
             @QueryParam("limit") @DefaultValue("20") LimitArg limit, // Optional, default 20
-            @Schema(extensions = { @Extension(name = "gemma", properties = { @ExtensionProperty(name = "filteringService", value = "taxonService") }) })
             @QueryParam("sort") @DefaultValue("+id") SortArg<Taxon> sort // Optional, default +id
     ) {
         // will raise a NotFoundException if the taxon is not found

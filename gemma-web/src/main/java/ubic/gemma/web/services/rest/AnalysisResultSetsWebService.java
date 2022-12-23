@@ -88,11 +88,9 @@ public class AnalysisResultSetsWebService {
     public PaginatedResponseDataObject<DifferentialExpressionAnalysisResultSetValueObject> getResultSets(
             @Parameter(schema = @Schema(implementation = DatasetArrayArg.class), explode = Explode.FALSE) @QueryParam("datasets") DatasetArrayArg datasets,
             @Parameter(schema = @Schema(implementation = DatabaseEntryArrayArg.class), explode = Explode.FALSE) @QueryParam("databaseEntries") DatabaseEntryArrayArg databaseEntries,
-            @Schema(extensions = { @Extension(name = "gemma", properties = { @ExtensionProperty(name = "filteringService", value = "expressionAnalysisResultSetService") }) })
             @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionAnalysisResultSet> filters,
             @QueryParam("offset") @DefaultValue("0") OffsetArg offset,
             @QueryParam("limit") @DefaultValue("20") LimitArg limit,
-            @Schema(extensions = { @Extension(name = "gemma", properties = { @ExtensionProperty(name = "filteringService", value = "expressionAnalysisResultSetService") }) })
             @QueryParam("sort") @DefaultValue("+id") SortArg<ExpressionAnalysisResultSet> sort ) {
         Collection<BioAssaySet> bas = null;
         if ( datasets != null ) {
@@ -118,7 +116,6 @@ public class AnalysisResultSetsWebService {
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Count platforms matching a given set of filters")
     public ResponseDataObject<Long> getNumberOfResultSets(
-            @Schema(extensions = { @Extension(name = "gemma", properties = { @ExtensionProperty(name = "filteringService", value = "arrayDesignService") }) })
             @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionAnalysisResultSet> filter ) {
         return Responder.respond( expressionAnalysisResultSetService.countPreFilter( filter.getFilters( expressionAnalysisResultSetService ) ) );
     }

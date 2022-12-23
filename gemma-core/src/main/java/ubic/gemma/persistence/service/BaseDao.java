@@ -29,6 +29,8 @@ import java.util.Collection;
  */
 public interface BaseDao<T> {
 
+    Class<? extends T> getElementClass();
+
     /**
      * Obtain the identifiable property name for {@link O}.
      */

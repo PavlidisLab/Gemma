@@ -156,11 +156,9 @@ public class AnnotationsWebService {
     })
     public PaginatedResponseDataObject<ExpressionExperimentValueObject> searchDatasets( // Params:
             @Parameter(schema = @Schema(implementation = StringArrayArg.class), explode = Explode.FALSE) @QueryParam("query") @DefaultValue("") StringArrayArg query,
-            @Schema(extensions = { @Extension(name = "gemma", properties = { @ExtensionProperty(name = "filteringService", value = "expressionExperimentService") }) })
             @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filterArg, // Optional, default null
             @QueryParam("offset") @DefaultValue("0") OffsetArg offset, // Optional, default 0
             @QueryParam("limit") @DefaultValue("20") LimitArg limit, // Optional, default 20
-            @Schema(extensions = { @Extension(name = "gemma", properties = { @ExtensionProperty(name = "filteringService", value = "expressionExperimentService") }) })
             @QueryParam("sort") @DefaultValue("+id") SortArg<ExpressionExperiment> sortArg // Optional, default +id
     ) {
         if ( query == null || query.getValue().isEmpty() ) {
@@ -204,11 +202,9 @@ public class AnnotationsWebService {
     }, deprecated = true)
     public PaginatedResponseDataObject<ExpressionExperimentValueObject> searchDatasetsByQueryInPath( // Params:
             @PathParam("query") @DefaultValue("") StringArrayArg query, // Required
-            @Schema(extensions = { @Extension(name = "gemma", properties = { @ExtensionProperty(name = "filteringService", value = "expressionExperimentService") }) })
             @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filterArg, // Optional, default null
             @QueryParam("offset") @DefaultValue("0") OffsetArg offset, // Optional, default 0
             @QueryParam("limit") @DefaultValue("20") LimitArg limit, // Optional, default 20
-            @Schema(extensions = { @Extension(name = "gemma", properties = { @ExtensionProperty(name = "filteringService", value = "expressionExperimentService") }) })
             @QueryParam("sort") @DefaultValue("+id") SortArg<ExpressionExperiment> sortArg // Optional, default +id
     ) {
         return searchDatasets( query, filterArg, offset, limit, sortArg );
@@ -228,11 +224,9 @@ public class AnnotationsWebService {
     public PaginatedResponseDataObject<ExpressionExperimentValueObject> searchTaxonDatasets( // Params:
             @PathParam("taxon") TaxonArg<?> taxonArg, // Required
             @Parameter(schema = @Schema(implementation = StringArrayArg.class), explode = Explode.FALSE) @QueryParam("query") @DefaultValue("") StringArrayArg query,
-            @Schema(extensions = { @Extension(name = "gemma", properties = { @ExtensionProperty(name = "filteringService", value = "expressionExperimentService") }) })
             @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filter, // Optional, default null
             @QueryParam("offset") @DefaultValue("0") OffsetArg offset, // Optional, default 0
             @QueryParam("limit") @DefaultValue("20") LimitArg limit, // Optional, default 20
-            @Schema(extensions = { @Extension(name = "gemma", properties = { @ExtensionProperty(name = "filteringService", value = "expressionExperimentService") }) })
             @QueryParam("sort") @DefaultValue("+id") SortArg<ExpressionExperiment> sort // Optional, default +id
     ) {
         if ( query == null || query.getValue().isEmpty() ) {
@@ -274,11 +268,9 @@ public class AnnotationsWebService {
     public PaginatedResponseDataObject<ExpressionExperimentValueObject> searchTaxonDatasetsByQueryInPath( // Params:
             @PathParam("taxon") TaxonArg<?> taxonArg, // Required
             @PathParam("query") @DefaultValue("") StringArrayArg query, // Required
-            @Schema(extensions = { @Extension(name = "gemma", properties = { @ExtensionProperty(name = "filteringService", value = "expressionExperimentService") }) })
             @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filter, // Optional, default null
             @QueryParam("offset") @DefaultValue("0") OffsetArg offset, // Optional, default 0
             @QueryParam("limit") @DefaultValue("20") LimitArg limit, // Optional, default 20
-            @Schema(extensions = { @Extension(name = "gemma", properties = { @ExtensionProperty(name = "filteringService", value = "expressionExperimentService") }) })
             @QueryParam("sort") @DefaultValue("+id") SortArg<ExpressionExperiment> sort // Optional, default +id
     ) {
         return searchTaxonDatasets( taxonArg, query, filter, offset, limit, sort );

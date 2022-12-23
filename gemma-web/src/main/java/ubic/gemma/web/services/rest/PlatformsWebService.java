@@ -91,11 +91,9 @@ public class PlatformsWebService {
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve all platforms")
     public PaginatedResponseDataObject<ArrayDesignValueObject> getPlatforms( // Params:
-            @Schema(extensions = { @Extension(name = "gemma", properties = { @ExtensionProperty(name = "filteringService", value = "arrayDesignService") }) })
             @QueryParam("filter") @DefaultValue("") FilterArg<ArrayDesign> filter, // Optional, default null
             @QueryParam("offset") @DefaultValue("0") OffsetArg offset, // Optional, default 0
             @QueryParam("limit") @DefaultValue("20") LimitArg limit, // Optional, default 20
-            @Schema(extensions = { @Extension(name = "gemma", properties = { @ExtensionProperty(name = "filteringService", value = "arrayDesignService") }) })
             @QueryParam("sort") @DefaultValue("+id") SortArg<ArrayDesign> sort // Optional, default +id
     ) {
         return Responder.paginate( arrayDesignService, filter.getFilters( arrayDesignService ), sort.getSort( arrayDesignService ), offset.getValue(), limit.getValue() );
@@ -106,7 +104,6 @@ public class PlatformsWebService {
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Count platforms matching a given set of filters")
     public ResponseDataObject<Long> getNumberOfPlatforms(
-            @Schema(extensions = { @Extension(name = "gemma", properties = { @ExtensionProperty(name = "filteringService", value = "arrayDesignService") }) })
             @QueryParam("filter") @DefaultValue("") FilterArg<ArrayDesign> filter ) {
         return Responder.respond( arrayDesignService.countPreFilter( filter.getFilters( arrayDesignService ) ) );
     }
@@ -130,11 +127,9 @@ public class PlatformsWebService {
     @Operation(summary = "Retrieve all platforms matching a set of platform identifiers")
     public PaginatedResponseDataObject<ArrayDesignValueObject> getPlatformsByIds( // Params:
             @PathParam("platform") PlatformArrayArg datasetsArg, // Optional
-            @Schema(extensions = { @Extension(name = "gemma", properties = { @ExtensionProperty(name = "filteringService", value = "arrayDesignService") }) })
             @QueryParam("filter") @DefaultValue("") FilterArg<ArrayDesign> filter, // Optional, default null
             @QueryParam("offset") @DefaultValue("0") OffsetArg offset, // Optional, default 0
             @QueryParam("limit") @DefaultValue("20") LimitArg limit, // Optional, default 20
-            @Schema(extensions = { @Extension(name = "gemma", properties = { @ExtensionProperty(name = "filteringService", value = "arrayDesignService") }) })
             @QueryParam("sort") @DefaultValue("+id") SortArg<ArrayDesign> sort // Optional, default +id
     ) {
         Filters filters = filter.getFilters( arrayDesignService )
