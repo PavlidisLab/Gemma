@@ -695,6 +695,7 @@ public class DatasetCombiner {
             // Try to resolve the tie. Messy, yes.
             if ( distance == minDistance ) {
                 wasTied = true;
+                assert bestMatchAcc != null;
                 double prefixWeightedDistanceA = StringDistance
                         .prefixWeightedHammingDistance( targetAcc, bestMatchAcc, 1.0 );
                 double prefixWeightedDistanceB = StringDistance
@@ -735,7 +736,7 @@ public class DatasetCombiner {
                                     "" :
                                     " a.k.a " + testSecondaryTitle + ", distance = " + distance ) );
                     wasTied = false;
-                } else if ( prefixWeightedDistanceA < prefixWeightedDistanceB ) {
+                } else {
                     wasTied = false;
                     //noinspection UnnecessaryContinue // better for readability
                     continue; // old best is still better.

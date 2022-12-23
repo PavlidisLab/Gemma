@@ -156,7 +156,7 @@ public class ExpressionExperimentSetServiceImpl
     @Transactional
     public void deleteDatabaseEntity( ExpressionExperimentSetValueObject eesvo ) {
         try {
-            this.remove( this.load( eesvo.getId() ) );
+            this.remove( this.loadOrFail( eesvo.getId() ) );
         } catch ( Exception e ) {
             throw new RuntimeException( e );
         }

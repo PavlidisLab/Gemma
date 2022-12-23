@@ -88,7 +88,7 @@ public class ExpressionExperimentSetValueObjectHelperImpl implements ExpressionE
             entity = ExpressionExperimentSet.Factory.newInstance();
             entity.setId( null );
         } else {
-            entity = expressionExperimentSetService.load( setVO.getId() );
+            entity = expressionExperimentSetService.loadOrFail( setVO.getId() );
         }
 
         entity.setDescription( setVO.getDescription() );

@@ -25,6 +25,7 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.BaseService;
 
+import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.Map;
 
@@ -55,10 +56,10 @@ public interface Gene2GOAssociationService extends BaseService<Gene2GOAssociatio
     /**
      * @param  termsToFetch terms
      * @param  taxon        constraint
-     * @return              all the genes that match any of the terms. Used to fetch genes associated with a term +
+     * @return all the genes that match any of the terms. Used to fetch genes associated with a term +
      *                      children.
      */
-    Collection<Gene> findByGOTerms( Collection<String> termsToFetch, Taxon taxon );
+    Collection<Gene> findByGOTerms( Collection<String> termsToFetch, @Nullable Taxon taxon );
 
     Map<Taxon, Collection<Gene>> findByGOTermsPerTaxon( Collection<String> termsToFetch );
 

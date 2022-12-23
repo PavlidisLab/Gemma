@@ -42,6 +42,7 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.util.EntityUtils;
 
+import javax.annotation.Nullable;
 import java.math.BigInteger;
 import java.util.*;
 
@@ -1120,7 +1121,7 @@ public class CoexpressionDaoImpl implements CoexpressionDao {
      * have gotten any results.
      */
     private Map<Long, List<CoexpressionValueObject>> convertToValueObjects( List<Gene2GeneCoexpression> rawResults,
-            Collection<Long> geneIds ) {
+            @Nullable Collection<Long> geneIds ) {
 
         int removed = 0;
         Set<NonPersistentNonOrderedCoexpLink> allSeen = new HashSet<>( rawResults.size() );
@@ -1855,7 +1856,7 @@ public class CoexpressionDaoImpl implements CoexpressionDao {
      * @return map
      */
     private Map<Long, List<CoexpressionValueObject>> loadAndConvertLinks( Taxon t, List<Long> linkIds,
-            Collection<Long> queryGenes, boolean quick ) {
+            @Nullable Collection<Long> queryGenes, boolean quick ) {
 
         assert !linkIds.isEmpty();
 

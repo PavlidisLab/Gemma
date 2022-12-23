@@ -17,6 +17,7 @@ package ubic.gemma.core.ontology.providers;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.springframework.core.io.ClassPathResource;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.gemma.core.ontology.providers.GeneOntologyServiceImpl.GOAspect;
 
@@ -40,7 +41,7 @@ public class GeneOntologyServiceTest2 {
     public static void setUp() throws Exception {
         GeneOntologyServiceTest2.gos = new GeneOntologyServiceImpl();
         InputStream is = new GZIPInputStream(
-                GeneOntologyServiceTest.class.getResourceAsStream( "/data/loader/ontology/go.bptest.owl.gz" ) );
+                new ClassPathResource( "/data/loader/ontology/go.bptest.owl.gz" ).getInputStream() );
         GeneOntologyServiceTest2.gos.loadTermsInNameSpace( is );
     }
 

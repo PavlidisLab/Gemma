@@ -90,7 +90,7 @@ public class FactorValueDeletionImpl implements FactorValueDeletion {
             /*
              * Delete any diff ex analyses that use this factor.
              */
-            ExperimentalFactor ef = experimentalFactorService.load( fv.getExperimentalFactor().getId() );
+            ExperimentalFactor ef = experimentalFactorService.loadOrFail( fv.getExperimentalFactor().getId() );
             Collection<DifferentialExpressionAnalysis> analyses = differentialExpressionAnalysisService
                     .findByFactor( ef );
             // Warning: slow.

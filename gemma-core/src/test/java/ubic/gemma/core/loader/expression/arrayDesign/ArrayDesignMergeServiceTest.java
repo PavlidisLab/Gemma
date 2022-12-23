@@ -1,13 +1,13 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2011 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
@@ -55,10 +55,13 @@ public class ArrayDesignMergeServiceTest extends BaseSpringContextTest {
                 "ad1ad2ad3_" + RandomStringUtils.randomAlphabetic( 4 ), false );
 
         ad1 = arrayDesignService.load( ad1.getId() );
+        assertNotNull( ad1 );
         ad1 = arrayDesignService.thawLite( ad1 );
         ad2 = arrayDesignService.load( ad2.getId() );
+        assertNotNull( ad2 );
         ad2 = arrayDesignService.thawLite( ad2 );
         ad3 = arrayDesignService.load( ad3.getId() );
+        assertNotNull( ad3 );
         ad3 = arrayDesignService.thawLite( ad3 );
 
         /*

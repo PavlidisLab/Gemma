@@ -230,7 +230,7 @@ public class BatchInfoPopulationServiceImpl implements BatchInfoPopulationServic
             throw new IOException( "Error while processing FASTQ headers for " + ee + ": " + e.getMessage(), e );
         }
 
-        if ( headers.isEmpty() ) {
+        if ( headers == null || headers.isEmpty() ) {
             this.auditTrailService
                     .addUpdateEvent( ee, FailedBatchInformationMissingEvent.class, "No FASTQ headers found", "" );
             throw new IOException( "No FASTQ headers found for " + ee );

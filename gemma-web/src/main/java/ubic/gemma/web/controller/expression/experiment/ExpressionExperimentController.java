@@ -1514,7 +1514,7 @@ public class ExpressionExperimentController {
 
         Taxon taxon;
         if ( taxonId != null ) {
-            taxon = Objects.requireNonNull( taxonService.load( taxonId ), String.format( "No taxon with ID %d.", taxonId ) );
+            taxon = taxonService.loadOrFail( taxonId );
         } else {
             taxon = null;
         }

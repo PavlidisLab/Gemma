@@ -24,6 +24,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ClassPathResource;
 import ubic.gemma.core.genome.gene.service.GeneSetService;
 import ubic.gemma.core.ontology.providers.GeneOntologyService;
 import ubic.gemma.core.search.GeneSetSearch;
@@ -68,7 +69,7 @@ public class GeneSetServiceTest extends BaseSpringContextTest {
     public void setUp() throws Exception {
 
         InputStream is = new GZIPInputStream(
-                this.getClass().getResourceAsStream( "/data/loader/ontology/molecular-function.test.owl.gz" ) );
+                new ClassPathResource( "/data/loader/ontology/molecular-function.test.owl.gz" ).getInputStream() );
         geneOntologyService.loadTermsInNameSpace( is );
 
         g = this.getTestPersistentGene();
@@ -153,6 +154,7 @@ public class GeneSetServiceTest extends BaseSpringContextTest {
         gene2GoService.create( g2Go2 );
 
         GeneSet gset = this.geneSetSearch.findByGoId( GeneSetServiceTest.GOTERM_QUERY, g3.getTaxon() );
+        assertNotNull( gset );
         assertEquals( 2, gset.getMembers().size() );
     }
 

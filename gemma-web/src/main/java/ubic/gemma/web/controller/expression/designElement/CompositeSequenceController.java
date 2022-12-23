@@ -113,7 +113,7 @@ public class CompositeSequenceController extends BaseController {
         }
 
         Collection<CompositeSequence> compositeSequences = compositeSequenceService.load( ids );
-        Collection<Object[]> rawSummaries = compositeSequenceService.getRawSummary( compositeSequences, 0 );
+        Collection<Object[]> rawSummaries = compositeSequenceService.getRawSummary( compositeSequences );
         return arrayDesignMapResultService.getSummaryMapValueObjects( rawSummaries );
     }
 
@@ -128,7 +128,7 @@ public class CompositeSequenceController extends BaseController {
         }
 
         Collection<CompositeSequence> compositeSequences = geneService.getCompositeSequencesById( geneId );
-        Collection<Object[]> rawSummaries = compositeSequenceService.getRawSummary( compositeSequences, 0 );
+        Collection<Object[]> rawSummaries = compositeSequenceService.getRawSummary( compositeSequences );
 
         if ( rawSummaries == null || rawSummaries.isEmpty() ) {
             return new HashSet<>();
@@ -206,7 +206,7 @@ public class CompositeSequenceController extends BaseController {
             Collection<CompositeSequence> compositeSequences ) {
         Collection<CompositeSequenceMapValueObject> compositeSequenceSummary = new HashSet<>();
         if ( compositeSequences.size() > 0 ) {
-            Collection<Object[]> rawSummaries = compositeSequenceService.getRawSummary( compositeSequences, 0 );
+            Collection<Object[]> rawSummaries = compositeSequenceService.getRawSummary( compositeSequences );
             compositeSequenceSummary = arrayDesignMapResultService.getSummaryMapValueObjects( rawSummaries );
         }
         return compositeSequenceSummary;

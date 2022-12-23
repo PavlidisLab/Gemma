@@ -185,6 +185,7 @@ public class ProcessedExpressionDataVectorServiceTest extends AbstractGeoService
                 compositeSequenceService.update( cs );
 
                 cs = compositeSequenceService.load( cs.getId() );
+                assertNotNull( cs );
 
                 assertNotNull( cs.getBiologicalCharacteristic() );
 

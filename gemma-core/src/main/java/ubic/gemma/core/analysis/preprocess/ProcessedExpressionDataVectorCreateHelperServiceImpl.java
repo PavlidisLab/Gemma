@@ -129,7 +129,8 @@ public class ProcessedExpressionDataVectorCreateHelperServiceImpl
     @Override
     @Transactional
     public void reorderByDesign( Long eeId ) {
-        ExpressionExperiment ee = expressionExperimentDao.load( eeId );
+        ExpressionExperiment ee = Objects.requireNonNull( expressionExperimentDao.load( eeId ),
+                String.format( "No ExpressionExperiment with ID %d.", eeId ) );
 
         if ( ee.getExperimentalDesign().getExperimentalFactors().size() == 0 ) {
             ProcessedExpressionDataVectorCreateHelperServiceImpl.log

@@ -34,6 +34,7 @@ import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * @see ubic.gemma.model.expression.experiment.ExperimentalFactor
@@ -113,7 +114,8 @@ public class ExperimentalFactorDaoImpl extends AbstractVoEnabledDao<Experimental
 
     @Override
     public ExperimentalFactor thaw( ExperimentalFactor ef ) {
-        ef = this.load( ef.getId() );
+        ef = Objects.requireNonNull( this.load( ef.getId() ),
+                String.format( "No ExperimentalFactory with ID %d.", ef.getId() ) );
         Hibernate.initialize( ef );
         Hibernate.initialize( ef.getExperimentalDesign() );
         return ef;

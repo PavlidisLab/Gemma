@@ -115,6 +115,8 @@ public class DiffExTest extends AbstractGeoServiceTest {
             throw new IllegalStateException( "Need to remove this data set before test is run" );
         }
 
+        assertNotNull( ee );
+
         ee = eeService.thaw( ee );
 
         try ( InputStream is = this.getClass()
@@ -238,6 +240,7 @@ public class DiffExTest extends AbstractGeoServiceTest {
 
         if ( ee.getExperimentalDesign().getExperimentalFactors().isEmpty() ) {
             ee = eeService.load( ee.getId() );
+            assertNotNull( ee );
             ee = this.eeService.thawLite( ee );
 
             try ( InputStream is = this.getClass()
@@ -246,6 +249,7 @@ public class DiffExTest extends AbstractGeoServiceTest {
             }
 
             ee = eeService.load( ee.getId() );
+            assertNotNull( ee );
             ee = this.eeService.thawLite( ee );
         }
 

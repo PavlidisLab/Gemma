@@ -38,6 +38,8 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.compass.core.util.concurrent.ConcurrentHashSet;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 
 import ubic.basecode.ontology.model.OntologyIndividual;
@@ -938,9 +940,9 @@ public class OntologyServiceImpl implements OntologyService {
 
     private synchronized void initializeCategoryTerms() {
 
-        URL termUrl = OntologyServiceImpl.class.getResource( "/ubic/gemma/core/ontology/EFO.factor.categories.txt" );
         OntologyServiceImpl.categoryTerms = new ConcurrentHashSet<>();
-        try ( BufferedReader reader = new BufferedReader( new InputStreamReader( termUrl.openStream() ) ) ) {
+        Resource resource = new ClassPathResource( "/ubic/gemma/core/ontology/EFO.factor.categories.txt" );
+        try ( BufferedReader reader = new BufferedReader( new InputStreamReader( resource.getInputStream() ) ) ) {
             String line;
             boolean warned = false;
             while ( ( line = reader.readLine() ) != null ) {
@@ -968,13 +970,12 @@ public class OntologyServiceImpl implements OntologyService {
                 OntologyServiceImpl.categoryTerms.add( t );
             }
 
+            OntologyServiceImpl.categoryTerms = Collections.unmodifiableCollection( OntologyServiceImpl.categoryTerms );
         } catch ( IOException ioe ) {
             OntologyServiceImpl.log
-                    .error( "Error reading from term list '" + termUrl + "'; returning general term list", ioe );
+                    .error( "Error reading from term list '" + resource + "'; returning general term list", ioe );
             OntologyServiceImpl.categoryTerms = null;
         }
-
-        OntologyServiceImpl.categoryTerms = Collections.unmodifiableCollection( OntologyServiceImpl.categoryTerms );
     }
 
     /**

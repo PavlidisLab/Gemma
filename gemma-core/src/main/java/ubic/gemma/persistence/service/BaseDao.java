@@ -30,6 +30,11 @@ import java.util.Collection;
 public interface BaseDao<T> {
 
     /**
+     * Obtain the element class of this.
+     */
+    Class<? extends T> getElementClass();
+
+    /**
      * Crates all the given entities in the persistent storage.
      *
      * @param entities the entities to be crated.

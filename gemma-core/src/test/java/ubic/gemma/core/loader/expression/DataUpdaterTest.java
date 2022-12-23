@@ -255,6 +255,7 @@ public class DataUpdaterTest extends AbstractGeoServiceTest {
         // Main step.
         dataUpdater.addCountData( ee, targetArrayDesign, countMatrix, rpkmMatrix, 36, true, false );
         ee = experimentService.load( ee.getId() );
+        assertNotNull( ee );
         ee = experimentService.thaw( ee );
 
         // should have: log2cpm, counts, rpkm, and counts-masked ('preferred')
@@ -291,11 +292,14 @@ public class DataUpdaterTest extends AbstractGeoServiceTest {
             assertEquals( 6, v.getBioAssays().size() );
 
         }
-        assertFalse( dataVectorService.getProcessedDataVectors( experimentService.load( ee.getId() ) ).isEmpty() );
+        ExpressionExperiment ee2 = experimentService.load( ee.getId() );
+        assertNotNull( ee2 );
+        assertFalse( dataVectorService.getProcessedDataVectors( ee2 ).isEmpty() );
 
         // Call it again to test that we don't leak QTs
         dataUpdater.addCountData( ee, targetArrayDesign, countMatrix, rpkmMatrix, 36, true, false );
         ee = experimentService.load( ee.getId() );
+        assertNotNull( ee );
         ee = this.experimentService.thawLite( ee );
         assertEquals( 4, ee.getQuantitationTypes().size() );
 

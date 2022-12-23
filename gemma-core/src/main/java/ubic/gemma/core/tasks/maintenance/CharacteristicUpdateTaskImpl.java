@@ -192,7 +192,7 @@ public class CharacteristicUpdateTaskImpl extends AbstractTask<TaskResult, Chara
 
         Map<Characteristic, Object> charToParent = characteristicService.getParents( asChars );
         for ( Characteristic cFromClient : asChars ) {
-            Characteristic cFromDatabase = characteristicService.load( cFromClient.getId() );
+            Characteristic cFromDatabase = characteristicService.loadOrFail( cFromClient.getId() );
             Object parent = charToParent.get( cFromDatabase );
             removeFromParent( cFromDatabase, parent );
             characteristicService.remove( cFromDatabase );

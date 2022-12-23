@@ -20,6 +20,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ClassPathResource;
 import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.core.loader.expression.arrayDesign.ArrayDesignProbeMapperService;
 import ubic.gemma.core.loader.expression.geo.AbstractGeoServiceTest;
@@ -130,8 +131,8 @@ public class DiffExMetaAnalyzerServiceTest extends AbstractGeoServiceTest {
          * Add genes.
          */
         if ( !loadedGenes ) {
-            try (InputStream geneFile = this.getClass().getResourceAsStream(
-                    "/data/loader/expression/geo/meta-analysis/human.genes.subset.for.import.txt" )) {
+            try ( InputStream geneFile = this.getClass().getResourceAsStream(
+                    "/data/loader/expression/geo/meta-analysis/human.genes.subset.for.import.txt" ) ) {
                 externalFileGeneLoaderService.load( geneFile, "human" );
                 loadedGenes = true;
             }
@@ -195,10 +196,13 @@ public class DiffExMetaAnalyzerServiceTest extends AbstractGeoServiceTest {
         experimentService.update( ds3 );
 
         ds1 = experimentService.load( ds1.getId() );
+        assertNotNull( ds1 );
         ds1 = experimentService.thawLite( ds1 );
         ds2 = experimentService.load( ds2.getId() );
+        assertNotNull( ds2 );
         ds2 = experimentService.thawLite( ds2 );
         ds3 = experimentService.load( ds3.getId() );
+        assertNotNull( ds3 );
         ds3 = experimentService.thawLite( ds3 );
 
         designImporter.importDesign( ds1,
@@ -301,7 +305,7 @@ public class DiffExMetaAnalyzerServiceTest extends AbstractGeoServiceTest {
                     foundTests++;
                     assertTrue( r.getUpperTail() );
                     assertEquals( this.logComponentResults( r, gene ), 0.003375654, r.getMetaPvalue(), 0.00001 );
-                    found[0]= true;
+                    found[0] = true;
                     break;
                 case "ABCF1":
                     fail( "Should have gotten removed due to conflicting results" );
@@ -481,9 +485,8 @@ public class DiffExMetaAnalyzerServiceTest extends AbstractGeoServiceTest {
         Taxon human = taxonService.findByCommonName( "human" );
         assert human != null;
 
-        File annotationFile = new File(
-                this.getClass().getResource( "/data/loader/expression/geo/meta-analysis/human.probes.for.import.txt" )
-                        .toURI() );
+        File annotationFile = new ClassPathResource( "/data/loader/expression/geo/meta-analysis/human.probes.for.import.txt" )
+                .getFile();
 
         ArrayDesign gpl96 = arrayDesignService.findByShortName( "GPL96" );
         assertNotNull( gpl96 );
@@ -556,7 +559,7 @@ public class DiffExMetaAnalyzerServiceTest extends AbstractGeoServiceTest {
 
     private void loadSet( String acc ) throws Exception {
 
-        String path = new File( this.getClass().getResource( "/data/loader/expression/geo/meta-analysis" ).toURI() )
+        String path = new ClassPathResource( "/data/loader/expression/geo/meta-analysis" ).getFile()
                 .getAbsolutePath();
         geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path ) );
 

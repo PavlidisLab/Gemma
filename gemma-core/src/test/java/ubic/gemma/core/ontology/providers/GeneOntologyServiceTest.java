@@ -23,6 +23,7 @@ import org.apache.commons.logging.LogFactory;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.springframework.core.io.ClassPathResource;
 import ubic.basecode.ontology.model.OntologyTerm;
 
 import java.io.InputStream;
@@ -47,8 +48,8 @@ public class GeneOntologyServiceTest {
         /*
          * Note that this test file is out of date in some ways. See GeneOntologyServiceTest2
          */
-        InputStream is = new GZIPInputStream( GeneOntologyServiceTest.class
-                .getResourceAsStream( "/data/loader/ontology/molecular-function.test.owl.gz" ) );
+        InputStream is = new GZIPInputStream(
+                new ClassPathResource( "/data/loader/ontology/molecular-function.test.owl.gz" ).getInputStream() );
         GeneOntologyServiceTest.gos.loadTermsInNameSpace( is );
     }
 

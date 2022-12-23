@@ -21,6 +21,8 @@ package ubic.gemma.core.util.biomart;
 import org.junit.Before;
 import org.junit.Test;
 
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.Resource;
 import ubic.gemma.core.loader.util.biomart.BiomartEnsembleNcbiParser;
 import ubic.gemma.core.loader.util.biomart.Ensembl2NcbiValueObject;
 import ubic.gemma.model.genome.Taxon;
@@ -118,11 +120,11 @@ public class BioMartEnsemblNcbiParserTest {
         String[] attributesToGet = new String[] { "ensembl_gene_id", "ensembl_transcript_id", "entrezgene",
                 "ensembl_peptide_id", "hgnc_id" };
         String fileName = "/data/loader/protein/biomart/biomartsapiens.txt";
-        URL myurl = this.getClass().getResource( fileName );
+        Resource resource = new ClassPathResource( fileName );
 
         try {
             parser.setBioMartFields( attributesToGet );
-            parser.parse( new File( myurl.toURI() ) );
+            parser.parse( resource.getFile() );
             Collection<Ensembl2NcbiValueObject> items = parser.getResults();
             // 39 unique proteins and 36 unique genes
             assertEquals( 10, items.size() );
@@ -148,10 +150,10 @@ public class BioMartEnsemblNcbiParserTest {
         String[] attributesToGet = new String[] { "ensembl_gene_id", "ensembl_transcript_id", "entrezgene",
                 "ensembl_peptide_id", "" };
         String fileNameStringmouse = "/data/loader/protein/biomart/biomartmmusculus.txt";
-        URL myurl = this.getClass().getResource( fileNameStringmouse );
+        Resource resource = new ClassPathResource( fileNameStringmouse );
         try {
             parser.setBioMartFields( attributesToGet );
-            parser.parse( new File( myurl.toURI() ) );
+            parser.parse( resource.getFile() );
             Collection<Ensembl2NcbiValueObject> items = parser.getResults();
             boolean isItemThereOne = false;
             boolean isItemThereTwo = false;

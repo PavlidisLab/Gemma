@@ -27,6 +27,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ClassPathResource;
 import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.core.ontology.providers.GeneOntologyService;
 import ubic.gemma.core.util.test.BaseSpringContextTest;
@@ -88,7 +89,7 @@ public class GeneMultifunctionalityPopulationServiceTest extends BaseSpringConte
         gene2GoService.removeAll();
 
         goService.loadTermsInNameSpace( new GZIPInputStream(
-                this.getClass().getResourceAsStream( "/data/loader/ontology/molecular-function.test.owl.gz" ) ) );
+                new ClassPathResource( "/data/loader/ontology/molecular-function.test.owl.gz" ).getInputStream() ) );
 
         testTaxon = taxonService.findOrCreate( Taxon.Factory
                 .newInstance( "foobly" + RandomStringUtils.randomAlphabetic( 2 ),

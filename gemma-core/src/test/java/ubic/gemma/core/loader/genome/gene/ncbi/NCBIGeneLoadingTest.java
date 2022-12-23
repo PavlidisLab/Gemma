@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -145,7 +145,7 @@ public class NCBIGeneLoadingTest extends BaseSpringContextTest {
 
         g = geneService.findByNCBIId( 1 );
         assertEquals( "ENSG00000121410", g.getEnsemblId() );
-        
+
         // test remove...
         geneProductService.remove( products );
 
@@ -156,7 +156,9 @@ public class NCBIGeneLoadingTest extends BaseSpringContextTest {
         if ( g != null ) {
             try {
                 g = geneService.load( g.getId() );
-                geneService.remove( g );
+                if ( g != null ) {
+                    geneService.remove( g );
+                }
             } catch ( Exception e ) {
                 // ignore
             }

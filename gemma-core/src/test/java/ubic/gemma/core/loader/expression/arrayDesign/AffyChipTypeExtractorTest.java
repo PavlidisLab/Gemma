@@ -15,6 +15,8 @@
 package ubic.gemma.core.loader.expression.arrayDesign;
 
 import org.junit.Test;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.Resource;
 
 import java.io.InputStream;
 import java.util.zip.GZIPInputStream;
@@ -28,11 +30,10 @@ public class AffyChipTypeExtractorTest {
 
     @Test
     public void testExtractInputStreamGCOS() throws Exception {
-        InputStream is = new GZIPInputStream(
-                this.getClass().getResourceAsStream( "/data/loader/expression/geo/GSM506974.part.CEL.gz" ) );
-        AffyChipTypeExtractor extractor = new AffyChipTypeExtractor();
+        Resource resource = new ClassPathResource( "/data/loader/expression/geo/GSM506974.part.CEL.gz" );
+        InputStream is = new GZIPInputStream( resource.getInputStream() );
 
-        String actual = extractor.extract( is );
+        String actual = AffyChipTypeExtractor.extract( is );
 
         String expected = "Rat230_2";
 
@@ -41,11 +42,10 @@ public class AffyChipTypeExtractorTest {
 
     @Test
     public void testExtractInputStreamV3() throws Exception {
-        InputStream is = new GZIPInputStream(
-                this.getClass().getResourceAsStream( "/data/loader/expression/geo/GSM3448.part.CEL.txt.gz" ) );
-        AffyChipTypeExtractor extractor = new AffyChipTypeExtractor();
+        Resource resource = new ClassPathResource( "/data/loader/expression/geo/GSM3448.part.CEL.txt.gz" );
+        InputStream is = new GZIPInputStream( resource.getInputStream() );
 
-        String actual = extractor.extract( is );
+        String actual = AffyChipTypeExtractor.extract( is );
 
         String expected = "RG_U34A";
 
@@ -54,11 +54,10 @@ public class AffyChipTypeExtractorTest {
 
     @Test
     public void testExtractInputStreamV4() throws Exception {
-        InputStream is = new GZIPInputStream(
-                this.getClass().getResourceAsStream( "/data/loader/expression/geo/GSM306831.part.CEL.gz" ) );
-        AffyChipTypeExtractor extractor = new AffyChipTypeExtractor();
+        Resource resource = new ClassPathResource( "/data/loader/expression/geo/GSM306831.part.CEL.gz" );
+        InputStream is = new GZIPInputStream( resource.getInputStream() );
 
-        String actual = extractor.extract( is );
+        String actual = AffyChipTypeExtractor.extract( is );
 
         String expected = "Zebrafish";
 
@@ -67,11 +66,10 @@ public class AffyChipTypeExtractorTest {
 
     @Test
     public void testExtractInputStreamVx() throws Exception {
-        InputStream is = new GZIPInputStream(
-                this.getClass().getResourceAsStream( "/data/loader/expression/geo/GSM239803.CEL.gz" ) );
-        AffyChipTypeExtractor extractor = new AffyChipTypeExtractor();
+        Resource resource = new ClassPathResource( "/data/loader/expression/geo/GSM239803.CEL.gz" );
+        InputStream is = new GZIPInputStream( resource.getInputStream() );
 
-        String actual = extractor.extract( is );
+        String actual = AffyChipTypeExtractor.extract( is );
 
         String expected = "RN_U34";
 
