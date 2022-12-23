@@ -13,7 +13,11 @@ import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.persistence.service.FilteringVoEnabledDao;
 import ubic.gemma.persistence.service.common.auditAndSecurity.curation.CuratableDao;
+import ubic.gemma.persistence.util.Filters;
+import ubic.gemma.persistence.util.Slice;
+import ubic.gemma.persistence.util.Sort;
 
+import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -132,4 +136,6 @@ public interface ArrayDesignDao extends CuratableDao<ArrayDesign, ArrayDesignVal
     void deleteGeneProductAlignmentAssociations( ArrayDesign arrayDesign );
 
     void deleteGeneProductAnnotationAssociations( ArrayDesign arrayDesign );
+
+    Slice<ArrayDesignValueObject> loadBlacklistedValueObjects( @Nullable Filters filters, @Nullable Sort sort, int offset, int limit );
 }

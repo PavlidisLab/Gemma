@@ -6,16 +6,18 @@ import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
+import ubic.gemma.model.expression.arrayDesign.BlacklistedPlatform;
 import ubic.gemma.model.expression.designElement.CompositeSequenceValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
+import ubic.gemma.persistence.service.expression.experiment.BlacklistedEntityService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.web.services.rest.util.PaginatedResponseDataObject;
 import ubic.gemma.web.services.rest.util.args.*;
 import ubic.gemma.web.util.BaseSpringWebTest;
 
-import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class PlatformsWebServiceTest extends BaseSpringWebTest {
 
@@ -27,6 +29,9 @@ public class PlatformsWebServiceTest extends BaseSpringWebTest {
 
     @Autowired
     private ArrayDesignService arrayDesignService;
+
+    @Autowired
+    private BlacklistedEntityService blacklistedEntityService;
 
     /* fixtures */
     private ExpressionExperiment expressionExperiment;
@@ -79,5 +84,17 @@ public class PlatformsWebServiceTest extends BaseSpringWebTest {
         assertThat( response )
                 .hasFieldOrPropertyWithValue( "offset", 0 )
                 .hasFieldOrPropertyWithValue( "limit", 20 );
+    }
+
+    @Test
+    public void testGetBlacklistedPlatforms() {
+        BlacklistedPlatform bp = blacklistedEntityService.blacklistPlatform( arrayDesign, "This is just a test, don't feel bad about it." );
+        assertThat( blacklistedEntityService.isBlacklisted( arrayDesign ) ).isTrue();
+        assertThat( bp.getShortName() ).isEqualTo( arrayDesign.getShortName() );
+        PaginatedResponseDataObject<ArrayDesignValueObject> payload = platformsWebService.getBlacklistedPlatforms( FilterArg.valueOf( "" ), SortArg.valueOf( "+id" ), OffsetArg.valueOf( "0" ), LimitArg.valueOf( "20" ) );
+        assertThat( payload.getData() )
+                .hasSize( 1 )
+                .first()
+                .hasFieldOrPropertyWithValue( "shortName", arrayDesign.getShortName() );
     }
 }

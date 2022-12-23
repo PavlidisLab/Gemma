@@ -200,6 +200,24 @@ public class DatasetsWebService {
     }
 
     /**
+     * Browse blacklisted datasets.
+     */
+    @GET
+    @Path("/blacklisted")
+    @Produces(MediaType.APPLICATION_JSON)
+    public PaginatedResponseDataObject<ExpressionExperimentValueObject> getBlacklistedDatasets(
+            @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filterArg,
+            @QueryParam("sort") @DefaultValue("+id") SortArg<ExpressionExperiment> sortArg,
+            @QueryParam("offset") @DefaultValue("0") OffsetArg offset,
+            @QueryParam("limit") @DefaultValue("20") LimitArg limit ) {
+        return Responder.paginate( expressionExperimentService::loadBlacklistedValueObjects,
+                filterArg.getFilters( expressionExperimentService ),
+                sortArg.getSort( expressionExperimentService ),
+                offset.getValue(),
+                limit.getValue() );
+    }
+
+    /**
      * Retrieves platforms for the given dataset.
      *
      * @param datasetArg can either be the ExpressionExperiment ID or its short name (e.g. GSE1234). Retrieval by ID

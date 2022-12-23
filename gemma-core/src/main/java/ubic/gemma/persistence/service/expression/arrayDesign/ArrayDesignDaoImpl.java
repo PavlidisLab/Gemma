@@ -27,6 +27,7 @@ import org.hibernate.collection.spi.PersistentCollection;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
+import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -39,6 +40,7 @@ import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.persistence.service.AbstractDao;
 import ubic.gemma.persistence.service.common.auditAndSecurity.curation.AbstractCuratableDao;
+import ubic.gemma.persistence.util.Filter;
 import ubic.gemma.persistence.util.*;
 
 import javax.annotation.Nullable;
@@ -56,6 +58,16 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
         implements ArrayDesignDao {
 
     private static final int LOGGING_UPDATE_EVENT_COUNT = 5000;
+
+    /**
+     * Alias used for {@link ArrayDesign#getPrimaryTaxon()}.
+     */
+    private static final String PRIMARY_TAXON_ALIAS = "t";
+
+    /**
+     * Alias used for {@link ArrayDesign#getExternalReferences()}.
+     */
+    private static final String EXTERNAL_REFERENCE_ALIAS = "er";
 
     @Autowired
     public ArrayDesignDaoImpl( SessionFactory sessionFactory ) {
@@ -185,6 +197,43 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
         }
         AbstractDao.log.info(
                 "Done deleting " + annotAssociations.size() + " AnnotationAssociations for " + arrayDesign );
+    }
+
+    @Override
+    public Slice<ArrayDesignValueObject> loadBlacklistedValueObjects( @Nullable Filters filters, @Nullable Sort sort, int offset, int limit ) {
+        //noinspection unchecked
+        List<Object[]> result = ( List<Object[]> ) getSessionFactory().getCurrentSession()
+                .createQuery( "select bp.shortName, ea.accession from BlacklistedPlatform bp left join bp.externalAccession ea" )
+                .setCacheable( true )
+                .list();
+        if ( result.isEmpty() ) {
+            return Slice.empty();
+        }
+        if ( filters == null ) {
+            filters = Filters.empty();
+        } else {
+            // use a copy to avoid leaking the blacklisted arrayDesign short names
+            filters = Filters.by( filters );
+        }
+        // either by shortname
+        Set<String> blacklistedShortNames = result.stream()
+                .map( row -> ( String ) row[0] )
+                .filter( Objects::nonNull )
+                .collect( Collectors.toSet() );
+        // or by accession
+        Set<String> blacklistedAccessions = result.stream()
+                .map( row -> ( String ) row[1] )
+                .filter( Objects::nonNull )
+                .collect( Collectors.toSet() );
+        Filters.FiltersClauseBuilder clauseBuilder = filters.and();
+        if ( !blacklistedShortNames.isEmpty() ) {
+            clauseBuilder = clauseBuilder.or( OBJECT_ALIAS, "shortName", String.class, Filter.Operator.in, blacklistedShortNames );
+        }
+        if ( !blacklistedAccessions.isEmpty() ) {
+            clauseBuilder = clauseBuilder.or( EXTERNAL_REFERENCE_ALIAS, "accession", String.class, Filter.Operator.in, blacklistedAccessions );
+        }
+        filters = clauseBuilder.build();
+        return loadValueObjectsPreFilter( filters, sort, offset, limit );
     }
 
     @Override
@@ -959,52 +1008,53 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
 
     @Override
     protected Query getFilteringQuery( @Nullable Filters filters, @Nullable Sort sort, EnumSet<QueryHint> hints ) {
-        // FIXME: the distinct is necessary because the ACL jointure creates duplicated platforms
-        String queryString =
-                "select distinct ad from ArrayDesign as ad "
-                        + "left join fetch ad.curationDetails s "
-                        + "left join fetch ad.primaryTaxon t "
-                        + "left join fetch ad.mergedInto m "
-                        + "left join fetch s.lastNeedsAttentionEvent as eAttn "
-                        + "left join fetch s.lastNoteUpdateEvent as eNote "
-                        + "left join fetch s.lastTroubledEvent as eTrbl "
-                        + "left join fetch ad.alternativeTo alt";
-
-        if ( filters == null ) {
-            filters = Filters.empty();
-        }
-
-        // Restrict to non-troubled ADs for non-administrators
-        addNonTroubledFilter( filters, OBJECT_ALIAS );
-
-        queryString += AclQueryUtils.formAclJoinClause( OBJECT_ALIAS );
-        queryString += AclQueryUtils.formAclRestrictionClause();
-        queryString += FilterQueryUtils.formRestrictionAndGroupByAndOrderByClauses( filters, null, sort );
-
-        Query query = this.getSessionFactory().getCurrentSession().createQuery( queryString );
-
-        AclQueryUtils.addAclJoinParameters( query, ArrayDesign.class );
-        AclQueryUtils.addAclRestrictionParameters( query );
-        FilterQueryUtils.addRestrictionParameters( query, filters );
-
-        return query;
+        //language=HQL
+        return finishFilteringQuery( "select distinct ad from ArrayDesign as ad "
+                + "left join fetch ad.curationDetails " + CURATION_DETAILS_ALIAS + " "
+                + "left join fetch ad.primaryTaxon " + PRIMARY_TAXON_ALIAS + " "
+                + "left join fetch ad.mergedInto m "
+                + "left join fetch s.lastNeedsAttentionEvent as eAttn "
+                + "left join fetch s.lastNoteUpdateEvent as eNote "
+                + "left join fetch s.lastTroubledEvent as eTrbl "
+                + "left join fetch ad.alternativeTo alt", filters, sort );
     }
 
     @Override
-    protected Query getFilteringCountQuery( @Nullable Filters filters ) {
-        // contain duplicated platforms
-        String queryString =
-                "select count(distinct ad) from ArrayDesign as ad "
-                        + "left join ad.curationDetails s "
-                        + "left join ad.primaryTaxon t "
+    protected Query getFilteringIdQuery( @Nullable Filters filters ) {
+        //language=HQL
+        return finishFilteringQuery(
+                "select distinct ad.id from ArrayDesign as ad "
+                        + "left join ad.curationDetails " + CURATION_DETAILS_ALIAS + " "
+                        + "left join ad.primaryTaxon " + PRIMARY_TAXON_ALIAS + " "
                         + "left join ad.mergedInto m "
                         + "left join s.lastNeedsAttentionEvent as eAttn "
                         + "left join s.lastNoteUpdateEvent as eNote "
                         + "left join s.lastTroubledEvent as eTrbl "
-                        + "left join ad.alternativeTo alt";
+                        + "left join ad.alternativeTo alt", filters, null );
+    }
 
+    @Override
+    protected Query getFilteringCountQuery( @Nullable Filters filters ) {
+        //language=HQL
+        return finishFilteringQuery( "select count(distinct ad) from ArrayDesign as ad "
+                + "left join ad.curationDetails " + CURATION_DETAILS_ALIAS + " "
+                + "left join ad.primaryTaxon " + PRIMARY_TAXON_ALIAS + " "
+                + "left join ad.mergedInto m "
+                + "left join s.lastNeedsAttentionEvent as eAttn "
+                + "left join s.lastNoteUpdateEvent as eNote "
+                + "left join s.lastTroubledEvent as eTrbl "
+                + "left join ad.alternativeTo alt", filters, null );
+    }
+
+    private Query finishFilteringQuery( String queryString, @Nullable Filters filters, @Nullable Sort sort ) {
         if ( filters == null ) {
             filters = Filters.empty();
+        } else {
+            filters = Filters.by( filters );
+        }
+
+        if ( FiltersUtils.containsAnyAlias( filters, sort, EXTERNAL_REFERENCE_ALIAS ) ) {
+            queryString += " left join ad.externalReferences as " + EXTERNAL_REFERENCE_ALIAS;
         }
 
         // Restrict to non-troubled ADs for non-administrators
@@ -1013,6 +1063,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
         queryString += AclQueryUtils.formAclJoinClause( OBJECT_ALIAS );
         queryString += AclQueryUtils.formAclRestrictionClause();
         queryString += FilterQueryUtils.formRestrictionClause( filters );
+        queryString += FilterQueryUtils.formOrderByClause( sort );
 
         Query query = this.getSessionFactory().getCurrentSession().createQuery( queryString );
 
@@ -1026,6 +1077,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     @Override
     public Set<String> getFilterableProperties() {
         Set<String> result = new HashSet<>( super.getFilterableProperties() );
+        addFilterableProperties( "externalReference.", DatabaseEntry.class, result, FILTERABLE_PROPERTIES_MAX_DEPTH - 1 );
         result.add( "taxon" );
         addFilterableProperties( "taxon.", Taxon.class, result, FILTERABLE_PROPERTIES_MAX_DEPTH - 1 );
         return result;
@@ -1033,15 +1085,20 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
 
     @Override
     protected FilterablePropertyMeta getFilterablePropertyMeta( String propertyName ) {
+        if ( propertyName.startsWith( "externalReference." ) ) {
+            String fieldName = propertyName.replaceFirst( "^externalReference\\.", "" );
+            return new FilterablePropertyMeta( EXTERNAL_REFERENCE_ALIAS, fieldName, resolveFilterPropertyType( fieldName, DatabaseEntry.class ), null );
+        }
+
         // alias for primaryTaxon which is not discoverable in the VO
         if ( propertyName.startsWith( "taxon." ) ) {
             String fieldName = propertyName.replaceFirst( "^taxon\\.", "" );
-            return new FilterablePropertyMeta( "t", fieldName, resolveFilterPropertyType( fieldName, Taxon.class ), "alias for primaryTaxon." + fieldName );
+            return new FilterablePropertyMeta( PRIMARY_TAXON_ALIAS, fieldName, resolveFilterPropertyType( fieldName, Taxon.class ), "alias for primaryTaxon." + fieldName );
         }
 
         // handle cases such as taxon = 1
         if ( propertyName.equals( "taxon" ) ) {
-            return new FilterablePropertyMeta( "t", "id", Long.class, "alias for taxon.id" );
+            return new FilterablePropertyMeta( PRIMARY_TAXON_ALIAS, "id", Long.class, "alias for taxon.id" );
         }
 
         return super.getFilterablePropertyMeta( propertyName );

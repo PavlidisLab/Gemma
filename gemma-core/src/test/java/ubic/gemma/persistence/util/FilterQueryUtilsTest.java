@@ -82,8 +82,12 @@ public class FilterQueryUtilsTest {
     @Test
     public void testFormRestrictionAndGroupByAndOrderByClauses() {
         Filters filters = Filters.by( null, "id", Long.class, Filter.Operator.eq, 12L );
-        assertThat( formRestrictionAndGroupByAndOrderByClauses( filters, "ee", Sort.by( "ee", "shortName" ) ) )
-                .isEqualTo( " and (id = :id1) group by ee order by ee.shortName" );
+        Sort sort = Sort.by( "ee", "shortName" );
+        String queryString = "";
+        queryString += FilterQueryUtils.formRestrictionClause( filters );
+        queryString += FilterQueryUtils.formOrderByClause( sort );
+        assertThat( queryString )
+                .isEqualTo( " and (id = :id1) order by ee.shortName" );
     }
 
     @Test

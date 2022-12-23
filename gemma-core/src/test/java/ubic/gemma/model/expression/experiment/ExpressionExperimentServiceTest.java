@@ -19,8 +19,7 @@
 package ubic.gemma.model.expression.experiment;
 
 import org.apache.commons.lang3.RandomStringUtils;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.util.test.BaseSpringContextTest;
 import ubic.gemma.model.common.auditAndSecurity.Contact;
@@ -37,9 +36,11 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.common.description.CharacteristicDao;
 import ubic.gemma.persistence.service.expression.bioAssay.BioAssayDao;
 import ubic.gemma.persistence.service.expression.bioAssayData.RawExpressionDataVectorService;
+import ubic.gemma.persistence.service.expression.experiment.BlacklistedEntityService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Filter;
+import ubic.gemma.persistence.util.Slice;
 
 import java.util.*;
 
@@ -57,34 +58,38 @@ public class ExpressionExperimentServiceTest extends BaseSpringContextTest {
     private ExpressionExperimentService expressionExperimentService;
     @Autowired
     private RawExpressionDataVectorService rawExpressionDataVectorService;
-    private ExpressionExperiment ee = null;
+    @Autowired
+    private BlacklistedEntityService blacklistedEntityService;
+
+    private static ExpressionExperiment ee = null;
     private ExternalDatabase ed;
     private String accession;
-    private boolean persisted = false;
 
     @Before
     public void setUp() throws Exception {
+        expressionExperimentService.removeAll();
 
-        if ( !persisted ) {
-            ee = this.getTestPersistentCompleteExpressionExperiment( false );
-            ee.setName( ExpressionExperimentServiceTest.EE_NAME );
+        ee = this.getTestPersistentCompleteExpressionExperiment( false );
+        ee.setName( ExpressionExperimentServiceTest.EE_NAME );
 
-            DatabaseEntry accessionEntry = this.getTestPersistentDatabaseEntry();
-            accession = accessionEntry.getAccession();
-            ed = accessionEntry.getExternalDatabase();
-            ee.setAccession( accessionEntry );
+        DatabaseEntry accessionEntry = this.getTestPersistentDatabaseEntry();
+        accession = accessionEntry.getAccession();
+        ed = accessionEntry.getExternalDatabase();
+        ee.setAccession( accessionEntry );
 
-            Contact c = this.getTestPersistentContact();
-            ee.setOwner( c );
+        Contact c = this.getTestPersistentContact();
+        ee.setOwner( c );
 
-            ee.getCharacteristics().add( Characteristic.Factory.newInstance() );
+        ee.getCharacteristics().add( Characteristic.Factory.newInstance() );
 
-            expressionExperimentService.update( ee );
-            ee = expressionExperimentService.thaw( ee );
+        expressionExperimentService.update( ee );
+        ee = expressionExperimentService.thaw( ee );
+    }
 
-            persisted = true;
-        } else {
-            log.debug( "Skipping making new ee for test" );
+    @After
+    public void tearDown() {
+        if ( ee != null ) {
+            expressionExperimentService.remove( ee );
         }
     }
 
@@ -166,8 +171,9 @@ public class ExpressionExperimentServiceTest extends BaseSpringContextTest {
         long oldCount = counts.get( taxonService.findByCommonName( "mouse" ) );
         assertNotNull( counts );
         expressionExperimentService.remove( ee );
+        ee = null;
         counts = expressionExperimentService.getPerTaxonCount();
-        assertEquals( oldCount - 1, counts.get( taxonService.findByCommonName( "mouse" ) ).longValue() );
+        assertEquals( oldCount - 1, counts.getOrDefault( taxonService.findByCommonName( "mouse" ), 0L ).longValue() );
     }
 
     @Test
@@ -311,4 +317,14 @@ public class ExpressionExperimentServiceTest extends BaseSpringContextTest {
         assertEquals( 1, list.size() );
     }
 
+    @Test
+    public void testLoadBlacklistedValueObjects() {
+        blacklistedEntityService.blacklistExpressionExperiment( ee, "Don't feel bad!" );
+        assertThat( blacklistedEntityService.isBlacklisted( ee ) ).isTrue();
+        Slice<ExpressionExperimentValueObject> result = expressionExperimentService.loadBlacklistedValueObjects( null, null, 0, 10 );
+        assertThat( result )
+                .hasSize( 1 )
+                .first()
+                .hasFieldOrPropertyWithValue( "shortName", ee.getShortName() );
+    }
 }

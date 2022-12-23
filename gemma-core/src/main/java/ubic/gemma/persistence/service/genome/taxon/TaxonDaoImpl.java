@@ -109,13 +109,12 @@ public class TaxonDaoImpl extends AbstractQueryFilteringVoEnabledDao<Taxon, Taxo
                 + "left join {0}.externalDatabase as ED " // external db
                 + "where {0}.id is not null ", OBJECT_ALIAS ); // needed to use formRestrictionCause()
 
-        queryString += FilterQueryUtils.formRestrictionAndGroupByAndOrderByClauses( filters, null, sort );
+        queryString += FilterQueryUtils.formRestrictionClause( filters );
+        queryString += FilterQueryUtils.formOrderByClause( sort );
 
         Query query = this.getSessionFactory().getCurrentSession().createQuery( queryString );
 
-        if ( filters != null ) {
-            FilterQueryUtils.addRestrictionParameters( query, filters );
-        }
+        FilterQueryUtils.addRestrictionParameters( query, filters );
 
         return query;
     }
@@ -129,15 +128,11 @@ public class TaxonDaoImpl extends AbstractQueryFilteringVoEnabledDao<Taxon, Taxo
                 + "left join {0}.externalDatabase as ED " // external db
                 + "where {0}.id is not null ", OBJECT_ALIAS ); // needed to use formRestrictionCause()
 
-        if ( filters != null ) {
-            queryString += FilterQueryUtils.formRestrictionClause( filters );
-        }
+        queryString += FilterQueryUtils.formRestrictionClause( filters );
 
         Query query = this.getSessionFactory().getCurrentSession().createQuery( queryString );
 
-        if ( filters != null ) {
-            FilterQueryUtils.addRestrictionParameters( query, filters );
-        }
+        FilterQueryUtils.addRestrictionParameters( query, filters );
 
         return query;
     }

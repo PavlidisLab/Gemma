@@ -859,6 +859,11 @@ public class ExpressionExperimentServiceImpl
     }
 
     @Override
+    public Slice<ExpressionExperimentValueObject> loadBlacklistedValueObjects( @Nullable Filters filters, @Nullable Sort sort, int offset, int limit ) {
+        return expressionExperimentDao.loadBlacklistedValueObjects( filters, sort, offset, limit );
+    }
+
+    @Override
     @Transactional(readOnly = true)
     public Collection<ExpressionExperiment> loadLackingFactors() {
         return this.expressionExperimentDao.loadLackingFactors();

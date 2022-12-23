@@ -1,5 +1,7 @@
 package ubic.gemma.persistence.util;
 
+import lombok.EqualsAndHashCode;
+
 import javax.annotation.CheckReturnValue;
 import javax.annotation.Nullable;
 import java.util.ArrayList;
@@ -12,6 +14,7 @@ import java.util.stream.Collectors;
  * Represents a conjunction of disjunctions of {@link Filter}.
  * @author poirigui
  */
+@EqualsAndHashCode(of = { "clauses" })
 public class Filters implements Iterable<Filter[]> {
 
     /**
@@ -70,14 +73,21 @@ public class Filters implements Iterable<Filter[]> {
      * @return a {@link Filters} with the given filter as only clause
      */
     public static Filters by( Filter... subClauses ) {
-        return new Filters().and( subClauses );
+        return empty().and( subClauses );
     }
 
     /**
      * Create a singleton {@link Filters} from an explicit clause.
      */
     public static Filters by( @Nullable String objectAlias, String propertyName, Class<?> propertyType, Filter.Operator operator, @Nullable Object requiredValue ) {
-        return by( Filter.by( objectAlias, propertyName, propertyType, operator, requiredValue ) );
+        return empty().and( Filter.by( objectAlias, propertyName, propertyType, operator, requiredValue ) );
+    }
+
+    /**
+     * Copy constructor.
+     */
+    public static Filters by( Filters filters ) {
+        return empty().and( filters );
     }
 
     private final ArrayList<Filter[]> clauses;

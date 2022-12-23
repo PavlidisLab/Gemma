@@ -111,13 +111,12 @@ public class CompositeSequenceDaoImpl extends AbstractQueryFilteringVoEnabledDao
                         + "where {0}.id is not null ", // needed to use formRestrictionCause()
                 OBJECT_ALIAS, ArrayDesignDao.OBJECT_ALIAS );
 
-        queryString += FilterQueryUtils.formRestrictionAndGroupByAndOrderByClauses( filters, null, sort );
+        queryString += FilterQueryUtils.formRestrictionClause( filters );
+        queryString += FilterQueryUtils.formOrderByClause( sort );
 
         Query query = this.getSessionFactory().getCurrentSession().createQuery( queryString );
 
-        if ( filters != null ) {
-            FilterQueryUtils.addRestrictionParameters( query, filters );
-        }
+        FilterQueryUtils.addRestrictionParameters( query, filters );
 
         return query;
     }
@@ -131,15 +130,11 @@ public class CompositeSequenceDaoImpl extends AbstractQueryFilteringVoEnabledDao
                         + "where {0}.id is not null ", // needed to use formRestrictionCause()
                 OBJECT_ALIAS, ArrayDesignDao.OBJECT_ALIAS );
 
-        if ( filters != null ) {
-            queryString += FilterQueryUtils.formRestrictionClause( filters );
-        }
+        queryString += FilterQueryUtils.formRestrictionClause( filters );
 
         Query query = this.getSessionFactory().getCurrentSession().createQuery( queryString );
 
-        if ( filters != null ) {
-            FilterQueryUtils.addRestrictionParameters( query, filters );
-        }
+        FilterQueryUtils.addRestrictionParameters( query, filters );
 
         return query;
     }

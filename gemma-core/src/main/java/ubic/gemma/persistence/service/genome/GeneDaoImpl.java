@@ -531,20 +531,19 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
     protected Query getFilteringQuery( @Nullable Filters filters, @Nullable Sort sort, EnumSet<QueryHint> hints ) {
 
         //noinspection JpaQlInspection // the constants for aliases is messing with the inspector
-        String queryString = "select " + OBJECT_ALIAS + " "
+        String queryString = "select distinct " + OBJECT_ALIAS + " "
                 + "from Gene as " + OBJECT_ALIAS + " " // gene
                 + "left join fetch " + OBJECT_ALIAS + ".multifunctionality " // multifunctionality, if available
                 + "left join fetch " + OBJECT_ALIAS + ".taxon as " + "taxon" + " "// taxon
                 + "left join fetch " + OBJECT_ALIAS + ".aliases " // aliases
                 + "where " + OBJECT_ALIAS + ".id is not null "; // needed to use formRestrictionCause()
 
-        queryString += FilterQueryUtils.formRestrictionAndGroupByAndOrderByClauses( filters, OBJECT_ALIAS, sort );
+        queryString += FilterQueryUtils.formRestrictionClause( filters );
+        queryString += FilterQueryUtils.formOrderByClause( sort );
 
         Query query = this.getSessionFactory().getCurrentSession().createQuery( queryString );
 
-        if ( filters != null ) {
-            FilterQueryUtils.addRestrictionParameters( query, filters );
-        }
+        FilterQueryUtils.addRestrictionParameters( query, filters );
 
         return query;
     }
@@ -552,17 +551,15 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
     @Override
     protected Query getFilteringCountQuery( @Nullable Filters filters ) {
         //noinspection JpaQlInspection // the constants for aliases is messing with the inspector
-        String queryString = "select count(*) from Gene as " + OBJECT_ALIAS + " " // gene
+        String queryString = "select count(distinct *) from Gene as " + OBJECT_ALIAS + " " // gene
                 + "left join " + OBJECT_ALIAS + ".taxon as " + "taxon" + " "// taxon
                 + "where " + OBJECT_ALIAS + ".id is not null "; // needed to use formRestrictionCause()
 
-        queryString += FilterQueryUtils.formRestrictionAndGroupByAndOrderByClauses( filters, OBJECT_ALIAS, null );
+        queryString += FilterQueryUtils.formRestrictionClause( filters );
 
         Query query = this.getSessionFactory().getCurrentSession().createQuery( queryString );
 
-        if ( filters != null ) {
-            FilterQueryUtils.addRestrictionParameters( query, filters );
-        }
+        FilterQueryUtils.addRestrictionParameters( query, filters );
 
         return query;
     }

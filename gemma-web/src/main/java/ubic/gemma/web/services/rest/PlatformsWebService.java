@@ -137,6 +137,20 @@ public class PlatformsWebService {
         return Responder.paginate( arrayDesignService, filters, sort.getSort( arrayDesignService ), offset.getValue(), limit.getValue() );
     }
 
+    @GET
+    @Path("/blacklisted")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(summary = "Retrieve all blacklisted platforms")
+    public PaginatedResponseDataObject<ArrayDesignValueObject> getBlacklistedPlatforms(
+            @QueryParam("filter") @DefaultValue("") FilterArg<ArrayDesign> filter,
+            @QueryParam("sort") @DefaultValue("+id") SortArg<ArrayDesign> sort,
+            @QueryParam("offset") @DefaultValue("0") OffsetArg offset,
+            @QueryParam("limit") @DefaultValue("20") LimitArg limit
+    ) {
+        return Responder.paginate( arrayDesignService::loadBlacklistedValueObjects, filter.getFilters( arrayDesignService ),
+                sort.getSort( arrayDesignService ), offset.getValue(), limit.getValue() );
+    }
+
     /**
      * Retrieves experiments in the given platform.
      *

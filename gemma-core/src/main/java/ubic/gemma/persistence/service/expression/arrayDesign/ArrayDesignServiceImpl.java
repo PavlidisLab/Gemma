@@ -30,7 +30,11 @@ import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.persistence.service.AbstractFilteringVoEnabledService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventDao;
 import ubic.gemma.persistence.service.expression.experiment.BlacklistedEntityService;
+import ubic.gemma.persistence.util.Filters;
+import ubic.gemma.persistence.util.Slice;
+import ubic.gemma.persistence.util.Sort;
 
+import javax.annotation.Nullable;
 import java.util.*;
 
 /**
@@ -246,7 +250,6 @@ public class ArrayDesignServiceImpl extends AbstractFilteringVoEnabledService<Ar
     @Transactional(readOnly = true)
     public boolean isBlackListed( String geoAccession ) {
         return this.blacklistedEntityService.isBlacklisted( geoAccession );
-
     }
 
     @Override
@@ -259,6 +262,12 @@ public class ArrayDesignServiceImpl extends AbstractFilteringVoEnabledService<Ar
     @Transactional
     public void deleteGeneProductAlignmentAssociations( ArrayDesign arrayDesign ) {
         this.arrayDesignDao.deleteGeneProductAnnotationAssociations( arrayDesign );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Slice<ArrayDesignValueObject> loadBlacklistedValueObjects( @Nullable Filters filters, @Nullable Sort sort, int offset, int limit ) {
+        return arrayDesignDao.loadBlacklistedValueObjects( filters, sort, offset, limit );
     }
 
     @Override

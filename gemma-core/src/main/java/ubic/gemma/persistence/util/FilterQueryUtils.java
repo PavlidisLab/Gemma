@@ -1,6 +1,6 @@
 package ubic.gemma.persistence.util;
 
-import com.google.common.base.Strings;
+import org.apache.commons.lang3.StringUtils;
 import org.hibernate.Query;
 
 import javax.annotation.Nullable;
@@ -42,8 +42,8 @@ public class FilterQueryUtils {
      * @param sort the property and direction the query should be ordered by.
      * @return an order by clause. Empty string if the orderByProperty argument is null or empty.
      */
-    public static String formOrderByClause( Sort sort ) {
-        if ( Strings.isNullOrEmpty( sort.getPropertyName() ) )
+    public static String formOrderByClause( @Nullable Sort sort ) {
+        if ( sort == null || StringUtils.isEmpty( sort.getPropertyName() ) )
             return "";
         StringBuilder ret = new StringBuilder();
 
@@ -79,8 +79,8 @@ public class FilterQueryUtils {
      *                <code>[0 OR 1 OR 2] AND [0 OR 1] AND [0 OR 1 OR 3]</code>
      * @return a string containing the clause, without the leading "WHERE" keyword.
      */
-    public static String formRestrictionClause( Filters filters ) {
-        if ( filters.isEmpty() )
+    public static String formRestrictionClause( @Nullable Filters filters ) {
+        if ( filters == null || filters.isEmpty() )
             return "";
         int i = 0;
         StringBuilder conjunction = new StringBuilder();
@@ -132,28 +132,6 @@ public class FilterQueryUtils {
     }
 
     /**
-     * Form both the filters and order by clauses, accounting for potential nulls.
-     *
-     * @param filters the filters to apply, or null to ignore
-     * @param groupBy a property to group by, or null to ignore
-     * @param sort the sort to apply, or null to ignore
-     * @return a string with restriction, group by and order by clauses
-     */
-    public static String formRestrictionAndGroupByAndOrderByClauses( @Nullable Filters filters, @Nullable String groupBy, @Nullable Sort sort ) {
-        String queryString = "";
-        if ( filters != null ) {
-            queryString += FilterQueryUtils.formRestrictionClause( filters );
-        }
-        if ( groupBy != null ) {
-            queryString += " group by " + groupBy;
-        }
-        if ( sort != null ) {
-            queryString += FilterQueryUtils.formOrderByClause( sort );
-        }
-        return queryString;
-    }
-
-    /**
      * Adds all parameters contained in the filters argument to the query by calling {@link Query#setParameter(String, Object)}
      * or {@link Query#setParameterList(String, Collection)} as needed.
      * <p>
@@ -166,7 +144,9 @@ public class FilterQueryUtils {
      * @param query   the query that needs parameters populated.
      * @param filters filters that provide the parameter values.
      */
-    public static void addRestrictionParameters( Query query, Filters filters ) {
+    public static void addRestrictionParameters( Query query, @Nullable Filters filters ) {
+        if ( filters == null )
+            return;
         int i = 0;
         for ( Filter[] clause : filters ) {
             if ( clause == null )

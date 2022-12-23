@@ -21,7 +21,11 @@ package ubic.gemma.persistence.service.expression.experiment;
 
 import ubic.gemma.model.expression.BlacklistedEntity;
 import ubic.gemma.model.expression.BlacklistedValueObject;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.BaseVoEnabledDao;
+
+import java.util.Collection;
 
 /**
  * @author paul
@@ -32,8 +36,13 @@ public interface BlacklistedEntityDao extends BaseVoEnabledDao<BlacklistedEntity
 
     /**
      * @param  accession accession to search for (typically either a GPL or GSE)
-     * @return           null if not blacklisted, or a BlackListedPlatform or BlackListedExperiment.
+     * @return null if not blacklisted, or a BlackListedPlatform or BlackListedExperiment.
      */
-    public BlacklistedEntity findByAccession( String accession );
+    BlacklistedEntity findByAccession( String accession );
 
+    boolean isBlacklisted( ArrayDesign platform );
+
+    boolean isBlacklisted( ExpressionExperiment dataset );
+
+    Collection<ExpressionExperiment> getNonBlacklistedExpressionExperiments( ArrayDesign arrayDesign );
 }

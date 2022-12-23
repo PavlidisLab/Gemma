@@ -6,13 +6,16 @@ import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.curation.AbstractCuratableValueObject;
 import ubic.gemma.model.common.auditAndSecurity.curation.Curatable;
+import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.persistence.service.AbstractQueryFilteringVoEnabledDao;
 import ubic.gemma.persistence.service.common.auditAndSecurity.CurationDetailsDao;
 import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Filter;
+import ubic.gemma.persistence.util.Slice;
 
 import javax.annotation.Nullable;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Created by tesarst on 07/03/17.
@@ -22,6 +25,11 @@ import java.util.*;
  */
 public abstract class AbstractCuratableDao<C extends Curatable, VO extends AbstractCuratableValueObject<C>>
         extends AbstractQueryFilteringVoEnabledDao<C, VO> implements CuratableDao<C, VO> {
+
+    /**
+     * HQL alias for {@link Curatable#getCurationDetails()}.
+     */
+    protected static final String CURATION_DETAILS_ALIAS = "s";
 
     @Autowired
     private CurationDetailsDao curationDetailsDao;
@@ -97,15 +105,15 @@ public abstract class AbstractCuratableDao<C extends Curatable, VO extends Abstr
     @Override
     protected FilterablePropertyMeta getFilterablePropertyMeta( String propertyName ) throws IllegalArgumentException {
         if ( propertyName.equals( "lastUpdated" ) ) {
-            return new FilterablePropertyMeta( "s", "lastUpdated", Date.class, "alias for curationDetails.lastUpdated" );
+            return new FilterablePropertyMeta( CURATION_DETAILS_ALIAS, "lastUpdated", Date.class, "alias for curationDetails.lastUpdated" );
         }
 
         if ( propertyName.equals( "troubled" ) ) {
-            return new FilterablePropertyMeta( "s", "troubled", Boolean.class, "alias for curationDetails.troubled" );
+            return new FilterablePropertyMeta( CURATION_DETAILS_ALIAS, "troubled", Boolean.class, "alias for curationDetails.troubled" );
         }
 
         if ( propertyName.equals( "needsAttention" ) ) {
-            return new FilterablePropertyMeta( "s", "needsAttention", Boolean.class, "alias for curationDetails.needsAttention" );
+            return new FilterablePropertyMeta( CURATION_DETAILS_ALIAS, "needsAttention", Boolean.class, "alias for curationDetails.needsAttention" );
         }
 
         return super.getFilterablePropertyMeta( propertyName );

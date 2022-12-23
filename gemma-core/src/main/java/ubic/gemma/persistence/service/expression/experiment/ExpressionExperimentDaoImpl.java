@@ -82,6 +82,12 @@ public class ExpressionExperimentDaoImpl
 
     private static final int BATCH_SIZE = 1000;
 
+    private static final String
+            CHARACTERISTIC_ALIAS = CharacteristicDao.OBJECT_ALIAS,
+            BIO_ASSAY_ALIAS = BioAssayDao.OBJECT_ALIAS,
+            TAXON_ALIAS = TaxonDao.OBJECT_ALIAS,
+            ARRAY_DESIGN_ALIAS = ArrayDesignDao.OBJECT_ALIAS;
+
     @Autowired
     public ExpressionExperimentDaoImpl( SessionFactory sessionFactory ) {
         super( ExpressionExperimentDao.OBJECT_ALIAS, ExpressionExperiment.class, sessionFactory );
@@ -1363,6 +1369,33 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
+    public Slice<ExpressionExperimentValueObject> loadBlacklistedValueObjects( @Nullable Filters filters, @Nullable Sort sort, int offset, int limit ) {
+        //noinspection unchecked
+        List<Object[]> result = getSessionFactory().getCurrentSession()
+                .createQuery( "select be.shortName, ea.accession from BlacklistedExperiment be left join be.externalAccession ea" )
+                .setCacheable( true )
+                .list();
+        if ( result.isEmpty() ) {
+            return Slice.empty();
+        }
+        if ( filters == null ) {
+            filters = Filters.empty();
+        } else {
+            // we create a copy because we don't want to leak the lits of blacklisted EEs in the filter
+            filters = Filters.by( filters );
+        }
+        Set<String> blacklistedShortNames = result.stream().map( row -> ( String ) row[0] ).filter( Objects::nonNull ).collect( Collectors.toSet() );
+        Set<String> blacklistedAccessions = result.stream().map( row -> ( String ) row[1] ).filter( Objects::nonNull ).collect( Collectors.toSet() );
+        Filters.FiltersClauseBuilder clause = filters.and();
+        if ( !blacklistedShortNames.isEmpty() )
+            clause = clause.or( "ee", "shortName", String.class, Filter.Operator.in, blacklistedShortNames );
+        if ( !blacklistedAccessions.isEmpty() )
+            clause = clause.or( "ee", "accession.accession", String.class, Filter.Operator.in, blacklistedAccessions );
+        clause.build();
+        return loadValueObjectsPreFilter( filters, sort, offset, limit );
+    }
+
+    @Override
     public Collection<ExpressionExperiment> loadLackingFactors() {
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession().createQuery(
@@ -1562,145 +1595,59 @@ public class ExpressionExperimentDaoImpl
         }
     }
 
-
     @Override
     protected Query getFilteringQuery( @Nullable Filters filters, @Nullable Sort sort, EnumSet<QueryHint> hints ) {
-        if ( filters == null ) {
-            filters = Filters.empty();
-        }
-
-        // Restrict to non-troubled EEs for non-administrators
-        addNonTroubledFilter( filters, OBJECT_ALIAS );
-
-        // FIXME: this is triggering an AD jointure that simply we cannot afford, so we only perform it if necessary
-        if ( FiltersUtils.containsAnyAlias( filters, sort, ArrayDesignDao.OBJECT_ALIAS ) ) {
-            addNonTroubledFilter( filters, ArrayDesignDao.OBJECT_ALIAS );
-        }
-
         // the constants for aliases are messing with the inspector
         //language=HQL
-        String queryString = MessageFormat.format(
-                "select {0}, {1}, {2} "
-                        + "from ExpressionExperiment as {0} "
-                        + "left join fetch {0}.accession acc "
-                        + "left join fetch acc.externalDatabase as ED "
-                        + "left join fetch {0}.experimentalDesign as EDES "
-                        + "left join fetch {0}.curationDetails as s " /* needed for trouble status */
-                        + "left join fetch s.lastNeedsAttentionEvent as eAttn "
-                        + "left join fetch s.lastNoteUpdateEvent as eNote "
-                        + "left join fetch s.lastTroubledEvent as eTrbl "
-                        + "left join fetch {0}.geeq as geeq "
-                        + "left join fetch {0}.taxon as {3}",
-                OBJECT_ALIAS, AclQueryUtils.AOI_ALIAS, AclQueryUtils.SID_ALIAS, TaxonDao.OBJECT_ALIAS );
-
-        // fetching characteristics, bioAssays and arrayDesignUsed is costly, so we reserve these operations only if it
-        // is mentioned in the filters
-
-        if ( FiltersUtils.containsAnyAlias( filters, sort, CharacteristicDao.OBJECT_ALIAS ) ) {
-            log.debug( "Querying ee.characteristics, this might take some time..." );
-            queryString += MessageFormat.format( " left join ee.characteristics as {0}", CharacteristicDao.OBJECT_ALIAS );
-        }
-
-        if ( FiltersUtils.containsAnyAlias( filters, sort, BioAssayDao.OBJECT_ALIAS, ArrayDesignDao.OBJECT_ALIAS ) ) {
-            log.debug( "Querying ee.bioAssays, this might take some time..." );
-            queryString += MessageFormat.format( " left join ee.bioAssays as {0}", BioAssayDao.OBJECT_ALIAS );
-        }
-
-        if ( FiltersUtils.containsAnyAlias( filters, sort, ArrayDesignDao.OBJECT_ALIAS ) ) {
-            log.debug( "Querying ee.bioAssays.arrayDesignUsed, this might take some time..." );
-            queryString += MessageFormat.format( " left join {0}.arrayDesignUsed as {1}", BioAssayDao.OBJECT_ALIAS, ArrayDesignDao.OBJECT_ALIAS );
-        }
-
-        // parts of this query (above) are only needed for administrators: the notes, so it could theoretically be sped up even more
-        queryString += AclQueryUtils.formAclJoinClause( OBJECT_ALIAS );
-
-        queryString += AclQueryUtils.formAclRestrictionClause();
-
-        // FIXME: this is necessary because of the ACL jointure, it can also become necessary if bioAssays are included as well
-        // unlike in ArrayDesignDaoImpl, a distinct is not possible because we select the ACL AOI and SID
-        queryString += FilterQueryUtils.formRestrictionAndGroupByAndOrderByClauses( filters, OBJECT_ALIAS, sort );
-
-        Query query = this.getSessionFactory().getCurrentSession().createQuery( queryString );
-
-        AclQueryUtils.addAclJoinParameters( query, ExpressionExperiment.class );
-        AclQueryUtils.addAclRestrictionParameters( query );
-        FilterQueryUtils.addRestrictionParameters( query, filters );
-
-        return query;
+        return finishFilteringQuery( "select distinct ee, aoi, sid "
+                + "from ExpressionExperiment as ee "
+                + "left join fetch ee.accession acc "
+                + "left join fetch acc.externalDatabase as ED "
+                + "left join fetch ee.experimentalDesign as EDES "
+                + "left join fetch ee.curationDetails as s " /* needed for trouble status */
+                + "left join fetch s.lastNeedsAttentionEvent as eAttn "
+                + "left join fetch s.lastNoteUpdateEvent as eNote "
+                + "left join fetch s.lastTroubledEvent as eTrbl "
+                + "left join fetch ee.geeq as geeq "
+                + "left join fetch ee.taxon as taxon", filters, sort );
     }
 
     @Override
     protected Query getFilteringIdQuery( @Nullable Filters filters ) {
-        if ( filters == null ) {
-            filters = Filters.empty();
-        }
-
-        Sort sort = null;
-
-        // Restrict to non-troubled EEs for non-administrators
-        addNonTroubledFilter( filters, OBJECT_ALIAS );
-
-        // FIXME: this is triggering an AD jointure that simply we cannot afford, so we only perform it if necessary
-        if ( FiltersUtils.containsAnyAlias( filters, sort, ArrayDesignDao.OBJECT_ALIAS ) ) {
-            addNonTroubledFilter( filters, ArrayDesignDao.OBJECT_ALIAS );
-        }
-
-        // the constants for aliases are messing with the inspector
         //language=HQL
-        String queryString = MessageFormat.format(
-                "select {0}.id "
-                        + "from ExpressionExperiment as {0} "
-                        + "left join {0}.accession acc "
-                        + "left join acc.externalDatabase as ED "
-                        + "left join {0}.experimentalDesign as EDES "
-                        + "left join {0}.curationDetails as s " /* needed for trouble status */
-                        + "left join s.lastNeedsAttentionEvent as eAttn "
-                        + "left join s.lastNoteUpdateEvent as eNote "
-                        + "left join s.lastTroubledEvent as eTrbl "
-                        + "left join {0}.geeq as geeq "
-                        + "left join {0}.taxon as {3}",
-                OBJECT_ALIAS, AclQueryUtils.AOI_ALIAS, AclQueryUtils.SID_ALIAS, TaxonDao.OBJECT_ALIAS );
-
-        // fetching characteristics, bioAssays and arrayDesignUsed is costly, so we reserve these operations only if it
-        // is mentioned in the filters
-
-        if ( FiltersUtils.containsAnyAlias( filters, sort, CharacteristicDao.OBJECT_ALIAS ) ) {
-            log.debug( "Querying ee.characteristics, this might take some time..." );
-            queryString += MessageFormat.format( " left join ee.characteristics as {0}", CharacteristicDao.OBJECT_ALIAS );
-        }
-
-        if ( FiltersUtils.containsAnyAlias( filters, sort, BioAssayDao.OBJECT_ALIAS, ArrayDesignDao.OBJECT_ALIAS ) ) {
-            log.debug( "Querying ee.bioAssays, this might take some time..." );
-            queryString += MessageFormat.format( " left join ee.bioAssays as {0}", BioAssayDao.OBJECT_ALIAS );
-        }
-
-        if ( FiltersUtils.containsAnyAlias( filters, sort, ArrayDesignDao.OBJECT_ALIAS ) ) {
-            log.debug( "Querying ee.bioAssays.arrayDesignUsed, this might take some time..." );
-            queryString += MessageFormat.format( " left join {0}.arrayDesignUsed as {1}", BioAssayDao.OBJECT_ALIAS, ArrayDesignDao.OBJECT_ALIAS );
-        }
-
-        // parts of this query (above) are only needed for administrators: the notes, so it could theoretically be sped up even more
-        queryString += AclQueryUtils.formAclJoinClause( OBJECT_ALIAS );
-
-        queryString += AclQueryUtils.formAclRestrictionClause();
-
-        // FIXME: this is necessary because of the ACL jointure, it can also become necessary if bioAssays are included as well
-        // unlike in ArrayDesignDaoImpl, a distinct is not possible because we select the ACL AOI and SID
-        queryString += FilterQueryUtils.formRestrictionAndGroupByAndOrderByClauses( filters, OBJECT_ALIAS, sort );
-
-        Query query = this.getSessionFactory().getCurrentSession().createQuery( queryString );
-
-        AclQueryUtils.addAclJoinParameters( query, ExpressionExperiment.class );
-        AclQueryUtils.addAclRestrictionParameters( query );
-        FilterQueryUtils.addRestrictionParameters( query, filters );
-
-        return query;
+        return finishFilteringQuery( "select distinct ee.id "
+                + "from ExpressionExperiment as ee "
+                + "left join ee.accession acc "
+                + "left join acc.externalDatabase as ED "
+                + "left join ee.experimentalDesign as EDES "
+                + "left join ee.curationDetails as s " /* needed for trouble status */
+                + "left join s.lastNeedsAttentionEvent as eAttn "
+                + "left join s.lastNoteUpdateEvent as eNote "
+                + "left join s.lastTroubledEvent as eTrbl "
+                + "left join ee.geeq as geeq "
+                + "left join ee.taxon as taxon", filters, null );
     }
 
     @Override
     protected Query getFilteringCountQuery( @Nullable Filters filters ) {
+        //language=HQL
+        return finishFilteringQuery( "select count(distinct ee) from ExpressionExperiment as ee "
+                + "left join ee.accession acc "
+                + "left join acc.externalDatabase as ED "
+                + "left join ee.experimentalDesign as EDES "
+                + "left join ee.curationDetails as s " /* needed for trouble status */
+                + "left join s.lastNeedsAttentionEvent as eAttn "
+                + "left join ee.geeq as geeq "
+                + "left join s.lastNoteUpdateEvent as eNote "
+                + "left join s.lastTroubledEvent as eTrbl "
+                + "left join ee.taxon as taxon", filters, null );
+    }
+
+    private Query finishFilteringQuery( String queryString, @Nullable Filters filters, @Nullable Sort sort ) {
         if ( filters == null ) {
             filters = Filters.empty();
+        } else {
+            filters = Filters.by( filters );
         }
 
         // Restrict to non-troubled EEs for non-administrators
@@ -1709,35 +1656,22 @@ public class ExpressionExperimentDaoImpl
             addNonTroubledFilter( filters, ArrayDesignDao.OBJECT_ALIAS );
         }
 
-        //noinspection JpaQlInspection // the constants for aliases are messing with the inspector
-        String queryString =
-                "select count(distinct ee) from ExpressionExperiment as ee "
-                        + "left join ee.accession acc "
-                        + "left join acc.externalDatabase as ED "
-                        + "left join ee.experimentalDesign as EDES "
-                        + "left join ee.curationDetails as s " /* needed for trouble status */
-                        + "left join s.lastNeedsAttentionEvent as eAttn "
-                        + "left join ee.geeq as geeq "
-                        + "left join s.lastNoteUpdateEvent as eNote "
-                        + "left join s.lastTroubledEvent as eTrbl "
-                        + "left join ee.taxon as " + TaxonDao.OBJECT_ALIAS;
-
         // fetching characteristics, bioAssays and arrayDesignUsed is costly, so we reserve these operations only if it
         // is mentioned in the filters
 
-        if ( FiltersUtils.containsAnyAlias( filters, null, CharacteristicDao.OBJECT_ALIAS ) ) {
+        if ( FiltersUtils.containsAnyAlias( filters, sort, CHARACTERISTIC_ALIAS ) ) {
             log.warn( "Querying ee.characteristics, this might take some time..." );
-            queryString += MessageFormat.format( "left join ee.characteristics as {0} ", CharacteristicDao.OBJECT_ALIAS );
+            queryString += " left join ee.characteristics as " + CharacteristicDao.OBJECT_ALIAS;
         }
 
-        if ( FiltersUtils.containsAnyAlias( filters, null, BioAssayDao.OBJECT_ALIAS, ArrayDesignDao.OBJECT_ALIAS ) ) {
+        if ( FiltersUtils.containsAnyAlias( filters, sort, BIO_ASSAY_ALIAS, ARRAY_DESIGN_ALIAS ) ) {
             log.warn( "Querying ee.bioAssays, this might take some time..." );
-            queryString += MessageFormat.format( "left join ee.bioAssays as {0} ", BioAssayDao.OBJECT_ALIAS );
+            queryString += " left join ee.bioAssays as " + BIO_ASSAY_ALIAS;
         }
 
-        if ( FiltersUtils.containsAnyAlias( filters, null, ArrayDesignDao.OBJECT_ALIAS ) ) {
+        if ( FiltersUtils.containsAnyAlias( filters, sort, ArrayDesignDao.OBJECT_ALIAS ) ) {
             log.warn( "Querying ee.bioAssays.arrayDesignUsed, this might take some time..." );
-            queryString += MessageFormat.format( "left join {0}.arrayDesignUsed as {1} ", BioAssayDao.OBJECT_ALIAS, ArrayDesignDao.OBJECT_ALIAS );
+            queryString += " left join " + BIO_ASSAY_ALIAS + ".arrayDesignUsed as " + ARRAY_DESIGN_ALIAS;
         }
 
         // parts of this query (above) are only needed for administrators: the notes, so it could theoretically be sped up even more
@@ -1745,6 +1679,7 @@ public class ExpressionExperimentDaoImpl
 
         queryString += AclQueryUtils.formAclRestrictionClause();
         queryString += FilterQueryUtils.formRestrictionClause( filters );
+        queryString += FilterQueryUtils.formOrderByClause( sort );
 
         Query query = this.getSessionFactory().getCurrentSession().createQuery( queryString );
 

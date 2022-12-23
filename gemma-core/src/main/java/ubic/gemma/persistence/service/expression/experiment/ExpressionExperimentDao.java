@@ -152,6 +152,8 @@ public interface ExpressionExperimentDao
      */
     List<ExpressionExperimentDetailsValueObject> loadDetailsValueObjectsByIds( Collection<Long> ids );
 
+    Slice<ExpressionExperimentValueObject> loadBlacklistedValueObjects( @Nullable Filters filters, @Nullable Sort sort, int offset, int limit );
+
     Collection<ExpressionExperiment> loadLackingFactors();
 
     Collection<ExpressionExperiment> loadLackingTags();

@@ -76,13 +76,22 @@ public class Responder {
         }
     }
 
-    public static <T extends IdentifiableValueObject<?>> PaginatedResponseDataObject<T> paginate(
-            FilteringVoEnabledService<?, T> service, Filters filters, Sort sort, int offset, int limit ) throws NotFoundException {
-        Slice<T> payload = service.loadValueObjectsPreFilter( filters, sort, offset, limit );
-        if ( payload == null ) {
-            throw new NotFoundException( Responder.DEFAULT_ERR_MSG_NULL_OBJECT );
-        } else {
-            return new PaginatedResponseDataObject<>( payload, filters );
-        }
+    @FunctionalInterface
+    public interface FilterMethod<T> {
+        Slice<T> filter( @Nullable Filters filters, @Nullable Sort sort, int offset, int limit );
+    }
+
+    /**
+     * Paginate using an arbitrary filtering method.
+     */
+    public static <T extends IdentifiableValueObject<?>> PaginatedResponseDataObject<T> paginate( FilterMethod<T> filterMethod, Filters filters, Sort sort, int offset, int limit ) throws NotFoundException {
+        return paginate( filterMethod.filter( filters, sort, offset, limit ), filters );
+    }
+
+    /**
+     * Paginate using a {@link FilteringVoEnabledService}
+     */
+    public static <T extends IdentifiableValueObject<?>> PaginatedResponseDataObject<T> paginate( FilteringVoEnabledService<?, T> filterMethod, Filters filters, Sort sort, int offset, int limit ) throws NotFoundException {
+        return paginate( filterMethod::loadValueObjectsPreFilter, filters, sort, offset, limit );
     }
 }

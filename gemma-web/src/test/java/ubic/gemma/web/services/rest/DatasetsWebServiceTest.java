@@ -26,6 +26,9 @@ import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.persistence.util.Filters;
+import ubic.gemma.persistence.util.Slice;
+import ubic.gemma.persistence.util.Sort;
 import ubic.gemma.persistence.util.TestComponent;
 import ubic.gemma.web.services.rest.util.BaseJerseyTest;
 
@@ -180,5 +183,16 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
         verify( quantitationTypeService ).findByIdAndDataVectorType( ee, 12L, RawExpressionDataVector.class );
         verify( expressionDataFileService ).writeRawExpressionData( eq( ee ), eq( qt ), any() );
         assertThat( res.getStatus() ).isEqualTo( 200 );
+    }
+
+    @Test
+    public void testGetBlacklistedDatasets() {
+        when( expressionExperimentService.loadBlacklistedValueObjects( any(), any(), anyInt(), anyInt() ) ).thenReturn( Slice.empty() );
+        when( expressionExperimentService.getSort( "id", Sort.Direction.ASC ) ).thenReturn( Sort.by( "ee", "id", Sort.Direction.ASC ) );
+        Response res = target( "/datasets/blacklisted" )
+                .queryParam( "filter", "" ).request().get();
+        System.out.println( res.getEntity() );
+        assertThat( res.getStatus() ).isEqualTo( 200 );
+        verify( expressionExperimentService ).loadBlacklistedValueObjects( Filters.empty(), Sort.by( "ee", "id", Sort.Direction.ASC ), 0, 20 );
     }
 }
