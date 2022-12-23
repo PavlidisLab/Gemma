@@ -167,4 +167,15 @@ public class FilterTest {
         assertThatThrownBy( () -> Filter.by( "ee", "id", String.class, Filter.Operator.in, Arrays.asList( 1, 2, 3 ) ) )
                 .isInstanceOf( IllegalArgumentException.class );
     }
+
+    @Test
+    public void testCollectionWithNullElement() {
+        assertThatThrownBy( () -> Filter.by( "ee", "id", String.class, Filter.Operator.in, Arrays.asList( "a", null, "b" ) ) )
+                .isInstanceOf( IllegalArgumentException.class );
+    }
+
+    @Test
+    public void testCollectionWithSubclass() {
+        Filter.by( "ee", "id", Number.class, Filter.Operator.in, Arrays.asList( 1L, 2, 3.0 ) );
+    }
 }

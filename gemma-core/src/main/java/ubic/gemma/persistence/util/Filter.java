@@ -253,8 +253,8 @@ public class Filter {
         // for example, ad.id in ("a", 1, NULL) must be invalid if id is of type Long
         if ( requiredValue != null && operator.getRequiredType() != null && Collection.class.isAssignableFrom( operator.getRequiredType() ) ) {
             Collection<?> requiredCollection = ( Collection<?> ) requiredValue;
-            if ( !requiredCollection.stream().allMatch( rv -> rv.getClass().isAssignableFrom( propertyType ) ) ) {
-                throw new IllegalArgumentException( "All elements in requiredValue " + requiredType + " must be assignable from " + propertyType.getName() + "." );
+            if ( !requiredCollection.stream().allMatch( rv -> rv != null && propertyType.isAssignableFrom( rv.getClass() ) ) ) {
+                throw new IllegalArgumentException( String.format( "All elements in requiredValue %s must be assignable from %s.", requiredType, propertyType.getName() ) );
             }
         }
     }
