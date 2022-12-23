@@ -111,6 +111,8 @@ public class StartupListener extends ContextLoaderListener {
 
         servletContext.setAttribute( Constants.CONFIG, config );
 
+        this.configureJawr( ctx );
+
         this.configureScheduler( ctx );
 
         sw.stop();
@@ -118,6 +120,20 @@ public class StartupListener extends ContextLoaderListener {
         StartupListener.log.info( String.format( "Initialization of Gemma Web context took %d s. The following profiles are active: %s.",
                 sw.getTime( TimeUnit.SECONDS ),
                 String.join( ", ", ctx.getEnvironment().getActiveProfiles() ) ) );
+    }
+
+    private static final String JAWR_DEBUG_ON_SYSTEM_PROPERTY = "net.jawr.debug.on";
+
+    /**
+     * Set the net.jawr.debug.on system property to true if the current profile is {@link SpringProfiles#DEV} and no
+     * value has been explicitly set by the user.
+     */
+    private void configureJawr( ApplicationContext ctx ) {
+        if ( ctx.getEnvironment().acceptsProfiles( SpringProfiles.DEV )
+                && System.getProperty( JAWR_DEBUG_ON_SYSTEM_PROPERTY ) == null ) {
+            log.info( String.format( "Enabling debug mode for JAWR by setting %s=true.", JAWR_DEBUG_ON_SYSTEM_PROPERTY ) );
+            System.setProperty( JAWR_DEBUG_ON_SYSTEM_PROPERTY, "true" );
+        }
     }
 
     private void configureScheduler( ApplicationContext ctx ) {
