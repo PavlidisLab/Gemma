@@ -24,6 +24,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.springframework.core.io.ClassPathResource;
 import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.Keyword;
@@ -175,8 +176,7 @@ public class PubMedXMLParserTest {
     @Test
     public void testParseMulti() throws Exception {
         try {
-            testStream = new GZIPInputStream(
-                    PubMedXMLParserTest.class.getResourceAsStream( "/data/loader/medline.multi.xml.gz" ) );
+            testStream = new GZIPInputStream( new ClassPathResource( "/data/loader/medline.multi.xml.gz" ).getInputStream() );
             Collection<BibliographicReference> brl = testParser.parse( testStream );
             assertEquals( 147, brl.size() );
             int expectedNumberofKeywords = 258;

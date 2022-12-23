@@ -235,7 +235,7 @@ public class VectorMergingServiceImpl extends ExpressionExperimentVectorManipula
         log.info( ee.getRawExpressionDataVectors().size() );
         vectorMergingHelperService.persist( ee, newVectors );
 
-        ee = expressionExperimentService.load( ee.getId() );
+        ee = expressionExperimentService.loadOrFail( ee.getId() );
         ee = expressionExperimentService.thaw( ee );
         log.info( ee.getRawExpressionDataVectors().size() );
 

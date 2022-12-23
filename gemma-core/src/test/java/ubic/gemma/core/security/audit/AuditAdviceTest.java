@@ -80,6 +80,7 @@ public class AuditAdviceTest extends BaseSpringContextTest {
         assertEquals( 1, ee.getAuditTrail().getEvents().size() );
 
         ee = expressionExperimentService.load( ee.getId() ); // so not thawed, which tests lazy issue in the advice.
+        assertNotNull( ee );
 
         ee.setShortName( this.randomName() );
 
@@ -101,6 +102,7 @@ public class AuditAdviceTest extends BaseSpringContextTest {
         ExpressionExperiment ee = this.getTestPersistentCompleteExpressionExperiment( false );
 
         ee = this.expressionExperimentService.load( ee.getId() );
+        assertNotNull( ee );
         ee = expressionExperimentService.thawLite( ee );
 
         // should have create only
@@ -136,6 +138,7 @@ public class AuditAdviceTest extends BaseSpringContextTest {
         ExpressionExperiment ee = this.getTestPersistentCompleteExpressionExperiment( false );
 
         ee = this.expressionExperimentService.load( ee.getId() );
+        assertNotNull( ee );
         ee = expressionExperimentService.thawLite( ee );
 
         assertEquals( 16, ee.getBioAssays().size() );
@@ -167,7 +170,7 @@ public class AuditAdviceTest extends BaseSpringContextTest {
      */
     @SuppressWarnings("Duplicates") // Not in this project
     @Test
-    @Category( SlowTest.class )
+    @Category(SlowTest.class)
     public void testAuditFindOrCreateConcurrentTorture() throws Exception {
         int numThreads = 14; // too high and we run out of connections, which is not what we're testing.
         final int numExperimentsPerThread = 5;

@@ -198,7 +198,7 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
             this.cleanupUnused( unusedBADs, targetBioAssayDimension );
         }
 
-        ee = expressionExperimentService.load( ee.getId() ); // refresh after cleanup
+        ee = expressionExperimentService.loadOrFail( ee.getId() ); // refresh after cleanup
         ee = expressionExperimentService.thawLite( ee );
 
         if ( hasData ) {

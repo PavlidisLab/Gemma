@@ -21,6 +21,7 @@ package ubic.gemma.core.analysis.preprocess;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.springframework.core.io.ClassPathResource;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.util.RegressionTesting;
 import ubic.gemma.core.analysis.preprocess.svd.ExpressionDataSVD;
@@ -157,8 +158,7 @@ public class ExpressionDataSVDTest {
     @Category(SlowTest.class)
     public void testMatrixReconstructB() throws Exception {
         GeoConverter gc = new GeoConverterImpl();
-        InputStream is = new GZIPInputStream( this.getClass()
-                .getResourceAsStream( "/data/loader/expression/geo/fullSizeTests/GSE1623_family.soft.txt.gz" ) );
+        InputStream is = new GZIPInputStream( new ClassPathResource( "/data/loader/expression/geo/fullSizeTests/GSE1623_family.soft.txt.gz" ).getInputStream() );
         GeoFamilyParser parser = new GeoFamilyParser();
         parser.parse( is );
         GeoSeries series = ( ( GeoParseResult ) parser.getResults().iterator().next() ).getSeriesMap().get( "GSE1623" );

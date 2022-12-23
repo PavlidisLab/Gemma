@@ -231,7 +231,7 @@ public class ExpressionExperimentSearchServiceImpl implements ExpressionExperime
 
         List<SearchResultDisplayObject> setResults = new LinkedList<>();
 
-        Taxon taxon = taxonService.load( taxonId );
+        Taxon taxon = taxonService.loadOrFail( taxonId );
 
         Collection<ExpressionExperimentSet> sets = expressionExperimentSetService
                 .findByName( "Master set for " + taxon.getCommonName().toLowerCase() );

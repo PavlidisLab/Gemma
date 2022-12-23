@@ -111,8 +111,8 @@ public class ExpressionDataDoubleMatrixTest extends AbstractGeoServiceTest {
         metaData.setType( StandardQuantitationType.AMOUNT );
         metaData.setIsRatio( true );
 
-        try (InputStream data = this.getClass()
-                .getResourceAsStream( "/data/loader/aov.results-2-monocyte-data-bytime.bypat.data.sort" )) {
+        try ( InputStream data = this.getClass()
+                .getResourceAsStream( "/data/loader/aov.results-2-monocyte-data-bytime.bypat.data.sort" ) ) {
             DoubleMatrix<String, String> matrix = simpleExpressionDataLoaderService.parse( data );
             ee = simpleExpressionDataLoaderService.convert( metaData, matrix );
         }
@@ -345,6 +345,7 @@ public class ExpressionDataDoubleMatrixTest extends AbstractGeoServiceTest {
 
         sampleRemoveService.unmarkAsMissing( ol );
         newee = expressionExperimentService.load( newee.getId() );
+        assertNotNull( newee );
         newee = expressionExperimentService.thaw( newee );
         vecs = newee.getProcessedExpressionDataVectors();
 

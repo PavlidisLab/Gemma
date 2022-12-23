@@ -23,6 +23,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.task.TaskExecutor;
 import ubic.basecode.util.FileTools;
 import ubic.gemma.core.apps.Blat;
@@ -183,8 +184,7 @@ public class CompositeSequenceGeneMapperServiceTest extends AbstractGeoServiceTe
 
         Taxon taxon = taxonService.findByScientificName( "Homo sapiens" );
 
-        InputStream blatResultInputStream = new GZIPInputStream(
-                this.getClass().getResourceAsStream( "/data/loader/genome/gpl96.blatresults.psl.gz" ) );
+        InputStream blatResultInputStream = new GZIPInputStream( new ClassPathResource( "/data/loader/genome/gpl96.blatresults.psl.gz" ).getInputStream() );
 
         Collection<BlatResult> results = blat.processPsl( blatResultInputStream, taxon );
 

@@ -24,6 +24,7 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.BaseDao;
 
+import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.Map;
 
@@ -49,10 +50,10 @@ public interface Gene2GOAssociationDao extends BaseDao<Gene2GOAssociation> {
     Map<Taxon, Collection<Gene>> findByGoTermsPerTaxon( Collection<String> termsToFetch );
 
     @SuppressWarnings("unused")
-    // Ensures consistency
+        // Ensures consistency
     Collection<Gene> getGenes( Collection<String> ids );
 
-    Collection<Gene> getGenes( Collection<String> ids, Taxon taxon );
+    Collection<Gene> getGenes( Collection<String> ids, @Nullable Taxon taxon );
 
     void removeAll();
 

@@ -33,6 +33,7 @@ import ubic.gemma.persistence.service.AbstractVoEnabledDao;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentDao;
 import ubic.gemma.persistence.util.EntityUtils;
 
+import javax.annotation.Nullable;
 import java.util.*;
 
 /**
@@ -185,12 +186,10 @@ public class ExpressionExperimentSetDaoImpl
         }
     }
 
-    private Query getLoadValueObjectsQueryString( Collection<Long> ids ) {
+    private Query getLoadValueObjectsQueryString( @Nullable Collection<Long> ids ) {
 
-        if ( ids != null ) {
-            if ( ids.isEmpty() ) {
-                throw new IllegalArgumentException( "If provided ids cannot be empty" );
-            }
+        if ( ids != null && ids.isEmpty() ) {
+            throw new IllegalArgumentException( "If provided ids cannot be empty" );
         }
 
         String queryString = "select eeset.id , " // 0
@@ -215,7 +214,7 @@ public class ExpressionExperimentSetDaoImpl
      *                  EESets this might want to be avoided.
      * @return EE set VOs
      */
-    private List<ExpressionExperimentSetValueObject> fetchValueObjects( Collection<Long> ids,
+    private List<ExpressionExperimentSetValueObject> fetchValueObjects( @Nullable Collection<Long> ids,
             boolean loadEEIds ) {
         Map<Long, ExpressionExperimentSetValueObject> vo = new LinkedHashMap<>();
         Query queryObject = this.getLoadValueObjectsQueryString( ids );

@@ -3,6 +3,7 @@ package ubic.gemma.persistence.service;
 import ubic.gemma.model.common.Identifiable;
 
 import javax.annotation.CheckReturnValue;
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.Collection;
 
@@ -31,6 +32,10 @@ public interface BaseService<O extends Identifiable> {
     @CheckReturnValue
     O find( O entity );
 
+    @Nonnull
+    @CheckReturnValue
+    O findOrFail(O entity);
+
     /**
      * Does a search for the entity in the persistent storage, and if not found, creates it.
      *
@@ -46,7 +51,8 @@ public interface BaseService<O extends Identifiable> {
      * @param entities the entities to be created.
      * @return collection of objects referencing the persistent instances of given entities.
      */
-    @SuppressWarnings("unused") // Consistency
+    @SuppressWarnings("unused")
+    // Consistency
     Collection<O> create( Collection<O> entities );
 
     /**
@@ -83,6 +89,15 @@ public interface BaseService<O extends Identifiable> {
      */
     @Nullable
     O load( Long id );
+
+    /**
+     * Convenience for running {@link #load(Long)} and checking if the result is null.
+     * @param id the ID used to retrieve the entity
+     * @return the entity as per {@link #load(Long)}, never null
+     * @throws NullPointerException if the entity does not exist in the persistent storage
+     */
+    @Nonnull
+    O loadOrFail( Long id ) throws NullPointerException;
 
     /**
      * Loads all the entities of specific type.

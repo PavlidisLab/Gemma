@@ -105,7 +105,8 @@ public class GeneSetSearchImpl implements GeneSetSearch {
     }
 
     @Override
-    public GeneSet findByGoId( String goId, Taxon taxon ) {
+    @Nullable
+    public GeneSet findByGoId( String goId, @Nullable Taxon taxon ) {
         OntologyTerm goTerm = geneOntologyService.getTermForId( StringUtils.strip( goId ) );
 
         if ( goTerm == null ) {
@@ -279,14 +280,16 @@ public class GeneSetSearchImpl implements GeneSetSearch {
         return this.goTermToGeneSets( goTerm, GeneSetSearchImpl.MAX_GO_GROUP_SIZE );
     }
 
-    private GeneSet goTermToGeneSet( OntologyResource term, Taxon taxon ) {
+    @Nullable
+    private GeneSet goTermToGeneSet( OntologyResource term, @Nullable Taxon taxon ) {
         return this.goTermToGeneSet( term, taxon, null );
     }
 
     /**
      * Convert a GO term to a 'GeneSet', including genes from all child terms. Divide up by taxon.
      */
-    private GeneSet goTermToGeneSet( OntologyResource term, Taxon taxon, @Nullable Integer maxGeneSetSize ) {
+    @Nullable
+    private GeneSet goTermToGeneSet( OntologyResource term, @Nullable Taxon taxon, @Nullable Integer maxGeneSetSize ) {
         if ( term.getUri() == null )
             return null;
 

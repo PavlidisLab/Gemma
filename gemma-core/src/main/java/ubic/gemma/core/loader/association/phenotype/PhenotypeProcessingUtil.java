@@ -19,9 +19,11 @@
 
 package ubic.gemma.core.loader.association.phenotype;
 
+import org.apache.commons.lang3.ClassPathUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.core.io.ClassPathResource;
 import org.xml.sax.SAXException;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.basecode.ontology.ncbo.AnnotatorClient;
@@ -370,8 +372,8 @@ class PhenotypeProcessingUtil {
             throw new RuntimeException( e1 );
         }
 
-        try (InputStream reader = url.openStream();
-                FileOutputStream writer = new FileOutputStream( outputFileFullPath )) {
+        try ( InputStream reader = url.openStream();
+                FileOutputStream writer = new FileOutputStream( outputFileFullPath ) ) {
 
             byte[] buffer = new byte[153600];
             int bytesRead;
@@ -401,10 +403,8 @@ class PhenotypeProcessingUtil {
 
         // download the disease Ontology File, or use an existing one
         File doobo = new File( WRITE_FOLDER + File.separator + "doid.obo" );
-        String diseaseOntologyFile = null;
         if ( doobo.exists() && doobo.canRead() ) {
             log.info( "Using existing doid.obo file for getting MESH and OMIM mappings to DOID" );
-            diseaseOntologyFile = doobo.getAbsolutePath();
         } else {
             log.info( "Downloading doid.obo file for getting MESH and OMIM mappings to DOID" );
             downloadFileFromWeb( DISEASE_ONT_PATH, DISEASE_ONT_OBO_FILE, WRITE_FOLDER, "doid.obo" );
@@ -414,7 +414,7 @@ class PhenotypeProcessingUtil {
         Set<String> meshIds = new HashSet<>();
         String valueUri = null;
 
-        try (BufferedReader br = new BufferedReader( new FileReader( diseaseOntologyFile ) )) {
+        try ( BufferedReader br = new BufferedReader( new FileReader( doobo ) ) ) {
 
             String line;
 
@@ -531,8 +531,8 @@ class PhenotypeProcessingUtil {
      */
     private void parseDescriptionToIgnore() throws IOException {
 
-        try (BufferedReader br = new BufferedReader(
-                new InputStreamReader( PhenotypeProcessingUtil.class.getResourceAsStream( DESCRIPTION_TO_IGNORE ) ) )) {
+        try ( BufferedReader br = new BufferedReader(
+                new InputStreamReader( new ClassPathResource( DESCRIPTION_TO_IGNORE ).getInputStream() ) ) ) {
 
             String line;
 
@@ -552,8 +552,8 @@ class PhenotypeProcessingUtil {
      */
     private void parseManualMappingFile() throws IOException {
 
-        try (BufferedReader br = new BufferedReader(
-                new InputStreamReader( PhenotypeProcessingUtil.class.getResourceAsStream( MANUAL_MAPPING ) ) )) {
+        try ( BufferedReader br = new BufferedReader(
+                new InputStreamReader( new ClassPathResource( MANUAL_MAPPING ).getInputStream() ) ) ) {
 
             String line;
             // skip first line, the headers
@@ -608,7 +608,7 @@ class PhenotypeProcessingUtil {
         InputStream resultsToIgnoreStream = PhenotypeProcessingUtil.class.getResourceAsStream( RESULTS_TO_IGNORE );
         assert resultsToIgnoreStream != null;
 
-        try (BufferedReader br = new BufferedReader( new InputStreamReader( resultsToIgnoreStream ) )) {
+        try ( BufferedReader br = new BufferedReader( new InputStreamReader( resultsToIgnoreStream ) ) ) {
             String line;
 
             while ( ( line = br.readLine() ) != null ) {

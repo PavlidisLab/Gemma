@@ -150,8 +150,10 @@ public class BioAssayServiceImpl extends AbstractFilteringVoEnabledService<BioAs
 
     // TODO: Refactor so that it accepts ids and does security check later.
     private void handleRemoveBioMaterialAssociation( BioAssay bioAssay, BioMaterial bioMaterial ) {
-        BioAssay bioAssayTemp = this.bioAssayDao.load( bioAssay.getId() );
-        BioMaterial biomaterialToBeRemoved = this.bioMaterialDao.load( bioMaterial.getId() );
+        BioAssay bioAssayTemp = Objects.requireNonNull( this.bioAssayDao.load( bioAssay.getId() ),
+                String.format( "No BioAssay with ID %d.", bioAssay.getId() ) );
+        BioMaterial biomaterialToBeRemoved = Objects.requireNonNull( this.bioMaterialDao.load( bioMaterial.getId() ),
+                String.format( "No BioMaterial with ID %d.", bioMaterial.getId() ) );
 
         BioMaterial currentBioMaterials = bioAssayTemp.getSampleUsed();
         bioAssayTemp.setSampleUsed( currentBioMaterials );

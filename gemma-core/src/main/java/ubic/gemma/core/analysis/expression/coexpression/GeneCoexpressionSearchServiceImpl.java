@@ -177,7 +177,7 @@ public class GeneCoexpressionSearchServiceImpl implements GeneCoexpressionSearch
 
         boolean actuallyUseQueryGeneOnly = queryGenesOnly && genes.size() > 1;
 
-        Taxon taxon = this.geneService.load( genes.iterator().next() ).getTaxon();
+        Taxon taxon = this.geneService.loadOrFail( genes.iterator().next() ).getTaxon();
         List<ExpressionExperimentValueObject> eevos = this.getFilteredEEVos( inputEeIds, taxon );
 
         CoexpressionMetaValueObject result = this.initValueObject( genes, eevos );

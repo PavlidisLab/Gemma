@@ -33,6 +33,7 @@ import ubic.gemma.persistence.service.AbstractDao;
 import ubic.gemma.persistence.util.BusinessKey;
 import ubic.gemma.persistence.util.EntityUtils;
 
+import javax.annotation.Nullable;
 import java.util.*;
 
 /**
@@ -65,7 +66,7 @@ public class Gene2GOAssociationDaoImpl extends AbstractDao<Gene2GOAssociation> i
     public Collection<Characteristic> findByGene( Gene gene ) {
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession().createQuery(
-                "select distinct geneAss.ontologyEntry from Gene2GOAssociation as geneAss  where geneAss.gene = :gene" )
+                        "select distinct geneAss.ontologyEntry from Gene2GOAssociation as geneAss  where geneAss.gene = :gene" )
                 .setParameter( "gene", gene ).list();
     }
 
@@ -92,7 +93,7 @@ public class Gene2GOAssociationDaoImpl extends AbstractDao<Gene2GOAssociation> i
 
         if ( timer.getTime() > 1000 ) {
             AbstractDao.log
-                    .info( "Fetched GO annotations for " + needToFind.size() + " genes in " + timer.getTime() + "ms" );
+                    .info( "Fetched GO annotations for " + needToFind.size() + " genes in " + timer.getTime() + " ms" );
         }
         return result;
     }
@@ -101,8 +102,8 @@ public class Gene2GOAssociationDaoImpl extends AbstractDao<Gene2GOAssociation> i
     public Collection<Gene> findByGoTerm( String goId, Taxon taxon ) {
         //noinspection unchecked
         return super.getSessionFactory().getCurrentSession().createQuery(
-                "select distinct geneAss.gene from Gene2GOAssociation as geneAss  "
-                        + "where geneAss.ontologyEntry.value = :goID and geneAss.gene.taxon = :taxon" )
+                        "select distinct geneAss.gene from Gene2GOAssociation as geneAss  "
+                                + "where geneAss.ontologyEntry.value = :goID and geneAss.gene.taxon = :taxon" )
                 .setParameter( "goID", goId.replaceFirst( ":", "_" ) ).setParameter( "taxon", taxon ).list();
     }
 
@@ -124,20 +125,20 @@ public class Gene2GOAssociationDaoImpl extends AbstractDao<Gene2GOAssociation> i
     public Collection<Gene> getGenes( Collection<String> ids ) {
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession().createQuery(
-                "select distinct geneAss.gene from Gene2GOAssociation as geneAss  "
-                        + "where geneAss.ontologyEntry.value in ( :goIDs)" )
+                        "select distinct geneAss.gene from Gene2GOAssociation as geneAss  "
+                                + "where geneAss.ontologyEntry.value in ( :goIDs)" )
                 .setParameterList( "goIDs", ids ).list();
     }
 
     @Override
-    public Collection<Gene> getGenes( Collection<String> ids, Taxon taxon ) {
+    public Collection<Gene> getGenes( Collection<String> ids, @Nullable Taxon taxon ) {
         if ( taxon == null )
             return this.getGenes( ids );
 
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession().createQuery(
-                "select distinct  " + "  gene from Gene2GOAssociation as geneAss join geneAss.gene as gene "
-                        + "where geneAss.ontologyEntry.value in ( :goIDs) and gene.taxon = :tax" )
+                        "select distinct  " + "  gene from Gene2GOAssociation as geneAss join geneAss.gene as gene "
+                                + "where geneAss.ontologyEntry.value in ( :goIDs) and gene.taxon = :tax" )
                 .setParameterList( "goIDs", ids ).setParameter( "tax", taxon ).list();
     }
 

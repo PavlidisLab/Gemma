@@ -32,6 +32,7 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.AbstractService;
 import ubic.gemma.persistence.util.CacheUtils;
 
+import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -115,7 +116,7 @@ public class Gene2GOAssociationServiceImpl extends AbstractService<Gene2GOAssoci
 
     @Override
     @Transactional(readOnly = true)
-    public Collection<Gene> findByGOTerms( Collection<String> termsToFetch, Taxon taxon ) {
+    public Collection<Gene> findByGOTerms( Collection<String> termsToFetch, @Nullable Taxon taxon ) {
         return this.gene2GOAssociationDao.getGenes( termsToFetch, taxon );
     }
 

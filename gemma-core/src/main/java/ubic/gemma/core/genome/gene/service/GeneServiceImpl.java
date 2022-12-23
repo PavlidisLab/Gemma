@@ -383,7 +383,7 @@ public class GeneServiceImpl extends AbstractFilteringVoEnabledService<Gene, Gen
     @Override
     @Transactional(readOnly = true)
     public GeneValueObject loadGenePhenotypes( Long geneId ) {
-        Gene gene = this.load( geneId );
+        Gene gene = this.loadOrFail( geneId );
         gene = this.thaw( gene );
         GeneValueObject initialResult = GeneValueObject.convert2ValueObject( gene );
         GeneValueObject details = new GeneValueObject( initialResult );

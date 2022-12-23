@@ -21,6 +21,7 @@ package ubic.gemma.core.analysis.preprocess;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ClassPathResource;
 import ubic.basecode.io.ByteArrayConverter;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataBooleanMatrix;
 import ubic.gemma.core.loader.expression.geo.*;
@@ -63,8 +64,7 @@ public class TwoChannelMissingValuesTest extends BaseSpringContextTest {
         if ( old != null )
             eeService.remove( old );
 
-        InputStream is = new GZIPInputStream( this.getClass()
-                .getResourceAsStream( "/data/loader/expression/geo/shortGenePix/GSE2221_family.soft.gz" ) );
+        InputStream is = new GZIPInputStream( new ClassPathResource( "/data/loader/expression/geo/shortGenePix/GSE2221_family.soft.gz" ).getInputStream() );
         GeoFamilyParser parser = new GeoFamilyParser();
         parser.parse( is );
         GeoSeries series = ( ( GeoParseResult ) parser.getResults().iterator().next() ).getSeriesMap().get( "GSE2221" );
@@ -123,7 +123,7 @@ public class TwoChannelMissingValuesTest extends BaseSpringContextTest {
             eeService.remove( old );
 
         InputStream is = new GZIPInputStream(
-                this.getClass().getResourceAsStream( "/data/loader/expression/geo/GSE523_family.soft.gz" ) );
+                new ClassPathResource( "/data/loader/expression/geo/GSE523_family.soft.gz" ).getInputStream() );
         GeoFamilyParser parser = new GeoFamilyParser();
         parser.parse( is );
         GeoSeries series = ( ( GeoParseResult ) parser.getResults().iterator().next() ).getSeriesMap().get( "GSE523" );
@@ -153,7 +153,7 @@ public class TwoChannelMissingValuesTest extends BaseSpringContextTest {
             eeService.remove( old );
 
         InputStream is = new GZIPInputStream(
-                this.getClass().getResourceAsStream( "/data/loader/expression/geo/GSE11017.soft.gz" ) );
+                new ClassPathResource( "/data/loader/expression/geo/GSE11017.soft.gz" ).getInputStream() );
         GeoFamilyParser parser = new GeoFamilyParser();
         parser.parse( is );
         GeoSeries series = ( ( GeoParseResult ) parser.getResults().iterator().next() ).getSeriesMap()
@@ -213,7 +213,7 @@ public class TwoChannelMissingValuesTest extends BaseSpringContextTest {
             eeService.remove( old );
 
         InputStream is = new GZIPInputStream(
-                this.getClass().getResourceAsStream( "/data/loader/expression/geo/GSE56Short/GSE56_family.soft.gz" ) );
+                new ClassPathResource( "/data/loader/expression/geo/GSE56Short/GSE56_family.soft.gz" ).getInputStream() );
         GeoFamilyParser parser = new GeoFamilyParser();
         parser.parse( is );
         GeoSeries series = ( ( GeoParseResult ) parser.getResults().iterator().next() ).getSeriesMap().get( "GSE56" );

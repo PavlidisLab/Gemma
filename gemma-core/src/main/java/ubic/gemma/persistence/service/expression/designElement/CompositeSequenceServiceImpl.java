@@ -39,6 +39,7 @@ import ubic.gemma.persistence.service.genome.gene.GeneProductService;
 import ubic.gemma.persistence.service.genome.sequenceAnalysis.BlatResultService;
 import ubic.gemma.persistence.util.Slice;
 
+import javax.annotation.Nullable;
 import java.util.*;
 
 /**
@@ -176,20 +177,20 @@ public class CompositeSequenceServiceImpl
 
     @Override
     @Transactional(readOnly = true)
-    public Collection<Object[]> getRawSummary( Collection<CompositeSequence> compositeSequences, Integer numResults ) {
+    public Collection<Object[]> getRawSummary( Collection<CompositeSequence> compositeSequences ) {
         return this.compositeSequenceDao.getRawSummary( compositeSequences );
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Collection<Object[]> getRawSummary( ArrayDesign arrayDesign, Integer numResults ) {
+    public Collection<Object[]> getRawSummary( ArrayDesign arrayDesign, int numResults ) {
         return this.compositeSequenceDao.getRawSummary( arrayDesign, numResults );
     }
 
     @Override
     @Transactional(readOnly = true)
     public Collection<GeneMappingSummary> getGeneMappingSummary( BioSequence biologicalCharacteristic,
-            CompositeSequenceValueObject cs ) {
+            @Nullable CompositeSequenceValueObject cs ) {
 
         biologicalCharacteristic = bioSequenceService.thaw( biologicalCharacteristic );
 
@@ -280,7 +281,7 @@ public class CompositeSequenceServiceImpl
      * Note that duplicate hits will be ignored here. See bug 4037.
      */
     private void addBlatResultsLackingGenes( BioSequence biologicalCharacteristic,
-            Map<Integer, GeneMappingSummary> blatResults, CompositeSequenceValueObject cs ) {
+            Map<Integer, GeneMappingSummary> blatResults, @Nullable CompositeSequenceValueObject cs ) {
         Collection<BlatResultValueObject> allBlatResultsForCs = blatResultService.loadValueObjects(
                 blatResultService.thaw( blatResultService.findByBioSequence( biologicalCharacteristic ) ) );
         for ( BlatResultValueObject blatResult : allBlatResultsForCs ) {

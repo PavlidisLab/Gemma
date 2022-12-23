@@ -123,7 +123,7 @@ public class ArrayDesignSequenceProcessorTest extends AbstractGeoServiceTest {
     @Test
     public void testFetchAndLoadWithIdentifiers() throws Exception {
         String fastacmdExe = Settings.getString( SimpleFastaCmd.FASTA_CMD_ENV_VAR );
-        Assume.assumeTrue( "No fastacmd executable is configured, skipping test.", fastacmdExe == null );
+        Assume.assumeTrue( "No fastacmd executable is configured, skipping test.", fastacmdExe != null );
 
         File fi = new File( fastacmdExe );
         if ( !fi.canRead() ) {
@@ -139,8 +139,8 @@ public class ArrayDesignSequenceProcessorTest extends AbstractGeoServiceTest {
         result = ads.iterator().next();
         result = arrayDesignService.thaw( result );
         // have to specify taxon as this has two taxons in it
-        try (InputStream f = this.getClass()
-                .getResourceAsStream( "/data/loader/expression/arrayDesign/identifierTest.txt" )) {
+        try ( InputStream f = this.getClass()
+                .getResourceAsStream( "/data/loader/expression/arrayDesign/identifierTest.txt" ) ) {
             Collection<BioSequence> res = app
                     .processArrayDesign( result, f, new String[] { "testblastdb", "testblastdbPartTwo" },
                             FileTools.resourceToPath( "/data/loader/genome/blast" ), taxon, true );

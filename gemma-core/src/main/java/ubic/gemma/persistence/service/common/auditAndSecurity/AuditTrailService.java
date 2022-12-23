@@ -46,13 +46,13 @@ public interface AuditTrailService extends BaseService<AuditTrail> {
      * collection.
      */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    AuditEvent addUpdateEvent( Auditable auditable, Class<? extends AuditEventType> type, String note, String detail );
+    AuditEvent addUpdateEvent( Auditable auditable, Class<? extends AuditEventType> type, @Nullable String note, @Nullable String detail );
 
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    AuditEvent addUpdateEvent( Auditable auditable, Class<? extends AuditEventType> type, String note );
+    AuditEvent addUpdateEvent( Auditable auditable, Class<? extends AuditEventType> type, @Nullable String note );
 
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    AuditEvent addUpdateEvent( Auditable auditable, Class<? extends AuditEventType> type, String message, Throwable throwable );
+    AuditEvent addUpdateEvent( Auditable auditable, Class<? extends AuditEventType> type, @Nullable String note, Throwable throwable );
 
     /**
      * Add an update event defined by the given parameters, to the given auditable. Returns the generated event.
@@ -63,7 +63,7 @@ public interface AuditTrailService extends BaseService<AuditTrail> {
      * collection.
      */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    AuditEvent addUpdateEvent( Auditable auditable, String note );
+    AuditEvent addUpdateEvent( Auditable auditable, @Nullable String note );
 
     @Override
     @Secured({ "GROUP_USER" })

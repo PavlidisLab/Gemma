@@ -107,6 +107,7 @@ public class ArrayDesignServiceTest extends BaseSpringContextTest {
         ad = ( ArrayDesign ) persisterHelper.persist( ad );
 
         ad = arrayDesignService.find( ad );
+        assertNotNull( ad );
         ad = arrayDesignService.thaw( ad );
         CompositeSequence cs = ad.getCompositeSequences().iterator().next();
 
@@ -369,7 +370,7 @@ public class ArrayDesignServiceTest extends BaseSpringContextTest {
         ad = super.getTestPersistentArrayDesign( 5, true );
 
         ad = arrayDesignService.load( ad.getId() );
-
+        assertNotNull( ad );
         ad = arrayDesignService.thaw( ad );
 
         // make sure we can do this...

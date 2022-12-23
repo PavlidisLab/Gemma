@@ -241,6 +241,7 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
         }
 
         ee = eeService.load( ee.getId() );
+        assertNotNull( ee );
         ee = this.eeService.thawLite( ee );
 
         // fix for unknown log scale
@@ -258,6 +259,7 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
         twoChannelMissingValues.computeMissingValues( ee );
 
         ee = eeService.load( ee.getId() );
+        assertNotNull( ee );
         ee = this.eeService.thawLite( ee );
         qts = eeService.getQuantitationTypes( ee );
         assertEquals( 17, qts.size() ); // 16 that were imported plus the detection call we added.
@@ -274,6 +276,7 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
         }
 
         ee = eeService.load( ee.getId() );
+        assertNotNull( ee );
         ee = this.eeService.thawLite( ee );
         qts = eeService.getQuantitationTypes( ee );
         assertEquals( 18, qts.size() );
@@ -436,7 +439,7 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
     }
 
     @SuppressWarnings("unused")
-    // !! Please leave this here, we use it to load data sets for chopping.
+        // !! Please leave this here, we use it to load data sets for chopping.
     ExpressionExperiment fetchASeries( String accession ) {
         geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGenerator() );
         return ( ExpressionExperiment ) geoService.fetchAndLoad( accession, false, false, false ).iterator().next();

@@ -29,6 +29,7 @@ import ubic.gemma.persistence.service.AbstractDao;
 
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.Objects;
 
 /**
  * @see ubic.gemma.model.common.auditAndSecurity.UserGroup
@@ -92,7 +93,8 @@ public class UserGroupDaoImpl extends AbstractDao<UserGroup> implements UserGrou
     public void remove( UserGroup userGroup ) {
         // FIXME: this should not be necessary, but we have cases where the group are obtained from a different Hibernate
         //  session
-        userGroup = this.load( userGroup.getId() );
+        userGroup = Objects.requireNonNull( this.load( userGroup.getId() ),
+                String.format( "No UserGroup with ID %d.", userGroup.getId() ) );
         // this check is done higher up as well...
         if ( userGroup.getName().equals( AuthorityConstants.USER_GROUP_NAME ) || userGroup.getName()
                 .equals( AuthorityConstants.ADMIN_GROUP_NAME ) || userGroup.getName()
@@ -104,7 +106,8 @@ public class UserGroupDaoImpl extends AbstractDao<UserGroup> implements UserGrou
 
     @Override
     public void update( UserGroup userGroup ) {
-        UserGroup groupToUpdate = this.load( userGroup.getId() );
+        UserGroup groupToUpdate = Objects.requireNonNull( this.load( userGroup.getId() ),
+                String.format( "No UserGroup with ID %d.", userGroup.getId() ) );
         String name = groupToUpdate.getName();
         if ( !name.equals( userGroup.getName() ) && ( name.equals( AuthorityConstants.USER_GROUP_NAME ) || name
                 .equals( AuthorityConstants.ADMIN_GROUP_NAME ) || name

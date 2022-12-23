@@ -33,10 +33,7 @@ import ubic.gemma.persistence.service.expression.bioAssay.BioAssayDao;
 import ubic.gemma.persistence.service.expression.experiment.ExperimentalFactorDao;
 import ubic.gemma.persistence.service.expression.experiment.FactorValueDao;
 
-import java.util.Collection;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.Map;
+import java.util.*;
 
 /**
  * @author pavlidis
@@ -117,7 +114,8 @@ public class BioMaterialServiceImpl extends AbstractVoEnabledService<BioMaterial
 
         for ( final BioMaterial bm : descriptors.keySet() ) {
 
-            final BioMaterial toUpdate = this.bioMaterialDao.load( bm.getId() );
+            final BioMaterial toUpdate = Objects.requireNonNull( this.bioMaterialDao.load( bm.getId() ),
+                    String.format( "No BioMaterial with ID %d.", bm.getId() ) );
 
             if ( !descriptors.containsKey( bm ) ) {
                 throw new IllegalStateException( "Descriptor not provided for " + bm );
@@ -170,7 +168,8 @@ public class BioMaterialServiceImpl extends AbstractVoEnabledService<BioMaterial
     }
 
     private BioMaterial update( BioMaterialValueObject bmvo ) {
-        BioMaterial bm = this.load( bmvo.getId() );
+        BioMaterial bm = Objects.requireNonNull( this.load( bmvo.getId() ),
+                String.format( "No BioMaterial with ID %d.", bmvo.getId() ) );
 
         Collection<FactorValue> updatedFactorValues = new HashSet<>();
         Map<String, String> factorIdToFactorValueId = bmvo.getFactorIdToFactorValueId(); // all of them.
@@ -222,7 +221,8 @@ public class BioMaterialServiceImpl extends AbstractVoEnabledService<BioMaterial
                     /*
                      * Have to load the factor, create a factor value.
                      */
-                    ExperimentalFactor ef = experimentalFactorDao.load( factorId );
+                    ExperimentalFactor ef = Objects.requireNonNull( experimentalFactorDao.load( factorId ),
+                            String.format( "No ExperimentalFactor with ID %d.", factorId ) );
 
                     // note that this type of factorvalues are not reused for continuous ones.
                     AbstractService.log

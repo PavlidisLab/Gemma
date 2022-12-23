@@ -20,6 +20,7 @@
 package ubic.gemma.persistence.service.expression.experiment;
 
 import java.util.List;
+import java.util.Objects;
 
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -77,7 +78,8 @@ public class BlacklistedEntityDaoImpl extends AbstractVoEnabledDao<BlacklistedEn
      */
     @Override
     protected BlacklistedValueObject doLoadValueObject( BlacklistedEntity entity ) {
-        return BlacklistedValueObject.fromEntity( this.load( entity.getId() ) );
+        return BlacklistedValueObject.fromEntity( Objects.requireNonNull( this.load( entity.getId() ),
+                String.format( "No BlacklistedEntity with ID %d.", entity.getId() ) ) );
     }
 
 }

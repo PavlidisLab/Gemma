@@ -41,6 +41,7 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.Scope;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
 
 import ubic.basecode.io.ByteArrayConverter;
@@ -872,9 +873,7 @@ public class GeoConverterImpl implements GeoConverter {
      * See also convertVariableType where we map some to some categories.
      */
     private void initializeTerm2OntologyMappings() {
-        InputStream r = this.getClass()
-                .getResourceAsStream( "/ubic/gemma/core/ontology/valueStringToOntologyTermMappings.txt" );
-        try (BufferedReader in = new BufferedReader( new InputStreamReader( r ) )) {
+        try ( BufferedReader in = new BufferedReader( new InputStreamReader( new ClassPathResource( "/ubic/gemma/core/ontology/valueStringToOntologyTermMappings.txt" ).getInputStream() ) ) ) {
             while ( in.ready() ) {
                 String line = in.readLine().trim();
                 if ( line.startsWith( "#" ) ) {

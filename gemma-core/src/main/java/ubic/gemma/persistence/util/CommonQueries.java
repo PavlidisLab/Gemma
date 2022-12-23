@@ -98,7 +98,7 @@ public class CommonQueries {
         queryObject.setFlushMode( FlushMode.MANUAL );
 
         List<?> qr = queryObject.list();
-        ee2ads = CommonQueries.addAllAds( ee2ads, qr );
+        CommonQueries.addAllAds( ee2ads, qr );
 
         if ( ee2ads.size() < ees.size() ) {
             // ids might be invalid, but also might be subsets. Note that the output key is for the subset, not the
@@ -111,13 +111,13 @@ public class CommonQueries {
             // note: CollectionUtils.removeAll has a bug.
 
             qr = session.createQuery( subsetQuery ).setParameterList( "ees", possibleEEsubsets ).list();
-            ee2ads = CommonQueries.addAllAds( ee2ads, qr );
+            CommonQueries.addAllAds( ee2ads, qr );
         }
 
         return ee2ads;
     }
 
-    private static Map<Long, Collection<Long>> addAllAds( Map<Long, Collection<Long>> ee2ads, List<?> qr ) {
+    private static void addAllAds( Map<Long, Collection<Long>> ee2ads, List<?> qr ) {
         for ( Object o : qr ) {
             Object[] ar = ( Object[] ) o;
             Long ee = ( Long ) ar[0];
@@ -127,7 +127,6 @@ public class CommonQueries {
             }
             ee2ads.get( ee ).add( ad );
         }
-        return ee2ads;
     }
 
     /**
@@ -136,9 +135,6 @@ public class CommonQueries {
      * @return list of array designs used in given expression experiment
      */
     public static Collection<ArrayDesign> getArrayDesignsUsed( ExpressionExperiment ee, Session session ) {
-        if ( ee == null ) {
-            return null;
-        }
         return CommonQueries.getArrayDesignsUsed( ee.getId(), session );
     }
 

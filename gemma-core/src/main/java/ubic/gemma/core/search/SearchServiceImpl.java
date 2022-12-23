@@ -74,7 +74,6 @@ import ubic.gemma.persistence.service.expression.experiment.ExpressionExperiment
 import ubic.gemma.persistence.service.genome.biosequence.BioSequenceService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.persistence.util.CacheUtils;
-import ubic.gemma.persistence.util.EntityUtils;
 import ubic.gemma.persistence.util.Settings;
 
 import javax.annotation.Nonnull;
@@ -687,7 +686,7 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
      * @param  limit stop querying if we hit or surpass this limit. 0 for no limit.
      * @return collection of SearchResults (Experiments)
      */
-    private Collection<SearchResult<ExpressionExperiment>> characteristicEESearchTerm( String query, Taxon t, int limit ) throws SearchException {
+    private Collection<SearchResult<ExpressionExperiment>> characteristicEESearchTerm( String query, @Nullable Taxon t, int limit ) throws SearchException {
 
         StopWatch watch = StopWatch.createStarted();
         Collection<SearchResult<ExpressionExperiment>> results = new HashSet<>();
@@ -799,7 +798,7 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
         return results;
     }
 
-    private void findExperimentsByUris( Collection<String> uris, Collection<SearchResult<ExpressionExperiment>> results, Taxon t, int limit,
+    private void findExperimentsByUris( Collection<String> uris, Collection<SearchResult<ExpressionExperiment>> results, @Nullable Taxon t, int limit,
             Map<String, String> uri2value ) {
         Map<Class<? extends Identifiable>, Map<String, Set<ExpressionExperiment>>> hits = characteristicService.findExperimentsByUris( uris, t, limit );
 
@@ -833,7 +832,7 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
      * @param  limit try to stop searching if we exceed this (0 for no limit)
      * @return SearchResults of Experiments
      */
-    private Collection<SearchResult<ExpressionExperiment>> characteristicEESearchWithChildren( String query, Taxon t, int limit ) throws SearchException {
+    private Collection<SearchResult<ExpressionExperiment>> characteristicEESearchWithChildren( String query, @Nullable Taxon t, int limit ) throws SearchException {
         StopWatch watch = StopWatch.createStarted();
 
         /*
@@ -1415,7 +1414,7 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
      * Recursively
      */
     private void getCharacteristicsAnnotatedToChildren( OntologyTerm term,
-            Collection<SearchResult<ExpressionExperiment>> results, Collection<OntologyTerm> seenTerms, Taxon t, int limit ) {
+            Collection<SearchResult<ExpressionExperiment>> results, Collection<OntologyTerm> seenTerms, @Nullable Taxon t, int limit ) {
 
         Collection<OntologyTerm> children = this.getDirectChildTerms( term );
         if ( children.isEmpty() ) {

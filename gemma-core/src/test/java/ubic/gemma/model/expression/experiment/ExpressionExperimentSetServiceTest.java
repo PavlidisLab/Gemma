@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2012 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -30,10 +30,7 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSetService;
 
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.Set;
+import java.util.*;
 
 import static org.junit.Assert.*;
 
@@ -110,6 +107,7 @@ public class ExpressionExperimentSetServiceTest extends BaseSpringContextTest {
 
         expressionExperimentSetService.update( eeSet );
         ExpressionExperimentSet updatedSet = expressionExperimentSetService.load( eeSetId );
+        assertNotNull( updatedSet );
         // need VO otherwise was getting lazy loading issues
         ExpressionExperimentSetValueObject setVO = expressionExperimentSetService.loadValueObject( updatedSet );
 
