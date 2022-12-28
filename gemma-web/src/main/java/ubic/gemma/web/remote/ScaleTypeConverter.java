@@ -31,6 +31,6 @@ public class ScaleTypeConverter extends StringConverter {
     @Override
     public Object convertInbound( Class paramType, InboundVariable iv, InboundContext inctx ) throws MarshallException {
         String value = ( String ) super.convertInbound( paramType, iv, inctx );
-        return ScaleType.fromString( value );
+        return ScaleType.valueOf( value );
     }
 }

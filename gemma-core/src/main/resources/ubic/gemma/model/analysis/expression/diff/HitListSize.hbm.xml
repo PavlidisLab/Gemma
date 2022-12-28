@@ -17,8 +17,12 @@
       <property name="numberOfProbes" type="java.lang.Integer">
          <column name="NUMBER_OF_PROBES" not-null="true" unique="false" sql-type="INTEGER"/>
       </property>
-      <property name="direction" type="ubic.gemma.model.analysis.expression.diff.DirectionEnum">
+      <property name="direction">
          <column name="DIRECTION" not-null="true" unique="false" sql-type="VARCHAR(255)"/>
+         <type name="org.hibernate.type.EnumType">
+            <param name="enumClass">ubic.gemma.model.analysis.expression.diff.Direction</param>
+            <param name="named">true</param>
+         </type>
       </property>
       <property name="numberOfGenes" type="java.lang.Integer">
          <column name="NUMBER_OF_GENES" not-null="false" unique="false" sql-type="INTEGER"/>

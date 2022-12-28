@@ -70,7 +70,7 @@ public class SequenceTypePropertyEditor extends PropertyEditorSupport {
 
     @Override
     public void setAsText( String text ) throws IllegalArgumentException {
-        this.setValue( SequenceType.fromString( text ) );
+        this.setValue( SequenceType.valueOf( text ) );
     }
 
 }

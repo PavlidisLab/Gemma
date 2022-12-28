@@ -28,8 +28,10 @@ import ubic.gemma.core.util.test.BaseSpringContextTest;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.genome.biosequence.BioSequence;
+import ubic.gemma.model.genome.biosequence.SequenceType;
 import ubic.gemma.persistence.service.genome.biosequence.BioSequenceService;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
 /**
@@ -62,6 +64,7 @@ public class BioSequencePersistTest extends BaseSpringContextTest {
 
         bs.setName( RandomStringUtils.randomAlphanumeric( 10 ) );
         bs.setSequenceDatabaseEntry( de );
+        bs.setType( SequenceType.WHOLE_CHROMOSOME );
     }
 
     @After
@@ -73,6 +76,7 @@ public class BioSequencePersistTest extends BaseSpringContextTest {
     public final void testPersistBioSequence() {
         bs = ( BioSequence ) persisterHelper.persist( bs );
         assertNotNull( bs.getId() );
+        assertEquals( "WHOLE_CHROMOSOME", bs.getType().name() );
     }
 
 }

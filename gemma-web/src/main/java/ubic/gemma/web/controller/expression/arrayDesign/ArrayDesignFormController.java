@@ -32,6 +32,7 @@ import ubic.gemma.web.controller.BaseFormController;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Controller for editing basic information about array designs.
@@ -61,7 +62,7 @@ public class ArrayDesignFormController extends BaseFormController {
         existing.setShortName( ad.getShortName() );
         String technologyType = ad.getTechnologyType();
         if ( StringUtils.isNotBlank( technologyType ) ) {
-            existing.setTechnologyType( TechnologyType.fromString( technologyType ) );
+            existing.setTechnologyType( TechnologyType.valueOf( technologyType ) );
         }
 
         arrayDesignService.update( existing );
@@ -130,10 +131,15 @@ public class ArrayDesignFormController extends BaseFormController {
                 new RedirectView( "/arrays/showArrayDesign.html?id=" + request.getParameter( "id" ), true ) );
     }
 
+    private static final List<String> TECHNOLOGY_TYPES = Arrays.stream( TechnologyType.values() )
+            .map( TechnologyType::name )
+            .sorted()
+            .collect( Collectors.toList() );
+
     @Override
     protected Map referenceData( HttpServletRequest request ) {
         Map<String, List<? extends Object>> mapping = new HashMap<String, List<? extends Object>>();
-        mapping.put( "technologyTypes", new ArrayList<String>( TechnologyType.literals() ) );
+        mapping.put( "technologyTypes", new ArrayList<>( TECHNOLOGY_TYPES ) );
         return mapping;
     }
 

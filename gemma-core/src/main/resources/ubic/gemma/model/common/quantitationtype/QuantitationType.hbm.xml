@@ -20,19 +20,35 @@
       <property name="isBackground" type="java.lang.Boolean">
          <column name="IS_BACKGROUND" not-null="true" unique="false" sql-type="TINYINT"/>
       </property>
-      <property name="representation" type="ubic.gemma.model.common.quantitationtype.PrimitiveTypeEnum">
+      <property name="representation">
          <column name="REPRESENTATION" not-null="true" unique="false" sql-type="VARCHAR(255)"/>
+         <type name="org.hibernate.type.EnumType">
+            <param name="enumClass">ubic.gemma.model.common.quantitationtype.PrimitiveType</param>
+            <param name="useNamed">true</param>
+         </type>
       </property>
-      <property name="generalType" type="ubic.gemma.model.common.quantitationtype.GeneralTypeEnum">
-         <column name="GENERAL_TYPE" not-null="true" unique="false" sql-type="VARCHAR(255)"/>
-      </property>
-      <property name="type" type="ubic.gemma.model.common.quantitationtype.StandardQuantitationTypeEnum">
+      <property name="generalType">
+          <column name="GENERAL_TYPE" not-null="true" unique="false" sql-type="VARCHAR(255)"/>
+          <type name="org.hibernate.type.EnumType">
+              <param name="enumClass">ubic.gemma.model.common.quantitationtype.GeneralType</param>
+              <param name="useNamed">true</param>
+          </type>
+       </property>
+       <property name="type">
          <column name="TYPE" not-null="true" unique="false" sql-type="VARCHAR(255)"/>
+           <type name="org.hibernate.type.EnumType">
+               <param name="enumClass">ubic.gemma.model.common.quantitationtype.StandardQuantitationType</param>
+               <param name="useNamed">true</param>
+           </type>
       </property>
-      <property name="scale" type="ubic.gemma.model.common.quantitationtype.ScaleTypeEnum">
-         <column name="SCALE" not-null="true" unique="false" sql-type="VARCHAR(255)"/>
-      </property>
-      <property name="isPreferred" type="java.lang.Boolean">
+       <property name="scale">
+           <column name="SCALE" not-null="true" unique="false" sql-type="VARCHAR(255)"/>
+           <type name="org.hibernate.type.EnumType">
+               <param name="enumClass">ubic.gemma.model.common.quantitationtype.ScaleType</param>
+               <param name="useNamed">true</param>
+           </type>
+       </property>
+       <property name="isPreferred" type="java.lang.Boolean">
          <column name="IS_PREFERRED" not-null="false" unique="false" sql-type="TINYINT"/>
       </property>
       <property name="isNormalized" type="java.lang.Boolean">

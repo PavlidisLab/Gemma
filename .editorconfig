@@ -9,6 +9,9 @@ indent_style=tab
 [Investigation.hbm.xml]
 indent_style=tab
 
+[HitListSize.hbm.xml]
+indent_size=3
+
 [ExperimentalFactor.hbm.xml]
 indent_size=3
 

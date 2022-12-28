@@ -32,7 +32,7 @@ public class DirectionConverter extends StringConverter {
     @Override
     public Object convertInbound( Class paramType, InboundVariable iv, InboundContext inctx ) throws MarshallException {
         String value = ( String ) super.convertInbound( paramType, iv, inctx );
-        return Direction.fromString( value );
+        return Direction.valueOf( value );
     }
 
 }

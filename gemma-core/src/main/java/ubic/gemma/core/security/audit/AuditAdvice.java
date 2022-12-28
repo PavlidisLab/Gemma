@@ -273,7 +273,7 @@ public class AuditAdvice {
 
         for ( Object object : visited ) {
             if ( object instanceof Auditable ) {
-                this.addAuditEvent( method, ( Auditable ) object, auditAction, String.format( " - %s by cascade from %s", auditAction.getValue(), auditable ), user, date );
+                this.addAuditEvent( method, ( Auditable ) object, auditAction, String.format( " - %s by cascade from %s", auditAction.name(), auditable ), user, date );
             }
         }
     }

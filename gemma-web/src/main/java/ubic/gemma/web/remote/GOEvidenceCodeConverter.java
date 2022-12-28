@@ -36,6 +36,6 @@ public class GOEvidenceCodeConverter extends StringConverter {
         if ( StringUtils.isBlank( value ) ) {
             return null;
         }
-        return GOEvidenceCode.fromString( value );
+        return GOEvidenceCode.valueOf( value );
     }
 }

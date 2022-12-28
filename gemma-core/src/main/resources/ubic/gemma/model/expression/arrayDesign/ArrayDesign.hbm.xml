@@ -31,10 +31,14 @@
       <property name="shortName" type="java.lang.String">
          <column name="SHORT_NAME" not-null="false" unique="true" sql-type="VARCHAR(255)"/>
       </property>
-      <property name="technologyType" type="ubic.gemma.model.expression.arrayDesign.TechnologyTypeEnum">
-         <column name="TECHNOLOGY_TYPE" not-null="false" unique="false" sql-type="VARCHAR(255)"/>
-      </property>
-      <!-- considering lazy false on taxon, join fetch; we almost always need that (was: lazy=proxy, fetch=select) -->
+       <property name="technologyType">
+           <column name="TECHNOLOGY_TYPE" not-null="false" unique="false" sql-type="VARCHAR(255)"/>
+           <type name="org.hibernate.type.EnumType">
+               <param name="enumClass">ubic.gemma.model.expression.arrayDesign.TechnologyType</param>
+               <param name="useNamed">true</param>
+           </type>
+       </property>
+       <!-- considering lazy false on taxon, join fetch; we almost always need that (was: lazy=proxy, fetch=select) -->
       <!-- this is assumed available in ArrayDesignValueObject -->
       <many-to-one name="primaryTaxon" class="ubic.gemma.model.genome.Taxon" lazy="false" fetch="join">
          <column name="PRIMARY_TAXON_FK" not-null="true" sql-type="BIGINT"/>

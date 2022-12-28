@@ -99,7 +99,7 @@ public class ExperimentAnnotationEndpoint extends AbstractGemmaEndpoint {
 
                 String elementString1 = eeId.toString();
                 String elementString2 = character.getValue();
-                String elementString4 = character.getEvidenceCode().getValue();
+                String elementString4 = character.getEvidenceCode().name();
                 String elementString3 = character.getCategory();
 
                 Element e1 = document.createElement( "ee_id" );

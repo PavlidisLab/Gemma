@@ -153,7 +153,7 @@ public class LoadSimpleExpressionDataCli extends AbstractCLIContextCLI {
 
     private void configureArrayDesigns( String[] fields, SimpleExpressionExperimentMetaData metaData ) {
         int i;
-        TechnologyType techType = TechnologyType.fromString( fields[LoadSimpleExpressionDataCli.TECHNOLOGY_TYPE_I] );
+        TechnologyType techType = TechnologyType.valueOf( fields[LoadSimpleExpressionDataCli.TECHNOLOGY_TYPE_I] );
         Collection<ArrayDesign> ads = new HashSet<>();
         if ( StringUtils.isBlank( fields[LoadSimpleExpressionDataCli.AD_SHORT_NAME_I] ) ) {
             // that's okay, so long as we get an array design name
@@ -206,10 +206,10 @@ public class LoadSimpleExpressionDataCli extends AbstractCLIContextCLI {
         metaData.setGeneralType( GeneralType.QUANTITATIVE );
 
         StandardQuantitationType sQType = StandardQuantitationType
-                .fromString( fields[LoadSimpleExpressionDataCli.Q_TYPE_I] );
+                .valueOf( fields[LoadSimpleExpressionDataCli.Q_TYPE_I] );
         metaData.setType( sQType );
 
-        ScaleType sType = ScaleType.fromString( fields[LoadSimpleExpressionDataCli.Q_SCALE_I] );
+        ScaleType sType = ScaleType.valueOf( fields[LoadSimpleExpressionDataCli.Q_SCALE_I] );
         metaData.setScale( sType );
     }
 

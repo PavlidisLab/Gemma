@@ -19,7 +19,7 @@ public class SequenceTypeValueObject implements Serializable {
     }
 
     public SequenceTypeValueObject( SequenceType sequenceType ) {
-        this.value = sequenceType.getValue();
+        this.value = sequenceType.name();
     }
 
     @JsonValue

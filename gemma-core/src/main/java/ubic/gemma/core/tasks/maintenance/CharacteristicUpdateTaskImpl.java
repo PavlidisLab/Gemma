@@ -109,7 +109,7 @@ public class CharacteristicUpdateTaskImpl extends AbstractTask<TaskResult, Chara
         vc.setValue( avo.getTermName() );
         vc.setValueUri( StringUtils.stripToNull( avo.getTermUri() ) );
         if ( StringUtils.isNotBlank( avo.getEvidenceCode() ) )
-            vc.setEvidenceCode( GOEvidenceCode.fromString( avo.getEvidenceCode() ) );
+            vc.setEvidenceCode( GOEvidenceCode.valueOf( avo.getEvidenceCode() ) );
         return vc;
     }
 

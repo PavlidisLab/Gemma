@@ -76,12 +76,7 @@ public class ArrayDesignSequenceAssociationCli extends ArrayDesignSequenceManipu
 
         arrayDesign = this.thaw( arrayDesign );
 
-        SequenceType sequenceTypeEn = SequenceType.fromString( sequenceType );
-
-        if ( sequenceTypeEn == null ) {
-            throw new IllegalArgumentException( "No sequenceType " + sequenceType + " found" );
-
-        }
+        SequenceType sequenceTypeEn = SequenceType.valueOf( sequenceType );
 
         Taxon taxon = null;
         if ( this.taxonName != null ) {
@@ -188,8 +183,8 @@ public class ArrayDesignSequenceAssociationCli extends ArrayDesignSequenceManipu
 
         StringBuilder buf = new StringBuilder();
 
-        for ( String lit : SequenceType.literals() ) {
-            buf.append( lit ).append( "\n" );
+        for ( SequenceType lit : SequenceType.values() ) {
+            buf.append( lit.name() ).append( "\n" );
         }
 
         String seqtypes = buf.toString();

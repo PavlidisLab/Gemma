@@ -26,8 +26,12 @@
         <property name="ftpUri" type="java.lang.String">
             <column name="FTP_URI" not-null="false" unique="false" sql-type="VARCHAR(255)"/>
         </property>
-        <property name="type" type="ubic.gemma.model.common.description.DatabaseTypeEnum">
+        <property name="type">
             <column name="TYPE" not-null="false" unique="false" sql-type="VARCHAR(255)"/>
+            <type name="org.hibernate.type.EnumType">
+                <param name="enumClass">ubic.gemma.model.common.description.DatabaseType</param>
+                <param name="useNamed">true</param>
+            </type>
         </property>
         <property name="releaseVersion" type="java.lang.String">
             <column name="RELEASE_VERSION" not-null="false" sql-type="VARCHAR(255)"/>
