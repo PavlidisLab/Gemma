@@ -28,9 +28,13 @@
             <column name="RELATIONSHIP" not-null="false" unique="false"
                     sql-type="VARCHAR(255)"/>
         </property>
-        <property name="evidenceCode" type="ubic.gemma.model.association.GOEvidenceCodeEnum">
+        <property name="evidenceCode" >
             <column name="EVIDENCE_CODE" not-null="false" unique="false"
                     sql-type="VARCHAR(255)"/>
+            <type name="org.hibernate.type.EnumType">
+                <param name="enumClass">ubic.gemma.model.association.GOEvidenceCode</param>
+                <param name="useNamed">true</param>
+            </type>
         </property>
         <property name="mappingType" type="ubic.gemma.model.association.phenotype.PhenotypeMappingType">
             <column name="MAPPING_TYPE" not-null="false" unique="false"

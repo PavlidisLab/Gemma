@@ -20,9 +20,13 @@
 			<column name="ONTOLOGY_ENTRY_FK" not-null="true" sql-type="BIGINT" unique="true" />
 		</many-to-one>
 
-		<property access="field" name="evidenceCode" type="ubic.gemma.model.association.GOEvidenceCodeEnum">
+		<property access="field" name="evidenceCode">
 			<column name="EVIDENCE_CODE" not-null="false" unique="false"
 				sql-type="VARCHAR(255)" />
+			<type name="org.hibernate.type.EnumType">
+				<param name="enumClass">ubic.gemma.model.association.GOEvidenceCode</param>
+				<param name="useNamed">true</param>
+			</type>
 		</property>
 	</class>
 </hibernate-mapping>

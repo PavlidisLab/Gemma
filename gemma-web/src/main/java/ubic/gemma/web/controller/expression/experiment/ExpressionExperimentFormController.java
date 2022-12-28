@@ -50,6 +50,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.util.*;
 import java.util.Map.Entry;
+import java.util.stream.Collectors;
 
 /**
  * Handle editing of expression experiments.
@@ -191,6 +192,12 @@ public class ExpressionExperimentFormController extends BaseFormController {
         return obj;
     }
 
+    private static final List<String>
+            STANDARD_QUANTITATION_TYPES = Arrays.stream( StandardQuantitationType.values() ).map( Enum::name ).sorted().collect( Collectors.toList() ),
+            SCALE_TYPES = Arrays.stream( ScaleType.values() ).map( Enum::name ).sorted().collect( Collectors.toList() ),
+            GENERAL_QUANTITATION_TYPES = Arrays.stream( GeneralType.values() ).map( Enum::name ).sorted().collect( Collectors.toList() ),
+            REPRESENTATIONS = Arrays.stream( PrimitiveType.values() ).map( Enum::name ).sorted().collect( Collectors.toList() );
+
     @Override
     protected Map referenceData( HttpServletRequest request ) {
         Map<Object, Object> referenceData = new HashMap<>();
@@ -207,10 +214,10 @@ public class ExpressionExperimentFormController extends BaseFormController {
 
         referenceData.put( "externalDatabases", keepers );
 
-        referenceData.put( "standardQuantitationTypes", new ArrayList<>( StandardQuantitationType.literals() ) );
-        referenceData.put( "scaleTypes", new ArrayList<>( ScaleType.literals() ) );
-        referenceData.put( "generalQuantitationTypes", new ArrayList<>( GeneralType.literals() ) );
-        referenceData.put( "representations", new ArrayList<>( PrimitiveType.literals() ) );
+        referenceData.put( "standardQuantitationTypes", new ArrayList<>( STANDARD_QUANTITATION_TYPES ) );
+        referenceData.put( "scaleTypes", new ArrayList<>( SCALE_TYPES ) );
+        referenceData.put( "generalQuantitationTypes", new ArrayList<>( GENERAL_QUANTITATION_TYPES ) );
+        referenceData.put( "representations", new ArrayList<>( REPRESENTATIONS ) );
         return referenceData;
     }
 
@@ -388,13 +395,13 @@ public class ExpressionExperimentFormController extends BaseFormController {
 
                     String newName = newQtype.getName();
                     String newDescription = newQtype.getDescription();
-                    GeneralType newgentype = GeneralType.fromString( newQtype.getGeneralType() );
+                    GeneralType newgentype = GeneralType.valueOf( newQtype.getGeneralType() );
                     boolean newisBkg = newQtype.getIsBackground();
                     boolean newisBkgSub = newQtype.getIsBackgroundSubtracted();
                     boolean newisNormalized = newQtype.getIsNormalized();
-                    PrimitiveType newrep = PrimitiveType.fromString( newQtype.getRepresentation() );
-                    ScaleType newscale = ScaleType.fromString( newQtype.getScale() );
-                    StandardQuantitationType newType = StandardQuantitationType.fromString( newQtype.getType() );
+                    PrimitiveType newrep = PrimitiveType.valueOf( newQtype.getRepresentation() );
+                    ScaleType newscale = ScaleType.valueOf( newQtype.getScale() );
+                    StandardQuantitationType newType = StandardQuantitationType.valueOf( newQtype.getType() );
                     boolean newisPreferred = newQtype.getIsPreferred();
                     boolean newIsmaskedPreferred = newQtype.getIsMaskedPreferred();
                     boolean newisRatio = newQtype.getIsRatio();

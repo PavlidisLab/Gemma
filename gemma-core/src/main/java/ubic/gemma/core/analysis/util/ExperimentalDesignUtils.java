@@ -187,7 +187,7 @@ public class ExperimentalDesignUtils {
      * @return true if this factor appears to be a "batch" factor.
      */
     public static boolean isBatch( ExperimentalFactorValueObject ef ) {
-        if ( ef.getType() != null && ef.getType().equals( FactorType.CONTINUOUS.getValue() ) )
+        if ( ef.getType() != null && ef.getType().equals( FactorType.CONTINUOUS.name() ) )
             return false;
 
         String category = ef.getCategory();

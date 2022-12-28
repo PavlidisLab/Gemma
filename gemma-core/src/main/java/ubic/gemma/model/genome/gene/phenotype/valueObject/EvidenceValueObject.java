@@ -98,7 +98,7 @@ public class EvidenceValueObject<E extends PhenotypeAssociation> extends Identif
         super( phenotypeAssociation );
         this.className = this.getClass().getSimpleName();
         this.description = phenotypeAssociation.getDescription();
-        this.evidenceCode = phenotypeAssociation.getEvidenceCode().getValue();
+        this.evidenceCode = phenotypeAssociation.getEvidenceCode().name();
         this.isNegativeEvidence = phenotypeAssociation.getIsNegativeEvidence();
         this.taxonCommonName = phenotypeAssociation.getGene().getTaxon().getCommonName();
         this.originalPhenotype = phenotypeAssociation.getOriginalPhenotype();

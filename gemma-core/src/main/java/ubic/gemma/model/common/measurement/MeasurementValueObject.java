@@ -25,9 +25,9 @@ public class MeasurementValueObject extends IdentifiableValueObject {
             this.unit = measurement.getUnit().getUnitNameCV();
             this.unitId = measurement.getUnit().getId();
         }
-        this.type = measurement.getType() == null ? null : measurement.getType().getValue();
+        this.type = measurement.getType() == null ? null : measurement.getType().name();
         this.representation =
-                measurement.getRepresentation() == null ? null : measurement.getRepresentation().getValue();
+                measurement.getRepresentation() == null ? null : measurement.getRepresentation().name();
     }
 
     public String getValue() {

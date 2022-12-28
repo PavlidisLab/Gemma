@@ -111,7 +111,7 @@ public class PhenotypeMappingType
      */
     @Override
     public String toXMLString( Object object ) {
-        return String.valueOf( ( ( ubic.gemma.model.association.GOEvidenceCode ) object ).getValue() );
+        return String.valueOf( ( ( ubic.gemma.model.association.GOEvidenceCode ) object ).name() );
     }
 
     /**

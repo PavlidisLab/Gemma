@@ -567,7 +567,7 @@ public class GeeqServiceImpl extends AbstractVoEnabledService<Geeq, GeeqValueObj
         boolean twoColor = false;
 
         for ( ArrayDesign ad : ads ) {
-            if ( ad.getTechnologyType().getValue().equals( TechnologyType.TWOCOLOR.getValue() ) ) {
+            if ( ad.getTechnologyType().equals( TechnologyType.TWOCOLOR) ) {
                 twoColor = true;
                 break;
             }
