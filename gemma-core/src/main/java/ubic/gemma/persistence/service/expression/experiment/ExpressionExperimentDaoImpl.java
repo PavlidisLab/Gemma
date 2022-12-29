@@ -1779,11 +1779,6 @@ public class ExpressionExperimentDaoImpl
             return new FilterablePropertyMeta( CharacteristicDao.OBJECT_ALIAS, fieldName, resolveFilterPropertyType( fieldName, Characteristic.class ), null );
         }
 
-        if ( propertyName.equals( "bioAssays.arrayDesignUsed.technologyType" ) ) {
-            String fieldName = propertyName.replaceFirst( "^bioAssays\\.", "" );
-            return new FilterablePropertyMeta( BioAssayDao.OBJECT_ALIAS, fieldName, String.class, null );
-        }
-
         if ( propertyName.startsWith( "bioAssays." ) && !propertyName.equals( "bioAssays.size" ) ) {
             String fieldName = propertyName.replaceFirst( "^bioAssays\\.", "" );
             return new FilterablePropertyMeta( BioAssayDao.OBJECT_ALIAS, fieldName, resolveFilterPropertyType( fieldName, BioAssay.class ), null );

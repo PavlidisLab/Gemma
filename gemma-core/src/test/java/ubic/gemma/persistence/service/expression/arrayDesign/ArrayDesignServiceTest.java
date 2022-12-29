@@ -3,6 +3,7 @@ package ubic.gemma.persistence.service.expression.arrayDesign;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.util.test.BaseSpringContextTest;
+import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.persistence.util.Filter;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -40,6 +41,12 @@ public class ArrayDesignServiceTest extends BaseSpringContextTest {
                 .isInstanceOf( IllegalArgumentException.class )
                 .hasMessageContaining( "At most 3 levels can be used for filtering." )
                 .hasNoCause();
+    }
+
+    @Test
+    public void testGetFilterTechnologyType() {
+        assertThat( arrayDesignService.getFilterablePropertyDescription( "technologyType" ) )
+                .contains( TechnologyType.SEQUENCING.name(), TechnologyType.ONECOLOR.name() );
     }
 
     @Test

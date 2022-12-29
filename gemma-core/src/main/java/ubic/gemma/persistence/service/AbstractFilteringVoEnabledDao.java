@@ -3,9 +3,9 @@ package ubic.gemma.persistence.service;
 import lombok.Value;
 import org.apache.commons.lang3.ArrayUtils;
 import org.hibernate.SessionFactory;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metadata.ClassMetadata;
-import org.hibernate.type.CollectionType;
+import org.hibernate.type.CustomType;
+import org.hibernate.type.EnumType;
 import org.hibernate.type.Type;
 import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.common.Identifiable;
@@ -159,7 +159,7 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
             } else if ( propertyTypes[i].isCollectionType() ) {
                 // special case for collection size, regardless of its type
                 destination.add( prefix + propertyNames[i] + ".size" );
-            } else if ( Filter.getConversionService().canConvert( String.class, propertyTypes[i].getReturnedClass() ) ) {
+            } else if ( Filter.getConversionService().canConvert( String.class, resolveActualType( propertyTypes[i] ) ) ) {
                 destination.add( prefix + propertyNames[i] );
             }
         }
@@ -193,7 +193,13 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
      * @see #getSort(String, Sort.Direction)
      */
     protected FilterablePropertyMeta getFilterablePropertyMeta( String propertyName ) throws IllegalArgumentException {
-        return new FilterablePropertyMeta( objectAlias, propertyName, resolveFilterPropertyType( propertyName, elementClass ), null );
+        try {
+            PartialFilterablePropertyMeta meta = resolveFilterablePropertyMetaInternal( propertyName, elementClass, FILTERABLE_PROPERTIES_MAX_DEPTH );
+            return new FilterablePropertyMeta( objectAlias, propertyName, meta.propertyType, meta.description );
+        } catch ( NoSuchFieldException e ) {
+            String availableProperties = getFilterableProperties().stream().sorted().collect( Collectors.joining( ", " ) );
+            throw new IllegalArgumentException( String.format( "Could not resolve property '%s' on %s. Available properties are: %s.", propertyName, elementClass.getName(), availableProperties ), e );
+        }
     }
 
     /**
@@ -201,11 +207,18 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
      */
     protected Class<?> resolveFilterPropertyType( String propertyName, Class<?> clazz ) {
         try {
-            return resolveFilterablePropertyTypeInternal( propertyName, clazz, FILTERABLE_PROPERTIES_MAX_DEPTH );
+            return resolveFilterablePropertyMetaInternal( propertyName, clazz, FILTERABLE_PROPERTIES_MAX_DEPTH ).propertyType;
         } catch ( NoSuchFieldException e ) {
             String availableProperties = getFilterableProperties().stream().sorted().collect( Collectors.joining( ", " ) );
             throw new IllegalArgumentException( String.format( "Could not resolve property '%s' on %s. Available properties are: %s.", propertyName, clazz.getName(), availableProperties ), e );
         }
+    }
+
+    @Value
+    private static class PartialFilterablePropertyMeta {
+        Class<?> propertyType;
+        @Nullable
+        String description;
     }
 
     /**
@@ -219,7 +232,7 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
      * @param cls      the class to check the property on.
      * @return the class of the property last in the line of nesting.
      */
-    private Class<?> resolveFilterablePropertyTypeInternal( String property, Class<?> cls, int maxDepth ) throws NoSuchFieldException {
+    private PartialFilterablePropertyMeta resolveFilterablePropertyMetaInternal( String property, Class<?> cls, int maxDepth ) throws NoSuchFieldException {
         if ( maxDepth == 0 ) {
             throw new IllegalArgumentException( String.format( "At most %d levels can be used for filtering.",
                     FILTERABLE_PROPERTIES_MAX_DEPTH ) );
@@ -231,7 +244,7 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
 
         // ID is kept separately from properties
         if ( parts[0].equals( classMetadata.getIdentifierPropertyName() ) ) {
-            return classMetadata.getIdentifierType().getReturnedClass();
+            return new PartialFilterablePropertyMeta( classMetadata.getIdentifierType().getReturnedClass(), null );
         }
 
         String[] propertyNames = classMetadata.getPropertyNames();
@@ -246,18 +259,50 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
         // recurse only on entity type
         if ( parts.length > 1 ) {
             if ( propertyType.isEntityType() ) {
-                return resolveFilterablePropertyTypeInternal( parts[1], propertyType.getReturnedClass(), maxDepth - 1 );
+                return resolveFilterablePropertyMetaInternal( parts[1], propertyType.getReturnedClass(), maxDepth - 1 );
             } else if ( propertyType.isCollectionType() && "size".equals( parts[1] ) ) {
-                return Integer.class; /* special case for collection size */
+                return new PartialFilterablePropertyMeta( Integer.class, null ); /* special case for collection size */
             } else {
                 throw new NoSuchFieldException( String.format( "%s is not an entity type in %s.", property, cls.getName() ) );
             }
         }
 
-        if ( Filter.getConversionService().canConvert( String.class, propertyType.getReturnedClass() ) ) {
-            return ( Class<?> ) propertyType.getReturnedClass();
+        Class<?> actualType = resolveActualType( propertyType );
+        String description = resolveDescription( propertyType );
+
+        if ( Filter.getConversionService().canConvert( String.class, actualType ) ) {
+            return new PartialFilterablePropertyMeta( actualType, description );
         } else {
             throw new NoSuchFieldException( String.format( "%s is not of a supported type or a collection of supported types %s.", property, cls.getName() ) );
+        }
+    }
+
+    private static Class<?> resolveActualType( Type propertyType ) {
+        Class<?> returnedClass = propertyType.getReturnedClass();
+        // special treatment for org.hibernate.EnumType
+        if ( propertyType instanceof CustomType
+                && ( ( CustomType ) propertyType ).getUserType() instanceof EnumType ) {
+            EnumType enumType = ( EnumType ) ( ( CustomType ) propertyType ).getUserType();
+            returnedClass = enumType.isOrdinal() ? Integer.class : String.class;
+        }
+        return returnedClass;
+    }
+
+    @Nullable
+    private static String resolveDescription( Type propertyType ) {
+        if ( propertyType instanceof CustomType && ( ( CustomType ) propertyType ).getUserType() instanceof EnumType ) {
+            EnumType et = ( EnumType ) ( ( CustomType ) propertyType ).getUserType();
+            //noinspection unchecked
+            EnumSet<?> es = EnumSet.allOf( et.returnedClass() );
+            String availableValues;
+            if ( et.isOrdinal() ) {
+                availableValues = es.stream().map( Enum::ordinal ).map( String::valueOf ).collect( Collectors.joining( ", " ) );
+            } else {
+                availableValues = es.stream().map( Enum::name ).collect( Collectors.joining( ", " ) );
+            }
+            return String.format( "available values: %s", availableValues );
+        } else {
+            return null;
         }
     }
 
