@@ -11,20 +11,32 @@
             <generator class="native">
             </generator>
         </id>
-        <property name="type" type="ubic.gemma.model.common.measurement.MeasurementTypeEnum">
+        <property name="type">
             <column name="TYPE" not-null="true" unique="false" sql-type="VARCHAR(255)"/>
+            <type name="org.hibernate.type.EnumType">
+                <param name="enumClass">ubic.gemma.model.common.measurement.MeasurementType</param>
+                <param name="useNamed">true</param>
+            </type>
         </property>
         <property name="value" type="java.lang.String">
             <column name="VALUE" not-null="false" unique="false" sql-type="VARCHAR(255)"/>
         </property>
-        <property name="kindCV" type="ubic.gemma.model.common.measurement.MeasurementKindEnum">
+        <property name="kindCV">
             <column name="KIND_C_V" not-null="false" unique="false" sql-type="VARCHAR(255)"/>
+            <type name="org.hibernate.type.EnumType">
+                <param name="enumClass">ubic.gemma.model.common.measurement.MeasurementKind</param>
+                <param name="useNamed">true</param>
+            </type>
         </property>
         <property name="otherKind" type="java.lang.String">
             <column name="OTHER_KIND" not-null="false" unique="false" sql-type="VARCHAR(255)"/>
         </property>
-        <property name="representation" type="ubic.gemma.model.common.quantitationtype.PrimitiveTypeEnum">
+        <property name="representation">
             <column name="REPRESENTATION" not-null="true" unique="false" sql-type="VARCHAR(255)"/>
+            <type name="org.hibernate.type.EnumType">
+                <param name="enumClass">ubic.gemma.model.common.quantitationtype.PrimitiveType</param>
+                <param name="useNamed">true</param>
+            </type>
         </property>
         <!-- absolutely necessary for this entity, so always fetched -->
         <many-to-one name="unit" class="ubic.gemma.model.common.measurement.UnitImpl" lazy="false" fetch="join">

@@ -1028,8 +1028,6 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
         Set<String> result = new HashSet<>( super.getFilterableProperties() );
         result.add( "taxon" );
         addFilterableProperties( "taxon.", Taxon.class, result, FILTERABLE_PROPERTIES_MAX_DEPTH - 1 );
-        // TODO: handle these in a generic manner (see https://github.com/PavlidisLab/Gemma/issues/522)
-        result.add( "technologyType" );
         return result;
     }
 
@@ -1044,10 +1042,6 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
         // handle cases such as taxon = 1
         if ( propertyName.equals( "taxon" ) ) {
             return new FilterablePropertyMeta( "t", "id", Long.class, "alias for taxon.id" );
-        }
-
-        if ( propertyName.equals( "technologyType" ) ) {
-            return new FilterablePropertyMeta( OBJECT_ALIAS, "technologyType", String.class, null );
         }
 
         return super.getFilterablePropertyMeta( propertyName );

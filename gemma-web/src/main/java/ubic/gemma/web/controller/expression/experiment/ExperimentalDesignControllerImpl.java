@@ -132,7 +132,7 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
         ExperimentalDesign ed = experimentalDesignService.loadWithExperimentalFactors( e.getId() );
 
         ExperimentalFactor ef = ExperimentalFactor.Factory.newInstance();
-        ef.setType( FactorType.fromString( efvo.getType() ) );
+        ef.setType( FactorType.valueOf( efvo.getType() ) );
         ef.setExperimentalDesign( ed );
         ef.setName( efvo.getName() );
         ef.setDescription( efvo.getDescription() );
@@ -616,7 +616,7 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
             ef.setName( efvo.getName() );
             ef.setDescription( efvo.getDescription() );
 
-            FactorType newType = FactorType.fromString( efvo.getType() );
+            FactorType newType = efvo.getType() != null ? FactorType.valueOf( efvo.getType() ) : null;
             if ( newType == null || !newType.equals( ef.getType() ) ) {
                 // we only allow this if there are no factors
                 if ( ef.getFactorValues().isEmpty() ) {
