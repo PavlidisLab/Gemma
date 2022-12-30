@@ -39,7 +39,7 @@ public abstract class AbstractAsyncFactoryBean<T> implements AsyncFactoryBean<T>
     /**
      * Singleton if {@link #isSingleton()} is true.
      */
-    private Future<T> singletonBean;
+    private volatile Future<T> singletonBean;
 
     /**
      * Pending futures, but might also contain completed ones.
@@ -60,10 +60,10 @@ public abstract class AbstractAsyncFactoryBean<T> implements AsyncFactoryBean<T>
     public final Future<T> getObject() {
         Future<T> future;
         if ( isSingleton() ) {
+            if ( singletonBean != null ) {
+                return singletonBean;
+            }
             synchronized ( this ) {
-                if ( singletonBean != null ) {
-                    return singletonBean;
-                }
                 singletonBean = future = executor.submit( this::createObject );
             }
         } else {
