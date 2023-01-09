@@ -122,8 +122,8 @@ public class Filters implements Iterable<Filter[]> {
      * An empty {@link Filters} has no effect whatsoever on the result of a query.
      */
     public boolean isEmpty() {
-        // hint: allMatch returns false if the stream is empty
-        return clauses.isEmpty();
+        // hint: allMatch returns true if the stream is empty
+        return clauses.stream().allMatch( arr -> arr.length == 0 );
     }
 
     /**
