@@ -1760,8 +1760,6 @@ public class ExpressionExperimentDaoImpl
         Set<String> results = new HashSet<>( super.getFilterableProperties() );
         addFilterableProperties( "characteristics.", Characteristic.class, results, FILTERABLE_PROPERTIES_MAX_DEPTH - 1 );
         addFilterableProperties( "bioAssays.", BioAssay.class, results, FILTERABLE_PROPERTIES_MAX_DEPTH - 1 );
-        // TODO: handle these in a generic manner (see https://github.com/PavlidisLab/Gemma/issues/522)
-        results.add( "bioAssays.arrayDesignUsed.technologyType" );
         results.add( "taxon" );
         addFilterableProperties( "taxon.", Taxon.class, results, FILTERABLE_PROPERTIES_MAX_DEPTH - 1 );
         results.add( "bioAssayCount" );
