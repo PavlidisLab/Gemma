@@ -37,7 +37,7 @@
                     sql-type="VARCHAR(255)"/>
             <type name="org.hibernate.type.EnumType">
                 <param name="enumClass">ubic.gemma.model.genome.biosequence.PolymerType</param>
-                <param name="usedNamed">true</param>
+                <param name="useNamed">true</param>
             </type>
         </property>
         <property name="type">
@@ -45,7 +45,7 @@
                     sql-type="VARCHAR(255)"/>
             <type name="org.hibernate.type.EnumType">
                 <param name="enumClass">ubic.gemma.model.genome.biosequence.SequenceType</param>
-                <param name="usedNamed">true</param>
+                <param name="useNamed">true</param>
             </type>
         </property>
         <property name="fractionRepeats" type="java.lang.Double">
