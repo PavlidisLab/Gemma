@@ -29,17 +29,15 @@ import java.util.Collection;
  */
 public interface BaseDao<T> {
 
+    /**
+     * Obtain the element class of {@link T}.
+     */
     Class<? extends T> getElementClass();
 
     /**
-     * Obtain the identifiable property name for {@link O}.
+     * Obtain the identifiable property name for {@link T}.
      */
     String getIdentifierPropertyName();
-
-    /**
-     * Obtain the element class of this.
-     */
-    Class<? extends T> getElementClass();
 
     /**
      * Crates all the given entities in the persistent storage.
