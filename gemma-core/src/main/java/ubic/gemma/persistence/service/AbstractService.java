@@ -47,7 +47,7 @@ public abstract class AbstractService<O extends Identifiable> implements BaseSer
     @Transactional(readOnly = true)
     public O findOrFail( O entity ) {
         return Objects.requireNonNull( mainDao.find( entity ),
-                String.format( "No %s matching %s could be found.", getElementClass().getName(), entity ) );
+                String.format( "No %s matching %s could be found.", mainDao.getElementClass().getName(), entity ) );
     }
 
     @Override

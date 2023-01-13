@@ -42,7 +42,11 @@ public interface ExternalDatabaseService extends BaseService<ExternalDatabase> {
     @Secured({ "GROUP_ADMIN" })
     ExternalDatabase create( ExternalDatabase entity );
 
+    ExternalDatabase loadWithExternalDatabases( Long id );
+
     ExternalDatabase findByName( String name );
+
+    ExternalDatabase findByNameWithExternalDatabases( String name );
 
     @Secured({ "GROUP_ADMIN", "GROUP_AGENT" })
     ExternalDatabase findByNameWithAuditTrail( String name );

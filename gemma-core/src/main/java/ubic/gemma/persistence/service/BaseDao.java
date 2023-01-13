@@ -37,6 +37,11 @@ public interface BaseDao<T> {
     String getIdentifierPropertyName();
 
     /**
+     * Obtain the element class of this.
+     */
+    Class<? extends T> getElementClass();
+
+    /**
      * Crates all the given entities in the persistent storage.
      *
      * @param entities the entities to be crated.
