@@ -19,6 +19,7 @@
 package ubic.gemma.web.util;
 
 import org.junit.Before;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.test.context.ActiveProfiles;
@@ -50,8 +51,9 @@ public abstract class BaseSpringWebTest extends BaseSpringContextTest {
 
     protected MockMvc mvc;
 
-    @Before
-    public void setUpMockMvc() {
+    @Override
+    public void afterPropertiesSet() {
+        super.afterPropertiesSet();
         mvc = MockMvcBuilders.webAppContextSetup( applicationContext ).build();
     }
 
