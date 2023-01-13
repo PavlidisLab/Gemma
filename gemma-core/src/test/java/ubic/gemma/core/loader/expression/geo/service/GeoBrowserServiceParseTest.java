@@ -16,6 +16,7 @@ package ubic.gemma.core.loader.expression.geo.service;
 
 import org.junit.Test;
 
+import org.springframework.core.io.ClassPathResource;
 import ubic.gemma.core.loader.expression.geo.model.GeoRecord;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
@@ -161,8 +162,7 @@ public class GeoBrowserServiceParseTest {
 
     @Test
     public void testParse2() throws Exception {
-        try ( InputStream is = this.getClass()
-                .getResourceAsStream( "/data/loader/expression/geo/geo.esummary.test1.xml" );
+        try ( InputStream is = new ClassPathResource( "/data/loader/expression/geo/geo.esummary.test1.xml" ).getInputStream();
                 BufferedReader r = new BufferedReader( new InputStreamReader( is ) ) ) {
 
             String l;
@@ -188,8 +188,7 @@ public class GeoBrowserServiceParseTest {
 
     @Test
     public void testParse3() throws Exception {
-        try ( InputStream is = this.getClass()
-                .getResourceAsStream( "/data/loader/expression/geo/geo.esummary.test2.xml" );
+        try ( InputStream is = new ClassPathResource( "/data/loader/expression/geo/geo.esummary.test2.xml" ).getInputStream();
                 BufferedReader r = new BufferedReader( new InputStreamReader( is ) ) ) {
 
             String l;
@@ -215,8 +214,7 @@ public class GeoBrowserServiceParseTest {
 
     @Test
     public void testMINiMLParse() throws Exception {
-        try ( InputStream is = this.getClass()
-                .getResourceAsStream( "/data/loader/expression/geo/GSE180363.miniml.xml" );
+        try ( InputStream is = new ClassPathResource( "/data/loader/expression/geo/GSE180363.miniml.xml" ).getInputStream();
                 BufferedReader r = new BufferedReader( new InputStreamReader( is ) ) ) {
 
             String l;
@@ -236,8 +234,7 @@ public class GeoBrowserServiceParseTest {
     @Test
     public void testSampleMINiMLParse() throws Exception {
 
-        try ( InputStream is = this.getClass()
-                .getResourceAsStream( "/data/loader/expression/geo/GSE171682.xml" );
+        try ( InputStream is = new ClassPathResource( "/data/loader/expression/geo/GSE171682.xml" ).getInputStream();
                 BufferedReader r = new BufferedReader( new InputStreamReader( is ) ) ) {
 
             String l;

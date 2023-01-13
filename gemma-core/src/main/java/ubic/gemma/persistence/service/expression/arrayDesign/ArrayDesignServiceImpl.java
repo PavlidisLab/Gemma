@@ -454,7 +454,7 @@ public class ArrayDesignServiceImpl extends AbstractFilteringVoEnabledService<Ar
             if ( events == null ) {
                 lastEventMap.put( arrayDesignId, null );
             } else {
-                ArrayDesign ad = this.load( arrayDesignId );
+                ArrayDesign ad = this.loadOrFail( arrayDesignId );
                 lastEvent = this.auditEventDao.getLastEvent( ad, eventclass );
                 lastEventMap.put( arrayDesignId, lastEvent );
             }

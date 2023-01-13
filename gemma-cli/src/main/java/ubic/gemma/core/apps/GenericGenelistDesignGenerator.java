@@ -118,9 +118,9 @@ public class GenericGenelistDesignGenerator extends AbstractCLIContextCLI {
 
         if ( arrayDesignService.find( arrayDesign ) != null ) {
             AbstractCLI.log.info( "Platform for " + taxon + " already exists, will update" );
-            arrayDesign = arrayDesignService.find( arrayDesign );
+            arrayDesign = arrayDesignService.findOrFail( arrayDesign );
             arrayDesignService.deleteGeneProductAnnotationAssociations( arrayDesign );
-            arrayDesign = arrayDesignService.load( arrayDesign.getId() );
+            arrayDesign = arrayDesignService.loadOrFail( arrayDesign.getId() );
 
         } else {
             AbstractCLI.log.info( "Creating new 'generic' platform" );

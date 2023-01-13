@@ -3,6 +3,8 @@ package ubic.gemma.core.search;
 import org.junit.Test;
 import ubic.gemma.model.common.Identifiable;
 
+import javax.annotation.Nullable;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
@@ -16,7 +18,7 @@ public class SearchResultTest {
 
         private final Long id;
 
-        private FooBar( Long id ) {
+        private FooBar( @Nullable Long id ) {
             this.id = id;
         }
 

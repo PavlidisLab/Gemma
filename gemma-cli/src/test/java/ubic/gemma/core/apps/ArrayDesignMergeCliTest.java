@@ -12,6 +12,7 @@ import ubic.gemma.core.util.AbstractCLI;
 import ubic.gemma.core.util.test.BaseCliTest;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
+import ubic.gemma.persistence.util.TestComponent;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -24,6 +25,7 @@ import static org.mockito.Mockito.*;
 public class ArrayDesignMergeCliTest extends BaseCliTest {
 
     @Configuration
+    @TestComponent
     public static class ArrayDesignMergeCliTestContextConfiguration extends BaseCliTestContextConfiguration {
 
         @Bean

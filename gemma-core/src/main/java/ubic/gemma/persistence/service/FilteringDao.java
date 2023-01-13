@@ -15,11 +15,12 @@ import ubic.gemma.persistence.util.Sort;
 public interface FilteringDao<O extends Identifiable> extends BaseDao<O> {
 
     /**
-     * Obtain the element class of this.
-     *
+     * {@inheritDoc}
+     * <p>
      * The purpose of this interface is to provide introspectable properties to construct {@link ObjectFilter} and
      * {@link Sort} objects.
      */
+    @Override
     Class<? extends O> getElementClass();
 
     /**

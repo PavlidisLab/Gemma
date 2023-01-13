@@ -31,6 +31,7 @@ import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.persistence.service.FilteringVoEnabledService;
 import ubic.gemma.persistence.util.Slice;
 
+import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -115,12 +116,12 @@ public interface CompositeSequenceService
     Map<CompositeSequence, Collection<BioSequence2GeneProduct>> getGenesWithSpecificity(
             Collection<CompositeSequence> compositeSequences );
 
-    Collection<Object[]> getRawSummary( Collection<CompositeSequence> compositeSequences, Integer numResults );
+    Collection<Object[]> getRawSummary( Collection<CompositeSequence> compositeSequences );
 
-    Collection<Object[]> getRawSummary( ArrayDesign arrayDesign, Integer numResults );
+    Collection<Object[]> getRawSummary( ArrayDesign arrayDesign, int numResults );
 
     Collection<GeneMappingSummary> getGeneMappingSummary( BioSequence biologicalCharacteristic,
-            CompositeSequenceValueObject cs );
+            @Nullable CompositeSequenceValueObject cs );
 
     void thaw( Collection<CompositeSequence> compositeSequences );
 

@@ -18,9 +18,11 @@
  */
 package ubic.gemma.model.common.quantitationtype;
 
-import ubic.gemma.model.common.Describable;
+import ubic.gemma.model.common.AbstractDescribable;
 
-public abstract class QuantitationType extends Describable {
+import java.io.Serializable;
+
+public abstract class QuantitationType extends AbstractDescribable implements Serializable {
 
     /**
      * The serial version UID of this class. Needed for serialization.

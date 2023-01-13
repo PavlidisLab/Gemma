@@ -19,8 +19,10 @@
 
 package ubic.gemma.model.analysis;
 
-import ubic.gemma.model.common.Describable;
+import ubic.gemma.model.common.AbstractDescribable;
 import ubic.gemma.model.common.protocol.Protocol;
+
+import java.io.Serializable;
 
 /**
  * An analysis of one or more Investigations. The manner in which the analysis was done is described in the Protocol and
@@ -28,7 +30,7 @@ import ubic.gemma.model.common.protocol.Protocol;
  *
  * @author Paul
  */
-public abstract class Analysis extends Describable {
+public abstract class Analysis extends AbstractDescribable implements Serializable {
 
     private static final long serialVersionUID = -7666181528240555473L;
     private Protocol protocol;

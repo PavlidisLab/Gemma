@@ -20,6 +20,7 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
+import ubic.gemma.persistence.util.TestComponent;
 import ubic.gemma.web.services.rest.util.args.LimitArg;
 import ubic.gemma.web.services.rest.util.args.PlatformArg;
 import ubic.gemma.web.services.rest.util.args.TaxonArg;
@@ -37,6 +38,7 @@ import static org.mockito.Mockito.*;
 public class SearchWebServiceTest extends AbstractJUnit4SpringContextTests {
 
     @Configuration
+    @TestComponent
     public static class SearchWebServiceTestContextConfiguration {
 
         @Bean

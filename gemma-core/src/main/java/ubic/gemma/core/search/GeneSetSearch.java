@@ -43,6 +43,7 @@ public interface GeneSetSearch {
      * @param taxonId taxon id
      * @return a GeneSet or null if nothing is found
      */
+    @Nullable
     GOGroupValueObject findGeneSetValueObjectByGoId( String goId, @Nullable Long taxonId );
 
     /**
@@ -52,7 +53,8 @@ public interface GeneSetSearch {
      * @param taxon taxon
      * @return a GeneSet or null if nothing is found
      */
-    GeneSet findByGoId( String goId, Taxon taxon );
+    @Nullable
+    GeneSet findByGoId( String goId, @Nullable Taxon taxon );
 
     /**
      * finds gene sets by go term name eg: "trans-hexaPrenylTransTransferase activity" Note: the gene sets returned are
@@ -74,8 +76,8 @@ public interface GeneSetSearch {
      * @param maxGeneSetSize      max gene set size
      * @return a collection with the hits
      */
-    Collection<GeneSet> findByGoTermName( String goTermName, Taxon taxon, Integer maxGoTermsProcessed,
-            Integer maxGeneSetSize ) throws OntologySearchException;
+    Collection<GeneSet> findByGoTermName( String goTermName, @Nullable Taxon taxon, @Nullable Integer maxGoTermsProcessed,
+            @Nullable Integer maxGeneSetSize ) throws OntologySearchException;
 
     /**
      * @param name name

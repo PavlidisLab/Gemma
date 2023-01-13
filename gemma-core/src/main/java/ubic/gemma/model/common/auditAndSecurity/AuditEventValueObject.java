@@ -63,7 +63,7 @@ public class AuditEventValueObject extends IdentifiableValueObject<AuditEvent> {
         if ( ae.getPerformer() != null )
             this.setPerformer( ae.getPerformer().getUserName() );
         if ( ae.getAction() != null )
-            this.setAction( ae.getAction().getValue() );
+            this.setAction( ae.getAction().name() );
         this.setEventType( ae.getEventType() );
         this.setNote( ae.getNote() );
         this.setDate( ae.getDate() );

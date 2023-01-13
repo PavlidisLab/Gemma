@@ -72,7 +72,7 @@ public class ArrayDesignMapResultServiceImpl implements ArrayDesignMapResultServ
 
     @Override
     public Collection<CompositeSequenceMapValueObject> getSummaryMapValueObjects( ArrayDesign arrayDesign ) {
-        Collection<Object[]> sequenceData = compositeSequenceService.getRawSummary( arrayDesign, null );
+        Collection<Object[]> sequenceData = compositeSequenceService.getRawSummary( arrayDesign, -1 );
         return this.getSummaryMapValueObjects( sequenceData );
     }
 

@@ -51,6 +51,7 @@ import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.persistence.util.EntityUtils;
 
+import javax.annotation.Nullable;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
@@ -129,7 +130,7 @@ public class GeeqServiceImpl extends AbstractVoEnabledService<Geeq, GeeqValueObj
     @Override
     @Transactional
     public void setManualOverrides( Long eeId, GeeqAdminValueObject gqVo ) {
-        ExpressionExperiment ee = expressionExperimentService.load( eeId );
+        ExpressionExperiment ee = expressionExperimentService.loadOrFail( eeId );
         ee = expressionExperimentService.thawLiter( ee );
         Geeq gq = ee.getGeeq();
 
@@ -256,8 +257,8 @@ public class GeeqServiceImpl extends AbstractVoEnabledService<Geeq, GeeqValueObj
         }
 
         // Recalculate final scores
-        gq = this.updateQualityScore( gq );
-        gq = this.updateSuitabilityScore( gq );
+        this.updateQualityScore( gq );
+        this.updateSuitabilityScore( gq );
 
         // Add note if experiment curation not finished
         if ( ee.getCurationDetails().getNeedsAttention() ) {
@@ -266,7 +267,7 @@ public class GeeqServiceImpl extends AbstractVoEnabledService<Geeq, GeeqValueObj
 
         stopwatch.stop();
         this.createGeeqEvent( ee, "Re-ran geeq scoring (mode: " + mode + ")",
-                "Took " + stopwatch.getTime() + "ms.\nUnexpected problems encountered: \n" + gq
+                "Took " + stopwatch.getTime() + " ms.\nUnexpected problems encountered: \n" + gq
                         .getOtherIssues() );
 
         this.update( gq );
@@ -276,20 +277,18 @@ public class GeeqServiceImpl extends AbstractVoEnabledService<Geeq, GeeqValueObj
 
     }
 
-    private Geeq updateSuitabilityScore( Geeq gq ) {
+    private void updateSuitabilityScore( Geeq gq ) {
         double[] suitability = gq.getSuitabilityScoreArray();
         double[] weights = gq.getSuitabilityScoreWeightsArray();
         double score = this.getWeightedMean( suitability, weights );
         gq.setDetectedSuitabilityScore( score );
-        return gq;
     }
 
-    private Geeq updateQualityScore( Geeq gq ) {
+    private void updateQualityScore( Geeq gq ) {
         double[] quality = gq.getQualityScoreArray();
         double[] weights = gq.getQualityScoreWeightsArray();
         double score = this.getWeightedMean( quality, weights );
         gq.setDetectedQualityScore( score );
-        return gq;
     }
 
     private Geeq scoreAll( ExpressionExperiment ee ) {
@@ -529,7 +528,7 @@ public class GeeqServiceImpl extends AbstractVoEnabledService<Geeq, GeeqValueObj
      * Quality scoring methods
      */
 
-    private void scoreOutliers( Geeq gq, DoubleMatrix<BioAssay, BioAssay> cormat ) {
+    private void scoreOutliers( Geeq gq, @Nullable DoubleMatrix<BioAssay, BioAssay> cormat ) {
         double score;
         boolean hasCorrMat = true;
         boolean hasNaNs = false;
@@ -568,7 +567,7 @@ public class GeeqServiceImpl extends AbstractVoEnabledService<Geeq, GeeqValueObj
         boolean twoColor = false;
 
         for ( ArrayDesign ad : ads ) {
-            if ( ad.getTechnologyType().getValue().equals( TechnologyType.TWOCOLOR.getValue() ) ) {
+            if ( ad.getTechnologyType().equals( TechnologyType.TWOCOLOR) ) {
                 twoColor = true;
                 break;
             }

@@ -385,6 +385,7 @@ public class QuantitationTypeParameterGuesser {
         isRatio = QuantitationTypeParameterGuesser.isRatio( namelc, descriptionlc );
 
         if ( qType.equals( StandardQuantitationType.AMOUNT ) || qType.equals( StandardQuantitationType.COUNT ) ) {
+            //noinspection DataFlowIssue
             gType = GeneralType.QUANTITATIVE;
         } else if ( qType.equals( StandardQuantitationType.PRESENTABSENT ) ) {
             gType = GeneralType.CATEGORICAL;

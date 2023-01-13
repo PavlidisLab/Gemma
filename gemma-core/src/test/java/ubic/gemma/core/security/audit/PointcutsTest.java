@@ -16,6 +16,7 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.persistence.retry.Retryable;
+import ubic.gemma.persistence.util.TestComponent;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
@@ -24,6 +25,7 @@ import static org.mockito.Mockito.*;
 public class PointcutsTest extends AbstractJUnit4SpringContextTests {
 
     @Configuration
+    @TestComponent
     @EnableAspectJAutoProxy
     static class AuditAdviceTestContextConfiguration {
         @Bean

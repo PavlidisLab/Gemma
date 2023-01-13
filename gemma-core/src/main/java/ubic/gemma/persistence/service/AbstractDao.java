@@ -79,6 +79,11 @@ public abstract class AbstractDao<T extends Identifiable> implements BaseDao<T> 
     }
 
     @Override
+    public Class<? extends T> getElementClass() {
+        return elementClass;
+    }
+
+    @Override
     public Collection<T> create( Collection<T> entities ) {
         StopWatch stopWatch = StopWatch.createStarted();
         warnIfBatchingIsNotAdvisable( "remove", entities );

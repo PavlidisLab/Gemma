@@ -10,6 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.core.util.test.BaseSpringContextTest;
 import ubic.gemma.model.common.description.Characteristic;
 
+import javax.annotation.Nullable;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Map;
@@ -62,7 +63,7 @@ public class CharacteristicDaoImplTest extends BaseSpringContextTest {
         assertThat( results ).containsKeys( "http://test/T0006".toLowerCase(), "http://test/T0002".toLowerCase() );
     }
 
-    private Characteristic createCharacteristic( String valueUri, String value ) {
+    private Characteristic createCharacteristic( @Nullable String valueUri, String value ) {
         Characteristic c = new Characteristic();
         c.setValueUri( valueUri );
         c.setValue( value );

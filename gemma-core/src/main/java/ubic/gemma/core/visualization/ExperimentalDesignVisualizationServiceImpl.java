@@ -485,10 +485,10 @@ public class ExperimentalDesignVisualizationServiceImpl implements ExperimentalD
                 log.error( "Vector is sliced, but the source experiment is null!" );
             }
 
-            actualEe = expressionExperimentService.load( eesvo.getSourceExperiment() );
+            actualEe = expressionExperimentService.loadOrFail( eesvo.getSourceExperiment() );
             actualEe = expressionExperimentService.thawLiter( actualEe );
         } else {
-            actualEe = expressionExperimentService.load( ee.getId() );
+            actualEe = expressionExperimentService.loadOrFail( ee.getId() );
             actualEe = expressionExperimentService.thawLiter( actualEe );
         }
         return actualEe;

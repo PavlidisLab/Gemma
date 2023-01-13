@@ -177,7 +177,7 @@ public class ArrayDesignValueObject extends AbstractCuratableValueObject<ArrayDe
         TechnologyType c = ad.getTechnologyType();
         if ( c != null ) {
             this.technologyType = c.toString();
-            this.color = c.getValue();
+            this.color = c.name();
         }
 
         // no need to initialize them to know if the entities exist

@@ -19,17 +19,14 @@
 
 package ubic.gemma.model.common.description;
 
+import ubic.gemma.model.common.AbstractDescribable;
 import ubic.gemma.model.common.Auditable;
-import ubic.gemma.model.common.Describable;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
-import ubic.gemma.model.common.auditAndSecurity.AuditTrailImpl;
 import ubic.gemma.model.common.auditAndSecurity.Contact;
 
 import javax.annotation.Nullable;
-import javax.persistence.Transient;
-import javax.persistence.Version;
+import java.io.Serializable;
 import java.net.URL;
-import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
@@ -37,7 +34,7 @@ import java.util.Set;
 /**
  * @author Paul
  */
-public class ExternalDatabase extends Describable implements Auditable, Versioned {
+public class ExternalDatabase extends AbstractDescribable implements Auditable, Versioned, Serializable {
 
     /**
      * The serial version UID of this class. Needed for serialization.

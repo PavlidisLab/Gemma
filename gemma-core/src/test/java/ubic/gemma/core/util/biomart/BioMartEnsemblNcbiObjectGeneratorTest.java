@@ -18,14 +18,18 @@
  */
 package ubic.gemma.core.util.biomart;
 
+import org.apache.commons.io.FileUtils;
 import org.junit.Before;
 import org.junit.Test;
 
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.Resource;
 import ubic.gemma.core.loader.util.biomart.BiomartEnsemblNcbiObjectGenerator;
 import ubic.gemma.core.loader.util.biomart.Ensembl2NcbiValueObject;
 import ubic.gemma.model.genome.Taxon;
 
 import java.io.File;
+import java.io.IOException;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
@@ -47,7 +51,7 @@ public class BioMartEnsemblNcbiObjectGeneratorTest {
     private File taxonBiomartFile = null;
 
     @Before
-    public void setUp() throws URISyntaxException {
+    public void setUp() throws URISyntaxException, IOException {
         biomartEnsemblNcbiObjectGenerator = new BiomartEnsemblNcbiObjectGenerator();
         Taxon taxon = Taxon.Factory.newInstance();
         taxon.setIsGenesUsable( true );
@@ -57,9 +61,8 @@ public class BioMartEnsemblNcbiObjectGeneratorTest {
         taxa.add( taxon );
 
         String fileNameBiomartmouse = "/data/loader/protein/biomart/biomartmmusculusShort.txt";
-        URL fileNameBiomartmouseURL = this.getClass().getResource( fileNameBiomartmouse );
-        taxonBiomartFile = new File( fileNameBiomartmouseURL.toURI() );
-
+        Resource resource = new ClassPathResource( fileNameBiomartmouse );
+        taxonBiomartFile = resource.getFile();
     }
 
     /**

@@ -172,17 +172,17 @@ public class ArrayDesignValueObjectExt extends ArrayDesignValueObject {
             return;
         }
 
-        if ( this.getTechnologyType().equals( TechnologyType.ONECOLOR.getValue() ) ) {
+        if ( this.getTechnologyType().equals( TechnologyType.ONECOLOR.name() ) ) {
             colorString = "one-color";
-        } else if ( this.getTechnologyType().equals( TechnologyType.TWOCOLOR.getValue() ) ) {
+        } else if ( this.getTechnologyType().equals( TechnologyType.TWOCOLOR.name() ) ) {
             colorString = "two-color";
-        } else if ( this.getTechnologyType().equals( TechnologyType.DUALMODE.getValue() ) ) {
+        } else if ( this.getTechnologyType().equals( TechnologyType.DUALMODE.name() ) ) {
             colorString = "dual mode";
-        } else if ( this.getTechnologyType().equals( TechnologyType.SEQUENCING.getValue() ) ) {
+        } else if ( this.getTechnologyType().equals( TechnologyType.SEQUENCING.name() ) ) {
             colorString = "sequencing-based";
-        } else if ( this.getTechnologyType().equals( TechnologyType.GENELIST.getValue() ) ) {
+        } else if ( this.getTechnologyType().equals( TechnologyType.GENELIST.name() ) ) {
             colorString = "gene list";
-        } else if ( this.getTechnologyType().equals( TechnologyType.OTHER.getValue() ) ) {
+        } else if ( this.getTechnologyType().equals( TechnologyType.OTHER.name() ) ) {
             colorString = "other";
         }
     }

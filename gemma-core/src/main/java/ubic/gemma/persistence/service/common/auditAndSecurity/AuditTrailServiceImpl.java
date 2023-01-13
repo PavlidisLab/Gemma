@@ -66,25 +66,25 @@ public class AuditTrailServiceImpl extends AbstractService<AuditTrail> implement
 
     @Override
     @Transactional
-    public AuditEvent addUpdateEvent( Auditable auditable, Class<? extends AuditEventType> type, String note, String detail ) {
+    public AuditEvent addUpdateEvent( Auditable auditable, Class<? extends AuditEventType> type, @Nullable String note, @Nullable String detail ) {
         return doAddUpdateEvent( auditable, getAuditEventType( type ), note, detail );
     }
 
     @Override
     @Transactional
-    public AuditEvent addUpdateEvent( Auditable auditable, Class<? extends AuditEventType> type, String note ) {
+    public AuditEvent addUpdateEvent( Auditable auditable, Class<? extends AuditEventType> type, @Nullable String note ) {
         return doAddUpdateEvent( auditable, getAuditEventType( type ), note, null );
     }
 
     @Override
     @Transactional
-    public AuditEvent addUpdateEvent( Auditable auditable, Class<? extends AuditEventType> type, String note, Throwable throwable ) {
+    public AuditEvent addUpdateEvent( Auditable auditable, Class<? extends AuditEventType> type, @Nullable String note, Throwable throwable ) {
         return doAddUpdateEvent( auditable, getAuditEventType( type ), note, ExceptionUtils.getStackTrace( throwable ) );
     }
 
     @Override
     @Transactional
-    public AuditEvent addUpdateEvent( final Auditable auditable, final String note ) {
+    public AuditEvent addUpdateEvent( final Auditable auditable, @Nullable final String note ) {
         return doAddUpdateEvent( auditable, null, note, null );
     }
 

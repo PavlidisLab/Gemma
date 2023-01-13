@@ -13,12 +13,13 @@ public class SequenceTypeValueObject implements Serializable {
 
     private String value;
 
+    @SuppressWarnings("unused")
     public SequenceTypeValueObject() {
 
     }
 
     public SequenceTypeValueObject( SequenceType sequenceType ) {
-        this.value = sequenceType.getValue();
+        this.value = sequenceType.name();
     }
 
     @JsonValue

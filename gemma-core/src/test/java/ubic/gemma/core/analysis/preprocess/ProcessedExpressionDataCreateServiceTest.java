@@ -97,7 +97,7 @@ public class ProcessedExpressionDataCreateServiceTest extends AbstractGeoService
         processedExpressionDataVectorService.computeProcessedExpressionData( ee );
         Collection<ProcessedExpressionDataVector> preferredVectors = this.processedExpressionDataVectorService
                 .getProcessedDataVectors( ee );
-        ee = eeService.load( ee.getId() );
+        ee = eeService.loadOrFail( ee.getId() );
         ee = this.eeService.thawLite( ee );
         int numQts = ee.getQuantitationTypes().size();
         for ( ProcessedExpressionDataVector d : preferredVectors ) {
@@ -115,6 +115,7 @@ public class ProcessedExpressionDataCreateServiceTest extends AbstractGeoService
         processedExpressionDataVectorService.computeProcessedExpressionData( ee );
         // repeat, make sure deleted old QTs.
         ee = eeService.load( ee.getId() );
+        assertNotNull( ee );
         ee = this.eeService.thawLite( ee );
         assertEquals( numQts, ee.getQuantitationTypes().size() );
     }
@@ -143,6 +144,7 @@ public class ProcessedExpressionDataCreateServiceTest extends AbstractGeoService
         Collection<ProcessedExpressionDataVector> preferredVectors = this.processedExpressionDataVectorService
                 .getProcessedDataVectors( ee );
         ee = eeService.load( ee.getId() );
+        assertNotNull( ee );
         ee = this.eeService.thawLite( ee );
         processedExpressionDataVectorService.thaw( preferredVectors );
 
@@ -295,6 +297,7 @@ public class ProcessedExpressionDataCreateServiceTest extends AbstractGeoService
         }
 
         factor = this.experimentalFactorService.load( factor.getId() );
+        assertNotNull( factor );
         assertEquals( 2, factor.getFactorValues().size() );
 
         /*

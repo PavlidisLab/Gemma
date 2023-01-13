@@ -178,6 +178,7 @@ public class SecurityServiceTest extends BaseSpringContextTest {
         this.runAsUser( usertwo );
 
         entity = this.arrayDesignService.load( entity.getId() );
+        assertNotNull( entity );
         entity.setDescription( "woohoo, I can edit" );
         this.arrayDesignService.update( entity );
         // no exception == happy.
@@ -186,6 +187,7 @@ public class SecurityServiceTest extends BaseSpringContextTest {
         this.securityService.makeUnreadableByGroup( entity, groupName );
         // should still work.
         entity = this.arrayDesignService.load( entity.getId() );
+        assertNotNull( entity );
 
         this.runAsUser( usertwo );
         // should be locked out.

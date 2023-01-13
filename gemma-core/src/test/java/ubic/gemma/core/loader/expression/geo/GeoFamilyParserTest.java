@@ -22,6 +22,7 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.springframework.core.io.ClassPathResource;
 import ubic.gemma.core.loader.expression.geo.model.GeoPlatform;
 import ubic.gemma.core.loader.expression.geo.model.GeoSample;
 import ubic.gemma.core.loader.expression.geo.model.GeoSeries;
@@ -41,16 +42,16 @@ public class GeoFamilyParserTest {
 
     @Test
     public void testParseBigA() throws Exception {
-        is = new GZIPInputStream( this.getClass()
-                .getResourceAsStream( "/data/loader/expression/geo/fullSizeTests/GSE1623_family.soft.txt.gz" ) );
+        is = new GZIPInputStream(
+                new ClassPathResource( "/data/loader/expression/geo/fullSizeTests/GSE1623_family.soft.txt.gz" ).getInputStream() );
         parser.parse( is );
         Assert.assertEquals( 8, ( ( GeoParseResult ) parser.getResults().iterator().next() ).getSamples().size() );
     }
 
     @Test
     public void testParseBigBPlatformOnly() throws Exception {
-        is = new GZIPInputStream( this.getClass()
-                .getResourceAsStream( "/data/loader/expression/geo/fullSizeTests/GSE1623_family.soft.txt.gz" ) );
+        is = new GZIPInputStream(
+                new ClassPathResource( "/data/loader/expression/geo/fullSizeTests/GSE1623_family.soft.txt.gz" ).getInputStream() );
         parser.setProcessPlatformsOnly( true );
         parser.parse( is );
         Assert.assertEquals( 0, ( ( GeoParseResult ) parser.getResults().iterator().next() ).getSamples().size() );
@@ -64,15 +65,15 @@ public class GeoFamilyParserTest {
     @Test
     public void testParseDataset() throws Exception {
         is = new GZIPInputStream(
-                this.getClass().getResourceAsStream( "/data/loader/expression/geo/fullSizeTests/GDS100.soft.txt.gz" ) );
+                new ClassPathResource( "/data/loader/expression/geo/fullSizeTests/GDS100.soft.txt.gz" ).getInputStream() );
         parser.parse( is );
         Assert.assertEquals( 8, ( ( GeoParseResult ) parser.getResults().iterator().next() ).getSamples().size() );
     }
 
     @Test
     public void testParseGenePix() throws Exception {
-        is = new GZIPInputStream( this.getClass()
-                .getResourceAsStream( "/data/loader/expression/geo/shortGenePix/GSE2221_family.soft.gz" ) );
+        is = new GZIPInputStream(
+                new ClassPathResource( "/data/loader/expression/geo/shortGenePix/GSE2221_family.soft.gz" ).getInputStream() );
         parser.parse( is );
         GeoSample sample = ( ( GeoParseResult ) parser.getResults().iterator().next() ).getSamples().values().iterator()
                 .next();
@@ -86,7 +87,7 @@ public class GeoFamilyParserTest {
     @Test
     public void testParseGSE29014() throws Exception {
         is = new GZIPInputStream(
-                this.getClass().getResourceAsStream( "/data/loader/expression/geo/GSE29014.soft.gz" ) );
+                new ClassPathResource( "/data/loader/expression/geo/GSE29014.soft.gz" ).getInputStream() );
         parser.parse( is );
 
         GeoSeries series = ( ( GeoParseResult ) parser.getResults().iterator().next() ).getSeriesMap()
@@ -100,15 +101,15 @@ public class GeoFamilyParserTest {
      */
     @Test
     public void testParseGse432() throws Exception {
-        is = new GZIPInputStream( this.getClass()
-                .getResourceAsStream( "/data/loader/expression/geo/gse432Short/GSE432_family.soft.gz" ) );
+        is = new GZIPInputStream(
+                new ClassPathResource( "/data/loader/expression/geo/gse432Short/GSE432_family.soft.gz" ).getInputStream() );
         parser.parse( is );
     }
 
     @Test
     public void testParseSAGE() throws Exception {
         is = new GZIPInputStream(
-                this.getClass().getResourceAsStream( "/data/loader/expression/geo/gse2122shortSage/GSE2122.soft.gz" ) );
+                new ClassPathResource( "/data/loader/expression/geo/gse2122shortSage/GSE2122.soft.gz" ).getInputStream() );
         parser.parse( is );
         GeoSample sample = ( ( GeoParseResult ) parser.getResults().iterator().next() ).getSamples().values().iterator()
                 .next();

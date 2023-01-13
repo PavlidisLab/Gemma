@@ -19,6 +19,7 @@
 package ubic.gemma.core.loader.genome.gene.ncbi;
 
 import junit.framework.TestCase;
+import org.springframework.core.io.ClassPathResource;
 
 import java.io.InputStream;
 import java.util.HashMap;
@@ -31,8 +32,7 @@ import java.util.zip.GZIPInputStream;
 public class NCBIGeneParserTest extends TestCase {
 
     public void testParseGene2Accession() throws Exception {
-        InputStream is = new GZIPInputStream(
-                this.getClass().getResourceAsStream( "/data/loader/genome/gene/gene2accession.sample.gz" ) );
+        InputStream is = new GZIPInputStream( new ClassPathResource( "/data/loader/genome/gene/gene2accession.sample.gz" ).getInputStream() );
         NcbiGene2AccessionParser ncbiGene2AccessionParser = new NcbiGene2AccessionParser();
         ncbiGene2AccessionParser.geneInfo = new HashMap<>();
         ncbiGene2AccessionParser.parse( is, new ArrayBlockingQueue<NcbiGeneData>( 10 ) );
@@ -40,8 +40,7 @@ public class NCBIGeneParserTest extends TestCase {
     }
 
     public void testParseGeneInfo() throws Exception {
-        InputStream is = new GZIPInputStream(
-                this.getClass().getResourceAsStream( "/data/loader/genome/gene/gene_info.sample.gz" ) );
+        InputStream is = new GZIPInputStream( new ClassPathResource( "/data/loader/genome/gene/gene_info.sample.gz" ).getInputStream() );
         NcbiGeneInfoParser ncbiGeneInfoParser = new NcbiGeneInfoParser();
         ncbiGeneInfoParser.setFilter( false );
         ncbiGeneInfoParser.parse( is );

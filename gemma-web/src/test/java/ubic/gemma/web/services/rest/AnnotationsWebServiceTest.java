@@ -6,7 +6,6 @@ import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
 import org.springframework.test.context.web.WebAppConfiguration;
@@ -24,9 +23,9 @@ import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.persistence.util.Sort;
+import ubic.gemma.persistence.util.TestComponent;
 import ubic.gemma.web.services.rest.util.args.*;
 
-import javax.ws.rs.NotFoundException;
 import java.util.Collections;
 
 import static org.mockito.Mockito.*;
@@ -39,6 +38,7 @@ import static org.mockito.Mockito.*;
 public class AnnotationsWebServiceTest extends AbstractJUnit4SpringContextTests {
 
     @Configuration
+    @TestComponent
     public static class AnnotationsWebServiceContextConfiguration {
 
         @Bean

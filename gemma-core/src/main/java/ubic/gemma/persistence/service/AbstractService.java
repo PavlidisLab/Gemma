@@ -5,8 +5,10 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.common.Identifiable;
 
+import javax.annotation.Nonnull;
 import javax.annotation.OverridingMethodsMustInvokeSuper;
 import java.util.Collection;
+import java.util.Objects;
 
 /**
  * Base for all services handling DAO access.
@@ -28,6 +30,14 @@ public abstract class AbstractService<O extends Identifiable> implements BaseSer
     @Transactional(readOnly = true)
     public O find( O entity ) {
         return mainDao.find( entity );
+    }
+
+    @Nonnull
+    @Override
+    @Transactional(readOnly = true)
+    public O findOrFail( O entity ) {
+        return Objects.requireNonNull( mainDao.find( entity ),
+                String.format( "No %s matching %s could be found.", mainDao.getElementClass().getName(), entity ) );
     }
 
     @Override
@@ -72,6 +82,14 @@ public abstract class AbstractService<O extends Identifiable> implements BaseSer
     @Transactional(readOnly = true)
     public O load( Long id ) {
         return mainDao.load( id );
+    }
+
+    @Nonnull
+    @Override
+    @Transactional(readOnly = true)
+    public final O loadOrFail( Long id ) {
+        return Objects.requireNonNull( mainDao.load( id ),
+                String.format( "No %s with ID %d.", mainDao.getElementClass().getName(), id ) );
     }
 
     @Override

@@ -19,6 +19,7 @@ import ubic.gemma.persistence.service.expression.experiment.ExpressionExperiment
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSetService;
 import ubic.gemma.persistence.service.genome.biosequence.BioSequenceService;
 import ubic.gemma.persistence.service.genome.gene.GeneProductService;
+import ubic.gemma.persistence.util.TestComponent;
 
 import static org.mockito.Mockito.*;
 
@@ -26,6 +27,7 @@ import static org.mockito.Mockito.*;
 public class DatabaseSearchSourceTest extends AbstractJUnit4SpringContextTests {
 
     @Configuration
+    @TestComponent
     static class DatabaseSearchSourceTestContextConfiguration {
 
         @Bean

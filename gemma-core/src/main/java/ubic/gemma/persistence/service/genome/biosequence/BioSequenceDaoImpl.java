@@ -34,6 +34,7 @@ import ubic.gemma.persistence.service.AbstractVoEnabledDao;
 import ubic.gemma.persistence.util.BusinessKey;
 import ubic.gemma.persistence.util.EntityUtils;
 
+import javax.annotation.Nullable;
 import java.util.*;
 
 /**
@@ -270,7 +271,7 @@ public class BioSequenceDaoImpl extends AbstractVoEnabledDao<BioSequence, BioSeq
         }
     }
 
-    private void debug( BioSequence query, List<?> results ) {
+    private void debug( @Nullable BioSequence query, List<?> results ) {
         StringBuilder sb = new StringBuilder();
         sb.append( "\nMultiple BioSequences found matching query:\n" );
 

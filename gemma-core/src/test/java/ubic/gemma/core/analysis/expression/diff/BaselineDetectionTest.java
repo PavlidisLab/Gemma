@@ -39,6 +39,7 @@ import java.util.List;
 import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 /**
  * @author paul
@@ -75,6 +76,7 @@ public class BaselineDetectionTest extends AbstractGeoServiceTest {
         ee = this.eeService.thawLite( ee );
         if ( ee.getExperimentalDesign().getExperimentalFactors().isEmpty() ) {
             ee = eeService.load( ee.getId() );
+            assertNotNull( ee );
             ee = this.eeService.thawLite( ee );
 
             try ( InputStream is = this.getClass()
@@ -82,6 +84,7 @@ public class BaselineDetectionTest extends AbstractGeoServiceTest {
                 experimentalDesignImporter.importDesign( ee, is );
             }
             ee = eeService.load( ee.getId() );
+            assertNotNull( ee );
             ee = this.eeService.thawLite( ee );
         }
         // end setup

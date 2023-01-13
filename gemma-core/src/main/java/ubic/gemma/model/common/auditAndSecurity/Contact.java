@@ -19,7 +19,9 @@
 
 package ubic.gemma.model.common.auditAndSecurity;
 
-import ubic.gemma.model.common.Describable;
+import ubic.gemma.model.common.AbstractDescribable;
+
+import java.io.Serializable;
 
 /**
  * Representing a person or organization that can be contacted about, or is the source of, data in the system. A contact
@@ -27,7 +29,7 @@ import ubic.gemma.model.common.Describable;
  *
  * @author Paul
  */
-public class Contact extends Describable implements gemma.gsec.model.Contact {
+public class Contact extends AbstractDescribable implements gemma.gsec.model.Contact, Serializable {
 
     /**
      * The serial version UID of this class. Needed for serialization.

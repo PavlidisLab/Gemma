@@ -24,6 +24,7 @@ import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorDao.RankMethod;
 import ubic.gemma.persistence.util.EntityUtils;
 
+import javax.annotation.Nullable;
 import java.util.*;
 
 /**
@@ -103,7 +104,7 @@ public class ProcessedExpressionDataVectorServiceImpl
     @Override
     @Transactional(readOnly = true)
     public List<ExperimentExpressionLevelsValueObject> getExpressionLevels( Collection<ExpressionExperiment> ees,
-            Collection<Gene> genes, boolean keepGeneNonSpecific, String consolidateMode ) {
+            Collection<Gene> genes, boolean keepGeneNonSpecific, @Nullable String consolidateMode ) {
         Collection<DoubleVectorValueObject> vectors = this.getProcessedDataArrays( ees, EntityUtils.getIds( genes ) );
         List<ExperimentExpressionLevelsValueObject> vos = new ArrayList<>( ees.size() );
 
@@ -140,7 +141,7 @@ public class ProcessedExpressionDataVectorServiceImpl
     @Transactional(readOnly = true)
     public List<ExperimentExpressionLevelsValueObject> getExpressionLevelsPca(
             Collection<ExpressionExperiment> ees, int limit, int component, boolean keepGeneNonSpecific,
-            String consolidateMode ) {
+            @Nullable String consolidateMode ) {
         List<ExperimentExpressionLevelsValueObject> vos = new ArrayList<>( ees.size() );
 
         // Adapted from DEDV controller
@@ -157,7 +158,7 @@ public class ProcessedExpressionDataVectorServiceImpl
     @Transactional(readOnly = true)
     public List<ExperimentExpressionLevelsValueObject> getExpressionLevelsDiffEx(
             Collection<ExpressionExperiment> ees, Long diffExResultSetId, double threshold, int max,
-            boolean keepGeneNonSpecific, String consolidateMode ) {
+            boolean keepGeneNonSpecific, @Nullable String consolidateMode ) {
         List<ExperimentExpressionLevelsValueObject> vos = new ArrayList<>( ees.size() );
 
         // Adapted from DEDV controller
@@ -327,7 +328,7 @@ public class ProcessedExpressionDataVectorServiceImpl
      */
     private void addExperimentGeneVectors( Collection<ExperimentExpressionLevelsValueObject> vos,
             ExpressionExperiment ee, Collection<DoubleVectorValueObject> vectors, boolean keepGeneNonSpecific,
-            String consolidateMode ) {
+            @Nullable String consolidateMode ) {
         Map<Gene, List<DoubleVectorValueObject>> vectorsPerGene = new HashMap<>();
         if ( vectors == null ) {
             return;

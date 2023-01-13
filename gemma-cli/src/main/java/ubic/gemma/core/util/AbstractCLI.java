@@ -28,6 +28,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.core.config.Configuration;
 import org.apache.logging.log4j.core.config.LoggerConfig;
 import org.apache.logging.log4j.core.LoggerContext;
+import org.springframework.transaction.support.TransactionTemplate;
 import ubic.basecode.util.DateUtil;
 import ubic.gemma.core.apps.GemmaCLI;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;

@@ -26,6 +26,7 @@ import ubic.gemma.model.genome.gene.phenotype.valueObject.GeneEvidenceValueObjec
 import ubic.gemma.model.genome.gene.phenotype.valueObject.PhenotypeValueObject;
 import ubic.gemma.persistence.service.BaseService;
 
+import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
@@ -45,8 +46,8 @@ public interface PhenotypeAssociationService extends BaseService<PhenotypeAssoci
     @Secured({ "GROUP_USER" })
     PhenotypeAssociation create( PhenotypeAssociation p );
 
-    Collection<GeneEvidenceValueObject> findGenesWithPhenotypes( Set<String> phenotypesValueUri, Taxon taxon,
-            boolean showOnlyEditable, Collection<Long> externalDatabaseIds );
+    Collection<GeneEvidenceValueObject> findGenesWithPhenotypes( Set<String> phenotypesValueUri, @Nullable Taxon taxon,
+            boolean showOnlyEditable, @Nullable Collection<Long> externalDatabaseIds );
 
     /**
      * @param phenotype  phenotype
@@ -99,7 +100,7 @@ public interface PhenotypeAssociationService extends BaseService<PhenotypeAssoci
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     Collection<PhenotypeAssociation> findPhenotypeAssociationForGeneIdAndDatabases( Long geneId,
-            Collection<Long> externalDatabaseIds );
+            @Nullable Collection<Long> externalDatabaseIds );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     Collection<PhenotypeAssociation> findPhenotypeAssociationForGeneNCBI( Integer geneNCBI );
@@ -115,14 +116,14 @@ public interface PhenotypeAssociationService extends BaseService<PhenotypeAssoci
     @Secured({ "GROUP_AGENT" })
     Collection<PhenotypeAssociation> findEvidencesWithoutExternalDatabaseName();
 
-    Map<String, Set<Integer>> findPublicPhenotypesGenesAssociations( Taxon taxon, Set<String> valuesUri,
-            String userName, Collection<String> groups, boolean showOnlyEditable, Collection<Long> externalDatabaseIds,
+    Map<String, Set<Integer>> findPublicPhenotypesGenesAssociations( @Nullable Taxon taxon, @Nullable Set<String> valuesUri,
+            @Nullable String userName, @Nullable Collection<String> groups, boolean showOnlyEditable, @Nullable Collection<Long> externalDatabaseIds,
             boolean noElectronicAnnotation );
 
-    Set<Long> findPrivateEvidenceId( String userName, Collection<String> groups, Long taxonId, int limit );
+    Set<Long> findPrivateEvidenceId( @Nullable String userName, @Nullable Collection<String> groups, Long taxonId, int limit );
 
-    Map<String, Set<Integer>> findPrivatePhenotypesGenesAssociations( Taxon taxon, Set<String> valuesUri,
-            String userName, Collection<String> groups, boolean showOnlyEditable, Collection<Long> externalDatabaseIds,
+    Map<String, Set<Integer>> findPrivatePhenotypesGenesAssociations( @Nullable Taxon taxon, @Nullable Set<String> valuesUri,
+            @Nullable String userName, @Nullable Collection<String> groups, boolean showOnlyEditable, @Nullable Collection<Long> externalDatabaseIds,
             boolean noElectronicAnnotation );
 
     Collection<String> findEvidenceOwners();

@@ -29,6 +29,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import org.springframework.core.io.ClassPathResource;
 import ubic.basecode.util.FileTools;
 import ubic.gemma.core.loader.expression.geo.AbstractGeoServiceTest;
 import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGeneratorLocal;
@@ -97,7 +98,7 @@ public class RNASeqBatchInfoPopulationTest extends AbstractGeoServiceTest {
     @Before
     public void setUp() throws Exception {
         Settings.setProperty( "gemma.fastq.headers.dir",
-                new File( getClass().getResource( "/data/analysis/preprocess/batcheffects/fastqheaders" ).toURI() ).getAbsolutePath() );
+                new ClassPathResource( "/data/analysis/preprocess/batcheffects/fastqheaders" ).getFile().getAbsolutePath() );
     }
 
     /**

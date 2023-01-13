@@ -29,6 +29,7 @@ import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 
+import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -80,7 +81,7 @@ public interface ProcessedExpressionDataVectorService
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_COLLECTION_READ" })
     List<ExperimentExpressionLevelsValueObject> getExpressionLevels( Collection<ExpressionExperiment> ees,
-            Collection<Gene> genes, boolean keepGeneNonSpecific, String consolidateMode );
+            Collection<Gene> genes, boolean keepGeneNonSpecific, @Nullable String consolidateMode );
 
     /**
      * @param ees                 expressionExperiments
@@ -94,7 +95,7 @@ public interface ProcessedExpressionDataVectorService
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_COLLECTION_READ" })
     @Transactional(readOnly = true)
     List<ExperimentExpressionLevelsValueObject> getExpressionLevelsPca( Collection<ExpressionExperiment> ees,
-            int threshold, int component, boolean keepGeneNonSpecific, String consolidateMode );
+            int threshold, int component, boolean keepGeneNonSpecific, @Nullable String consolidateMode );
 
     /**
      * @param diffExResultSetId   the differential expression result set to access
@@ -109,7 +110,7 @@ public interface ProcessedExpressionDataVectorService
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_COLLECTION_READ" })
     @Transactional(readOnly = true)
     List<ExperimentExpressionLevelsValueObject> getExpressionLevelsDiffEx( Collection<ExpressionExperiment> ees,
-            Long diffExResultSetId, double threshold, int max, boolean keepGeneNonSpecific, String consolidateMode );
+            Long diffExResultSetId, double threshold, int max, boolean keepGeneNonSpecific, @Nullable String consolidateMode );
 
     /**
      * @param expressionExperiment ee

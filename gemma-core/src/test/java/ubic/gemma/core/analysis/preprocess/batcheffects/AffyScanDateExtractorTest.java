@@ -15,6 +15,8 @@
 package ubic.gemma.core.analysis.preprocess.batcheffects;
 
 import org.junit.Test;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.Resource;
 
 import java.io.InputStream;
 import java.text.DateFormat;
@@ -33,8 +35,8 @@ public class AffyScanDateExtractorTest {
 
     @Test
     public void testExtractInputStreamGCOS() throws Exception {
-        InputStream is = new GZIPInputStream(
-                this.getClass().getResourceAsStream( "/data/loader/expression/geo/GSM506974.part.CEL.gz" ) );
+        Resource resource = new ClassPathResource( "/data/loader/expression/geo/GSM506974.part.CEL.gz" );
+        InputStream is = new GZIPInputStream( resource.getInputStream() );
         AffyScanDateExtractor extractor = new AffyScanDateExtractor();
 
         Date actual = extractor.extract( is );
@@ -48,8 +50,8 @@ public class AffyScanDateExtractorTest {
 
     @Test
     public void testExtractInputStreamV3() throws Exception {
-        InputStream is = new GZIPInputStream(
-                this.getClass().getResourceAsStream( "/data/loader/expression/geo/GSM3448.part.CEL.txt.gz" ) );
+        Resource resource = new ClassPathResource( "/data/loader/expression/geo/GSM3448.part.CEL.txt.gz" );
+        InputStream is = new GZIPInputStream( resource.getInputStream() );
         AffyScanDateExtractor extractor = new AffyScanDateExtractor();
 
         Date actual = extractor.extract( is );
@@ -62,8 +64,8 @@ public class AffyScanDateExtractorTest {
 
     @Test
     public void testExtractInputStreamV4() throws Exception {
-        InputStream is = new GZIPInputStream(
-                this.getClass().getResourceAsStream( "/data/loader/expression/geo/GSM306831.part.CEL.gz" ) );
+        Resource resource = new ClassPathResource( "/data/loader/expression/geo/GSM306831.part.CEL.gz" );
+        InputStream is = new GZIPInputStream( resource.getInputStream() );
         AffyScanDateExtractor extractor = new AffyScanDateExtractor();
 
         Date actual = extractor.extract( is );
@@ -76,8 +78,8 @@ public class AffyScanDateExtractorTest {
 
     @Test
     public void testExtractInputStreamVx() throws Exception {
-        InputStream is = new GZIPInputStream(
-                this.getClass().getResourceAsStream( "/data/loader/expression/geo/GSM239803.CEL.gz" ) );
+        Resource resource = new ClassPathResource( "/data/loader/expression/geo/GSM239803.CEL.gz" );
+        InputStream is = new GZIPInputStream( resource.getInputStream() );
         AffyScanDateExtractor extractor = new AffyScanDateExtractor();
 
         Date actual = extractor.extract( is );

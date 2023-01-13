@@ -35,11 +35,6 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
         return objectAlias;
     }
 
-    @Override
-    public Class<? extends O> getElementClass() {
-        return elementClass;
-    }
-
     /**
      * {@inheritDoc}
      * <p>

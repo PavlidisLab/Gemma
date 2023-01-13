@@ -32,6 +32,6 @@ public class StandardQuantitationTypeConverter extends StringConverter {
     @Override
     public Object convertInbound( Class paramType, InboundVariable iv, InboundContext inctx ) throws MarshallException {
         String value = ( String ) super.convertInbound( paramType, iv, inctx );
-        return StandardQuantitationType.fromString( value );
+        return StandardQuantitationType.valueOf( value );
     }
 }

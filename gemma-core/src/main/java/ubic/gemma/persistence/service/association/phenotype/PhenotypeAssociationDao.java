@@ -26,6 +26,7 @@ import ubic.gemma.model.genome.gene.phenotype.valueObject.GeneEvidenceValueObjec
 import ubic.gemma.model.genome.gene.phenotype.valueObject.PhenotypeValueObject;
 import ubic.gemma.persistence.service.BaseDao;
 
+import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
@@ -86,8 +87,8 @@ public interface PhenotypeAssociationDao extends BaseDao<PhenotypeAssociation> {
      * @param showOnlyEditable    show only editable
      * @return Genes link to a phenotype
      */
-    Collection<GeneEvidenceValueObject> findGenesWithPhenotypes( Set<String> phenotypesValueUri, Taxon taxon,
-            boolean showOnlyEditable, Collection<Long> externalDatabaseIds );
+    Collection<GeneEvidenceValueObject> findGenesWithPhenotypes( Set<String> phenotypesValueUri, @Nullable Taxon taxon,
+            boolean showOnlyEditable, @Nullable Collection<Long> externalDatabaseIds );
 
     /**
      * @param geneId gene id
@@ -101,7 +102,7 @@ public interface PhenotypeAssociationDao extends BaseDao<PhenotypeAssociation> {
      * @return all PhenotypeAssociation for a specific gene id and external Databases ids
      */
     Collection<PhenotypeAssociation> findPhenotypeAssociationForGeneIdAndDatabases( Long geneId,
-            Collection<Long> externalDatabaseIds );
+            @Nullable Collection<Long> externalDatabaseIds );
 
     /**
      * @param geneNCBI gene ncbi id
@@ -133,7 +134,7 @@ public interface PhenotypeAssociationDao extends BaseDao<PhenotypeAssociation> {
      * @param taxonId taxon id
      * @return private evidence id that the user can modify or owns
      */
-    Set<Long> findPrivateEvidenceId( Long taxonId, int limit );
+    Set<Long> findPrivateEvidenceId( @Nullable Long taxonId, int limit );
 
     /**
      * @param externalDatabaseIds    external db ids
@@ -143,8 +144,8 @@ public interface PhenotypeAssociationDao extends BaseDao<PhenotypeAssociation> {
      * @param valuesUri              value uris
      * @return ll private phenotypes associated with genes on a specific taxon and containing the valuesUri
      */
-    Map<String, Set<Integer>> findPrivatePhenotypesGenesAssociations( Taxon taxon, Set<String> valuesUri,
-            boolean showOnlyEditable, Collection<Long> externalDatabaseIds, boolean noElectronicAnnotation );
+    Map<String, Set<Integer>> findPrivatePhenotypesGenesAssociations( @Nullable Taxon taxon, @Nullable Set<String> valuesUri,
+            boolean showOnlyEditable, @Nullable Collection<Long> externalDatabaseIds, boolean noElectronicAnnotation );
 
     /**
      * @param showOnlyEditable       show only editable
@@ -154,8 +155,8 @@ public interface PhenotypeAssociationDao extends BaseDao<PhenotypeAssociation> {
      * @param valuesUri              values uri
      * @return all public phenotypes associated with genes on a specific taxon and containing the valuesUri
      */
-    Map<String, Set<Integer>> findPublicPhenotypesGenesAssociations( Taxon taxon, Set<String> valuesUri,
-            boolean showOnlyEditable, Collection<Long> externalDatabaseIds, boolean noElectronicAnnotation );
+    Map<String, Set<Integer>> findPublicPhenotypesGenesAssociations( @Nullable Taxon taxon, @Nullable Set<String> valuesUri,
+            boolean showOnlyEditable, @Nullable Collection<Long> externalDatabaseIds, boolean noElectronicAnnotation );
 
     Collection<String> loadAllDescription();
 

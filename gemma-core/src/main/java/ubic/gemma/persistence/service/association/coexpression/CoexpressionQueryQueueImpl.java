@@ -29,6 +29,7 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.persistence.service.genome.GeneDao;
 
 import java.util.Collection;
+import java.util.Objects;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 
@@ -123,8 +124,9 @@ class CoexpressionQueryQueueImpl implements CoexpressionQueryQueue, Initializing
     }
 
     private void queryForCache( QueuedGene gene ) {
-
-        int numCached = coexpressionDao.queryAndCache( geneDao.load( gene.getId() ) );
+        Gene g = Objects.requireNonNull( geneDao.load( gene.getId() ),
+                String.format( "No Gene with ID %d.", gene.getId() ) );
+        int numCached = coexpressionDao.queryAndCache( g );
         //noinspection StatementWithEmptyBody // Better readability
         if ( numCached < 0 ) {
             // it was already in the cache

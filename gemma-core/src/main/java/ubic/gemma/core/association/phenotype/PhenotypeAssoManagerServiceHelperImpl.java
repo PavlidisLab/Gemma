@@ -84,7 +84,7 @@ public class PhenotypeAssoManagerServiceHelperImpl implements PhenotypeAssoManag
 
         // 1- modify common values to all evidences
         phenotypeAssociation.setDescription( evidenceValueObject.getDescription() );
-        phenotypeAssociation.setEvidenceCode( GOEvidenceCode.fromString( evidenceValueObject.getEvidenceCode() ) );
+        phenotypeAssociation.setEvidenceCode( GOEvidenceCode.valueOf( evidenceValueObject.getEvidenceCode() ) );
         phenotypeAssociation.setIsNegativeEvidence( evidenceValueObject.getIsNegativeEvidence() );
         phenotypeAssociation.setGene( this.geneService.findByNCBIId( evidenceValueObject.getGeneNCBI() ) );
 
@@ -179,7 +179,7 @@ public class PhenotypeAssoManagerServiceHelperImpl implements PhenotypeAssoManag
     private void populatePheAssoWithoutPhenotypes( PhenotypeAssociation phe,
             EvidenceValueObject<? extends PhenotypeAssociation> evidenceValueObject ) {
         phe.setDescription( evidenceValueObject.getDescription() );
-        phe.setEvidenceCode( GOEvidenceCode.fromString( evidenceValueObject.getEvidenceCode() ) );
+        phe.setEvidenceCode( GOEvidenceCode.valueOf( evidenceValueObject.getEvidenceCode() ) );
         phe.setIsNegativeEvidence( evidenceValueObject.getIsNegativeEvidence() );
         phe.setGene( this.geneService.findByNCBIId( evidenceValueObject.getGeneNCBI() ) );
         phe.setRelationship( evidenceValueObject.getRelationship() );

@@ -1,7 +1,6 @@
 package ubic.gemma.core.search;
 
 import org.junit.After;
-import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -15,6 +14,7 @@ import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
+import ubic.gemma.persistence.util.TestComponent;
 
 import java.util.Collections;
 
@@ -26,6 +26,7 @@ public class SearchServiceTest extends AbstractJUnit4SpringContextTests {
     private static final Taxon rat = Taxon.Factory.newInstance( "Rattus norvegicus", "rat", 192, false );
 
     @Configuration
+    @TestComponent
     static class SearchServiceImplTestContextConfiguration extends SearchServiceTestContextConfiguration {
 
         @Bean

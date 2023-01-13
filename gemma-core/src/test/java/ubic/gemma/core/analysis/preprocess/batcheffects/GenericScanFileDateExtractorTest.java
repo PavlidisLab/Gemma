@@ -20,6 +20,7 @@
 package ubic.gemma.core.analysis.preprocess.batcheffects;
 
 import org.junit.Test;
+import org.springframework.core.io.ClassPathResource;
 
 import java.io.InputStream;
 import java.text.DateFormat;
@@ -41,8 +42,8 @@ public class GenericScanFileDateExtractorTest {
      */
     @Test
     public void testExtractGeneSpring() throws Exception {
-        try (InputStream is = this.getClass()
-                .getResourceAsStream( "/data/loader/expression/geo/GSM522322.part.genespring.txt" )) {
+        try ( InputStream is = this.getClass()
+                .getResourceAsStream( "/data/loader/expression/geo/GSM522322.part.genespring.txt" ) ) {
             GenericScanFileDateExtractor extractor = new GenericScanFileDateExtractor();
 
             Date actual = extractor.extract( is );
@@ -57,7 +58,7 @@ public class GenericScanFileDateExtractorTest {
     @Test
     public void testExtractGpr() throws Exception {
         InputStream is = new GZIPInputStream(
-                this.getClass().getResourceAsStream( "/data/loader/expression/rawdata/GSM489680.short.gpr.gz" ) );
+                new ClassPathResource( "/data/loader/expression/rawdata/GSM489680.short.gpr.gz" ).getInputStream() );
         GenericScanFileDateExtractor extractor = new GenericScanFileDateExtractor();
 
         Date actual = extractor.extract( is );
@@ -98,8 +99,8 @@ public class GenericScanFileDateExtractorTest {
 
     @Test
     public void testExtractImagene() throws Exception {
-        try (InputStream is = this.getClass()
-                .getResourceAsStream( "/data/loader/expression/geo/GSM542196.imagene.part.txt" )) {
+        try ( InputStream is = this.getClass()
+                .getResourceAsStream( "/data/loader/expression/geo/GSM542196.imagene.part.txt" ) ) {
             GenericScanFileDateExtractor extractor = new GenericScanFileDateExtractor();
 
             Date actual = extractor.extract( is );

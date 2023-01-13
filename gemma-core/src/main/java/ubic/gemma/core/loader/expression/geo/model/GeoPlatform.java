@@ -20,6 +20,7 @@ package ubic.gemma.core.loader.expression.geo.model;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.core.io.ClassPathResource;
 import ubic.gemma.core.loader.expression.geo.model.GeoDataset.PlatformType;
 import ubic.gemma.core.loader.expression.geo.util.GeoConstants;
 
@@ -58,8 +59,7 @@ public class GeoPlatform extends GeoData {
         affyExonArrays.add( "GPL6543" ); // RaEx-1_0-st, gene-level version
         affyExonArrays.add( "GPL17586" ); // HTA-2_0, gene-level version
 
-        try (BufferedReader in = new BufferedReader( new InputStreamReader(
-                GeoPlatform.class.getResourceAsStream( "/ubic/gemma/core/loader/affy.altmappings.txt" ) ) )) {
+        try ( BufferedReader in = new BufferedReader( new InputStreamReader( new ClassPathResource( "/ubic/gemma/core/loader/affy.altmappings.txt" ).getInputStream() ) ) ) {
             while ( in.ready() ) {
                 String geoId = in.readLine().trim();
 

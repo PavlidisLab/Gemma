@@ -36,10 +36,7 @@ import ubic.gemma.model.genome.gene.*;
 import ubic.gemma.persistence.service.genome.gene.GeneSetDao;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Service for managing gene sets
@@ -200,7 +197,7 @@ public class GeneSetServiceImpl implements GeneSetService {
         this.geneSetDao.update( geneset );
 
     }
-    
+
 //    @Override
 //    @Transactional
 //    public void addGene(GeneSet geneset, Gene gene) {
@@ -266,7 +263,7 @@ public class GeneSetServiceImpl implements GeneSetService {
     @Transactional(readOnly = true)
     public Collection<GeneSetValueObject> findGeneSetsByGene( Long geneId ) {
 
-        Gene gene = geneService.load( geneId );
+        Gene gene = geneService.loadOrFail( geneId );
 
         Collection<GeneSet> genesets = geneSetSearch.findByGene( gene );
 
@@ -577,7 +574,7 @@ public class GeneSetServiceImpl implements GeneSetService {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see ubic.gemma.core.genome.gene.service.GeneSetService#thaw(ubic.gemma.model.genome.gene.GeneSet)
      */
     @Override

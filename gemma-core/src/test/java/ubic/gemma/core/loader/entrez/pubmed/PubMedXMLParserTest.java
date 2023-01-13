@@ -23,6 +23,7 @@ import org.apache.commons.logging.LogFactory;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.springframework.core.io.ClassPathResource;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.Keyword;
 import ubic.gemma.model.common.description.MedicalSubjectHeading;
@@ -37,6 +38,7 @@ import java.util.Locale;
 import java.util.zip.GZIPInputStream;
 
 import static org.junit.Assert.*;
+import static org.junit.Assume.assumeNoException;
 
 /**
  * @author pavlidis
@@ -172,8 +174,7 @@ public class PubMedXMLParserTest {
     @Test
     public void testParseMulti() throws Exception {
         try {
-            testStream = new GZIPInputStream(
-                    PubMedXMLParserTest.class.getResourceAsStream( "/data/loader/medline.multi.xml.gz" ) );
+            testStream = new GZIPInputStream( new ClassPathResource( "/data/loader/medline.multi.xml.gz" ).getInputStream() );
             Collection<BibliographicReference> brl = testParser.parse( testStream );
             assertEquals( 147, brl.size() );
             int expectedNumberofKeywords = 258;
@@ -248,9 +249,9 @@ public class PubMedXMLParserTest {
 
     private void logOrThrowException( IOException e ) throws IOException {
         if ( e.getCause() instanceof java.net.ConnectException ) {
-            PubMedXMLParserTest.log.warn( "Test skipped due to connection exception" );
+            assumeNoException( "Test skipped due to connection exception", e );
         } else if ( e.getCause() instanceof java.net.UnknownHostException ) {
-            PubMedXMLParserTest.log.warn( "Test skipped due to unknown host exception" );
+            assumeNoException( "Test skipped due to unknown host exception", e );
         } else {
             throw ( e );
         }

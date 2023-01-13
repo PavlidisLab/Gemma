@@ -19,6 +19,7 @@ import ubic.gemma.model.genome.gene.GeneSet;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.persistence.util.TestComponent;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
@@ -27,6 +28,7 @@ import static org.mockito.Mockito.*;
 public class SearchServiceVoConversionTest extends AbstractJUnit4SpringContextTests {
 
     @Configuration
+    @TestComponent
     static class SearchServiceVoConversionTestContextConfiguration extends SearchServiceTestContextConfiguration {
 
     }

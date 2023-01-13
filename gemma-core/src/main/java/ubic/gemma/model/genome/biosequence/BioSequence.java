@@ -19,9 +19,11 @@
 package ubic.gemma.model.genome.biosequence;
 
 import ubic.gemma.model.association.BioSequence2GeneProduct;
+import ubic.gemma.model.common.AbstractDescribable;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.genome.Taxon;
 
+import java.io.Serializable;
 import java.util.Set;
 
 /**
@@ -35,7 +37,7 @@ import java.util.Set;
  * </p>
  */
 @SuppressWarnings("unused")
-public class BioSequence extends ubic.gemma.model.common.Describable {
+public class BioSequence extends AbstractDescribable implements Serializable {
 
     /**
      * The serial version UID of this class. Needed for serialization.

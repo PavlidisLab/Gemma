@@ -212,10 +212,10 @@ public class QuantitationTypeParameterGuesserTest {
                 String name = fields[1];
                 String description = fields[2];
                 Boolean isBackground = fields[3].equals( "0" ) ? Boolean.FALSE : Boolean.TRUE;
-                PrimitiveType representation = PrimitiveType.fromString( fields[4] );
-                GeneralType generalType = GeneralType.fromString( fields[5] );
-                StandardQuantitationType type = StandardQuantitationType.fromString( fields[6] );
-                ScaleType scale = ScaleType.fromString( fields[7] );
+                PrimitiveType representation = PrimitiveType.valueOf( fields[4] );
+                GeneralType generalType = GeneralType.valueOf( fields[5] );
+                StandardQuantitationType type = StandardQuantitationType.valueOf( fields[6] );
+                ScaleType scale = ScaleType.valueOf( fields[7] );
 
                 Boolean isPreferred = fields[8].equals( "0" ) ? Boolean.FALSE : Boolean.TRUE;
                 Boolean isNormalized = fields[9].equals( "0" ) ? Boolean.FALSE : Boolean.TRUE;

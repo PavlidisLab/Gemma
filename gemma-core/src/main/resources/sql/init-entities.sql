@@ -109,20 +109,9 @@ call add_external_database('mm39 annotations', NULL, 'https://hgdownload.cse.ucs
 call add_external_database('rn4 annotations', NULL, 'https://hgdownload.cse.ucsc.edu/goldenpath/rn4/database/', NULL, 'OTHER');
 call add_external_database('rn6 annotations', NULL, 'https://hgdownload.cse.ucsc.edu/goldenpath/rn6/database/', NULL, 'OTHER');
 call add_external_database('rn7 annotations', NULL, 'https://hgdownload.cse.ucsc.edu/goldenpath/rn7/database/', NULL, 'OTHER');
-call add_external_database('hg18 sequence alignments', NULL, NULL, NULL, 'OTHER');
-call add_external_database('hg19 sequence alignments', NULL, NULL, NULL, 'OTHER');
-call add_external_database('hg38 sequence alignments', NULL, NULL, NULL, 'OTHER');
-call add_external_database('mm8 sequence alignments', NULL, NULL, NULL, 'OTHER');
-call add_external_database('mm9 sequence alignments', NULL, NULL, NULL, 'OTHER');
-call add_external_database('mm10 sequence alignments', NULL, NULL, NULL, 'OTHER');
-call add_external_database('mm11 sequence alignments', NULL, NULL, NULL, 'OTHER');
-call add_external_database('mm39 sequence alignments', NULL, NULL, NULL, 'OTHER');
-call add_external_database('rn4 sequence alignments', NULL, NULL, NULL, 'OTHER');
-call add_external_database('rn6 sequence alignments', NULL, NULL, NULL, 'OTHER');
-call add_external_database('rn7 sequence alignments', NULL, NULL, NULL, 'OTHER');
-call add_external_database('hg19 RNA-Seq annotations', NULL, NULL, NULL, 'OTHER');
+call add_external_database('hg38 RNA-Seq annotations', NULL, NULL, NULL, 'OTHER');
 call add_external_database('mm10 RNA-Seq annotations', NULL, NULL, NULL, 'OTHER');
-call add_external_database('rn6 RNA-Seq annotations', NULL, NULL, NULL, 'OTHER');
+call add_external_database('rn7 RNA-Seq annotations', NULL, NULL, NULL, 'OTHER');
 call add_external_database('gene', NULL, NULL, 'https://ftp.ncbi.nih.gov/gene/DATA/gene_info.gz', 'OTHER');
 call add_external_database('go', NULL, NULL, 'https://ftp.ncbi.nih.gov/gene/DATA/gene2go.gz', 'ONTOLOGY');
 call add_external_database('multifunctionality', NULL, NULL, NULL, 'OTHER');
@@ -142,9 +131,9 @@ call add_external_database_relation('rn7', 'rn7 annotations');
 call add_external_database_relation('rn6', 'rn4 annotations');
 call add_external_database_relation('rn4', 'rn6 annotations');
 
-call add_external_database_relation('hg19', 'hg19 RNA-Seq annotations');
+call add_external_database_relation('hg38', 'hg38 RNA-Seq annotations');
 call add_external_database_relation('mm10', 'mm10 RNA-Seq annotations');
-call add_external_database_relation('rn6', 'rn6 RNA-Seq annotations');
+call add_external_database_relation('rn7', 'rn7 RNA-Seq annotations');
 
 drop procedure add_external_database_relation;
 

@@ -752,7 +752,7 @@ public class DataUpdater {
                 if ( !toRemove.isEmpty() ) {
                     ee.getBioAssays().removeAll( toRemove );
                     experimentService.update( ee );
-                    ee = experimentService.load( ee.getId() );
+                    ee = experimentService.loadOrFail( ee.getId() );
                     ee = experimentService.thawLite( ee );
 
                     if ( ee.getBioAssays().size() != countMatrix.columns() ) {
