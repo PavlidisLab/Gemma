@@ -24,8 +24,7 @@ public class ExternalDatabaseUpdaterCli extends AbstractSpringAwareCLI {
             RELEASE_NOTE_OPTION = "releaseNote",
             RELEASE_VERSION_OPTION = "releaseVersion",
             RELEASE_URL_OPTION = "releaseUrl",
-            LAST_UPDATED_OPTION = "lastUpdated",
-            PARENT_DATABASE_OPTION = "parentDatabase";
+            LAST_UPDATED_OPTION = "lastUpdated";
 
     @Autowired
     private ExternalDatabaseService externalDatabaseService;
@@ -37,7 +36,6 @@ public class ExternalDatabaseUpdaterCli extends AbstractSpringAwareCLI {
     private String releaseVersion;
     private URL releaseUrl;
     private Date lastUpdated;
-    private ExternalDatabase parentDatabase;
 
     @Override
     public String getCommandName() {
@@ -75,12 +73,6 @@ public class ExternalDatabaseUpdaterCli extends AbstractSpringAwareCLI {
                 .hasArg()
                 .desc( "Moment the release was performed if known, otherwise the current time will be used." )
                 .type( Date.class ).build() );
-        options.addOption( Option.builder( PARENT_DATABASE_OPTION )
-                .longOpt( "parent-database" )
-                .hasArg()
-                .desc( "Identifier or name of the parent database." )
-                .build() );
-
     }
 
     @Override
@@ -94,18 +86,6 @@ public class ExternalDatabaseUpdaterCli extends AbstractSpringAwareCLI {
         lastUpdated = ( Date ) commandLine.getParsedOptionValue( LAST_UPDATED_OPTION );
         if ( lastUpdated == null ) {
             lastUpdated = new Date();
-        }
-        if ( commandLine.hasOption( PARENT_DATABASE_OPTION ) ) {
-            String parentDatabaseStr = commandLine.getOptionValue( PARENT_DATABASE_OPTION );
-            try {
-                parentDatabase = externalDatabaseService.loadWithExternalDatabases( Long.parseLong( parentDatabaseStr ) );
-            } catch ( NumberFormatException nfe ) {
-                parentDatabase = externalDatabaseService.findByNameWithExternalDatabases( parentDatabaseStr );
-            }
-            if ( parentDatabase == null ) {
-                throw new IllegalArgumentException( String.format( "The parent database %s does not refer to any known external database.",
-                        parentDatabaseStr ) );
-            }
         }
     }
 
@@ -125,13 +105,8 @@ public class ExternalDatabaseUpdaterCli extends AbstractSpringAwareCLI {
                 externalDatabaseService.updateReleaseLastUpdated( ed, releaseNote, lastUpdated );
             }
         } else {
-            AbstractCLI.log.info( String.format( "Updating %s. Use the --release/--release-version flags to update last updated or release infos.", name ) );
+            AbstractCLI.log.info( String.format( "Updating %s. Use the --release flag to update last updated or release infos.", name ) );
             externalDatabaseService.update( ed ); /* only update description, etc. */
-        }
-        if ( parentDatabase != null ) {
-            AbstractCLI.log.info( String.format( "Updating the parent database of %s to %s.", name, parentDatabase ) );
-            parentDatabase.getExternalDatabases().add( ed );
-            externalDatabaseService.update( ed );
         }
     }
 }

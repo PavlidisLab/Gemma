@@ -18,7 +18,6 @@
  */
 package ubic.gemma.persistence.service.common.description;
 
-import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -56,28 +55,8 @@ public class ExternalDatabaseServiceImpl extends AbstractService<ExternalDatabas
 
     @Override
     @Transactional(readOnly = true)
-    public ExternalDatabase loadWithExternalDatabases( Long id ) {
-        ExternalDatabase ed = externalDatabaseDao.load( id );
-        if ( ed != null ) {
-            Hibernate.initialize( ed.getExternalDatabases() );
-        }
-        return ed;
-    }
-
-    @Override
-    @Transactional(readOnly = true)
     public ExternalDatabase findByName( String name ) {
         return this.externalDatabaseDao.findByName( name );
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public ExternalDatabase findByNameWithExternalDatabases( String name ) {
-        ExternalDatabase ed = externalDatabaseDao.findByName( name );
-        if ( ed != null ) {
-            Hibernate.initialize( ed.getExternalDatabases() );
-        }
-        return ed;
     }
 
     @Override
