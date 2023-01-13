@@ -38,6 +38,7 @@ import java.util.Locale;
 import java.util.zip.GZIPInputStream;
 
 import static org.junit.Assert.*;
+import static org.junit.Assume.assumeNoException;
 
 /**
  * @author pavlidis
@@ -248,9 +249,9 @@ public class PubMedXMLParserTest {
 
     private void logOrThrowException( IOException e ) throws IOException {
         if ( e.getCause() instanceof java.net.ConnectException ) {
-            PubMedXMLParserTest.log.warn( "Test skipped due to connection exception" );
+            assumeNoException( "Test skipped due to connection exception", e );
         } else if ( e.getCause() instanceof java.net.UnknownHostException ) {
-            PubMedXMLParserTest.log.warn( "Test skipped due to unknown host exception" );
+            assumeNoException( "Test skipped due to unknown host exception", e );
         } else {
             throw ( e );
         }
