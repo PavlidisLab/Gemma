@@ -48,11 +48,12 @@ public class ExternalDatabaseUpdaterCliTest extends BaseCliTest {
     @Autowired
     private UserManager userManager;
 
-    private ExternalDatabase ed;
+    private ExternalDatabase ed, ed2;
 
     @Before
     public void setUp() {
         ed = ExternalDatabase.Factory.newInstance( "test", DatabaseType.OTHER );
+        ed2 = ExternalDatabase.Factory.newInstance( "test2", DatabaseType.OTHER );
     }
 
     @After
@@ -65,9 +66,12 @@ public class ExternalDatabaseUpdaterCliTest extends BaseCliTest {
         User user = User.Factory.newInstance();
         when( userManager.getCurrentUser() ).thenReturn( user );
         when( externalDatabaseService.findByNameWithAuditTrail( "test" ) ).thenReturn( ed );
-        externalDatabaseUpdaterCli.executeCommand( new String[] { "--name", "test", "--description", "Youpi!", "--release-note", "Yep", "--release-version", "123", "--release-url", "http://example.com/test" } );
+        when( externalDatabaseService.findByNameWithExternalDatabases( "test2" ) ).thenReturn( ed2 );
+        externalDatabaseUpdaterCli.executeCommand( new String[] { "--name", "test", "--description", "Youpi!", "--release-note", "Yep", "--release-version", "123", "--release-url", "http://example.com/test", "--parent-database", "test2" } );
+        verify( externalDatabaseService ).findByNameWithExternalDatabases( "test2" );
         verify( externalDatabaseService ).findByNameWithAuditTrail( "test" );
         assertThat( ed.getDescription() ).isEqualTo( "Youpi!" );
         verify( externalDatabaseService ).updateReleaseDetails( eq( ed ), eq( "123" ), eq( new URL( "http://example.com/test" ) ), eq( "Yep" ), any() );
+        verify( externalDatabaseService ).update( ed2 );
     }
 }
