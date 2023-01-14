@@ -43,7 +43,6 @@ import ubic.gemma.persistence.service.FilteringVoEnabledService;
 import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.persistence.util.Sort;
-import ubic.gemma.persistence.util.monitor.Monitored;
 
 import javax.annotation.Nullable;
 import java.util.*;
@@ -120,7 +119,6 @@ public interface ExpressionExperimentService
     Collection<ExpressionExperiment> load( Collection<Long> ids );
 
     @Override
-    @Monitored
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ_QUIET" })
     ExpressionExperiment load( Long id );
 

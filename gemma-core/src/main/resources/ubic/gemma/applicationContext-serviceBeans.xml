@@ -2,8 +2,10 @@
 <!-- Somewhat miscellaneous beans. @author Gemma paul -->
 <beans xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
        xmlns="http://www.springframework.org/schema/beans"
+       xmlns:aop="http://www.springframework.org/schema/aop"
        xsi:schemaLocation="http://www.springframework.org/schema/beans
-            http://www.springframework.org/schema/beans/spring-beans.xsd">
+            http://www.springframework.org/schema/beans/spring-beans.xsd
+       http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop.xsd">
 
     <!-- Local tasks executor -->
     <bean id="taskExecutor" class="org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor">
@@ -56,5 +58,50 @@
         </property>
     </bean>
 
+    <!-- micrometer, for metrics -->
+    <beans profile="!test">
+        <bean id="meterRegistry" class="io.micrometer.jmx.JmxMeterRegistry">
+            <constructor-arg value="DEFAULT"/>
+            <constructor-arg value="SYSTEM"/>
+        </bean>
+        <bean class="ubic.gemma.core.metrics.MeterRegistryConfigurer">
+            <constructor-arg ref="meterRegistry"/>
+            <constructor-arg>
+                <list>
+                    <!-- basic metrics -->
+                    <bean class="io.micrometer.core.instrument.binder.jvm.ClassLoaderMetrics"/>
+                    <bean class="io.micrometer.core.instrument.binder.jvm.JvmMemoryMetrics"/>
+                    <bean class="io.micrometer.core.instrument.binder.system.ProcessorMetrics"/>
+                    <bean class="io.micrometer.core.instrument.binder.jvm.JvmThreadMetrics"/>
+                    <!-- logging metrics -->
+                    <bean class="io.micrometer.core.instrument.binder.logging.Log4j2Metrics"/>
+                    <!-- database metrics -->
+                    <bean class="ubic.gemma.core.metrics.binder.jpa.Hibernate4Metrics">
+                        <constructor-arg ref="sessionFactory"/>
+                        <constructor-arg value="sessionFactory"/>
+                        <constructor-arg>
+                            <list/>
+                        </constructor-arg>
+                    </bean>
+                    <bean class="ubic.gemma.core.metrics.binder.jpa.Hibernate4QueryMetrics">
+                        <constructor-arg ref="sessionFactory"/>
+                        <constructor-arg value="sessionFactory"/>
+                        <constructor-arg>
+                            <list/>
+                        </constructor-arg>
+                    </bean>
+                </list>
+            </constructor-arg>
+        </bean>
+        <bean class="ubic.gemma.core.metrics.MeterRegistryCacheConfigurer">
+            <constructor-arg ref="meterRegistry"/>
+            <constructor-arg ref="cacheManager"/>
+        </bean>
+        <!-- for @Timed annotations -->
+        <aop:aspectj-autoproxy/>
+        <bean class="io.micrometer.core.aop.TimedAspect">
+            <constructor-arg ref="meterRegistry"/>
+        </bean>
+    </beans>
 
 </beans>

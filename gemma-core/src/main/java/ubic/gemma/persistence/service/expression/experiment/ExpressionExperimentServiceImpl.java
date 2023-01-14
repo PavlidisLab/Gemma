@@ -20,6 +20,7 @@ package ubic.gemma.persistence.service.expression.experiment;
 
 import com.google.common.base.Strings;
 import gemma.gsec.SecurityService;
+import io.micrometer.core.annotation.Timed;
 import org.apache.commons.math3.exception.NotStrictlyPositiveException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -130,6 +131,12 @@ public class ExpressionExperimentServiceImpl
     public ExpressionExperimentServiceImpl( ExpressionExperimentDao expressionExperimentDao ) {
         super( expressionExperimentDao );
         this.expressionExperimentDao = expressionExperimentDao;
+    }
+
+    @Override
+    @Timed
+    public ExpressionExperiment load( Long id ) {
+        return super.load( id );
     }
 
     @Override
