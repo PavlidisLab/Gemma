@@ -83,7 +83,7 @@
 
     <filter-mapping>
         <filter-name>servletMetricsFilter</filter-name>
-        <url-pattern>/*</url-pattern>
+        <servlet-name>gemma</servlet-name>
     </filter-mapping>
 
     <!-- Spring Security -->
