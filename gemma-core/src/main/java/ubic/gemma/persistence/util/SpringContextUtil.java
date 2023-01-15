@@ -51,7 +51,6 @@ public class SpringContextUtil {
     public static ApplicationContext getApplicationContext( String[] activeProfiles, String... additionalConfigurationLocations ) throws BeansException {
         List<String> paths = new ArrayList<>();
 
-        paths.add( "classpath*:gemma/gsec/applicationContext-*.xml" );
         paths.add( "classpath*:ubic/gemma/applicationContext-*.xml" );
 
         paths.addAll( Arrays.asList( additionalConfigurationLocations ) );

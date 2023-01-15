@@ -19,8 +19,7 @@ import ubic.gemma.core.util.test.category.SpringContextTest;
  */
 @ActiveProfiles({ "web", SpringProfiles.TEST })
 @Category(SpringContextTest.class)
-@ContextConfiguration(locations = { "classpath*:ubic/gemma/applicationContext-*.xml",
-        "classpath*:gemma/gsec/applicationContext-*.xml" })
+@ContextConfiguration(locations = { "classpath*:ubic/gemma/applicationContext-*.xml" })
 public abstract class BaseJerseyIntegrationTest extends BaseJerseyTest {
 
     @Autowired

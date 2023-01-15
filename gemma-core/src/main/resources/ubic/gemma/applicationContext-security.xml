@@ -15,6 +15,9 @@
             http://www.springframework.org/schema/aop
             http://www.springframework.org/schema/aop/spring-aop.xsd">
 
+    <!-- gsec definitions -->
+    <import resource="classpath*:gemma/gsec/applicationContext-*.xml"/>
+
     <bean id="authenticationLoggerListener" class="org.springframework.security.authentication.event.LoggerListener"/>
 
     <!-- For use with access tags -->
