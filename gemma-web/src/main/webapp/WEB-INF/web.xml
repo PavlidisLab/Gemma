@@ -37,6 +37,12 @@
 
     <!-- Filters.  -->
 
+    <!-- Metrics -->
+    <filter>
+        <filter-name>servletMetricsFilter</filter-name>
+        <filter-class>ubic.gemma.web.metrics.binder.servlet.ServletMetricsFilter</filter-class>
+    </filter>
+
     <!-- Security. -->
     <filter>
         <filter-name>springSecurityFilterChain</filter-name>
@@ -74,6 +80,11 @@
         <filter-name>restapidocsFilter</filter-name>
         <filter-class>ubic.gemma.web.services.rest.servlet.RestapidocsIndexRewriteFilter</filter-class>
     </filter>
+
+    <filter-mapping>
+        <filter-name>servletMetricsFilter</filter-name>
+        <url-pattern>/*</url-pattern>
+    </filter-mapping>
 
     <!-- Spring Security -->
     <filter-mapping>
