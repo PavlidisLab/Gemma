@@ -2,23 +2,26 @@ package ubic.gemma.core.metrics;
 
 import io.micrometer.core.instrument.MeterRegistry;
 import net.sf.ehcache.Ehcache;
-import org.springframework.beans.factory.InitializingBean;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import ubic.gemma.core.metrics.binder.cache.EhCache24Metrics;
 
-public class MeterRegistryCacheConfigurer implements InitializingBean {
+/**
+ * Add metrics from each available {@link Ehcache} in the given {@link CacheManager} to the supplied meter registry.
+ * @author poirigui
+ * @see EhCache24Metrics
+ */
+public class MeterRegistryEhcacheConfigurer extends AbstractMeterRegistryConfigurer {
 
-    private final MeterRegistry registry;
     private final CacheManager cacheManager;
 
-    public MeterRegistryCacheConfigurer( MeterRegistry registry, CacheManager cacheManager ) {
-        this.registry = registry;
+    public MeterRegistryEhcacheConfigurer( MeterRegistry registry, CacheManager cacheManager ) {
+        super( registry );
         this.cacheManager = cacheManager;
     }
 
     @Override
-    public void afterPropertiesSet() throws Exception {
+    public void configure( MeterRegistry registry ) {
         for ( String cacheName : cacheManager.getCacheNames() ) {
             Cache cache = cacheManager.getCache( cacheName );
             if ( cache.getNativeCache() instanceof Ehcache ) {

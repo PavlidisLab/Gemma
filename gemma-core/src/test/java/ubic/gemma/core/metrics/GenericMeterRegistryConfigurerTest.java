@@ -25,12 +25,12 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 @ContextConfiguration
-public class MeterRegistryConfigurerTest extends AbstractJUnit4SpringContextTests {
+public class GenericMeterRegistryConfigurerTest extends AbstractJUnit4SpringContextTests {
 
     @Configuration
     @TestComponent
     @EnableAspectJAutoProxy
-    static class MeterRegistryConfigurerTestContextConfiguration {
+    static class GenericMeterRegistryConfigurerTestContextConfiguration {
 
         @Bean
         public MeterRegistry meterRegistry() {
@@ -52,8 +52,8 @@ public class MeterRegistryConfigurerTest extends AbstractJUnit4SpringContextTest
         }
 
         @Bean
-        public MeterRegistryConfigurer meterRegistryConfigurer( MeterRegistry meterRegistry ) {
-            return new MeterRegistryConfigurer( meterRegistry, Collections.emptyList() );
+        public GenericMeterRegistryConfigurer meterRegistryConfigurer( MeterRegistry meterRegistry ) {
+            return new GenericMeterRegistryConfigurer( meterRegistry, Collections.emptyList() );
         }
 
         @Bean
@@ -116,7 +116,7 @@ public class MeterRegistryConfigurerTest extends AbstractJUnit4SpringContextTest
 
     private Timer getTimer( Class<?> clazz, String methodName ) {
         return meterRegistry.find( "method.timed" )
-                .tag( "class", MeterRegistryConfigurerTest.class.getName() + "$" + clazz.getSimpleName() )
+                .tag( "class", GenericMeterRegistryConfigurerTest.class.getName() + "$" + clazz.getSimpleName() )
                 .tag( "method", methodName )
                 .timer();
     }

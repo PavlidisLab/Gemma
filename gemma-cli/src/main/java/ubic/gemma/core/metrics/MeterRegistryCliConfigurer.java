@@ -2,7 +2,6 @@ package ubic.gemma.core.metrics;
 
 import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.beans.BeansException;
-import org.springframework.beans.factory.InitializingBean;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.ApplicationListener;
@@ -11,24 +10,27 @@ import org.springframework.security.authentication.event.AuthenticationSuccessEv
 import org.springframework.security.core.userdetails.UserDetails;
 
 /**
- * This configurer adds two tags: {@code environment} and {@code user} to the given meter registry.
+ * This configurer adds two tags: {@code environment='cli'} and {@code user} to the given meter registry.
  * @author poirigui
  */
-public class MeterRegistryCliConfigurer implements InitializingBean, ApplicationContextAware {
-
-    private final MeterRegistry registry;
+public class MeterRegistryCliConfigurer extends AbstractMeterRegistryConfigurer implements ApplicationContextAware {
 
     private ConfigurableApplicationContext applicationContext;
 
     public MeterRegistryCliConfigurer( MeterRegistry registry ) {
-        this.registry = registry;
+        super( registry );
     }
 
     @Override
-    public void afterPropertiesSet() {
+    protected void configure( MeterRegistry registry ) {
         registry.config().commonTags( "environment", "cli" );
         if ( applicationContext != null ) {
-            applicationContext.addApplicationListener( new AddTagOnAuthenticationListener() );
+            applicationContext.addApplicationListener( ( ApplicationListener<AuthenticationSuccessEvent> ) event -> {
+                if ( event.getAuthentication().getPrincipal() instanceof UserDetails ) {
+                    UserDetails userDetails = ( UserDetails ) event.getAuthentication().getPrincipal();
+                    registry.config().commonTags( "user", userDetails.getUsername() );
+                }
+            } );
         }
     }
 
@@ -36,17 +38,6 @@ public class MeterRegistryCliConfigurer implements InitializingBean, Application
     public void setApplicationContext( ApplicationContext applicationContext ) throws BeansException {
         if ( applicationContext instanceof ConfigurableApplicationContext ) {
             this.applicationContext = ( ConfigurableApplicationContext ) applicationContext;
-        }
-    }
-
-    private class AddTagOnAuthenticationListener implements ApplicationListener<AuthenticationSuccessEvent> {
-
-        @Override
-        public void onApplicationEvent( AuthenticationSuccessEvent event ) {
-            if ( event.getAuthentication().getPrincipal() instanceof UserDetails ) {
-                UserDetails userDetails = ( UserDetails ) event.getAuthentication().getPrincipal();
-                registry.config().commonTags( "user", userDetails.getUsername() );
-            }
         }
     }
 }

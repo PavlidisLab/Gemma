@@ -64,7 +64,7 @@
             <constructor-arg value="DEFAULT"/>
             <constructor-arg value="SYSTEM"/>
         </bean>
-        <bean class="ubic.gemma.core.metrics.MeterRegistryConfigurer">
+        <bean class="ubic.gemma.core.metrics.GenericMeterRegistryConfigurer">
             <constructor-arg ref="meterRegistry"/>
             <constructor-arg>
                 <list>
@@ -93,7 +93,7 @@
                 </list>
             </constructor-arg>
         </bean>
-        <bean class="ubic.gemma.core.metrics.MeterRegistryCacheConfigurer">
+        <bean class="ubic.gemma.core.metrics.MeterRegistryEhcacheConfigurer">
             <constructor-arg ref="meterRegistry"/>
             <constructor-arg ref="cacheManager"/>
         </bean>
