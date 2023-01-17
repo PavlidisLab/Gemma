@@ -277,12 +277,9 @@ public class ExpressionExperimentDataFetchController {
 
         response.setContentLength( ( int ) f.length() );
         response.addHeader( "Content-disposition", "attachment; filename=\"" + downloadName + "\"" );
-        FileInputStream in = new FileInputStream( f );
-        FileCopyUtils.copy( in, response.getOutputStream() );
-        response.flushBuffer();
-
-        try {
-            in.close();
+        try ( FileInputStream in = new FileInputStream( f ) ) {
+            FileCopyUtils.copy( in, response.getOutputStream() );
+            response.flushBuffer();
         } catch ( IOException ignored ) {
 
         }

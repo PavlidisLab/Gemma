@@ -18,6 +18,7 @@
  */
 package ubic.gemma.core.loader.util.fetcher;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.model.common.description.LocalFile;
 import ubic.gemma.persistence.util.Settings;
@@ -93,16 +94,9 @@ public class HttpFetcher extends AbstractFetcher {
                 AbstractFetcher.log.info( "Fetching " + seekFile );
                 URL urlPattern = new URL( seekFile );
 
-                InputStream inputStream = new BufferedInputStream( urlPattern.openStream() );
-                try ( OutputStream outputStream = new FileOutputStream( new File( outputFileName ) ) ) {
-
-                    final byte[] buffer = new byte[65536];
-                    int read;
-
-                    while ( ( read = inputStream.read( buffer ) ) > -1 ) {
-                        outputStream.write( buffer, 0, read );
-                    }
-                    outputStream.close();
+                try ( InputStream inputStream = urlPattern.openStream();
+                        OutputStream outputStream = new FileOutputStream( outputFileName ) ) {
+                    IOUtils.copy( inputStream, outputStream );
                     return Boolean.TRUE;
                 }
             }

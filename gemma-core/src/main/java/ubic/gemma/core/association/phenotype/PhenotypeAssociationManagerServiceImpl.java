@@ -1004,8 +1004,6 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         File ermineJWithOmimFolder = new File( ermineJWithOmimFolderPath );
         ermineJWithOmimFolder.mkdir();
 
-        // this writer will be used to write 1 file per resource
-        BufferedWriter fileWriterDataSource;
         // this writer is the dump of all evidence
         try ( BufferedWriter fileWriterAllEvidence = new BufferedWriter(
                 new FileWriter( mainFolderPath + PhenotypeAssociationConstants.FILE_ALL_PHENOCARTA_ANNOTATIONS ) );
@@ -1038,142 +1036,139 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
                 if ( dbFromColln != null && dbFromColln.getLastUpdateDate() != null
                         && dbFromColln.getLastUpdateDate().getTime() > thisFile.lastModified() ) {
-                    fileWriterDataSource = new BufferedWriter( new FileWriter(
+                    // this writer will be used to write 1 file per resource
+                    try ( BufferedWriter fileWriterDataSource = new BufferedWriter( new FileWriter(
                             datasetsFolderPath + externalDatabaseValueObject.getName().replaceAll( " ", "" )
-                                    + ".tsv" ) );
+                                    + ".tsv" ) ) ) {
 
-                    // header of file
-                    fileWriterDataSource.write( header );
+                        // header of file
+                        fileWriterDataSource.write( header );
 
-                    // not using value object to make it faster
-                    Collection<PhenotypeAssociation> phenotypeAssociations;
+                        // not using value object to make it faster
+                        Collection<PhenotypeAssociation> phenotypeAssociations;
 
-                    // this one is a special case, not actually linked to an external database
-                    if ( externalDatabaseValueObject.getName()
-                            .equalsIgnoreCase( PhenotypeAssociationConstants.MANUAL_CURATION ) ) {
-                        phenotypeAssociations = this.phenoAssocService.findEvidencesWithoutExternalDatabaseName();
-                    } else {
-                        phenotypeAssociations = this.phenoAssocService
-                                .findEvidencesWithExternalDatabaseName( externalDatabaseValueObject.getName(), PhenotypeAssociationDaoImpl.DEFAULT_PA_LIMIT,
-                                        0 );
-                    }
-
-                    for ( PhenotypeAssociation phenotypeAssociation : phenotypeAssociations ) {
-
-                        if ( i++ % 5000 == 0 ) {
-                            PhenotypeAssociationManagerServiceImpl.log
-                                    .debug( "Phenocarta dump of evidence at evidence number: " + i );
-                        }
-
-                        StringBuilder pubmeds = new StringBuilder();
-
-                        for ( PhenotypeAssociationPublication phenotypeAssociationPublication : phenotypeAssociation
-                                .getPhenotypeAssociationPublications() ) {
-                            String pubId = phenotypeAssociationPublication.getCitation().getPubAccession().getAccession()
-                                    + ";";
-                            // primary should be order first
-                            if ( phenotypeAssociationPublication.getType()
-                                    .equals( PhenotypeAssPubValueObject.PRIMARY ) ) {
-                                pubmeds.insert( 0, pubId );
-                            } else {
-                                pubmeds.append( pubId );
-                            }
-                        }
-
-                        String relationship;
-                        relationship = phenotypeAssociation.getRelationship();
-
-                        StringBuilder phenotypes = new StringBuilder();
-
-                        for ( Characteristic cha : phenotypeAssociation.getPhenotypes() ) {
-                            phenotypes.append( cha.getValue() ).append( ";" );
-                        }
-
-                        StringBuilder phenotypesUri = new StringBuilder();
-
-                        for ( Characteristic cha : phenotypeAssociation.getPhenotypes() ) {
-                            if ( StringUtils.isNotBlank( cha.getValueUri() ) ) {
-                                phenotypesUri.append( cha.getValueUri() ).append( ";" );
-                            }
-                        }
-
-                        // this should never happen
-                        if ( ( phenotypes.length() == 0 ) || ( phenotypesUri.length() == 0 ) ) {
-                            PhenotypeAssociationManagerServiceImpl.log
-                                    .error( "Found an evidence without phenotypes : " + phenotypeAssociation.getId() );
-                        }
-
-                        String webLink = "";
-
-                        if ( phenotypeAssociation.getEvidenceSource() != null
-                                && phenotypeAssociation.getEvidenceSource().getExternalDatabase() != null ) {
-                            webLink = phenotypeAssociation.getEvidenceSource().getExternalDatabase().getWebUri()
-                                    + phenotypeAssociation.getEvidenceSource().getAccession();
-                        }
-
-                        String isNegative;
-
-                        if ( phenotypeAssociation.getIsNegativeEvidence() ) {
-                            isNegative = "Yes";
+                        // this one is a special case, not actually linked to an external database
+                        if ( externalDatabaseValueObject.getName()
+                                .equalsIgnoreCase( PhenotypeAssociationConstants.MANUAL_CURATION ) ) {
+                            phenotypeAssociations = this.phenoAssocService.findEvidencesWithoutExternalDatabaseName();
                         } else {
-                            isNegative = "No";
+                            phenotypeAssociations = this.phenoAssocService
+                                    .findEvidencesWithExternalDatabaseName( externalDatabaseValueObject.getName(), PhenotypeAssociationDaoImpl.DEFAULT_PA_LIMIT,
+                                            0 );
                         }
 
-                        String description = phenotypeAssociation.getDescription();
+                        for ( PhenotypeAssociation phenotypeAssociation : phenotypeAssociations ) {
 
-                        // represents 1 evidence
-                        String evidenceLine = externalDatabaseValueObject.getName() + "\t" + phenotypeAssociation.getGene()
-                                .getNcbiGeneId() + "\t" + phenotypeAssociation.getGene().getOfficialSymbol()
-                                + "\t" + phenotypeAssociation.getGene().getTaxon().getCommonName() + "\t"
-                                + StringUtils.removeEnd( phenotypes.toString(), ";" ) + "\t" + relationship
-                                + "\t"
-                                // relationship
-                                // information
-                                + StringUtils.removeEnd( phenotypesUri.toString(), ";" ) + "\t" + StringUtils
-                                .removeEnd( pubmeds.toString(), ";" )
-                                + "\t" + webLink + "\t" + isNegative
-                                + "\t" + description + "\n";
+                            if ( i++ % 5000 == 0 ) {
+                                PhenotypeAssociationManagerServiceImpl.log
+                                        .debug( "Phenocarta dump of evidence at evidence number: " + i );
+                            }
 
-                        fileWriterDataSource.write( evidenceLine );
-                        if ( !externalDatabaseValueObject.getName().contains( "OMIM" ) )
-                            fileWriterAllEvidence.write( evidenceLine );
-                        fileWriterAllEvidenceWithOMIM.write( evidenceLine );
+                            StringBuilder pubmeds = new StringBuilder();
+
+                            for ( PhenotypeAssociationPublication phenotypeAssociationPublication : phenotypeAssociation
+                                    .getPhenotypeAssociationPublications() ) {
+                                String pubId = phenotypeAssociationPublication.getCitation().getPubAccession().getAccession()
+                                        + ";";
+                                // primary should be order first
+                                if ( phenotypeAssociationPublication.getType()
+                                        .equals( PhenotypeAssPubValueObject.PRIMARY ) ) {
+                                    pubmeds.insert( 0, pubId );
+                                } else {
+                                    pubmeds.append( pubId );
+                                }
+                            }
+
+                            String relationship;
+                            relationship = phenotypeAssociation.getRelationship();
+
+                            StringBuilder phenotypes = new StringBuilder();
+
+                            for ( Characteristic cha : phenotypeAssociation.getPhenotypes() ) {
+                                phenotypes.append( cha.getValue() ).append( ";" );
+                            }
+
+                            StringBuilder phenotypesUri = new StringBuilder();
+
+                            for ( Characteristic cha : phenotypeAssociation.getPhenotypes() ) {
+                                if ( StringUtils.isNotBlank( cha.getValueUri() ) ) {
+                                    phenotypesUri.append( cha.getValueUri() ).append( ";" );
+                                }
+                            }
+
+                            // this should never happen
+                            if ( ( phenotypes.length() == 0 ) || ( phenotypesUri.length() == 0 ) ) {
+                                PhenotypeAssociationManagerServiceImpl.log
+                                        .error( "Found an evidence without phenotypes : " + phenotypeAssociation.getId() );
+                            }
+
+                            String webLink = "";
+
+                            if ( phenotypeAssociation.getEvidenceSource() != null
+                                    && phenotypeAssociation.getEvidenceSource().getExternalDatabase() != null ) {
+                                webLink = phenotypeAssociation.getEvidenceSource().getExternalDatabase().getWebUri()
+                                        + phenotypeAssociation.getEvidenceSource().getAccession();
+                            }
+
+                            String isNegative;
+
+                            if ( phenotypeAssociation.getIsNegativeEvidence() ) {
+                                isNegative = "Yes";
+                            } else {
+                                isNegative = "No";
+                            }
+
+                            String description = phenotypeAssociation.getDescription();
+
+                            // represents 1 evidence
+                            String evidenceLine = externalDatabaseValueObject.getName() + "\t" + phenotypeAssociation.getGene()
+                                    .getNcbiGeneId() + "\t" + phenotypeAssociation.getGene().getOfficialSymbol()
+                                    + "\t" + phenotypeAssociation.getGene().getTaxon().getCommonName() + "\t"
+                                    + StringUtils.removeEnd( phenotypes.toString(), ";" ) + "\t" + relationship
+                                    + "\t"
+                                    // relationship
+                                    // information
+                                    + StringUtils.removeEnd( phenotypesUri.toString(), ";" ) + "\t" + StringUtils
+                                    .removeEnd( pubmeds.toString(), ";" )
+                                    + "\t" + webLink + "\t" + isNegative
+                                    + "\t" + description + "\n";
+
+                            fileWriterDataSource.write( evidenceLine );
+                            if ( !externalDatabaseValueObject.getName().contains( "OMIM" ) )
+                                fileWriterAllEvidence.write( evidenceLine );
+                            fileWriterAllEvidenceWithOMIM.write( evidenceLine );
+                        }
                     }
-                    fileWriterDataSource.close();// finish writing one given data src file
                 } // old: finish loop of writing all ext data src files
             } // new: finish loop of writing all ext data src files, including checking modified times
-            fileWriterAllEvidence.close();
-            fileWriterAllEvidenceWithOMIM.close();
+        }
 
-            // LatestEvidenceExport ---> points to the latest dump
-            File symbolicLink = new File( PhenotypeAssociationConstants.PHENOCARTA_HOME_FOLDER_PATH
-                    + PhenotypeAssociationConstants.LATEST_EVIDENCE_EXPORT );
+        // LatestEvidenceExport ---> points to the latest dump
+        File symbolicLink = new File( PhenotypeAssociationConstants.PHENOCARTA_HOME_FOLDER_PATH
+                + PhenotypeAssociationConstants.LATEST_EVIDENCE_EXPORT );
 
-            if ( symbolicLink.exists() ) {
-                Files.delete( symbolicLink.toPath() );
-            }
-            Files.createSymbolicLink( symbolicLink.toPath(), mainFolder.toPath() );
+        if ( symbolicLink.exists() ) {
+            Files.delete( symbolicLink.toPath() );
+        }
+        Files.createSymbolicLink( symbolicLink.toPath(), mainFolder.toPath() );
 
-            PhenotypeAssociationManagerServiceImpl.log
-                    .debug( "After symlink code; symlink now exists: " + symbolicLink.exists() );
-            PhenotypeAssociationManagerServiceImpl.log
-                    .debug( "Right before ErmineJ; latest dir exists: " + mainFolder.exists() + " and is: " + mainFolder
-                            .toPath() );
+        PhenotypeAssociationManagerServiceImpl.log
+                .debug( "After symlink code; symlink now exists: " + symbolicLink.exists() );
+        PhenotypeAssociationManagerServiceImpl.log
+                .debug( "Right before ErmineJ; latest dir exists: " + mainFolder.exists() + " and is: " + mainFolder
+                        .toPath() );
 
-            this.writeErmineJFile( ermineJFolderPath, disclaimer, this.taxonService.findByCommonName( "mouse" ),
+        Taxon mouseTaxon = this.taxonService.findByCommonName( "mouse" );
+        Taxon humanTaxon = this.taxonService.findByCommonName( "human" );
+        Taxon[] taxa = new Taxon[] { mouseTaxon, humanTaxon };
+
+        for ( Taxon taxon : taxa ) {
+            this.writeErmineJFile( ermineJFolderPath, disclaimer, taxon,
                     false );
-            this.writeErmineJFile( ermineJFolderPath, disclaimer, this.taxonService.findByCommonName( "mouse" ), true );
-            this.writeErmineJFile( ermineJFolderPath, disclaimer, this.taxonService.findByCommonName( "human" ),
+            this.writeErmineJFile( ermineJFolderPath, disclaimer, taxon, true );
+            this.writeErmineJFile( ermineJWithOmimFolderPath, disclaimer, taxon,
                     false );
-            this.writeErmineJFile( ermineJFolderPath, disclaimer, this.taxonService.findByCommonName( "human" ), true );
-
-            this.writeErmineJFile( ermineJWithOmimFolderPath, disclaimer, this.taxonService.findByCommonName( "mouse" ),
-                    false );
-            this.writeErmineJFile( ermineJWithOmimFolderPath, disclaimer, this.taxonService.findByCommonName( "mouse" ),
-                    true );
-            this.writeErmineJFile( ermineJWithOmimFolderPath, disclaimer, this.taxonService.findByCommonName( "human" ),
-                    false );
-            this.writeErmineJFile( ermineJWithOmimFolderPath, disclaimer, this.taxonService.findByCommonName( "human" ),
+            this.writeErmineJFile( ermineJWithOmimFolderPath, disclaimer, taxon,
                     true );
         }
     }

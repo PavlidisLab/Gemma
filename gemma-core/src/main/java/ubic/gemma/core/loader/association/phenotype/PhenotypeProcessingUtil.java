@@ -19,6 +19,7 @@
 
 package ubic.gemma.core.loader.association.phenotype;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.ClassPathUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -374,19 +375,8 @@ class PhenotypeProcessingUtil {
 
         try ( InputStream reader = url.openStream();
                 FileOutputStream writer = new FileOutputStream( outputFileFullPath ) ) {
-
-            byte[] buffer = new byte[153600];
-            int bytesRead;
-
-            while ( ( bytesRead = reader.read( buffer ) ) > 0 ) {
-                writer.write( buffer, 0, bytesRead );
-                buffer = new byte[153600];
-            }
-
-            writer.close();
-            reader.close();
+            IOUtils.copy( reader, writer );
             log.info( "Download Completed" );
-
         } catch ( IOException e ) {
             throw new RuntimeException( e );
         }
