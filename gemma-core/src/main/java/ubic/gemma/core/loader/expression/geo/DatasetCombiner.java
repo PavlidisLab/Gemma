@@ -30,6 +30,7 @@ import ubic.basecode.util.StringUtil;
 import ubic.gemma.core.loader.entrez.EutilFetch;
 import ubic.gemma.core.loader.expression.geo.model.*;
 
+import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -72,7 +73,14 @@ import java.util.regex.Pattern;
 @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
 public class DatasetCombiner {
 
-    static final DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+    static final DocumentBuilderFactory factory;
+
+    static {
+        factory = DocumentBuilderFactory.newInstance();
+        factory.setAttribute( XMLConstants.ACCESS_EXTERNAL_DTD, "" );
+        factory.setAttribute( XMLConstants.ACCESS_EXTERNAL_SCHEMA, "" );
+    }
+
     @SuppressWarnings("Annotator")
     private static final String PUNCTUATION_REGEXP = "[()\\s-._]";
     /**

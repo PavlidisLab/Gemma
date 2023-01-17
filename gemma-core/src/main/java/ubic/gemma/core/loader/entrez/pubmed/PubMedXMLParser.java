@@ -29,6 +29,7 @@ import ubic.gemma.core.util.XMLUtils;
 import ubic.gemma.model.common.description.*;
 import ubic.gemma.model.expression.biomaterial.Compound;
 
+import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -99,6 +100,8 @@ public class PubMedXMLParser {
             //            }
 
             DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+            factory.setAttribute( XMLConstants.ACCESS_EXTERNAL_DTD, "" );
+            factory.setAttribute( XMLConstants.ACCESS_EXTERNAL_SCHEMA, "" );
             factory.setIgnoringComments( true );
             factory.setValidating( false );
             builder = factory.newDocumentBuilder();

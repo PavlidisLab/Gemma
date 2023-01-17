@@ -34,6 +34,7 @@ import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 import ubic.gemma.persistence.util.Settings;
 
+import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -300,6 +301,8 @@ public abstract class AbstractGemmaEndpoint extends AbstractDomPayloadEndpoint {
     protected Document readReport( InputStream is ) throws IOException {
 
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+        factory.setAttribute( XMLConstants.ACCESS_EXTERNAL_DTD, "" );
+        factory.setAttribute( XMLConstants.ACCESS_EXTERNAL_SCHEMA, "" );
         factory.setIgnoringComments( true );
         factory.setValidating( false );
         Document document;
