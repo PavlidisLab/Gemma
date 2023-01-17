@@ -600,7 +600,7 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
         int geneStart = geneLoc.getNucleotide().intValue();
         int geneEnd = geneLoc.getNucleotide().intValue() + geneLoc.getNucleotideLength();
         int exonOverlap = 0;
-        if ( starts != null & sizes != null ) {
+        if ( starts != null && sizes != null ) {
             exonOverlap = SequenceManipulation
                     .getGeneProductExonOverlap( starts, sizes, geneLoc.getStrand(), geneProduct );
             int totalSize = SequenceManipulation.totalSize( sizes );

@@ -1,19 +1,16 @@
 package ubic.gemma.core.association.phenotype.fileUpload.literatureEvidence;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.FileReader;
-import java.io.FileWriter;
+import java.io.*;
 
 public class SFARIIntermediateFileParser {
 
-    public static void main( String[] args ) throws Exception {
+    public static void main( String[] args ) {
 
-        try (BufferedWriter outputSFARI = new BufferedWriter( new FileWriter(
-                "./gemma-core/src/main/java/ubic/gemma/association/phenotype/fileUpload/literatureEvidence/outputSFARI.tsv" ) )) {
+        try ( BufferedWriter outputSFARI = new BufferedWriter( new FileWriter(
+                "./gemma-core/src/main/java/ubic/gemma/association/phenotype/fileUpload/literatureEvidence/outputSFARI.tsv" ) ) ) {
 
-            try (BufferedReader br = new BufferedReader( new FileReader(
-                    "./gemma-core/src/main/java/ubic/gemma/association/phenotype/fileUpload/literatureEvidence/autism-gene-dataset.csv" ) )) {
+            try ( BufferedReader br = new BufferedReader( new FileReader(
+                    "./gemma-core/src/main/java/ubic/gemma/association/phenotype/fileUpload/literatureEvidence/autism-gene-dataset.csv" ) ) ) {
 
                 String headers = SFARIIntermediateFileParser.cvs2tsv( br.readLine() );
 
@@ -36,6 +33,9 @@ public class SFARIIntermediateFileParser {
                 }
 
             }
+        } catch ( Exception e ) {
+            e.printStackTrace();
+            System.exit( 1 );
         }
     }
 
