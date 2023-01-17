@@ -298,7 +298,7 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
             Long id = Long.parseLong( sId );
             job = new GenerateArraySummaryLocalTask( new TaskCommand( id ) );
             String taskId = taskRunningService.submitTask( job );
-            return new ModelAndView( new RedirectView( "/arrays/showAllArrayDesigns.html?id=" + sId, true ) )
+            return new ModelAndView( new RedirectView( "/arrays/showAllArrayDesigns.html?id=" + id, true ) )
                     .addObject( "taskId", taskId );
         } catch ( NumberFormatException e ) {
             throw new RuntimeException( "Invalid ID: " + sId );
