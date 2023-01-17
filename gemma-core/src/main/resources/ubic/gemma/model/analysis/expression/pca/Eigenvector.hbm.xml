@@ -15,7 +15,7 @@
         <property name="componentNumber" type="java.lang.Integer">
             <column name="COMPONENT_NUMBER" not-null="true" unique="false" sql-type="INTEGER"/>
         </property>
-        <property name="vector" type="ubic.gemma.persistence.model.usertypes.HibernateByteBlobType">
+        <property name="vector" type="org.hibernate.type.MaterializedBlobType">
             <column name="VECTOR" not-null="true" unique="false" sql-type="LONGBLOB"/>
         </property>
     </class>
