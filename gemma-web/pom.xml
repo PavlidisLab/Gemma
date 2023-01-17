@@ -237,12 +237,6 @@
 			<groupId>rome</groupId>
 			<artifactId>rome-fetcher</artifactId>
 			<version>1.0</version>
-			<exclusions>
-				<exclusion>
-					<groupId>xerces</groupId>
-					<artifactId>xercesImpl</artifactId>
-				</exclusion>
-			</exclusions>
 		</dependency>
 
 		<!-- JSON -->
