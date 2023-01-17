@@ -28,7 +28,6 @@ import org.xml.sax.SAXException;
 
 import ubic.gemma.core.util.XMLUtils;
 
-import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -61,8 +60,6 @@ public class ESearchXMLParser {
 
     private Document openAndParse( InputStream is ) throws IOException, ParserConfigurationException, SAXException {
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-        factory.setAttribute( XMLConstants.ACCESS_EXTERNAL_DTD, "" );
-        factory.setAttribute( XMLConstants.ACCESS_EXTERNAL_SCHEMA, "" );
         factory.setIgnoringComments( true );
 
         DocumentBuilder builder = factory.newDocumentBuilder();

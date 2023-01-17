@@ -31,7 +31,6 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
-import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -73,13 +72,7 @@ import ubic.gemma.persistence.util.Settings;
  */
 public class GeoBrowser {
 
-    private static final DocumentBuilderFactory docFactory;
-
-    static {
-        docFactory = DocumentBuilderFactory.newInstance();
-        docFactory.setAttribute( XMLConstants.ACCESS_EXTERNAL_DTD, "" );
-        docFactory.setAttribute( XMLConstants.ACCESS_EXTERNAL_SCHEMA, "" );
-    }
+    private static final DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
 
     private static final String EFETCH = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi?db=gds&";
     private static final String EPLATRETRIEVE = "https://eutls.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=gds&term=gpl[ETYP]+AND+(mouse[orgn]+OR+human[orgn]+OR+rat[orgn])";

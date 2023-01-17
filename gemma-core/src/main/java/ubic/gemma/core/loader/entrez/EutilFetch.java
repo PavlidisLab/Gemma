@@ -29,7 +29,6 @@ import org.xml.sax.SAXException;
 import ubic.gemma.core.util.XMLUtils;
 import ubic.gemma.persistence.util.Settings;
 
-import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -49,14 +48,7 @@ public class EutilFetch {
     private static final String EFETCH = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi?db=";
     private static final String ESEARCH = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=";
     private static final String APIKEY = Settings.getString( "entrez.efetch.apikey" );
-    private static final DocumentBuilderFactory factory;
-
-    static {
-        factory = DocumentBuilderFactory.newInstance();
-        factory.setAttribute( XMLConstants.ACCESS_EXTERNAL_DTD, "" );
-        factory.setAttribute( XMLConstants.ACCESS_EXTERNAL_SCHEMA, "" );
-    }
-
+    private static final DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
     private static final int MAX_TRIES = 3;
 
     /**
