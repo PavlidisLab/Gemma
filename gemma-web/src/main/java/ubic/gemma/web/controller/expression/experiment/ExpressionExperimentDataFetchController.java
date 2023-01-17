@@ -19,6 +19,7 @@
 package ubic.gemma.web.controller.expression.experiment;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
@@ -85,7 +86,13 @@ public class ExpressionExperimentDataFetchController {
      */
     @RequestMapping(value = "/getData.html", method = RequestMethod.GET, produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
     public void downloadFile( HttpServletRequest request, HttpServletResponse response ) throws IOException {
-        this.download( response, ExpressionDataFileService.DATA_DIR + request.getParameter( "file" ), null );
+        String filename = request.getParameter( "file" );
+        if ( StringUtils.isBlank( filename ) ) {
+            throw new IllegalArgumentException( "The 'file' parameter must not be empty." );
+        }
+        // exclude any paths leading to the filename
+        filename = FilenameUtils.getName( filename );
+        this.download( response, new File( ExpressionDataFileService.DATA_DIR, filename ), null );
     }
 
     @RequestMapping(value = "/getMetaData.html", method = RequestMethod.GET, produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
@@ -101,7 +108,7 @@ public class ExpressionExperimentDataFetchController {
                 throw e;
             }
 
-            ExpressionExperiment ee = expressionExperimentService.load( Long.parseLong( eeId ) );
+            ExpressionExperiment ee = expressionExperimentService.loadOrFail( Long.parseLong( eeId ) );
             MetaFileType type = this.getType( Integer.parseInt( typeId ) );
             if ( type == null ) {
                 throw e;
@@ -116,11 +123,11 @@ public class ExpressionExperimentDataFetchController {
             if ( type.isDirectory() ) {
                 File fNew = this.getNewestFile( file );
                 if ( fNew != null ) {
-                    dir += fNew.getName();
+                    file = fNew;
                 }
             }
 
-            this.download( response, dir, type.getDownloadName( ee ) );
+            this.download( response, file, type.getDownloadName( ee ) );
 
         } catch ( NumberFormatException ne ) {
             throw e;
@@ -238,12 +245,7 @@ public class ExpressionExperimentDataFetchController {
             List<File> fList = Arrays.asList( files );
 
             // Sort by last modified, we only want the newest file
-            Collections.sort( fList, new Comparator<File>() {
-                @Override
-                public int compare( File file, File t1 ) {
-                    return Long.compare( file.lastModified(), t1.lastModified() );
-                }
-            } );
+            fList.sort( Comparator.comparingLong( File::lastModified ) );
 
             if ( fList.get( 0 ).canRead() ) {
                 return fList.get( 0 );
@@ -254,21 +256,15 @@ public class ExpressionExperimentDataFetchController {
 
     /**
      * @param response     the http response to download to.
-     * @param path         the file path to download from
+     * @param f            the file to download from
      * @param downloadName this string will be used as a download name for the downloaded file. If null, the filesystem name
      *                     of the file will be used.
      * @throws IOException if the file in the given path can not be read.
      */
-    private void download( HttpServletResponse response, String path, String downloadName ) throws IOException {
-
-        if ( StringUtils.isBlank( path ) ) {
-            throw new IllegalArgumentException( "The file name cannot be blank" );
-        }
-
-        File f = new File( path );
+    private void download( HttpServletResponse response, File f, String downloadName ) throws IOException {
 
         if ( !f.canRead() ) {
-            throw new IOException( "Cannot read from " + path );
+            throw new IOException( "Cannot read from " + f.getPath() );
         }
 
         if ( StringUtils.isBlank( downloadName ) ) {

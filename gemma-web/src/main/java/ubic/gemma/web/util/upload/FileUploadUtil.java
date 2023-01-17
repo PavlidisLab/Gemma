@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,6 +18,8 @@
  */
 package ubic.gemma.web.util.upload;
 
+import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -27,7 +29,10 @@ import ubic.basecode.util.FileTools;
 import ubic.gemma.persistence.util.Settings;
 
 import javax.servlet.http.HttpServletRequest;
-import java.io.*;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 
 /**
  * Utility methods for uploading files.
@@ -36,7 +41,6 @@ import java.io.*;
  */
 public class FileUploadUtil {
 
-    private static final int BUF_SIZE = 32768;
     private static final Log log = LogFactory.getLog( FileUploadUtil.class.getName() );
 
     public static File copyUploadedFile( HttpServletRequest request, String key ) throws IOException {
@@ -51,11 +55,12 @@ public class FileUploadUtil {
 
     public static File copyUploadedFile( MultipartFile multipartFile, HttpServletRequest request ) throws IOException {
         log.info( "Copying the file:" + multipartFile );
-        String copiedFilePath = getLocalUploadLocation( request, multipartFile );
+        File copiedFile = getLocalUploadLocation( request, multipartFile );
 
-        File copiedFile = new File( copiedFilePath );
-
-        copyFile( multipartFile, copiedFile );
+        log.info( "Copying file " + multipartFile + " (" + multipartFile.getSize() + " bytes)" );
+        // write the file to the file specified
+        multipartFile.transferTo( copiedFile );
+        log.info( "Done copying to " + copiedFile );
 
         if ( !copiedFile.canRead() || copiedFile.length() == 0 ) {
             throw new IllegalArgumentException( "Uploaded file is not readable or of size zero" );
@@ -69,7 +74,7 @@ public class FileUploadUtil {
             request.setAttribute( "fileName", multipartFile.getOriginalFilename() );
             request.setAttribute( "contentType", multipartFile.getContentType() );
             request.setAttribute( "size", multipartFile.getSize() + " bytes" );
-            request.setAttribute( "location", copiedFilePath );
+            request.setAttribute( "location", copiedFile.getPath() );
         }
         return copiedFile;
 
@@ -82,7 +87,9 @@ public class FileUploadUtil {
 
         File copiedFile = new File(
                 uploadDirFile.getAbsolutePath() + File.separatorChar + RandomStringUtils.randomAlphanumeric( 50 ) );
-        copy( copiedFile, is );
+        try ( FileOutputStream fos = new FileOutputStream( copiedFile ) ) {
+            IOUtils.copy( is, fos );
+        }
         return copiedFile;
     }
 
@@ -94,39 +101,23 @@ public class FileUploadUtil {
         return Settings.getDownloadPath() + "userUploads";
     }
 
-    private static void copy( File copiedFile, InputStream stream ) throws IOException {
-        try (OutputStream bos = new FileOutputStream( copiedFile )) {
-            int bytesRead;
-            byte[] buffer = new byte[BUF_SIZE];
-            while ( ( bytesRead = stream.read( buffer, 0, BUF_SIZE ) ) != -1 ) {
-                bos.write( buffer, 0, bytesRead );
-            }
-
-            bos.close();
-            stream.close();
-        }
-    }
-
-    private static void copyFile( MultipartFile file, File copiedFile ) throws IOException {
-        log.info( "Copying file " + file + " (" + file.getSize() + " bytes)" );
-        // write the file to the file specified
-        try (InputStream stream = file.getInputStream()) {
-            copy( copiedFile, stream );
-            log.info( "Done copying to " + copiedFile );
-        }
-    }
-
-    private static String getLocalUploadLocation( HttpServletRequest request, MultipartFile file ) {
+    private static File getLocalUploadLocation( HttpServletRequest request, MultipartFile file ) {
         // the directory to upload to - put it in a user-specific directory for now.
         String uploadDir = getUploadPath();
 
         // Create the directory if it doesn't exist
         File uploadDirFile = FileTools.createDir( uploadDir );
 
-        return uploadDirFile.getAbsolutePath() + File.separatorChar + (
+        String filename;
+        if ( file.getOriginalFilename() == null ) {
+            filename = RandomStringUtils.randomAlphanumeric( 50 );
+        } else {
+            filename = FilenameUtils.getName( file.getOriginalFilename() );
+        }
+
+        return new File( uploadDirFile.getAbsolutePath() + File.separatorChar + (
                 request == null || request.getSession() == null ?
                         RandomStringUtils.randomAlphanumeric( 20 ) :
-                        request.getSession().getId() ) + "__" + file.getOriginalFilename();
+                        request.getSession().getId() ) + "__" + filename );
     }
-
 }
