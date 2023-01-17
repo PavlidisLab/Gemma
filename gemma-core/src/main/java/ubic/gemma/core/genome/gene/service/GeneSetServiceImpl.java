@@ -457,6 +457,7 @@ public class GeneSetServiceImpl implements GeneSetService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Collection<Long> getGeneIdsInGroup( GeneSetValueObject object ) {
         return this.getValueObject( object.getId() ).getGeneIds();
     }

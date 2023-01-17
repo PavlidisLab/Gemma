@@ -213,6 +213,7 @@ public class DifferentialExpressionAnalysisServiceImpl implements DifferentialEx
     }
 
     @Override
+    @Transactional
     public void removeForExperiment( ExpressionExperiment ee ) {
         Collection<DifferentialExpressionAnalysis> diffAnalyses = this.differentialExpressionAnalysisDao
                 .findByInvestigation( ee );
