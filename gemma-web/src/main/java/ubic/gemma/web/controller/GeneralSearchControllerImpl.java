@@ -271,7 +271,7 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
     @Deprecated
     @Override
     @RequestMapping(value = "/searcher.html", method = RequestMethod.GET)
-    protected ModelAndView showForm( HttpServletRequest request, HttpServletResponse response, BindException errors ) {
+    public ModelAndView showForm( HttpServletRequest request, HttpServletResponse response, BindException errors ) {
         if ( request.getParameter( "query" ) != null || request.getParameter( "termUri" ) != null ) {
             SearchSettings searchSettings = this.formBackingObject( request );
             return this.doSearch( request, response, searchSettings, errors );

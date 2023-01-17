@@ -558,7 +558,7 @@ public class DEDVController {
      * Handle case of text export of the results.
      */
     @RequestMapping("/downloadDEDV.html")
-    protected ModelAndView handleRequestInternal( HttpServletRequest request ) {
+    public ModelAndView handleRequestInternal( HttpServletRequest request ) {
 
         StopWatch watch = new StopWatch();
         watch.start();

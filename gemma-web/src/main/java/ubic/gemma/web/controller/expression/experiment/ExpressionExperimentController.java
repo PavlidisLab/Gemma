@@ -1134,7 +1134,7 @@ public class ExpressionExperimentController {
     }
 
     @RequestMapping("/downloadExpressionExperimentList.html")
-    protected ModelAndView handleRequestInternal( HttpServletRequest request ) {
+    public ModelAndView handleRequestInternal( HttpServletRequest request ) {
 
         StopWatch watch = new StopWatch();
         watch.start();
