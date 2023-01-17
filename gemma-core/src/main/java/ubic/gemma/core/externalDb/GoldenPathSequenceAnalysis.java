@@ -886,17 +886,13 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
 
         return this.getJdbcTemplate()
                 .query( "SELECT rg.name2 FROM all_mrna m INNER JOIN refGene rg ON m.qName = rg.name WHERE m.qName = ? ",
-                        new Object[] { ncbiId }, new ResultSetExtractor<String>() {
-
-                            @Override
-                            public String extractData( ResultSet rs ) throws SQLException, DataAccessException {
-                                while ( rs.next() ) {
-                                    String string = rs.getString( 0 );
-                                    if ( StringUtils.isNotBlank( string ) )
-                                        return string;
-                                }
-                                return null;
+                        new Object[] { ncbiId }, rs -> {
+                            while ( rs.next() ) {
+                                String string = rs.getString( 1 );
+                                if ( StringUtils.isNotBlank( string ) )
+                                    return string;
                             }
+                            return null;
                         } );
 
     }
