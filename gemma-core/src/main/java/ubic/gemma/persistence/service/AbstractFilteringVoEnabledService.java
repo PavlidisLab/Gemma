@@ -1,5 +1,7 @@
 package ubic.gemma.persistence.service;
 
+import org.springframework.context.MessageSourceResolvable;
+import org.springframework.context.support.DefaultMessageSourceResolvable;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.common.Identifiable;
@@ -12,6 +14,7 @@ import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Base implementation for {@link FilteringVoEnabledService}.
@@ -102,6 +105,26 @@ public abstract class AbstractFilteringVoEnabledService<O extends Identifiable, 
     @Nullable
     public String getFilterablePropertyDescription( String property ) {
         return voDao.getFilterablePropertyDescription( property );
+    }
+
+    @Nullable
+    @Override
+    public List<Object> getFilterablePropertyAvailableValues( String property ) {
+        return voDao.getFilterablePropertyAvailableValues( property );
+    }
+
+    @Nullable
+    @Override
+    public List<MessageSourceResolvable> getFilterablePropertyResolvableAvailableValues( String p ) {
+        Class<?> elementClass = voDao.getElementClass();
+        List<Object> filterable = getFilterablePropertyAvailableValues( p );
+        if ( filterable != null ) {
+            return filterable.stream()
+                    .map( f -> new DefaultMessageSourceResolvable( new String[] { elementClass.getSimpleName() + "." + p + "." + f.toString() + ".title" }, null, f.toString() ) )
+                    .collect( Collectors.toList() );
+        } else {
+            return null;
+        }
     }
 
     public Filter getFilter( String property, Filter.Operator operator, String value ) throws IllegalArgumentException {

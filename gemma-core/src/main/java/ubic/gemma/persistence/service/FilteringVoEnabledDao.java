@@ -37,6 +37,9 @@ public interface FilteringVoEnabledDao<O extends Identifiable, VO extends Identi
     @Nullable
     String getFilterablePropertyDescription( String propertyName ) throws IllegalArgumentException;
 
+    @Nullable
+    List<Object> getFilterablePropertyAvailableValues( String property );
+
     /**
      * Obtain an {@link Filter} for the entity this DAO is providing.
      * <p>

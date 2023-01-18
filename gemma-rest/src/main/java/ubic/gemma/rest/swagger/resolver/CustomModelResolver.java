@@ -10,9 +10,14 @@ import io.swagger.v3.core.converter.ModelConverterContext;
 import io.swagger.v3.core.converter.ModelConverters;
 import io.swagger.v3.core.jackson.ModelResolver;
 import io.swagger.v3.oas.models.media.Schema;
+import lombok.Value;
 import lombok.extern.apachecommons.CommonsLog;
+import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.MessageSource;
+import org.springframework.context.MessageSourceResolvable;
+import org.springframework.context.NoSuchMessageException;
 import org.springframework.stereotype.Component;
 import ubic.gemma.core.search.SearchService;
 import ubic.gemma.model.common.Identifiable;
@@ -22,10 +27,9 @@ import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeSe
 import ubic.gemma.rest.SearchWebService;
 import ubic.gemma.rest.util.args.*;
 
+import javax.annotation.Nullable;
 import java.lang.annotation.Annotation;
-import java.util.Date;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -69,6 +73,9 @@ public class CustomModelResolver extends ModelResolver {
         }
     }
 
+    @Autowired
+    private SessionFactory sessionFactory;
+
     /**
      * Resolves allowed values for the {@link ubic.gemma.rest.SearchWebService#search(String, TaxonArg, PlatformArg, List, LimitArg)}
      * resultTypes argument.
@@ -90,17 +97,47 @@ public class CustomModelResolver extends ModelResolver {
 
         // append available properties to the description
         if ( FilterArg.class.isAssignableFrom( a.getRawType() ) || SortArg.class.isAssignableFrom( a.getRawType() ) ) {
-            String availableProperties = resolveAvailableProperties( a );
+            String availableProperties = resolveAvailablePropertiesAsString( a );
             return description == null ? availableProperties : description + "\n\n" + availableProperties;
         }
 
         return description;
     }
 
+    @Override
+    protected Map<String, Object> resolveExtensions( Annotated a, Annotation[] annotations, io.swagger.v3.oas.annotations.media.Schema schema ) {
+        Map<String, Object> extensions = super.resolveExtensions( a, annotations, schema );
+        if ( FilterArg.class.isAssignableFrom( a.getRawType() ) || SortArg.class.isAssignableFrom( a.getRawType() ) ) {
+            extensions = extensions != null ? new HashMap<>( extensions ) : new HashMap<>();
+            extensions.put( "x-gemma-filterable-properties", resolveAvailableProperties( a ) );
+            extensions = Collections.unmodifiableMap( extensions );
+        }
+        return extensions;
+    }
+
     @Autowired
     private List<FilteringVoEnabledService<?, ?>> filteringServices;
 
-    private String resolveAvailableProperties( Annotated a ) {
+    @Value
+    private static class FilterablePropMeta {
+        String name;
+        String type;
+        @Nullable
+        String description;
+        @Nullable
+        List<FilterablePropMetaAvailableValue> availableValues;
+    }
+
+    @Value
+    private static class FilterablePropMetaAvailableValue {
+        String value;
+        String name;
+    }
+
+    @Autowired
+    private MessageSource messageSource;
+
+    private List<FilterablePropMeta> resolveAvailableProperties( Annotated a ) {
         // this is the case for FilterArg and SortArg
         JavaType[] candidateServiceTypes = a.getType().findTypeParameters( a.getRawType() );
         //noinspection unchecked
@@ -110,16 +147,55 @@ public class CustomModelResolver extends ModelResolver {
                 .filter( s -> clazz.isAssignableFrom( s.getElementClass() ) )
                 .findAny()
                 .orElseThrow( () -> new IllegalArgumentException( String.format( "Could not find filtering service for %s.", clazz.getName() ) ) );
+        return filteringService.getFilterableProperties().stream()
+                // FIXME: The Criteria-based services don't support ordering results by collection size, see https://github.com/PavlidisLab/Gemma/issues/520
+                .filter( p -> !SortArg.class.isAssignableFrom( a.getRawType() ) || !isCriteriaBased( filteringService ) || !p.endsWith( ".size" ) )
+                .sorted()
+                .map( p -> new FilterablePropMeta( p,
+                        resolveType( SimpleType.constructUnsafe( filteringService.getFilterablePropertyType( p ) ) ),
+                        filteringService.getFilterablePropertyDescription( p ),
+                        Optional.ofNullable( filteringService.getFilterablePropertyAvailableValues( p ) )
+                                .map( e -> {
+                                    List<MessageSourceResolvable> r = filteringService.getFilterablePropertyResolvableAvailableValues( p );
+                                    assert r != null;
+                                    assert e.size() == r.size();
+                                    int numValues = e.size();
+                                    List<FilterablePropMetaAvailableValue> l = new ArrayList<>( numValues );
+                                    for ( int i = 0; i < numValues; i++ ) {
+                                        String title = messageSource.getMessage( r.get( i ), Locale.getDefault() );
+                                        l.add( new FilterablePropMetaAvailableValue( e.get( i ).toString(), title ) );
+                                    }
+                                    return l;
+                                } )
+                                .orElse( null ) ) )
+                .collect( Collectors.toList() );
+    }
+
+    private String resolveAvailablePropertiesAsString( Annotated a ) {
         return String.format( "Available properties:\n\n%s",
-                filteringService.getFilterableProperties().stream()
-                        // FIXME: The Criteria-based services don't support ordering results by collection size, see https://github.com/PavlidisLab/Gemma/issues/520
-                        .filter( p -> !SortArg.class.isAssignableFrom( a.getRawType() ) || !isCriteriaBased( filteringService ) || !p.endsWith( ".size" ) )
-                        .sorted()
+                resolveAvailableProperties( a ).stream()
                         .map( p -> String.format( "- %s `%s`%s",
-                                p,
-                                resolveType( SimpleType.constructUnsafe( filteringService.getFilterablePropertyType( p ) ) ),
-                                filteringService.getFilterablePropertyDescription( p ) != null ? " (" + filteringService.getFilterablePropertyDescription( p ) + ")" : ""
-                        ) ).collect( Collectors.joining( "\n" ) ) );
+                                p.name,
+                                p.type,
+                                resolvePropDescription( p ) ) )
+                        .collect( Collectors.joining( "\n" ) ) );
+    }
+
+    private String resolvePropDescription( FilterablePropMeta prop ) {
+        StringBuilder desc = new StringBuilder();
+        if ( prop.description != null ) {
+            desc.append( prop.description );
+        }
+        if ( prop.availableValues != null ) {
+            if ( desc.length() > 0 )
+                desc.append( ", " );
+            desc.append( "available values: " )
+                    .append( prop.availableValues.stream().map( FilterablePropMetaAvailableValue::getValue ).collect( Collectors.joining( ", " ) ) );
+        }
+        if ( desc.length() > 0 )
+            return " (" + desc + ")";
+        else
+            return "";
     }
 
     private static boolean isCriteriaBased( FilteringVoEnabledService<?, ?> service ) {
@@ -145,6 +221,9 @@ public class CustomModelResolver extends ModelResolver {
         } else if ( type.isTypeOrSubTypeOf( Float.class ) || type.isTypeOrSubTypeOf( Double.class ) ) {
             return "number";
         } else if ( type.isTypeOrSubTypeOf( Date.class ) || type.isTypeOrSubTypeOf( String.class ) ) {
+            return "string";
+        } else if ( type.isEnumType() ) {
+            // FIXME: handle ordinal enums
             return "string";
         } else if ( type.isArrayType() || type.isCollectionLikeType() ) {
             return "array";

@@ -123,6 +123,12 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
         return getFilterablePropertyMeta( propertyName ).description;
     }
 
+    @Nullable
+    @Override
+    public List<Object> getFilterablePropertyAvailableValues( String propertyName ) {
+        return getFilterablePropertyMeta( propertyName ).availableValues;
+    }
+
     @Override
     public final Filter getFilter( String property, Filter.Operator operator, String value ) {
         FilterablePropertyMeta propertyMeta = getFilterablePropertyMeta( property );
@@ -180,6 +186,11 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
          */
         @Nullable
         String description;
+        /**
+         * A short list of allowed values if that can be determined, or null.
+         */
+        @Nullable
+        List<Object> availableValues;
     }
 
     /**
@@ -195,7 +206,7 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
     protected FilterablePropertyMeta getFilterablePropertyMeta( String propertyName ) throws IllegalArgumentException {
         try {
             PartialFilterablePropertyMeta meta = resolveFilterablePropertyMetaInternal( propertyName, elementClass, FILTERABLE_PROPERTIES_MAX_DEPTH );
-            return new FilterablePropertyMeta( objectAlias, propertyName, meta.propertyType, meta.description );
+            return new FilterablePropertyMeta( objectAlias, propertyName, meta.propertyType, null, meta.availableValues );
         } catch ( NoSuchFieldException e ) {
             String availableProperties = getFilterableProperties().stream().sorted().collect( Collectors.joining( ", " ) );
             throw new IllegalArgumentException( String.format( "Could not resolve property '%s' on %s. Available properties are: %s.", propertyName, elementClass.getName(), availableProperties ), e );
@@ -218,7 +229,7 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
     private static class PartialFilterablePropertyMeta {
         Class<?> propertyType;
         @Nullable
-        String description;
+        List<Object> availableValues;
     }
 
     /**
@@ -268,10 +279,10 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
         }
 
         Class<?> actualType = resolveActualType( propertyType );
-        String description = resolveDescription( propertyType );
+        List<Object> availableValues = resolveAvailableValues( propertyType );
 
         if ( Filter.getConversionService().canConvert( String.class, actualType ) ) {
-            return new PartialFilterablePropertyMeta( actualType, description );
+            return new PartialFilterablePropertyMeta( actualType, availableValues );
         } else {
             throw new NoSuchFieldException( String.format( "%s is not of a supported type or a collection of supported types %s.", property, cls.getName() ) );
         }
@@ -289,18 +300,16 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
     }
 
     @Nullable
-    private static String resolveDescription( Type propertyType ) {
+    private static List<Object> resolveAvailableValues( Type propertyType ) {
         if ( propertyType instanceof CustomType && ( ( CustomType ) propertyType ).getUserType() instanceof EnumType ) {
             EnumType et = ( EnumType ) ( ( CustomType ) propertyType ).getUserType();
             //noinspection unchecked
             EnumSet<?> es = EnumSet.allOf( et.returnedClass() );
-            String availableValues;
             if ( et.isOrdinal() ) {
-                availableValues = es.stream().map( Enum::ordinal ).map( String::valueOf ).collect( Collectors.joining( ", " ) );
+                return es.stream().map( Enum::ordinal ).map( String::valueOf ).collect( Collectors.toList() );
             } else {
-                availableValues = es.stream().map( Enum::name ).collect( Collectors.joining( ", " ) );
+                return es.stream().map( Enum::name ).collect( Collectors.toList() );
             }
-            return String.format( "available values: %s", availableValues );
         } else {
             return null;
         }

@@ -105,15 +105,15 @@ public abstract class AbstractCuratableDao<C extends Curatable, VO extends Abstr
     @Override
     protected FilterablePropertyMeta getFilterablePropertyMeta( String propertyName ) throws IllegalArgumentException {
         if ( propertyName.equals( "lastUpdated" ) ) {
-            return new FilterablePropertyMeta( CURATION_DETAILS_ALIAS, "lastUpdated", Date.class, "alias for curationDetails.lastUpdated" );
+            return new FilterablePropertyMeta( CURATION_DETAILS_ALIAS, "lastUpdated", Date.class, "alias for curationDetails.lastUpdated", null );
         }
 
         if ( propertyName.equals( "troubled" ) ) {
-            return new FilterablePropertyMeta( CURATION_DETAILS_ALIAS, "troubled", Boolean.class, "alias for curationDetails.troubled" );
+            return new FilterablePropertyMeta( CURATION_DETAILS_ALIAS, "troubled", Boolean.class, "alias for curationDetails.troubled", null );
         }
 
         if ( propertyName.equals( "needsAttention" ) ) {
-            return new FilterablePropertyMeta( CURATION_DETAILS_ALIAS, "needsAttention", Boolean.class, "alias for curationDetails.needsAttention" );
+            return new FilterablePropertyMeta( CURATION_DETAILS_ALIAS, "needsAttention", Boolean.class, "alias for curationDetails.needsAttention", null );
         }
 
         return super.getFilterablePropertyMeta( propertyName );

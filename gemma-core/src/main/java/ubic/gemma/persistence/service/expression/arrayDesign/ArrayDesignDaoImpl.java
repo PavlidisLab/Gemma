@@ -1087,18 +1087,18 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     protected FilterablePropertyMeta getFilterablePropertyMeta( String propertyName ) {
         if ( propertyName.startsWith( "externalReference." ) ) {
             String fieldName = propertyName.replaceFirst( "^externalReference\\.", "" );
-            return new FilterablePropertyMeta( EXTERNAL_REFERENCE_ALIAS, fieldName, resolveFilterPropertyType( fieldName, DatabaseEntry.class ), null );
+            return new FilterablePropertyMeta( EXTERNAL_REFERENCE_ALIAS, fieldName, resolveFilterPropertyType( fieldName, DatabaseEntry.class ), null, null );
         }
 
         // alias for primaryTaxon which is not discoverable in the VO
         if ( propertyName.startsWith( "taxon." ) ) {
             String fieldName = propertyName.replaceFirst( "^taxon\\.", "" );
-            return new FilterablePropertyMeta( PRIMARY_TAXON_ALIAS, fieldName, resolveFilterPropertyType( fieldName, Taxon.class ), "alias for primaryTaxon." + fieldName );
+            return new FilterablePropertyMeta( PRIMARY_TAXON_ALIAS, fieldName, resolveFilterPropertyType( fieldName, Taxon.class ), "alias for primaryTaxon." + fieldName, null );
         }
 
         // handle cases such as taxon = 1
         if ( propertyName.equals( "taxon" ) ) {
-            return new FilterablePropertyMeta( PRIMARY_TAXON_ALIAS, "id", Long.class, "alias for taxon.id" );
+            return new FilterablePropertyMeta( PRIMARY_TAXON_ALIAS, "id", Long.class, "alias for taxon.id", null );
         }
 
         return super.getFilterablePropertyMeta( propertyName );

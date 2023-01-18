@@ -42,6 +42,12 @@ public abstract class AbstractNoopFilteringVoEnabledDao<O extends Identifiable, 
         throw new UnsupportedOperationException( message );
     }
 
+    @Nullable
+    @Override
+    public List<Object> getFilterablePropertyAvailableValues( String property ) {
+        throw new UnsupportedOperationException( message );
+    }
+
     @Override
     public final Filter getFilter( String property, Filter.Operator operator, String value ) throws IllegalArgumentException {
         throw new UnsupportedOperationException( message );

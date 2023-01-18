@@ -1,5 +1,6 @@
 package ubic.gemma.persistence.service;
 
+import org.springframework.context.MessageSourceResolvable;
 import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.persistence.util.Filter;
@@ -33,6 +34,18 @@ public interface FilteringVoEnabledService<O extends Identifiable, VO extends Id
      */
     @Nullable
     String getFilterablePropertyDescription( String property );
+
+    /**
+     * @see FilteringVoEnabledDao#getFilterablePropertyAvailableValues(String)
+     */
+    @Nullable
+    List<Object> getFilterablePropertyAvailableValues( String p );
+
+    /**
+     * Obtain a list of resolvable message sources to be used for user display purposes.
+     */
+    @Nullable
+    List<MessageSourceResolvable> getFilterablePropertyResolvableAvailableValues( String p );
 
     /**
      * @see FilteringVoEnabledDao#getFilterableProperties()
