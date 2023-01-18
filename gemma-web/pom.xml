@@ -102,6 +102,31 @@
 				<artifactId>maven-war-plugin</artifactId>
 				<version>3.3.2</version>
 			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-dependency-plugin</artifactId>
+				<version>3.3.0</version>
+				<executions>
+					<execution>
+						<phase>generate-sources</phase>
+						<goals>
+							<goal>unpack</goal>
+						</goals>
+						<configuration>
+							<artifactItems>
+								<artifactItem>
+									<groupId>org.springframework</groupId>
+									<artifactId>spring-webmvc</artifactId>
+									<version>3.2.18.RELEASE</version>
+									<classifier>sources</classifier>
+								</artifactItem>
+							</artifactItems>
+							<includes>org/springframework/web/servlet/mvc/AbstractFormController.java,org/springframework/web/servlet/mvc/BaseCommandController.java,org/springframework/web/servlet/mvc/SimpleFormController.java</includes>
+							<outputDirectory>${project.build.sourceDirectory}</outputDirectory>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
 		</plugins>
 		<pluginManagement>
 			<plugins>
@@ -187,18 +212,18 @@
 		</dependency>
 
 		<!-- Spring extra modules -->
-		<!-- latest for Spring 3 -->
+		<!-- latest for Spring 4 -->
 		<dependency>
 			<groupId>org.springframework.social</groupId>
 			<artifactId>spring-social-core</artifactId>
-			<version>1.0.3.RELEASE</version>
+			<version>1.1.6.RELEASE</version>
 			<scope>runtime</scope>
 		</dependency>
-		<!-- latest for Spring 3 -->
+		<!-- latest for Spring 4 -->
 		<dependency>
 			<groupId>org.springframework.ws</groupId>
 			<artifactId>spring-ws-core</artifactId>
-			<version>2.1.4.RELEASE</version>
+			<version>2.4.7.RELEASE</version>
 		</dependency>
 
 		<!-- Apache Commons -->
@@ -224,19 +249,19 @@
 		<dependency>
 			<groupId>org.quartz-scheduler</groupId>
 			<artifactId>quartz</artifactId>
-			<version>1.8.6</version>
+			<version>2.3.2</version>
 		</dependency>
 
 		<!-- RSS feeds (depends on spring-web version) -->
 		<dependency>
-			<groupId>rome</groupId>
+			<groupId>com.rometools</groupId>
 			<artifactId>rome</artifactId>
-			<version>1.0</version>
+			<version>1.18.0</version>
 		</dependency>
 		<dependency>
-			<groupId>rome</groupId>
+			<groupId>com.rometools</groupId>
 			<artifactId>rome-fetcher</artifactId>
-			<version>1.0</version>
+			<version>1.18.0</version>
 		</dependency>
 
 		<!-- JSON -->
@@ -250,7 +275,7 @@
 		<dependency>
 			<groupId>org.directwebremoting</groupId>
 			<artifactId>dwr</artifactId>
-			<version>2.0.11-RELEASE</version>
+			<version>3.0.2-RELEASE</version>
 		</dependency>
 
 		<!-- Templating -->
@@ -274,7 +299,7 @@
 			<scope>runtime</scope>
 		</dependency>
 
-		<!-- Jersey (latest for Spring 3) -->
+		<!-- Jersey (latest for Spring 4 and javax.servlet namespace) -->
 		<dependency>
 			<groupId>org.glassfish.jersey.core</groupId>
 			<artifactId>jersey-server</artifactId>
@@ -288,7 +313,7 @@
 		</dependency>
 		<dependency>
 			<groupId>org.glassfish.jersey.ext</groupId>
-			<artifactId>jersey-spring3</artifactId>
+			<artifactId>jersey-spring4</artifactId>
 			<version>${jersey.version}</version>
 		</dependency>
 		<dependency>
@@ -312,7 +337,7 @@
 		<dependency>
 			<groupId>javax.ws.rs</groupId>
 			<artifactId>javax.ws.rs-api</artifactId>
-			<version>2.0.1</version>
+			<version>2.1.1</version>
 		</dependency>
 
 		<!-- Tomcat (defined by production deployment constraints) -->

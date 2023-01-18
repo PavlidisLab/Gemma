@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2007 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,10 +18,9 @@
  */
 package ubic.gemma.web.remote;
 
+import org.directwebremoting.ConversionException;
 import org.directwebremoting.convert.StringConverter;
-import org.directwebremoting.extend.InboundContext;
 import org.directwebremoting.extend.InboundVariable;
-import org.directwebremoting.extend.MarshallException;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
 
 /**
@@ -29,8 +28,8 @@ import ubic.gemma.model.common.quantitationtype.ScaleType;
  */
 public class ScaleTypeConverter extends StringConverter {
     @Override
-    public Object convertInbound( Class paramType, InboundVariable iv, InboundContext inctx ) throws MarshallException {
-        String value = ( String ) super.convertInbound( paramType, iv, inctx );
+    public Object convertInbound( Class<?> paramType, InboundVariable iv ) throws ConversionException {
+        String value = ( String ) super.convertInbound( paramType, iv );
         return ScaleType.valueOf( value );
     }
 }

@@ -20,8 +20,8 @@ package ubic.gemma.web.util;
 
 import lombok.SneakyThrows;
 import net.sf.ehcache.Ehcache;
-import net.sf.ehcache.Statistics;
 import net.sf.ehcache.config.CacheConfiguration;
+import net.sf.ehcache.statistics.StatisticsGateway;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -79,13 +79,11 @@ public class CacheMonitorImpl implements CacheMonitor {
     @Override
     public void disableStatistics() {
         CacheMonitorImpl.log.info( "Disabling statistics" );
-        this.setStatisticsEnabled( false );
     }
 
     @Override
     public void enableStatistics() {
         CacheMonitorImpl.log.info( "Enabling statistics" );
-        this.setStatisticsEnabled( true );
     }
 
     @Override
@@ -138,9 +136,9 @@ public class CacheMonitorImpl implements CacheMonitor {
 
     @SneakyThrows(IOException.class)
     private void addEhcacheRow( String rawCacheName, Ehcache cache, Appendable buf ) {
-        Statistics statistics = cache.getStatistics();
+        StatisticsGateway statistics = cache.getStatistics();
 
-        long objectCount = statistics.getObjectCount();
+        long objectCount = statistics.getSize();
 
         if ( objectCount == 0 ) {
             return;
@@ -154,13 +152,13 @@ public class CacheMonitorImpl implements CacheMonitor {
                 .append( "<img src=\"" ).append( anticlockwiseIconUrl ).append( "\" onClick=\"clearCache('" ).append( escapeHtml4( rawCacheName ) ).append( "')\" alt=\"Clear cache\" title=\"Clear cache\"/> " )
                 .append( escapeHtml4( cacheName ) )
                 .append( "</td>" );
-        long hits = statistics.getCacheHits();
-        long misses = statistics.getCacheMisses();
-        long inMemoryHits = statistics.getInMemoryHits();
-        long inMemoryMisses = statistics.getInMemoryMisses();
+        long hits = statistics.cacheHitCount();
+        long misses = statistics.cacheMissCount();
+        long inMemoryHits = statistics.localHeapHitCount();
+        long inMemoryMisses = statistics.localHeapMissCount();
 
-        long onDiskHits = statistics.getOnDiskHits();
-        long evictions = statistics.getEvictionCount();
+        long onDiskHits = statistics.localDiskHitCount();
+        long evictions = statistics.cacheEvictedCount();
 
         buf.append( this.makeTableCellForStat( ( double ) hits / ( hits + misses ) ) );
         buf.append( this.makeTableCellForStat( hits ) );
@@ -194,14 +192,5 @@ public class CacheMonitorImpl implements CacheMonitor {
 
     private String makeTableCellForStat( double hits ) {
         return "<td>" + ( hits > 0 ? String.format( "%.2f", hits ) : "" ) + "</td>";
-    }
-
-    private void setStatisticsEnabled( boolean b ) {
-        for ( String rawCacheName : cacheManager.getCacheNames() ) {
-            Cache cache = cacheManager.getCache( rawCacheName );
-            if ( cache.getNativeCache() instanceof Ehcache ) {
-                ( ( Ehcache ) cache.getNativeCache() ).setSampledStatisticsEnabled( b );
-            }
-        }
     }
 }

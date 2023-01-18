@@ -19,7 +19,7 @@
 package ubic.gemma.web.controller;
 
 import gemma.gsec.util.SecurityUtil;
-import org.apache.commons.lang.exception.ExceptionUtils;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.springframework.beans.factory.annotation.Autowired;

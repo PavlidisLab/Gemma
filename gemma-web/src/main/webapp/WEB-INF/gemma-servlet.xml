@@ -9,7 +9,7 @@
        xsi:schemaLocation="http://www.springframework.org/schema/beans
    http://www.springframework.org/schema/beans/spring-beans.xsd
    http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop.xsd
-   http://www.directwebremoting.org/schema/spring-dwr http://www.directwebremoting.org/schema/spring-dwr-2.0.xsd
+   http://www.directwebremoting.org/schema/spring-dwr http://www.directwebremoting.org/schema/spring-dwr-3.0.xsd
    http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd">
 
     <!-- Note: the component-scan directive can be found in gemma-core's applicationContext-component-scan.xml -->
@@ -791,8 +791,6 @@
 
         <dwr:convert type="bean"
                      class="ubic.gemma.core.tasks.visualization.DifferentialExpressionGenesConditionsValueObject"/>
-        <dwr:convert type="bean"
-                     class="ubic.gemma.core.tasks.visualization.DifferentialExpressionGenesConditionsValueObject$Gene"/>
         <dwr:convert type="bean" class="ubic.gemma.model.analysis.expression.diff.DifferentialExpressionValueObject"/>
         <dwr:convert type="bean" class="ubic.gemma.model.analysis.expression.diff.ContrastsValueObject"/>
         <dwr:convert type="bean" class="ubic.gemma.model.analysis.expression.diff.ContrastVO"/>
@@ -802,8 +800,6 @@
                      class="ubic.gemma.core.tasks.visualization.DifferentialExpressionGenesConditionsValueObject$Cell"/>
         <dwr:convert type="bean"
                      class="ubic.gemma.core.tasks.visualization.DifferentialExpressionGenesConditionsValueObject$DiffExGene"/>
-        <dwr:convert type="bean"
-                     class="ubic.gemma.web.visualization.DifferentialExpressionGeneConditionSearchService$TaskProgress"/>
 
         <dwr:convert type="bean" class="ubic.gemma.core.search.SearchResult"/>
 
@@ -842,7 +838,6 @@
         <dwr:convert type="bean"
                      class="ubic.gemma.web.controller.expression.experiment.ExpressionExperimentExperimentalFactorValueObject"/>
 
-        <dwr:convert type="bean" class="ubic.gemma.core.ontology.OntologyTreeNode"/>
         <!-- yes, used -->
         <dwr:convert type="bean" class="ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType"/>
 
@@ -961,14 +956,11 @@
                      class="ubic.gemma.web.controller.expression.experiment.ExpressionExperimentDataFetchCommand"/>
         <dwr:convert type="bean" class="ubic.gemma.model.genome.gene.GeneSetMember"/>
         <dwr:convert type="bean" class="ubic.gemma.core.analysis.sequence.CompositeSequenceMapValueObject"/>
-        <dwr:convert type="bean"
-                     class="ubic.gemma.web.controller.common.description.BibliographicReferenceValueObject"/>
         <dwr:convert type="bean" class="ubic.gemma.model.genome.sequenceAnalysis.BlatResultValueObject"/>
         <dwr:convert type="bean" class="ubic.gemma.model.BaseValueObject"/>
         <dwr:convert type="bean" class="ubic.gemma.model.common.description.DatabaseEntryValueObject"/>
         <dwr:convert type="bean" class="ubic.gemma.model.common.description.ExternalDatabaseValueObject"/>
         <dwr:convert type="bean" class="ubic.gemma.model.expression.designElement.CompositeSequenceValueObject"/>
-        <dwr:convert type="bean" class="ubic.gemma.core.analysis.expression.diff.DifferentialExpressionValueObject"/>
         <dwr:convert type="bean"
                      class="ubic.gemma.core.analysis.expression.diff.DifferentialExpressionMetaAnalysisValueObject"/>
         <dwr:convert type="bean" class="ubic.gemma.core.image.ABALinkOutValueObject"/>
@@ -990,8 +982,6 @@
         <dwr:convert type="bean" class="ubic.gemma.web.remote.JsonReaderResponse"/>
         <dwr:convert type="bean" class="ubic.gemma.web.remote.EntityDelegator"/>
         <dwr:convert type="bean" class="ubic.gemma.web.remote.ListBatchCommand"/>
-        <dwr:convert type="bean" class="ubic.gemma.model.common.description.Property"/>
-        <dwr:convert type="bean" class="ubic.gemma.model.common.description.DataProperty"/>
 
         <dwr:convert type="bean" class="ubic.basecode.dataStructure.DoublePoint">
             <dwr:include method="x"/>

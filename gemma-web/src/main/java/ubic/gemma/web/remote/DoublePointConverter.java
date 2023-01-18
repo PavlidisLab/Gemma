@@ -18,15 +18,14 @@
  */
 package ubic.gemma.web.remote;
 
+import org.directwebremoting.ConversionException;
 import org.directwebremoting.convert.BeanConverter;
-import org.directwebremoting.dwrp.ObjectOutboundVariable;
-import org.directwebremoting.extend.MarshallException;
+import org.directwebremoting.extend.ObjectOutboundVariable;
 import org.directwebremoting.extend.OutboundContext;
 import org.directwebremoting.extend.OutboundVariable;
 import org.directwebremoting.extend.Property;
 import ubic.basecode.dataStructure.DoublePoint;
 
-import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.TreeMap;
@@ -41,7 +40,7 @@ import java.util.TreeMap;
 public class DoublePointConverter extends BeanConverter {
 
     @Override
-    public OutboundVariable convertOutbound( Object data, OutboundContext outctx ) throws MarshallException {
+    public OutboundVariable convertOutbound( Object data, OutboundContext outctx ) throws ConversionException {
 
         if ( !( data instanceof DoublePoint ) ) return super.convertOutbound( data, outctx );
 
@@ -54,8 +53,7 @@ public class DoublePointConverter extends BeanConverter {
 
         try {
             Map<String, Property> properties = getPropertyMapFromObject( data, true, false );
-            for ( Iterator<Entry<String, Property>> it = properties.entrySet().iterator(); it.hasNext(); ) {
-                Entry<String, Property> entry = it.next();
+            for ( Entry<String, Property> entry : properties.entrySet() ) {
                 String name = entry.getKey();
                 Property property = entry.getValue();
 
@@ -73,13 +71,13 @@ public class DoublePointConverter extends BeanConverter {
                 }
                 ovs.put( name, nested );
             }
-        } catch ( MarshallException ex ) {
+        } catch ( ConversionException ex ) {
             throw ex;
         } catch ( Exception ex ) {
-            throw new MarshallException( data.getClass(), ex );
+            throw new ConversionException( data.getClass(), ex );
         }
 
-        ov.init( ovs, getJavascript() );
+        ov.setChildren( ovs );
 
         return ov;
     }

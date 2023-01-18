@@ -18,12 +18,12 @@
  */
 package ubic.gemma.web.feed;
 
-import com.sun.syndication.feed.synd.SyndEntry;
-import com.sun.syndication.feed.synd.SyndFeed;
-import com.sun.syndication.fetcher.FeedFetcher;
-import com.sun.syndication.fetcher.impl.FeedFetcherCache;
-import com.sun.syndication.fetcher.impl.HashMapFeedInfoCache;
-import com.sun.syndication.fetcher.impl.HttpURLFeedFetcher;
+import com.rometools.fetcher.FeedFetcher;
+import com.rometools.fetcher.impl.FeedFetcherCache;
+import com.rometools.fetcher.impl.HashMapFeedInfoCache;
+import com.rometools.fetcher.impl.HttpURLFeedFetcher;
+import com.rometools.rome.feed.synd.SyndEntry;
+import com.rometools.rome.feed.synd.SyndFeed;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.stereotype.Controller;
