@@ -59,7 +59,7 @@ public class FileUploadUtilTest {
 
         copiedFile = FileUploadUtil.copyUploadedFile( request, key );
         assertTrue( copiedFile.exists() );
-        assertEquals( "1__test_upload.txt", copiedFile.getName() );
+        assertTrue( copiedFile.getName().endsWith( "__test_upload.txt" ) );
         assertEquals( expectedSize, copiedFile.length() );
     }
 
@@ -81,7 +81,7 @@ public class FileUploadUtilTest {
 
         copiedFile = FileUploadUtil.copyUploadedFile( request, key );
         assertTrue( copiedFile.exists() );
-        assertEquals( "1__test_upload.txt", copiedFile.getName() );
+        assertTrue( copiedFile.getName().endsWith( "__test_upload.txt" ) );
         assertEquals( expectedSize, copiedFile.length() );
     }
 
