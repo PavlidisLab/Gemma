@@ -298,6 +298,12 @@
             <groupId>ubc.chibi.compass-fork</groupId>
             <artifactId>compass-fork</artifactId>
             <version>1.2.0</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>commons-el</groupId>
+                    <artifactId>commons-el</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
         <!-- Apache Commons -->
