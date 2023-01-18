@@ -25,10 +25,15 @@ public class MeterRegistryCliConfigurer extends AbstractMeterRegistryConfigurer 
     protected void configure( MeterRegistry registry ) {
         registry.config().commonTags( "environment", "cli" );
         if ( applicationContext != null ) {
-            applicationContext.addApplicationListener( ( ApplicationListener<AuthenticationSuccessEvent> ) event -> {
-                if ( event.getAuthentication().getPrincipal() instanceof UserDetails ) {
-                    UserDetails userDetails = ( UserDetails ) event.getAuthentication().getPrincipal();
-                    registry.config().commonTags( "user", userDetails.getUsername() );
+            // unfortunately, the lambda is necessary to let Spring correctly infer the type of handled events
+            //noinspection Convert2Lambda
+            applicationContext.addApplicationListener( new ApplicationListener<AuthenticationSuccessEvent>() {
+                @Override
+                public void onApplicationEvent( AuthenticationSuccessEvent event ) {
+                    if ( event.getAuthentication().getPrincipal() instanceof UserDetails ) {
+                        UserDetails userDetails = ( UserDetails ) event.getAuthentication().getPrincipal();
+                        registry.config().commonTags( "user", userDetails.getUsername() );
+                    }
                 }
             } );
         }
