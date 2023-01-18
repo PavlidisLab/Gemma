@@ -209,12 +209,6 @@
 
 		<!-- Apache Commons -->
 		<dependency>
-			<groupId>commons-el</groupId>
-			<artifactId>commons-el</artifactId>
-			<version>1.0</version>
-			<scope>runtime</scope>
-		</dependency>
-		<dependency>
 			<groupId>commons-fileupload</groupId>
 			<artifactId>commons-fileupload</artifactId>
 			<version>1.4</version>
