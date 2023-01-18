@@ -21,6 +21,7 @@
 	<modules>
 		<module>gemma-core</module>
 		<module>gemma-cli</module>
+		<module>gemma-rest</module>
 		<module>gemma-web</module>
 		<module>gemma-groovy-support</module>
 	</modules>

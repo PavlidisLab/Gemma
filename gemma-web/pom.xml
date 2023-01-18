@@ -161,6 +161,12 @@
 			<scope>test</scope>
 		</dependency>
 
+		<dependency>
+			<groupId>gemma</groupId>
+			<artifactId>gemma-rest</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+
 		<!-- Spring -->
 		<dependency>
 			<groupId>org.springframework</groupId>
@@ -274,47 +280,6 @@
 			<scope>runtime</scope>
 		</dependency>
 
-		<!-- Jersey (latest for Spring 3) -->
-		<dependency>
-			<groupId>org.glassfish.jersey.core</groupId>
-			<artifactId>jersey-server</artifactId>
-			<version>${jersey.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>org.glassfish.jersey.containers</groupId>
-			<artifactId>jersey-container-servlet</artifactId>
-			<version>${jersey.version}</version>
-			<scope>runtime</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.glassfish.jersey.ext</groupId>
-			<artifactId>jersey-spring3</artifactId>
-			<version>${jersey.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>org.glassfish.jersey.media</groupId>
-			<artifactId>jersey-media-json-jackson</artifactId>
-			<version>${jersey.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>org.glassfish.jersey.test-framework</groupId>
-			<artifactId>jersey-test-framework-core</artifactId>
-			<version>${jersey.version}</version>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.glassfish.jersey.test-framework.providers</groupId>
-			<artifactId>jersey-test-framework-provider-inmemory</artifactId>
-			<version>${jersey.version}</version>
-			<scope>test</scope>
-		</dependency>
-		<!-- this is determined by jersey-core -->
-		<dependency>
-			<groupId>javax.ws.rs</groupId>
-			<artifactId>javax.ws.rs-api</artifactId>
-			<version>2.0.1</version>
-		</dependency>
-
 		<!-- Tomcat (defined by production deployment constraints) -->
 		<dependency>
 			<groupId>org.apache.tomcat</groupId>
@@ -323,39 +288,6 @@
 		<dependency>
 			<groupId>org.apache.tomcat</groupId>
 			<artifactId>tomcat-jsp-api</artifactId>
-		</dependency>
-
-		<!-- Swagger -->
-		<dependency>
-			<groupId>io.swagger.core.v3</groupId>
-			<artifactId>swagger-core</artifactId>
-			<version>${swagger.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>io.swagger.core.v3</groupId>
-			<artifactId>swagger-jaxrs2</artifactId>
-			<version>${swagger.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>io.swagger.core.v3</groupId>
-			<artifactId>swagger-jaxrs2-servlet-initializer-v2</artifactId>
-			<version>${swagger.version}</version>
-			<scope>runtime</scope>
-		</dependency>
-		<dependency>
-			<groupId>io.swagger.core.v3</groupId>
-			<artifactId>swagger-integration</artifactId>
-			<version>${swagger.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>io.swagger.core.v3</groupId>
-			<artifactId>swagger-models</artifactId>
-			<version>${swagger.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>io.swagger.core.v3</groupId>
-			<artifactId>swagger-annotations</artifactId>
-			<version>${swagger.version}</version>
 		</dependency>
 
 		<!-- logging -->
