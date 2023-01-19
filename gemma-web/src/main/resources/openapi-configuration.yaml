@@ -23,9 +23,29 @@ openAPI:
       `getNumberOfResultSets`. These endpoints are faster than looking up `totalElements` as no data is retrieved or
       converted.
 
+      New `getDatasetsAnnotationsUsageStatistics` endpoints for retrieving annotations used by the matched datasets. The
+      endpoint accepts the same `filter` argument of `getDatasets`, allowing one to easily navigate terms for filtering
+      further down results.
+
       Enumerate all properties available for filtering and sorting in the description of the corresponding parameter.
       There's been a number of fixes and additional tests performed to ensure that all advertised properties are working
       as expected.
+
+      The `FilterArg` and `SortArg`-based parameters now have OpenAPI extensions to enumerate available properties in a
+      structured format under the `x-gemma-filterable-properties`key. Possible values are exposed for enumerated types.
+
+      ```yaml
+      x-gemma-filterable-properties:
+      - name: technologyType
+        type: string
+        availableValues:
+        - value: ONECOLOR
+          name: One Color
+        - value: SEQUENCING
+          name: Sequencing
+      ```
+
+      New endpoints for browsing blacklisted platforms and datasets.
 
       ### Update 2.6.1
 
