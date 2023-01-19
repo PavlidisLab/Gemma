@@ -48,7 +48,7 @@ public abstract class BaseJerseyTest extends JerseyTest implements InitializingB
     protected Application configure() {
         SecurityContextHolder.setStrategyName( SecurityContextHolder.MODE_INHERITABLETHREADLOCAL );
         application = new ResourceConfig()
-                .packages( "io.swagger.v3.jaxrs2.integration.resources", "ubic.gemma.web.services.rest" )
+                .packages( "io.swagger.v3.jaxrs2.integration.resources", "ubic.gemma.rest" )
                 // use a generic context for now, it will be replaced when this bean is fully initialized in afterPropertiesSet()
                 .property( "contextConfig", new GenericWebApplicationContext() )
                 .property( "openApi.configuration.location", "/WEB-INF/classes/openapi-configuration.yaml" );
