@@ -28,6 +28,7 @@ import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
@@ -272,11 +273,11 @@ public class ExpressionExperimentServiceTest extends BaseSpringContextTest {
                 .hasFieldOrPropertyWithValue( "operator", Filter.Operator.eq )
                 .hasFieldOrPropertyWithValue( "requiredValue", false );
 
-        assertThat( expressionExperimentService.getFilter( "bioAssays.arrayDesignUsed.technologyType", Filter.Operator.eq, "SEQUENCE" ) )
+        assertThat( expressionExperimentService.getFilter( "bioAssays.arrayDesignUsed.technologyType", Filter.Operator.eq, "SEQUENCING" ) )
                 .hasFieldOrPropertyWithValue( "objectAlias", "ba" )
                 .hasFieldOrPropertyWithValue( "propertyName", "arrayDesignUsed.technologyType" )
                 .hasFieldOrPropertyWithValue( "operator", Filter.Operator.eq )
-                .hasFieldOrPropertyWithValue( "requiredValue", "SEQUENCE" );
+                .hasFieldOrPropertyWithValue( "requiredValue", TechnologyType.SEQUENCING );
     }
 
     @Test

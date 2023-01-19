@@ -45,8 +45,12 @@ public class ArrayDesignServiceTest extends BaseSpringContextTest {
 
     @Test
     public void testGetFilterTechnologyType() {
+        arrayDesignService.getFilterablePropertyType( "technologyType" )
+                .isAssignableFrom( TechnologyType.class );
         assertThat( arrayDesignService.getFilterablePropertyDescription( "technologyType" ) )
-                .contains( TechnologyType.SEQUENCING.name(), TechnologyType.ONECOLOR.name() );
+                .isNull();
+        assertThat( arrayDesignService.getFilterablePropertyAvailableValues( "technologyType" ) )
+                .contains( TechnologyType.SEQUENCING );
     }
 
     @Test
@@ -70,6 +74,6 @@ public class ArrayDesignServiceTest extends BaseSpringContextTest {
         assertThat( arrayDesignService.getFilter( "technologyType", Filter.Operator.eq, "ONECOLOR" ) )
                 .hasFieldOrPropertyWithValue( "objectAlias", "ad" )
                 .hasFieldOrPropertyWithValue( "propertyName", "technologyType" )
-                .hasFieldOrPropertyWithValue( "requiredValue", "ONECOLOR" );
+                .hasFieldOrPropertyWithValue( "requiredValue", TechnologyType.ONECOLOR );
     }
 }

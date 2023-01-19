@@ -4,12 +4,15 @@ import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.util.test.BaseSpringContextTest;
 import ubic.gemma.persistence.service.analysis.expression.diff.ExpressionAnalysisResultSetService;
-import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Filter;
+import ubic.gemma.persistence.util.Filters;
+import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.persistence.util.Sort;
 
 import java.util.Date;
 import java.util.List;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * Test all possible filterable properties for filtering and sorting results.
@@ -25,8 +28,11 @@ public class FilteringVoEnabledServiceIntegrationTest extends BaseSpringContextT
     public void testFilteringByAllFilterableProperties() {
         for ( FilteringVoEnabledService<?, ?> filteringService : filteringServices ) {
             for ( String property : filteringService.getFilterableProperties() ) {
-                Filter filter = filteringService.getFilter( property, Filter.Operator.eq, getStubForPropType( filteringService.getFilterablePropertyType( property ) ) );
-                filteringService.loadValueObjectsPreFilter( Filters.by( filter ), null, 0, 1 );
+                log.info( String.format( "Testing %s with %s %s %s", filteringService, property, Filter.Operator.eq, getStubForPropType( filteringService, property ) ) );
+                Filter filter = filteringService.getFilter( property, Filter.Operator.eq, getStubForPropType( filteringService, property ) );
+                Slice<?> slice = filteringService.loadValueObjectsPreFilter( Filters.by( filter ), null, 0, 1 );
+                long count = filteringService.countPreFilter( Filters.by( filter ) );
+                assertThat( slice.getTotalElements() ).isEqualTo( count );
             }
         }
     }
@@ -45,7 +51,12 @@ public class FilteringVoEnabledServiceIntegrationTest extends BaseSpringContextT
         }
     }
 
-    private static String getStubForPropType( Class<?> clazz ) {
+    private static String getStubForPropType( FilteringService<?> filteringService, String prop ) {
+        List<Object> availableValues = filteringService.getFilterablePropertyAvailableValues( prop );
+        if ( availableValues != null ) {
+            return availableValues.stream().findAny().map( String::valueOf ).orElse( null );
+        }
+        Class<?> clazz = filteringService.getFilterablePropertyType( prop );
         if ( Integer.class.isAssignableFrom( clazz ) ) {
             return "0";
         } else if ( Long.class.isAssignableFrom( clazz ) ) {

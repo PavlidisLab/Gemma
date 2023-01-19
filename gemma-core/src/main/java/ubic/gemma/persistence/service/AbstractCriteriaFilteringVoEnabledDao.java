@@ -270,7 +270,9 @@ public abstract class AbstractCriteriaFilteringVoEnabledDao<O extends Identifiab
         for ( FilterablePropertyAlias alias : aliases ) {
             if ( propertyName.startsWith( alias.propertyName + "." ) ) {
                 propertyName = propertyName.replaceFirst( "^" + Pattern.quote( alias.propertyName + "." ), "" );
-                return new FilterablePropertyMeta( alias.alias, propertyName, meta.getPropertyType(), meta.getDescription(), meta.getAvailableValues() );
+                return meta
+                        .withObjectAlias( alias.alias )
+                        .withPropertyName( propertyName );
             }
         }
         return meta;

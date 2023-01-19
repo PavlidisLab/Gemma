@@ -1709,20 +1709,21 @@ public class ExpressionExperimentDaoImpl
     protected FilterablePropertyMeta getFilterablePropertyMeta( String propertyName ) {
         if ( propertyName.startsWith( "characteristics." ) && !propertyName.equals( "characteristics.size" ) ) {
             String fieldName = propertyName.replaceFirst( "^characteristics\\.", "" );
-            return new FilterablePropertyMeta( CharacteristicDao.OBJECT_ALIAS, fieldName, resolveFilterPropertyType( fieldName, Characteristic.class ), null, null );
+            return getFilterablePropertyMeta( CHARACTERISTIC_ALIAS, fieldName, Characteristic.class );
         }
 
         if ( propertyName.startsWith( "bioAssays." ) && !propertyName.equals( "bioAssays.size" ) ) {
             String fieldName = propertyName.replaceFirst( "^bioAssays\\.", "" );
-            return new FilterablePropertyMeta( BioAssayDao.OBJECT_ALIAS, fieldName, resolveFilterPropertyType( fieldName, BioAssay.class ), null, null );
+            return getFilterablePropertyMeta( BIO_ASSAY_ALIAS, fieldName, BioAssay.class );
         }
 
         if ( propertyName.equals( "taxon" ) ) {
-            return new FilterablePropertyMeta( TaxonDao.OBJECT_ALIAS, "id", Long.class, "alias for taxon.id", null );
+            return getFilterablePropertyMeta( TAXON_ALIAS, "id", Taxon.class ).withDescription( "alias for taxon.id" );
         }
 
         if ( propertyName.equals( "bioAssayCount" ) ) {
-            return new FilterablePropertyMeta( OBJECT_ALIAS, "bioAssays.size", Integer.class, null, null );
+            return getFilterablePropertyMeta( "bioAssays.size" )
+                    .withDescription( "alias for bioAssays.size" );
         }
 
         return super.getFilterablePropertyMeta( propertyName );

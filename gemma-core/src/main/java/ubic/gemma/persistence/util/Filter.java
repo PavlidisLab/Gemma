@@ -29,6 +29,8 @@ import org.springframework.core.convert.TypeDescriptor;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.core.convert.support.ConfigurableConversionService;
 import org.springframework.core.convert.support.GenericConversionService;
+import ubic.gemma.model.common.description.DatabaseType;
+import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 
 import javax.annotation.Nullable;
 import java.text.DateFormat;
@@ -78,6 +80,9 @@ public class Filter {
                 throw new ConversionFailedException( TypeDescriptor.valueOf( Date.class ), TypeDescriptor.valueOf( String.class ), s, e );
             }
         }, DATE_FORMAT::format );
+        // FIXME: move these into AbstractFilteringVoEnabledDao
+        addConverter( DatabaseType.class, DatabaseType::valueOf, DatabaseType::name );
+        addConverter( TechnologyType.class, TechnologyType::valueOf, TechnologyType::name );
     }
 
     /**

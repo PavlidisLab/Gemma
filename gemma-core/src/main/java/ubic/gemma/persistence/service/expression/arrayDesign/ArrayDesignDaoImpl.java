@@ -40,6 +40,9 @@ import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.persistence.service.AbstractDao;
 import ubic.gemma.persistence.service.common.auditAndSecurity.curation.AbstractCuratableDao;
+import ubic.gemma.persistence.service.common.description.DatabaseEntryDao;
+import ubic.gemma.persistence.service.common.description.ExternalDatabaseDao;
+import ubic.gemma.persistence.service.genome.taxon.TaxonDao;
 import ubic.gemma.persistence.util.Filter;
 import ubic.gemma.persistence.util.*;
 
@@ -1087,18 +1090,20 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     protected FilterablePropertyMeta getFilterablePropertyMeta( String propertyName ) {
         if ( propertyName.startsWith( "externalReference." ) ) {
             String fieldName = propertyName.replaceFirst( "^externalReference\\.", "" );
-            return new FilterablePropertyMeta( EXTERNAL_REFERENCE_ALIAS, fieldName, resolveFilterPropertyType( fieldName, DatabaseEntry.class ), null, null );
+            return getFilterablePropertyMeta( EXTERNAL_REFERENCE_ALIAS, fieldName, DatabaseEntry.class );
         }
 
         // alias for primaryTaxon which is not discoverable in the VO
         if ( propertyName.startsWith( "taxon." ) ) {
             String fieldName = propertyName.replaceFirst( "^taxon\\.", "" );
-            return new FilterablePropertyMeta( PRIMARY_TAXON_ALIAS, fieldName, resolveFilterPropertyType( fieldName, Taxon.class ), "alias for primaryTaxon." + fieldName, null );
+            return getFilterablePropertyMeta( PRIMARY_TAXON_ALIAS, fieldName, Taxon.class )
+                    .withDescription( "alias for primaryTaxon." + fieldName );
         }
 
         // handle cases such as taxon = 1
         if ( propertyName.equals( "taxon" ) ) {
-            return new FilterablePropertyMeta( PRIMARY_TAXON_ALIAS, "id", Long.class, "alias for taxon.id", null );
+            return getFilterablePropertyMeta( PRIMARY_TAXON_ALIAS, "id", Taxon.class )
+                    .withDescription( "alias for taxon.id" );
         }
 
         return super.getFilterablePropertyMeta( propertyName );

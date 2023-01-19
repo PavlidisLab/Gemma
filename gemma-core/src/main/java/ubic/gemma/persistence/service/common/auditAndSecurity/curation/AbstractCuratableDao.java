@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.curation.AbstractCuratableValueObject;
 import ubic.gemma.model.common.auditAndSecurity.curation.Curatable;
+import ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.persistence.service.AbstractQueryFilteringVoEnabledDao;
 import ubic.gemma.persistence.service.common.auditAndSecurity.CurationDetailsDao;
@@ -104,18 +105,10 @@ public abstract class AbstractCuratableDao<C extends Curatable, VO extends Abstr
      */
     @Override
     protected FilterablePropertyMeta getFilterablePropertyMeta( String propertyName ) throws IllegalArgumentException {
-        if ( propertyName.equals( "lastUpdated" ) ) {
-            return new FilterablePropertyMeta( CURATION_DETAILS_ALIAS, "lastUpdated", Date.class, "alias for curationDetails.lastUpdated", null );
+        if ( propertyName.equals( "lastUpdated" ) || propertyName.equals( "troubled" ) || propertyName.equals( "needsAttention" ) ) {
+            return getFilterablePropertyMeta( CURATION_DETAILS_ALIAS, propertyName, CurationDetails.class )
+                    .withDescription( "alias for curationDetails." + propertyName );
         }
-
-        if ( propertyName.equals( "troubled" ) ) {
-            return new FilterablePropertyMeta( CURATION_DETAILS_ALIAS, "troubled", Boolean.class, "alias for curationDetails.troubled", null );
-        }
-
-        if ( propertyName.equals( "needsAttention" ) ) {
-            return new FilterablePropertyMeta( CURATION_DETAILS_ALIAS, "needsAttention", Boolean.class, "alias for curationDetails.needsAttention", null );
-        }
-
         return super.getFilterablePropertyMeta( propertyName );
     }
 }

@@ -1,6 +1,9 @@
 package ubic.gemma.persistence.service;
 
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
 import lombok.Value;
+import lombok.With;
 import org.apache.commons.lang3.ArrayUtils;
 import org.hibernate.SessionFactory;
 import org.hibernate.metadata.ClassMetadata;
@@ -9,13 +12,12 @@ import org.hibernate.type.EnumType;
 import org.hibernate.type.Type;
 import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.common.Identifiable;
-import ubic.gemma.persistence.util.EntityUtils;
-import ubic.gemma.persistence.util.Filters;
-import ubic.gemma.persistence.util.Filter;
-import ubic.gemma.persistence.util.Sort;
+import ubic.gemma.persistence.util.*;
 
 import javax.annotation.Nullable;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.stream.Collectors;
 
 /**
@@ -38,6 +40,11 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
      * Cached filterable properties, computed once on startup.
      */
     private final Set<String> filterableProperties;
+
+    /**
+     * Cached filterable properties meta, computed as we go.
+     */
+    private final ConcurrentMap<String, FilterablePropertyMeta> filterablePropertiesMeta = new ConcurrentHashMap<>();
 
     protected AbstractFilteringVoEnabledDao( @Nullable String objectAlias, Class<? extends O> elementClass, SessionFactory sessionFactory ) {
         super( elementClass, sessionFactory );
@@ -165,7 +172,7 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
             } else if ( propertyTypes[i].isCollectionType() ) {
                 // special case for collection size, regardless of its type
                 destination.add( prefix + propertyNames[i] + ".size" );
-            } else if ( Filter.getConversionService().canConvert( String.class, resolveActualType( propertyTypes[i] ) ) ) {
+            } else if ( Filter.getConversionService().canConvert( String.class, propertyTypes[i].getReturnedClass() ) ) {
                 destination.add( prefix + propertyNames[i] );
             }
         }
@@ -173,8 +180,12 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
 
     /**
      * Meta-information for a filterable property.
+     *
+     * Use {@link #getFilterablePropertyMeta(String)} and {@link #getFilterablePropertyMeta(String, String, Class)}.
      */
+    @With
     @Value
+    @AllArgsConstructor(access = AccessLevel.PRIVATE)
     protected static class FilterablePropertyMeta {
         String objectAlias;
         String propertyName;
@@ -204,25 +215,21 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
      * @see #getSort(String, Sort.Direction)
      */
     protected FilterablePropertyMeta getFilterablePropertyMeta( String propertyName ) throws IllegalArgumentException {
-        try {
-            PartialFilterablePropertyMeta meta = resolveFilterablePropertyMetaInternal( propertyName, elementClass, FILTERABLE_PROPERTIES_MAX_DEPTH );
-            return new FilterablePropertyMeta( objectAlias, propertyName, meta.propertyType, null, meta.availableValues );
-        } catch ( NoSuchFieldException e ) {
-            String availableProperties = getFilterableProperties().stream().sorted().collect( Collectors.joining( ", " ) );
-            throw new IllegalArgumentException( String.format( "Could not resolve property '%s' on %s. Available properties are: %s.", propertyName, elementClass.getName(), availableProperties ), e );
-        }
+        return getFilterablePropertyMeta( objectAlias, propertyName, elementClass );
     }
 
-    /**
-     * Helper to resolve the type of a property in a given class.
-     */
-    protected Class<?> resolveFilterPropertyType( String propertyName, Class<?> clazz ) {
-        try {
-            return resolveFilterablePropertyMetaInternal( propertyName, clazz, FILTERABLE_PROPERTIES_MAX_DEPTH ).propertyType;
-        } catch ( NoSuchFieldException e ) {
-            String availableProperties = getFilterableProperties().stream().sorted().collect( Collectors.joining( ", " ) );
-            throw new IllegalArgumentException( String.format( "Could not resolve property '%s' on %s. Available properties are: %s.", propertyName, clazz.getName(), availableProperties ), e );
-        }
+    protected FilterablePropertyMeta getFilterablePropertyMeta( @Nullable String objectAlias, String propertyName, Class<?> clazz ) {
+        // include the objectAlias in the cache
+        String key = FilterQueryUtils.formPropertyName( objectAlias, propertyName );
+        return filterablePropertiesMeta.computeIfAbsent( key, ignored -> {
+            try {
+                PartialFilterablePropertyMeta partialMeta = resolveFilterablePropertyMetaInternal( propertyName, clazz, FILTERABLE_PROPERTIES_MAX_DEPTH );
+                return new FilterablePropertyMeta( objectAlias, propertyName, partialMeta.propertyType, null, partialMeta.availableValues );
+            } catch ( NoSuchFieldException e ) {
+                String availableProperties = getFilterableProperties().stream().sorted().collect( Collectors.joining( ", " ) );
+                throw new IllegalArgumentException( String.format( "Could not resolve property '%s' on %s. Available properties are: %s.", propertyName, elementClass.getName(), availableProperties ), e );
+            }
+        } );
     }
 
     @Value
@@ -278,7 +285,7 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
             }
         }
 
-        Class<?> actualType = resolveActualType( propertyType );
+        Class<?> actualType = ( Class<?> ) propertyType.getReturnedClass();
         List<Object> availableValues = resolveAvailableValues( propertyType );
 
         if ( Filter.getConversionService().canConvert( String.class, actualType ) ) {
@@ -288,28 +295,12 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
         }
     }
 
-    private static Class<?> resolveActualType( Type propertyType ) {
-        Class<?> returnedClass = propertyType.getReturnedClass();
-        // special treatment for org.hibernate.EnumType
-        if ( propertyType instanceof CustomType
-                && ( ( CustomType ) propertyType ).getUserType() instanceof EnumType ) {
-            EnumType enumType = ( EnumType ) ( ( CustomType ) propertyType ).getUserType();
-            returnedClass = enumType.isOrdinal() ? Integer.class : String.class;
-        }
-        return returnedClass;
-    }
-
     @Nullable
     private static List<Object> resolveAvailableValues( Type propertyType ) {
         if ( propertyType instanceof CustomType && ( ( CustomType ) propertyType ).getUserType() instanceof EnumType ) {
             EnumType et = ( EnumType ) ( ( CustomType ) propertyType ).getUserType();
-            //noinspection unchecked
-            EnumSet<?> es = EnumSet.allOf( et.returnedClass() );
-            if ( et.isOrdinal() ) {
-                return es.stream().map( Enum::ordinal ).map( String::valueOf ).collect( Collectors.toList() );
-            } else {
-                return es.stream().map( Enum::name ).collect( Collectors.toList() );
-            }
+            //noinspection unchecked,rawtypes
+            return new ArrayList<>( EnumSet.allOf( et.returnedClass() ) );
         } else {
             return null;
         }
