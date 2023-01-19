@@ -551,7 +551,7 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
     @Override
     protected Query getFilteringCountQuery( @Nullable Filters filters ) {
         //noinspection JpaQlInspection // the constants for aliases is messing with the inspector
-        String queryString = "select count(distinct *) from Gene as " + OBJECT_ALIAS + " " // gene
+        String queryString = "select count(distinct " + OBJECT_ALIAS + ") from Gene as " + OBJECT_ALIAS + " " // gene
                 + "left join " + OBJECT_ALIAS + ".taxon as " + "taxon" + " "// taxon
                 + "where " + OBJECT_ALIAS + ".id is not null "; // needed to use formRestrictionCause()
 
