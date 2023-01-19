@@ -6,6 +6,7 @@ import io.micrometer.core.instrument.Tags;
 import io.micrometer.core.instrument.Timer;
 import io.micrometer.core.instrument.binder.http.DefaultHttpServletRequestTagsProvider;
 import io.micrometer.core.instrument.binder.http.HttpServletRequestTagsProvider;
+import org.compass.core.util.Assert;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.context.support.WebApplicationContextUtils;
@@ -28,6 +29,15 @@ public class ServletMetricsFilter extends OncePerRequestFilter {
 
     private final HttpServletRequestTagsProvider tagsProvider = new DefaultHttpServletRequestTagsProvider();
 
+    private String metricName;
+
+    @Override
+    protected void initFilterBean() throws ServletException {
+        super.initFilterBean();
+        metricName = getFilterConfig().getInitParameter( "metricName" );
+        Assert.notNull( metricName, "The 'metricName' init parameter is not set." );
+    }
+
     @Override
     protected void doFilterInternal( HttpServletRequest request, HttpServletResponse response, FilterChain filterChain ) throws ServletException, IOException {
         WebApplicationContext ctx = WebApplicationContextUtils.getRequiredWebApplicationContext( request.getServletContext() );
@@ -47,7 +57,7 @@ public class ServletMetricsFilter extends OncePerRequestFilter {
         } catch ( Exception e ) {
             exception = e;
         } finally {
-            timerSample.stop( registry.timer( "httpServlet", getTags( request, response, exception ) ) );
+            timerSample.stop( registry.timer( metricName, getTags( request, response, exception ) ) );
         }
     }
 

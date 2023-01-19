@@ -39,8 +39,12 @@
 
     <!-- Metrics -->
     <filter>
-        <filter-name>servletMetricsFilter</filter-name>
+        <filter-name>gemmaWebMetricsFilter</filter-name>
         <filter-class>ubic.gemma.web.metrics.binder.servlet.ServletMetricsFilter</filter-class>
+        <init-param>
+            <param-name>metricName</param-name>
+            <param-value>gemmaWebServlet</param-value>
+        </init-param>
     </filter>
 
     <!-- Security. -->
@@ -82,7 +86,7 @@
     </filter>
 
     <filter-mapping>
-        <filter-name>servletMetricsFilter</filter-name>
+        <filter-name>gemmaWebMetricsFilter</filter-name>
         <servlet-name>gemma</servlet-name>
     </filter-mapping>
 

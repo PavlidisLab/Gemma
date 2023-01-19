@@ -17,6 +17,8 @@ import javax.ws.rs.ext.Provider;
 @Provider
 public class MetricsApplicationEventListener implements ApplicationEventListener {
 
+    private static final String METRIC_NAME = "gemmaRestServlet";
+
     private ApplicationEventListener delegate;
 
     @Context
@@ -38,7 +40,7 @@ public class MetricsApplicationEventListener implements ApplicationEventListener
             try {
                 MeterRegistry registry = ctx.getBean( MeterRegistry.class );
                 delegate = new io.micrometer.core.instrument.binder.jersey.server.MetricsApplicationEventListener(
-                        registry, new DefaultJerseyTagsProvider(), "jersey", true );
+                        registry, new DefaultJerseyTagsProvider(), METRIC_NAME, true );
             } catch ( NoSuchBeanDefinitionException e ) {
                 delegate = new org.glassfish.jersey.server.monitoring.ApplicationEventListener() {
 
