@@ -58,6 +58,7 @@ import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.util.Filters;
+import ubic.gemma.persistence.util.Sort;
 import ubic.gemma.rest.util.*;
 import ubic.gemma.rest.util.args.*;
 import ubic.gemma.rest.annotations.GZIP;
@@ -140,14 +141,16 @@ public class DatasetsWebService {
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve usage statistics of annotations among datasets matching the provided filter",
             description = "Usage statistics are aggregated across experiment tags, samples and factor values mentioned in the experimental design.")
-    public ResponseDataObject<List<AnnotationWithUsageStatisticsValueObject>> getDatasetsAnnotationsUsageStatistics(
+    public LimitedResponseDataObject<AnnotationWithUsageStatisticsValueObject> getDatasetsAnnotationsUsageStatistics(
             @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filter, @QueryParam("limit") @DefaultValue("50") LimitArg limit ) {
-        List<AnnotationWithUsageStatisticsValueObject> results = expressionExperimentService.getAnnotationsFrequencyPreFilter( filter.getFilters( expressionExperimentService ), limit.getValue( 50 ) )
+        Filters filters = filter.getFilters( expressionExperimentService );
+        Integer l = limit.getValue( 50 );
+        List<AnnotationWithUsageStatisticsValueObject> results = expressionExperimentService.getAnnotationsFrequencyPreFilter( filters, limit.getValue( 50 ) )
                 .entrySet()
                 .stream().map( e -> new AnnotationWithUsageStatisticsValueObject( e.getKey(), e.getValue() ) )
                 .sorted( Comparator.comparing( AnnotationWithUsageStatisticsValueObject::getNumberOfExpressionExperiments, Comparator.reverseOrder() ) )
                 .collect( Collectors.toList() );
-        return Responder.respond( results );
+        return Responder.limit( results, filters, Sort.by( null, "numberOfExpressionExperiments", Sort.Direction.DESC ), l );
     }
 
     /**
