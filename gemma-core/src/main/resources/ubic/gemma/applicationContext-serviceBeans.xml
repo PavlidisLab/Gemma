@@ -15,7 +15,8 @@
 
     <!-- Message source for this context, loaded from localized "messages_xx" files -->
     <bean id="messageSource" class="org.springframework.context.support.ReloadableResourceBundleMessageSource">
-        <property name="basename" value="messages"/>
+        <property name="basename" value="classpath:messages"/>
+        <property name="fallbackToSystemLocale" value="false"/>
     </bean>
 
     <!-- configurationPropertyConfigurer allows you to use variables like ${mail.host} in the spring bean definitions. Variables
