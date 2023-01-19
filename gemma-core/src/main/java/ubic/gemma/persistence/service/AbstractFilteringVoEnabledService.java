@@ -36,13 +36,13 @@ public abstract class AbstractFilteringVoEnabledService<O extends Identifiable, 
     }
 
     @Override
-    public List<O> loadValuePreFilter( @Nullable Filters filters, @Nullable Sort sort ) {
+    public List<O> loadPreFilter( @Nullable Filters filters, @Nullable Sort sort ) {
         return voDao.loadPreFilter( filters, sort );
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Slice<O> loadValuePreFilter( @Nullable Filters filters, @Nullable Sort sort, int offset, int limit ) {
+    public Slice<O> loadPreFilter( @Nullable Filters filters, @Nullable Sort sort, int offset, int limit ) {
         return voDao.loadPreFilter( filters, sort, offset, limit );
     }
 

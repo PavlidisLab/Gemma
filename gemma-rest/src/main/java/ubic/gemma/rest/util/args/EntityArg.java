@@ -1,7 +1,7 @@
 package ubic.gemma.rest.util.args;
 
 import ubic.gemma.model.common.Identifiable;
-import ubic.gemma.persistence.service.FilteringVoEnabledService;
+import ubic.gemma.persistence.service.FilteringService;
 import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Sort;
 
@@ -17,7 +17,7 @@ import javax.ws.rs.NotFoundException;
  * @param <O> the persistent object type.
  * @param <S> the service for the object type.
  */
-public interface EntityArg<T, O extends Identifiable, S extends FilteringVoEnabledService<O, ?>> extends Arg<T> {
+public interface EntityArg<T, O extends Identifiable, S extends FilteringService<O>> extends Arg<T> {
 
     /**
      * Calls appropriate backend logic to retrieve the persistent object that this mutable argument represents.
@@ -36,8 +36,8 @@ public interface EntityArg<T, O extends Identifiable, S extends FilteringVoEnabl
      *
      * @throws BadRequestException if the filter represented by this is invalid (i.e. a property is not found in the
      *                             entity)
-     * @see FilteringVoEnabledService#loadValueObjectsPreFilter(Filters, Sort, int, int)
-     * @see FilteringVoEnabledService#loadValueObjectsPreFilter(Filters, Sort)
+     * @see FilteringService#loadPreFilter(Filters, Sort, int, int)
+     * @see FilteringService#loadPreFilter(Filters, Sort)
      */
     Filters getFilters( S service ) throws BadRequestException;
 }

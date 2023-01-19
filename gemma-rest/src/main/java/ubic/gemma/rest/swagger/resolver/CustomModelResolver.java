@@ -21,7 +21,7 @@ import org.springframework.context.NoSuchMessageException;
 import org.springframework.stereotype.Component;
 import ubic.gemma.core.search.SearchService;
 import ubic.gemma.model.common.Identifiable;
-import ubic.gemma.persistence.service.FilteringVoEnabledService;
+import ubic.gemma.persistence.service.FilteringService;
 import ubic.gemma.persistence.service.analysis.expression.diff.ExpressionAnalysisResultSetService;
 import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeService;
 import ubic.gemma.rest.SearchWebService;
@@ -116,7 +116,7 @@ public class CustomModelResolver extends ModelResolver {
     }
 
     @Autowired
-    private List<FilteringVoEnabledService<?, ?>> filteringServices;
+    private List<FilteringService<?>> filteringServices;
 
     @Value
     private static class FilterablePropMeta {
@@ -143,7 +143,7 @@ public class CustomModelResolver extends ModelResolver {
         //noinspection unchecked
         Class<Identifiable> clazz = ( Class<Identifiable> ) candidateServiceTypes[0].getRawClass();
         // kind of silly, this can be done with Spring 4+ with generic injection
-        FilteringVoEnabledService<?, ?> filteringService = filteringServices.stream()
+        FilteringService<?> filteringService = filteringServices.stream()
                 .filter( s -> clazz.isAssignableFrom( s.getElementClass() ) )
                 .findAny()
                 .orElseThrow( () -> new IllegalArgumentException( String.format( "Could not find filtering service for %s.", clazz.getName() ) ) );
@@ -198,7 +198,7 @@ public class CustomModelResolver extends ModelResolver {
             return "";
     }
 
-    private static boolean isCriteriaBased( FilteringVoEnabledService<?, ?> service ) {
+    private static boolean isCriteriaBased( FilteringService<?> service ) {
         // this is a temporary fix, there's no way to tell if the DAO is implemented with AbstractCriteriaFilteringVoEnabledDao
         // from the service layer
         return service instanceof ExpressionAnalysisResultSetService || service instanceof QuantitationTypeService;

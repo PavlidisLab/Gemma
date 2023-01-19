@@ -1,7 +1,7 @@
 package ubic.gemma.rest.util.args;
 
 import ubic.gemma.model.common.Identifiable;
-import ubic.gemma.persistence.service.FilteringVoEnabledService;
+import ubic.gemma.persistence.service.FilteringService;
 import ubic.gemma.persistence.util.Filter;
 import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.rest.util.EntityNotFoundException;
@@ -14,7 +14,7 @@ import javax.ws.rs.NotFoundException;
 /**
  * @author tesarst
  */
-public abstract class AbstractEntityArg<T, O extends Identifiable, S extends FilteringVoEnabledService<O, ?>> extends AbstractArg<T> implements EntityArg<T, O, S> {
+public abstract class AbstractEntityArg<T, O extends Identifiable, S extends FilteringService<O>> extends AbstractArg<T> implements EntityArg<T, O, S> {
 
     private static final String ERROR_FORMAT_ENTITY_NOT_FOUND = "The identifier was recognised to be '%1$s', but entity of type '%2$s' with '%1$s' equal to '%3$s' does not exist or is not accessible.";
     private static final String ERROR_MSG_ENTITY_NOT_FOUND = "Entity with the given identifier does not exist or is not accessible.";
@@ -32,7 +32,7 @@ public abstract class AbstractEntityArg<T, O extends Identifiable, S extends Fil
     protected abstract String getPropertyName( S service );
 
     /**
-     * Convert a given value to string so that it can be passed to {@link FilteringVoEnabledService#getFilter(String, Filter.Operator, String)}
+     * Convert a given value to string so that it can be passed to {@link FilteringService#getFilter(String, Filter.Operator, String)}
      */
     protected String getFilterRequiredValue() {
         return String.valueOf( getValue() );

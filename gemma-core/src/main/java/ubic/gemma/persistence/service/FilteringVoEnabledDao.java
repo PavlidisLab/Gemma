@@ -17,93 +17,15 @@ import java.util.Set;
  * @author poirigui
  */
 public interface FilteringVoEnabledDao<O extends Identifiable, VO extends IdentifiableValueObject<O>>
-        extends BaseVoEnabledDao<O, VO>, BaseDao<O> {
-
-    /**
-     * List all properties availble for filtering.
-     */
-    Set<String> getFilterableProperties();
-
-    /**
-     * Obtain the type of the given filterable property.
-     * @throws IllegalArgumentException if no such property exists, the cause will be a {@link NoSuchFieldException}
-     */
-    Class<?> getFilterablePropertyType( String propertyName ) throws IllegalArgumentException;
-
-    /**
-     * Obtain a short description for a given filterable property.
-     * @throws IllegalArgumentException if no such property exists
-     */
-    @Nullable
-    String getFilterablePropertyDescription( String propertyName ) throws IllegalArgumentException;
-
-    @Nullable
-    List<Object> getFilterablePropertyAvailableValues( String property );
-
-    /**
-     * Obtain an {@link Filter} for the entity this DAO is providing.
-     * <p>
-     * It is the responsibility of the DAO to infer the filter property type as well as the alias to use.
-     * <p>
-     * If the filter refers to a related entity (i.e. a {@link ubic.gemma.model.expression.bioAssay.BioAssay} of an
-     * {@link ubic.gemma.model.expression.experiment.ExpressionExperiment}), then the DAO should inject the corresponding
-     * DAO and delegate it the work of creating the filter.
-     * <p>
-     * In the frontend, that correspond to a FilterArg, but since the definition is not available here, we unpack its
-     * attributes.
-     *
-     * @param property property name in the entity use as a left-hand side of the operator
-     * @param operator an operator
-     * @param value the corresponding, unparsed value, to the right-hand side of the operator
-     * @return a filter filled with the object alias, property, inferred type, operator and parsed value
-     * @throws IllegalArgumentException if the property does not exist in {@link O}, or if the operator cannot be applied,
-     * or if the value cannot apply to the property an operator see {@link Filter#parse(String, String, Class, Filter.Operator, String)}
-     * for more details
-     */
-    Filter getFilter( String property, Filter.Operator operator, String value ) throws IllegalArgumentException;
-
-    /**
-     * Similar to {@link #getFilter(String, Filter.Operator, String)}, but with a collection of values.
-     */
-    Filter getFilter( String property, Filter.Operator operator, Collection<String> values ) throws IllegalArgumentException;
-
-    /**
-     * Obtain a {@link Sort} object for a property of the {@link O}.
-     *
-     * @param property a property of {@link O} to sort by
-     * @param direction a sorting direction, or null if the default direction applies
-     * @return a {@link Sort} object that can be used, for example, on {@link FilteringVoEnabledDao#loadValueObjectsPreFilter(Filters, Sort, int, int)}
-     * @throws IllegalArgumentException if no such field exists in {@link O}
-     */
-    Sort getSort( String property, @Nullable Sort.Direction direction ) throws IllegalArgumentException;
-
-    /**
-     * Load IDs of entities matching the given filters.
-     */
-    List<Long> loadIdsPreFilter( @Nullable Filters filters, @Nullable Sort sort );
-
-    /**
-     * Load entities matching the given filters.
-     * @see #loadValueObjectsPreFilter(Filters, Sort)
-     */
-    List<O> loadPreFilter( @Nullable Filters filters, @Nullable Sort sort );
-
-    /**
-     * Load a slice of entities matching the given filters.
-     * @see #loadValueObjectsPreFilter(Filters, Sort, int, int)
-     */
-    Slice<O> loadPreFilter( @Nullable Filters filters, @Nullable Sort sort, int offset, int limit );
-
-    /**
-     * Count VOs matching the given filters.
-     */
-    long countPreFilter( @Nullable Filters filters );
+        extends BaseVoEnabledDao<O, VO>, FilteringDao<O> {
 
     /**
      * Load VOs with ordering, filtering and offset/limit.
      * <p>
-     * Consider using {@link FilteringVoEnabledService#getFilter(String, Filter.Operator, String)} and {@link FilteringVoEnabledService#getSort(String, Sort.Direction)}
+     * Consider using {@link #getFilter(String, Filter.Operator, String)} and {@link #getSort(String, Sort.Direction)}
      * to produce the filters and sort safely from user input.
+     *
+     * @see #loadPreFilter(Filters, Sort, int, int)
      *
      * @param filters filters applied on the search. The properties mentioned in the {@link Filter}
      *                must exist and be visible to Hibernate. You can use nested properties such as "curationDetails.lastUpdated".
@@ -118,10 +40,11 @@ public interface FilteringVoEnabledDao<O extends Identifiable, VO extends Identi
 
     /**
      * Load VOs with minimal ordering and filtering.
-     *
+     * <p>
      * Use this as an alternative to {@link #loadValueObjectsPreFilter(Filters, Sort, int, int)} if you do not
      * intend to provide pagination capabilities.
      *
+     * @see #loadPreFilter(Filters, Sort)
      * @see #loadValueObjectsPreFilter(Filters, Sort, int, int)
      */
     List<VO> loadValueObjectsPreFilter( @Nullable Filters filters, @Nullable Sort sort );

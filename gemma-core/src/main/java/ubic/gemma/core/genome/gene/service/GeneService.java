@@ -30,7 +30,6 @@ import ubic.gemma.model.genome.PhysicalLocationValueObject;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneProductValueObject;
 import ubic.gemma.model.genome.gene.GeneValueObject;
-import ubic.gemma.persistence.service.BaseVoEnabledService;
 import ubic.gemma.persistence.service.FilteringVoEnabledService;
 
 import javax.annotation.Nullable;

@@ -1,86 +1,19 @@
 package ubic.gemma.persistence.service;
 
-import org.springframework.context.MessageSourceResolvable;
 import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.common.Identifiable;
-import ubic.gemma.persistence.util.Filter;
 import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.persistence.util.Sort;
 
 import javax.annotation.Nullable;
-import java.util.Collection;
 import java.util.List;
-import java.util.Set;
 
 /**
  * Interface VO-enabled service with filtering capabilities.
  */
 public interface FilteringVoEnabledService<O extends Identifiable, VO extends IdentifiableValueObject<O>>
-        extends BaseVoEnabledService<O, VO>, BaseService<O> {
-
-    /**
-     * @see FilteringVoEnabledDao#getFilterableProperties()
-     */
-    Set<String> getFilterableProperties();
-
-    /**
-     * @see FilteringVoEnabledDao#getFilterablePropertyType(String)
-     */
-    Class<?> getFilterablePropertyType( String property );
-
-    /**
-     * @see FilteringVoEnabledDao#getFilterablePropertyDescription(String)
-     */
-    @Nullable
-    String getFilterablePropertyDescription( String property );
-
-    /**
-     * @see FilteringVoEnabledDao#getFilterablePropertyAvailableValues(String)
-     */
-    @Nullable
-    List<Object> getFilterablePropertyAvailableValues( String p );
-
-    /**
-     * Obtain a list of resolvable message sources to be used for user display purposes.
-     */
-    @Nullable
-    List<MessageSourceResolvable> getFilterablePropertyResolvableAvailableValues( String p );
-
-    /**
-     * @see FilteringVoEnabledDao#getFilterableProperties()
-     */
-    Filter getFilter( String property, Filter.Operator operator, String value ) throws IllegalArgumentException;
-
-    /**
-     * @see FilteringVoEnabledDao#getFilter(String, Filter.Operator, Collection)
-     */
-    Filter getFilter( String property, Filter.Operator operator, Collection<String> values ) throws IllegalArgumentException;
-
-    /**
-     * @see FilteringVoEnabledDao#getSort(String, Sort.Direction)
-     */
-    Sort getSort( String property, @Nullable Sort.Direction direction ) throws IllegalArgumentException;
-
-    /**
-     * @see FilteringVoEnabledDao#loadIdsPreFilter(Filters, Sort)
-     */
-    List<Long> loadIdsPreFilter( @Nullable Filters filters, @Nullable Sort sort );
-
-    /**
-     * @see FilteringVoEnabledDao#loadPreFilter(Filters, Sort, int, int)
-     */
-    Slice<O> loadValuePreFilter( @Nullable Filters filters, @Nullable Sort sort, int offset, int limit );
-
-    /**
-     * @see FilteringVoEnabledDao#loadPreFilter(Filters, Sort)
-     */
-    List<O> loadValuePreFilter( @Nullable Filters filters, @Nullable Sort sort );
-
-    /**
-     * @see FilteringVoEnabledDao#countPreFilter(Filters)
-     */
-    long countPreFilter( @Nullable Filters filters );
+        extends BaseVoEnabledService<O, VO>, FilteringService<O> {
 
     /**
      * @see FilteringVoEnabledDao#loadValueObjectsPreFilter(Filters, Sort, int, int)

@@ -1,7 +1,7 @@
 package ubic.gemma.rest.util.args;
 
 import ubic.gemma.model.common.Identifiable;
-import ubic.gemma.persistence.service.FilteringVoEnabledService;
+import ubic.gemma.persistence.service.FilteringService;
 import ubic.gemma.persistence.util.Filters;
 
 import javax.ws.rs.BadRequestException;
@@ -15,7 +15,7 @@ import java.util.List;
  * @param <O> the type of the resulting entity
  * @param <S> the type of the filtering service providing the entity
  */
-public interface EntityArrayArg<A, O extends Identifiable, S extends FilteringVoEnabledService<O, ?>> extends Arg<List<A>> {
+public interface EntityArrayArg<A, O extends Identifiable, S extends FilteringService<O>> extends Arg<List<A>> {
 
     /**
      * Retrieves the persistent objects for all the identifiers in this array arg.

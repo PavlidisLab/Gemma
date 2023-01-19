@@ -2,7 +2,7 @@ package ubic.gemma.rest.util.args;
 
 import org.junit.Test;
 import ubic.gemma.model.common.Identifiable;
-import ubic.gemma.persistence.service.FilteringVoEnabledService;
+import ubic.gemma.persistence.service.FilteringService;
 import ubic.gemma.persistence.util.Sort;
 import ubic.gemma.rest.util.MalformedArgException;
 
@@ -22,7 +22,7 @@ public class SortArgTest {
 
     @Test
     public void testGetSort() {
-        FilteringVoEnabledService<Identifiable, ?> filteringService = mock( FilteringVoEnabledService.class );
+        FilteringService<Identifiable> filteringService = mock( FilteringService.class );
         when( filteringService.getSort( "id", Sort.Direction.ASC ) ).thenReturn( Sort.by( "entity", "id", Sort.Direction.ASC ) );
         assertThat( SortArg.valueOf( "+id" ).getSort( filteringService ) )
                 .hasFieldOrPropertyWithValue( "objectAlias", "entity" )
@@ -32,7 +32,7 @@ public class SortArgTest {
 
     @Test(expected = MalformedArgException.class)
     public void testGetSortWhenFieldDoesNotExistThenRaiseMalformedArgumentException() {
-        FilteringVoEnabledService<Identifiable, ?> filteringService = mock( FilteringVoEnabledService.class );
+        FilteringService<Identifiable> filteringService = mock( FilteringService.class );
         when( filteringService.getSort( "wut", Sort.Direction.ASC ) ).thenThrow( IllegalArgumentException.class );
         SortArg.valueOf( "+wut" ).getSort( filteringService );
     }

@@ -3,7 +3,7 @@ package ubic.gemma.rest.util.args;
 import com.google.common.base.Strings;
 import org.apache.commons.lang3.NotImplementedException;
 import ubic.gemma.model.common.Identifiable;
-import ubic.gemma.persistence.service.FilteringVoEnabledService;
+import ubic.gemma.persistence.service.FilteringService;
 import ubic.gemma.persistence.util.Filter;
 import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.rest.util.MalformedArgException;
@@ -16,7 +16,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-public abstract class AbstractEntityArrayArg<A, O extends Identifiable, S extends FilteringVoEnabledService<O, ?>> extends AbstractArrayArg<A> implements EntityArrayArg<A, O, S> {
+public abstract class AbstractEntityArrayArg<A, O extends Identifiable, S extends FilteringService<O>> extends AbstractArrayArg<A> implements EntityArrayArg<A, O, S> {
 
     private final Class<? extends AbstractEntityArg> entityArgClass;
     private String argValueName = null;
@@ -51,7 +51,7 @@ public abstract class AbstractEntityArrayArg<A, O extends Identifiable, S extend
     }
 
     /**
-     * Convert a given value to string so that it can be passed to {@link FilteringVoEnabledService#getFilter(String, Filter.Operator, String)}
+     * Convert a given value to string so that it can be passed to {@link FilteringService#getFilter(String, Filter.Operator, String)}
      */
     protected List<String> getFilterRequiredValues() {
         return this.getValue().stream().map( String::valueOf ).collect( Collectors.toList() );

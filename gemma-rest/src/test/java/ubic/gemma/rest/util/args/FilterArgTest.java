@@ -6,7 +6,7 @@ import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 import ubic.gemma.model.common.Identifiable;
-import ubic.gemma.persistence.service.FilteringVoEnabledService;
+import ubic.gemma.persistence.service.FilteringService;
 import ubic.gemma.persistence.util.Filter;
 import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.rest.util.MalformedArgException;
@@ -30,7 +30,7 @@ public class FilterArgTest {
     public MockitoRule mockitoRule = MockitoJUnit.rule();
 
     @Mock
-    private FilteringVoEnabledService<Identifiable, ?> mockVoService;
+    private FilteringService<Identifiable> mockVoService;
 
     private void setUpMockVoService() {
         when( mockVoService.getFilter( any(), any(), any( String.class ) ) )

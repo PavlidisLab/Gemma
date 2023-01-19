@@ -18,19 +18,18 @@ import io.swagger.v3.oas.annotations.ExternalDocumentation;
 import io.swagger.v3.oas.annotations.media.Schema;
 import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.model.common.Identifiable;
-import ubic.gemma.persistence.service.FilteringVoEnabledService;
+import ubic.gemma.persistence.service.FilteringService;
 import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Sort;
 import ubic.gemma.rest.util.MalformedArgException;
 
-import javax.annotation.Nullable;
 import java.util.LinkedList;
 import java.util.List;
 
 /**
  * Represent a filter argument designed to generate a {@link Filters} from user input.
  * <p>
- * Filtering can be done on any property or nested property of an entity managed by a {@link FilteringVoEnabledService}. E.g:
+ * Filtering can be done on any property or nested property of an entity managed by a {@link FilteringService}. E.g:
  * 'curationDetails' or 'curationDetails.lastTroubledEvent.date'.
  * <p>
  * Any property of a supported type. Currently, supported types are:
@@ -82,7 +81,7 @@ import java.util.List;
  *
  * Breaking the CNF results in an error.
  * <p>
- * The available properties on an entity can be restricted by the service layer via {@link FilteringVoEnabledService#getFilter(String, ubic.gemma.persistence.util.Filter.Operator, String)}.
+ * The available properties on an entity can be restricted by the service layer via {@link FilteringService#getFilter(String, ubic.gemma.persistence.util.Filter.Operator, String)}.
  *
  * @author tesarst
  * @see Filters
@@ -108,16 +107,16 @@ public class FilterArg<O extends Identifiable> extends AbstractArg<FilterArg.Fil
 
     /**
      * Create a {@link Filters} that can be used as a filter parameter for service value object retrieval.
-     *
-     * This is typically used with {@link FilteringVoEnabledService#loadValueObjectsPreFilter(Filters, Sort, int, int)}
+     * <p>
+     * This is typically used with {@link FilteringService#loadPreFilter(Filters, Sort, int, int)}
      * for retrieving and filtering entities.
      *
      * @param service a filtering service that can resolve the properties types and relevant object alias to use
      * @return a {@link Filters} structure that is actually an iterable over a sequence of conjunction of disjunction of
      * {@link ubic.gemma.persistence.util.Filter}, or null if the filter is empty.
-     * @throws MalformedArgException if the filter cannot be parsed for the given {@link FilteringVoEnabledService}
+     * @throws MalformedArgException if the filter cannot be parsed for the given {@link FilteringService}
      */
-    public Filters getFilters( FilteringVoEnabledService<O, ?> service ) throws MalformedArgException {
+    public Filters getFilters( FilteringService<O> service ) throws MalformedArgException {
         Filter filter = getValue();
         Filters filterList = Filters.empty();
 

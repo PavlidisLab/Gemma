@@ -21,10 +21,8 @@ package ubic.gemma.persistence.service.expression.experiment;
 import org.springframework.security.access.annotation.Secured;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.expression.experiment.FactorValueValueObject;
-import ubic.gemma.persistence.service.BaseVoEnabledService;
 import ubic.gemma.persistence.service.FilteringVoEnabledService;
 
-import javax.annotation.Nullable;
 import java.util.Collection;
 
 /**
