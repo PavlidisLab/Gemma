@@ -40,9 +40,6 @@ import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.persistence.service.AbstractDao;
 import ubic.gemma.persistence.service.common.auditAndSecurity.curation.AbstractCuratableDao;
-import ubic.gemma.persistence.service.common.description.DatabaseEntryDao;
-import ubic.gemma.persistence.service.common.description.ExternalDatabaseDao;
-import ubic.gemma.persistence.service.genome.taxon.TaxonDao;
 import ubic.gemma.persistence.util.Filter;
 import ubic.gemma.persistence.util.*;
 
@@ -1083,6 +1080,12 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
         addFilterableProperties( "externalReference.", DatabaseEntry.class, result, FILTERABLE_PROPERTIES_MAX_DEPTH - 1 );
         result.add( "taxon" );
         addFilterableProperties( "taxon.", Taxon.class, result, FILTERABLE_PROPERTIES_MAX_DEPTH - 1 );
+        // because the ArrayDesign is the root property, and we allow at most 3 level, some of the recursive properties
+        // (i.e. referring to another AD) will result in a bunch of useless prefix such as mergedInto.mergedInto. To
+        // disallow this, we remove those properties.
+        // see https://github.com/PavlidisLab/Gemma/issues/546
+        String recursiveProperty = String.join( "|", new String[] { "subsumingArrayDesign", "mergedInto", "alternativeTo" } );
+        result.removeIf( prop -> prop.matches( "^(" + recursiveProperty + ")\\.(" + recursiveProperty + ")\\..+$" ) );
         return result;
     }
 

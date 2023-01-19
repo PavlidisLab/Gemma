@@ -17,7 +17,9 @@ public class ArrayDesignServiceTest extends BaseSpringContextTest {
     @Test
     public void testGetFilterableProperties() {
         assertThat( arrayDesignService.getFilterableProperties() )
-                .contains( "taxon", "taxon.ncbiId" );
+                .contains( "taxon", "taxon.ncbiId" )
+                // recursive properties are limited
+                .doesNotContain( "mergedInto.mergedInto.id" );
     }
 
     @Test
