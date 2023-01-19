@@ -19,7 +19,9 @@
 package ubic.gemma.model.expression.experiment;
 
 import org.apache.commons.lang3.RandomStringUtils;
-import org.junit.*;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.util.test.BaseSpringContextTest;
 import ubic.gemma.model.common.auditAndSecurity.Contact;
@@ -39,14 +41,14 @@ import ubic.gemma.persistence.service.expression.bioAssay.BioAssayDao;
 import ubic.gemma.persistence.service.expression.bioAssayData.RawExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.experiment.BlacklistedEntityService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Filter;
+import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Slice;
 
 import java.util.*;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.*;
-import static org.assertj.core.api.Assertions.*;
 
 /**
  * @author kkeshav
@@ -68,8 +70,6 @@ public class ExpressionExperimentServiceTest extends BaseSpringContextTest {
 
     @Before
     public void setUp() throws Exception {
-        expressionExperimentService.removeAll();
-
         ee = this.getTestPersistentCompleteExpressionExperiment( false );
         ee.setName( ExpressionExperimentServiceTest.EE_NAME );
 
