@@ -1,8 +1,10 @@
 package ubic.gemma.persistence.service;
 
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.util.test.BaseSpringContextTest;
+import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.persistence.service.analysis.expression.diff.ExpressionAnalysisResultSetService;
 import ubic.gemma.persistence.util.Filter;
 import ubic.gemma.persistence.util.Filters;
@@ -25,6 +27,7 @@ public class FilteringVoEnabledServiceIntegrationTest extends BaseSpringContextT
 
 
     @Test
+    @Category(SlowTest.class)
     public void testFilteringByAllFilterableProperties() {
         for ( FilteringVoEnabledService<?, ?> filteringService : filteringServices ) {
             for ( String property : filteringService.getFilterableProperties() ) {
@@ -38,6 +41,7 @@ public class FilteringVoEnabledServiceIntegrationTest extends BaseSpringContextT
     }
 
     @Test
+    @Category(SlowTest.class)
     public void testSortingByAllFilterableProperties() {
         for ( FilteringVoEnabledService<?, ?> filteringService : filteringServices ) {
             for ( String property : filteringService.getFilterableProperties() ) {
