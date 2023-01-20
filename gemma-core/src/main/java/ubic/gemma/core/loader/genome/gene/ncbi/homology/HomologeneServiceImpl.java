@@ -40,9 +40,13 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * Reads in the homologene list as specified in the Gemmea.properties file. Loads the list at startup and keeps a
- * mapping off
+ * mapping off.
+ * <p>
+ * You almost certainly want to call {@link #refresh()} before using this service. This is done automatically if you use
+ * the {@link HomologeneServiceFactory} to lazy-load this service.
  *
  * @author kelsey
+ * @see HomologeneServiceFactory
  */
 public class HomologeneServiceImpl implements HomologeneService {
 
@@ -58,13 +62,10 @@ public class HomologeneServiceImpl implements HomologeneService {
     private final TaxonService taxonService;
     private final Resource homologeneFile;
 
-    public HomologeneServiceImpl( GeneService geneService, TaxonService taxonService, Resource homologeneFile, boolean loadHomologene ) throws IOException {
+    public HomologeneServiceImpl( GeneService geneService, TaxonService taxonService, Resource homologeneFile ) {
         this.geneService = geneService;
         this.taxonService = taxonService;
         this.homologeneFile = homologeneFile;
-        if ( loadHomologene ) {
-            refresh();
-        }
     }
 
     public Gene getHomologue( Gene gene, Taxon taxon ) {

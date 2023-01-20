@@ -90,6 +90,7 @@ public class HomologeneServiceTest extends AbstractJUnit4SpringContextTests {
     @Before
     public void setUp() throws Exception {
         hgs.setHomologeneFile( new ClassPathResource( "/data/loader/genome/homologene/homologene.testdata.txt" ) );
+        hgs.setLoadHomologene( true ); // ignore setting from Gemma.properties
     }
 
     @Test
@@ -141,5 +142,12 @@ public class HomologeneServiceTest extends AbstractJUnit4SpringContextTests {
         assertThat( homologeneService ).isNotCancelled().isNotDone();
         hgs.destroy();
         assertThat( homologeneService ).isCancelled();
+    }
+
+    @Test
+    public void testDisableLoadHomologene() {
+        assertThat( hgs.isInitialized() ).isFalse();
+        hgs.setLoadHomologene( false );
+        assertThat( hgs.getObject() ).succeedsWithin( 20, TimeUnit.MILLISECONDS );
     }
 }
