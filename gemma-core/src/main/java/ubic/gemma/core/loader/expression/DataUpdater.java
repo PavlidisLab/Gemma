@@ -1,6 +1,7 @@
 package ubic.gemma.core.loader.expression;
 
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
+import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -22,4 +23,13 @@ public interface DataUpdater {
             DoubleMatrix<String, String> data );
 
     void reprocessAffyDataFromCel( ExpressionExperiment ee );
+
+    ExpressionExperiment addData( ExpressionExperiment ee, ArrayDesign targetPlatform, ExpressionDataDoubleMatrix data );
+
+    @SuppressWarnings("UnusedReturnValue")
+    // Possible external use
+    int deleteData( ExpressionExperiment ee, QuantitationType qt );
+
+    ExpressionExperiment replaceData( ExpressionExperiment ee, ArrayDesign targetPlatform,
+            ExpressionDataDoubleMatrix data );
 }

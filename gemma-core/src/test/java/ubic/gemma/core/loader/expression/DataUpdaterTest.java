@@ -65,7 +65,7 @@ public class DataUpdaterTest extends AbstractGeoServiceTest {
     private GeoService geoService;
 
     @Autowired
-    private DataUpdaterImpl dataUpdater;
+    private DataUpdater dataUpdater;
 
     @Autowired
     private ExpressionExperimentService experimentService;

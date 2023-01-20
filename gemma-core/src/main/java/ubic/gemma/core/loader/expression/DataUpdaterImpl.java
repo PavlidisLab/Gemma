@@ -541,7 +541,8 @@ public class DataUpdaterImpl implements DataUpdater {
      * @param  data           to slot in
      * @return ee
      */
-    ExpressionExperiment addData( ExpressionExperiment ee, ArrayDesign targetPlatform, ExpressionDataDoubleMatrix data ) {
+    @Override
+    public ExpressionExperiment addData( ExpressionExperiment ee, ArrayDesign targetPlatform, ExpressionDataDoubleMatrix data ) {
 
         if ( data.rows() == 0 ) {
             throw new IllegalArgumentException( "Data had no rows" );
@@ -602,7 +603,8 @@ public class DataUpdaterImpl implements DataUpdater {
      */
     @SuppressWarnings("UnusedReturnValue")
     // Possible external use
-    int deleteData( ExpressionExperiment ee, QuantitationType qt ) {
+    @Override
+    public int deleteData( ExpressionExperiment ee, QuantitationType qt ) {
         return this.experimentService.removeRawVectors( ee, qt );
     }
 
@@ -618,7 +620,8 @@ public class DataUpdaterImpl implements DataUpdater {
      * @param  data           the data to be used
      * @return ee
      */
-    ExpressionExperiment replaceData( ExpressionExperiment ee, ArrayDesign targetPlatform,
+    @Override
+    public ExpressionExperiment replaceData( ExpressionExperiment ee, ArrayDesign targetPlatform,
             ExpressionDataDoubleMatrix data ) {
 
         Collection<ArrayDesign> ads = experimentService.getArrayDesignsUsed( ee );
