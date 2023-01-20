@@ -242,13 +242,6 @@
 			<groupId>mysql</groupId>
 			<artifactId>mysql-connector-java</artifactId>
 		</dependency>
-		<!-- mitigate a vulnerability in mysql-connector-java dependency (see https://nvd.nist.gov/vuln/detail/CVE-2022-3171) -->
-		<dependency>
-			<groupId>com.google.protobuf</groupId>
-			<artifactId>protobuf-java</artifactId>
-			<version>3.19.6</version>
-			<scope>runtime</scope>
-		</dependency>
 		<!-- used in dataSource.xml and testDataSource.xml -->
 		<dependency>
 			<groupId>org.apache.commons</groupId>
