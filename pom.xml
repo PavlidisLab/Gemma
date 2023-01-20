@@ -376,12 +376,6 @@
 			<artifactId>xercesImpl</artifactId>
 			<version>2.12.2</version>
 		</dependency>
-		<!-- This is also used at runtime by taglibs-standard-impl in gemma-web -->
-		<dependency>
-			<groupId>xalan</groupId>
-			<artifactId>xalan</artifactId>
-			<version>2.7.2</version>
-		</dependency>
 
 		<!-- Logging -->
 		<dependency>
