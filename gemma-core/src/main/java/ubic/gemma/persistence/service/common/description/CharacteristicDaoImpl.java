@@ -23,6 +23,9 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.hibernate.Query;
 import org.hibernate.SessionFactory;
+import org.hibernate.criterion.MatchMode;
+import org.hibernate.criterion.Order;
+import org.hibernate.criterion.Restrictions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import ubic.basecode.util.BatchIterator;
@@ -72,9 +75,12 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
     @Override
     public List<Characteristic> browse( int start, int limit, String orderField, boolean descending ) {
         //noinspection unchecked
-        return this.getSessionFactory().getCurrentSession().createQuery(
-                        "from Characteristic where value not like 'GO_%' order by " + orderField + " " + ( descending ? "desc" : "" ) ).setMaxResults( limit )
-                .setFirstResult( start ).list();
+        return this.getSessionFactory().getCurrentSession().createCriteria( elementClass )
+                .add( Restrictions.not( Restrictions.like( "value", "GO_", MatchMode.START ) ) )
+                .addOrder( descending ? Order.desc( orderField ) : Order.asc( orderField ) )
+                .setFirstResult( start )
+                .setMaxResults( limit )
+                .list();
     }
 
     @Override

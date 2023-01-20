@@ -23,6 +23,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import org.springframework.orm.hibernate4.HibernateQueryException;
 import ubic.gemma.core.util.test.BaseSpringContextTest;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
@@ -37,6 +38,7 @@ import ubic.gemma.persistence.service.expression.experiment.FactorValueService;
 import java.util.*;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 /**
  * @author luke
@@ -94,7 +96,7 @@ public class CharacteristicServiceTest extends BaseSpringContextTest {
         Map<Characteristic, Object> charToParent;
         charToParent = characteristicService.getParents( Collections.singletonList( eeChar1 ) );
         assertEquals( ee, charToParent.get( eeChar1 ) );
-        assertEquals( null, charToParent.get( eeChar2 ) );
+        assertNull( charToParent.get( eeChar2 ) );
     }
 
     @Test
@@ -103,7 +105,17 @@ public class CharacteristicServiceTest extends BaseSpringContextTest {
         charToParent = characteristicService.getParents( Arrays.asList( new Class<?>[] { ExpressionExperiment.class } ),
                 Collections.singletonList( eeChar1 ) );
         assertEquals( ee, charToParent.get( eeChar1 ) );
-        assertEquals( null, charToParent.get( eeChar2 ) );
+        assertNull( charToParent.get( eeChar2 ) );
+    }
+
+    @Test
+    public void testBrowse() {
+        characteristicService.browse( 10, 10, "category", true );
+    }
+
+    @Test(expected = HibernateQueryException.class)
+    public void testBrowseWithInvalidField() {
+        characteristicService.browse( 10, 10, "foo", true );
     }
 
     private Set<Characteristic> getTestPersistentCharacteristics( int n ) {
