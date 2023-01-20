@@ -3,6 +3,7 @@ package ubic.gemma.persistence.service.expression.arrayDesign;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.util.test.BaseSpringContextTest;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.persistence.util.Filter;
 
@@ -34,7 +35,7 @@ public class ArrayDesignServiceTest extends BaseSpringContextTest {
     public void testGetFilterWhenPropertyDoesNotExist() {
         assertThatThrownBy( () -> arrayDesignService.getFilter( "foo.bar", Filter.Operator.eq, "joe" ) )
                 .isInstanceOf( IllegalArgumentException.class )
-                .hasMessageContainingAll( "taxon", "taxon.ncbiId", "alternativeTo" );
+                .hasMessageContainingAll( "foo.bar", ArrayDesign.class.getName() );
     }
 
     @Test

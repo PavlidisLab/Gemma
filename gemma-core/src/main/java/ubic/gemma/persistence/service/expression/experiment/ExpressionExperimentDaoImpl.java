@@ -1718,7 +1718,8 @@ public class ExpressionExperimentDaoImpl
         }
 
         if ( propertyName.equals( "taxon" ) ) {
-            return getFilterablePropertyMeta( TAXON_ALIAS, "id", Taxon.class ).withDescription( "alias for taxon.id" );
+            return getFilterablePropertyMeta( TAXON_ALIAS, "id", Taxon.class )
+                    .withDescription( "alias for taxon.id" );
         }
 
         if ( propertyName.equals( "bioAssayCount" ) ) {

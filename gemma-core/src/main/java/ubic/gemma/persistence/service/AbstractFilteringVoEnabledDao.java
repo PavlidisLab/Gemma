@@ -12,13 +12,14 @@ import org.hibernate.type.EnumType;
 import org.hibernate.type.Type;
 import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.common.Identifiable;
-import ubic.gemma.persistence.util.*;
+import ubic.gemma.persistence.util.EntityUtils;
+import ubic.gemma.persistence.util.Filter;
+import ubic.gemma.persistence.util.Filters;
+import ubic.gemma.persistence.util.Sort;
 
 import javax.annotation.Nullable;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
-import java.util.stream.Collectors;
 
 /**
  * Base implementation for {@link FilteringVoEnabledDao}.
@@ -34,17 +35,23 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
      */
     protected static final int FILTERABLE_PROPERTIES_MAX_DEPTH = 3;
 
+    /**
+     * Cached partial filterable properties meta, computed as we go.
+     */
+    private static final Map<Key, PartialFilterablePropertyMeta> partialFilterablePropertiesMeta = new ConcurrentHashMap<>();
+
+    @Value
+    private static class Key {
+        Class<?> clazz;
+        String propertyName;
+    }
+
     private final String objectAlias;
 
     /**
      * Cached filterable properties, computed once on startup.
      */
     private final Set<String> filterableProperties;
-
-    /**
-     * Cached filterable properties meta, computed as we go.
-     */
-    private final ConcurrentMap<String, FilterablePropertyMeta> filterablePropertiesMeta = new ConcurrentHashMap<>();
 
     protected AbstractFilteringVoEnabledDao( @Nullable String objectAlias, Class<? extends O> elementClass, SessionFactory sessionFactory ) {
         super( elementClass, sessionFactory );
@@ -158,8 +165,10 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
      * Helper that inspects a class and add all the filterable properties with the given prefix.
      */
     protected void addFilterableProperties( String prefix, Class<?> entityClass, Set<String> destination, int maxDepth ) {
-        if ( maxDepth == 0 )
-            return;
+        if ( maxDepth <= 0 ) {
+            throw new IllegalArgumentException( String.format( "Maximum depth for adding filterable properties of %s to %s must be strictly positive.",
+                    entityClass.getName(), prefix ) );
+        }
         ClassMetadata classMetadata = getSessionFactory().getClassMetadata( entityClass );
         String[] propertyNames = classMetadata.getPropertyNames();
         Type[] propertyTypes = classMetadata.getPropertyTypes();
@@ -168,7 +177,9 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
         }
         for ( int i = 0; i < propertyNames.length; i++ ) {
             if ( propertyTypes[i].isEntityType() ) {
-                addFilterableProperties( prefix + propertyNames[i] + ".", propertyTypes[i].getReturnedClass(), destination, maxDepth - 1 );
+                if ( maxDepth > 1 ) {
+                    addFilterableProperties( prefix + propertyNames[i] + ".", propertyTypes[i].getReturnedClass(), destination, maxDepth - 1 );
+                }
             } else if ( propertyTypes[i].isCollectionType() ) {
                 // special case for collection size, regardless of its type
                 destination.add( prefix + propertyNames[i] + ".size" );
@@ -180,8 +191,6 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
 
     /**
      * Meta-information for a filterable property.
-     *
-     * Use {@link #getFilterablePropertyMeta(String)} and {@link #getFilterablePropertyMeta(String, String, Class)}.
      */
     @With
     @Value
@@ -218,20 +227,24 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
         return getFilterablePropertyMeta( objectAlias, propertyName, elementClass );
     }
 
-    protected FilterablePropertyMeta getFilterablePropertyMeta( @Nullable String objectAlias, String propertyName, Class<?> clazz ) {
-        // include the objectAlias in the cache
-        String key = FilterQueryUtils.formPropertyName( objectAlias, propertyName );
-        return filterablePropertiesMeta.computeIfAbsent( key, ignored -> {
+    protected FilterablePropertyMeta getFilterablePropertyMeta( @Nullable String objectAlias, String propertyName, Class<?> clazz ) throws IllegalArgumentException {
+        Key key = new Key( clazz, propertyName );
+        PartialFilterablePropertyMeta partialMeta = partialFilterablePropertiesMeta.computeIfAbsent( key, ignored -> {
             try {
-                PartialFilterablePropertyMeta partialMeta = resolveFilterablePropertyMetaInternal( propertyName, clazz, FILTERABLE_PROPERTIES_MAX_DEPTH );
-                return new FilterablePropertyMeta( objectAlias, propertyName, partialMeta.propertyType, null, partialMeta.availableValues );
+                return resolveFilterablePropertyMetaInternal( propertyName, clazz, FILTERABLE_PROPERTIES_MAX_DEPTH );
             } catch ( NoSuchFieldException e ) {
-                String availableProperties = getFilterableProperties().stream().sorted().collect( Collectors.joining( ", " ) );
-                throw new IllegalArgumentException( String.format( "Could not resolve property '%s' on %s. Available properties are: %s.", propertyName, elementClass.getName(), availableProperties ), e );
+                throw new IllegalArgumentException( String.format( "Could not resolve property %s on %s.", propertyName, clazz.getName() ), e );
             }
         } );
+        return new FilterablePropertyMeta( objectAlias, propertyName, partialMeta.propertyType, null, partialMeta.availableValues );
     }
 
+    /**
+     * Partial property meta.
+     * <p>
+     * This is used by {@link #resolveFilterablePropertyMetaInternal(String, Class, int)} which uses a recursion that
+     * does not need to track information about object alias, full property path, etc.
+     */
     @Value
     private static class PartialFilterablePropertyMeta {
         Class<?> propertyType;
@@ -286,23 +299,21 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
         }
 
         Class<?> actualType = ( Class<?> ) propertyType.getReturnedClass();
-        List<Object> availableValues = resolveAvailableValues( propertyType );
+
+        // available values, only for enumerated types
+        List<Object> availableValues;
+        if ( propertyType instanceof CustomType && ( ( CustomType ) propertyType ).getUserType() instanceof EnumType ) {
+            EnumType et = ( EnumType ) ( ( CustomType ) propertyType ).getUserType();
+            //noinspection unchecked,rawtypes
+            availableValues = new ArrayList<>( EnumSet.allOf( et.returnedClass() ) );
+        } else {
+            availableValues = null;
+        }
 
         if ( Filter.getConversionService().canConvert( String.class, actualType ) ) {
             return new PartialFilterablePropertyMeta( actualType, availableValues );
         } else {
             throw new NoSuchFieldException( String.format( "%s is not of a supported type or a collection of supported types %s.", property, cls.getName() ) );
-        }
-    }
-
-    @Nullable
-    private static List<Object> resolveAvailableValues( Type propertyType ) {
-        if ( propertyType instanceof CustomType && ( ( CustomType ) propertyType ).getUserType() instanceof EnumType ) {
-            EnumType et = ( EnumType ) ( ( CustomType ) propertyType ).getUserType();
-            //noinspection unchecked,rawtypes
-            return new ArrayList<>( EnumSet.allOf( et.returnedClass() ) );
-        } else {
-            return null;
         }
     }
 
