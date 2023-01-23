@@ -18,95 +18,168 @@
  */
 package ubic.gemma.core.util;
 
+import gemma.gsec.authentication.ManualAuthenticationService;
 import org.apache.commons.cli.*;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import ubic.basecode.util.DateUtil;
-import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.springframework.beans.factory.BeanFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import ubic.gemma.persistence.util.Settings;
 
-import java.io.File;
+import javax.annotation.Nullable;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.PrintWriter;
-import java.util.*;
-import java.util.concurrent.*;
+import java.nio.charset.StandardCharsets;
 
 /**
- * Base Command Line Interface. Provides some default functionality.
- *
- * To use this, in your concrete subclass, implement a main method. You must implement buildOptions and processOptions
- * to handle any application-specific options (they can be no-ops).
- *
- * To facilitate testing of your subclass, your main method must call a non-static 'doWork' method, that will be exposed
- * for testing. In that method call processCommandline. You should return any non-null return value from
- * processCommandLine.
+ * Subclass this to create command line interface (CLI) tools that need a Spring context. A standard set of CLI options
+ * are provided to manage authentication.
  *
  * @author pavlidis
  */
-@SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
 public abstract class AbstractCLI implements CLI {
 
-    /**
-     * Exit code used for a successful doWork execution.
-     */
-    public static final int SUCCESS = 0;
-    /**
-     * Exit code used for a failed doWork execution.
-     */
-    public static final int FAILURE = 1;
-    /**
-     * Exit code used for a successful doWork execution that resulted in failed error objects.
-     */
-    public static final int FAILURE_FROM_ERROR_OBJECTS = 1;
+    protected static final Logger log = LogManager.getLogger( AbstractCLI.class );
 
-    public static final String FOOTER = "The Gemma project, Copyright (c) 2007-2021 University of British Columbia.";
-    protected static final String AUTO_OPTION_NAME = "auto";
-    protected static final String THREADS_OPTION = "threads";
-    protected static final Log log = LogFactory.getLog( AbstractCLI.class );
-    private static final int DEFAULT_PORT = 3306;
-    public static final String HEADER = "Options:";
-    private static final String HOST_OPTION = "H";
-    private static final String PORT_OPTION = "P";
+
+    /**
+     * Environment variable used to store the username (if not passed directly to the CLI).
+     */
+    private static final String USERNAME_ENV = "GEMMA_USERNAME";
+
+    /**
+     * Environment variable used to store the user password.
+     */
+    private static final String PASSWORD_ENV = "GEMMA_PASSWORD";
+
+    /**
+     * Environment variable used to store the command that produces the password.
+     */
+    private static final String PASSWORD_CMD_ENV = "GEMMA_PASSWORD_CMD";
     private static final String HELP_OPTION = "h";
     private static final String TESTING_OPTION = "testing";
-    private static final String DATE_OPTION = "mdate";
 
-    /* support for convenience options */
-    private final String DEFAULT_HOST = "localhost";
-    /**
-     * Automatically identify which entities to run the tool on. To enable call addAutoOption.
-     */
-    protected boolean autoSeek = false;
-    /**
-     * The event type to look for the lack of, when using auto-seek.
-     */
-    protected Class<? extends AuditEventType> autoSeekEventType = null;
-    /**
-     * Date used to identify which entities to run the tool on (e.g., those which were run less recently than mDate). To
-     * enable call addDateOption.
-     */
-    protected String mDate = null;
-    protected int numThreads = 1;
-    protected String host = DEFAULT_HOST;
-    protected int port = AbstractCLI.DEFAULT_PORT;
-    private ExecutorService executorService;
+    @Autowired
+    private BeanFactory ctx;
+    @Autowired
+    private ManualAuthenticationService manAuthentication;
 
-    // hold the results of the command execution
-    // needs to be concurrently modifiable and kept in-order
-    private final List<BatchProcessingResult> errorObjects = Collections.synchronizedList( new ArrayList<BatchProcessingResult>() );
-    private final List<BatchProcessingResult> successObjects = Collections.synchronizedList( new ArrayList<BatchProcessingResult>() );
+    /**
+     * If this CLI failed, this holds the corresponding exception.
+     */
+    private Exception lastException = null;
+
+    /**
+     * Indicate if the command requires authentication.
+     * <p>
+     * Override this to return true to make authentication required.
+     *
+     * @return true if login is required, otherwise false
+     */
+    protected boolean requireLogin() {
+        return false;
+    }
+
+    /**
+     * @deprecated Use {@link Autowired} to specify your dependencies, this is just a wrapper around the current
+     * {@link BeanFactory}.
+     */
+    @Deprecated
+    protected <T> T getBean( Class<T> clz ) {
+        return ctx.getBean( clz );
+    }
+
+    /**
+     * check username and password.
+     */
+    private void authenticate() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if ( authentication != null && authentication.isAuthenticated() ) {
+            AbstractCLI.log.info( String.format( "Logged in as %s", authentication.getPrincipal() ) );
+        } else if ( requireLogin() || System.getenv().containsKey( USERNAME_ENV ) ) {
+            String username = getUsername();
+            String password = getPassword();
+
+            if ( StringUtils.isBlank( username ) ) {
+                throw new IllegalArgumentException( "Not authenticated. Username was blank" );
+            }
+
+            if ( StringUtils.isBlank( password ) ) {
+                throw new IllegalArgumentException( "Not authenticated. You didn't enter a password" );
+            }
+
+            boolean success = manAuthentication.validateRequest( username, password );
+            if ( !success ) {
+                throw new IllegalStateException( "Not authenticated. Make sure you entered a valid username (got '" + username
+                        + "') and/or password" );
+            } else {
+                AbstractCLI.log.info( "Logged in as " + username );
+            }
+        } else {
+            AbstractCLI.log.info( "Logging in as anonymous guest with limited privileges" );
+            manAuthentication.authenticateAnonymously();
+        }
+    }
+
+    private String getUsername() {
+        if ( System.getenv().containsKey( USERNAME_ENV ) ) {
+            return System.getenv().get( USERNAME_ENV );
+        } else if ( System.console() != null ) {
+            return System.console().readLine( "Username: " );
+        } else {
+            throw new RuntimeException( String.format( "Could not read the username from the console. Please run Gemma CLI from an interactive shell or provide the %s environment variable.", USERNAME_ENV ) );
+        }
+    }
+
+    private String getPassword() {
+        if ( System.getenv().containsKey( PASSWORD_ENV ) ) {
+            return System.getenv().get( PASSWORD_ENV );
+        }
+
+        if ( System.getenv().containsKey( PASSWORD_CMD_ENV ) ) {
+            String passwordCommand = System.getenv().get( PASSWORD_CMD_ENV );
+            try {
+                Process proc = Runtime.getRuntime().exec( passwordCommand );
+                if ( proc.waitFor() == 0 ) {
+                    try ( BufferedReader reader = new BufferedReader( new InputStreamReader( proc.getInputStream() ) ) ) {
+                        return reader.readLine();
+                    }
+                } else {
+                    log.error( "Could not read the password from '" + passwordCommand + "':\n"
+                            + String.join( "\n", IOUtils.readLines( proc.getErrorStream(), StandardCharsets.UTF_8 ) ) );
+                    throw new IllegalArgumentException( "Could not read the password from '" + passwordCommand + "'." );
+                }
+            } catch ( IOException | InterruptedException e ) {
+                log.error( "Could not read the password from '" + passwordCommand + "'.", e );
+                throw new IllegalArgumentException( "Could not read the password from '" + passwordCommand + "'.", e );
+            }
+        }
+
+        // prompt the user for his password
+        if ( System.console() != null ) {
+            return String.valueOf( System.console().readPassword( "Password: " ) );
+        } else {
+            throw new IllegalArgumentException( String.format( "Could not read the password from the console. Please run Gemma CLI from an interactive shell or provide either the %s or %s environment variables.",
+                    PASSWORD_ENV, PASSWORD_CMD_ENV ) );
+        }
+    }
 
     /**
      * Run the command.
-     *
+     * <p>
      * Parse and process CLI arguments, invoke the command doWork implementation, and print basic statistics about time
      * usage.
      *
-     * @param args arguments Arguments to pass to {@link #processCommandLine(Options, String[])}
+     * @param args Arguments to pass to {@link #processCommandLine(Options, String[])}
      * @return Exit code intended to be used with {@link System#exit(int)} to indicate a success or failure to the
-     * end-user. Any exception raised by doWork results in a value of {@link #FAILURE}, and any error set in the
-     * internal error objects will result in a value of {@link #FAILURE_FROM_ERROR_OBJECTS}.
+     * end-user. Any exception raised by doWork results in a value of {@link #FAILURE}.
      */
     @Override
     public int executeCommand( String[] args ) {
@@ -114,183 +187,72 @@ public abstract class AbstractCLI implements CLI {
         watch.start();
         try {
             Options options = new Options();
-            buildStandardOptions( options );
+            AbstractCLI.log.debug( "Creating standard options" );
+            options.addOption( new Option( HELP_OPTION, "help", false, "Print this message" ) );
+            options.addOption( new Option( TESTING_OPTION, "testing", false, "Use the test environment. This option must be passed before the command." ) );
             buildOptions( options );
             CommandLine commandLine = processCommandLine( options, args );
             // check if -h/--help is provided before pursuing option processing
             if ( commandLine.hasOption( 'h' ) ) {
                 printHelp( options );
-                return SUCCESS;
+                return CLI.SUCCESS;
             }
             if ( commandLine.hasOption( TESTING_OPTION ) ) {
                 System.err.printf( "The -testing/--testing option must be passed before the %s command.%n", getCommandName() );
-                return FAILURE;
+                return CLI.FAILURE;
             }
-            processStandardOptions( commandLine );
+            this.authenticate();
             processOptions( commandLine );
             doWork();
-            return errorObjects.isEmpty() ? SUCCESS : FAILURE_FROM_ERROR_OBJECTS;
+            return CLI.SUCCESS;
         } catch ( Exception e ) {
+            lastException = e;
             log.error( getCommandName() + " failed.", e );
-            return FAILURE;
+            return CLI.FAILURE;
         } finally {
-            // always summarize processing, even if an error is thrown
-            summarizeProcessing();
             AbstractCLI.log.info( "Elapsed time: " + watch.getTime() / 1000 + " seconds." );
         }
     }
 
-    /**
-     * You must implement the handling for this option.
-     */
-    @SuppressWarnings("static-access")
-    protected void addAutoOption( Options options ) {
-        Option autoSeekOption = Option.builder( AUTO_OPTION_NAME )
-                .desc( "Attempt to process entities that need processing based on workflow criteria." )
-                .build();
-
-        options.addOption( autoSeekOption );
-    }
-
-    @SuppressWarnings("static-access")
-    protected void addDateOption( Options options ) {
-        Option dateOption = Option.builder( DATE_OPTION ).hasArg().desc(
-                        "Constrain to run only on entities with analyses older than the given date. "
-                                + "For example, to run only on entities that have not been analyzed in the last 10 days, use '-10d'. "
-                                + "If there is no record of when the analysis was last run, it will be run." )
-                .build();
-
-        options.addOption( dateOption );
-    }
-
-    /**
-     * Convenience method to add a standard pair of options to intake a host name and port number. *
-     *
-     * @param hostRequired Whether the host name is required
-     * @param portRequired Whether the port is required
-     */
-    @SuppressWarnings("static-access")
-    protected void addHostAndPortOptions( Options options, boolean hostRequired, boolean portRequired ) {
-        Option hostOpt = Option.builder( HOST_OPTION ).argName( "host name" ).longOpt( "host" ).hasArg()
-                .desc( "Hostname to use (Default = " + DEFAULT_HOST + ")" )
-                .build();
-
-        hostOpt.setRequired( hostRequired );
-
-        Option portOpt = Option.builder( PORT_OPTION ).argName( "port" ).longOpt( "port" ).hasArg()
-                .desc( "Port to use on host (Default = " + AbstractCLI.DEFAULT_PORT + ")" )
-                .build();
-
-        portOpt.setRequired( portRequired );
-
-        options.addOption( hostOpt );
-        options.addOption( portOpt );
-    }
-
-    /**
-     * Convenience method to add an option for parallel processing option.
-     */
-    @SuppressWarnings("static-access")
-    protected void addThreadsOption( Options options ) {
-        Option threadsOpt = Option.builder( THREADS_OPTION ).argName( "numThreads" ).hasArg()
-                .desc( "Number of threads to use for batch processing." )
-                .build();
-        options.addOption( threadsOpt );
+    @Override
+    @Nullable
+    public Exception getLastException() {
+        return lastException;
     }
 
     /**
      * Build option implementation.
-     *
+     * <p>
      * Implement this method to add options to your command line, using the OptionBuilder.
-     *
-     * This is called right after {@link #buildStandardOptions(Options)} so the options will be added after standard options.
      */
     protected abstract void buildOptions( Options options );
 
-    @SuppressWarnings("static-access")
-    protected void buildStandardOptions( Options options ) {
-        AbstractCLI.log.debug( "Creating standard options" );
-        Option helpOpt = new Option( HELP_OPTION, "help", false, "Print this message" );
-        Option testOpt = new Option( TESTING_OPTION, "testing", false, "Use the test environment. This option must be passed before the command." );
-        options.addOption( helpOpt );
-        options.addOption( testOpt );
-    }
+    /**
+     * Process command line options.
+     * <p>
+     * Implement this to provide processing of options. It is called after {@link #buildOptions(Options)} and right
+     * before {@link #doWork()}.
+     *
+     * @throws ParseException if the parsing of the command line exception fails
+     */
+    protected abstract void processOptions( CommandLine commandLine ) throws ParseException;
 
     /**
      * Command line implementation.
-     *
+     * <p>
      * This is called after {@link #buildOptions(Options)} and {@link #processOptions(CommandLine)}, so the implementation can assume that
      * all its arguments have already been initialized.
      *
      * @throws Exception in case of unrecoverable failure, an exception is thrown and will result in a {@link #FAILURE}
-     *                   exit code, otherwise use {@link #addErrorObject}
+     *                   exit code
      */
     protected abstract void doWork() throws Exception;
 
-    protected final double getDoubleOptionValue( CommandLine commandLine, char option ) {
-        try {
-            return Double.parseDouble( commandLine.getOptionValue( option ) );
-        } catch ( NumberFormatException e ) {
-            throw new RuntimeException( this.invalidOptionString( commandLine, "" + option ) + ", not a valid double", e );
-        }
-    }
-
-    protected final double getDoubleOptionValue( CommandLine commandLine, String option ) {
-        try {
-            return Double.parseDouble( commandLine.getOptionValue( option ) );
-        } catch ( NumberFormatException e ) {
-            throw new RuntimeException( this.invalidOptionString( commandLine, option ) + ", not a valid double", e );
-        }
-    }
-
-    protected final String getFileNameOptionValue( CommandLine commandLine, char c ) {
-        String fileName = commandLine.getOptionValue( c );
-        File f = new File( fileName );
-        if ( !f.canRead() ) {
-            throw new RuntimeException( this.invalidOptionString( commandLine, "" + c ) + ", cannot read from file" );
-        }
-        return fileName;
-    }
-
-    protected final String getFileNameOptionValue( CommandLine commandLine, String c ) {
-        String fileName = commandLine.getOptionValue( c );
-        File f = new File( fileName );
-        if ( !f.canRead() ) {
-            throw new RuntimeException( this.invalidOptionString( commandLine, "" + c ) + ", cannot read from file" );
-        }
-        return fileName;
-    }
-
-    protected final int getIntegerOptionValue( CommandLine commandLine, char option ) {
-        try {
-            return Integer.parseInt( commandLine.getOptionValue( option ) );
-        } catch ( NumberFormatException e ) {
-            throw new RuntimeException( this.invalidOptionString( commandLine, "" + option ) + ", not a valid integer", e );
-        }
-    }
-
-    protected final int getIntegerOptionValue( CommandLine commandLine, String option ) {
-        try {
-            return Integer.parseInt( commandLine.getOptionValue( option ) );
-        } catch ( NumberFormatException e ) {
-            throw new RuntimeException( this.invalidOptionString( commandLine, option ) + ", not a valid integer", e );
-        }
-    }
-
-    protected Date getLimitingDate() {
-        Date skipIfLastRunLaterThan = null;
-        if ( StringUtils.isNotBlank( mDate ) ) {
-            skipIfLastRunLaterThan = DateUtil.getRelativeDate( new Date(), mDate );
-            AbstractCLI.log.info( "Analyses will be run only if last was older than " + skipIfLastRunLaterThan );
-        }
-        return skipIfLastRunLaterThan;
-    }
-
-    protected void printHelp( Options options ) {
+    private void printHelp( Options options ) {
         new HelpFormatter().printHelp( new PrintWriter( System.err, true ), 150,
                 this.getCommandName() + " [options]",
-                this.getShortDesc() + "\n" + AbstractCLI.HEADER,
-                options, HelpFormatter.DEFAULT_LEFT_PAD, HelpFormatter.DEFAULT_DESC_PAD, AbstractCLI.FOOTER );
+                ( this.getShortDesc() != null ? this.getShortDesc() + "\n" : "" ) + "Options:",
+                options, HelpFormatter.DEFAULT_LEFT_PAD, HelpFormatter.DEFAULT_DESC_PAD, COPYRIGHT_NOTICE );
     }
 
     /**
@@ -300,7 +262,7 @@ public abstract class AbstractCLI implements CLI {
      * @param args args
      * @return Exception; null if nothing went wrong.
      */
-    private final CommandLine processCommandLine( Options options, String[] args ) throws Exception {
+    private CommandLine processCommandLine( Options options, String[] args ) throws Exception {
         /* COMMAND LINE PARSER STAGE */
         DefaultParser parser = new DefaultParser();
         String appVersion = Settings.getAppVersion();
@@ -335,158 +297,6 @@ public abstract class AbstractCLI implements CLI {
             }
 
             throw e;
-        }
-    }
-
-    /**
-     * Process command line options.
-     *
-     * Implement this to provide processing of options. It is called after {@link #buildOptions(Options)} and right before
-     * {@link #doWork()}.
-     *
-     * @throws Exception in case of unrecoverable failure (i.e. missing option or invalid value), an exception can be
-     *                   raised and will result in an exit code of {@link #FAILURE}.
-     */
-    protected abstract void processOptions( CommandLine commandLine ) throws Exception;
-
-    /**
-     * Add a success object to indicate success in a batch processing.
-     *
-     * This is further used in {@link #summarizeProcessing()} to summarize the execution of the command.
-     *
-     * @param successObject object that was processed
-     * @param message       success message
-     */
-    protected void addSuccessObject( Object successObject, String message ) {
-        successObjects.add( new BatchProcessingResult( successObject, message ) );
-        log.info( successObject + ": " + message );
-    }
-
-    /**
-     * Add an error object with a stacktrace to indicate failure in a batch processing.
-     *
-     * This is further used in {@link #summarizeProcessing()} to summarize the execution of the command.
-     *
-     * This is intended to be used when an {@link Exception} is caught.
-     *
-     * @param errorObject object that was processed
-     * @param message     error message
-     * @param throwable   throwable to produce a stacktrace
-     */
-    protected void addErrorObject( Object errorObject, String message, Throwable throwable ) {
-        errorObjects.add( new BatchProcessingResult( errorObject, message ) );
-        log.error( errorObject + ": " + message, throwable );
-    }
-
-    /**
-     * Add an error object to indicate failure in a batch processing.
-     *
-     * This is further used in {@link #summarizeProcessing()} to summarize the execution of the command.
-     */
-    protected void addErrorObject( Object errorObject, String message ) {
-        errorObjects.add( new BatchProcessingResult( errorObject, message ) );
-        log.error( errorObject + ": " + message );
-    }
-
-    /**
-     * Print out a summary of what the program did. Useful when analyzing lists of experiments etc. Use the
-     * 'successObjects' and 'errorObjects'
-     */
-    private void summarizeProcessing() {
-        if ( successObjects.size() > 0 ) {
-            StringBuilder buf = new StringBuilder();
-            buf.append( "\n---------------------\nSuccessfully processed " ).append( successObjects.size() )
-                    .append( " objects:\n" );
-            for ( BatchProcessingResult result : successObjects ) {
-                buf.append( "Success\t" )
-                        .append( result.source ).append( ": " )
-                        .append( result.message ).append( "\n" );
-            }
-            buf.append( "---------------------\n" );
-
-            AbstractCLI.log.info( buf );
-        }
-
-        if ( errorObjects.size() > 0 ) {
-            StringBuilder buf = new StringBuilder();
-            buf.append( "\n---------------------\nErrors occurred during the processing of " )
-                    .append( errorObjects.size() ).append( " objects:\n" );
-            for ( BatchProcessingResult result : errorObjects ) {
-                buf.append( "Error\t" )
-                        .append( result.source ).append( ": " )
-                        .append( result.message ).append( "\n" );
-            }
-            buf.append( "---------------------\n" );
-            AbstractCLI.log.error( buf );
-        }
-    }
-
-    /**
-     * Execute batch tasks using a preconfigured {@link ExecutorService} and return all the resulting tasks results.
-     *
-     */
-    protected <T> List<T> executeBatchTasks( Collection<? extends Callable<T>> tasks ) throws InterruptedException {
-        List<Future<T>> futures = executorService.invokeAll( tasks );
-        List<T> futureResults = new ArrayList<>( futures.size() );
-        for ( Future<T> future : futures ) {
-            try {
-                futureResults.add( future.get() );
-            } catch ( ExecutionException | InterruptedException e ) {
-                addErrorObject( null, "Batch task failed.", e );
-            }
-        }
-        return futureResults;
-    }
-
-    private String invalidOptionString( CommandLine commandLine, String option ) {
-        return "Invalid value '" + commandLine.getOptionValue( option ) + " for option " + option;
-    }
-
-    /**
-     * Somewhat annoying: This causes subclasses to be unable to safely use 'h', 'p', 'u' and 'P' etc for their own
-     * purposes.
-     */
-    protected void processStandardOptions( CommandLine commandLine ) {
-
-        if ( commandLine.hasOption( AbstractCLI.HOST_OPTION ) ) {
-            this.host = commandLine.getOptionValue( AbstractCLI.HOST_OPTION );
-        } else {
-            this.host = DEFAULT_HOST;
-        }
-
-        if ( commandLine.hasOption( AbstractCLI.PORT_OPTION ) ) {
-            this.port = this.getIntegerOptionValue( commandLine, AbstractCLI.PORT_OPTION );
-        } else {
-            this.port = AbstractCLI.DEFAULT_PORT;
-        }
-
-        if ( commandLine.hasOption( DATE_OPTION ) ) {
-            this.mDate = commandLine.getOptionValue( DATE_OPTION );
-        }
-
-        if ( this.numThreads < 1 ) {
-            throw new IllegalArgumentException( "Number of threads must be greater than 1." );
-        }
-        this.executorService = new ForkJoinPool( this.numThreads );
-    }
-
-    /**
-     * Represents an individual result in a batch processing.
-     */
-    private static class BatchProcessingResult {
-        private Object source;
-        private String message;
-        private Throwable throwable;
-
-        public BatchProcessingResult( Object source, String message ) {
-            this.source = source;
-            this.message = message;
-        }
-
-        public BatchProcessingResult( Object source, String message, Throwable throwable ) {
-            this.source = source;
-            this.message = message;
-            this.throwable = throwable;
         }
     }
 }

@@ -16,12 +16,14 @@ package ubic.gemma.core.apps;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
 import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.core.annotation.reference.BibliographicReferenceService;
 import ubic.gemma.core.loader.entrez.pubmed.PubMedSearch;
 import ubic.gemma.core.loader.expression.geo.model.GeoRecord;
 import ubic.gemma.core.loader.expression.geo.service.GeoBrowser;
-import ubic.gemma.core.util.AbstractCLIContextCLI;
+import ubic.gemma.core.util.AbstractBatchProcessingCLI;
+import ubic.gemma.core.util.CLI;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.ExternalDatabase;
@@ -40,7 +42,7 @@ import java.util.Map;
  * Fetch their GEO records and check for pubmed IDs
  * Add the publications where we find them.
  */
-public class UpdatePubMedCli extends AbstractCLIContextCLI {
+public class UpdatePubMedCli extends AbstractBatchProcessingCLI {
     @Override
     public String getCommandName() {
         return "findDatasetPubs";
@@ -53,12 +55,17 @@ public class UpdatePubMedCli extends AbstractCLIContextCLI {
     }
 
     @Override
-    protected void buildOptions( Options options ) {
+    protected void buildBatchOptions( Options options ) {
 
     }
 
     @Override
-    protected void doWork() throws Exception {
+    protected void processBatchOptions( CommandLine commandLine ) throws ParseException {
+
+    }
+
+    @Override
+    protected void doBatchWork() throws Exception {
 
         ExpressionExperimentService eeserv = this.getBean( ExpressionExperimentService.class );
         Map<String, ExpressionExperiment> toFetch = new HashMap<>();
@@ -122,13 +129,8 @@ public class UpdatePubMedCli extends AbstractCLIContextCLI {
     }
 
     @Override
-    protected void processOptions( CommandLine commandLine ) throws Exception {
-
-    }
-
-    @Override
-    public GemmaCLI.CommandGroup getCommandGroup() {
-        return GemmaCLI.CommandGroup.EXPERIMENT;
+    public CommandGroup getCommandGroup() {
+        return CLI.CommandGroup.EXPERIMENT;
     }
 
 
@@ -140,7 +142,7 @@ public class UpdatePubMedCli extends AbstractCLIContextCLI {
     private BibliographicReference getBibliographicReference( String pubmedId ) {
         // check if it already in the system
         BibliographicReferenceService bibliographicReferenceService = this.getBean( BibliographicReferenceService.class );
-        Persister persisterHelper = this.getPersisterHelper();
+        Persister persisterHelper = getBean( Persister.class );
         BibliographicReference publication = bibliographicReferenceService.findByExternalId( pubmedId );
         if ( publication == null ) {
             PubMedSearch pms = new PubMedSearch();

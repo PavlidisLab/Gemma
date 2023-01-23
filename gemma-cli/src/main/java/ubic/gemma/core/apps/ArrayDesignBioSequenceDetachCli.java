@@ -21,8 +21,8 @@ package ubic.gemma.core.apps;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignSequenceRemoveEvent;
-import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.genome.biosequence.BioSequence;
@@ -51,9 +51,8 @@ public class ArrayDesignBioSequenceDetachCli extends ArrayDesignSequenceManipula
     }
 
     @Override
-    protected void buildOptions( Options options ) {
-        super.buildOptions( options );
-
+    protected void buildBatchOptions( Options options ) {
+        super.buildBatchOptions( options );
         Option fileOption = Option.builder( "delete" )
                 .desc( "Delete sequences instead of detaching them - use with care" ).build();
 
@@ -61,13 +60,13 @@ public class ArrayDesignBioSequenceDetachCli extends ArrayDesignSequenceManipula
     }
 
     @Override
-    protected void processOptions( CommandLine commandLine ) {
-        super.processOptions( commandLine );
+    protected void processBatchOptions( CommandLine commandLine ) throws ParseException {
+        super.processBatchOptions( commandLine );
         this.delete = commandLine.hasOption( "delete" );
     }
 
     @Override
-    protected void doWork() throws Exception {
+    protected void doBatchWork() throws Exception {
         BioSequenceService bioSequenceService = this.getBean( BioSequenceService.class );
 
         if ( this.getArrayDesignsToProcess().isEmpty() ) {

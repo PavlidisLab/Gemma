@@ -17,9 +17,9 @@ package ubic.gemma.core.apps;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.io.reader.DoubleMatrixReader;
-import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.core.loader.expression.DataUpdater;
 import ubic.gemma.core.util.AbstractCLI;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
@@ -57,8 +57,8 @@ public class RNASeqDataAddCli extends ExpressionExperimentManipulatingCLI {
     }
 
     @Override
-    protected void buildOptions( Options options ) {
-        super.buildOptions( options );
+    protected void buildBatchOptions( Options options ) {
+        super.buildBatchOptions( options );
         options.addOption( Option.builder( RNASeqDataAddCli.RPKM_FILE_OPT ).longOpt( null ).desc( "File with RPKM data" ).argName( "file path" ).hasArg().build() );
         options.addOption( Option.builder( RNASeqDataAddCli.COUNT_FILE_OPT ).longOpt( null ).desc( "File with count data" ).argName( "file path" ).hasArg().build() );
 
@@ -73,9 +73,8 @@ public class RNASeqDataAddCli extends ExpressionExperimentManipulatingCLI {
     }
 
     @Override
-    protected void processOptions( CommandLine commandLine ) {
-        super.processOptions( commandLine );
-
+    protected void processBatchOptions( CommandLine commandLine ) throws ParseException {
+        super.processBatchOptions( commandLine );
         if ( commandLine.hasOption( "log2cpm" ) ) {
             this.justbackfillLog2cpm = true;
 
@@ -136,7 +135,7 @@ public class RNASeqDataAddCli extends ExpressionExperimentManipulatingCLI {
     }
 
     @Override
-    protected void doWork() throws Exception {
+    protected void doBatchWork() throws Exception {
         DataUpdater serv = this.getBean( DataUpdater.class );
 
         if ( this.expressionExperiments.isEmpty() ) {

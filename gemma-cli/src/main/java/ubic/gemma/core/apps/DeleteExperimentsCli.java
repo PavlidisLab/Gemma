@@ -20,6 +20,7 @@ import java.util.List;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
 import org.apache.commons.lang3.StringUtils;
 
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -42,8 +43,8 @@ public class DeleteExperimentsCli extends ExpressionExperimentManipulatingCLI {
     }
 
     @Override
-    protected void buildOptions( Options options ) {
-        super.buildOptions( options );
+    protected void buildBatchOptions( Options options ) {
+        super.buildBatchOptions( options );
         options.addOption(
                 Option.builder( "a" ).longOpt( "array" )
                         .desc( "Delete platform(s) instead; you must delete associated experiments first; other options are ignored" )
@@ -52,8 +53,8 @@ public class DeleteExperimentsCli extends ExpressionExperimentManipulatingCLI {
     }
 
     @Override
-    protected void processOptions( CommandLine commandLine ) {
-        super.processOptions( commandLine );
+    protected void processBatchOptions( CommandLine commandLine ) throws ParseException {
+        super.processBatchOptions( commandLine );
         if ( commandLine.hasOption( 'a' ) ) {
             this.platformAccs = Arrays.asList( StringUtils.split( commandLine.getOptionValue( 'a' ), "," ) );
 
@@ -64,7 +65,7 @@ public class DeleteExperimentsCli extends ExpressionExperimentManipulatingCLI {
     }
 
     @Override
-    protected void doWork() throws Exception {
+    protected void doBatchWork() throws Exception {
         this.force = true;
 
         if ( platformAccs != null ) {

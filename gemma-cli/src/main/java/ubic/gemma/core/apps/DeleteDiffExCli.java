@@ -32,7 +32,7 @@ public class DeleteDiffExCli extends ExpressionExperimentManipulatingCLI {
     }
 
     @Override
-    protected void doWork() throws Exception {
+    protected void doBatchWork() throws Exception {
         this.force = true;
 
         DifferentialExpressionAnalysisService deas = this.getBean( DifferentialExpressionAnalysisService.class );

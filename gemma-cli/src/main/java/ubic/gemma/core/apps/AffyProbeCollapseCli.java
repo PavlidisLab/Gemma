@@ -22,6 +22,7 @@ package ubic.gemma.core.apps;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
 import ubic.gemma.core.analysis.sequence.SequenceManipulation;
 import ubic.gemma.core.loader.expression.arrayDesign.AffyProbeReader;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
@@ -60,8 +61,13 @@ public class AffyProbeCollapseCli extends ArrayDesignSequenceManipulatingCli {
     }
 
     @Override
-    protected void buildOptions( Options options ) {
-        super.buildOptions( options );
+    public String getShortDesc() {
+        return null;
+    }
+
+    @Override
+    protected void buildBatchOptions( Options options ) {
+        super.buildBatchOptions( options );
         options.addOption( Option.builder( "affyProbeFile" )
                 .hasArg()
                 .desc( "Affymetrix probe file to use as input" )
@@ -69,8 +75,8 @@ public class AffyProbeCollapseCli extends ArrayDesignSequenceManipulatingCli {
     }
 
     @Override
-    protected void processOptions( CommandLine commandLine ) {
-        super.processOptions( commandLine );
+    protected void processBatchOptions( CommandLine commandLine ) throws ParseException {
+        super.processBatchOptions( commandLine );
         affyProbeFileName = commandLine.getOptionValue( "affyProbeFile" );
     }
 
@@ -80,7 +86,7 @@ public class AffyProbeCollapseCli extends ArrayDesignSequenceManipulatingCli {
      * @see ubic.gemma.core.util.AbstractCLI#doWork(java.lang.String[])
      */
     @Override
-    protected void doWork() throws IOException {
+    protected void doBatchWork() throws IOException {
 
         // parse
         AffyProbeReader apr = new AffyProbeReader();

@@ -17,7 +17,6 @@ package ubic.gemma.core.loader.association.phenotype;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
 import ubic.basecode.util.FileTools;
-import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.model.genome.Gene;
 
 import java.io.BufferedReader;

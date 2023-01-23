@@ -22,14 +22,14 @@ package ubic.gemma.core.apps;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
 import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.core.analysis.preprocess.PreprocessingException;
 import ubic.gemma.core.analysis.preprocess.PreprocessorService;
-import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGenerator;
 import ubic.gemma.core.loader.expression.geo.service.GeoService;
+import ubic.gemma.core.util.AbstractBatchProcessingCLI;
 import ubic.gemma.core.util.AbstractCLI;
-import ubic.gemma.core.util.AbstractCLIContextCLI;
 import ubic.gemma.model.common.Describable;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.ExternalDatabase;
@@ -50,7 +50,7 @@ import java.util.Collection;
  *
  * @author pavlidis
  */
-public class LoadExpressionDataCli extends AbstractCLIContextCLI {
+public class LoadExpressionDataCli extends AbstractBatchProcessingCLI {
 
     // Command line Options
     private String accessionFile = null;
@@ -78,7 +78,7 @@ public class LoadExpressionDataCli extends AbstractCLIContextCLI {
 
     @SuppressWarnings("static-access")
     @Override
-    protected void buildOptions( Options options ) {
+    protected void buildBatchOptions( Options options ) {
         Option fileOption = Option.builder( "f" ).hasArg().argName( "Input file" )
                 .desc( "Optional path to file with list of experiment accessions to load" )
                 .longOpt( "file" ).build();
@@ -91,7 +91,7 @@ public class LoadExpressionDataCli extends AbstractCLIContextCLI {
         options.addOption( accessionOption );
 
         Option platformOnlyOption = Option.builder( "y" ).argName( "Platforms only" ).desc(
-                "Load platforms (array designs) only; implied if you supply GPL instead of GSE or GDS" )
+                        "Load platforms (array designs) only; implied if you supply GPL instead of GSE or GDS" )
                 .longOpt( "platforms" ).build();
         options.addOption( platformOnlyOption );
 
@@ -124,7 +124,7 @@ public class LoadExpressionDataCli extends AbstractCLIContextCLI {
     }
 
     @Override
-    protected void doWork() throws Exception {
+    protected void doBatchWork() throws Exception {
         GeoService geoService = this.getBean( GeoService.class );
         geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGenerator() );
 
@@ -188,7 +188,7 @@ public class LoadExpressionDataCli extends AbstractCLIContextCLI {
     }
 
     @Override
-    protected void processOptions( CommandLine commandLine ) {
+    protected void processBatchOptions( CommandLine commandLine ) throws ParseException {
         if ( commandLine.hasOption( 'f' ) ) {
             accessionFile = commandLine.getOptionValue( 'f' );
         }

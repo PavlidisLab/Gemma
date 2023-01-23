@@ -5,12 +5,12 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.core.util.AbstractCLI;
-import ubic.gemma.core.util.AbstractCLIContextCLI;
+import ubic.gemma.core.util.CLI;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 
 import java.util.Map;
 
-public class CountObsoleteTermsCli extends AbstractCLIContextCLI {
+public class CountObsoleteTermsCli extends AbstractCLI {
     private OntologyService ontologyService;
 
     private String startArg;
@@ -18,8 +18,8 @@ public class CountObsoleteTermsCli extends AbstractCLIContextCLI {
     private String stopArg;
 
     @Override
-    public GemmaCLI.CommandGroup getCommandGroup() {
-        return GemmaCLI.CommandGroup.EXPERIMENT;
+    public CommandGroup getCommandGroup() {
+        return CLI.CommandGroup.EXPERIMENT;
     }
 
     @Override

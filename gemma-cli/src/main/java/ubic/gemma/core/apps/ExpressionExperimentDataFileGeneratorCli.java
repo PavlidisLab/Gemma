@@ -22,11 +22,10 @@ package ubic.gemma.core.apps;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
 import org.springframework.security.core.context.SecurityContext;
-import org.springframework.security.core.context.SecurityContextHolder;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
 import ubic.gemma.core.util.AbstractCLI;
-import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.common.auditAndSecurity.eventType.CommentedEvent;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -34,9 +33,8 @@ import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.Callable;
+import java.util.List;
+import java.util.concurrent.*;
 
 /**
  * @author paul
@@ -53,7 +51,7 @@ public class ExpressionExperimentDataFileGeneratorCli extends ExpressionExperime
     }
 
     @Override
-    protected void doWork() throws Exception {
+    protected void doBatchWork() throws Exception {
         BlockingQueue<BioAssaySet> queue = new ArrayBlockingQueue<>( expressionExperiments.size() );
 
         // Add the Experiments to the queue for processing
@@ -74,7 +72,14 @@ public class ExpressionExperimentDataFileGeneratorCli extends ExpressionExperime
         for ( BioAssaySet ee : queue ) {
             tasks.add( new ProcessBioAssaySet( ee ) );
         }
-        executeBatchTasks( tasks );
+        List<Future<Void>> futures = getExecutorService().invokeAll( tasks );
+        for ( Future<Void> future : futures ) {
+            try {
+                future.get();
+            } catch ( ExecutionException e ) {
+                addErrorObject( null, "Batch task failed.", e.getCause() );
+            }
+        }
     }
 
     @Override
@@ -84,24 +89,18 @@ public class ExpressionExperimentDataFileGeneratorCli extends ExpressionExperime
 
     @SuppressWarnings("static-access")
     @Override
-    protected void buildOptions( Options options ) {
-        super.buildOptions( options );
-
+    protected void buildBatchOptions( Options options ) {
+        super.buildBatchOptions( options );
         Option forceWriteOption = Option.builder( "w" ).hasArg().argName( "ForceWrite" )
                 .desc( "Overwrites exsiting files if this option is set" ).longOpt( "forceWrite" )
                 .build();
 
-        this.addThreadsOption( options );
         options.addOption( forceWriteOption );
     }
 
     @Override
-    protected void processOptions( CommandLine commandLine ) {
-        super.processOptions( commandLine );
-
-        if ( commandLine.hasOption( AbstractCLI.THREADS_OPTION ) ) {
-            this.numThreads = this.getIntegerOptionValue( commandLine, "threads" );
-        }
+    protected void processBatchOptions( CommandLine commandLine ) throws ParseException {
+        super.processBatchOptions( commandLine );
 
         if ( commandLine.hasOption( 'w' ) ) {
             this.force_write = true;

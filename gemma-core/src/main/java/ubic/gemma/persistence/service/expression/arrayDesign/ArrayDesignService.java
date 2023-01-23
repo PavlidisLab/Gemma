@@ -135,6 +135,13 @@ public interface ArrayDesignService extends FilteringVoEnabledService<ArrayDesig
     ArrayDesign findByShortName( String shortName );
 
     /**
+     * @param  name               of the array design to find.
+     * @return an array design, if found. Bails otherwise with an error exit code
+     */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ_QUIET" })
+    ArrayDesign findByNameOrByShortName( String name );
+
+    /**
      * Find by the primary taxon.
      *
      * @param taxon taxon

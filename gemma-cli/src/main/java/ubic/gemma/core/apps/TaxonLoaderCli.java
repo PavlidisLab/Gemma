@@ -20,10 +20,9 @@ package ubic.gemma.core.apps;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
-import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.core.loader.genome.taxon.TaxonFetcher;
 import ubic.gemma.core.loader.genome.taxon.TaxonLoader;
-import ubic.gemma.core.util.AbstractCLIContextCLI;
+import ubic.gemma.core.util.AbstractCLI;
 import ubic.gemma.model.common.description.LocalFile;
 import ubic.gemma.persistence.persister.PersisterHelper;
 
@@ -32,7 +31,7 @@ import java.util.Collection;
 /**
  * @author pavlidis
  */
-public class TaxonLoaderCli extends AbstractCLIContextCLI {
+public class TaxonLoaderCli extends AbstractCLI {
 
     @Override
     public String getCommandName() {
@@ -55,7 +54,7 @@ public class TaxonLoaderCli extends AbstractCLIContextCLI {
     }
 
     @Override
-    protected void processOptions( CommandLine commandLine ) throws Exception {
+    protected void processOptions( CommandLine commandLine ) {
 
     }
 

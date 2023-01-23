@@ -25,9 +25,9 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 
 import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
 import ubic.gemma.core.analysis.preprocess.SplitExperimentService;
 import ubic.gemma.core.analysis.preprocess.batcheffects.BatchInfoPopulationServiceImpl;
-import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExperimentalFactorValueObject;
@@ -71,9 +71,8 @@ public class SplitExperimentCli extends ExpressionExperimentManipulatingCLI {
     }
 
     @Override
-    protected void buildOptions( Options options ) {
-        super.buildOptions( options );
-
+    protected void buildBatchOptions( Options options ) {
+        super.buildBatchOptions( options );
         options.addOption( Option.builder( FACTOR_OPTION ).hasArg().desc(
                 "ID numbers, categories or names of the factor to use, with spaces replaced by underscores (must not be 'batch')" ).build() );
 
@@ -85,7 +84,7 @@ public class SplitExperimentCli extends ExpressionExperimentManipulatingCLI {
      * @see ubic.gemma.core.util.AbstractCLI#doWork(java.lang.String[])
      */
     @Override
-    protected void doWork() throws Exception {
+    protected void doBatchWork() throws Exception {
         if ( expressionExperiments.size() > 1 ) {
             throw new IllegalArgumentException( "Can only split one experiment at a time" );
         }
@@ -107,8 +106,8 @@ public class SplitExperimentCli extends ExpressionExperimentManipulatingCLI {
     }
 
     @Override
-    protected void processOptions( CommandLine commandLine ) {
-        super.processOptions( commandLine );
+    protected void processBatchOptions( CommandLine commandLine ) throws ParseException {
+        super.processBatchOptions( commandLine );
         if ( !commandLine.hasOption( FACTOR_OPTION ) ) {
             throw new IllegalArgumentException( "Please specify the factor" );
         }

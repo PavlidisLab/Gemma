@@ -23,7 +23,8 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import ubic.gemma.core.loader.genome.gene.ExternalFileGeneLoaderService;
-import ubic.gemma.core.util.AbstractCLIContextCLI;
+import ubic.gemma.core.util.AbstractCLI;
+import ubic.gemma.core.util.CLI;
 
 import java.io.IOException;
 
@@ -33,7 +34,7 @@ import java.io.IOException;
  *
  * @author ldonnison
  */
-public class ExternalFileGeneLoaderCLI extends AbstractCLIContextCLI {
+public class ExternalFileGeneLoaderCLI extends AbstractCLI {
 
     private String directGeneInputFileName = null;
     private String taxonName;
@@ -118,8 +119,8 @@ public class ExternalFileGeneLoaderCLI extends AbstractCLIContextCLI {
     }
 
     @Override
-    public GemmaCLI.CommandGroup getCommandGroup() {
-        return GemmaCLI.CommandGroup.SYSTEM;
+    public CommandGroup getCommandGroup() {
+        return CLI.CommandGroup.SYSTEM;
     }
 
 }

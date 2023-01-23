@@ -18,9 +18,9 @@
  */
 package ubic.gemma.core.apps;
 
-import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
 import ubic.gemma.core.analysis.preprocess.VectorMergingService;
+import ubic.gemma.core.util.CLI;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
@@ -34,13 +34,13 @@ public class VectorMergingCli extends ExpressionExperimentManipulatingCLI {
     private VectorMergingService mergingService;
 
     @Override
-    public GemmaCLI.CommandGroup getCommandGroup() {
-        return GemmaCLI.CommandGroup.EXPERIMENT;
+    public CommandGroup getCommandGroup() {
+        return CLI.CommandGroup.EXPERIMENT;
     }
 
     @Override
-    protected void buildOptions( Options options ) {
-        super.buildOptions( options );
+    protected void buildBatchOptions( Options options ) {
+        super.buildBatchOptions( options );
         super.addForceOption( options );
     }
 
@@ -50,7 +50,7 @@ public class VectorMergingCli extends ExpressionExperimentManipulatingCLI {
     }
 
     @Override
-    protected void doWork() throws Exception {
+    protected void doBatchWork() throws Exception {
         mergingService = this.getBean( VectorMergingService.class );
 
         for ( BioAssaySet ee : expressionExperiments ) {

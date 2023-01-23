@@ -20,9 +20,9 @@ package ubic.gemma.core.loader.entrez.pubmed;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
-import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
-import ubic.gemma.core.util.AbstractCLIContextCLI;
+import ubic.gemma.core.util.AbstractCLI;
 import ubic.gemma.model.common.description.BibliographicReference;
+import ubic.gemma.persistence.persister.Persister;
 
 import java.util.Collection;
 
@@ -31,7 +31,7 @@ import java.util.Collection;
  *
  * @author pavlidis
  */
-public class PubMedSearcher extends AbstractCLIContextCLI {
+public class PubMedSearcher extends AbstractCLI {
     private static final PubMedSearch pms = new PubMedSearch();
     private Collection<String> args;
     private boolean persist = false;
@@ -70,7 +70,7 @@ public class PubMedSearcher extends AbstractCLIContextCLI {
         System.out.println( refs.size() + " references found" );
 
         if ( this.persist ) {
-            this.getPersisterHelper().persist( refs );
+            getBean( Persister.class ).persist( refs );
         }
     }
 

@@ -21,12 +21,12 @@ package ubic.gemma.core.apps;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
 import ubic.basecode.ontology.providers.ExperimentalFactorOntologyService;
-import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.core.loader.expression.simple.ExperimentalDesignImporter;
 import ubic.gemma.core.ontology.OntologyService;
+import ubic.gemma.core.util.AbstractBatchProcessingCLI;
 import ubic.gemma.core.util.AbstractCLI;
-import ubic.gemma.core.util.AbstractCLIContextCLI;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
@@ -36,7 +36,7 @@ import java.io.*;
  * @author Paul
  * @see ExperimentalDesignImporter
  */
-public class ExperimentalDesignImportCli extends AbstractCLIContextCLI {
+public class ExperimentalDesignImportCli extends AbstractBatchProcessingCLI {
 
     private ExpressionExperiment expressionExperiment;
     private InputStream inputStream;
@@ -53,7 +53,7 @@ public class ExperimentalDesignImportCli extends AbstractCLIContextCLI {
 
     @SuppressWarnings("static-access")
     @Override
-    protected void buildOptions( Options options ) {
+    protected void buildBatchOptions( Options options ) {
 
         Option expOption = Option.builder( "e" ).required().hasArg().argName( "Expression experiment name" )
                 .desc(
@@ -68,7 +68,7 @@ public class ExperimentalDesignImportCli extends AbstractCLIContextCLI {
     }
 
     @Override
-    protected void doWork() throws Exception {
+    protected void doBatchWork() throws Exception {
         ExperimentalFactorOntologyService mos = this.getBean( OntologyService.class )
                 .getExperimentalFactorOntologyService();
         mos.startInitializationThread( true, false ); // note will *not* re-index
@@ -93,7 +93,7 @@ public class ExperimentalDesignImportCli extends AbstractCLIContextCLI {
     }
 
     @Override
-    protected void processOptions( CommandLine commandLine ) {
+    protected void processBatchOptions( CommandLine commandLine ) throws ParseException {
         String shortName = commandLine.getOptionValue( 'e' );
         this.expressionExperiment = this.locateExpressionExperiment( shortName );
         if ( this.expressionExperiment == null ) {

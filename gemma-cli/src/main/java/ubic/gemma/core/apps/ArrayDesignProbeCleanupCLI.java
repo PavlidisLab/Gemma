@@ -21,8 +21,8 @@ package ubic.gemma.core.apps;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
 import org.apache.commons.lang3.StringUtils;
-import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.core.util.AbstractCLI;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
@@ -51,9 +51,8 @@ public class ArrayDesignProbeCleanupCLI extends ArrayDesignSequenceManipulatingC
     }
 
     @Override
-    @SuppressWarnings("static-access")
-    protected void buildOptions( Options options ) {
-        super.buildOptions( options );
+    protected void buildBatchOptions( Options options ) {
+        super.buildBatchOptions( options );
         Option fileOption = Option.builder( "f" ).hasArg().required().argName( "file" )
                 .desc( "File (tabbed) with element ids in the first column" ).longOpt( "file" )
                 .build();
@@ -63,8 +62,8 @@ public class ArrayDesignProbeCleanupCLI extends ArrayDesignSequenceManipulatingC
     }
 
     @Override
-    protected void processOptions( CommandLine commandLine ) {
-        super.processOptions( commandLine );
+    protected void processBatchOptions( CommandLine commandLine ) throws ParseException {
+        super.processBatchOptions( commandLine );
         this.compositeSequenceService = this.getBean( CompositeSequenceService.class );
         this.rawExpressionDataVectorService = this.getBean( RawExpressionDataVectorService.class );
         this.processedExpressionDataVectorService = this.getBean( ProcessedExpressionDataVectorService.class );
@@ -79,7 +78,12 @@ public class ArrayDesignProbeCleanupCLI extends ArrayDesignSequenceManipulatingC
     }
 
     @Override
-    protected void doWork() throws Exception {
+    public String getShortDesc() {
+        return null;
+    }
+
+    @Override
+    protected void doBatchWork() throws Exception {
         File f = new File( file );
         if ( !f.canRead() ) {
             throw new RuntimeException( "Cannot read from " + file );
@@ -92,7 +96,7 @@ public class ArrayDesignProbeCleanupCLI extends ArrayDesignSequenceManipulatingC
 
         ArrayDesign arrayDesign = this.getArrayDesignsToProcess().iterator().next();
         try ( InputStream is = new FileInputStream( f );
-              BufferedReader br = new BufferedReader( new InputStreamReader( is ) ) ) {
+                BufferedReader br = new BufferedReader( new InputStreamReader( is ) ) ) {
 
             String line;
             int count = 0;

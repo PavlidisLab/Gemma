@@ -21,11 +21,10 @@ package ubic.gemma.core.apps;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
 import org.apache.commons.lang3.StringUtils;
-import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.core.util.AbstractCLI;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignProbeRenamingEvent;
-import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 
@@ -55,9 +54,8 @@ public class ArrayDesignProbeRenamerCli extends ArrayDesignSequenceManipulatingC
     }
 
     @Override
-    protected void buildOptions( Options options ) {
-        super.buildOptions( options );
-        //noinspection AccessStaticViaInstance
+    protected void buildBatchOptions( Options options ) {
+        super.buildBatchOptions( options );
         options.addOption( Option.builder( FILE_OPT )
                 .longOpt( "file" )
                 .required()
@@ -67,8 +65,8 @@ public class ArrayDesignProbeRenamerCli extends ArrayDesignSequenceManipulatingC
     }
 
     @Override
-    protected void processOptions( CommandLine commandLine ) {
-        super.processOptions( commandLine );
+    protected void processBatchOptions( CommandLine commandLine ) throws ParseException {
+        super.processBatchOptions( commandLine );
         this.fileName = commandLine.getOptionValue( FILE_OPT );
     }
 
@@ -78,7 +76,12 @@ public class ArrayDesignProbeRenamerCli extends ArrayDesignSequenceManipulatingC
     }
 
     @Override
-    protected void doWork() throws Exception {
+    public String getShortDesc() {
+        return null;
+    }
+
+    @Override
+    protected void doBatchWork() throws Exception {
         if ( fileName == null ) {
             throw new IllegalArgumentException( "filename cannot be null" );
         }

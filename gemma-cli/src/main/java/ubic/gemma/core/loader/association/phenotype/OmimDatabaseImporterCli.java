@@ -19,7 +19,6 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.lang3.StringUtils;
 import ubic.basecode.ontology.ncbo.OmimAnnotatorClient;
 import ubic.basecode.util.FileTools;
-import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.core.util.AbstractCLI;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.persistence.util.EntityUtils;
@@ -69,7 +68,7 @@ public class OmimDatabaseImporterCli extends ExternalDatabaseEvidenceImporterAbs
     }
 
     @Override
-    protected void processOptions( CommandLine commandLine ) throws Exception {
+    protected void processOptions( CommandLine commandLine ) {
 
     }
 

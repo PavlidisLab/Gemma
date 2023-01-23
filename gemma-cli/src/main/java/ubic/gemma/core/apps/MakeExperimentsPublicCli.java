@@ -32,7 +32,7 @@ public class MakeExperimentsPublicCli extends ExpressionExperimentManipulatingCL
     }
 
     @Override
-    protected void doWork() throws Exception {
+    protected void doBatchWork() throws Exception {
         SecurityService securityService = this.getBean( SecurityService.class );
         for ( BioAssaySet ee : this.expressionExperiments ) {
             securityService.makePublic( ee );

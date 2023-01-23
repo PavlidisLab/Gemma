@@ -21,9 +21,11 @@ package ubic.gemma.core.apps;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
 import org.apache.commons.lang3.StringUtils;
 import ubic.basecode.util.FileTools;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
+import ubic.gemma.core.util.CLI;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
@@ -40,21 +42,20 @@ public class ExpressionDataMatrixWriterCLI extends ExpressionExperimentManipulat
     private String outFileName = null;
 
     @Override
-    public GemmaCLI.CommandGroup getCommandGroup() {
-        return GemmaCLI.CommandGroup.EXPERIMENT;
+    public CommandGroup getCommandGroup() {
+        return CLI.CommandGroup.EXPERIMENT;
     }
 
     @Override
-    @SuppressWarnings("static-access")
-    protected void buildOptions( Options options ) {
-        super.buildOptions( options );
+    protected void buildBatchOptions( Options options ) {
+        super.buildBatchOptions( options );
         options.addOption( Option.builder( "o" ).longOpt( "outputFileName" ).desc( "File name. If omitted, the file name will be based on the short name of the experiment." ).argName( "filename" ).hasArg().build() );
         options.addOption( "filter", "Filter expression matrix under default parameters" );
     }
 
     @Override
-    protected void processOptions( CommandLine commandLine ) {
-        super.processOptions( commandLine );
+    protected void processBatchOptions( CommandLine commandLine ) throws ParseException {
+        super.processBatchOptions( commandLine );
         outFileName = commandLine.getOptionValue( 'o' );
         if ( commandLine.hasOption( "filter" ) ) {
             filter = true;
@@ -67,7 +68,7 @@ public class ExpressionDataMatrixWriterCLI extends ExpressionExperimentManipulat
     }
 
     @Override
-    protected void doWork() throws Exception {
+    protected void doBatchWork() throws Exception {
         ExpressionDataFileService fs = this.getBean( ExpressionDataFileService.class );
 
         if ( expressionExperiments.size() > 1 && StringUtils.isNotBlank( outFileName ) ) {

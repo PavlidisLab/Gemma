@@ -17,9 +17,9 @@ package ubic.gemma.core.apps;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.io.reader.DoubleMatrixReader;
-import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.core.loader.expression.DataUpdater;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -48,16 +48,15 @@ public class ReplaceDataCli extends ExpressionExperimentManipulatingCLI {
     }
 
     @Override
-    protected void buildOptions( Options options ) {
-        super.buildOptions( options );
+    protected void buildBatchOptions( Options options ) {
+        super.buildBatchOptions( options );
         options.addOption( Option.builder( "file" ).longOpt( null ).desc( "Path to file with tab-delimited data, first column = probe ids, first row = sample IDs (e.g. GEO GSM#)" ).argName( "file path" ).hasArg().build() );
         super.addForceOption( options );
     }
 
     @Override
-    protected void processOptions( CommandLine commandLine ) {
-        super.processOptions( commandLine );
-
+    protected void processBatchOptions( CommandLine commandLine ) throws ParseException {
+        super.processBatchOptions( commandLine );
         this.file = commandLine.getOptionValue( "file" );
         if ( file == null )
             throw new IllegalArgumentException( "File is required" );
@@ -69,7 +68,7 @@ public class ReplaceDataCli extends ExpressionExperimentManipulatingCLI {
     }
 
     @Override
-    protected void doWork() throws Exception {
+    protected void doBatchWork() throws Exception {
         DataUpdater dataUpdater = this.getBean( DataUpdater.class );
 
         if ( this.expressionExperiments.size() > 1 ) {

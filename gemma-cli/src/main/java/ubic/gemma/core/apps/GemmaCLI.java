@@ -24,7 +24,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.springframework.context.ApplicationContext;
 import org.springframework.security.core.context.SecurityContextHolder;
-import ubic.gemma.core.util.AbstractCLI;
 import ubic.gemma.core.util.CLI;
 import ubic.gemma.core.logging.log4j.Log4jConfigurer;
 import ubic.gemma.core.logging.LoggingConfigurer;
@@ -66,21 +65,16 @@ public class GemmaCLI {
     private static final LoggingConfigurer loggingConfigurer = new Log4jConfigurer();
 
     public static void main( String[] args ) {
-        Option logOpt = Option.builder( VERBOSITY_OPTION )
-                .longOpt( "verbosity" ).hasArg()
-                .desc( "Set verbosity level for all loggers (0=silent, 5=very verbose; default is custom, see log4j.properties)" )
-                .type( Number.class )
-                .build();
-        Option otherLogOpt = Option.builder( LOGGER_OPTION )
-                .longOpt( "logger" ).hasArg()
-                .desc( "Configure a specific logger verbosity. For example, '--logger ubic.gemma=5' or --logger log4j.logger.org.hibernate.SQL=5" )
-                .build();
         Options options = new Options()
                 .addOption( HELP_OPTION, "help", false, "Show help" )
                 .addOption( HELP_ALL_OPTION, "help-all", false, "Show complete help with all available CLI commands" )
                 .addOption( VERSION_OPTION, "version", false, "Show Gemma version" )
-                .addOption( otherLogOpt )
-                .addOption( logOpt )
+                .addOption( LOGGER_OPTION, "logger", true, "Configure a specific logger verbosity. For example, '--logger ubic.gemma=5' or --logger log4j.logger.org.hibernate.SQL=5" )
+                .addOption( Option.builder( VERBOSITY_OPTION )
+                        .longOpt( "verbosity" ).hasArg()
+                        .desc( "Set verbosity level for all loggers (0=silent, 5=very verbose; default is custom, see log4j.properties)" )
+                        .type( Number.class )
+                        .build() )
                 .addOption( TESTING_OPTION, "testing", false, "Use the test environment" );
         CommandLine commandLine;
         try {
@@ -143,12 +137,11 @@ public class GemmaCLI {
 
         List<String> profiles = new ArrayList<>();
         profiles.add( "cli" );
+        // check for the -testing flag to load the appropriate application context
         if ( commandLine.hasOption( TESTING_OPTION ) ) {
             profiles.add( SpringProfiles.TEST );
         }
 
-        // check for the -testing flag to load the appropriate application context
-        /* webapp */
         ApplicationContext ctx = SpringContextUtil.getApplicationContext( profiles.toArray( new String[0] ) );
 
         /*
@@ -156,15 +149,18 @@ public class GemmaCLI {
          */
         Map<String, CLI> commandBeans = ctx.getBeansOfType( CLI.class );
         Map<String, CLI> commandsByName = new HashMap<>();
-        SortedMap<CommandGroup, SortedMap<String, CLI>> commandGroups = new TreeMap<>( Comparator.comparingInt( CommandGroup::ordinal ) );
+        SortedMap<CLI.CommandGroup, SortedMap<String, CLI>> commandGroups = new TreeMap<>( Comparator.comparingInt( CLI.CommandGroup::ordinal ) );
         for ( CLI cliInstance : commandBeans.values() ) {
-            String commandName = cliInstance.getCommandName();
-            if ( commandName == null || StringUtils.isBlank( commandName ) ) {
-                // keep null to avoid printing some commands...
-                continue;
+            try {
+                validateCli( cliInstance, commandsByName );
+            } catch ( IllegalArgumentException e ) {
+                System.err.printf( "The command %s is invalid: %s%n", cliInstance.getClass().getName(),
+                        ExceptionUtils.getMessage( e ) );
+                System.exit( 1 );
             }
+            String commandName = cliInstance.getCommandName();
             commandsByName.put( commandName, cliInstance );
-            CommandGroup g = cliInstance.getCommandGroup();
+            CLI.CommandGroup g = cliInstance.getCommandGroup();
             if ( !commandGroups.containsKey( g ) ) {
                 commandGroups.put( g, new TreeMap<>() );
             }
@@ -196,10 +192,27 @@ public class GemmaCLI {
             } catch ( Exception e ) {
                 System.err.println( "Gemma CLI error: " + e.getClass().getName() + " - " + e.getMessage() );
                 System.err.println( ExceptionUtils.getStackTrace( e ) );
-                throw new RuntimeException( e );
+                System.exit( 1 );
             } finally {
                 System.err.println( "========= Gemma CLI run of " + commandRequested + " complete ============" );
             }
+        }
+    }
+
+    private static void validateCli( CLI cliInstance, Map<String, CLI> commandsByName ) throws IllegalArgumentException {
+        String commandName = cliInstance.getCommandName();
+        if ( StringUtils.isBlank( cliInstance.getCommandName() ) ) {
+            throw new IllegalArgumentException( "the command name cannot be null or empty" );
+        }
+        if ( StringUtils.containsWhitespace( cliInstance.getCommandName() ) ) {
+            throw new IllegalArgumentException( "the command name cannot contain whitespaces" );
+        }
+        if ( commandsByName.containsKey( commandName ) ) {
+            throw new IllegalArgumentException( String.format( "the command name %s is already used by %s",
+                    commandName, commandsByName.get( commandName ).getClass().getName() ) );
+        }
+        if ( cliInstance.getCommandGroup() == null ) {
+            throw new IllegalArgumentException( "the command group cannot be null" );
         }
     }
 
@@ -219,20 +232,24 @@ public class GemmaCLI {
         return matcher.replaceAll( "$1 XXXXXX" );
     }
 
-    private static void printHelp( Options options, @Nullable SortedMap<CommandGroup, SortedMap<String, CLI>> commands ) {
+    private static void printHelp( Options options, @Nullable SortedMap<CLI.CommandGroup, SortedMap<String, CLI>> commands ) {
         System.err.println( "============ Gemma CLI tools ============" );
 
         StringBuilder footer = new StringBuilder();
         if ( commands != null ) {
             footer.append( "Here is a list of available commands, grouped by category:" ).append( '\n' );
             footer.append( '\n' );
-            for ( Map.Entry<CommandGroup, SortedMap<String, CLI>> entry : commands.entrySet() ) {
-                if ( entry.getKey().equals( CommandGroup.DEPRECATED ) )
+            for ( Map.Entry<CLI.CommandGroup, SortedMap<String, CLI>> entry : commands.entrySet() ) {
+                if ( entry.getKey().equals( CLI.CommandGroup.DEPRECATED ) )
                     continue;
                 Map<String, CLI> commandsInGroup = entry.getValue();
                 footer.append( "---- " ).append( entry.getKey() ).append( " ----" ).append( '\n' );
                 for ( Map.Entry<String, CLI> e : commandsInGroup.entrySet() ) {
-                    footer.append( e.getKey() ).append( " - " ).append( e.getValue().getShortDesc() ).append( '\n' );
+                    footer.append( e.getKey() );
+                    if ( StringUtils.isNotBlank( e.getValue().getShortDesc() ) ) {
+                        footer.append( " - " ).append( e.getValue().getShortDesc() );
+                    }
+                    footer.append( '\n' );
                 }
                 footer.append( '\n' );
             }
@@ -240,14 +257,9 @@ public class GemmaCLI {
 
         footer.append( "To get help for a specific tool, use: gemma-cli <commandName> --help\n" );
         footer.append( '\n' );
-        footer.append( AbstractCLI.FOOTER );
+        footer.append( CLI.COPYRIGHT_NOTICE );
 
         new HelpFormatter().printHelp( new PrintWriter( System.err, true ), 150, "gemma-cli <commandName> [options]",
-                AbstractCLI.HEADER, options, HelpFormatter.DEFAULT_LEFT_PAD, HelpFormatter.DEFAULT_DESC_PAD, footer.toString() );
-    }
-
-    // order here is significant.
-    public enum CommandGroup {
-        EXPERIMENT, PLATFORM, ANALYSIS, METADATA, PHENOTYPES, SYSTEM, MISC, DEPRECATED
+                "Options:", options, HelpFormatter.DEFAULT_LEFT_PAD, HelpFormatter.DEFAULT_DESC_PAD, footer.toString() );
     }
 }

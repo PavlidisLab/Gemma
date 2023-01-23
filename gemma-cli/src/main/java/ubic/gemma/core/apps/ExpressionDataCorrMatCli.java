@@ -39,7 +39,7 @@ public class ExpressionDataCorrMatCli extends ExpressionExperimentManipulatingCL
     }
 
     @Override
-    protected void doWork() throws Exception {
+    protected void doBatchWork() throws Exception {
         for ( BioAssaySet ee : expressionExperiments ) {
             try {
                 if ( !( ee instanceof ExpressionExperiment ) ) {
@@ -61,8 +61,8 @@ public class ExpressionDataCorrMatCli extends ExpressionExperimentManipulatingCL
     }
 
     @Override
-    protected void buildOptions( Options options ) {
-        super.buildOptions( options );
+    protected void buildBatchOptions( Options options ) {
+        super.buildBatchOptions( options );
         super.addForceOption( options );
     }
 

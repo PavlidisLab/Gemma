@@ -21,12 +21,12 @@ package ubic.gemma.core.apps;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
 import org.apache.commons.lang3.StringUtils;
 import ubic.basecode.util.FileTools;
 import ubic.gemma.core.loader.expression.arrayDesign.ArrayDesignSequenceProcessingService;
 import ubic.gemma.core.util.AbstractCLI;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignSequenceUpdateEvent;
-import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
@@ -57,7 +57,7 @@ public class ArrayDesignSequenceAssociationCli extends ArrayDesignSequenceManipu
     }
 
     @Override
-    protected void doWork() throws Exception {
+    protected void doBatchWork() throws Exception {
         // this is kind of an oddball function of this tool.
         if ( this.sequenceId != null ) {
             BioSequence updated = arrayDesignSequenceProcessingService.processSingleAccession( this.sequenceId,
@@ -166,9 +166,8 @@ public class ArrayDesignSequenceAssociationCli extends ArrayDesignSequenceManipu
 
     @SuppressWarnings("static-access")
     @Override
-    protected void buildOptions( Options options ) {
-        super.buildOptions( options );
-
+    protected void buildBatchOptions( Options options ) {
+        super.buildBatchOptions( options );
         Option fileOption = Option.builder( "f" ).argName( "Input sequence file" ).hasArg()
                 .desc( "Path to file (FASTA). If the FASTA file doesn't have " +
                         "probe identifiers included, provide identifiers via the -i option." ).longOpt( "file" ).build();
@@ -215,8 +214,8 @@ public class ArrayDesignSequenceAssociationCli extends ArrayDesignSequenceManipu
     }
 
     @Override
-    protected void processOptions( CommandLine commandLine ) {
-        super.processOptions( commandLine );
+    protected void processBatchOptions( CommandLine commandLine ) throws ParseException {
+        super.processBatchOptions( commandLine );
         arrayDesignSequenceProcessingService = this.getBean( ArrayDesignSequenceProcessingService.class );
         this.taxonService = this.getBean( TaxonService.class );
 
