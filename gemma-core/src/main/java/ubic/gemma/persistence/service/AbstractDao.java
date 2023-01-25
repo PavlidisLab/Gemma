@@ -21,9 +21,7 @@ package ubic.gemma.persistence.service;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.hibernate.FlushMode;
-import org.hibernate.LockOptions;
-import org.hibernate.SessionFactory;
+import org.hibernate.*;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.metadata.ClassMetadata;
@@ -222,7 +220,16 @@ public abstract class AbstractDao<T extends Identifiable> implements BaseDao<T> 
     @Override
     public void removeAll() {
         StopWatch timer = StopWatch.createStarted();
-        this.remove( this.loadAll() );
+        while ( true ) {
+            //noinspection unchecked
+            List<T> results = sessionFactory.getCurrentSession().createCriteria( elementClass )
+                    .setMaxResults( batchSize )
+                    .list();
+            if ( results.isEmpty() ) {
+                break;
+            }
+            this.remove( results );
+        }
         AbstractDao.log.debug( String.format( "Removed all %s entities in %d ms.", elementClass.getSimpleName(), timer.getTime( TimeUnit.MILLISECONDS ) ) );
     }
 

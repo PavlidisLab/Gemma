@@ -79,14 +79,7 @@ public class GeneSetServiceTest extends BaseSpringContextTest {
 
     @After
     public void tearDown() {
-        Collection<GeneSet> ags = geneSetService.loadAll();
-        for ( GeneSet gs : ags ) {
-            try {
-                geneSetService.remove( gs );
-            } catch ( Exception e ) {
-                // ignore
-            }
-        }
+        geneSetService.removeAll();
         gene2GoService.removeAll();
     }
 
