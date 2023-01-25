@@ -6,7 +6,7 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import ubic.gemma.core.util.AbstractCLI;
+import ubic.gemma.core.util.AbstractTransactionalCLI;
 import ubic.gemma.core.util.CLI;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.persistence.service.common.description.ExternalDatabaseService;
@@ -17,7 +17,7 @@ import java.util.Date;
 import static java.util.Objects.requireNonNull;
 
 @Component
-public class ExternalDatabaseUpdaterCli extends AbstractCLI {
+public class ExternalDatabaseUpdaterCli extends AbstractTransactionalCLI {
 
     private static final String NAME_OPTION = "n",
             DESCRIPTION_OPTION = "d",
@@ -125,18 +125,18 @@ public class ExternalDatabaseUpdaterCli extends AbstractCLI {
         }
         if ( release || releaseVersion != null ) {
             if ( releaseVersion != null ) {
-                AbstractCLI.log.info( String.format( "Updating %s release version to %s.", name, releaseVersion ) );
+                log.info( String.format( "Updating %s release version to %s.", name, releaseVersion ) );
                 externalDatabaseService.updateReleaseDetails( ed, releaseVersion, releaseUrl, releaseNote, lastUpdated );
             } else {
-                AbstractCLI.log.info( String.format( "Updating %s last updated moment to %s.", name, lastUpdated ) );
+                log.info( String.format( "Updating %s last updated moment to %s.", name, lastUpdated ) );
                 externalDatabaseService.updateReleaseLastUpdated( ed, releaseNote, lastUpdated );
             }
         } else {
-            AbstractCLI.log.info( String.format( "Updating %s. Use the --release/--release-version flags to update last updated or release infos.", name ) );
+            log.info( String.format( "Updating %s. Use the --release/--release-version flags to update last updated or release infos.", name ) );
             externalDatabaseService.update( ed ); /* only update description, etc. */
         }
         if ( parentDatabase != null ) {
-            AbstractCLI.log.info( String.format( "Updating the parent database of %s to %s.", name, parentDatabase ) );
+            log.info( String.format( "Updating the parent database of %s to %s.", name, parentDatabase ) );
             parentDatabase.getExternalDatabases().add( ed );
             externalDatabaseService.update( parentDatabase );
         }
