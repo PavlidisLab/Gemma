@@ -64,7 +64,6 @@ public abstract class AbstractCLI implements CLI {
      */
     private static final String PASSWORD_CMD_ENV = "GEMMA_PASSWORD_CMD";
     private static final String HELP_OPTION = "h";
-    private static final String TESTING_OPTION = "testing";
 
     @Autowired
     private BeanFactory ctx;
@@ -189,17 +188,12 @@ public abstract class AbstractCLI implements CLI {
             Options options = new Options();
             AbstractCLI.log.debug( "Creating standard options" );
             options.addOption( new Option( HELP_OPTION, "help", false, "Print this message" ) );
-            options.addOption( new Option( TESTING_OPTION, "testing", false, "Use the test environment. This option must be passed before the command." ) );
             buildOptions( options );
             CommandLine commandLine = processCommandLine( options, args );
             // check if -h/--help is provided before pursuing option processing
             if ( commandLine.hasOption( 'h' ) ) {
                 printHelp( options );
                 return CLI.SUCCESS;
-            }
-            if ( commandLine.hasOption( TESTING_OPTION ) ) {
-                System.err.printf( "The -testing/--testing option must be passed before the %s command.%n", getCommandName() );
-                return CLI.FAILURE;
             }
             this.authenticate();
             processOptions( commandLine );
