@@ -18,6 +18,8 @@
  */
 package ubic.gemma.persistence.util;
 
+import org.assertj.core.api.CollectionAssert;
+import org.assertj.core.api.InstanceOfAssertFactories;
 import org.junit.Test;
 import org.springframework.core.convert.ConversionFailedException;
 
@@ -26,6 +28,7 @@ import java.util.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.InstanceOfAssertFactories.collection;
 
 public class FilterTest {
 
@@ -121,6 +124,21 @@ public class FilterTest {
                 .isInstanceOf( IllegalArgumentException.class )
                 .hasCauseInstanceOf( ConversionFailedException.class );
     }
+
+    @Test
+    public void testParseEmptyCollection() {
+        Filter f;
+        f = Filter.parse( "ee", "id", Integer.class, Filter.Operator.in, "()" );
+        assertThat( f.getRequiredValue() ).isInstanceOf( Collection.class )
+                .asInstanceOf( collection( Integer.class ) )
+                .hasSize( 0 );
+        f = Filter.parse( "ee", "id", Integer.class, Filter.Operator.in, "( )" );
+        assertThat( f.getRequiredValue() )
+                .isInstanceOf( Collection.class )
+                .asInstanceOf( collection( Integer.class ) )
+                .hasSize( 0 );
+    }
+
 
     @Test
     public void testParseUnsupportedType() {

@@ -289,7 +289,7 @@ public class Filter {
     }
 
     private static final Pattern
-            COLLECTION_PATTERN = Pattern.compile( "^\\((.+,)*.+\\)$" ),
+            COLLECTION_PATTERN = Pattern.compile( "^\\(.*\\)$" ),
             COLLECTION_DELIMITER_PATTERN = Pattern.compile( "\\s*,\\s*" );
 
     private static boolean isCollection( String value ) {
@@ -304,7 +304,7 @@ public class Filter {
      */
     private static Stream<String> parseCollection( String value ) {
         // these are the parenthesis, thus we skip the first and last non-blank character
-        return COLLECTION_DELIMITER_PATTERN.splitAsStream( value.trim().substring( 1, value.length() - 1 ) );
+        return COLLECTION_DELIMITER_PATTERN.splitAsStream( value.substring( 1, value.length() - 1 ).trim() );
     }
 
     private static Object parseItem( String rv, Class<?> pt ) throws IllegalArgumentException {
