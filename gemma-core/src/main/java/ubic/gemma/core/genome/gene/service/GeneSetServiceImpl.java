@@ -583,4 +583,10 @@ public class GeneSetServiceImpl implements GeneSetService {
         this.geneSetDao.thaw( geneSet );
     }
 
+    @Override
+    @Transactional
+    public void removeAll() {
+        this.geneSetDao.removeAll();
+    }
+
 }
