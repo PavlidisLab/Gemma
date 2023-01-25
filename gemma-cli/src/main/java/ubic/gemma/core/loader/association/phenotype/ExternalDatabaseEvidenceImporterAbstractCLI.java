@@ -14,16 +14,15 @@
  */
 package ubic.gemma.core.loader.association.phenotype;
 
-import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.core.ontology.OntologyService;
-import ubic.gemma.core.util.AbstractCLIContextCLI;
+import ubic.gemma.core.util.AbstractCLI;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 
 /**
  * @author nicolas
  */
-public abstract class ExternalDatabaseEvidenceImporterAbstractCLI extends AbstractCLIContextCLI {
+public abstract class ExternalDatabaseEvidenceImporterAbstractCLI extends AbstractCLI {
 
     protected String writeFolder = null;
 

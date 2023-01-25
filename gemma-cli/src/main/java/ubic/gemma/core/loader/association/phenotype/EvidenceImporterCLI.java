@@ -14,12 +14,10 @@
  */
 package ubic.gemma.core.loader.association.phenotype;
 
-import org.apache.commons.cli.CommandLine;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.basecode.ontology.providers.AbstractOntologyService;
 import ubic.basecode.ontology.search.OntologySearchException;
 import ubic.basecode.util.StringUtil;
-import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.core.association.phenotype.EntityNotFoundException;
 import ubic.gemma.core.util.AbstractCLI;
 import ubic.gemma.model.common.description.CitationValueObject;

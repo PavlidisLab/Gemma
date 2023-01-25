@@ -3,7 +3,6 @@ package ubic.gemma.core.loader.association.phenotype;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
 import ubic.basecode.ontology.model.OntologyTerm;
-import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.core.util.AbstractCLI;
 
 import java.io.BufferedReader;

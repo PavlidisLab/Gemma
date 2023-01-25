@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2007 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -23,6 +23,7 @@ import cern.colt.Arrays;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
 import ubic.gemma.core.loader.entrez.pubmed.ExpressionExperimentBibRefFinder;
 import ubic.gemma.core.loader.entrez.pubmed.PubMedXMLFetcher;
 import ubic.gemma.model.common.description.BibliographicReference;
@@ -60,14 +61,13 @@ public class ExpressionExperimentPrimaryPubCli extends ExpressionExperimentManip
     }
 
     @Override
-    @SuppressWarnings("static-access")
-    protected void buildOptions( Options options ) {
-        super.buildOptions( options );
+    protected void buildBatchOptions( Options options ) {
+        super.buildBatchOptions( options );
         Option pubmedOption = Option.builder( "pubmedIDFile" ).hasArg().argName( "pubmedIDFile" ).desc(
-                "A text file which contains the list of pubmed IDs associated with each experiment ID. "
-                        + "If the pubmed ID is not found, it will try to use the existing pubmed ID associated "
-                        + "with the experiment. Each row has two columns: pubmedId and experiment shortName, "
-                        + "e.g. 22438826<TAB>GSE27715" )
+                        "A text file which contains the list of pubmed IDs associated with each experiment ID. "
+                                + "If the pubmed ID is not found, it will try to use the existing pubmed ID associated "
+                                + "with the experiment. Each row has two columns: pubmedId and experiment shortName, "
+                                + "e.g. 22438826<TAB>GSE27715" )
                 .build();
 
         options.addOption( pubmedOption );
@@ -75,10 +75,10 @@ public class ExpressionExperimentPrimaryPubCli extends ExpressionExperimentManip
     }
 
     @Override
-    protected void doWork() throws Exception {
+    protected void doBatchWork() throws Exception {
         ExpressionExperimentService ees = this.getBean( ExpressionExperimentService.class );
 
-        Persister ph = this.getPersisterHelper();
+        Persister ph = getBean( Persister.class );
         PubMedXMLFetcher fetcher = new PubMedXMLFetcher();
 
         // collect some statistics
@@ -155,8 +155,8 @@ public class ExpressionExperimentPrimaryPubCli extends ExpressionExperimentManip
     }
 
     @Override
-    protected void processOptions( CommandLine commandLine ) {
-        super.processOptions( commandLine );
+    protected void processBatchOptions( CommandLine commandLine ) throws ParseException {
+        super.processBatchOptions( commandLine );
         if ( commandLine.hasOption( "pmidFile" ) ) {
             this.pubmedIdFilename = commandLine.getOptionValue( "pmidFile" );
             try {
@@ -175,7 +175,7 @@ public class ExpressionExperimentPrimaryPubCli extends ExpressionExperimentManip
     private Map<String, Integer> parsePubmedIdFile( String filename ) throws IOException {
         Map<String, Integer> ids = new HashMap<>();
         final int COL_COUNT = 2;
-        try (BufferedReader br = new BufferedReader( new FileReader( filename ) )) {
+        try ( BufferedReader br = new BufferedReader( new FileReader( filename ) ) ) {
             String row;
             while ( ( row = br.readLine() ) != null ) {
                 String[] col = row.split( "\t" );

@@ -19,10 +19,8 @@
 
 package ubic.gemma.core.apps;
 
-import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
 import ubic.gemma.core.analysis.preprocess.svd.SVDService;
-import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.core.util.AbstractCLI;
 import ubic.gemma.model.common.auditAndSecurity.eventType.PCAAnalysisEvent;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
@@ -44,8 +42,9 @@ public class SVDCli extends ExpressionExperimentManipulatingCLI {
     }
 
     @Override
-    protected void buildOptions( Options options ) {
-        super.buildOptions( options );
+    protected void buildBatchOptions( Options options ) {
+        super.buildBatchOptions( options );
+        super.buildBatchOptions( options );
         super.addForceOption( options );
     }
 
@@ -55,7 +54,7 @@ public class SVDCli extends ExpressionExperimentManipulatingCLI {
     }
 
     @Override
-    protected void doWork() throws Exception {
+    protected void doBatchWork() throws Exception {
         SVDService svdService = this.getBean( SVDService.class );
 
         for ( BioAssaySet bas : this.expressionExperiments ) {

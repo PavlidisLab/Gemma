@@ -21,6 +21,7 @@ package ubic.gemma.core.apps;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
 import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
@@ -69,9 +70,8 @@ public class BioSequenceCleanupCli extends ArrayDesignSequenceManipulatingCli {
 
     @SuppressWarnings("static-access")
     @Override
-    protected void buildOptions( Options options ) {
-        super.buildOptions( options );
-
+    protected void buildBatchOptions( Options options ) {
+        super.buildBatchOptions( options );
         Option justTestingOption = Option.builder( "dryrun" )
                 .desc( "Set to run without any database modifications" )
                 .build();
@@ -85,7 +85,7 @@ public class BioSequenceCleanupCli extends ArrayDesignSequenceManipulatingCli {
     }
 
     @Override
-    protected void doWork() {
+    protected void doBatchWork() {
 
         Collection<ArrayDesign> ads = new HashSet<>();
         if ( !this.getArrayDesignsToProcess().isEmpty() ) {
@@ -189,8 +189,8 @@ public class BioSequenceCleanupCli extends ArrayDesignSequenceManipulatingCli {
     }
 
     @Override
-    protected void processOptions( CommandLine commandLine ) {
-        super.processOptions( commandLine );
+    protected void processBatchOptions( CommandLine commandLine ) throws ParseException {
+        super.processBatchOptions( commandLine );
         if ( commandLine.hasOption( "dryrun" ) ) {
             this.justTesting = true;
             log.info( "TEST MODE: NO DATABASE UPDATES WILL BE PERFORMED" );

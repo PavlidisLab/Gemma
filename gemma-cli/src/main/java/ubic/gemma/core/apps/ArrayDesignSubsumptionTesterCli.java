@@ -21,14 +21,14 @@ package ubic.gemma.core.apps;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
 import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignSubsumeCheckEvent;
-import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
+import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 
 import java.util.*;
-import java.util.concurrent.ArrayBlockingQueue;
 
 /**
  * Test two array designs to see if one subsumes the other, and if so update their information.
@@ -46,7 +46,7 @@ public class ArrayDesignSubsumptionTesterCli extends ArrayDesignSequenceManipula
     }
 
     @Override
-    protected void doWork() throws Exception {
+    protected void doBatchWork() throws Exception {
         if ( this.getArrayDesignsToProcess().size() > 1 ) {
             throw new IllegalArgumentException(
                     "Cannot be applied to more than one array design given to the '-a' option" );
@@ -63,7 +63,8 @@ public class ArrayDesignSubsumptionTesterCli extends ArrayDesignSequenceManipula
         allToCompare.add( arrayDesign );
 
         for ( String otherArrayDesignName : otherArrayDesignNames ) {
-            ArrayDesign otherArrayDesign = this.locateArrayDesign( otherArrayDesignName, getArrayDesignService() );
+            ArrayDesignService arrayDesignService = getArrayDesignService();
+            ArrayDesign otherArrayDesign = arrayDesignService.findByNameOrByShortName( otherArrayDesignName );
 
             if ( otherArrayDesign == null ) {
                 throw new Exception( "No arrayDesign " + otherArrayDesignName + " found" );
@@ -128,8 +129,8 @@ public class ArrayDesignSubsumptionTesterCli extends ArrayDesignSequenceManipula
 
     @SuppressWarnings("static-access")
     @Override
-    protected void buildOptions( Options options ) {
-        super.buildOptions( options );
+    protected void buildBatchOptions( Options options ) {
+        super.buildBatchOptions( options );
         Option otherArrayDesignOption = Option.builder( "o" ).required().hasArg().argName( "Other platform" )
                 .desc( "Short name(s) of platforms to compare to the first one, comma-delimited" )
                 .longOpt( "other" ).build();
@@ -140,7 +141,8 @@ public class ArrayDesignSubsumptionTesterCli extends ArrayDesignSequenceManipula
     }
 
     @Override
-    protected void processOptions( CommandLine commandLine ) {
+    protected void processBatchOptions( CommandLine commandLine ) throws ParseException {
+        super.processBatchOptions( commandLine );
         super.processOptions( commandLine );
         if ( commandLine.hasOption( 'o' ) ) {
             String otherArrayDesignName = commandLine.getOptionValue( 'o' );

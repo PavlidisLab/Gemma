@@ -3,12 +3,14 @@ package ubic.gemma.core.apps;
 import org.junit.After;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Scope;
 import org.springframework.test.context.ContextConfiguration;
 import ubic.gemma.core.analysis.report.ArrayDesignReportService;
 import ubic.gemma.core.loader.expression.arrayDesign.ArrayDesignMergeService;
-import ubic.gemma.core.util.AbstractCLI;
+import ubic.gemma.core.util.CLI;
 import ubic.gemma.core.util.test.BaseCliTest;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
@@ -29,6 +31,7 @@ public class ArrayDesignMergeCliTest extends BaseCliTest {
     public static class ArrayDesignMergeCliTestContextConfiguration extends BaseCliTestContextConfiguration {
 
         @Bean
+        @Scope(BeanDefinition.SCOPE_PROTOTYPE)
         public ArrayDesignMergeCli arrayDesignMergeCli() {
             return new ArrayDesignMergeCli();
         }
@@ -74,7 +77,7 @@ public class ArrayDesignMergeCliTest extends BaseCliTest {
         when( arrayDesignService.thaw( any() ) ).thenAnswer( args -> args.getArgument( 0 ) );
         Collection<ArrayDesign> otherPlatforms = new HashSet<>( Arrays.asList( b, c ) );
         assertThat( arrayDesignMergeCli.executeCommand( new String[] { "-a", "1", "-o", "2,3", "-s", "4", "-n", "four is better than one" } ) )
-                .isEqualTo( AbstractCLI.SUCCESS );
+                .isEqualTo( CLI.SUCCESS );
         verify( arrayDesignMergeService ).merge( a, otherPlatforms, "four is better than one", "4", false );
     }
 }

@@ -22,11 +22,11 @@ package ubic.gemma.core.apps;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
 import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.core.analysis.preprocess.PreprocessingException;
 import ubic.gemma.core.analysis.preprocess.PreprocessorService;
 import ubic.gemma.core.analysis.preprocess.TwoChannelMissingValues;
-import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.core.util.AbstractCLI;
 import ubic.gemma.model.common.auditAndSecurity.eventType.MissingValueAnalysisEvent;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
@@ -66,15 +66,14 @@ public class TwoChannelMissingValueCLI extends ExpressionExperimentManipulatingC
         return CommandGroup.EXPERIMENT;
     }
 
-    @SuppressWarnings("static-access")
     @Override
-    protected void buildOptions( Options options ) {
-        super.buildOptions( options );
-
+    protected void buildBatchOptions( Options options ) {
+        super.buildBatchOptions( options );
         Option signal2noiseOption = Option.builder( "s" ).hasArg().argName( "Signal-to-noise" ).desc(
-                "Signal to noise ratio, below which values are considered missing; default="
-                        + TwoChannelMissingValues.DEFAULT_SIGNAL_TO_NOISE_THRESHOLD )
+                        "Signal to noise ratio, below which values are considered missing; default="
+                                + TwoChannelMissingValues.DEFAULT_SIGNAL_TO_NOISE_THRESHOLD )
                 .longOpt( "signal2noise" )
+                .type( Number.class )
                 .build();
 
         options.addOption( signal2noiseOption );
@@ -90,10 +89,10 @@ public class TwoChannelMissingValueCLI extends ExpressionExperimentManipulatingC
     }
 
     @Override
-    protected void processOptions( CommandLine commandLine ) {
-        super.processOptions( commandLine );
+    protected void processBatchOptions( CommandLine commandLine ) throws ParseException {
+        super.processBatchOptions( commandLine );
         if ( commandLine.hasOption( 's' ) ) {
-            this.s2n = this.getDoubleOptionValue( commandLine, 's' );
+            this.s2n = ( ( Number ) commandLine.getParsedOptionValue( 's' ) ).doubleValue();
         }
 
         if ( commandLine.hasOption( "force" ) ) {
@@ -124,7 +123,7 @@ public class TwoChannelMissingValueCLI extends ExpressionExperimentManipulatingC
     }
 
     @Override
-    protected void doWork() throws Exception {
+    protected void doBatchWork() throws Exception {
         for ( BioAssaySet ee : expressionExperiments ) {
             if ( ee instanceof ExpressionExperiment ) {
                 this.processForMissingValues( ( ExpressionExperiment ) ee );

@@ -17,10 +17,8 @@ package ubic.gemma.core.loader.association.phenotype;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
-import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.core.association.phenotype.PhenotypeAssociationManagerService;
 import ubic.gemma.core.util.AbstractCLI;
-import ubic.gemma.core.util.AbstractCLIContextCLI;
 import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.EvidenceValueObject;
 
@@ -31,7 +29,7 @@ import java.util.Collection;
  *
  * @author nicolas
  */
-public class DeleteEvidenceCLI extends AbstractCLIContextCLI {
+public class DeleteEvidenceCLI extends AbstractCLI {
 
     private String externalDatabaseName = "";
     private PhenotypeAssociationManagerService phenotypeAssociationService = null;

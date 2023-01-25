@@ -19,12 +19,12 @@
 package ubic.gemma.core.apps;
 
 import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
-import ubic.gemma.core.analysis.preprocess.PreprocessingException;
+import org.apache.commons.cli.ParseException;
 import ubic.gemma.core.analysis.preprocess.PreprocessorService;
 import ubic.gemma.core.analysis.preprocess.ProcessedExpressionDataVectorCreateHelperService;
 import ubic.gemma.core.util.AbstractCLI;
+import ubic.gemma.core.util.CLI;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
@@ -47,15 +47,14 @@ public class ProcessedDataComputeCLI extends ExpressionExperimentManipulatingCLI
     private boolean updateDiagnostics = false;
 
     @Override
-    public GemmaCLI.CommandGroup getCommandGroup() {
-        return GemmaCLI.CommandGroup.EXPERIMENT;
+    public CommandGroup getCommandGroup() {
+        return CLI.CommandGroup.EXPERIMENT;
     }
 
     @SuppressWarnings("static-access")
     @Override
-    protected void buildOptions( Options options ) {
-
-        super.buildOptions( options );
+    protected void buildBatchOptions( Options options ) {
+        super.buildBatchOptions( options );
 
         super.addForceOption( options );
         this.addDateOption( options );
@@ -68,8 +67,8 @@ public class ProcessedDataComputeCLI extends ExpressionExperimentManipulatingCLI
     }
 
     @Override
-    protected void processOptions( CommandLine commandLine ) {
-        super.processOptions( commandLine );
+    protected void processBatchOptions( CommandLine commandLine ) throws ParseException {
+        super.processBatchOptions( commandLine );
         preprocessorService = this.getBean( PreprocessorService.class );
         expressionExperimentService = this.getBean( ExpressionExperimentService.class );
         proccessedVectorService = this.getBean( ProcessedExpressionDataVectorCreateHelperService.class );
@@ -92,7 +91,7 @@ public class ProcessedDataComputeCLI extends ExpressionExperimentManipulatingCLI
     }
 
     @Override
-    protected void doWork() throws Exception {
+    protected void doBatchWork() throws Exception {
         if ( expressionExperiments.size() == 0 ) {
             AbstractCLI.log.error( "You did not select any usable expression experiments" );
             return;

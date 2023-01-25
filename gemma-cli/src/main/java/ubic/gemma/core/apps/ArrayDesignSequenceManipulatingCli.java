@@ -21,18 +21,23 @@ package ubic.gemma.core.apps;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 import ubic.gemma.core.analysis.report.ArrayDesignReportService;
-import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
+import ubic.gemma.core.util.AbstractBatchProcessingCLI;
 import ubic.gemma.core.util.AbstractCLI;
-import ubic.gemma.core.util.AbstractCLIContextCLI;
+import ubic.gemma.core.util.ListFileUtils;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignAnalysisEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
+import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 
+import javax.annotation.OverridingMethodsMustInvokeSuper;
 import java.io.IOException;
 import java.util.*;
 
@@ -42,10 +47,16 @@ import java.util.*;
  *
  * @author pavlidis
  */
-public abstract class ArrayDesignSequenceManipulatingCli extends AbstractCLIContextCLI {
+@Component
+public abstract class ArrayDesignSequenceManipulatingCli extends AbstractBatchProcessingCLI {
 
+    @Autowired
     private ArrayDesignReportService arrayDesignReportService;
+    @Autowired
     private ArrayDesignService arrayDesignService;
+    @Autowired
+    protected AuditTrailService auditTrailService;
+
     private Collection<ArrayDesign> arrayDesignsToProcess = new HashSet<>();
 
     @Override
@@ -58,8 +69,8 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractCLICont
     }
 
     @Override
-    @SuppressWarnings("static-access")
-    protected void buildOptions( Options options ) {
+    @OverridingMethodsMustInvokeSuper
+    protected void buildBatchOptions( Options options ) {
         Option arrayDesignOption = Option.builder( "a" ).hasArg().argName( "Array design" )
                 .desc( "Array design name (or short name); or comma-delimited list" ).longOpt( "array" ).build();
 
@@ -71,16 +82,13 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractCLICont
         options.addOption( eeFileListOption );
 
         this.addDateOption( options );
-        this.addAutoOption( options );
+        this.addAutoOption( options, null );
 
     }
 
     @Override
-    protected void processOptions( CommandLine commandLine ) {
-
-        arrayDesignReportService = this.getBean( ArrayDesignReportService.class );
-        arrayDesignService = this.getBean( ArrayDesignService.class );
-
+    @OverridingMethodsMustInvokeSuper
+    protected void processBatchOptions( CommandLine commandLine ) throws ParseException {
         if ( commandLine.hasOption( 'a' ) ) {
             this.arraysFromCliList( commandLine );
         } else if ( commandLine.hasOption( 'f' ) ) {
@@ -90,20 +98,6 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractCLICont
                 this.arrayDesignsToProcess = this.readListFile( experimentListFile );
             } catch ( IOException e ) {
                 throw new RuntimeException( e );
-            }
-        }
-
-        if ( commandLine.hasOption( "mdate" ) ) {
-            super.mDate = commandLine.getOptionValue( "mdate" );
-            if ( commandLine.hasOption( AbstractCLI.AUTO_OPTION_NAME ) ) {
-                throw new IllegalArgumentException( "Please only select one of 'mdate' OR 'auto'" );
-            }
-        }
-
-        if ( commandLine.hasOption( AbstractCLI.AUTO_OPTION_NAME ) ) {
-            this.autoSeek = true;
-            if ( commandLine.hasOption( "mdate" ) ) {
-                throw new IllegalArgumentException( "Please only select one of 'mdate' OR 'auto'" );
             }
         }
     }
@@ -191,7 +185,7 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractCLICont
     boolean needToRun( Date skipIfLastRunLaterThan, ArrayDesign arrayDesign,
             Class<? extends ArrayDesignAnalysisEvent> eventClass ) {
 
-        if ( autoSeek ) {
+        if ( isAutoSeek() ) {
             return this.needToAutoRun( arrayDesign, eventClass );
         }
 
@@ -223,7 +217,7 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractCLICont
         for ( String shortName : shortNames ) {
             if ( StringUtils.isBlank( shortName ) )
                 continue;
-            ArrayDesign ad = this.locateArrayDesign( shortName, arrayDesignService );
+            ArrayDesign ad = arrayDesignService.findByNameOrByShortName( shortName );
             if ( ad == null ) {
                 AbstractCLI.log.warn( shortName + " not found" );
                 continue;
@@ -257,7 +251,7 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractCLICont
      * Find if the most recent ArrayDesignAnalysisEvent is less recent than the _other_ types of array design events; if
      * so, then we need to refresh it.
      * <ul>
-     * <li>If the autoseek option is not turned on, then return false.
+     * <li>If the auto-seek option is not turned on, then return false.
      * <li>If the event has never been done, return true.
      * <li>If the last event was of the passed eventClass, then return false.
      * <li>If any other ArrayDesignAnalysisEvent was more recent than the last event of eventClass, return true.
@@ -268,12 +262,12 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractCLICont
      * @return whether the array design needs updating based on the criteria outlined above.
      */
     private boolean needToAutoRun( ArrayDesign arrayDesign, Class<? extends ArrayDesignAnalysisEvent> eventClass ) {
-        if ( !autoSeek ) {
+        if ( !isAutoSeek() ) {
             return false;
         }
 
         List<AuditEvent> eventsOfCurrentType = this.getEvents( arrayDesign, eventClass );
-        List<AuditEvent> allEvents = ( List<AuditEvent> ) arrayDesign.getAuditTrail().getEvents();
+        List<AuditEvent> allEvents = arrayDesign.getAuditTrail().getEvents();
 
         if ( eventsOfCurrentType.size() == 0 ) {
             // it's never been run.
@@ -323,7 +317,7 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractCLICont
      */
     private Set<ArrayDesign> readListFile( String fileName ) throws IOException {
         Set<ArrayDesign> ees = new HashSet<>();
-        for ( String eeName : AbstractCLIContextCLI.readListFileToStrings( fileName ) ) {
+        for ( String eeName : ListFileUtils.readListFileToStrings( fileName ) ) {
             ArrayDesign ee = arrayDesignService.findByShortName( eeName );
             if ( ee == null ) {
 

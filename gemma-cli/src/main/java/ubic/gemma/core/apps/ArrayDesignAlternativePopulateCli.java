@@ -22,8 +22,7 @@ package ubic.gemma.core.apps;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
 import org.apache.commons.lang3.StringUtils;
-import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
-import ubic.gemma.core.util.AbstractCLIContextCLI;
+import ubic.gemma.core.util.AbstractCLI;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 
@@ -37,7 +36,7 @@ import java.io.InputStreamReader;
  *
  * @author paul
  */
-public class ArrayDesignAlternativePopulateCli extends AbstractCLIContextCLI {
+public class ArrayDesignAlternativePopulateCli extends AbstractCLI {
 
     @Override
     public CommandGroup getCommandGroup() {
@@ -60,7 +59,7 @@ public class ArrayDesignAlternativePopulateCli extends AbstractCLIContextCLI {
     }
 
     @Override
-    protected void processOptions( CommandLine commandLine ) throws Exception {
+    protected void processOptions( CommandLine commandLine ) {
 
     }
 

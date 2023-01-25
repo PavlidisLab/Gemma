@@ -21,8 +21,8 @@ package ubic.gemma.core.apps;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
 import ubic.gemma.core.loader.expression.ExpressionExperimentPlatformSwitchService;
-import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ExpressionExperimentPlatformSwitchEvent;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
@@ -47,7 +47,7 @@ public class ExpressionExperimentPlatformSwitchCli extends ExpressionExperimentM
     }
 
     @Override
-    protected void doWork() throws Exception {
+    protected void doBatchWork() throws Exception {
         serv = this.getBean( ExpressionExperimentPlatformSwitchService.class );
 
         for ( BioAssaySet ee : expressionExperiments ) {
@@ -66,9 +66,8 @@ public class ExpressionExperimentPlatformSwitchCli extends ExpressionExperimentM
     }
 
     @Override
-    @SuppressWarnings("static-access")
-    protected void buildOptions( Options options ) {
-        super.buildOptions( options );
+    protected void buildBatchOptions( Options options ) {
+        super.buildBatchOptions( options );
         Option arrayDesignOption = Option.builder( "a" ).hasArg().argName( "Array design" ).desc(
                         "Array design name (or short name) - no need to specifiy if the platforms used by the EE are merged" )
                 .longOpt( "array" ).build();
@@ -78,8 +77,8 @@ public class ExpressionExperimentPlatformSwitchCli extends ExpressionExperimentM
     }
 
     @Override
-    protected void processOptions( CommandLine commandLine ) {
-        super.processOptions( commandLine );
+    protected void processBatchOptions( CommandLine commandLine ) throws ParseException {
+        super.processBatchOptions( commandLine );
         if ( commandLine.hasOption( 'a' ) ) {
             this.arrayDesignName = commandLine.getOptionValue( 'a' );
         }
@@ -93,7 +92,7 @@ public class ExpressionExperimentPlatformSwitchCli extends ExpressionExperimentM
 
             AuditTrailService ats = this.getBean( AuditTrailService.class );
             if ( this.arrayDesignName != null ) {
-                ArrayDesign ad = this.locateArrayDesign( this.arrayDesignName, arrayDesignService );
+                ArrayDesign ad = arrayDesignService.findByNameOrByShortName( this.arrayDesignName );
                 if ( ad == null ) {
                     throw new RuntimeException( "Unknown array design" );
                 }

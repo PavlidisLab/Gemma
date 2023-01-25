@@ -27,6 +27,7 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 
 import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
 import ubic.gemma.core.util.AbstractCLI;
 import ubic.gemma.model.common.auditAndSecurity.eventType.GeeqEvent;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
@@ -50,9 +51,8 @@ public class GeeqCli extends ExpressionExperimentManipulatingCLI {
     }
 
     @Override
-    protected void processOptions( CommandLine commandLine ) {
-        super.processOptions( commandLine );
-
+    protected void processBatchOptions( CommandLine commandLine ) throws ParseException {
+        super.processBatchOptions( commandLine );
         eeService = this.getBean( ExpressionExperimentService.class );
         geeqService = this.getBean( GeeqService.class );
 
@@ -68,12 +68,10 @@ public class GeeqCli extends ExpressionExperimentManipulatingCLI {
 
     @SuppressWarnings("AccessStaticViaInstance")
     @Override
-    protected void buildOptions( Options options ) {
-
-        super.buildOptions( options );
-        super.addAutoOption( options );
+    protected void buildBatchOptions( Options options ) {
+        super.buildBatchOptions( options );
+        super.addAutoOption( options, GeeqEvent.class );
         super.addDateOption( options );
-        this.autoSeekEventType = GeeqEvent.class;
         super.addForceOption( options );
 
         Option modeOption = Option.builder( "m" ).longOpt( "mode" )
@@ -88,7 +86,7 @@ public class GeeqCli extends ExpressionExperimentManipulatingCLI {
     }
 
     @Override
-    protected void doWork() throws Exception {
+    protected void doBatchWork() throws Exception {
         for ( BioAssaySet bioassay : expressionExperiments ) {
             if ( !( bioassay instanceof ExpressionExperiment ) ) {
                 log.debug( bioassay.getName() + " is not an ExpressionExperiment" );

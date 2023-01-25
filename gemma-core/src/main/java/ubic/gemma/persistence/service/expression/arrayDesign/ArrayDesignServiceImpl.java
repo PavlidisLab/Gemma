@@ -122,6 +122,29 @@ public class ArrayDesignServiceImpl extends AbstractFilteringVoEnabledService<Ar
 
     @Override
     @Transactional(readOnly = true)
+    public ArrayDesign findByNameOrByShortName( String name ) {
+        ArrayDesign arrayDesign = null;
+
+        Collection<ArrayDesign> byname = findByName( name.trim().toUpperCase() );
+        if ( byname.size() > 1 ) {
+            throw new IllegalArgumentException( "Ambiguous name: " + name );
+        } else if ( byname.size() == 1 ) {
+            arrayDesign = byname.iterator().next();
+        }
+
+        if ( arrayDesign == null ) {
+            arrayDesign = findByShortName( name );
+        }
+
+        if ( arrayDesign == null ) {
+            log.error( String.format( "No ArrayDesign found with name %s.", name ) );
+        }
+
+        return arrayDesign;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public Collection<ArrayDesign> findByTaxon( Taxon taxon ) {
         return this.arrayDesignDao.findByTaxon( taxon );
     }

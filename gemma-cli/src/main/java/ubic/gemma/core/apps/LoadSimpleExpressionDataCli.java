@@ -22,12 +22,12 @@ package ubic.gemma.core.apps;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
 import org.apache.commons.lang3.StringUtils;
-import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.core.loader.expression.simple.SimpleExpressionDataLoaderService;
 import ubic.gemma.core.loader.expression.simple.model.SimpleExpressionExperimentMetaData;
+import ubic.gemma.core.util.AbstractBatchProcessingCLI;
 import ubic.gemma.core.util.AbstractCLI;
-import ubic.gemma.core.util.AbstractCLIContextCLI;
 import ubic.gemma.model.common.quantitationtype.GeneralType;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
@@ -48,7 +48,7 @@ import java.util.HashSet;
  *
  * @author xiangwan
  */
-public class LoadSimpleExpressionDataCli extends AbstractCLIContextCLI {
+public class LoadSimpleExpressionDataCli extends AbstractBatchProcessingCLI {
     private final static String SPLIT_CHAR = "\t";
     private final static int NAME_I = 0;
     private final static int SHORT_NAME_I = LoadSimpleExpressionDataCli.NAME_I + 1;
@@ -83,7 +83,7 @@ public class LoadSimpleExpressionDataCli extends AbstractCLIContextCLI {
     }
 
     @Override
-    protected void processOptions( CommandLine commandLine ) {
+    protected void processBatchOptions( CommandLine commandLine ) throws ParseException {
         if ( commandLine.hasOption( 'f' ) ) {
             fileName = commandLine.getOptionValue( 'f' );
         }
@@ -100,7 +100,7 @@ public class LoadSimpleExpressionDataCli extends AbstractCLIContextCLI {
 
     @SuppressWarnings("static-access")
     @Override
-    protected void buildOptions( Options options ) {
+    protected void buildBatchOptions( Options options ) {
         Option fileOption = Option.builder( "f" ).required().hasArg().argName( "File Name" )
                 .desc( "the list of experiments in flat file" ).longOpt( "file" ).build();
         options.addOption( fileOption );
@@ -112,7 +112,7 @@ public class LoadSimpleExpressionDataCli extends AbstractCLIContextCLI {
     }
 
     @Override
-    protected void doWork() throws Exception {
+    protected void doBatchWork() throws Exception {
         this.eeLoaderService = this.getBean( SimpleExpressionDataLoaderService.class );
         this.eeService = this.getBean( ExpressionExperimentService.class );
         this.adService = this.getBean( ArrayDesignService.class );

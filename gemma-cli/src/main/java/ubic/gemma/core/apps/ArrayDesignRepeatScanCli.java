@@ -21,11 +21,12 @@ package ubic.gemma.core.apps;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
 import ubic.gemma.core.analysis.sequence.RepeatScan;
 import ubic.gemma.core.loader.expression.arrayDesign.ArrayDesignSequenceAlignmentServiceImpl;
 import ubic.gemma.core.util.AbstractCLI;
+import ubic.gemma.core.util.CLI;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignRepeatAnalysisEvent;
-import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.persistence.service.genome.biosequence.BioSequenceService;
@@ -44,22 +45,21 @@ public class ArrayDesignRepeatScanCli extends ArrayDesignSequenceManipulatingCli
     private String inputFileName;
 
     @Override
-    public GemmaCLI.CommandGroup getCommandGroup() {
-        return GemmaCLI.CommandGroup.PLATFORM;
+    public CommandGroup getCommandGroup() {
+        return CLI.CommandGroup.PLATFORM;
     }
 
-    @SuppressWarnings("static-access")
     @Override
-    protected void buildOptions( Options options ) {
-        super.buildOptions( options );
+    protected void buildBatchOptions( Options options ) {
+        super.buildBatchOptions( options );
         Option fileOption = Option.builder( "f" ).hasArg().argName( ".out file" )
                 .desc( "RepeatScan file to use as input" ).longOpt( "file" ).build();
         options.addOption( fileOption );
     }
 
     @Override
-    protected void processOptions( CommandLine commandLine ) {
-        super.processOptions( commandLine );
+    protected void processBatchOptions( CommandLine commandLine ) throws ParseException {
+        super.processBatchOptions( commandLine );
         if ( commandLine.hasOption( 'f' ) ) {
             this.inputFileName = commandLine.getOptionValue( 'f' );
         }
@@ -71,7 +71,7 @@ public class ArrayDesignRepeatScanCli extends ArrayDesignSequenceManipulatingCli
     }
 
     @Override
-    protected void doWork() throws Exception {
+    protected void doBatchWork() throws Exception {
         bsService = this.getBean( BioSequenceService.class );
 
         Date skipIfLastRunLaterThan = this.getLimitingDate();

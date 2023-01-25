@@ -18,6 +18,7 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
 import ubic.gemma.core.analysis.preprocess.batcheffects.BatchInfoPopulationException;
 import ubic.gemma.core.analysis.preprocess.batcheffects.BatchInfoPopulationService;
+import ubic.gemma.core.util.CLI;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.util.Settings;
@@ -35,20 +36,14 @@ public class RNASeqBatchInfoCli extends ExpressionExperimentManipulatingCLI {
     private String fastqRootDir = Settings.getString( "gemma.fastq.headers.dir" );
 
     @Override
-    public GemmaCLI.CommandGroup getCommandGroup() {
-        return GemmaCLI.CommandGroup.EXPERIMENT;
+    public CommandGroup getCommandGroup() {
+        return CLI.CommandGroup.EXPERIMENT;
     }
 
     @Override
-    protected void buildOptions( Options options ) {
-        super.buildOptions( options );
+    protected void buildBatchOptions( Options options ) {
+        super.buildBatchOptions( options );
         super.addForceOption( options );
-    }
-
-    @Override
-    protected void processOptions( CommandLine commandLine ) {
-        super.processOptions( commandLine );
-
     }
 
     @Override
@@ -57,7 +52,7 @@ public class RNASeqBatchInfoCli extends ExpressionExperimentManipulatingCLI {
     }
 
     @Override
-    protected void doWork() throws Exception {
+    protected void doBatchWork() throws Exception {
         batchService = this.getBean( BatchInfoPopulationService.class );
 
         log.info( "Checking folders for existing experiments in " + fastqRootDir );

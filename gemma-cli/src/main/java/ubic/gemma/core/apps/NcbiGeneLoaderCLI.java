@@ -24,10 +24,8 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.core.loader.genome.gene.ncbi.NcbiGeneLoader;
 import ubic.gemma.core.util.AbstractCLI;
-import ubic.gemma.core.util.AbstractCLIContextCLI;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.common.description.ExternalDatabases;
 import ubic.gemma.model.genome.Taxon;
@@ -44,7 +42,7 @@ import java.util.Date;
  * @author joseph
  */
 @Component
-public class NcbiGeneLoaderCLI extends AbstractCLIContextCLI {
+public class NcbiGeneLoaderCLI extends AbstractCLI {
     private static final String GENE_INFO_FILE = "gene_info.gz";
     private static final String GENE2ACCESSION_FILE = "gene2accession.gz";
     private static final String GENE_HISTORY_FILE = "gene_history.gz";

@@ -25,10 +25,8 @@ import org.apache.commons.lang3.StringUtils;
 
 import ubic.gemma.core.analysis.report.ArrayDesignReportService;
 import ubic.gemma.core.analysis.service.ArrayDesignAnnotationService;
-import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.core.util.AbstractCLI;
-import ubic.gemma.core.util.AbstractCLIContextCLI;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AnnotationBasedGeneMappingEvent;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.ExternalDatabase;
@@ -42,6 +40,8 @@ import ubic.gemma.model.genome.biosequence.PolymerType;
 import ubic.gemma.model.genome.biosequence.SequenceType;
 import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.model.genome.sequenceAnalysis.AnnotationAssociation;
+import ubic.gemma.persistence.persister.Persister;
+import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.common.description.ExternalDatabaseService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
@@ -58,7 +58,7 @@ import ubic.gemma.persistence.service.genome.taxon.TaxonService;
  *
  * @author paul
  */
-public class GenericGenelistDesignGenerator extends AbstractCLIContextCLI {
+public class GenericGenelistDesignGenerator extends AbstractCLI {
 
     private AnnotationAssociationService annotationAssociationService;
     private ArrayDesignAnnotationService arrayDesignAnnotationService;
@@ -68,6 +68,7 @@ public class GenericGenelistDesignGenerator extends AbstractCLIContextCLI {
     private CompositeSequenceService compositeSequenceService;
     private ExternalDatabaseService externalDatabaseService;
     private GeneService geneService;
+    private AuditTrailService auditTrailService;
 
     private Taxon taxon = null;
     private boolean useEnsemblIds = false;
@@ -251,7 +252,7 @@ public class GenericGenelistDesignGenerator extends AbstractCLIContextCLI {
                 }
 
                 if ( existing == null ) {
-                    bioSequence = ( BioSequence ) this.getPersisterHelper().persist( bioSequence );
+                    bioSequence = ( BioSequence ) getBean( Persister.class ).persist( bioSequence );
                 } else {
                     bioSequence = existing;
                 }
@@ -377,9 +378,14 @@ public class GenericGenelistDesignGenerator extends AbstractCLIContextCLI {
         annotationAssociationService = this.getBean( AnnotationAssociationService.class );
         externalDatabaseService = this.getBean( ExternalDatabaseService.class );
         arrayDesignReportService = this.getBean( ArrayDesignReportService.class );
+        auditTrailService = this.getBean( AuditTrailService.class );
 
         if ( commandLine.hasOption( 't' ) ) {
-            this.taxon = this.setTaxonByName( commandLine, taxonService );
+            String taxonName = commandLine.getOptionValue( 't' );
+            this.taxon = taxonService.findByCommonName( taxonName );
+            if ( taxon == null ) {
+                AbstractCLI.log.error( "ERROR: Cannot find taxon " + taxonName );
+            }
         }
         if ( commandLine.hasOption( "ncbiids" ) ) {
             this.useNCBIIds = true;

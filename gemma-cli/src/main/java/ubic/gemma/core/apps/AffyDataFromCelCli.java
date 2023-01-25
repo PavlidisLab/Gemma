@@ -22,10 +22,12 @@ package ubic.gemma.core.apps;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
 import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.core.loader.expression.DataUpdater;
 import ubic.gemma.core.loader.expression.geo.model.GeoPlatform;
 import ubic.gemma.core.util.AbstractCLI;
+import ubic.gemma.core.util.CLI;
 import ubic.gemma.model.common.auditAndSecurity.eventType.DataReplacedEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.FailedDataReplacedEvent;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
@@ -60,8 +62,8 @@ public class AffyDataFromCelCli extends ExpressionExperimentManipulatingCLI {
     }
 
     @Override
-    public GemmaCLI.CommandGroup getCommandGroup() {
-        return GemmaCLI.CommandGroup.EXPERIMENT;
+    public CommandGroup getCommandGroup() {
+        return CLI.CommandGroup.EXPERIMENT;
     }
 
     @Override
@@ -75,8 +77,8 @@ public class AffyDataFromCelCli extends ExpressionExperimentManipulatingCLI {
     }
 
     @Override
-    protected void buildOptions( Options options ) {
-        super.buildOptions( options );
+    protected void buildBatchOptions( Options options ) {
+        super.buildBatchOptions( options );
         options.addOption( Option.builder( AffyDataFromCelCli.APT_FILE_OPT ).longOpt( null ).desc( "File output from apt-probeset-summarize; use if you want to override usual GEO download behaviour; "
                 + "ensure you used the right official CDF/MPS configuration" ).argName( "path" ).hasArg().build() );
         super.addForceOption( options );
@@ -84,7 +86,7 @@ public class AffyDataFromCelCli extends ExpressionExperimentManipulatingCLI {
     }
 
     @Override
-    protected void doWork() throws Exception {
+    protected void doBatchWork() throws Exception {
         DataUpdater serv = this.getBean( DataUpdater.class );
 
         if ( this.expressionExperiments.isEmpty() )
@@ -182,8 +184,8 @@ public class AffyDataFromCelCli extends ExpressionExperimentManipulatingCLI {
     }
 
     @Override
-    protected void processOptions( CommandLine commandLine ) {
-        super.processOptions( commandLine );
+    protected void processBatchOptions( CommandLine commandLine ) throws ParseException {
+        super.processBatchOptions( commandLine );
         if ( commandLine.hasOption( AffyDataFromCelCli.APT_FILE_OPT ) ) {
             this.aptFile = commandLine.getOptionValue( AffyDataFromCelCli.APT_FILE_OPT );
         }

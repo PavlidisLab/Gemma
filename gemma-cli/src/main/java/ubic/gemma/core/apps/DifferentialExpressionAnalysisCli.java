@@ -22,6 +22,7 @@ import gemma.gsec.SecurityService;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalysisConfig;
@@ -84,7 +85,7 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
     }
 
     @Override
-    protected void doWork() throws Exception {
+    protected void doBatchWork() throws Exception {
         SecurityService securityService = this.getBean( SecurityService.class );
 
         for ( BioAssaySet ee : expressionExperiments ) {
@@ -117,19 +118,13 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
 
     @SuppressWarnings("static-access")
     @Override
-    protected void buildOptions( Options options ) {
-
-        /*
-         * These options from the super class support: running on one or more data sets from the command line, running
-         * on list of data sets from a file, running on all data sets.
-         */
-        super.buildOptions( options );
+    protected void buildBatchOptions( Options options ) {
+        super.buildBatchOptions( options );
 
         /* Supports: running on all data sets that have not been run since a given date. */
         super.addDateOption( options );
 
-        super.addAutoOption( options );
-        this.autoSeekEventType = DifferentialExpressionAnalysisEvent.class;
+        super.addAutoOption( options, DifferentialExpressionAnalysisEvent.class );
         super.addForceOption( options );
 
         Option factors = Option.builder( "factors" ).hasArg().desc(
@@ -172,8 +167,8 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
     }
 
     @Override
-    protected void processOptions( CommandLine commandLine ) {
-        super.processOptions( commandLine );
+    protected void processBatchOptions( CommandLine commandLine ) throws ParseException {
+        super.processBatchOptions( commandLine );
         differentialExpressionAnalyzerService = this.getBean( DifferentialExpressionAnalyzerService.class );
         differentialExpressionAnalysisService = this.getBean( DifferentialExpressionAnalysisService.class );
         expressionDataFileService = this.getBean( ExpressionDataFileService.class );

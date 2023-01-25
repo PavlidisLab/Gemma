@@ -31,10 +31,10 @@ import java.util.HashSet;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
 import org.apache.commons.lang3.StringUtils;
 
 import ubic.gemma.core.analysis.service.ArrayDesignAnnotationService;
-import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.core.ontology.providers.GeneOntologyService;
 import ubic.gemma.core.util.AbstractCLI;
@@ -42,6 +42,7 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 
 /**
@@ -81,9 +82,8 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
     }
 
     @Override
-    protected void buildOptions( Options options ) {
-        super.buildOptions( options );
-
+    protected void buildBatchOptions( Options options ) {
+        super.buildBatchOptions( options );
         Option fileLoading = Option.builder( "l" ).desc( ArrayDesignAnnotationFileCli.FILE_LOAD_DESC ).hasArg()
                 .argName( "file of short names" ).build();
 
@@ -106,9 +106,9 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
     }
 
     @Override
-    protected void processOptions( CommandLine commandLine ) {
-
-        if ( autoSeek ) {
+    protected void processBatchOptions( CommandLine commandLine ) throws ParseException {
+        super.processBatchOptions( commandLine );
+        if ( isAutoSeek() ) {
             throw new IllegalArgumentException( "This CLI doesn't support the auto option" );
         }
 
@@ -145,8 +145,6 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
         if ( commandLine.hasOption( 'o' ) )
             this.overWrite = true;
 
-        super.processOptions( commandLine );
-
         this.arrayDesignAnnotationService = this.getBean( ArrayDesignAnnotationService.class );
         this.goService = this.getBean( GeneOntologyService.class );
     }
@@ -162,7 +160,7 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
     }
 
     @Override
-    protected void doWork() throws Exception {
+    protected void doBatchWork() throws Exception {
         this.taxonService = this.getBean( TaxonService.class );
 
         this.waitForGeneOntologyReady();
@@ -334,7 +332,8 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
                     continue;
                 }
 
-                ArrayDesign arrayDesign = this.locateArrayDesign( accession, getArrayDesignService() );
+                ArrayDesignService arrayDesignService = getArrayDesignService();
+                ArrayDesign arrayDesign = arrayDesignService.findByNameOrByShortName( accession );
 
                 try {
                     this.processAD( arrayDesign );

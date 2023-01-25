@@ -17,7 +17,6 @@ package ubic.gemma.core.apps;
 import org.apache.commons.cli.Options;
 import ubic.gemma.core.analysis.preprocess.batcheffects.BatchInfoPopulationException;
 import ubic.gemma.core.analysis.preprocess.batcheffects.BatchInfoPopulationService;
-import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.core.util.AbstractCLI;
 import ubic.gemma.model.common.auditAndSecurity.eventType.BatchInformationFetchingEvent;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
@@ -36,8 +35,8 @@ public class BatchEffectPopulationCli extends ExpressionExperimentManipulatingCL
     }
 
     @Override
-    protected void buildOptions( Options options ) {
-        super.buildOptions( options );
+    protected void buildBatchOptions( Options options ) {
+        super.buildBatchOptions( options );
         this.addForceOption( options );
     }
 
@@ -47,7 +46,7 @@ public class BatchEffectPopulationCli extends ExpressionExperimentManipulatingCL
     }
 
     @Override
-    protected void doWork() throws Exception {
+    protected void doBatchWork() throws Exception {
         BatchInfoPopulationService ser = this.getBean( BatchInfoPopulationService.class );
 
         for ( BioAssaySet bas : this.expressionExperiments ) {

@@ -21,6 +21,7 @@ package ubic.gemma.core.apps;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
 import ubic.basecode.util.FileTools;
 import ubic.gemma.core.datastructure.matrix.ExperimentalDesignWriter;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
@@ -44,7 +45,7 @@ public class ExperimentalDesignWriterCLI extends ExpressionExperimentManipulatin
     }
 
     @Override
-    protected void doWork() throws Exception {
+    protected void doBatchWork() throws Exception {
         for ( BioAssaySet ee : expressionExperiments ) {
 
             if ( ee instanceof ExpressionExperiment ) {
@@ -71,9 +72,8 @@ public class ExperimentalDesignWriterCLI extends ExpressionExperimentManipulatin
     }
 
     @Override
-    @SuppressWarnings("static-access")
-    protected void buildOptions( Options options ) {
-        super.buildOptions( options );
+    protected void buildBatchOptions( Options options ) {
+        super.buildBatchOptions( options );
         Option outputFileOption = Option.builder( "o" ).hasArg().required().argName( "outFilePrefix" )
                 .desc( "File prefix for saving the output (short name will be appended)" )
                 .longOpt( "outFilePrefix" ).build();
@@ -81,8 +81,8 @@ public class ExperimentalDesignWriterCLI extends ExpressionExperimentManipulatin
     }
 
     @Override
-    protected void processOptions( CommandLine commandLine ) {
-        super.processOptions( commandLine );
+    protected void processBatchOptions( CommandLine commandLine ) throws ParseException {
+        super.processBatchOptions( commandLine );
         outFileName = commandLine.getOptionValue( 'o' );
     }
 }

@@ -21,9 +21,11 @@ package ubic.gemma.core.apps;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
 import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.core.loader.expression.arrayDesign.ArrayDesignMergeService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 
 import java.util.HashSet;
 
@@ -55,7 +57,7 @@ public class ArrayDesignMergeCli extends ArrayDesignSequenceManipulatingCli {
     }
 
     @Override
-    protected void doWork() throws Exception {
+    protected void doBatchWork() throws Exception {
         arrayDesignMergeService.merge( arrayDesign, otherArrayDesigns, newName, newShortName, add );
     }
 
@@ -64,10 +66,9 @@ public class ArrayDesignMergeCli extends ArrayDesignSequenceManipulatingCli {
         return "Make a new array design that combines the reporters from others.";
     }
 
-    @SuppressWarnings("static-access")
     @Override
-    protected void buildOptions( Options options ) {
-        super.buildOptions( options );
+    protected void buildBatchOptions( Options options ) {
+        super.buildBatchOptions( options );
         Option otherArrayDesignOption = Option.builder( "o" ).required().hasArg().argName( "Other platforms" )
                 .desc(
                         "Short name(s) of arrays to merge with the one given to the -a option, preferably subsumed by it, comma-delimited. "
@@ -94,14 +95,15 @@ public class ArrayDesignMergeCli extends ArrayDesignSequenceManipulatingCli {
     }
 
     @Override
-    protected void processOptions( CommandLine commandLine ) {
-        super.processOptions( commandLine );
+    protected void processBatchOptions( CommandLine commandLine ) throws ParseException {
+        super.processBatchOptions( commandLine );
         if ( commandLine.hasOption( 'o' ) ) {// required
             String otherArrayDesignName = commandLine.getOptionValue( 'o' );
             String[] names = StringUtils.split( otherArrayDesignName, ',' );
             this.otherArrayDesigns = new HashSet<>();
             for ( String string : names ) {
-                ArrayDesign o = this.locateArrayDesign( string, getArrayDesignService() );
+                ArrayDesignService arrayDesignService = getArrayDesignService();
+                ArrayDesign o = arrayDesignService.findByNameOrByShortName( string );
                 if ( o == null ) {
                     throw new IllegalArgumentException( "Array design " + string + " not found" );
                 }

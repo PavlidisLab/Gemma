@@ -17,8 +17,7 @@ package ubic.gemma.core.loader.association.phenotype;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
 import ubic.gemma.core.annotation.reference.BibliographicReferenceService;
-import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
-import ubic.gemma.core.util.AbstractCLIContextCLI;
+import ubic.gemma.core.util.AbstractCLI;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.MedicalSubjectHeading;
@@ -33,7 +32,7 @@ import java.util.Set;
  *
  * @author nicolas
  */
-public class LoadEvidenceForClassifier extends AbstractCLIContextCLI {
+public class LoadEvidenceForClassifier extends AbstractCLI {
 
     // a monthly dump of all evidence, takes too long to all, use files auto-generated
     private final String evidenceDumpPath =
@@ -59,11 +58,17 @@ public class LoadEvidenceForClassifier extends AbstractCLIContextCLI {
     }
 
     @Override
-    protected void buildOptions( Options options ) {
+    public String getShortDesc() {
+        return null;
     }
 
     @Override
-    protected void processOptions( CommandLine commandLine ) throws Exception {
+    protected void buildOptions( Options options ) {
+
+    }
+
+    @Override
+    protected void processOptions( CommandLine commandLine ) {
 
     }
 

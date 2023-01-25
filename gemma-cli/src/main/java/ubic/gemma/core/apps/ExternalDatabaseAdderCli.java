@@ -21,7 +21,8 @@ package ubic.gemma.core.apps;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
-import ubic.gemma.core.util.AbstractCLIContextCLI;
+import ubic.gemma.core.util.AbstractCLI;
+import ubic.gemma.core.util.CLI;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.persistence.service.common.description.ExternalDatabaseService;
 
@@ -30,11 +31,11 @@ import ubic.gemma.persistence.service.common.description.ExternalDatabaseService
  *
  * @author paul
  */
-public class ExternalDatabaseAdderCli extends AbstractCLIContextCLI {
+public class ExternalDatabaseAdderCli extends AbstractCLI {
 
     @Override
-    public GemmaCLI.CommandGroup getCommandGroup() {
-        return GemmaCLI.CommandGroup.SYSTEM;
+    public CommandGroup getCommandGroup() {
+        return CLI.CommandGroup.SYSTEM;
     }
 
     @Override
@@ -52,7 +53,7 @@ public class ExternalDatabaseAdderCli extends AbstractCLIContextCLI {
     }
 
     @Override
-    protected void processOptions( CommandLine commandLine ) throws Exception {
+    protected void processOptions( CommandLine commandLine ) {
 
     }
 

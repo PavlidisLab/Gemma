@@ -19,12 +19,10 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.basecode.ontology.providers.*;
-import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.core.association.phenotype.PhenotypeAssociationManagerService;
 import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.core.util.AbstractCLI;
-import ubic.gemma.core.util.AbstractCLIContextCLI;
 import ubic.gemma.model.common.description.ExternalDatabaseValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.EvidenceSourceValueObject;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
@@ -36,7 +34,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.*;
 
-public abstract class EvidenceImporterAbstractCLI extends AbstractCLIContextCLI {
+public abstract class EvidenceImporterAbstractCLI extends AbstractCLI {
 
     static final String WRITE_FOLDER = Settings.getString( "gemma.appdata.home" ) + File.separator + "EvidenceImporterNeurocarta";
 

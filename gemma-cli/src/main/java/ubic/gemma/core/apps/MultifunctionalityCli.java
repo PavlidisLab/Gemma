@@ -19,14 +19,14 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import ubic.gemma.core.analysis.service.GeneMultifunctionalityPopulationService;
 import ubic.gemma.core.util.AbstractCLI;
-import ubic.gemma.core.util.AbstractCLIContextCLI;
+import ubic.gemma.core.util.CLI;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 
 /**
  * @author paul
  */
-public class MultifunctionalityCli extends AbstractCLIContextCLI {
+public class MultifunctionalityCli extends AbstractCLI {
 
     private Taxon taxon;
 
@@ -80,8 +80,8 @@ public class MultifunctionalityCli extends AbstractCLIContextCLI {
     }
 
     @Override
-    public GemmaCLI.CommandGroup getCommandGroup() {
-        return GemmaCLI.CommandGroup.SYSTEM;
+    public CommandGroup getCommandGroup() {
+        return CLI.CommandGroup.SYSTEM;
     }
 
 }
