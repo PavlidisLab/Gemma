@@ -1657,7 +1657,6 @@ public class ExpressionExperimentDaoImpl
         // is mentioned in the filters
 
         if ( FiltersUtils.containsAnyAlias( filters, sort, CHARACTERISTIC_ALIAS ) ) {
-            log.warn( "Querying ee.characteristics, this might take some time..." );
             queryString += " left join ee.characteristics as " + CharacteristicDao.OBJECT_ALIAS;
         }
 
@@ -1671,7 +1670,6 @@ public class ExpressionExperimentDaoImpl
         }
 
         if ( FiltersUtils.containsAnyAlias( filters, sort, BIO_ASSAY_ALIAS, BIO_MATERIAL_CHARACTERISTIC_ALIAS, ARRAY_DESIGN_ALIAS ) ) {
-            log.warn( "Querying ee.bioAssays, this might take some time..." );
             queryString += " left join ee.bioAssays as " + BIO_ASSAY_ALIAS;
         }
 

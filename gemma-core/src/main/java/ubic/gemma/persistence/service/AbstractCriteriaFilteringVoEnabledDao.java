@@ -130,7 +130,7 @@ public abstract class AbstractCriteriaFilteringVoEnabledDao<O extends Identifiab
         countingStopWatch.stop();
 
         if ( stopWatch.getTime( TimeUnit.MILLISECONDS ) > REPORT_SLOW_QUERY_AFTER_MS ) {
-            log.info( String.format( "Loading and counting %d entities for %s took %d ms (querying: %d, counting: %d).",
+            log.warn( String.format( "Loading and counting %d entities for %s took %d ms (querying: %d, counting: %d).",
                     totalElements, elementClass.getName(),
                     stopWatch.getTime( TimeUnit.MILLISECONDS ), queryStopWatch.getTime( TimeUnit.MILLISECONDS ),
                     countingStopWatch.getTime( TimeUnit.MILLISECONDS ) ) );
@@ -178,7 +178,7 @@ public abstract class AbstractCriteriaFilteringVoEnabledDao<O extends Identifiab
         stopWatch.stop();
 
         if ( stopWatch.getTime( TimeUnit.MILLISECONDS ) > REPORT_SLOW_QUERY_AFTER_MS ) {
-            log.info( String.format( "Loading and counting %d VOs for %s took %d ms (querying: %d, counting: %d, post-processing: %d).",
+            log.warn( String.format( "Loading and counting %d VOs for %s took %d ms (querying: %d, counting: %d, post-processing: %d).",
                     totalElements, elementClass.getName(),
                     stopWatch.getTime( TimeUnit.MILLISECONDS ), queryStopWatch.getTime( TimeUnit.MILLISECONDS ),
                     countingStopWatch.getTime( TimeUnit.MILLISECONDS ), postProcessingStopWatch.getTime( TimeUnit.MILLISECONDS ) ) );
