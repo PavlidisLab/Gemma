@@ -307,7 +307,7 @@ public class ExpressionExperimentServiceTest extends BaseSpringContextTest {
 
     @Test
     public void testLoadValueObjectsPreFilterByFactorValueCharacteristic() {
-        Filter of = expressionExperimentService.getFilter( "factorValueCharacteristics.id", Filter.Operator.eq, "1" );
+        Filter of = expressionExperimentService.getFilter( "experimentalDesign.experimentalFactors.factorValues.characteristics.id", Filter.Operator.eq, "1" );
         assertEquals( "id", of.getPropertyName() );
         assertEquals( Long.class, of.getPropertyType() );
         Collection<ExpressionExperimentValueObject> list = expressionExperimentService.loadValueObjectsPreFilter( Filters.by( of ), null, 0, 0 );
@@ -316,7 +316,7 @@ public class ExpressionExperimentServiceTest extends BaseSpringContextTest {
 
     @Test
     public void testLoadValueObjectsPreFilterBySampleUsedCharacteristic() {
-        Filter of = expressionExperimentService.getFilter( "sampleUsedCharacteristics.id", Filter.Operator.eq, "1" );
+        Filter of = expressionExperimentService.getFilter( "bioAssays.sampleUsed.characteristics.id", Filter.Operator.eq, "1" );
         assertEquals( "id", of.getPropertyName() );
         assertEquals( Long.class, of.getPropertyType() );
         Collection<ExpressionExperimentValueObject> list = expressionExperimentService.loadValueObjectsPreFilter( Filters.by( of ), null, 0, 0 );

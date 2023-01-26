@@ -1075,40 +1075,30 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     }
 
     @Override
-    public Set<String> getFilterableProperties() {
-        Set<String> result = new HashSet<>( super.getFilterableProperties() );
-        addFilterableProperties( "externalReference.", DatabaseEntry.class, result, FILTERABLE_PROPERTIES_MAX_DEPTH - 1 );
-        result.add( "taxon" );
-        addFilterableProperties( "taxon.", Taxon.class, result, FILTERABLE_PROPERTIES_MAX_DEPTH - 1 );
+    protected void registerFilterableProperties( Set<String> properties ) {
+        super.registerFilterableProperties( properties );
+        properties.add( "taxon" );
         // because the ArrayDesign is the root property, and we allow at most 3 level, some of the recursive properties
-        // (i.e. referring to another AD) will result in a bunch of useless prefix such as mergedInto.mergedInto. To
+        // (i.e. referring to another AD) will properties in a bunch of useless prefix such as mergedInto.mergedInto. To
         // disallow this, we remove those properties.
         // see https://github.com/PavlidisLab/Gemma/issues/546
         String recursiveProperty = String.join( "|", new String[] { "subsumingArrayDesign", "mergedInto", "alternativeTo" } );
-        result.removeIf( prop -> prop.matches( "^(" + recursiveProperty + ")\\.(" + recursiveProperty + ")\\..+$" ) );
-        return result;
+        properties.removeIf( prop -> prop.matches( "^(" + recursiveProperty + ")\\.(" + recursiveProperty + ")\\..+$" ) );
+    }
+
+    @Override
+    protected void registerFilterablePropertyAliases( Set<FilterablePropertyAlias> aliases ) {
+        aliases.add( new FilterablePropertyAlias( "externalReferences.", EXTERNAL_REFERENCE_ALIAS, DatabaseEntry.class, null ) );
+        aliases.add( new FilterablePropertyAlias( "taxon.", PRIMARY_TAXON_ALIAS, Taxon.class, "primaryTaxon" ) );
     }
 
     @Override
     protected FilterablePropertyMeta getFilterablePropertyMeta( String propertyName ) {
-        if ( propertyName.startsWith( "externalReference." ) ) {
-            String fieldName = propertyName.replaceFirst( "^externalReference\\.", "" );
-            return getFilterablePropertyMeta( EXTERNAL_REFERENCE_ALIAS, fieldName, DatabaseEntry.class );
-        }
-
-        // alias for primaryTaxon which is not discoverable in the VO
-        if ( propertyName.startsWith( "taxon." ) ) {
-            String fieldName = propertyName.replaceFirst( "^taxon\\.", "" );
-            return getFilterablePropertyMeta( PRIMARY_TAXON_ALIAS, fieldName, Taxon.class )
-                    .withDescription( "alias for primaryTaxon." + fieldName );
-        }
-
         // handle cases such as taxon = 1
         if ( propertyName.equals( "taxon" ) ) {
             return getFilterablePropertyMeta( PRIMARY_TAXON_ALIAS, "id", Taxon.class )
                     .withDescription( "alias for taxon.id" );
         }
-
         return super.getFilterablePropertyMeta( propertyName );
     }
 

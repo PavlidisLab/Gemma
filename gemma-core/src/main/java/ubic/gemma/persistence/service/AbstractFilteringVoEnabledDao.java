@@ -1,9 +1,6 @@
 package ubic.gemma.persistence.service;
 
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
-import lombok.Value;
-import lombok.With;
+import lombok.*;
 import org.apache.commons.lang3.ArrayUtils;
 import org.hibernate.SessionFactory;
 import org.hibernate.metadata.ClassMetadata;
@@ -18,8 +15,11 @@ import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Sort;
 
 import javax.annotation.Nullable;
+import javax.annotation.OverridingMethodsMustInvokeSuper;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 /**
  * Base implementation for {@link FilteringVoEnabledDao}.
@@ -33,7 +33,7 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
     /**
      * Maximum depth to explore when enumerating filterable properties via {@link #getFilterableProperties()}.
      */
-    protected static final int FILTERABLE_PROPERTIES_MAX_DEPTH = 3;
+    private static final int FILTERABLE_PROPERTIES_MAX_DEPTH = 3;
 
     /**
      * Cached partial filterable properties meta, computed as we go.
@@ -53,12 +53,18 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
      */
     private final Set<String> filterableProperties;
 
+    /**
+     * Aliases for filterable properties.
+     */
+    private final Set<FilterablePropertyAlias> filterablePropertyAliases;
+
     protected AbstractFilteringVoEnabledDao( @Nullable String objectAlias, Class<? extends O> elementClass, SessionFactory sessionFactory ) {
         super( elementClass, sessionFactory );
         this.objectAlias = objectAlias;
-        Set<String> result = new HashSet<>();
-        addFilterableProperties( "", elementClass, result, FILTERABLE_PROPERTIES_MAX_DEPTH );
-        this.filterableProperties = Collections.unmodifiableSet( result );
+        this.filterablePropertyAliases = new HashSet<>();
+        registerFilterablePropertyAliases( this.filterablePropertyAliases );
+        this.filterableProperties = new HashSet<>();
+        registerFilterableProperties( this.filterableProperties );
     }
 
     /**
@@ -122,8 +128,30 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
     }
 
     @Override
-    public Set<String> getFilterableProperties() {
+    public final Set<String> getFilterableProperties() {
         return filterableProperties;
+    }
+
+    /**
+     * Register filterable properties.
+     * @param properties a collection to which filterable properties are to be added
+     */
+    @OverridingMethodsMustInvokeSuper
+    protected void registerFilterableProperties( Set<String> properties ) {
+        addFilterableProperties( "", elementClass, properties, FILTERABLE_PROPERTIES_MAX_DEPTH );
+        // FIXME: the aliases are not available because they are registered afterward in the constructor
+        Set<FilterablePropertyAlias> aliases = new HashSet<>();
+        registerFilterablePropertyAliases( aliases );
+        for ( FilterablePropertyAlias alias : aliases ) {
+            addFilterableProperties( alias.prefix, alias.propertyType, properties, FILTERABLE_PROPERTIES_MAX_DEPTH - 1 );
+        }
+    }
+
+    /**
+     * Register aliases for filterable properties.
+     * @param aliases a collection to which aliases are to be added
+     */
+    protected void registerFilterablePropertyAliases( Set<FilterablePropertyAlias> aliases ) {
     }
 
     @Override
@@ -139,7 +167,7 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
 
     @Nullable
     @Override
-    public List<Object> getFilterablePropertyAvailableValues( String propertyName ) {
+    public List<Object> getFilterablePropertyAvailableValues( String propertyName ) throws IllegalArgumentException {
         return getFilterablePropertyMeta( propertyName ).availableValues;
     }
 
@@ -164,7 +192,10 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
     /**
      * Helper that inspects a class and add all the filterable properties with the given prefix.
      */
-    protected void addFilterableProperties( String prefix, Class<?> entityClass, Set<String> destination, int maxDepth ) {
+    private void addFilterableProperties( String prefix, Class<?> entityClass, Set<String> destination, int maxDepth ) {
+        if ( !prefix.isEmpty() && !prefix.endsWith( "." ) ) {
+            throw new IllegalArgumentException( "A non-empty prefix must end with a '.' character." );
+        }
         if ( maxDepth <= 0 ) {
             throw new IllegalArgumentException( String.format( "Maximum depth for adding filterable properties of %s to %s must be strictly positive.",
                     entityClass.getName(), prefix ) );
@@ -213,6 +244,22 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
         List<Object> availableValues;
     }
 
+    @Value
+    @EqualsAndHashCode(of = "prefix")
+    protected static class FilterablePropertyAlias {
+        String prefix;
+        @Nullable
+        String objectAlias;
+        Class<?> propertyType;
+        /**
+         * If this alias is actual aliasing another alias.
+         * <p>
+         * Example: {@code taxon. -> primaryTaxon.}
+         */
+        @Nullable
+        String aliasFor;
+    }
+
     /**
      * Obtain various meta-information used to infer what to use in a {@link Filter} or {@link Sort}.
      * <p>
@@ -224,6 +271,17 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
      * @see #getSort(String, Sort.Direction)
      */
     protected FilterablePropertyMeta getFilterablePropertyMeta( String propertyName ) throws IllegalArgumentException {
+        // replace longer prefix first
+        List<FilterablePropertyAlias> aliases = filterablePropertyAliases.stream()
+                .sorted( Comparator.comparing( f -> f.prefix.length(), Comparator.reverseOrder() ) )
+                .collect( Collectors.toList() );
+        for ( FilterablePropertyAlias alias : aliases ) {
+            if ( propertyName.startsWith( alias.prefix ) && !propertyName.equals( alias.prefix + "size" ) ) {
+                String fieldName = propertyName.replaceFirst( "^" + Pattern.quote( alias.prefix ), "" );
+                return getFilterablePropertyMeta( alias.objectAlias, fieldName, alias.propertyType )
+                        .withDescription( alias.aliasFor != null ? String.format( "alias for %s.%s", alias.aliasFor, fieldName ) : null );
+            }
+        }
         return getFilterablePropertyMeta( objectAlias, propertyName, elementClass );
     }
 

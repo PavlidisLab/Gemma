@@ -35,6 +35,9 @@ import static ubic.gemma.persistence.util.FilterQueryUtils.formPropertyName;
  */
 public abstract class AbstractCriteriaFilteringVoEnabledDao<O extends Identifiable, VO extends IdentifiableValueObject<O>> extends AbstractFilteringVoEnabledDao<O, VO> {
 
+    @Autowired
+    private PlatformTransactionManager platformTransactionManager;
+
     protected AbstractCriteriaFilteringVoEnabledDao( Class<? extends O> elementClass, SessionFactory sessionFactory ) {
         // This is a good default objet alias for Hibernate Criteria since null is used to refer to the root entity.
         super( null, elementClass, sessionFactory );
@@ -232,42 +235,13 @@ public abstract class AbstractCriteriaFilteringVoEnabledDao<O extends Identifiab
         return ret;
     }
 
-    @Value
-    protected static class FilterablePropertyAlias {
-        String propertyName;
-        String alias;
-    }
-
-    @Autowired
-    private PlatformTransactionManager platformTransactionManager;
-
-    /**
-     * Unfortunately, because of how criteria API works, you have to explicitly list all aliases.
-     * TODO: infer this from the criteria.
-     */
-    protected List<FilterablePropertyAlias> getFilterablePropertyAliases() {
-        // FIXME: unfortunately, this requires a session...
-        Criteria criteria = new TransactionTemplate( platformTransactionManager ).execute( ( ts ) -> getFilteringCriteria( Filters.empty() ) );
-        if ( criteria instanceof CriteriaImpl ) {
-            //noinspection unchecked
-            Iterator<CriteriaImpl.Subcriteria> it = ( ( CriteriaImpl ) criteria ).iterateSubcriteria();
-            List<FilterablePropertyAlias> result = new ArrayList<>();
-            while ( it.hasNext() ) {
-                CriteriaImpl.Subcriteria sc = it.next();
-                result.add( new FilterablePropertyAlias( sc.getPath(), sc.getAlias() ) );
-            }
-            return result;
-        }
-        return Collections.emptyList();
-    }
-
     @Override
     protected FilterablePropertyMeta getFilterablePropertyMeta( String propertyName ) throws IllegalArgumentException {
         FilterablePropertyMeta meta = super.getFilterablePropertyMeta( propertyName );
-        List<FilterablePropertyAlias> aliases = getFilterablePropertyAliases();
+        List<FilterablePropertyCriteriaAlias> aliases = getFilterablePropertyCriteriaAliases();
         // substitute longest path first
         aliases.sort( Comparator.comparing( a -> a.propertyName.length(), Comparator.reverseOrder() ) );
-        for ( FilterablePropertyAlias alias : aliases ) {
+        for ( FilterablePropertyCriteriaAlias alias : aliases ) {
             if ( propertyName.startsWith( alias.propertyName + "." ) ) {
                 propertyName = propertyName.replaceFirst( "^" + Pattern.quote( alias.propertyName + "." ), "" );
                 return meta
@@ -276,6 +250,28 @@ public abstract class AbstractCriteriaFilteringVoEnabledDao<O extends Identifiab
             }
         }
         return meta;
+    }
+
+    @Value
+    private static class FilterablePropertyCriteriaAlias {
+        String propertyName;
+        String alias;
+    }
+
+    private List<FilterablePropertyCriteriaAlias> getFilterablePropertyCriteriaAliases() {
+        // FIXME: unfortunately, this requires a session...
+        Criteria criteria = new TransactionTemplate( platformTransactionManager ).execute( ( ts ) -> getFilteringCriteria( Filters.empty() ) );
+        if ( criteria instanceof CriteriaImpl ) {
+            //noinspection unchecked
+            Iterator<CriteriaImpl.Subcriteria> it = ( ( CriteriaImpl ) criteria ).iterateSubcriteria();
+            List<FilterablePropertyCriteriaAlias> result = new ArrayList<>();
+            while ( it.hasNext() ) {
+                CriteriaImpl.Subcriteria sc = it.next();
+                result.add( new FilterablePropertyCriteriaAlias( sc.getPath(), sc.getAlias() ) );
+            }
+            return result;
+        }
+        return Collections.emptyList();
     }
 
     private static void addOrder( Criteria query, Sort sort ) {

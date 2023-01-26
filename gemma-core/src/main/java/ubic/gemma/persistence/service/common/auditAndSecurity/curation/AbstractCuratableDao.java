@@ -7,16 +7,14 @@ import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.curation.AbstractCuratableValueObject;
 import ubic.gemma.model.common.auditAndSecurity.curation.Curatable;
 import ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails;
-import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.persistence.service.AbstractQueryFilteringVoEnabledDao;
 import ubic.gemma.persistence.service.common.auditAndSecurity.CurationDetailsDao;
-import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Filter;
-import ubic.gemma.persistence.util.Slice;
+import ubic.gemma.persistence.util.Filters;
 
 import javax.annotation.Nullable;
+import javax.annotation.OverridingMethodsMustInvokeSuper;
 import java.util.*;
-import java.util.stream.Collectors;
 
 /**
  * Created by tesarst on 07/03/17.
@@ -91,12 +89,12 @@ public abstract class AbstractCuratableDao<C extends Curatable, VO extends Abstr
     }
 
     @Override
-    public Set<String> getFilterableProperties() {
-        Set<String> result = new HashSet<>( super.getFilterableProperties() );
-        result.addAll( Arrays.asList( "lastUpdated", "troubled", "needsAttention" ) );
-        return result;
+    @OverridingMethodsMustInvokeSuper
+    protected void registerFilterableProperties( Set<String> properties ) {
+        super.registerFilterableProperties( properties );
+        properties.addAll( Arrays.asList( "lastUpdated", "troubled", "needsAttention" ) );
     }
-
+   
     /**
      * {@inheritDoc}
      * <p>

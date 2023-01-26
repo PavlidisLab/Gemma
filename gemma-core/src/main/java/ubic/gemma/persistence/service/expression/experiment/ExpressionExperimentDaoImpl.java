@@ -1705,22 +1705,18 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
-    protected FilterablePropertyQueryAlias[] getFilterablePropertyQueryAliases() {
-        return new FilterablePropertyQueryAlias[] {
-                new FilterablePropertyQueryAlias( "characteristics.", CHARACTERISTIC_ALIAS, Characteristic.class ),
-                new FilterablePropertyQueryAlias( "factorValueCharacteristics.", FACTOR_VALUE_CHARACTERISTIC_ALIAS, Characteristic.class ),
-                new FilterablePropertyQueryAlias( "sampleUsedCharacteristics.", BIO_MATERIAL_CHARACTERISTIC_ALIAS, Characteristic.class ),
-                new FilterablePropertyQueryAlias( "bioAssays.", BIO_ASSAY_ALIAS, BioAssay.class )
-        };
+    protected void registerFilterableProperties( Set<String> properties ) {
+        super.registerFilterableProperties( properties );
+        properties.add( "taxon" );
+        properties.add( "bioAssayCount" );
     }
 
     @Override
-    public Set<String> getFilterableProperties() {
-        Set<String> results = new HashSet<>( super.getFilterableProperties() );
-        results.add( "taxon" );
-        addFilterableProperties( "taxon.", Taxon.class, results, FILTERABLE_PROPERTIES_MAX_DEPTH - 1 );
-        results.add( "bioAssayCount" );
-        return results;
+    protected void registerFilterablePropertyAliases( Set<FilterablePropertyAlias> aliases ) {
+        aliases.add( new FilterablePropertyAlias( "characteristics.", CHARACTERISTIC_ALIAS, Characteristic.class, null ) );
+        aliases.add( new FilterablePropertyAlias( "experimentalDesign.experimentalFactors.factorValues.characteristics.", FACTOR_VALUE_CHARACTERISTIC_ALIAS, Characteristic.class, null ) );
+        aliases.add( new FilterablePropertyAlias( "bioAssays.sampleUsed.characteristics.", BIO_MATERIAL_CHARACTERISTIC_ALIAS, Characteristic.class, null ) );
+        aliases.add( new FilterablePropertyAlias( "bioAssays.", BIO_ASSAY_ALIAS, BioAssay.class, null ) );
     }
 
     /**
