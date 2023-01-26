@@ -101,7 +101,7 @@ public class TaxonDaoImpl extends AbstractQueryFilteringVoEnabledDao<Taxon, Taxo
     }
 
     @Override
-    protected Query getFilteringQuery( @Nullable Filters filters, @Nullable Sort sort, EnumSet<QueryHint> hints ) {
+    protected Query getFilteringQuery( @Nullable Filters filters, @Nullable Sort sort ) {
         //noinspection JpaQlInspection // the constants for aliases is messing with the inspector
         //language=HQL
         String queryString = MessageFormat.format( "select {0} "

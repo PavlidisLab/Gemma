@@ -1007,7 +1007,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     }
 
     @Override
-    protected Query getFilteringQuery( @Nullable Filters filters, @Nullable Sort sort, EnumSet<QueryHint> hints ) {
+    protected Query getFilteringQuery( @Nullable Filters filters, @Nullable Sort sort ) {
         //language=HQL
         return finishFilteringQuery( "select distinct ad from ArrayDesign as ad "
                 + "left join fetch ad.curationDetails " + CURATION_DETAILS_ALIAS + " "

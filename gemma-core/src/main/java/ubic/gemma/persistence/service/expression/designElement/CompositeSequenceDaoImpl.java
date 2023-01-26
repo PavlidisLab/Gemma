@@ -104,7 +104,7 @@ public class CompositeSequenceDaoImpl extends AbstractQueryFilteringVoEnabledDao
     }
 
     @Override
-    protected Query getFilteringQuery( @Nullable Filters filters, @Nullable Sort sort, EnumSet<QueryHint> hints ) {
+    protected Query getFilteringQuery( @Nullable Filters filters, @Nullable Sort sort ) {
         //language=HQL
         String queryString = MessageFormat.format( "select {0} from CompositeSequence as {0} "
                         + "left join fetch {0}.arrayDesign as {1} "

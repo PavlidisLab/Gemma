@@ -1203,13 +1203,8 @@ public class ExpressionExperimentDaoImpl
     @Override
     public Slice<ExpressionExperimentDetailsValueObject> loadDetailsValueObjects( @Nullable Filters
             filters, @Nullable Sort sort, int offset, int limit ) {
-        EnumSet<QueryHint> hints = EnumSet.noneOf( QueryHint.class );
-
-        if ( offset > 0 || limit > 0 )
-            hints.add( QueryHint.PAGINATED );
-
         // Compose query
-        Query query = this.getFilteringQuery( filters, sort, hints );
+        Query query = this.getFilteringQuery( filters, sort );
 
         if ( offset > 0 ) {
             query.setFirstResult( offset );
@@ -1597,7 +1592,7 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
-    protected Query getFilteringQuery( @Nullable Filters filters, @Nullable Sort sort, EnumSet<QueryHint> hints ) {
+    protected Query getFilteringQuery( @Nullable Filters filters, @Nullable Sort sort ) {
         // the constants for aliases are messing with the inspector
         //language=HQL
         return finishFilteringQuery( "select distinct ee, aoi, sid "

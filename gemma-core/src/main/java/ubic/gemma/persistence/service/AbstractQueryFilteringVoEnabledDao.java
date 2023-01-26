@@ -30,18 +30,6 @@ import java.util.stream.Collectors;
  */
 public abstract class AbstractQueryFilteringVoEnabledDao<O extends Identifiable, VO extends IdentifiableValueObject<O>> extends AbstractFilteringVoEnabledDao<O, VO> {
 
-    /**
-     * Enumeration of hints that can be used to tune HQL queries.
-     */
-    protected enum QueryHint {
-        /**
-         * Indicate that the elements of the query will be paginated with {@link Query#setFirstResult(int)} and {@link Query#setMaxResults(int)}.
-         * <p>
-         * This is useful to queries that perform 'join fetch' on one-to-many and many-to-many relationships.
-         */
-        PAGINATED
-    }
-
     protected AbstractQueryFilteringVoEnabledDao( String objectAlias, Class<O> elementClass, SessionFactory sessionFactory ) {
         super( objectAlias, elementClass, sessionFactory );
     }
@@ -54,17 +42,17 @@ public abstract class AbstractQueryFilteringVoEnabledDao<O extends Identifiable,
      *
      * @return a {@link Query} that produce a list of {@link O}
      */
-    protected abstract Query getFilteringQuery( @Nullable Filters filters, @Nullable Sort sort, EnumSet<QueryHint> hints );
+    protected abstract Query getFilteringQuery( @Nullable Filters filters, @Nullable Sort sort );
 
     /**
-     * Produce a query that will be used to retrieve IDs of {@link #getFilteringQuery(Filters, Sort, EnumSet)}.
+     * Produce a query that will be used to retrieve IDs of {@link #getFilteringQuery(Filters, Sort)}.
      */
     protected Query getFilteringIdQuery( @Nullable Filters filters ) {
         throw new NotImplementedException( "Retrieving IDs for " + elementClass + " is not supported." );
     }
 
     /**
-     * Produce a query that will be used to retrieve the size of {@link #getFilteringQuery(Filters, Sort, EnumSet)}.
+     * Produce a query that will be used to retrieve the size of {@link #getFilteringQuery(Filters, Sort)}.
      * @return a {@link Query} which must return a single {@link Long} value
      */
     protected Query getFilteringCountQuery( @Nullable Filters filters ) {
@@ -72,7 +60,7 @@ public abstract class AbstractQueryFilteringVoEnabledDao<O extends Identifiable,
     }
 
     /**
-     * Process a properties from {@link #getFilteringQuery(Filters, Sort, EnumSet)} into a {@link O}.
+     * Process a properties from {@link #getFilteringQuery(Filters, Sort)} into a {@link O}.
      * <p>
      * The default is to simply cast the properties to {@link O}, assuming that it is the only return value of the query.
      */
@@ -82,7 +70,7 @@ public abstract class AbstractQueryFilteringVoEnabledDao<O extends Identifiable,
     }
 
     /**
-     * Process a properties from {@link #getFilteringQuery(Filters, Sort, EnumSet)} into a {@link VO} value object.
+     * Process a properties from {@link #getFilteringQuery(Filters, Sort)} into a {@link VO} value object.
      * <p>
      * The properties is obtained from {@link Query#list()}.
      * <p>
@@ -114,7 +102,7 @@ public abstract class AbstractQueryFilteringVoEnabledDao<O extends Identifiable,
     public List<O> loadPreFilter( @Nullable Filters filters, @Nullable Sort sort ) {
         StopWatch timer = StopWatch.createStarted();
         //noinspection unchecked
-        List<Object> result = getFilteringQuery( filters, sort, EnumSet.noneOf( QueryHint.class ) ).list();
+        List<Object> result = getFilteringQuery( filters, sort ).list();
         List<O> r = result.stream()
                 .map( this::processFilteringQueryResultToEntity )
                 .collect( Collectors.toList() );
@@ -127,18 +115,14 @@ public abstract class AbstractQueryFilteringVoEnabledDao<O extends Identifiable,
     @Override
     public Slice<O> loadPreFilter( @Nullable Filters filters, @Nullable Sort sort, int offset, int limit ) {
         StopWatch timer = StopWatch.createStarted();
-        EnumSet<QueryHint> hints = EnumSet.noneOf( QueryHint.class );
-        if ( offset > 0 || limit > 0 ) {
-            hints.add( QueryHint.PAGINATED );
-        }
-        Query query = this.getFilteringQuery( filters, sort, hints );
+        Query query = this.getFilteringQuery( filters, sort );
         Query totalElementsQuery = getFilteringCountQuery( filters );
         // setup offset/limit
         if ( offset > 0 )
             query.setFirstResult( offset );
         if ( limit > 0 )
             query.setMaxResults( limit );
-        List<?> result = getFilteringQuery( filters, sort, EnumSet.noneOf( QueryHint.class ) ).list();
+        List<?> result = getFilteringQuery( filters, sort ).list();
         List<O> os = result.stream()
                 .map( this::processFilteringQueryResultToEntity )
                 .collect( Collectors.toList() );
@@ -153,12 +137,7 @@ public abstract class AbstractQueryFilteringVoEnabledDao<O extends Identifiable,
     public Slice<VO> loadValueObjectsPreFilter( @Nullable Filters filters, @Nullable Sort sort, int offset, int limit ) {
         StopWatch stopWatch = StopWatch.createStarted();
 
-        EnumSet<QueryHint> hints = EnumSet.noneOf( QueryHint.class );
-        if ( offset > 0 || limit > 0 ) {
-            hints.add( QueryHint.PAGINATED );
-        }
-
-        Query query = this.getFilteringQuery( filters, sort, hints );
+        Query query = this.getFilteringQuery( filters, sort );
         Query totalElementsQuery = getFilteringCountQuery( filters );
 
         // setup offset/limit
@@ -200,7 +179,7 @@ public abstract class AbstractQueryFilteringVoEnabledDao<O extends Identifiable,
         StopWatch queryStopWatch = StopWatch.create();
         StopWatch postProcessingStopWatch = StopWatch.create();
 
-        Query query = this.getFilteringQuery( filters, sort, EnumSet.noneOf( QueryHint.class ) );
+        Query query = this.getFilteringQuery( filters, sort );
 
         queryStopWatch.start();
         List<?> list = query.list();
