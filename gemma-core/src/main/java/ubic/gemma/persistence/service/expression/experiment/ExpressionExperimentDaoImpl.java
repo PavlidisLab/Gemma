@@ -63,6 +63,7 @@ import ubic.gemma.persistence.util.*;
 
 import javax.annotation.Nullable;
 import java.sql.SQLException;
+import java.text.Collator;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
@@ -604,7 +605,7 @@ public class ExpressionExperimentDaoImpl
      * the same characteristic at multiple levels to make counting more efficient.
      */
     private Map<Characteristic, Long> doGetAnnotationsFrequency( @Nullable Collection<Long> eeIds, int maxResults ) {
-        Map<Characteristic, Long> result = new HashMap<>();
+        Map<Characteristic, Long> result = new TreeMap<>( Characteristic.getByValueComparator() );
 
         if ( eeIds != null && eeIds.isEmpty() ) {
             return result;

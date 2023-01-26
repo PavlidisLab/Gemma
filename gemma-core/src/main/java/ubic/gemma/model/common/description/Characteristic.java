@@ -26,6 +26,9 @@ import ubic.gemma.model.common.AbstractDescribable;
 
 import javax.annotation.Nullable;
 import java.io.Serializable;
+import java.text.Collator;
+import java.util.Comparator;
+import java.util.Locale;
 import java.util.Objects;
 
 /**
@@ -37,6 +40,18 @@ import java.util.Objects;
 public class Characteristic extends AbstractDescribable implements Serializable {
 
     private static final long serialVersionUID = -7242166109264718620L;
+
+    /**
+     * Obtain a comparator to order terms by value URI (or value if null) in a case-insensitive manner.
+     */
+    public static Comparator<Characteristic> getByValueComparator() {
+        Collator collator = Collator.getInstance( Locale.ENGLISH );
+        collator.setStrength( Collator.PRIMARY );
+        return Comparator
+                .comparing( Characteristic::getValueUri, Comparator.nullsLast( collator ) )
+                .thenComparing( Characteristic::getValue, Comparator.nullsLast( collator ) ); // there should be no null, but we better be safe than sorry
+    }
+
     private String category;
     @Nullable
     private String categoryUri;
