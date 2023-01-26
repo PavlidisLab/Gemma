@@ -1,5 +1,6 @@
 package ubic.gemma.persistence.service;
 
+import lombok.Value;
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.commons.lang3.time.StopWatch;
 import org.hibernate.Query;
@@ -12,11 +13,9 @@ import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.persistence.util.Sort;
 
 import javax.annotation.Nullable;
-import java.util.EnumSet;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 /**
@@ -46,6 +45,54 @@ public abstract class AbstractQueryFilteringVoEnabledDao<O extends Identifiable,
     protected AbstractQueryFilteringVoEnabledDao( String objectAlias, Class<O> elementClass, SessionFactory sessionFactory ) {
         super( objectAlias, elementClass, sessionFactory );
     }
+
+    @Value
+    protected static class FilterablePropertyQueryAlias {
+        String prefix;
+        @Nullable
+        String objectAlias;
+        Class<?> propertyType;
+    }
+
+    /**
+     * Since HQL-based filtering cannot simply detect aliases in the query, you have to declare them explicitly.
+     */
+    protected FilterablePropertyQueryAlias[] getFilterablePropertyQueryAliases() {
+        return new FilterablePropertyQueryAlias[0];
+    }
+
+    @Override
+    public Set<String> getFilterableProperties() {
+        Set<String> results = super.getFilterableProperties();
+        if ( getFilterablePropertyQueryAliases().length > 0 ) {
+            results = new HashSet<>( results );
+            for ( FilterablePropertyQueryAlias alias : getFilterablePropertyQueryAliases() ) {
+                addFilterableProperties( alias.prefix, alias.propertyType, results, FILTERABLE_PROPERTIES_MAX_DEPTH - 1 );
+            }
+            results = Collections.unmodifiableSet( results );
+        }
+        return results;
+    }
+
+    /**
+     * Checks for special properties that are allowed to be referenced on certain objects. E.g. characteristics on EEs.
+     * {@inheritDoc}
+     */
+    @Override
+    protected FilterablePropertyMeta getFilterablePropertyMeta( String propertyName ) {
+        // replace longer prefix first
+        List<FilterablePropertyQueryAlias> aliases = Arrays.stream( getFilterablePropertyQueryAliases() )
+                .sorted( Comparator.comparing( f -> f.prefix.length(), Comparator.reverseOrder() ) )
+                .collect( Collectors.toList() );
+        for ( FilterablePropertyQueryAlias alias : aliases ) {
+            if ( propertyName.startsWith( alias.prefix ) && !propertyName.equals( alias.prefix + "size" ) ) {
+                String fieldName = propertyName.replaceFirst( "^" + Pattern.quote( alias.prefix ), "" );
+                return getFilterablePropertyMeta( alias.objectAlias, fieldName, alias.propertyType );
+            }
+        }
+        return super.getFilterablePropertyMeta( propertyName );
+    }
+
 
     /**
      * Produce a query for retrieving value objects after applying a set of filters and a given ordering.

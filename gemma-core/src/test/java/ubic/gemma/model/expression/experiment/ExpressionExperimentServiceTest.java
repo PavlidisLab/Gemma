@@ -298,10 +298,29 @@ public class ExpressionExperimentServiceTest extends BaseSpringContextTest {
         Filter of = expressionExperimentService.getFilter( "characteristics.id", Filter.Operator.eq, c.getId().toString() );
         assertEquals( CharacteristicDao.OBJECT_ALIAS, of.getObjectAlias() );
         assertEquals( "id", of.getPropertyName() );
+        assertEquals( Long.class, of.getPropertyType() );
         Long id = ee.getId();
         ids.add( id );
         Collection<ExpressionExperimentValueObject> list = expressionExperimentService.loadValueObjectsPreFilter( Filters.by( of ), null, 0, 0 );
         assertEquals( 1, list.size() );
+    }
+
+    @Test
+    public void testLoadValueObjectsPreFilterByFactorValueCharacteristic() {
+        Filter of = expressionExperimentService.getFilter( "factorValueCharacteristics.id", Filter.Operator.eq, "1" );
+        assertEquals( "id", of.getPropertyName() );
+        assertEquals( Long.class, of.getPropertyType() );
+        Collection<ExpressionExperimentValueObject> list = expressionExperimentService.loadValueObjectsPreFilter( Filters.by( of ), null, 0, 0 );
+        assertTrue( list.isEmpty() );
+    }
+
+    @Test
+    public void testLoadValueObjectsPreFilterBySampleUsedCharacteristic() {
+        Filter of = expressionExperimentService.getFilter( "sampleUsedCharacteristics.id", Filter.Operator.eq, "1" );
+        assertEquals( "id", of.getPropertyName() );
+        assertEquals( Long.class, of.getPropertyType() );
+        Collection<ExpressionExperimentValueObject> list = expressionExperimentService.loadValueObjectsPreFilter( Filters.by( of ), null, 0, 0 );
+        assertTrue( list.isEmpty() );
     }
 
     @Test

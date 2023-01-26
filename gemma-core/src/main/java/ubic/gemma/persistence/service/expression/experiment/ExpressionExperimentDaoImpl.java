@@ -63,7 +63,6 @@ import ubic.gemma.persistence.util.*;
 
 import javax.annotation.Nullable;
 import java.sql.SQLException;
-import java.text.MessageFormat;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
@@ -84,6 +83,8 @@ public class ExpressionExperimentDaoImpl
 
     private static final String
             CHARACTERISTIC_ALIAS = CharacteristicDao.OBJECT_ALIAS,
+            BIO_MATERIAL_CHARACTERISTIC_ALIAS = "bmc",
+            FACTOR_VALUE_CHARACTERISTIC_ALIAS = "fvc",
             BIO_ASSAY_ALIAS = BioAssayDao.OBJECT_ALIAS,
             TAXON_ALIAS = TaxonDao.OBJECT_ALIAS,
             ARRAY_DESIGN_ALIAS = ArrayDesignDao.OBJECT_ALIAS;
@@ -1664,9 +1665,22 @@ public class ExpressionExperimentDaoImpl
             queryString += " left join ee.characteristics as " + CharacteristicDao.OBJECT_ALIAS;
         }
 
-        if ( FiltersUtils.containsAnyAlias( filters, sort, BIO_ASSAY_ALIAS, ARRAY_DESIGN_ALIAS ) ) {
+        if ( FiltersUtils.containsAnyAlias( filters, sort, FACTOR_VALUE_CHARACTERISTIC_ALIAS ) ) {
+            queryString += " left join ee.experimentalDesign.experimentalFactors as ef";
+        }
+
+        if ( FiltersUtils.containsAnyAlias( filters, sort, FACTOR_VALUE_CHARACTERISTIC_ALIAS ) ) {
+            queryString += " left join ef.factorValues as fv ";
+            queryString += " left join fv.characteristics as " + FACTOR_VALUE_CHARACTERISTIC_ALIAS;
+        }
+
+        if ( FiltersUtils.containsAnyAlias( filters, sort, BIO_ASSAY_ALIAS, BIO_MATERIAL_CHARACTERISTIC_ALIAS, ARRAY_DESIGN_ALIAS ) ) {
             log.warn( "Querying ee.bioAssays, this might take some time..." );
             queryString += " left join ee.bioAssays as " + BIO_ASSAY_ALIAS;
+        }
+
+        if ( FiltersUtils.containsAnyAlias( filters, sort, BIO_MATERIAL_CHARACTERISTIC_ALIAS ) ) {
+            queryString += " left join " + BIO_ASSAY_ALIAS + ".sampleUsed.characteristics as " + BIO_MATERIAL_CHARACTERISTIC_ALIAS;
         }
 
         if ( FiltersUtils.containsAnyAlias( filters, sort, ArrayDesignDao.OBJECT_ALIAS ) ) {
@@ -1691,10 +1705,18 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
+    protected FilterablePropertyQueryAlias[] getFilterablePropertyQueryAliases() {
+        return new FilterablePropertyQueryAlias[] {
+                new FilterablePropertyQueryAlias( "characteristics.", CHARACTERISTIC_ALIAS, Characteristic.class ),
+                new FilterablePropertyQueryAlias( "factorValueCharacteristics.", FACTOR_VALUE_CHARACTERISTIC_ALIAS, Characteristic.class ),
+                new FilterablePropertyQueryAlias( "sampleUsedCharacteristics.", BIO_MATERIAL_CHARACTERISTIC_ALIAS, Characteristic.class ),
+                new FilterablePropertyQueryAlias( "bioAssays.", BIO_ASSAY_ALIAS, BioAssay.class )
+        };
+    }
+
+    @Override
     public Set<String> getFilterableProperties() {
         Set<String> results = new HashSet<>( super.getFilterableProperties() );
-        addFilterableProperties( "characteristics.", Characteristic.class, results, FILTERABLE_PROPERTIES_MAX_DEPTH - 1 );
-        addFilterableProperties( "bioAssays.", BioAssay.class, results, FILTERABLE_PROPERTIES_MAX_DEPTH - 1 );
         results.add( "taxon" );
         addFilterableProperties( "taxon.", Taxon.class, results, FILTERABLE_PROPERTIES_MAX_DEPTH - 1 );
         results.add( "bioAssayCount" );
@@ -1707,16 +1729,6 @@ public class ExpressionExperimentDaoImpl
      */
     @Override
     protected FilterablePropertyMeta getFilterablePropertyMeta( String propertyName ) {
-        if ( propertyName.startsWith( "characteristics." ) && !propertyName.equals( "characteristics.size" ) ) {
-            String fieldName = propertyName.replaceFirst( "^characteristics\\.", "" );
-            return getFilterablePropertyMeta( CHARACTERISTIC_ALIAS, fieldName, Characteristic.class );
-        }
-
-        if ( propertyName.startsWith( "bioAssays." ) && !propertyName.equals( "bioAssays.size" ) ) {
-            String fieldName = propertyName.replaceFirst( "^bioAssays\\.", "" );
-            return getFilterablePropertyMeta( BIO_ASSAY_ALIAS, fieldName, BioAssay.class );
-        }
-
         if ( propertyName.equals( "taxon" ) ) {
             return getFilterablePropertyMeta( TAXON_ALIAS, "id", Taxon.class )
                     .withDescription( "alias for taxon.id" );
