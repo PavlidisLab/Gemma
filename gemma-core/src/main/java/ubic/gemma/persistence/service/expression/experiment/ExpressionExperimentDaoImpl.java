@@ -691,8 +691,10 @@ public class ExpressionExperimentDaoImpl
                 addCounts( futureBioMaterial.get(), result );
             }
             bioMaterialSkipped = false;
-        } catch ( InterruptedException | ExecutionException e ) {
+        } catch ( InterruptedException e ) {
             throw new RuntimeException( e );
+        } catch ( ExecutionException e ) {
+            throw new RuntimeException( e.getCause() );
         } catch ( TimeoutException e ) {
             log.warn( String.format( "Loading characteristics usage statistics by BioMaterial is taking more than %d ms, it will not be included in the returned statistics.",
                     MAX_WAIT_TIME_FOR_BIOMATERIAL_MS ) );
