@@ -155,7 +155,7 @@ public class SplitExperimentCli extends ExpressionExperimentManipulatingCLI {
 
         }
 
-        ExperimentalFactor factor = efs.load( factorId );
+        ExperimentalFactor factor = efs.loadOrFail( factorId );
         factor = efs.thaw( factor );
         if ( factor == null ) {
             throw new IllegalArgumentException( "No factor for id=" + factorId );

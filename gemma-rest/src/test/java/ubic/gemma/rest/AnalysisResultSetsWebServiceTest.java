@@ -212,6 +212,7 @@ public class AnalysisResultSetsWebServiceTest extends BaseSpringContextTest {
 
     @Test
     public void testFindAllWithDatabaseEntriesThenReturnLatestAnalysisResults() {
+        assertThat( ee.getAccession() ).isNotNull();
         ResponseDataObject<?> result = service.getResultSets( null,
                 DatabaseEntryArrayArg.valueOf( ee.getAccession().getAccession() ),
                 FilterArg.valueOf( "" ),

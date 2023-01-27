@@ -107,11 +107,10 @@ public class CharacteristicBrowserController {
 
         Map<Characteristic, Object> charToParent = characteristicService.getParents( records );
 
-        for ( Object o : records ) {
-            Characteristic c = ( Characteristic ) o;
-            Object parent = charToParent.get( c );
+        for ( Characteristic o : records ) {
+            Object parent = charToParent.get( o );
 
-            AnnotationValueObject avo = new AnnotationValueObject( c, Characteristic );
+            AnnotationValueObject avo = new AnnotationValueObject( o, Characteristic.class );
 
             if ( parent != null ) {
                 populateParentInformation( avo, parent );

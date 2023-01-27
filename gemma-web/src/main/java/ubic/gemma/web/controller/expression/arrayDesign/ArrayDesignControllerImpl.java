@@ -25,13 +25,7 @@ import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.FileSystemResource;
-import org.springframework.core.io.InputStreamResource;
-import org.springframework.core.io.Resource;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -70,7 +64,6 @@ import ubic.gemma.web.util.EntityNotFoundException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.*;
-import java.nio.file.Files;
 import java.util.*;
 
 /**
@@ -259,7 +252,7 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
         StringBuilder list = new StringBuilder();
 
         if ( searchResults.size() == 1 ) {
-            ArrayDesign arrayDesign = arrayDesignService.load( searchResults.iterator().next().getResultId() );
+            ArrayDesign arrayDesign = arrayDesignService.loadOrFail( searchResults.iterator().next().getResultId() );
             return new ModelAndView(
                     new RedirectView( "/arrays/showArrayDesign.html?id=" + arrayDesign.getId(), true ) )
                     .addObject( "message",
@@ -370,10 +363,10 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
         arrayDesignReportService.fillInSubsumptionInfo( Collections.singleton( vo ) );
 
         ArrayDesignValueObjectExt result = new ArrayDesignValueObjectExt( vo );
-        result = this.setExtRefsAndCounts( result, arrayDesign );
-        result = this.setAlternateNames( result, arrayDesign );
-        result = this.setExtRefsAndCounts( result, arrayDesign );
-        result = this.setSummaryInfo( result, id );
+        this.setExtRefsAndCounts( result, arrayDesign );
+        this.setAlternateNames( result, arrayDesign );
+        this.setExtRefsAndCounts( result, arrayDesign );
+        this.setSummaryInfo( result, id );
         result.setSwitchedExpressionExperimentCount( ( long ) arrayDesignService.getSwitchedExperimentIds( arrayDesign ).size() );
 
         populateMergeStatus( arrayDesign, result ); // SLOW if we follow down to mergees of mergees etc.
@@ -406,19 +399,18 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
     /**
      * Set alternate names on the given value object.
      */
-    private ArrayDesignValueObjectExt setAlternateNames( ArrayDesignValueObjectExt result, ArrayDesign arrayDesign ) {
+    private void setAlternateNames( ArrayDesignValueObjectExt result, ArrayDesign arrayDesign ) {
         Collection<String> names = new HashSet<>();
         for ( AlternateName an : arrayDesign.getAlternateNames() ) {
             names.add( an.getName() );
         }
         result.setAlternateNames( names );
-        return result;
     }
 
     /**
      * Sets external references, design element count and express. experiment count on the given value object.
      */
-    private ArrayDesignValueObjectExt setExtRefsAndCounts( ArrayDesignValueObjectExt result, ArrayDesign arrayDesign ) {
+    private void setExtRefsAndCounts( ArrayDesignValueObjectExt result, ArrayDesign arrayDesign ) {
         Integer numCompositeSequences = arrayDesignService.getCompositeSequenceCount( arrayDesign ).intValue();
 
         long numExpressionExperiments = arrayDesignService.numExperiments( arrayDesign );
@@ -430,20 +422,18 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
         result.setExternalReferences( externalReferences );
         result.setDesignElementCount( numCompositeSequences );
         result.setExpressionExperimentCount( numExpressionExperiments );
-        return result;
     }
 
     /**
      * Sets the summary info on the given value object.
      */
-    private ArrayDesignValueObjectExt setSummaryInfo( ArrayDesignValueObjectExt result, Long id ) {
+    private void setSummaryInfo( ArrayDesignValueObjectExt result, Long id ) {
         ArrayDesignValueObject summary = arrayDesignReportService.getSummaryObject( id );
         if ( summary != null ) {
             result.setNumProbeAlignments( summary.getNumProbeAlignments() );
             result.setNumProbesToGenes( summary.getNumProbesToGenes() );
             result.setNumProbeSequences( summary.getNumProbeSequences() );
         }
-        return result;
     }
 
     @Override

@@ -91,7 +91,7 @@ public class LoadExpressionDataCli extends AbstractCLIContextCLI {
         options.addOption( accessionOption );
 
         Option platformOnlyOption = Option.builder( "y" ).argName( "Platforms only" ).desc(
-                "Load platforms (array designs) only; implied if you supply GPL instead of GSE or GDS" )
+                        "Load platforms (array designs) only; implied if you supply GPL instead of GSE or GDS" )
                 .longOpt( "platforms" ).build();
         options.addOption( platformOnlyOption );
 
@@ -239,10 +239,8 @@ public class LoadExpressionDataCli extends AbstractCLIContextCLI {
                 this.postProcess( ees );
             }
 
-            for ( Object object : ees ) {
-                assert object instanceof ExpressionExperiment;
-                addSuccessObject( object, ( ( Describable ) object ).getName() + " (" + ( ( ExpressionExperiment ) object )
-                        .getAccession().getAccession() + ")" );
+            for ( ExpressionExperiment object : ees ) {
+                addSuccessObject( object, object.getName() + ( object.getAccession() != null ? " (" + object.getAccession().getAccession() + ")" : "" ) );
             }
         } catch ( Exception e ) {
             addErrorObject( accession, e.getMessage(), e );

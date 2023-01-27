@@ -119,6 +119,7 @@ public class ExperimentalDesignControllerTest extends BaseSpringWebTest {
         ee = this.eeService.thawLite( ee );
 
         ExperimentalFactor ef = ee.getExperimentalDesign().getExperimentalFactors().iterator().next();
+        assertNotNull( ef );
         EntityDelegator e = new EntityDelegator( ef.getFactorValues().iterator().next() );
 
         Characteristic vc = Characteristic.Factory.newInstance();
@@ -135,6 +136,7 @@ public class ExperimentalDesignControllerTest extends BaseSpringWebTest {
         experimentalDesignController.createFactorValue( new EntityDelegator( ef ) );
 
         ef = experimentalFactorService.load( ef.getId() );
+        assertNotNull( ef );
         assertEquals( 5, ef.getFactorValues().size() );
     }
 

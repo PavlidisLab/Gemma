@@ -34,6 +34,7 @@ import javax.ws.rs.core.MediaType;
 import java.net.URI;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -75,9 +76,14 @@ public class RootWebService {
             @Context final HttpServletRequest request,
             @Context final ServletConfig servletConfig ) {
         // collect various versioned entities to display on the main endpoint
-        List<ExternalDatabaseValueObject> versioned = externalDatabaseService.findAllByNameIn( Arrays.asList( EXTERNAL_DATABASE_NAMES ) ).stream()
-                .map( ExternalDatabaseValueObject::new )
-                .collect( Collectors.toList() );
+        List<ExternalDatabaseValueObject> versioned;
+        if ( EXTERNAL_DATABASE_NAMES != null && EXTERNAL_DATABASE_NAMES.length > 0 ) {
+            versioned = externalDatabaseService.findAllByNameIn( Arrays.asList( EXTERNAL_DATABASE_NAMES ) ).stream()
+                    .map( ExternalDatabaseValueObject::new )
+                    .collect( Collectors.toList() );
+        } else {
+            versioned = Collections.emptyList();
+        }
         URI apiDocsUrl = ServletUriComponentsBuilder.fromContextPath( request )
                 .path( "/resources/restapidocs/" )
                 .build()

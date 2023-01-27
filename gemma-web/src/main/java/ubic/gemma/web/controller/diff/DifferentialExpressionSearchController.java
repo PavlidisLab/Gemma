@@ -88,7 +88,7 @@ public class DifferentialExpressionSearchController {
     public Collection<DifferentialExpressionValueObject> getDifferentialExpression( Long geneId, double threshold,
             Integer limit ) {
 
-        Gene g = geneService.load( geneId );
+        Gene g = geneService.loadOrFail( geneId );
         g = geneService.thaw( g );
 
         if ( g == null ) {

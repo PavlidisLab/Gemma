@@ -67,7 +67,9 @@ public class UpdatePubMedCli extends AbstractCLIContextCLI {
             String shortName = ee.getShortName();
             if ( shortName.contains( "." ) ) {
                 ee = eeserv.thawLite( ee );
-                shortName = ee.getAccession().getAccession();
+                if ( ee.getAccession() != null ) {
+                    shortName = ee.getAccession().getAccession();
+                }
             }
             toFetch.put( shortName, ee );
         }

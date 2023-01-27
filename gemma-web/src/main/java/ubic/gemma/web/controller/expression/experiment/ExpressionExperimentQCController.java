@@ -347,7 +347,7 @@ public class ExpressionExperimentQCController extends BaseController {
         boolean reallyShowLabels;
         int minimumCellSizeForText = 9;
         if ( forceShowLabels != null && forceShowLabels ) {
-            cellsize = Math.min( ExpressionExperimentQCController.MAX_HEATMAP_CELLSIZE, minimumCellSizeForText );
+            cellsize = minimumCellSizeForText;
             reallyShowLabels = true;
         } else {
             reallyShowLabels = showLabels != null && ( showLabels && cellsize >= minimumCellSizeForText );

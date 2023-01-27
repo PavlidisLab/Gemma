@@ -125,7 +125,7 @@ public class SessionListManagerImpl implements SessionListManager {
 
     @Override
     public Collection<Long> getExperimentIdsInSet( Long id ) {
-        ExpressionExperimentSet eeSet = expressionExperimentSetService.load( id ); // secure
+        ExpressionExperimentSet eeSet = expressionExperimentSetService.loadOrFail( id ); // secure
         Collection<BioAssaySet> datasets = eeSet.getExperiments(); // Not secure.
         Collection<Long> eeids = new HashSet<>();
         for ( BioAssaySet ee : datasets ) {

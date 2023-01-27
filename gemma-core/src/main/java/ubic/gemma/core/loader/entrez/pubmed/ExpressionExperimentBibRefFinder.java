@@ -53,6 +53,11 @@ public class ExpressionExperimentBibRefFinder {
 
         DatabaseEntry accession = ee.getAccession();
 
+        if ( accession == null ) {
+            ExpressionExperimentBibRefFinder.log.warn( String.format( "%s has no accession, will return null as primary reference", ee ) );
+            return null;
+        }
+
         ExternalDatabase ed = accession.getExternalDatabase();
 
         if ( !ed.getName().equals( "GEO" ) ) {
@@ -90,8 +95,8 @@ public class ExpressionExperimentBibRefFinder {
             throw new RuntimeException( "Could not get data from remote server", e1 );
         }
 
-        try (InputStream is = conn.getInputStream();
-                BufferedReader br = new BufferedReader( new InputStreamReader( is ) )) {
+        try ( InputStream is = conn.getInputStream();
+                BufferedReader br = new BufferedReader( new InputStreamReader( is ) ) ) {
 
             String line;
             while ( ( line = br.readLine() ) != null ) {

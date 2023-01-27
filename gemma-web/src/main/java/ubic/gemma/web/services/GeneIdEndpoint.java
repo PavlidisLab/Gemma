@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2008 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -34,7 +34,7 @@ import java.util.HashSet;
 
 /**
  * Given the official symbol and taxon of a gene, will return the matching gene ID.
- * 
+ *
  * @author klc, gavin
  *
  */
@@ -63,7 +63,7 @@ public class GeneIdEndpoint extends AbstractGemmaEndpoint {
 
     /**
      * Reads the given <code>requestElement</code>, and sends a the response back.
-     * 
+     *
      * @param requestElement the contents of the SOAP message as DOM elements
      * @param document a DOM document to be used for constructing <code>Node</code>s
      * @return the response element
@@ -89,7 +89,7 @@ public class GeneIdEndpoint extends AbstractGemmaEndpoint {
 
         log.debug( "XML input read: gene symbol, " + geneName + " & taxon id, " + taxString );
         // Collection<Gene> genes = geneService.findByOfficialSymbolInexact( geneName );
-        Taxon taxon = taxonService.load( Long.parseLong( taxString ) );
+        Taxon taxon = taxonService.loadOrFail( Long.parseLong( taxString ) );
         Gene gene = geneService.findByOfficialSymbol( geneName, taxon );
 
         if ( gene == null ) {

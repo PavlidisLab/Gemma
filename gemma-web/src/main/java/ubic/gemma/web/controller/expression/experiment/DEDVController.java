@@ -210,8 +210,8 @@ public class DEDVController {
         if ( ees == null || ees.isEmpty() )
             return new VisualizationValueObject[0];
 
-        Gene queryGene = geneService.load( queryGeneId );
-        Gene coexpressedGene = geneService.load( coexpressedGeneId );
+        Gene queryGene = geneService.loadOrFail( queryGeneId );
+        Gene coexpressedGene = geneService.loadOrFail( coexpressedGeneId );
 
         List<Long> genes = new ArrayList<>();
         genes.add( queryGeneId );
@@ -628,7 +628,7 @@ public class DEDVController {
              * Organize the vectors in the same way expected by the ee+gene type of request.
              */
             ExpressionExperimentValueObject ee = expressionExperimentService
-                    .loadValueObject( expressionExperimentService.load( eeId ) );
+                    .loadValueObjectById( eeId );
 
             result = new HashMap<>();
             Map<Long, Collection<DoubleVectorValueObject>> gmap = new HashMap<>();

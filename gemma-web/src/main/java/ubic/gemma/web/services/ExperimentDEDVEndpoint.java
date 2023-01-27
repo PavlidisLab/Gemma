@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2008 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -37,7 +37,7 @@ import java.util.Collection;
 /**
  * Allows access to all the Design Element Data Vectors (DEDV's) for a given Expression Experiment. Returns the DEDV's
  * and the genes that might be responsible for that DEDV
- * 
+ *
  * @author klc, gavin
  *
  */
@@ -75,7 +75,7 @@ public class ExperimentDEDVEndpoint extends AbstractGemmaEndpoint {
 
     /**
      * Reads the given <code>requestElement</code>, and sends a the response back.
-     * 
+     *
      * @param requestElement the contents of the SOAP message as DOM elements
      * @param document a DOM document to be used for constructing <code>Node</code>s
      * @return the response element
@@ -108,7 +108,7 @@ public class ExperimentDEDVEndpoint extends AbstractGemmaEndpoint {
         }
 
         // Build the matrix
-        ExpressionExperiment ee = expressionExperimentService.load( Long.parseLong( eeid ) );
+        ExpressionExperiment ee = expressionExperimentService.loadOrFail( Long.parseLong( eeid ) );
         ee = expressionExperimentService.thawLite( ee );
 
         ExpressionDataDoubleMatrix dmatrix = expressionDataMatrixService.getProcessedExpressionDataMatrix( ee );

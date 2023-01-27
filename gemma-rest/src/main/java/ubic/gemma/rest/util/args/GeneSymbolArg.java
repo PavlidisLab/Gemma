@@ -51,7 +51,7 @@ public class GeneSymbolArg extends GeneArg<String> {
     @Override
     public List<GeneValueObject> getValueObjects( GeneService service ) {
         Collection<Gene> genes = service.findByOfficialSymbol( this.getValue() );
-        checkEntity( service, genes == null || genes.size() < 1 ? null : genes.iterator().next() );
+        checkEntity( service, genes.iterator().next() );
         return service.loadValueObjects( genes );
     }
 

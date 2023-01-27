@@ -22,6 +22,7 @@ package ubic.gemma.core.apps;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.core.io.ClassPathResource;
 import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.core.util.AbstractCLIContextCLI;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -69,7 +70,7 @@ public class ArrayDesignAlternativePopulateCli extends AbstractCLIContextCLI {
         ArrayDesignService arrayDesignService = this.getBean( ArrayDesignService.class );
 
         // Read in the mapping file, which is in the classpath. This is also used by GeoPlatform (and in the DataUpdater)
-        InputStream r = this.getClass().getResourceAsStream( "/ubic/gemma/core/loader/affy.altmappings.txt" );
+        InputStream r = new ClassPathResource( "/ubic/gemma/core/loader/affy.altmappings.txt" ).getInputStream();
         try ( BufferedReader in = new BufferedReader( new InputStreamReader( r ) ) ) {
             while ( in.ready() ) {
                 String line = in.readLine().trim();

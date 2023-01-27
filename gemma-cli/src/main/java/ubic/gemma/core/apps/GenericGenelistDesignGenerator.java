@@ -311,7 +311,7 @@ public class GenericGenelistDesignGenerator extends AbstractCLIContextCLI {
                     }
 
                     // making sure ...
-                    csForGene = compositeSequenceService.load( csForGene.getId() );
+                    csForGene = compositeSequenceService.loadOrFail( csForGene.getId() );
                     assert csForGene.getId() != null;
                     arrayDesign.getCompositeSequences().add( csForGene );
 

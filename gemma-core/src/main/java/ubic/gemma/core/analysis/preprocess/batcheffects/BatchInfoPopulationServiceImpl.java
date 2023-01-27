@@ -19,14 +19,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -428,7 +421,8 @@ public class BatchInfoPopulationServiceImpl implements BatchInfoPopulationServic
      * @return map of GEO id to headers, including the platform ID
      */
     private Map<String, String> readFastqHeaders( ExpressionExperiment ee ) throws IOException {
-        String accession = ee.getAccession().getAccession();
+        String accession = Objects.requireNonNull( ee.getAccession(), String.format( "%s does not have an accession", ee ) )
+                .getAccession();
         File headerFile = locateFASTQheadersForBatchInfo( accession );
 
         if ( !headerFile.canRead() ) {

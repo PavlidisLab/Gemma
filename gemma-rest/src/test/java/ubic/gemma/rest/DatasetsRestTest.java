@@ -74,13 +74,16 @@ public class DatasetsRestTest extends BaseSpringContextTest {
                         ees.get( 0 ).getShortName() + ", BAD_NAME, " + ees.get( 2 )
                                 .getShortName() ), FilterArg.valueOf( "" ), OffsetArg.valueOf( "0" ),
                 LimitArg.valueOf( "10" ), SortArg.valueOf( "+id" ) );
+        ExpressionExperiment ee = ees.get( 0 );
+        assertThat( ee ).isNotNull();
+        assertThat( ee.getAccession() ).isNotNull();
         assertThat( response.getData() )
                 .isNotNull()
                 .asList().hasSize( 2 )
                 .first()
-                .hasFieldOrPropertyWithValue( "accession", ees.get( 0 ).getAccession().getAccession() )
-                .hasFieldOrPropertyWithValue( "externalDatabase", ees.get( 0 ).getAccession().getExternalDatabase().getName() )
-                .hasFieldOrPropertyWithValue( "externalUri", ees.get( 0 ).getAccession().getExternalDatabase().getWebUri() );
+                .hasFieldOrPropertyWithValue( "accession", ee.getAccession().getAccession() )
+                .hasFieldOrPropertyWithValue( "externalDatabase", ee.getAccession().getExternalDatabase().getName() )
+                .hasFieldOrPropertyWithValue( "externalUri", ee.getAccession().getExternalDatabase().getWebUri() );
     }
 
     @Test
@@ -90,15 +93,18 @@ public class DatasetsRestTest extends BaseSpringContextTest {
                         ees.get( 0 ).getId() + ", 12310, " + ees.get( 2 )
                                 .getId() ), FilterArg.valueOf( "" ), OffsetArg.valueOf( "0" ),
                 LimitArg.valueOf( "10" ), SortArg.valueOf( "+id" ) );
+        ExpressionExperiment ee = ees.get( 0 );
+        assertThat( ee ).isNotNull();
+        assertThat( ee.getAccession() ).isNotNull();
         assertThat( response.getData() )
                 .isNotNull()
                 .asList().hasSize( 2 )
                 .first()
-                .hasFieldOrPropertyWithValue( "accession", ees.get( 0 ).getAccession().getAccession() )
-                .hasFieldOrPropertyWithValue( "externalDatabase", ees.get( 0 ).getAccession().getExternalDatabase().getName() )
-                .hasFieldOrPropertyWithValue( "externalUri", ees.get( 0 ).getAccession().getExternalDatabase().getWebUri() )
-                .hasFieldOrPropertyWithValue( "taxon", ees.get( 0 ).getTaxon().getCommonName() )
-                .hasFieldOrPropertyWithValue( "taxonId", ees.get( 0 ).getTaxon().getId() );
+                .hasFieldOrPropertyWithValue( "accession", ee.getAccession().getAccession() )
+                .hasFieldOrPropertyWithValue( "externalDatabase", ee.getAccession().getExternalDatabase().getName() )
+                .hasFieldOrPropertyWithValue( "externalUri", ee.getAccession().getExternalDatabase().getWebUri() )
+                .hasFieldOrPropertyWithValue( "taxon", ee.getTaxon().getCommonName() )
+                .hasFieldOrPropertyWithValue( "taxonId", ee.getTaxon().getId() );
     }
 
     @Test

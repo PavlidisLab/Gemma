@@ -145,7 +145,7 @@ public class CompositeSequenceController extends BaseController {
         if ( csd == null || csd.getId() == null ) {
             return new HashSet<>();
         }
-        CompositeSequence cs = compositeSequenceService.load( csd.getId() );
+        CompositeSequence cs = compositeSequenceService.loadOrFail( csd.getId() );
 
         // unnecessary see https://github.com/PavlidisLab/Gemma/issues/176
         //     compositeSequenceService.thaw( Collections.singletonList( cs ) );
