@@ -536,7 +536,7 @@ public class ExpressionExperimentDaoImpl
                 continue;
             }
 
-            AnnotationValueObject annotationValue = new AnnotationValueObject( c, BioMaterial.class.getSimpleName() );
+            AnnotationValueObject annotationValue = new AnnotationValueObject( c, BioMaterial.class );
 
             results.add( annotationValue );
         }
@@ -583,7 +583,7 @@ public class ExpressionExperimentDaoImpl
                     continue;
             }
 
-            results.add( new AnnotationValueObject( c, FactorValue.class.getSimpleName() ) );
+            results.add( new AnnotationValueObject( c, FactorValue.class ) );
         }
 
         return results;

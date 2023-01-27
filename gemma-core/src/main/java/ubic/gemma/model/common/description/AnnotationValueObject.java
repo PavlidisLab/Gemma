@@ -22,6 +22,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.annotations.GemmaWebOnly;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
  * @author luke
@@ -69,9 +70,13 @@ public class AnnotationValueObject extends IdentifiableValueObject<Characteristi
         evidenceCode = c.getEvidenceCode() != null ? c.getEvidenceCode().toString() : "";
     }
 
-    public AnnotationValueObject( Characteristic c, String objectClass ) {
+    public AnnotationValueObject( Characteristic c, Class<?> objectClass ) {
         this( c );
-        this.objectClass = objectClass;
+        if ( ExpressionExperiment.class.isAssignableFrom( objectClass ) ) {
+            this.objectClass = "ExperimentTag";
+        } else {
+            this.objectClass = objectClass.getSimpleName();
+        }
     }
 
     @Override

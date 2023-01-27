@@ -469,7 +469,7 @@ public class ExpressionExperimentServiceImpl
         Collection<String> seenTerms = new HashSet<>();
         for ( Characteristic c : expressionExperiment.getCharacteristics() ) {
 
-            AnnotationValueObject annotationValue = new AnnotationValueObject( c, "ExperimentTag" );
+            AnnotationValueObject annotationValue = new AnnotationValueObject( c, ExpressionExperiment.class );
 
             annotations.add( annotationValue );
             seenTerms.add( annotationValue.getTermName() );

@@ -129,7 +129,7 @@ public class BioMaterialController {
         Collection<AnnotationValueObject> annotation = new ArrayList<>();
 
         for ( Characteristic c : bioM.getCharacteristics() ) {
-            AnnotationValueObject annotationValue = new AnnotationValueObject( c, BioMaterial.class.getSimpleName() );
+            AnnotationValueObject annotationValue = new AnnotationValueObject( c, BioMaterial.class );
 
             String className = getLabelFromUri( c.getCategoryUri() );
             if ( className != null )

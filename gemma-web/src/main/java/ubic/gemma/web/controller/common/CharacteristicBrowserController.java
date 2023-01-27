@@ -111,7 +111,7 @@ public class CharacteristicBrowserController {
             Characteristic c = ( Characteristic ) o;
             Object parent = charToParent.get( c );
 
-            AnnotationValueObject avo = new AnnotationValueObject( c, Characteristic.class.getSimpleName() );
+            AnnotationValueObject avo = new AnnotationValueObject( c, Characteristic );
 
             if ( parent != null ) {
                 populateParentInformation( avo, parent );
@@ -167,7 +167,7 @@ public class CharacteristicBrowserController {
                     || ( searchNos && parent == null ) || ( searchPAs
                     && parent instanceof PhenotypeAssociation ) ) {
 
-                AnnotationValueObject avo = new AnnotationValueObject( c, Characteristic.class.getSimpleName() );
+                AnnotationValueObject avo = new AnnotationValueObject( c, Characteristic.class );
 
                 if ( parent != null ) {
                     populateParentInformation( avo, parent );
