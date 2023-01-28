@@ -142,6 +142,7 @@
                                 CREATE DATABASE ${gemma.testdb.name} CHARACTER SET utf8mb4;
                                 ]]>
                             </sqlCommand>
+                            <skip>${skipTests}</skip>
                         </configuration>
                     </execution>
                     <execution>
@@ -161,6 +162,7 @@
                                 <srcFile>${project.basedir}/src/main/resources/sql/init-entities.sql</srcFile>
                             </srcFiles>
                             <onError>abort</onError>
+                            <skip>${skipTests}</skip>
                         </configuration>
                     </execution>
                 </executions>
