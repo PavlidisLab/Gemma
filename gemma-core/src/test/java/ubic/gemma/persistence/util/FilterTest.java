@@ -93,25 +93,25 @@ public class FilterTest {
 
     @Test
     public void testParseCollectionOfDates() {
-        Filter of = Filter.parse( "ee", "lastUpdated", Date.class, Filter.Operator.in, "(2021-10-01, 2021-10-02)" );
+        Filter of = Filter.parse( "ee", "lastUpdated", Date.class, Filter.Operator.in, Arrays.asList( "2021-10-01", "2021-10-02" ) );
         assertThat( of ).hasToString( "ee.lastUpdated in (2021-10-01T00:00:00.000+00:00, 2021-10-02T00:00:00.000+00:00)" );
     }
 
     @Test
     public void testParseCollectionOfDateTimes() {
-        Filter of = Filter.parse( "ee", "lastUpdated", Date.class, Filter.Operator.in, "(2021-10-01T00:00:01, 2021-10-02T01:00:00Z)" );
+        Filter of = Filter.parse( "ee", "lastUpdated", Date.class, Filter.Operator.in, Arrays.asList( "2021-10-01T00:00:01", "2021-10-02T01:00:00Z" ) );
         assertThat( of ).hasToString( "ee.lastUpdated in (2021-10-01T00:00:01.000+00:00, 2021-10-02T01:00:00.000+00:00)" );
     }
 
     @Test
     public void testParseMixtureOfDateAndDateTime() {
-        Filter of = Filter.parse( "ee", "lastUpdated", Date.class, Filter.Operator.in, "(2021-10-01, 2021-10-02T01:00:00Z)" );
+        Filter of = Filter.parse( "ee", "lastUpdated", Date.class, Filter.Operator.in, Arrays.asList( "2021-10-01", "2021-10-02T01:00:00Z" ) );
         assertThat( of ).hasToString( "ee.lastUpdated in (2021-10-01T00:00:00.000+00:00, 2021-10-02T01:00:00.000+00:00)" );
     }
 
     @Test
     public void testParseCollection() {
-        Filter of = Filter.parse( "ee", "id", String.class, Filter.Operator.in, "(a, b, c)" );
+        Filter of = Filter.parse( "ee", "id", String.class, Filter.Operator.in, Arrays.asList( "a", "b", "c" ) );
         assertThat( of.getRequiredValue() )
                 .isInstanceOf( Collection.class )
                 .asList()
@@ -120,21 +120,15 @@ public class FilterTest {
 
     @Test
     public void testParseInvalidCollection() {
-        assertThatThrownBy( () -> Filter.parse( "ee", "id", Integer.class, Filter.Operator.in, "(1, 2, c)" ) )
+        assertThatThrownBy( () -> Filter.parse( "ee", "id", Integer.class, Filter.Operator.in, Arrays.asList( "1", "2", "c" ) ) )
                 .isInstanceOf( IllegalArgumentException.class )
                 .hasCauseInstanceOf( ConversionFailedException.class );
     }
 
     @Test
     public void testParseEmptyCollection() {
-        Filter f;
-        f = Filter.parse( "ee", "id", Integer.class, Filter.Operator.in, "()" );
+        Filter f = Filter.parse( "ee", "id", Integer.class, Filter.Operator.in, Collections.emptyList() );
         assertThat( f.getRequiredValue() ).isInstanceOf( Collection.class )
-                .asInstanceOf( collection( Integer.class ) )
-                .hasSize( 0 );
-        f = Filter.parse( "ee", "id", Integer.class, Filter.Operator.in, "( )" );
-        assertThat( f.getRequiredValue() )
-                .isInstanceOf( Collection.class )
                 .asInstanceOf( collection( Integer.class ) )
                 .hasSize( 0 );
     }

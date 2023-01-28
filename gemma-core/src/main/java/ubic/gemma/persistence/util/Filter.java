@@ -37,10 +37,7 @@ import java.text.DateFormat;
 import java.text.ParseException;
 import java.util.Collection;
 import java.util.Date;
-import java.util.Optional;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /**
  * Holds the necessary information to filter an entity with a property, operator and right-hand side value.
@@ -98,7 +95,7 @@ public class Filter {
      * If you need to parse the right-hand side, consider using {@link #parse(String, String, Class, Operator, String)}
      * for a scalar or {@link #parse(String, String, Class, Operator, Collection)} for a collection type.
      *
-     * @param objectAlias the alias that refers to the entity subject to the filter
+     * @param objectAlias   the alias that refers to the entity subject to the filter
      * @param propertyName  the property in the entity
      * @param propertyType  the type of the property
      * @param operator      a valid operator for the property and the requiredValue
@@ -157,21 +154,6 @@ public class Filter {
         lessOrEq( "<=", true, null ),
         greaterOrEq( ">=", true, null ),
         in( "in", true, Collection.class );
-
-        /**
-         * Retrieve an {@link Operator} from a given token.
-         *
-         * @return an {@link Optional} containing the operator matched in a case-insensitive manner if found, otherwise
-         * {@link Optional#empty()}.
-         */
-        public static Optional<Operator> fromToken( String token ) {
-            for ( Operator o : values() ) {
-                if ( o.token.equalsIgnoreCase( token ) ) {
-                    return Optional.of( o );
-                }
-            }
-            return Optional.empty();
-        }
 
         /**
          * Token used when parsing filter input.
@@ -272,39 +254,13 @@ public class Filter {
      * @return and Object of requested type, containing the given value converted to the new type.
      */
     private static Object parseRequiredValue( String rv, Class<?> pt ) throws IllegalArgumentException {
-        if ( isCollection( rv ) ) {
-            // convert individual elements
-            return parseCollection( rv )
-                    .map( item -> parseItem( item, pt ) )
-                    .collect( Collectors.toList() );
-        } else {
-            return parseItem( rv, pt );
-        }
+        return parseItem( rv, pt );
     }
 
     private static Object parseRequiredValues( Collection<String> requiredValues, Class<?> pt ) throws IllegalArgumentException {
         return requiredValues.stream()
                 .map( item -> parseItem( item, pt ) )
                 .collect( Collectors.toList() );
-    }
-
-    private static final Pattern
-            COLLECTION_PATTERN = Pattern.compile( "^\\(.*\\)$" ),
-            COLLECTION_DELIMITER_PATTERN = Pattern.compile( "\\s*,\\s*" );
-
-    private static boolean isCollection( String value ) {
-        return COLLECTION_PATTERN.matcher( value ).matches();
-    }
-
-    /**
-     * Tries to parse the given string value into a collection of strings.
-     * @param value the value to be parsed into a collection of strings. This should be a bracketed comma separated list
-     *              of strings.
-     * @return a collection of strings.
-     */
-    private static Stream<String> parseCollection( String value ) {
-        // these are the parenthesis, thus we skip the first and last non-blank character
-        return COLLECTION_DELIMITER_PATTERN.splitAsStream( value.substring( 1, value.length() - 1 ).trim() );
     }
 
     private static Object parseItem( String rv, Class<?> pt ) throws IllegalArgumentException {

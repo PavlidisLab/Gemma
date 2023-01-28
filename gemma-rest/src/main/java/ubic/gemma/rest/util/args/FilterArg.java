@@ -16,15 +16,18 @@ package ubic.gemma.rest.util.args;
 
 import io.swagger.v3.oas.annotations.ExternalDocumentation;
 import io.swagger.v3.oas.annotations.media.Schema;
-import org.apache.commons.lang3.StringUtils;
+import lombok.extern.apachecommons.CommonsLog;
+import org.antlr.v4.runtime.*;
+import org.antlr.v4.runtime.misc.ParseCancellationException;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.persistence.service.FilteringService;
 import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Sort;
 import ubic.gemma.rest.util.MalformedArgException;
 
-import java.util.LinkedList;
 import java.util.List;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 /**
  * Represent a filter argument designed to generate a {@link Filters} from user input.
@@ -88,21 +91,13 @@ import java.util.List;
  * @see ubic.gemma.persistence.util.Filter
  * @see ubic.gemma.persistence.util.Filter.Operator
  */
+@CommonsLog
 @Schema(type = "string", description = "Filter results by matching the expression. The exact syntax is described in the attached external documentation.",
         externalDocs = @ExternalDocumentation(url = "https://gemma.msl.ubc.ca/resources/apidocs/ubic/gemma/web/services/rest/util/args/FilterArg.html"))
 public class FilterArg<O extends Identifiable> extends AbstractArg<FilterArg.Filter> {
 
-    /**
-     * @param propertyNames     names of properties to filter by. <br> Elements in each array will be in a disjunction
-     *                          (OR) with each other.<br> Arrays will then be in a conjunction (AND) with each
-     *                          other.<br>
-     * @param propertyValues    values to compare the given property names to.
-     * @param propertyOperators the operation used for comparison of the given value and the value of the object. The
-     *                          propertyValues will be the right operand of each given operator. <br> E.g:
-     *                          <code>object.propertyName[0] isNot propertyValues[0];</code><br>
-     */
-    private FilterArg( List<String[]> propertyNames, List<String[]> propertyValues, List<ubic.gemma.persistence.util.Filter.Operator[]> propertyOperators ) {
-        super( new Filter( propertyNames, propertyValues, propertyOperators ) );
+    private FilterArg( FilterArgParser.FilterContext filterContext ) {
+        super( new Filter( filterContext ) );
     }
 
     /**
@@ -120,26 +115,67 @@ public class FilterArg<O extends Identifiable> extends AbstractArg<FilterArg.Fil
         Filter filter = getValue();
         Filters filterList = Filters.empty();
 
-        for ( int i = 0; i < filter.propertyNames.size(); i++ ) {
-            String[] properties = filter.propertyNames.get( i );
-            ubic.gemma.persistence.util.Filter.Operator[] operators = filter.propertyOperators.get( i );
-            String[] values = filter.propertyValues.get( i );
-            // this is guaranteed by how the filter array is constructed below
-            assert properties.length == operators.length;
-            assert properties.length == values.length;
-            ubic.gemma.persistence.util.Filter[] filterArray = new ubic.gemma.persistence.util.Filter[properties.length];
-            for ( int j = 0; j < properties.length; j++ ) {
+        for ( FilterArgParser.ClauseContext clause : filter.filterContext.clause() ) {
+            Filters.FiltersClauseBuilder disjunction = filterList.and();
+            for ( FilterArgParser.SubClauseContext subClause : clause.subClause() ) {
+                String property = subClause.PROPERTY().getText();
+                ubic.gemma.persistence.util.Filter.Operator operator;
                 try {
-                    // these are user-supplied filters, so we need to do basic exception checking
-                    filterArray[j] = service.getFilter( properties[j], operators[j], values[j] );
+                    if ( subClause.operator() != null ) {
+                        operator = operatorToOperator( subClause.operator() );
+                        String requiredValue = scalarToString( subClause.scalar() );
+                        disjunction = disjunction.or( service.getFilter( property, operator, requiredValue ) );
+                    } else {
+                        operator = collectionOperatorToOperator( subClause.collectionOperator() );
+                        List<String> requiredValue = subClause.collection().scalar().stream().map( FilterArg::scalarToString ).collect( Collectors.toList() );
+                        disjunction = disjunction.or( service.getFilter( property, operator, requiredValue ) );
+                    }
                 } catch ( IllegalArgumentException e ) {
-                    throw new MalformedArgException( String.format( "The entity cannot be filtered by %s: %s", properties[j], e.getMessage() ), e );
+                    throw new MalformedArgException( String.format( "The entity cannot be filtered by %s: %s", property, e.getMessage() ), e );
                 }
             }
-            filterList.and( filterArray );
+            disjunction.build();
         }
 
         return filterList;
+    }
+
+    private static ubic.gemma.persistence.util.Filter.Operator operatorToOperator( FilterArgParser.OperatorContext operator ) {
+        switch ( operator.getStart().getType() ) {
+            case FilterArgLexer.EQ:
+                return ubic.gemma.persistence.util.Filter.Operator.eq;
+            case FilterArgLexer.NEQ:
+                return ubic.gemma.persistence.util.Filter.Operator.notEq;
+            case FilterArgLexer.LE:
+                return ubic.gemma.persistence.util.Filter.Operator.lessThan;
+            case FilterArgLexer.LEQ:
+                return ubic.gemma.persistence.util.Filter.Operator.lessOrEq;
+            case FilterArgLexer.GE:
+                return ubic.gemma.persistence.util.Filter.Operator.greaterThan;
+            case FilterArgLexer.GEQ:
+                return ubic.gemma.persistence.util.Filter.Operator.greaterOrEq;
+            case FilterArgLexer.LIKE:
+                return ubic.gemma.persistence.util.Filter.Operator.like;
+        }
+        throw new IllegalArgumentException( String.format( "Unknown operator: %s", operator.getText() ) );
+    }
+
+    private static ubic.gemma.persistence.util.Filter.Operator collectionOperatorToOperator( FilterArgParser.CollectionOperatorContext terminalNode ) {
+        if ( terminalNode.IN() != null ) {
+            return ubic.gemma.persistence.util.Filter.Operator.in;
+        }
+        throw new IllegalArgumentException( String.format( "Unknown operator: %s", terminalNode.getText() ) );
+    }
+
+    private static String scalarToString( FilterArgParser.ScalarContext scalar ) {
+        if ( scalar.QUOTED_STRING() != null ) {
+            // replace escaped quotes
+            return scalar.getText()
+                    .substring( 1, scalar.getText().length() - 1 )
+                    .replaceAll( Pattern.quote( "\\\"" ), "\"" );
+        } else {
+            return scalar.getText();
+        }
     }
 
     /**
@@ -147,14 +183,10 @@ public class FilterArg<O extends Identifiable> extends AbstractArg<FilterArg.Fil
      */
     public static class Filter {
 
-        private final List<String[]> propertyNames;
-        private final List<String[]> propertyValues;
-        private final List<ubic.gemma.persistence.util.Filter.Operator[]> propertyOperators;
+        private final FilterArgParser.FilterContext filterContext;
 
-        private Filter( List<String[]> propertyNames, List<String[]> propertyValues, List<ubic.gemma.persistence.util.Filter.Operator[]> propertyOperators ) {
-            this.propertyNames = propertyNames;
-            this.propertyValues = propertyValues;
-            this.propertyOperators = propertyOperators;
+        private Filter( FilterArgParser.FilterContext filterContext ) {
+            this.filterContext = filterContext;
         }
     }
 
@@ -166,65 +198,40 @@ public class FilterArg<O extends Identifiable> extends AbstractArg<FilterArg.Fil
      */
     @SuppressWarnings("unused")
     public static <O extends Identifiable> FilterArg<O> valueOf( final String s ) {
+        LoggingErrorListener lel = new LoggingErrorListener();
+
+        FilterArgLexer lexer = new FilterArgLexer( CharStreams.fromString( s ) ) {
+            @Override
+            public void recover( RecognitionException re ) {
+                throw new ParseCancellationException( re );
+            }
+
+            @Override
+            public void recover( LexerNoViableAltException e ) {
+                throw new ParseCancellationException( e );
+            }
+        };
+        lexer.removeErrorListeners();
+        lexer.addErrorListener( lel );
+
+        FilterArgParser parser = new FilterArgParser( new BufferedTokenStream( lexer ) );
+        parser.setErrorHandler( new BailErrorStrategy() );
+        parser.removeErrorListeners();
+        parser.addErrorListener( lel );
+
         try {
-            return parseFilterString( s );
-        } catch ( FilterArgParseException e ) {
-            throw new MalformedArgException( String.format( "The filter query '%s' is not correctly formed.", s ), e );
+            FilterArgParser.FilterContext f = parser.filter();
+            return new FilterArg<>( f );
+        } catch ( ParseCancellationException e ) {
+            throw new MalformedArgException( String.format( "The filter query '%s' is not correctly formed.", s ),
+                    e.getCause() );
         }
     }
 
-    /**
-     * Parses the input string into lists of logical disjunctions, that together form a conjunction (CNF).
-     *
-     * @param s the string to be parsed.
-     */
-    private static <O extends Identifiable> FilterArg<O> parseFilterString( String s ) throws FilterArgParseException {
-        List<String[]> propertyNames = new LinkedList<>();
-        List<String[]> propertyValues = new LinkedList<>();
-        List<ubic.gemma.persistence.util.Filter.Operator[]> propertyOperators = new LinkedList<>();
-
-        // TODO: have a nicer way to tokenize the filter
-        String[] parts = StringUtils.isBlank( s ) ? new String[0] : s.split( "\\s*,?\\s+" );
-
-        List<String> propertyNamesDisjunction = new LinkedList<>();
-        List<ubic.gemma.persistence.util.Filter.Operator> propertyOperatorsDisjunction = new LinkedList<>();
-        List<String> propertyValuesDisjunction = new LinkedList<>();
-
-        int i = 0;
-        while ( i < parts.length ) {
-            if ( i + 2 >= parts.length ) {
-                throw new FilterArgParseException( "Not enough parts to parse an property name, operator and required value from here.", i );
-            }
-
-            // parse property name
-            propertyNamesDisjunction.add( parts[i++] );
-
-            // parse operator
-            final int j = i++;
-            propertyOperatorsDisjunction.add( ubic.gemma.persistence.util.Filter.Operator.fromToken( parts[j] )
-                    .orElseThrow( () -> new FilterArgParseException( String.format( "%s is not an accepted operator.", parts[j] ), j ) ) );
-
-            // parse required value
-            propertyValuesDisjunction.add( parts[i++] );
-
-            if ( i == parts.length || parts[i].equalsIgnoreCase( "and" ) ) {
-                // We either reached an 'AND', or the end of the string.
-                // Add the current disjunction.
-                propertyNames.add( propertyNamesDisjunction.toArray( new String[0] ) );
-                propertyOperators.add( propertyOperatorsDisjunction.toArray( new ubic.gemma.persistence.util.Filter.Operator[0] ) );
-                propertyValues.add( propertyValuesDisjunction.toArray( new String[0] ) );
-                // Start new disjunction lists
-                propertyNamesDisjunction = new LinkedList<>();
-                propertyOperatorsDisjunction = new LinkedList<>();
-                propertyValuesDisjunction = new LinkedList<>();
-                i++;
-            } else if ( parts[i].equalsIgnoreCase( "or" ) ) {
-                // Skip this part and continue the disjunction
-                i++;
-            }
+    private static class LoggingErrorListener extends BaseErrorListener {
+        @Override
+        public void syntaxError( Recognizer<?, ?> recognizer, Object offendingSymbol, int line, int charPositionInLine, String msg, RecognitionException e ) {
+            log.debug( msg, e );
         }
-
-        return new FilterArg<>( propertyNames, propertyValues, propertyOperators );
     }
-
 }
