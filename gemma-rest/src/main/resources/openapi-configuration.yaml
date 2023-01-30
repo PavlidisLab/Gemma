@@ -23,6 +23,10 @@ openAPI:
       `getNumberOfResultSets`. These endpoints are faster than looking up `totalElements` as no data is retrieved or
       converted.
 
+      Datasets can now be filtered by annotations at the sample- and factor value-level using the two newly exposed
+      `experimentalDesign.experimentalFactors.factorValues.characteristics` and `bioAssays.sampleUsed.characteristics`
+      collections. The two useful available properties for filtering are `value` and `valueUri`.
+
       New `getDatasetsAnnotationsUsageStatistics` endpoints for retrieving annotations used by the matched datasets. The
       endpoint accepts the same `filter` argument of `getDatasets`, allowing one to easily navigate terms for filtering
       further down results.
