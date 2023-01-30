@@ -23,11 +23,11 @@ public class FilterQueryUtilsTest {
     public void testComplexClause() {
         Filters filters = Filters.empty()
                 .and( Filter.parse( "ee", "shortName", String.class, Filter.Operator.like, "GSE" ) )
-                .and( Filter.parse( "ee", "id", Long.class, Filter.Operator.in, "(1,2,3,4)" ) )
+                .and( Filter.parse( "ee", "id", Long.class, Filter.Operator.in, Arrays.asList( "1", "2", "3", "4" ) ) )
                 .and( Filter.parse( "ad", "taxonId", Long.class, Filter.Operator.eq, "9606" ) )
                 .and()
-                .or( Filter.parse( "ee", "id", Long.class, Filter.Operator.in, "(1,2,3,4)" ) )
-                .or( Filter.parse( "ee", "id", Long.class, Filter.Operator.in, "(5,6,7,8)" ) )
+                .or( Filter.parse( "ee", "id", Long.class, Filter.Operator.in, Arrays.asList( "1", "2", "3", "4" ) ) )
+                .or( Filter.parse( "ee", "id", Long.class, Filter.Operator.in, Arrays.asList( "5", "6", "7", "8" ) ) )
                 .build();
         assertThat( formRestrictionClause( filters ) )
                 .isEqualTo( " and (ee.shortName like :ee_shortName1) and (ee.id in (:ee_id2)) and (ad.taxonId = :ad_taxonId3) and (ee.id in (:ee_id4) or ee.id in (:ee_id5))" );
@@ -43,7 +43,7 @@ public class FilterQueryUtilsTest {
 
     @Test
     public void testRestrictionClauseWithCollection() {
-        Filters filters = Filters.by( Filter.parse( "ee", "id", Long.class, Filter.Operator.in, "(1,2,3,4)" ) );
+        Filters filters = Filters.by( Filter.parse( "ee", "id", Long.class, Filter.Operator.in, Arrays.asList( "1", "2", "3", "4" ) ) );
         assertThat( formRestrictionClause( filters ) )
                 .isEqualTo( " and (ee.id in (:ee_id1))" );
 
