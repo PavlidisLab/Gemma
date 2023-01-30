@@ -22,6 +22,7 @@ import com.fasterxml.jackson.databind.util.StdDateFormat;
 import lombok.Getter;
 import lombok.Value;
 import org.apache.commons.lang3.ClassUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.core.convert.ConversionException;
 import org.springframework.core.convert.ConversionFailedException;
 import org.springframework.core.convert.ConversionService;
@@ -210,11 +211,23 @@ public class Filter {
         if ( requiredValue instanceof Collection ) {
             requiredValueString = "(" + ( ( Collection<?> ) requiredValue ).stream()
                     .map( e -> conversionService.convert( e, String.class ) )
+                    .map( Filter::quoteIfNecessary )
                     .collect( Collectors.joining( ", " ) ) + ")";
         } else {
             requiredValueString = conversionService.convert( requiredValue, String.class );
+            requiredValueString = quoteIfNecessary( requiredValueString );
         }
         return String.format( "%s%s %s %s", objectAlias != null ? objectAlias + "." : "", propertyName, operator.getToken(), requiredValueString );
+    }
+
+    private static String quoteIfNecessary( String s ) {
+        // FIXME: this is incomplete, a full solution would be based on the FilterArg grammar
+        char[] RESERVED_CHARS = { '(', ')', ',', ' ' };
+        if ( StringUtils.containsAny( s, RESERVED_CHARS ) ) {
+            return "\"" + s.replace( "\"", "\\\"" ) + "\"";
+        } else {
+            return s;
+        }
     }
 
     private void checkTypeCorrect() throws IllegalArgumentException {

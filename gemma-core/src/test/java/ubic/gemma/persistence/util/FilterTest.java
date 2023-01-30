@@ -18,13 +18,17 @@
  */
 package ubic.gemma.persistence.util;
 
-import org.assertj.core.api.CollectionAssert;
-import org.assertj.core.api.InstanceOfAssertFactories;
 import org.junit.Test;
 import org.springframework.core.convert.ConversionFailedException;
 
-import java.time.*;
-import java.util.*;
+import java.time.LocalDateTime;
+import java.time.Month;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Date;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -37,7 +41,7 @@ public class FilterTest {
         Filter of = Filter.parse( "ee", "id", String.class, Filter.Operator.greaterOrEq, "just a string" );
         assertThat( of.getRequiredValue() )
                 .isEqualTo( "just a string" );
-        assertThat( of ).hasToString( "ee.id >= just a string" );
+        assertThat( of ).hasToString( "ee.id >= \"just a string\"" );
     }
 
     @Test
