@@ -605,7 +605,7 @@ public class ExpressionExperimentDaoImpl
      * the same characteristic at multiple levels to make counting more efficient.
      */
     private Map<Characteristic, Long> doGetAnnotationsFrequency( @Nullable Collection<Long> eeIds, int maxResults ) {
-        Map<Characteristic, Long> result = new TreeMap<>( Characteristic.getByValueComparator() );
+        Map<Characteristic, Long> result = new TreeMap<>( Characteristic.getByCategoryAndValueComparator() );
 
         if ( eeIds != null && eeIds.isEmpty() ) {
             return result;
@@ -752,7 +752,7 @@ public class ExpressionExperimentDaoImpl
                 + AclQueryUtils.formAclJoinClause( "e" )
                 + AclQueryUtils.formAclRestrictionClause()
                 + ( eeIds != null ? " and e.id in :eeIds " : "" )
-                + "group by c.valueUri, c.value "
+                + "group by c.categoryUri, c.category, c.valueUri, c.value "
                 + "order by count(distinct e) desc" );
         if ( eeIds != null ) {
             query.setParameterList( "eeIds", eeIds );
@@ -771,7 +771,7 @@ public class ExpressionExperimentDaoImpl
                 + AclQueryUtils.formAclJoinClause( "e" )
                 + AclQueryUtils.formAclRestrictionClause()
                 + ( eeIds != null ? " and e.id in :eeIds " : "" )
-                + "group by c.valueUri, c.value "
+                + "group by c.categoryUri, c.category, c.valueUri, c.value "
                 + "order by count(distinct e) desc" );
         if ( eeIds != null ) {
             query.setParameterList( "eeIds", eeIds );
@@ -789,7 +789,7 @@ public class ExpressionExperimentDaoImpl
                 + AclQueryUtils.formAclJoinClause( "e" )
                 + AclQueryUtils.formAclRestrictionClause()
                 + ( eeIds != null ? " and e.id in :eeIds " : "" )
-                + "group by c.valueUri, c.value "
+                + "group by c.categoryUri, c.category, c.valueUri, c.value "
                 + "order by count(distinct e) desc" );
         if ( eeIds != null ) {
             query.setParameterList( "eeIds", eeIds );

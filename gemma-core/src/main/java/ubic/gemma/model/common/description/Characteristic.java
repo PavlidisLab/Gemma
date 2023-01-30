@@ -44,11 +44,13 @@ public class Characteristic extends AbstractDescribable implements Serializable 
     /**
      * Obtain a comparator to order terms by value URI (or value if null) in a case-insensitive manner.
      */
-    public static Comparator<Characteristic> getByValueComparator() {
+    public static Comparator<Characteristic> getByCategoryAndValueComparator() {
         Collator collator = Collator.getInstance( Locale.ENGLISH );
         collator.setStrength( Collator.PRIMARY );
         return Comparator
-                .comparing( Characteristic::getValueUri, Comparator.nullsLast( collator ) )
+                .comparing( Characteristic::getCategoryUri, Comparator.nullsLast( collator ) )
+                .thenComparing( Characteristic::getCategory, Comparator.nullsLast( collator ) )
+                .thenComparing( Characteristic::getValueUri, Comparator.nullsLast( collator ) )
                 .thenComparing( Characteristic::getValue, Comparator.nullsLast( collator ) ); // there should be no null, but we better be safe than sorry
     }
 

@@ -26,7 +26,7 @@ public class CharacteristicTest {
                 createCharacteristic( null, "test" ),
                 createCharacteristic( null, null )
         );
-        SortedSet<Characteristic> sortedCs = new TreeSet<>( Characteristic.getByValueComparator() );
+        SortedSet<Characteristic> sortedCs = new TreeSet<>( Characteristic.getByCategoryAndValueComparator() );
         sortedCs.addAll( cs );
         assertThat( sortedCs )
                 .extracting( "valueUri", "value" )
