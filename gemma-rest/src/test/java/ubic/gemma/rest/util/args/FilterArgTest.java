@@ -207,9 +207,15 @@ public class FilterArgTest {
         checkValidString( "https://john@example.com:8080/a;c=d?e=f&d=%20D#fragment" );
         checkValidString( "a+b" );
         checkValidString( "a_b-c" );
+        checkValidString( "() ", "\"() \"" );
+        checkValidString( "\"", "\"\\\"\"" );
     }
 
     private void checkValidString( String s ) {
+        checkValidString( s, s );
+    }
+
+    private void checkValidString( String expected, String s ) {
         FilterArg<Identifiable> fa = FilterArg.valueOf( "foo >= " + s );
         Filters f = fa.getFilters( mockVoService );
         assertThat( f ).isNotNull();
@@ -217,7 +223,7 @@ public class FilterArgTest {
         assertThat( subClause )
                 .hasFieldOrPropertyWithValue( "objectAlias", "alias" )
                 .hasFieldOrPropertyWithValue( "propertyName", "foo" )
-                .hasFieldOrPropertyWithValue( "requiredValue", s );
+                .hasFieldOrPropertyWithValue( "requiredValue", expected );
     }
 
     @Test
