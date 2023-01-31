@@ -4,7 +4,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.hibernate.Query;
 
 import javax.annotation.Nullable;
-import java.util.*;
+import java.util.Collection;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -157,14 +158,19 @@ public class FilterQueryUtils {
                 String paramName = formParamName( subClause.getObjectAlias(), subClause.getPropertyName() ) + ( ++i );
                 if ( subClause.getOperator().equals( Filter.Operator.in ) ) {
                     // order is unimportant for this operation, so we can ensure that it is consistent and therefore cacheable
-                    query.setParameterList( paramName, Objects.requireNonNull( ( Collection<?> ) subClause.getRequiredValue(), "Required value cannot be null for a collection.." )
+                    query.setParameterList( paramName, Objects.requireNonNull( ( Collection<?> ) subClause.getRequiredValue(), "Required value cannot be null for the 'in' operator." )
                             .stream().sorted().distinct().collect( Collectors.toList() ) );
                 } else if ( subClause.getOperator().equals( Filter.Operator.like ) ) {
-                    query.setParameter( paramName, "%" + subClause.getRequiredValue() + "%" );
+                    query.setParameter( paramName, "%" + escapeLike( ( String ) Objects.requireNonNull( subClause.getRequiredValue(), "Required value cannot be null for the 'like' operator." ) ) + "%" );
                 } else {
                     query.setParameter( paramName, subClause.getRequiredValue() );
                 }
             }
         }
+    }
+
+    static String escapeLike( String s ) {
+        return s.replace( "%", "\\%" )
+                .replace( "_", "\\_" );
     }
 }

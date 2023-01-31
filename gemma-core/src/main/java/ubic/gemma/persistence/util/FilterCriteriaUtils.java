@@ -7,6 +7,8 @@ import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.Objects;
 
+import static ubic.gemma.persistence.util.FilterQueryUtils.escapeLike;
+
 /**
  * Utilities for integrating {@link Filter} with Hibernate {@link Criteria} API.
  * @author poirigui
@@ -79,7 +81,7 @@ public class FilterCriteriaUtils {
                     return Restrictions.ne( propertyName, filter.getRequiredValue() );
                 }
             case like:
-                return Restrictions.like( propertyName, ( String ) filter.getRequiredValue(), MatchMode.ANYWHERE );
+                return Restrictions.like( propertyName, escapeLike( ( String ) Objects.requireNonNull( filter.getRequiredValue(), "Required value cannot be null for the like operator." ) ), MatchMode.ANYWHERE );
             case lessThan:
                 return Restrictions.lt( propertyName, filter.getRequiredValue() );
             case greaterThan:

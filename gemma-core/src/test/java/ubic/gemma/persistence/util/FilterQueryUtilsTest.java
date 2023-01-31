@@ -20,6 +20,15 @@ public class FilterQueryUtilsTest {
     }
 
     @Test
+    public void testLikeRestrictionClause() {
+        Filters filters = Filters.empty()
+                .and( "ee", "shortName", String.class, Filter.Operator.like, "%_" );
+        Query mockedQuery = mock( Query.class );
+        addRestrictionParameters( mockedQuery, filters );
+        verify( mockedQuery ).setParameter( "ee_shortName1", "%\\%\\_%" );
+    }
+
+    @Test
     public void testComplexClause() {
         Filters filters = Filters.empty()
                 .and( Filter.parse( "ee", "shortName", String.class, Filter.Operator.like, "GSE" ) )
