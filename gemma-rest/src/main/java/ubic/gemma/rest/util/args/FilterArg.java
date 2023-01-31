@@ -68,8 +68,8 @@ import java.util.stream.Collectors;
  * <dt>'&gt;='</dt>
  * <dd>Larger or equal (only Number and Date types)</dd>
  * <dt>'like'</dt>
- * <dd>Similar string, effectively means 'contains', translates to the SQL {@code LIKE} operator where the
- * given value is surrounded by '%' signs (only String type)</dd>
+ * <dd>Similar string, effectively means 'begins with', translates to the SQL {@code LIKE} operator where a '%' is
+ * appended to the given value (only String type)</dd>
  * <dt>'in'</dt>
  * <dd>Required value in the given collection with the semantic of the '=' equality operator (only for Collection
  * types)</dd>

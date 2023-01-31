@@ -81,7 +81,7 @@ public class FilterCriteriaUtils {
                     return Restrictions.ne( propertyName, filter.getRequiredValue() );
                 }
             case like:
-                return Restrictions.like( propertyName, escapeLike( ( String ) Objects.requireNonNull( filter.getRequiredValue(), "Required value cannot be null for the like operator." ) ), MatchMode.ANYWHERE );
+                return Restrictions.like( propertyName, escapeLike( ( String ) Objects.requireNonNull( filter.getRequiredValue(), "Required value cannot be null for the like operator." ) ), MatchMode.START );
             case lessThan:
                 return Restrictions.lt( propertyName, filter.getRequiredValue() );
             case greaterThan:

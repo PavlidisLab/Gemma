@@ -161,7 +161,7 @@ public class FilterQueryUtils {
                     query.setParameterList( paramName, Objects.requireNonNull( ( Collection<?> ) subClause.getRequiredValue(), "Required value cannot be null for the 'in' operator." )
                             .stream().sorted().distinct().collect( Collectors.toList() ) );
                 } else if ( subClause.getOperator().equals( Filter.Operator.like ) ) {
-                    query.setParameter( paramName, "%" + escapeLike( ( String ) Objects.requireNonNull( subClause.getRequiredValue(), "Required value cannot be null for the 'like' operator." ) ) + "%" );
+                    query.setParameter( paramName, escapeLike( ( String ) Objects.requireNonNull( subClause.getRequiredValue(), "Required value cannot be null for the 'like' operator." ) ) + "%" );
                 } else {
                     query.setParameter( paramName, subClause.getRequiredValue() );
                 }
