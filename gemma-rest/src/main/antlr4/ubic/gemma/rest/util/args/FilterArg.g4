@@ -17,14 +17,8 @@ fragment CHAR_IN_PROPERTY: [a-zA-Z0-9];
 fragment PROPERTY_ACCESS: '.' FIRST_CHAR_IN_PROPERTY CHAR_IN_PROPERTY*;
 PROPERTY: FIRST_CHAR_IN_PROPERTY CHAR_IN_PROPERTY* PROPERTY_ACCESS*;
 
-// characters appearing in encoded URLs (parentheses and comma are excluded)
-fragment URL_CHAR: [A-Za-z0-9] | [-_.~] | [!*';:@&=+$/?%#[\]];
-
-// characters appearing in our database
-fragment EXTRA_CHAR: [\\{}'′–—‘’“”•·];
-
-fragment CHAR: [\p{Letter}\p{Number}\p{Symbol}] | URL_CHAR | EXTRA_CHAR;
-fragment CHAR_IN_QUOTE: CHAR | '\\"' | ~'"';
+fragment CHAR: ~[()," ];
+fragment CHAR_IN_QUOTE: CHAR | '\\"';
 STRING: CHAR+;
 QUOTED_STRING: '"' CHAR_IN_QUOTE* '"';
 
