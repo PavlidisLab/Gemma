@@ -9,8 +9,8 @@ LE: '<';
 LEQ: '<=';
 EQ: '=';
 NEQ: '!=';
-LIKE: 'like';
-IN: 'in';
+LIKE: 'like' | 'LIKE';
+IN: 'in' | 'IN';
 
 fragment FIRST_CHAR_IN_PROPERTY: [a-zA-Z];
 fragment CHAR_IN_PROPERTY: [a-zA-Z0-9];
