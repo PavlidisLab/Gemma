@@ -38,39 +38,37 @@ import java.util.stream.Collectors;
  * Any property of a supported type. Currently, supported types are:
  * <dl>
  * <dt>String</dt>
- * <dd>Property of {@link String} type, required value can be any String.</dd>
+ * <dd>Property of {@link String} type. Strings that contain parenthesis {@code ()}, comma {@code ,} or space ' '
+ * characters must be quoted with double-quotes {@code "}. Double-quotes can be escaped with a backslash character: {@code \"}.</dd>
  * <dt>Number</dt>
  * <dd>Any Number implementation (i.e. {@link Float}, {@link Double}, {@link Integer}, {@link Long}, and their
  * corresponding primitive types). Required value must be a string parseable to the specific Number type.</dd>
  * <dt>Boolean</dt>
- * <dd>Required value will be parsed to true only if the string matches 'true', ignoring case.</dd>
+ * <dd>Required value will be parsed to true only if the string matches {@code true}, ignoring case.</dd>
  * <dt>Date</dt>
  * <dd>Property of {@link java.util.Date}, required value must be an ISO 8601 formatted date or datetime, UTC is assumed of no timezone is supplied</dd>
  * <dt>Collection</dt>
  * <dd>Property of a {@link java.util.Collection} of any type aforementioned, nested collections are not supported</dd>
  * </dl>
  * <p>
- * Strings that contain parenthesis {@code ()}, comma {@code ,} or space ' ' characters must be quoted with
- * double-quotes {@code "}. Double-quotes can be escaped with a backslash character: {@code \"}.
- * <p>
  * Accepted operator keywords are:
  * <dl>
- * <dt>'='</dt>
- * <dd>Equality</li>
- * <dt>'!='</dt>
+ * <dt>=</dt>
+ * <dd>Equality</dd>
+ * <dt>!=</dt>
  * <dd>Non-equality</dd>
- * <dt>'&lt;'</dt>
+ * <dt>&lt;</dt>
  * <dd>Smaller than (only Number and Date types)</dd>
- * <dt>'&gt;'</dt>
+ * <dt>&gt;</dt>
  * <dd>Larger than (only Number and Date types)</dd>
- * <dt>'&lt;='</dt>
+ * <dt>&lt;=</dt>
  * <dd>Smaller or equal (only Number and Date types)</dd>
- * <dt>'&gt;='</dt>
+ * <dt>&gt;=</dt>
  * <dd>Larger or equal (only Number and Date types)</dd>
- * <dt>'like'</dt>
+ * <dt>like or LIKE</dt>
  * <dd>Similar string, effectively means 'begins with', translates to the SQL {@code LIKE} operator where a '%' is
  * appended to the given value (only String type)</dd>
- * <dt>'in'</dt>
+ * <dt>in or IN</dt>
  * <dd>Required value in the given collection with the semantic of the '=' equality operator (only for Collection
  * types)</dd>
  * </dl>
@@ -79,32 +77,35 @@ import java.util.stream.Collectors;
  * <p>
  * Properties, operators and required values must be delimited by spaces.
  * <p>
- * Multiple filters can be chained using 'AND' or 'OR' keywords.
- * Example:
+ * Multiple filters can be chained using conjunctions (i.e. {@code AND, and}) or disjunctions (i.e. {@code OR, or, ','}) keywords.
+ * Example:<br>
  * {@code property1 < value1 AND property2 like value2}
  * <p>
- * If chained filters are mixed conjunctions and disjunctions, the query must be in conjunctive normal form (CNF)
- * without any parentheses. Every AND conjunctions separates blocks of OR disjunctions.
+ * Queries mixing conjunctions and disjunctions are interpreted in <a href="https://en.wikipedia.org/wiki/Conjunctive_normal_form">conjunctive normal form (CNF)</a>
+ * without any parentheses. Every {@code AND} conjunctions separates blocks of {@code OR} disjunctions.
  * <p>
- * Example:
- * {@code p1 = v1 OR p1 != v2 AND p2 <=v2 AND p3 > v3 OR p3 < v4}
- * Above query will translate to:
- * {@code (p1 = v1 OR p1 != v2) AND (p2 <=v2) AND (p3 > v3 OR p3 < v4;)}
+ * Example:<br>
+ * {@code p1 = v1 OR p1 != v2 AND p2 <=v2 AND p3 > v3, p3 < v4}
  * <p>
- * The format of collection is a sequence of comma-delimited  values surrounded by parenthesis. The values must be
- * compatible with the type contained in the collection. No space can be used to separate elements of a collection.
- * <p>
- * Example:
- * {@code id in (1,2,3,4)}
+ * Above query will translate to:<br>
+ * {@code (p1 = v1 OR p1 != v2) AND (p2 <= v2) AND (p3 > v3 OR p3 < v4)}
  * <p>
  * Breaking the CNF results in an error.
  * <p>
- * The available properties on an entity can be restricted by the service layer via {@link FilteringService#getFilter(String, ubic.gemma.persistence.util.Filter.Operator, String)}.
+ * The format of collection is a sequence of comma-delimited  values surrounded by parenthesis. The values must be
+ * compatible with the type contained in the collection.
+ * <p>
+ * Example:<br>
+ * {@code id in (1,2,3,4)}
+ * <p>
+ * The available filterable properties on an entity can be retrieved from {@link FilteringService#getFilterableProperties()}.
  *
  * @author tesarst
+ * @author poirigui
  * @see Filters
  * @see ubic.gemma.persistence.util.Filter
  * @see ubic.gemma.persistence.util.Filter.Operator
+ * @see FilteringService
  */
 @CommonsLog
 @Schema(type = "string", description = "Filter results by matching the expression. The exact syntax is described in the attached external documentation.",
