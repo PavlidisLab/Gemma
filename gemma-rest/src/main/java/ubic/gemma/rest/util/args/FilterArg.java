@@ -36,29 +36,44 @@ import java.util.stream.Collectors;
  * 'curationDetails' or 'curationDetails.lastTroubledEvent.date'.
  * <p>
  * Any property of a supported type. Currently, supported types are:
- * <ul>
- * <li>String - property of {@link String} type, required value can be any String.</li>
- * <li>Number - any Number implementation (i.e. {@link Float}, {@link Double}, {@link Integer}, {@link Long}, and their
- * corresponding primitive types). Required value must be a string parseable to the specific Number type.</li>
- * <li>Boolean - required value will be parsed to true only if the string matches 'true', ignoring case.</li>
- * <li>Date - property of {@link java.util.Date}, required value must be an ISO 8601 formatted date or datetime, UTC is assumed of no timezone is supplied</li>
- * <li>Collection - property of a {@link java.util.Collection} of any type aforementioned, nested collections are not
- * supported</li>
- * </ul>
+ * <dl>
+ * <dt>String</dt>
+ * <dd>Property of {@link String} type, required value can be any String.</dd>
+ * <dt>Number</dt>
+ * <dd>Any Number implementation (i.e. {@link Float}, {@link Double}, {@link Integer}, {@link Long}, and their
+ * corresponding primitive types). Required value must be a string parseable to the specific Number type.</dd>
+ * <dt>Boolean</dt>
+ * <dd>Required value will be parsed to true only if the string matches 'true', ignoring case.</dd>
+ * <dt>Date</dt>
+ * <dd>Property of {@link java.util.Date}, required value must be an ISO 8601 formatted date or datetime, UTC is assumed of no timezone is supplied</dd>
+ * <dt>Collection</dt>
+ * <dd>Property of a {@link java.util.Collection} of any type aforementioned, nested collections are not supported</dd>
+ * </dl>
+ * <p>
+ * Strings that contain parenthesis {@code ()}, comma {@code ,} or space ' ' characters must be quoted with
+ * double-quotes {@code "}. Double-quotes can be escaped with a backslash character: {@code \"}.
  * <p>
  * Accepted operator keywords are:
- * <ul>
- * <li>'=' - equality</li>
- * <li>'!=' - non-equality</li>
- * <li>'&lt;' - smaller than (only Number and Date types)</li>
- * <li>'&gt;' - larger than (only Number and Date types)</li>
- * <li>'&lt;=' - smaller or equal (only Number and Date types)</li>
- * <li>'&gt;=' - larger or equal (only Number and Date types)</li>
- * <li>'like' - similar string, effectively means 'contains', translates to the SQL {@code LIKE} operator where the
- * given value is surrounded by '%' signs</li>
- * <li>'in' - required value in the given collection with the semantic of the '=' equality operator (only for Collection
- * types)</li>
- * </ul>
+ * <dl>
+ * <dt>'='</dt>
+ * <dd>Equality</li>
+ * <dt>'!='</dt>
+ * <dd>Non-equality</dd>
+ * <dt>'&lt;'</dt>
+ * <dd>Smaller than (only Number and Date types)</dd>
+ * <dt>'&gt;'</dt>
+ * <dd>Larger than (only Number and Date types)</dd>
+ * <dt>'&lt;='</dt>
+ * <dd>Smaller or equal (only Number and Date types)</dd>
+ * <dt>'&gt;='</dt>
+ * <dd>Larger or equal (only Number and Date types)</dd>
+ * <dt>'like'</dt>
+ * <dd>Similar string, effectively means 'contains', translates to the SQL {@code LIKE} operator where the
+ * given value is surrounded by '%' signs (only String type)</dd>
+ * <dt>'in'</dt>
+ * <dd>Required value in the given collection with the semantic of the '=' equality operator (only for Collection
+ * types)</dd>
+ * </dl>
  * <p>
  * See {@link ubic.gemma.persistence.util.Filter.Operator} for more details on the available operators.
  * <p>
@@ -67,7 +82,7 @@ import java.util.stream.Collectors;
  * Multiple filters can be chained using 'AND' or 'OR' keywords.
  * Example:
  * {@code property1 < value1 AND property2 like value2}
- *
+ * <p>
  * If chained filters are mixed conjunctions and disjunctions, the query must be in conjunctive normal form (CNF)
  * without any parentheses. Every AND conjunctions separates blocks of OR disjunctions.
  * <p>
@@ -75,13 +90,13 @@ import java.util.stream.Collectors;
  * {@code p1 = v1 OR p1 != v2 AND p2 <=v2 AND p3 > v3 OR p3 < v4}
  * Above query will translate to:
  * {@code (p1 = v1 OR p1 != v2) AND (p2 <=v2) AND (p3 > v3 OR p3 < v4;)}
- *
+ * <p>
  * The format of collection is a sequence of comma-delimited  values surrounded by parenthesis. The values must be
  * compatible with the type contained in the collection. No space can be used to separate elements of a collection.
  * <p>
  * Example:
  * {@code id in (1,2,3,4)}
- *
+ * <p>
  * Breaking the CNF results in an error.
  * <p>
  * The available properties on an entity can be restricted by the service layer via {@link FilteringService#getFilter(String, ubic.gemma.persistence.util.Filter.Operator, String)}.
