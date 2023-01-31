@@ -24,18 +24,19 @@ import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.basecode.util.FileTools;
 import ubic.gemma.core.apps.Blat;
+import ubic.gemma.core.util.test.category.GoldenPathTest;
 import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 
 import java.util.Collection;
 
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 /**
  * @author pavlidis
  */
+@Category(GoldenPathTest.class)
 public class ArrayDesignSequenceAlignmentandMappingTest extends AbstractArrayDesignProcessingTest {
 
     @Autowired
@@ -55,7 +56,7 @@ public class ArrayDesignSequenceAlignmentandMappingTest extends AbstractArrayDes
                 new MockFastaCmd( ad.getPrimaryTaxon() ) );
 
         assertNotNull( seqs );
-        assertTrue( !seqs.isEmpty() );
+        assertFalse( seqs.isEmpty() );
 
         Blat mockBlat = new MockBlat( ad.getPrimaryTaxon() );
 
