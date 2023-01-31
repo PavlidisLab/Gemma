@@ -16,10 +16,7 @@ import ubic.gemma.rest.util.MalformedArgException;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Date;
-import java.util.Iterator;
+import java.util.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -242,12 +239,18 @@ public class FilterArgTest {
         when( mockVoService.getFilter( any(), any(), anyCollection() ) )
                 .thenAnswer( a -> Filter.parse( "alias", a.getArgument( 0 ), String.class,
                         a.getArgument( 1 ), a.getArgument( 2, Collection.class ) ) );
-        FilterArg<Identifiable> fa = FilterArg.valueOf( "foo in (1, 2, true, foo)" );
+        checkValidCollection( Arrays.asList( "1", "2", "true", "foo" ), "(1, 2, true, foo)" );
+        checkValidCollection( Collections.emptyList(), "()" );
+        checkValidCollection( Collections.emptyList(), "( )" );
+    }
+
+    private void checkValidCollection( Collection<String> expected, String input ) {
+        FilterArg<Identifiable> fa = FilterArg.valueOf( "foo in " + input );
         Filters f = fa.getFilters( mockVoService );
         Filter subClause = f.iterator().next()[0];
         assertThat( subClause )
                 .hasFieldOrPropertyWithValue( "objectAlias", "alias" )
                 .hasFieldOrPropertyWithValue( "propertyName", "foo" )
-                .hasFieldOrPropertyWithValue( "requiredValue", Arrays.asList( "1", "2", "true", "foo" ) );
+                .hasFieldOrPropertyWithValue( "requiredValue", expected );
     }
 }

@@ -32,7 +32,7 @@ collectionOperator: IN;
 
 // we include tokens that can be treated as strings
 scalar: STRING | QUOTED_STRING | PROPERTY | CONJUNCTION | DISJUNCTION | operator | collectionOperator;
-collection: '(' scalar (',' scalar)* ')';
+collection: '(' scalar (',' scalar)* ')' | '(' ')';
 subClause: PROPERTY operator scalar | PROPERTY collectionOperator collection;
 clause: subClause (disjunction subClause)*;
 filter: clause (CONJUNCTION clause)* EOF | EOF;
