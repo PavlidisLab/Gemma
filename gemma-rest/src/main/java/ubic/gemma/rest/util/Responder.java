@@ -50,30 +50,30 @@ public class Responder {
         }
     }
 
-    public static <T> FilteringResponseDataObject<T> filter( List<T> payload, @Nullable Filters filters, @Nullable Sort sort ) {
+    public static <T> FilteringResponseDataObject<T> filter( List<T> payload, @Nullable Filters filters, @Nullable String[] groupBy, @Nullable Sort sort ) {
         if ( payload == null ) {
             throw new NotFoundException( Responder.DEFAULT_ERR_MSG_NULL_OBJECT );
         } else {
-            return new FilteringResponseDataObject<>( payload, filters, sort );
+            return new FilteringResponseDataObject<>( payload, filters, null, sort );
         }
     }
 
-    public static <T> LimitedResponseDataObject<T> limit( List<T> payload, @Nullable Filters filters, @Nullable Sort sort, int limit ) {
+    public static <T> LimitedResponseDataObject<T> limit( List<T> payload, @Nullable Filters filters, String[] groupBy, @Nullable Sort sort, int limit ) {
         if ( payload == null ) {
             throw new NotFoundException( Responder.DEFAULT_ERR_MSG_NULL_OBJECT );
         } else {
-            return new LimitedResponseDataObject<>( payload, filters, sort, limit );
+            return new LimitedResponseDataObject<>( payload, filters, groupBy, sort, limit );
         }
     }
 
     /**
      * Produce a {@link PaginatedResponseDataObject} for a given {@link Slice}.
      */
-    public static <T extends IdentifiableValueObject<?>> PaginatedResponseDataObject<T> paginate( Slice<T> payload, @Nullable Filters filters ) throws NotFoundException {
+    public static <T extends IdentifiableValueObject<?>> PaginatedResponseDataObject<T> paginate( Slice<T> payload, @Nullable Filters filters, String[] groupBy ) throws NotFoundException {
         if ( payload == null ) {
             throw new NotFoundException( Responder.DEFAULT_ERR_MSG_NULL_OBJECT );
         } else {
-            return new PaginatedResponseDataObject<>( payload, filters );
+            return new PaginatedResponseDataObject<>( payload, filters, groupBy );
         }
     }
 
@@ -85,14 +85,14 @@ public class Responder {
     /**
      * Paginate using an arbitrary filtering method.
      */
-    public static <T extends IdentifiableValueObject<?>> PaginatedResponseDataObject<T> paginate( FilterMethod<T> filterMethod, Filters filters, Sort sort, int offset, int limit ) throws NotFoundException {
-        return paginate( filterMethod.filter( filters, sort, offset, limit ), filters );
+    public static <T extends IdentifiableValueObject<?>> PaginatedResponseDataObject<T> paginate( FilterMethod<T> filterMethod, Filters filters, String[] groupBy, Sort sort, int offset, int limit ) throws NotFoundException {
+        return paginate( filterMethod.filter( filters, sort, offset, limit ), filters, groupBy );
     }
 
     /**
      * Paginate using a {@link FilteringVoEnabledService}
      */
-    public static <T extends IdentifiableValueObject<?>> PaginatedResponseDataObject<T> paginate( FilteringVoEnabledService<?, T> filterMethod, Filters filters, Sort sort, int offset, int limit ) throws NotFoundException {
-        return paginate( filterMethod::loadValueObjectsPreFilter, filters, sort, offset, limit );
+    public static <T extends IdentifiableValueObject<?>> PaginatedResponseDataObject<T> paginate( FilteringVoEnabledService<?, T> filterMethod, Filters filters, String[] groupBy, Sort sort, int offset, int limit ) throws NotFoundException {
+        return paginate( filterMethod::loadValueObjectsPreFilter, filters, groupBy, sort, offset, limit );
     }
 }

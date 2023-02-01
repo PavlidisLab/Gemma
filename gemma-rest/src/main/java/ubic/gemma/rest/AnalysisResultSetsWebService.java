@@ -108,7 +108,7 @@ public class AnalysisResultSetsWebService {
         Filters filters2 = filters.getFilters( expressionAnalysisResultSetService );
         return Responder.paginate( expressionAnalysisResultSetService.findByBioAssaySetInAndDatabaseEntryInLimit(
                         bas, des, filters2, offset.getValue(), limit.getValue(), sort.getSort( expressionAnalysisResultSetService ) ),
-                filters2 );
+                filters2, new String[] { "id" } );
     }
 
     @GET

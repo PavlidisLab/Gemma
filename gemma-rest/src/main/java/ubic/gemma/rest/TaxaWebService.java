@@ -237,7 +237,7 @@ public class TaxaWebService {
         taxonArg.getEntity( taxonService );
         Filters filters = filter.getFilters( expressionExperimentService )
                 .and( taxonArg.getFilters( taxonService ) );
-        return Responder.paginate( expressionExperimentService, filters, sort.getSort( taxonService ), offset.getValue(), limit.getValue() );
+        return Responder.paginate( expressionExperimentService, filters, new String[] { "id" }, sort.getSort( taxonService ), offset.getValue(), limit.getValue() );
     }
 
     /**

@@ -50,6 +50,10 @@ openAPI:
       ```
 
       New endpoints for browsing blacklisted platforms and datasets.
+ 
+      Filtered endpoints (including paginated and limited ones) now expose a `groupBy` array that enumerates all the
+      properties used to group results. This helps clear confusion about what constitute a business key in the returned
+      response.
 
       ### Update 2.6.1
 

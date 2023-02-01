@@ -22,8 +22,6 @@ package ubic.gemma.rest;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.Explode;
-import io.swagger.v3.oas.annotations.extensions.Extension;
-import io.swagger.v3.oas.annotations.extensions.ExtensionProperty;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -175,7 +173,7 @@ public class AnnotationsWebService {
         Sort sort = sortArg.getSort( expressionExperimentService );
 
         if ( foundIds.isEmpty() ) {
-            return Responder.paginate( Slice.empty(), filters );
+            return Responder.paginate( Slice.empty(), filters, new String[] { "id" } );
         }
 
         if ( filters.isEmpty()
@@ -184,13 +182,13 @@ public class AnnotationsWebService {
                 && sort.getPropertyName().equals( "id" )
                 && sort.getDirection() == Sort.Direction.ASC ) {
             // Otherwise there is no need to go the pre-filter path since we already know exactly what IDs we want.
-            return Responder.paginate( Slice.fromList( expressionExperimentService.loadValueObjectsByIds( foundIds ) ), filters );
+            return Responder.paginate( Slice.fromList( expressionExperimentService.loadValueObjectsByIds( foundIds ) ), filters, new String[] { "id" } );
 
         }
 
         // If there are filters other than the search query, intersect the results.
         filters.and( DatasetArrayArg.valueOf( StringUtils.join( foundIds, ',' ) ).getFilters( expressionExperimentService ) );
-        return Responder.paginate( expressionExperimentService, filters, sort, offset.getValue(), limit.getValue() );
+        return Responder.paginate( expressionExperimentService, filters, new String[] { "id" }, sort, offset.getValue(), limit.getValue() );
     }
 
     @GET
@@ -244,7 +242,7 @@ public class AnnotationsWebService {
         }
 
         if ( foundIds.isEmpty() ) {
-            return Responder.paginate( Slice.empty(), null );
+            return Responder.paginate( Slice.empty(), null, new String[] { "id" } );
         }
 
         // We always have to do filtering, because we always have at least the taxon argument (otherwise this#datasets method is used)
@@ -252,7 +250,7 @@ public class AnnotationsWebService {
                 .and( DatasetArrayArg.valueOf( StringUtils.join( foundIds, ',' ) ).getFilters( expressionExperimentService ) )
                 .and( taxonArg.getFilters( taxonService ) );
 
-        return Responder.paginate( expressionExperimentService, filters, sort.getSort( expressionExperimentService ), offset.getValue(), limit.getValue() );
+        return Responder.paginate( expressionExperimentService, filters, new String[] { "id" }, sort.getSort( expressionExperimentService ), offset.getValue(), limit.getValue() );
     }
 
     /**

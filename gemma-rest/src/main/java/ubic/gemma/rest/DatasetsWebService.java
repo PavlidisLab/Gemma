@@ -123,6 +123,7 @@ public class DatasetsWebService {
     ) {
         return Responder.paginate( expressionExperimentService,
                 filter.getFilters( expressionExperimentService ),
+                new String[] { "id" },
                 sort.getSort( expressionExperimentService ),
                 offset.getValue(),
                 limit.getValue() );
@@ -154,7 +155,7 @@ public class DatasetsWebService {
                 .stream().map( e -> new ArrayDesignWithUsageStatisticsValueObject( e.getKey(), e.getValue() ) )
                 .sorted( Comparator.comparing( UsageStatistics::getNumberOfExpressionExperiments, Comparator.reverseOrder() ) )
                 .collect( Collectors.toList() );
-        return Responder.limit( results, filters, Sort.by( null, "numberOfExpressionExperiments", Sort.Direction.DESC ), l );
+        return Responder.limit( results, filters, new String[] { "id" }, Sort.by( null, "numberOfExpressionExperiments", Sort.Direction.DESC ), l );
     }
 
     @Value
@@ -182,7 +183,7 @@ public class DatasetsWebService {
                 .stream().map( e -> new AnnotationWithUsageStatisticsValueObject( e.getKey(), e.getValue() ) )
                 .sorted( Comparator.comparing( UsageStatistics::getNumberOfExpressionExperiments, Comparator.reverseOrder() ) )
                 .collect( Collectors.toList() );
-        return Responder.limit( results, filters, Sort.by( null, "numberOfExpressionExperiments", Sort.Direction.DESC ), l );
+        return Responder.limit( results, filters, new String[] { "classUri", "className", "termUri", "termName" }, Sort.by( null, "numberOfExpressionExperiments", Sort.Direction.DESC ), l );
     }
 
     /**
@@ -230,7 +231,7 @@ public class DatasetsWebService {
     ) {
         Filters filters = filter.getFilters( expressionExperimentService )
                 .and( datasetsArg.getFilters( expressionExperimentService ) );
-        return Responder.paginate( expressionExperimentService, filters, sort.getSort( expressionExperimentService ), offset.getValue(), limit.getValue() );
+        return Responder.paginate( expressionExperimentService, filters, new String[] { "id" }, sort.getSort( expressionExperimentService ), offset.getValue(), limit.getValue() );
     }
 
     /**
@@ -246,6 +247,7 @@ public class DatasetsWebService {
             @QueryParam("limit") @DefaultValue("20") LimitArg limit ) {
         return Responder.paginate( expressionExperimentService::loadBlacklistedValueObjects,
                 filterArg.getFilters( expressionExperimentService ),
+                new String[] { "id" },
                 sortArg.getSort( expressionExperimentService ),
                 offset.getValue(),
                 limit.getValue() );
