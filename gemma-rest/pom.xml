@@ -99,6 +99,13 @@
             <version>2.0.1</version>
         </dependency>
 
+        <!-- Logging (Jersey uses JUL, so we redirect to Log4j2 see logging.properties for the bridge) -->
+        <dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-jul</artifactId>
+            <version>${log4j.version}</version>
+        </dependency>
+
         <!-- Swagger -->
         <dependency>
             <groupId>io.swagger.core.v3</groupId>
