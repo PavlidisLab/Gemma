@@ -25,7 +25,7 @@ public class FilterQueryUtilsTest {
                 .and( "ee", "shortName", String.class, Filter.Operator.like, "%_" );
         Query mockedQuery = mock( Query.class );
         addRestrictionParameters( mockedQuery, filters );
-        verify( mockedQuery ).setParameter( "ee_shortName1", "%\\%\\_%" );
+        verify( mockedQuery ).setParameter( "ee_shortName1", "\\%\\_%" );
     }
 
     @Test
@@ -43,7 +43,7 @@ public class FilterQueryUtilsTest {
 
         Query mockedQuery = mock( Query.class );
         addRestrictionParameters( mockedQuery, filters );
-        verify( mockedQuery ).setParameter( "ee_shortName1", "%GSE%" );
+        verify( mockedQuery ).setParameter( "ee_shortName1", "GSE%" );
         verify( mockedQuery ).setParameterList( "ee_id2", Arrays.asList( 1L, 2L, 3L, 4L ) );
         verify( mockedQuery ).setParameter( "ad_taxonId3", 9606L );
         verify( mockedQuery ).setParameterList( "ee_id4", Arrays.asList( 1L, 2L, 3L, 4L ) );
