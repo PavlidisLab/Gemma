@@ -37,6 +37,7 @@ import ubic.gemma.core.annotation.reference.BibliographicReferenceService;
 import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.core.loader.entrez.pubmed.PubMedXMLFetcher;
 import ubic.gemma.core.loader.genome.gene.ncbi.homology.HomologeneService;
+import ubic.gemma.core.loader.genome.gene.ncbi.homology.HomologeneServiceFactory;
 import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.search.SearchResult;
@@ -61,6 +62,7 @@ import ubic.gemma.persistence.service.common.description.CharacteristicService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.persistence.util.EntityUtils;
+import ubic.gemma.persistence.util.AsyncFactoryBeanUtils;
 import ubic.gemma.persistence.util.Settings;
 
 import java.io.BufferedWriter;
@@ -70,7 +72,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.util.*;
 import java.util.Map.Entry;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
 /**
@@ -1806,12 +1807,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         // Get the Gene object for finding homologues' evidence.
         Gene gene = this.geneService.load( geneId );
 
-        Collection<Gene> homologues;
-        try {
-            homologues = homologeneService.get().getHomologues( gene );
-        } catch ( InterruptedException | ExecutionException e ) {
-            throw new RuntimeException( e );
-        }
+        Collection<Gene> homologues = AsyncFactoryBeanUtils.getSilently( homologeneService, HomologeneServiceFactory.class ).getHomologues( gene );
 
         Collection<PhenotypeAssociation> homologuePhenotypeAssociations = new HashSet<>();
 
@@ -2111,6 +2107,8 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     private void writeForErmineJ( TreeCharacteristicValueObject t, Taxon taxon, HashMap<Integer, String> cacheMap,
             BufferedWriter phenoCartageneSets ) throws IOException {
 
+        HomologeneService hs = hs = AsyncFactoryBeanUtils.getSilently( this.homologeneService, HomologeneServiceFactory.class );
+
         Set<String> geneSymbols = new HashSet<>();
 
         if ( t != null ) {
@@ -2127,13 +2125,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
                             geneSymbols.add( gene.getOfficialSymbol() );
                             cacheMap.put( geneNCBI, gene.getOfficialSymbol() );
                         } else {
-                            Gene homoGene;
-                            try {
-                                homoGene = this.homologeneService.get().getHomologue( gene, taxon );
-                            } catch ( InterruptedException | ExecutionException e ) {
-                                throw new RuntimeException( e );
-                            }
-
+                            Gene homoGene = hs.getHomologue( gene, taxon );
                             if ( homoGene != null ) {
                                 geneSymbols.add( homoGene.getOfficialSymbol() );
                                 cacheMap.put( geneNCBI, homoGene.getOfficialSymbol() );
