@@ -42,6 +42,7 @@ import ubic.gemma.model.common.description.AnnotationValueObject;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.QuantitationTypeValueObject;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
 import ubic.gemma.model.expression.bioAssayData.ExperimentExpressionLevelsValueObject;
@@ -136,6 +137,37 @@ public class DatasetsWebService {
         return Responder.respond( expressionExperimentService.countPreFilter( filter.getFilters( expressionExperimentService ) ) );
     }
 
+    public interface UsageStatistics {
+        Long getNumberOfExpressionExperiments();
+    }
+
+    @GET
+    @Path("/platforms")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(summary = "Retrieve usage statistics of annotations among datasets matching the provided filter",
+            description = "Usage statistics are aggregated across experiment tags, samples and factor values mentioned in the experimental design.")
+    public LimitedResponseDataObject<ArrayDesignWithUsageStatisticsValueObject> getDatasetsPlatformsUsageStatistics( @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filter, @QueryParam("limit") @DefaultValue("50") LimitArg limit ) {
+        Filters filters = filter.getFilters( expressionExperimentService );
+        Integer l = limit.getValue( 50 );
+        List<ArrayDesignWithUsageStatisticsValueObject> results = expressionExperimentService.getArrayDesignFrequencyPreFilter( filters, limit.getValue( 50 ) )
+                .entrySet()
+                .stream().map( e -> new ArrayDesignWithUsageStatisticsValueObject( e.getKey(), e.getValue() ) )
+                .sorted( Comparator.comparing( UsageStatistics::getNumberOfExpressionExperiments, Comparator.reverseOrder() ) )
+                .collect( Collectors.toList() );
+        return Responder.limit( results, filters, Sort.by( null, "numberOfExpressionExperiments", Sort.Direction.DESC ), l );
+    }
+
+    @Value
+    @EqualsAndHashCode(callSuper = true)
+    @JsonIgnoreProperties({ "expressionExperimentCount", "numberOfSwitchedExpressionExperiments" })
+    public static class ArrayDesignWithUsageStatisticsValueObject extends ArrayDesignValueObject implements UsageStatistics {
+
+        public ArrayDesignWithUsageStatisticsValueObject( ArrayDesign arrayDesign, Long numberOfExpressionExperiments ) {
+            super( arrayDesign );
+            setExpressionExperimentCount( numberOfExpressionExperiments );
+        }
+    }
+
     @GET
     @Path("/annotations")
     @Produces(MediaType.APPLICATION_JSON)
@@ -148,7 +180,7 @@ public class DatasetsWebService {
         List<AnnotationWithUsageStatisticsValueObject> results = expressionExperimentService.getAnnotationsFrequencyPreFilter( filters, limit.getValue( 50 ) )
                 .entrySet()
                 .stream().map( e -> new AnnotationWithUsageStatisticsValueObject( e.getKey(), e.getValue() ) )
-                .sorted( Comparator.comparing( AnnotationWithUsageStatisticsValueObject::getNumberOfExpressionExperiments, Comparator.reverseOrder() ) )
+                .sorted( Comparator.comparing( UsageStatistics::getNumberOfExpressionExperiments, Comparator.reverseOrder() ) )
                 .collect( Collectors.toList() );
         return Responder.limit( results, filters, Sort.by( null, "numberOfExpressionExperiments", Sort.Direction.DESC ), l );
     }
@@ -159,7 +191,7 @@ public class DatasetsWebService {
     @Value
     @EqualsAndHashCode(callSuper = true)
     @JsonIgnoreProperties(value = { "id", "objectClass" })
-    public static class AnnotationWithUsageStatisticsValueObject extends AnnotationValueObject {
+    public static class AnnotationWithUsageStatisticsValueObject extends AnnotationValueObject implements UsageStatistics {
 
         /**
          * Number of times the characteristic is mentioned among matching datasets.

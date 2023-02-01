@@ -254,6 +254,8 @@ public interface ExpressionExperimentService
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     Collection<ArrayDesign> getArrayDesignsUsed( BioAssaySet expressionExperiment );
 
+    Map<ArrayDesign, Long> getArrayDesignFrequencyPreFilter( @Nullable Filters filters, int maxResults );
+
     /**
      * Checks the experiment for a batch confound.
      *

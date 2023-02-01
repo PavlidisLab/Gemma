@@ -63,13 +63,15 @@ import ubic.gemma.persistence.util.*;
 
 import javax.annotation.Nullable;
 import java.sql.SQLException;
-import java.text.Collator;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
+
+import static java.util.stream.Collectors.groupingBy;
+import static java.util.stream.Collectors.summingLong;
 
 /**
  * @author pavlidis
@@ -827,6 +829,16 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
+    public Map<ArrayDesign, Long> getArrayDesignsUsageFrequency( Collection<Long> eeIds ) {
+        //noinspection unchecked
+        List<Object[]> result = getSessionFactory().getCurrentSession()
+                .createQuery( "select a, count(distinct ee) from ExpressionExperiment ee join ee.bioAssays ba join ba.arrayDesignUsed a where ee.id in (:ids) group by a" )
+                .setParameterList( "ids", eeIds )
+                .list();
+        return result.stream().collect( groupingBy( row -> ( ArrayDesign ) row[0], summingLong( row -> ( Long ) row[1] ) ) );
+    }
+
+    @Override
     public Map<Long, Collection<AuditEvent>> getAuditEvents( Collection<Long> ids ) {
         //language=HQL
         final String queryString =
@@ -1331,7 +1343,7 @@ public class ExpressionExperimentDaoImpl
                 .setCacheable( true )
                 .list();
         return results.stream()
-                .collect( Collectors.groupingBy( row -> ( ExpressionExperiment ) row[0], Collectors.toList() ) );
+                .collect( groupingBy( row -> ( ExpressionExperiment ) row[0], Collectors.toList() ) );
     }
 
     @Override

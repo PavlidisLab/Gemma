@@ -56,6 +56,7 @@ import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.persistence.service.AbstractFilteringVoEnabledService;
 import ubic.gemma.persistence.service.AbstractService;
 import ubic.gemma.persistence.service.analysis.expression.coexpression.CoexpressionAnalysisService;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
@@ -82,7 +83,7 @@ import java.util.stream.Collectors;
 @Service
 @Transactional
 public class ExpressionExperimentServiceImpl
-        extends ubic.gemma.persistence.service.AbstractFilteringVoEnabledService<ExpressionExperiment, ExpressionExperimentValueObject>
+        extends AbstractFilteringVoEnabledService<ExpressionExperiment, ExpressionExperimentValueObject>
         implements ExpressionExperimentService {
 
     private static final double BATCH_CONFOUND_THRESHOLD = 0.01;
@@ -515,6 +516,12 @@ public class ExpressionExperimentServiceImpl
     @Transactional(readOnly = true)
     public Collection<ArrayDesign> getArrayDesignsUsed( final BioAssaySet expressionExperiment ) {
         return this.expressionExperimentDao.getArrayDesignsUsed( expressionExperiment );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Map<ArrayDesign, Long> getArrayDesignFrequencyPreFilter( @Nullable Filters filters, int maxResults ) {
+        return expressionExperimentDao.getArrayDesignsUsageFrequency( this.expressionExperimentDao.loadIdsPreFilter( filters, null ) );
     }
 
     @Override
