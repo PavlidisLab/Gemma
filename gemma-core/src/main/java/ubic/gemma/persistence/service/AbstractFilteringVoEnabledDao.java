@@ -162,11 +162,19 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
             filterableProperties.addAll( props );
         }
 
+        public void unregisterProperty( String propertyName ) {
+            if ( !filterableProperties.remove( propertyName ) ) {
+                throw new IllegalArgumentException( String.format( "No such filterable properties %s.", propertyName ) );
+            }
+        }
+
         /**
          * Unregister all the properties matching the given predicate.
          */
         public void unregisterProperties( Predicate<? super String> predicate ) {
-            filterableProperties.removeIf( predicate );
+            if ( !filterableProperties.removeIf( predicate ) ) {
+                throw new IllegalArgumentException( "No filterable properties matched the supplied predicate." );
+            }
         }
 
         /**
@@ -209,6 +217,16 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
                     registerProperty( prefix + propertyNames[i] );
                 }
             }
+        }
+
+        /**
+         * Unregister an entity at a given prefix.
+         */
+        public void unregisterEntity( String prefix ) {
+            if ( !prefix.isEmpty() && !prefix.endsWith( "." ) ) {
+                throw new IllegalArgumentException( "A non-empty prefix must end with a '.' character." );
+            }
+            unregisterProperties( s -> s.startsWith( prefix ) );
         }
 
         /**

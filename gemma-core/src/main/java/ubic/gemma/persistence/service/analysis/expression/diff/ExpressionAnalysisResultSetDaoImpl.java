@@ -237,9 +237,9 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilterin
     protected void configureFilterableProperties( FilterablePropertiesConfigurer configurer ) {
         super.configureFilterableProperties( configurer );
         // these cause a org.hibernate.MappingException: Unknown collection role exception (see https://github.com/PavlidisLab/Gemma/issues/518)
-        configurer.unregisterProperties( "analysis.experimentAnalyzed.characteristics.size"::equals );
-        configurer.unregisterProperties( "analysis.experimentAnalyzed.otherRelevantPublications.size"::equals );
-        configurer.unregisterProperties( "experimentalFactors.size"::equals );
+        configurer.unregisterProperty( "analysis.experimentAnalyzed.characteristics.size" );
+        configurer.unregisterProperty( "analysis.experimentAnalyzed.otherRelevantPublications.size" );
+        configurer.unregisterProperty( "experimentalFactors.size" );
     }
 
     @Override

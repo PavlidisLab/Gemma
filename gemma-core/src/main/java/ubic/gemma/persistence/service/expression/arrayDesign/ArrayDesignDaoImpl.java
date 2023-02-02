@@ -47,6 +47,7 @@ import javax.annotation.Nullable;
 import java.math.BigInteger;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 /**
@@ -1083,7 +1084,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
         // disallow this, we remove those properties.
         // see https://github.com/PavlidisLab/Gemma/issues/546
         String recursiveProperty = String.join( "|", new String[] { "subsumingArrayDesign", "mergedInto", "alternativeTo" } );
-        configurer.unregisterProperties( prop -> prop.matches( "^(" + recursiveProperty + ")\\.(" + recursiveProperty + ")\\..+$" ) );
+        configurer.unregisterProperties( Pattern.compile( "^(" + recursiveProperty + ")\\.(" + recursiveProperty + ")\\..+$" ).asPredicate() );
         configurer.registerAlias( "externalReferences.", EXTERNAL_REFERENCE_ALIAS, DatabaseEntry.class, null, 2 );
         configurer.registerAlias( "taxon.", PRIMARY_TAXON_ALIAS, Taxon.class, "primaryTaxon", 2 );
     }
