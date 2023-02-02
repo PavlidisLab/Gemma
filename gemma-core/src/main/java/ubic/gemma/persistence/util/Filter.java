@@ -223,7 +223,7 @@ public class Filter {
     private static String quoteIfNecessary( String s ) {
         // FIXME: this is incomplete, a full solution would be based on the FilterArg grammar
         char[] RESERVED_CHARS = { '(', ')', ',', ' ' };
-        if ( StringUtils.containsAny( s, RESERVED_CHARS ) ) {
+        if ( StringUtils.containsAny( s, RESERVED_CHARS ) || s.isEmpty() ) {
             return "\"" + s.replace( "\"", "\\\"" ) + "\"";
         } else {
             return s;

@@ -39,7 +39,8 @@ import java.util.stream.Collectors;
  * <dl>
  * <dt>String</dt>
  * <dd>Property of {@link String} type. Strings that contain parenthesis {@code ()}, comma {@code ,} or space ' '
- * characters must be quoted with double-quotes {@code "}. Double-quotes can be escaped with a backslash character: {@code \"}.</dd>
+ * characters, or empty strings must be quoted with double-quotes {@code "}. Double-quotes can be escaped with a
+ * backslash character: {@code \"}.</dd>
  * <dt>Number</dt>
  * <dd>Any Number implementation (i.e. {@link Float}, {@link Double}, {@link Integer}, {@link Long}, and their
  * corresponding primitive types). Required value must be a string parseable to the specific Number type.</dd>
