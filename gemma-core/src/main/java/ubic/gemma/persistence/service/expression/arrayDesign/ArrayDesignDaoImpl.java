@@ -1075,21 +1075,17 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     }
 
     @Override
-    protected void registerFilterableProperties( Set<String> properties ) {
-        super.registerFilterableProperties( properties );
-        properties.add( "taxon" );
+    protected void configureFilterableProperties( FilterablePropertiesConfigurer configurer ) {
+        super.configureFilterableProperties( configurer );
+        configurer.registerProperty( "taxon" );
         // because the ArrayDesign is the root property, and we allow at most 3 level, some of the recursive properties
         // (i.e. referring to another AD) will properties in a bunch of useless prefix such as mergedInto.mergedInto. To
         // disallow this, we remove those properties.
         // see https://github.com/PavlidisLab/Gemma/issues/546
         String recursiveProperty = String.join( "|", new String[] { "subsumingArrayDesign", "mergedInto", "alternativeTo" } );
-        properties.removeIf( prop -> prop.matches( "^(" + recursiveProperty + ")\\.(" + recursiveProperty + ")\\..+$" ) );
-    }
-
-    @Override
-    protected void registerFilterablePropertyAliases( Set<FilterablePropertyAlias> aliases ) {
-        aliases.add( new FilterablePropertyAlias( "externalReferences.", EXTERNAL_REFERENCE_ALIAS, DatabaseEntry.class, null ) );
-        aliases.add( new FilterablePropertyAlias( "taxon.", PRIMARY_TAXON_ALIAS, Taxon.class, "primaryTaxon" ) );
+        configurer.unregisterProperties( prop -> prop.matches( "^(" + recursiveProperty + ")\\.(" + recursiveProperty + ")\\..+$" ) );
+        configurer.registerAlias( "externalReferences.", EXTERNAL_REFERENCE_ALIAS, DatabaseEntry.class, null, 2 );
+        configurer.registerAlias( "taxon.", PRIMARY_TAXON_ALIAS, Taxon.class, "primaryTaxon", 2 );
     }
 
     @Override

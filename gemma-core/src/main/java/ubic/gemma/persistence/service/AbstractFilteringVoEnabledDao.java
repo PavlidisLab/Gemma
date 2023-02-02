@@ -1,12 +1,14 @@
 package ubic.gemma.persistence.service;
 
 import lombok.*;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.hibernate.SessionFactory;
 import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.type.CustomType;
 import org.hibernate.type.EnumType;
 import org.hibernate.type.Type;
+import org.springframework.beans.factory.InitializingBean;
 import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.persistence.util.EntityUtils;
@@ -18,6 +20,7 @@ import javax.annotation.Nullable;
 import javax.annotation.OverridingMethodsMustInvokeSuper;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Predicate;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -28,7 +31,7 @@ import java.util.stream.Collectors;
  * @param <VO> the corresponding VO type
  * @author poirigui
  */
-public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO extends IdentifiableValueObject<O>> extends AbstractVoEnabledDao<O, VO> implements FilteringVoEnabledDao<O, VO> {
+public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO extends IdentifiableValueObject<O>> extends AbstractVoEnabledDao<O, VO> implements FilteringVoEnabledDao<O, VO>, InitializingBean {
 
     /**
      * Maximum depth to explore when enumerating filterable properties via {@link #getFilterableProperties()}.
@@ -51,20 +54,22 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
     /**
      * Cached filterable properties, computed once on startup.
      */
-    private final Set<String> filterableProperties;
+    private final Set<String> filterableProperties = new HashSet<>();
 
     /**
      * Aliases for filterable properties.
      */
-    private final Set<FilterablePropertyAlias> filterablePropertyAliases;
+    private final Set<FilterablePropertyAlias> filterablePropertyAliases = new HashSet<>();
 
     protected AbstractFilteringVoEnabledDao( @Nullable String objectAlias, Class<? extends O> elementClass, SessionFactory sessionFactory ) {
         super( elementClass, sessionFactory );
         this.objectAlias = objectAlias;
-        this.filterablePropertyAliases = new HashSet<>();
-        registerFilterablePropertyAliases( this.filterablePropertyAliases );
-        this.filterableProperties = new HashSet<>();
-        registerFilterableProperties( this.filterableProperties );
+    }
+
+    @Override
+    @OverridingMethodsMustInvokeSuper
+    public void afterPropertiesSet() {
+        configureFilterableProperties( new FilterablePropertiesConfigurer() );
     }
 
     /**
@@ -133,25 +138,98 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
     }
 
     /**
-     * Register filterable properties.
-     * @param properties a collection to which filterable properties are to be added
+     * Configurer for filterable properties and their aliases.
      */
-    @OverridingMethodsMustInvokeSuper
-    protected void registerFilterableProperties( Set<String> properties ) {
-        addFilterableProperties( "", elementClass, properties, FILTERABLE_PROPERTIES_MAX_DEPTH );
-        // FIXME: the aliases are not available because they are registered afterward in the constructor
-        Set<FilterablePropertyAlias> aliases = new HashSet<>();
-        registerFilterablePropertyAliases( aliases );
-        for ( FilterablePropertyAlias alias : aliases ) {
-            addFilterableProperties( alias.prefix, alias.propertyType, properties, FILTERABLE_PROPERTIES_MAX_DEPTH - 1 );
+    protected class FilterablePropertiesConfigurer {
+
+        public void registerProperty( String propertyName ) {
+            if ( filterableProperties.contains( propertyName ) ) {
+                throw new IllegalArgumentException( "Filterable property %s is already registered." );
+            }
+            filterableProperties.add( propertyName );
+        }
+
+        /**
+         * Register all the given properties.
+         * @throws IllegalArgumentException if any of the given properties is already registered
+         */
+        public void registerProperties( String... propertyNames ) throws IllegalArgumentException {
+            List<String> props = Arrays.asList( propertyNames );
+            if ( CollectionUtils.containsAny( filterableProperties, props ) ) {
+                throw new IllegalArgumentException( String.format( "The following filterable properties are already registered: %s.",
+                        props.stream().filter( filterableProperties::contains ).collect( Collectors.joining( ", " ) ) ) );
+            }
+            filterableProperties.addAll( props );
+        }
+
+        /**
+         * Unregister all the properties matching the given predicate.
+         */
+        public void unregisterProperties( Predicate<? super String> predicate ) {
+            filterableProperties.removeIf( predicate );
+        }
+
+        /**
+         * Register an entity available at a given prefix.
+         * <p>
+         * This method recursively register the properties of a given entity up to the maximum depth.
+         * @param prefix      a prefix under which the entity is made available
+         * @param entityClass a class for the entity, which must be registered mapped by Hibernate
+         * @param maxDepth    maximum depth for visiting properties. For example, zero would expose no property but the
+         *                    entity itself, 1 would expose the properties of the alias, 2 would expose the properties
+         *                    of any entity directly related to the given entity, etc.
+         */
+        public void registerEntity( String prefix, Class<?> entityClass, int maxDepth ) throws IllegalArgumentException {
+            if ( !prefix.isEmpty() && !prefix.endsWith( "." ) ) {
+                throw new IllegalArgumentException( "A non-empty prefix must end with a '.' character." );
+            }
+            if ( maxDepth <= 0 ) {
+                throw new IllegalArgumentException( String.format( "Maximum depth for adding filterable properties of %s to %s must be strictly positive.",
+                        entityClass.getName(), prefix ) );
+            }
+            ClassMetadata classMetadata = getSessionFactory().getClassMetadata( entityClass );
+            if ( classMetadata == null ) {
+                throw new IllegalArgumentException( String.format( "Cannot add filterable properties for unmapped class %s.",
+                        entityClass.getName() ) );
+            }
+            String[] propertyNames = classMetadata.getPropertyNames();
+            Type[] propertyTypes = classMetadata.getPropertyTypes();
+            if ( classMetadata.getIdentifierPropertyName() != null ) {
+                registerProperty( prefix + classMetadata.getIdentifierPropertyName() );
+            }
+            for ( int i = 0; i < propertyNames.length; i++ ) {
+                if ( propertyTypes[i].isEntityType() ) {
+                    if ( maxDepth > 1 ) {
+                        registerEntity( prefix + propertyNames[i] + ".", propertyTypes[i].getReturnedClass(), maxDepth - 1 );
+                    }
+                } else if ( propertyTypes[i].isCollectionType() ) {
+                    // special case for collection size, regardless of its type
+                    registerProperty( prefix + propertyNames[i] + ".size" );
+                } else if ( Filter.getConversionService().canConvert( String.class, propertyTypes[i].getReturnedClass() ) ) {
+                    registerProperty( prefix + propertyNames[i] );
+                }
+            }
+        }
+
+        /**
+         * Register an alias for a property.
+         * <p>
+         * This also registers a property under the given prefix as per {@link #registerEntity(String, Class, int)}.
+         * @param objectAlias internal alias used to refer to the entity as per {@link Filter#getObjectAlias()}.
+         * @see #registerEntity(String, Class, int)
+         */
+        public void registerAlias( String prefix, @Nullable String objectAlias, Class<?> propertyType, @Nullable String aliasFor, int maxDepth ) {
+            filterablePropertyAliases.add( new FilterablePropertyAlias( prefix, objectAlias, propertyType, aliasFor, maxDepth ) );
+            registerEntity( prefix, propertyType, maxDepth );
         }
     }
 
     /**
-     * Register aliases for filterable properties.
-     * @param aliases a collection to which aliases are to be added
+     * Register filterable properties.
      */
-    protected void registerFilterablePropertyAliases( Set<FilterablePropertyAlias> aliases ) {
+    @OverridingMethodsMustInvokeSuper
+    protected void configureFilterableProperties( FilterablePropertiesConfigurer configurer ) {
+        configurer.registerEntity( "", elementClass, FILTERABLE_PROPERTIES_MAX_DEPTH );
     }
 
     @Override
@@ -190,37 +268,6 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
     }
 
     /**
-     * Helper that inspects a class and add all the filterable properties with the given prefix.
-     */
-    private void addFilterableProperties( String prefix, Class<?> entityClass, Set<String> destination, int maxDepth ) {
-        if ( !prefix.isEmpty() && !prefix.endsWith( "." ) ) {
-            throw new IllegalArgumentException( "A non-empty prefix must end with a '.' character." );
-        }
-        if ( maxDepth <= 0 ) {
-            throw new IllegalArgumentException( String.format( "Maximum depth for adding filterable properties of %s to %s must be strictly positive.",
-                    entityClass.getName(), prefix ) );
-        }
-        ClassMetadata classMetadata = getSessionFactory().getClassMetadata( entityClass );
-        String[] propertyNames = classMetadata.getPropertyNames();
-        Type[] propertyTypes = classMetadata.getPropertyTypes();
-        if ( classMetadata.getIdentifierPropertyName() != null ) {
-            destination.add( prefix + classMetadata.getIdentifierPropertyName() );
-        }
-        for ( int i = 0; i < propertyNames.length; i++ ) {
-            if ( propertyTypes[i].isEntityType() ) {
-                if ( maxDepth > 1 ) {
-                    addFilterableProperties( prefix + propertyNames[i] + ".", propertyTypes[i].getReturnedClass(), destination, maxDepth - 1 );
-                }
-            } else if ( propertyTypes[i].isCollectionType() ) {
-                // special case for collection size, regardless of its type
-                destination.add( prefix + propertyNames[i] + ".size" );
-            } else if ( Filter.getConversionService().canConvert( String.class, propertyTypes[i].getReturnedClass() ) ) {
-                destination.add( prefix + propertyNames[i] );
-            }
-        }
-    }
-
-    /**
      * Meta-information for a filterable property.
      */
     @With
@@ -246,18 +293,14 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
 
     @Value
     @EqualsAndHashCode(of = "prefix")
-    protected static class FilterablePropertyAlias {
+    private static class FilterablePropertyAlias {
         String prefix;
         @Nullable
         String objectAlias;
         Class<?> propertyType;
-        /**
-         * If this alias is actual aliasing another alias.
-         * <p>
-         * Example: {@code taxon. -> primaryTaxon.}
-         */
         @Nullable
         String aliasFor;
+        int maxDepth;
     }
 
     /**

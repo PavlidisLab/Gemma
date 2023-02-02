@@ -90,11 +90,11 @@ public abstract class AbstractCuratableDao<C extends Curatable, VO extends Abstr
 
     @Override
     @OverridingMethodsMustInvokeSuper
-    protected void registerFilterableProperties( Set<String> properties ) {
-        super.registerFilterableProperties( properties );
-        properties.addAll( Arrays.asList( "lastUpdated", "troubled", "needsAttention" ) );
+    protected void configureFilterableProperties( FilterablePropertiesConfigurer configurer ) {
+        super.configureFilterableProperties( configurer );
+        configurer.registerProperties( "lastUpdated", "troubled", "needsAttention" );
     }
-   
+
     /**
      * {@inheritDoc}
      * <p>

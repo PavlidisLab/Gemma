@@ -1713,18 +1713,13 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
-    protected void registerFilterableProperties( Set<String> properties ) {
-        super.registerFilterableProperties( properties );
-        properties.add( "taxon" );
-        properties.add( "bioAssayCount" );
-    }
-
-    @Override
-    protected void registerFilterablePropertyAliases( Set<FilterablePropertyAlias> aliases ) {
-        aliases.add( new FilterablePropertyAlias( "characteristics.", CHARACTERISTIC_ALIAS, Characteristic.class, null ) );
-        aliases.add( new FilterablePropertyAlias( "experimentalDesign.experimentalFactors.factorValues.characteristics.", FACTOR_VALUE_CHARACTERISTIC_ALIAS, Characteristic.class, null ) );
-        aliases.add( new FilterablePropertyAlias( "bioAssays.sampleUsed.characteristics.", BIO_MATERIAL_CHARACTERISTIC_ALIAS, Characteristic.class, null ) );
-        aliases.add( new FilterablePropertyAlias( "bioAssays.", BIO_ASSAY_ALIAS, BioAssay.class, null ) );
+    protected void configureFilterableProperties( FilterablePropertiesConfigurer configurer ) {
+        super.configureFilterableProperties( configurer );
+        configurer.registerProperties( "taxon", "bioAssayCount" );
+        configurer.registerAlias( "characteristics.", CHARACTERISTIC_ALIAS, Characteristic.class, null, 1 );
+        configurer.registerAlias( "experimentalDesign.experimentalFactors.factorValues.characteristics.", FACTOR_VALUE_CHARACTERISTIC_ALIAS, Characteristic.class, null, 1 );
+        configurer.registerAlias( "bioAssays.sampleUsed.characteristics.", BIO_MATERIAL_CHARACTERISTIC_ALIAS, Characteristic.class, null, 1 );
+        configurer.registerAlias( "bioAssays.", BIO_ASSAY_ALIAS, BioAssay.class, null, 2 );
     }
 
     /**

@@ -31,8 +31,8 @@ public class FilteringVoEnabledServiceIntegrationTest extends BaseSpringContextT
     public void testFilteringByAllFilterableProperties() {
         for ( FilteringVoEnabledService<?, ?> filteringService : filteringServices ) {
             for ( String property : filteringService.getFilterableProperties() ) {
-                log.info( String.format( "Testing %s with %s %s %s", filteringService, property, Filter.Operator.eq, getStubForPropType( filteringService, property ) ) );
                 Filter filter = filteringService.getFilter( property, Filter.Operator.eq, getStubForPropType( filteringService, property ) );
+                log.info( String.format( "Testing %s with %s", filteringService, filter ) );
                 Slice<?> slice = filteringService.loadValueObjectsPreFilter( Filters.by( filter ), null, 0, 1 );
                 long count = filteringService.countPreFilter( Filters.by( filter ) );
                 assertThat( slice.getTotalElements() ).isEqualTo( count );

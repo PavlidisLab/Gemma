@@ -519,6 +519,7 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
 
     @Override
     public void afterPropertiesSet() {
+        super.afterPropertiesSet();
         CacheUtils.getCache( cacheManager, GeneDaoImpl.G2CS_CACHE_NAME );
     }
 
