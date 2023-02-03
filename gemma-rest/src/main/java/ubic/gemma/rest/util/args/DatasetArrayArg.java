@@ -6,7 +6,6 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.rest.util.MalformedArgException;
-import ubic.gemma.rest.util.StringUtils;
 
 import java.util.List;
 
@@ -34,7 +33,7 @@ public class DatasetArrayArg
             throw new MalformedArgException( String.format( DatasetArrayArg.ERROR_MSG, s ),
                     new IllegalArgumentException( DatasetArrayArg.ERROR_MSG_DETAIL ) );
         }
-        return new DatasetArrayArg( StringUtils.splitAndTrim( s ) );
+        return new DatasetArrayArg( splitAndTrim( s ) );
     }
 
 }

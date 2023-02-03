@@ -4,7 +4,6 @@ import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Schema;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.persistence.service.expression.experiment.FactorValueService;
-import ubic.gemma.rest.util.StringUtils;
 
 import java.util.List;
 
@@ -16,7 +15,7 @@ public class FactorValueArrayArg extends AbstractEntityArrayArg<String, FactorVa
     }
 
     public static FactorValueArrayArg valueOf( String s ) {
-        return new FactorValueArrayArg( StringUtils.splitAndTrim( s ) );
+        return new FactorValueArrayArg( splitAndTrim( s ) );
     }
 
 }

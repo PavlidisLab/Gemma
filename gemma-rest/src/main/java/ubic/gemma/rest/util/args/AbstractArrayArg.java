@@ -1,5 +1,6 @@
 package ubic.gemma.rest.util.args;
 
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -17,5 +18,17 @@ public abstract class AbstractArrayArg<T> extends AbstractArg<List<T>> {
 
     protected AbstractArrayArg( List<T> values ) {
         super( values );
+    }
+
+    /**
+     * Split a string by the ',' comma character and trim the resulting pieces.
+     *
+     * This is meant to be used for parsing query arguments that use a comma as a delimiter.
+     *
+     * @param  arg the string to process
+     * @return trimmed strings exploded from the input.
+     */
+    protected static List<String> splitAndTrim( String arg ) {
+        return Arrays.asList( arg.split( "\\s*,\\s*" ) );
     }
 }

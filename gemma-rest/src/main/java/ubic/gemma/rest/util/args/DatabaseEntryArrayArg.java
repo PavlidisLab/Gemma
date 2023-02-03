@@ -9,8 +9,6 @@ import ubic.gemma.rest.util.MalformedArgException;
 
 import java.util.List;
 
-import static ubic.gemma.rest.util.StringUtils.splitAndTrim;
-
 @ArraySchema(schema = @Schema(implementation = DatabaseEntryArg.class))
 public class DatabaseEntryArrayArg extends AbstractEntityArrayArg<String, DatabaseEntry, DatabaseEntryService> {
 

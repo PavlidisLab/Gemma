@@ -4,7 +4,6 @@ import com.google.common.base.Strings;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Schema;
 import ubic.gemma.rest.util.MalformedArgException;
-import ubic.gemma.rest.util.StringUtils;
 
 import java.util.List;
 
@@ -35,7 +34,7 @@ public class StringArrayArg extends AbstractArrayArg<String> {
             throw new MalformedArgException( String.format( ERROR_MSG, s ), new IllegalArgumentException(
                     "Provide a string that contains at least one character, or several strings separated by a comma (',') character." ) );
         }
-        return new StringArrayArg( StringUtils.splitAndTrim( s ) );
+        return new StringArrayArg( splitAndTrim( s ) );
     }
 
 }

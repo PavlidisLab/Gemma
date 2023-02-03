@@ -11,8 +11,6 @@ import ubic.gemma.rest.util.MalformedArgException;
 
 import java.util.List;
 
-import static ubic.gemma.rest.util.StringUtils.splitAndTrim;
-
 @ArraySchema(schema = @Schema(implementation = TaxonArg.class))
 public class TaxonArrayArg extends AbstractEntityArrayArg<String, Taxon, TaxonService> {
     private static final String ERROR_MSG_DETAIL = "Provide a string that contains at least one "

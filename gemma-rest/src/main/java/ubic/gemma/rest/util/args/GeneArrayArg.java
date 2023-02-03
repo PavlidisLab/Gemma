@@ -6,7 +6,6 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.rest.util.MalformedArgException;
-import ubic.gemma.rest.util.StringUtils;
 
 import java.util.List;
 
@@ -33,7 +32,7 @@ public class GeneArrayArg extends AbstractEntityArrayArg<String, Gene, GeneServi
             throw new MalformedArgException( String.format( GeneArrayArg.ERROR_MSG, s ),
                     new IllegalArgumentException( GeneArrayArg.ERROR_MSG_DETAIL ) );
         }
-        return new GeneArrayArg( StringUtils.splitAndTrim( s ) );
+        return new GeneArrayArg( splitAndTrim( s ) );
     }
 
 }

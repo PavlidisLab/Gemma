@@ -6,7 +6,6 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.rest.util.MalformedArgException;
-import ubic.gemma.rest.util.StringUtils;
 
 import java.util.List;
 
@@ -33,7 +32,7 @@ public class PlatformArrayArg extends AbstractEntityArrayArg<String, ArrayDesign
             throw new MalformedArgException( String.format( PlatformArrayArg.ERROR_MSG, s ),
                     new IllegalArgumentException( PlatformArrayArg.ERROR_MSG_DETAIL ) );
         }
-        return new PlatformArrayArg( StringUtils.splitAndTrim( s ) );
+        return new PlatformArrayArg( splitAndTrim( s ) );
     }
 
 }

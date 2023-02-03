@@ -9,7 +9,6 @@ import ubic.gemma.persistence.service.expression.designElement.CompositeSequence
 import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
 import ubic.gemma.persistence.util.Filter;
 import ubic.gemma.rest.util.MalformedArgException;
-import ubic.gemma.rest.util.StringUtils;
 
 import java.util.List;
 
@@ -42,7 +41,7 @@ public class CompositeSequenceArrayArg
             throw new MalformedArgException( String.format( CompositeSequenceArrayArg.ERROR_MSG, s ),
                     new IllegalArgumentException( CompositeSequenceArrayArg.ERROR_MSG_DETAIL ) );
         }
-        return new CompositeSequenceArrayArg( StringUtils.splitAndTrim( s ) );
+        return new CompositeSequenceArrayArg( splitAndTrim( s ) );
     }
 
     public void setPlatform( ArrayDesign arrayDesign ) {
