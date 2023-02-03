@@ -14,27 +14,12 @@
  */
 package ubic.gemma.core.analysis.preprocess.batcheffects;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
-
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.core.analysis.util.ExperimentalDesignUtils;
 import ubic.gemma.core.loader.expression.geo.fetcher.RawDataFetcher;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
@@ -50,7 +35,6 @@ import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExperimentalDesign;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
@@ -59,12 +43,18 @@ import ubic.gemma.persistence.service.expression.experiment.ExpressionExperiment
 import ubic.gemma.persistence.util.EntityUtils;
 import ubic.gemma.persistence.util.Settings;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.*;
+
 /**
  * Retrieve batch information from the data source, if possible, and populate it into experiments.
  *
  * @author paul
  */
-@Component
+@Service
 public class BatchInfoPopulationServiceImpl implements BatchInfoPopulationService {
 
     /**
@@ -125,7 +115,10 @@ public class BatchInfoPopulationServiceImpl implements BatchInfoPopulationServic
     private ExpressionExperimentService expressionExperimentService = null;
 
     @Override
+    @Transactional
     public void fillBatchInformation( ExpressionExperiment ee, boolean force ) throws BatchInfoPopulationException {
+
+        ee = expressionExperimentService.thawLite( ee );
 
         boolean isRNASeq = expressionExperimentService.isRNASeq( ee );
         boolean needed = force || this.needToRun( ee, isRNASeq );
@@ -152,9 +145,8 @@ public class BatchInfoPopulationServiceImpl implements BatchInfoPopulationServic
             this.getBatchDataFromRawFiles( ee, files );
 
         } catch ( Exception e ) {
-            BatchInfoPopulationServiceImpl.log.info( e, e );
             this.auditTrailService.addUpdateEvent( ee, FailedBatchInformationFetchingEvent.class, e.getMessage(), e );
-            throw new BatchInfoPopulationException( "", e );
+            throw new BatchInfoPopulationException( e );
         } finally {
             if ( BatchInfoPopulationServiceImpl.CLEAN_UP && files != null ) {
                 for ( LocalFile localFile : files ) {
@@ -170,12 +162,12 @@ public class BatchInfoPopulationServiceImpl implements BatchInfoPopulationServic
      * @param  accession             GEO accession
      * @return map of GEO id to headers, including the platform ID
      */
-    Map<String, String> readFastqHeaders( String accession ) throws IOException, FileNotFoundException {
+    Map<String, String> readFastqHeaders( String accession ) throws IOException {
         Map<String, String> result = new HashMap<>();
         File headerFile = new File( Settings.getString( GEMMA_FASTQ_HEADERS_DIR_CONFIG ) + File.separator
                 + accession + FASTQHEADERSFILE_SUFFIX );
         try ( BufferedReader br = new BufferedReader( new FileReader( headerFile ) ) ) {
-            String line = null;
+            String line;
             while ( ( line = br.readLine() ) != null ) {
 
                 String[] fields = StringUtils.split( line, "\t" );
@@ -350,16 +342,15 @@ public class BatchInfoPopulationServiceImpl implements BatchInfoPopulationServic
 
     /**
      */
-    private final File locateFASTQheadersForBatchInfo( String accession ) {
+    private File locateFASTQheadersForBatchInfo( String accession ) {
         String fhd = Settings.getString( GEMMA_FASTQ_HEADERS_DIR_CONFIG );
 
         if ( StringUtils.isBlank( fhd ) ) {
             throw new IllegalStateException( "You must configure the path to extracted headers directory (" + GEMMA_FASTQ_HEADERS_DIR_CONFIG + ")" );
         }
 
-        File headerFile = new File( fhd + File.separator
+        return new File( fhd + File.separator
                 + accession + FASTQHEADERSFILE_SUFFIX );
-        return headerFile;
     }
 
     /**
@@ -369,23 +360,13 @@ public class BatchInfoPopulationServiceImpl implements BatchInfoPopulationServic
      */
     private boolean needToRun( ExpressionExperiment ee, boolean rnaSeq ) {
 
-        ExpressionExperimentValueObject eevo = expressionExperimentService.loadValueObject( ee );
-
-        assert eevo != null;
-
         if ( rnaSeq ) {
             return !expressionExperimentService.checkHasBatchInfo( ee );
         }
 
-        if ( StringUtils.isBlank( eevo.getAccession() ) ) {
+        if ( ee.getAccession() == null || StringUtils.isBlank( ee.getAccession().getAccession() ) ) {
             BatchInfoPopulationServiceImpl.log.info( ee
                     + " lacks an external accession to use for fetching, will not attempt to fetch raw data files." );
-            return false;
-        }
-
-        if ( eevo.getTechnologyType().equals( "NONE" ) ) {
-            BatchInfoPopulationServiceImpl.log
-                    .info( ee + " has technology type 'NONE', will not attempt to fetch raw data files" );
             return false;
         }
 
@@ -393,12 +374,12 @@ public class BatchInfoPopulationServiceImpl implements BatchInfoPopulationServic
         if ( e == null )
             return true;
 
-        if ( FailedBatchInformationFetchingEvent.class.isAssignableFrom( e.getClass() ) )
+        if ( FailedBatchInformationFetchingEvent.class.isAssignableFrom( e.getEventType().getClass() ) )
             return true; // worth trying
         // again perhaps
 
         // on occasions the files appear or were missed the first time ...? GSE20842
-        if ( FailedBatchInformationMissingEvent.class.isAssignableFrom( e.getClass() ) ) {
+        if ( FailedBatchInformationMissingEvent.class.isAssignableFrom( e.getEventType().getClass() ) ) {
             RawDataFetcher fetcher = new RawDataFetcher();
             return fetcher.checkForFile( ee.getAccession().getAccession() );
         }

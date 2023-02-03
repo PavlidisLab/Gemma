@@ -22,7 +22,7 @@ package ubic.gemma.core.analysis.preprocess;
  *
  * @author Paul
  */
-public class PreprocessingException extends Exception {
+public class PreprocessingException extends RuntimeException {
 
     private static final long serialVersionUID = -8463478950898408838L;
 
@@ -34,7 +34,7 @@ public class PreprocessingException extends Exception {
         super( message );
     }
 
-    public PreprocessingException( String message, Throwable cause ) {
-        super( message, cause );
+    public PreprocessingException( Throwable cause ) {
+        super( cause );
     }
 }
