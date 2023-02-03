@@ -592,38 +592,28 @@ public class ExpressionExperimentDaoImpl
 
     }
 
-    @Override
-    public Map<Characteristic, Long> getAnnotationsFrequency( int maxResults ) {
-        return doGetAnnotationsFrequency( null, maxResults );
-    }
-
-    @Override
-    public Map<Characteristic, Long> getAnnotationsFrequency( Collection<Long> eeIds, int maxResults ) {
-        return doGetAnnotationsFrequency( eeIds, maxResults );
-    }
+    /**
+     * Maximum number of results to be considered for caching in {@link #getAnnotationsFrequency(int)} and {@link #getAnnotationsFrequency(Collection, int)}.
+     */
+    public static final int MAX_RESULT_FOR_CACHING_ANNOTATIONS_FREQUENCY = 50;
 
     /**
      * We're making two assumptions: a dataset cannot have a characteristic more than once and a dataset cannot have
      * the same characteristic at multiple levels to make counting more efficient.
      */
-    private Map<Characteristic, Long> doGetAnnotationsFrequency( @Nullable Collection<Long> eeIds, int maxResults ) {
+    @Override
+    public Map<Characteristic, Long> getAnnotationsFrequency( int maxResults ) {
         Map<Characteristic, Long> result = new TreeMap<>( Characteristic.getByCategoryAndValueComparator() );
 
-        if ( eeIds != null && eeIds.isEmpty() ) {
-            return result;
-        }
-
-        // reuses cached value if the same IDs are requested in a different order
-        final Set<Long> uniqueIds = eeIds != null ? new HashSet<>( eeIds ) : null;
-
-        int MAX_RESULT_FOR_CACHING = 50;
+        // how much time we're ready to wait for biomaterial, only applies if results are to be cached
         long MAX_WAIT_TIME_FOR_BIOMATERIAL_MS = 2000L;
+
 
         // 0 < maxResults < 50 ->  50, since all queries are essentially subsets
         // unlimited results are not cached, so they just follow the regular expansion
         // note that the cache key will use 500 due to the expansion
-        int expandedMaxResults = 10 * ( maxResults > 0 && maxResults < MAX_RESULT_FOR_CACHING ? MAX_RESULT_FOR_CACHING : maxResults );
-        boolean cacheable = maxResults > 0 && maxResults <= MAX_RESULT_FOR_CACHING;
+        int expandedMaxResults = 10 * ( maxResults > 0 && maxResults < MAX_RESULT_FOR_CACHING_ANNOTATIONS_FREQUENCY ? MAX_RESULT_FOR_CACHING_ANNOTATIONS_FREQUENCY : maxResults );
+        boolean cacheable = maxResults > 0 && maxResults <= MAX_RESULT_FOR_CACHING_ANNOTATIONS_FREQUENCY;
 
         // we're assuming that a dataset cannot have the same characteristic more than once at different levels
         // we're also assuming that the top 10 * maxResults contain results from a previous pass
@@ -638,7 +628,7 @@ public class ExpressionExperimentDaoImpl
             directTagTimer.start();
             try {
                 //noinspection unchecked
-                return ( List<Object[]> ) getAnnotationsFrequencyFromTagsQuery( session, uniqueIds )
+                return ( List<Object[]> ) getAnnotationsFrequencyFromTagsQuery( session )
                         .setMaxResults( expandedMaxResults )
                         .setCacheable( cacheable )
                         .list();
@@ -653,7 +643,7 @@ public class ExpressionExperimentDaoImpl
             factorValueTimer.start();
             try {
                 //noinspection unchecked
-                return ( List<Object[]> ) getAnnotationsFrequencyFromFactorValueQuery( session, uniqueIds )
+                return ( List<Object[]> ) getAnnotationsFrequencyFromFactorValueQuery( session )
                         .setMaxResults( expandedMaxResults )
                         .setCacheable( cacheable )
                         .list();
@@ -668,20 +658,20 @@ public class ExpressionExperimentDaoImpl
             bioMaterialTimer.start();
             try {
                 //noinspection unchecked
-                return ( List<Object[]> ) getAnnotationsFrequencyFromBioMaterialQuery( session, uniqueIds )
+                return ( List<Object[]> ) getAnnotationsFrequencyFromBioMaterialQuery( session )
                         .setMaxResults( expandedMaxResults )
                         .setCacheable( cacheable )
                         .list();
             } finally {
                 bioMaterialTimer.stop();
                 if ( cacheable && timer.getTime( TimeUnit.MILLISECONDS ) > MAX_WAIT_TIME_FOR_BIOMATERIAL_MS ) {
-                    log.warn( String.format( "Loading characteristics usage by BioMaterial took %s ms. It is reported here because the doGetAnnotationsFrequency() almost certainly bailed on us.",
+                    log.warn( String.format( "Loading characteristics usage by BioMaterial took %s ms. It is reported here because the getAnnotationsFrequency() almost certainly bailed on us.",
                             bioMaterialTimer.getTime( TimeUnit.MILLISECONDS ) ) );
                 }
             }
         } );
 
-        boolean bioMaterialSkipped;
+        boolean bioMaterialSkipped = false;
         try {
             addCounts( directTagFuture.get(), result );
             addCounts( factorValueFuture.get(), result );
@@ -692,8 +682,8 @@ public class ExpressionExperimentDaoImpl
             } else {
                 addCounts( futureBioMaterial.get(), result );
             }
-            bioMaterialSkipped = false;
         } catch ( InterruptedException e ) {
+            Thread.currentThread().interrupt();
             throw new RuntimeException( e );
         } catch ( ExecutionException e ) {
             throw new RuntimeException( e.getCause() );
@@ -706,8 +696,7 @@ public class ExpressionExperimentDaoImpl
         timer.stop();
 
         if ( timer.getTime( TimeUnit.MILLISECONDS ) > MAX_WAIT_TIME_FOR_BIOMATERIAL_MS ) {
-            log.warn( String.format( "Loading and aggregating annotations usage frequency for %s datasets took %d ms (%d ms by direct tags, %s ms by biomaterials, %d ms by factor values).",
-                    eeIds == null ? "all" : eeIds.size(),
+            log.warn( String.format( "Loading and aggregating annotations usage frequency for all datasets took %d ms (%d ms by direct tags, %s ms by biomaterials, %d ms by factor values).",
                     timer.getTime( TimeUnit.MILLISECONDS ),
                     directTagTimer.getTime( TimeUnit.MILLISECONDS ),
                     bioMaterialSkipped ? "?" : String.valueOf( bioMaterialTimer.getTime( TimeUnit.MILLISECONDS ) ),
@@ -748,23 +737,19 @@ public class ExpressionExperimentDaoImpl
         }
     }
 
-    private Query getAnnotationsFrequencyFromTagsQuery( Session session, @Nullable Collection<Long> eeIds ) {
+    private Query getAnnotationsFrequencyFromTagsQuery( Session session ) {
         Query query = session.createQuery( "select c, count(distinct e) from ExpressionExperiment e "
                 + "join e.characteristics c "
                 + AclQueryUtils.formAclJoinClause( "e" )
                 + AclQueryUtils.formAclRestrictionClause()
-                + ( eeIds != null ? " and e.id in :eeIds " : "" )
                 + "group by c.categoryUri, c.category, c.valueUri, c.value "
                 + "order by count(distinct e) desc" );
-        if ( eeIds != null ) {
-            query.setParameterList( "eeIds", eeIds );
-        }
         AclQueryUtils.addAclJoinParameters( query, ExpressionExperiment.class );
         AclQueryUtils.addAclRestrictionParameters( query );
         return query;
     }
 
-    private Query getAnnotationsFrequencyFromFactorValueQuery( Session session, @Nullable Collection<Long> eeIds ) {
+    private Query getAnnotationsFrequencyFromFactorValueQuery( Session session ) {
         Query query = session.createQuery( "select c, count(distinct e) from ExpressionExperiment e "
                 + "join e.experimentalDesign ed "
                 + "join ed.experimentalFactors ef "
@@ -772,33 +757,77 @@ public class ExpressionExperimentDaoImpl
                 + "join fv.characteristics c "
                 + AclQueryUtils.formAclJoinClause( "e" )
                 + AclQueryUtils.formAclRestrictionClause()
-                + ( eeIds != null ? " and e.id in :eeIds " : "" )
                 + "group by c.categoryUri, c.category, c.valueUri, c.value "
                 + "order by count(distinct e) desc" );
-        if ( eeIds != null ) {
-            query.setParameterList( "eeIds", eeIds );
-        }
         AclQueryUtils.addAclJoinParameters( query, ExpressionExperiment.class );
         AclQueryUtils.addAclRestrictionParameters( query );
         return query;
     }
 
-    private Query getAnnotationsFrequencyFromBioMaterialQuery( Session session, @Nullable Collection<Long> eeIds ) {
+    private Query getAnnotationsFrequencyFromBioMaterialQuery( Session session ) {
         Query query = session.createQuery( "select c, count(distinct e) from ExpressionExperiment e "
                 + "join e.bioAssays ba "
                 + "join ba.sampleUsed s "
                 + "join s.characteristics c "
                 + AclQueryUtils.formAclJoinClause( "e" )
                 + AclQueryUtils.formAclRestrictionClause()
-                + ( eeIds != null ? " and e.id in :eeIds " : "" )
                 + "group by c.categoryUri, c.category, c.valueUri, c.value "
                 + "order by count(distinct e) desc" );
-        if ( eeIds != null ) {
-            query.setParameterList( "eeIds", eeIds );
-        }
         AclQueryUtils.addAclJoinParameters( query, ExpressionExperiment.class );
         AclQueryUtils.addAclRestrictionParameters( query );
         return query;
+    }
+
+    /**
+     * The approach used here is impractical for all datasets, but produces the correct result very quickly for a
+     * handful of them.
+     * <p>
+     * We also assume that all supplied EE IDs have been vetted by ACLs.
+     */
+    @Override
+    public Map<Characteristic, Long> getAnnotationsFrequency( Collection<Long> eeIds, int maxResults ) {
+        if ( eeIds.isEmpty() ) {
+            return Collections.emptyMap();
+        }
+        String query = "select {T.*}, count(distinct {T}.EE_ID) as EE_COUNT from ("
+                // direct tags
+                + "select C.*, I.ID as EE_ID "
+                + "from INVESTIGATION I "
+                + "join CHARACTERISTIC C on I.ID = C.INVESTIGATION_FK "
+                + "where I.ID in :eeIds and I.class = 'ExpressionExperiment' "
+                + "union "
+                // biomaterial
+                + "select C.*, I.ID as EE_ID "
+                + "from INVESTIGATION I "
+                + "join BIO_ASSAY BA on I.ID = BA.EXPRESSION_EXPERIMENT_FK "
+                + "join BIO_MATERIAL BM on BA.SAMPLE_USED_FK = BM.ID "
+                + "join BIO_MATERIAL_FACTOR_VALUES BMFV on BM.ID = BMFV.BIO_MATERIALS_FK "
+                + "join FACTOR_VALUE FV on BMFV.FACTOR_VALUES_FK = FV.ID "
+                + "join CHARACTERISTIC C on FV.ID = C.FACTOR_VALUE_FK "
+                + "where I.ID in :eeIds and I.class = 'ExpressionExperiment' "
+                + "union "
+                // factor values
+                + "select C.*, I.ID as EE_ID "
+                + "from INVESTIGATION I "
+                + "join EXPERIMENTAL_DESIGN on I.EXPERIMENTAL_DESIGN_FK = EXPERIMENTAL_DESIGN.ID "
+                + "join EXPERIMENTAL_FACTOR EF on EXPERIMENTAL_DESIGN.ID = EF.EXPERIMENTAL_DESIGN_FK "
+                + "join FACTOR_VALUE FV on FV.EXPERIMENTAL_FACTOR_FK = EF.ID "
+                + "join CHARACTERISTIC C on FV.ID = C.FACTOR_VALUE_FK "
+                + "where I.ID in :eeIds and I.class = 'ExpressionExperiment' "
+                + ") {T} "
+                + "group by {T}.CATEGORY_URI, {T}.CATEGORY, {T}.VALUE_URI, {T}.VALUE_URI "
+                + "order by EE_COUNT desc";
+        //noinspection unchecked
+        List<Object[]> result = getSessionFactory().getCurrentSession().createSQLQuery( query )
+                .addEntity( "T", Characteristic.class )
+                .addScalar( "EE_COUNT", new LongType() )
+                .setParameterList( "eeIds", new HashSet<>( eeIds ) )
+                .setCacheable( maxResults > 0 && maxResults <= MAX_RESULT_FOR_CACHING_ANNOTATIONS_FREQUENCY )
+                .setMaxResults( 10 * ( maxResults > 0 && maxResults < MAX_RESULT_FOR_CACHING_ANNOTATIONS_FREQUENCY ? MAX_RESULT_FOR_CACHING_ANNOTATIONS_FREQUENCY : maxResults ) )
+                .list();
+        return result.stream()
+                .limit( maxResults )
+                .collect( Collectors.toMap( row -> ( Characteristic ) row[0], row -> ( Long ) row[1] ) );
     }
 
     @Override

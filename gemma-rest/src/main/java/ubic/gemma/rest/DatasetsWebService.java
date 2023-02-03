@@ -57,6 +57,7 @@ import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeSe
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentDaoImpl;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Sort;
@@ -177,13 +178,14 @@ public class DatasetsWebService {
     public LimitedResponseDataObject<AnnotationWithUsageStatisticsValueObject> getDatasetsAnnotationsUsageStatistics(
             @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filter, @QueryParam("limit") @DefaultValue("50") LimitArg limit ) {
         Filters filters = filter.getFilters( expressionExperimentService );
-        Integer l = limit.getValue( 50 );
-        List<AnnotationWithUsageStatisticsValueObject> results = expressionExperimentService.getAnnotationsFrequencyPreFilter( filters, limit.getValue( 50 ) )
+        Integer l = limit.getValue( ExpressionExperimentDaoImpl.MAX_RESULT_FOR_CACHING_ANNOTATIONS_FREQUENCY );
+        List<AnnotationWithUsageStatisticsValueObject> results = expressionExperimentService.getAnnotationsFrequencyPreFilter( filters, l )
                 .entrySet()
                 .stream().map( e -> new AnnotationWithUsageStatisticsValueObject( e.getKey(), e.getValue() ) )
                 .sorted( Comparator.comparing( UsageStatistics::getNumberOfExpressionExperiments, Comparator.reverseOrder() ) )
                 .collect( Collectors.toList() );
-        return Responder.limit( results, filters, new String[] { "classUri", "className", "termUri", "termName" }, Sort.by( null, "numberOfExpressionExperiments", Sort.Direction.DESC ), l );
+        return Responder.limit( results, filters, new String[] { "classUri", "className", "termUri", "termName" },
+                Sort.by( null, "numberOfExpressionExperiments", Sort.Direction.DESC ), l );
     }
 
     /**
