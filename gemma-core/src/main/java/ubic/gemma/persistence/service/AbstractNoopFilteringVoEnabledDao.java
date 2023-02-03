@@ -44,7 +44,7 @@ public abstract class AbstractNoopFilteringVoEnabledDao<O extends Identifiable, 
 
     @Nullable
     @Override
-    public List<Object> getFilterablePropertyAvailableValues( String property ) {
+    public List<Object> getFilterablePropertyAllowedValues( String property ) {
         throw new UnsupportedOperationException( message );
     }
 

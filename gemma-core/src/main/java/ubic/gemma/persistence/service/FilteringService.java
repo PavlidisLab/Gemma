@@ -35,21 +35,21 @@ public interface FilteringService<O extends Identifiable> extends BaseService<O>
     String getFilterablePropertyDescription( String property );
 
     /**
-     * @see FilteringDao#getFilterablePropertyAvailableValues(String)
+     * @see FilteringDao#getFilterablePropertyAllowedValues(String)
      */
     @Nullable
-    List<Object> getFilterablePropertyAvailableValues( String property );
+    List<Object> getFilterablePropertyAllowedValues( String property );
 
     /**
      * Obtain a list of resolvable {@link MessageSourceResolvable}s to be used for user display purposes.
      * <p>
-     * Nullity and the number of elements is guaranteed to match {@link #getFilterablePropertyAvailableValues(String)} (String)},
+     * Nullity and the number of elements is guaranteed to match {@link #getFilterablePropertyAllowedValues(String)} (String)},
      * so the two methods can be used jointly.
      *
-     * @see #getFilterablePropertyResolvableAvailableValues(String)
+     * @see #getFilterablePropertyResolvableAvailableValuesLabels(String)
      */
     @Nullable
-    List<MessageSourceResolvable> getFilterablePropertyResolvableAvailableValues( String property );
+    List<MessageSourceResolvable> getFilterablePropertyResolvableAvailableValuesLabels( String property );
 
     /**
      * @see FilteringDao#getFilterableProperties()

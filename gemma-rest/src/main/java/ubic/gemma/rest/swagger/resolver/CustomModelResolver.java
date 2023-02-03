@@ -17,7 +17,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.MessageSource;
 import org.springframework.context.MessageSourceResolvable;
-import org.springframework.context.NoSuchMessageException;
 import org.springframework.stereotype.Component;
 import ubic.gemma.core.search.SearchService;
 import ubic.gemma.model.common.Identifiable;
@@ -125,13 +124,14 @@ public class CustomModelResolver extends ModelResolver {
         @Nullable
         String description;
         @Nullable
-        List<FilterablePropMetaAvailableValue> availableValues;
+        List<FilterablePropMetaAllowedValue> allowedValues;
     }
 
     @Value
-    private static class FilterablePropMetaAvailableValue {
+    private static class FilterablePropMetaAllowedValue {
         String value;
-        String name;
+        @Nullable
+        String label;
     }
 
     @Autowired
@@ -147,6 +147,8 @@ public class CustomModelResolver extends ModelResolver {
                 .filter( s -> clazz.isAssignableFrom( s.getElementClass() ) )
                 .findAny()
                 .orElseThrow( () -> new IllegalArgumentException( String.format( "Could not find filtering service for %s.", clazz.getName() ) ) );
+        // FIXME: make this locale-sensitive
+        Locale locale = Locale.getDefault();
         return filteringService.getFilterableProperties().stream()
                 // FIXME: The Criteria-based services don't support ordering results by collection size, see https://github.com/PavlidisLab/Gemma/issues/520
                 .filter( p -> !SortArg.class.isAssignableFrom( a.getRawType() ) || !isCriteriaBased( filteringService ) || !p.endsWith( ".size" ) )
@@ -154,21 +156,24 @@ public class CustomModelResolver extends ModelResolver {
                 .map( p -> new FilterablePropMeta( p,
                         resolveType( SimpleType.constructUnsafe( filteringService.getFilterablePropertyType( p ) ) ),
                         filteringService.getFilterablePropertyDescription( p ),
-                        Optional.ofNullable( filteringService.getFilterablePropertyAvailableValues( p ) )
-                                .map( e -> {
-                                    List<MessageSourceResolvable> r = filteringService.getFilterablePropertyResolvableAvailableValues( p );
-                                    assert r != null;
-                                    assert e.size() == r.size();
-                                    int numValues = e.size();
-                                    List<FilterablePropMetaAvailableValue> l = new ArrayList<>( numValues );
-                                    for ( int i = 0; i < numValues; i++ ) {
-                                        String title = messageSource.getMessage( r.get( i ), Locale.getDefault() );
-                                        l.add( new FilterablePropMetaAvailableValue( e.get( i ).toString(), title ) );
-                                    }
-                                    return l;
-                                } )
-                                .orElse( null ) ) )
+                        resolveAllowedValues( filteringService, p, locale ) ) )
                 .collect( Collectors.toList() );
+    }
+
+    private List<FilterablePropMetaAllowedValue> resolveAllowedValues( FilteringService<?> filteringService, String p, Locale locale ) {
+        List<Object> allowedValues = filteringService.getFilterablePropertyAllowedValues( p );
+        List<MessageSourceResolvable> allowedValuesLabels = filteringService.getFilterablePropertyResolvableAvailableValuesLabels( p );
+        if ( allowedValues != null && allowedValuesLabels != null ) {
+            assert allowedValues.size() == allowedValuesLabels.size();
+            int numValues = allowedValues.size();
+            List<FilterablePropMetaAllowedValue> l = new ArrayList<>( numValues );
+            for ( int i = 0; i < numValues; i++ ) {
+                String title = messageSource.getMessage( allowedValuesLabels.get( i ), locale );
+                l.add( new FilterablePropMetaAllowedValue( allowedValues.get( i ).toString(), title ) );
+            }
+            return l;
+        }
+        return null;
     }
 
     private String resolveAvailablePropertiesAsString( Annotated a ) {
@@ -186,11 +191,11 @@ public class CustomModelResolver extends ModelResolver {
         if ( prop.description != null ) {
             desc.append( prop.description );
         }
-        if ( prop.availableValues != null ) {
+        if ( prop.allowedValues != null ) {
             if ( desc.length() > 0 )
                 desc.append( ", " );
             desc.append( "available values: " )
-                    .append( prop.availableValues.stream().map( FilterablePropMetaAvailableValue::getValue ).collect( Collectors.joining( ", " ) ) );
+                    .append( prop.allowedValues.stream().map( FilterablePropMetaAllowedValue::getValue ).collect( Collectors.joining( ", " ) ) );
         }
         if ( desc.length() > 0 )
             return " (" + desc + ")";

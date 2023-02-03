@@ -56,7 +56,7 @@ public class FilteringVoEnabledServiceIntegrationTest extends BaseSpringContextT
     }
 
     private static String getStubForPropType( FilteringService<?> filteringService, String prop ) {
-        List<Object> availableValues = filteringService.getFilterablePropertyAvailableValues( prop );
+        List<Object> availableValues = filteringService.getFilterablePropertyAllowedValues( prop );
         if ( availableValues != null ) {
             return availableValues.stream().findAny().map( String::valueOf ).orElse( null );
         }

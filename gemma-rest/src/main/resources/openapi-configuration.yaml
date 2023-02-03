@@ -42,11 +42,11 @@ openAPI:
       x-gemma-filterable-properties:
       - name: technologyType
         type: string
-        availableValues:
+        allowedValues:
         - value: ONECOLOR
-          name: One Color
+          label: One Color
         - value: SEQUENCING
-          name: Sequencing
+          label: Sequencing
       ```
 
       New endpoints for browsing blacklisted platforms and datasets.

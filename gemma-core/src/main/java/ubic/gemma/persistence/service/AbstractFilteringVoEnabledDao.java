@@ -263,7 +263,7 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
 
     @Nullable
     @Override
-    public List<Object> getFilterablePropertyAvailableValues( String propertyName ) throws IllegalArgumentException {
+    public List<Object> getFilterablePropertyAllowedValues( String propertyName ) throws IllegalArgumentException {
         return getFilterablePropertyMeta( propertyName ).availableValues;
     }
 

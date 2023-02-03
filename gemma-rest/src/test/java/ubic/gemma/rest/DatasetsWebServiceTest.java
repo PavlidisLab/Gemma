@@ -26,10 +26,7 @@ import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.persistence.util.Filters;
-import ubic.gemma.persistence.util.Slice;
-import ubic.gemma.persistence.util.Sort;
-import ubic.gemma.persistence.util.TestComponent;
+import ubic.gemma.persistence.util.*;
 import ubic.gemma.rest.util.BaseJerseyTest;
 
 import javax.ws.rs.core.Response;
@@ -130,6 +127,17 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
     public void tearDown() throws Exception {
         super.tearDown();
         reset( expressionExperimentService, quantitationTypeService );
+    }
+
+    @Test
+    public void testGetDatasetsPlatformsUsageStatistics() {
+        when( expressionExperimentService.getFilter( "id", Filter.Operator.lessThan, "10" ) )
+                .thenReturn( Filter.by( "ee", "id", Long.class, Filter.Operator.lessThan, 10L ) );
+        when( expressionExperimentService.getAnnotationsFrequencyPreFilter( Filters.empty(), 50 ) )
+                .thenReturn( Collections.emptyMap() );
+        assertThat( target( "/datasets/platforms" ).queryParam( "filter", "ee.id < 10" ).request().get() )
+                .hasFieldOrPropertyWithValue( "status", 200 );
+        verify( expressionExperimentService ).getArrayDesignFrequencyPreFilter( Filters.empty(), 50 );
     }
 
     @Test

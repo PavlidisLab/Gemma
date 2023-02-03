@@ -7,7 +7,6 @@ import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.persistence.util.Sort;
 
 import javax.annotation.Nullable;
-import java.io.Serializable;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
@@ -44,13 +43,13 @@ public interface FilteringDao<O extends Identifiable> extends BaseDao<O> {
     String getFilterablePropertyDescription( String propertyName ) throws IllegalArgumentException;
 
     /**
-     * Obtain a short list of available values for the given property, or null if unknown.
+     * Obtain a short list of allowed values for the given property, or null if unrestricted.
      * <p>
      * The returned values must be of the type outlined by {@link #getFilterablePropertyType(String)}, generally a list
      * of {@link String} or {@link Integer} to denote possible values for an enumerated type.
      */
     @Nullable
-    List<Object> getFilterablePropertyAvailableValues( String property );
+    List<Object> getFilterablePropertyAllowedValues( String property );
 
     /**
      * Obtain an {@link Filter} for the entity this DAO is providing.

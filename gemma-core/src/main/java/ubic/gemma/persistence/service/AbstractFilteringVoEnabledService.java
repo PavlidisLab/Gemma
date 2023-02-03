@@ -109,18 +109,18 @@ public abstract class AbstractFilteringVoEnabledService<O extends Identifiable, 
 
     @Nullable
     @Override
-    public List<Object> getFilterablePropertyAvailableValues( String property ) {
-        return voDao.getFilterablePropertyAvailableValues( property );
+    public List<Object> getFilterablePropertyAllowedValues( String property ) {
+        return voDao.getFilterablePropertyAllowedValues( property );
     }
 
     @Nullable
     @Override
-    public List<MessageSourceResolvable> getFilterablePropertyResolvableAvailableValues( String p ) {
+    public List<MessageSourceResolvable> getFilterablePropertyResolvableAvailableValuesLabels( String p ) {
         Class<?> elementClass = voDao.getElementClass();
-        List<Object> filterable = getFilterablePropertyAvailableValues( p );
+        List<Object> filterable = getFilterablePropertyAllowedValues( p );
         if ( filterable != null ) {
             return filterable.stream()
-                    .map( f -> new DefaultMessageSourceResolvable( new String[] { elementClass.getSimpleName() + "." + p + "." + f.toString() + ".title" }, null, f.toString() ) )
+                    .map( f -> new DefaultMessageSourceResolvable( new String[] { elementClass.getSimpleName() + "." + p + "." + f.toString() + ".label" }, null, f.toString() ) )
                     .collect( Collectors.toList() );
         } else {
             return null;

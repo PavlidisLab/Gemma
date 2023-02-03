@@ -52,7 +52,7 @@ public class ArrayDesignServiceTest extends BaseSpringContextTest {
                 .isAssignableFrom( TechnologyType.class );
         assertThat( arrayDesignService.getFilterablePropertyDescription( "technologyType" ) )
                 .isNull();
-        assertThat( arrayDesignService.getFilterablePropertyAvailableValues( "technologyType" ) )
+        assertThat( arrayDesignService.getFilterablePropertyAllowedValues( "technologyType" ) )
                 .contains( TechnologyType.SEQUENCING );
     }
 
