@@ -175,18 +175,12 @@ public interface ExpressionExperimentDao
     Collection<? extends AnnotationValueObject> getAnnotationsByFactorvalues( Long eeId );
 
     /**
-     * Obtain annotations usage frequency for all datasets.
-     * @param maxResults maximum number of characteristics to return
-     */
-    Map<Characteristic, Long> getAnnotationsFrequency( int maxResults );
-
-    /**
      * Obtain annotations usage frequency for a set of given {@link ExpressionExperiment} IDs.
      * <p>
      * This is meant as a counterpart to {@link ubic.gemma.persistence.service.common.description.CharacteristicService#findExperimentsByUris(Collection, Taxon, int)}
      * to answer the reverse question: which annotations can be used to.
      */
-    Map<Characteristic, Long> getAnnotationsFrequency( Collection<Long> expressionExperimentIds, int maxResults );
+    Map<Characteristic, Long> getAnnotationsFrequency( @Nullable Collection<Long> expressionExperimentIds, int maxResults );
 
     Collection<ExpressionExperiment> getExperimentsLackingPublications();
 }

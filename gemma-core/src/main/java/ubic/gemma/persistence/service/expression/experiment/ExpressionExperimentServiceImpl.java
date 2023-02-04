@@ -125,8 +125,6 @@ public class ExpressionExperimentServiceImpl
     private SampleCoexpressionAnalysisService sampleCoexpressionAnalysisService;
     @Autowired
     private BlacklistedEntityService blacklistedEntityService;
-    @Autowired
-    private CharacteristicService characteristicService;
 
     @Autowired
     public ExpressionExperimentServiceImpl( ExpressionExperimentDao expressionExperimentDao ) {
@@ -505,7 +503,7 @@ public class ExpressionExperimentServiceImpl
     @Transactional(readOnly = true)
     public Map<Characteristic, Long> getAnnotationsFrequencyPreFilter( @Nullable Filters filters, int maxResults ) {
         if ( filters == null || filters.isEmpty() ) {
-            return expressionExperimentDao.getAnnotationsFrequency( maxResults );
+            return expressionExperimentDao.getAnnotationsFrequency( null, maxResults );
         } else {
             List<Long> eeIds = expressionExperimentDao.loadIdsPreFilter( filters, null );
             return expressionExperimentDao.getAnnotationsFrequency( eeIds, maxResults );

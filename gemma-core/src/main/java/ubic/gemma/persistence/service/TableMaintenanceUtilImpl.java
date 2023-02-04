@@ -19,6 +19,7 @@
 
 package ubic.gemma.persistence.service;
 
+import io.micrometer.core.annotation.Timed;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
@@ -35,6 +36,9 @@ import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignGeneMapping
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.common.description.ExternalDatabases;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.biomaterial.BioMaterial;
+import ubic.gemma.model.expression.experiment.ExperimentalDesign;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.model.Gene2CsStatus;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.persistence.service.common.description.ExternalDatabaseService;
@@ -73,6 +77,29 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
                     + " WHERE geneprod.GENE_FK = gene.ID AND bsgp.GENE_PRODUCT_FK = geneprod.ID AND "
                     + " bsgp.BIO_SEQUENCE_FK = cs.BIOLOGICAL_CHARACTERISTIC_FK ORDER BY gene.ID,cs.ARRAY_DESIGN_FK";
 
+    private static final String E2C_QUERY =
+            "replace into EXPRESSION_EXPERIMENT2CHARACTERISTIC (ID, NAME, DESCRIPTION, CATEGORY, CATEGORY_URI, VALUE, VALUE_URI, ORIGINAL_VALUE, EVIDENCE_CODE, EXPRESSION_EXPERIMENT_FK, LEVEL) "
+                    + "select C.ID, C.NAME, C.DESCRIPTION, C.CATEGORY, C.CATEGORY_URI, C.VALUE, C.VALUE_URI, C.ORIGINAL_VALUE, C.EVIDENCE_CODE, I.ID, ? "
+                    + "from INVESTIGATION I "
+                    + "join CHARACTERISTIC C on I.ID = C.INVESTIGATION_FK "
+                    + "where I.class = 'ExpressionExperiment' "
+                    + "union "
+                    + "select C.ID, C.NAME, C.DESCRIPTION, C.CATEGORY, C.CATEGORY_URI, C.VALUE, C.VALUE_URI, C.ORIGINAL_VALUE, C.EVIDENCE_CODE, I.ID, ? "
+                    + "from INVESTIGATION I "
+                    + "join BIO_ASSAY BA on I.ID = BA.EXPRESSION_EXPERIMENT_FK "
+                    + "join BIO_MATERIAL BM on BA.SAMPLE_USED_FK = BM.ID "
+                    + "join BIO_MATERIAL_FACTOR_VALUES BMFV on BM.ID = BMFV.BIO_MATERIALS_FK "
+                    + "join FACTOR_VALUE FV on BMFV.FACTOR_VALUES_FK = FV.ID "
+                    + "join CHARACTERISTIC C on FV.ID = C.FACTOR_VALUE_FK "
+                    + "where I.class = 'ExpressionExperiment' "
+                    + "union "
+                    + "select C.ID, C.NAME, C.DESCRIPTION, C.CATEGORY, C.CATEGORY_URI, C.VALUE, C.VALUE_URI, C.ORIGINAL_VALUE, C.EVIDENCE_CODE, I.ID, ? "
+                    + "from INVESTIGATION I "
+                    + "join EXPERIMENTAL_DESIGN on I.EXPERIMENTAL_DESIGN_FK = EXPERIMENTAL_DESIGN.ID "
+                    + "join EXPERIMENTAL_FACTOR EF on EXPERIMENTAL_DESIGN.ID = EF.EXPERIMENTAL_DESIGN_FK "
+                    + "join FACTOR_VALUE FV on FV.EXPERIMENTAL_FACTOR_FK = EF.ID "
+                    + "join CHARACTERISTIC C on FV.ID = C.FACTOR_VALUE_FK "
+                    + "where I.class = 'ExpressionExperiment'";
     private static final Path DEFAULT_GENE2CS_INFO_PATH = Paths.get( Settings.getString( "gemma.appdata.home" ), "DbReports", "gene2cs.info" );
     private static final Log log = LogFactory.getLog( TableMaintenanceUtil.class.getName() );
     @Autowired
@@ -166,6 +193,20 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
         } finally {
             TableMaintenanceUtilImpl.running.set( false );
         }
+    }
+
+    @Override
+    @Transactional
+    @Timed
+    public void updateExpressionExperiment2CharacteristicEntries() {
+        log.info( "Updating the EXPRESSION_EXPERIMENT2CHARACTERISTIC table..." );
+        int updated = sessionFactory.getCurrentSession().createSQLQuery( E2C_QUERY )
+                .setParameter( 0, ExpressionExperiment.class )
+                .setParameter( 1, BioMaterial.class )
+                .setParameter( 2, ExperimentalDesign.class )
+                .executeUpdate();
+        log.info( String.format( "%d entries were updated in the EXPRESSION_EXPERIMENT2CHARACTERISTIC table.",
+                updated ) );
     }
 
     /**

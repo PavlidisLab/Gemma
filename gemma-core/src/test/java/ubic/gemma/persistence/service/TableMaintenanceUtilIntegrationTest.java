@@ -46,4 +46,10 @@ public class TableMaintenanceUtilIntegrationTest extends BaseSpringContextTest {
         this.runAsAnonymous();
         tableMaintenanceUtil.updateGene2CsEntries();
     }
+
+    @Test
+    public void testUpdateExpressionExperiment2CharacteristicEntries() {
+        this.runAsAgent();
+        tableMaintenanceUtil.updateExpressionExperiment2CharacteristicEntries();
+    }
 }

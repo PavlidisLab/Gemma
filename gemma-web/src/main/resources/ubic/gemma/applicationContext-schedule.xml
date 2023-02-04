@@ -65,6 +65,16 @@
         <property name="jobDetail" ref="gene2CsUpdateJobDetail"/>
         <property name="cronExpression" value="0 40 0 ? * *"/>
     </bean>
+    <bean id="ee2cUpdateTrigger" class="org.springframework.scheduling.quartz.CronTriggerBean">
+        <property name="jobDetail">
+            <bean class="ubic.gemma.web.scheduler.SecureMethodInvokingJobDetailFactoryBean"
+                  p:targetObject-ref="tableMaintenanceUtil">
+                <property name="targetMethod" value="updateExpressionExperiment2CharacteristicEntries"/>
+                <property name="concurrent" value="false"/>
+            </bean>
+        </property>
+        <property name="cronExpression" value="0 40 0 ? * *"/>
+    </bean>
 
     <!-- TODO make this work in the space, disabling until then. <bean id="viewTrigger" class="org.springframework.scheduling.quartz.CronTriggerBean">
         <property name="jobDetail"> <ref bean="viewJobDetail" /> </property> <property name="cronExpression"> <value>0 15 1 10 *

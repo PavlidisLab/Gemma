@@ -26,6 +26,8 @@ import org.hibernate.SessionFactory;
 import org.hibernate.criterion.MatchMode;
 import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Restrictions;
+import org.hibernate.type.ClassType;
+import org.hibernate.type.StringType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import ubic.basecode.util.BatchIterator;
@@ -112,87 +114,35 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
         return result;
     }
 
-    @SuppressWarnings({ "rawtypes", "cast" })
     @Override
     public Map<Class<? extends Identifiable>, Map<String, Set<ExpressionExperiment>>> findExperimentsByUris( Collection<String> uris, @Nullable Taxon taxon, int limit ) {
-        Map<Class<? extends Identifiable>, Map<String, Set<ExpressionExperiment>>> result = new HashMap<>();
-
-        if ( uris.isEmpty() )
-            return result;
-
-        // Note that the limit isn't strictly adhered to; we just stop querying when we have enough. We avoid duplicates
-        Set<ExpressionExperiment> seenEEs = new HashSet<>();
-
-        // direct associations
-        // language=HQL
-        result.put( ExpressionExperiment.class, queryAndMarkAsSeen(
-                "select distinct ee, c.valueUri from ExpressionExperiment ee "
-                        + "join ee.characteristics c",
-                uris, taxon, seenEEs, limit ) );
-
-        // via experimental factor
-        // language=HQL
-        result.put( FactorValue.class, queryAndMarkAsSeen( "select distinct ee, c.valueUri from ExpressionExperiment ee "
-                + "join ee.experimentalDesign ed join ed.experimentalFactors ef "
-                + "join ef.factorValues fv join fv.characteristics c", uris, taxon, seenEEs, limit ) );
-
-        // via biomaterial
-        // language=HQL
-        result.put( BioMaterial.class, queryAndMarkAsSeen( "select distinct ee, c.valueUri from ExpressionExperiment ee "
-                        + "join ee.bioAssays ba join ba.sampleUsed bm join bm.characteristics c",
-                uris, taxon, seenEEs, limit ) );
-
-        return result;
-    }
-
-    private Map<String, Set<ExpressionExperiment>> queryAndMarkAsSeen( String query, Collection<String> uris, @Nullable Taxon taxon, Set<ExpressionExperiment> seenEEs, int limit ) {
-        if ( limit > 0 && seenEEs.size() > limit ) {
+        if ( uris.isEmpty() ) {
             return Collections.emptyMap();
         }
 
-        query += AclQueryUtils.formAclJoinClause( "ee" );
-        query += AclQueryUtils.formAclRestrictionClause();
+        Query query = getSessionFactory().getCurrentSession().createSQLQuery( "select T.LEVEL, T.VALUE_URI, {I.*} from EXPRESSION_EXPERIMENT2CHARACTERISTIC T "
+                        + "join INVESTIGATION {I} on {I}.ID = T.EXPRESSION_EXPERIMENT_FK "
+                        + "where T.VALUE_URI in :uris"
+                        + ( taxon != null ? " and {I}.TAXON_FK = :taxonId" : "" ) )
+                .addScalar( "LEVEL", new ClassType() )
+                .addScalar( "VALUE_URI", new StringType() )
+                .addEntity( "I", ExpressionExperiment.class )
+                .setParameterList( "uris", uris );
 
-        query += " and c.valueUri in (:uriStrings)";
-
-        // don't retrieve EE IDs that we have already fetched otherwise
-        if ( !seenEEs.isEmpty() ) {
-            query += " and ee not in (:seenEEs)";
-        }
-
-        // by taxon
         if ( taxon != null ) {
-            query += " and ee.taxon = :t";
+            query.setParameter( "taxonId", taxon.getId() );
         }
-
-        Query q = getSessionFactory().getCurrentSession()
-                .createQuery( query )
-                .setParameterList( "uriStrings", uris );
-        if ( !seenEEs.isEmpty() )
-            q.setParameterList( "seenEEs", seenEEs );
-        if ( taxon != null )
-            q.setParameter( "t", taxon );
-        AclQueryUtils.addAclJoinParameters( q, ExpressionExperiment.class );
-        AclQueryUtils.addAclRestrictionParameters( q );
 
         //noinspection unchecked
-        List<Object[]> results = q.list();
+        List<Object[]> result = query
+                .setMaxResults( limit )
+                .list();
 
-        Map<String, Set<ExpressionExperiment>> map = new HashMap<>();
-        for ( Object[] row : results ) {
-            ExpressionExperiment ee = ( ExpressionExperiment ) row[0];
-            String uri = ( String ) row[1];
-            if ( seenEEs.contains( ee ) ) {
-                continue;
-            }
-            if ( !map.containsKey( uri ) ) {
-                map.put( uri, new HashSet<>() );
-            }
-            map.get( uri ).add( ee );
-            seenEEs.add( ee );
-        }
+        // TODO: restrict EEs by ACLs
 
-        return map;
+        return result.stream().collect( Collectors.groupingBy( row -> ( Class<? extends Identifiable> ) row[0],
+                Collectors.groupingBy( row -> ( String ) row[1],
+                        Collectors.mapping( row -> ( ExpressionExperiment ) row[2], Collectors.toSet() ) ) ) );
     }
 
     @Override

@@ -152,3 +152,28 @@ alter table GENE2CS
     add foreign key GENE2CS_CS_FKC (CS) references COMPOSITE_SEQUENCE (ID) on update cascade on delete cascade;
 alter table GENE2CS
     add foreign key GENE2CS_GENE_FKC (GENE) references CHROMOSOME_FEATURE (ID) on update cascade on delete cascade;
+
+drop table if exists EXPRESSION_EXPERIMENT2CHARACTERISTIC;
+create table EXPRESSION_EXPERIMENT2CHARACTERISTIC
+(
+    ID                       bigint(20) references CHARACTERISTIC (ID) on update cascade on delete cascade,
+    NAME                     varchar(255),
+    DESCRIPTION              text,
+    CATEGORY                 varchar(255),
+    CATEGORY_URI             varchar(255),
+    VALUE                    varchar(255),
+    VALUE_URI                varchar(255),
+    ORIGINAL_VALUE           varchar(255),
+    EVIDENCE_CODE            varchar(255),
+    EXPRESSION_EXPERIMENT_FK integer references INVESTIGATION (ID) on update cascade on delete cascade,
+    LEVEL                    varchar(255),
+    primary key (ID, EXPRESSION_EXPERIMENT_FK, LEVEL)
+);
+
+-- no URI exceeds 100 characters in practice, so we only index a prefix
+alter table EXPRESSION_EXPERIMENT2CHARACTERISTIC
+    add index EXPRESSION_EXPERIMENT2C_VALUE (VALUE),
+    add index EXPRESSION_EXPERIMENT2C_CATEGORY (CATEGORY),
+    add index EXPRESSION_EXPERIMENT2C_VALUE_URI_VALUE (VALUE_URI(100), VALUE),
+    add index EXPRESSION_EXPERIMENT2C_CATEGORY_URI_CATEGORY_VALUE_URI_VALUE (CATEGORY_URI(100), CATEGORY, VALUE_URI(100), VALUE),
+    add index EXPRESSION_EXPERIMENT2C_LEVEL (LEVEL);
