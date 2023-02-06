@@ -7,10 +7,8 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static ubic.gemma.persistence.util.AclQueryUtils.addAclJoinParameters;
-import static ubic.gemma.persistence.util.AclQueryUtils.formAclJoinClause;
+import static org.mockito.Mockito.*;
+import static ubic.gemma.persistence.util.AclQueryUtils.*;
 
 public class AclQueryUtilsTest extends BaseSpringContextTest {
 
@@ -39,15 +37,38 @@ public class AclQueryUtilsTest extends BaseSpringContextTest {
         String clause = formAclJoinClause( "ee" );
         assertThat( clause )
                 .contains( "ee.id" )
-                .contains( "inner join aoi.entries ace" );
+                .contains( "join aoi.entries ace" );
     }
 
     @Test
     public void testAddAclJoinParameters() {
         Query query = mock( Query.class );
-        addAclJoinParameters( query, ExpressionExperiment.class );
-        System.out.println( query );
-        verify( query ).setParameter( "aoiType", "ubic.gemma.model.expression.experiment.ExpressionExperiment" );
+        when( query.getNamedParameters() ).thenReturn( new String[0] );
+        addAclParameters( query, ExpressionExperiment.class );
+        verify( query ).setParameter( "aclQueryUtils_aoiType", "ubic.gemma.model.expression.experiment.ExpressionExperiment" );
     }
 
+    @Test
+    public void testFormNativeAclJoinClause() {
+        assertThat( formNativeAclJoinClause( "EE.ID" ) )
+                .isEqualTo( " join ACLOBJECTIDENTITY aoi on (aoi.OBJECT_CLASS = :aclQueryUtils_aoiType and aoi.OBJECT_ID = EE.ID)" );
+    }
+
+    @Test
+    public void testFormNativeAclJoinClauseAsAnonymous() {
+        this.runAsAnonymous();
+        assertThat( formNativeAclJoinClause( "EE.ID" ) )
+                .isEqualTo( " join ACLOBJECTIDENTITY aoi on (aoi.OBJECT_CLASS = :aclQueryUtils_aoiType and aoi.OBJECT_ID = EE.ID) join ACLENTRY ace on (aoi.ID = ace.OBJECTIDENTITY_FK)" );
+    }
+
+    @Test
+    public void testFormNativeRestrictionClause() {
+        assertThat( formNativeAclRestrictionClause() ).isEmpty();
+    }
+
+    @Test
+    public void testFormNativeRestrictionClauseAsAnonymous() {
+        this.runAsAnonymous();
+        assertThat( formNativeAclRestrictionClause() ).isEqualTo( " and (ace.MASK = :aclQueryUtils_readMask and ace.SID_FK = :aclQueryUtils_nonymousAuthSid)" );
+    }
 }

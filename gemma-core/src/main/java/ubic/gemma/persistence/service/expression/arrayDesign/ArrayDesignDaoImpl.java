@@ -1068,8 +1068,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
 
         Query query = this.getSessionFactory().getCurrentSession().createQuery( queryString );
 
-        AclQueryUtils.addAclJoinParameters( query, ArrayDesign.class );
-        AclQueryUtils.addAclRestrictionParameters( query );
+        AclQueryUtils.addAclParameters( query, ArrayDesign.class );
         FilterQueryUtils.addRestrictionParameters( query, filters );
 
         return query;

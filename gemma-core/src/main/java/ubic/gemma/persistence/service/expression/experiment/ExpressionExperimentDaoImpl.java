@@ -28,9 +28,6 @@ import org.hibernate.*;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.type.LongType;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.task.AsyncTaskExecutor;
-import org.springframework.core.task.SimpleAsyncTaskExecutor;
-import org.springframework.security.task.DelegatingSecurityContextAsyncTaskExecutor;
 import org.springframework.stereotype.Repository;
 import ubic.gemma.core.analysis.expression.diff.BaselineSelection;
 import ubic.gemma.core.analysis.util.ExperimentalDesignUtils;
@@ -62,12 +59,7 @@ import ubic.gemma.persistence.util.Filter;
 import ubic.gemma.persistence.util.*;
 
 import javax.annotation.Nullable;
-import java.sql.SQLException;
 import java.util.*;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
 import static java.util.stream.Collectors.groupingBy;
@@ -608,7 +600,10 @@ public class ExpressionExperimentDaoImpl
         }
         Query q = getSessionFactory().getCurrentSession().createSQLQuery(
                         "select {T.*}, count(distinct {T}.EXPRESSION_EXPERIMENT_FK) as EE_COUNT from EXPRESSION_EXPERIMENT2CHARACTERISTIC {T} "
-                                + ( eeIds != null ? "where T.EXPRESSION_EXPERIMENT_FK in :eeIds " : "" )
+                                + AclQueryUtils.formNativeAclJoinClause( "{T}.EXPRESSION_EXPERIMENT_FK" ) + " "
+                                + "where {T}.ID is not null " // this is necessary for the clause building since there might be no clause
+                                + ( eeIds != null ? " and T.EXPRESSION_EXPERIMENT_FK in :eeIds " : "" )
+                                + AclQueryUtils.formNativeAclRestrictionClause() + " "
                                 + "group by {T}.CATEGORY_URI, {T}.CATEGORY, {T}.VALUE_URI, {T}.VALUE_URI "
                                 + "order by EE_COUNT desc" )
                 .addEntity( "T", Characteristic.class )
@@ -618,6 +613,7 @@ public class ExpressionExperimentDaoImpl
         if ( eeIds != null ) {
             q.setParameterList( "eeIds", new HashSet<>( eeIds ) );
         }
+        AclQueryUtils.addAclParameters( q, ExpressionExperiment.class );
         //noinspection unchecked
         List<Object[]> result = q.list();
         return result.stream()
@@ -1529,8 +1525,7 @@ public class ExpressionExperimentDaoImpl
 
         Query query = this.getSessionFactory().getCurrentSession().createQuery( queryString );
 
-        AclQueryUtils.addAclJoinParameters( query, ExpressionExperiment.class );
-        AclQueryUtils.addAclRestrictionParameters( query );
+        AclQueryUtils.addAclParameters( query, ExpressionExperiment.class );
         FilterQueryUtils.addRestrictionParameters( query, filters );
 
         return query;

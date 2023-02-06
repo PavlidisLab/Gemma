@@ -39,12 +39,12 @@ import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.biomaterial.Treatment;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 import ubic.gemma.persistence.service.AbstractDao;
 import ubic.gemma.persistence.service.AbstractNoopFilteringVoEnabledDao;
-import ubic.gemma.persistence.util.*;
+import ubic.gemma.persistence.util.AclQueryUtils;
+import ubic.gemma.persistence.util.EntityUtils;
 
 import javax.annotation.Nullable;
 import java.util.*;
@@ -120,25 +120,32 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
             return Collections.emptyMap();
         }
 
-        Query query = getSessionFactory().getCurrentSession().createSQLQuery( "select T.LEVEL, T.VALUE_URI, {I.*} from EXPRESSION_EXPERIMENT2CHARACTERISTIC T "
-                        + "join INVESTIGATION {I} on {I}.ID = T.EXPRESSION_EXPERIMENT_FK "
-                        + "where T.VALUE_URI in :uris"
-                        + ( taxon != null ? " and {I}.TAXON_FK = :taxonId" : "" ) )
+        String qs = "select T.LEVEL, T.VALUE_URI, {I.*} from EXPRESSION_EXPERIMENT2CHARACTERISTIC T "
+                + "join INVESTIGATION {I} on {I}.ID = T.EXPRESSION_EXPERIMENT_FK "
+                + AclQueryUtils.formNativeAclJoinClause( "T.EXPRESSION_EXPERIMENT_FK" ) + " "
+                + "where T.VALUE_URI in :uris"
+                + ( taxon != null ? " and {I}.TAXON_FK = :taxonId" : "" )
+                + AclQueryUtils.formNativeAclRestrictionClause();
+
+        log.info( qs );
+
+        Query query = getSessionFactory().getCurrentSession().createSQLQuery( qs )
                 .addScalar( "LEVEL", new ClassType() )
                 .addScalar( "VALUE_URI", new StringType() )
-                .addEntity( "I", ExpressionExperiment.class )
-                .setParameterList( "uris", uris );
+                .addEntity( "I", ExpressionExperiment.class );
+
+        query.setParameterList( "uris", uris );
 
         if ( taxon != null ) {
             query.setParameter( "taxonId", taxon.getId() );
         }
 
+        AclQueryUtils.addAclParameters( query, ExpressionExperiment.class );
+
         //noinspection unchecked
         List<Object[]> result = query
                 .setMaxResults( limit )
                 .list();
-
-        // TODO: restrict EEs by ACLs
 
         return result.stream().collect( Collectors.groupingBy( row -> ( Class<? extends Identifiable> ) row[0],
                 Collectors.groupingBy( row -> ( String ) row[1],

@@ -25,11 +25,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import org.springframework.orm.hibernate4.HibernateQueryException;
 import ubic.gemma.core.util.test.BaseSpringContextTest;
+import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
+import ubic.gemma.model.expression.experiment.ExperimentalDesign;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
+import ubic.gemma.persistence.service.TableMaintenanceUtil;
 import ubic.gemma.persistence.service.common.description.CharacteristicService;
 import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
@@ -37,8 +40,7 @@ import ubic.gemma.persistence.service.expression.experiment.FactorValueService;
 
 import java.util.*;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
+import static org.junit.Assert.*;
 
 /**
  * @author luke
@@ -63,7 +65,6 @@ public class CharacteristicServiceTest extends BaseSpringContextTest {
 
     @Before
     public void setUp() throws Exception {
-
         ee = this.getTestPersistentBasicExpressionExperiment();
         ee.setCharacteristics( this.getTestPersistentCharacteristics( 2 ) );
         Characteristic[] eeChars = ee.getCharacteristics().toArray( new Characteristic[0] );
@@ -89,6 +90,8 @@ public class CharacteristicServiceTest extends BaseSpringContextTest {
         FactorValue fv = ef.getFactorValues().iterator().next();
         fv.setCharacteristics( this.getTestPersistentCharacteristics( 1 ) );
         fvService.update( fv );
+
+        tableMaintenanceUtil.updateExpressionExperiment2CharacteristicEntries();
     }
 
     @Test
@@ -118,12 +121,37 @@ public class CharacteristicServiceTest extends BaseSpringContextTest {
         characteristicService.browse( 10, 10, "foo", true );
     }
 
+    @Autowired
+    private TableMaintenanceUtil tableMaintenanceUtil;
+
+    @Test
+    public void testFindExperimentsByUris() {
+        Map<Class<? extends Identifiable>, Map<String, Set<ExpressionExperiment>>> result = characteristicService.findExperimentsByUris( Collections.singletonList( eeChar1.getValueUri() ), null, 10 );
+        assertEquals( 1, result.keySet().size() );
+        assertTrue( result.containsKey( ExpressionExperiment.class ) );
+    }
+
+    @Test
+    public void testFindExperimentsByUrisAsAnonymousUser() {
+        runAsAnonymous();
+        Map<Class<? extends Identifiable>, Map<String, Set<ExpressionExperiment>>> result = characteristicService.findExperimentsByUris( Collections.singletonList( eeChar1.getValueUri() ), null, 10 );
+        assertTrue( result.isEmpty() );
+    }
+
+    @Test
+    public void testFindExperimentsByUrisAsUser() {
+        runAsUser( "bob" );
+        Map<Class<? extends Identifiable>, Map<String, Set<ExpressionExperiment>>> result = characteristicService.findExperimentsByUris( Collections.singletonList( eeChar1.getValueUri() ), null, 10 );
+        assertTrue( result.isEmpty() );
+    }
+
     private Set<Characteristic> getTestPersistentCharacteristics( int n ) {
         Set<Characteristic> chars = new HashSet<>();
         for ( int i = 0; i < n; ++i ) {
             Characteristic c = Characteristic.Factory.newInstance();
             c.setCategory( "test" );
             c.setValue( RandomStringUtils.randomNumeric( 10 ) );
+            c.setValueUri( "http://www.ebi.ac.uk/efo/EFO_" + RandomStringUtils.randomAlphabetic( 7 ) );
             characteristicService.create( c );
             chars.add( c );
         }

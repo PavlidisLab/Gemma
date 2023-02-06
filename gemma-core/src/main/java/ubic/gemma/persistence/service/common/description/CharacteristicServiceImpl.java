@@ -18,6 +18,7 @@
  */
 package ubic.gemma.persistence.service.common.description;
 
+import gemma.gsec.model.Securable;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -35,6 +36,7 @@ import ubic.gemma.persistence.service.AbstractFilteringVoEnabledService;
 
 import javax.annotation.Nullable;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * @author Luke

@@ -51,7 +51,7 @@ public class AclCriteriaUtils {
                         .add( Restrictions.eq( "sid.principal", userName ) )
                         // user has specific rights to the object
                         .add( Restrictions.conjunction()
-                                .add( Restrictions.sqlRestriction( "ace.sid.id in (" + AclQueryUtils.CURRENT_USER_SIDS_SQL + ")", userName, StringType.INSTANCE ) )
+                                .add( Restrictions.sqlRestriction( "ace.sid.id in (" + AclQueryUtils.CURRENT_USER_SIDS_HQL + ")", userName, StringType.INSTANCE ) )
                                 .add( Restrictions.in( "ace.mask", new Object[] { readMask, writeMask } ) ) )
                         // the object is public
                         .add( Restrictions.conjunction()
