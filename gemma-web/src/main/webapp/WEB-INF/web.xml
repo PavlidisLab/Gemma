@@ -162,6 +162,10 @@
             <param-value>io.swagger.v3.jaxrs2.integration.resources,ubic.gemma.rest</param-value>
         </init-param>
         <init-param>
+            <param-name>jersey.config.server.provider.classnames</param-name>
+            <param-value>org.glassfish.jersey.message.GZipEncoder</param-value>
+        </init-param>
+        <init-param>
             <!-- this is necessary because the file would otherwise be looked at under /WEB-INF/openapi-configuration.yaml -->
             <param-name>openApi.configuration.location</param-name>
             <param-value>/WEB-INF/classes/openapi-configuration.yaml</param-value>

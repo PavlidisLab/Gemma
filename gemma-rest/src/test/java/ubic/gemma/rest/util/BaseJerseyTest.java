@@ -1,5 +1,6 @@
 package ubic.gemma.rest.util;
 
+import org.glassfish.jersey.message.GZipEncoder;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 import org.glassfish.jersey.test.inmemory.InMemoryTestContainerFactory;
@@ -49,6 +50,7 @@ public abstract class BaseJerseyTest extends JerseyTest implements InitializingB
         SecurityContextHolder.setStrategyName( SecurityContextHolder.MODE_INHERITABLETHREADLOCAL );
         application = new ResourceConfig()
                 .packages( "io.swagger.v3.jaxrs2.integration.resources", "ubic.gemma.rest" )
+                .registerClasses( GZipEncoder.class )
                 // use a generic context for now, it will be replaced when this bean is fully initialized in afterPropertiesSet()
                 .property( "contextConfig", new GenericWebApplicationContext() )
                 .property( "openApi.configuration.location", "/WEB-INF/classes/openapi-configuration.yaml" );
