@@ -605,7 +605,7 @@ public class ExpressionExperimentDaoImpl
                                 + "where {T}.ID is not null " // this is necessary for the clause building since there might be no clause
                                 + ( eeIds != null ? " and T.EXPRESSION_EXPERIMENT_FK in :eeIds " : "" )
                                 + AclQueryUtils.formNativeAclRestrictionClause() + " "
-                                + "group by {T}.CATEGORY_URI, {T}.CATEGORY, {T}.VALUE_URI, {T}.VALUE_URI "
+                                + "group by COALESCE({T}.CATEGORY_URI, {T}.CATEGORY), COALESCE({T}.VALUE_URI, {T}.VALUE_URI) "
                                 + "order by EE_COUNT desc" )
                 .addEntity( "T", Characteristic.class )
                 .addScalar( "EE_COUNT", new LongType() )
