@@ -37,35 +37,35 @@
         W Month 1-12 or JAN-DEC , - * / Day-of-Week 1-7 or SUN-SAT , - * ? / L # Year (Optional) empty, 1970-2099 , - * / See http://www.opensymphony.com/quartz/api/org/quartz/CronExpression.html
         for details, http://www.opensymphony.com/quartz/api/org/quartz/CronTrigger.html for examples. If you want a schedule that
         fire frequently for testing, try <value>0 0/2 * ? * *</value>. -->
-    <bean id="batchInfoTrigger" class="org.springframework.scheduling.quartz.CronTriggerBean">
+    <bean id="batchInfoTrigger" class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
         <property name="jobDetail" ref="batchInfoDetail"/>
         <property name="cronExpression" value="0 30 0 ? * *"/>
     </bean>
-    <bean id="indexTrigger" class="org.springframework.scheduling.quartz.CronTriggerBean">
+    <bean id="indexTrigger" class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
         <property name="jobDetail" ref="indexJobDetail"/>
         <property name="cronExpression" value="0 15 1 ? * SAT"/>
     </bean>
-    <bean id="expressionExperimentReportTrigger" class="org.springframework.scheduling.quartz.CronTriggerBean">
+    <bean id="expressionExperimentReportTrigger" class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
         <property name="jobDetail" ref="expressionExperimentReportJobDetail"/>
         <property name="cronExpression" value="0 15 0 1 * ?"/>
     </bean>
-    <bean id="arrayDesignReportTrigger" class="org.springframework.scheduling.quartz.CronTriggerBean">
+    <bean id="arrayDesignReportTrigger" class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
         <property name="jobDetail" ref="arrayDesignReportJobDetail"/>
         <property name="cronExpression" value="0 30 1 1 * ?"/>
     </bean>
-    <bean id="neurocartaTrigger" class="org.springframework.scheduling.quartz.CronTriggerBean">
+    <bean id="neurocartaTrigger" class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
         <property name="jobDetail" ref="neurocartaJobDetail"/>
         <property name="cronExpression" value="0 30 2 * * ?"/>
     </bean>
-    <bean id="whatsNewTrigger" class="org.springframework.scheduling.quartz.CronTriggerBean">
+    <bean id="whatsNewTrigger" class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
         <property name="jobDetail" ref="whatsNewJobDetail"/>
         <property name="cronExpression" value="0 15 0 ? * *"/>
     </bean>
-    <bean id="gene2CsUpdateTrigger" class="org.springframework.scheduling.quartz.CronTriggerBean">
+    <bean id="gene2CsUpdateTrigger" class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
         <property name="jobDetail" ref="gene2CsUpdateJobDetail"/>
         <property name="cronExpression" value="0 40 0 ? * *"/>
     </bean>
-    <bean id="ee2cUpdateTrigger" class="org.springframework.scheduling.quartz.CronTriggerBean">
+    <bean id="ee2cUpdateTrigger" class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
         <property name="jobDetail">
             <bean class="ubic.gemma.web.scheduler.SecureMethodInvokingJobDetailFactoryBean"
                   p:targetObject-ref="tableMaintenanceUtil">
