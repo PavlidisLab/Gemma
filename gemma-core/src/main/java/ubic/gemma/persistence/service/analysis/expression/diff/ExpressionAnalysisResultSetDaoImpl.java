@@ -227,8 +227,8 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilterin
 
         // apply the ACL on the associated EE (or EE subset)
         query.add( Restrictions.or(
-                AclCriteriaUtils.formAclRestrictionClause( "e", ExpressionExperiment.class ),
-                AclCriteriaUtils.formAclRestrictionClause( "e", ExpressionExperimentSubSet.class ) ) );
+                AclCriteriaUtils.formAclRestrictionClause( "e.id", ExpressionExperiment.class ),
+                AclCriteriaUtils.formAclRestrictionClause( "e.id", ExpressionExperimentSubSet.class ) ) );
 
         return query;
     }

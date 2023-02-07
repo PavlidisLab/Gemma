@@ -5,7 +5,7 @@ public interface TestAuthenticationUtils {
 
     void runAsAgent();
 
-    void runAsUser( String userName );
+    void runAsUser( String userName, boolean createIfMissing );
 
     void runAsAnonymous();
 }

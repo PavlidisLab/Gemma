@@ -1,7 +1,9 @@
 package ubic.gemma.persistence.util;
 
 import org.hibernate.Query;
+import org.hibernate.SessionFactory;
 import org.junit.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.util.test.BaseSpringContextTest;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -25,18 +27,24 @@ public class AclQueryUtilsTest extends BaseSpringContextTest {
     @Test
     public void testFormAclJoinClauseAsAdmin() {
         super.runAsAdmin();
-        String clause = formAclJoinClause( "ee" );
+        String clause = formAclJoinClause( "ee.id" );
         assertThat( clause )
-                .contains( "ee.id" )
-                .doesNotContain( "inner join aoi.entries ace" );
+                .startsWith( "," )
+                .contains( "AclObjectIdentity as aoi" )
+                .contains( "aoi.identifier = ee.id" )
+                .contains( "join aoi.ownerSid sid" )
+                .doesNotContain( "join aoi.entries ace" );
     }
 
     @Test
     public void testFormAclJoinClauseAsNonAdminIncludesAoiEntriesInnerJointure() {
         super.runAsAnonymous();
-        String clause = formAclJoinClause( "ee" );
+        String clause = formAclJoinClause( "ee.id" );
         assertThat( clause )
-                .contains( "ee.id" )
+                .startsWith( "," )
+                .contains( "AclObjectIdentity as aoi" )
+                .contains( "aoi.identifier = ee.id" )
+                .contains( "join aoi.ownerSid sid" )
                 .contains( "join aoi.entries ace" );
     }
 
@@ -51,14 +59,22 @@ public class AclQueryUtilsTest extends BaseSpringContextTest {
     @Test
     public void testFormNativeAclJoinClause() {
         assertThat( formNativeAclJoinClause( "EE.ID" ) )
-                .isEqualTo( " join ACLOBJECTIDENTITY aoi on (aoi.OBJECT_CLASS = :aclQueryUtils_aoiType and aoi.OBJECT_ID = EE.ID)" );
+                .startsWith( " " )
+                .contains( "join ACLOBJECTIDENTITY aoi" )
+                .contains( "aoi.OBJECT_CLASS" )
+                .contains( "aoi.OBJECT_ID = EE.ID" )
+                .doesNotContain( "join ACLENTRY ace on (aoi.ID = ace.OBJECTIDENTITY_FK)" );
     }
 
     @Test
     public void testFormNativeAclJoinClauseAsAnonymous() {
         this.runAsAnonymous();
         assertThat( formNativeAclJoinClause( "EE.ID" ) )
-                .isEqualTo( " join ACLOBJECTIDENTITY aoi on (aoi.OBJECT_CLASS = :aclQueryUtils_aoiType and aoi.OBJECT_ID = EE.ID) join ACLENTRY ace on (aoi.ID = ace.OBJECTIDENTITY_FK)" );
+                .startsWith( " " )
+                .contains( "join ACLOBJECTIDENTITY aoi" )
+                .contains( "aoi.OBJECT_CLASS" )
+                .contains( "aoi.OBJECT_ID = EE.ID" )
+                .contains( "join ACLENTRY ace on (aoi.ID = ace.OBJECTIDENTITY_FK)" );
     }
 
     @Test
@@ -69,6 +85,89 @@ public class AclQueryUtilsTest extends BaseSpringContextTest {
     @Test
     public void testFormNativeRestrictionClauseAsAnonymous() {
         this.runAsAnonymous();
-        assertThat( formNativeAclRestrictionClause() ).isEqualTo( " and (ace.MASK = :aclQueryUtils_readMask and ace.SID_FK = :aclQueryUtils_nonymousAuthSid)" );
+        assertThat( formNativeAclRestrictionClause() )
+                .startsWith( " " )
+                .contains( "ace.MASK" )
+                .contains( "ace.SID_FK" )
+                .contains( "select sid.ID from ACLSID sid where sid.GRANTED_AUTHORITY = 'IS_AUTHENTICATED_ANONYMOUSLY'" );
+    }
+
+    @Autowired
+    private SessionFactory sessionFactory;
+
+    @Test
+    public void testAsAdmin() {
+        Query q = sessionFactory.openSession().createQuery(
+                "select ee from ExpressionExperiment ee"
+                        + formAclJoinClause( "ee.id" )
+                        + formAclRestrictionClause() );
+        addAclParameters( q, ExpressionExperiment.class );
+        q.setMaxResults( 1 );
+        q.list();
+    }
+
+    @Test
+    public void testAsUser() {
+        runAsUser( "bob", true );
+        Query q = sessionFactory.openSession().createQuery(
+                "select ee from ExpressionExperiment ee"
+                        + formAclJoinClause( "ee.id" )
+                        + formAclRestrictionClause() );
+        addAclParameters( q, ExpressionExperiment.class );
+        q.setMaxResults( 1 );
+        q.list();
+    }
+
+    @Test
+    public void testAsAnonymous() {
+        runAsAnonymous();
+        Query q = sessionFactory.openSession().createQuery(
+                "select ee from ExpressionExperiment ee"
+                        + formAclJoinClause( "ee.id" )
+                        + formAclRestrictionClause() );
+        addAclParameters( q, ExpressionExperiment.class );
+        q.setMaxResults( 1 );
+        q.list();
+    }
+
+    @Test
+    public void testNative() {
+        Query q = sessionFactory.openSession().createSQLQuery(
+                        "select I.* from INVESTIGATION I"
+                                + formNativeAclJoinClause( "I.id" ) + " "
+                                + "where I.class = 'ExpressionExperiment'"
+                                + formNativeAclRestrictionClause() )
+                .addEntity( ExpressionExperiment.class );
+        addAclParameters( q, ExpressionExperiment.class );
+        q.setMaxResults( 1 );
+        q.list();
+    }
+
+    @Test
+    public void testNativeAsUser() {
+        runAsUser( "bob" );
+        Query q = sessionFactory.openSession().createSQLQuery(
+                        "select I.* from INVESTIGATION I"
+                                + formNativeAclJoinClause( "I.id" ) + " "
+                                + "where I.class = 'ExpressionExperiment'"
+                                + formNativeAclRestrictionClause() )
+                .addEntity( ExpressionExperiment.class );
+        addAclParameters( q, ExpressionExperiment.class );
+        q.setMaxResults( 1 );
+        q.list();
+    }
+
+    @Test
+    public void testNativeAsAnonymous() {
+        runAsAnonymous();
+        Query q = sessionFactory.openSession().createSQLQuery(
+                        "select I.* from INVESTIGATION I"
+                                + formNativeAclJoinClause( "I.id" ) + " "
+                                + "where I.class = 'ExpressionExperiment'"
+                                + formNativeAclRestrictionClause() )
+                .addEntity( ExpressionExperiment.class );
+        addAclParameters( q, ExpressionExperiment.class );
+        q.setMaxResults( 1 );
+        q.list();
     }
 }

@@ -5,8 +5,10 @@ import gemma.gsec.model.Securable;
 import gemma.gsec.util.SecurityUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.hibernate.Criteria;
+import org.hibernate.HibernateException;
 import org.hibernate.criterion.*;
 import org.hibernate.type.StringType;
+import org.hibernate.type.Type;
 import org.springframework.security.acls.domain.BasePermission;
 
 /**
@@ -20,46 +22,59 @@ public class AclCriteriaUtils {
      *
      * @see AclQueryUtils#formAclRestrictionClause()
      */
-    public static Criterion formAclRestrictionClause( String alias, Class<? extends Securable> aoiType ) {
-        if ( StringUtils.isBlank( alias ) )
-            throw new IllegalArgumentException( "Alias cannot be empty." );
-
+    public static Criterion formAclRestrictionClause( String aoiIdColumn, Class<? extends Securable> aoiType ) {
+        if ( StringUtils.isBlank( aoiIdColumn ) ) {
+            throw new IllegalArgumentException( "Object identity column cannot be empty." );
+        }
         DetachedCriteria dc = DetachedCriteria.forClass( AclObjectIdentity.class, "aoi" )
+                .createAlias( "aoi.ownerSid", "sid" )
                 .setProjection( Projections.property( "aoi.identifier" ) )
-                .add( Restrictions.eqProperty( "aoi.identifier", alias + ".id" ) )
+                .add( Restrictions.eqProperty( "aoi.identifier", aoiIdColumn ) )
                 .add( Restrictions.eq( "aoi.type", aoiType.getCanonicalName() ) );
-        if ( SecurityUtil.isUserAdmin() ) {
-            dc.createAlias( "aoi.ownerSid", "sid" );
-        } else {
+
+        if ( !SecurityUtil.isUserAdmin() ) {
             dc.createAlias( "aoi.entries", "ace" );
         }
 
-        String userName = SecurityUtil.getCurrentUsername();
         int readMask = BasePermission.READ.getMask();
         int writeMask = BasePermission.WRITE.getMask();
         if ( SecurityUtil.isUserAnonymous() ) {
             // the object is public
             dc.add( Restrictions.conjunction()
-                    .add( Restrictions.eq( "ace.sid.id", 4L ) )
+                    // FIXME: ace2_ is generated, but sqlRestriction can only replace the root alias
+                    .add( new SQLCriterionWithAceSidAliasSubstitution( "{aceSid}.SID_FK in (" + AclQueryUtils.ANONYMOUS_SID_SQL + ")", new Object[0], new Type[0] ) )
                     .add( Restrictions.eq( "ace.mask", readMask ) ) );
-        } else {
-            if ( SecurityUtil.isUserAdmin() ) {
-                // no restriction applies
-            } else {
-                dc.add( Restrictions.disjunction()
-                        // user own the object
-                        .add( Restrictions.eq( "sid.principal", userName ) )
-                        // user has specific rights to the object
-                        .add( Restrictions.conjunction()
-                                .add( Restrictions.sqlRestriction( "ace.sid.id in (" + AclQueryUtils.CURRENT_USER_SIDS_HQL + ")", userName, StringType.INSTANCE ) )
-                                .add( Restrictions.in( "ace.mask", new Object[] { readMask, writeMask } ) ) )
-                        // the object is public
-                        .add( Restrictions.conjunction()
-                                .add( Restrictions.eq( "ace.sid.id", 4L ) )
-                                .add( Restrictions.eq( "ace.mask", readMask ) ) ) );
-            }
+        } else if ( !SecurityUtil.isUserAdmin() ) {
+            String userName = SecurityUtil.getCurrentUsername();
+            dc.add( Restrictions.disjunction()
+                    // user own the object
+                    .add( Restrictions.eq( "sid.principal", userName ) )
+                    // user has specific rights to the object
+                    .add( Restrictions.conjunction()
+                            .add( new SQLCriterionWithAceSidAliasSubstitution( "{aceSid}.SID_FK in (" + AclQueryUtils.CURRENT_USER_SIDS_SQL.replace( ":" + AclQueryUtils.USER_NAME_PARAM, "?" ) + ")", new Object[] { userName }, new Type[] { StringType.INSTANCE } ) )
+                            .add( Restrictions.in( "ace.mask", new Object[] { readMask, writeMask } ) ) )
+                    // the object is public
+                    .add( Restrictions.conjunction()
+                            .add( new SQLCriterionWithAceSidAliasSubstitution( "{aceSid}.SID_FK in (" + AclQueryUtils.ANONYMOUS_SID_SQL + ")", new Object[0], new Type[0] ) )
+                            .add( Restrictions.eq( "ace.mask", readMask ) ) ) );
         }
 
-        return Subqueries.propertyIn( alias + ".id", dc );
+        return Subqueries.propertyIn( aoiIdColumn, dc );
+    }
+
+    /**
+     * Extend {@link SQLCriterion} to also substitute selected non-root aliases.
+     */
+    private static class SQLCriterionWithAceSidAliasSubstitution extends SQLCriterion {
+
+        protected SQLCriterionWithAceSidAliasSubstitution( String sql, Object[] values, Type[] types ) {
+            super( sql, values, types );
+        }
+
+        @Override
+        public String toSqlString( Criteria criteria, CriteriaQuery criteriaQuery ) throws HibernateException {
+            return super.toSqlString( criteria, criteriaQuery )
+                    .replace( "{aceSid}", criteriaQuery.getSQLAlias( criteria, "ace.sid" ) );
+        }
     }
 }

@@ -1523,7 +1523,7 @@ public class ExpressionExperimentDaoImpl
         }
 
         // parts of this query (above) are only needed for administrators: the notes, so it could theoretically be sped up even more
-        queryString += AclQueryUtils.formAclJoinClause( OBJECT_ALIAS );
+        queryString += AclQueryUtils.formAclJoinClause( OBJECT_ALIAS + ".id" );
 
         queryString += AclQueryUtils.formAclRestrictionClause();
         queryString += FilterQueryUtils.formRestrictionClause( filters );

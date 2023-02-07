@@ -511,18 +511,37 @@ public abstract class BaseSpringContextTest extends AbstractJUnit4SpringContextT
         testHelper.resetTestElementCollectionSize();
     }
 
+    /**
+     * @see TestAuthenticationUtils#runAsAdmin()
+     */
     protected void runAsAdmin() {
         testAuthenticationUtils.runAsAdmin();
     }
 
+    /**
+     * @see TestAuthenticationUtils#runAsAgent()
+     */
     protected void runAsAgent() {
         testAuthenticationUtils.runAsAgent();
     }
 
+    /**
+     * @see TestAuthenticationUtils#runAsUser(String, boolean)
+     */
     protected void runAsUser( String userName ) {
-        testAuthenticationUtils.runAsUser( userName );
+        testAuthenticationUtils.runAsUser( userName, false );
     }
 
+    /**
+     * @see TestAuthenticationUtils#runAsUser(String, boolean)
+     */
+    protected void runAsUser( String userName, boolean createIfMissing ) {
+        testAuthenticationUtils.runAsUser( userName, createIfMissing );
+    }
+
+    /**
+     * @see TestAuthenticationUtils#runAsAnonymous()
+     */
     protected void runAsAnonymous() {
         testAuthenticationUtils.runAsAnonymous();
     }
