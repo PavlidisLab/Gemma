@@ -37,6 +37,7 @@ import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.biomaterial.Treatment;
+import ubic.gemma.model.expression.experiment.ExperimentalDesign;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
@@ -125,14 +126,17 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
                 + AclQueryUtils.formNativeAclJoinClause( "T.EXPRESSION_EXPERIMENT_FK" ) + " "
                 + "where T.VALUE_URI in :uris"
                 + ( taxon != null ? " and {I}.TAXON_FK = :taxonId" : "" )
-                + AclQueryUtils.formNativeAclRestrictionClause();
-
-        log.info( qs );
+                + AclQueryUtils.formNativeAclRestrictionClause() + " "
+                + "order by FIELD(T.LEVEL, :eeClass, :edClass, :bmClass)";
 
         Query query = getSessionFactory().getCurrentSession().createSQLQuery( qs )
                 .addScalar( "LEVEL", new ClassType() )
                 .addScalar( "VALUE_URI", new StringType() )
                 .addEntity( "I", ExpressionExperiment.class );
+
+        query.setParameter( "eeClass", ExpressionExperiment.class );
+        query.setParameter( "edClass", ExperimentalDesign.class );
+        query.setParameter( "bmClass", BioMaterial.class );
 
         query.setParameterList( "uris", uris );
 
