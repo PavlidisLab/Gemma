@@ -36,6 +36,7 @@ public abstract class AbstractFilteringVoEnabledService<O extends Identifiable, 
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<O> loadPreFilter( @Nullable Filters filters, @Nullable Sort sort ) {
         return voDao.loadPreFilter( filters, sort );
     }
