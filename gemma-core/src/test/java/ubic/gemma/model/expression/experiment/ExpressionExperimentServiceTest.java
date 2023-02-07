@@ -347,4 +347,14 @@ public class ExpressionExperimentServiceTest extends BaseSpringContextTest {
                 .first()
                 .hasFieldOrPropertyWithValue( "shortName", ee.getShortName() );
     }
+
+    @Test
+    public void testFilterByAllCharacteristics() {
+        Filter f = expressionExperimentService.getFilter( "allCharacteristics.valueUri", Filter.Operator.eq, "http://www.ebi.ac.uk/efo/EFO_000516" );
+        assertThat( f )
+                .hasFieldOrPropertyWithValue( "objectAlias", "ac" )
+                .hasFieldOrPropertyWithValue( "propertyName", "valueUri" );
+        assertThat( expressionExperimentService.loadPreFilter( Filters.by( f ), null ) )
+                .isEmpty();
+    }
 }

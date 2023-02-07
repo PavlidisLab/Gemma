@@ -80,6 +80,7 @@ public class ExpressionExperimentDaoImpl
             CHARACTERISTIC_ALIAS = CharacteristicDao.OBJECT_ALIAS,
             BIO_MATERIAL_CHARACTERISTIC_ALIAS = "bmc",
             FACTOR_VALUE_CHARACTERISTIC_ALIAS = "fvc",
+            ALL_CHARACTERISTIC_ALIAS = "ac",
             BIO_ASSAY_ALIAS = BioAssayDao.OBJECT_ALIAS,
             TAXON_ALIAS = TaxonDao.OBJECT_ALIAS,
             ARRAY_DESIGN_ALIAS = ArrayDesignDao.OBJECT_ALIAS;
@@ -1507,6 +1508,11 @@ public class ExpressionExperimentDaoImpl
             queryString += " left join ee.bioAssays as " + BIO_ASSAY_ALIAS;
         }
 
+        // this is a shorthand for all characteristics (direct + biomaterial + experimental design)
+        if ( FiltersUtils.containsAnyAlias( filters, sort, ALL_CHARACTERISTIC_ALIAS ) ) {
+            queryString += " left join ee.allCharacteristics as " + ALL_CHARACTERISTIC_ALIAS;
+        }
+
         if ( FiltersUtils.containsAnyAlias( filters, sort, BIO_MATERIAL_CHARACTERISTIC_ALIAS ) ) {
             queryString += " left join " + BIO_ASSAY_ALIAS + ".sampleUsed.characteristics as " + BIO_MATERIAL_CHARACTERISTIC_ALIAS;
         }
@@ -1539,6 +1545,7 @@ public class ExpressionExperimentDaoImpl
         configurer.registerAlias( "characteristics.", CHARACTERISTIC_ALIAS, Characteristic.class, null, 1 );
         configurer.registerAlias( "experimentalDesign.experimentalFactors.factorValues.characteristics.", FACTOR_VALUE_CHARACTERISTIC_ALIAS, Characteristic.class, null, 1 );
         configurer.registerAlias( "bioAssays.sampleUsed.characteristics.", BIO_MATERIAL_CHARACTERISTIC_ALIAS, Characteristic.class, null, 1 );
+        configurer.registerAlias( "allCharacteristics.", ALL_CHARACTERISTIC_ALIAS, Characteristic.class, null, 1 );
         configurer.registerAlias( "bioAssays.", BIO_ASSAY_ALIAS, BioAssay.class, null, 2 );
     }
 

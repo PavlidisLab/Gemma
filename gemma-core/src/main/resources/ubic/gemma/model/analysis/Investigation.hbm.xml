@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
-		"http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+	"http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
 
 <hibernate-mapping>
 	<class name="ubic.gemma.model.analysis.Investigation" table="INVESTIGATION">
@@ -142,6 +142,16 @@
 					</key>
 					<many-to-many class="ubic.gemma.model.expression.experiment.ExpressionExperiment">
 						<column name="OTHER_PART_FK" sql-type="BIGINT"/>
+					</many-to-many>
+				</set>
+
+				<set name="allCharacteristics" table="EXPRESSION_EXPERIMENT2CHARACTERISTIC"
+					 inverse="true">
+					<key>
+						<column name="EXPRESSION_EXPERIMENT_FK" sql-type="BIGINT"/>
+					</key>
+					<many-to-many class="ubic.gemma.model.common.description.Characteristic">
+						<column name="ID" sql-type="BIGINT"/>
 					</many-to-many>
 				</set>
 

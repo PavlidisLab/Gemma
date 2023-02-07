@@ -156,7 +156,7 @@ alter table GENE2CS
 drop table if exists EXPRESSION_EXPERIMENT2CHARACTERISTIC;
 create table EXPRESSION_EXPERIMENT2CHARACTERISTIC
 (
-    ID                       bigint(20) references CHARACTERISTIC (ID) on update cascade on delete cascade,
+    ID                       bigint references CHARACTERISTIC (ID) on update cascade on delete cascade,
     NAME                     varchar(255),
     DESCRIPTION              text,
     CATEGORY                 varchar(255),
@@ -165,7 +165,7 @@ create table EXPRESSION_EXPERIMENT2CHARACTERISTIC
     VALUE_URI                varchar(255),
     ORIGINAL_VALUE           varchar(255),
     EVIDENCE_CODE            varchar(255),
-    EXPRESSION_EXPERIMENT_FK integer references INVESTIGATION (ID) on update cascade on delete cascade,
+    EXPRESSION_EXPERIMENT_FK bigint references INVESTIGATION (ID) on update cascade on delete cascade,
     LEVEL                    varchar(255),
     primary key (ID, EXPRESSION_EXPERIMENT_FK, LEVEL)
 );

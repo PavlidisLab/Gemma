@@ -24,6 +24,7 @@ import org.hibernate.proxy.HibernateProxyHelper;
 import gemma.gsec.model.SecuredNotChild;
 import ubic.gemma.model.common.auditAndSecurity.curation.Curatable;
 import ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails;
+import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.MeanVarianceRelation;
@@ -77,6 +78,8 @@ public class ExpressionExperiment extends BioAssaySet implements SecuredNotChild
     private String shortName;
 
     private String source;
+
+    private Set<Characteristic> allCharacteristics;
 
     @Override
     public ExpressionExperimentValueObject createValueObject() {
@@ -172,6 +175,15 @@ public class ExpressionExperiment extends BioAssaySet implements SecuredNotChild
         return this.source;
     }
 
+    /**
+     * Obtain all characteristics associated to this EE.
+     * <p>
+     * This relationship is not managed by this entity, so you should only query it.
+     */
+    public Set<Characteristic> getAllCharacteristics() {
+        return allCharacteristics;
+    }
+
     @Override
     public int hashCode() {
         int result = 1;
@@ -247,6 +259,11 @@ public class ExpressionExperiment extends BioAssaySet implements SecuredNotChild
 
     public void setSource( String source ) {
         this.source = source;
+    }
+
+
+    public void setAllCharacteristics( Set<Characteristic> allCharacteristics ) {
+        this.allCharacteristics = allCharacteristics;
     }
 
     /**
