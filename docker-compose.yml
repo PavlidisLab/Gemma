@@ -1,0 +1,11 @@
+version: "3.1"
+services:
+  testdb:
+    image: mysql:5.7
+    environment:
+      - MYSQL_RANDOM_ROOT_PASSWORD=yes
+      - MYSQL_DATABASE=gemdtest
+      - MYSQL_USER=gemmatest
+      - MYSQL_PASSWORD=1234
+    ports:
+      - "3307:3306"
