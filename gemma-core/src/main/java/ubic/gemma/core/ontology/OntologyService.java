@@ -28,6 +28,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 
+import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -155,6 +156,7 @@ public interface OntologyService {
      * @param  uri uri
      * @return     the OntologyTerm for the specified URI.
      */
+    @Nullable
     OntologyTerm getTerm( String uri );
 
     /**

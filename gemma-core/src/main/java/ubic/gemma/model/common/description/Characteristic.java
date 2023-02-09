@@ -34,6 +34,10 @@ import java.util.Objects;
 /**
  * Instances of this are used to describe other entities. This base class is just a characteristic that is simply a
  * 'tag' of free text.
+ * <p>
+ * Characteristics can have an associated URI from an ontology from {@link #getCategoryUri()} and {@link #getValueUri()},
+ * but not necessarily since there might not be an adequate term to represent the conveyed concept. These properties are
+ * marked with {@link Nullable} and should always be handled with care.
  *
  * @author Paul
  */

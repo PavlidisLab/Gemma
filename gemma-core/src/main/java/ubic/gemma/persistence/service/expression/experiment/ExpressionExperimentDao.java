@@ -1,5 +1,6 @@
 package ubic.gemma.persistence.service.expression.experiment;
 
+import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.description.AnnotationValueObject;
 import ubic.gemma.model.common.description.Characteristic;
@@ -21,7 +22,10 @@ import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.persistence.util.Sort;
 
 import javax.annotation.Nullable;
-import java.util.*;
+import java.util.Collection;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Created by tesarst on 13/03/17.
@@ -175,12 +179,27 @@ public interface ExpressionExperimentDao
     Collection<? extends AnnotationValueObject> getAnnotationsByFactorvalues( Long eeId );
 
     /**
+     * Obtain all annotations, grouped by applicable level.
+     */
+    Map<Class<? extends Identifiable>, List<Characteristic>> getAllAnnotations( ExpressionExperiment expressionExperiment );
+
+    /**
+     * Obtain sample-level annotations.
+     */
+    List<Characteristic> getBioMaterialAnnotations( ExpressionExperiment expressionExperiment );
+
+    /**
+     * Obtain experimental design-level annotations.
+     */
+    List<Characteristic> getExperimentalDesignAnnotations( ExpressionExperiment expressionExperiment );
+
+    /**
      * Obtain annotations usage frequency for a set of given {@link ExpressionExperiment} IDs.
      * <p>
      * This is meant as a counterpart to {@link ubic.gemma.persistence.service.common.description.CharacteristicService#findExperimentsByUris(Collection, Taxon, int)}
-     * to answer the reverse question: which annotations can be used to.
+     * to answer the reverse question: which annotations can be used to filter a given set of datasets?
      */
-    Map<Characteristic, Long> getAnnotationsFrequency( @Nullable Collection<Long> expressionExperimentIds, int maxResults );
+    Map<Characteristic, Long> getAnnotationsUsageFrequency( @Nullable Collection<Long> expressionExperimentIds, @Nullable Class<? extends Identifiable> level, int maxResults );
 
     Collection<ExpressionExperiment> getExperimentsLackingPublications();
 }

@@ -588,17 +588,49 @@ public class ExpressionExperimentDaoImpl
 
     }
 
-    /**
-     * Maximum number of results to be considered for caching in {@link #getAnnotationsFrequency(Collection, int)}.
-     */
-    public static final int MAX_RESULT_FOR_CACHING_ANNOTATIONS_FREQUENCY = 50;
+    @Override
+    public Map<Class<? extends Identifiable>, List<Characteristic>> getAllAnnotations( ExpressionExperiment expressionExperiment ) {
+        //noinspection unchecked
+        List<Object[]> result = ( ( List<Object[]> ) getSessionFactory().getCurrentSession().createSQLQuery(
+                        "select {T.*}, {T}.LEVEL as LEVEL from gemd.EXPRESSION_EXPERIMENT2CHARACTERISTIC {T} "
+                                + "where T.EXPRESSION_EXPERIMENT_FK = :eeId" )
+                .addEntity( "T", Characteristic.class )
+                .addScalar( "LEVEL" )
+                .setParameter( "eeId", expressionExperiment.getId() )
+                .list() );
+        //noinspection unchecked
+        return result.stream()
+                .collect( Collectors.groupingBy( row -> ( Class<? extends Identifiable> ) row[1],
+                        Collectors.mapping( row -> ( Characteristic ) row[0], Collectors.toList() ) ) );
+    }
+
+    @Override
+    public List<Characteristic> getBioMaterialAnnotations( ExpressionExperiment expressionExperiment ) {
+        return getAnnotationsByLevel( expressionExperiment, BioMaterial.class );
+    }
+
+    @Override
+    public List<Characteristic> getExperimentalDesignAnnotations( ExpressionExperiment expressionExperiment ) {
+        return getAnnotationsByLevel( expressionExperiment, ExperimentalDesign.class );
+    }
+
+    private List<Characteristic> getAnnotationsByLevel( ExpressionExperiment expressionExperiment, Class<? extends Identifiable> level ) {
+        //noinspection unchecked
+        return getSessionFactory().getCurrentSession().createSQLQuery(
+                        "select {T.*} from gemd.EXPRESSION_EXPERIMENT2CHARACTERISTIC {T} "
+                                + "where {T}.LEVEL = :level and T.EXPRESSION_EXPERIMENT_FK = :eeId" )
+                .addEntity( "T", Characteristic.class )
+                .setParameter( "level", level )
+                .setParameter( "eeId", expressionExperiment.getId() )
+                .list();
+    }
 
     /**
      * We're making two assumptions: a dataset cannot have a characteristic more than once and a dataset cannot have
      * the same characteristic at multiple levels to make counting more efficient.
      */
     @Override
-    public Map<Characteristic, Long> getAnnotationsFrequency( @Nullable Collection<Long> eeIds, int maxResults ) {
+    public Map<Characteristic, Long> getAnnotationsUsageFrequency( @Nullable Collection<Long> eeIds, @Nullable Class<? extends Identifiable> level, int maxResults ) {
         if ( eeIds != null && eeIds.isEmpty() ) {
             return Collections.emptyMap();
         }
@@ -607,21 +639,25 @@ public class ExpressionExperimentDaoImpl
                                 + AclQueryUtils.formNativeAclJoinClause( "{T}.EXPRESSION_EXPERIMENT_FK" ) + " "
                                 + "where {T}.ID is not null " // this is necessary for the clause building since there might be no clause
                                 + ( eeIds != null ? " and T.EXPRESSION_EXPERIMENT_FK in :eeIds " : "" )
+                                + ( level != null ? " and T.LEVEL = :level " : "" )
                                 + AclQueryUtils.formNativeAclRestrictionClause() + " "
                                 + "group by COALESCE({T}.CATEGORY_URI, {T}.CATEGORY), COALESCE({T}.VALUE_URI, {T}.VALUE_URI) "
                                 + "order by EE_COUNT desc" )
                 .addEntity( "T", Characteristic.class )
                 .addScalar( "EE_COUNT", new LongType() )
-                .setCacheable( maxResults > 0 && maxResults <= MAX_RESULT_FOR_CACHING_ANNOTATIONS_FREQUENCY )
-                .setMaxResults( maxResults > 0 && maxResults <= MAX_RESULT_FOR_CACHING_ANNOTATIONS_FREQUENCY ? MAX_RESULT_FOR_CACHING_ANNOTATIONS_FREQUENCY : maxResults );
+                .setCacheable( true )
+                .setMaxResults( maxResults );
         if ( eeIds != null ) {
             q.setParameterList( "eeIds", new HashSet<>( eeIds ) );
+        }
+        if ( level != null ) {
+            q.setParameter( "level", level );
         }
         AclQueryUtils.addAclParameters( q, ExpressionExperiment.class );
         //noinspection unchecked
         List<Object[]> result = q.list();
         return result.stream()
-                .limit( maxResults )
+                .limit( maxResults > 0 ? maxResults : Long.MAX_VALUE )
                 .collect( Collectors.toMap( row -> ( Characteristic ) row[0], row -> ( Long ) row[1] ) );
     }
 

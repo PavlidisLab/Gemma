@@ -142,8 +142,8 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
     public void testGetDatasetsPlatformsUsageStatistics() {
         when( expressionExperimentService.getFilter( "id", Filter.Operator.lessThan, "10" ) )
                 .thenReturn( Filter.by( "ee", "id", Long.class, Filter.Operator.lessThan, 10L, "id" ) );
-        when( expressionExperimentService.getAnnotationsFrequency( Filters.empty(), 50 ) )
-                .thenReturn( Collections.emptyMap() );
+        when( expressionExperimentService.getAnnotationsUsageFrequencyPreFilter( Filters.empty(), 50 ) )
+                .thenReturn( Collections.emptyList() );
         assertThat( target( "/datasets/platforms" ).queryParam( "filter", "id < 10" ).request().get() )
                 .hasFieldOrPropertyWithValue( "status", 200 );
         verify( expressionExperimentService ).getFilter( "id", Filter.Operator.lessThan, "10" );
