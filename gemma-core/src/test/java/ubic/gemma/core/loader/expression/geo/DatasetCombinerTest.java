@@ -27,6 +27,7 @@ import ubic.gemma.core.loader.expression.geo.model.GeoDataset;
 import ubic.gemma.core.loader.expression.geo.model.GeoSeries;
 import ubic.gemma.core.util.test.category.SlowTest;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collection;
 import java.util.HashSet;
@@ -36,6 +37,7 @@ import java.util.zip.GZIPInputStream;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assume.assumeNoException;
 
 /**
  * @author pavlidis
@@ -53,15 +55,11 @@ public class DatasetCombinerTest {
             assertEquals( 2, result.size() );
             assertTrue( result.contains( "GDS472" ) && result.contains( "GDS473" ) );
         } catch ( RuntimeException e ) {
-            if ( e.getCause() instanceof java.net.UnknownHostException ) {
-                DatasetCombinerTest.log.warn( "Test skipped due to unknown host exception" );
-                return;
-            } else if ( e.getCause() instanceof java.io.IOException && e.getCause().getMessage().contains( "503" ) ) {
-                DatasetCombinerTest.log.warn( "Test skipped due to 503 from NCBI" );
-                DatasetCombinerTest.log.error( e, e );
-                return;
+            if ( e.getCause() instanceof IOException ) {
+                assumeNoException( "Test skipped due to an I/O error from NCBI.", e.getCause() );
+            } else {
+                throw e;
             }
-            throw e;
         }
     }
 
@@ -110,8 +108,16 @@ public class DatasetCombinerTest {
 
     @Test
     public void testFindGSE267() {
-        Collection<String> result = DatasetCombiner.findGDSforGSE( "GSE267" );
-        assertEquals( 0, result.size() );
+        try {
+            Collection<String> result = DatasetCombiner.findGDSforGSE( "GSE267" );
+            assertEquals( 0, result.size() );
+        } catch ( RuntimeException e ) {
+            if ( e.getCause() instanceof IOException ) {
+                assumeNoException( "Test skipped due to an I/O error from NCBI.", e.getCause() );
+            } else {
+                throw e;
+            }
+        }
     }
 
     /*
