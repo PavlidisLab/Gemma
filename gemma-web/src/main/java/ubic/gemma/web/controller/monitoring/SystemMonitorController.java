@@ -22,7 +22,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
-import ubic.gemma.persistence.util.monitor.HibernateMonitor;
+import ubic.gemma.web.util.HibernateMonitor;
 import ubic.gemma.web.util.CacheMonitor;
 
 import javax.servlet.ServletContext;

@@ -16,7 +16,7 @@
  * limitations under the License.
  *
  */
-package ubic.gemma.persistence.util.monitor;
+package ubic.gemma.web.util;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
