@@ -254,7 +254,15 @@ public interface ExpressionExperimentService
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     Collection<ArrayDesign> getArrayDesignsUsed( BioAssaySet expressionExperiment );
 
-    Map<ArrayDesign, Long> getArrayDesignFrequencyPreFilter( @Nullable Filters filters, int maxResults );
+    /**
+     * Calculate the usage frequency of platforms by the datasets matching the provided filters.
+     *
+     * @param filters                  a set of filters to be applied as per {@link #loadPreFilter(Filters, Sort, int, int)}
+     * @param includeOriginalPlatforms if true, original platforms as per {@link BioAssay#getOriginalPlatform()} are
+     *                                 also included.
+     * @param maxResults               the maximum of results, or unlimited if less than 1
+     */
+    Map<ArrayDesign, Long> getArrayDesignUsedOrOriginalPlatformUsageFrequencyPreFilter( @Nullable Filters filters, boolean includeOriginalPlatforms, int maxResults );
 
     /**
      * Checks the experiment for a batch confound.

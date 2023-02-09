@@ -25,6 +25,7 @@ import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Sort;
 import ubic.gemma.rest.util.MalformedArgException;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -113,6 +114,11 @@ import java.util.stream.Collectors;
         externalDocs = @ExternalDocumentation(url = "https://gemma.msl.ubc.ca/resources/apidocs/ubic/gemma/web/services/rest/util/args/FilterArg.html"))
 public class FilterArg<O extends Identifiable> extends AbstractArg<FilterArg.Filter> {
 
+    /**
+     * Maximum number of clauses that can appear in a filter expression.
+     */
+    public static final int MAX_CLAUSES = 50;
+
     private FilterArg( FilterArgParser.FilterContext filterContext ) {
         super( new Filter( filterContext ) );
     }
@@ -130,8 +136,15 @@ public class FilterArg<O extends Identifiable> extends AbstractArg<FilterArg.Fil
      */
     public Filters getFilters( FilteringService<O> service ) throws MalformedArgException {
         Filter filter = getValue();
-        Filters filterList = Filters.empty();
 
+        int numClauses = filter.filterContext.clause().stream()
+                .map( FilterArgParser.ClauseContext::subClause )
+                .mapToInt( Collection::size ).sum();
+        if ( numClauses > MAX_CLAUSES ) {
+            throw new MalformedArgException( String.format( "The number of clauses cannot exceed %d.", MAX_CLAUSES ) );
+        }
+
+        Filters filterList = Filters.empty();
         for ( FilterArgParser.ClauseContext clause : filter.filterContext.clause() ) {
             Filters.FiltersClauseBuilder disjunction = filterList.and();
             for ( FilterArgParser.SubClauseContext subClause : clause.subClause() ) {

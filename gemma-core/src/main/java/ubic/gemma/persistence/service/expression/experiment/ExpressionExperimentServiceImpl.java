@@ -518,8 +518,15 @@ public class ExpressionExperimentServiceImpl
 
     @Override
     @Transactional(readOnly = true)
-    public Map<ArrayDesign, Long> getArrayDesignFrequencyPreFilter( @Nullable Filters filters, int maxResults ) {
-        return expressionExperimentDao.getArrayDesignsUsageFrequency( this.expressionExperimentDao.loadIdsPreFilter( filters, null ) );
+    public Map<ArrayDesign, Long> getArrayDesignUsedOrOriginalPlatformUsageFrequencyPreFilter( @Nullable Filters filters, boolean includeOriginalPlatforms, int maxResults ) {
+        List<Long> ids = this.expressionExperimentDao.loadIdsPreFilter( filters, null );
+        Map<ArrayDesign, Long> result = new HashMap<>( expressionExperimentDao.getArrayDesignsUsageFrequency( ids ) );
+        if ( includeOriginalPlatforms ) {
+            for ( Map.Entry<ArrayDesign, Long> e : expressionExperimentDao.getOriginalPlatformsUsageFrequency( ids ).entrySet() ) {
+                result.compute( e.getKey(), ( k, v ) -> ( v != null ? v : 0L ) + e.getValue() );
+            }
+        }
+        return result;
     }
 
     @Override

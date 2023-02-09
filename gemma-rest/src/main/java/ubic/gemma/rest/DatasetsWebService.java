@@ -146,12 +146,12 @@ public class DatasetsWebService {
     @GET
     @Path("/platforms")
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Retrieve usage statistics of annotations among datasets matching the provided filter",
+    @Operation(summary = "Retrieve usage statistics of platforms among datasets matching the provided filter",
             description = "Usage statistics are aggregated across experiment tags, samples and factor values mentioned in the experimental design.")
     public LimitedResponseDataObject<ArrayDesignWithUsageStatisticsValueObject> getDatasetsPlatformsUsageStatistics( @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filter, @QueryParam("limit") @DefaultValue("50") LimitArg limit ) {
         Filters filters = filter.getFilters( expressionExperimentService );
         Integer l = limit.getValue( 50 );
-        List<ArrayDesignWithUsageStatisticsValueObject> results = expressionExperimentService.getArrayDesignFrequencyPreFilter( filters, limit.getValue( 50 ) )
+        List<ArrayDesignWithUsageStatisticsValueObject> results = expressionExperimentService.getArrayDesignUsedOrOriginalPlatformUsageFrequencyPreFilter( filters, true, limit.getValue( 50 ) )
                 .entrySet()
                 .stream().map( e -> new ArrayDesignWithUsageStatisticsValueObject( e.getKey(), e.getValue() ) )
                 .sorted( Comparator.comparing( UsageStatistics::getNumberOfExpressionExperiments, Comparator.reverseOrder() ) )

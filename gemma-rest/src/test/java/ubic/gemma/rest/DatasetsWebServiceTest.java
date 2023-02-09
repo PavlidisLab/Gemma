@@ -5,12 +5,10 @@ import io.swagger.v3.core.util.Json;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import ubic.gemma.core.analysis.preprocess.OutlierDetectionService;
 import ubic.gemma.core.analysis.preprocess.svd.SVDService;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
@@ -136,7 +134,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
                 .thenReturn( Collections.emptyMap() );
         assertThat( target( "/datasets/platforms" ).queryParam( "filter", "ee.id < 10" ).request().get() )
                 .hasFieldOrPropertyWithValue( "status", 200 );
-        verify( expressionExperimentService ).getArrayDesignFrequencyPreFilter( Filters.empty(), 50 );
+        verify( expressionExperimentService ).getArrayDesignUsedOrOriginalPlatformUsageFrequencyPreFilter( Filters.empty(), true, 50 );
     }
 
     @Test

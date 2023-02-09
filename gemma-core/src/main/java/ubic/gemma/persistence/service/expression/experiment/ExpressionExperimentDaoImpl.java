@@ -611,7 +611,7 @@ public class ExpressionExperimentDaoImpl
                 .addEntity( "T", Characteristic.class )
                 .addScalar( "EE_COUNT", new LongType() )
                 .setCacheable( maxResults > 0 && maxResults <= MAX_RESULT_FOR_CACHING_ANNOTATIONS_FREQUENCY )
-                .setMaxResults( maxResults > 0 && maxResults < MAX_RESULT_FOR_CACHING_ANNOTATIONS_FREQUENCY ? MAX_RESULT_FOR_CACHING_ANNOTATIONS_FREQUENCY : maxResults );
+                .setMaxResults( maxResults > 0 && maxResults <= MAX_RESULT_FOR_CACHING_ANNOTATIONS_FREQUENCY ? MAX_RESULT_FOR_CACHING_ANNOTATIONS_FREQUENCY : maxResults );
         if ( eeIds != null ) {
             q.setParameterList( "eeIds", new HashSet<>( eeIds ) );
         }
@@ -652,9 +652,25 @@ public class ExpressionExperimentDaoImpl
 
     @Override
     public Map<ArrayDesign, Long> getArrayDesignsUsageFrequency( Collection<Long> eeIds ) {
+        if ( eeIds.isEmpty() ) {
+            return Collections.emptyMap();
+        }
         //noinspection unchecked
         List<Object[]> result = getSessionFactory().getCurrentSession()
                 .createQuery( "select a, count(distinct ee) from ExpressionExperiment ee join ee.bioAssays ba join ba.arrayDesignUsed a where ee.id in (:ids) group by a" )
+                .setParameterList( "ids", eeIds )
+                .list();
+        return result.stream().collect( groupingBy( row -> ( ArrayDesign ) row[0], summingLong( row -> ( Long ) row[1] ) ) );
+    }
+
+    @Override
+    public Map<ArrayDesign, Long> getOriginalPlatformsUsageFrequency( Collection<Long> eeIds ) {
+        if ( eeIds.isEmpty() ) {
+            return Collections.emptyMap();
+        }
+        //noinspection unchecked
+        List<Object[]> result = getSessionFactory().getCurrentSession()
+                .createQuery( "select a, count(distinct ee) from ExpressionExperiment ee join ee.bioAssays ba join ba.originalPlatform a where ee.id in (:ids) group by a" )
                 .setParameterList( "ids", eeIds )
                 .list();
         return result.stream().collect( groupingBy( row -> ( ArrayDesign ) row[0], summingLong( row -> ( Long ) row[1] ) ) );

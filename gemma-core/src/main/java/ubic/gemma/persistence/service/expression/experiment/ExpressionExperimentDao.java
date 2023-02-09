@@ -81,6 +81,8 @@ public interface ExpressionExperimentDao
 
     Map<ArrayDesign, Long> getArrayDesignsUsageFrequency( Collection<Long> eeIds );
 
+    Map<ArrayDesign, Long> getOriginalPlatformsUsageFrequency( Collection<Long> eeIds );
+
     Map<Long, Collection<AuditEvent>> getAuditEvents( Collection<Long> ids );
 
     Integer getBioAssayCountById( long Id );
