@@ -8,6 +8,7 @@ import org.compass.core.*;
 import org.compass.core.config.CompassSettings;
 import org.compass.core.spi.InternalCompassSession;
 import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -95,14 +96,15 @@ public class CompassSearchSourceTest extends AbstractJUnit4SpringContextTests {
     CompassQueryBuilder mockedQueryBuilder;
     CompassQuery compassQuery;
 
-    private void setupCompassMocks( Compass compass ) {
+    @Before
+    public void setupCompassMocks() {
         mockedSettings = mock( CompassSettings.class );
         mockedSession = mock( InternalCompassSession.class );
         mockedQueryBuilder = mock( CompassQueryBuilder.class, RETURNS_SELF );
         compassQuery = mock( CompassQuery.class );
         CompassQueryBuilder.CompassQueryStringBuilder qs = mock( CompassQueryBuilder.CompassQueryStringBuilder.class, RETURNS_SELF );
-        when( compass.openSession() ).thenReturn( mockedSession );
-        when( compass.getSettings() ).thenReturn( mockedSettings );
+        when( compassGene.openSession() ).thenReturn( mockedSession );
+        when( compassGene.getSettings() ).thenReturn( mockedSettings );
         when( mockedSession.getSettings() ).thenReturn( mockedSettings );
         when( mockedSession.beginTransaction() ).thenReturn( mock( CompassTransaction.class ) );
         when( mockedSession.queryBuilder() ).thenReturn( mockedQueryBuilder );
@@ -118,7 +120,6 @@ public class CompassSearchSourceTest extends AbstractJUnit4SpringContextTests {
 
     @Test
     public void test() throws SearchException {
-        setupCompassMocks( compassGene );
         searchSource.searchGene( SearchSettings.geneSearch( "BRCA1", null ) );
         verify( compassGene ).openSession();
         verify( mockedSession ).beginTransaction();
@@ -127,7 +128,6 @@ public class CompassSearchSourceTest extends AbstractJUnit4SpringContextTests {
 
     @Test
     public void test_quotedTerm() throws SearchException {
-        setupCompassMocks( compassGene );
         searchSource.searchGene( SearchSettings.geneSearch( "\"collections of materials\"", null ) );
         verify( compassGene ).openSession();
         verify( mockedSession ).beginTransaction();
@@ -136,7 +136,6 @@ public class CompassSearchSourceTest extends AbstractJUnit4SpringContextTests {
 
     @Test
     public void test_multipleQuotedTerms() throws SearchException {
-        setupCompassMocks( compassGene );
         searchSource.searchGene( SearchSettings.geneSearch( "\"collections of materials\" \"lung cancer\"", null ) );
         verify( compassGene ).openSession();
         verify( mockedSession ).beginTransaction();
@@ -145,7 +144,6 @@ public class CompassSearchSourceTest extends AbstractJUnit4SpringContextTests {
 
     @Test
     public void test_multipleQuotedTermsWithOr() throws SearchException {
-        setupCompassMocks( compassGene );
         searchSource.searchGene( SearchSettings.geneSearch( "\"collections of materials\" OR \"lung cancer\"", null ) );
         verify( compassGene ).openSession();
         verify( mockedSession ).beginTransaction();
@@ -154,21 +152,18 @@ public class CompassSearchSourceTest extends AbstractJUnit4SpringContextTests {
 
     @Test
     public void test_whenQueryIsEmpty_thenReturnNothing() throws SearchException {
-        setupCompassMocks( compassGene );
         searchSource.searchGene( SearchSettings.geneSearch( "", null ) );
         verifyNoInteractions( mockedQueryBuilder );
     }
 
     @Test
     public void test_whenQueryOnlyContainsAWildCard_thenReturnNothing() throws SearchException {
-        setupCompassMocks( compassGene );
         searchSource.searchGene( SearchSettings.geneSearch( "*", null ) );
         verifyNoInteractions( mockedQueryBuilder );
     }
 
     @Test
     public void test_whenQueryOnlyContainsNonWordCharacters_thenReturnNothing() throws SearchException {
-        setupCompassMocks( compassGene );
         searchSource.searchGene( SearchSettings.geneSearch( "\"*\" * \"*\"", null ) );
         verifyNoInteractions( mockedQueryBuilder );
     }
