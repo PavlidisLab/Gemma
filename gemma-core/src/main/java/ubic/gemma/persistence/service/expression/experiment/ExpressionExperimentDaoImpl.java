@@ -25,6 +25,7 @@ import org.apache.commons.lang3.NotImplementedException;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.hibernate.*;
+import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.type.LongType;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -871,8 +872,12 @@ public class ExpressionExperimentDaoImpl
     public Optional<QuantitationType> getPreferredQuantitationTypeForDataVectorType( ExpressionExperiment ee, Class<? extends DesignElementDataVector> vectorType ) {
         //noinspection unchecked
         List<QuantitationType> quantitationTypes = this.getSessionFactory().getCurrentSession()
-                .createQuery( "select distinct v.quantitationType from " + vectorType.getName() + " v where v.quantitationType.isPreferred = true and v.expressionExperiment = :ee" )
-                .setParameter( "ee", ee )
+                .createCriteria( vectorType )
+                .createAlias( "quantitationType", "qt" )
+                .add( Restrictions.and(
+                        Restrictions.eq( ProcessedExpressionDataVector.class.isAssignableFrom( vectorType ) ? "qt.isMaskedPreferred" : "qt.isPreferred", true ),
+                        Restrictions.eq( "expressionExperiment", ee ) ) )
+                .setProjection( Projections.distinct( Projections.property( "quantitationType" ) ) )
                 .list();
         if ( quantitationTypes.size() > 1 ) {
             log.warn( String.format( "There are more than one preferred %s for %s, the most recent one according to its numerical ID will be selected.", vectorType.getSimpleName(), ee ) );
