@@ -32,7 +32,6 @@ import ubic.gemma.web.services.rest.util.BaseJerseyTest;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.util.Collections;
-import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
@@ -143,7 +142,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
     public void testGetDatasetProcessedExpression() {
         QuantitationType qt = QuantitationType.Factory.newInstance();
         when( expressionExperimentService.getPreferredQuantitationTypeForDataVectorType( ee, ProcessedExpressionDataVector.class ) )
-                .thenReturn( Optional.of( qt ) );
+                .thenReturn( qt );
         assertThat( target( "/datasets/1/data/processed" ).request().get() ).hasFieldOrPropertyWithValue( "status", 200 );
         verify( expressionExperimentService ).getPreferredQuantitationTypeForDataVectorType( ee, ProcessedExpressionDataVector.class );
     }
@@ -164,7 +163,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
     public void testGetDatasetRawExpression() throws IOException {
         QuantitationType qt = QuantitationType.Factory.newInstance();
         when( expressionExperimentService.getPreferredQuantitationTypeForDataVectorType( ee, RawExpressionDataVector.class ) )
-                .thenReturn( Optional.of( qt ) );
+                .thenReturn( qt );
         assertThat( target( "/datasets/1/data/raw" ).request().get() ).hasFieldOrPropertyWithValue( "status", 200 );
         verify( expressionExperimentService ).getPreferredQuantitationTypeForDataVectorType( ee, RawExpressionDataVector.class );
         verifyNoInteractions( quantitationTypeService );

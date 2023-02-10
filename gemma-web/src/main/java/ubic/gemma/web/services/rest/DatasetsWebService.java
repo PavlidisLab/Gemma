@@ -368,8 +368,10 @@ public class DatasetsWebService {
         if ( quantitationTypeArg != null ) {
             qt = quantitationTypeArg.getEntityForExpressionExperimentAndDataVectorType( ee, ProcessedExpressionDataVector.class, quantitationTypeService );
         } else {
-            qt = expressionExperimentService.getPreferredQuantitationTypeForDataVectorType( ee, ProcessedExpressionDataVector.class )
-                    .orElseThrow( () -> new NotFoundException( String.format( "No preferred quantitation type could be for found processed expression data data of %s.", ee ) ) );
+            qt = expressionExperimentService.getPreferredQuantitationTypeForDataVectorType( ee, ProcessedExpressionDataVector.class );
+            if ( qt == null ) {
+                throw new NotFoundException( String.format( "No preferred quantitation type could be for found processed expression data data of %s.", ee ) );
+            }
         }
         StreamingOutput stream = ( output ) -> expressionDataFileService.writeProcessedExpressionData( ee, qt, new OutputStreamWriter( output ) );
         return Response.ok( stream )
@@ -399,8 +401,10 @@ public class DatasetsWebService {
         if ( quantitationTypeArg != null ) {
             qt = quantitationTypeArg.getEntityForExpressionExperimentAndDataVectorType( ee, RawExpressionDataVector.class, quantitationTypeService );
         } else {
-            qt = expressionExperimentService.getPreferredQuantitationTypeForDataVectorType( ee, RawExpressionDataVector.class )
-                    .orElseThrow( () -> new NotFoundException( String.format( "No preferred quantitation type could be found for raw expression data data of %s.", ee ) ) );
+            qt = expressionExperimentService.getPreferredQuantitationTypeForDataVectorType( ee, RawExpressionDataVector.class );
+            if ( qt == null ) {
+                throw new NotFoundException( String.format( "No preferred quantitation type could be found for raw expression data data of %s.", ee ) );
+            }
         }
         StreamingOutput stream = ( output ) -> expressionDataFileService.writeRawExpressionData( ee, qt, new OutputStreamWriter( output ) );
         return Response.ok( stream )

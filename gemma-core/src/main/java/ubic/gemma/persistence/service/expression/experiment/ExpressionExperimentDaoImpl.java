@@ -735,22 +735,6 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
-    public QuantitationType getMaskedPreferredQuantitationType( ExpressionExperiment ee ) {
-        String queryString = "select q from ExpressionExperiment e inner join e.quantitationTypes q where e = :ee and q.isMaskedPreferred = true";
-        List k = this.getSessionFactory().getCurrentSession().createQuery( queryString ).setParameter( "ee", ee )
-                .list();
-
-        if ( k.size() == 1 ) {
-            return ( QuantitationType ) k.iterator().next();
-        } else if ( k.size() > 1 ) {
-            throw new IllegalStateException(
-                    "There should only be one masked preferred quantitationType per expressionExperiment (" + ee
-                            + ")" );
-        }
-        return null;
-    }
-
-    @Override
     public Map<Taxon, Long> getPerTaxonCount() {
         String queryString = "select t, count(distinct ee) from ExpressionExperiment ee "
                 + "join ee.bioAssays as ba "
@@ -869,21 +853,16 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
-    public Optional<QuantitationType> getPreferredQuantitationTypeForDataVectorType( ExpressionExperiment ee, Class<? extends DesignElementDataVector> vectorType ) {
-        //noinspection unchecked
-        List<QuantitationType> quantitationTypes = this.getSessionFactory().getCurrentSession()
+    public QuantitationType getPreferredQuantitationTypeForDataVectorType( ExpressionExperiment ee, Class<? extends DesignElementDataVector> vectorType ) {
+        QuantitationType quantitationType = ( QuantitationType ) this.getSessionFactory().getCurrentSession()
                 .createCriteria( vectorType )
                 .createAlias( "quantitationType", "qt" )
                 .add( Restrictions.and(
                         Restrictions.eq( ProcessedExpressionDataVector.class.isAssignableFrom( vectorType ) ? "qt.isMaskedPreferred" : "qt.isPreferred", true ),
                         Restrictions.eq( "expressionExperiment", ee ) ) )
                 .setProjection( Projections.distinct( Projections.property( "quantitationType" ) ) )
-                .list();
-        if ( quantitationTypes.size() > 1 ) {
-            log.warn( String.format( "There are more than one preferred %s for %s, the most recent one according to its numerical ID will be selected.", vectorType.getSimpleName(), ee ) );
-        }
-        return quantitationTypes.stream().sorted()
-                .max( Comparator.comparing( QuantitationType::getId ) );
+                .uniqueResult();
+        return quantitationType;
     }
 
     @Override
