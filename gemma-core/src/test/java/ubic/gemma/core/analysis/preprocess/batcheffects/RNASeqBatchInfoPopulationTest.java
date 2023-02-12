@@ -119,7 +119,6 @@ public class RNASeqBatchInfoPopulationTest extends AbstractGeoServiceTest {
 
         ees = eeService.findByAccession( "GSE71229" );
         ee = ees.iterator().next();
-        ee = eeService.thawLite( ee );
 
         batchInfoPopulationService.fillBatchInformation( ee, true );
 
@@ -156,7 +155,6 @@ public class RNASeqBatchInfoPopulationTest extends AbstractGeoServiceTest {
         } catch ( AlreadyExistsInSystemException e ) {
             log.warn( "Test skipped because GSE142485 was not removed from the system prior to test" );
         }
-        ee = eeService.thawLite( ee );
         batchInfoPopulationService.fillBatchInformation( ee, false );
         ee = eeService.thawLite( ee );
         Collection<ExperimentalFactor> experimentalFactors = ee.getExperimentalDesign().getExperimentalFactors();
@@ -182,15 +180,13 @@ public class RNASeqBatchInfoPopulationTest extends AbstractGeoServiceTest {
             log.warn( "Test skipped because GSE156689 was not removed from the system prior to test" );
         }
 
-        ee = eeService.thawLite( ee );
-
         batchInfoPopulationService.fillBatchInformation( ee, false );
 
         ee = eeService.thawLite( ee );
         Collection<ExperimentalFactor> experimentalFactors = ee.getExperimentalDesign().getExperimentalFactors();
         assertTrue( experimentalFactors.isEmpty() );
         assertTrue( auditService.hasEvent( ee, FailedBatchInformationFetchingEvent.class ) );
-        assertTrue( !this.eeService.checkHasBatchInfo( ee ) );
+        assertFalse( this.eeService.checkHasBatchInfo( ee ) );
 
     }
 

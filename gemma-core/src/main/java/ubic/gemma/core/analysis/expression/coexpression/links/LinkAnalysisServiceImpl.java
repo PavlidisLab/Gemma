@@ -539,7 +539,7 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
         }
         wr.write( la.getConfig().toString() );
         wr.write( filterConfig.toString() );
-        NumberFormat nf = NumberFormat.getInstance();
+        NumberFormat nf = NumberFormat.getInstance( Locale.ENGLISH );
         nf.setMaximumFractionDigits( 4 );
 
         Integer probeDegreeThreshold = la.getConfig().getProbeDegreeThreshold();

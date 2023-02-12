@@ -142,29 +142,6 @@ public class Gene2GOAssociationDaoImpl extends AbstractDao<Gene2GOAssociation> i
                 .setParameterList( "goIDs", ids ).setParameter( "tax", taxon ).list();
     }
 
-    @Override
-    public void removeAll() {
-
-        int total = 0;
-        Session session = this.getSessionFactory().getCurrentSession();
-
-        while ( true ) {
-            Query q = session.createQuery( "from Gene2GOAssociation" );
-            q.setMaxResults( 10000 );
-            //noinspection unchecked
-            List<Gene2GOAssociation> list = q.list();
-            if ( list.isEmpty() )
-                break;
-
-            total += list.size();
-
-            remove( list );
-            AbstractDao.log.info( "Deleted " + total + " so far..." );
-        }
-
-        AbstractDao.log.info( "Deleted: " + total );
-    }
-
     private Map<? extends Gene, ? extends Collection<Characteristic>> fetchBatch( Set<Gene> batch ) {
         Map<Long, Gene> giMap = EntityUtils.getIdMap( batch );
         //language=HQL

@@ -85,12 +85,19 @@ public class ExternalDatabaseServiceTest extends BaseSpringContextTest {
                 .isEqualTo( lastUpdated.getTime() );
     }
 
+    /**
+     * This test applies to fixtures found in init-entities.sql.
+     */
     @Test
     public void testExternalDatabaseWithRelatedDatabases() {
         ExternalDatabase hg19 = externalDatabaseService.findByName( "hg19" );
         assertThat( hg19.getExternalDatabases() )
+                .hasSize( 1 )
+                .extracting( "name" ).contains( "hg19 annotations" );
+        ExternalDatabase hg38 = externalDatabaseService.findByName( "hg38" );
+        assertThat( hg38.getExternalDatabases() )
                 .hasSize( 2 )
-                .extracting( "name" ).contains( "hg19 annotations", "hg19 RNA-Seq annotations" );
+                .extracting( "name" ).contains( "hg38 annotations", "hg38 RNA-Seq annotations" );
     }
 
     @Test

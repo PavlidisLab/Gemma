@@ -94,8 +94,6 @@ public interface ExpressionExperimentDao
 
     Date getLastArrayDesignUpdate( ExpressionExperiment ee );
 
-    QuantitationType getMaskedPreferredQuantitationType( ExpressionExperiment ee );
-
     Map<Taxon, Long> getPerTaxonCount();
 
     Map<Long, Integer> getPopulatedFactorCounts( Collection<Long> ids );
@@ -115,9 +113,9 @@ public interface ExpressionExperimentDao
      * If more than one preferred QT exists, a warning is emitted and the latest one according to their {@link DesignElementDataVector#getId()}
      * is returned.
      *
-     * @return the data vector, or {@link Optional#empty()} if no preferred vector type can be found
+     * @return the data vector, or null if no preferred vector type can be found
      */
-    Optional<QuantitationType> getPreferredQuantitationTypeForDataVectorType( ExpressionExperiment ee, Class<? extends DesignElementDataVector> vectorType );
+    QuantitationType getPreferredQuantitationTypeForDataVectorType( ExpressionExperiment ee, Class<? extends DesignElementDataVector> vectorType );
 
     Map<ExpressionExperiment, Collection<AuditEvent>> getSampleRemovalEvents(
             Collection<ExpressionExperiment> expressionExperiments );

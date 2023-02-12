@@ -125,7 +125,7 @@ public class BatchInfoParser {
 
             ArrayDesign arrayDesignUsed = ba.getArrayDesignUsed();
 
-            try (InputStream is = FileTools.getInputStreamFromPlainOrCompressedFile( f.getAbsolutePath() )) {
+            try ( InputStream is = FileTools.getInputStreamFromPlainOrCompressedFile( f.getAbsolutePath() ) ) {
 
                 this.locateExtractor( arrayDesignUsed, ba, f );
 
@@ -140,7 +140,7 @@ public class BatchInfoParser {
                 BioMaterial bm = ba.getSampleUsed();
                 result.put( bm, d );
 
-            } catch ( RuntimeException | IOException | UnsupportedRawdataFileFormatException e ) {
+            } catch ( IOException | UnsupportedRawdataFileFormatException e ) {
                 BatchInfoParser.log.warn( "Failure while parsing: " + f + ": " + e.getMessage() );
                 missingDate.add( f );
             }
