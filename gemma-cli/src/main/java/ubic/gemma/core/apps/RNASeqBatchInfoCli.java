@@ -16,6 +16,8 @@ package ubic.gemma.core.apps;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 import ubic.gemma.core.analysis.preprocess.batcheffects.BatchInfoPopulationException;
 import ubic.gemma.core.analysis.preprocess.batcheffects.BatchInfoPopulationService;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
@@ -28,10 +30,12 @@ import ubic.gemma.persistence.util.Settings;
  * @author tesar
  * @deprecated this should not be necessary and the regular batch population tool can be used instead.
  */
+@Component
 public class RNASeqBatchInfoCli extends ExpressionExperimentManipulatingCLI {
 
-    @SuppressWarnings("FieldCanBeLocal")
+    @Autowired
     private BatchInfoPopulationService batchService;
+
     private String fastqRootDir = Settings.getString( "gemma.fastq.headers.dir" );
 
     @Override
@@ -58,20 +62,17 @@ public class RNASeqBatchInfoCli extends ExpressionExperimentManipulatingCLI {
 
     @Override
     protected void doWork() throws Exception {
-        batchService = this.getBean( BatchInfoPopulationService.class );
-
         log.info( "Checking folders for existing experiments in " + fastqRootDir );
-
         for ( BioAssaySet ee : this.expressionExperiments ) {
-            if ( !( ee instanceof ExpressionExperiment ) ) {
-                addErrorObject( ee, "This is not an ExpressionExperiment!" );
-                continue;
-            }
-            try {
-                batchService.fillBatchInformation( ( ExpressionExperiment ) ee, this.force );
-                addSuccessObject( ee, "Added batch information" );
-            } catch ( BatchInfoPopulationException e ) {
-                addErrorObject( ee, "Failed to add batch information", e );
+            if ( ee instanceof ExpressionExperiment ) {
+                try {
+                    batchService.fillBatchInformation( ( ExpressionExperiment ) ee, this.force );
+                    addSuccessObject( ee, "Added batch information" );
+                } catch ( Exception e ) {
+                    addErrorObject( ee, "Failed to add batch information to " + ee, e );
+                }
+            } else {
+                addErrorObject( ee, String.format( "%s is not an ExpressionExperiment", ee ) );
             }
         }
     }

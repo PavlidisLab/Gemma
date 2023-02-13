@@ -28,7 +28,7 @@ public class BatchInfoPopulationException extends PreprocessingException {
         super( message );
     }
 
-    public BatchInfoPopulationException( String message, Throwable cause ) {
-        super( message, cause );
+    public BatchInfoPopulationException( Throwable cause ) {
+        super( cause );
     }
 }

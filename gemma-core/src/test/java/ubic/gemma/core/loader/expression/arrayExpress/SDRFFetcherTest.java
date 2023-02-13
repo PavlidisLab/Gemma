@@ -36,6 +36,7 @@ public class SDRFFetcherTest extends TestCase {
 
     private static final Log log = LogFactory.getLog( SDRFFetcherTest.class.getName() );
 
+    @Category(SlowTest.class)
     public final void testFetch() {
         try {
             SDRFFetcher f = new SDRFFetcher();

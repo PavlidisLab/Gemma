@@ -25,18 +25,18 @@
 
 	<tr>
 		<td class="label"><strong>Sample</strong></td>
-		<td><a href="/Gemma/bioMaterial/showBioMaterial.html?id=${bioAssay.sample.id}">${bioAssay.sample.name}</a></td>
+		<td><a href="${pageContext.request.contextPath}/bioMaterial/showBioMaterial.html?id=${bioAssay.sample.id}">${bioAssay.sample.name}</a></td>
 	</tr>
 	<tr>
 		<td class="label"><strong>Platform</strong></td>
-		<td><a href="/Gemma/arrays/showArrayDesign.html?id=${bioAssay.arrayDesign.id}">${bioAssay.arrayDesign.shortName}</a>&nbsp;
+		<td><a href="${pageContext.request.contextPath}/arrays/showArrayDesign.html?id=${bioAssay.arrayDesign.id}">${bioAssay.arrayDesign.shortName}</a>&nbsp;
 			${bioAssay.arrayDesign.name}</td>
 	</tr>
 
 	<c:if test="${not empty bioAssay.originalPlatform}">
 		<tr>
 			<td class="label"><strong>Original platform</strong></td>
-			<td><a href="/Gemma/arrays/showArrayDesign.html?id=${bioAssay.originalPlatform.id}">${bioAssay.originalPlatform.shortName}</a>&nbsp;
+			<td><a href="${pageContext.request.contextPath}/arrays/showArrayDesign.html?id=${bioAssay.originalPlatform.id}">${bioAssay.originalPlatform.shortName}</a>&nbsp;
 				${bioAssay.originalPlatform.name}</td>
 		</tr>
 	</c:if>

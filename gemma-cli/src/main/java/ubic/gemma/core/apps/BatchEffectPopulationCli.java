@@ -15,6 +15,8 @@
 package ubic.gemma.core.apps;
 
 import org.apache.commons.cli.Options;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 import ubic.gemma.core.analysis.preprocess.batcheffects.BatchInfoPopulationException;
 import ubic.gemma.core.analysis.preprocess.batcheffects.BatchInfoPopulationService;
 import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
@@ -28,7 +30,11 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  *
  * @author paul
  */
+@Component
 public class BatchEffectPopulationCli extends ExpressionExperimentManipulatingCLI {
+
+    @Autowired
+    private BatchInfoPopulationService ser;
 
     @Override
     public CommandGroup getCommandGroup() {
@@ -48,8 +54,6 @@ public class BatchEffectPopulationCli extends ExpressionExperimentManipulatingCL
 
     @Override
     protected void doWork() throws Exception {
-        BatchInfoPopulationService ser = this.getBean( BatchInfoPopulationService.class );
-
         for ( BioAssaySet bas : this.expressionExperiments ) {
             if ( bas instanceof ExpressionExperiment ) {
 
@@ -62,7 +66,6 @@ public class BatchEffectPopulationCli extends ExpressionExperimentManipulatingCL
 
                 try {
                     ExpressionExperiment ee = ( ExpressionExperiment ) bas;
-                    ee = this.eeService.thawLite( ee );
                     ser.fillBatchInformation( ee, force );
                     addSuccessObject( bas, "Successfully processed " + bas );
                 } catch ( BatchInfoPopulationException e ) {
@@ -73,7 +76,10 @@ public class BatchEffectPopulationCli extends ExpressionExperimentManipulatingCL
                     addErrorObject( bas, e.getMessage(), e );
                 }
 
+            } else {
+                addErrorObject( bas, String.format( "%s is not an ExpressionExperiment", bas ) );
             }
+
         }
     }
 

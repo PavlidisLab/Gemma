@@ -368,7 +368,7 @@ public interface ExpressionExperimentService
      * @see ExpressionExperimentDao#getPreferredQuantitationTypeForDataVectorType(ExpressionExperiment, Class)
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    Optional<QuantitationType> getPreferredQuantitationTypeForDataVectorType( ExpressionExperiment ee, Class<? extends DesignElementDataVector> vectorType );
+    QuantitationType getPreferredQuantitationTypeForDataVectorType( ExpressionExperiment ee, Class<? extends DesignElementDataVector> vectorType );
 
     /**
      * @param id id

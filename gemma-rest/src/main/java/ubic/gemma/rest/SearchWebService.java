@@ -63,7 +63,7 @@ public class SearchWebService {
     /**
      * Maximum number of search results.
      */
-    public static final int MAX_SEARCH_RESULTS = 1000;
+    public static final int MAX_SEARCH_RESULTS = 2000;
 
     @Autowired
     private SearchService searchService;
@@ -84,7 +84,7 @@ public class SearchWebService {
             @QueryParam("taxon") TaxonArg<?> taxonArg,
             @QueryParam("platform") PlatformArg<?> platformArg,
             @Parameter(array = @ArraySchema(schema = @Schema(name = RESULT_TYPES_SCHEMA_NAME, hidden = true))) @QueryParam("resultTypes") List<String> resultTypes,
-            @QueryParam("limit") @DefaultValue("20") LimitArg limit ) {
+            @QueryParam("limit") @DefaultValue("100") LimitArg limit ) {
         if ( StringUtils.isBlank( query ) ) {
             throw new BadRequestException( "A non-empty query must be supplied." );
         }
@@ -102,12 +102,14 @@ public class SearchWebService {
                     String.join( ", ", supportedResultTypesByName.keySet() ) ) );
         }
 
+        int maxResults = limit.getValue( MAX_SEARCH_RESULTS );
+
         SearchSettings searchSettings = SearchSettings.builder()
                 .query( query )
                 .taxon( taxonArg != null ? taxonArg.getEntity( taxonService ) : null )
                 .platformConstraint( platformArg != null ? platformArg.getEntity( arrayDesignService ) : null )
                 .resultTypes( resultTypesCls )
-                .maxResults( limit.getValue( MAX_SEARCH_RESULTS ) )
+                .maxResults( maxResults )
                 .build();
 
         List<SearchResult<?>> searchResults;
@@ -135,7 +137,7 @@ public class SearchWebService {
         return new SearchResultsResponseDataObject( searchResultVos.stream()
                 .filter( sr -> sr.getResultObject() != null ) // exclude null cases, we warn about them above
                 .sorted() // SearchResults are sorted by descending score order
-                .limit( limit.getValue( MAX_SEARCH_RESULTS ) ) // results are limited by class, so there might be more results than expected when unraveling everything
+                .limit( maxResults ) // results are limited by class, so there might be more results than expected when unraveling everything
                 .map( SearchResultValueObject::new )
                 .collect( Collectors.toList() ), new SearchSettingsValueObject( searchSettings ) );
     }
