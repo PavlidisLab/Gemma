@@ -110,7 +110,36 @@ public class FilterQueryUtils {
                 } else if ( subClause.getOperator().equals( Filter.Operator.notEq ) && subClause.getRequiredValue() == null ) {
                     disjunction.append( "is not" );
                 } else {
-                    disjunction.append( subClause.getOperator().getSqlToken() );
+                    String token;
+                    switch ( subClause.getOperator() ) {
+                        case eq:
+                            token = "=";
+                            break;
+                        case notEq:
+                            token = "!=";
+                            break;
+                        case like:
+                            token = "like";
+                            break;
+                        case lessThan:
+                            token = "<";
+                            break;
+                        case greaterThan:
+                            token = ">";
+                            break;
+                        case lessOrEq:
+                            token = "<=";
+                            break;
+                        case greaterOrEq:
+                            token = ">=";
+                            break;
+                        case in:
+                            token = "in";
+                            break;
+                        default:
+                            throw new IllegalArgumentException( String.format( "Unsupported operator %s.", subClause.getOperator() ) );
+                    }
+                    disjunction.append( token );
                 }
 
                 disjunction.append( " " );

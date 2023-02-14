@@ -138,16 +138,8 @@ public class Filter {
         return new Filter( objectAlias, propertyName, propertyType, operator, parseRequiredValues( requiredValues, propertyType ) );
     }
 
-    @Getter
     public enum Operator {
-        /**
-         * Note that in the case of a null requiredValue, the {@link #getSqlToken()} of this operator must be ignored
-         * and 'is' must be used instead.
-         */
         eq( "=", false, null ),
-        /**
-         * Same remark for {@link #eq} applies, but with the 'is not' operator.
-         */
         notEq( "!=", false, null ),
         like( "like", true, String.class ),
         lessThan( "<", true, null ),
@@ -176,15 +168,6 @@ public class Filter {
             this.token = operator;
             this.nonNullRequired = isNonNullRequired;
             this.requiredType = requiredType;
-        }
-
-        /**
-         * Token used in SQL/HQL query.
-         * <p>
-         * This is package-private on purpose and is only meant for{@link FilterQueryUtils#formRestrictionClause(Filters)}.
-         */
-        String getSqlToken() {
-            return token;
         }
     }
 
@@ -217,7 +200,7 @@ public class Filter {
             requiredValueString = conversionService.convert( requiredValue, String.class );
             requiredValueString = quoteIfNecessary( requiredValueString );
         }
-        return String.format( "%s%s %s %s", objectAlias != null ? objectAlias + "." : "", propertyName, operator.getToken(), requiredValueString );
+        return String.format( "%s%s %s %s", objectAlias != null ? objectAlias + "." : "", propertyName, operator.token, requiredValueString );
     }
 
     private static String quoteIfNecessary( String s ) {
@@ -231,12 +214,12 @@ public class Filter {
     }
 
     private void checkTypeCorrect() throws IllegalArgumentException {
-        if ( operator.isNonNullRequired() && requiredValue == null ) {
+        if ( operator.nonNullRequired && requiredValue == null ) {
             throw new IllegalArgumentException( "requiredValue for operator " + operator + " cannot be null." );
         }
 
         // if the operator does not have a specific type requirement, then consider that the propertyType is the type requirement
-        Class<?> requiredType = operator.getRequiredType() != null ? operator.getRequiredType() : propertyType;
+        Class<?> requiredType = operator.requiredType != null ? operator.requiredType : propertyType;
 
         // if the required type is a primitive, convert it to the corresponding wrapper type because required value can
         // never be a primitive
@@ -251,7 +234,7 @@ public class Filter {
         // if an operator expects a collection as RHS, then the type of the elements in that collection must absolutely
         // match the propertyType
         // for example, ad.id in ("a", 1, NULL) must be invalid if id is of type Long
-        if ( requiredValue != null && operator.getRequiredType() != null && Collection.class.isAssignableFrom( operator.getRequiredType() ) ) {
+        if ( requiredValue != null && operator.requiredType != null && Collection.class.isAssignableFrom( operator.requiredType ) ) {
             Collection<?> requiredCollection = ( Collection<?> ) requiredValue;
             if ( !requiredCollection.stream().allMatch( rv -> rv != null && propertyType.isAssignableFrom( rv.getClass() ) ) ) {
                 throw new IllegalArgumentException( String.format( "All elements in requiredValue %s must be assignable from %s.", requiredType, propertyType.getName() ) );
