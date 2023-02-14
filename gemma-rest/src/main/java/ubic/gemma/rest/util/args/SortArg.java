@@ -45,7 +45,7 @@ public class SortArg<O extends Identifiable> extends AbstractArg<SortArg.Sort> {
      * @throws MalformedArgException in case the orderBy property cannot be applied for the given class, or if the
      *                               argument was malformed in the first place
      */
-    public ubic.gemma.persistence.util.Sort getSort( FilteringService<O> service ) throws MalformedArgException {
+    ubic.gemma.persistence.util.Sort getSort( FilteringService<O> service ) throws MalformedArgException {
         ubic.gemma.persistence.util.Sort.Direction direction;
         if ( getValue().direction == Sort.Direction.ASC ) {
             direction = ubic.gemma.persistence.util.Sort.Direction.ASC;

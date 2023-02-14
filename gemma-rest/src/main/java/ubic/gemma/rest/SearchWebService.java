@@ -31,9 +31,7 @@ import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.rest.swagger.resolver.CustomModelResolver;
 import ubic.gemma.rest.util.ResponseDataObject;
-import ubic.gemma.rest.util.args.LimitArg;
-import ubic.gemma.rest.util.args.PlatformArg;
-import ubic.gemma.rest.util.args.TaxonArg;
+import ubic.gemma.rest.util.args.*;
 
 import javax.ws.rs.*;
 import java.util.Collection;
@@ -71,6 +69,10 @@ public class SearchWebService {
     private TaxonService taxonService;
     @Autowired
     private ArrayDesignService arrayDesignService;
+    @Autowired
+    private TaxonArgService taxonArgService;
+    @Autowired
+    private PlatformArgService platformArgService;
 
     /**
      * Search everything subject to taxon and platform constraints.
@@ -106,8 +108,8 @@ public class SearchWebService {
 
         SearchSettings searchSettings = SearchSettings.builder()
                 .query( query )
-                .taxon( taxonArg != null ? taxonArg.getEntity( taxonService ) : null )
-                .platformConstraint( platformArg != null ? platformArg.getEntity( arrayDesignService ) : null )
+                .taxon( taxonArg != null ? taxonArgService.getEntity( taxonArg ) : null )
+                .platformConstraint( platformArg != null ? platformArgService.getEntity( platformArg ) : null )
                 .resultTypes( resultTypesCls )
                 .maxResults( maxResults )
                 .build();

@@ -35,7 +35,6 @@ import ubic.gemma.core.analysis.preprocess.filter.NoRowsLeftAfterFilteringExcept
 import ubic.gemma.core.analysis.preprocess.svd.SVDService;
 import ubic.gemma.core.analysis.preprocess.svd.SVDValueObject;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
-import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisValueObject;
 import ubic.gemma.model.common.auditAndSecurity.eventType.BatchInformationFetchingEvent;
 import ubic.gemma.model.common.description.AnnotationValueObject;
@@ -61,9 +60,9 @@ import ubic.gemma.persistence.service.expression.experiment.ExpressionExperiment
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Sort;
+import ubic.gemma.rest.annotations.GZIP;
 import ubic.gemma.rest.util.*;
 import ubic.gemma.rest.util.args.*;
-import ubic.gemma.rest.annotations.GZIP;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.*;
@@ -101,8 +100,6 @@ public class DatasetsWebService {
     @Autowired
     private ProcessedExpressionDataVectorService processedExpressionDataVectorService;
     @Autowired
-    private GeneService geneService;
-    @Autowired
     private SVDService svdService;
     @Autowired
     private DifferentialExpressionAnalysisService differentialExpressionAnalysisService;
@@ -112,6 +109,10 @@ public class DatasetsWebService {
     private OutlierDetectionService outlierDetectionService;
     @Autowired
     private QuantitationTypeService quantitationTypeService;
+    @Autowired
+    private DatasetArgService datasetArgService;
+    @Autowired
+    private GeneArgService geneArgService;
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
@@ -123,9 +124,9 @@ public class DatasetsWebService {
             @QueryParam("sort") @DefaultValue("+id") SortArg<ExpressionExperiment> sort // Optional, default +id
     ) {
         return Responder.paginate( expressionExperimentService,
-                filter.getFilters( expressionExperimentService ),
+                datasetArgService.getFilters( filter ),
                 new String[] { "id" },
-                sort.getSort( expressionExperimentService ),
+                datasetArgService.getSort( sort ),
                 offset.getValue(),
                 limit.getValue() );
     }
@@ -136,7 +137,7 @@ public class DatasetsWebService {
     @Operation(summary = "Count datasets matching the provided filters")
     public ResponseDataObject<Long> getNumberOfDatasets(
             @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filter ) {
-        return Responder.respond( expressionExperimentService.countPreFilter( filter.getFilters( expressionExperimentService ) ) );
+        return Responder.respond( expressionExperimentService.countPreFilter( datasetArgService.getFilters( filter ) ) );
     }
 
     public interface UsageStatistics {
@@ -149,7 +150,7 @@ public class DatasetsWebService {
     @Operation(summary = "Retrieve usage statistics of platforms among datasets matching the provided filter",
             description = "Usage statistics are aggregated across experiment tags, samples and factor values mentioned in the experimental design.")
     public LimitedResponseDataObject<ArrayDesignWithUsageStatisticsValueObject> getDatasetsPlatformsUsageStatistics( @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filter, @QueryParam("limit") @DefaultValue("50") LimitArg limit ) {
-        Filters filters = filter.getFilters( expressionExperimentService );
+        Filters filters = datasetArgService.getFilters( filter );
         Integer l = limit.getValue( 50 );
         List<ArrayDesignWithUsageStatisticsValueObject> results = expressionExperimentService.getArrayDesignUsedOrOriginalPlatformUsageFrequencyPreFilter( filters, true, limit.getValue( 50 ) )
                 .entrySet()
@@ -177,7 +178,7 @@ public class DatasetsWebService {
             description = "Usage statistics are aggregated across experiment tags, samples and factor values mentioned in the experimental design.")
     public LimitedResponseDataObject<AnnotationWithUsageStatisticsValueObject> getDatasetsAnnotationsUsageStatistics(
             @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filter, @QueryParam("limit") @DefaultValue("50") LimitArg limit ) {
-        Filters filters = filter.getFilters( expressionExperimentService );
+        Filters filters = datasetArgService.getFilters( filter );
         Integer l = limit.getValue( ExpressionExperimentDaoImpl.MAX_RESULT_FOR_CACHING_ANNOTATIONS_FREQUENCY );
         List<AnnotationWithUsageStatisticsValueObject> results = expressionExperimentService.getAnnotationsFrequencyPreFilter( filters, l )
                 .entrySet()
@@ -231,9 +232,8 @@ public class DatasetsWebService {
             @QueryParam("limit") @DefaultValue("20") LimitArg limit, // Optional, default 20
             @QueryParam("sort") @DefaultValue("+id") SortArg<ExpressionExperiment> sort // Optional, default +id
     ) {
-        Filters filters = filter.getFilters( expressionExperimentService )
-                .and( datasetsArg.getFilters( expressionExperimentService ) );
-        return Responder.paginate( expressionExperimentService, filters, new String[] { "id" }, sort.getSort( expressionExperimentService ), offset.getValue(), limit.getValue() );
+        Filters filters = datasetArgService.getFilters( filter ).and( datasetArgService.getFilters( datasetsArg ) );
+        return Responder.paginate( expressionExperimentService, filters, new String[] { "id" }, datasetArgService.getSort( sort ), offset.getValue(), limit.getValue() );
     }
 
     /**
@@ -248,9 +248,9 @@ public class DatasetsWebService {
             @QueryParam("offset") @DefaultValue("0") OffsetArg offset,
             @QueryParam("limit") @DefaultValue("20") LimitArg limit ) {
         return Responder.paginate( expressionExperimentService::loadBlacklistedValueObjects,
-                filterArg.getFilters( expressionExperimentService ),
+                datasetArgService.getFilters( filterArg ),
                 new String[] { "id" },
-                sortArg.getSort( expressionExperimentService ),
+                datasetArgService.getSort( sortArg ),
                 offset.getValue(),
                 limit.getValue() );
     }
@@ -312,7 +312,7 @@ public class DatasetsWebService {
             @QueryParam("limit") @DefaultValue("20") LimitArg limit // Optional, default 20
     ) {
         return Responder.respond(
-                this.getDiffExVos( datasetArg.getEntity( expressionExperimentService ).getId(),
+                this.getDiffExVos( datasetArgService.getEntity( datasetArg ).getId(),
                         offset.getValue(), limit.getValue() )
         );
     }
@@ -333,7 +333,7 @@ public class DatasetsWebService {
     public Response getDatasetDifferentialExpressionAnalysesResultSets(
             @PathParam("dataset") DatasetArg<?> datasetArg,
             @Context HttpServletRequest request ) {
-        ExpressionExperiment ee = datasetArg.getEntity( expressionExperimentService );
+        ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
         UriComponentsBuilder uriComponents;
         // this is only for testing because Jersey in-memory container lacks a servlet context
         if ( request != null ) {
@@ -419,7 +419,7 @@ public class DatasetsWebService {
             @PathParam("dataset") DatasetArg<?> datasetArg, // Required
             @QueryParam("filter") @DefaultValue("false") BoolArg filterData // Optional, default false
     ) {
-        ExpressionExperiment ee = datasetArg.getEntity( expressionExperimentService );
+        ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
         try {
             return this.outputDataFile( ee, filterData.getValue() );
         } catch ( NoRowsLeftAfterFilteringException e ) {
@@ -446,7 +446,7 @@ public class DatasetsWebService {
                     content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class))) })
     public Response getDatasetProcessedExpression( @PathParam("dataset") DatasetArg<?> datasetArg,
             @QueryParam("quantitationType") QuantitationTypeArg<?> quantitationTypeArg ) {
-        ExpressionExperiment ee = datasetArg.getEntity( expressionExperimentService );
+        ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
         QuantitationType qt;
         if ( quantitationTypeArg != null ) {
             qt = quantitationTypeArg.getEntityForExpressionExperimentAndDataVectorType( ee, ProcessedExpressionDataVector.class, quantitationTypeService );
@@ -479,7 +479,7 @@ public class DatasetsWebService {
                     content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class))) })
     public Response getDatasetRawExpression( @PathParam("dataset") DatasetArg<?> datasetArg,
             @QueryParam("quantitationType") QuantitationTypeArg<?> quantitationTypeArg ) {
-        ExpressionExperiment ee = datasetArg.getEntity( expressionExperimentService );
+        ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
         QuantitationType qt;
         if ( quantitationTypeArg != null ) {
             qt = quantitationTypeArg.getEntityForExpressionExperimentAndDataVectorType( ee, RawExpressionDataVector.class, quantitationTypeService );
@@ -512,7 +512,7 @@ public class DatasetsWebService {
     public Response getDatasetDesign( // Params:
             @PathParam("dataset") DatasetArg<?> datasetArg // Required
     ) {
-        ExpressionExperiment ee = datasetArg.getEntity( expressionExperimentService );
+        ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
         return this.outputDesignFile( ee );
     }
 
@@ -530,7 +530,7 @@ public class DatasetsWebService {
     public ResponseDataObject<Boolean> getDatasetHasBatch( // Params:
             @PathParam("dataset") DatasetArg<?> datasetArg // Required
     ) {
-        ExpressionExperiment ee = datasetArg.getEntity( expressionExperimentService );
+        ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
         return Responder.respond( this.auditEventService.hasEvent( ee, BatchInformationFetchingEvent.class ) );
     }
 
@@ -550,7 +550,7 @@ public class DatasetsWebService {
     public ResponseDataObject<SimpleSVDValueObject> getDatasetSvd( // Params:
             @PathParam("dataset") DatasetArg<?> datasetArg // Required
     ) {
-        SVDValueObject svd = svdService.getSvd( datasetArg.getEntity( expressionExperimentService ).getId() );
+        SVDValueObject svd = svdService.getSvd( datasetArgService.getEntity( datasetArg ).getId() );
         return Responder.respond( svd == null ? null : new SimpleSVDValueObject( Arrays.asList( svd.getBioMaterialIds() ), svd.getVariances(), svd.getvMatrix().getRawMatrix() )
         );
     }
@@ -598,8 +598,8 @@ public class DatasetsWebService {
             @QueryParam("consolidate") ExpLevelConsolidationArg consolidate // Optional, default everything is returned
     ) {
         return Responder.respond( processedExpressionDataVectorService
-                .getExpressionLevels( datasets.getEntities( expressionExperimentService ),
-                        genes.getEntities( geneService ), keepNonSpecific.getValue(),
+                .getExpressionLevels( datasetArgService.getEntities( datasets ),
+                        geneArgService.getEntities( genes ), keepNonSpecific.getValue(),
                         consolidate == null ? null : consolidate.getValue() )
         );
     }
@@ -640,7 +640,7 @@ public class DatasetsWebService {
     ) {
         ArgUtils.requiredArg( component, "component" );
         return Responder.respond( processedExpressionDataVectorService
-                .getExpressionLevelsPca( datasets.getEntities( expressionExperimentService ), limit.getValueNoMaximum(),
+                .getExpressionLevelsPca( datasetArgService.getEntities( datasets ), limit.getValueNoMaximum(),
                         component.getValue(), keepNonSpecific.getValue(),
                         consolidate == null ? null : consolidate.getValue() )
         );
@@ -684,7 +684,7 @@ public class DatasetsWebService {
     ) {
         ArgUtils.requiredArg( diffExSet, "diffExSet" );
         return Responder.respond( processedExpressionDataVectorService
-                .getExpressionLevelsDiffEx( datasets.getEntities( expressionExperimentService ),
+                .getExpressionLevelsDiffEx( datasetArgService.getEntities( datasets ),
                         diffExSet.getValue(), threshold.getValue(), limit.getValueNoMaximum(), keepNonSpecific.getValue(),
                         consolidate == null ? null : consolidate.getValue() )
         );
@@ -736,5 +736,4 @@ public class DatasetsWebService {
         double[] variances;
         double[][] vMatrix;
     }
-
 }

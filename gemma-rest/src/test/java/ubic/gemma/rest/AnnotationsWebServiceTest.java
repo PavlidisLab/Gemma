@@ -21,6 +21,7 @@ import ubic.gemma.persistence.service.common.description.CharacteristicService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.persistence.util.*;
+import ubic.gemma.rest.util.args.DatasetArgService;
 import ubic.gemma.rest.util.PaginatedResponseDataObject;
 import ubic.gemma.rest.util.SortValueObject;
 import ubic.gemma.rest.util.args.*;
@@ -67,10 +68,20 @@ public class AnnotationsWebServiceTest extends AbstractJUnit4SpringContextTests 
         }
 
         @Bean
+        public DatasetArgService datasetRestService( ExpressionExperimentService service ) {
+            return new DatasetArgService( service );
+        }
+
+        @Bean
+        public TaxonArgService taxonArgService( TaxonService taxonService ) {
+            return new TaxonArgService( taxonService );
+        }
+
+        @Bean
         public AnnotationsWebService annotationsWebService( OntologyService ontologyService, SearchService searchService,
                 CharacteristicService characteristicService, ExpressionExperimentService expressionExperimentService,
-                TaxonService taxon ) {
-            return new AnnotationsWebService( ontologyService, searchService, characteristicService, expressionExperimentService, taxon );
+                DatasetArgService datasetRestService, TaxonArgService taxonArgService ) {
+            return new AnnotationsWebService( ontologyService, searchService, characteristicService, expressionExperimentService, datasetRestService, taxonArgService );
         }
     }
 

@@ -4,17 +4,26 @@ import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.persistence.service.FilteringService;
 import ubic.gemma.persistence.util.Filter;
 import ubic.gemma.persistence.util.Filters;
+import ubic.gemma.persistence.util.Sort;
 import ubic.gemma.rest.util.EntityNotFoundException;
 import ubic.gemma.rest.util.MalformedArgException;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.NotFoundException;
 
 /**
+ * Interface representing and API call argument that can represent various identifiers of different types. E.g a taxon
+ * can be represented by Long number (ID) or multiple String properties (scientific/common name).
+ *
+ * @param <T> the type that the argument is expected to mutate to as per {@link Arg}
+ * @param <O> the persistent object type.
+ * @param <S> the service for the object type.
  * @author tesarst
+ * @author poirigui
  */
-public abstract class AbstractEntityArg<T, O extends Identifiable, S extends FilteringService<O>> extends AbstractArg<T> implements EntityArg<T, O, S> {
+public abstract class AbstractEntityArg<T, O extends Identifiable, S extends FilteringService<O>> extends AbstractArg<T> implements Arg<T> {
 
     private static final String ERROR_FORMAT_ENTITY_NOT_FOUND = "The identifier was recognised to be '%1$s', but entity of type '%2$s' with '%1$s' equal to '%3$s' does not exist or is not accessible.";
     private static final String ERROR_MSG_ENTITY_NOT_FOUND = "Entity with the given identifier does not exist or is not accessible.";
@@ -38,11 +47,18 @@ public abstract class AbstractEntityArg<T, O extends Identifiable, S extends Fil
         return String.valueOf( getValue() );
     }
 
+    @Nonnull
+    abstract O getEntity( S service ) throws NotFoundException, BadRequestException;
+
     /**
-     * Obtain a {@link Filters} that restrict a query to the entity represented by this argument.
+     * Obtain filters suitable for restricting results of a query to the entity represented by this argument.
+     *
+     * @throws BadRequestException if the filter represented by this is invalid (i.e. a property is not found in the
+     *                             entity)
+     * @see FilteringService#loadPreFilter(Filters, Sort, int, int)
+     * @see FilteringService#loadPreFilter(Filters, Sort)
      */
-    @Override
-    public Filters getFilters( S service ) throws BadRequestException {
+    Filters getFilters( S service ) throws BadRequestException {
         try {
             return Filters.by( service.getFilter( this.getPropertyName( service ), Filter.Operator.eq, getFilterRequiredValue() ) );
         } catch ( IllegalArgumentException e ) {

@@ -6,14 +6,12 @@ import io.swagger.v3.oas.annotations.enums.SecuritySchemeType;
 import io.swagger.v3.oas.annotations.security.SecurityScheme;
 import io.swagger.v3.oas.models.OpenAPI;
 import lombok.Data;
-import lombok.Getter;
 import lombok.Value;
 import lombok.extern.apachecommons.CommonsLog;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
-import org.springframework.web.util.UriComponentsBuilder;
 import ubic.gemma.core.security.authentication.UserManager;
 import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.model.common.description.ExternalDatabaseValueObject;
@@ -93,7 +91,7 @@ public class RootWebService {
 
     /**
      * Retrieve user information.
-     *
+     * <p>
      * This method only works for authenticated users (via basic HTTP auth or their JSESSIONID cookie as specified by
      * the {@link SecurityScheme} annotation on this class. If the current authenticated user is an administrator, any
      * user can be retrieved with this endpoint, otherwise only the current user is accessible.

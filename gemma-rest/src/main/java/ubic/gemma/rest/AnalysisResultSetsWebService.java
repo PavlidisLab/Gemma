@@ -21,8 +21,6 @@ package ubic.gemma.rest;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.Explode;
-import io.swagger.v3.oas.annotations.extensions.Extension;
-import io.swagger.v3.oas.annotations.extensions.ExtensionProperty;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -32,19 +30,18 @@ import org.springframework.stereotype.Service;
 import ubic.gemma.core.analysis.service.ExpressionAnalysisResultSetFileService;
 import ubic.gemma.model.analysis.AnalysisResultSet;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
-import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResultSetValueObject;
+import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.persistence.service.analysis.expression.diff.ExpressionAnalysisResultSetService;
-import ubic.gemma.persistence.service.common.description.DatabaseEntryService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.util.Filters;
+import ubic.gemma.rest.annotations.GZIP;
 import ubic.gemma.rest.util.*;
 import ubic.gemma.rest.util.args.*;
-import ubic.gemma.rest.annotations.GZIP;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
@@ -71,10 +68,15 @@ public class AnalysisResultSetsWebService {
     private ExpressionExperimentService expressionExperimentService;
 
     @Autowired
-    private DatabaseEntryService databaseEntryService;
+    private ExpressionAnalysisResultSetFileService expressionAnalysisResultSetFileService;
 
     @Autowired
-    private ExpressionAnalysisResultSetFileService expressionAnalysisResultSetFileService;
+    private ExpressionAnalysisResultSetArgService expressionAnalysisResultSetArgService;
+
+    @Autowired
+    private DatasetArgService datasetArgService;
+    @Autowired
+    private DatabaseEntryArgService databaseEntryArgService;
 
     /**
      * Retrieve all {@link AnalysisResultSet} matching a set of criteria.
@@ -94,7 +96,7 @@ public class AnalysisResultSetsWebService {
             @QueryParam("sort") @DefaultValue("+id") SortArg<ExpressionAnalysisResultSet> sort ) {
         Collection<BioAssaySet> bas = null;
         if ( datasets != null ) {
-            Collection<ExpressionExperiment> ees = new ArrayList<>( datasets.getEntities( expressionExperimentService ) );
+            Collection<ExpressionExperiment> ees = new ArrayList<>( datasetArgService.getEntities( datasets ) );
             bas = new ArrayList<>( ees );
             // expand with all subsets
             for ( ExpressionExperiment ee : ees ) {
@@ -103,11 +105,11 @@ public class AnalysisResultSetsWebService {
         }
         Collection<DatabaseEntry> des = null;
         if ( databaseEntries != null ) {
-            des = databaseEntries.getEntities( databaseEntryService );
+            des = databaseEntryArgService.getEntities( databaseEntries );
         }
-        Filters filters2 = filters.getFilters( expressionAnalysisResultSetService );
+        Filters filters2 = expressionAnalysisResultSetArgService.getFilters( filters );
         return Responder.paginate( expressionAnalysisResultSetService.findByBioAssaySetInAndDatabaseEntryInLimit(
-                        bas, des, filters2, offset.getValue(), limit.getValue(), sort.getSort( expressionAnalysisResultSetService ) ),
+                        bas, des, filters2, offset.getValue(), limit.getValue(), expressionAnalysisResultSetArgService.getSort( sort ) ),
                 filters2, new String[] { "id" } );
     }
 
@@ -117,7 +119,7 @@ public class AnalysisResultSetsWebService {
     @Operation(summary = "Count platforms matching a given set of filters")
     public ResponseDataObject<Long> getNumberOfResultSets(
             @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionAnalysisResultSet> filter ) {
-        return Responder.respond( expressionAnalysisResultSetService.countPreFilter( filter.getFilters( expressionAnalysisResultSetService ) ) );
+        return Responder.respond( expressionAnalysisResultSetService.countPreFilter( expressionAnalysisResultSetArgService.getFilters( filter ) ) );
     }
 
     private static final String TSV_EXAMPLE = "# If you use this file for your research, please cite:\n" +
@@ -151,7 +153,7 @@ public class AnalysisResultSetsWebService {
             @PathParam("resultSet") ExpressionAnalysisResultSetArg analysisResultSet,
             @Parameter(hidden = true) @QueryParam("excludeResults") @DefaultValue("false") Boolean excludeResults ) {
         if ( excludeResults ) {
-            ExpressionAnalysisResultSet ears = analysisResultSet.getEntity( expressionAnalysisResultSetService );
+            ExpressionAnalysisResultSet ears = expressionAnalysisResultSetArgService.getEntity( analysisResultSet );
             if ( ears == null ) {
                 throw new NotFoundException( "Could not find ExpressionAnalysisResultSet for " + analysisResultSet + "." );
             }

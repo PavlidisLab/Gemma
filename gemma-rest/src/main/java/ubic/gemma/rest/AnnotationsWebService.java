@@ -42,7 +42,6 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 import ubic.gemma.persistence.service.common.description.CharacteristicService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.persistence.util.Sort;
@@ -71,7 +70,8 @@ public class AnnotationsWebService {
     private SearchService searchService;
     private CharacteristicService characteristicService;
     private ExpressionExperimentService expressionExperimentService;
-    private TaxonService taxonService;
+    private DatasetArgService datasetArgService;
+    private TaxonArgService taxonArgService;
 
     /**
      * Required by spring
@@ -85,12 +85,13 @@ public class AnnotationsWebService {
     @Autowired
     public AnnotationsWebService( OntologyService ontologyService, SearchService searchService,
             CharacteristicService characteristicService, ExpressionExperimentService expressionExperimentService,
-            TaxonService taxonService ) {
+            DatasetArgService datasetArgService, TaxonArgService taxonArgService ) {
         this.ontologyService = ontologyService;
         this.searchService = searchService;
         this.characteristicService = characteristicService;
         this.expressionExperimentService = expressionExperimentService;
-        this.taxonService = taxonService;
+        this.datasetArgService = datasetArgService;
+        this.taxonArgService = taxonArgService;
     }
 
     /**
@@ -169,8 +170,8 @@ public class AnnotationsWebService {
             throw new BadRequestException( "Invalid search settings.", e );
         }
 
-        Filters filters = filterArg.getFilters( expressionExperimentService );
-        Sort sort = sortArg.getSort( expressionExperimentService );
+        Filters filters = datasetArgService.getFilters( filterArg );
+        Sort sort = datasetArgService.getSort( sortArg );
 
         if ( foundIds.isEmpty() ) {
             return Responder.paginate( Slice.empty(), filters, new String[] { "id" } );
@@ -187,7 +188,7 @@ public class AnnotationsWebService {
         }
 
         // If there are filters other than the search query, intersect the results.
-        filters.and( DatasetArrayArg.valueOf( StringUtils.join( foundIds, ',' ) ).getFilters( expressionExperimentService ) );
+        filters.and( datasetArgService.getFilters( DatasetArrayArg.valueOf( StringUtils.join( foundIds, ',' ) ) ) );
         return Responder.paginate( expressionExperimentService, filters, new String[] { "id" }, sort, offset.getValue(), limit.getValue() );
     }
 
@@ -232,7 +233,7 @@ public class AnnotationsWebService {
         }
 
         // will raise a NotFoundException early if not found
-        taxonArg.getEntity( taxonService );
+        taxonArgService.getEntity( taxonArg );
 
         Collection<Long> foundIds;
         try {
@@ -246,11 +247,11 @@ public class AnnotationsWebService {
         }
 
         // We always have to do filtering, because we always have at least the taxon argument (otherwise this#datasets method is used)
-        Filters filters = filter.getFilters( expressionExperimentService )
-                .and( DatasetArrayArg.valueOf( StringUtils.join( foundIds, ',' ) ).getFilters( expressionExperimentService ) )
-                .and( taxonArg.getFilters( taxonService ) );
+        Filters filters = datasetArgService.getFilters( filter )
+                .and( datasetArgService.getFilters( DatasetArrayArg.valueOf( StringUtils.join( foundIds, ',' ) ) ) )
+                .and( taxonArgService.getFilters( taxonArg ) );
 
-        return Responder.paginate( expressionExperimentService, filters, new String[] { "id" }, sort.getSort( expressionExperimentService ), offset.getValue(), limit.getValue() );
+        return Responder.paginate( expressionExperimentService, filters, new String[] { "id" }, datasetArgService.getSort( sort ), offset.getValue(), limit.getValue() );
     }
 
     /**

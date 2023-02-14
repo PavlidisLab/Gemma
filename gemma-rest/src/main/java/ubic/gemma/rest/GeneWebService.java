@@ -59,6 +59,7 @@ public class GeneWebService {
     private CompositeSequenceService compositeSequenceService;
     private PhenotypeAssociationManagerService phenotypeAssociationManagerService;
     private GeneCoexpressionSearchService geneCoexpressionSearchService;
+    private GeneArgService geneArgService;
 
     /**
      * Required by spring
@@ -73,12 +74,14 @@ public class GeneWebService {
     public GeneWebService( GeneService geneService, GeneOntologyService geneOntologyService,
             CompositeSequenceService compositeSequenceService,
             PhenotypeAssociationManagerService phenotypeAssociationManagerService,
-            GeneCoexpressionSearchService geneCoexpressionSearchService ) {
+            GeneCoexpressionSearchService geneCoexpressionSearchService,
+            GeneArgService geneArgService ) {
         this.geneService = geneService;
         this.geneOntologyService = geneOntologyService;
         this.compositeSequenceService = compositeSequenceService;
         this.phenotypeAssociationManagerService = phenotypeAssociationManagerService;
         this.geneCoexpressionSearchService = geneCoexpressionSearchService;
+        this.geneArgService = geneArgService;
     }
 
     /**
@@ -100,8 +103,8 @@ public class GeneWebService {
     ) {
         SortArg<Gene> sort = SortArg.valueOf( "+id" );
         Filters filters = Filters.empty();
-        filters.and( genes.getFilters( geneService ) );
-        return Responder.respond( geneService.loadValueObjectsPreFilter( filters, sort.getSort( geneService ), IntArg.valueOf( "0" ).getValue(), IntArg.valueOf( "-1" ).getValue() ) );
+        filters.and( geneArgService.getFilters( genes ) );
+        return Responder.respond( geneService.loadValueObjectsPreFilter( filters, geneArgService.getSort( sort ), IntArg.valueOf( "0" ).getValue(), IntArg.valueOf( "-1" ).getValue() ) );
     }
 
     /**
@@ -157,8 +160,8 @@ public class GeneWebService {
             @QueryParam("limit") @DefaultValue("20") LimitArg limit // Optional, default 20
     ) {
         return Responder.paginate( compositeSequenceService
-                .loadValueObjectsForGene( geneArg.getEntity( geneService ), offset.getValue(),
-                        limit.getValue() ), geneArg.getFilters( geneService ), new String[] { "id" } );
+                .loadValueObjectsForGene( geneArgService.getEntity( geneArg ), offset.getValue(),
+                        limit.getValue() ), geneArgService.getFilters( geneArg ), new String[] { "id" } );
     }
 
     /**
@@ -198,8 +201,8 @@ public class GeneWebService {
         ArgUtils.requiredArg( with, "with" );
         return Responder
                 .respond( geneCoexpressionSearchService.coexpressionSearchQuick( null, new ArrayList<Long>( 2 ) {{
-                    this.add( geneArg.getEntity( geneService ).getId() );
-                    this.add( with.getEntity( geneService ).getId() );
+                    this.add( geneArgService.getEntity( geneArg ).getId() );
+                    this.add( geneArgService.getEntity( with ).getId() );
                 }}, 1, limit.getValueNoMaximum(), false ).getResults() );
     }
 

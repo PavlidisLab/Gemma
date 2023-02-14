@@ -17,8 +17,6 @@ package ubic.gemma.rest;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.Explode;
-import io.swagger.v3.oas.annotations.extensions.Extension;
-import io.swagger.v3.oas.annotations.extensions.ExtensionProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -40,7 +38,6 @@ import ubic.gemma.persistence.service.genome.ChromosomeService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Sort;
-import ubic.gemma.rest.util.ArgUtils;
 import ubic.gemma.rest.util.PaginatedResponseDataObject;
 import ubic.gemma.rest.util.Responder;
 import ubic.gemma.rest.util.ResponseDataObject;
@@ -70,6 +67,8 @@ public class TaxaWebService {
     private ExpressionExperimentService expressionExperimentService;
     private PhenotypeAssociationManagerService phenotypeAssociationManagerService;
     private ChromosomeService chromosomeService;
+    private TaxonArgService taxonArgService;
+    private DatasetArgService datasetArgService;
 
     /**
      * Required by spring
@@ -84,12 +83,15 @@ public class TaxaWebService {
     public TaxaWebService( TaxonService taxonService, GeneService geneService,
             ExpressionExperimentService expressionExperimentService,
             PhenotypeAssociationManagerService phenotypeAssociationManagerService,
-            ChromosomeService chromosomeService ) {
+            ChromosomeService chromosomeService, TaxonArgService taxonArgService,
+            DatasetArgService datasetArgService ) {
         this.taxonService = taxonService;
         this.geneService = geneService;
         this.expressionExperimentService = expressionExperimentService;
         this.phenotypeAssociationManagerService = phenotypeAssociationManagerService;
         this.chromosomeService = chromosomeService;
+        this.taxonArgService = taxonArgService;
+        this.datasetArgService = datasetArgService;
     }
 
     /**
@@ -187,7 +189,7 @@ public class TaxaWebService {
             @PathParam("taxon") TaxonArg<?> taxonArg, // Required
             @PathParam("gene") GeneArg<?> geneArg // Required
     ) {
-        Taxon taxon = taxonArg.getEntity( taxonService );
+        Taxon taxon = taxonArgService.getEntity( taxonArg );
         try {
             return Responder
                     .respond( geneArg.getGeneEvidence( geneService, phenotypeAssociationManagerService, taxon ) );
@@ -212,7 +214,7 @@ public class TaxaWebService {
             @PathParam("taxon") TaxonArg<?> taxonArg, // Required
             @PathParam("gene") GeneArg<?> geneArg // Required
     ) {
-        Taxon taxon = taxonArg.getEntity( taxonService );
+        Taxon taxon = taxonArgService.getEntity( taxonArg );
         return Responder.respond( geneArg.getGeneLocation( geneService, taxon ) );
     }
 
@@ -234,16 +236,16 @@ public class TaxaWebService {
             @QueryParam("sort") @DefaultValue("+id") SortArg<Taxon> sort // Optional, default +id
     ) {
         // will raise a NotFoundException if the taxon is not found
-        taxonArg.getEntity( taxonService );
-        Filters filters = filter.getFilters( expressionExperimentService )
-                .and( taxonArg.getFilters( taxonService ) );
-        return Responder.paginate( expressionExperimentService, filters, new String[] { "id" }, sort.getSort( taxonService ), offset.getValue(), limit.getValue() );
+        taxonArgService.getEntity( taxonArg );
+        Filters filters = datasetArgService.getFilters( filter )
+                .and( taxonArgService.getFilters( taxonArg ) );
+        return Responder.paginate( expressionExperimentService, filters, new String[] { "id" }, taxonArgService.getSort( sort ), offset.getValue(), limit.getValue() );
     }
 
     /**
      * Loads all phenotypes for the given taxon. Unfortunately, pagination is not possible as the
      * phenotypes are loaded in a tree structure.
-     *
+     * <p>
      * TODO: We need to split this in two methods because otherwise we cannot infer the type this endpoint is producing
      *       and provide a backward compatible switch.
      *
@@ -264,7 +266,7 @@ public class TaxaWebService {
             @QueryParam("editableOnly") @DefaultValue("false") BoolArg editableOnly, // Optional, default false
             @QueryParam("tree") @DefaultValue("false") BoolArg tree // Optional, default false
     ) {
-        Taxon taxon = taxonArg.getEntity( taxonService );
+        Taxon taxon = taxonArgService.getEntity( taxonArg );
         if ( tree.getValue() ) {
             return Responder.respond( phenotypeAssociationManagerService
                     .loadAllPhenotypesAsTree( new EvidenceFilter( taxon.getId(), editableOnly.getValue() ) ) );
@@ -293,7 +295,7 @@ public class TaxaWebService {
         requiredArg( phenotypes, "phenotypes" );
         Set<GeneEvidenceValueObject> response;
         response = this.phenotypeAssociationManagerService.findCandidateGenes(
-                new EvidenceFilter( taxonArg.getEntity( taxonService ).getId(), editableOnly.getValue() ),
+                new EvidenceFilter( taxonArgService.getEntity( taxonArg ).getId(), editableOnly.getValue() ),
                 new HashSet<>( phenotypes.getValue() ) );
         return Responder.respond( response );
     }

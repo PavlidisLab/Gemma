@@ -37,6 +37,9 @@ public class DatasetsRestTest extends BaseSpringContextTest {
     private DatasetsWebService datasetsWebService;
 
     @Autowired
+    private DatasetArgService datasetArgService;
+
+    @Autowired
     private ExpressionExperimentService expressionExperimentService;
 
     /* fixtures */
@@ -127,7 +130,7 @@ public class DatasetsRestTest extends BaseSpringContextTest {
     @Category(SlowTest.class)
     public void testAllFilterByIdIn() {
         FilterArg filterArg = FilterArg.valueOf( "id in (" + ees.get( 0 ).getId() + ")" );
-        assertThat( filterArg.getFilters( expressionExperimentService ) )
+        assertThat( datasetArgService.getFilters( filterArg ) )
                 .extracting( of -> of[0] )
                 .first()
                 .hasFieldOrPropertyWithValue( "objectAlias", ExpressionExperimentDao.OBJECT_ALIAS )
@@ -151,7 +154,7 @@ public class DatasetsRestTest extends BaseSpringContextTest {
     @Category(SlowTest.class)
     public void testAllFilterByShortName() {
         FilterArg filterArg = FilterArg.valueOf( "shortName = " + ees.get( 0 ).getShortName() );
-        assertThat( filterArg.getFilters( expressionExperimentService ) )
+        assertThat( datasetArgService.getFilters( filterArg ) )
                 .extracting( of -> of[0] )
                 .first()
                 .hasFieldOrPropertyWithValue( "objectAlias", ExpressionExperimentDao.OBJECT_ALIAS )
@@ -175,7 +178,7 @@ public class DatasetsRestTest extends BaseSpringContextTest {
     @Category(SlowTest.class)
     public void testAllFilterByShortNameIn() {
         FilterArg filterArg = FilterArg.valueOf( "shortName in (" + ees.get( 0 ).getShortName() + ")" );
-        assertThat( filterArg.getFilters( expressionExperimentService ) )
+        assertThat( datasetArgService.getFilters( filterArg ) )
                 .extracting( of -> of[0] )
                 .first()
                 .hasFieldOrPropertyWithValue( "objectAlias", ExpressionExperimentDao.OBJECT_ALIAS )
@@ -199,7 +202,7 @@ public class DatasetsRestTest extends BaseSpringContextTest {
     @Category(SlowTest.class)
     public void testAllFilterByIdInOrShortNameIn() {
         FilterArg filterArg = FilterArg.valueOf( "id in (" + ees.get( 0 ).getId() + ") or shortName in (" + ees.get( 1 ).getShortName() + ")" );
-        assertThat( filterArg.getFilters( expressionExperimentService ) )
+        assertThat( datasetArgService.getFilters( filterArg ) )
                 .hasSize( 1 );
         /*
         assertThat( filterArg.getFilters( expressionExperimentService ).get( 0 ) )

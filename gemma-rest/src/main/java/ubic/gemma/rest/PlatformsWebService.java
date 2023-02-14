@@ -64,6 +64,8 @@ public class PlatformsWebService {
     private ExpressionExperimentService expressionExperimentService;
     private CompositeSequenceService compositeSequenceService;
     private ArrayDesignAnnotationService annotationFileService;
+    private PlatformArgService arrayDesignArgService;
+    private CompositeSequenceArgService probeArgService;
 
     /**
      * Required by spring
@@ -77,12 +79,15 @@ public class PlatformsWebService {
     @Autowired
     public PlatformsWebService( GeneService geneService, ArrayDesignService arrayDesignService,
             ExpressionExperimentService expressionExperimentService,
-            CompositeSequenceService compositeSequenceService, ArrayDesignAnnotationService annotationFileService ) {
+            CompositeSequenceService compositeSequenceService, ArrayDesignAnnotationService annotationFileService,
+            PlatformArgService arrayDesignArgService, CompositeSequenceArgService probeArgService ) {
         this.geneService = geneService;
         this.arrayDesignService = arrayDesignService;
         this.expressionExperimentService = expressionExperimentService;
         this.compositeSequenceService = compositeSequenceService;
         this.annotationFileService = annotationFileService;
+        this.arrayDesignArgService = arrayDesignArgService;
+        this.probeArgService = probeArgService;
     }
 
     @GET
@@ -94,8 +99,8 @@ public class PlatformsWebService {
             @QueryParam("limit") @DefaultValue("20") LimitArg limit, // Optional, default 20
             @QueryParam("sort") @DefaultValue("+id") SortArg<ArrayDesign> sort // Optional, default +id
     ) {
-        return Responder.paginate( arrayDesignService, filter.getFilters( arrayDesignService ), new String[] { "id" },
-                sort.getSort( arrayDesignService ), offset.getValue(), limit.getValue() );
+        return Responder.paginate( arrayDesignService, arrayDesignArgService.getFilters( filter ), new String[] { "id" },
+                arrayDesignArgService.getSort( sort ), offset.getValue(), limit.getValue() );
     }
 
     @GET
@@ -104,13 +109,13 @@ public class PlatformsWebService {
     @Operation(summary = "Count platforms matching a given set of filters")
     public ResponseDataObject<Long> getNumberOfPlatforms(
             @QueryParam("filter") @DefaultValue("") FilterArg<ArrayDesign> filter ) {
-        return Responder.respond( arrayDesignService.countPreFilter( filter.getFilters( arrayDesignService ) ) );
+        return Responder.respond( arrayDesignService.countPreFilter( arrayDesignArgService.getFilters( filter ) ) );
     }
 
     /**
      * Retrieves all datasets matching the given identifiers.
      *
-     * @param datasetsArg a list of identifiers, separated by commas (','). Identifiers can either be the
+     * @param platformsArg a list of identifiers, separated by commas (','). Identifiers can either be the
      *                    ExpressionExperiment ID or its short name (e.g. GSE1234). Retrieval by ID
      *                    is more efficient.
      *                    <p>
@@ -125,15 +130,15 @@ public class PlatformsWebService {
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve all platforms matching a set of platform identifiers")
     public PaginatedResponseDataObject<ArrayDesignValueObject> getPlatformsByIds( // Params:
-            @PathParam("platform") PlatformArrayArg datasetsArg, // Optional
+            @PathParam("platform") PlatformArrayArg platformsArg, // Optional
             @QueryParam("filter") @DefaultValue("") FilterArg<ArrayDesign> filter, // Optional, default null
             @QueryParam("offset") @DefaultValue("0") OffsetArg offset, // Optional, default 0
             @QueryParam("limit") @DefaultValue("20") LimitArg limit, // Optional, default 20
             @QueryParam("sort") @DefaultValue("+id") SortArg<ArrayDesign> sort // Optional, default +id
     ) {
-        Filters filters = filter.getFilters( arrayDesignService )
-                .and( datasetsArg.getFilters( arrayDesignService ) );
-        return Responder.paginate( arrayDesignService, filters, new String[] { "id" }, sort.getSort( arrayDesignService ), offset.getValue(), limit.getValue() );
+        Filters filters = arrayDesignArgService.getFilters( filter )
+                .and( arrayDesignArgService.getFilters( platformsArg ) );
+        return Responder.paginate( arrayDesignService, filters, new String[] { "id" }, arrayDesignArgService.getSort( sort ), offset.getValue(), limit.getValue() );
     }
 
     @GET
@@ -146,8 +151,8 @@ public class PlatformsWebService {
             @QueryParam("offset") @DefaultValue("0") OffsetArg offset,
             @QueryParam("limit") @DefaultValue("20") LimitArg limit
     ) {
-        return Responder.paginate( arrayDesignService::loadBlacklistedValueObjects, filter.getFilters( arrayDesignService ),
-                new String[] { "id" }, sort.getSort( arrayDesignService ), offset.getValue(), limit.getValue() );
+        return Responder.paginate( arrayDesignService::loadBlacklistedValueObjects, arrayDesignArgService.getFilters( filter ),
+                new String[] { "id" }, arrayDesignArgService.getSort( sort ), offset.getValue(), limit.getValue() );
     }
 
     /**
@@ -216,7 +221,7 @@ public class PlatformsWebService {
             @QueryParam("offset") @DefaultValue("0") OffsetArg offset, // Optional, default 0
             @QueryParam("limit") @DefaultValue("20") LimitArg limit // Optional, default 20
     ) {
-        probesArg.setPlatform( platformArg.getEntity( arrayDesignService ) );
+        probesArg.setPlatform( arrayDesignArgService.getEntity( platformArg ) );
         return Responder.paginate( compositeSequenceService, Filters.by( probesArg.getPlatformFilter() ), new String[] { "id" }, null, offset.getValue(), limit.getValue() );
     }
 
@@ -244,11 +249,11 @@ public class PlatformsWebService {
             @QueryParam("offset") @DefaultValue("0") OffsetArg offset, // Optional, default 0
             @QueryParam("limit") @DefaultValue("20") LimitArg limit // Optional, default 20
     ) {
-        probeArg.setPlatform( platformArg.getEntity( arrayDesignService ) );
+        probeArg.setPlatform( arrayDesignArgService.getEntity( platformArg ) );
         return Responder.paginate( compositeSequenceService
-                .getGenes( probeArg.getEntity( compositeSequenceService ), offset.getValue(),
+                .getGenes( probeArgService.getEntity( probeArg ), offset.getValue(),
                         limit.getValue() )
-                .map( geneService::loadValueObject ), probeArg.getFilters( compositeSequenceService ), new String[] { "id" } );
+                .map( geneService::loadValueObject ), probeArgService.getFilters( probeArg ), new String[] { "id" } );
     }
 
     /**
@@ -266,7 +271,7 @@ public class PlatformsWebService {
     public Response getPlatformAnnotations( // Params:
             @PathParam("platform") PlatformArg<?> platformArg // Optional, default null
     ) {
-        return outputAnnotationFile( platformArg.getEntity( arrayDesignService ) );
+        return outputAnnotationFile( arrayDesignArgService.getEntity( platformArg ) );
     }
 
     /**

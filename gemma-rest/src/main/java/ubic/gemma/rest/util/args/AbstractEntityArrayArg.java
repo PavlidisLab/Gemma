@@ -16,7 +16,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-public abstract class AbstractEntityArrayArg<A, O extends Identifiable, S extends FilteringService<O>> extends AbstractArrayArg<A> implements EntityArrayArg<A, O, S> {
+public abstract class AbstractEntityArrayArg<A, O extends Identifiable, S extends FilteringService<O>> extends AbstractArrayArg<A> implements Arg<List<A>> {
 
     private final Class<? extends AbstractEntityArg> entityArgClass;
     private String argValueName = null;
@@ -26,8 +26,7 @@ public abstract class AbstractEntityArrayArg<A, O extends Identifiable, S extend
         this.entityArgClass = entityArgClass;
     }
 
-    @Override
-    public Filters getFilters( S service ) throws BadRequestException {
+    Filters getFilters( S service ) throws BadRequestException {
         try {
             return Filters.by( service.getFilter( this.getPropertyName( service ), Filter.Operator.in, getFilterRequiredValues() ) );
         } catch ( IllegalArgumentException e ) {
@@ -35,8 +34,7 @@ public abstract class AbstractEntityArrayArg<A, O extends Identifiable, S extend
         }
     }
 
-    @Override
-    public List<O> getEntities( S service ) throws NotFoundException, BadRequestException {
+    List<O> getEntities( S service ) throws NotFoundException, BadRequestException {
         List<O> objects = new ArrayList<>( this.getValue().size() );
         for ( A s : this.getValue() ) {
             AbstractEntityArg<?, O, S> arg;

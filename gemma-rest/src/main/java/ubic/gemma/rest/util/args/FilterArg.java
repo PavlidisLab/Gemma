@@ -134,7 +134,7 @@ public class FilterArg<O extends Identifiable> extends AbstractArg<FilterArg.Fil
      * {@link ubic.gemma.persistence.util.Filter}, or null if the filter is empty.
      * @throws MalformedArgException if the filter cannot be parsed for the given {@link FilteringService}
      */
-    public Filters getFilters( FilteringService<O> service ) throws MalformedArgException {
+    Filters getFilters( FilteringService<O> service ) throws MalformedArgException {
         Filter filter = getValue();
 
         int numClauses = filter.filterContext.clause().stream()
