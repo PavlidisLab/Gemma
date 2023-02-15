@@ -14,7 +14,9 @@ public class SortValueObject {
     private final String direction;
 
     public SortValueObject( Sort sort ) {
-        if ( sort.getObjectAlias() != null ) {
+        if ( sort.getOriginalProperty() != null ) {
+            this.orderBy = sort.getOriginalProperty();
+        } else if ( sort.getObjectAlias() != null ) {
             this.orderBy = sort.getObjectAlias() + "." + sort.getPropertyName();
         } else {
             this.orderBy = sort.getPropertyName();

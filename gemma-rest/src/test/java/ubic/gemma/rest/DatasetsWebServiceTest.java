@@ -129,7 +129,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
     @Test
     public void testGetDatasetsPlatformsUsageStatistics() {
         when( expressionExperimentService.getFilter( "id", Filter.Operator.lessThan, "10" ) )
-                .thenReturn( Filter.by( "ee", "id", Long.class, Filter.Operator.lessThan, 10L ) );
+                .thenReturn( Filter.by( "ee", "id", Long.class, Filter.Operator.lessThan, 10L, "id" ) );
         when( expressionExperimentService.getAnnotationsFrequencyPreFilter( Filters.empty(), 50 ) )
                 .thenReturn( Collections.emptyMap() );
         assertThat( target( "/datasets/platforms" ).queryParam( "filter", "ee.id < 10" ).request().get() )
@@ -192,11 +192,11 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
     @Test
     public void testGetBlacklistedDatasets() {
         when( expressionExperimentService.loadBlacklistedValueObjects( any(), any(), anyInt(), anyInt() ) ).thenReturn( Slice.empty() );
-        when( expressionExperimentService.getSort( "id", Sort.Direction.ASC ) ).thenReturn( Sort.by( "ee", "id", Sort.Direction.ASC ) );
+        when( expressionExperimentService.getSort( "id", Sort.Direction.ASC ) ).thenReturn( Sort.by( "ee", "id", Sort.Direction.ASC, "id" ) );
         Response res = target( "/datasets/blacklisted" )
                 .queryParam( "filter", "" ).request().get();
         System.out.println( res.getEntity() );
         assertThat( res.getStatus() ).isEqualTo( 200 );
-        verify( expressionExperimentService ).loadBlacklistedValueObjects( Filters.empty(), Sort.by( "ee", "id", Sort.Direction.ASC ), 0, 20 );
+        verify( expressionExperimentService ).loadBlacklistedValueObjects( Filters.empty(), Sort.by( "ee", "id", Sort.Direction.ASC, "id" ), 0, 20 );
     }
 }

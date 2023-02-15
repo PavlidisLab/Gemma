@@ -12,8 +12,8 @@ import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
 import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.common.Identifiable;
-import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.FilterCriteriaUtils;
+import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.persistence.util.Sort;
 
@@ -21,8 +21,6 @@ import javax.annotation.Nullable;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
-
-import static ubic.gemma.persistence.util.FilterQueryUtils.formPropertyName;
 
 /**
  * Partial implementation of {@link FilteringVoEnabledDao} based on the Hibernate {@link Criteria} API.
@@ -275,12 +273,12 @@ public abstract class AbstractCriteriaFilteringVoEnabledDao<O extends Identifiab
     }
 
     private static void addOrder( Criteria query, Sort sort ) {
-        String propertyName = formPropertyName( sort.getObjectAlias(), sort.getPropertyName() );
+        String property = sort.getProperty();
         // handle .size ordering
-        if ( propertyName.endsWith( ".size" ) ) {
+        if ( property.endsWith( ".size" ) ) {
             // FIXME: find a workaround for sorting by collection size (see https://github.com/PavlidisLab/Gemma/issues/520)
             throw new UnsupportedOperationException( "Ordering by collection size is not supported for the Criteria API." );
         }
-        query.addOrder( sort.getDirection() == Sort.Direction.DESC ? Order.desc( propertyName ) : Order.asc( propertyName ) );
+        query.addOrder( sort.getDirection() == Sort.Direction.DESC ? Order.desc( property ) : Order.asc( property ) );
     }
 }

@@ -18,7 +18,7 @@ public class QuantitationTypeDaoTest extends BaseSpringContextTest {
     @Test
     @Transactional
     public void testLoadValueObjectsPreFilter() {
-        Filters filters = Filters.by( Filter.parse( null, "name", String.class, Filter.Operator.eq, "FPKM" ) );
+        Filters filters = Filters.by( Filter.parse( null, "name", String.class, Filter.Operator.eq, "FPKM", null ) );
         quantitationTypeDao.loadValueObjectsPreFilter( filters, null );
     }
 }

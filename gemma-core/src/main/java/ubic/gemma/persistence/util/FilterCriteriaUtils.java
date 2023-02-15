@@ -7,8 +7,6 @@ import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.Objects;
 
-import static ubic.gemma.persistence.util.FilterQueryUtils.escapeLike;
-
 /**
  * Utilities for integrating {@link Filter} with Hibernate {@link Criteria} API.
  * @author poirigui
@@ -38,31 +36,26 @@ public class FilterCriteriaUtils {
     }
 
     private static Criterion formRestrictionClause( Filter filter ) {
-        String propertyName;
-        if ( filter.getObjectAlias() != null ) {
-            propertyName = filter.getObjectAlias() + "." + filter.getPropertyName();
-        } else {
-            propertyName = filter.getPropertyName();
-        }
-        if ( propertyName.endsWith( ".size" ) ) {
+        String property = filter.getProperty();
+        if ( property.endsWith( ".size" ) ) {
             if ( !( filter.getRequiredValue() instanceof Integer ) ) {
                 throw new IllegalArgumentException( "Right hand size for a size-check must be a non-null integer." );
             }
-            propertyName = propertyName.replaceFirst( "\\.size$", "" );
+            property = property.replaceFirst( "\\.size$", "" );
             int size = ( Integer ) filter.getRequiredValue();
             switch ( filter.getOperator() ) {
                 case eq:
-                    return Restrictions.sizeEq( propertyName, size );
+                    return Restrictions.sizeEq( property, size );
                 case notEq:
-                    return Restrictions.sizeNe( propertyName, size );
+                    return Restrictions.sizeNe( property, size );
                 case lessThan:
-                    return Restrictions.sizeLt( propertyName, size );
+                    return Restrictions.sizeLt( property, size );
                 case lessOrEq:
-                    return Restrictions.sizeLe( propertyName, size );
+                    return Restrictions.sizeLe( property, size );
                 case greaterThan:
-                    return Restrictions.sizeGt( propertyName, size );
+                    return Restrictions.sizeGt( property, size );
                 case greaterOrEq:
-                    return Restrictions.sizeGe( propertyName, size );
+                    return Restrictions.sizeGe( property, size );
                 default:
                     throw new IllegalArgumentException( String.format( "Unsupported operator %s for a size-check.", filter.getOperator() ) );
             }
@@ -70,31 +63,36 @@ public class FilterCriteriaUtils {
         switch ( filter.getOperator() ) {
             case eq:
                 if ( filter.getRequiredValue() == null ) {
-                    return Restrictions.isNull( propertyName );
+                    return Restrictions.isNull( property );
                 } else {
-                    return Restrictions.eq( propertyName, filter.getRequiredValue() );
+                    return Restrictions.eq( property, filter.getRequiredValue() );
                 }
             case notEq:
                 if ( filter.getRequiredValue() == null ) {
-                    return Restrictions.isNotNull( propertyName );
+                    return Restrictions.isNotNull( property );
                 } else {
-                    return Restrictions.ne( propertyName, filter.getRequiredValue() );
+                    return Restrictions.ne( property, filter.getRequiredValue() );
                 }
             case like:
-                return Restrictions.like( propertyName, escapeLike( ( String ) Objects.requireNonNull( filter.getRequiredValue(), "Required value cannot be null for the like operator." ) ), MatchMode.START );
+                return Restrictions.like( property, escapeLike( ( String ) Objects.requireNonNull( filter.getRequiredValue(), "Required value cannot be null for the like operator." ) ), MatchMode.START );
             case lessThan:
-                return Restrictions.lt( propertyName, filter.getRequiredValue() );
+                return Restrictions.lt( property, filter.getRequiredValue() );
             case greaterThan:
-                return Restrictions.gt( propertyName, filter.getRequiredValue() );
+                return Restrictions.gt( property, filter.getRequiredValue() );
             case lessOrEq:
-                return Restrictions.le( propertyName, filter.getRequiredValue() );
+                return Restrictions.le( property, filter.getRequiredValue() );
             case greaterOrEq:
-                return Restrictions.ge( propertyName, filter.getRequiredValue() );
+                return Restrictions.ge( property, filter.getRequiredValue() );
             case in:
-                return Restrictions.in( propertyName, ( Collection<?> ) Objects.requireNonNull( filter.getRequiredValue(),
+                return Restrictions.in( property, ( Collection<?> ) Objects.requireNonNull( filter.getRequiredValue(),
                         "Required value cannot be null for a collection." ) );
             default:
                 throw new IllegalStateException( "Unexpected operator for filter: " + filter.getOperator() );
         }
+    }
+
+    private static String escapeLike( String s ) {
+        return s.replace( "%", "\\%" )
+                .replace( "_", "\\_" );
     }
 }

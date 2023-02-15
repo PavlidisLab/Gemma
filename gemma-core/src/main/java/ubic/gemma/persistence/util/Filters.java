@@ -146,17 +146,19 @@ public class Filters implements Iterable<Filter[]> {
 
     @Override
     public String toString() {
+        return toString( false );
+    }
+
+    public String toOriginalString() {
+        return toString( true );
+    }
+
+    private String toString( boolean withOriginalProperties ) {
         return clauses.stream()
                 .filter( conjunction -> conjunction.length > 0 )
-                .map( conjunction -> {
-                    if ( conjunction.length == 1 ) {
-                        return conjunction[0].toString();
-                    } else {
-                        return Arrays.stream( conjunction )
-                                .map( Filter::toString )
-                                .collect( Collectors.joining( " or " ) );
-                    }
-                } )
+                .map( conjunction -> Arrays.stream( conjunction )
+                        .map( Filter::toOriginalString )
+                        .collect( Collectors.joining( " or " ) ) )
                 .collect( Collectors.joining( " and " ) );
     }
 }

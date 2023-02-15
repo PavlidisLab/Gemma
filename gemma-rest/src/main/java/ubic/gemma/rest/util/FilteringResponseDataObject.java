@@ -23,7 +23,7 @@ public class FilteringResponseDataObject<T> extends ResponseDataObject<List<T>> 
      */
     public FilteringResponseDataObject( List<T> payload, @Nullable Filters filters, String[] groupBy, @Nullable Sort sort ) {
         super( payload );
-        this.filter = filters != null ? filters.toString() : null;
+        this.filter = filters != null ? filters.toOriginalString() : null;
         this.groupBy = groupBy;
         this.sort = sort != null ? new SortValueObject( sort ) : null;
     }

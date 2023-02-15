@@ -68,7 +68,7 @@ public interface FilteringDao<O extends Identifiable> extends BaseDao<O> {
      * @param value the corresponding, unparsed value, to the right-hand side of the operator
      * @return a filter filled with the object alias, property, inferred type, operator and parsed value
      * @throws IllegalArgumentException if the property does not exist in {@link O}, or if the operator cannot be applied,
-     * or if the value cannot apply to the property an operator see {@link Filter#parse(String, String, Class, Filter.Operator, String)}
+     * or if the value cannot apply to the property an operator see {@link Filter#parse(String, String, Class, Filter.Operator, String, String)}
      * for more details
      */
     Filter getFilter( String property, Filter.Operator operator, String value ) throws IllegalArgumentException;

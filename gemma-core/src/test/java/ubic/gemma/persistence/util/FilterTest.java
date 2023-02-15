@@ -140,7 +140,7 @@ public class FilterTest {
 
     @Test
     public void testParseUnsupportedType() {
-        assertThatThrownBy( () -> Filter.parse( "ee", "id", Object.class, Filter.Operator.in, "unsupported type" ) )
+        assertThatThrownBy( () -> Filter.parse( "ee", "id", Object.class, Filter.Operator.in, "unsupported type", "id" ) )
                 .isInstanceOf( IllegalArgumentException.class );
     }
 

@@ -49,6 +49,6 @@ public class CompositeSequenceArrayArg
     }
 
     public Filter getPlatformFilter() {
-        return Filter.parse( CompositeSequenceDao.OBJECT_ALIAS, "arrayDesign.id", Long.class, Filter.Operator.eq, this.arrayDesign.getId().toString() );
+        return Filter.parse( CompositeSequenceDao.OBJECT_ALIAS, "arrayDesign.id", Long.class, Filter.Operator.eq, this.arrayDesign.getId().toString(), null );
     }
 }

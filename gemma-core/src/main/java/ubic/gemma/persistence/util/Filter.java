@@ -19,7 +19,6 @@
 package ubic.gemma.persistence.util;
 
 import com.fasterxml.jackson.databind.util.StdDateFormat;
-import lombok.Getter;
 import lombok.Value;
 import org.apache.commons.lang3.ClassUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -47,7 +46,7 @@ import java.util.stream.Collectors;
  * @author poirigui
  */
 @Value
-public class Filter {
+public class Filter implements PropertyMapping {
 
     /**
      * This is only the date part of the ISO 8601 standard.
@@ -93,18 +92,27 @@ public class Filter {
     /**
      * Create a new filter.
      * <p>
-     * If you need to parse the right-hand side, consider using {@link #parse(String, String, Class, Operator, String)}
-     * for a scalar or {@link #parse(String, String, Class, Operator, Collection)} for a collection type.
+     * If you need to parse the right-hand side, consider using {@link #parse(String, String, Class, Operator, String, String)}
+     * for a scalar or {@link #parse(String, String, Class, Operator, Collection, String)} for a collection type.
      *
-     * @param objectAlias   the alias that refers to the entity subject to the filter
-     * @param propertyName  the property in the entity
-     * @param propertyType  the type of the property
-     * @param operator      a valid operator for the property and the requiredValue
-     * @param requiredValue a required value, or null to perform a null-check (i.e. <code>objectAlias.propertyName is null</code>)
+     * @param objectAlias      the alias that refers to the entity subject to the filter
+     * @param propertyName     the property in the entity
+     * @param propertyType     the type of the property
+     * @param operator         a valid operator for the property and the requiredValue
+     * @param requiredValue    a required value, or null to perform a null-check (i.e. <code>objectAlias.propertyName is null</code>)
+     * @param originalProperty the original property name, or null if not applicable
      * @throws IllegalArgumentException if the type of the requiredValue does not match the propertyType
      */
+    public static Filter by( @Nullable String objectAlias, String propertyName, Class<?> propertyType, Operator operator, @Nullable Object requiredValue, String originalProperty ) {
+        return new Filter( objectAlias, propertyName, propertyType, operator, requiredValue, originalProperty );
+    }
+
+    /**
+     * Create a new filter without an original property.
+     * @see #by(String, String, Class, Operator, Object)
+     */
     public static Filter by( @Nullable String objectAlias, String propertyName, Class<?> propertyType, Operator operator, @Nullable Object requiredValue ) {
-        return new Filter( objectAlias, propertyName, propertyType, operator, requiredValue );
+        return new Filter( objectAlias, propertyName, propertyType, operator, requiredValue, null );
     }
 
 
@@ -115,27 +123,34 @@ public class Filter {
      * @throws IllegalArgumentException if the right-hand side cannot be parsed, which is generally caused by a
      *                                  {@link ConversionException} when attempting to convert the requiredValue to the
      *                                  desired propertyType.
-     * @see #Filter(String, String, Class, Operator, Object)
+     * @see #Filter(String, String, Class, Operator, Object, String)
      */
-    public static Filter parse( @Nullable String objectAlias, String propertyName, Class<?> propertyType, Operator operator, String requiredValue ) throws IllegalArgumentException {
-        return new Filter( objectAlias, propertyName, propertyType, operator, parseRequiredValue( requiredValue, propertyType ) );
+    public static Filter parse( @Nullable String objectAlias, String propertyName, Class<?> propertyType, Operator operator, String requiredValue, String originalProperty ) throws IllegalArgumentException {
+        return new Filter( objectAlias, propertyName, propertyType, operator, parseRequiredValue( requiredValue, propertyType ), originalProperty );
     }
 
+    public static Filter parse( @Nullable String objectAlias, String propertyName, Class<?> propertyType, Operator operator, String requiredValue ) throws IllegalArgumentException {
+        return new Filter( objectAlias, propertyName, propertyType, operator, parseRequiredValue( requiredValue, propertyType ), null );
+    }
 
     /**
      * Parse a filter where the right-hand side is a {@link Collection} of scalar right-hand side to be parsed.
      * <p>
      * If you need to parse a collection held in a {@link String} (i.e. <code>"(1,2,3,4)"</code>), you should use
-     * {@link #parse(String, String, Class, Operator, String)} instead.
+     * {@link #parse(String, String, Class, Operator, String, String)} instead.
      *
      * @param requiredValues a collection of right-hand side to be parsed
      * @throws IllegalArgumentException if the right-hand side cannot be parsed, which is generally caused by a
      *                                  {@link ConversionException} when attempting to convert the requiredValue to the
      *                                  desired propertyType.
-     * @see #Filter(String, String, Class, Operator, Object)
+     * @see #Filter(String, String, Class, Operator, Object, String)
      */
+    public static Filter parse( @Nullable String objectAlias, String propertyName, Class<?> propertyType, Operator operator, Collection<String> requiredValues, String originalProperty ) throws IllegalArgumentException {
+        return new Filter( objectAlias, propertyName, propertyType, operator, parseRequiredValues( requiredValues, propertyType ), originalProperty );
+    }
+
     public static Filter parse( @Nullable String objectAlias, String propertyName, Class<?> propertyType, Operator operator, Collection<String> requiredValues ) throws IllegalArgumentException {
-        return new Filter( objectAlias, propertyName, propertyType, operator, parseRequiredValues( requiredValues, propertyType ) );
+        return new Filter( objectAlias, propertyName, propertyType, operator, parseRequiredValues( requiredValues, propertyType ), null );
     }
 
     public enum Operator {
@@ -178,18 +193,33 @@ public class Filter {
     Operator operator;
     @Nullable
     Object requiredValue;
+    /**
+     * The origin, if known.
+     */
+    @Nullable
+    String originalProperty;
 
-    private Filter( @Nullable String objectAlias, String propertyName, Class<?> propertyType, Operator operator, @Nullable Object requiredValue ) throws IllegalArgumentException {
+    private Filter( @Nullable String objectAlias, String propertyName, Class<?> propertyType, Operator operator, @Nullable Object requiredValue, @Nullable String originalProperty ) throws IllegalArgumentException {
         this.objectAlias = objectAlias;
         this.propertyName = propertyName;
         this.propertyType = propertyType;
         this.operator = operator;
         this.requiredValue = requiredValue;
+        this.originalProperty = originalProperty;
         this.checkTypeCorrect();
     }
 
     @Override
     public String toString() {
+        return toString( false );
+    }
+
+    @Override
+    public String toOriginalString() {
+        return toString( true );
+    }
+
+    private String toString( boolean withOriginalProperties ) {
         String requiredValueString;
         if ( requiredValue instanceof Collection ) {
             requiredValueString = "(" + ( ( Collection<?> ) requiredValue ).stream()
@@ -200,7 +230,10 @@ public class Filter {
             requiredValueString = conversionService.convert( requiredValue, String.class );
             requiredValueString = quoteIfNecessary( requiredValueString );
         }
-        return String.format( "%s%s %s %s", objectAlias != null ? objectAlias + "." : "", propertyName, operator.token, requiredValueString );
+        return String.format( "%s %s %s",
+                withOriginalProperties ? getOriginalProperty() : getProperty(),
+                operator.token,
+                requiredValueString );
     }
 
     private static String quoteIfNecessary( String s ) {

@@ -1250,7 +1250,7 @@ public class ExpressionExperimentDaoImpl
     public List<ExpressionExperimentValueObject> loadValueObjectsPreFilter( @Nullable Filters
             filters, @Nullable Sort sort ) {
         if ( sort == null ) {
-            sort = Sort.by( OBJECT_ALIAS, "id" );
+            sort = Sort.by( OBJECT_ALIAS, "id", null, "id" );
         }
         List<ExpressionExperimentValueObject> results = super.loadValueObjectsPreFilter( filters, sort );
         populateArrayDesignCount( results );
@@ -1261,7 +1261,7 @@ public class ExpressionExperimentDaoImpl
     public Slice<ExpressionExperimentValueObject> loadValueObjectsPreFilter( @Nullable Filters
             filters, @Nullable Sort sort, int offset, int limit ) {
         if ( sort == null ) {
-            sort = Sort.by( OBJECT_ALIAS, "id" );
+            sort = Sort.by( OBJECT_ALIAS, "id", null, "id" );
         }
         Slice<ExpressionExperimentValueObject> results = super.loadValueObjectsPreFilter( filters, sort, offset, limit );
         populateArrayDesignCount( results );

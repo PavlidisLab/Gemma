@@ -12,10 +12,10 @@ public class SortValueObjectTest {
         assertThat( new SortValueObject( Sort.by( "ee", "id", Sort.Direction.DESC ) ) )
                 .hasFieldOrPropertyWithValue( "orderBy", "ee.id" )
                 .hasFieldOrPropertyWithValue( "direction", "DESC" );
-        assertThat( new SortValueObject( Sort.by( "ee", "id" ) ) )
+        assertThat( new SortValueObject( Sort.by( "ee", "id", null ) ) )
                 .hasFieldOrPropertyWithValue( "orderBy", "ee.id" )
                 .hasFieldOrPropertyWithValue( "direction", null );
-        assertThat( new SortValueObject( Sort.by( null, "id" ) ) )
+        assertThat( new SortValueObject( Sort.by( null, "id", null ) ) )
                 .hasFieldOrPropertyWithValue( "orderBy", "id" )
                 .hasFieldOrPropertyWithValue( "direction", null );
     }

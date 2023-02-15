@@ -23,7 +23,7 @@ public class SortArgTest {
     @Test
     public void testGetSort() {
         FilteringService<Identifiable> filteringService = mock( FilteringService.class );
-        when( filteringService.getSort( "id", Sort.Direction.ASC ) ).thenReturn( Sort.by( "entity", "id", Sort.Direction.ASC ) );
+        when( filteringService.getSort( "id", Sort.Direction.ASC ) ).thenReturn( Sort.by( "entity", "id", Sort.Direction.ASC, "id" ) );
         assertThat( SortArg.valueOf( "+id" ).getSort( filteringService ) )
                 .hasFieldOrPropertyWithValue( "objectAlias", "entity" )
                 .hasFieldOrPropertyWithValue( "propertyName", "id" )

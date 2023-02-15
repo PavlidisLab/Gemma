@@ -14,30 +14,6 @@ import java.util.stream.Collectors;
 public class FilterQueryUtils {
 
     /**
-     * Form a property name with an alias.
-     * <p>
-     * The alias is omitted if set to null.
-     *
-     * @param alias        an alias, or null
-     * @param propertyName a property name within the defined entity
-     * @return a well-formed property name suitable for an HQL query
-     */
-    public static String formPropertyName( @Nullable String alias, String propertyName ) {
-        return alias == null ? propertyName : alias + "." + propertyName.replaceFirst( "\\.size$", "" );
-    }
-
-    /**
-     * Form an SQL/HQL parameter name for binding a query.
-     */
-    public static String formParamName( @Nullable String objectAlias, String propertyName ) {
-        if ( objectAlias != null ) {
-            return objectAlias + "_" + propertyName.replaceAll( "\\.", "_" );
-        } else {
-            return propertyName.replaceAll( "\\.", "_" );
-        }
-    }
-
-    /**
      * Forms an order by clause for a Hibernate query based on given arguments.
      *
      * @param sort the property and direction the query should be ordered by.
@@ -48,14 +24,13 @@ public class FilterQueryUtils {
             return "";
         StringBuilder ret = new StringBuilder();
 
-        ret.append( " order by" );
+        ret.append( " order by " );
 
         if ( sort.getPropertyName().endsWith( ".size" ) ) {
             // This will crate an order by count clause, stripping the object alias and size suffix
-            ret.append( " size(" ).append( formPropertyName( sort.getObjectAlias(), sort.getPropertyName() ) ).append( ')' );
+            ret.append( "size(" ).append( sort.getProperty().replaceFirst( "\\.size$", "" ) ).append( ')' );
         } else {
-            ret.append( " " );
-            ret.append( formPropertyName( sort.getObjectAlias(), sort.getPropertyName() ) );
+            ret.append( sort.getProperty() );
         }
 
         //noinspection StatementWithEmptyBody
@@ -97,12 +72,11 @@ public class FilterQueryUtils {
                     disjunction.append( " or " );
 
                 if ( subClause.getPropertyName().endsWith( ".size" ) ) {
-                    disjunction.append( "size(" ).append( formPropertyName( subClause.getObjectAlias(), subClause.getPropertyName() ) ).append( ')' ).append( " " );
+                    disjunction.append( "size(" ).append( subClause.getProperty().replaceFirst( "\\.size$", "" ) ).append( ')' ).append( " " );
                 } else {
-                    disjunction
-                            .append( formPropertyName( subClause.getObjectAlias(), subClause.getPropertyName() ) ).append( " " );
+                    disjunction.append( subClause.getProperty() ).append( " " );
                 }
-                String paramName = formParamName( subClause.getObjectAlias(), subClause.getPropertyName() ) + ( ++i );
+                String paramName = formParamName( subClause, ++i );
 
                 // we need to handle two special cases when comparing to NULL which cannot use == or != operators.
                 if ( subClause.getOperator().equals( Filter.Operator.eq ) && subClause.getRequiredValue() == null ) {
@@ -184,7 +158,7 @@ public class FilterQueryUtils {
             for ( Filter subClause : clause ) {
                 if ( subClause == null )
                     continue;
-                String paramName = formParamName( subClause.getObjectAlias(), subClause.getPropertyName() ) + ( ++i );
+                String paramName = formParamName( subClause, ++i );
                 if ( subClause.getOperator().equals( Filter.Operator.in ) ) {
                     // order is unimportant for this operation, so we can ensure that it is consistent and therefore cacheable
                     query.setParameterList( paramName, Objects.requireNonNull( ( Collection<?> ) subClause.getRequiredValue(), "Required value cannot be null for the 'in' operator." )
@@ -198,7 +172,11 @@ public class FilterQueryUtils {
         }
     }
 
-    static String escapeLike( String s ) {
+    private static String formParamName( PropertyMapping mapping, int i ) {
+        return mapping.getProperty().replaceAll( "\\.", "_" ) + i;
+    }
+
+    private static String escapeLike( String s ) {
         return s.replace( "%", "\\%" )
                 .replace( "_", "\\_" );
     }

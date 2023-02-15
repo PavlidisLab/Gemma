@@ -13,13 +13,6 @@ import static ubic.gemma.persistence.util.FilterQueryUtils.*;
 public class FilterQueryUtilsTest {
 
     @Test
-    public void testFormParamName() {
-        assertThat( formParamName( "ee", "id" ) ).isEqualTo( "ee_id" );
-        assertThat( formParamName( "ee", "curationDetails.troubled" ) ).isEqualTo( "ee_curationDetails_troubled" );
-        assertThat( formParamName( null, "id" ) ).isEqualTo( "id" );
-    }
-
-    @Test
     public void testLikeRestrictionClause() {
         Filters filters = Filters.empty()
                 .and( "ee", "shortName", String.class, Filter.Operator.like, "%_" );
@@ -91,7 +84,7 @@ public class FilterQueryUtilsTest {
     @Test
     public void testFormRestrictionAndGroupByAndOrderByClauses() {
         Filters filters = Filters.by( null, "id", Long.class, Filter.Operator.eq, 12L );
-        Sort sort = Sort.by( "ee", "shortName" );
+        Sort sort = Sort.by( "ee", "shortName", null );
         String queryString = "";
         queryString += FilterQueryUtils.formRestrictionClause( filters );
         queryString += FilterQueryUtils.formOrderByClause( sort );
@@ -107,7 +100,7 @@ public class FilterQueryUtilsTest {
 
     @Test
     public void testSortByCollectionSize() {
-        assertThat( formOrderByClause( Sort.by( "ee", "bioAssays.size" ) ) )
+        assertThat( formOrderByClause( Sort.by( "ee", "bioAssays.size", null ) ) )
                 .isEqualTo( " order by size(ee.bioAssays)" );
     }
 }

@@ -270,19 +270,19 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
     @Override
     public final Filter getFilter( String property, Filter.Operator operator, String value ) {
         FilterablePropertyMeta propertyMeta = getFilterablePropertyMeta( property );
-        return Filter.parse( propertyMeta.objectAlias, propertyMeta.propertyName, propertyMeta.propertyType, operator, value );
+        return Filter.parse( propertyMeta.objectAlias, propertyMeta.propertyName, propertyMeta.propertyType, operator, value, property );
     }
 
     @Override
     public final Filter getFilter( String property, Filter.Operator operator, Collection<String> values ) {
         FilterablePropertyMeta propertyMeta = getFilterablePropertyMeta( property );
-        return Filter.parse( propertyMeta.objectAlias, propertyMeta.propertyName, propertyMeta.propertyType, operator, values );
+        return Filter.parse( propertyMeta.objectAlias, propertyMeta.propertyName, propertyMeta.propertyType, operator, values, property );
     }
 
     @Override
     public final Sort getSort( String property, @Nullable Sort.Direction direction ) {
         FilterablePropertyMeta propertyMeta = getFilterablePropertyMeta( property );
-        return Sort.by( propertyMeta.objectAlias, propertyMeta.propertyName, direction );
+        return Sort.by( propertyMeta.objectAlias, propertyMeta.propertyName, direction, property );
     }
 
     /**
