@@ -78,6 +78,11 @@
                         <goals>
                             <goal>test-jar</goal>
                         </goals>
+                        <configuration>
+                            <excludes>
+                                <exclude>log4j-test.properties</exclude>
+                            </excludes>
+                        </configuration>
                     </execution>
                 </executions>
             </plugin>
