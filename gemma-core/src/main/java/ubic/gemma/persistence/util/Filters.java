@@ -152,9 +152,9 @@ public class Filters implements Iterable<Filter[]> {
                     if ( conjunction.length == 1 ) {
                         return conjunction[0].toString();
                     } else {
-                        return "(" + Arrays.stream( conjunction )
+                        return Arrays.stream( conjunction )
                                 .map( Filter::toString )
-                                .collect( Collectors.joining( " or " ) ) + ")";
+                                .collect( Collectors.joining( " or " ) );
                     }
                 } )
                 .collect( Collectors.joining( " and " ) );
