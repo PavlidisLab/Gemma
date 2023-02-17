@@ -5,6 +5,7 @@ import org.hibernate.Query;
 
 import javax.annotation.Nullable;
 import java.util.Collection;
+import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
@@ -60,8 +61,8 @@ public class FilterQueryUtils {
             return "";
         int i = 0;
         StringBuilder conjunction = new StringBuilder();
-        for ( Filter[] clause : filters ) {
-            if ( clause == null || clause.length == 0 )
+        for ( List<Filter> clause : filters ) {
+            if ( clause == null || clause.isEmpty() )
                 continue;
             StringBuilder disjunction = new StringBuilder();
             boolean first = true;
@@ -152,7 +153,7 @@ public class FilterQueryUtils {
         if ( filters == null )
             return;
         int i = 0;
-        for ( Filter[] clause : filters ) {
+        for ( List<Filter> clause : filters ) {
             if ( clause == null )
                 continue;
             for ( Filter subClause : clause ) {

@@ -19,6 +19,7 @@
 package ubic.gemma.persistence.util;
 
 import com.fasterxml.jackson.databind.util.StdDateFormat;
+import lombok.EqualsAndHashCode;
 import lombok.Value;
 import org.apache.commons.lang3.ClassUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -46,6 +47,7 @@ import java.util.stream.Collectors;
  * @author poirigui
  */
 @Value
+@EqualsAndHashCode(of = { "objectAlias", "operator", "requiredValue" })
 public class Filter implements PropertyMapping {
 
     /**

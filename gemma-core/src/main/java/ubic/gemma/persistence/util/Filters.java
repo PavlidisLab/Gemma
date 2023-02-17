@@ -12,7 +12,7 @@ import java.util.stream.Collectors;
  * @author poirigui
  */
 @EqualsAndHashCode(of = { "clauses" })
-public class Filters implements Iterable<Filter[]> {
+public class Filters implements Iterable<List<Filter>> {
 
     /**
      * Builder for a disjunctive sub-clause.
@@ -99,7 +99,7 @@ public class Filters implements Iterable<Filter[]> {
         return empty().and( filters );
     }
 
-    private final ArrayList<Filter[]> clauses;
+    private final ArrayList<List<Filter>> clauses;
 
     private Filters() {
         this.clauses = new ArrayList<>();
@@ -116,7 +116,7 @@ public class Filters implements Iterable<Filter[]> {
      * Add a clause of one or more {@link Filter} sub-clauses to the conjunction.
      */
     public Filters and( Filter... filters ) {
-        clauses.add( filters );
+        clauses.add( Arrays.asList( filters ) );
         return this;
     }
 
@@ -149,14 +149,14 @@ public class Filters implements Iterable<Filter[]> {
      */
     public boolean isEmpty() {
         // hint: allMatch returns true if the stream is empty
-        return clauses.stream().allMatch( arr -> arr.length == 0 );
+        return clauses.stream().allMatch( List::isEmpty );
     }
 
     /**
      * Obtain an iterator over the clauses contained in this conjunction.
      */
     @Override
-    public Iterator<Filter[]> iterator() {
+    public Iterator<List<Filter>> iterator() {
         return clauses.iterator();
     }
 
@@ -171,8 +171,8 @@ public class Filters implements Iterable<Filter[]> {
 
     private String toString( boolean withOriginalProperties ) {
         return clauses.stream()
-                .filter( conjunction -> conjunction.length > 0 )
-                .map( conjunction -> Arrays.stream( conjunction )
+                .filter( conjunction -> !conjunction.isEmpty() )
+                .map( conjunction -> conjunction.stream()
                         .map( f -> withOriginalProperties ? f.toOriginalString() : f.toString() )
                         .collect( Collectors.joining( " or " ) ) )
                 .collect( Collectors.joining( " and " ) );

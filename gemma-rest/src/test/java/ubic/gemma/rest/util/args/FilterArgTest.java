@@ -54,7 +54,7 @@ public class FilterArgTest {
         setUpMockVoService();
         Filters filters = FilterArg.valueOf( "a = b" ).getFilters( mockVoService );
         assertThat( filters )
-                .extracting( of -> of[0] )
+                .extracting( of -> of.get( 0 ) )
                 .first()
                 .hasFieldOrPropertyWithValue( "propertyName", "a" )
                 .hasFieldOrPropertyWithValue( "operator", Filter.Operator.eq )
@@ -94,13 +94,13 @@ public class FilterArgTest {
         Filters filters = FilterArg.valueOf( "a = b and c = d" ).getFilters( mockVoService );
         assertThat( filters ).hasSize( 2 );
         assertThat( filters )
-                .extracting( of -> of[0] )
+                .extracting( of -> of.get( 0 ) )
                 .first()
                 .hasFieldOrPropertyWithValue( "propertyName", "a" )
                 .hasFieldOrPropertyWithValue( "operator", Filter.Operator.eq )
                 .hasFieldOrPropertyWithValue( "requiredValue", "b" );
         assertThat( filters )
-                .extracting( of -> of[0] )
+                .extracting( of -> of.get( 0 ) )
                 .last()
                 .hasFieldOrPropertyWithValue( "propertyName", "c" )
                 .hasFieldOrPropertyWithValue( "operator", Filter.Operator.eq )
@@ -115,24 +115,24 @@ public class FilterArgTest {
         assertThat( filters.iterator().next() )
                 .hasSize( 2 );
 
-        assertThat( filters.iterator().next()[0] )
+        assertThat( filters.iterator().next().get( 0 ) )
                 .hasFieldOrPropertyWithValue( "propertyName", "a" )
                 .hasFieldOrPropertyWithValue( "operator", Filter.Operator.eq )
                 .hasFieldOrPropertyWithValue( "requiredValue", "b" );
 
-        assertThat( filters.iterator().next()[1] )
+        assertThat( filters.iterator().next().get( 1 ) )
                 .hasFieldOrPropertyWithValue( "propertyName", "c" )
                 .hasFieldOrPropertyWithValue( "operator", Filter.Operator.eq )
                 .hasFieldOrPropertyWithValue( "requiredValue", "d" );
 
         FilterArg.valueOf( "a = b or c = d" ).getFilters( mockVoService );
 
-        assertThat( filters.iterator().next()[0] )
+        assertThat( filters.iterator().next().get( 0 ) )
                 .hasFieldOrPropertyWithValue( "propertyName", "a" )
                 .hasFieldOrPropertyWithValue( "operator", Filter.Operator.eq )
                 .hasFieldOrPropertyWithValue( "requiredValue", "b" );
 
-        assertThat( filters.iterator().next()[1] )
+        assertThat( filters.iterator().next().get( 1 ) )
                 .hasFieldOrPropertyWithValue( "propertyName", "c" )
                 .hasFieldOrPropertyWithValue( "operator", Filter.Operator.eq )
                 .hasFieldOrPropertyWithValue( "requiredValue", "d" );
@@ -145,29 +145,29 @@ public class FilterArgTest {
 
         assertThat( filters ).hasSize( 2 );
 
-        Iterator<Filter[]> iterator = filters.iterator();
-        Filter[] of;
+        Iterator<List<Filter>> iterator = filters.iterator();
+        List<Filter> of;
 
         of = iterator.next();
         assertThat( of )
                 .hasSize( 2 );
-        assertThat( of[0] )
+        assertThat( of.get( 0 ) )
                 .hasFieldOrPropertyWithValue( "propertyName", "a" )
                 .hasFieldOrPropertyWithValue( "operator", Filter.Operator.eq )
                 .hasFieldOrPropertyWithValue( "requiredValue", "b" );
 
-        assertThat( of[1] )
+        assertThat( of.get( 1 ) )
                 .hasFieldOrPropertyWithValue( "propertyName", "g" )
                 .hasFieldOrPropertyWithValue( "operator", Filter.Operator.eq )
                 .hasFieldOrPropertyWithValue( "requiredValue", "h" );
 
         of = iterator.next();
-        assertThat( of[0] )
+        assertThat( of.get( 0 ) )
                 .hasFieldOrPropertyWithValue( "propertyName", "c" )
                 .hasFieldOrPropertyWithValue( "operator", Filter.Operator.eq )
                 .hasFieldOrPropertyWithValue( "requiredValue", "d" );
 
-        assertThat( of[1] )
+        assertThat( of.get( 1 ) )
                 .hasFieldOrPropertyWithValue( "propertyName", "e" )
                 .hasFieldOrPropertyWithValue( "operator", Filter.Operator.eq )
                 .hasFieldOrPropertyWithValue( "requiredValue", "f" );
@@ -180,7 +180,7 @@ public class FilterArgTest {
         FilterArg<Identifiable> fa = FilterArg.valueOf( "lastUpdated >= 2022-01-01" );
         Filters f = fa.getFilters( mockVoService );
         assertThat( f ).isNotNull();
-        Filter subClause = f.iterator().next()[0];
+        Filter subClause = f.iterator().next().get( 0 );
         assertThat( subClause )
                 .hasFieldOrPropertyWithValue( "objectAlias", "alias" )
                 .hasFieldOrPropertyWithValue( "propertyName", "lastUpdated" );
@@ -192,7 +192,7 @@ public class FilterArgTest {
         FilterArg<Identifiable> fa2 = FilterArg.valueOf( subClause.toString() );
         Filters f2 = fa2.getFilters( mockVoService );
         assertThat( f2 ).isNotNull();
-        Filter subClause2 = f2.iterator().next()[0];
+        Filter subClause2 = f2.iterator().next().get( 0 );
         assertThat( subClause2 )
                 .hasFieldOrPropertyWithValue( "objectAlias", "alias" )
                 .hasFieldOrPropertyWithValue( "propertyName", "alias.lastUpdated" );
@@ -219,7 +219,7 @@ public class FilterArgTest {
         FilterArg<Identifiable> fa = FilterArg.valueOf( "foo >= " + s );
         Filters f = fa.getFilters( mockVoService );
         assertThat( f ).isNotNull();
-        Filter subClause = f.iterator().next()[0];
+        Filter subClause = f.iterator().next().get( 0 );
         assertThat( subClause )
                 .hasFieldOrPropertyWithValue( "objectAlias", "alias" )
                 .hasFieldOrPropertyWithValue( "propertyName", "foo" )
@@ -232,7 +232,7 @@ public class FilterArgTest {
         FilterArg<Identifiable> fa = FilterArg.valueOf( "foo >= \"\\\"\"" );
         Filters f = fa.getFilters( mockVoService );
         assertThat( f ).isNotNull();
-        Filter subClause = f.iterator().next()[0];
+        Filter subClause = f.iterator().next().get( 0 );
         assertThat( subClause )
                 .hasFieldOrPropertyWithValue( "objectAlias", "alias" )
                 .hasFieldOrPropertyWithValue( "propertyName", "foo" )
@@ -253,7 +253,7 @@ public class FilterArgTest {
     private void checkValidCollection( Collection<String> expected, String input ) {
         FilterArg<Identifiable> fa = FilterArg.valueOf( "foo in " + input );
         Filters f = fa.getFilters( mockVoService );
-        Filter subClause = f.iterator().next()[0];
+        Filter subClause = f.iterator().next().get( 0 );
         assertThat( subClause )
                 .hasFieldOrPropertyWithValue( "objectAlias", "alias" )
                 .hasFieldOrPropertyWithValue( "propertyName", "foo" )

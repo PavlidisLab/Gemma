@@ -21,7 +21,7 @@ public class FiltersTest {
                     .or( "ee", "shortName", String.class, Filter.Operator.like, "%brain%" )
                     .or( "ee", "description", String.class, Filter.Operator.like, "%tumor%" )
                 .build();
-        List<Filter[]> clauses = IterableUtils.toList( filters );
+        List<List<Filter>> clauses = IterableUtils.toList( filters );
         assertThat( clauses ).hasSize( 4 );
         assertThat( clauses.get( 0 ) ).extracting( "requiredValue" ).containsExactly( 3L );
         assertThat( clauses.get( 1 ) ).extracting( "requiredValue" ).containsExactly( 1L, 2L );
@@ -37,4 +37,11 @@ public class FiltersTest {
                 .and( new Filter[0] );
         assertThat( f.isEmpty() ).isTrue();
     }
+
+    @Test
+    public void testEquality() {
+        assertThat( Filters.by( "ee", "id", Long.class, Filter.Operator.lessThan, 10L ) )
+                .isEqualTo( Filters.by( "ee", "id", Long.class, Filter.Operator.lessThan, 10L ) );
+    }
+
 }

@@ -3,6 +3,7 @@ package ubic.gemma.persistence.util;
 import org.apache.commons.lang3.ArrayUtils;
 
 import javax.annotation.Nullable;
+import java.util.List;
 
 /**
  * Utilities for working with {@link Filters} and {@link Filter}.
@@ -22,7 +23,7 @@ public class FiltersUtils {
         }
         if ( filters == null )
             return false;
-        for ( Filter[] clause : filters ) {
+        for ( List<Filter> clause : filters ) {
             if ( clause == null )
                 continue;
             for ( Filter subClause : clause ) {

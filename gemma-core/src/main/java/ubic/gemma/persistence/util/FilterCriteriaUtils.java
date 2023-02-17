@@ -5,6 +5,7 @@ import org.hibernate.criterion.*;
 
 import javax.annotation.Nullable;
 import java.util.Collection;
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -23,8 +24,8 @@ public class FilterCriteriaUtils {
         Conjunction c = Restrictions.conjunction();
         if ( filters == null || filters.isEmpty() )
             return c;
-        for ( Filter[] clause : filters ) {
-            if ( clause == null || clause.length == 0 )
+        for ( List<Filter> clause : filters ) {
+            if ( clause == null || clause.isEmpty() )
                 continue;
             Disjunction d = Restrictions.disjunction();
             for ( Filter subClause : clause ) {
