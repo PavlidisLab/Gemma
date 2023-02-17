@@ -1,5 +1,6 @@
 package ubic.gemma.rest.util;
 
+import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.message.GZipEncoder;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
@@ -14,6 +15,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.context.web.WebAppConfiguration;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.context.support.GenericWebApplicationContext;
+import ubic.gemma.rest.providers.ObjectMapperResolver;
 
 import javax.ws.rs.core.Application;
 
@@ -55,5 +57,11 @@ public abstract class BaseJerseyTest extends JerseyTest implements InitializingB
                 .property( "contextConfig", new GenericWebApplicationContext() )
                 .property( "openApi.configuration.location", "/WEB-INF/classes/openapi-configuration.yaml" );
         return application;
+    }
+
+    @Override
+    protected void configureClient( ClientConfig config ) {
+        // ensures that the test client can decompress gzipped payloads
+        config.register( GZipEncoder.class );
     }
 }

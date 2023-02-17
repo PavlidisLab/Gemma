@@ -169,6 +169,7 @@ public class DatasetsWebService {
     }
 
     @GET
+    @GZIP
     @Path("/annotations")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve usage statistics of annotations among datasets matching the provided filter",
