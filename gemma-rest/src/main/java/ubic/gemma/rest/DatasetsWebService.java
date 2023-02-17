@@ -178,7 +178,7 @@ public class DatasetsWebService {
         Filters filters = datasetArgService.getFilters( filter );
         // at 200, the least frequent term covers about 50 datasets
         int l = limit != null ? limit.getValueNoMaximum() : -1;
-        List<AnnotationWithUsageStatisticsValueObject> results = expressionExperimentService.getAnnotationsUsageFrequencyPreFilter( filters, l )
+        List<AnnotationWithUsageStatisticsValueObject> results = expressionExperimentService.getAnnotationsUsageFrequency( filters, l )
                 .stream().map( e -> new AnnotationWithUsageStatisticsValueObject( e.getCharacteristic(), e.getNumberOfExpressionExperiments(), getParentTerms( e.getTerm() ) ) )
                 .sorted( Comparator.comparing( UsageStatistics::getNumberOfExpressionExperiments, Comparator.reverseOrder() ) )
                 .collect( Collectors.toList() );

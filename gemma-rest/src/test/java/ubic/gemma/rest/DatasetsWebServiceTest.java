@@ -1,13 +1,13 @@
 package ubic.gemma.rest;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import io.swagger.v3.core.util.Json;
+import org.assertj.core.api.InstanceOfAssertFactories;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ContextConfiguration;
 import ubic.gemma.core.analysis.preprocess.OutlierDetectionService;
 import ubic.gemma.core.analysis.preprocess.svd.SVDService;
@@ -26,19 +26,22 @@ import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressio
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.util.*;
 import ubic.gemma.rest.util.BaseJerseyTest;
+import ubic.gemma.rest.util.JacksonConfig;
 import ubic.gemma.rest.util.args.DatasetArgService;
 import ubic.gemma.rest.util.args.GeneArgService;
 
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.util.Collections;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
+import static ubic.gemma.rest.util.Assertions.assertThat;
 
 @ContextConfiguration
 public class DatasetsWebServiceTest extends BaseJerseyTest {
 
+    @Import(JacksonConfig.class)
     @Configuration
     @TestComponent
     static class DatasetsWebServiceTestContextConfiguration {
@@ -99,11 +102,6 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
         }
 
         @Bean
-        public ObjectMapper objectMapper() {
-            return Json.mapper();
-        }
-
-        @Bean
         public DatasetArgService datasetArgService( ExpressionExperimentService expressionExperimentService ) {
             return new DatasetArgService( expressionExperimentService );
         }
@@ -130,6 +128,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
         super.setUp();
         ee = ExpressionExperiment.Factory.newInstance();
         when( expressionExperimentService.load( 1L ) ).thenReturn( ee );
+        when( expressionExperimentService.getFiltersWithInferredAnnotations( any() ) ).thenAnswer( a -> a.getArgument( 0 ) );
     }
 
     @After
@@ -139,24 +138,80 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
     }
 
     @Test
+    public void testGetDatasets() {
+        when( expressionExperimentService.loadValueObjects( any(), any(), anyInt(), anyInt() ) )
+                .thenAnswer( a -> new Slice<>( Collections.emptyList(), a.getArgument( 1 ), a.getArgument( 2 ), a.getArgument( 3 ), 0L ) );
+        assertThat( target( "/datasets" ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE )
+                .entity()
+                .hasFieldOrPropertyWithValue( "sort", null )
+                .hasFieldOrPropertyWithValue( "offset", 0 )
+                .hasFieldOrPropertyWithValue( "limit", 20 )
+                .hasFieldOrPropertyWithValue( "totalElements", 0 );
+    }
+
+    @Test
+    public void testGetDatasetsWhenSliceHasNoLimit() {
+        when( expressionExperimentService.loadValueObjects( any(), any(), anyInt(), anyInt() ) )
+                .thenAnswer( a -> new Slice<>( Collections.emptyList(), null, null, null, null ) );
+        assertThat( target( "/datasets" ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE )
+                .entity()
+                .hasFieldOrPropertyWithValue( "sort", null )
+                .hasFieldOrPropertyWithValue( "offset", null )
+                .hasFieldOrPropertyWithValue( "limit", null )
+                .hasFieldOrPropertyWithValue( "totalElements", null );
+    }
+
+    @Test
     public void testGetDatasetsPlatformsUsageStatistics() {
+        Filter f = Filter.by( "ee", "id", Long.class, Filter.Operator.lessThan, 10L, "id" );
         when( expressionExperimentService.getFilter( "id", Filter.Operator.lessThan, "10" ) )
-                .thenReturn( Filter.by( "ee", "id", Long.class, Filter.Operator.lessThan, 10L, "id" ) );
-        when( expressionExperimentService.getAnnotationsUsageFrequencyPreFilter( Filters.empty(), 50 ) )
-                .thenReturn( Collections.emptyList() );
+                .thenReturn( f );
         assertThat( target( "/datasets/platforms" ).queryParam( "filter", "id < 10" ).request().get() )
-                .hasFieldOrPropertyWithValue( "status", 200 );
+                .hasStatus( Response.Status.OK )
+                .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE );
         verify( expressionExperimentService ).getFilter( "id", Filter.Operator.lessThan, "10" );
-        verify( expressionExperimentService ).getArrayDesignUsedOrOriginalPlatformUsageFrequency(
-                Filters.by( "ee", "id", Long.class, Filter.Operator.lessThan, 10L ),
-                true, 50 );
+        verify( expressionExperimentService ).getFiltersWithInferredAnnotations( Filters.by( f ) );
+        verify( expressionExperimentService ).getArrayDesignUsedOrOriginalPlatformUsageFrequency( Filters.by( f ), true, 50 );
+    }
+
+    @Test
+    public void testGetDatasetsAnnotations() {
+        assertThat( target( "/datasets/annotations" ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE )
+                .entity()
+                .hasFieldOrPropertyWithValue( "limit", null )
+                .hasFieldOrPropertyWithValue( "sort.orderBy", "numberOfExpressionExperiments" )
+                .hasFieldOrPropertyWithValue( "sort.direction", "-" )
+                .extracting( "groupBy", InstanceOfAssertFactories.list( String.class ) )
+                .containsExactly( "classUri", "className", "termUri", "termName" );
+        verify( expressionExperimentService ).getFiltersWithInferredAnnotations( Filters.empty() );
+        verify( expressionExperimentService ).getAnnotationsUsageFrequency( Filters.empty(), -1 );
+    }
+
+    @Test
+    public void testGetDatasetsAnnotationsWithLimitIsSupplied() {
+        assertThat( target( "/datasets/annotations" ).queryParam( "limit", 50 ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE )
+                .entity()
+                .hasFieldOrPropertyWithValue( "limit", 50 )
+                .extracting( "groupBy", InstanceOfAssertFactories.list( String.class ) )
+                .containsExactly( "classUri", "className", "termUri", "termName" );
+        verify( expressionExperimentService ).getAnnotationsUsageFrequency( Filters.empty(), 50 );
     }
 
     @Test
     public void testGetDatasetQuantitationTypes() {
         when( expressionExperimentService.load( 1L ) ).thenReturn( ee );
         when( expressionExperimentService.getQuantitationTypeValueObjects( ee ) ).thenReturn( Collections.emptyList() );
-        assertThat( target( "/datasets/1/quantitationTypes" ).request().get() ).hasFieldOrPropertyWithValue( "status", 200 );
+        assertThat( target( "/datasets/1/quantitationTypes" ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE );
         verify( expressionExperimentService ).load( 1L );
         verify( expressionExperimentService ).getQuantitationTypeValueObjects( ee );
     }
@@ -166,7 +221,10 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
         QuantitationType qt = QuantitationType.Factory.newInstance();
         when( expressionExperimentService.getPreferredQuantitationTypeForDataVectorType( ee, ProcessedExpressionDataVector.class ) )
                 .thenReturn( qt );
-        assertThat( target( "/datasets/1/data/processed" ).request().get() ).hasFieldOrPropertyWithValue( "status", 200 );
+        assertThat( target( "/datasets/1/data/processed" ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE )
+                .hasEncoding( "gzip" );
         verify( expressionExperimentService ).getPreferredQuantitationTypeForDataVectorType( ee, ProcessedExpressionDataVector.class );
     }
 
@@ -177,7 +235,9 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
         when( quantitationTypeService.findByIdAndDataVectorType( ee, 12L, ProcessedExpressionDataVector.class ) ).thenReturn( qt );
         assertThat( target( "/datasets/1/data/processed" )
                 .queryParam( "quantitationType", "12" ).request().get() )
-                .hasFieldOrPropertyWithValue( "status", 200 );
+                .hasStatus( Response.Status.OK )
+                .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE )
+                .hasEncoding( "gzip" );
         verify( quantitationTypeService ).findByIdAndDataVectorType( ee, 12L, ProcessedExpressionDataVector.class );
         verify( expressionDataFileService ).writeProcessedExpressionData( eq( ee ), eq( qt ), any() );
     }
@@ -187,7 +247,10 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
         QuantitationType qt = QuantitationType.Factory.newInstance();
         when( expressionExperimentService.getPreferredQuantitationTypeForDataVectorType( ee, RawExpressionDataVector.class ) )
                 .thenReturn( qt );
-        assertThat( target( "/datasets/1/data/raw" ).request().get() ).hasFieldOrPropertyWithValue( "status", 200 );
+        assertThat( target( "/datasets/1/data/raw" ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE )
+                .hasEncoding( "gzip" );
         verify( expressionExperimentService ).getPreferredQuantitationTypeForDataVectorType( ee, RawExpressionDataVector.class );
         verifyNoInteractions( quantitationTypeService );
         verify( expressionDataFileService ).writeRawExpressionData( eq( ee ), eq( qt ), any() );
@@ -201,7 +264,9 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
                 .queryParam( "quantitationType", "12" ).request().get();
         verify( quantitationTypeService ).findByIdAndDataVectorType( ee, 12L, RawExpressionDataVector.class );
         verify( expressionDataFileService ).writeRawExpressionData( eq( ee ), eq( qt ), any() );
-        assertThat( res.getStatus() ).isEqualTo( 200 );
+        assertThat( res ).hasStatus( Response.Status.OK )
+                .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE )
+                .hasEncoding( "gzip" );
     }
 
     @Test
@@ -211,8 +276,8 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
         when( expressionExperimentService.getSort( "id", Sort.Direction.ASC ) ).thenReturn( Sort.by( "ee", "id", Sort.Direction.ASC, "id" ) );
         Response res = target( "/datasets/blacklisted" )
                 .queryParam( "filter", "" ).request().get();
-        System.out.println( res.getEntity() );
-        assertThat( res.getStatus() ).isEqualTo( 200 );
+        assertThat( res ).hasStatus( Response.Status.OK )
+                .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE );
         verify( expressionExperimentService ).loadBlacklistedValueObjects( Filters.empty(), Sort.by( "ee", "id", Sort.Direction.ASC, "id" ), 0, 20 );
     }
 }

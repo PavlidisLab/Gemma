@@ -600,7 +600,7 @@ public class ExpressionExperimentServiceImpl
      */
     @Override
     @Transactional(readOnly = true)
-    public List<CharacteristicWithUsageStatisticsAndOntologyTerm> getAnnotationsUsageFrequencyPreFilter( @Nullable Filters filters, int maxResults ) {
+    public List<CharacteristicWithUsageStatisticsAndOntologyTerm> getAnnotationsUsageFrequency( @Nullable Filters filters, int maxResults ) {
         Map<Characteristic, Long> result;
         if ( filters == null || filters.isEmpty() ) {
             result = expressionExperimentDao.getAnnotationsUsageFrequency( null, null, maxResults );
