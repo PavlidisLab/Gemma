@@ -639,10 +639,7 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
             }
             // FIXME: this should not be necessary, the AD is eagerly fetched in the model definition (see https://github.com/PavlidisLab/Gemma/issues/483)
             Hibernate.initialize( cs.getArrayDesign() );
-            SearchResult<ArrayDesign> sr = new SearchResult<>( cs.getArrayDesign(), "ArrayDesign associated to probes obtained by a Compass search." );
-            // indirect hit penalty
-            sr.setScore( INDIRECT_HIT_PENALTY * r.getScore() );
-            results.add( sr );
+            results.add( SearchResult.from( ArrayDesign.class, cs.getArrayDesign(), INDIRECT_HIT_PENALTY * r.getScore(), null, "ArrayDesign associated to probes obtained by a Compass search." ) );
         }
 
         watch.stop();
