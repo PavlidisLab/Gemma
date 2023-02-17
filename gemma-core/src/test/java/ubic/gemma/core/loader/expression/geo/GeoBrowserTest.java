@@ -102,8 +102,6 @@ public class GeoBrowserTest {
         GeoBrowser b = new GeoBrowser();
 
         try {
-            Thread.sleep( 200 );
-
             Collection<GeoRecord> res = b.getGeoRecordsBySearchTerm( null, 10, 10, true, null, null );
             // Check that the search has returned at least one record
             assertTrue( res.size() > 0 );
@@ -131,7 +129,7 @@ public class GeoBrowserTest {
     public void testGetGeoRecordsB() throws Exception {
         GeoBrowser b = new GeoBrowser();
         try {
-            Collection<GeoRecord> geoRecords = b.getGeoRecords( Arrays.asList( new String[] { "GSE1", "GSE2", "GSE3" } ) );
+            Collection<GeoRecord> geoRecords = b.getGeoRecords( Arrays.asList( "GSE1", "GSE2", "GSE3" ) );
             assertEquals( 3, geoRecords.size() );
         } catch ( IOException e ) {
             if ( e.getMessage().contains( "GEO returned an error" ) ) {
