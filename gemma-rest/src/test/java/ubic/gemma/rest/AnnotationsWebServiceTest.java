@@ -117,8 +117,8 @@ public class AnnotationsWebServiceTest extends AbstractJUnit4SpringContextTests 
         when( srm.get( ExpressionExperiment.class ) ).thenReturn( Collections.singletonList( new SearchResult<>( ee, "test object" ) ) );
         when( searchService.search( any( SearchSettings.class ), eq( false ), eq( false ) ) )
                 .thenReturn( srm );
-        when( taxonService.getFilter( eq( "commonName" ), eq( Filter.Operator.eq ), any( String.class ) ) ).thenAnswer( a -> Filter.by( "t", "commonName", String.class, Filter.Operator.eq, a.getArgument( 2 ), a.getArgument( 0 ) ) );
-        when( taxonService.getFilter( eq( "scientificName" ), eq( Filter.Operator.eq ), any( String.class ) ) ).thenAnswer( a -> Filter.by( "t", "scientificName", String.class, Filter.Operator.eq, a.getArgument( 2 ), a.getArgument( 0 ) ) );
+        when( taxonService.getFilter( eq( "commonName" ), eq( Filter.Operator.eq ), any( String.class ) ) ).thenAnswer( a -> Filter.by( "t", "commonName", String.class, Filter.Operator.eq, a.getArgument( 2, String.class ), a.getArgument( 0 ) ) );
+        when( taxonService.getFilter( eq( "scientificName" ), eq( Filter.Operator.eq ), any( String.class ) ) ).thenAnswer( a -> Filter.by( "t", "scientificName", String.class, Filter.Operator.eq, a.getArgument( 2, String.class ), a.getArgument( 0 ) ) );
         when( expressionExperimentService.getIdentifierPropertyName() ).thenReturn( "id" );
         when( expressionExperimentService.getFilter( "id", Filter.Operator.in, Collections.singletonList( "1" ) ) ).thenReturn( Filter.by( "ee", "id", Long.class, Filter.Operator.in, Collections.singleton( 1L ), "id" ) );
         when( expressionExperimentService.getSort( "id", Sort.Direction.ASC ) ).thenReturn( Sort.by( "ee", "id", Sort.Direction.ASC, "id" ) );

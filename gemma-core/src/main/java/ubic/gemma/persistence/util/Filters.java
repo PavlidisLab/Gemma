@@ -4,10 +4,7 @@ import lombok.EqualsAndHashCode;
 
 import javax.annotation.CheckReturnValue;
 import javax.annotation.Nullable;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -43,8 +40,16 @@ public class Filters implements Iterable<Filter[]> {
          * Add a sub-clause explicitly.
          */
         @CheckReturnValue
-        public FiltersClauseBuilder or( @Nullable String objectAlias, String propertyName, Class<?> propertyType, Filter.Operator operator, @Nullable Object requiredValue ) {
+        public <T> FiltersClauseBuilder or( @Nullable String objectAlias, String propertyName, Class<T> propertyType, Filter.Operator operator, @Nullable T requiredValue ) {
             return or( Filter.by( objectAlias, propertyName, propertyType, operator, requiredValue ) );
+        }
+
+        /**
+         * Add a sub-clause explicitly.
+         */
+        @CheckReturnValue
+        public <T> FiltersClauseBuilder or( @Nullable String objectAlias, String propertyName, Class<T> propertyType, Filter.Operator operator, Collection<T> requiredValues ) {
+            return or( Filter.by( objectAlias, propertyName, propertyType, operator, requiredValues ) );
         }
 
         public Filters build() {
@@ -79,7 +84,11 @@ public class Filters implements Iterable<Filter[]> {
     /**
      * Create a singleton {@link Filters} from an explicit clause.
      */
-    public static Filters by( @Nullable String objectAlias, String propertyName, Class<?> propertyType, Filter.Operator operator, @Nullable Object requiredValue ) {
+    public static <T> Filters by( @Nullable String objectAlias, String propertyName, Class<T> propertyType, Filter.Operator operator, @Nullable T requiredValue ) {
+        return empty().and( Filter.by( objectAlias, propertyName, propertyType, operator, requiredValue ) );
+    }
+
+    public static <T> Filters by( @Nullable String objectAlias, String propertyName, Class<T> propertyType, Filter.Operator operator, Collection<T> requiredValue ) {
         return empty().and( Filter.by( objectAlias, propertyName, propertyType, operator, requiredValue ) );
     }
 
@@ -114,8 +123,15 @@ public class Filters implements Iterable<Filter[]> {
     /**
      * Add a clause of one explicit clause to the conjunction.
      */
-    public Filters and( @Nullable String objectAlias, String propertyName, Class<?> propertyType, Filter.Operator operator, @Nullable Object requiredValue ) {
+    public <T> Filters and( @Nullable String objectAlias, String propertyName, Class<T> propertyType, Filter.Operator operator, @Nullable T requiredValue ) {
         return and( Filter.by( objectAlias, propertyName, propertyType, operator, requiredValue ) );
+    }
+
+    /**
+     * Add a new clause of one explicit clause with a collection right hand side to to the conjunction.
+     */
+    public <T> Filters and( @Nullable String objectAlias, String propertyName, Class<T> propertyType, Filter.Operator operator, Collection<T> requiredValues ) {
+        return and( Filter.by( objectAlias, propertyName, propertyType, operator, requiredValues ) );
     }
 
     /**

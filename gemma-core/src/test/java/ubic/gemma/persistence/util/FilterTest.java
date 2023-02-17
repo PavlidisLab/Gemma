@@ -25,10 +25,7 @@ import java.time.LocalDateTime;
 import java.time.Month;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Date;
+import java.util.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -157,14 +154,8 @@ public class FilterTest {
     }
 
     @Test
-    public void testLikeWithInvalidRequiredValue() {
-        assertThatThrownBy( () -> Filter.by( "ee", "id", String.class, Filter.Operator.like, 1 ) )
-                .isInstanceOf( ( IllegalArgumentException.class ) );
-    }
-
-    @Test
     public void testGeqWithNullRequiredValue() {
-        assertThatThrownBy( () -> Filter.by( "ee", "id", String.class, Filter.Operator.greaterOrEq, null ) )
+        assertThatThrownBy( () -> Filter.by( "ee", "id", String.class, Filter.Operator.greaterOrEq, ( String ) null ) )
                 .isInstanceOf( IllegalArgumentException.class );
     }
 
@@ -176,12 +167,6 @@ public class FilterTest {
     @Test
     public void testWrapperToPrimitiveConversion() {
         Filter.by( "ee", "id", int.class, Filter.Operator.greaterOrEq, Integer.valueOf( 1 ) );
-    }
-
-    @Test
-    public void testInvalidCollectionTypeConversion() {
-        assertThatThrownBy( () -> Filter.by( "ee", "id", String.class, Filter.Operator.in, Arrays.asList( 1, 2, 3 ) ) )
-                .isInstanceOf( IllegalArgumentException.class );
     }
 
     @Test

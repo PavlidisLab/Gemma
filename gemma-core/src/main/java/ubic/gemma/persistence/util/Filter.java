@@ -103,18 +103,32 @@ public class Filter implements PropertyMapping {
      * @param originalProperty the original property name, or null if not applicable
      * @throws IllegalArgumentException if the type of the requiredValue does not match the propertyType
      */
-    public static Filter by( @Nullable String objectAlias, String propertyName, Class<?> propertyType, Operator operator, @Nullable Object requiredValue, String originalProperty ) {
+    public static <T> Filter by( @Nullable String objectAlias, String propertyName, Class<T> propertyType, Operator operator, @Nullable T requiredValue, String originalProperty ) {
         return new Filter( objectAlias, propertyName, propertyType, operator, requiredValue, originalProperty );
     }
 
     /**
-     * Create a new filter without an original property.
-     * @see #by(String, String, Class, Operator, Object)
+     * Create a new filter with a collection right hand side.
      */
-    public static Filter by( @Nullable String objectAlias, String propertyName, Class<?> propertyType, Operator operator, @Nullable Object requiredValue ) {
+    public static <T> Filter by( @Nullable String objectAlias, String propertyName, Class<T> propertyType, Operator operator, Collection<T> requiredValues, String originalProperty ) {
+        return new Filter( objectAlias, propertyName, propertyType, operator, requiredValues, originalProperty );
+    }
+
+    /**
+     * Create a new filter without an original property.
+     * @see #by(String, String, Class, Operator, Object, String)
+     */
+    public static <T> Filter by( @Nullable String objectAlias, String propertyName, Class<T> propertyType, Operator operator, @Nullable T requiredValue ) {
         return new Filter( objectAlias, propertyName, propertyType, operator, requiredValue, null );
     }
 
+    /**
+     * Create a new filter without an original property and a collection right hand side.
+     * @see #by(String, String, Class, Operator, Object, String)
+     */
+    public static <T> Filter by( @Nullable String objectAlias, String propertyName, Class<T> propertyType, Operator operator, Collection<T> requiredValues ) {
+        return new Filter( objectAlias, propertyName, propertyType, operator, requiredValues, null );
+    }
 
     /**
      * Parse filter where the right-hand side is a scalar.

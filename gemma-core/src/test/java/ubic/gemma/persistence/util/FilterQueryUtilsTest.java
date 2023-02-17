@@ -58,8 +58,8 @@ public class FilterQueryUtilsTest {
     public void testRestrictionClauseWithNullRequiredValue() {
         Filters filters = Filters.empty()
                 .and()
-                .or( "ee", "id", Long.class, Filter.Operator.eq, null )
-                .or( "ee", "id", Long.class, Filter.Operator.notEq, null )
+                .or( "ee", "id", Long.class, Filter.Operator.eq, ( Long ) null )
+                .or( "ee", "id", Long.class, Filter.Operator.notEq, ( Long ) null )
                 .build();
         assertThat( formRestrictionClause( filters ) )
                 .isEqualTo( " and (ee.id is :ee_id1 or ee.id is not :ee_id2)" );
