@@ -27,7 +27,7 @@ public class FiltersTest {
         assertThat( clauses.get( 1 ) ).extracting( "requiredValue" ).containsExactly( 1L, 2L );
         assertThat( clauses.get( 2 ) ).isEmpty();
         assertThat( clauses.get( 3 ) ).extracting( "requiredValue" ).containsExactly( "%brain%", "%tumor%" );
-        assertThat( filters ).hasToString( "ee.id = 3 and (ee.id = 1 or ee.id = 2) and (ee.shortName like %brain% or ee.description like %tumor%)" );
+        assertThat( filters ).hasToString( "ee.id = 3 and ee.id = 1 or ee.id = 2 and ee.shortName like %brain% or ee.description like %tumor%" );
     }
 
     @Test
