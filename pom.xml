@@ -16,7 +16,7 @@
 	<parent>
 		<groupId>ubc.pavlab</groupId>
 		<artifactId>pavlab-starter-parent</artifactId>
-		<version>1.2.6</version>
+		<version>1.2.7</version>
 	</parent>
 	<modules>
 		<module>gemma-core</module>
@@ -140,7 +140,6 @@
 		<dependency>
 			<groupId>baseCode</groupId>
 			<artifactId>baseCode</artifactId>
-			<version>1.1.9</version>
 		</dependency>
 
 		<dependency>
@@ -230,7 +229,6 @@
 		<dependency>
 			<groupId>org.dom4j</groupId>
 			<artifactId>dom4j</artifactId>
-			<version>${dom4j.version}</version>
 			<scope>runtime</scope>
 		</dependency>
 		<dependency>
@@ -337,7 +335,7 @@
 		<dependency>
 			<groupId>commons-fileupload</groupId>
 			<artifactId>commons-fileupload</artifactId>
-			<version>1.4</version>
+			<version>1.5</version>
 		</dependency>
 
 		<!-- Jackson, for JSON serialization -->
@@ -641,8 +639,7 @@
 		<jawr.version>3.9</jawr.version>
 		<lucene.version>3.6.2</lucene.version>
 		<slack.version>1.27.3</slack.version>
-		<micrometer.version>1.10.3</micrometer.version>
-		<dom4j.version>2.1.4</dom4j.version>
+		<micrometer.version>1.10.4</micrometer.version>
 		<!-- this ensures that -DexcludedGroups works properly -->
 		<excludedGroups/>
 	</properties>
