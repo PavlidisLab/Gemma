@@ -40,18 +40,18 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.xpath.*;
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.lang.reflect.Array;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 /**
  * Gets records from GEO and compares them to Gemma. This is used to identify data sets that are new in GEO and not in
@@ -152,9 +152,9 @@ public class GeoBrowser {
         //https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=gds&term=GSE[ETYP]+AND+(GSE100[accn]+OR+GSE101[accn])&retmax=5000&usehistory=y
 
         for ( List<String> chunk : ListUtils.partition( new ArrayList<>( accessions ), 10 ) ) {
-            String searchUrlString = GeoBrowser.ESEARCH + "(" + StringUtils.join( chunk, "[accn]+OR+" ) + "[accn])&usehistory=y";
+            String searchUrlString = GeoBrowser.ESEARCH + "(" + chunk.stream().map( GeoBrowser::urlEncode ).collect( Collectors.joining( "[accn]+OR+" ) ) + "[accn])&usehistory=y";
             if ( StringUtils.isNotBlank( NCBI_API_KEY ) ) {
-                searchUrlString = searchUrlString + "&api_key=" + NCBI_API_KEY;
+                searchUrlString = searchUrlString + "&api_key=" + urlEncode( NCBI_API_KEY );
             }
             getGeoBasicRecords( records, searchUrlString );
         }
@@ -191,8 +191,8 @@ public class GeoBrowser {
         String cookie = XMLUtils.getTextValue( cookieEl );
 
         URL fetchUrl = new URL(
-                GeoBrowser.EFETCH + "&mode=mode.text&query_key=" + queryId + "&WebEnv=" + cookie
-                        + ( StringUtils.isNotBlank( NCBI_API_KEY ) ? "&api_key=" + NCBI_API_KEY : "" ) );
+                GeoBrowser.EFETCH + "&mode=mode.text&query_key=" + urlEncode( queryId ) + "&WebEnv=" + urlEncode( cookie )
+                        + ( StringUtils.isNotBlank( NCBI_API_KEY ) ? "&api_key=" + urlEncode( NCBI_API_KEY ) : "" ) );
 
         StopWatch t = new StopWatch();
         t.start();
@@ -279,7 +279,7 @@ public class GeoBrowser {
         searchUrlString = GeoBrowser.EPLATRETRIEVE + "&retmax=" + 10000 + "&usehistory=y"; //10k is the limit.
 
         if ( StringUtils.isNotBlank( NCBI_API_KEY ) ) {
-            searchUrlString = searchUrlString + "&api_key=" + NCBI_API_KEY;
+            searchUrlString = searchUrlString + "&api_key=" + urlEncode( NCBI_API_KEY );
         }
 
         URL searchUrl = new URL( searchUrlString );
@@ -310,9 +310,9 @@ public class GeoBrowser {
         String cookie = XMLUtils.getTextValue( cookieEl );
 
         URL fetchUrl = new URL(
-                GeoBrowser.EFETCH + "&mode=mode.text" + "&query_key=" + queryId + "&retmax="
-                        + 10000 + "&WebEnv=" + cookie
-                        + ( StringUtils.isNotBlank( NCBI_API_KEY ) ? "&api_key=" + NCBI_API_KEY : "" ) );
+                GeoBrowser.EFETCH + "&mode=mode.text" + "&query_key=" + urlEncode( queryId ) + "&retmax="
+                        + 10000 + "&WebEnv=" + urlEncode( cookie )
+                        + ( StringUtils.isNotBlank( NCBI_API_KEY ) ? "&api_key=" + urlEncode( NCBI_API_KEY ) : "" ) );
 
         StopWatch t = new StopWatch();
         t.start();
@@ -384,15 +384,15 @@ public class GeoBrowser {
 
         String platformLimitClause = "";
         if ( limitPlatforms != null && !limitPlatforms.isEmpty() ) {
-            platformLimitClause = "%20AND%20(" + StringUtils.join( limitPlatforms, "[ACCN]%20OR%20" ) + "[ACCN])";
+            platformLimitClause = " AND (" + limitPlatforms.stream().map( s -> s + "[ACCN]" ).collect( Collectors.joining( " OR " ) );
         }
 
         String searchUrlString;
         if ( StringUtils.isBlank( searchTerms ) ) {
-            searchUrlString = GeoBrowser.ERETRIEVE + platformLimitClause + "&retstart=" + start + "&retmax=" + pageSize + "&usehistory=y";
+            searchUrlString = GeoBrowser.ERETRIEVE + urlEncode( platformLimitClause ) + "&retstart=" + start + "&retmax=" + pageSize + "&usehistory=y";
         } else {
             // FIXME: could allow merging in of platformLimitClause. Should really rewrite the way we form these urls to be more modular.
-            searchUrlString = GeoBrowser.ESEARCH + searchTerms + "&retstart=" + start + "&retmax=" + pageSize
+            searchUrlString = GeoBrowser.ESEARCH + urlEncode( searchTerms ) + "&retstart=" + start + "&retmax=" + pageSize
                     + "&usehistory=y";
         }
 
@@ -428,9 +428,9 @@ public class GeoBrowser {
         String cookie = XMLUtils.getTextValue( cookieEl );
 
         URL fetchUrl = new URL(
-                GeoBrowser.EFETCH + "&mode=mode.text" + "&query_key=" + queryId + "&retstart=" + start + "&retmax="
-                        + pageSize + "&WebEnv=" + cookie
-                        + ( StringUtils.isNotBlank( NCBI_API_KEY ) ? "&api_key=" + NCBI_API_KEY : "" ) );
+                GeoBrowser.EFETCH + "&mode=mode.text" + "&query_key=" + urlEncode( queryId ) + "&retstart=" + start + "&retmax="
+                        + pageSize + "&WebEnv=" + urlEncode( cookie )
+                        + ( StringUtils.isNotBlank( NCBI_API_KEY ) ? "&api_key=" + urlEncode( NCBI_API_KEY ) : "" ) );
 
         StopWatch t = new StopWatch();
         DateFormat dateFormat = new SimpleDateFormat( "yyyy.MM.dd", Locale.ENGLISH ); // for logging
@@ -717,7 +717,7 @@ public class GeoBrowser {
         if ( !record.isSuperSeries() ) {
             URL miniMLURL;
             try {
-                miniMLURL = new URL( "https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?targ=gse&form=xml&view=full&acc=" + record.getGeoAccession() );
+                miniMLURL = new URL( "https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?targ=gse&form=xml&view=full&acc=" + urlEncode( record.getGeoAccession() ) );
             } catch ( MalformedURLException e ) {
                 throw new RuntimeException( e );
             }
@@ -788,7 +788,7 @@ public class GeoBrowser {
     private void getSampleDetails( GeoRecord record ) throws IOException {
         // Fetch miniML for the samples.
         // e.g. https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE171682&targ=gsm&form=xml&view=full
-        URL sampleMINIMLURL = new URL( "https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?targ=gsm&form=xml&view=full&acc=" + record.getGeoAccession() );
+        URL sampleMINIMLURL = new URL( "https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?targ=gsm&form=xml&view=full&acc=" + urlEncode( record.getGeoAccession() ) );
         log.debug( String.format( "Obtaining sample details for %s from %s...", record.getGeoAccession(), sampleMINIMLURL ) );
         try ( InputStream isd = openUrlWithMaxSize( sampleMINIMLURL, MAX_MINIML_RECORD_SIZE ) ) {
             parseSampleMiNIML( record, isd );
@@ -813,6 +813,14 @@ public class GeoBrowser {
             taxa.add( taxonArray[i].trim() );
         }
         return taxa;
+    }
+
+    private static String urlEncode( String s ) {
+        try {
+            return URLEncoder.encode( s, StandardCharsets.UTF_8.name() );
+        } catch ( UnsupportedEncodingException e ) {
+            throw new RuntimeException( e );
+        }
     }
 
     /**
