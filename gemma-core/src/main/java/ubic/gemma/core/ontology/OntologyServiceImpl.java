@@ -21,7 +21,6 @@ package ubic.gemma.core.ontology;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -71,7 +70,6 @@ import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.search.SearchResult;
 import ubic.gemma.core.search.SearchService;
 import ubic.gemma.model.association.GOEvidenceCode;
-import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
@@ -1023,8 +1021,8 @@ public class OntologyServiceImpl implements OntologyService {
         SearchService.SearchResultMap geneResults = this.searchService.search( ss, false, false );
 
         for ( SearchResult<Gene> sr : geneResults.get( Gene.class ) ) {
-            if ( !sr.getResultClass().isAssignableFrom( Gene.class ) ) {
-                throw new IllegalStateException( "Expected a gene search result, got a " + sr.getResultClass() );
+            if ( !sr.getResultType().isAssignableFrom( Gene.class ) ) {
+                throw new IllegalStateException( "Expected a gene search result, got a " + sr.getResultType() );
             }
 
             GeneValueObject g = this.geneService.loadValueObjectById( sr.getResultId() );

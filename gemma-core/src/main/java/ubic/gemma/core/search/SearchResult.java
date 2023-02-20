@@ -22,7 +22,9 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
 import ubic.gemma.model.common.Identifiable;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.Comparator;
 import java.util.Objects;
@@ -31,8 +33,8 @@ import java.util.Objects;
  * @author paul
  */
 @Data
-@EqualsAndHashCode(of = { "resultClass", "resultId" })
-@ToString(of = { "resultId", "resultClass", "highlightedText", "score", "source" })
+@EqualsAndHashCode(of = { "resultType", "resultId" })
+@ToString(of = { "resultType", "resultId", "resultType", "highlightedText", "score", "source" })
 public class SearchResult<T extends Identifiable> implements Comparable<SearchResult<?>> {
 
     /**
@@ -46,28 +48,40 @@ public class SearchResult<T extends Identifiable> implements Comparable<SearchRe
     }
 
     /**
-     * Create a search result from an entity, a score and some highlighted text.
-     */
-    public static <T extends Identifiable> SearchResult<T> from( T entity, double score, @Nullable String highlightedText, Object source ) {
-        SearchResult<T> sr = new SearchResult<>( entity, source );
-        sr.setScore( score );
-        sr.setHighlightedText( highlightedText );
-        return sr;
-    }
-
-    /**
      * Create a search result whose result class differ from the object.
      * <p>
      * This can be useful if you wrap a proxy, or don't want to expose the object class publicly. For example, our
      * {@link ubic.gemma.model.association.phenotype.PhenotypeAssociation} use a {@link ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject}
      * for the result object.
      */
-    public static <T extends Identifiable> SearchResult<T> from( Class<? extends Identifiable> resultClass, T entity, double score, @Nullable String highlightedText, Object source ) {
-        SearchResult<T> sr = new SearchResult<>( resultClass, entity.getId(), source );
+    public static <T extends Identifiable> SearchResult<T> from( Class<? extends Identifiable> resultType, T entity, double score, @Nullable String highlightedText, Object source ) {
+        SearchResult<T> sr = new SearchResult<>( resultType, entity.getId(), source );
         sr.setResultObject( entity );
         sr.setScore( score );
         sr.setHighlightedText( highlightedText );
         return sr;
+    }
+
+    /**
+     * Shorthand for {@link #from(Class, Identifiable, double, String, Object)} if you don't need to set the score and
+     * highlighted text.
+     */
+    public static <T extends Identifiable> SearchResult<T> from( Class<? extends Identifiable> resultType, T entity, String source ) {
+        return from( resultType, entity, 0.0, null, source );
+    }
+
+    /**
+     * Create a new provisional search result with a result type and ID.
+     */
+    public static <T extends Identifiable> SearchResult<T> from( Class<? extends Identifiable> resultType, long entityId, double score, @Nullable String highlightedText, Object source ) {
+        SearchResult<T> sr = new SearchResult<>( resultType, entityId, source );
+        sr.setScore( score );
+        sr.setHighlightedText( highlightedText );
+        return sr;
+    }
+
+    public static <T extends Identifiable> SearchResult<T> from( Class<? extends Identifiable> resultType, long entityId, String source ) {
+        return from( resultType, entityId, 0.0, null, source );
     }
 
     /**
@@ -77,7 +91,7 @@ public class SearchResult<T extends Identifiable> implements Comparable<SearchRe
      * highlighted text, etc.).
      */
     public static <T extends Identifiable> SearchResult<T> from( SearchResult<?> original, @Nullable T newResultObject ) {
-        SearchResult<T> sr = new SearchResult<>( original.resultClass, original.resultId, original.source );
+        SearchResult<T> sr = new SearchResult<>( original.resultType, original.resultId, original.source );
         sr.setScore( original.getScore() );
         sr.setHighlightedText( original.getHighlightedText() );
         sr.setResultObject( newResultObject );
@@ -87,12 +101,12 @@ public class SearchResult<T extends Identifiable> implements Comparable<SearchRe
     /**
      * Class of the result, immutable.
      */
-    private final Class<? extends Identifiable> resultClass;
+    private final Class<? extends Identifiable> resultType;
 
     /**
      * ID of the result, immutable.
      */
-    private final Long resultId;
+    private final long resultId;
 
     /**
      * Result object this search result is referring to.
@@ -124,24 +138,14 @@ public class SearchResult<T extends Identifiable> implements Comparable<SearchRe
      */
     private final Object source;
 
-    public SearchResult( T resultObject, Object source ) {
-        if ( resultObject.getId() == null ) {
-            throw new IllegalArgumentException( "THe result object ID cannot be null." );
-        }
-        this.resultClass = resultObject.getClass();
-        this.resultId = resultObject.getId();
-        setResultObject( resultObject );
-        this.source = source;
-    }
-
     /**
      * Placeholder for provisional search results.
      * <p>
      * This is used when the class and ID is known beforehand, but the result hasn't been retrieve yet from persistent
      * storage.
      */
-    public SearchResult( Class<? extends Identifiable> entityClass, long entityId, Object source ) {
-        this.resultClass = entityClass;
+    private SearchResult( Class<? extends Identifiable> entityClass, long entityId, Object source ) {
+        this.resultType = entityClass;
         this.resultId = entityId;
         this.source = source;
     }
@@ -149,6 +153,17 @@ public class SearchResult<T extends Identifiable> implements Comparable<SearchRe
     @Override
     public int compareTo( SearchResult<?> o ) {
         return getComparator().compare( this, o );
+    }
+
+    /**
+     * Obtain the result ID.
+     * <p>
+     * For consistency with {@link Identifiable#getId()}, thus returns a {@link Long}. It is however backed internally
+     * by a native long and cannot ever be null.
+     */
+    @Nonnull
+    public Long getResultId() {
+        return resultId;
     }
 
     /**

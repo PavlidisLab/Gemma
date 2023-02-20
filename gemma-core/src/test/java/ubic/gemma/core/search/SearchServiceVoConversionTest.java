@@ -1,5 +1,6 @@
 package ubic.gemma.core.search;
 
+import org.apache.commons.math3.analysis.function.Exp;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -9,6 +10,7 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
 import ubic.gemma.core.genome.gene.service.GeneSetService;
 import ubic.gemma.model.analysis.expression.diff.ContrastResult;
+import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -75,20 +77,20 @@ public class SearchServiceVoConversionTest extends AbstractJUnit4SpringContextTe
 
     @Test
     public void testConvertArrayDesign() {
-        searchService.loadValueObject( new SearchResult<>( ad, "test object" ) );
+        searchService.loadValueObject( SearchResult.from( ArrayDesign.class, ad, "test object" ) );
         verify( arrayDesignService ).loadValueObject( ad );
     }
 
     @Test
     public void testConvertExpressionExperiment() {
-        searchService.loadValueObject( new SearchResult<>( ee, "test object" ) );
+        searchService.loadValueObject( SearchResult.from( ExpressionExperiment.class, ee, "test object" ) );
         verify( expressionExperimentService ).loadValueObject( ee );
     }
 
     @Test
     public void testConvertPhenotypeAssociation() {
         // this is a complicated one because
-        assertThat( searchService.loadValueObject( new SearchResult<>( phenotypeAssociation, "test object" ) ) )
+        assertThat( searchService.loadValueObject( SearchResult.from( PhenotypeAssociation.class, phenotypeAssociation, "test object" ) ) )
                 .extracting( "resultObject" )
                 .isSameAs( phenotypeAssociation );
     }
@@ -96,13 +98,13 @@ public class SearchServiceVoConversionTest extends AbstractJUnit4SpringContextTe
     @Test
     public void testConvertGeneSet() {
         // this is another complicated one because GeneSetService does not implement BaseVoEnabledService
-        searchService.loadValueObject( new SearchResult<>( gs, "test object" ) );
+        searchService.loadValueObject( SearchResult.from( GeneSet.class, gs, "test object" ) );
         verify( geneSetService ).loadValueObject( gs );
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void testUnsupportedResultTypeRaisesIllegalArgumentException() {
-        searchService.loadValueObject( new SearchResult<>( new ContrastResult(), "test object" ) );
+        searchService.loadValueObject( SearchResult.from( ContrastResult.class, new ContrastResult(), "test object" ) );
     }
 
 }

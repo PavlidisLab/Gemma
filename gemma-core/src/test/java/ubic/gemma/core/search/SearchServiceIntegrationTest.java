@@ -349,7 +349,7 @@ public class SearchServiceIntegrationTest extends BaseSpringContextTest {
                 .hasSize( 1 );
         SearchResult<IdentifiableValueObject<ExpressionExperiment>> resultVo = searchService.loadValueObject( results.get( 0 ) );
         // ensure that the resultType is preserved
-        assertThat( resultVo.getResultClass() )
+        assertThat( resultVo.getResultType() )
                 .isAssignableFrom( ExpressionExperiment.class );
         assertThat( resultVo.getResultId() )
                 .isEqualTo( ee.getId() );

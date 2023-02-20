@@ -210,7 +210,7 @@ public class SearchWebService {
 
         public SearchResultValueObject( SearchResult<T> searchResult ) {
             this.resultId = searchResult.getResultId();
-            this.resultType = searchResult.getResultClass().getName();
+            this.resultType = searchResult.getResultType().getName();
             this.resultObject = searchResult.getResultObject();
             this.score = searchResult.getScore();
             this.source = searchResult.getSource().toString();

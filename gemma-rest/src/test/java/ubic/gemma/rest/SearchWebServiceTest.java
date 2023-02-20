@@ -99,12 +99,12 @@ public class SearchWebServiceTest extends AbstractJUnit4SpringContextTests {
     public void testSearchEverything() throws SearchException {
         ArgumentCaptor<SearchSettings> searchSettingsArgumentCaptor = ArgumentCaptor.forClass( SearchSettings.class );
         SearchService.SearchResultMap srm = mock( SearchService.SearchResultMap.class );
-        when( srm.values() ).thenReturn( Collections.singleton( Collections.singletonList( new SearchResult<>( gene, "test object" ) ) ) );
+        when( srm.values() ).thenReturn( Collections.singleton( Collections.singletonList( SearchResult.from( Gene.class, gene, "test object" ) ) ) );
         when( searchService.search( searchSettingsArgumentCaptor.capture() ) ).thenReturn( srm );
         when( searchService.loadValueObject( any() ) ).thenAnswer( args -> {
             //noinspection unchecked
             SearchResult<Gene> searchResult = args.getArgument( 0, SearchResult.class );
-            SearchResult<GeneValueObject> sr = new SearchResult<>( searchResult.getResultClass(), searchResult.getResultId(), "test object" );
+            SearchResult<GeneValueObject> sr = SearchResult.from( searchResult.getResultType(), searchResult.getResultId(), "test object" );
             if ( searchResult.getResultObject() != null ) {
                 sr.setResultObject( new GeneValueObject( searchResult.getResultObject() ) );
             }
@@ -137,12 +137,12 @@ public class SearchWebServiceTest extends AbstractJUnit4SpringContextTests {
     @Test
     public void testSearchByTaxon() throws SearchException {
         SearchService.SearchResultMap srm = mock( SearchService.SearchResultMap.class );
-        when( srm.get( Gene.class ) ).thenReturn( Collections.singletonList( new SearchResult<>( gene, "test object" ) ) );
+        when( srm.get( Gene.class ) ).thenReturn( Collections.singletonList( SearchResult.from( Gene.class, gene, "test object" ) ) );
         when( searchService.search( any() ) ).thenReturn( srm );
         when( searchService.loadValueObject( any() ) ).thenAnswer( args -> {
             //noinspection unchecked
             SearchResult<Gene> searchResult = args.getArgument( 0, SearchResult.class );
-            SearchResult<GeneValueObject> sr = new SearchResult<>( searchResult.getResultClass(), searchResult.getResultId(), "test object" );
+            SearchResult<GeneValueObject> sr = SearchResult.from( searchResult.getResultType(), searchResult.getResultId(), "test object" );
             if ( searchResult.getResultObject() != null ) {
                 sr.setResultObject( new GeneValueObject( searchResult.getResultObject() ) );
             }
@@ -157,12 +157,12 @@ public class SearchWebServiceTest extends AbstractJUnit4SpringContextTests {
     @Test
     public void testSearchByArrayDesign() throws SearchException {
         SearchService.SearchResultMap srm = mock( SearchService.SearchResultMap.class );
-        when( srm.get( Gene.class ) ).thenReturn( Collections.singletonList( new SearchResult<>( gene, "test object" ) ) );
+        when( srm.get( Gene.class ) ).thenReturn( Collections.singletonList( SearchResult.from( Gene.class, gene, "test object" ) ) );
         when( searchService.search( any() ) ).thenReturn( srm );
         when( searchService.loadValueObject( any() ) ).thenAnswer( args -> {
             //noinspection unchecked
             SearchResult<Gene> searchResult = args.getArgument( 0, SearchResult.class );
-            SearchResult<GeneValueObject> sr = new SearchResult<>( searchResult.getResultClass(), searchResult.getResultId(), "test object" );
+            SearchResult<GeneValueObject> sr = SearchResult.from( searchResult.getResultType(), searchResult.getResultId(), "test object" );
             if ( searchResult.getResultObject() != null ) {
                 sr.setResultObject( new GeneValueObject( searchResult.getResultObject() ) );
             }

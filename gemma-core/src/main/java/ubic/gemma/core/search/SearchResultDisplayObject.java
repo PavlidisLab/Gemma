@@ -354,7 +354,7 @@ public class SearchResultDisplayObject implements Comparable<SearchResultDisplay
     private void setValues( SearchResult<?> searchResult ) {
 
         // if it's a search result, grab the underlying object
-        Class<?> searchResultClass = searchResult.getResultClass();
+        Class<?> searchResultClass = searchResult.getResultType();
         Object resultObject = searchResult.getResultObject();
         // class-specific construction
         if ( resultObject instanceof GeneValueObject ) {
