@@ -63,7 +63,6 @@ import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpre
 import ubic.gemma.persistence.service.analysis.expression.pca.PrincipalComponentAnalysisService;
 import ubic.gemma.persistence.service.analysis.expression.sampleCoexpression.SampleCoexpressionAnalysisService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventDao;
-import ubic.gemma.persistence.service.common.description.CharacteristicService;
 import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeService;
 import ubic.gemma.persistence.service.expression.bioAssayData.BioAssayDimensionService;
 import ubic.gemma.persistence.service.expression.bioAssayData.RawExpressionDataVectorDao;
@@ -501,11 +500,11 @@ public class ExpressionExperimentServiceImpl
 
     @Override
     @Transactional(readOnly = true)
-    public Map<Characteristic, Long> getAnnotationsFrequencyPreFilter( @Nullable Filters filters, int maxResults ) {
+    public Map<Characteristic, Long> getAnnotationsFrequency( @Nullable Filters filters, int maxResults ) {
         if ( filters == null || filters.isEmpty() ) {
             return expressionExperimentDao.getAnnotationsFrequency( null, maxResults );
         } else {
-            List<Long> eeIds = expressionExperimentDao.loadIdsPreFilter( filters, null );
+            List<Long> eeIds = expressionExperimentDao.loadIds( filters, null );
             return expressionExperimentDao.getAnnotationsFrequency( eeIds, maxResults );
         }
     }
@@ -518,8 +517,8 @@ public class ExpressionExperimentServiceImpl
 
     @Override
     @Transactional(readOnly = true)
-    public Map<ArrayDesign, Long> getArrayDesignUsedOrOriginalPlatformUsageFrequencyPreFilter( @Nullable Filters filters, boolean includeOriginalPlatforms, int maxResults ) {
-        List<Long> ids = this.expressionExperimentDao.loadIdsPreFilter( filters, null );
+    public Map<ArrayDesign, Long> getArrayDesignUsedOrOriginalPlatformUsageFrequency( @Nullable Filters filters, boolean includeOriginalPlatforms, int maxResults ) {
+        List<Long> ids = this.expressionExperimentDao.loadIds( filters, null );
         Map<ArrayDesign, Long> result = new HashMap<>( expressionExperimentDao.getArrayDesignsUsageFrequency( ids ) );
         if ( includeOriginalPlatforms ) {
             for ( Map.Entry<ArrayDesign, Long> e : expressionExperimentDao.getOriginalPlatformsUsageFrequency( ids ).entrySet() ) {

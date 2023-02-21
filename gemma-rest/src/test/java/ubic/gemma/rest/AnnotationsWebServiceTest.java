@@ -122,7 +122,7 @@ public class AnnotationsWebServiceTest extends AbstractJUnit4SpringContextTests 
         when( expressionExperimentService.getIdentifierPropertyName() ).thenReturn( "id" );
         when( expressionExperimentService.getFilter( "id", Filter.Operator.in, Collections.singletonList( "1" ) ) ).thenReturn( Filter.by( "ee", "id", Long.class, Filter.Operator.in, Collections.singleton( 1L ), "id" ) );
         when( expressionExperimentService.getSort( "id", Sort.Direction.ASC ) ).thenReturn( Sort.by( "ee", "id", Sort.Direction.ASC, "id" ) );
-        when( expressionExperimentService.loadValueObjectsPreFilter( any( Filters.class ), eq( Sort.by( "ee", "id", Sort.Direction.ASC, "id" ) ), eq( 0 ), eq( 20 ) ) )
+        when( expressionExperimentService.loadValueObjects( any( Filters.class ), eq( Sort.by( "ee", "id", Sort.Direction.ASC, "id" ) ), eq( 0 ), eq( 20 ) ) )
                 .thenAnswer( a -> new Slice<>( Collections.singletonList( new ExpressionExperimentValueObject( ee ) ), a.getArgument( 1 ), a.getArgument( 2, Integer.class ), a.getArgument( 3, Integer.class ), 10000L ) );
         PaginatedResponseDataObject<ExpressionExperimentValueObject> payload = annotationsWebService.searchTaxonDatasets(
                 TaxonArg.valueOf( "human" ),
@@ -142,7 +142,7 @@ public class AnnotationsWebServiceTest extends AbstractJUnit4SpringContextTests 
         verify( taxonService ).getFilter( "scientificName", Filter.Operator.eq, "human" );
         verify( expressionExperimentService ).getFilter( "id", Filter.Operator.in, Collections.singletonList( "1" ) );
         verify( expressionExperimentService ).getSort( "id", Sort.Direction.ASC );
-        verify( expressionExperimentService ).loadValueObjectsPreFilter( any( Filters.class ), eq( Sort.by( "ee", "id", Sort.Direction.ASC, "id" ) ), eq( 0 ), eq( 20 ) );
+        verify( expressionExperimentService ).loadValueObjects( any( Filters.class ), eq( Sort.by( "ee", "id", Sort.Direction.ASC, "id" ) ), eq( 0 ), eq( 20 ) );
     }
 
 }

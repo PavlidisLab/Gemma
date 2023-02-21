@@ -93,6 +93,6 @@ public class Responder {
      * Paginate using a {@link FilteringVoEnabledService}
      */
     public static <T extends IdentifiableValueObject<?>> PaginatedResponseDataObject<T> paginate( FilteringVoEnabledService<?, T> filterMethod, Filters filters, String[] groupBy, Sort sort, int offset, int limit ) throws NotFoundException {
-        return paginate( filterMethod::loadValueObjectsPreFilter, filters, groupBy, sort, offset, limit );
+        return paginate( filterMethod::loadValueObjects, filters, groupBy, sort, offset, limit );
     }
 }

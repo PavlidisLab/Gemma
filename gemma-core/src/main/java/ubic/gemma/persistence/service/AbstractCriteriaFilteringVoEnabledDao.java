@@ -54,7 +54,7 @@ public abstract class AbstractCriteriaFilteringVoEnabledDao<O extends Identifiab
     }
 
     @Override
-    public List<Long> loadIdsPreFilter( @Nullable Filters filters, @Nullable Sort sort ) {
+    public List<Long> loadIds( @Nullable Filters filters, @Nullable Sort sort ) {
         StopWatch stopWatch = StopWatch.createStarted();
 
         Criteria criteria = getFilteringCriteria( filters )
@@ -77,7 +77,7 @@ public abstract class AbstractCriteriaFilteringVoEnabledDao<O extends Identifiab
     }
 
     @Override
-    public List<O> loadPreFilter( @Nullable Filters filters, @Nullable Sort sort ) {
+    public List<O> load( @Nullable Filters filters, @Nullable Sort sort ) {
         StopWatch stopWatch = StopWatch.createStarted();
 
         Criteria criteria = getFilteringCriteria( filters );
@@ -99,7 +99,7 @@ public abstract class AbstractCriteriaFilteringVoEnabledDao<O extends Identifiab
     }
 
     @Override
-    public Slice<O> loadPreFilter( @Nullable Filters filters, @Nullable Sort sort, int offset, int limit ) {
+    public Slice<O> load( @Nullable Filters filters, @Nullable Sort sort, int offset, int limit ) {
         StopWatch stopWatch = StopWatch.createStarted();
         StopWatch queryStopWatch = StopWatch.create();
         StopWatch countingStopWatch = StopWatch.create();
@@ -138,7 +138,7 @@ public abstract class AbstractCriteriaFilteringVoEnabledDao<O extends Identifiab
     }
 
     @Override
-    public Slice<VO> loadValueObjectsPreFilter( @Nullable Filters filters, @Nullable Sort sort, int offset, int limit ) {
+    public Slice<VO> loadValueObjects( @Nullable Filters filters, @Nullable Sort sort, int offset, int limit ) {
         StopWatch stopWatch = StopWatch.createStarted();
         StopWatch queryStopWatch = StopWatch.create();
         StopWatch countingStopWatch = StopWatch.create();
@@ -186,7 +186,7 @@ public abstract class AbstractCriteriaFilteringVoEnabledDao<O extends Identifiab
     }
 
     @Override
-    public List<VO> loadValueObjectsPreFilter( @Nullable Filters filters, @Nullable Sort sort ) {
+    public List<VO> loadValueObjects( @Nullable Filters filters, @Nullable Sort sort ) {
         StopWatch stopWatch = StopWatch.createStarted();
         StopWatch queryStopWatch = StopWatch.create();
         StopWatch postProcessingStopWatch = StopWatch.create();
@@ -220,7 +220,7 @@ public abstract class AbstractCriteriaFilteringVoEnabledDao<O extends Identifiab
     }
 
     @Override
-    public long countPreFilter( @Nullable Filters filters ) {
+    public long count( @Nullable Filters filters ) {
         StopWatch timer = StopWatch.createStarted();
         Long ret = ( Long ) getFilteringCriteria( filters )
                 .setProjection( Projections.countDistinct( getIdentifierPropertyName() ) )

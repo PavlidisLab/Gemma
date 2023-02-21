@@ -12,7 +12,6 @@ import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.persistence.util.Sort;
 
 import javax.annotation.Nullable;
-import java.util.EnumSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
@@ -77,7 +76,7 @@ public abstract class AbstractQueryFilteringVoEnabledDao<O extends Identifiable,
      * By default, it will process the properties with {@link #processFilteringQueryResultToEntity(Object)} and then apply
      * {@link #doLoadValueObject(Identifiable)} to obtain a value object.
      *
-     * @return a value object, or null, and it will be ignored when constructing the {@link Slice} in {@link #loadValueObjectsPreFilter(Filters, Sort, int, int)}
+     * @return a value object, or null, and it will be ignored when constructing the {@link Slice} in {@link #loadValueObjects(Filters, Sort, int, int)}
      */
     protected VO processFilteringQueryResultToValueObject( Object result ) {
         return doLoadValueObject( processFilteringQueryResultToEntity( result ) );
@@ -87,7 +86,7 @@ public abstract class AbstractQueryFilteringVoEnabledDao<O extends Identifiable,
      * FIXME: this could be far more efficient with a specialized query
      */
     @Override
-    public List<Long> loadIdsPreFilter( @Nullable Filters filters, @Nullable Sort sort ) {
+    public List<Long> loadIds( @Nullable Filters filters, @Nullable Sort sort ) {
         StopWatch timer = StopWatch.createStarted();
         //noinspection unchecked
         List<Long> result = getFilteringIdQuery( filters ).list();
@@ -99,7 +98,7 @@ public abstract class AbstractQueryFilteringVoEnabledDao<O extends Identifiable,
     }
 
     @Override
-    public List<O> loadPreFilter( @Nullable Filters filters, @Nullable Sort sort ) {
+    public List<O> load( @Nullable Filters filters, @Nullable Sort sort ) {
         StopWatch timer = StopWatch.createStarted();
         //noinspection unchecked
         List<Object> result = getFilteringQuery( filters, sort ).list();
@@ -113,7 +112,7 @@ public abstract class AbstractQueryFilteringVoEnabledDao<O extends Identifiable,
     }
 
     @Override
-    public Slice<O> loadPreFilter( @Nullable Filters filters, @Nullable Sort sort, int offset, int limit ) {
+    public Slice<O> load( @Nullable Filters filters, @Nullable Sort sort, int offset, int limit ) {
         StopWatch timer = StopWatch.createStarted();
         Query query = this.getFilteringQuery( filters, sort );
         Query totalElementsQuery = getFilteringCountQuery( filters );
@@ -134,7 +133,7 @@ public abstract class AbstractQueryFilteringVoEnabledDao<O extends Identifiable,
     }
 
     @Override
-    public Slice<VO> loadValueObjectsPreFilter( @Nullable Filters filters, @Nullable Sort sort, int offset, int limit ) {
+    public Slice<VO> loadValueObjects( @Nullable Filters filters, @Nullable Sort sort, int offset, int limit ) {
         StopWatch stopWatch = StopWatch.createStarted();
 
         Query query = this.getFilteringQuery( filters, sort );
@@ -174,7 +173,7 @@ public abstract class AbstractQueryFilteringVoEnabledDao<O extends Identifiable,
     }
 
     @Override
-    public List<VO> loadValueObjectsPreFilter( @Nullable Filters filters, @Nullable Sort sort ) {
+    public List<VO> loadValueObjects( @Nullable Filters filters, @Nullable Sort sort ) {
         StopWatch stopWatch = StopWatch.createStarted();
         StopWatch queryStopWatch = StopWatch.create();
         StopWatch postProcessingStopWatch = StopWatch.create();
@@ -204,7 +203,7 @@ public abstract class AbstractQueryFilteringVoEnabledDao<O extends Identifiable,
     }
 
     @Override
-    public long countPreFilter( @Nullable Filters filters ) {
+    public long count( @Nullable Filters filters ) {
         StopWatch timer = StopWatch.createStarted();
         try {
             return ( Long ) this.getFilteringCountQuery( filters ).uniqueResult();

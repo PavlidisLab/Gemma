@@ -243,7 +243,7 @@ public interface ExpressionExperimentService
      */
     Set<AnnotationValueObject> getAnnotations( Long eeId );
 
-    Map<Characteristic, Long> getAnnotationsFrequencyPreFilter( @Nullable Filters filters, int maxResults );
+    Map<Characteristic, Long> getAnnotationsFrequency( @Nullable Filters filters, int maxResults );
 
     /**
      * @param expressionExperiment experiment
@@ -257,12 +257,12 @@ public interface ExpressionExperimentService
     /**
      * Calculate the usage frequency of platforms by the datasets matching the provided filters.
      *
-     * @param filters                  a set of filters to be applied as per {@link #loadPreFilter(Filters, Sort, int, int)}
+     * @param filters                  a set of filters to be applied as per {@link #load(Filters, Sort, int, int)}
      * @param includeOriginalPlatforms if true, original platforms as per {@link BioAssay#getOriginalPlatform()} are
      *                                 also included.
      * @param maxResults               the maximum of results, or unlimited if less than 1
      */
-    Map<ArrayDesign, Long> getArrayDesignUsedOrOriginalPlatformUsageFrequencyPreFilter( @Nullable Filters filters, boolean includeOriginalPlatforms, int maxResults );
+    Map<ArrayDesign, Long> getArrayDesignUsedOrOriginalPlatformUsageFrequency( @Nullable Filters filters, boolean includeOriginalPlatforms, int maxResults );
 
     /**
      * Checks the experiment for a batch confound.
@@ -458,15 +458,15 @@ public interface ExpressionExperimentService
 
     @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
-    List<ExpressionExperimentValueObject> loadValueObjectsPreFilter( @Nullable Filters filters, @Nullable Sort sort );
+    List<ExpressionExperimentValueObject> loadValueObjects( @Nullable Filters filters, @Nullable Sort sort );
 
     /**
-     * @see FilteringVoEnabledDao#loadValueObjectsPreFilter(Filters, Sort, int, int) for
+     * @see FilteringVoEnabledDao#loadValueObjects(Filters, Sort, int, int) for
      * description (no but seriously do look it might not work as you would expect).
      */
     @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
-    Slice<ExpressionExperimentValueObject> loadValueObjectsPreFilter( @Nullable Filters filters, @Nullable Sort sort, int offset, int limit );
+    Slice<ExpressionExperimentValueObject> loadValueObjects( @Nullable Filters filters, @Nullable Sort sort, int offset, int limit );
 
     /**
      * @see ExpressionExperimentDao#loadDetailsValueObjectsByIds(Collection, Taxon, Sort, int, int)

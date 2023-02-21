@@ -33,8 +33,8 @@ public class FilteringVoEnabledServiceIntegrationTest extends BaseSpringContextT
             for ( String property : filteringService.getFilterableProperties() ) {
                 Filter filter = filteringService.getFilter( property, Filter.Operator.eq, getStubForPropType( filteringService, property ) );
                 log.info( String.format( "Testing %s with %s", filteringService, filter ) );
-                Slice<?> slice = filteringService.loadValueObjectsPreFilter( Filters.by( filter ), null, 0, 1 );
-                long count = filteringService.countPreFilter( Filters.by( filter ) );
+                Slice<?> slice = filteringService.loadValueObjects( Filters.by( filter ), null, 0, 1 );
+                long count = filteringService.count( Filters.by( filter ) );
                 assertThat( slice.getTotalElements() ).isEqualTo( count );
             }
         }
@@ -50,7 +50,7 @@ public class FilteringVoEnabledServiceIntegrationTest extends BaseSpringContextT
                     continue;
                 }
                 Sort sort = filteringService.getSort( property, Sort.Direction.ASC );
-                filteringService.loadValueObjectsPreFilter( null, sort, 0, 1 );
+                filteringService.loadValueObjects( null, sort, 0, 1 );
             }
         }
     }

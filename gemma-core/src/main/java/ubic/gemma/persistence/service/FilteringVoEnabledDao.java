@@ -8,9 +8,7 @@ import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.persistence.util.Sort;
 
 import javax.annotation.Nullable;
-import java.util.Collection;
 import java.util.List;
-import java.util.Set;
 
 /**
  * Interface for VO-enabled DAO with filtering capabilities.
@@ -25,7 +23,7 @@ public interface FilteringVoEnabledDao<O extends Identifiable, VO extends Identi
      * Consider using {@link #getFilter(String, Filter.Operator, String)} and {@link #getSort(String, Sort.Direction)}
      * to produce the filters and sort safely from user input.
      *
-     * @see #loadPreFilter(Filters, Sort, int, int)
+     * @see #load(Filters, Sort, int, int)
      *
      * @param filters filters applied on the search. The properties mentioned in the {@link Filter}
      *                must exist and be visible to Hibernate. You can use nested properties such as "curationDetails.lastUpdated".
@@ -36,16 +34,16 @@ public interface FilteringVoEnabledDao<O extends Identifiable, VO extends Identi
      * @param limit   a limit on the number of returned results, or -1 to ignore
      * @return a slice of the relevant data
      */
-    Slice<VO> loadValueObjectsPreFilter( @Nullable Filters filters, @Nullable Sort sort, int offset, int limit );
+    Slice<VO> loadValueObjects( @Nullable Filters filters, @Nullable Sort sort, int offset, int limit );
 
     /**
      * Load VOs with minimal ordering and filtering.
      * <p>
-     * Use this as an alternative to {@link #loadValueObjectsPreFilter(Filters, Sort, int, int)} if you do not
+     * Use this as an alternative to {@link #loadValueObjects(Filters, Sort, int, int)} if you do not
      * intend to provide pagination capabilities.
      *
-     * @see #loadPreFilter(Filters, Sort)
-     * @see #loadValueObjectsPreFilter(Filters, Sort, int, int)
+     * @see #load(Filters, Sort)
+     * @see #loadValueObjects(Filters, Sort, int, int)
      */
-    List<VO> loadValueObjectsPreFilter( @Nullable Filters filters, @Nullable Sort sort );
+    List<VO> loadValueObjects( @Nullable Filters filters, @Nullable Sort sort );
 }

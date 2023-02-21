@@ -67,22 +67,22 @@ public interface FilteringService<O extends Identifiable> extends BaseService<O>
     Sort getSort( String property, @Nullable Sort.Direction direction ) throws IllegalArgumentException;
 
     /**
-     * @see FilteringDao#loadIdsPreFilter(Filters, Sort)
+     * @see FilteringDao#loadIds(Filters, Sort)
      */
-    List<Long> loadIdsPreFilter( @Nullable Filters filters, @Nullable Sort sort );
+    List<Long> loadIds( @Nullable Filters filters, @Nullable Sort sort );
 
     /**
-     * @see FilteringDao#loadPreFilter(Filters, Sort, int, int)
+     * @see FilteringDao#load(Filters, Sort, int, int)
      */
-    Slice<O> loadPreFilter( @Nullable Filters filters, @Nullable Sort sort, int offset, int limit );
+    Slice<O> load( @Nullable Filters filters, @Nullable Sort sort, int offset, int limit );
 
     /**
-     * @see FilteringDao#loadPreFilter(Filters, Sort)
+     * @see FilteringDao#load(Filters, Sort)
      */
-    List<O> loadPreFilter( @Nullable Filters filters, @Nullable Sort sort );
+    List<O> load( @Nullable Filters filters, @Nullable Sort sort );
 
     /**
-     * @see FilteringDao#countPreFilter(Filters)
+     * @see FilteringDao#count(Filters)
      */
-    long countPreFilter( @Nullable Filters filters );
+    long count( @Nullable Filters filters );
 }

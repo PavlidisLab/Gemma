@@ -9,7 +9,7 @@ import java.util.List;
 /**
  * Represents the result of a filtering.
  * @param <T>
- * @see ubic.gemma.persistence.service.FilteringVoEnabledService#loadValueObjectsPreFilter(Filters, Sort)
+ * @see ubic.gemma.persistence.service.FilteringVoEnabledService#loadValueObjects(Filters, Sort)
  */
 public class FilteringResponseDataObject<T> extends ResponseDataObject<List<T>> {
 

@@ -137,8 +137,8 @@ public interface ExpressionExperimentDao
     Slice<ExpressionExperimentDetailsValueObject> loadDetailsValueObjects( Filters filters, Sort sort, int offset, int limit );
 
     /**
-     * Special method for front-end access. This is partly redundant with loadValueObjectsPreFilter; however, it fills
-     * in more information, returns ExpressionExperimentDetailsValueObject
+     * Special method for front-end access. This is partly redundant with {@link #loadValueObjects(Filters, Sort, int, int)};
+     * however, it fills in more information, returns ExpressionExperimentDetailsValueObject
      *
      * @param ids        only list specific ids, or null to ignore
      * @param taxon      only list EEs in the specified taxon, or null to ignore

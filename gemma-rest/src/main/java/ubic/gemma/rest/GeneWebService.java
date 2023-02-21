@@ -104,7 +104,7 @@ public class GeneWebService {
         SortArg<Gene> sort = SortArg.valueOf( "+id" );
         Filters filters = Filters.empty();
         filters.and( geneArgService.getFilters( genes ) );
-        return Responder.respond( geneService.loadValueObjectsPreFilter( filters, geneArgService.getSort( sort ), IntArg.valueOf( "0" ).getValue(), IntArg.valueOf( "-1" ).getValue() ) );
+        return Responder.respond( geneService.loadValueObjects( filters, geneArgService.getSort( sort ), IntArg.valueOf( "0" ).getValue(), IntArg.valueOf( "-1" ).getValue() ) );
     }
 
     /**

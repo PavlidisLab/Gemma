@@ -1223,7 +1223,7 @@ public class ExpressionExperimentDaoImpl
         if ( !blacklistedAccessions.isEmpty() )
             clause = clause.or( "ee", "accession.accession", String.class, Filter.Operator.in, blacklistedAccessions );
         clause.build();
-        return loadValueObjectsPreFilter( filters, sort, offset, limit );
+        return loadValueObjects( filters, sort, offset, limit );
     }
 
     @Override
@@ -1247,23 +1247,23 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
-    public List<ExpressionExperimentValueObject> loadValueObjectsPreFilter( @Nullable Filters
+    public List<ExpressionExperimentValueObject> loadValueObjects( @Nullable Filters
             filters, @Nullable Sort sort ) {
         if ( sort == null ) {
             sort = Sort.by( OBJECT_ALIAS, "id", null, "id" );
         }
-        List<ExpressionExperimentValueObject> results = super.loadValueObjectsPreFilter( filters, sort );
+        List<ExpressionExperimentValueObject> results = super.loadValueObjects( filters, sort );
         populateArrayDesignCount( results );
         return results;
     }
 
     @Override
-    public Slice<ExpressionExperimentValueObject> loadValueObjectsPreFilter( @Nullable Filters
+    public Slice<ExpressionExperimentValueObject> loadValueObjects( @Nullable Filters
             filters, @Nullable Sort sort, int offset, int limit ) {
         if ( sort == null ) {
             sort = Sort.by( OBJECT_ALIAS, "id", null, "id" );
         }
-        Slice<ExpressionExperimentValueObject> results = super.loadValueObjectsPreFilter( filters, sort, offset, limit );
+        Slice<ExpressionExperimentValueObject> results = super.loadValueObjects( filters, sort, offset, limit );
         populateArrayDesignCount( results );
         return results;
     }

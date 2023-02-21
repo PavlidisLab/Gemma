@@ -54,7 +54,7 @@ public abstract class PlatformArg<T> extends AbstractEntityArg<T, ArrayDesign, A
             ExpressionExperimentService eeService, int limit, int offset ) {
         ArrayDesign ad = this.getEntity( service );
         Filters filters = Filters.by( service.getFilter( "id", Filter.Operator.eq, ad.getId().toString() ) );
-        return eeService.loadValueObjectsPreFilter( filters, service.getSort( "id", null ), offset, limit );
+        return eeService.loadValueObjects( filters, service.getSort( "id", null ), offset, limit );
     }
 
     /**
@@ -67,7 +67,7 @@ public abstract class PlatformArg<T> extends AbstractEntityArg<T, ArrayDesign, A
             CompositeSequenceService csService, int limit, int offset ) {
         final ArrayDesign ad = this.getEntity( service );
         Filters filters = Filters.by( service.getFilter( "id", Filter.Operator.eq, ad.getId().toString() ) );
-        return csService.loadValueObjectsPreFilter( filters, null, offset, limit );
+        return csService.loadValueObjects( filters, null, offset, limit );
 
     }
 }

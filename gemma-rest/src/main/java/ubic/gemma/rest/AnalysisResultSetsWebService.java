@@ -119,7 +119,7 @@ public class AnalysisResultSetsWebService {
     @Operation(summary = "Count platforms matching a given set of filters")
     public ResponseDataObject<Long> getNumberOfResultSets(
             @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionAnalysisResultSet> filter ) {
-        return Responder.respond( expressionAnalysisResultSetService.countPreFilter( expressionAnalysisResultSetArgService.getFilters( filter ) ) );
+        return Responder.respond( expressionAnalysisResultSetService.count( expressionAnalysisResultSetArgService.getFilters( filter ) ) );
     }
 
     private static final String TSV_EXAMPLE = "# If you use this file for your research, please cite:\n" +

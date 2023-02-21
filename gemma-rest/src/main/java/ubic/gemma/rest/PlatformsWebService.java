@@ -109,7 +109,7 @@ public class PlatformsWebService {
     @Operation(summary = "Count platforms matching a given set of filters")
     public ResponseDataObject<Long> getNumberOfPlatforms(
             @QueryParam("filter") @DefaultValue("") FilterArg<ArrayDesign> filter ) {
-        return Responder.respond( arrayDesignService.countPreFilter( arrayDesignArgService.getFilters( filter ) ) );
+        return Responder.respond( arrayDesignService.count( arrayDesignArgService.getFilters( filter ) ) );
     }
 
     /**

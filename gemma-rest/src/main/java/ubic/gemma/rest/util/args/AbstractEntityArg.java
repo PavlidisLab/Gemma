@@ -55,8 +55,8 @@ public abstract class AbstractEntityArg<T, O extends Identifiable, S extends Fil
      *
      * @throws BadRequestException if the filter represented by this is invalid (i.e. a property is not found in the
      *                             entity)
-     * @see FilteringService#loadPreFilter(Filters, Sort, int, int)
-     * @see FilteringService#loadPreFilter(Filters, Sort)
+     * @see FilteringService#load(Filters, Sort, int, int)
+     * @see FilteringService#load(Filters, Sort)
      */
     Filters getFilters( S service ) throws BadRequestException {
         try {

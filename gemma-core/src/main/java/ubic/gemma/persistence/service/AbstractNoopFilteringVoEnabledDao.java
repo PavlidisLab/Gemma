@@ -64,32 +64,32 @@ public abstract class AbstractNoopFilteringVoEnabledDao<O extends Identifiable, 
     }
 
     @Override
-    public final List<Long> loadIdsPreFilter( @Nullable Filters filters, @Nullable Sort sort ) {
+    public final List<Long> loadIds( @Nullable Filters filters, @Nullable Sort sort ) {
         throw new UnsupportedOperationException( message );
     }
 
     @Override
-    public final List<O> loadPreFilter( @Nullable Filters filters, @Nullable Sort sort ) {
+    public final List<O> load( @Nullable Filters filters, @Nullable Sort sort ) {
         throw new UnsupportedOperationException( message );
     }
 
     @Override
-    public final Slice<O> loadPreFilter( @Nullable Filters filters, @Nullable Sort sort, int offset, int limit ) {
+    public final Slice<O> load( @Nullable Filters filters, @Nullable Sort sort, int offset, int limit ) {
         throw new UnsupportedOperationException( message );
     }
 
     @Override
-    public final long countPreFilter( @Nullable Filters filters ) {
+    public final long count( @Nullable Filters filters ) {
         throw new UnsupportedOperationException( message );
     }
 
     @Override
-    public final Slice<VO> loadValueObjectsPreFilter( @Nullable Filters filters, @Nullable Sort sort, int offset, int limit ) {
+    public final Slice<VO> loadValueObjects( @Nullable Filters filters, @Nullable Sort sort, int offset, int limit ) {
         throw new UnsupportedOperationException( message );
     }
 
     @Override
-    public final List<VO> loadValueObjectsPreFilter( @Nullable Filters filters, @Nullable Sort sort ) {
+    public final List<VO> loadValueObjects( @Nullable Filters filters, @Nullable Sort sort ) {
         throw new UnsupportedOperationException( message );
     }
 }

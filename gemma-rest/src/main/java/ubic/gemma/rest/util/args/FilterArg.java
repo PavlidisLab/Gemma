@@ -126,7 +126,7 @@ public class FilterArg<O extends Identifiable> extends AbstractArg<FilterArg.Fil
     /**
      * Create a {@link Filters} that can be used as a filter parameter for service value object retrieval.
      * <p>
-     * This is typically used with {@link FilteringService#loadPreFilter(Filters, Sort, int, int)}
+     * This is typically used with {@link FilteringService#load(Filters, Sort, int, int)}
      * for retrieving and filtering entities.
      *
      * @param service a filtering service that can resolve the properties types and relevant object alias to use

@@ -16,8 +16,6 @@ package ubic.gemma.rest;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.extensions.Extension;
-import io.swagger.v3.oas.annotations.extensions.ExtensionProperty;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -137,7 +135,7 @@ public class DatasetsWebService {
     @Operation(summary = "Count datasets matching the provided filters")
     public ResponseDataObject<Long> getNumberOfDatasets(
             @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filter ) {
-        return Responder.respond( expressionExperimentService.countPreFilter( datasetArgService.getFilters( filter ) ) );
+        return Responder.respond( expressionExperimentService.count( datasetArgService.getFilters( filter ) ) );
     }
 
     public interface UsageStatistics {
@@ -152,7 +150,7 @@ public class DatasetsWebService {
     public LimitedResponseDataObject<ArrayDesignWithUsageStatisticsValueObject> getDatasetsPlatformsUsageStatistics( @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filter, @QueryParam("limit") @DefaultValue("50") LimitArg limit ) {
         Filters filters = datasetArgService.getFilters( filter );
         Integer l = limit.getValue( 50 );
-        List<ArrayDesignWithUsageStatisticsValueObject> results = expressionExperimentService.getArrayDesignUsedOrOriginalPlatformUsageFrequencyPreFilter( filters, true, limit.getValue( 50 ) )
+        List<ArrayDesignWithUsageStatisticsValueObject> results = expressionExperimentService.getArrayDesignUsedOrOriginalPlatformUsageFrequency( filters, true, limit.getValue( 50 ) )
                 .entrySet()
                 .stream().map( e -> new ArrayDesignWithUsageStatisticsValueObject( e.getKey(), e.getValue() ) )
                 .sorted( Comparator.comparing( UsageStatistics::getNumberOfExpressionExperiments, Comparator.reverseOrder() ) )
@@ -180,7 +178,7 @@ public class DatasetsWebService {
             @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filter, @QueryParam("limit") @DefaultValue("50") LimitArg limit ) {
         Filters filters = datasetArgService.getFilters( filter );
         Integer l = limit.getValue( ExpressionExperimentDaoImpl.MAX_RESULT_FOR_CACHING_ANNOTATIONS_FREQUENCY );
-        List<AnnotationWithUsageStatisticsValueObject> results = expressionExperimentService.getAnnotationsFrequencyPreFilter( filters, l )
+        List<AnnotationWithUsageStatisticsValueObject> results = expressionExperimentService.getAnnotationsFrequency( filters, l )
                 .entrySet()
                 .stream().map( e -> new AnnotationWithUsageStatisticsValueObject( e.getKey(), e.getValue() ) )
                 .sorted( Comparator.comparing( UsageStatistics::getNumberOfExpressionExperiments, Comparator.reverseOrder() ) )

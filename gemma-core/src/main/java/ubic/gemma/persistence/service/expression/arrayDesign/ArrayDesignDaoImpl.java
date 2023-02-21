@@ -234,7 +234,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
             clauseBuilder = clauseBuilder.or( EXTERNAL_REFERENCE_ALIAS, "accession", String.class, Filter.Operator.in, blacklistedAccessions );
         }
         filters = clauseBuilder.build();
-        return loadValueObjectsPreFilter( filters, sort, offset, limit );
+        return loadValueObjects( filters, sort, offset, limit );
     }
 
     @Override
@@ -574,15 +574,15 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     }
 
     @Override
-    public Slice<ArrayDesignValueObject> loadValueObjectsPreFilter( @Nullable Filters filters, @Nullable Sort sort, int offset, int limit ) {
-        Slice<ArrayDesignValueObject> results = super.loadValueObjectsPreFilter( filters, sort, offset, limit );
+    public Slice<ArrayDesignValueObject> loadValueObjects( @Nullable Filters filters, @Nullable Sort sort, int offset, int limit ) {
+        Slice<ArrayDesignValueObject> results = super.loadValueObjects( filters, sort, offset, limit );
         populateArrayDesignValueObjects( results );
         return results;
     }
 
     @Override
-    public List<ArrayDesignValueObject> loadValueObjectsPreFilter( @Nullable Filters filters, @Nullable Sort sort ) {
-        List<ArrayDesignValueObject> results = super.loadValueObjectsPreFilter( filters, sort );
+    public List<ArrayDesignValueObject> loadValueObjects( @Nullable Filters filters, @Nullable Sort sort ) {
+        List<ArrayDesignValueObject> results = super.loadValueObjects( filters, sort );
         populateArrayDesignValueObjects( results );
         return results;
     }

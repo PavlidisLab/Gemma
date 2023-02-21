@@ -19,12 +19,11 @@ import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.persistence.util.Sort;
 
 import javax.annotation.Nullable;
-import java.util.List;
 
 /**
  * Represents paginated results with offset and limit.
  * @param <T>
- * @see ubic.gemma.persistence.service.FilteringVoEnabledService#loadValueObjectsPreFilter(Filters, Sort, int, int)
+ * @see ubic.gemma.persistence.service.FilteringVoEnabledService#loadValueObjects(Filters, Sort, int, int)
  */
 public class PaginatedResponseDataObject<T> extends FilteringResponseDataObject<T> {
 

@@ -98,32 +98,32 @@ public class AbstractFilteringVoEnabledDaoTest extends AbstractJUnit4SpringConte
         }
 
         @Override
-        public List<Long> loadIdsPreFilter( @Nullable Filters filters, @Nullable Sort sort ) {
+        public List<Long> loadIds( @Nullable Filters filters, @Nullable Sort sort ) {
             return null;
         }
 
         @Override
-        public List<FakeModel> loadPreFilter( @Nullable Filters filters, @Nullable Sort sort ) {
+        public List<FakeModel> load( @Nullable Filters filters, @Nullable Sort sort ) {
             return null;
         }
 
         @Override
-        public Slice<FakeModel> loadPreFilter( @Nullable Filters filters, @Nullable Sort sort, int offset, int limit ) {
+        public Slice<FakeModel> load( @Nullable Filters filters, @Nullable Sort sort, int offset, int limit ) {
             return null;
         }
 
         @Override
-        public long countPreFilter( @Nullable Filters filters ) {
+        public long count( @Nullable Filters filters ) {
             return 0;
         }
 
         @Override
-        public Slice<FakeModelVo> loadValueObjectsPreFilter( @Nullable Filters filters, @Nullable Sort sort, int offset, int limit ) {
+        public Slice<FakeModelVo> loadValueObjects( @Nullable Filters filters, @Nullable Sort sort, int offset, int limit ) {
             return null;
         }
 
         @Override
-        public List<FakeModelVo> loadValueObjectsPreFilter( @Nullable Filters filters, @Nullable Sort sort ) {
+        public List<FakeModelVo> loadValueObjects( @Nullable Filters filters, @Nullable Sort sort ) {
             return null;
         }
     }

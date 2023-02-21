@@ -75,11 +75,11 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
     /**
      * {@inheritDoc}
      * <p>
-     * For consistency, this is redefined in terms of {@link #loadValueObjectsPreFilter(Filters, Sort)}.
+     * For consistency, this is redefined in terms of {@link #loadValueObjects(Filters, Sort)}.
      */
     @Override
     public final VO loadValueObject( O entity ) {
-        return loadValueObjectsPreFilter( Filters.by( objectAlias, getIdPropertyName(), Long.class, Filter.Operator.eq, entity.getId() ), null ).stream()
+        return loadValueObjects( Filters.by( objectAlias, getIdPropertyName(), Long.class, Filter.Operator.eq, entity.getId() ), null ).stream()
                 .findFirst()
                 .orElse( null );
     }
@@ -87,11 +87,11 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
     /**
      * {@inheritDoc}
      * <p>
-     * For consistency, this is redefined in terms of {@link #loadValueObjectsPreFilter(Filters, Sort)}.
+     * For consistency, this is redefined in terms of {@link #loadValueObjects(Filters, Sort)}.
      */
     @Override
     public final VO loadValueObjectById( Long id ) {
-        return loadValueObjectsPreFilter( Filters.by( objectAlias, getIdPropertyName(), Long.class, Filter.Operator.eq, id ), null ).stream()
+        return loadValueObjects( Filters.by( objectAlias, getIdPropertyName(), Long.class, Filter.Operator.eq, id ), null ).stream()
                 .findFirst()
                 .orElse( null );
     }
@@ -99,37 +99,37 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
     /**
      * {@inheritDoc}
      * <p>
-     * For consistency, this is redefined in terms of {@link #loadValueObjectsPreFilter(Filters, Sort)}.
+     * For consistency, this is redefined in terms of {@link #loadValueObjects(Filters, Sort)}.
      */
     @Override
     public final List<VO> loadValueObjects( Collection<O> entities ) {
         if ( entities.isEmpty() ) {
             return Collections.emptyList();
         }
-        return loadValueObjectsPreFilter( Filters.by( objectAlias, getIdPropertyName(), Long.class, Filter.Operator.in, EntityUtils.getIds( entities ) ), null );
+        return loadValueObjects( Filters.by( objectAlias, getIdPropertyName(), Long.class, Filter.Operator.in, EntityUtils.getIds( entities ) ), null );
     }
 
     /**
      * {@inheritDoc}
      * <p>
-     * For consistency, this is redefined in terms of {@link #loadValueObjectsPreFilter(Filters, Sort)}.
+     * For consistency, this is redefined in terms of {@link #loadValueObjects(Filters, Sort)}.
      */
     @Override
     public final List<VO> loadValueObjectsByIds( Collection<Long> ids ) {
         if ( ids.isEmpty() ) {
             return Collections.emptyList();
         }
-        return loadValueObjectsPreFilter( Filters.by( objectAlias, getIdPropertyName(), Long.class, Filter.Operator.in, ids ), null );
+        return loadValueObjects( Filters.by( objectAlias, getIdPropertyName(), Long.class, Filter.Operator.in, ids ), null );
     }
 
     /**
      * {@inheritDoc}
      * <p>
-     * For consistency, this is redefined in terms of {@link #loadValueObjectsPreFilter(Filters, Sort)}.
+     * For consistency, this is redefined in terms of {@link #loadValueObjects(Filters, Sort)}.
      */
     @Override
     public final List<VO> loadAllValueObjects() {
-        return loadValueObjectsPreFilter( null, null );
+        return loadValueObjects( null, null );
     }
 
     @Override

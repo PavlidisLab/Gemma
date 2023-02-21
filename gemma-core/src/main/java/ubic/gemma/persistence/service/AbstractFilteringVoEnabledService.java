@@ -31,20 +31,20 @@ public abstract class AbstractFilteringVoEnabledService<O extends Identifiable, 
 
     @Override
     @Transactional(readOnly = true)
-    public List<Long> loadIdsPreFilter( @Nullable Filters filters, @Nullable Sort sort ) {
-        return voDao.loadIdsPreFilter( filters, sort );
+    public List<Long> loadIds( @Nullable Filters filters, @Nullable Sort sort ) {
+        return voDao.loadIds( filters, sort );
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<O> loadPreFilter( @Nullable Filters filters, @Nullable Sort sort ) {
-        return voDao.loadPreFilter( filters, sort );
+    public List<O> load( @Nullable Filters filters, @Nullable Sort sort ) {
+        return voDao.load( filters, sort );
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Slice<O> loadPreFilter( @Nullable Filters filters, @Nullable Sort sort, int offset, int limit ) {
-        return voDao.loadPreFilter( filters, sort, offset, limit );
+    public Slice<O> load( @Nullable Filters filters, @Nullable Sort sort, int offset, int limit ) {
+        return voDao.load( filters, sort, offset, limit );
     }
 
     @Override
@@ -79,20 +79,20 @@ public abstract class AbstractFilteringVoEnabledService<O extends Identifiable, 
 
     @Override
     @Transactional(readOnly = true)
-    public Slice<VO> loadValueObjectsPreFilter( @Nullable Filters filters, @Nullable Sort sort, int offset, int limit ) {
-        return voDao.loadValueObjectsPreFilter( filters, sort, offset, limit );
+    public Slice<VO> loadValueObjects( @Nullable Filters filters, @Nullable Sort sort, int offset, int limit ) {
+        return voDao.loadValueObjects( filters, sort, offset, limit );
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<VO> loadValueObjectsPreFilter( @Nullable Filters filters, @Nullable Sort sort ) {
-        return voDao.loadValueObjectsPreFilter( filters, sort );
+    public List<VO> loadValueObjects( @Nullable Filters filters, @Nullable Sort sort ) {
+        return voDao.loadValueObjects( filters, sort );
     }
 
     @Override
     @Transactional(readOnly = true)
-    public long countPreFilter( @Nullable Filters filters ) {
-        return voDao.countPreFilter( filters );
+    public long count( @Nullable Filters filters ) {
+        return voDao.count( filters );
     }
 
     public Set<String> getFilterableProperties() {

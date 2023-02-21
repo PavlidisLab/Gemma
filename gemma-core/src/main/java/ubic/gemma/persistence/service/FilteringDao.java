@@ -15,8 +15,8 @@ import java.util.Set;
  * Interface for filtering-capable DAO.
  * <p>
  * Filtering DAOs have the capability of using {@link Filters} and {@link Sort} abstractions for browsing entities.
- * There are also extra conveniences for loading IDs {@link #loadIdsPreFilter(Filters, Sort)} and counting entities
- * {@link #countPreFilter(Filters)} without having to retrieve too much from the persistent storage.
+ * There are also extra conveniences for loading IDs {@link #loadIds(Filters, Sort)} and counting entities
+ * {@link #count(Filters)} without having to retrieve too much from the persistent storage.
  * <p>
  * This interface also provides introspection capabilities for enumerating and getting some meta information about
  * filterable properties.
@@ -83,7 +83,7 @@ public interface FilteringDao<O extends Identifiable> extends BaseDao<O> {
      *
      * @param property a property of {@link O} to sort by
      * @param direction a sorting direction, or null if the default direction applies
-     * @return a {@link Sort} object that can be used, for example, on {@link FilteringVoEnabledDao#loadValueObjectsPreFilter(Filters, Sort, int, int)}
+     * @return a {@link Sort} object that can be used, for example, on {@link FilteringVoEnabledDao#loadValueObjects(Filters, Sort, int, int)}
      * @throws IllegalArgumentException if no such field exists in {@link O}
      */
     Sort getSort( String property, @Nullable Sort.Direction direction ) throws IllegalArgumentException;
@@ -91,20 +91,20 @@ public interface FilteringDao<O extends Identifiable> extends BaseDao<O> {
     /**
      * Load IDs of entities matching the given filters.
      */
-    List<Long> loadIdsPreFilter( @Nullable Filters filters, @Nullable Sort sort );
+    List<Long> loadIds( @Nullable Filters filters, @Nullable Sort sort );
 
     /**
      * Load entities matching the given filters.
      */
-    List<O> loadPreFilter( @Nullable Filters filters, @Nullable Sort sort );
+    List<O> load( @Nullable Filters filters, @Nullable Sort sort );
 
     /**
      * Load a slice of entities matching the given filters.
      */
-    Slice<O> loadPreFilter( @Nullable Filters filters, @Nullable Sort sort, int offset, int limit );
+    Slice<O> load( @Nullable Filters filters, @Nullable Sort sort, int offset, int limit );
 
     /**
      * Count VOs matching the given filters.
      */
-    long countPreFilter( @Nullable Filters filters );
+    long count( @Nullable Filters filters );
 }

@@ -130,11 +130,11 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
     public void testGetDatasetsPlatformsUsageStatistics() {
         when( expressionExperimentService.getFilter( "id", Filter.Operator.lessThan, "10" ) )
                 .thenReturn( Filter.by( "ee", "id", Long.class, Filter.Operator.lessThan, 10L, "id" ) );
-        when( expressionExperimentService.getAnnotationsFrequencyPreFilter( Filters.empty(), 50 ) )
+        when( expressionExperimentService.getAnnotationsFrequency( Filters.empty(), 50 ) )
                 .thenReturn( Collections.emptyMap() );
         assertThat( target( "/datasets/platforms" ).queryParam( "filter", "ee.id < 10" ).request().get() )
                 .hasFieldOrPropertyWithValue( "status", 200 );
-        verify( expressionExperimentService ).getArrayDesignUsedOrOriginalPlatformUsageFrequencyPreFilter( Filters.empty(), true, 50 );
+        verify( expressionExperimentService ).getArrayDesignUsedOrOriginalPlatformUsageFrequency( Filters.empty(), true, 50 );
     }
 
     @Test
