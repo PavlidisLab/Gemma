@@ -31,7 +31,7 @@ import java.util.Collection;
  */
 interface CoexpressionQueryQueue {
 
-    void addToFullQueryQueue( Collection<Long> geneIds );
+    void addToFullQueryQueue( Collection<Gene> genes );
 
     void addToFullQueryQueue( Gene gene );
 
@@ -40,6 +40,6 @@ interface CoexpressionQueryQueue {
      *
      * @param geneIds gene IDs
      */
-    void removeFromQueue( Collection<Long> geneIds );
+    void removeFromQueue( Collection<Gene> genes );
 
 }
