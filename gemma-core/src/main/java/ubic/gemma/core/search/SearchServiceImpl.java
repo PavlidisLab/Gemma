@@ -792,7 +792,13 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
 
     private void findExperimentsByUris( Collection<String> uris, Collection<SearchResult<ExpressionExperiment>> results, @Nullable Taxon t, int limit,
             Map<String, String> uri2value ) {
-        Map<Class<? extends Identifiable>, Map<String, Set<ExpressionExperiment>>> hits = characteristicService.findExperimentsByUris( uris, t, limit );
+        // URIs for bnodes are null, which is a massive annoyance
+        List<String> safeUris = uris.stream()
+                .filter( Objects::nonNull )
+                .distinct()
+                .collect( Collectors.toList() );
+
+        Map<Class<? extends Identifiable>, Map<String, Set<ExpressionExperiment>>> hits = characteristicService.findExperimentsByUris( safeUris, t, limit );
 
         for ( Class<? extends Identifiable> clazz : hits.keySet() ) {
             for ( String uri : hits.get( clazz ).keySet() ) {
