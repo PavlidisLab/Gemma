@@ -389,7 +389,7 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
                 // FIXME: add support for OR, but there's a bug in baseCode that prevents this https://github.com/PavlidisLab/baseCode/issues/22
                 String query = settings.getQuery().replaceAll( "\\s+OR\\s+", "" );
                 results.addAll( this.dbHitsToSearchResult(
-                        Gene.class, geneSearchService.getGOGroupGenes( query, settings.getTaxon() ), "From GO group", "GeneSearchService.getGOGroupGenes" ) );
+                        Gene.class, geneSearchService.getGOGroupGenes( query, settings.getTaxon() ), 0.8, "From GO group", "GeneSearchService.getGOGroupGenes" ) );
             } catch ( OntologySearchException e ) {
                 throw new BaseCodeOntologySearchException( e );
             }
@@ -1018,7 +1018,7 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
     /**
      * Convert hits from database searches into SearchResults.
      */
-    private <T extends Identifiable> Collection<SearchResult<T>> dbHitsToSearchResult( Class<T> entityClass, Collection<T> entities, String matchText, String source ) {
+    private <T extends Identifiable> Collection<SearchResult<T>> dbHitsToSearchResult( Class<T> entityClass, Collection<T> entities, double score, String matchText, String source ) {
         StopWatch watch = StopWatch.createStarted();
         List<SearchResult<T>> results = new ArrayList<>( entities.size() );
         for ( T e : entities ) {
@@ -1030,7 +1030,7 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
             if ( e.getId() == null ) {
                 log.warn( "Search result object with null ID." );
             }
-            results.add( SearchResult.from( entityClass, e, 0, matchText, source ) );
+            results.add( SearchResult.from( entityClass, e, score, matchText, source ) );
         }
         if ( watch.getTime() > 1000 ) {
             log.info( "Unpack " + results.size() + " search resultsS: " + watch.getTime() + "ms" );
@@ -1191,7 +1191,7 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
                             .getExpressionExperiments( ad );
                     if ( expressionExperiments.size() > 0 )
                         results.addAll( this.dbHitsToSearchResult( ExpressionExperiment.class, expressionExperiments,
-                                ad.getShortName() + " - " + ad.getName(), String.format( "ArrayDesignService.getExpressionExperiments(%s)", ad ) ) );
+                                0.8, ad.getShortName() + " - " + ad.getName(), String.format( "ArrayDesignService.getExpressionExperiments(%s)", ad ) ) );
                 }
             }
             if ( watch.getTime() > 500 )
