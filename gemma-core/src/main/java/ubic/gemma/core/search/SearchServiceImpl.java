@@ -419,7 +419,7 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
             // FIXME: add support for OR, but there's a bug in baseCode that prevents this https://github.com/PavlidisLab/baseCode/issues/22
             String query = settings.getQuery().replaceAll( "\\s+OR\\s+", "" );
             return this.phenotypeAssociationManagerService.searchInDatabaseForPhenotype( query ).stream()
-                    .map( r -> SearchResult.from( PhenotypeAssociation.class, r, 1.0, null, "PhenotypeAssociationManagerService.searchInDatabaseForPhenotype" ) )
+                    .map( r -> SearchResult.from( PhenotypeAssociation.class, r, 1.0, "PhenotypeAssociationManagerService.searchInDatabaseForPhenotype" ) )
                     .collect( Collectors.toSet() );
         } catch ( OntologySearchException e ) {
             throw new BaseCodeOntologySearchException( "Failed to search for phenotype associations.", e );
@@ -545,14 +545,14 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
 
         ArrayDesign shortNameResult = arrayDesignService.findByShortName( searchString );
         if ( shortNameResult != null ) {
-            results.add( SearchResult.from( ArrayDesign.class, shortNameResult, DatabaseSearchSource.MATCH_BY_SHORT_NAME_SCORE, null, "ArrayDesignService.findByShortName" ) );
+            results.add( SearchResult.from( ArrayDesign.class, shortNameResult, DatabaseSearchSource.MATCH_BY_SHORT_NAME_SCORE, "ArrayDesignService.findByShortName" ) );
             return results;
         }
 
         Collection<ArrayDesign> nameResult = arrayDesignService.findByName( searchString );
         if ( nameResult != null && !nameResult.isEmpty() ) {
             for ( ArrayDesign ad : nameResult ) {
-                results.add( SearchResult.from( ArrayDesign.class, ad, DatabaseSearchSource.MATCH_BY_NAME_SCORE, null, "ArrayDesignService.findByShortName" ) );
+                results.add( SearchResult.from( ArrayDesign.class, ad, DatabaseSearchSource.MATCH_BY_NAME_SCORE, "ArrayDesignService.findByShortName" ) );
             }
             return results;
         }
@@ -566,12 +566,12 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
 
         Collection<ArrayDesign> altNameResults = arrayDesignService.findByAlternateName( searchString );
         for ( ArrayDesign arrayDesign : altNameResults ) {
-            results.add( SearchResult.from( ArrayDesign.class, arrayDesign, 0.9, null, "ArrayDesignService.findByAlternateName" ) );
+            results.add( SearchResult.from( ArrayDesign.class, arrayDesign, 0.9, "ArrayDesignService.findByAlternateName" ) );
         }
 
         Collection<ArrayDesign> manufacturerResults = arrayDesignService.findByManufacturer( searchString );
         for ( ArrayDesign arrayDesign : manufacturerResults ) {
-            results.add( SearchResult.from( ArrayDesign.class, arrayDesign, 0.9, null, "ArrayDesignService.findByManufacturer" ) );
+            results.add( SearchResult.from( ArrayDesign.class, arrayDesign, 0.9, "ArrayDesignService.findByManufacturer" ) );
         }
 
         /*
@@ -601,7 +601,7 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
             }
             // FIXME: this should not be necessary, the AD is eagerly fetched in the model definition (see https://github.com/PavlidisLab/Gemma/issues/483)
             Hibernate.initialize( cs.getArrayDesign() );
-            results.add( SearchResult.from( ArrayDesign.class, cs.getArrayDesign(), INDIRECT_HIT_PENALTY * r.getScore(), null, "ArrayDesign associated to probes obtained by a Compass search." ) );
+            results.add( SearchResult.from( ArrayDesign.class, cs.getArrayDesign(), INDIRECT_HIT_PENALTY * r.getScore(), "ArrayDesign associated to probes obtained by a Compass search." ) );
         }
 
         watch.stop();
@@ -802,9 +802,7 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
                     if ( !clazz.isAssignableFrom( ExpressionExperiment.class ) ) {
                         matchedText = matchedText + " via " + clazz.getSimpleName();
                     }
-                    SearchResult<ExpressionExperiment> sr = SearchResult.from( ExpressionExperiment.class, ee, 0, null, "CharacteristicService.findExperimentsByUris" );
-                    sr.setHighlightedText( matchedText );
-                    results.add( sr );
+                    results.add( SearchResult.from( ExpressionExperiment.class, ee, 0, matchedText, "CharacteristicService.findExperimentsByUris" ) );
                     if ( limit > 0 && results.size() >= limit ) {
                         break;
                     }
@@ -1000,7 +998,7 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
     /**
      * Convert hits from database searches into SearchResults.
      */
-    private <T extends Identifiable> Collection<SearchResult<T>> dbHitsToSearchResult( Class<T> entityClass, Collection<T> entities, @Nullable String matchText, String source ) {
+    private <T extends Identifiable> Collection<SearchResult<T>> dbHitsToSearchResult( Class<T> entityClass, Collection<T> entities, String matchText, String source ) {
         StopWatch watch = StopWatch.createStarted();
         List<SearchResult<T>> results = new ArrayList<>( entities.size() );
         for ( T e : entities ) {
@@ -1071,10 +1069,7 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
 
             BlacklistedEntity b = blacklistedEntityService.findByAccession( prepareDatabaseQuery( settings ) );
             if ( b != null ) {
-                SearchResult<ExpressionExperiment> sr = SearchResult.from( ExpressionExperiment.class, b.getId(), 0, null, "BlackListDao.findByAccession" );
-                sr.setScore( DatabaseSearchSource.MATCH_BY_ACCESSION_SCORE );
-                sr.setHighlightedText( "Blacklisted accessions are not loaded into Gemma" );
-                results.add( sr );
+                results.add( SearchResult.from( ExpressionExperiment.class, b.getId(), DatabaseSearchSource.MATCH_BY_ACCESSION_SCORE, "Blacklisted accessions are not loaded into Gemma", "BlackListDao.findByAccession" ) );
                 return results;
             }
 
@@ -1338,14 +1333,10 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
                         Gene g = Gene.Factory.newInstance();
                         g.setId( gvo.getId() );
                         g.setTaxon( settings.getTaxon() );
-                        SearchResult<Gene> sr = SearchResult.from( Gene.class, g, 0, null, "PhenotypeAssociationManagerService.findCandidateGenes" );
-                        sr.setHighlightedText( phenotype.getValue() + " (" + phenotype.getValueUri() + ")" );
-
                         // if ( gvo.getScore() != null ) {
                         // TODO If we get evidence quality, use that in the score.
                         // }
-                        sr.setScore( 1.0 ); // maybe lower, if we do this search when combinedGeneList is nonempty.
-                        combinedGeneList.add( sr );
+                        combinedGeneList.add( SearchResult.from( Gene.class, g, 1.0, phenotype.getValue() + " (" + phenotype.getValueUri() + ")", "PhenotypeAssociationManagerService.findCandidateGenes" ) );
                     }
                     if ( combinedGeneList.size() > 100 /* some limit */ ) {
                         break;
@@ -1574,7 +1565,7 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
 
                 ////
                 if ( settings.hasResultType( Gene.class ) ) {
-                    results.add( SearchResult.from( Gene.class, g, 0, null, "GeneService.findByNCBIId" ) );
+                    results.add( SearchResult.from( Gene.class, g, DatabaseSearchSource.MATCH_BY_ID_SCORE, "GeneService.findByNCBIId" ) );
 
                 }
             }

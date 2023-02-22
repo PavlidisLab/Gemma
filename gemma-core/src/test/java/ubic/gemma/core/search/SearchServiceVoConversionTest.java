@@ -1,6 +1,5 @@
 package ubic.gemma.core.search;
 
-import org.apache.commons.math3.analysis.function.Exp;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -77,20 +76,20 @@ public class SearchServiceVoConversionTest extends AbstractJUnit4SpringContextTe
 
     @Test
     public void testConvertArrayDesign() {
-        searchService.loadValueObject( SearchResult.from( ArrayDesign.class, ad, "test object" ) );
+        searchService.loadValueObject( SearchResult.from( ArrayDesign.class, ad, 1.0, "test object" ) );
         verify( arrayDesignService ).loadValueObject( ad );
     }
 
     @Test
     public void testConvertExpressionExperiment() {
-        searchService.loadValueObject( SearchResult.from( ExpressionExperiment.class, ee, "test object" ) );
+        searchService.loadValueObject( SearchResult.from( ExpressionExperiment.class, ee, 1.0, "test object" ) );
         verify( expressionExperimentService ).loadValueObject( ee );
     }
 
     @Test
     public void testConvertPhenotypeAssociation() {
         // this is a complicated one because
-        assertThat( searchService.loadValueObject( SearchResult.from( PhenotypeAssociation.class, phenotypeAssociation, "test object" ) ) )
+        assertThat( searchService.loadValueObject( SearchResult.from( PhenotypeAssociation.class, phenotypeAssociation, 1.0, "test object" ) ) )
                 .extracting( "resultObject" )
                 .isSameAs( phenotypeAssociation );
     }
@@ -98,13 +97,15 @@ public class SearchServiceVoConversionTest extends AbstractJUnit4SpringContextTe
     @Test
     public void testConvertGeneSet() {
         // this is another complicated one because GeneSetService does not implement BaseVoEnabledService
-        searchService.loadValueObject( SearchResult.from( GeneSet.class, gs, "test object" ) );
+        searchService.loadValueObject( SearchResult.from( GeneSet.class, gs, 1.0, "test object" ) );
         verify( geneSetService ).loadValueObject( gs );
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void testUnsupportedResultTypeRaisesIllegalArgumentException() {
-        searchService.loadValueObject( SearchResult.from( ContrastResult.class, new ContrastResult(), "test object" ) );
+        ContrastResult cr = new ContrastResult();
+        cr.setId( 1L );
+        searchService.loadValueObject( SearchResult.from( ContrastResult.class, cr, 1.0, "test object" ) );
     }
 
 }

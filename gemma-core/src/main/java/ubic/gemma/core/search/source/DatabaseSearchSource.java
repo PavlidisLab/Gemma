@@ -186,7 +186,7 @@ public class DatabaseSearchSource implements SearchSource {
         if ( ad != null ) {
             CompositeSequence cs = compositeSequenceService.findByName( ad, searchString );
             if ( cs != null )
-                matchedCs.add( SearchResult.from( CompositeSequence.class, cs, MATCH_BY_NAME_SCORE, null, "CompositeSequenceService.findByName" ) );
+                matchedCs.add( SearchResult.from( CompositeSequence.class, cs, MATCH_BY_NAME_SCORE, "CompositeSequenceService.findByName" ) );
         } else {
             matchedCs = toSearchResults( CompositeSequence.class, compositeSequenceService.findByName( searchString ), MATCH_BY_NAME_SCORE, "CompositeSequenceService.findByName" );
         }
@@ -341,11 +341,11 @@ public class DatabaseSearchSource implements SearchSource {
             //
         }
         if ( result != null ) {
-            results.add( SearchResult.from( Gene.class, result, MATCH_BY_ID_SCORE, null, "GeneService.findByNCBIId" ) );
+            results.add( SearchResult.from( Gene.class, result, MATCH_BY_ID_SCORE, "GeneService.findByNCBIId" ) );
         } else {
             result = geneService.findByAccession( searchString, null );
             if ( result != null ) {
-                results.add( SearchResult.from( Gene.class, result, MATCH_BY_ACCESSION_SCORE, null, "GeneService.findByAccession" ) );
+                results.add( SearchResult.from( Gene.class, result, MATCH_BY_ACCESSION_SCORE, "GeneService.findByAccession" ) );
             }
         }
 
@@ -406,7 +406,7 @@ public class DatabaseSearchSource implements SearchSource {
             results.addAll( toSearchResults( Gene.class, geneService.findByAlias( exactString ), MATCH_BY_ALIAS_SCORE, "GeneService.findByAlias" ) );
             Gene geneByEnsemblId = geneService.findByEnsemblId( exactString );
             if ( geneByEnsemblId != null ) {
-                results.add( SearchResult.from( Gene.class, geneByEnsemblId, MATCH_BY_ACCESSION_SCORE, null, "GeneService.findByAlias" ) );
+                results.add( SearchResult.from( Gene.class, geneByEnsemblId, MATCH_BY_ACCESSION_SCORE, "GeneService.findByAlias" ) );
             }
             results.addAll( toSearchResults( Gene.class, geneProductService.getGenesByName( exactString ), INDIRECT_HIT_PENALTY * MATCH_BY_NAME_SCORE, "GeneProductService.getGenesByName" ) );
             results.addAll( toSearchResults( Gene.class, geneProductService.getGenesByNcbiId( exactString ), INDIRECT_HIT_PENALTY * MATCH_BY_ACCESSION_SCORE, "GeneProductService.getGenesByNcbiId" ) );
@@ -431,7 +431,7 @@ public class DatabaseSearchSource implements SearchSource {
     private static <T extends Identifiable> Set<SearchResult<T>> toSearchResults( Class<T> resultType, Collection<T> entities, double score, String source ) {
         return entities.stream()
                 .filter( Objects::nonNull )
-                .map( e -> SearchResult.from( resultType, e, score, null, source ) )
+                .map( e -> SearchResult.from( resultType, e, score, source ) )
                 .collect( Collectors.toSet() );
     }
 }

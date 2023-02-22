@@ -22,7 +22,6 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
 import ubic.gemma.model.common.Identifiable;
-import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -58,10 +57,8 @@ public class SearchResult<T extends Identifiable> implements Comparable<SearchRe
         if ( entity.getId() == null ) {
             throw new IllegalArgumentException( "Entity ID cannot be null." );
         }
-        SearchResult<T> sr = new SearchResult<>( resultType, entity.getId(), source );
+        SearchResult<T> sr = new SearchResult<>( resultType, entity.getId(), score, highlightedText, source );
         sr.setResultObject( entity );
-        sr.setScore( score );
-        sr.setHighlightedText( highlightedText );
         return sr;
     }
 
@@ -69,22 +66,24 @@ public class SearchResult<T extends Identifiable> implements Comparable<SearchRe
      * Shorthand for {@link #from(Class, Identifiable, double, String, Object)} if you don't need to set the score and
      * highlighted text.
      */
-    public static <T extends Identifiable> SearchResult<T> from( Class<? extends Identifiable> resultType, T entity, String source ) {
-        return from( resultType, entity, 0.0, null, source );
+    public static <T extends Identifiable> SearchResult<T> from( Class<? extends Identifiable> resultType, T entity, double score, String source ) {
+        if ( entity.getId() == null ) {
+            throw new IllegalArgumentException( "Entity ID cannot be null." );
+        }
+        SearchResult<T> sr = new SearchResult<>( resultType, entity.getId(), score, null, source );
+        sr.setResultObject( entity );
+        return sr;
     }
 
     /**
      * Create a new provisional search result with a result type and ID.
      */
-    public static <T extends Identifiable> SearchResult<T> from( Class<? extends Identifiable> resultType, long entityId, double score, @Nullable String highlightedText, Object source ) {
-        SearchResult<T> sr = new SearchResult<>( resultType, entityId, source );
-        sr.setScore( score );
-        sr.setHighlightedText( highlightedText );
-        return sr;
+    public static <T extends Identifiable> SearchResult<T> from( Class<? extends Identifiable> resultType, long entityId, double score, String highlightedText, Object source ) {
+        return new SearchResult<>( resultType, entityId, score, highlightedText, source );
     }
 
-    public static <T extends Identifiable> SearchResult<T> from( Class<? extends Identifiable> resultType, long entityId, String source ) {
-        return from( resultType, entityId, 0.0, null, source );
+    public static <T extends Identifiable> SearchResult<T> from( Class<? extends Identifiable> resultType, long entityId, double score, String source ) {
+        return new SearchResult<>( resultType, entityId, score, null, source );
     }
 
     /**
@@ -94,9 +93,7 @@ public class SearchResult<T extends Identifiable> implements Comparable<SearchRe
      * highlighted text, etc.).
      */
     public static <T extends Identifiable> SearchResult<T> from( SearchResult<?> original, @Nullable T newResultObject ) {
-        SearchResult<T> sr = new SearchResult<>( original.resultType, original.resultId, original.source );
-        sr.setScore( original.getScore() );
-        sr.setHighlightedText( original.getHighlightedText() );
+        SearchResult<T> sr = new SearchResult<>( original.resultType, original.resultId, original.score, original.highlightedText, original.source );
         sr.setResultObject( newResultObject );
         return sr;
     }
@@ -123,8 +120,6 @@ public class SearchResult<T extends Identifiable> implements Comparable<SearchRe
 
     /**
      * Highlighted text for this result.
-     * <p>
-     * This is provided by Compass to indicate which part of the result was matched by a query.
      */
     @Nullable
     private String highlightedText;
@@ -132,7 +127,7 @@ public class SearchResult<T extends Identifiable> implements Comparable<SearchRe
     /**
      * Score for ranking this result among other results.
      */
-    private double score = 1.0;
+    private final double score;
 
     /**
      * Object representing the source of this result object.
@@ -147,9 +142,11 @@ public class SearchResult<T extends Identifiable> implements Comparable<SearchRe
      * This is used when the class and ID is known beforehand, but the result hasn't been retrieve yet from persistent
      * storage.
      */
-    private SearchResult( Class<? extends Identifiable> entityClass, long entityId, Object source ) {
+    private SearchResult( Class<? extends Identifiable> entityClass, long entityId, double score, @Nullable String highlightedText, Object source ) {
         this.resultType = entityClass;
         this.resultId = entityId;
+        this.score = score;
+        this.highlightedText = highlightedText;
         this.source = source;
     }
 

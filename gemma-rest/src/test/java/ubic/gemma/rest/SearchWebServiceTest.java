@@ -105,17 +105,16 @@ public class SearchWebServiceTest extends AbstractJUnit4SpringContextTests {
     public void testSearchEverything() throws SearchException {
         ArgumentCaptor<SearchSettings> searchSettingsArgumentCaptor = ArgumentCaptor.forClass( SearchSettings.class );
         SearchService.SearchResultMap srm = mock( SearchService.SearchResultMap.class );
-        when( srm.values() ).thenReturn( Collections.singleton( Collections.singletonList( SearchResult.from( Gene.class, gene, "test object" ) ) ) );
+        when( srm.values() ).thenReturn( Collections.singleton( Collections.singletonList( SearchResult.from( Gene.class, gene, 1.0, "test object" ) ) ) );
         when( searchService.search( searchSettingsArgumentCaptor.capture() ) ).thenReturn( srm );
         when( searchService.loadValueObject( any() ) ).thenAnswer( args -> {
             //noinspection unchecked
             SearchResult<Gene> searchResult = args.getArgument( 0, SearchResult.class );
-            SearchResult<GeneValueObject> sr = SearchResult.from( searchResult.getResultType(), searchResult.getResultId(), "test object" );
+            SearchResult<GeneValueObject> sr = SearchResult.from( searchResult.getResultType(), searchResult.getResultId(), searchResult.getScore(), "test object" );
+            sr.setHighlightedText( searchResult.getHighlightedText() );
             if ( searchResult.getResultObject() != null ) {
                 sr.setResultObject( new GeneValueObject( searchResult.getResultObject() ) );
             }
-            sr.setScore( searchResult.getScore() );
-            sr.setHighlightedText( searchResult.getHighlightedText() );
             return sr;
         } );
         when( searchService.getSupportedResultTypes() ).thenReturn( Collections.singleton( Gene.class ) );
@@ -143,17 +142,16 @@ public class SearchWebServiceTest extends AbstractJUnit4SpringContextTests {
     @Test
     public void testSearchByTaxon() throws SearchException {
         SearchService.SearchResultMap srm = mock( SearchService.SearchResultMap.class );
-        when( srm.get( Gene.class ) ).thenReturn( Collections.singletonList( SearchResult.from( Gene.class, gene, "test object" ) ) );
+        when( srm.get( Gene.class ) ).thenReturn( Collections.singletonList( SearchResult.from( Gene.class, gene, 1.0, "test object" ) ) );
         when( searchService.search( any() ) ).thenReturn( srm );
         when( searchService.loadValueObject( any() ) ).thenAnswer( args -> {
             //noinspection unchecked
             SearchResult<Gene> searchResult = args.getArgument( 0, SearchResult.class );
-            SearchResult<GeneValueObject> sr = SearchResult.from( searchResult.getResultType(), searchResult.getResultId(), "test object" );
+            SearchResult<GeneValueObject> sr = SearchResult.from( searchResult.getResultType(), searchResult.getResultId(), searchResult.getScore(), "test object" );
+            searchResult.setHighlightedText( searchResult.getHighlightedText() );
             if ( searchResult.getResultObject() != null ) {
                 sr.setResultObject( new GeneValueObject( searchResult.getResultObject() ) );
             }
-            sr.setScore( searchResult.getScore() );
-            sr.setHighlightedText( searchResult.getHighlightedText() );
             return sr;
         } );
         searchWebService.search( "BRCA1", TaxonArg.valueOf( "9606" ), null, null, LimitArg.valueOf( "20" ), null );
@@ -163,17 +161,16 @@ public class SearchWebServiceTest extends AbstractJUnit4SpringContextTests {
     @Test
     public void testSearchByArrayDesign() throws SearchException {
         SearchService.SearchResultMap srm = mock( SearchService.SearchResultMap.class );
-        when( srm.get( Gene.class ) ).thenReturn( Collections.singletonList( SearchResult.from( Gene.class, gene, "test object" ) ) );
+        when( srm.get( Gene.class ) ).thenReturn( Collections.singletonList( SearchResult.from( Gene.class, gene, 1.0, "test object" ) ) );
         when( searchService.search( any() ) ).thenReturn( srm );
         when( searchService.loadValueObject( any() ) ).thenAnswer( args -> {
             //noinspection unchecked
             SearchResult<Gene> searchResult = args.getArgument( 0, SearchResult.class );
-            SearchResult<GeneValueObject> sr = SearchResult.from( searchResult.getResultType(), searchResult.getResultId(), "test object" );
+            SearchResult<GeneValueObject> sr = SearchResult.from( searchResult.getResultType(), searchResult.getResultId(), searchResult.getScore(), "test object" );
+            sr.setHighlightedText( searchResult.getHighlightedText() );
             if ( searchResult.getResultObject() != null ) {
                 sr.setResultObject( new GeneValueObject( searchResult.getResultObject() ) );
             }
-            sr.setScore( searchResult.getScore() );
-            sr.setHighlightedText( searchResult.getHighlightedText() );
             return sr;
         } );
         searchWebService.search( "BRCA1", null, PlatformArg.valueOf( "1" ), null, LimitArg.valueOf( "20" ), null );
