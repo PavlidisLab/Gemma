@@ -67,6 +67,7 @@ import ubic.gemma.persistence.util.EntityUtils;
 import ubic.gemma.web.propertyeditor.TaxonPropertyEditor;
 import ubic.gemma.web.remote.JsonReaderResponse;
 
+import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.util.*;
@@ -102,6 +103,8 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
     private ExpressionExperimentSetService experimentSetService;
     @Autowired
     private CompositeSequenceService compositeSequenceService;
+    @Autowired
+    private ServletContext servletContext;
 
     @Override
     public JsonReaderResponse<SearchResult<?>> ajaxSearch( SearchSettingsValueObject settingsValueObject ) {
@@ -120,7 +123,8 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
         timer.start();
 
         SearchSettings searchSettings = searchSettingsFromVo( settingsValueObject )
-                .withDoHighlighting( true );
+                .withDoHighlighting( true )
+                .withContextPath( servletContext.getContextPath() );
 
         searchTimer.start();
         SearchService.SearchResultMap searchResults;
@@ -218,7 +222,7 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
         String taxon = request.getParameter( "taxon" );
         if ( taxon != null )
             csc.taxon( taxonService.findByScientificName( taxon ) );
-
+        csc.contextPath( servletContext.getContextPath() );
         String scope = request.getParameter( "scope" );
         if ( StringUtils.isNotBlank( scope ) ) {
             char[] scopes = scope.toCharArray();

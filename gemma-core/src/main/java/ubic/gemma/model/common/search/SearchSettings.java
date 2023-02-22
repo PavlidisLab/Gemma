@@ -200,6 +200,14 @@ public class SearchSettings implements Serializable {
     private SearchMode mode = SearchMode.NORMAL;
 
     /**
+     * A context path for highlighted text containing URLs.
+     * @deprecated Never use this, always generate URLs in Gemma Web or Gemma REST
+     */
+    @Nullable
+    @Deprecated
+    private String contextPath;
+
+    /**
      * Get this query, trimmed.
      */
     public String getQuery() {

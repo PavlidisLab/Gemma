@@ -74,14 +74,17 @@ import ubic.gemma.persistence.service.expression.experiment.ExpressionExperiment
 import ubic.gemma.persistence.service.genome.biosequence.BioSequenceService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.persistence.util.CacheUtils;
-import ubic.gemma.persistence.util.Settings;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+import static org.apache.commons.text.StringEscapeUtils.escapeHtml4;
 import static ubic.gemma.core.search.source.DatabaseSearchSourceUtils.prepareDatabaseQuery;
 
 /**
@@ -654,7 +657,7 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
              * level.
              */
             Collection<SearchResult<ExpressionExperiment>> classResults = this
-                    .characteristicEESearchWithChildren( subclause, settings.getTaxon(), settings.getMaxResults() );
+                    .characteristicEESearchWithChildren( subclause, settings.getTaxon(), settings.getMaxResults(), settings.getContextPath() );
             if ( classResults.size() > 0 ) {
                 log.info( "... Found " + classResults.size() + " EEs matching " + subclause );
             }
@@ -678,7 +681,7 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
      * @param  limit stop querying if we hit or surpass this limit. 0 for no limit.
      * @return collection of SearchResults (Experiments)
      */
-    private Collection<SearchResult<ExpressionExperiment>> characteristicEESearchTerm( String query, @Nullable Taxon t, int limit ) throws SearchException {
+    private Collection<SearchResult<ExpressionExperiment>> characteristicEESearchTerm( String query, @Nullable Taxon t, int limit, @Nullable String contextPath ) throws SearchException {
 
         StopWatch watch = StopWatch.createStarted();
         Collection<SearchResult<ExpressionExperiment>> results = new HashSet<>();
@@ -698,7 +701,7 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
                 uri2value.put( individual.getUri(), individual.getLabel() );
             }
 
-            findExperimentsByUris( uris, results, t, limit, uri2value );
+            findExperimentsByUris( uris, results, t, limit, uri2value, contextPath );
             if ( limit > 0 && results.size() > limit ) {
                 break;
             }
@@ -753,11 +756,11 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
 
                 // query current term before going to children
                 int sizeBefore = results.size();
-                findExperimentsByUris( Collections.singleton( uri ), results, t, limit, uri2value );
+                findExperimentsByUris( Collections.singleton( uri ), results, t, limit, uri2value, contextPath );
 
                 if ( limit > 0 && results.size() >= limit ) break;
 
-                this.getCharacteristicsAnnotatedToChildren( term, results, seenTerms, t, limit );
+                this.getCharacteristicsAnnotatedToChildren( term, results, seenTerms, t, limit, contextPath );
 
                 seenTerms.add( term );
 
@@ -791,7 +794,7 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
     }
 
     private void findExperimentsByUris( Collection<String> uris, Collection<SearchResult<ExpressionExperiment>> results, @Nullable Taxon t, int limit,
-            Map<String, String> uri2value ) {
+            Map<String, String> uri2value, @Nullable String contextPath ) {
         // URIs for bnodes are null, which is a massive annoyance
         List<String> safeUris = uris.stream()
                 .filter( Objects::nonNull )
@@ -803,18 +806,29 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
         for ( Class<? extends Identifiable> clazz : hits.keySet() ) {
             for ( String uri : hits.get( clazz ).keySet() ) {
                 for ( ExpressionExperiment ee : hits.get( clazz ).get( uri ) ) {
-                    String matchedText = "Tagged term: <a href=\"" + Settings.getRootContext()
-                            + "/searcher.html?query=" + uri + "\">" + uri2value.get( uri ) + "</a> ";
-                    if ( !clazz.isAssignableFrom( ExpressionExperiment.class ) ) {
-                        matchedText = matchedText + " via " + clazz.getSimpleName();
-                    }
-                    results.add( SearchResult.from( ExpressionExperiment.class, ee, 0, matchedText, "CharacteristicService.findExperimentsByUris" ) );
+                    results.add( SearchResult.from( ExpressionExperiment.class, ee, 1.0, getHighlightTextForTerm( uri, uri2value, clazz, contextPath ), "CharacteristicService.findExperimentsByUris" ) );
                     if ( limit > 0 && results.size() >= limit ) {
                         break;
                     }
                 }
             }
         }
+    }
+
+    /**
+     * FIXME: move this code in Gemma Web
+     */
+    private String getHighlightTextForTerm( String uri, Map<String, String> uri2value, Class<? extends Identifiable> clazz, @Nullable String contextPath ) {
+        String matchedText;
+        try {
+            matchedText = "Tagged term: <a href=\"" + ( contextPath != null ? contextPath : "" ) + "/searcher.html?query=" + URLEncoder.encode( uri, StandardCharsets.UTF_8.name() ) + "\">" + escapeHtml4( uri2value.get( uri ) ) + "</a> ";
+        } catch ( UnsupportedEncodingException e ) {
+            throw new RuntimeException( e );
+        }
+        if ( !clazz.isAssignableFrom( ExpressionExperiment.class ) ) {
+            matchedText = matchedText + " via " + clazz.getSimpleName();
+        }
+        return matchedText;
     }
 
     /**
@@ -828,7 +842,7 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
      * @param  limit try to stop searching if we exceed this (0 for no limit)
      * @return SearchResults of Experiments
      */
-    private Collection<SearchResult<ExpressionExperiment>> characteristicEESearchWithChildren( String query, @Nullable Taxon t, int limit ) throws SearchException {
+    private Collection<SearchResult<ExpressionExperiment>> characteristicEESearchWithChildren( String query, @Nullable Taxon t, int limit, @Nullable String contextPath ) throws SearchException {
         StopWatch watch = StopWatch.createStarted();
 
         /*
@@ -850,7 +864,7 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
             if ( StringUtils.isBlank( trimmed ) ) {
                 continue;
             }
-            Collection<SearchResult<ExpressionExperiment>> subqueryResults = this.characteristicEESearchTerm( trimmed, t, limit );
+            Collection<SearchResult<ExpressionExperiment>> subqueryResults = this.characteristicEESearchTerm( trimmed, t, limit, contextPath );
             if ( allResults.isEmpty() ) {
                 allResults.addAll( subqueryResults );
             } else {
@@ -1388,7 +1402,7 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
      * Recursively
      */
     private void getCharacteristicsAnnotatedToChildren( OntologyTerm term,
-            Collection<SearchResult<ExpressionExperiment>> results, Collection<OntologyTerm> seenTerms, @Nullable Taxon t, int limit ) {
+            Collection<SearchResult<ExpressionExperiment>> results, Collection<OntologyTerm> seenTerms, @Nullable Taxon t, int limit, @Nullable String contextPath ) {
 
         Collection<OntologyTerm> children = this.getDirectChildTerms( term );
         if ( children.isEmpty() ) {
@@ -1411,13 +1425,13 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
             return;
         }
 
-        findExperimentsByUris( uris, results, t, limit, uri2value );
+        findExperimentsByUris( uris, results, t, limit, uri2value, contextPath );
         if ( limit > 0 && results.size() >= limit ) {
             return;
         }
 
         for ( OntologyTerm child : children ) { // recurse
-            this.getCharacteristicsAnnotatedToChildren( child, results, seenTerms, t, limit );
+            this.getCharacteristicsAnnotatedToChildren( child, results, seenTerms, t, limit, contextPath );
         }
     }
 
@@ -1562,7 +1576,7 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
                     Collection<SearchResult<ExpressionExperiment>> eeHits = new HashSet<>();
                     Map<String, String> uri2value = new HashMap<>();
                     uri2value.put( termUri, g.getOfficialSymbol() );
-                    this.findExperimentsByUris( Collections.singleton( termUri ), eeHits, settings.getTaxon(), settings.getMaxResults(), uri2value );
+                    this.findExperimentsByUris( Collections.singleton( termUri ), eeHits, settings.getTaxon(), settings.getMaxResults(), uri2value, settings.getContextPath() );
 
                     if ( !eeHits.isEmpty() ) {
                         results.addAll( eeHits );
@@ -1582,7 +1596,7 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
          * Not searching for a gene. Only other option is a direct URI search for experiments.
          */
         if ( settings.hasResultType( ExpressionExperiment.class ) ) {
-            Collection<SearchResult<ExpressionExperiment>> hits = this.characteristicEESearchTerm( uriString, settings.getTaxon(), settings.getMaxResults() );
+            Collection<SearchResult<ExpressionExperiment>> hits = this.characteristicEESearchTerm( uriString, settings.getTaxon(), settings.getMaxResults(), settings.getContextPath() );
             results.addAll( hits );
         }
 
