@@ -81,18 +81,16 @@ public class SearchWebServiceTest extends AbstractJUnit4SpringContextTests {
 
     /* fixtures */
     private Gene gene;
-    private Taxon taxon;
-    private ArrayDesign arrayDesign;
 
     @Before
     public void setUp() {
         gene = new Gene();
         gene.setId( 1L );
         gene.setOfficialSymbol( "BRCA1" );
-        taxon = new Taxon();
+        Taxon taxon = new Taxon();
         gene.setTaxon( taxon );
         taxon.setNcbiId( 9606 );
-        arrayDesign = new ArrayDesign();
+        ArrayDesign arrayDesign = new ArrayDesign();
         arrayDesign.setId( 1L );
         when( taxonService.findByNcbiId( 9606 ) ).thenReturn( taxon );
         when( arrayDesignService.load( 1L ) ).thenReturn( arrayDesign );
@@ -122,7 +120,7 @@ public class SearchWebServiceTest extends AbstractJUnit4SpringContextTests {
         } );
         when( searchService.getSupportedResultTypes() ).thenReturn( Collections.singleton( Gene.class ) );
 
-        SearchWebService.SearchResultsResponseDataObject searchResults = searchWebService.search( "BRCA1", null, null, null, LimitArg.valueOf( "20" ) );
+        SearchWebService.SearchResultsResponseDataObject searchResults = searchWebService.search( "BRCA1", null, null, null, LimitArg.valueOf( "20" ), null );
 
         assertThat( searchSettingsArgumentCaptor.getValue() )
                 .hasFieldOrPropertyWithValue( "query", "BRCA1" )
@@ -158,7 +156,7 @@ public class SearchWebServiceTest extends AbstractJUnit4SpringContextTests {
             sr.setHighlightedText( searchResult.getHighlightedText() );
             return sr;
         } );
-        searchWebService.search( "BRCA1", TaxonArg.valueOf( "9606" ), null, null, LimitArg.valueOf( "20" ) );
+        searchWebService.search( "BRCA1", TaxonArg.valueOf( "9606" ), null, null, LimitArg.valueOf( "20" ), null );
         verify( taxonService ).findByNcbiId( 9606 );
     }
 
@@ -178,32 +176,32 @@ public class SearchWebServiceTest extends AbstractJUnit4SpringContextTests {
             sr.setHighlightedText( searchResult.getHighlightedText() );
             return sr;
         } );
-        searchWebService.search( "BRCA1", null, PlatformArg.valueOf( "1" ), null, LimitArg.valueOf( "20" ) );
+        searchWebService.search( "BRCA1", null, PlatformArg.valueOf( "1" ), null, LimitArg.valueOf( "20" ), null );
         verify( arrayDesignService ).load( 1L );
     }
 
     @Test(expected = BadRequestException.class)
     public void testSearchWhenQueryIsMissing() {
-        searchWebService.search( null, null, null, null, LimitArg.valueOf( "20" ) );
+        searchWebService.search( null, null, null, null, LimitArg.valueOf( "20" ), null );
     }
 
     @Test(expected = BadRequestException.class)
     public void testSearchWhenQueryIsEmpty() {
-        searchWebService.search( null, null, null, null, LimitArg.valueOf( "20" ) );
+        searchWebService.search( null, null, null, null, LimitArg.valueOf( "20" ), null );
     }
 
     @Test(expected = NotFoundException.class)
     public void testSearchWhenUnknownTaxonIsProvided() {
-        searchWebService.search( "brain", TaxonArg.valueOf( "9607" ), null, null, LimitArg.valueOf( "20" ) );
+        searchWebService.search( "brain", TaxonArg.valueOf( "9607" ), null, null, LimitArg.valueOf( "20" ), null );
     }
 
     @Test(expected = NotFoundException.class)
     public void testSearchWhenUnknownPlatformIsProvided() {
-        searchWebService.search( "brain", null, PlatformArg.valueOf( "2" ), null, LimitArg.valueOf( "20" ) );
+        searchWebService.search( "brain", null, PlatformArg.valueOf( "2" ), null, LimitArg.valueOf( "20" ), null );
     }
 
     @Test(expected = BadRequestException.class)
     public void testSearchWhenUnsupportedResultTypeIsProvided() {
-        searchWebService.search( "brain", null, null, Collections.singletonList( "ubic.gemma.model.expression.designElement.CompositeSequence2" ), LimitArg.valueOf( "20" ) );
+        searchWebService.search( "brain", null, null, Collections.singletonList( "ubic.gemma.model.expression.designElement.CompositeSequence2" ), LimitArg.valueOf( "20" ), null );
     }
 }

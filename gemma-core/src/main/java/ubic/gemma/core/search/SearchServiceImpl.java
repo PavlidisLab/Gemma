@@ -193,7 +193,7 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
     @Override
     @Transactional(readOnly = true)
     public SearchResultMap search( SearchSettings settings ) throws SearchException {
-        return doSearch( settings, true /* fill objects */, false /* web speed search */ );
+        return doSearch( settings );
     }
 
     /*
@@ -202,7 +202,7 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
     @Override
     @Transactional(readOnly = true)
     public SearchResultMap speedSearch( SearchSettings settings ) throws SearchException {
-        return doSearch( settings, true, true );
+        return doSearch( settings.withMode( SearchSettings.SearchMode.FAST ) );
     }
 
     /*
@@ -212,11 +212,10 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
     @Transactional(readOnly = true)
     public SearchResultMap search( SearchSettings settings, boolean fillObjects,
             boolean webSpeedSearch ) throws SearchException {
-        return doSearch( settings, fillObjects, webSpeedSearch );
+        return doSearch( settings.withFillResults( fillObjects ).withMode( webSpeedSearch ? SearchSettings.SearchMode.FAST : SearchSettings.SearchMode.NORMAL ) );
     }
 
-    private SearchResultMap doSearch( SearchSettings settings, boolean fillObjects,
-            boolean webSpeedSearch ) throws SearchException {
+    private SearchResultMap doSearch( SearchSettings settings ) throws SearchException {
         if ( !supportedResultTypes.containsAll( settings.getResultTypes() ) ) {
             throw new IllegalArgumentException( "The search settings contains unsupported result types:" + Sets.difference( settings.getResultTypes(), supportedResultTypes ) + "." );
         }
@@ -228,7 +227,11 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
             // we only attempt an ontology search if the uri looks remotely like a url.
             results = this.ontologyUriSearch( settings );
         } else {
-            results = this.generalSearch( settings, fillObjects, webSpeedSearch );
+            results = this.generalSearch( settings );
+        }
+
+        if ( !settings.isFillResults() ) {
+            results.forEach( ( k, v ) -> v.forEach( sr -> sr.setResultObject( null ) ) );
         }
 
         if ( !results.isEmpty() ) {
@@ -327,22 +330,21 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
      *
      * @param results the results to which should any new results be accreted.
      */
-    private void accreteResultsGenes( LinkedHashSet<SearchResult<?>> results, SearchSettings settings, boolean webSpeedSearch ) throws SearchException {
+    private void accreteResultsGenes( LinkedHashSet<SearchResult<?>> results, SearchSettings settings ) throws SearchException {
         if ( settings.hasResultType( Gene.class ) ) {
-            Collection<SearchResult<Gene>> genes = this.getGenesFromSettings( settings, webSpeedSearch );
+            Collection<SearchResult<Gene>> genes = this.getGenesFromSettings( settings );
             results.addAll( genes );
         }
     }
 
     /**
      * Checks settings for all do-search flags, except for gene (see
-     * {@link #accreteResultsGenes(LinkedHashSet, SearchSettings, boolean)}), and does the search if needed.
+     * {@link #accreteResultsGenes(LinkedHashSet, SearchSettings)}), and does the search if needed.
      *
-     * @param  results        the results to which should any new results be accreted.
-     * @param  webSpeedSearch - only used for gene search?
+     * @param results  the results to which should any new results be accreted.
+     * @param settings search settings
      */
-    private void accreteResultsOthers( LinkedHashSet<SearchResult<?>> results, SearchSettings settings,
-            boolean webSpeedSearch ) throws SearchException {
+    private void accreteResultsOthers( LinkedHashSet<SearchResult<?>> results, SearchSettings settings ) throws SearchException {
 
         if ( settings.hasResultType( ExpressionExperiment.class ) ) {
             results.addAll( this.expressionExperimentSearch( settings ) );
@@ -359,7 +361,7 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
         }
 
         if ( settings.hasResultType( BioSequence.class ) ) {
-            Collection<SearchResult<Gene>> genes = this.getGenesFromSettings( settings, webSpeedSearch );
+            Collection<SearchResult<Gene>> genes = this.getGenesFromSettings( settings );
             Collection<SearchResult<?>> bioSequencesAndGenes = this.bioSequenceAndGeneSearch( settings, genes );
 
             // split results so that accreteResults can be properly typed
@@ -379,7 +381,7 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
             results.addAll( gen );
         }
 
-        if ( settings.getUseGo() ) {
+        if ( settings.isUseGo() ) {
             try {
                 // FIXME: add support for OR, but there's a bug in baseCode that prevents this https://github.com/PavlidisLab/baseCode/issues/22
                 String query = settings.getQuery().replaceAll( "\\s+OR\\s+", "" );
@@ -411,7 +413,7 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
      * Find phenotypes.
      */
     private Collection<SearchResult<CharacteristicValueObject>> searchPhenotype( SearchSettings settings ) throws SearchException {
-        if ( !settings.getUseDatabase() )
+        if ( !settings.isUseDatabase() )
             return new HashSet<>();
         try {
             // FIXME: add support for OR, but there's a bug in baseCode that prevents this https://github.com/PavlidisLab/baseCode/issues/22
@@ -599,7 +601,7 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
             }
             // FIXME: this should not be necessary, the AD is eagerly fetched in the model definition (see https://github.com/PavlidisLab/Gemma/issues/483)
             Hibernate.initialize( cs.getArrayDesign() );
-            SearchResult<ArrayDesign> sr = SearchResult.from( ArrayDesign.class, cs.getArrayDesign(), INDIRECT_HIT_PENALTY * r.getScore(), null, "ArrayDesign associated to probes obtained by a Compass search." );
+            results.add( SearchResult.from( ArrayDesign.class, cs.getArrayDesign(), INDIRECT_HIT_PENALTY * r.getScore(), null, "ArrayDesign associated to probes obtained by a Compass search." ) );
         }
 
         watch.stop();
@@ -1051,7 +1053,7 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
         Collection<SearchResult<ExpressionExperiment>> results = new HashSet<>();
 
         // searches for GEO names, etc - "exact" matches.
-        if ( settings.getUseDatabase() ) {
+        if ( settings.isUseDatabase() ) {
             results.addAll( this.databaseSearchSource.searchExpressionExperiment( settings ) );
             if ( watch.getTime() > 500 )
                 SearchServiceImpl.log
@@ -1081,7 +1083,7 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
         }
 
         // special case: search for experiments associated with genes 
-        Collection<SearchResult<Gene>> geneHits = this.geneSearch( settings, true );
+        Collection<SearchResult<Gene>> geneHits = this.geneSearch( settings.withMode( SearchSettings.SearchMode.FAST ) );
         if ( geneHits.size() > 0 ) {
             // TODO: make sure this is being hit correctly.
             for ( SearchResult<Gene> gh : geneHits ) {
@@ -1101,7 +1103,7 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
         }
 
         // fancy search that uses ontologies to infer related terms
-        if ( settings.getUseCharacteristics() ) {
+        if ( settings.isUseCharacteristics() ) {
             results.addAll( this.characteristicEESearch( settings ) );
             if ( watch.getTime() > 500 )
                 SearchServiceImpl.log
@@ -1113,7 +1115,7 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
 
         // searches for strings in associated free text including factorvalues and biomaterials 
         // we have toyed with having this be done before the characteristic search
-        if ( settings.getUseIndices() && ( settings.getMaxResults() <= 0 || results.size() < settings.getMaxResults() ) ) {
+        if ( settings.isUseIndices() && ( settings.getMaxResults() <= 0 || results.size() < settings.getMaxResults() ) ) {
             results.addAll( this.compassSearchSource.searchExpressionExperiment( settings ) );
             if ( watch.getTime() > 500 )
                 SearchServiceImpl.log
@@ -1187,6 +1189,10 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
             }
         }
 
+        if ( !settings.isFillResults() ) {
+            results.forEach( sr -> sr.setResultObject( null ) );
+        }
+
         if ( totalTime.getTime() > 500 )
             SearchServiceImpl.log
                     .info( ">>>>>>> Expression Experiment search for '" + settings + "' took " + watch.getTime()
@@ -1247,24 +1253,11 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
     /**
      * Makes no attempt at resolving the search query as a URI. Will tokenize the search query if there are control
      * characters in the String. URI's will get parsed into multiple query terms and lead to bad results.
-     *
-     * @param settings       Will try to resolve general terms like brain --> to appropriate OntologyTerms and search
-     *                       for
-     *                       objects tagged with those terms (if isUseCharacte = true)
-     * @param fillObjects    If false, the entities will not be filled in inside the searchsettings; instead, they will
-     *                       be
-     *                       nulled (for security purposes). You can then use the id and Class stored in the
-     *                       SearchSettings to load the
-     *                       entities at your leisure. If true, the entities are loaded in the usual secure fashion.
-     *                       Setting this to
-     *                       false can be an optimization if all you need is the id. Note: filtering by taxon will not
-     *                       be done unless
-     *                       objects are filled
-     * @param webSpeedSearch if true, this call is probably coming from a web app combo box and results will be limited
-     *                       to improve speed
+     * <p>
+     * Will try to resolve general terms like brain --> to appropriate OntologyTerms and search for objects tagged with
+     * those terms (if isUseCharacte = true)
      */
-    private SearchResultMap generalSearch( SearchSettings settings, boolean fillObjects,
-            boolean webSpeedSearch ) throws SearchException {
+    private SearchResultMap generalSearch( SearchSettings settings ) throws SearchException {
         // If nothing to search return nothing.
         if ( StringUtils.isBlank( settings.getQuery() ) ) {
             return new SearchResultMapImpl();
@@ -1278,30 +1271,26 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
         LinkedHashSet<SearchResult<?>> rawResults = new LinkedHashSet<>();
 
         // do gene first before we munge the query too much.
-        this.accreteResultsGenes( rawResults, settings, webSpeedSearch );
+        this.accreteResultsGenes( rawResults, settings );
 
         this.accreteResultsOthers(
                 rawResults,
-                settings,
-                webSpeedSearch );
+                settings );
 
-        return this.groupAndSortResultsByType( rawResults, settings, fillObjects );
+        return this.groupAndSortResultsByType( rawResults, settings );
     }
 
     /**
      * Combines compass style search, the db style search, and the compositeSequence search and returns 1 combined list
      * with no duplicates.
-     *
-     * @param returnOnDbHit if true and if there is a match for a gene from the database, return immediately - much
-     *                      faster
      */
-    private Collection<SearchResult<Gene>> geneSearch( final SearchSettings settings, boolean returnOnDbHit ) throws SearchException {
+    private Collection<SearchResult<Gene>> geneSearch( final SearchSettings settings ) throws SearchException {
 
         StopWatch watch = StopWatch.createStarted();
 
         Collection<SearchResult<Gene>> geneDbList = this.databaseSearchSource.searchGene( settings );
 
-        if ( returnOnDbHit && geneDbList.size() > 0 ) {
+        if ( settings.getMode() == SearchSettings.SearchMode.FAST && geneDbList.size() > 0 ) {
             return geneDbList;
         }
 
@@ -1470,10 +1459,10 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
     /**
      * @return a collection of SearchResults holding all the genes resulting from the search with given SearchSettings.
      */
-    private Collection<SearchResult<Gene>> getGenesFromSettings( SearchSettings settings, boolean webSpeedSearch ) throws SearchException {
+    private Collection<SearchResult<Gene>> getGenesFromSettings( SearchSettings settings ) throws SearchException {
         Collection<SearchResult<Gene>> genes = null;
         if ( settings.hasResultType( Gene.class ) ) {
-            genes = this.geneSearch( settings, webSpeedSearch );
+            genes = this.geneSearch( settings );
         }
         return genes;
     }
@@ -1493,24 +1482,18 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
     /**
      * Group and sort results by type.
      *
-     * @param  fillObjects should the entities be filled in? Otherwise, the SearchResults will just have the Class and
-     *                     Id for later retrieval.
      * @see SearchResult#getResultType()
      * @return map of result entity class (e.g. BioSequence or ExpressionExperiment) to SearchResult
      */
     private SearchResultMap groupAndSortResultsByType(
             Collection<SearchResult<?>> rawResults,
-            SearchSettings settings,
-            boolean fillObjects ) {
+            SearchSettings settings ) {
 
         SearchResultMapImpl results = new SearchResultMapImpl();
         List<SearchResult<?>> sortedRawResults = rawResults.stream().sorted().collect( Collectors.toList() );
 
         // Get the top N results for each class.
         for ( SearchResult<?> sr : sortedRawResults ) {
-            if ( !fillObjects ) {
-                sr.setResultObject( null );
-            }
             if ( settings.getMaxResults() <= 0 || results.get( sr.getResultType() ).size() < settings.getMaxResults() ) {
                 results.add( sr );
             }

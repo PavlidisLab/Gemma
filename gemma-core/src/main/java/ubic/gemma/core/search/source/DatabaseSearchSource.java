@@ -91,7 +91,7 @@ public class DatabaseSearchSource implements SearchSource {
      */
     @Override
     public Collection<SearchResult<ArrayDesign>> searchArrayDesign( SearchSettings settings ) {
-        if ( !settings.getUseDatabase() )
+        if ( !settings.isUseDatabase() )
             return Collections.emptySet();
 
         StopWatch watch = StopWatch.createStarted();
@@ -129,7 +129,7 @@ public class DatabaseSearchSource implements SearchSource {
      */
     @Override
     public Collection<SearchResult<BioSequence>> searchBioSequence( SearchSettings settings ) {
-        if ( !settings.getUseDatabase() )
+        if ( !settings.isUseDatabase() )
             return Collections.emptySet();
 
         StopWatch watch = StopWatch.createStarted();
@@ -173,7 +173,7 @@ public class DatabaseSearchSource implements SearchSource {
     }
 
     private Collection<SearchResult<CompositeSequence>> searchCompositeSequenceAndPopulateGenes( SearchSettings settings, Set<SearchResult<Gene>> geneSet ) {
-        if ( !settings.getUseDatabase() )
+        if ( !settings.isUseDatabase() )
             return Collections.emptySet();
 
         StopWatch watch = StopWatch.createStarted();
@@ -251,7 +251,7 @@ public class DatabaseSearchSource implements SearchSource {
      */
     @Override
     public Collection<SearchResult<ExpressionExperiment>> searchExpressionExperiment( SearchSettings settings ) {
-        if ( !settings.getUseDatabase() )
+        if ( !settings.isUseDatabase() )
             return Collections.emptySet();
 
         StopWatch watch = StopWatch.createStarted();
@@ -313,7 +313,7 @@ public class DatabaseSearchSource implements SearchSource {
      */
     @Override
     public Collection<SearchResult<Gene>> searchGene( SearchSettings settings ) {
-        if ( !settings.getUseDatabase() )
+        if ( !settings.isUseDatabase() )
             return Collections.emptySet();
 
         StopWatch watch = StopWatch.createStarted();
@@ -419,7 +419,7 @@ public class DatabaseSearchSource implements SearchSource {
 
     @Override
     public Collection<SearchResult<GeneSet>> searchGeneSet( SearchSettings settings ) {
-        if ( !settings.getUseDatabase() )
+        if ( !settings.isUseDatabase() )
             return Collections.emptySet();
         if ( settings.getTaxon() != null ) {
             return toSearchResults( GeneSet.class, this.geneSetService.findByName( settings.getQuery(), settings.getTaxon() ), MATCH_BY_NAME_SCORE, "GeneSetService.findByNameWithTaxon" );

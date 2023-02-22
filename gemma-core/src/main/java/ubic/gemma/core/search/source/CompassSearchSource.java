@@ -208,7 +208,7 @@ public class CompassSearchSource implements SearchSource {
      * Generic method for searching Lucene indices for entities (excluding ontology terms, which use the OntologySearch)
      */
     private <T extends Identifiable> Set<SearchResult<T>> compassSearch( Compass compass, final SearchSettings settings, Class<T> clazz ) throws SearchException {
-        if ( !settings.getUseIndices() )
+        if ( !settings.isUseIndices() )
             return Collections.emptySet();
         try {
             StopWatch timer = StopWatch.createStarted();

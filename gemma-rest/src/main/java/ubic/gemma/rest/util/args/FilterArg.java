@@ -21,6 +21,7 @@ import org.antlr.v4.runtime.*;
 import org.antlr.v4.runtime.misc.ParseCancellationException;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.persistence.service.FilteringService;
+import ubic.gemma.persistence.util.Filter;
 import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Sort;
 import ubic.gemma.rest.util.MalformedArgException;
@@ -158,7 +159,12 @@ public class FilterArg<O extends Identifiable> extends AbstractArg<FilterArg.Fil
                     } else {
                         operator = collectionOperatorToOperator( subClause.collectionOperator() );
                         List<String> requiredValue = subClause.collection().scalar().stream().map( FilterArg::scalarToString ).collect( Collectors.toList() );
-                        disjunction = disjunction.or( service.getFilter( property, operator, requiredValue ) );
+                        ubic.gemma.persistence.util.Filter f = service.getFilter( property, operator, requiredValue );
+                        if ( ( ( Collection<?> ) f.getRequiredValue() ).isEmpty() ) {
+                            // collections must be non-empty
+                            throw new MalformedArgException( String.format( "The right hand side collection in '%s' must be non-empty.", f ) );
+                        }
+                        disjunction = disjunction.or( f );
                     }
                 } catch ( IllegalArgumentException e ) {
                     throw new MalformedArgException( String.format( "The entity cannot be filtered by %s: %s", property, e.getMessage() ), e );

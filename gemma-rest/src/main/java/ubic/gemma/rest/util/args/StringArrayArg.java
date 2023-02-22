@@ -16,7 +16,7 @@ import java.util.List;
 public class StringArrayArg extends AbstractArrayArg<String> {
     private static final String ERROR_MSG = AbstractArrayArg.ERROR_MSG + " Strings";
 
-    public StringArrayArg( List<String> values ) {
+    private StringArrayArg( List<String> values ) {
         super( values );
     }
 
@@ -28,7 +28,6 @@ public class StringArrayArg extends AbstractArrayArg<String> {
      * ArrayStringArg that will throw an {@link javax.ws.rs.BadRequestException} when accessing its value, if the input
      * String can not be converted into an array of strings.
      */
-    @SuppressWarnings("unused")
     public static StringArrayArg valueOf( final String s ) {
         if ( Strings.isNullOrEmpty( s ) ) {
             throw new MalformedArgException( String.format( ERROR_MSG, s ), new IllegalArgumentException(
@@ -36,5 +35,4 @@ public class StringArrayArg extends AbstractArrayArg<String> {
         }
         return new StringArrayArg( splitAndTrim( s ) );
     }
-
 }

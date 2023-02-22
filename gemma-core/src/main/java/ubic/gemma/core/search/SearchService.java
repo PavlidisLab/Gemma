@@ -67,7 +67,10 @@ public interface SearchService {
      * @param  settings settings
      * @return Map of Class to SearchResults. The results are already filtered for security considerations.
      * @see             #search(SearchSettings)
+     * @deprecated use {@link #search(SearchSettings)} with {@link SearchSettings#setFillResults(boolean)} and
+     * {@link SearchSettings#setMode(SearchSettings.SearchMode)} instead
      */
+    @Deprecated
     SearchResultMap speedSearch( SearchSettings settings ) throws SearchException;
 
     /**
@@ -89,7 +92,11 @@ public interface SearchService {
      * @param  settings       settings
      * @return Map of Class to SearchResults. The results are already filtered for security
      *                        considerations.
+     * @deprecated use {@link #search(SearchSettings)} with {@link SearchSettings#setFillResults(boolean)} and
+     * {@link SearchSettings#setMode(SearchSettings.SearchMode)} set to {@link ubic.gemma.model.common.search.SearchSettings.SearchMode#FAST}
+     * instead
      */
+    @Deprecated
     SearchResultMap search( SearchSettings settings, boolean fillObjects, boolean webSpeedSearch ) throws SearchException;
 
     /**

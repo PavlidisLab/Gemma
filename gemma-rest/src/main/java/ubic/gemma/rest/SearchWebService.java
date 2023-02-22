@@ -1,10 +1,11 @@
 package ubic.gemma.rest;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.Data;
+import lombok.Value;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -29,15 +30,15 @@ import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObj
 import ubic.gemma.model.genome.sequenceAnalysis.BioSequenceValueObject;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
+import ubic.gemma.rest.annotations.GZIP;
 import ubic.gemma.rest.swagger.resolver.CustomModelResolver;
+import ubic.gemma.rest.util.MalformedArgException;
 import ubic.gemma.rest.util.ResponseDataObject;
 import ubic.gemma.rest.util.args.*;
 
+import javax.annotation.Nullable;
 import javax.ws.rs.*;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static java.util.function.Function.identity;
@@ -53,7 +54,7 @@ import static java.util.function.Function.identity;
 public class SearchWebService {
 
     /**
-     * Name used in the OpenAPI schema to identify result types as per {@link #search(String, TaxonArg, PlatformArg, List, LimitArg)}'s
+     * Name used in the OpenAPI schema to identify result types as per {@link #search(String, TaxonArg, PlatformArg, List, LimitArg, StringArrayArg)}'s
      * fourth argument.
      */
     public static final String RESULT_TYPES_SCHEMA_NAME = "SearchResultType";
@@ -80,13 +81,15 @@ public class SearchWebService {
      * Naming the schema in for the result types is necessary so that it can be resolved in {@link CustomModelResolver}.
      */
     @GET
+    @GZIP
     @Produces(MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Search everything in Gemma.")
     public SearchResultsResponseDataObject search( @QueryParam("query") String query,
             @QueryParam("taxon") TaxonArg<?> taxonArg,
             @QueryParam("platform") PlatformArg<?> platformArg,
             @Parameter(array = @ArraySchema(schema = @Schema(name = RESULT_TYPES_SCHEMA_NAME, hidden = true))) @QueryParam("resultTypes") List<String> resultTypes,
-            @QueryParam("limit") @DefaultValue("100") LimitArg limit ) {
+            @Parameter(description = "Maximum number of search results to return; capped at " + MAX_SEARCH_RESULTS + " unless 'resultObject' is excluded.") @QueryParam("limit") LimitArg limit,
+            @QueryParam("exclude") StringArrayArg excludeArg ) {
         if ( StringUtils.isBlank( query ) ) {
             throw new BadRequestException( "A non-empty query must be supplied." );
         }
@@ -104,7 +107,15 @@ public class SearchWebService {
                     String.join( ", ", supportedResultTypesByName.keySet() ) ) );
         }
 
-        int maxResults = limit.getValue( MAX_SEARCH_RESULTS );
+        boolean fillResults;
+        int maxResults;
+        if ( getExcludedFields( excludeArg ).contains( "resultObject" ) ) {
+            fillResults = false;
+            maxResults = limit != null ? limit.getValueNoMaximum() : -1;
+        } else {
+            fillResults = true;
+            maxResults = limit != null ? limit.getValue( MAX_SEARCH_RESULTS ) : 100;
+        }
 
         SearchSettings searchSettings = SearchSettings.builder()
                 .query( query )
@@ -112,6 +123,7 @@ public class SearchWebService {
                 .platformConstraint( platformArg != null ? platformArgService.getEntity( platformArg ) : null )
                 .resultTypes( resultTypesCls )
                 .maxResults( maxResults )
+                .fillResults( fillResults )
                 .build();
 
         List<SearchResult<?>> searchResults;
@@ -128,20 +140,35 @@ public class SearchWebService {
                 .collect( Collectors.toList() );
 
         // Some result VOs are null for unknown reasons, see https://github.com/PavlidisLab/Gemma/issues/417
-        List<String> searchResultVosWithNullResultObject = searchResultVos.stream().filter( sr -> sr.getResultObject() == null )
-                .map( SearchResult::toString )
-                .collect( Collectors.toList() );
-        if ( !searchResultVosWithNullResultObject.isEmpty() ) {
-            log.warn( String.format( "The following search results have null result objects: %s.", String.join( ", ", searchResultVosWithNullResultObject ) ) );
+        if ( fillResults ) {
+            List<String> searchResultVosWithNullResultObject = searchResultVos.stream().filter( sr -> sr.getResultObject() == null )
+                    .map( SearchResult::toString )
+                    .collect( Collectors.toList() );
+            if ( !searchResultVosWithNullResultObject.isEmpty() ) {
+                log.warn( String.format( "The following search results have null result objects: %s.", String.join( ", ", searchResultVosWithNullResultObject ) ) );
+            }
         }
 
         // convert the response to search results of VOs
         return new SearchResultsResponseDataObject( searchResultVos.stream()
-                .filter( sr -> sr.getResultObject() != null ) // exclude null cases, we warn about them above
+                .filter( sr -> !fillResults || sr.getResultObject() != null ) // exclude null cases, we warn about them above
                 .sorted() // SearchResults are sorted by descending score order
-                .limit( maxResults ) // results are limited by class, so there might be more results than expected when unraveling everything
+                .limit( maxResults > 0 ? maxResults : Long.MAX_VALUE ) // results are limited by class, so there might be more results than expected when unraveling everything
                 .map( SearchResultValueObject::new )
                 .collect( Collectors.toList() ), new SearchSettingsValueObject( searchSettings ) );
+    }
+
+    private static final Set<String> ALLOWED_FIELDS = Collections.singleton( "resultObject" );
+
+    private static Set<String> getExcludedFields( @Nullable StringArrayArg arg ) {
+        if ( arg == null ) {
+            return Collections.emptySet();
+        }
+        if ( !ALLOWED_FIELDS.containsAll( arg.getValue() ) ) {
+            throw new MalformedArgException( String.format( "Only the following fields can be excluded: %s.",
+                    String.join( ", ", ALLOWED_FIELDS ) ) );
+        }
+        return new HashSet<>( arg.getValue() );
     }
 
     /**
@@ -149,18 +176,24 @@ public class SearchWebService {
      * <p>
      * Note that we will only expose back what the {@link SearchWebService} accepts to take as parameters for searching.
      */
-    @Data
+    @Value
     public class SearchSettingsValueObject {
 
-        private final String query;
+        String query;
         @ArraySchema(schema = @Schema(ref = "SearchResultType"))
-        private final Set<String> resultTypes;
+        Set<String> resultTypes;
 
         /* constraints */
-        private final TaxonValueObject taxon;
-        private final ArrayDesignValueObject platform;
+        @Nullable
+        TaxonValueObject taxon;
+        @Nullable
+        ArrayDesignValueObject platform;
 
-        private final int maxResults;
+        /**
+         * The maximum number of results, of null if unlimited.
+         */
+        @Nullable
+        Integer maxResults;
 
         public SearchSettingsValueObject( SearchSettings searchSettings ) {
             this.query = searchSettings.getQuery();
@@ -175,25 +208,25 @@ public class SearchWebService {
             } else {
                 this.platform = null;
             }
-            this.maxResults = searchSettings.getMaxResults();
+            this.maxResults = searchSettings.getMaxResults() > 0 ? searchSettings.getMaxResults() : null;
         }
     }
 
     /**
      * Representation of {@link SearchResult} for the RESTful API.
      */
-    @Data
+    @Value
     public static class SearchResultValueObject<T extends IdentifiableValueObject<?>> {
 
-        private final Long resultId;
+        Long resultId;
 
         @Schema(ref = "SearchResultType")
-        private final String resultType;
+        String resultType;
 
-        private final double score;
+        double score;
 
         @Schema(hidden = true)
-        private final String source;
+        String source;
 
         @Schema(oneOf = {
                 ArrayDesignValueObject.class,
@@ -206,7 +239,8 @@ public class SearchWebService {
                 GeneSetValueObject.class,
                 CharacteristicValueObject.class // for PhenotypeAssociation
         })
-        private final T resultObject;
+        @JsonInclude(JsonInclude.Include.NON_NULL)
+        T resultObject;
 
         public SearchResultValueObject( SearchResult<T> searchResult ) {
             this.resultId = searchResult.getResultId();

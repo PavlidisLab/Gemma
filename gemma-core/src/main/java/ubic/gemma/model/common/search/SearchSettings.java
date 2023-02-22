@@ -48,6 +48,17 @@ public class SearchSettings implements Serializable {
             WILDCARD_CHAR = '*',
             SINGLE_WILDCARD_CHAR = '?';
 
+    public enum SearchMode {
+        /**
+         * Normal search mode with trade-offs to make it usable.
+         */
+        NORMAL,
+        /**
+         * Fast search mode, designed for autocompletion.
+         */
+        FAST
+    }
+
     /**
      * The serial version UID of this class. Needed for serialization.
      */
@@ -152,17 +163,17 @@ public class SearchSettings implements Serializable {
 
     /* sources */
     @Builder.Default
-    private Boolean useCharacteristics = Boolean.TRUE;
+    private boolean useCharacteristics = true;
     @Builder.Default
-    private Boolean useDatabase = Boolean.TRUE;
+    private boolean useDatabase = true;
     @Builder.Default
-    private Boolean useGo = Boolean.TRUE;
+    private boolean useGo = true;
     @Builder.Default
-    private Boolean useIndices = Boolean.TRUE;
+    private boolean useIndices = true;
 
     /**
      * Highlight part of the search result as per {@link SearchResult#getHighlightedText()}.
-     *
+     * <p>
      * Overhead can be reduced by disabling highlighting if not needed.
      */
     private boolean doHighlighting;
@@ -175,6 +186,18 @@ public class SearchSettings implements Serializable {
      */
     @Builder.Default
     private int maxResults = SearchSettings.DEFAULT_MAX_RESULTS_PER_RESULT_TYPE;
+
+    /**
+     * Indicate if results should be filled.
+     */
+    @Builder.Default
+    private boolean fillResults = true;
+
+    /**
+     * Fast mode, return quickly.
+     */
+    @Builder.Default
+    private SearchMode mode = SearchMode.NORMAL;
 
     /**
      * Get this query, trimmed.
@@ -193,7 +216,7 @@ public class SearchSettings implements Serializable {
 
     /**
      * Indicate if the query refers to an ontology term.
-     *
+     * <p>
      * This is done by checking if this query starts with 'http://' for now, but there could be fancier checks performed
      * in the future.
      */
