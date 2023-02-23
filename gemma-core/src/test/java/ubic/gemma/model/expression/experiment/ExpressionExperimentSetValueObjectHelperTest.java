@@ -92,6 +92,7 @@ public class ExpressionExperimentSetValueObjectHelperTest extends BaseSpringCont
 
         ExpressionExperimentSetValueObject eesvo = expressionExperimentSetService.loadValueObject( eeSet );
 
+        assertNotNull( eesvo );
         assertEquals( 1, eeSet.getExperiments().size() );
 
         Collection<ExpressionExperimentDetailsValueObject> experimentValueObjectsInSet = expressionExperimentSetService
@@ -134,11 +135,13 @@ public class ExpressionExperimentSetValueObjectHelperTest extends BaseSpringCont
 
         // test loading without EEIds.
         eesvo = expressionExperimentSetService.loadValueObjectById( id );
+        assertNotNull( eesvo );
         assertEquals( 0, eesvo.getExpressionExperimentIds().size() );
         this.equalValuesCheck( eesvo );
 
         // test the same thing, without using the overloaded method.
         eesvo = expressionExperimentSetService.loadValueObjectById( id, false );
+        assertNotNull( eesvo );
         assertEquals( 0, eesvo.getExpressionExperimentIds().size() );
         this.equalValuesCheck( eesvo );
 
@@ -156,6 +159,7 @@ public class ExpressionExperimentSetValueObjectHelperTest extends BaseSpringCont
 
         // test loading with EEIds.
         eesvo = expressionExperimentSetService.loadValueObjectById( id, true );
+        assertNotNull( eesvo );
         assertEquals( 1, eesvo.getExpressionExperimentIds().size() );
         this.equalValuesCheck( eesvo );
     }

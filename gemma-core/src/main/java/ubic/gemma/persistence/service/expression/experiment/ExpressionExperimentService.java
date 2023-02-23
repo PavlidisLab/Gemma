@@ -431,6 +431,16 @@ public interface ExpressionExperimentService
     boolean isTroubled( ExpressionExperiment expressionExperiment );
 
     @Override
+    @Nullable
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_READ" })
+    ExpressionExperimentValueObject loadValueObject( ExpressionExperiment entity );
+
+    @Override
+    @Nullable
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_READ" })
+    ExpressionExperimentValueObject loadValueObjectById( Long entityId );
+
+    @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
     List<ExpressionExperimentValueObject> loadAllValueObjects();
 

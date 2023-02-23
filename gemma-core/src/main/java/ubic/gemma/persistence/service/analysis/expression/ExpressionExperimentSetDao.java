@@ -23,6 +23,7 @@ import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.persistence.service.BaseVoEnabledDao;
 
+import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.List;
 
@@ -88,6 +89,7 @@ public interface ExpressionExperimentSetDao
      *                  EESets this might want to be avoided.
      * @return ee vos
      */
+    @Nullable
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_READ" })
     ExpressionExperimentSetValueObject loadValueObject( Long id, boolean loadEEIds );
 

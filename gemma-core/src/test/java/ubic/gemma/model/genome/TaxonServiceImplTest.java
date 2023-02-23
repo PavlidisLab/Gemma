@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2011 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -52,7 +52,8 @@ public class TaxonServiceImplTest extends BaseSpringContextTest {
     public void testLoadValueObject() {
         Taxon yeast = taxonService.findByCommonName( "yeast" );
         assertNotNull( yeast ); // this should be loaded automatically.
-        taxonService.loadValueObject( yeast );
+        TaxonValueObject vo = taxonService.loadValueObject( yeast );
+        assertNotNull( vo );
     }
 
 }

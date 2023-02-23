@@ -131,6 +131,7 @@ public class CuratableValueObjectTest extends BaseSpringWebTest {
     @Test
     public void testCuratableValueObjectInteraction() {
         ArrayDesignValueObject adVO = this.arrayDesignService.loadValueObject( arrayDesign );
+        assertNotNull( adVO );
         assertFalse( adVO.getTroubled() );
 
         ExpressionExperimentDetailsValueObject eeDVO = new ExpressionExperimentDetailsValueObject(
@@ -147,6 +148,7 @@ public class CuratableValueObjectTest extends BaseSpringWebTest {
                         "trouble update details", null, new TroubledStatusFlagEvent() ) );
 
         adVO = this.arrayDesignService.loadValueObject( arrayDesign );
+        assertNotNull( adVO );
         assertTrue( adVO.getTroubled() );
 
         eeDVO = new ExpressionExperimentDetailsValueObject(
