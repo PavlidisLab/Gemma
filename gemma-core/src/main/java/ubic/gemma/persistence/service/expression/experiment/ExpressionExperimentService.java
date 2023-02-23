@@ -283,7 +283,7 @@ public interface ExpressionExperimentService
      * @return mapping annotations grouped by category and term (URI or value if null) to their number of occurrences in
      * the matched datasets
      */
-    List<CharacteristicWithUsageStatisticsAndOntologyTerm> getAnnotationsUsageFrequency( @Nullable Filters filters, int maxResults );
+    List<CharacteristicWithUsageStatisticsAndOntologyTerm> getAnnotationsUsageFrequency( @Nullable Filters filters, int maxResults, int minFrequency );
 
     /**
      * @param expressionExperiment experiment

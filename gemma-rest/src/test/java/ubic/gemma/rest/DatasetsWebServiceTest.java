@@ -191,7 +191,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
                 .extracting( "groupBy", InstanceOfAssertFactories.list( String.class ) )
                 .containsExactly( "classUri", "className", "termUri", "termName" );
         verify( expressionExperimentService ).getFiltersWithInferredAnnotations( Filters.empty() );
-        verify( expressionExperimentService ).getAnnotationsUsageFrequency( Filters.empty(), -1 );
+        verify( expressionExperimentService ).getAnnotationsUsageFrequency( Filters.empty(), -1, 0 );
     }
 
     @Test
@@ -203,7 +203,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
                 .hasFieldOrPropertyWithValue( "limit", 50 )
                 .extracting( "groupBy", InstanceOfAssertFactories.list( String.class ) )
                 .containsExactly( "classUri", "className", "termUri", "termName" );
-        verify( expressionExperimentService ).getAnnotationsUsageFrequency( Filters.empty(), 50 );
+        verify( expressionExperimentService ).getAnnotationsUsageFrequency( Filters.empty(), 50, 0 );
     }
 
     @Test

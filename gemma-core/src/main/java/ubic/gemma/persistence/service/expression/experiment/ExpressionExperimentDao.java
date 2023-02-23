@@ -198,8 +198,15 @@ public interface ExpressionExperimentDao
      * <p>
      * This is meant as a counterpart to {@link ubic.gemma.persistence.service.common.description.CharacteristicService#findExperimentsByUris(Collection, Taxon, int)}
      * to answer the reverse question: which annotations can be used to filter a given set of datasets?
+     *
+     * @param expressionExperimentIds IDs of {@link ExpressionExperiment} to use for restricting annotations, or null to
+     *                                consider everything
+     * @param level                   applicable annotation level, one of {@link ExpressionExperiment}, {@link ExperimentalDesign}
+     *                                or {@link BioMaterial}
+     * @param maxResults              maximum number of annotations to return
+     * @param minFrequency            minimum usage frequency to be reported (0 effectively allows everything)
      */
-    Map<Characteristic, Long> getAnnotationsUsageFrequency( @Nullable Collection<Long> expressionExperimentIds, @Nullable Class<? extends Identifiable> level, int maxResults );
+    Map<Characteristic, Long> getAnnotationsUsageFrequency( @Nullable Collection<Long> expressionExperimentIds, @Nullable Class<? extends Identifiable> level, int maxResults, int minFrequency );
 
     Collection<ExpressionExperiment> getExperimentsLackingPublications();
 }

@@ -630,7 +630,7 @@ public class ExpressionExperimentDaoImpl
      * the same characteristic at multiple levels to make counting more efficient.
      */
     @Override
-    public Map<Characteristic, Long> getAnnotationsUsageFrequency( @Nullable Collection<Long> eeIds, @Nullable Class<? extends Identifiable> level, int maxResults ) {
+    public Map<Characteristic, Long> getAnnotationsUsageFrequency( @Nullable Collection<Long> eeIds, @Nullable Class<? extends Identifiable> level, int maxResults, int minFrequency ) {
         if ( eeIds != null && eeIds.isEmpty() ) {
             return Collections.emptyMap();
         }
@@ -642,6 +642,7 @@ public class ExpressionExperimentDaoImpl
                                 + ( level != null ? " and T.LEVEL = :level " : "" )
                                 + AclQueryUtils.formNativeAclRestrictionClause() + " "
                                 + "group by COALESCE({T}.CATEGORY_URI, {T}.CATEGORY), COALESCE({T}.VALUE_URI, {T}.VALUE_URI) "
+                                + "having EE_COUNT >= :minFrequency "
                                 + "order by EE_COUNT desc" )
                 .addEntity( "T", Characteristic.class )
                 .addScalar( "EE_COUNT", new LongType() )
@@ -653,6 +654,7 @@ public class ExpressionExperimentDaoImpl
         if ( level != null ) {
             q.setParameter( "level", level );
         }
+        q.setParameter( "minFrequency", minFrequency );
         AclQueryUtils.addAclParameters( q, ExpressionExperiment.class );
         //noinspection unchecked
         List<Object[]> result = q.list();

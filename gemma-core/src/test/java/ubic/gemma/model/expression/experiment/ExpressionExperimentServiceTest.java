@@ -151,17 +151,17 @@ public class ExpressionExperimentServiceTest extends AbstractJUnit4SpringContext
 
     @Test
     public void testGetAnnotationsUsageFrequency() {
-        expressionExperimentService.getAnnotationsUsageFrequency( Filters.empty(), -1 );
-        verify( expressionExperimentDao ).getAnnotationsUsageFrequency( null, null, -1 );
+        expressionExperimentService.getAnnotationsUsageFrequency( Filters.empty(), -1, 0 );
+        verify( expressionExperimentDao ).getAnnotationsUsageFrequency( null, null, -1, 0 );
         verifyNoMoreInteractions( expressionExperimentDao );
     }
 
     @Test
     public void testGetAnnotationsUsageFrequencyWithFilters() {
         Filters f = Filters.by( "c", "valueUri", String.class, Filter.Operator.eq, "http://example.com/T00001", "characteristics.valueUri" );
-        expressionExperimentService.getAnnotationsUsageFrequency( f, -1 );
+        expressionExperimentService.getAnnotationsUsageFrequency( f, -1, 0 );
         verify( expressionExperimentDao ).loadIds( f, null );
-        verify( expressionExperimentDao ).getAnnotationsUsageFrequency( Collections.emptyList(), null, -1 );
+        verify( expressionExperimentDao ).getAnnotationsUsageFrequency( Collections.emptyList(), null, -1, 0 );
         verifyNoMoreInteractions( expressionExperimentDao );
     }
 }
