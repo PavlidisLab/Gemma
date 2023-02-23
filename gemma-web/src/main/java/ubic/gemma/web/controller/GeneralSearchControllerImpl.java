@@ -107,7 +107,7 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
     private ServletContext servletContext;
 
     @Override
-    public JsonReaderResponse<SearchResult<?>> ajaxSearch( SearchSettingsValueObject settingsValueObject ) {
+    public JsonReaderResponse<SearchResultValueObject<?>> ajaxSearch( SearchSettingsValueObject settingsValueObject ) {
         StopWatch timer = new StopWatch();
         StopWatch searchTimer = new StopWatch();
         StopWatch fillVosTimer = new StopWatch();
@@ -137,7 +137,7 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
 
         // FIXME: sort by the number of hits per class, so the smallest number of hits is at the top.
         fillVosTimer.start();
-        List<SearchResult<?>> finalResults = new ArrayList<>();
+        List<SearchResultValueObject<?>> finalResults = new ArrayList<>();
         if ( searchResults != null ) {
             for ( Class<? extends Identifiable> clazz : searchResults.keySet() ) {
                 List<SearchResult<?>> results = searchResults.get( ( Object ) clazz );
@@ -154,10 +154,10 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
                  * Now put the valueObjects inside the SearchResults in score order.
                  */
                 results = results.stream().sorted().collect( Collectors.toList() );
-                this.fillValueObjects( clazz, results, searchSettings );
-                finalResults.addAll( results );
+                finalResults.addAll( this.fillValueObjects( clazz, results, searchSettings ) );
             }
         }
+
         fillVosTimer.stop();
 
         timer.stop();
@@ -173,7 +173,6 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
     }
 
     @Override
-    @RequestMapping(value = "/searcher.html", method = RequestMethod.POST)
     public ModelAndView doSearch( HttpServletRequest request, HttpServletResponse response, SearchSettings command,
             BindException errors ) {
 
@@ -299,7 +298,7 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
      * cases, possibly the entity)
      */
     @SuppressWarnings("unchecked")
-    private void fillValueObjects( Class<?> entityClass, List<SearchResult<?>> results, SearchSettings settings ) {
+    private List<SearchResultValueObject<?>> fillValueObjects( Class<?> entityClass, List<SearchResult<?>> results, SearchSettings settings ) {
         StopWatch timer = StopWatch.createStarted();
         Collection<? extends IdentifiableValueObject<?>> vos;
 
@@ -346,7 +345,9 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
             }
             vos = cvos;
         } else if ( BioSequenceValueObject.class.isAssignableFrom( entityClass ) ) {
-            return; // why?
+            return results.stream()
+                    .map( s -> new SearchResultValueObject<>( ( SearchResult<BioSequenceValueObject> ) s ) )
+                    .collect( Collectors.toList() );
         } else if ( GeneSet.class.isAssignableFrom( entityClass ) ) {
             vos = geneSetService.getValueObjects( ids );
         } else if ( ExpressionExperimentSet.class.isAssignableFrom( entityClass ) ) {
@@ -364,37 +365,29 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
         }
 
         if ( vos == null || vos.isEmpty() ) {
-
             // bug 3475: if there are search results but they are all removed because they are troubled, then results
             // has ExpressionExperiments in
             // it causing front end errors, if vos is empty make sure to get rid of all search results
-            for ( Iterator<SearchResult<?>> it = results.iterator(); it.hasNext(); ) {
-                it.next();
-                it.remove();
-            }
-
-            return;
+            return Collections.emptyList();
         }
 
         // retained objects...
         Map<Long, ? extends IdentifiableValueObject<?>> idMap = EntityUtils.getIdMap( vos );
 
-        List<SearchResult<? extends IdentifiableValueObject<?>>> convertResults = new ArrayList<>( results.size() );
+        List<SearchResultValueObject<?>> convertResults = new ArrayList<>( results.size() );
         for ( SearchResult<?> sr : results ) {
             if ( idMap.containsKey( sr.getResultId() ) ) {
-                convertResults.add( SearchResult.from( sr, idMap.get( sr.getResultId() ) ) );
+                convertResults.add( new SearchResultValueObject<>( SearchResult.from( sr, idMap.get( sr.getResultId() ) ) ) );
             }
         }
-
-        // rewrite results with VOs
-        results.clear();
-        results.addAll( convertResults );
 
         timer.stop();
 
         if ( timer.getTime() > 200 ) {
             BaseFormController.log.info( "Value object conversion for " + ids.size() + " " + entityClass + " after search took " + timer.getTime() + " ms." );
         }
+
+        return convertResults;
     }
 
     private Collection<ArrayDesignValueObject> filterAD( final Collection<ArrayDesignValueObject> toFilter,

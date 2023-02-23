@@ -30,6 +30,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 import com.hp.hpl.jena.ontology.OntModel;
 import org.apache.commons.lang3.StringUtils;
@@ -309,6 +310,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean, D
         String query = OntologySearch.stripInvalidCharacters( givenSearch );
         Collection<OntologyIndividual> results = new HashSet<>();
 
+        StopWatch timer = StopWatch.createStarted();
         for ( AbstractOntologyService ontology : ontologyServices ) {
             if ( !ontology.isOntologyLoaded() ) {
                 continue;
@@ -316,6 +318,12 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean, D
             Collection<OntologyIndividual> found = ontology.findIndividuals( query );
             if ( found != null )
                 results.addAll( found );
+            if ( timer.getTime( TimeUnit.MILLISECONDS ) > 100 ) {
+                log.warn( String.format( "Finding individuals for ontology %s for input query '%s' took %d ms",
+                        ontology.getClass().getName(), givenSearch, timer.getTime( TimeUnit.MILLISECONDS ) ) );
+            }
+            timer.reset();
+            timer.start();
         }
 
         return results;

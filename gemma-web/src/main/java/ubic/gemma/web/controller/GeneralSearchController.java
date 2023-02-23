@@ -14,14 +14,14 @@
  */
 package ubic.gemma.web.controller;
 
+import lombok.Value;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.BindException;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.servlet.ModelAndView;
 import ubic.gemma.core.search.SearchResult;
-import ubic.gemma.model.annotations.GemmaWebOnly;
-import ubic.gemma.model.common.Identifiable;
+import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.common.search.SearchSettingsValueObject;
 import ubic.gemma.web.remote.JsonReaderResponse;
@@ -39,7 +39,12 @@ import javax.servlet.http.HttpServletResponse;
 @Controller
 public interface GeneralSearchController {
 
-    JsonReaderResponse<SearchResult<?>> ajaxSearch( SearchSettingsValueObject settings );
+    /**
+     * AJAX-flavoured search.
+     * Mapped by DWR.
+     */
+    @SuppressWarnings("unused")
+    JsonReaderResponse<SearchResultValueObject<?>> ajaxSearch( SearchSettingsValueObject settings );
 
     @RequestMapping(value = "/searcher.html", method = RequestMethod.POST)
     ModelAndView doSearch( HttpServletRequest request, HttpServletResponse response, SearchSettings command,
@@ -48,4 +53,19 @@ public interface GeneralSearchController {
     ModelAndView processFormSubmission( HttpServletRequest request, HttpServletResponse response,
             SearchSettings command, BindException errors ) throws Exception;
 
+    @Value
+    class SearchResultValueObject<T extends IdentifiableValueObject<?>> {
+
+        Class<?> resultClass;
+        double score;
+        String highlightedText;
+        IdentifiableValueObject<?> resultObject;
+
+        public SearchResultValueObject( SearchResult<T> result ) {
+            this.resultClass = result.getResultType();
+            this.score = result.getScore();
+            this.highlightedText = result.getHighlightedText();
+            this.resultObject = result.getResultObject();
+        }
+    }
 }
