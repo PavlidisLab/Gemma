@@ -240,11 +240,13 @@ public class ExpressionExperimentSearchServiceImpl implements ExpressionExperime
             expressionExperimentSetService.thaw( set );
             if ( set.getTaxon().getId().equals( taxonId ) ) {
                 ExpressionExperimentSetValueObject eevo = expressionExperimentSetService.loadValueObject( set );
-                newSRDO = new SearchResultDisplayObject( eevo );
-                newSRDO.setUserOwned( securityService.isPrivate( set ) );
-                ( ( ExpressionExperimentSetValueObject ) newSRDO.getResultValueObject() )
-                        .setIsPublic( securityService.isPublic( set ) );
-                setResults.add( newSRDO );
+                if ( eevo != null ) {
+                    newSRDO = new SearchResultDisplayObject( eevo );
+                    newSRDO.setUserOwned( securityService.isPrivate( set ) );
+                    ( ( ExpressionExperimentSetValueObject ) newSRDO.getResultValueObject() )
+                            .setIsPublic( securityService.isPublic( set ) );
+                    setResults.add( newSRDO );
+                }
             }
         }
 

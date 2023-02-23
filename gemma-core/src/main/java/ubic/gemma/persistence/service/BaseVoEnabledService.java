@@ -3,6 +3,7 @@ package ubic.gemma.persistence.service;
 import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.common.Identifiable;
 
+import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.List;
 
@@ -14,16 +15,15 @@ public interface BaseVoEnabledService<O extends Identifiable, VO extends Identif
         extends BaseService<O> {
 
     /**
-     * Loads a value object representing the entity with given id.
-     *
-     * @param  entity the entity whose value object should be loaded.
-     * @return        value object representing the entity with matching id.
+     * @see BaseVoEnabledDao#loadValueObject(Identifiable)
      */
+    @Nullable
     VO loadValueObject( O entity );
 
     /**
-     * Load a value object by its ID.
+     * @see BaseVoEnabledDao#loadValueObjectById(Long)
      */
+    @Nullable
     VO loadValueObjectById( Long entityId );
 
     /**

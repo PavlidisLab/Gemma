@@ -21,6 +21,7 @@ import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;

@@ -90,15 +90,18 @@ public class CompositeSequenceServiceImpl
     @Transactional(readOnly = true)
     public CompositeSequenceValueObject loadValueObjectWithGeneMappingSummary( CompositeSequence cs ) {
         CompositeSequenceValueObject vo = loadValueObject( cs );
-        // Not passing the vo since that would create data redundancy in the returned structure
-        vo.setGeneMappingSummaries(
-                this.getGeneMappingSummary( this.bioSequenceService.findByCompositeSequence( cs ), null ) );
+        if ( vo != null ) {
+            // Not passing the vo since that would create data redundancy in the returned structure
+            vo.setGeneMappingSummaries(
+                    this.getGeneMappingSummary( this.bioSequenceService.findByCompositeSequence( cs ), null ) );
+        }
         return vo;
     }
 
     @Override
     @Transactional(readOnly = true)
     public Slice<CompositeSequenceValueObject> loadValueObjectsForGene( Gene gene, int start, int limit ) {
+        // FIXME: deal with potential null return values of loadValueObject
         return this.compositeSequenceDao.findByGene( gene, start, limit ).map( this::loadValueObject );
     }
 

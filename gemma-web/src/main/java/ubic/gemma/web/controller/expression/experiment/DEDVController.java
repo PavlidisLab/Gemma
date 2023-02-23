@@ -729,6 +729,10 @@ public class DEDVController {
                     gene = genes.get( geneId );
                 } else {
                     gene = geneService.loadValueObjectById( geneId );
+                    if ( gene == null ) {
+                        log.warn( String.format( "Failed to convert gene with ID %d to VO.", geneId ) );
+                        continue;
+                    }
                     genes.put( geneId, gene );
                 }
                 String geneName = gene.getOfficialSymbol();

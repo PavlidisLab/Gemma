@@ -24,7 +24,12 @@ public abstract class GeneAnyIdArg<T> extends GeneArg<T> {
 
     @Override
     public List<GeneValueObject> getValueObjects( GeneService service ) {
-        return Collections.singletonList( service.loadValueObject( this.getEntity( service ) ) );
+        GeneValueObject vo = service.loadValueObject( this.getEntity( service ) );
+        if ( vo != null ) {
+            return Collections.singletonList( vo );
+        } else {
+            return Collections.emptyList();
+        }
     }
 
     @Override

@@ -250,6 +250,7 @@ public class PlatformsWebService {
             @QueryParam("limit") @DefaultValue("20") LimitArg limit // Optional, default 20
     ) {
         probeArg.setPlatform( arrayDesignArgService.getEntity( platformArg ) );
+        // FIXME: deal with potential null return value of loadValueObject
         return Responder.paginate( compositeSequenceService
                 .getGenes( probeArgService.getEntity( probeArg ), offset.getValue(),
                         limit.getValue() )

@@ -236,7 +236,10 @@ public class GeneController extends BaseController {
         Collection<GeneValueObject> genes = new ArrayList<>();
         if ( geneIds != null ) {
             for ( Long id : geneIds ) {
-                genes.add( geneService.loadValueObjectById( id ) );
+                GeneValueObject vo = geneService.loadValueObjectById( id );
+                if ( vo != null ) {
+                    genes.add( vo );
+                }
             }
         }
         if ( geneSetIds != null ) {

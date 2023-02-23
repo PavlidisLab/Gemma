@@ -3,6 +3,7 @@ package ubic.gemma.persistence.service;
 import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.common.Identifiable;
 
+import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.List;
 
@@ -18,8 +19,13 @@ public interface BaseVoEnabledDao<O extends Identifiable, VO extends Identifiabl
      * @param entity the entity to turn into a value object
      * @return a value object
      */
+    @Nullable
     VO loadValueObject( O entity );
 
+    /**
+     * @return a value object, or null if it could not be constructed
+     */
+    @Nullable
     VO loadValueObjectById( Long id );
 
     /**

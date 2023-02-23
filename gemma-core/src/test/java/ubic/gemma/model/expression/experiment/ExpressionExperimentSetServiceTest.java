@@ -111,6 +111,7 @@ public class ExpressionExperimentSetServiceTest extends BaseSpringContextTest {
         // need VO otherwise was getting lazy loading issues
         ExpressionExperimentSetValueObject setVO = expressionExperimentSetService.loadValueObject( updatedSet );
 
+        assertNotNull( setVO );
         assertEquals( newName, setVO.getName() );
         assertEquals( newDesc, setVO.getDescription() );
         assertEquals( 1, setVO.getSize().intValue() ); // experiment IDs are not populated by default.

@@ -38,6 +38,7 @@ import ubic.gemma.persistence.util.EntityUtils;
 import ubic.gemma.web.controller.BaseController;
 import ubic.gemma.web.persistence.SessionListManager;
 
+import javax.annotation.Nullable;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.util.ArrayList;
@@ -131,6 +132,9 @@ public class ExpressionExperimentSetController extends BaseController {
             try {
                 ExpressionExperimentSetValueObject set = expressionExperimentSetService
                         .loadValueObject( expressionExperimentSetService.loadOrFail( eesvo.getId() ) );
+                if ( set == null ) {
+                    throw new IllegalArgumentException( String.format( "Failed to load VO for experiment set with ID %d", eesvo.getId() ) );
+                }
                 userCanEditGroup = ( set.getUserCanWrite() && set.isModifiable() );
 
             } catch ( org.springframework.security.access.AccessDeniedException ade ) {
