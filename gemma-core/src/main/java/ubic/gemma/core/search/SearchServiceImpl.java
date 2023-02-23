@@ -412,7 +412,7 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
             results.addAll( gen );
         }
 
-        if ( settings.getUseGo() ) {
+        if ( settings.hasResultType( Gene.class ) && settings.getUseGo() ) {
             try {
                 // FIXME: add support for OR, but there's a bug in baseCode that prevents this https://github.com/PavlidisLab/baseCode/issues/22
                 String query = settings.getQuery().replaceAll( "\\s+OR\\s+", "" );
