@@ -1551,7 +1551,6 @@ public class ExpressionExperimentDaoImpl
         }
 
         if ( FiltersUtils.containsAnyAlias( filters, sort, ArrayDesignDao.OBJECT_ALIAS ) ) {
-            log.warn( "Querying ee.bioAssays.arrayDesignUsed, this might take some time..." );
             queryString += " left join " + BIO_ASSAY_ALIAS + ".arrayDesignUsed as " + ARRAY_DESIGN_ALIAS;
         }
 
