@@ -1247,14 +1247,17 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
+    protected void postProcessValueObjects( List<ExpressionExperimentValueObject> results ) {
+        populateArrayDesignCount( results );
+    }
+
+    @Override
     public List<ExpressionExperimentValueObject> loadValueObjects( @Nullable Filters
             filters, @Nullable Sort sort ) {
         if ( sort == null ) {
             sort = Sort.by( OBJECT_ALIAS, "id", null, "id" );
         }
-        List<ExpressionExperimentValueObject> results = super.loadValueObjects( filters, sort );
-        populateArrayDesignCount( results );
-        return results;
+        return super.loadValueObjects( filters, sort );
     }
 
     @Override
@@ -1263,26 +1266,26 @@ public class ExpressionExperimentDaoImpl
         if ( sort == null ) {
             sort = Sort.by( OBJECT_ALIAS, "id", null, "id" );
         }
-        Slice<ExpressionExperimentValueObject> results = super.loadValueObjects( filters, sort, offset, limit );
-        populateArrayDesignCount( results );
-        return results;
+        return super.loadValueObjects( filters, sort, offset, limit );
     }
 
     @Override
-    protected ExpressionExperiment processFilteringQueryResultToEntity( Object result ) {
-        Object[] row = ( Object[] ) result;
-        return ( ExpressionExperiment ) row[0];
-    }
+    protected TypedResultTransformer<ExpressionExperimentValueObject> getValueObjectTransformer() {
+        TypedResultTransformer<ExpressionExperimentValueObject> transformer = super.getValueObjectTransformer();
+        return new TypedResultTransformer<ExpressionExperimentValueObject>() {
+            @Override
+            public ExpressionExperimentValueObject transformTuple( Object[] row, String[] aliases ) {
+                ExpressionExperiment ee = ( ExpressionExperiment ) row[0];
+                AclObjectIdentity aoi = ( AclObjectIdentity ) row[1];
+                AclSid sid = ( AclSid ) row[2];
+                return new ExpressionExperimentValueObject( ee, aoi, sid );
+            }
 
-    @Override
-    protected ExpressionExperimentValueObject processFilteringQueryResultToValueObject( Object result ) {
-        Object[] row = ( Object[] ) result;
-
-        ExpressionExperiment ee = ( ExpressionExperiment ) row[0];
-        AclObjectIdentity aoi = ( AclObjectIdentity ) row[1];
-        AclSid sid = ( AclSid ) row[2];
-
-        return new ExpressionExperimentValueObject( ee, aoi, sid );
+            @Override
+            public List<ExpressionExperimentValueObject> transformList( List collection ) {
+                return transformer.transformList( collection );
+            }
+        };
     }
 
     @Override

@@ -12,10 +12,7 @@ import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
 import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.common.Identifiable;
-import ubic.gemma.persistence.util.FilterCriteriaUtils;
-import ubic.gemma.persistence.util.Filters;
-import ubic.gemma.persistence.util.Slice;
-import ubic.gemma.persistence.util.Sort;
+import ubic.gemma.persistence.util.*;
 
 import javax.annotation.Nullable;
 import java.util.*;
@@ -53,12 +50,34 @@ public abstract class AbstractCriteriaFilteringVoEnabledDao<O extends Identifiab
                 .add( FilterCriteriaUtils.formRestrictionClause( filters ) );
     }
 
+    private TypedResultTransformer<VO> getValueObjectResultTransformer( StopWatch postProcessingStopWatch ) {
+        return new TypedResultTransformer<VO>() {
+
+            @Override
+            public VO transformTuple( Object[] tuple, String[] aliases ) {
+                //noinspection unchecked
+                return doLoadValueObject( ( O ) Criteria.DISTINCT_ROOT_ENTITY.transformTuple( tuple, aliases ) );
+            }
+
+            @Override
+            public List<VO> transformList( List collection ) {
+                try {
+                    postProcessingStopWatch.start();
+                    //noinspection unchecked
+                    return ( List<VO> ) Criteria.DISTINCT_ROOT_ENTITY.transformList( collection );
+                } finally {
+                    postProcessingStopWatch.stop();
+                }
+            }
+        };
+    }
+
     @Override
     public List<Long> loadIds( @Nullable Filters filters, @Nullable Sort sort ) {
         StopWatch stopWatch = StopWatch.createStarted();
 
         Criteria criteria = getFilteringCriteria( filters )
-                .setProjection( Projections.id() );
+                .setProjection( Projections.distinct( Projections.id() ) );
 
         if ( sort != null ) {
             addOrder( criteria, sort );
@@ -85,6 +104,8 @@ public abstract class AbstractCriteriaFilteringVoEnabledDao<O extends Identifiab
         if ( sort != null ) {
             addOrder( criteria, sort );
         }
+
+        criteria.setResultTransformer( Criteria.DISTINCT_ROOT_ENTITY );
 
         //noinspection unchecked
         List<O> result = criteria.list();
@@ -120,7 +141,9 @@ public abstract class AbstractCriteriaFilteringVoEnabledDao<O extends Identifiab
 
         queryStopWatch.start();
         //noinspection unchecked
-        List<O> results = criteria.list();
+        List<O> results = criteria
+                .setResultTransformer( Criteria.DISTINCT_ROOT_ENTITY )
+                .list();
         queryStopWatch.stop();
 
         countingStopWatch.start();
@@ -140,7 +163,6 @@ public abstract class AbstractCriteriaFilteringVoEnabledDao<O extends Identifiab
     @Override
     public Slice<VO> loadValueObjects( @Nullable Filters filters, @Nullable Sort sort, int offset, int limit ) {
         StopWatch stopWatch = StopWatch.createStarted();
-        StopWatch queryStopWatch = StopWatch.create();
         StopWatch countingStopWatch = StopWatch.create();
         StopWatch postProcessingStopWatch = StopWatch.create();
 
@@ -158,10 +180,11 @@ public abstract class AbstractCriteriaFilteringVoEnabledDao<O extends Identifiab
         if ( limit > 0 )
             query.setMaxResults( limit );
 
-        queryStopWatch.start();
+        // setup transformer
+        query.setResultTransformer( getValueObjectResultTransformer( postProcessingStopWatch ) );
+
         //noinspection unchecked
-        List<O> data = query.setResultTransformer( Criteria.DISTINCT_ROOT_ENTITY ).list();
-        queryStopWatch.stop();
+        List<VO> results = query.list();
 
         countingStopWatch.start();
         Long totalElements = ( Long ) totalElementsQuery
@@ -169,16 +192,13 @@ public abstract class AbstractCriteriaFilteringVoEnabledDao<O extends Identifiab
                 .uniqueResult();
         countingStopWatch.stop();
 
-        postProcessingStopWatch.start();
-        List<VO> results = doLoadValueObjects( data );
-        postProcessingStopWatch.stop();
-
         stopWatch.stop();
 
         if ( stopWatch.getTime( TimeUnit.MILLISECONDS ) > REPORT_SLOW_QUERY_AFTER_MS ) {
             log.warn( String.format( "Loading and counting %d VOs for %s took %d ms (querying: %d, counting: %d, post-processing: %d).",
                     totalElements, elementClass.getName(),
-                    stopWatch.getTime( TimeUnit.MILLISECONDS ), queryStopWatch.getTime( TimeUnit.MILLISECONDS ),
+                    stopWatch.getTime( TimeUnit.MILLISECONDS ),
+                    stopWatch.getTime( TimeUnit.MILLISECONDS ) - postProcessingStopWatch.getTime( TimeUnit.MILLISECONDS ) - countingStopWatch.getTime( TimeUnit.MILLISECONDS ),
                     countingStopWatch.getTime( TimeUnit.MILLISECONDS ), postProcessingStopWatch.getTime( TimeUnit.MILLISECONDS ) ) );
         }
 
@@ -188,7 +208,6 @@ public abstract class AbstractCriteriaFilteringVoEnabledDao<O extends Identifiab
     @Override
     public List<VO> loadValueObjects( @Nullable Filters filters, @Nullable Sort sort ) {
         StopWatch stopWatch = StopWatch.createStarted();
-        StopWatch queryStopWatch = StopWatch.create();
         StopWatch postProcessingStopWatch = StopWatch.create();
 
         Criteria query = getFilteringCriteria( filters );
@@ -197,23 +216,19 @@ public abstract class AbstractCriteriaFilteringVoEnabledDao<O extends Identifiab
             addOrder( query, sort );
         }
 
-        queryStopWatch.start();
-        //noinspection unchecked
-        List<O> data = query
-                .setResultTransformer( Criteria.DISTINCT_ROOT_ENTITY )
-                .list();
-        queryStopWatch.stop();
+        // setup transformer
+        query.setResultTransformer( getValueObjectResultTransformer( postProcessingStopWatch ) );
 
-        postProcessingStopWatch.start();
-        List<VO> results = this.doLoadValueObjects( data );
-        postProcessingStopWatch.stop();
+        //noinspection unchecked
+        List<VO> results = query.list();
 
         stopWatch.stop();
 
         if ( stopWatch.getTime() > REPORT_SLOW_QUERY_AFTER_MS ) {
             log.info( String.format( "Loading %d VOs for %s took %d ms (querying: %d ms, post-processing: %d ms).",
                     results.size(), elementClass.getName(), stopWatch.getTime( TimeUnit.MILLISECONDS ),
-                    queryStopWatch.getTime( TimeUnit.MILLISECONDS ), postProcessingStopWatch.getTime( TimeUnit.MILLISECONDS ) ) );
+                    stopWatch.getTime( TimeUnit.MILLISECONDS ) - postProcessingStopWatch.getTime( TimeUnit.MILLISECONDS ),
+                    postProcessingStopWatch.getTime( TimeUnit.MILLISECONDS ) ) );
         }
 
         return results;

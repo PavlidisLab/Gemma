@@ -6,12 +6,10 @@ import org.hibernate.Query;
 import org.hibernate.SessionFactory;
 import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.common.Identifiable;
-import ubic.gemma.persistence.util.FilterQueryUtils;
-import ubic.gemma.persistence.util.Filters;
-import ubic.gemma.persistence.util.Slice;
-import ubic.gemma.persistence.util.Sort;
+import ubic.gemma.persistence.util.*;
 
 import javax.annotation.Nullable;
+import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
@@ -37,7 +35,7 @@ public abstract class AbstractQueryFilteringVoEnabledDao<O extends Identifiable,
      * Produce a query for retrieving value objects after applying a set of filters and a given ordering.
      * <p>
      * Note that if your implementation does not produce a {@link List} of {@link O} when {@link Query#list()} is invoked,
-     * you must override {@link AbstractQueryFilteringVoEnabledDao#processFilteringQueryResultToValueObject(Object)}.
+     * you must override {@link AbstractQueryFilteringVoEnabledDao#getValueObjectTransformer()}.
      *
      * @return a {@link Query} that produce a list of {@link O}
      */
@@ -58,33 +56,68 @@ public abstract class AbstractQueryFilteringVoEnabledDao<O extends Identifiable,
         throw new NotImplementedException( "Counting " + elementClass + " is not supported." );
     }
 
-    /**
-     * Process a properties from {@link #getFilteringQuery(Filters, Sort)} into a {@link O}.
-     * <p>
-     * The default is to simply cast the properties to {@link O}, assuming that it is the only return value of the query.
-     */
-    protected O processFilteringQueryResultToEntity( Object result ) {
-        //noinspection unchecked
-        return ( O ) result;
-    }
+    private final TypedResultTransformer<O> DEFAULT_ENTITY_TRANSFORMER = new TypedResultTransformer<O>() {
+        @Override
+        @Nullable
+        public O transformTuple( Object[] tuple, String[] aliases ) {
+            //noinspection unchecked
+            return ( O ) tuple[0];
+        }
+
+        @Override
+        public List<O> transformList( List collection ) {
+            //noinspection unchecked
+            return ( ( List<O> ) collection ).stream()
+                    .filter( Objects::nonNull )
+                    .collect( Collectors.toList() );
+        }
+    };
 
     /**
-     * Process a properties from {@link #getFilteringQuery(Filters, Sort)} into a {@link VO} value object.
+     * Obtain a value object transformer for the result of {@link #getFilteringQuery(Filters, Sort)}.
      * <p>
-     * The properties is obtained from {@link Query#list()}.
-     * <p>
-     * By default, it will process the properties with {@link #processFilteringQueryResultToEntity(Object)} and then apply
-     * {@link #doLoadValueObject(Identifiable)} to obtain a value object.
-     *
-     * @return a value object, or null, and it will be ignored when constructing the {@link Slice} in {@link #loadValueObjects(Filters, Sort, int, int)}
+     * By default, it will process the first element of the tuple with {@link #doLoadValueObjects(Collection)} and then
+     * post-process the resulting VOs with {@link #postProcessValueObjects(List)}.
      */
-    protected VO processFilteringQueryResultToValueObject( Object result ) {
-        return doLoadValueObject( processFilteringQueryResultToEntity( result ) );
+    protected TypedResultTransformer<VO> getValueObjectTransformer() {
+        TypedResultTransformer<O> entityTransformer = DEFAULT_ENTITY_TRANSFORMER;
+        return new TypedResultTransformer<VO>() {
+
+            @Override
+            public VO transformTuple( Object[] tuple, String[] aliases ) {
+                return doLoadValueObject( entityTransformer.transformTuple( tuple, aliases ) );
+            }
+
+            @Override
+            public List<VO> transformList( List collection ) {
+                //noinspection unchecked
+                List<VO> results = ( ( List<VO> ) collection ).stream().filter( Objects::nonNull ).collect( Collectors.toList() );
+                postProcessValueObjects( results );
+                return results;
+            }
+        };
     }
 
-    /**
-     * FIXME: this could be far more efficient with a specialized query
-     */
+    private TypedResultTransformer<VO> getValueObjectTransformer( StopWatch postProcessingStopWatch ) {
+        TypedResultTransformer<VO> transformer = getValueObjectTransformer();
+        return new TypedResultTransformer<VO>() {
+            @Override
+            public VO transformTuple( Object[] tuple, String[] aliases ) {
+                return transformer.transformTuple( tuple, aliases );
+            }
+
+            @Override
+            public List<VO> transformList( List collection ) {
+                try {
+                    postProcessingStopWatch.start();
+                    return transformer.transformList( collection );
+                } finally {
+                    postProcessingStopWatch.stop();
+                }
+            }
+        };
+    }
+
     @Override
     public List<Long> loadIds( @Nullable Filters filters, @Nullable Sort sort ) {
         StopWatch timer = StopWatch.createStarted();
@@ -92,7 +125,8 @@ public abstract class AbstractQueryFilteringVoEnabledDao<O extends Identifiable,
         List<Long> result = getFilteringIdQuery( filters ).list();
         timer.stop();
         if ( timer.getTime( TimeUnit.MILLISECONDS ) > REPORT_SLOW_QUERY_AFTER_MS ) {
-            log.warn( String.format( "Loading %d IDs for %s took %s ms.", result.size(), elementClass.getName(), timer.getTime( TimeUnit.MILLISECONDS ) ) );
+            log.warn( String.format( "Loading %d IDs for %s took %s ms.", result.size(), elementClass.getName(),
+                    timer.getTime( TimeUnit.MILLISECONDS ) ) );
         }
         return result;
     }
@@ -101,14 +135,14 @@ public abstract class AbstractQueryFilteringVoEnabledDao<O extends Identifiable,
     public List<O> load( @Nullable Filters filters, @Nullable Sort sort ) {
         StopWatch timer = StopWatch.createStarted();
         //noinspection unchecked
-        List<Object> result = getFilteringQuery( filters, sort ).list();
-        List<O> r = result.stream()
-                .map( this::processFilteringQueryResultToEntity )
-                .collect( Collectors.toList() );
+        List<O> result = getFilteringQuery( filters, sort )
+                .setResultTransformer( DEFAULT_ENTITY_TRANSFORMER )
+                .list();
         if ( timer.getTime( TimeUnit.MILLISECONDS ) > REPORT_SLOW_QUERY_AFTER_MS ) {
-            log.warn( String.format( "Loading %d entities for %s took %s ms.", r.size(), elementClass.getName(), timer.getTime( TimeUnit.MILLISECONDS ) ) );
+            log.warn( String.format( "Loading %d entities for %s took %s ms.", result.size(), elementClass.getName(),
+                    timer.getTime( TimeUnit.MILLISECONDS ) ) );
         }
-        return r;
+        return result;
     }
 
     @Override
@@ -121,20 +155,22 @@ public abstract class AbstractQueryFilteringVoEnabledDao<O extends Identifiable,
             query.setFirstResult( offset );
         if ( limit > 0 )
             query.setMaxResults( limit );
-        List<?> result = getFilteringQuery( filters, sort ).list();
-        List<O> os = result.stream()
-                .map( this::processFilteringQueryResultToEntity )
-                .collect( Collectors.toList() );
+        //noinspection unchecked
+        List<O> result = query
+                .setResultTransformer( DEFAULT_ENTITY_TRANSFORMER )
+                .list();
         Long totalElements = ( Long ) totalElementsQuery.uniqueResult();
         if ( timer.getTime( TimeUnit.MILLISECONDS ) > REPORT_SLOW_QUERY_AFTER_MS ) {
-            log.warn( String.format( "Loading %d entities for %s took %s ms.", os.size(), elementClass.getName(), timer.getTime( TimeUnit.MILLISECONDS ) ) );
+            log.warn( String.format( "Loading %d entities for %s took %s ms.", result.size(), elementClass.getName(),
+                    timer.getTime( TimeUnit.MILLISECONDS ) ) );
         }
-        return new Slice<>( os, sort, offset, limit, totalElements );
+        return new Slice<>( result, sort, offset, limit, totalElements );
     }
 
     @Override
     public Slice<VO> loadValueObjects( @Nullable Filters filters, @Nullable Sort sort, int offset, int limit ) {
         StopWatch stopWatch = StopWatch.createStarted();
+        StopWatch postProcessingStopWatch = StopWatch.create();
 
         Query query = this.getFilteringQuery( filters, sort );
         Query totalElementsQuery = getFilteringCountQuery( filters );
@@ -145,16 +181,10 @@ public abstract class AbstractQueryFilteringVoEnabledDao<O extends Identifiable,
         if ( limit > 0 )
             query.setMaxResults( limit );
 
-        StopWatch queryStopWatch = StopWatch.createStarted();
-        List<?> list = query.list();
-        queryStopWatch.stop();
-
-        StopWatch postProcessingStopWatch = StopWatch.createStarted();
-        List<VO> vos = list.stream()
-                .map( this::processFilteringQueryResultToValueObject )
-                .filter( Objects::nonNull )
-                .collect( Collectors.toList() );
-        postProcessingStopWatch.stop();
+        //noinspection unchecked
+        List<VO> list = query
+                .setResultTransformer( getValueObjectTransformer( postProcessingStopWatch ) )
+                .list();
 
         StopWatch countingStopWatch = StopWatch.createStarted();
         Long totalElements = ( Long ) totalElementsQuery.uniqueResult();
@@ -163,43 +193,35 @@ public abstract class AbstractQueryFilteringVoEnabledDao<O extends Identifiable,
         stopWatch.stop();
 
         if ( stopWatch.getTime( TimeUnit.MILLISECONDS ) > REPORT_SLOW_QUERY_AFTER_MS ) {
-            log.warn( "Loading and counting VOs for " + elementClass.getName() + " took " + stopWatch.getTime( TimeUnit.MILLISECONDS ) + " ms "
-                    + "(querying: " + queryStopWatch.getTime( TimeUnit.MILLISECONDS ) + " ms, "
-                    + "counting: " + countingStopWatch.getTime( TimeUnit.MILLISECONDS ) + " ms, "
-                    + "post-processing: " + postProcessingStopWatch.getTime( TimeUnit.MILLISECONDS ) + " ms)." );
+            log.warn( String.format( "Loading and counting %d VOs for %s took %d ms (querying: %d ms, counting: %d ms, post-processing: %d ms).",
+                    list.size(),
+                    elementClass.getName(),
+                    stopWatch.getTime( TimeUnit.MILLISECONDS ),
+                    stopWatch.getTime( TimeUnit.MILLISECONDS ) - countingStopWatch.getTime( TimeUnit.MILLISECONDS ) - postProcessingStopWatch.getTime( TimeUnit.MILLISECONDS ),
+                    countingStopWatch.getTime( TimeUnit.MILLISECONDS ),
+                    postProcessingStopWatch.getTime( TimeUnit.MILLISECONDS ) ) );
         }
 
-        return new Slice<>( vos, sort, offset, limit, totalElements );
+        return new Slice<>( list, sort, offset, limit, totalElements );
     }
 
     @Override
     public List<VO> loadValueObjects( @Nullable Filters filters, @Nullable Sort sort ) {
         StopWatch stopWatch = StopWatch.createStarted();
-        StopWatch queryStopWatch = StopWatch.create();
         StopWatch postProcessingStopWatch = StopWatch.create();
-
-        Query query = this.getFilteringQuery( filters, sort );
-
-        queryStopWatch.start();
-        List<?> list = query.list();
-        queryStopWatch.stop();
-
-        postProcessingStopWatch.start();
-        List<VO> vos = list.stream()
-                .map( this::processFilteringQueryResultToValueObject )
-                .filter( Objects::nonNull )
-                .collect( Collectors.toList() );
-        postProcessingStopWatch.stop();
-
+        //noinspection unchecked
+        List<VO> results = this.getFilteringQuery( filters, sort )
+                .setResultTransformer( getValueObjectTransformer( postProcessingStopWatch ) )
+                .list();
         stopWatch.stop();
-
         if ( stopWatch.getTime( TimeUnit.MILLISECONDS ) > REPORT_SLOW_QUERY_AFTER_MS ) {
-            log.info( "Loading VOs for " + elementClass.getName() + " took " + stopWatch.getTime( TimeUnit.MILLISECONDS ) + "ms ("
-                    + "querying: " + queryStopWatch.getTime( TimeUnit.MILLISECONDS ) + " ms, "
-                    + "post-processing: " + postProcessingStopWatch.getTime( TimeUnit.MILLISECONDS ) + " ms)." );
+            log.info( String.format( "Loading %d VOs for %s took %dms (querying: %d ms, post-processing: %d ms).",
+                    results.size(),
+                    elementClass.getName(), stopWatch.getTime( TimeUnit.MILLISECONDS ),
+                    stopWatch.getTime( TimeUnit.MILLISECONDS ) - postProcessingStopWatch.getTime( TimeUnit.MILLISECONDS ),
+                    postProcessingStopWatch.getTime( TimeUnit.MILLISECONDS ) ) );
         }
-
-        return vos;
+        return results;
     }
 
     @Override

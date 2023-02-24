@@ -564,6 +564,18 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     }
 
     @Override
+    protected void postProcessValueObjects( List<ArrayDesignValueObject> results ) {
+        StopWatch timer = StopWatch.createStarted();
+        populateIsMerged( results );
+        populateBlacklisted( results );
+        populateExpressionExperimentCount( results );
+        populateSwitchedExpressionExperimentCount( results );
+        if ( timer.getTime( TimeUnit.MILLISECONDS ) > 100 ) {
+            log.warn( String.format( "Populating %d ArrayDesign VOs took %d ms.", results.size(), timer.getTime( TimeUnit.MILLISECONDS ) ) );
+        }
+    }
+
+    @Override
     public List<ArrayDesignValueObject> loadValueObjectsForEE( @Nullable Long eeId ) {
         if ( eeId == null ) {
             return new ArrayList<>();
@@ -571,31 +583,6 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
         Collection<Long> ids = CommonQueries.getArrayDesignIdsUsed( eeId,
                 this.getSessionFactory().getCurrentSession() );
         return this.loadValueObjectsByIds( ids );
-    }
-
-    @Override
-    public Slice<ArrayDesignValueObject> loadValueObjects( @Nullable Filters filters, @Nullable Sort sort, int offset, int limit ) {
-        Slice<ArrayDesignValueObject> results = super.loadValueObjects( filters, sort, offset, limit );
-        populateArrayDesignValueObjects( results );
-        return results;
-    }
-
-    @Override
-    public List<ArrayDesignValueObject> loadValueObjects( @Nullable Filters filters, @Nullable Sort sort ) {
-        List<ArrayDesignValueObject> results = super.loadValueObjects( filters, sort );
-        populateArrayDesignValueObjects( results );
-        return results;
-    }
-
-    private void populateArrayDesignValueObjects( Collection<ArrayDesignValueObject> results ) {
-        StopWatch timer = StopWatch.createStarted();
-        populateIsMerged( results );
-        populateBlacklisted( results );
-        populateExpressionExperimentCount( results );
-        populateSwitchedExpressionExperimentCount( results );
-        if ( timer.getTime( TimeUnit.MILLISECONDS ) > 50 ) {
-            log.info( String.format( "Populating ArrayDesign VOs took %d ms.", timer.getTime( TimeUnit.MILLISECONDS ) ) );
-        }
     }
 
     @Override
