@@ -36,7 +36,7 @@ import java.util.Map;
  * @author Paul
  */
 @SuppressWarnings("unused") // Possible external use
-public interface OntologyService extends InitializingBean {
+public interface OntologyService {
 
     /**
      * Will add the give vocab characteristic to the expression experiment.

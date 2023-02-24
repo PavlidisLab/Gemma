@@ -31,11 +31,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.hp.hpl.jena.ontology.OntModel;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.reflect.FieldUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.compass.core.util.concurrent.ConcurrentHashSet;
+import org.springframework.beans.factory.DisposableBean;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
@@ -90,7 +94,7 @@ import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialService;
  * @author pavlidis
  */
 @Service
-public class OntologyServiceImpl implements OntologyService {
+public class OntologyServiceImpl implements OntologyService, InitializingBean, DisposableBean {
     /**
      * Throttle how many ontology terms we retrieve. We search the ontologies in a favored order, so we can stop when we
      * find "enough stuff".
@@ -183,6 +187,16 @@ public class OntologyServiceImpl implements OntologyService {
             log.info( "Auto-loading of ontologies suppressed" );
         }
 
+    }
+
+    @Override
+    public void destroy() throws Exception {
+        String doLoad = Configuration.getString( "load.ontologies" );
+        if ( StringUtils.isBlank( doLoad ) || Configuration.getBoolean( "load.ontologies" ) ) {
+            for ( AbstractOntologyService serv : this.ontologyServices ) {
+                serv.cancelInitializationThread();
+            }
+        }
     }
 
     private void countOccurrences( Collection<CharacteristicValueObject> searchResults,
