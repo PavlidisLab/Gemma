@@ -21,6 +21,7 @@ package ubic.gemma.persistence.service.expression.experiment;
 import gemma.gsec.acl.domain.AclObjectIdentity;
 import gemma.gsec.acl.domain.AclSid;
 import lombok.NonNull;
+import lombok.Value;
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
@@ -1035,9 +1036,124 @@ public class ExpressionExperimentDaoImpl
         return null;
     }
 
+    @Value
+    private static class ExpressionExperimentDetail {
+
+        public static ExpressionExperimentDetail fromRow( Object[] row ) {
+            return new ExpressionExperimentDetail( ( ArrayDesign ) row[1], ( ArrayDesign ) row[2], ( ExpressionExperiment ) row[3], ( Integer ) row[4] );
+        }
+
+        @Nullable
+        ArrayDesign arrayDesignUsed;
+        @Nullable
+        ArrayDesign originalPlatform;
+        @Nullable
+        ExpressionExperiment otherPart;
+        Integer bioAssaysCount;
+    }
+
+    /**
+     * Gather various EE details and group them by ID.
+     */
+    private Map<Long, List<ExpressionExperimentDetail>> getExpressionExperimentDetailsById( List<Long> expressionExperimentIds ) {
+        //noinspection unchecked
+        List<Object[]> results = getSessionFactory().getCurrentSession()
+                .createQuery( "select ee.id, ad, op, oe, ee.bioAssays.size from ExpressionExperiment as ee "
+                        + "left join ee.bioAssays ba "
+                        + "left join ba.arrayDesignUsed ad "
+                        + "left join ba.originalPlatform op " // not all bioAssays have an original platform
+                        + "left join ee.otherParts as oe "    // not all experiments are splitted
+                        + "where ee.id in :eeIds "
+                        + "group by ee, ad, op" )
+                .setParameterList( "eeIds", expressionExperimentIds )
+                .list();
+        return results.stream().collect(
+                groupingBy( row -> ( Long ) row[0],
+                        Collectors.mapping( ExpressionExperimentDetail::fromRow, Collectors.toList() ) ) );
+    }
+
+    private TypedResultTransformer<ExpressionExperimentDetailsValueObject> getDetailedValueObjectTransformer( StopWatch postProcessingTimer, StopWatch detailsTimer, StopWatch analysisInformationTimer ) {
+        return new TypedResultTransformer<ExpressionExperimentDetailsValueObject>() {
+            @Override
+            public ExpressionExperimentDetailsValueObject transformTuple( Object[] row, String[] aliases ) {
+                ExpressionExperiment ee = ( ExpressionExperiment ) row[0];
+                AclObjectIdentity aoi = ( AclObjectIdentity ) row[1];
+                AclSid sid = ( AclSid ) row[2];
+                return new ExpressionExperimentDetailsValueObject( ee, aoi, sid );
+            }
+
+            @Override
+            public List<ExpressionExperimentDetailsValueObject> transformList( List collection ) {
+                //noinspection unchecked
+                List<ExpressionExperimentDetailsValueObject> vos = ( List<ExpressionExperimentDetailsValueObject> ) collection;
+
+                postProcessingTimer.start();
+
+                // sort + distinct for cache consistency
+                List<Long> expressionExperimentIds = vos.stream()
+                        .map( Identifiable::getId )
+                        .sorted()
+                        .distinct()
+                        .collect( Collectors.toList() );
+
+                // fetch some extras details
+                // we could make this a single query in getLoadValueObjectDetails, but performing a jointure with the bioAssays
+                // and arrayDesignUsed is inefficient in the general case, so we only fetch what we need here
+                detailsTimer.start();
+                Map<Long, List<ExpressionExperimentDetail>> detailsByEE = getExpressionExperimentDetailsById( expressionExperimentIds );
+                detailsTimer.stop();
+
+                for ( ExpressionExperimentDetailsValueObject vo : vos ) {
+                    List<ExpressionExperimentDetail> details = detailsByEE.get( vo.getId() );
+
+                    // we need those later for computing original platforms
+                    Collection<ArrayDesign> arrayDesignsUsed = details.stream()
+                            .map( ExpressionExperimentDetail::getArrayDesignUsed )
+                            .filter( Objects::nonNull )
+                            .collect( Collectors.toSet() );
+
+                    Collection<ArrayDesignValueObject> adVos = arrayDesignsUsed.stream()
+                            .map( ArrayDesignValueObject::new )
+                            .collect( Collectors.toSet() );
+                    vo.setArrayDesigns( adVos ); // also sets taxon name, technology type, and number of ADs.
+
+                    // original platforms
+                    Collection<ArrayDesignValueObject> originalPlatformsVos = details.stream()
+                            .map( ExpressionExperimentDetail::getOriginalPlatform )
+                            .filter( Objects::nonNull ) // on original platform for the bioAssay
+                            .filter( op -> !arrayDesignsUsed.contains( op ) )
+                            .map( ArrayDesignValueObject::new )
+                            .collect( Collectors.toSet() );
+                    vo.setOriginalPlatforms( originalPlatformsVos );
+
+                    Integer bioAssayCount = details.stream()
+                            .map( ExpressionExperimentDetail::getBioAssaysCount )
+                            .findFirst()
+                            .orElse( 0 );
+                    vo.setNumberOfBioAssays( bioAssayCount );
+
+                    Set<ExpressionExperiment> otherParts = details.stream()
+                            .map( ExpressionExperimentDetail::getOtherPart )
+                            .filter( Objects::nonNull )
+                            .collect( Collectors.toSet() );
+
+                    // other parts (maybe fetch in details query?)
+                    vo.getOtherParts().addAll( otherParts.stream().map( ee2 -> doLoadValueObject( ee2 ) ).collect( Collectors.toList() ) );
+                }
+
+                try ( StopWatchUtils.StopWatchRegion ignored = StopWatchUtils.measuredRegion( analysisInformationTimer ) ) {
+                    populateAnalysisInformation( vos );
+                }
+
+                postProcessingTimer.stop();
+
+                return vos;
+            }
+        };
+    }
+
     @Override
-    public Slice<ExpressionExperimentDetailsValueObject> loadDetailsValueObjects( @Nullable Filters
-            filters, @Nullable Sort sort, int offset, int limit ) {
+    public Slice<ExpressionExperimentDetailsValueObject> loadDetailsValueObjects( @Nullable Filters filters, @Nullable Sort sort, int offset, int limit ) {
         // Compose query
         Query query = this.getFilteringQuery( filters, sort );
 
@@ -1052,118 +1168,33 @@ public class ExpressionExperimentDaoImpl
         StopWatch timer = StopWatch.createStarted();
 
         // timers for sub-steps
-        StopWatch queryTimer = StopWatch.create();
         StopWatch countingTimer = StopWatch.create();
-        StopWatch voTimer = StopWatch.create();
+        StopWatch postProcessingTimer = StopWatch.create();
         StopWatch detailsTimer = StopWatch.create();
-        StopWatch otherPartsTimer = StopWatch.create();
+        StopWatch analysisInformationTimer = StopWatch.create();
 
-        queryTimer.start();
+        query.setResultTransformer( getDetailedValueObjectTransformer( postProcessingTimer, detailsTimer, analysisInformationTimer ) );
+
         //noinspection unchecked
-        List<Object[]> list = query.list();
-        queryTimer.stop();
+        List<ExpressionExperimentDetailsValueObject> vos = query.list();
 
         countingTimer.start();
         Long totalElements = ( Long ) this.getFilteringCountQuery( filters ).uniqueResult();
         countingTimer.stop();
 
-        // sort + distinct for cache consistency
-        List<ExpressionExperiment> expressionExperiments = list.stream()
-                .map( row -> ( ExpressionExperiment ) row[0] )
-                .sorted( Comparator.comparing( ExpressionExperiment::getId ) )
-                .distinct()
-                .collect( Collectors.toList() );
-
-        // fetch some extras details
-        // we could make this a single query in getLoadValueObjectDetails, but performing a jointure with the bioAssays
-        // and arrayDesignUsed is inefficient in the general case, so we only fetch what we need here
-        Map<ExpressionExperiment, List<Object[]>> detailsByEE;
-        try ( StopWatchUtils.StopWatchRegion ignored = StopWatchUtils.measuredRegion( detailsTimer ) ) {
-            detailsByEE = loadDetailsByEE( expressionExperiments );
-        }
-
-        List<ExpressionExperimentDetailsValueObject> vos = new ArrayList<>( list.size() );
-        for ( Object[] row : list ) {
-            ExpressionExperiment ee = ( ExpressionExperiment ) row[0];
-            AclObjectIdentity aoi = ( AclObjectIdentity ) row[1];
-            AclSid sid = ( AclSid ) row[2];
-            List<Object[]> details = detailsByEE.get( ee );
-
-            ExpressionExperimentDetailsValueObject vo;
-            try ( StopWatchUtils.StopWatchRegion ignored = StopWatchUtils.measuredRegion( voTimer ) ) {
-                vo = new ExpressionExperimentDetailsValueObject( ee, aoi, sid );
-            }
-
-            Integer bioAssayCount = details.stream()
-                    .map( row2 -> ( Integer ) row2[3] )
-                    .findFirst()
-                    .orElse( 0 );
-            vo.setNumberOfBioAssays( bioAssayCount );
-
-            // we need those later for computing original platforms
-            Collection<ArrayDesign> arrayDesignsUsed = details.stream()
-                    .map( row2 -> ( ArrayDesign ) row2[1] )
-                    .collect( Collectors.toSet() );
-
-            Collection<ArrayDesignValueObject> adVos = arrayDesignsUsed.stream()
-                    .map( ArrayDesignValueObject::new )
-                    .collect( Collectors.toSet() );
-            vo.setArrayDesigns( adVos ); // also sets taxon name, technology type, and number of ADs.
-
-            // original platforms
-            Collection<ArrayDesignValueObject> originalPlatformsVos = details.stream()
-                    .map( row2 -> ( ArrayDesign ) row2[2] )
-                    .filter( Objects::nonNull ) // on original platform for the bioAssay
-                    .filter( op -> !arrayDesignsUsed.contains( op ) )
-                    .map( ArrayDesignValueObject::new )
-                    .collect( Collectors.toSet() );
-            vo.setOriginalPlatforms( originalPlatformsVos );
-
-            // other parts (maybe fetch in details query?)
-            try ( StopWatchUtils.StopWatchRegion ignored = StopWatchUtils.measuredRegion( otherPartsTimer ) ) {
-                vo.getOtherParts().addAll( ee.getOtherParts().stream().map( this::loadValueObject ).collect( Collectors.toList() ) );
-            }
-
-            vos.add( vo );
-        }
-
-        StopWatch analysisInformationTimer = StopWatch.create();
-        try ( StopWatchUtils.StopWatchRegion ignored = StopWatchUtils.measuredRegion( analysisInformationTimer ) ) {
-            this.populateAnalysisInformation( vos );
-        }
-
         timer.stop();
 
         if ( timer.getTime() > REPORT_SLOW_QUERY_AFTER_MS ) {
-            log.info( "EE details VO query + postprocessing: " + timer.getTime() + " ms ("
-                    + "query: " + queryTimer.getTime() + " ms, "
-                    + "counting: " + countingTimer.getTime() + " ms, "
-                    + "initializing VOs: " + voTimer.getTime() + " ms, "
-                    + "loading details (bioAssays + bioAssays.arrayDesignUsed + originalPlatforms): " + detailsTimer.getTime() + " ms, "
-                    + "otherParts: " + otherPartsTimer.getTime() + " ms, "
-                    + "retrieving analysis information: " + analysisInformationTimer.getTime() + " ms)" );
+            log.info( String.format( "EE details VO query + postprocessing: %d ms (query: %d ms, counting: %d ms, initializing VOs: %d ms, loading details (bioAssays + bioAssays.arrayDesignUsed + originalPlatforms + otherParts): %d ms, retrieving analysis information: %s ms)",
+                    timer.getTime(),
+                    timer.getTime() - postProcessingTimer.getTime(),
+                    countingTimer.getTime(),
+                    postProcessingTimer.getTime(),
+                    detailsTimer.getTime(),
+                    analysisInformationTimer.getTime() ) );
         }
 
         return new Slice<>( vos, sort, offset, limit, totalElements );
-    }
-
-    private Map<ExpressionExperiment, List<Object[]>> loadDetailsByEE
-            ( Collection<ExpressionExperiment> expressionExperiments ) {
-        if ( expressionExperiments.isEmpty() )
-            return Collections.emptyMap();
-        //noinspection unchecked
-        List<Object[]> results = getSessionFactory().getCurrentSession()
-                .createQuery( "select ee, ad, op, ee.bioAssays.size from ExpressionExperiment as ee "
-                        + "join ee.bioAssays ba "
-                        + "join ba.arrayDesignUsed ad "
-                        + "left join ba.originalPlatform op " // not all bioAssays have an original platform
-                        + "where ee in :eelist "
-                        + "group by ee, ad, op" )
-                .setParameterList( "eelist", expressionExperiments )
-                .setCacheable( true )
-                .list();
-        return results.stream()
-                .collect( groupingBy( row -> ( ExpressionExperiment ) row[0], Collectors.toList() ) );
     }
 
     @Override
