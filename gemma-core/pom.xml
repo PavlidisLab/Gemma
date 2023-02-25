@@ -126,10 +126,10 @@
                 <!-- common configuration shared by all executions -->
                 <configuration>
                     <driver>com.mysql.cj.jdbc.Driver</driver>
-                    <username>${gemma.db.build.user}</username>
-                    <password>${gemma.db.build.password}</password>
-                    <onError>continue</onError>
+                    <username>${gemma.testdb.build.user}</username>
+                    <password>${gemma.testdb.build.password}</password>
                     <autocommit>true</autocommit>
+                    <onError>abort</onError>
                 </configuration>
                 <executions>
                     <execution>
@@ -140,7 +140,6 @@
                         </goals>
                         <configuration>
                             <url>${bootstrap.db.url}</url>
-                            <autocommit>false</autocommit>
                             <sqlCommand>
                                 <![CDATA[
                                 DROP DATABASE IF EXISTS ${gemma.testdb.name};
@@ -166,7 +165,6 @@
                                 <scrFile>${project.basedir}/src/main/resources/sql/init-indices.sql</scrFile>
                                 <srcFile>${project.basedir}/src/main/resources/sql/init-entities.sql</srcFile>
                             </srcFiles>
-                            <onError>abort</onError>
                             <skip>${skipTests}</skip>
                         </configuration>
                     </execution>
