@@ -55,6 +55,9 @@ public class SearchResult<T extends Identifiable> implements Comparable<SearchRe
      * for the result object.
      */
     public static <T extends Identifiable> SearchResult<T> from( Class<? extends Identifiable> resultType, T entity, double score, @Nullable String highlightedText, Object source ) {
+        if ( entity.getId() == null ) {
+            throw new IllegalArgumentException( "Entity ID cannot be null." );
+        }
         SearchResult<T> sr = new SearchResult<>( resultType, entity.getId(), source );
         sr.setResultObject( entity );
         sr.setScore( score );
