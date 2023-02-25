@@ -245,7 +245,7 @@ public class Filter implements PropertyMapping {
             requiredValueString = quoteIfNecessary( requiredValueString );
         }
         return String.format( "%s %s %s",
-                withOriginalProperties ? getOriginalProperty() : getProperty(),
+                withOriginalProperties && originalProperty != null ? originalProperty : getProperty(),
                 operator.token,
                 requiredValueString );
     }

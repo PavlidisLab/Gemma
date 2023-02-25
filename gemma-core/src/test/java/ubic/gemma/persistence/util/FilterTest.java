@@ -25,7 +25,10 @@ import java.time.LocalDateTime;
 import java.time.Month;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Date;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -178,5 +181,17 @@ public class FilterTest {
     @Test
     public void testCollectionWithSubclass() {
         Filter.by( "ee", "id", Number.class, Filter.Operator.in, Arrays.asList( 1L, 2, 3.0 ) );
+    }
+
+    @Test
+    public void testToOriginalString() {
+        assertThat( Filter.by( "ee", "id", Number.class, Filter.Operator.in, Arrays.asList( 1L, 2, 3.0 ), "id" ).toOriginalString() )
+                .isEqualTo( "id in (1, 2, 3.0)" );
+    }
+
+    @Test
+    public void testToOriginalStringWhenOriginalPropertyIsNull() {
+        assertThat( Filter.by( "ee", "id", Number.class, Filter.Operator.in, Arrays.asList( 1L, 2, 3.0 ) ).toOriginalString() )
+                .isEqualTo( "ee.id in (1, 2, 3.0)" );
     }
 }

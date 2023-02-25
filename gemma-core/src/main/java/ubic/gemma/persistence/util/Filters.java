@@ -173,7 +173,7 @@ public class Filters implements Iterable<Filter[]> {
         return clauses.stream()
                 .filter( conjunction -> conjunction.length > 0 )
                 .map( conjunction -> Arrays.stream( conjunction )
-                        .map( Filter::toOriginalString )
+                        .map( f -> withOriginalProperties ? f.toOriginalString() : f.toString() )
                         .collect( Collectors.joining( " or " ) ) )
                 .collect( Collectors.joining( " and " ) );
     }
