@@ -156,7 +156,7 @@ alter table GENE2CS
 drop table if exists EXPRESSION_EXPERIMENT2CHARACTERISTIC;
 create table EXPRESSION_EXPERIMENT2CHARACTERISTIC
 (
-    ID                       bigint references CHARACTERISTIC (ID) on update cascade on delete cascade,
+    ID                       bigint,
     NAME                     varchar(255),
     DESCRIPTION              text,
     CATEGORY                 varchar(255),
@@ -165,13 +165,15 @@ create table EXPRESSION_EXPERIMENT2CHARACTERISTIC
     VALUE_URI                varchar(255),
     ORIGINAL_VALUE           varchar(255),
     EVIDENCE_CODE            varchar(255),
-    EXPRESSION_EXPERIMENT_FK bigint references INVESTIGATION (ID) on update cascade on delete cascade,
+    EXPRESSION_EXPERIMENT_FK bigint,
     LEVEL                    varchar(255),
     primary key (ID, EXPRESSION_EXPERIMENT_FK, LEVEL)
 );
 
 -- no URI exceeds 100 characters in practice, so we only index a prefix
 alter table EXPRESSION_EXPERIMENT2CHARACTERISTIC
+    add constraint EXPRESSION_EXPERIMENT2CHARACTERISTIC_CHARACTERISTIC_FKC foreign key (ID) references CHARACTERISTIC (ID) on update cascade on delete cascade,
+    add constraint EXPRESSION_EXPERIMENT2CHARACTERISTIC_EXPRESSION_EXPERIMENT_FKC foreign key (EXPRESSION_EXPERIMENT_FK) references INVESTIGATION (id) on update cascade on delete cascade,
     add index EXPRESSION_EXPERIMENT2C_VALUE (VALUE),
     add index EXPRESSION_EXPERIMENT2C_CATEGORY (CATEGORY),
     add index EXPRESSION_EXPERIMENT2C_VALUE_URI_VALUE (VALUE_URI(100), VALUE),

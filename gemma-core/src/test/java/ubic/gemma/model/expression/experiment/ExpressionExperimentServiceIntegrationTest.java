@@ -19,6 +19,7 @@
 package ubic.gemma.model.expression.experiment;
 
 import org.apache.commons.lang3.RandomStringUtils;
+import org.hibernate.SessionFactory;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -36,7 +37,9 @@ import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.persistence.service.TableMaintenanceUtil;
 import ubic.gemma.persistence.service.common.description.CharacteristicDao;
+import ubic.gemma.persistence.service.common.description.CharacteristicService;
 import ubic.gemma.persistence.service.expression.bioAssay.BioAssayDao;
 import ubic.gemma.persistence.service.expression.bioAssayData.RawExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.experiment.BlacklistedEntityService;
@@ -46,6 +49,7 @@ import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Slice;
 
 import java.util.*;
+import java.util.function.Consumer;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.*;
@@ -63,6 +67,10 @@ public class ExpressionExperimentServiceIntegrationTest extends BaseSpringContex
     private RawExpressionDataVectorService rawExpressionDataVectorService;
     @Autowired
     private BlacklistedEntityService blacklistedEntityService;
+    @Autowired
+    private TableMaintenanceUtil tableMaintenanceUtil;
+    @Autowired
+    private CharacteristicService characteristicService;
 
     private static ExpressionExperiment ee = null;
     private ExternalDatabase ed;
@@ -356,5 +364,48 @@ public class ExpressionExperimentServiceIntegrationTest extends BaseSpringContex
                 .hasFieldOrPropertyWithValue( "propertyName", "valueUri" );
         assertThat( expressionExperimentService.load( Filters.by( f ), null ) )
                 .isEmpty();
+    }
+
+    @Test
+    public void testCacheInvalidationWhenACharacteristicIsDeleted() {
+        Characteristic c = new Characteristic();
+        c.setCategory( "bar" );
+        c.setValue( "foo" );
+        Consumer<? super ExpressionExperimentService.CharacteristicWithUsageStatisticsAndOntologyTerm> consumer = c2 -> {
+            assertThat( c2.getCharacteristic() ).isEqualTo( c );
+            assertThat( c2.getNumberOfExpressionExperiments() ).isEqualTo( 1L );
+            assertThat( c2.getTerm() ).isNull();
+        };
+
+        tableMaintenanceUtil.updateExpressionExperiment2CharacteristicEntries();
+        assertThat( expressionExperimentService.getAnnotationsUsageFrequency( null, 0, 0 ) )
+                .noneSatisfy( consumer );
+
+        // add the term to the dataset and update the pivot table
+        ee.getCharacteristics().add( c );
+        expressionExperimentService.update( ee );
+        assertThat( c.getId() ).isNotNull();
+
+        // the table is out-of-date
+        assertThat( expressionExperimentService.getAnnotationsUsageFrequency( null, 0, 0 ) )
+                .noneSatisfy( consumer );
+
+        // update the pivot table
+        tableMaintenanceUtil.updateExpressionExperiment2CharacteristicEntries();
+        assertThat( expressionExperimentService.getAnnotationsUsageFrequency( null, 0, 0 ) )
+                .satisfiesOnlyOnce( consumer );
+
+        // remove the term, which must evict the query cache
+        characteristicService.remove( c );
+        assertThat( characteristicService.load( c.getId() ) ).isNull();
+        assertThat( expressionExperimentService.loadWithCharacteristics( ee.getId() ) )
+                .isNotNull()
+                .satisfies( e -> {
+                    assertThat( e.getCharacteristics() ).doesNotContain( c );
+                } );
+
+        // since deletions are cascaded, the change will be reflected immediatly
+        assertThat( expressionExperimentService.getAnnotationsUsageFrequency( null, 0, 0 ) )
+                .noneSatisfy( consumer );
     }
 }

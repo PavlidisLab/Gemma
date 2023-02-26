@@ -24,6 +24,7 @@ import io.micrometer.core.annotation.Timed;
 import lombok.Value;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.math3.exception.NotStrictlyPositiveException;
+import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -571,6 +572,16 @@ public class ExpressionExperimentServiceImpl
             f2 = clauseBuilder.build();
         }
         return f2;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public ExpressionExperiment loadWithCharacteristics( Long id ) {
+        ExpressionExperiment ee = expressionExperimentDao.load( id );
+        if ( ee != null ) {
+            Hibernate.initialize( ee.getCharacteristics() );
+        }
+        return ee;
     }
 
     private List<String> inferTermUris( String uri ) {
