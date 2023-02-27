@@ -24,6 +24,7 @@ import gemma.gsec.util.SecurityUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.json.JSONObject;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.encoding.PasswordEncoder;
 import org.springframework.stereotype.Controller;
@@ -49,7 +50,7 @@ import java.util.Map;
  * @author keshav
  */
 @Controller
-public class SignupController extends BaseController {
+public class SignupController extends BaseController implements InitializingBean {
 
     @Autowired
     private PasswordEncoder passwordEncoder;
@@ -58,6 +59,13 @@ public class SignupController extends BaseController {
     private UserManager userManager;
 
     private ReCaptcha reCaptcha = new ReCaptcha( Settings.getString( "gemma.recaptcha.privateKey" ) );
+
+    @Override
+    public void afterPropertiesSet() {
+        if ( reCaptcha.isPrivateKeySet() ) {
+            log.warn( "No recaptcha private key is configured, skipping validation" );
+        }
+    }
 
     @RequestMapping(value = "/ajaxLoginCheck.html")
     public void ajaxLoginCheck( HttpServletResponse response ) throws Exception {
@@ -157,8 +165,6 @@ public class SignupController extends BaseController {
                 return;
             }
 
-        } else {
-            log.warn( "No recaptcha private key is configured, skipping validation" );
         }
 
         if ( password.length() < UserFormMultiActionController.MIN_PASSWORD_LENGTH || !password.equals( cPass ) ) {
