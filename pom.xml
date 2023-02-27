@@ -493,6 +493,7 @@
 						<exclude>**/*Tests.java</exclude>
 					</excludes>
 					<excludedGroups>ubic.gemma.core.util.test.category.SpringContextTest,${excludedGroups}</excludedGroups>
+					<skip>${skipUnitTests}</skip>
 				</configuration>
 			</plugin>
 			<plugin>
@@ -510,6 +511,7 @@
 						<exclude>**/*IntegrationTest.java</exclude>
 					</excludes>
 					<groups>ubic.gemma.core.util.test.category.SpringContextTest</groups>
+					<skip>${skipIntegrationTests}</skip>
 				</configuration>
 				<executions>
 					<execution>
@@ -642,5 +644,7 @@
 		<dom4j.version>2.1.4</dom4j.version>
 		<!-- this ensures that -DexcludedGroups works properly -->
 		<excludedGroups/>
+		<skipUnitTests>${skipTests}</skipUnitTests>
+		<skipIntegrationTests>${skipTests}</skipIntegrationTests>
 	</properties>
 </project>
