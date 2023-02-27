@@ -170,12 +170,13 @@ create table EXPRESSION_EXPERIMENT2CHARACTERISTIC
     primary key (ID, EXPRESSION_EXPERIMENT_FK, LEVEL)
 );
 
+-- note: constraint names cannot exceed 64 characters, so we cannot use the usual naming convention
 -- no URI exceeds 100 characters in practice, so we only index a prefix
 alter table EXPRESSION_EXPERIMENT2CHARACTERISTIC
-    add constraint EXPRESSION_EXPERIMENT2CHARACTERISTIC_CHARACTERISTIC_FKC foreign key (ID) references CHARACTERISTIC (ID) on update cascade on delete cascade,
-    add constraint EXPRESSION_EXPERIMENT2CHARACTERISTIC_EXPRESSION_EXPERIMENT_FKC foreign key (EXPRESSION_EXPERIMENT_FK) references INVESTIGATION (id) on update cascade on delete cascade,
-    add index EXPRESSION_EXPERIMENT2C_VALUE (VALUE),
-    add index EXPRESSION_EXPERIMENT2C_CATEGORY (CATEGORY),
-    add index EXPRESSION_EXPERIMENT2C_VALUE_URI_VALUE (VALUE_URI(100), VALUE),
-    add index EXPRESSION_EXPERIMENT2C_CATEGORY_URI_CATEGORY_VALUE_URI_VALUE (CATEGORY_URI(100), CATEGORY, VALUE_URI(100), VALUE),
-    add index EXPRESSION_EXPERIMENT2C_LEVEL (LEVEL);
+    add constraint EE2C_CHARACTERISTIC_FKC foreign key (ID) references CHARACTERISTIC (ID) on update cascade on delete cascade,
+    add constraint EE2C_EXPRESSION_EXPERIMENT_FKC foreign key (EXPRESSION_EXPERIMENT_FK) references INVESTIGATION (id) on update cascade on delete cascade,
+    add index EE2C_VALUE (VALUE),
+    add index EE2C_CATEGORY (CATEGORY),
+    add index EE2C_VALUE_URI_VALUE (VALUE_URI(100), VALUE),
+    add index EE2C_CATEGORY_URI_CATEGORY_VALUE_URI_VALUE (CATEGORY_URI(100), CATEGORY, VALUE_URI(100), VALUE),
+    add index EE2C_LEVEL (LEVEL);
