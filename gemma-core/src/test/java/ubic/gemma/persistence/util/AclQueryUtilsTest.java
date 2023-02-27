@@ -1,7 +1,10 @@
 package ubic.gemma.persistence.util;
 
 import org.hibernate.Query;
+import org.hibernate.Session;
 import org.hibernate.SessionFactory;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.util.test.BaseSpringContextTest;
@@ -13,6 +16,21 @@ import static org.mockito.Mockito.*;
 import static ubic.gemma.persistence.util.AclQueryUtils.*;
 
 public class AclQueryUtilsTest extends BaseSpringContextTest {
+
+    @Autowired
+    private SessionFactory sessionFactory;
+
+    private Session session;
+
+    @Before
+    public void setUp() {
+        this.session = sessionFactory.openSession();
+    }
+
+    @After
+    public void tearDown() {
+        this.session.close();
+    }
 
     /**
      * Since ACL relies on the class name, and these class names are stored in the database, we must ensure that they
@@ -91,12 +109,9 @@ public class AclQueryUtilsTest extends BaseSpringContextTest {
                 .contains( "select sid.ID from ACLSID sid where sid.GRANTED_AUTHORITY = 'IS_AUTHENTICATED_ANONYMOUSLY'" );
     }
 
-    @Autowired
-    private SessionFactory sessionFactory;
-
     @Test
     public void testAsAdmin() {
-        Query q = sessionFactory.openSession().createQuery(
+        Query q = session.createQuery(
                 "select ee from ExpressionExperiment ee"
                         + formAclJoinClause( "ee.id" )
                         + formAclRestrictionClause() );
@@ -108,7 +123,7 @@ public class AclQueryUtilsTest extends BaseSpringContextTest {
     @Test
     public void testAsUser() {
         runAsUser( "bob", true );
-        Query q = sessionFactory.openSession().createQuery(
+        Query q = session.createQuery(
                 "select ee from ExpressionExperiment ee"
                         + formAclJoinClause( "ee.id" )
                         + formAclRestrictionClause() );
@@ -120,7 +135,7 @@ public class AclQueryUtilsTest extends BaseSpringContextTest {
     @Test
     public void testAsAnonymous() {
         runAsAnonymous();
-        Query q = sessionFactory.openSession().createQuery(
+        Query q = session.createQuery(
                 "select ee from ExpressionExperiment ee"
                         + formAclJoinClause( "ee.id" )
                         + formAclRestrictionClause() );
@@ -131,7 +146,7 @@ public class AclQueryUtilsTest extends BaseSpringContextTest {
 
     @Test
     public void testNative() {
-        Query q = sessionFactory.openSession().createSQLQuery(
+        Query q = session.createSQLQuery(
                         "select {I.*} from INVESTIGATION {I}"
                                 + formNativeAclJoinClause( "{I}.id" ) + " "
                                 + "where {I}.class = 'ExpressionExperiment'"
@@ -145,7 +160,7 @@ public class AclQueryUtilsTest extends BaseSpringContextTest {
     @Test
     public void testNativeAsUser() {
         runAsUser( "bob" );
-        Query q = sessionFactory.openSession().createSQLQuery(
+        Query q = session.createSQLQuery(
                         "select {I.*} from INVESTIGATION {I}"
                                 + formNativeAclJoinClause( "{I}.id" ) + " "
                                 + "where {I}.class = 'ExpressionExperiment'"
@@ -159,7 +174,7 @@ public class AclQueryUtilsTest extends BaseSpringContextTest {
     @Test
     public void testNativeAsAnonymous() {
         runAsAnonymous();
-        Query q = sessionFactory.openSession().createSQLQuery(
+        Query q = session.createSQLQuery(
                         "select {I.*} from INVESTIGATION {I}"
                                 + formNativeAclJoinClause( "{I}.id" ) + " "
                                 + "where {I}.class = 'ExpressionExperiment'"

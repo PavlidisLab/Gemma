@@ -192,21 +192,25 @@ public class GeneSetServiceTest extends BaseSpringContextTest {
         assertNotNull( gset.getId() );
 
         Session session = sessionFactory.openSession();
-        session.update( gset );
-
-        gmember = gset.getMembers().iterator().next();
-        assertNotNull( gmember.getId() );
-
-        session.close();
+        try {
+            session.update( gset );
+            gmember = gset.getMembers().iterator().next();
+            assertNotNull( gmember.getId() );
+        } finally {
+            session.close();
+        }
 
         // add one.
         gset = geneSetService.load( gset.getId() );
 
         // make sure members collection is initialized
         session = sessionFactory.openSession();
-        session.update( gset );
-        gset.getMembers().size();
-        session.close();
+        try {
+            session.update( gset );
+            gset.getMembers().size();
+        } finally {
+            session.close();
+        }
 
         gmember = GeneSetMember.Factory.newInstance();
         gmember.setGene( this.g3 );
@@ -223,9 +227,12 @@ public class GeneSetServiceTest extends BaseSpringContextTest {
 
         // make sure members collection is initialized
         session = sessionFactory.openSession();
-        session.update( gset );
-        gset.getMembers().size();
-        session.close();
+        try {
+            session.update( gset );
+            gset.getMembers().size();
+        } finally {
+            session.close();
+        }
 
         assertEquals( 2, gset.getMembers().size() );
 
@@ -237,9 +244,12 @@ public class GeneSetServiceTest extends BaseSpringContextTest {
         gset = geneSetService.load( gset.getId() );
         // make sure members collection is initialized
         session = sessionFactory.openSession();
-        session.update( gset );
-        gset.getMembers().size();
-        session.close();
+        try {
+            session.update( gset );
+            gset.getMembers().size();
+        } finally {
+            session.close();
+        }
 
         assertEquals( 1, gset.getMembers().size() );
 
