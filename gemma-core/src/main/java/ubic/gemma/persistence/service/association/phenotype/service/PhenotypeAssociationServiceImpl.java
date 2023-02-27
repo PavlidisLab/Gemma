@@ -382,8 +382,8 @@ public class PhenotypeAssociationServiceImpl extends AbstractService<PhenotypeAs
 
     @Override
     @Transactional
-    public void removePhenotypePublication( Long phenotypeAssociationPublicationId ) {
-        this.phenotypeAssociationDao.removePhenotypePublication( phenotypeAssociationPublicationId );
+    public void removePhenotypePublication( PhenotypeAssociationPublication phenotypeAssociationPublication ) {
+        this.phenotypeAssociationDao.removePhenotypePublication( phenotypeAssociationPublication );
     }
 
     @Override

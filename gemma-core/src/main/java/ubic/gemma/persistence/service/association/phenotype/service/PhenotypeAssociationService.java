@@ -154,7 +154,7 @@ public interface PhenotypeAssociationService extends BaseService<PhenotypeAssoci
 
     ExternalDatabaseStatisticsValueObject loadStatisticsOnAllEvidence( String downloadFile );
 
-    void removePhenotypePublication( Long phenotypeAssociationPublicationId );
+    void removePhenotypePublication( PhenotypeAssociationPublication phenotypeAssociationPublicationId );
 
     Collection<String> loadAllDescription();
 

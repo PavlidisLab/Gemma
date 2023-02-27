@@ -806,10 +806,10 @@ public class CoexpressionDaoImpl implements CoexpressionDao {
         Gene g = genes.iterator().next();
         String oldTable = CoexpressionQueryUtils.getGeneLinkTableName( g.getTaxon() ).replace( "COEXP", "CO_EXP" );
         SQLQuery q = sessionFactory.getCurrentSession()
-                .createSQLQuery( "select count(*) from " + oldTable + " WHERE FIRST_GENE_FK=?" );
+                .createSQLQuery( "select count(*) from " + oldTable + " WHERE FIRST_GENE_FK = :firstGeneId" );
         int i = 0;
         for ( Gene gene : genes ) {
-            Number c = ( Number ) q.setParameter( 0, gene.getId() ).uniqueResult();
+            Number c = ( Number ) q.setParameter( "firstGeneId", gene.getId() ).uniqueResult();
             results.put( gene, c.intValue() );
             if ( ++i % 500 == 0 ) {
                 CoexpressionDaoImpl.log

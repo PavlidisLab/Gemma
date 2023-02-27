@@ -471,7 +471,7 @@ public class PhenotypeAssoManagerServiceHelperImpl implements PhenotypeAssoManag
         if ( toUpdate ) {
 
             for ( PhenotypeAssociationPublication associationPublication : phe.getPhenotypeAssociationPublications() ) {
-                this.phenotypeAssociationService.removePhenotypePublication( associationPublication.getId() );
+                this.phenotypeAssociationService.removePhenotypePublication( associationPublication );
             }
 
             Collection<PhenotypeAssociationPublication> phenotypeAssociationPublications = new HashSet<>();

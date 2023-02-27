@@ -79,12 +79,12 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
 
     private static final String E2C_QUERY =
             "replace into EXPRESSION_EXPERIMENT2CHARACTERISTIC (ID, NAME, DESCRIPTION, CATEGORY, CATEGORY_URI, VALUE, VALUE_URI, ORIGINAL_VALUE, EVIDENCE_CODE, EXPRESSION_EXPERIMENT_FK, LEVEL) "
-                    + "select C.ID, C.NAME, C.DESCRIPTION, C.CATEGORY, C.CATEGORY_URI, C.VALUE, C.VALUE_URI, C.ORIGINAL_VALUE, C.EVIDENCE_CODE, I.ID, ? "
+                    + "select C.ID, C.NAME, C.DESCRIPTION, C.CATEGORY, C.CATEGORY_URI, C.VALUE, C.VALUE_URI, C.ORIGINAL_VALUE, C.EVIDENCE_CODE, I.ID, :eeClass "
                     + "from INVESTIGATION I "
                     + "join CHARACTERISTIC C on I.ID = C.INVESTIGATION_FK "
                     + "where I.class = 'ExpressionExperiment' "
                     + "union "
-                    + "select C.ID, C.NAME, C.DESCRIPTION, C.CATEGORY, C.CATEGORY_URI, C.VALUE, C.VALUE_URI, C.ORIGINAL_VALUE, C.EVIDENCE_CODE, I.ID, ? "
+                    + "select C.ID, C.NAME, C.DESCRIPTION, C.CATEGORY, C.CATEGORY_URI, C.VALUE, C.VALUE_URI, C.ORIGINAL_VALUE, C.EVIDENCE_CODE, I.ID, :bmClass "
                     + "from INVESTIGATION I "
                     + "join BIO_ASSAY BA on I.ID = BA.EXPRESSION_EXPERIMENT_FK "
                     + "join BIO_MATERIAL BM on BA.SAMPLE_USED_FK = BM.ID "
@@ -93,7 +93,7 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
                     + "join CHARACTERISTIC C on FV.ID = C.FACTOR_VALUE_FK "
                     + "where I.class = 'ExpressionExperiment' "
                     + "union "
-                    + "select C.ID, C.NAME, C.DESCRIPTION, C.CATEGORY, C.CATEGORY_URI, C.VALUE, C.VALUE_URI, C.ORIGINAL_VALUE, C.EVIDENCE_CODE, I.ID, ? "
+                    + "select C.ID, C.NAME, C.DESCRIPTION, C.CATEGORY, C.CATEGORY_URI, C.VALUE, C.VALUE_URI, C.ORIGINAL_VALUE, C.EVIDENCE_CODE, I.ID, :edClass "
                     + "from INVESTIGATION I "
                     + "join EXPERIMENTAL_DESIGN on I.EXPERIMENTAL_DESIGN_FK = EXPERIMENTAL_DESIGN.ID "
                     + "join EXPERIMENTAL_FACTOR EF on EXPERIMENTAL_DESIGN.ID = EF.EXPERIMENTAL_DESIGN_FK "
@@ -201,9 +201,9 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
     public void updateExpressionExperiment2CharacteristicEntries() {
         log.info( "Updating the EXPRESSION_EXPERIMENT2CHARACTERISTIC table..." );
         int updated = sessionFactory.getCurrentSession().createSQLQuery( E2C_QUERY )
-                .setParameter( 0, ExpressionExperiment.class )
-                .setParameter( 1, BioMaterial.class )
-                .setParameter( 2, ExperimentalDesign.class )
+                .setParameter( "eeClass", ExpressionExperiment.class )
+                .setParameter( "bmClass", BioMaterial.class )
+                .setParameter( "edClass", ExperimentalDesign.class )
                 .executeUpdate();
         log.info( String.format( "%d entries were updated in the EXPRESSION_EXPERIMENT2CHARACTERISTIC table.",
                 updated ) );
