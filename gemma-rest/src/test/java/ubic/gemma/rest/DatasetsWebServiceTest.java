@@ -26,6 +26,8 @@ import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressio
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.util.*;
 import ubic.gemma.rest.util.BaseJerseyTest;
+import ubic.gemma.rest.util.args.DatasetArgService;
+import ubic.gemma.rest.util.args.GeneArgService;
 
 import javax.ws.rs.core.Response;
 import java.io.IOException;
@@ -100,6 +102,16 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
         public ObjectMapper objectMapper() {
             return Json.mapper();
         }
+
+        @Bean
+        public DatasetArgService datasetArgService( ExpressionExperimentService expressionExperimentService ) {
+            return new DatasetArgService( expressionExperimentService );
+        }
+
+        @Bean
+        public GeneArgService geneArgService( GeneService geneService ) {
+            return new GeneArgService( geneService );
+        }
     }
 
     @Autowired
@@ -132,9 +144,12 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
                 .thenReturn( Filter.by( "ee", "id", Long.class, Filter.Operator.lessThan, 10L, "id" ) );
         when( expressionExperimentService.getAnnotationsFrequency( Filters.empty(), 50 ) )
                 .thenReturn( Collections.emptyMap() );
-        assertThat( target( "/datasets/platforms" ).queryParam( "filter", "ee.id < 10" ).request().get() )
+        assertThat( target( "/datasets/platforms" ).queryParam( "filter", "id < 10" ).request().get() )
                 .hasFieldOrPropertyWithValue( "status", 200 );
-        verify( expressionExperimentService ).getArrayDesignUsedOrOriginalPlatformUsageFrequency( Filters.empty(), true, 50 );
+        verify( expressionExperimentService ).getFilter( "id", Filter.Operator.lessThan, "10" );
+        verify( expressionExperimentService ).getArrayDesignUsedOrOriginalPlatformUsageFrequency(
+                Filters.by( "ee", "id", Long.class, Filter.Operator.lessThan, 10L ),
+                true, 50 );
     }
 
     @Test

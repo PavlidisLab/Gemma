@@ -11,7 +11,7 @@ public class SortValueObjectTest {
     public void test() {
         assertThat( new SortValueObject( Sort.by( "ee", "id", Sort.Direction.DESC ) ) )
                 .hasFieldOrPropertyWithValue( "orderBy", "ee.id" )
-                .hasFieldOrPropertyWithValue( "direction", "DESC" );
+                .hasFieldOrPropertyWithValue( "direction", "-" );
         assertThat( new SortValueObject( Sort.by( "ee", "id", null ) ) )
                 .hasFieldOrPropertyWithValue( "orderBy", "ee.id" )
                 .hasFieldOrPropertyWithValue( "direction", null );

@@ -21,9 +21,7 @@ import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.persistence.util.TestComponent;
-import ubic.gemma.rest.util.args.LimitArg;
-import ubic.gemma.rest.util.args.PlatformArg;
-import ubic.gemma.rest.util.args.TaxonArg;
+import ubic.gemma.rest.util.args.*;
 
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.NotFoundException;
@@ -59,6 +57,16 @@ public class SearchWebServiceTest extends AbstractJUnit4SpringContextTests {
         @Bean
         public ArrayDesignService arrayDesignService() {
             return mock( ArrayDesignService.class );
+        }
+
+        @Bean
+        public TaxonArgService taxonArgService( TaxonService taxonService ) {
+            return new TaxonArgService( taxonService );
+        }
+
+        @Bean
+        public PlatformArgService platformArgService( ArrayDesignService arrayDesignService ) {
+            return new PlatformArgService( arrayDesignService );
         }
     }
 

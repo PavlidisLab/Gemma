@@ -52,7 +52,9 @@ public abstract class AbstractExceptionMapper<E extends Throwable> implements Ex
     @Override
     public final Response toResponse( E exception ) {
         if ( logException() ) {
-            log.error( "Unhandled exception was raised for " + ServletUtils.summarizeRequest( request ) + ".", exception );
+            // FIXME: request is null in tests
+            log.error( String.format( "Unhandled exception was raised%s.",
+                    request != null ? " for " + ServletUtils.summarizeRequest( request ) : "" ), exception );
         }
         Response.Status code = getStatus( exception );
         MediaType mediaType;
