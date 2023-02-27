@@ -51,7 +51,6 @@ public class AclQueryUtilsTest extends BaseSpringContextTest {
     @Test
     public void testAddAclJoinParameters() {
         Query query = mock( Query.class );
-        when( query.getNamedParameters() ).thenReturn( new String[0] );
         addAclParameters( query, ExpressionExperiment.class );
         verify( query ).setParameter( "aclQueryUtils_aoiType", "ubic.gemma.model.expression.experiment.ExpressionExperiment" );
     }
@@ -133,11 +132,11 @@ public class AclQueryUtilsTest extends BaseSpringContextTest {
     @Test
     public void testNative() {
         Query q = sessionFactory.openSession().createSQLQuery(
-                        "select I.* from INVESTIGATION I"
-                                + formNativeAclJoinClause( "I.id" ) + " "
-                                + "where I.class = 'ExpressionExperiment'"
+                        "select {I.*} from INVESTIGATION {I}"
+                                + formNativeAclJoinClause( "{I}.id" ) + " "
+                                + "where {I}.class = 'ExpressionExperiment'"
                                 + formNativeAclRestrictionClause() )
-                .addEntity( ExpressionExperiment.class );
+                .addEntity( "I", ExpressionExperiment.class );
         addAclParameters( q, ExpressionExperiment.class );
         q.setMaxResults( 1 );
         q.list();
@@ -147,11 +146,11 @@ public class AclQueryUtilsTest extends BaseSpringContextTest {
     public void testNativeAsUser() {
         runAsUser( "bob" );
         Query q = sessionFactory.openSession().createSQLQuery(
-                        "select I.* from INVESTIGATION I"
-                                + formNativeAclJoinClause( "I.id" ) + " "
-                                + "where I.class = 'ExpressionExperiment'"
+                        "select {I.*} from INVESTIGATION {I}"
+                                + formNativeAclJoinClause( "{I}.id" ) + " "
+                                + "where {I}.class = 'ExpressionExperiment'"
                                 + formNativeAclRestrictionClause() )
-                .addEntity( ExpressionExperiment.class );
+                .addEntity( "I", ExpressionExperiment.class );
         addAclParameters( q, ExpressionExperiment.class );
         q.setMaxResults( 1 );
         q.list();
@@ -161,11 +160,11 @@ public class AclQueryUtilsTest extends BaseSpringContextTest {
     public void testNativeAsAnonymous() {
         runAsAnonymous();
         Query q = sessionFactory.openSession().createSQLQuery(
-                        "select I.* from INVESTIGATION I"
-                                + formNativeAclJoinClause( "I.id" ) + " "
-                                + "where I.class = 'ExpressionExperiment'"
+                        "select {I.*} from INVESTIGATION {I}"
+                                + formNativeAclJoinClause( "{I}.id" ) + " "
+                                + "where {I}.class = 'ExpressionExperiment'"
                                 + formNativeAclRestrictionClause() )
-                .addEntity( ExpressionExperiment.class );
+                .addEntity( "I", ExpressionExperiment.class );
         addAclParameters( q, ExpressionExperiment.class );
         q.setMaxResults( 1 );
         q.list();
