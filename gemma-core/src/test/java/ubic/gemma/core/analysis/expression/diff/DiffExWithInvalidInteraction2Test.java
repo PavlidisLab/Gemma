@@ -16,6 +16,7 @@ package ubic.gemma.core.analysis.expression.diff;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -109,6 +110,7 @@ public class DiffExWithInvalidInteraction2Test extends AbstractGeoServiceTest {
     }
 
     @Test
+    @Ignore("An UnknownLogScaleException is raised unpredictably. See https://github.com/PavlidisLab/Gemma/issues/582 for details.")
     @Category(SlowTest.class)
     public void test() {
 
