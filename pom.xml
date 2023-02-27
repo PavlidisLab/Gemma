@@ -494,6 +494,7 @@
 						<exclude>**/*Tests.java</exclude>
 					</excludes>
 					<excludedGroups>ubic.gemma.core.util.test.category.SpringContextTest,${excludedGroups}</excludedGroups>
+					<!--suppress MavenModelInspection -->
 					<skip>${skipUnitTests}</skip>
 				</configuration>
 			</plugin>
@@ -512,6 +513,7 @@
 						<exclude>**/*IntegrationTest.java</exclude>
 					</excludes>
 					<groups>ubic.gemma.core.util.test.category.SpringContextTest</groups>
+					<!--suppress MavenModelInspection -->
 					<skip>${skipIntegrationTests}</skip>
 				</configuration>
 				<executions>
@@ -645,7 +647,9 @@
 		<micrometer.version>1.10.4</micrometer.version>
 		<!-- this ensures that -DexcludedGroups works properly -->
 		<excludedGroups/>
+		<!--suppress UnresolvedMavenProperty -->
 		<skipUnitTests>${skipTests}</skipUnitTests>
+		<!--suppress UnresolvedMavenProperty -->
 		<skipIntegrationTests>${skipTests}</skipIntegrationTests>
 	</properties>
 </project>

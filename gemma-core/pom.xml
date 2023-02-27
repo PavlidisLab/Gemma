@@ -146,6 +146,7 @@
                                 CREATE DATABASE ${gemma.testdb.name} CHARACTER SET utf8mb4;
                                 ]]>
                             </sqlCommand>
+                            <!--suppress MavenModelInspection -->
                             <skip>${skipIntegrationTests}</skip>
                         </configuration>
                     </execution>
@@ -165,6 +166,7 @@
                                 <scrFile>${project.basedir}/src/main/resources/sql/init-indices.sql</scrFile>
                                 <srcFile>${project.basedir}/src/main/resources/sql/init-entities.sql</srcFile>
                             </srcFiles>
+                            <!--suppress MavenModelInspection -->
                             <skip>${skipIntegrationTests}</skip>
                         </configuration>
                     </execution>

@@ -92,6 +92,7 @@
 					<webDriverCapabilities>
 						<capability>
 							<name>phantomjs.binary.path</name>
+							<!--suppress UnresolvedMavenProperty -->
 							<value>${phantomjs.binary}</value>
 						</capability>
 					</webDriverCapabilities>
