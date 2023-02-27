@@ -529,7 +529,7 @@ public abstract class BaseSpringContextTest extends AbstractJUnit4SpringContextT
      * @see TestAuthenticationUtils#runAsUser(String, boolean)
      */
     protected void runAsUser( String userName ) {
-        testAuthenticationUtils.runAsUser( userName, false );
+        testAuthenticationUtils.runAsUser( userName, true );
     }
 
     /**
