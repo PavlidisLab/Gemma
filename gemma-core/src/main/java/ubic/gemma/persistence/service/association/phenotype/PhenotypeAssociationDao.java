@@ -17,6 +17,7 @@ package ubic.gemma.persistence.service.association.phenotype;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.gemma.model.association.phenotype.DifferentialExpressionEvidence;
 import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
+import ubic.gemma.model.association.phenotype.PhenotypeAssociationPublication;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneValueObject;
@@ -202,6 +203,6 @@ public interface PhenotypeAssociationDao extends BaseDao<PhenotypeAssociation> {
      *
      * @param phenotypeAssociationPublicationId id
      */
-    void removePhenotypePublication( Long phenotypeAssociationPublicationId );
+    void removePhenotypePublication( PhenotypeAssociationPublication phenotypeAssociationPublicationId );
 
 }

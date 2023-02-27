@@ -26,6 +26,7 @@ import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.gemma.model.association.GOEvidenceCode;
 import ubic.gemma.model.association.phenotype.DifferentialExpressionEvidence;
 import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
+import ubic.gemma.model.association.phenotype.PhenotypeAssociationPublication;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
@@ -761,10 +762,10 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
      * @param phenotypeAssociationPublicationId remove a PhenotypeAssociationPublication
      */
     @Override
-    public void removePhenotypePublication( Long phenotypeAssociationPublicationId ) {
+    public void removePhenotypePublication( PhenotypeAssociationPublication phenotypeAssociationPublication ) {
         this.getSessionFactory().getCurrentSession()
-                .createQuery( "delete from PhenotypeAssociationPublicationImpl p where p.id = ?" )
-                .setParameter( 0, phenotypeAssociationPublicationId )
+                .createQuery( "delete from PhenotypeAssociationPublicationImpl p where p = :p" )
+                .setParameter( "p", phenotypeAssociationPublication )
                 .executeUpdate();
     }
 
