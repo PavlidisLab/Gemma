@@ -15,6 +15,7 @@
 package ubic.gemma.rest.util;
 
 import io.swagger.v3.oas.models.OpenAPI;
+import lombok.Value;
 
 /**
  * Wrapper for an error response payload compliant with the
@@ -22,12 +23,11 @@ import io.swagger.v3.oas.models.OpenAPI;
  *
  * @author tesarst
  */
-@SuppressWarnings("unused")
-// Some properties might show as unused, but they are still serialised to JSON and published through API for client consumption.
+@Value
 public class ResponseErrorObject {
 
-    private final WellComposedErrorBody error;
-    private final String apiVersion;
+    WellComposedErrorBody error;
+    String apiVersion;
 
     /**
      * @param payload payload containing the error details.
@@ -39,16 +39,5 @@ public class ResponseErrorObject {
         } else {
             this.apiVersion = null;
         }
-    }
-
-    /**
-     * @return the payload with error details.
-     */
-    public WellComposedErrorBody getError() {
-        return error;
-    }
-
-    public String getApiVersion() {
-        return apiVersion;
     }
 }

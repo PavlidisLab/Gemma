@@ -1,5 +1,7 @@
 package ubic.gemma.rest.util;
 
+import lombok.EqualsAndHashCode;
+import lombok.Value;
 import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Sort;
 
@@ -11,12 +13,14 @@ import java.util.List;
  *
  * @param <T>
  */
+@Value
+@EqualsAndHashCode(callSuper = true)
 public class LimitedResponseDataObject<T> extends ResponseDataObject<List<T>> {
 
-    private final String filter;
-    private final String[] groupBy;
-    private final SortValueObject sort;
-    private final int limit;
+    String filter;
+    String[] groupBy;
+    SortValueObject sort;
+    int limit;
 
     public LimitedResponseDataObject( List<T> payload, @Nullable Filters filters, String[] groupBy, @Nullable Sort sort, int limit ) {
         super( payload );
@@ -24,21 +28,5 @@ public class LimitedResponseDataObject<T> extends ResponseDataObject<List<T>> {
         this.groupBy = groupBy;
         this.sort = sort != null ? new SortValueObject( sort ) : null;
         this.limit = limit;
-    }
-
-    public String getFilter() {
-        return filter;
-    }
-
-    public String[] getGroupBy() {
-        return groupBy;
-    }
-
-    public SortValueObject getSort() {
-        return sort;
-    }
-
-    public int getLimit() {
-        return this.limit;
     }
 }
