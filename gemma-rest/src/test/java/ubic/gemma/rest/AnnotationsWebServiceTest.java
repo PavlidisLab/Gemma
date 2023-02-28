@@ -21,6 +21,7 @@ import ubic.gemma.persistence.service.common.description.CharacteristicService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.persistence.util.*;
+import ubic.gemma.rest.util.FilteringAndPaginatedResponseDataObject;
 import ubic.gemma.rest.util.args.DatasetArgService;
 import ubic.gemma.rest.util.PaginatedResponseDataObject;
 import ubic.gemma.rest.util.SortValueObject;
@@ -124,7 +125,7 @@ public class AnnotationsWebServiceTest extends AbstractJUnit4SpringContextTests 
         when( expressionExperimentService.getSort( "id", Sort.Direction.ASC ) ).thenReturn( Sort.by( "ee", "id", Sort.Direction.ASC, "id" ) );
         when( expressionExperimentService.loadValueObjects( any( Filters.class ), eq( Sort.by( "ee", "id", Sort.Direction.ASC, "id" ) ), eq( 0 ), eq( 20 ) ) )
                 .thenAnswer( a -> new Slice<>( Collections.singletonList( new ExpressionExperimentValueObject( ee ) ), a.getArgument( 1 ), a.getArgument( 2, Integer.class ), a.getArgument( 3, Integer.class ), 10000L ) );
-        PaginatedResponseDataObject<ExpressionExperimentValueObject> payload = annotationsWebService.searchTaxonDatasets(
+        FilteringAndPaginatedResponseDataObject<ExpressionExperimentValueObject> payload = annotationsWebService.searchTaxonDatasets(
                 TaxonArg.valueOf( "human" ),
                 StringArrayArg.valueOf( "bipolar" ),
                 FilterArg.valueOf( "" ),
@@ -132,7 +133,7 @@ public class AnnotationsWebServiceTest extends AbstractJUnit4SpringContextTests 
                 LimitArg.valueOf( "20" ),
                 SortArg.valueOf( "+id" ) );
         assertThat( payload )
-                .hasFieldOrPropertyWithValue( "filter", "id in (1) and commonName = human or scientificName = human" )
+                .hasFieldOrPropertyWithValue( "filter", "commonName = human or scientificName = human and id in (1)" )
                 .hasFieldOrPropertyWithValue( "sort", new SortValueObject( Sort.by( "ee", "id", Sort.Direction.ASC, "id" ) ) )
                 .hasFieldOrPropertyWithValue( "offset", 0 )
                 .hasFieldOrPropertyWithValue( "limit", 20 )

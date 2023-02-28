@@ -11,6 +11,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentDao;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.rest.util.FilteringAndPaginatedResponseDataObject;
 import ubic.gemma.rest.util.MalformedArgException;
 import ubic.gemma.rest.util.PaginatedResponseDataObject;
 import ubic.gemma.rest.util.ResponseDataObject;
@@ -59,7 +60,7 @@ public class DatasetsRestTest extends BaseSpringContextTest {
 
     @Test
     public void testAll() {
-        PaginatedResponseDataObject<ExpressionExperimentValueObject> response = datasetsWebService
+        FilteringAndPaginatedResponseDataObject<ExpressionExperimentValueObject> response = datasetsWebService
                 .getDatasets( FilterArg.valueOf( "" ), OffsetArg.valueOf( "5" ), LimitArg.valueOf( "5" ),
                         SortArg.valueOf( "+id" ) );
         assertThat( response )

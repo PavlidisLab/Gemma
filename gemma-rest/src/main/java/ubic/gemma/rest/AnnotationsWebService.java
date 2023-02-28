@@ -40,15 +40,13 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
+import ubic.gemma.persistence.service.FilteringVoEnabledService;
 import ubic.gemma.persistence.service.common.description.CharacteristicService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.persistence.util.Sort;
-import ubic.gemma.rest.util.PaginatedResponseDataObject;
-import ubic.gemma.rest.util.Responder;
-import ubic.gemma.rest.util.ResponseDataObject;
-import ubic.gemma.rest.util.ResponseErrorObject;
+import ubic.gemma.rest.util.*;
 import ubic.gemma.rest.util.args.*;
 
 import javax.ws.rs.*;
@@ -153,7 +151,7 @@ public class AnnotationsWebService {
             @ApiResponse(responseCode = "200", content = @Content(schema = @Schema(ref = "PaginatedResponseDataObjectExpressionExperimentValueObject"))),
             @ApiResponse(responseCode = "400", description = "The search query is empty or invalid.", content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
     })
-    public PaginatedResponseDataObject<ExpressionExperimentValueObject> searchDatasets( // Params:
+    public FilteringAndPaginatedResponseDataObject<ExpressionExperimentValueObject> searchDatasets( // Params:
             @Parameter(schema = @Schema(implementation = StringArrayArg.class), explode = Explode.FALSE) @QueryParam("query") @DefaultValue("") StringArrayArg query,
             @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filterArg, // Optional, default null
             @QueryParam("offset") @DefaultValue("0") OffsetArg offset, // Optional, default 0
@@ -174,22 +172,25 @@ public class AnnotationsWebService {
         Sort sort = datasetArgService.getSort( sortArg );
 
         if ( foundIds.isEmpty() ) {
-            return Responder.paginate( Slice.empty(), filters, new String[] { "id" } );
+            return Responder.paginate( new Slice<>( Collections.emptyList(), sort, 0, limit.getValue(), ( long ) foundIds.size() ), filters, new String[] { "id" } );
         }
 
         if ( filters.isEmpty()
                 && offset.getValue() == 0
-                && foundIds.size() < limit.getValue()
+                && foundIds.size() <= limit.getValue()
                 && sort.getPropertyName().equals( "id" )
                 && sort.getDirection() == Sort.Direction.ASC ) {
             // Otherwise there is no need to go the pre-filter path since we already know exactly what IDs we want.
-            return Responder.paginate( Slice.fromList( expressionExperimentService.loadValueObjectsByIds( foundIds ) ), filters, new String[] { "id" } );
+            return Responder.paginate( new Slice<>( expressionExperimentService.loadValueObjectsByIds( foundIds ), sort, 0, limit.getValue(), ( long ) foundIds.size() ),
+                    filters, new String[] { "id" } );
 
         }
 
         // If there are filters other than the search query, intersect the results.
         filters.and( datasetArgService.getFilters( DatasetArrayArg.valueOf( StringUtils.join( foundIds, ',' ) ) ) );
-        return Responder.paginate( expressionExperimentService, filters, new String[] { "id" }, sort, offset.getValue(), limit.getValue() );
+
+        return Responder.paginate( expressionExperimentService::loadValueObjects, filters, new String[] { "id" }, sort,
+                offset.getValue(), limit.getValue() );
     }
 
     @GET
@@ -199,7 +200,7 @@ public class AnnotationsWebService {
             @ApiResponse(responseCode = "200", content = @Content(schema = @Schema(ref = "PaginatedResponseDataObjectExpressionExperimentValueObject"))),
             @ApiResponse(responseCode = "400", description = "The search query is empty or invalid.", content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
     }, deprecated = true)
-    public PaginatedResponseDataObject<ExpressionExperimentValueObject> searchDatasetsByQueryInPath( // Params:
+    public FilteringAndPaginatedResponseDataObject<ExpressionExperimentValueObject> searchDatasetsByQueryInPath( // Params:
             @PathParam("query") @DefaultValue("") StringArrayArg query, // Required
             @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filterArg, // Optional, default null
             @QueryParam("offset") @DefaultValue("0") OffsetArg offset, // Optional, default 0
@@ -220,7 +221,7 @@ public class AnnotationsWebService {
             @ApiResponse(responseCode = "200", content = @Content(schema = @Schema(ref = "PaginatedResponseDataObjectExpressionExperimentValueObject"))),
             @ApiResponse(responseCode = "400", description = "The search query is empty or invalid.", content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
     })
-    public PaginatedResponseDataObject<ExpressionExperimentValueObject> searchTaxonDatasets( // Params:
+    public FilteringAndPaginatedResponseDataObject<ExpressionExperimentValueObject> searchTaxonDatasets( // Params:
             @PathParam("taxon") TaxonArg<?> taxonArg, // Required
             @Parameter(schema = @Schema(implementation = StringArrayArg.class), explode = Explode.FALSE) @QueryParam("query") @DefaultValue("") StringArrayArg query,
             @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filter, // Optional, default null
@@ -242,16 +243,19 @@ public class AnnotationsWebService {
             throw new BadRequestException( "Invalid search settings.", e );
         }
 
+        // We always have to do filtering, because we always have at least the taxon argument (otherwise this#datasets method is used)
+        Filters filters = datasetArgService.getFilters( filter ).and( taxonArgService.getFilters( taxonArg ) );
+
         if ( foundIds.isEmpty() ) {
-            return Responder.paginate( Slice.empty(), null, new String[] { "id" } );
+            return Responder.paginate( new Slice<>( Collections.emptyList(), datasetArgService.getSort( sort ),
+                    offset.getValue(), limit.getValue(), 0L ), filters, new String[] { "id" } );
         }
 
         // We always have to do filtering, because we always have at least the taxon argument (otherwise this#datasets method is used)
-        Filters filters = datasetArgService.getFilters( filter )
-                .and( datasetArgService.getFilters( DatasetArrayArg.valueOf( StringUtils.join( foundIds, ',' ) ) ) )
-                .and( taxonArgService.getFilters( taxonArg ) );
+        filters.and( datasetArgService.getFilters( DatasetArrayArg.valueOf( StringUtils.join( foundIds, ',' ) ) ) );
 
-        return Responder.paginate( expressionExperimentService, filters, new String[] { "id" }, datasetArgService.getSort( sort ), offset.getValue(), limit.getValue() );
+        return Responder.paginate( expressionExperimentService::loadValueObjects, filters, new String[] { "id" },
+                datasetArgService.getSort( sort ), offset.getValue(), limit.getValue() );
     }
 
     /**
@@ -264,7 +268,7 @@ public class AnnotationsWebService {
             @ApiResponse(responseCode = "200", content = @Content(schema = @Schema(ref = "PaginatedResponseDataObjectExpressionExperimentValueObject"))),
             @ApiResponse(responseCode = "400", description = "The search query is empty or invalid.", content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
     }, deprecated = true)
-    public PaginatedResponseDataObject<ExpressionExperimentValueObject> searchTaxonDatasetsByQueryInPath( // Params:
+    public FilteringAndPaginatedResponseDataObject<ExpressionExperimentValueObject> searchTaxonDatasetsByQueryInPath( // Params:
             @PathParam("taxon") TaxonArg<?> taxonArg, // Required
             @PathParam("query") @DefaultValue("") StringArrayArg query, // Required
             @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filter, // Optional, default null

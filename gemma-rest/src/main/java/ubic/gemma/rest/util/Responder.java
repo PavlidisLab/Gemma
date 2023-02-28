@@ -15,7 +15,6 @@
 package ubic.gemma.rest.util;
 
 import ubic.gemma.model.IdentifiableValueObject;
-import ubic.gemma.persistence.service.FilteringVoEnabledService;
 import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.persistence.util.Sort;
@@ -39,10 +38,9 @@ public class Responder {
      * @param payload an object to be wrapped and published to the API
      * @return a {@link ResponseDataObject} containing the argument
      * @throws NotFoundException if the argument is null, a suitable {@link ResponseErrorObject} will be subsequently
-     *                           produced by {@link NotFoundExceptionMapper}
-     * @return a {@link ResponseDataObject} containing the argument
+     *                           produced by {@link ubic.gemma.rest.providers.NotFoundExceptionMapper}
      */
-    public static <T> ResponseDataObject<T> respond( T payload ) throws NotFoundException {
+    public static <T> ResponseDataObject<T> respond( @Nullable T payload ) throws NotFoundException {
         if ( payload == null ) { // object is null.
             throw new NotFoundException( Responder.DEFAULT_ERR_MSG_NULL_OBJECT );
         } else {
@@ -50,49 +48,38 @@ public class Responder {
         }
     }
 
-    public static <T> FilteringResponseDataObject<T> filter( List<T> payload, @Nullable Filters filters, @Nullable String[] groupBy, @Nullable Sort sort ) {
-        if ( payload == null ) {
-            throw new NotFoundException( Responder.DEFAULT_ERR_MSG_NULL_OBJECT );
-        } else {
-            return new FilteringResponseDataObject<>( payload, filters, null, sort );
-        }
-    }
-
     public static <T> LimitedResponseDataObject<T> limit( List<T> payload, @Nullable Filters filters, String[] groupBy, @Nullable Sort sort, int limit ) {
-        if ( payload == null ) {
-            throw new NotFoundException( Responder.DEFAULT_ERR_MSG_NULL_OBJECT );
-        } else {
-            return new LimitedResponseDataObject<>( payload, filters, groupBy, sort, limit );
-        }
+        return new LimitedResponseDataObject<>( payload, filters, groupBy, sort, limit );
     }
 
     /**
-     * Produce a {@link PaginatedResponseDataObject} for a given {@link Slice}.
+     * Produce a {@link PaginatedResponseDataObject} for a given unfiltered {@link Slice}.
      */
-    public static <T extends IdentifiableValueObject<?>> PaginatedResponseDataObject<T> paginate( Slice<T> payload, @Nullable Filters filters, String[] groupBy ) throws NotFoundException {
-        if ( payload == null ) {
-            throw new NotFoundException( Responder.DEFAULT_ERR_MSG_NULL_OBJECT );
-        } else {
-            return new PaginatedResponseDataObject<>( payload, filters, groupBy );
-        }
+    public static <T extends IdentifiableValueObject<?>> PaginatedResponseDataObject<T> paginate( Slice<T> payload, String[] groupBy ) throws NotFoundException {
+        return new PaginatedResponseDataObject<>( payload, groupBy );
     }
 
+    /**
+     * Produce a {@link FilteringAndPaginatedResponseDataObject} for a given {@link Slice}
+     */
+    public static <T extends IdentifiableValueObject<?>> FilteringAndPaginatedResponseDataObject<T> paginate( Slice<T> payload, @Nullable Filters filters, String[] groupBy ) throws NotFoundException {
+        return new FilteringAndPaginatedResponseDataObject<>( payload, filters, groupBy );
+    }
+
+    /**
+     * A functional interface matching the signature of a paginating service method.
+     *
+     * @see ubic.gemma.persistence.service.FilteringVoEnabledService#loadValueObjects(Filters, Sort, int, int)
+     */
     @FunctionalInterface
     public interface FilterMethod<T> {
-        Slice<T> filter( @Nullable Filters filters, @Nullable Sort sort, int offset, int limit );
+        Slice<T> load( @Nullable Filters filters, @Nullable Sort sort, int offset, int limit );
     }
 
     /**
      * Paginate using an arbitrary filtering method.
      */
-    public static <T extends IdentifiableValueObject<?>> PaginatedResponseDataObject<T> paginate( FilterMethod<T> filterMethod, Filters filters, String[] groupBy, Sort sort, int offset, int limit ) throws NotFoundException {
-        return paginate( filterMethod.filter( filters, sort, offset, limit ), filters, groupBy );
-    }
-
-    /**
-     * Paginate using a {@link FilteringVoEnabledService}
-     */
-    public static <T extends IdentifiableValueObject<?>> PaginatedResponseDataObject<T> paginate( FilteringVoEnabledService<?, T> filterMethod, Filters filters, String[] groupBy, Sort sort, int offset, int limit ) throws NotFoundException {
-        return paginate( filterMethod::loadValueObjects, filters, groupBy, sort, offset, limit );
+    public static <T extends IdentifiableValueObject<?>> FilteringAndPaginatedResponseDataObject<T> paginate( FilterMethod<T> filterMethod, @Nullable Filters filters, String[] groupBy, @Nullable Sort sort, int offset, int limit ) throws NotFoundException {
+        return paginate( filterMethod.load( filters, sort, offset, limit ), filters, groupBy );
     }
 }

@@ -34,10 +34,8 @@ import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.util.Filters;
-import ubic.gemma.rest.util.MediaTypeUtils;
-import ubic.gemma.rest.util.PaginatedResponseDataObject;
-import ubic.gemma.rest.util.Responder;
-import ubic.gemma.rest.util.ResponseDataObject;
+import ubic.gemma.persistence.util.Sort;
+import ubic.gemma.rest.util.*;
 import ubic.gemma.rest.util.args.*;
 
 import javax.ws.rs.*;
@@ -93,13 +91,14 @@ public class PlatformsWebService {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve all platforms")
-    public PaginatedResponseDataObject<ArrayDesignValueObject> getPlatforms( // Params:
+    public FilteringAndPaginatedResponseDataObject<ArrayDesignValueObject> getPlatforms( // Params:
             @QueryParam("filter") @DefaultValue("") FilterArg<ArrayDesign> filter, // Optional, default null
             @QueryParam("offset") @DefaultValue("0") OffsetArg offset, // Optional, default 0
             @QueryParam("limit") @DefaultValue("20") LimitArg limit, // Optional, default 20
             @QueryParam("sort") @DefaultValue("+id") SortArg<ArrayDesign> sort // Optional, default +id
     ) {
-        return Responder.paginate( arrayDesignService, arrayDesignArgService.getFilters( filter ), new String[] { "id" },
+        Filters filters = arrayDesignArgService.getFilters( filter );
+        return Responder.paginate( arrayDesignService::loadValueObjects, filters, new String[] { "id" },
                 arrayDesignArgService.getSort( sort ), offset.getValue(), limit.getValue() );
     }
 
@@ -129,7 +128,7 @@ public class PlatformsWebService {
     @Path("/{platform}")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve all platforms matching a set of platform identifiers")
-    public PaginatedResponseDataObject<ArrayDesignValueObject> getPlatformsByIds( // Params:
+    public FilteringAndPaginatedResponseDataObject<ArrayDesignValueObject> getPlatformsByIds( // Params:
             @PathParam("platform") PlatformArrayArg platformsArg, // Optional
             @QueryParam("filter") @DefaultValue("") FilterArg<ArrayDesign> filter, // Optional, default null
             @QueryParam("offset") @DefaultValue("0") OffsetArg offset, // Optional, default 0
@@ -138,14 +137,15 @@ public class PlatformsWebService {
     ) {
         Filters filters = arrayDesignArgService.getFilters( filter )
                 .and( arrayDesignArgService.getFilters( platformsArg ) );
-        return Responder.paginate( arrayDesignService, filters, new String[] { "id" }, arrayDesignArgService.getSort( sort ), offset.getValue(), limit.getValue() );
+        return Responder.paginate( arrayDesignService::loadValueObjects, filters, new String[] { "id" },
+                arrayDesignArgService.getSort( sort ), offset.getValue(), limit.getValue() );
     }
 
     @GET
     @Path("/blacklisted")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve all blacklisted platforms")
-    public PaginatedResponseDataObject<ArrayDesignValueObject> getBlacklistedPlatforms(
+    public FilteringAndPaginatedResponseDataObject<ArrayDesignValueObject> getBlacklistedPlatforms(
             @QueryParam("filter") @DefaultValue("") FilterArg<ArrayDesign> filter,
             @QueryParam("sort") @DefaultValue("+id") SortArg<ArrayDesign> sort,
             @QueryParam("offset") @DefaultValue("0") OffsetArg offset,
@@ -173,7 +173,7 @@ public class PlatformsWebService {
             @QueryParam("offset") @DefaultValue("0") OffsetArg offset, // Optional, default 0
             @QueryParam("limit") @DefaultValue("20") LimitArg limit // Optional, default 20
     ) {
-        return Responder.paginate( platformArg.getExperiments( arrayDesignService, expressionExperimentService, limit.getValue(), offset.getValue() ), null, new String[] { "id" } );
+        return Responder.paginate( platformArg.getExperiments( arrayDesignService, expressionExperimentService, limit.getValue(), offset.getValue() ), new String[] { "id" } );
     }
 
     /**
@@ -194,7 +194,7 @@ public class PlatformsWebService {
             @QueryParam("offset") @DefaultValue("0") OffsetArg offset, // Optional, default 0
             @QueryParam("limit") @DefaultValue("20") LimitArg limit // Optional, default 20
     ) {
-        return Responder.paginate( platformArg.getElements( arrayDesignService, compositeSequenceService, limit.getValue(), offset.getValue() ), null, new String[] { "id" } );
+        return Responder.paginate( platformArg.getElements( arrayDesignService, compositeSequenceService, limit.getValue(), offset.getValue() ), new String[] { "id" } );
     }
 
     /**
@@ -215,14 +215,16 @@ public class PlatformsWebService {
     @Path("/{platform}/elements/{probes}")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve the selected composite sequences for a given platform")
-    public PaginatedResponseDataObject<CompositeSequenceValueObject> getPlatformElement( // Params:
+    public FilteringAndPaginatedResponseDataObject<CompositeSequenceValueObject> getPlatformElement( // Params:
             @PathParam("platform") PlatformArg<?> platformArg, // Required
             @PathParam("probes") CompositeSequenceArrayArg probesArg, // Required
             @QueryParam("offset") @DefaultValue("0") OffsetArg offset, // Optional, default 0
             @QueryParam("limit") @DefaultValue("20") LimitArg limit // Optional, default 20
     ) {
         probesArg.setPlatform( arrayDesignArgService.getEntity( platformArg ) );
-        return Responder.paginate( compositeSequenceService, Filters.by( probesArg.getPlatformFilter() ), new String[] { "id" }, null, offset.getValue(), limit.getValue() );
+        Filters filters = Filters.by( probesArg.getPlatformFilter() );
+        return Responder.paginate( compositeSequenceService::loadValueObjects, filters, new String[] { "id" },
+                compositeSequenceService.getSort( "id", Sort.Direction.ASC ), offset.getValue(), limit.getValue() );
     }
 
     /**
@@ -243,7 +245,7 @@ public class PlatformsWebService {
     @Path("/{platform}/elements/{probe}/genes")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve the genes associated to a probe in a given platform")
-    public PaginatedResponseDataObject<GeneValueObject> getPlatformElementGenes( // Params:
+    public FilteringAndPaginatedResponseDataObject<GeneValueObject> getPlatformElementGenes( // Params:
             @PathParam("platform") PlatformArg<?> platformArg, // Required
             @PathParam("probe") CompositeSequenceArg<?> probeArg, // Required
             @QueryParam("offset") @DefaultValue("0") OffsetArg offset, // Optional, default 0

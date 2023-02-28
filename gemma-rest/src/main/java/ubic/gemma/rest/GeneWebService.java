@@ -31,10 +31,7 @@ import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.GeneEvidenceValueObject;
 import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
 import ubic.gemma.persistence.util.Filters;
-import ubic.gemma.rest.util.ArgUtils;
-import ubic.gemma.rest.util.PaginatedResponseDataObject;
-import ubic.gemma.rest.util.Responder;
-import ubic.gemma.rest.util.ResponseDataObject;
+import ubic.gemma.rest.util.*;
 import ubic.gemma.rest.util.args.*;
 
 import javax.ws.rs.*;
@@ -154,7 +151,7 @@ public class GeneWebService {
     @Path("/{gene}/probes")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve the probes associated to a genes across all platforms")
-    public PaginatedResponseDataObject<CompositeSequenceValueObject> getGeneProbes( // Params:
+    public FilteringAndPaginatedResponseDataObject<CompositeSequenceValueObject> getGeneProbes( // Params:
             @PathParam("gene") GeneArg<?> geneArg, // Required
             @QueryParam("offset") @DefaultValue("0") OffsetArg offset, // Optional, default 0
             @QueryParam("limit") @DefaultValue("20") LimitArg limit // Optional, default 20

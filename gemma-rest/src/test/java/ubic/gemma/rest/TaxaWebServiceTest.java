@@ -10,6 +10,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonValueObject;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
+import ubic.gemma.rest.util.FilteringAndPaginatedResponseDataObject;
 import ubic.gemma.rest.util.PaginatedResponseDataObject;
 import ubic.gemma.rest.util.ResponseDataObject;
 import ubic.gemma.rest.util.args.*;
@@ -70,7 +71,7 @@ public class TaxaWebServiceTest extends BaseSpringContextTest {
 
     @Test
     public void testTaxonDatasetsByNcbiId() {
-        PaginatedResponseDataObject<ExpressionExperimentValueObject> response = taxaWebService.getTaxonDatasets(
+        FilteringAndPaginatedResponseDataObject<ExpressionExperimentValueObject> response = taxaWebService.getTaxonDatasets(
                 TaxonArg.valueOf( taxon.getNcbiId().toString() ),
                 FilterArg.valueOf( "" ),
                 OffsetArg.valueOf( "0" ),

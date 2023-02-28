@@ -115,18 +115,15 @@ public class DatasetsWebService {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve all datasets")
-    public PaginatedResponseDataObject<ExpressionExperimentValueObject> getDatasets( // Params:
+    public FilteringAndPaginatedResponseDataObject<ExpressionExperimentValueObject> getDatasets( // Params:
             @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filter, // Optional, default null
             @QueryParam("offset") @DefaultValue("0") OffsetArg offset, // Optional, default 0
             @QueryParam("limit") @DefaultValue("20") LimitArg limit, // Optional, default 20
             @QueryParam("sort") @DefaultValue("+id") SortArg<ExpressionExperiment> sort // Optional, default +id
     ) {
-        return Responder.paginate( expressionExperimentService,
-                datasetArgService.getFilters( filter ),
-                new String[] { "id" },
-                datasetArgService.getSort( sort ),
-                offset.getValue(),
-                limit.getValue() );
+        Filters filters = datasetArgService.getFilters( filter );
+        return Responder.paginate( expressionExperimentService::loadValueObjects, filters, new String[] { "id" },
+                datasetArgService.getSort( sort ), offset.getValue(), limit.getValue() );
     }
 
     @GET
@@ -223,7 +220,7 @@ public class DatasetsWebService {
     @Path("/{dataset}")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve datasets by their identifiers")
-    public PaginatedResponseDataObject<ExpressionExperimentValueObject> getDatasetsByIds( // Params:
+    public FilteringAndPaginatedResponseDataObject<ExpressionExperimentValueObject> getDatasetsByIds( // Params:
             @PathParam("dataset") DatasetArrayArg datasetsArg, // Optional
             @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filter, // Optional, default null
             @QueryParam("offset") @DefaultValue("0") OffsetArg offset, // Optional, default 0
@@ -231,7 +228,8 @@ public class DatasetsWebService {
             @QueryParam("sort") @DefaultValue("+id") SortArg<ExpressionExperiment> sort // Optional, default +id
     ) {
         Filters filters = datasetArgService.getFilters( filter ).and( datasetArgService.getFilters( datasetsArg ) );
-        return Responder.paginate( expressionExperimentService, filters, new String[] { "id" }, datasetArgService.getSort( sort ), offset.getValue(), limit.getValue() );
+        return Responder.paginate( expressionExperimentService::loadValueObjects, filters, new String[] { "id" },
+                datasetArgService.getSort( sort ), offset.getValue(), limit.getValue() );
     }
 
     /**
@@ -240,17 +238,14 @@ public class DatasetsWebService {
     @GET
     @Path("/blacklisted")
     @Produces(MediaType.APPLICATION_JSON)
-    public PaginatedResponseDataObject<ExpressionExperimentValueObject> getBlacklistedDatasets(
+    public FilteringAndPaginatedResponseDataObject<ExpressionExperimentValueObject> getBlacklistedDatasets(
             @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filterArg,
             @QueryParam("sort") @DefaultValue("+id") SortArg<ExpressionExperiment> sortArg,
             @QueryParam("offset") @DefaultValue("0") OffsetArg offset,
             @QueryParam("limit") @DefaultValue("20") LimitArg limit ) {
         return Responder.paginate( expressionExperimentService::loadBlacklistedValueObjects,
-                datasetArgService.getFilters( filterArg ),
-                new String[] { "id" },
-                datasetArgService.getSort( sortArg ),
-                offset.getValue(),
-                limit.getValue() );
+                datasetArgService.getFilters( filterArg ), new String[] { "id" }, datasetArgService.getSort( sortArg ),
+                offset.getValue(), limit.getValue() );
     }
 
     /**

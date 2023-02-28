@@ -33,11 +33,13 @@ import ubic.gemma.model.genome.TaxonValueObject;
 import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.model.genome.gene.phenotype.EvidenceFilter;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.GeneEvidenceValueObject;
+import ubic.gemma.persistence.service.FilteringVoEnabledService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.genome.ChromosomeService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Sort;
+import ubic.gemma.rest.util.FilteringAndPaginatedResponseDataObject;
 import ubic.gemma.rest.util.PaginatedResponseDataObject;
 import ubic.gemma.rest.util.Responder;
 import ubic.gemma.rest.util.ResponseDataObject;
@@ -228,7 +230,7 @@ public class TaxaWebService {
     @Path("/{taxon}/datasets")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve the datasets for a given taxon")
-    public PaginatedResponseDataObject<ExpressionExperimentValueObject> getTaxonDatasets( // Params:
+    public FilteringAndPaginatedResponseDataObject<ExpressionExperimentValueObject> getTaxonDatasets( // Params:
             @PathParam("taxon") TaxonArg<?> taxonArg, // Required
             @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filter, // Optional, default null
             @QueryParam("offset") @DefaultValue("0") OffsetArg offset, // Optional, default 0
@@ -239,7 +241,8 @@ public class TaxaWebService {
         taxonArgService.getEntity( taxonArg );
         Filters filters = datasetArgService.getFilters( filter )
                 .and( taxonArgService.getFilters( taxonArg ) );
-        return Responder.paginate( expressionExperimentService, filters, new String[] { "id" }, taxonArgService.getSort( sort ), offset.getValue(), limit.getValue() );
+        return Responder.paginate( expressionExperimentService::loadValueObjects, filters, new String[] { "id" },
+                taxonArgService.getSort( sort ), offset.getValue(), limit.getValue() );
     }
 
     /**

@@ -14,44 +14,40 @@
  */
 package ubic.gemma.rest.util;
 
+import lombok.EqualsAndHashCode;
+import lombok.Value;
 import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.persistence.util.Sort;
 
-import javax.annotation.Nullable;
+import java.util.List;
 
 /**
  * Represents paginated results with offset and limit.
+ *
  * @param <T>
  * @see ubic.gemma.persistence.service.FilteringVoEnabledService#loadValueObjects(Filters, Sort, int, int)
  */
-public class PaginatedResponseDataObject<T> extends FilteringResponseDataObject<T> {
+@Value
+@EqualsAndHashCode(callSuper = true)
+public class PaginatedResponseDataObject<T> extends ResponseDataObject<List<T>> {
 
-    private final Integer offset;
-
-    private final Integer limit;
-
-    private final Long totalElements;
+    String[] groupBy;
+    SortValueObject sort;
+    Integer offset;
+    Integer limit;
+    Long totalElements;
 
     /**
      * @param payload the data to be serialised and returned as the response payload.
+     * @param groupBy
      */
-    public PaginatedResponseDataObject( Slice<T> payload, @Nullable Filters filters, String[] groupBy ) {
-        super( payload, filters, groupBy, payload.getSort() );
+    public PaginatedResponseDataObject( Slice<T> payload, String[] groupBy ) {
+        super( payload );
         this.offset = payload.getOffset();
         this.limit = payload.getLimit();
         this.totalElements = payload.getTotalElements();
-    }
-
-    public Integer getOffset() {
-        return offset;
-    }
-
-    public Integer getLimit() {
-        return limit;
-    }
-
-    public Long getTotalElements() {
-        return totalElements;
+        this.sort = payload.getSort() != null ? new SortValueObject( payload.getSort() ) : null;
+        this.groupBy = groupBy;
     }
 }
