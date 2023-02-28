@@ -36,7 +36,7 @@ public class PaginatedResponseDataObject<T> extends FilteringResponseDataObject<
     /**
      * @param payload the data to be serialised and returned as the response payload.
      */
-    public PaginatedResponseDataObject( Slice<T> payload, @Nullable Filters filters, @Nullable String[] groupBy ) {
+    public PaginatedResponseDataObject( Slice<T> payload, @Nullable Filters filters, String[] groupBy ) {
         super( payload, filters, groupBy, payload.getSort() );
         this.offset = payload.getOffset();
         this.limit = payload.getLimit();
