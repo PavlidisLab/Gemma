@@ -1205,7 +1205,7 @@ public class ExpressionExperimentDaoImpl
 
         if ( ids != null ) {
             if ( ids.isEmpty() ) {
-                return Slice.empty();
+                return new Slice<>( Collections.emptyList(), sort, offset, limit, 0L );
             }
             List<Long> idList = new ArrayList<>( ids );
             Collections.sort( idList );
@@ -1239,7 +1239,7 @@ public class ExpressionExperimentDaoImpl
                 .setCacheable( true )
                 .list();
         if ( result.isEmpty() ) {
-            return Slice.empty();
+            return new Slice<>( Collections.emptyList(), sort, offset, limit, 0L );
         }
         if ( filters == null ) {
             filters = Filters.empty();

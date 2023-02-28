@@ -206,7 +206,8 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
 
     @Test
     public void testGetBlacklistedDatasets() {
-        when( expressionExperimentService.loadBlacklistedValueObjects( any(), any(), anyInt(), anyInt() ) ).thenReturn( Slice.empty() );
+        when( expressionExperimentService.loadBlacklistedValueObjects( any(), any(), anyInt(), anyInt() ) )
+                .thenAnswer( a -> new Slice<>( Collections.emptyList(), a.getArgument( 1 ), a.getArgument( 2 ), a.getArgument( 3 ), 0L ) );
         when( expressionExperimentService.getSort( "id", Sort.Direction.ASC ) ).thenReturn( Sort.by( "ee", "id", Sort.Direction.ASC, "id" ) );
         Response res = target( "/datasets/blacklisted" )
                 .queryParam( "filter", "" ).request().get();

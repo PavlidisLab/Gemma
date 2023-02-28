@@ -12,20 +12,6 @@ import java.util.stream.Collectors;
  */
 public class Slice<O> extends AbstractList<O> implements List<O> {
 
-    /**
-     * Create an empty slice with zero elements.
-     */
-    public static <O> Slice<O> empty() {
-        return new Slice<>( Collections.emptyList(), null, null, null, 0L );
-    }
-
-    /**
-     * Create a slice from a {@link List}.
-     */
-    public static <O> Slice<O> fromList( List<O> list ) {
-        return new Slice<>( list, null, null, null, ( long ) list.size() );
-    }
-
     private final List<O> data;
     @Nullable
     private final Sort sort;

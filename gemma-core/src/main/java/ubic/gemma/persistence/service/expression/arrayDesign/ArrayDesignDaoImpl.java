@@ -208,7 +208,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
                 .setCacheable( true )
                 .list();
         if ( result.isEmpty() ) {
-            return Slice.empty();
+            return new Slice<>( Collections.emptyList(), sort, offset, limit, 0L );
         }
         if ( filters == null ) {
             filters = Filters.empty();
