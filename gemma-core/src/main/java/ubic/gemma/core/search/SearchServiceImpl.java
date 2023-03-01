@@ -1040,7 +1040,7 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
      */
     private <T extends Identifiable> Collection<SearchResult<T>> dbHitsToSearchResult( Collection<T> entities, @Nullable String matchText, String source ) {
         StopWatch watch = StopWatch.createStarted();
-        List<SearchResult<T>> results = new ArrayList<>();
+        List<SearchResult<T>> results = new ArrayList<>( entities.size() );
         for ( T e : entities ) {
             if ( e == null ) {
                 if ( log.isDebugEnabled() )
