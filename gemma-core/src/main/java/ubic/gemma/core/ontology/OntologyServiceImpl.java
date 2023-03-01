@@ -37,6 +37,7 @@ import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.compass.core.util.concurrent.ConcurrentHashSet;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
@@ -92,7 +93,7 @@ import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialService;
  * @author pavlidis
  */
 @Service
-public class OntologyServiceImpl implements OntologyService {
+public class OntologyServiceImpl implements OntologyService, InitializingBean {
     /**
      * Throttle how many ontology terms we retrieve. We search the ontologies in a favored order, so we can stop when we
      * find "enough stuff".
