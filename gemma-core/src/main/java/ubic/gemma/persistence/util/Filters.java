@@ -44,12 +44,22 @@ public class Filters implements Iterable<List<Filter>> {
             return or( Filter.by( objectAlias, propertyName, propertyType, operator, requiredValue ) );
         }
 
+        @CheckReturnValue
+        public <T> FiltersClauseBuilder or( @Nullable String objectAlias, String propertyName, Class<T> propertyType, Filter.Operator operator, @Nullable T requiredValue, String originalProperty ) {
+            return or( Filter.by( objectAlias, propertyName, propertyType, operator, requiredValue, originalProperty ) );
+        }
+
         /**
          * Add a sub-clause explicitly.
          */
         @CheckReturnValue
         public <T> FiltersClauseBuilder or( @Nullable String objectAlias, String propertyName, Class<T> propertyType, Filter.Operator operator, Collection<T> requiredValues ) {
             return or( Filter.by( objectAlias, propertyName, propertyType, operator, requiredValues ) );
+        }
+
+        @CheckReturnValue
+        public <T> FiltersClauseBuilder or( @Nullable String objectAlias, String propertyName, Class<T> propertyType, Filter.Operator operator, Collection<T> requiredValues, String originalProperty ) {
+            return or( Filter.by( objectAlias, propertyName, propertyType, operator, requiredValues, originalProperty ) );
         }
 
         public Filters build() {
@@ -85,11 +95,19 @@ public class Filters implements Iterable<List<Filter>> {
      * Create a singleton {@link Filters} from an explicit clause.
      */
     public static <T> Filters by( @Nullable String objectAlias, String propertyName, Class<T> propertyType, Filter.Operator operator, @Nullable T requiredValue ) {
-        return empty().and( Filter.by( objectAlias, propertyName, propertyType, operator, requiredValue ) );
+        return empty().and( objectAlias, propertyName, propertyType, operator, requiredValue );
+    }
+
+    public static <T> Filters by( @Nullable String objectAlias, String propertyName, Class<T> propertyType, Filter.Operator operator, @Nullable T requiredValue, String originalProperty ) {
+        return empty().and( objectAlias, propertyName, propertyType, operator, requiredValue, originalProperty );
     }
 
     public static <T> Filters by( @Nullable String objectAlias, String propertyName, Class<T> propertyType, Filter.Operator operator, Collection<T> requiredValue ) {
-        return empty().and( Filter.by( objectAlias, propertyName, propertyType, operator, requiredValue ) );
+        return empty().and( objectAlias, propertyName, propertyType, operator, requiredValue );
+    }
+
+    public static <T> Filters by( @Nullable String objectAlias, String propertyName, Class<T> propertyType, Filter.Operator operator, Collection<T> requiredValue, String originalProperty ) {
+        return empty().and( objectAlias, propertyName, propertyType, operator, requiredValue, originalProperty );
     }
 
     /**
@@ -127,11 +145,19 @@ public class Filters implements Iterable<List<Filter>> {
         return and( Filter.by( objectAlias, propertyName, propertyType, operator, requiredValue ) );
     }
 
+    public <T> Filters and( @Nullable String objectAlias, String propertyName, Class<T> propertyType, Filter.Operator operator, @Nullable T requiredValue, String originalProperty ) {
+        return and( Filter.by( objectAlias, propertyName, propertyType, operator, requiredValue, originalProperty ) );
+    }
+
     /**
      * Add a new clause of one explicit clause with a collection right hand side to to the conjunction.
      */
     public <T> Filters and( @Nullable String objectAlias, String propertyName, Class<T> propertyType, Filter.Operator operator, Collection<T> requiredValues ) {
         return and( Filter.by( objectAlias, propertyName, propertyType, operator, requiredValues ) );
+    }
+
+    public <T> Filters and( @Nullable String objectAlias, String propertyName, Class<T> propertyType, Filter.Operator operator, Collection<T> requiredValues, String originalProperty ) {
+        return and( Filter.by( objectAlias, propertyName, propertyType, operator, requiredValues, originalProperty ) );
     }
 
     /**

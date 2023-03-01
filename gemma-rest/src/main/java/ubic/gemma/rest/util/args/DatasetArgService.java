@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.persistence.util.Filters;
 
 @Service
 public class DatasetArgService extends AbstractEntityArgService<ExpressionExperiment, ExpressionExperimentService> {
@@ -11,5 +12,10 @@ public class DatasetArgService extends AbstractEntityArgService<ExpressionExperi
     @Autowired
     public DatasetArgService( ExpressionExperimentService service ) {
         super( service );
+    }
+
+    @Override
+    public Filters getFilters( FilterArg<ExpressionExperiment> filterArg ) {
+        return service.getFiltersWithInferredAnnotations( super.getFilters( filterArg ) );
     }
 }

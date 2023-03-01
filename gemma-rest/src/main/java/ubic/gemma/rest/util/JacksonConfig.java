@@ -15,6 +15,11 @@ import ubic.gemma.rest.swagger.resolver.CustomModelResolver;
 @Configuration
 public class JacksonConfig {
 
+    /**
+     * Mapper used to generate JSON payloads from the REST API.
+     *
+     * @see ubic.gemma.rest.providers.ObjectMapperResolver
+     */
     @Bean
     public ObjectMapper objectMapper() {
         return new ObjectMapper()

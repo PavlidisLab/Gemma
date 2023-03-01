@@ -18,7 +18,9 @@
  */
 package ubic.gemma.persistence.service.expression.experiment;
 
+import lombok.Value;
 import org.springframework.security.access.annotation.Secured;
+import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.gemma.core.analysis.preprocess.batcheffects.BatchEffectDetails;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
@@ -122,9 +124,13 @@ public interface ExpressionExperimentService
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ_QUIET" })
     ExpressionExperiment load( Long id );
 
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ_QUIET" })
+    ExpressionExperiment loadWithCharacteristics( Long id );
+
     @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     Collection<ExpressionExperiment> loadAll();
+
 
     @Override
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
@@ -243,7 +249,45 @@ public interface ExpressionExperimentService
      */
     Set<AnnotationValueObject> getAnnotations( Long eeId );
 
-    Map<Characteristic, Long> getAnnotationsFrequency( @Nullable Filters filters, int maxResults );
+    /**
+     * Apply ontological inference to augment a filter with additional terms.
+     */
+    Filters getFiltersWithInferredAnnotations( Filters f );
+
+    @Value
+    class CharacteristicWithUsageStatisticsAndOntologyTerm {
+        /**
+         * Characteristic.
+         */
+        Characteristic characteristic;
+        /**
+         * The number of associated {@link ExpressionExperiment}.
+         */
+        Long numberOfExpressionExperiments;
+        /**
+         * An associated ontology term if available.
+         * <p>
+         * The {@link #characteristic} must have a non-null {@link Characteristic#getValueUri()} and must be retrievable
+         * via {@link ubic.gemma.core.ontology.OntologyService#getTerm(String)} for this property to be filled.
+         */
+        @Nullable
+        OntologyTerm term;
+    }
+
+    /**
+     * Obtain annotation usage frequency for datasets matching the given filters.
+     * <p>
+     * Terms may originate from the experiment tags, experimental design or samples.
+     * <p>
+     * The implementation uses a denormalized table for associating EEs to characteristics which is not always in sync
+     * if new terms are attached.
+     *
+     * @param filters    filters restricting the terms to a given set of datasets
+     * @param maxResults maximum number of results to return, not including the parent terms if inference is applied
+     * @return mapping annotations grouped by category and term (URI or value if null) to their number of occurrences in
+     * the matched datasets
+     */
+    List<CharacteristicWithUsageStatisticsAndOntologyTerm> getAnnotationsUsageFrequency( @Nullable Filters filters, int maxResults, int minFrequency );
 
     /**
      * @param expressionExperiment experiment

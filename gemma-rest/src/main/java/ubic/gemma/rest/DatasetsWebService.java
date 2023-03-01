@@ -15,6 +15,7 @@
 package ubic.gemma.rest;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -27,6 +28,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import org.springframework.web.util.UriComponentsBuilder;
+import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.gemma.core.analysis.preprocess.OutlierDetectionService;
 import ubic.gemma.core.analysis.preprocess.filter.FilteringException;
 import ubic.gemma.core.analysis.preprocess.filter.NoRowsLeftAfterFilteringException;
@@ -54,7 +56,6 @@ import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeSe
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
-import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentDaoImpl;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Sort;
@@ -62,6 +63,7 @@ import ubic.gemma.rest.annotations.GZIP;
 import ubic.gemma.rest.util.*;
 import ubic.gemma.rest.util.args.*;
 
+import javax.annotation.Nullable;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
@@ -167,21 +169,77 @@ public class DatasetsWebService {
     }
 
     @GET
+    @GZIP
     @Path("/annotations")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve usage statistics of annotations among datasets matching the provided filter",
             description = "Usage statistics are aggregated across experiment tags, samples and factor values mentioned in the experimental design.")
     public LimitedResponseDataObject<AnnotationWithUsageStatisticsValueObject> getDatasetsAnnotationsUsageStatistics(
-            @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filter, @QueryParam("limit") @DefaultValue("50") LimitArg limit ) {
+            @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filter,
+            @QueryParam("limit") LimitArg limit,
+            @QueryParam("minFrequency") @DefaultValue("0") Integer minFrequency ) {
         Filters filters = datasetArgService.getFilters( filter );
-        Integer l = limit.getValue( ExpressionExperimentDaoImpl.MAX_RESULT_FOR_CACHING_ANNOTATIONS_FREQUENCY );
-        List<AnnotationWithUsageStatisticsValueObject> results = expressionExperimentService.getAnnotationsFrequency( filters, l )
-                .entrySet()
-                .stream().map( e -> new AnnotationWithUsageStatisticsValueObject( e.getKey(), e.getValue() ) )
+        // at 200, the least frequent term covers about 50 datasets
+        int l = limit != null ? limit.getValueNoMaximum() : -1;
+        if ( minFrequency < 0 ) {
+            throw new BadRequestException( "Minimum frequency must be positive." );
+        }
+        List<AnnotationWithUsageStatisticsValueObject> results = expressionExperimentService.getAnnotationsUsageFrequency( filters, l, minFrequency )
+                .stream().map( e -> new AnnotationWithUsageStatisticsValueObject( e.getCharacteristic(), e.getNumberOfExpressionExperiments(), getParentTerms( e.getTerm() ) ) )
                 .sorted( Comparator.comparing( UsageStatistics::getNumberOfExpressionExperiments, Comparator.reverseOrder() ) )
                 .collect( Collectors.toList() );
         return Responder.limit( results, filters, new String[] { "classUri", "className", "termUri", "termName" },
                 Sort.by( null, "numberOfExpressionExperiments", Sort.Direction.DESC, "numberOfExpressionExperiments" ), l );
+    }
+
+    @Nullable
+    private static Set<OntologyTermValueObject> getParentTerms( @Nullable OntologyTerm c ) {
+        if ( c != null ) {
+            return c.getParents( true ).stream()
+                    .map( t -> toTermVo( t, new HashSet<>() ) )
+                    .collect( Collectors.toSet() );
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * The
+     * @param ontologyTerm
+     * @param visited
+     * @return
+     */
+    private static OntologyTermValueObject toTermVo( OntologyTerm ontologyTerm, Set<OntologyTerm> visited ) {
+        Set<OntologyTermValueObject> parentVos;
+        if ( visited.contains( ontologyTerm ) ) {
+            // TODO: maybe add a note?
+            parentVos = null;
+        } else {
+            visited.add( ontologyTerm );
+            parentVos = ontologyTerm.getParents( true ).stream()
+                    .map( t -> toTermVo( t, new HashSet<>( visited ) ) )
+                    .collect( Collectors.toSet() );
+        }
+        return new OntologyTermValueObject( ontologyTerm, parentVos );
+    }
+
+    @Value
+    @EqualsAndHashCode(of = { "uri" })
+    public static class OntologyTermValueObject {
+
+        String uri;
+        String name;
+        /**
+         * Empty i
+         */
+        @JsonInclude(JsonInclude.Include.NON_EMPTY)
+        Set<OntologyTermValueObject> parentTerms;
+
+        public OntologyTermValueObject( OntologyTerm ontologyTerm, Set<OntologyTermValueObject> parentTerms ) {
+            this.uri = ontologyTerm.getUri();
+            this.name = ontologyTerm.getTerm();
+            this.parentTerms = parentTerms;
+        }
     }
 
     /**
@@ -197,9 +255,16 @@ public class DatasetsWebService {
          */
         Long numberOfExpressionExperiments;
 
-        public AnnotationWithUsageStatisticsValueObject( Characteristic c, Long numberOfExpressionExperiments ) {
+        /**
+         * URIs of parent terms.
+         */
+        @Nullable
+        Set<OntologyTermValueObject> parentTerms;
+
+        public AnnotationWithUsageStatisticsValueObject( Characteristic c, Long numberOfExpressionExperiments, @Nullable Set<OntologyTermValueObject> parentTerms ) {
             super( c );
             this.numberOfExpressionExperiments = numberOfExpressionExperiments;
+            this.parentTerms = parentTerms;
         }
     }
 

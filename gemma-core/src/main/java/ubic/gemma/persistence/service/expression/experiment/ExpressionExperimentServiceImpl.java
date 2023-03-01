@@ -21,10 +21,15 @@ package ubic.gemma.persistence.service.expression.experiment;
 import com.google.common.base.Strings;
 import gemma.gsec.SecurityService;
 import io.micrometer.core.annotation.Timed;
+import lombok.Value;
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.math3.exception.NotStrictlyPositiveException;
+import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ubic.basecode.ontology.model.OntologyTerm;
+import ubic.basecode.ontology.model.OntologyTermSimple;
 import ubic.gemma.core.analysis.preprocess.batcheffects.BatchConfoundUtils;
 import ubic.gemma.core.analysis.preprocess.batcheffects.BatchConfound;
 import ubic.gemma.core.analysis.preprocess.batcheffects.BatchEffectDetails;
@@ -66,6 +71,7 @@ import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventDao;
 import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeService;
 import ubic.gemma.persistence.service.expression.bioAssayData.BioAssayDimensionService;
 import ubic.gemma.persistence.service.expression.bioAssayData.RawExpressionDataVectorDao;
+import ubic.gemma.persistence.util.Filter;
 import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.persistence.util.Sort;
@@ -73,6 +79,7 @@ import ubic.gemma.persistence.util.Sort;
 import javax.annotation.Nullable;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * @author pavlidis
@@ -498,15 +505,160 @@ public class ExpressionExperimentServiceImpl
         return annotations;
     }
 
+    /**
+     * Only the mention of these properties will result in inferred term expansion.
+     */
+    private static final String[] PROPERTIES_USED_FOR_ANNOTATIONS = {
+            "allCharacteristics.categoryUri",
+            "allCharacteristics.valueUri",
+            "characteristics.categoryUri",
+            "characteristics.valueUri",
+            "bioAssays.sampleUsed.characteristics.categoryUri",
+            "bioAssays.sampleUsed.characteristics.valueUri",
+            "experimentalDesign.experimentalFactors.factorValues.characteristics.categoryUri",
+            "experimentalDesign.experimentalFactors.factorValues.characteristics.valueUri"
+    };
+
+    /**
+     * The approach here is to construct a collection for each sub-clause in the expression that regroups all the
+     * predicates that apply to characteristics as well as their inferred terms.
+     * <p>
+     * The transformation only applies to properties that represent {@link Characteristic} objects such as {@code characteristics},
+     * {@code allCharacteristics}, {@code bioAssays.sample.characteristics} and {@code experimentalDesign.experimentalFactors.factorValues.characteristics}
+     * <p>
+     * Given {@code characteristics.valueUri = a}, we construct a collection clause such as
+     * {@code characteristics.valueUri in (a, children of a...)}.
+     * <p>
+     * For efficiency, all the terms mentioned in a sub-clause are grouped by {@link SubClauseKey} and aggregated in a
+     * single collection. If a term is mentioned multiple times, it is simplified as a single appearance in the
+     * collection.
+     * <p>
+     * For example, {@code characteristics.termUri = a or characteristics.termUri = b} will be transformed into {@code characteristics.termUri in (a, b, children of a and b...)}.
+     */
+    @Override
+    public Filters getFiltersWithInferredAnnotations( Filters f ) {
+        Filters f2 = Filters.empty();
+        // apply inference to terms
+        // collect clauses mentioning terms
+        for ( List<Filter> clause : f ) {
+            Filters.FiltersClauseBuilder clauseBuilder = f2.and();
+            final Map<SubClauseKey, Set<String>> impliedTermsUrisBySubClause = new HashMap<>();
+            for ( Filter subClause : clause ) {
+                if ( ArrayUtils.contains( PROPERTIES_USED_FOR_ANNOTATIONS, subClause.getOriginalProperty() ) ) {
+                    Set<String> it = impliedTermsUrisBySubClause.computeIfAbsent( SubClauseKey.from( subClause.getObjectAlias(), subClause.getPropertyName(), subClause.getOriginalProperty() ), k -> new HashSet<>() );
+                    // rewrite the clause to contain all the inferred terms
+                    if ( subClause.getRequiredValue() instanceof Collection ) {
+                        //noinspection unchecked
+                        it.addAll( ( Collection<String> ) subClause.getRequiredValue() );
+                        //noinspection unchecked
+                        it.addAll( ( ( Collection<String> ) subClause.getRequiredValue() ).stream()
+                                .map( this::inferTermUris )
+                                .flatMap( List::stream )
+                                .collect( Collectors.toList() ) );
+                    } else if ( subClause.getRequiredValue() instanceof String ) {
+                        it.add( ( String ) subClause.getRequiredValue() );
+                        it.addAll( inferTermUris( ( String ) subClause.getRequiredValue() ) );
+                    }
+                } else {
+                    // clause is irrelevant, so we add it as it is
+                    clauseBuilder = clauseBuilder.or( subClause );
+                }
+            }
+            for ( Map.Entry<SubClauseKey, Set<String>> e : impliedTermsUrisBySubClause.entrySet() ) {
+                if ( !e.getValue().isEmpty() ) {
+                    clauseBuilder = clauseBuilder.or( Filter.by( e.getKey().getObjectAlias(), e.getKey().getPropertyName(), String.class, Filter.Operator.in, e.getValue(), e.getKey().getOriginalProperty() ) );
+                }
+            }
+            f2 = clauseBuilder.build();
+        }
+        return f2;
+    }
+
     @Override
     @Transactional(readOnly = true)
-    public Map<Characteristic, Long> getAnnotationsFrequency( @Nullable Filters filters, int maxResults ) {
+    public ExpressionExperiment loadWithCharacteristics( Long id ) {
+        ExpressionExperiment ee = expressionExperimentDao.load( id );
+        if ( ee != null ) {
+            Hibernate.initialize( ee.getCharacteristics() );
+        }
+        return ee;
+    }
+
+    private List<String> inferTermUris( String uri ) {
+        OntologyTerm term = ontologyService.getTerm( uri );
+        if ( term != null ) {
+            return term.getChildren( false ).stream().map( OntologyTerm::getUri ).collect( Collectors.toList() );
+        } else {
+            return Collections.emptyList();
+        }
+    }
+
+    /**
+     * Identifies a sub-clause in a filter.
+     */
+    @Value(staticConstructor = "from")
+    private static class SubClauseKey {
+        @Nullable
+        String objectAlias;
+        String propertyName;
+        @Nullable
+        String originalProperty;
+    }
+
+    /**
+     * If the term cannot be resolved via {@link OntologyService#getTerm(String)}, an attempt is done to resolve its
+     * category and assign it as its parent. This handles free-text terms that lack a value URI.
+     */
+    @Override
+    @Transactional(readOnly = true)
+    public List<CharacteristicWithUsageStatisticsAndOntologyTerm> getAnnotationsUsageFrequency( @Nullable Filters filters, int maxResults, int minFrequency ) {
+        Map<Characteristic, Long> result;
         if ( filters == null || filters.isEmpty() ) {
-            return expressionExperimentDao.getAnnotationsFrequency( null, maxResults );
+            result = expressionExperimentDao.getAnnotationsUsageFrequency( null, null, maxResults, minFrequency );
         } else {
             List<Long> eeIds = expressionExperimentDao.loadIds( filters, null );
-            return expressionExperimentDao.getAnnotationsFrequency( eeIds, maxResults );
+            result = expressionExperimentDao.getAnnotationsUsageFrequency( eeIds, null, maxResults, minFrequency );
         }
+
+        List<CharacteristicWithUsageStatisticsAndOntologyTerm> resultWithParents = new ArrayList<>();
+
+        for ( Map.Entry<Characteristic, Long> entry : result.entrySet() ) {
+            OntologyTerm term = null;
+
+            if ( entry.getKey().getValueUri() != null ) {
+                term = ontologyService.getTerm( entry.getKey().getValueUri() );
+            }
+
+            // create a fake term with its category as parent
+            if ( term == null && entry.getKey().getCategoryUri() != null ) {
+                term = ontologyService.getTerm( entry.getKey().getCategoryUri() );
+                if ( term != null ) {
+                    // create a fake term with its category as parent
+                    final Set<OntologyTerm> parentTerms = Collections.singleton( term );
+                    term = new OntologyTermSimple( entry.getKey().getValueUri(), entry.getKey().getValue() ) {
+                        @Override
+                        public Collection<OntologyTerm> getParents( boolean direct ) {
+                            if ( direct ) {
+                                return parentTerms;
+                            } else {
+                                // combine the direct parents + all the parents from the parents
+                                return Stream.concat( parentTerms.stream(), parentTerms.stream().flatMap( t -> getParents( false ).stream() ) )
+                                        .collect( Collectors.toSet() );
+                            }
+                        }
+
+                        @Override
+                        public boolean isRoot() {
+                            return false;
+                        }
+                    };
+                }
+            }
+
+            resultWithParents.add( new CharacteristicWithUsageStatisticsAndOntologyTerm( entry.getKey(), entry.getValue(), term ) );
+        }
+
+        return resultWithParents;
     }
 
     @Override
