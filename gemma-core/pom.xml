@@ -67,6 +67,17 @@
                         <version>2.1.3</version>
                         <scope>runtime</scope>
                     </dependency>
+                    <!-- Hibernate's JBoss logging will hook into Log4j 1.2 API -->
+                    <dependency>
+                        <groupId>org.apache.logging.log4j</groupId>
+                        <artifactId>log4j-core</artifactId>
+                        <version>${log4j.version}</version>
+                    </dependency>
+                    <dependency>
+                        <groupId>org.apache.logging.log4j</groupId>
+                        <artifactId>log4j-1.2-api</artifactId>
+                        <version>${log4j.version}</version>
+                    </dependency>
                 </dependencies>
             </plugin>
             <plugin>
