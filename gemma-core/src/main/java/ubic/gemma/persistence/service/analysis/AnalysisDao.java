@@ -18,9 +18,8 @@
  */
 package ubic.gemma.persistence.service.analysis;
 
-import ubic.gemma.model.analysis.Analysis;
-import ubic.gemma.model.analysis.Investigation;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.analysis.SingleExperimentAnalysis;
+import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.BaseDao;
 
@@ -30,19 +29,7 @@ import java.util.Map;
 /**
  * @see ubic.gemma.model.analysis.Analysis
  */
-public interface AnalysisDao<T extends Analysis> extends BaseDao<T> {
-
-    Collection<T> findByInvestigation( Investigation investigation );
-
-    /**
-     * Given a collection of investigations returns a Map of Analysis --&gt; collection of Investigations
-     * The collection of investigations returned by the map will include all the investigations for the analysis key iff
-     * one of the investigations for that analysis was in the given collection started with
-     *
-     * @param investigations investigations
-     * @return map to analyses
-     */
-    Map<Investigation, Collection<T>> findByInvestigations( Collection<Investigation> investigations );
+public interface AnalysisDao<T extends SingleExperimentAnalysis> extends BaseDao<T> {
 
     /**
      * @param name name
@@ -51,5 +38,4 @@ public interface AnalysisDao<T extends Analysis> extends BaseDao<T> {
     Collection<T> findByName( String name );
 
     Collection<T> findByTaxon( Taxon taxon );
-
 }

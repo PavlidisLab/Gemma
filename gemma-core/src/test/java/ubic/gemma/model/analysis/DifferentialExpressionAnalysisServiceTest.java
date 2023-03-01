@@ -26,6 +26,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import ubic.gemma.core.util.test.BaseSpringContextTest;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
+import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
@@ -118,17 +119,17 @@ public class DifferentialExpressionAnalysisServiceTest extends BaseSpringContext
     @Test
     public void testFindByInvestigation() {
 
-        Collection<DifferentialExpressionAnalysis> results = analysisService.findByInvestigation( e1 );
+        Collection<DifferentialExpressionAnalysis> results = analysisService.findByExperiment( e1 );
         assertEquals( 1, results.size() );
         DifferentialExpressionAnalysis dea = results.iterator().next();
         assertEquals( dea1_name, dea.getName() );
 
-        results = analysisService.findByInvestigation( e2 );
+        results = analysisService.findByExperiment( e2 );
         assertEquals( 1, results.size() );
         dea = results.iterator().next();
         assertEquals( dea2_name, dea.getName() );
 
-        results = analysisService.findByInvestigation( e3 );
+        results = analysisService.findByExperiment( e3 );
         assertEquals( 2, results.size() );
     }
 
@@ -138,8 +139,8 @@ public class DifferentialExpressionAnalysisServiceTest extends BaseSpringContext
         investigations.add( e1 );
         investigations.add( e3 );
 
-        Map<Investigation, Collection<DifferentialExpressionAnalysis>> results = analysisService
-                .findByInvestigations( investigations );
+        Map<BioAssaySet, Collection<DifferentialExpressionAnalysis>> results = analysisService
+                .findByExperiments( investigations );
         assertEquals( 2, results.keySet().size() );
 
         assertEquals( 1, results.get( e1 ).size() );
@@ -147,7 +148,7 @@ public class DifferentialExpressionAnalysisServiceTest extends BaseSpringContext
 
         // also by ID
         Map<Long, Collection<DifferentialExpressionAnalysis>> ees = analysisService
-                .findByInvestigationIds( EntityUtils.getIds( investigations ) );
+                .findByExperimentIds( EntityUtils.getIds( investigations ) );
         assertEquals( 2, ees.size() );
 
         assertEquals( 1, ees.get( e1.getId() ).size() );

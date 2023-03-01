@@ -73,7 +73,7 @@ public class AnalysisUtilServiceImpl implements AnalysisUtilService {
         }
 
         for ( DifferentialExpressionAnalysis diff : differentialExpressionAnalysisService
-                .findByInvestigation( expExp ) ) {
+                .findByExperiment( expExp ) ) {
             try {
                 differentialExpressionAnalysisService.remove( diff );
             } catch ( Exception e ) {
@@ -81,7 +81,7 @@ public class AnalysisUtilServiceImpl implements AnalysisUtilService {
                 removedAll = false;
             }
         }
-        for ( CoexpressionAnalysis coex : coexpressionAnalysisService.findByInvestigation( expExp ) ) {
+        for ( CoexpressionAnalysis coex : coexpressionAnalysisService.findByExperiment( expExp ) ) {
             try {
                 coexpressionAnalysisService.remove( coex );
             } catch ( Exception e ) {

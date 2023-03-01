@@ -230,11 +230,11 @@ public class DiffExMetaAnalyzerServiceTest extends AbstractGeoServiceTest {
          * Prepare for meta-analysis.
          */
         Collection<DifferentialExpressionAnalysis> ds1Analyses = differentialExpressionAnalysisService
-                .findByInvestigation( ds1 );
+                .findByExperiment( ds1 );
         Collection<DifferentialExpressionAnalysis> ds2Analyses = differentialExpressionAnalysisService
-                .findByInvestigation( ds2 );
+                .findByExperiment( ds2 );
         Collection<DifferentialExpressionAnalysis> ds3Analyses = differentialExpressionAnalysisService
-                .findByInvestigation( ds3 );
+                .findByExperiment( ds3 );
 
         assertTrue( !ds1Analyses.isEmpty() );
         assertTrue( !ds2Analyses.isEmpty() );

@@ -28,6 +28,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentDetailsValueObject;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.analysis.AnalysisService;
+import ubic.gemma.persistence.service.analysis.SingleExperimentAnalysisService;
 
 import java.util.Collection;
 import java.util.List;
@@ -37,7 +38,7 @@ import java.util.Map;
  * @author kelsey
  */
 @SuppressWarnings("unused") // Possible external use
-public interface DifferentialExpressionAnalysisService extends AnalysisService<DifferentialExpressionAnalysis> {
+public interface DifferentialExpressionAnalysisService extends SingleExperimentAnalysisService<DifferentialExpressionAnalysis> {
 
     /**
      * @param par       result set
@@ -73,7 +74,7 @@ public interface DifferentialExpressionAnalysisService extends AnalysisService<D
     Collection<DifferentialExpressionAnalysis> findByFactor( ExperimentalFactor ef );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
-    Map<Long, Collection<DifferentialExpressionAnalysis>> findByInvestigationIds( Collection<Long> investigationIds );
+    Map<Long, Collection<DifferentialExpressionAnalysis>> findByExperimentIds( Collection<Long> investigationIds );
 
     @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
