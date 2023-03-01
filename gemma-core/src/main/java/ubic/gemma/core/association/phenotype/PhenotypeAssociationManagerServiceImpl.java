@@ -1418,6 +1418,11 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
                         OntologyTerm ontologyTerm = this.ontologyService
                                 .getTerm( phenotypeAlreadyPresent.getValueUri() );
 
+                        if ( ontologyTerm == null ) {
+                            log.warn( String.format( "Unexpected null term for value URI %s from the ontology service.", phenotypeAlreadyPresent.getValueUri() ) );
+                            continue;
+                        }
+
                         for ( OntologyTerm ot : ontologyTerm.getParents( true ) ) {
                             parentOrChildTerm.add( ot.getUri() );
                         }

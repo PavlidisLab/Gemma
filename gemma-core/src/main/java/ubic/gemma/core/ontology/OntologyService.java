@@ -14,7 +14,6 @@
  */
 package ubic.gemma.core.ontology;
 
-import org.springframework.beans.factory.InitializingBean;
 import ubic.basecode.ontology.model.OntologyIndividual;
 import ubic.basecode.ontology.model.OntologyResource;
 import ubic.basecode.ontology.model.OntologyTerm;
@@ -148,6 +147,7 @@ public interface OntologyService {
      * @param  uri uri
      * @return     the OntologyResource
      */
+    @Nullable
     OntologyResource getResource( String uri );
 
     SequenceOntologyService getSequenceOntologyService();
