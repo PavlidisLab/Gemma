@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006-2007 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -20,15 +20,17 @@ package ubic.gemma.persistence.service.analysis.expression.coexpression;
 
 import ubic.gemma.model.analysis.expression.coexpression.CoexpCorrelationDistribution;
 import ubic.gemma.model.analysis.expression.coexpression.CoexpressionAnalysis;
+import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.analysis.AnalysisDao;
+import ubic.gemma.persistence.service.analysis.SingleExperimentAnalysisDao;
 
 import java.util.Collection;
 
 /**
  * @see ubic.gemma.model.analysis.expression.coexpression.CoexpressionAnalysis
  */
-public interface CoexpressionAnalysisDao extends AnalysisDao<CoexpressionAnalysis> {
+public interface CoexpressionAnalysisDao extends SingleExperimentAnalysisDao<CoexpressionAnalysis> {
 
     CoexpCorrelationDistribution getCoexpCorrelationDistribution( ExpressionExperiment expressionExperiment );
 

@@ -23,7 +23,6 @@ import org.apache.commons.lang3.time.StopWatch;
 import org.hibernate.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
-import ubic.gemma.model.analysis.Investigation;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.analysis.expression.diff.*;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
@@ -31,19 +30,20 @@ import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.AbstractDao;
-import ubic.gemma.persistence.service.analysis.AnalysisDaoBase;
+import ubic.gemma.persistence.service.analysis.SingleExperimentAnalysisDaoBase;
 import ubic.gemma.persistence.util.CommonQueries;
 import ubic.gemma.persistence.util.EntityUtils;
 
 import java.math.BigInteger;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * @author paul
  * @see    DifferentialExpressionAnalysis
  */
 @Repository
-class DifferentialExpressionAnalysisDaoImpl extends AnalysisDaoBase<DifferentialExpressionAnalysis>
+class DifferentialExpressionAnalysisDaoImpl extends SingleExperimentAnalysisDaoBase<DifferentialExpressionAnalysis>
         implements DifferentialExpressionAnalysisDao {
 
     @Autowired
@@ -140,8 +140,8 @@ class DifferentialExpressionAnalysisDaoImpl extends AnalysisDaoBase<Differential
     }
 
     @Override
-    public Map<Long, Collection<DifferentialExpressionAnalysis>> findByInvestigationIds(
-            Collection<Long> investigationIds ) {
+    public Map<Long, Collection<DifferentialExpressionAnalysis>> findByExperimentIds(
+            Collection<Long> experimentIds ) {
 
         Map<Long, Collection<DifferentialExpressionAnalysis>> results = new HashMap<>();
         //language=HQL
@@ -149,7 +149,7 @@ class DifferentialExpressionAnalysisDaoImpl extends AnalysisDaoBase<Differential
                 + "   inner join a.experimentAnalyzed e where e.id in (:eeIds)";
         List<?> qresult = this.getSessionFactory().getCurrentSession()
                 .createQuery( queryString )
-                .setParameterList( "eeIds", investigationIds )
+                .setParameterList( "eeIds", experimentIds )
                 .list();
         for ( Object o : qresult ) {
             Object[] oa = ( Object[] ) o;
@@ -500,14 +500,14 @@ class DifferentialExpressionAnalysisDaoImpl extends AnalysisDaoBase<Differential
     }
 
     @Override
-    public Collection<DifferentialExpressionAnalysis> findByInvestigation( Investigation investigation ) {
-        Long id = investigation.getId();
+    public Collection<DifferentialExpressionAnalysis> findByExperiment( BioAssaySet experiment ) {
         Collection<DifferentialExpressionAnalysis> results = new HashSet<>();
 
         //noinspection unchecked
         results.addAll( this.getSessionFactory().getCurrentSession().createQuery(
-                        "select distinct a from DifferentialExpressionAnalysis a where a.experimentAnalyzed.id=:eeid" )
-                .setParameter( "eeid", id ).list() );
+                        "select distinct a from DifferentialExpressionAnalysis a "
+                                + "where a.experimentAnalyzed = :ee" )
+                .setParameter( "ee", experiment ).list() );
 
         /*
          * Deal with the analyses of subsets of the investigation. User has to know this is possible.
@@ -516,10 +516,34 @@ class DifferentialExpressionAnalysisDaoImpl extends AnalysisDaoBase<Differential
         results.addAll( this.getSessionFactory().getCurrentSession().createQuery(
                         "select distinct a from ExpressionExperimentSubSet eess, DifferentialExpressionAnalysis a "
                                 + "join eess.sourceExperiment see "
-                                + "join a.experimentAnalyzed eeanalyzed where see.id=:eeid and eess=eeanalyzed" )
-                .setParameter( "eeid", id ).list() );
+                                + "join a.experimentAnalyzed eeanalyzed where see = :ee and eess = eeanalyzed" )
+                .setParameter( "ee", experiment ).list() );
 
         return results;
+    }
+
+    @Override
+    public Map<BioAssaySet, Collection<DifferentialExpressionAnalysis>> findByExperiments( Collection<? extends BioAssaySet> experiments ) {
+        Collection<DifferentialExpressionAnalysis> results = new HashSet<>();
+
+        //noinspection unchecked
+        results.addAll( this.getSessionFactory().getCurrentSession().createQuery(
+                        "select distinct a from DifferentialExpressionAnalysis a "
+                                + "where a.experimentAnalyzed in :ees" )
+                .setParameter( "ees", experiments ).list() );
+
+        /*
+         * Deal with the analyses of subsets of the investigation. User has to know this is possible.
+         */
+        //noinspection unchecked
+        results.addAll( this.getSessionFactory().getCurrentSession().createQuery(
+                        "select distinct a from ExpressionExperimentSubSet eess, DifferentialExpressionAnalysis a "
+                                + "join eess.sourceExperiment see "
+                                + "join a.experimentAnalyzed eeanalyzed where see in :ees and eess=eeanalyzed" )
+                .setParameter( "ees", experiments ).list() );
+
+        return results.stream()
+                .collect( Collectors.groupingBy( DifferentialExpressionAnalysis::getExperimentAnalyzed, Collectors.toCollection( ArrayList::new ) ) );
     }
 
     private void addFactorValues( Map<Long, Collection<FactorValue>> ee2fv, List<Object[]> fvs ) {

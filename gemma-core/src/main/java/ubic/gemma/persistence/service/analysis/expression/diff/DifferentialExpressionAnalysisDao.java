@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006-2007 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -26,7 +26,7 @@ import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.persistence.service.analysis.AnalysisDao;
+import ubic.gemma.persistence.service.analysis.SingleExperimentAnalysisDao;
 
 import java.util.Collection;
 import java.util.List;
@@ -35,7 +35,7 @@ import java.util.Map;
 /**
  * @see DifferentialExpressionAnalysis
  */
-public interface DifferentialExpressionAnalysisDao extends AnalysisDao<DifferentialExpressionAnalysis> {
+public interface DifferentialExpressionAnalysisDao extends SingleExperimentAnalysisDao<DifferentialExpressionAnalysis> {
 
     /**
      * @param threshold for corrected pvalue. Results may not be accurate for 'unreasonable' thresholds.
@@ -60,7 +60,7 @@ public interface DifferentialExpressionAnalysisDao extends AnalysisDao<Different
      */
     Collection<DifferentialExpressionAnalysis> findByFactor( ExperimentalFactor ef );
 
-    Map<Long, Collection<DifferentialExpressionAnalysis>> findByInvestigationIds( Collection<Long> investigationIds );
+    Map<Long, Collection<DifferentialExpressionAnalysis>> findByExperimentIds( Collection<Long> investigationIds );
 
     Collection<BioAssaySet> findExperimentsWithAnalyses( Gene gene );
 
@@ -75,7 +75,7 @@ public interface DifferentialExpressionAnalysisDao extends AnalysisDao<Different
 
     void thaw( DifferentialExpressionAnalysis differentialExpressionAnalysis );
 
-    void thawResultSets(DifferentialExpressionAnalysis dea);
+    void thawResultSets( DifferentialExpressionAnalysis dea );
 
     Map<Long, List<DifferentialExpressionAnalysisValueObject>> getAnalysesByExperimentIds(
             Collection<Long> expressionExperimentIds, int offset, int limit );

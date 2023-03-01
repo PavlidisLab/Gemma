@@ -505,7 +505,7 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
      */
     private Collection<DifferentialExpressionAnalysis> tryToRedoBasedOnOldAnalysis( ExpressionExperiment ee ) {
         Collection<DifferentialExpressionAnalysis> oldAnalyses = differentialExpressionAnalysisService
-                .findByInvestigation( ee );
+                .findByExperiment( ee );
 
         if ( oldAnalyses.isEmpty() ) {
             throw new IllegalArgumentException( "There are no old analyses to redo" );
