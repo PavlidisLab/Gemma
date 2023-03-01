@@ -310,6 +310,9 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean, D
         Collection<OntologyIndividual> results = new HashSet<>();
 
         for ( AbstractOntologyService ontology : ontologyServices ) {
+            if ( !ontology.isOntologyLoaded() ) {
+                continue;
+            }
             Collection<OntologyIndividual> found = ontology.findIndividuals( query );
             if ( found != null )
                 results.addAll( found );
@@ -329,6 +332,9 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean, D
         }
 
         for ( AbstractOntologyService ontology : ontologyServices ) {
+            if ( !ontology.isOntologyLoaded() ) {
+                continue;
+            }
             Collection<OntologyTerm> found = ontology.findTerm( query );
             if ( found != null )
                 results.addAll( this.convert( new HashSet<>( found ) ) );
@@ -561,6 +567,9 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean, D
     @Override
     public OntologyResource getResource( String uri ) {
         for ( AbstractOntologyService ontology : ontologyServices ) {
+            if ( !ontology.isOntologyLoaded() ) {
+                continue;
+            }
             OntologyResource resource = ontology.getResource( uri );
             if ( resource != null )
                 return resource;
@@ -576,6 +585,9 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean, D
     @Override
     public OntologyTerm getTerm( String uri ) {
         for ( AbstractOntologyService ontology : ontologyServices ) {
+            if ( !ontology.isOntologyLoaded() ) {
+                continue;
+            }
             OntologyTerm term = ontology.getTerm( uri );
             if ( term != null )
                 return term;
@@ -901,6 +913,9 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean, D
 
         // search all Ontology
         for ( AbstractOntologyService ontologyService : ontologyServicesToUse ) {
+            if ( !ontologyService.isOntologyLoaded() ) {
+                continue;
+            }
 
             Collection<OntologyTerm> ontologyTerms = ontologyService.findTerm( searchQuery );
 
