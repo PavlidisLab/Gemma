@@ -530,7 +530,7 @@ class DifferentialExpressionAnalysisDaoImpl extends SingleExperimentAnalysisDaoB
         results.addAll( this.getSessionFactory().getCurrentSession().createQuery(
                         "select distinct a from DifferentialExpressionAnalysis a "
                                 + "where a.experimentAnalyzed in :ees" )
-                .setParameter( "ees", experiments ).list() );
+                .setParameterList( "ees", experiments ).list() );
 
         /*
          * Deal with the analyses of subsets of the investigation. User has to know this is possible.
@@ -540,7 +540,7 @@ class DifferentialExpressionAnalysisDaoImpl extends SingleExperimentAnalysisDaoB
                         "select distinct a from ExpressionExperimentSubSet eess, DifferentialExpressionAnalysis a "
                                 + "join eess.sourceExperiment see "
                                 + "join a.experimentAnalyzed eeanalyzed where see in :ees and eess=eeanalyzed" )
-                .setParameter( "ees", experiments ).list() );
+                .setParameterList( "ees", experiments ).list() );
 
         return results.stream()
                 .collect( Collectors.groupingBy( DifferentialExpressionAnalysis::getExperimentAnalyzed, Collectors.toCollection( ArrayList::new ) ) );
