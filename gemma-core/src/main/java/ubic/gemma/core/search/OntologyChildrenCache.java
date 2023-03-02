@@ -38,7 +38,7 @@ public class OntologyChildrenCache implements InitializingBean {
      * Get the children of a given term.
      */
     public Set<OntologyTerm> getChildren( OntologyTerm term ) {
-        return getChildren( getDirectChildren( term ) );
+        return getChildren( getDirectChildren( term ), false );
     }
 
     /**
@@ -47,11 +47,20 @@ public class OntologyChildrenCache implements InitializingBean {
      * Note: some matching terms can be returned if they are children of others.
      */
     public Set<OntologyTerm> getChildren( Collection<OntologyTerm> matchingTerms ) {
+        return getChildren( matchingTerms, true );
+    }
+
+    private Set<OntologyTerm> getChildren( Collection<OntologyTerm> matchingTerms, boolean removeInitialTerms ) {
         StopWatch timer = StopWatch.createStarted();
         Set<OntologyTerm> terms = new HashSet<>();
         // perform BFS to gather all the children, skipping visited terms
         Queue<OntologyTerm> fringe = new ArrayDeque<>( matchingTerms );
-        Set<OntologyTerm> nonChildrenMatchingTerms = new HashSet<>( matchingTerms );
+        Set<OntologyTerm> nonChildrenMatchingTerms;
+        if ( removeInitialTerms ) {
+            nonChildrenMatchingTerms = new HashSet<>( matchingTerms );
+        } else {
+            nonChildrenMatchingTerms = null;
+        }
         while ( !fringe.isEmpty() ) {
             OntologyTerm term = fringe.remove();
             if ( terms.contains( term ) )
@@ -59,11 +68,15 @@ public class OntologyChildrenCache implements InitializingBean {
             // this is cached and handle some quirks
             Collection<OntologyTerm> dc = getDirectChildren( term );
             fringe.addAll( dc );
-            nonChildrenMatchingTerms.removeAll( dc );
+            if ( removeInitialTerms ) {
+                nonChildrenMatchingTerms.removeAll( dc );
+            }
             terms.add( term );
         }
         // only remove matching terms that are not children
-        terms.removeAll( nonChildrenMatchingTerms );
+        if ( removeInitialTerms ) {
+            terms.removeAll( nonChildrenMatchingTerms );
+        }
         if ( timer.getTime( TimeUnit.MILLISECONDS ) > 100 ) {
             log.warn( String.format( "Gathering children for %d terms took %d ms.",
                     matchingTerms.size(), timer.getTime( TimeUnit.MILLISECONDS ) ) );
