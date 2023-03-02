@@ -693,7 +693,7 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
         watch.reset();
         watch.start();
 
-        findExperimentsByTerms( individuals, results, settings );
+        findExperimentsByTerms( individuals, results, 0.9, settings );
 
         if ( results.size() > 0 && watch.getTime() > 500 ) {
             SearchServiceImpl.log.warn( String.format( "Found %d experiments matching '%s' via characteristic terms (individuals) in %d ms",
@@ -737,7 +737,7 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
             // query current term before going to children
             int sizeBefore = results.size();
 
-            findExperimentsByTerms( terms, results, settings );
+            findExperimentsByTerms( terms, results, 0.8, settings );
 
             if ( SearchServiceImpl.log.isDebugEnabled() && results.size() > sizeBefore ) {
                 SearchServiceImpl.log
@@ -761,7 +761,7 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
         return results;
     }
 
-    private void findExperimentsByTerms( Collection<? extends OntologyResource> individuals, Set<SearchResult<ExpressionExperiment>> results, SearchSettings settings ) {
+    private void findExperimentsByTerms( Collection<? extends OntologyResource> individuals, Set<SearchResult<ExpressionExperiment>> results, double score, SearchSettings settings ) {
         Collection<String> uris = new HashSet<>( individuals.size() );
         Map<String, String> uri2value = new HashMap<>( individuals.size() );
         for ( OntologyResource individual : individuals ) {
@@ -773,23 +773,23 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
                 log.warn( String.format( "%s has a null URI, it will be used for searching EEs", individual ) );
             }
         }
-        findExperimentsByUris( uris, results, uri2value, settings );
+        findExperimentsByUris( uris, results, score, uri2value, settings );
     }
 
-    private void findExperimentsByUris( Collection<String> uris, Set<SearchResult<ExpressionExperiment>> results, Map<String, String> uri2value, SearchSettings settings ) {
+    private void findExperimentsByUris( Collection<String> uris, Set<SearchResult<ExpressionExperiment>> results, double score, Map<String, String> uri2value, SearchSettings settings ) {
         if ( isFilled( results, settings ) )
             return;
 
         Map<Class<? extends Identifiable>, Map<String, Set<ExpressionExperiment>>> hits = characteristicService.findExperimentsByUris( uris, settings.getTaxon(), getLimit( results, settings ) );
 
         // collect all direct tags
-        addExperimentsByUrisHits( hits, results, ExpressionExperiment.class, 0.9, uri2value, settings );
+        addExperimentsByUrisHits( hits, results, ExpressionExperiment.class, score, uri2value, settings );
 
         // collect experimental design-related terms
-        addExperimentsByUrisHits( hits, results, ExperimentalDesign.class, 0.8, uri2value, settings );
+        addExperimentsByUrisHits( hits, results, ExperimentalDesign.class, 0.9 * score, uri2value, settings );
 
         // collect samples-related terms
-        addExperimentsByUrisHits( hits, results, BioMaterial.class, 0.8, uri2value, settings );
+        addExperimentsByUrisHits( hits, results, BioMaterial.class, 0.9 * score, uri2value, settings );
     }
 
     private void addExperimentsByUrisHits( Map<Class<? extends Identifiable>, Map<String, Set<ExpressionExperiment>>> hits, Set<SearchResult<ExpressionExperiment>> results, Class<? extends Identifiable> clazz, double score, Map<String, String> uri2value, SearchSettings settings ) {
@@ -802,7 +802,7 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
             for ( ExpressionExperiment ee : entry.getValue() ) {
                 results.add( SearchResult.from( ExpressionExperiment.class, ee, score,
                         getHighlightTextForTerm( uri, value, clazz, settings.getContextPath() ),
-                        String.format( "CharacteristicService.findExperimentsByUris with term %s (%s)", value, uri ) ) );
+                        String.format( "CharacteristicService.findExperimentsByUris with term [%s](%s)", value, uri ) ) );
             }
         }
     }
@@ -1493,7 +1493,7 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
                     Set<SearchResult<ExpressionExperiment>> eeHits = new HashSet<>();
                     Map<String, String> uri2value = new HashMap<>();
                     uri2value.put( termUri, g.getOfficialSymbol() );
-                    this.findExperimentsByUris( Collections.singleton( termUri ), eeHits, uri2value, settings );
+                    this.findExperimentsByUris( Collections.singleton( termUri ), eeHits, 1.0, uri2value, settings );
 
                     if ( !eeHits.isEmpty() ) {
                         results.addAll( eeHits );
