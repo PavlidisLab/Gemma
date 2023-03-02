@@ -797,8 +797,12 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
         if ( specificHits == null )
             return;
         for ( Map.Entry<String, Set<ExpressionExperiment>> entry : specificHits.entrySet() ) {
+            String uri = entry.getKey();
+            String value = uri2value.get( uri );
             for ( ExpressionExperiment ee : entry.getValue() ) {
-                results.add( SearchResult.from( ExpressionExperiment.class, ee, score, getHighlightTextForTerm( entry.getKey(), uri2value, clazz, settings.getContextPath() ), "CharacteristicService.findExperimentsByUris" ) );
+                results.add( SearchResult.from( ExpressionExperiment.class, ee, score,
+                        getHighlightTextForTerm( uri, value, clazz, settings.getContextPath() ),
+                        String.format( "CharacteristicService.findExperimentsByUris with term %s (%s)", value, uri ) ) );
             }
         }
     }
@@ -806,10 +810,10 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
     /**
      * FIXME: move this code in Gemma Web
      */
-    private static String getHighlightTextForTerm( String uri, Map<String, String> uri2value, Class<? extends Identifiable> clazz, @Nullable String contextPath ) {
+    private static String getHighlightTextForTerm( String uri, String value, Class<? extends Identifiable> clazz, @Nullable String contextPath ) {
         String matchedText;
         try {
-            matchedText = "Tagged term: <a href=\"" + ( contextPath != null ? contextPath : "" ) + "/searcher.html?query=" + URLEncoder.encode( uri, StandardCharsets.UTF_8.name() ) + "\">" + escapeHtml4( uri2value.get( uri ) ) + "</a> ";
+            matchedText = "Tagged term: <a href=\"" + ( contextPath != null ? contextPath : "" ) + "/searcher.html?query=" + URLEncoder.encode( uri, StandardCharsets.UTF_8.name() ) + "\">" + escapeHtml4( value ) + "</a> ";
         } catch ( UnsupportedEncodingException e ) {
             throw new RuntimeException( e );
         }
