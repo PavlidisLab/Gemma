@@ -13,10 +13,7 @@ import org.compass.core.spi.InternalCompassSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
-import ubic.gemma.core.search.CompassSearchException;
-import ubic.gemma.core.search.SearchException;
-import ubic.gemma.core.search.SearchResult;
-import ubic.gemma.core.search.SearchSource;
+import ubic.gemma.core.search.*;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.description.BibliographicReference;
@@ -38,6 +35,7 @@ import static java.util.function.Function.identity;
 
 /**
  * Compass-based search source.
+ *
  * @author klc
  * @author paul
  * @author keshav
@@ -126,7 +124,7 @@ public class CompassSearchSource implements SearchSource {
      *                                  for the genes are added to the final results.
      */
     @Override
-    public Collection<SearchResult<?>> searchBioSequenceAndGene( SearchSettings settings,
+    public Collection<SearchResult<? extends Identifiable>> searchBioSequenceAndGene( SearchSettings settings,
             @Nullable Collection<SearchResult<Gene>> previousGeneSearchResults ) throws SearchException {
         Collection<SearchResult<?>> results = new HashSet<>( this.compassSearch( compassBiosequence, settings, BioSequence.class ) );
 
@@ -163,7 +161,7 @@ public class CompassSearchSource implements SearchSource {
     }
 
     @Override
-    public Collection<SearchResult<?>> searchCompositeSequenceAndGene( final SearchSettings settings ) throws SearchException {
+    public Collection<SearchResult<? extends Identifiable>> searchCompositeSequenceAndGene( final SearchSettings settings ) throws SearchException {
         return new ArrayList<>( this.searchBioSequence( settings ) );
     }
 
@@ -180,7 +178,7 @@ public class CompassSearchSource implements SearchSource {
         if ( t == null || unfilteredResults.isEmpty() )
             return unfilteredResults;
 
-        Collection<SearchResult<ExpressionExperiment>> filteredResults = new HashSet<>();
+        Collection<SearchResult<ExpressionExperiment>> filteredResults = new SearchResultSet<>();
         Collection<Long> eeIds = unfilteredResults.stream().map( SearchResult::getResultId ).collect( Collectors.toSet() );
         for ( SearchResult<ExpressionExperiment> sr : unfilteredResults ) {
             if ( eeIds.contains( sr.getResultId() ) ) {
@@ -273,7 +271,7 @@ public class CompassSearchSource implements SearchSource {
 
         String source = String.format( "%s with '%s'", session.getSettings().getSetting( "compass.name" ), compassQuery );
 
-        Set<SearchResult<T>> results = new HashSet<>( maxHits );
+        Set<SearchResult<T>> results = new SearchResultSet<>( maxHits );
         for ( int i = 0; i < maxHits; i++ ) {
             Object resultObject = hits.data( i );
 

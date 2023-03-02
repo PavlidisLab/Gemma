@@ -10,6 +10,7 @@ import org.springframework.stereotype.Component;
 import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.core.genome.gene.service.GeneSetService;
 import ubic.gemma.core.search.SearchResult;
+import ubic.gemma.core.search.SearchResultSet;
 import ubic.gemma.core.search.SearchSource;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.common.Identifiable;
@@ -31,11 +32,11 @@ import javax.annotation.Nullable;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static ubic.gemma.core.search.source.DatabaseSearchSourceUtils.prepareDatabaseQuery;
-import static ubic.gemma.core.search.source.DatabaseSearchSourceUtils.prepareDatabaseQueryForInexactMatch;
+import static ubic.gemma.core.search.source.DatabaseSearchSourceUtils.*;
 
 /**
  * Search source for direct database results.
+ *
  * @author klc
  * @author paul
  * @author keshav
@@ -150,7 +151,7 @@ public class DatabaseSearchSource implements SearchSource {
     }
 
     @Override
-    public Collection<SearchResult<?>> searchBioSequenceAndGene( SearchSettings settings, @Nullable Collection<SearchResult<Gene>> previousGeneSearchResults ) {
+    public Collection<SearchResult<? extends Identifiable>> searchBioSequenceAndGene( SearchSettings settings, @Nullable Collection<SearchResult<Gene>> previousGeneSearchResults ) {
         return new HashSet<>( this.searchBioSequence( settings ) );
     }
 
@@ -163,8 +164,8 @@ public class DatabaseSearchSource implements SearchSource {
      * Search the DB for composite sequences and the genes that are matched to them.
      */
     @Override
-    public Collection<SearchResult<?>> searchCompositeSequenceAndGene( SearchSettings settings ) {
-        Set<SearchResult<Gene>> geneSet = new HashSet<>();
+    public Collection<SearchResult<? extends Identifiable>> searchCompositeSequenceAndGene( SearchSettings settings ) {
+        Set<SearchResult<Gene>> geneSet = new SearchResultSet<>();
         Collection<SearchResult<CompositeSequence>> matchedCs = this.searchCompositeSequenceAndPopulateGenes( settings, geneSet );
         Collection<SearchResult<?>> combinedResults = new HashSet<>();
         combinedResults.addAll( geneSet );
@@ -182,7 +183,7 @@ public class DatabaseSearchSource implements SearchSource {
         ArrayDesign ad = settings.getPlatformConstraint();
 
         // search by exact composite sequence name
-        Collection<SearchResult<CompositeSequence>> matchedCs = new HashSet<>();
+        Collection<SearchResult<CompositeSequence>> matchedCs = new SearchResultSet<>();
         if ( ad != null ) {
             CompositeSequence cs = compositeSequenceService.findByName( ad, searchString );
             if ( cs != null )
@@ -258,7 +259,7 @@ public class DatabaseSearchSource implements SearchSource {
 
         String query = prepareDatabaseQuery( settings );
 
-        Collection<SearchResult<ExpressionExperiment>> results = new HashSet<>();
+        Collection<SearchResult<ExpressionExperiment>> results = new SearchResultSet<>();
 
         Collection<ExpressionExperiment> ees = expressionExperimentService.findByName( query );
         for ( ExpressionExperiment ee : ees ) {
@@ -329,7 +330,7 @@ public class DatabaseSearchSource implements SearchSource {
         if ( StringUtils.isBlank( searchString ) )
             return Collections.emptySet();
 
-        Collection<SearchResult<Gene>> results = new HashSet<>();
+        Set<SearchResult<Gene>> results = new SearchResultSet<>();
 
         /*
          * First search by accession. If we find it, stop.
@@ -371,7 +372,7 @@ public class DatabaseSearchSource implements SearchSource {
      * Expanded gene search used when a simple search does not yield results.
      */
     private Collection<SearchResult<Gene>> searchGeneExpanded( SearchSettings settings ) {
-        Collection<SearchResult<Gene>> results = new HashSet<>();
+        Set<SearchResult<Gene>> results = new SearchResultSet<>();
 
         String exactString = prepareDatabaseQuery( settings );
         String inexactString = prepareDatabaseQueryForInexactMatch( settings );
@@ -432,6 +433,6 @@ public class DatabaseSearchSource implements SearchSource {
         return entities.stream()
                 .filter( Objects::nonNull )
                 .map( e -> SearchResult.from( resultType, e, score, source ) )
-                .collect( Collectors.toSet() );
+                .collect( Collectors.toCollection( SearchResultSet::new ) );
     }
 }

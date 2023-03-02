@@ -45,6 +45,7 @@ import ubic.gemma.core.genome.gene.service.GeneSearchService;
 import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.core.genome.gene.service.GeneSetService;
 import ubic.gemma.core.ontology.OntologyService;
+import ubic.gemma.core.search.source.CompositeSearchSource;
 import ubic.gemma.core.search.source.DatabaseSearchSource;
 import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
@@ -185,6 +186,11 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
     private final Set<Class<? extends Identifiable>> supportedResultTypes = new HashSet<>();
     private final ConfigurableConversionService resultObjectConversionService = new GenericConversionService();
 
+    /**
+     * A composite search source.
+     */
+    private SearchSource searchSource;
+
     /*
      * This is the method used by the main search page.
      */
@@ -277,6 +283,7 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
 
     @Override
     public void afterPropertiesSet() throws Exception {
+        searchSource = new CompositeSearchSource( Arrays.asList( databaseSearchSource, compassSearchSource ) );
         initializeSupportedResultTypes();
         initializeResultObjectConversionService();
         this.initializeNameToTaxonMap();
@@ -411,13 +418,13 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
      */
     private Collection<SearchResult<CharacteristicValueObject>> searchPhenotype( SearchSettings settings ) throws SearchException {
         if ( !settings.isUseDatabase() )
-            return new HashSet<>();
+            return Collections.emptySet();
         try {
             // FIXME: add support for OR, but there's a bug in baseCode that prevents this https://github.com/PavlidisLab/baseCode/issues/22
             String query = settings.getQuery().replaceAll( "\\s+OR\\s+", "" );
             return this.phenotypeAssociationManagerService.searchInDatabaseForPhenotype( query ).stream()
                     .map( r -> SearchResult.from( PhenotypeAssociation.class, r, 1.0, "PhenotypeAssociationManagerService.searchInDatabaseForPhenotype" ) )
-                    .collect( Collectors.toSet() );
+                    .collect( Collectors.toCollection( SearchResultSet::new ) );
         } catch ( OntologySearchException e ) {
             throw new BaseCodeOntologySearchException( "Failed to search for phenotype associations.", e );
         }
@@ -517,10 +524,7 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
     }
 
     private Collection<SearchResult<ExpressionExperimentSet>> experimentSetSearch( SearchSettings settings ) throws SearchException {
-        LinkedHashSet<SearchResult<ExpressionExperimentSet>> results = new LinkedHashSet<>();
-        results.addAll( databaseSearchSource.searchExperimentSet( settings ) );
-        results.addAll( this.compassSearchSource.searchExperimentSet( settings ) );
-        return results;
+        return searchSource.searchExperimentSet( settings );
     }
 
     /**
@@ -538,7 +542,7 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
 
         StopWatch watch = StopWatch.createStarted();
         String searchString = prepareDatabaseQuery( settings );
-        Collection<SearchResult<ArrayDesign>> results = new HashSet<>();
+        Collection<SearchResult<ArrayDesign>> results = new SearchResultSet<>();
 
         ArrayDesign shortNameResult = arrayDesignService.findByShortName( searchString );
         if ( shortNameResult != null ) {
@@ -574,18 +578,15 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
         /*
          * FIXME: add merged platforms and subsumers
          */
-
-        results.addAll( this.compassSearchSource.searchArrayDesign( settings ) );
-        results.addAll( this.databaseSearchSource.searchArrayDesign( settings ) );
+        results.addAll( searchSource.searchArrayDesign( settings ) );
 
         Collection<SearchResult<CompositeSequence>> probes;
         if ( probeResults == null ) {
-            //noinspection unchecked
             probes = this.compassSearchSource.searchCompositeSequenceAndGene( settings ).stream()
                     // strip all the gene results
                     .filter( result -> CompositeSequence.class.isAssignableFrom( result.getResultType() ) )
-                    .map( result -> ( SearchResult<CompositeSequence> ) result )
-                    .collect( Collectors.toSet() );
+                    .map( result -> SearchResult.from( result, ( CompositeSequence ) result.getResultObject() ) )
+                    .collect( Collectors.toCollection( SearchResultSet::new ) );
         } else {
             probes = probeResults;
         }
@@ -616,9 +617,7 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
             Collection<SearchResult<Gene>> previousGeneSearchResults ) throws SearchException {
         StopWatch watch = StopWatch.createStarted();
 
-        Collection<SearchResult<?>> searchResults = new HashSet<>();
-        searchResults.addAll( this.compassSearchSource.searchBioSequenceAndGene( settings, previousGeneSearchResults ) );
-        searchResults.addAll( this.databaseSearchSource.searchBioSequenceAndGene( settings, previousGeneSearchResults ) );
+        Collection<SearchResult<?>> searchResults = searchSource.searchBioSequenceAndGene( settings, previousGeneSearchResults );
 
         watch.stop();
         if ( watch.getTime() > 1000 )
@@ -639,7 +638,7 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
      */
     private Collection<SearchResult<ExpressionExperiment>> characteristicEESearch( final SearchSettings settings ) throws SearchException {
 
-        Collection<SearchResult<ExpressionExperiment>> results = new HashSet<>();
+        Collection<SearchResult<ExpressionExperiment>> results = new SearchResultSet<>();
 
         StopWatch watch = StopWatch.createStarted();
 
@@ -675,7 +674,7 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
     private Collection<SearchResult<ExpressionExperiment>> characteristicEESearchTerm( SearchSettings settings ) throws SearchException {
 
         StopWatch watch = StopWatch.createStarted();
-        Set<SearchResult<ExpressionExperiment>> results = new HashSet<>();
+        Set<SearchResult<ExpressionExperiment>> results = new SearchResultSet<>();
 
         // Phase 1: We first search for individuals.
         Collection<OntologyIndividual> individuals;
@@ -769,8 +768,6 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
             if ( individual.getUri() != null ) {
                 uris.add( individual.getUri() );
                 uri2value.put( individual.getUri(), individual.getLabel() );
-            } else {
-                log.warn( String.format( "%s has a null URI, it will be used for searching EEs", individual ) );
             }
         }
         findExperimentsByUris( uris, results, score, uri2value, settings );
@@ -845,7 +842,7 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
         String[] subparts = settings.getQuery().split( " AND " );
 
         // we would have to first deal with the separate queries, and then apply the logic.
-        Collection<SearchResult<ExpressionExperiment>> allResults = new HashSet<>();
+        Collection<SearchResult<ExpressionExperiment>> allResults = new SearchResultSet<>();
 
         SearchServiceImpl.log
                 .info( "Starting characteristic search: '" + settings.getQuery() );
@@ -914,7 +911,7 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
         /*
          * This last step is needed because the compassSearch for compositeSequences returns bioSequences too.
          */
-        Collection<SearchResult<CompositeSequence>> finalResults = new HashSet<>();
+        Collection<SearchResult<CompositeSequence>> finalResults = new SearchResultSet<>();
         for ( SearchResult<?> sr : compositeSequenceResults ) {
             if ( CompositeSequence.class.isAssignableFrom( sr.getResultType() ) ) {
                 //noinspection unchecked
@@ -1046,9 +1043,9 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
      * If the search matches a GEO ID, short name or full name of an experiment, the search ends. Otherwise, we search
      * free-text indices and ontology annotations.
      *
-     * @param  settings object; the maximum results can be set here but also has a default value defined by
-     *                  SearchSettings.DEFAULT_MAX_RESULTS_PER_RESULT_TYPE
-     * @return          {@link Collection} of SearchResults
+     * @param settings object; the maximum results can be set here but also has a default value defined by
+     *                 SearchSettings.DEFAULT_MAX_RESULTS_PER_RESULT_TYPE
+     * @return {@link Collection} of SearchResults
      */
     private Collection<SearchResult<ExpressionExperiment>> expressionExperimentSearch( final SearchSettings settings ) throws SearchException {
 
@@ -1057,7 +1054,7 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
 
         SearchServiceImpl.log.info( ">>>>> Starting search for '" + settings + "'" );
 
-        Collection<SearchResult<ExpressionExperiment>> results = new HashSet<>();
+        Set<SearchResult<ExpressionExperiment>> results = new SearchResultSet<>();
 
         // searches for GEO names, etc - "exact" matches.
         if ( settings.isUseDatabase() ) {
@@ -1362,10 +1359,7 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
     }
 
     private Collection<SearchResult<GeneSet>> geneSetSearch( SearchSettings settings ) throws SearchException {
-        Collection<SearchResult<GeneSet>> hits = new LinkedHashSet<>();
-        hits.addAll( this.databaseSearchSource.searchGeneSet( settings ) );
-        hits.addAll( this.compassSearchSource.searchGeneSet( settings ) );
-        return hits;
+        return searchSource.searchGeneSet( settings );
     }
 
     //    /**
@@ -1413,8 +1407,8 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
     /**
      * Group and sort results by type.
      *
-     * @see SearchResult#getResultType()
      * @return map of result entity class (e.g. BioSequence or ExpressionExperiment) to SearchResult
+     * @see SearchResult#getResultType()
      */
     private static SearchResultMap groupAndSortResultsByType(
             LinkedHashSet<SearchResult<?>> rawResults,
@@ -1490,7 +1484,7 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
 
                 // 1st get objects tagged with the given gene identifier
                 if ( settings.hasResultType( ExpressionExperiment.class ) ) { // FIXME maybe we always want this?
-                    Set<SearchResult<ExpressionExperiment>> eeHits = new HashSet<>();
+                    Set<SearchResult<ExpressionExperiment>> eeHits = new SearchResultSet<>();
                     Map<String, String> uri2value = new HashMap<>();
                     uri2value.put( termUri, g.getOfficialSymbol() );
                     this.findExperimentsByUris( Collections.singleton( termUri ), eeHits, 1.0, uri2value, settings );
@@ -1587,6 +1581,7 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
 
     /**
      * Check if a collection of search results is already filled.
+     *
      * @return true if the search results are filled and cannot accept more results, false otherwise
      */
     private static <T extends Identifiable> boolean isFilled( Collection<SearchResult<T>> results, SearchSettings settings ) {
@@ -1595,6 +1590,7 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
 
     /**
      * Obtain a limit suitable for the given search results and settings.
+     *
      * @return the difference between the maximum results and the collection size or -1 if the settings are for
      * unlimited results
      * @throws IllegalArgumentException if the search results are already fully filled as per {@link #isFilled(Collection, SearchSettings)}
