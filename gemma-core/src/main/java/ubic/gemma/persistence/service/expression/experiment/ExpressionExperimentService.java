@@ -309,6 +309,15 @@ public interface ExpressionExperimentService
     Map<ArrayDesign, Long> getArrayDesignUsedOrOriginalPlatformUsageFrequency( @Nullable Filters filters, boolean includeOriginalPlatforms, int maxResults );
 
     /**
+     * Calculate the usage frequency of taxa by the datasets matching the provided filters.
+     * <p>
+     * If no filters are supplied (either being null or empty), the {@link #getPerTaxonCount()} fast path is used.
+     *
+     * @see #getPerTaxonCount()
+     */
+    Map<Taxon, Long> getTaxaUsageFrequency( @Nullable Filters filters );
+
+    /**
      * Checks the experiment for a batch confound.
      *
      * @param ee the experiment to check.

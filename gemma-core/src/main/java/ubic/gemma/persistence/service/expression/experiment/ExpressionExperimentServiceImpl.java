@@ -682,6 +682,17 @@ public class ExpressionExperimentServiceImpl
 
     @Override
     @Transactional(readOnly = true)
+    public Map<Taxon, Long> getTaxaUsageFrequency( @Nullable Filters filters ) {
+        if ( filters == null || filters.isEmpty() ) {
+            return expressionExperimentDao.getPerTaxonCount();
+        } else {
+            List<Long> ids = this.expressionExperimentDao.loadIds( filters, null );
+            return expressionExperimentDao.getPerTaxonCount( ids );
+        }
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public String getBatchConfound( ExpressionExperiment ee ) {
         ee = this.thawBioAssays( ee );
 

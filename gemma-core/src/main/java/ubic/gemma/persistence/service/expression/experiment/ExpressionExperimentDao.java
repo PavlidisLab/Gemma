@@ -105,6 +105,11 @@ public interface ExpressionExperimentDao
 
     Map<Taxon, Long> getPerTaxonCount();
 
+    /**
+     * Obtain the count of distinct experiments per taxon for experiments with the given IDs.
+     */
+    Map<Taxon, Long> getPerTaxonCount( List<Long> ids );
+
     Map<Long, Integer> getPopulatedFactorCounts( Collection<Long> ids );
 
     Map<Long, Integer> getPopulatedFactorCountsExcludeBatch( Collection<Long> ids );

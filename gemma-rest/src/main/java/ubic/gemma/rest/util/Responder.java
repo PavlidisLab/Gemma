@@ -18,6 +18,7 @@ import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.persistence.util.Sort;
+import ubic.gemma.rest.DatasetsWebService;
 
 import javax.annotation.Nullable;
 import javax.ws.rs.NotFoundException;
@@ -57,6 +58,13 @@ public class Responder {
      */
     public static <T extends IdentifiableValueObject<?>> PaginatedResponseDataObject<T> paginate( Slice<T> payload, String[] groupBy ) throws NotFoundException {
         return new PaginatedResponseDataObject<>( payload, groupBy );
+    }
+
+    /**
+     * Produce a {@link FilteringResponseDataObject} for a given filtered {@link List}.
+     */
+    public static <T> FilteringResponseDataObject<T> filter( List<T> payload, @Nullable Filters filters ) {
+        return new FilteringResponseDataObject<>( payload, filters );
     }
 
     /**

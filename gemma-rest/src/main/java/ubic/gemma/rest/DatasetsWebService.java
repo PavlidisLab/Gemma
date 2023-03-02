@@ -50,6 +50,8 @@ import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentDetailsValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
+import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.model.genome.TaxonValueObject;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeService;
@@ -144,7 +146,7 @@ public class DatasetsWebService {
     @GET
     @Path("/platforms")
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Retrieve usage statistics of platforms among datasets matching the provided filter",
+    @Operation(summary = "Retrieve usage statistics of platforms among datasets matching the provided filterArg",
             description = "Usage statistics are aggregated across experiment tags, samples and factor values mentioned in the experimental design.")
     public LimitedResponseDataObject<ArrayDesignWithUsageStatisticsValueObject> getDatasetsPlatformsUsageStatistics( @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filter, @QueryParam("limit") @DefaultValue("50") LimitArg limit ) {
         Filters filters = datasetArgService.getFilters( filter );
@@ -172,7 +174,7 @@ public class DatasetsWebService {
     @GZIP
     @Path("/annotations")
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Retrieve usage statistics of annotations among datasets matching the provided filter",
+    @Operation(summary = "Retrieve usage statistics of annotations among datasets matching the provided filterArg",
             description = "Usage statistics are aggregated across experiment tags, samples and factor values mentioned in the experimental design.")
     public LimitedResponseDataObject<AnnotationWithUsageStatisticsValueObject> getDatasetsAnnotationsUsageStatistics(
             @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filter,
@@ -265,6 +267,30 @@ public class DatasetsWebService {
             super( c );
             this.numberOfExpressionExperiments = numberOfExpressionExperiments;
             this.parentTerms = parentTerms;
+        }
+    }
+
+    @GET
+    @Path("/taxa")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(summary = "Retrieve taxa usage statistics for datasets matching the provided filter")
+    public FilteringResponseDataObject<TaxonWithUsageStatisticsValueObject> getDatasetsTaxaUsageStatistics( @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filterArg ) {
+        Filters filters = datasetArgService.getFilters( filterArg );
+        return Responder.filter( expressionExperimentService.getTaxaUsageFrequency( filters )
+                .entrySet().stream()
+                .map( e -> new TaxonWithUsageStatisticsValueObject( e.getKey(), e.getValue() ) )
+                .collect( Collectors.toList() ), filters );
+    }
+
+    @Value
+    @EqualsAndHashCode(callSuper = true)
+    public static class TaxonWithUsageStatisticsValueObject extends TaxonValueObject implements UsageStatistics {
+
+        Long numberOfExpressionExperiments;
+
+        public TaxonWithUsageStatisticsValueObject( Taxon taxon, Long numberOfExpressionExperiments ) {
+            super( taxon );
+            this.numberOfExpressionExperiments = numberOfExpressionExperiments;
         }
     }
 

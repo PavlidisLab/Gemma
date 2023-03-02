@@ -869,6 +869,25 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
+    public Map<Taxon, Long> getPerTaxonCount( List<Long> ids ) {
+        if ( ids.isEmpty() ) {
+            return Collections.emptyMap();
+        }
+        //noinspection unchecked
+        List<Object[]> list = this.getSessionFactory().getCurrentSession().createQuery(
+                        "select t, count(distinct ee) from ExpressionExperiment ee "
+                                + "join ee.bioAssays as ba "
+                                + "join ba.sampleUsed su "
+                                + "join su.sourceTaxon t "
+                                + "where ee.id in :eeIds "
+                                + "group by t" )
+                .setParameterList( "eeIds", ids )
+                .list();
+        return list.stream()
+                .collect( Collectors.toMap( row -> ( Taxon ) row[0], row -> ( Long ) row[1] ) );
+    }
+
+    @Override
     public Map<Long, Integer> getPopulatedFactorCounts( Collection<Long> ids ) {
         Map<Long, Integer> results = new HashMap<>();
         if ( ids.size() == 0 ) {
