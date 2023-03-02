@@ -39,7 +39,7 @@ public class FilterArgTest {
                         arg.getArgument( 0, String.class ),
                         String.class,
                         arg.getArgument( 1, Filter.Operator.class ),
-                        arg.getArgument( 2, String.class ), null ) );
+                        arg.getArgument( 2, String.class ) ) );
     }
 
     @Test
@@ -176,7 +176,7 @@ public class FilterArgTest {
     @Test
     public void testParseDate() {
         when( mockVoService.getFilter( any(), any(), any( String.class ) ) )
-                .thenAnswer( a -> Filter.parse( "alias", a.getArgument( 0 ), Date.class, a.getArgument( 1 ), a.getArgument( 2, String.class ), null ) );
+                .thenAnswer( a -> Filter.parse( "alias", a.getArgument( 0 ), Date.class, a.getArgument( 1 ), a.getArgument( 2, String.class ) ) );
         FilterArg<Identifiable> fa = FilterArg.valueOf( "lastUpdated >= 2022-01-01" );
         Filters f = fa.getFilters( mockVoService );
         assertThat( f ).isNotNull();
@@ -246,8 +246,18 @@ public class FilterArgTest {
                 .thenAnswer( a -> Filter.parse( "alias", a.getArgument( 0 ), String.class,
                         a.getArgument( 1 ), a.getArgument( 2, Collection.class ) ) );
         checkValidCollection( Arrays.asList( "1", "2", "true", "foo" ), "(1, 2, true, foo)" );
-        checkValidCollection( Collections.emptyList(), "()" );
-        checkValidCollection( Collections.emptyList(), "( )" );
+    }
+
+    @Test
+    public void testParseEmptyCollectionRaisesMalformedArgException() {
+        //noinspection unchecked
+        when( mockVoService.getFilter( any(), any(), anyCollection() ) )
+                .thenAnswer( a -> Filter.parse( "alias", a.getArgument( 0 ), String.class,
+                        a.getArgument( 1 ), a.getArgument( 2, Collection.class ) ) );
+        assertThatThrownBy( () -> checkValidCollection( Collections.emptyList(), "()" ) )
+                .isInstanceOf( MalformedArgException.class );
+        assertThatThrownBy( () -> checkValidCollection( Collections.emptyList(), "( )" ) )
+                .isInstanceOf( MalformedArgException.class );
     }
 
     private void checkValidCollection( Collection<String> expected, String input ) {

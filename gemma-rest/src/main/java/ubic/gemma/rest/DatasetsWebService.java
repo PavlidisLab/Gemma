@@ -191,7 +191,8 @@ public class DatasetsWebService {
                 .sorted( Comparator.comparing( UsageStatistics::getNumberOfExpressionExperiments, Comparator.reverseOrder() ) )
                 .collect( Collectors.toList() );
         return Responder.limit( results, filters, new String[] { "classUri", "className", "termUri", "termName" },
-                Sort.by( null, "numberOfExpressionExperiments", Sort.Direction.DESC, "numberOfExpressionExperiments" ), l );
+                Sort.by( null, "numberOfExpressionExperiments", Sort.Direction.DESC, "numberOfExpressionExperiments" ),
+                limit != null ? limit.getValue() : null );
     }
 
     @Nullable
@@ -205,12 +206,6 @@ public class DatasetsWebService {
         }
     }
 
-    /**
-     * The
-     * @param ontologyTerm
-     * @param visited
-     * @return
-     */
     private static OntologyTermValueObject toTermVo( OntologyTerm ontologyTerm, Set<OntologyTerm> visited ) {
         Set<OntologyTermValueObject> parentVos;
         if ( visited.contains( ontologyTerm ) ) {

@@ -49,7 +49,7 @@ public class Responder {
         }
     }
 
-    public static <T> LimitedResponseDataObject<T> limit( List<T> payload, @Nullable Filters filters, String[] groupBy, @Nullable Sort sort, int limit ) {
+    public static <T> LimitedResponseDataObject<T> limit( List<T> payload, @Nullable Filters filters, String[] groupBy, @Nullable Sort sort, @Nullable Integer limit ) {
         return new LimitedResponseDataObject<>( payload, filters, groupBy, sort, limit );
     }
 

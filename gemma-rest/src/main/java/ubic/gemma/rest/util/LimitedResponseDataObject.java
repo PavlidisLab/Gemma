@@ -20,9 +20,9 @@ public class LimitedResponseDataObject<T> extends ResponseDataObject<List<T>> {
     String filter;
     String[] groupBy;
     SortValueObject sort;
-    int limit;
+    Integer limit;
 
-    public LimitedResponseDataObject( List<T> payload, @Nullable Filters filters, String[] groupBy, @Nullable Sort sort, int limit ) {
+    public LimitedResponseDataObject( List<T> payload, @Nullable Filters filters, String[] groupBy, @Nullable Sort sort, @Nullable Integer limit ) {
         super( payload );
         this.filter = filters != null ? filters.toOriginalString() : null;
         this.groupBy = groupBy;
