@@ -185,13 +185,32 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
                 .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE )
                 .hasEncoding( "gzip" )
                 .entity()
-                .hasFieldOrPropertyWithValue( "limit", null )
+                .hasFieldOrPropertyWithValue( "limit", 100 )
                 .hasFieldOrPropertyWithValue( "sort.orderBy", "numberOfExpressionExperiments" )
                 .hasFieldOrPropertyWithValue( "sort.direction", "-" )
                 .extracting( "groupBy", InstanceOfAssertFactories.list( String.class ) )
                 .containsExactly( "classUri", "className", "termUri", "termName" );
         verify( expressionExperimentService ).getFiltersWithInferredAnnotations( Filters.empty() );
-        verify( expressionExperimentService ).getAnnotationsUsageFrequency( Filters.empty(), -1, 0 );
+        verify( expressionExperimentService ).getAnnotationsUsageFrequency( Filters.empty(), 100, 0 );
+    }
+
+    @Test
+    public void testGetDatasetsAnnotationWhenLimitExceedHardCap() {
+        assertThat( target( "/datasets/annotations" ).queryParam( "limit", 3000 ).request().get() )
+                .hasStatus( Response.Status.BAD_REQUEST )
+                .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE );
+        verifyNoInteractions( expressionExperimentService );
+    }
+
+    @Test
+    public void testGetDatasetsAnnotationsWhenMaxFrequencyIsSuppliedLimitMustUseMaximum() {
+        assertThat( target( "/datasets/annotations" ).queryParam( "minFrequency", "10" ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE )
+                .entity()
+                .hasFieldOrPropertyWithValue( "limit", 2000 );
+        verify( expressionExperimentService ).getFiltersWithInferredAnnotations( Filters.empty() );
+        verify( expressionExperimentService ).getAnnotationsUsageFrequency( Filters.empty(), 2000, 10 );
     }
 
     @Test

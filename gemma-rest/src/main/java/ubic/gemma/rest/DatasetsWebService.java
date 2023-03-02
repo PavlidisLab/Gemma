@@ -17,6 +17,7 @@ package ubic.gemma.rest;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -90,6 +91,8 @@ public class DatasetsWebService {
 
     private static final String ERROR_DATA_FILE_NOT_AVAILABLE = "Data file for experiment %s can not be created.";
     private static final String ERROR_DESIGN_FILE_NOT_AVAILABLE = "Design file for experiment %s can not be created.";
+
+    private static final int MAX_DATASETS_ANNOTATIONS = 2000;
 
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
@@ -174,25 +177,25 @@ public class DatasetsWebService {
     @GZIP
     @Path("/annotations")
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Retrieve usage statistics of annotations among datasets matching the provided filterArg",
+    @Operation(summary = "Retrieve usage statistics of annotations among datasets matching the provided filter",
             description = "Usage statistics are aggregated across experiment tags, samples and factor values mentioned in the experimental design.")
     public LimitedResponseDataObject<AnnotationWithUsageStatisticsValueObject> getDatasetsAnnotationsUsageStatistics(
             @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filter,
-            @QueryParam("limit") LimitArg limit,
-            @QueryParam("minFrequency") @DefaultValue("0") Integer minFrequency ) {
-        Filters filters = datasetArgService.getFilters( filter );
-        // at 200, the least frequent term covers about 50 datasets
-        int l = limit != null ? limit.getValueNoMaximum() : -1;
-        if ( minFrequency < 0 ) {
+            @Parameter(description = "Maximum number of annotations to returned; capped at " + MAX_DATASETS_ANNOTATIONS + ".") @QueryParam("limit") LimitArg limitArg,
+            @Parameter(description = "Minimum number of associated datasets to report an annotation.") @QueryParam("minFrequency") Integer minFrequency ) {
+        // if a minFrequency is requested, use the hard cap, otherwise use 100 as a reasonable default
+        int limit = limitArg != null ? limitArg.getValue( MAX_DATASETS_ANNOTATIONS ) : minFrequency != null ? MAX_DATASETS_ANNOTATIONS : 100;
+        if ( minFrequency != null && minFrequency < 0 ) {
             throw new BadRequestException( "Minimum frequency must be positive." );
         }
-        List<AnnotationWithUsageStatisticsValueObject> results = expressionExperimentService.getAnnotationsUsageFrequency( filters, l, minFrequency )
+        Filters filters = datasetArgService.getFilters( filter );
+        List<AnnotationWithUsageStatisticsValueObject> results = expressionExperimentService.getAnnotationsUsageFrequency( filters, limit, minFrequency != null ? minFrequency : 0 )
                 .stream().map( e -> new AnnotationWithUsageStatisticsValueObject( e.getCharacteristic(), e.getNumberOfExpressionExperiments(), getParentTerms( e.getTerm() ) ) )
                 .sorted( Comparator.comparing( UsageStatistics::getNumberOfExpressionExperiments, Comparator.reverseOrder() ) )
                 .collect( Collectors.toList() );
         return Responder.limit( results, filters, new String[] { "classUri", "className", "termUri", "termName" },
                 Sort.by( null, "numberOfExpressionExperiments", Sort.Direction.DESC, "numberOfExpressionExperiments" ),
-                limit != null ? limit.getValue() : null );
+                limit );
     }
 
     @Nullable
