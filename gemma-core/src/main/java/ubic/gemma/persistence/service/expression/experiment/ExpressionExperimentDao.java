@@ -83,7 +83,11 @@ public interface ExpressionExperimentDao
 
     Map<ArrayDesign, Collection<Long>> getArrayDesignsUsed( Collection<Long> eeids );
 
+    Map<ArrayDesign, Long> getArrayDesignsUsageFrequency();
+
     Map<ArrayDesign, Long> getArrayDesignsUsageFrequency( Collection<Long> eeIds );
+
+    Map<ArrayDesign, Long> getOriginalPlatformsUsageFrequency();
 
     Map<ArrayDesign, Long> getOriginalPlatformsUsageFrequency( Collection<Long> eeIds );
 

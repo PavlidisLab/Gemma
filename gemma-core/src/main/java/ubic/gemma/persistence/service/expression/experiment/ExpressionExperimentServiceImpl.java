@@ -670,11 +670,21 @@ public class ExpressionExperimentServiceImpl
     @Override
     @Transactional(readOnly = true)
     public Map<ArrayDesign, Long> getArrayDesignUsedOrOriginalPlatformUsageFrequency( @Nullable Filters filters, boolean includeOriginalPlatforms, int maxResults ) {
-        List<Long> ids = this.expressionExperimentDao.loadIds( filters, null );
-        Map<ArrayDesign, Long> result = new HashMap<>( expressionExperimentDao.getArrayDesignsUsageFrequency( ids ) );
-        if ( includeOriginalPlatforms ) {
-            for ( Map.Entry<ArrayDesign, Long> e : expressionExperimentDao.getOriginalPlatformsUsageFrequency( ids ).entrySet() ) {
-                result.compute( e.getKey(), ( k, v ) -> ( v != null ? v : 0L ) + e.getValue() );
+        Map<ArrayDesign, Long> result;
+        if ( filters == null || filters.isEmpty() ) {
+            result = new HashMap<>( expressionExperimentDao.getArrayDesignsUsageFrequency() );
+            if ( includeOriginalPlatforms ) {
+                for ( Map.Entry<ArrayDesign, Long> e : expressionExperimentDao.getOriginalPlatformsUsageFrequency().entrySet() ) {
+                    result.compute( e.getKey(), ( k, v ) -> ( v != null ? v : 0L ) + e.getValue() );
+                }
+            }
+        } else {
+            List<Long> ids = this.expressionExperimentDao.loadIds( filters, null );
+            result = new HashMap<>( expressionExperimentDao.getArrayDesignsUsageFrequency( ids ) );
+            if ( includeOriginalPlatforms ) {
+                for ( Map.Entry<ArrayDesign, Long> e : expressionExperimentDao.getOriginalPlatformsUsageFrequency( ids ).entrySet() ) {
+                    result.compute( e.getKey(), ( k, v ) -> ( v != null ? v : 0L ) + e.getValue() );
+                }
             }
         }
         return result;

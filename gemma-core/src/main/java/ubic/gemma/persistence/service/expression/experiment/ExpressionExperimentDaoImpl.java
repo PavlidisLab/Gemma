@@ -691,6 +691,16 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
+    public Map<ArrayDesign, Long> getArrayDesignsUsageFrequency() {
+        //noinspection unchecked
+        List<Object[]> result = getSessionFactory().getCurrentSession()
+                .createQuery( "select a, count(distinct ee) from ExpressionExperiment ee join ee.bioAssays ba join ba.arrayDesignUsed a group by a" )
+                .setCacheable( true )
+                .list();
+        return result.stream().collect( groupingBy( row -> ( ArrayDesign ) row[0], summingLong( row -> ( Long ) row[1] ) ) );
+    }
+
+    @Override
     public Map<ArrayDesign, Long> getArrayDesignsUsageFrequency( Collection<Long> eeIds ) {
         if ( eeIds.isEmpty() ) {
             return Collections.emptyMap();
@@ -699,6 +709,16 @@ public class ExpressionExperimentDaoImpl
         List<Object[]> result = getSessionFactory().getCurrentSession()
                 .createQuery( "select a, count(distinct ee) from ExpressionExperiment ee join ee.bioAssays ba join ba.arrayDesignUsed a where ee.id in (:ids) group by a" )
                 .setParameterList( "ids", eeIds )
+                .list();
+        return result.stream().collect( groupingBy( row -> ( ArrayDesign ) row[0], summingLong( row -> ( Long ) row[1] ) ) );
+    }
+
+    @Override
+    public Map<ArrayDesign, Long> getOriginalPlatformsUsageFrequency() {
+        //noinspection unchecked
+        List<Object[]> result = getSessionFactory().getCurrentSession()
+                .createQuery( "select a, count(distinct ee) from ExpressionExperiment ee join ee.bioAssays ba join ba.originalPlatform a group by a" )
+                .setCacheable( true )
                 .list();
         return result.stream().collect( groupingBy( row -> ( ArrayDesign ) row[0], summingLong( row -> ( Long ) row[1] ) ) );
     }
