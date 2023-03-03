@@ -28,6 +28,7 @@ import org.apache.commons.lang3.time.StopWatch;
 import org.hibernate.*;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
+import org.hibernate.type.ClassType;
 import org.hibernate.type.LongType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
@@ -595,7 +596,7 @@ public class ExpressionExperimentDaoImpl
                         "select {T.*}, {T}.LEVEL as LEVEL from gemd.EXPRESSION_EXPERIMENT2CHARACTERISTIC {T} "
                                 + "where T.EXPRESSION_EXPERIMENT_FK = :eeId" )
                 .addEntity( "T", Characteristic.class )
-                .addScalar( "LEVEL" )
+                .addScalar( "LEVEL", new ClassType() )
                 .setParameter( "eeId", expressionExperiment.getId() )
                 .list() );
         //noinspection unchecked
