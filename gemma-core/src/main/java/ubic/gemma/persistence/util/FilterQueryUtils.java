@@ -73,9 +73,9 @@ public class FilterQueryUtils {
                     disjunction.append( " or " );
 
                 if ( subClause.getPropertyName().endsWith( ".size" ) ) {
-                    disjunction.append( "size(" ).append( subClause.getProperty().replaceFirst( "\\.size$", "" ) ).append( ')' ).append( " " );
+                    disjunction.append( "size(" ).append( subClause.getProperty().replaceFirst( "\\.size$", "" ) ).append( ')' ).append( ' ' );
                 } else {
-                    disjunction.append( subClause.getProperty() ).append( " " );
+                    disjunction.append( subClause.getProperty() ).append( ' ' );
                 }
                 String paramName = formParamName( subClause, ++i );
 
@@ -117,7 +117,7 @@ public class FilterQueryUtils {
                     disjunction.append( token );
                 }
 
-                disjunction.append( " " );
+                disjunction.append( ' ' );
                 if ( subClause.getRequiredValue() instanceof Collection<?> ) {
                     disjunction
                             .append( "(" ).append( ":" ).append( paramName ).append( ")" );
