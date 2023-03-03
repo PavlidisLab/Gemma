@@ -540,9 +540,9 @@ public class ExpressionExperimentServiceImpl
         Filters f2 = Filters.empty();
         // apply inference to terms
         // collect clauses mentioning terms
+        final Map<SubClauseKey, Set<String>> impliedTermsUrisBySubClause = new HashMap<>();
         for ( List<Filter> clause : f ) {
             Filters.FiltersClauseBuilder clauseBuilder = f2.and();
-            final Map<SubClauseKey, Set<String>> impliedTermsUrisBySubClause = new HashMap<>();
             for ( Filter subClause : clause ) {
                 if ( ArrayUtils.contains( PROPERTIES_USED_FOR_ANNOTATIONS, subClause.getOriginalProperty() ) ) {
                     Set<String> it = impliedTermsUrisBySubClause.computeIfAbsent( SubClauseKey.from( subClause.getObjectAlias(), subClause.getPropertyName(), subClause.getOriginalProperty() ), k -> new HashSet<>() );
@@ -570,6 +570,7 @@ public class ExpressionExperimentServiceImpl
                 }
             }
             f2 = clauseBuilder.build();
+            impliedTermsUrisBySubClause.clear();
         }
         return f2;
     }
