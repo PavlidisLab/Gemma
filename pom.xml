@@ -237,8 +237,9 @@
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
-			<groupId>mysql</groupId>
-			<artifactId>mysql-connector-java</artifactId>
+			<groupId>com.mysql</groupId>
+			<artifactId>mysql-connector-j</artifactId>
+			<version>${mysql.version}</version>
 		</dependency>
 		<!-- used in dataSource.xml and testDataSource.xml -->
 		<dependency>
