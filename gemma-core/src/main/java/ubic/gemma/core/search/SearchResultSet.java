@@ -39,8 +39,9 @@ public class SearchResultSet<T extends Identifiable> extends AbstractSet<SearchR
 
     @Override
     public boolean add( SearchResult<T> t ) {
-        if ( !results.containsKey( t ) || t.getScore() > results.get( t ).getScore() ) {
-            SearchResult<T> previousValue = results.put( t, t );
+        SearchResult<T> previousValue = results.get( t );
+        if ( previousValue == null || t.getScore() > previousValue.getScore() ) {
+            results.put( t, t );
             // retain the result object to avoid fetching it again in the future
             if ( previousValue != null && previousValue.getResultObject() != null && t.getResultObject() == null ) {
                 t.setResultObject( previousValue.getResultObject() );
