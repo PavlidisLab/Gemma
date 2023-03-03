@@ -54,7 +54,7 @@ public abstract class AbstractExceptionMapper<E extends Throwable> implements Ex
         if ( logException() ) {
             // FIXME: request is null in tests
             log.error( String.format( "Unhandled exception was raised%s.",
-                    request != null ? " for " + ServletUtils.summarizeRequest( request ) : "" ), exception );
+                    request != null ? " for " + ServletUtils.summarizeRequest( request ).replaceAll( "[\r\n]", "" ) : "" ), exception );
         }
         Response.Status code = getStatus( exception );
         MediaType mediaType;
