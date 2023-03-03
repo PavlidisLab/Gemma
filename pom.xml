@@ -279,14 +279,14 @@
 		<dependency>
 			<groupId>org.apache.ant</groupId>
 			<artifactId>ant</artifactId>
-			<version>1.10.12</version>
+			<version>1.10.13</version>
 		</dependency>
 
 		<!-- Plotting -->
 		<dependency>
 			<groupId>org.jfree</groupId>
 			<artifactId>jfreechart</artifactId>
-			<version>1.5.3</version>
+			<version>1.5.4</version>
 		</dependency>
 
 		<!-- Apache Commons -->
@@ -627,11 +627,11 @@
 		<spring.version>3.2.18.RELEASE</spring.version>
 		<spring.security.version>3.2.10.RELEASE</spring.security.version>
 		<jersey.version>2.25.1</jersey.version>
-		<jackson.version>2.14.1</jackson.version>
-		<swagger.version>2.2.7</swagger.version>
+		<jackson.version>2.14.2</jackson.version>
+		<swagger.version>2.2.8</swagger.version>
 		<jawr.version>3.9</jawr.version>
 		<lucene.version>3.6.2</lucene.version>
-		<slack.version>1.27.2</slack.version>
+		<slack.version>1.27.3</slack.version>
 		<dom4j.version>2.1.4</dom4j.version>
 		<!-- this ensures that -DexcludedGroups works properly -->
 		<excludedGroups/>
