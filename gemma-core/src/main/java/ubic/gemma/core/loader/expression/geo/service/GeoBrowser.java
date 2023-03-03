@@ -272,8 +272,6 @@ public class GeoBrowser {
      */
     public Collection<GeoRecord> getAllGEOPlatforms() throws IOException {
 
-        List<GeoRecord> records = new ArrayList<>();
-
         String searchUrlString;
 
         searchUrlString = GeoBrowser.EPLATRETRIEVE + "&retmax=" + 10000 + "&usehistory=y"; //10k is the limit.
@@ -330,13 +328,14 @@ public class GeoBrowser {
             dateNodes = ( NodeList ) xreleaseDate.evaluate( summaryDocument, XPathConstants.NODESET );
         } catch ( ParserConfigurationException | XPathExpressionException | SAXException | DOMException e ) {
             log.error( "Could not parse data: " + searchUrl, e );
-            return records;
+            return Collections.emptyList();
         }
 
         // consider n_samples (number of elements) and the number of GSEs, but not every record has them, so it would be trickier.
 
         log.debug( "Got " + accNodes.getLength() + " XML records" );
 
+        List<GeoRecord> records = new ArrayList<>( accNodes.getLength() );
         for ( int i = 0; i < accNodes.getLength(); i++ ) {
             GeoRecord record = new GeoRecord();
             record.setGeoAccession( "GPL" + accNodes.item( i ).getTextContent() );
