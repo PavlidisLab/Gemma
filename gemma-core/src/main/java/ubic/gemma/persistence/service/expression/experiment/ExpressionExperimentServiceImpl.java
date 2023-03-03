@@ -621,7 +621,7 @@ public class ExpressionExperimentServiceImpl
             result = expressionExperimentDao.getAnnotationsUsageFrequency( eeIds, null, maxResults, minFrequency );
         }
 
-        List<CharacteristicWithUsageStatisticsAndOntologyTerm> resultWithParents = new ArrayList<>();
+        List<CharacteristicWithUsageStatisticsAndOntologyTerm> resultWithParents = new ArrayList<>( result.size() );
 
         for ( Map.Entry<Characteristic, Long> entry : result.entrySet() ) {
             OntologyTerm term = null;
