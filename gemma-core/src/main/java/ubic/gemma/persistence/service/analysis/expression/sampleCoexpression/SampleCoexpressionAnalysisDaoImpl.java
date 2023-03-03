@@ -20,7 +20,7 @@ import org.springframework.stereotype.Repository;
 import ubic.gemma.model.analysis.expression.coexpression.SampleCoexpressionAnalysis;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.AbstractDao;
-import ubic.gemma.persistence.service.analysis.AnalysisDaoBase;
+import ubic.gemma.persistence.service.analysis.SingleExperimentAnalysisDaoBase;
 
 import java.util.Collection;
 
@@ -28,7 +28,7 @@ import java.util.Collection;
  * @author paul
  */
 @Repository
-class SampleCoexpressionAnalysisDaoImpl extends AnalysisDaoBase<SampleCoexpressionAnalysis>
+class SampleCoexpressionAnalysisDaoImpl extends SingleExperimentAnalysisDaoBase<SampleCoexpressionAnalysis>
         implements SampleCoexpressionAnalysisDao {
 
     @Autowired
@@ -39,7 +39,7 @@ class SampleCoexpressionAnalysisDaoImpl extends AnalysisDaoBase<SampleCoexpressi
     @Override
     public SampleCoexpressionAnalysis load( ExpressionExperiment ee ) {
 
-        Collection<SampleCoexpressionAnalysis> r = this.findByInvestigation( ee );
+        Collection<SampleCoexpressionAnalysis> r = this.findByExperiment( ee );
 
         if ( r.isEmpty() )
             return null;

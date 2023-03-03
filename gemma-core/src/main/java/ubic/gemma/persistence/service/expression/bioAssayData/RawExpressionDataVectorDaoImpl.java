@@ -106,20 +106,20 @@ public class RawExpressionDataVectorDaoImpl extends DesignElementDataVectorDaoIm
 
     @Override
     public void removeDataForCompositeSequence( final CompositeSequence compositeSequence ) {
-        final String dedvRemovalQuery = "delete RawExpressionDataVector dedv where dedv.designElement = ?";
+        final String dedvRemovalQuery = "delete RawExpressionDataVector dedv where dedv.designElement = :cs";
         int deleted = this.getSessionFactory().getCurrentSession()
                 .createQuery( dedvRemovalQuery )
-                .setParameter( 0, compositeSequence )
+                .setParameter( "cs", compositeSequence )
                 .executeUpdate();
         AbstractDao.log.info( "Deleted: " + deleted );
     }
 
     @Override
     public void removeDataForQuantitationType( final QuantitationType quantitationType ) {
-        final String dedvRemovalQuery = "delete from RawExpressionDataVector as dedv where dedv.quantitationType = ?";
+        final String dedvRemovalQuery = "delete from RawExpressionDataVector as dedv where dedv.quantitationType = :quantitationType";
         int deleted = this.getSessionFactory().getCurrentSession()
                 .createQuery( dedvRemovalQuery )
-                .setParameter( 0, quantitationType )
+                .setParameter( "quantitationType", quantitationType )
                 .executeUpdate();
         AbstractDao.log.info( "Deleted " + deleted + " data vector elements" );
     }

@@ -253,8 +253,8 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
             return new HashSet<>();
         }
         Query query = this.getSessionFactory().getCurrentSession()
-                .createQuery( "select ad from ArrayDesign ad inner join ad.designProvider n where n.name like ?" )
-                .setParameter( 0, queryString + "%" );
+                .createQuery( "select ad from ArrayDesign ad inner join ad.designProvider n where n.name like :query" )
+                .setParameter( "query", queryString + "%" );
         //noinspection unchecked
         return query.list();
     }

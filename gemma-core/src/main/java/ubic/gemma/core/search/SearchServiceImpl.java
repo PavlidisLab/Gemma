@@ -412,7 +412,7 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
             results.addAll( gen );
         }
 
-        if ( settings.getUseGo() ) {
+        if ( settings.hasResultType( Gene.class ) && settings.getUseGo() ) {
             try {
                 // FIXME: add support for OR, but there's a bug in baseCode that prevents this https://github.com/PavlidisLab/baseCode/issues/22
                 String query = settings.getQuery().replaceAll( "\\s+OR\\s+", "" );
@@ -639,10 +639,7 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
             }
             // FIXME: this should not be necessary, the AD is eagerly fetched in the model definition (see https://github.com/PavlidisLab/Gemma/issues/483)
             Hibernate.initialize( cs.getArrayDesign() );
-            SearchResult<ArrayDesign> sr = new SearchResult<>( cs.getArrayDesign(), "ArrayDesign associated to probes obtained by a Compass search." );
-            // indirect hit penalty
-            sr.setScore( INDIRECT_HIT_PENALTY * r.getScore() );
-            results.add( sr );
+            results.add( SearchResult.from( ArrayDesign.class, cs.getArrayDesign(), INDIRECT_HIT_PENALTY * r.getScore(), null, "ArrayDesign associated to probes obtained by a Compass search." ) );
         }
 
         watch.stop();
@@ -1043,7 +1040,7 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
      */
     private <T extends Identifiable> Collection<SearchResult<T>> dbHitsToSearchResult( Collection<T> entities, @Nullable String matchText, String source ) {
         StopWatch watch = StopWatch.createStarted();
-        List<SearchResult<T>> results = new ArrayList<>();
+        List<SearchResult<T>> results = new ArrayList<>( entities.size() );
         for ( T e : entities ) {
             if ( e == null ) {
                 if ( log.isDebugEnabled() )

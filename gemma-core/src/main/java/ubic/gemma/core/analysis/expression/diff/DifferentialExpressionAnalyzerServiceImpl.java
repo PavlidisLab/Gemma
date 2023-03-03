@@ -37,7 +37,6 @@ import ubic.gemma.model.common.auditAndSecurity.eventType.FailedDifferentialExpr
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
-import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionResultService;
 import ubic.gemma.persistence.service.analysis.expression.diff.ExpressionAnalysisResultSetService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
@@ -76,7 +75,7 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
     @Override
     public int deleteAnalyses( ExpressionExperiment expressionExperiment ) {
         Collection<DifferentialExpressionAnalysis> diffAnalysis = differentialExpressionAnalysisService
-                .findByInvestigation( expressionExperiment );
+                .findByExperiment( expressionExperiment );
 
         int result = 0;
         if ( diffAnalysis == null || diffAnalysis.isEmpty() ) {
@@ -361,7 +360,7 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
     private void deleteOldAnalyses( ExpressionExperiment expressionExperiment,
             DifferentialExpressionAnalysis newAnalysis, Collection<ExperimentalFactor> factors ) {
         Collection<DifferentialExpressionAnalysis> diffAnalyses = differentialExpressionAnalysisService
-                .findByInvestigation( expressionExperiment );
+                .findByExperiment( expressionExperiment );
         int numDeleted = 0;
         if ( diffAnalyses == null || diffAnalyses.isEmpty() ) {
             DifferentialExpressionAnalyzerServiceImpl.log

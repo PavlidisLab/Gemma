@@ -154,6 +154,7 @@ public interface ExpressionExperimentSetService
      *                  EESets this might want to be avoided.
      * @return null if id doesn't match an experiment set
      */
+    @Nullable
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_READ" })
     ExpressionExperimentSetValueObject loadValueObjectById( Long id, boolean loadEEIds );
 

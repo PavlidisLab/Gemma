@@ -143,7 +143,7 @@ public class DifferentialExpressionSearchController {
         Collection<Long> filteredEeIds = new HashSet<>();
 
         Map<Long, Collection<DifferentialExpressionAnalysis>> diffAnalyses = differentialExpressionAnalysisService
-                .findByInvestigationIds( securityFilteredIds );
+                .findByExperimentIds( securityFilteredIds );
 
         if ( diffAnalyses.isEmpty() ) {
             log.debug( "No differential expression analyses for given ids: " + StringUtils.join( filteredEeIds, ',' ) );

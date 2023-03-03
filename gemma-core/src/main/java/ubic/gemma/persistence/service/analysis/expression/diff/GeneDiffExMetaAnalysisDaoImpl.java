@@ -27,7 +27,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import ubic.gemma.model.analysis.Investigation;
 import ubic.gemma.model.analysis.expression.diff.*;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.AbstractDao;
 
@@ -138,8 +138,8 @@ public class GeneDiffExMetaAnalysisDaoImpl extends AbstractDao<GeneDifferentialE
     public Collection<Long> getExperimentsWithAnalysis( Collection<Long> idsToFilter ) {
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession().createQuery(
-                "select distinct a from GeneDifferentialExpressionMetaAnalysis a"
-                        + "  inner join a.resultSetsIncluded rs inner join rs.analysis ra where ra.experimentAnalyzed.id in (:ids)" )
+                        "select distinct a from GeneDifferentialExpressionMetaAnalysis a"
+                                + "  inner join a.resultSetsIncluded rs inner join rs.analysis ra where ra.experimentAnalyzed.id in (:ids)" )
                 .setParameterList( "ids", idsToFilter ).list();
     }
 
@@ -172,16 +172,16 @@ public class GeneDiffExMetaAnalysisDaoImpl extends AbstractDao<GeneDifferentialE
     }
 
     @Override
-    public Collection<GeneDifferentialExpressionMetaAnalysis> findByInvestigation( Investigation investigation ) {
-        Long id = investigation.getId();
-        return this.findByInvestigationId( id );
+    public Collection<GeneDifferentialExpressionMetaAnalysis> findByExperiment( BioAssaySet experiment ) {
+        Long id = experiment.getId();
+        return this.findByExperimentId( id );
     }
 
     @Override
-    public Map<Investigation, Collection<GeneDifferentialExpressionMetaAnalysis>> findByInvestigations(
-            Collection<? extends Investigation> investigations ) {
-        Map<Investigation, Collection<GeneDifferentialExpressionMetaAnalysis>> results = new HashMap<>();
-        for ( Investigation i : investigations ) {
+    public Map<BioAssaySet, Collection<GeneDifferentialExpressionMetaAnalysis>> findByExperiments(
+            Collection<? extends BioAssaySet> experiments ) {
+        Map<BioAssaySet, Collection<GeneDifferentialExpressionMetaAnalysis>> results = new HashMap<>();
+        for ( BioAssaySet i : experiments ) {
             results.put( i, this.getAnalyses( i ) );
         }
         return results;
@@ -205,11 +205,11 @@ public class GeneDiffExMetaAnalysisDaoImpl extends AbstractDao<GeneDifferentialE
     }
 
     @Override
-    public void removeForExperiment( ExpressionExperiment ee ) {
+    public void removeForExperiment( BioAssaySet ee ) {
         this.remove( this.findByProperty( "experimentAnalyzed", ee ) );
     }
 
-    private Collection<GeneDifferentialExpressionMetaAnalysis> findByInvestigationId( Long id ) {
+    private Collection<GeneDifferentialExpressionMetaAnalysis> findByExperimentId( Long id ) {
         //language=HQL
         final String queryString = "select distinct a from GeneDifferentialExpressionMetaAnalysis a"
                 + "  inner join a.resultSetsIncluded rs inner join rs.analysis ra where ra.experimentAnalyzed.id = :eeId";
@@ -223,15 +223,15 @@ public class GeneDiffExMetaAnalysisDaoImpl extends AbstractDao<GeneDifferentialE
     }
 
     private Collection<GeneDifferentialExpressionMetaAnalysis> getAnalysesForExperiment( Long id ) {
-        Collection<GeneDifferentialExpressionMetaAnalysis> results = this.findByInvestigationId( id );
+        Collection<GeneDifferentialExpressionMetaAnalysis> results = this.findByExperimentId( id );
         /*
          * Deal with the analyses of subsets of the investigation. User has to know this is possible.
          */
         //noinspection unchecked
         results.addAll( this.getSessionFactory().getCurrentSession().createQuery(
-                "select distinct a from ExpressionExperimentSubSet subset, GeneDifferentialExpressionMetaAnalysis a"
-                        + " join subset.sourceExperiment see "
-                        + "   inner join a.resultSetsIncluded rs  join rs.analysis ra inner join ra.experimentAnalyzed eeanalyzed where see.id=:ee and subset=eeanalyzed" )
+                        "select distinct a from ExpressionExperimentSubSet subset, GeneDifferentialExpressionMetaAnalysis a"
+                                + " join subset.sourceExperiment see "
+                                + "   inner join a.resultSetsIncluded rs  join rs.analysis ra inner join ra.experimentAnalyzed eeanalyzed where see.id=:ee and subset=eeanalyzed" )
                 .setParameter( "ee", id ).list() );
 
         return results;

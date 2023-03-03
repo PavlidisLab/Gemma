@@ -25,7 +25,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.core.tasks.analysis.diffex.DifferentialExpressionAnalysisTask;
-import ubic.gemma.model.analysis.Investigation;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisValueObject;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
@@ -101,9 +100,9 @@ public class DifferentialExpressionAnalysisServiceImpl implements DifferentialEx
 
     @Override
     @Transactional(readOnly = true)
-    public Map<Long, Collection<DifferentialExpressionAnalysis>> findByInvestigationIds(
-            Collection<Long> investigationIds ) {
-        return this.differentialExpressionAnalysisDao.findByInvestigationIds( investigationIds );
+    public Map<Long, Collection<DifferentialExpressionAnalysis>> findByExperimentIds(
+            Collection<Long> experimentIds ) {
+        return this.differentialExpressionAnalysisDao.findByExperimentIds( experimentIds );
     }
 
     @Override
@@ -121,7 +120,7 @@ public class DifferentialExpressionAnalysisServiceImpl implements DifferentialEx
     @Override
     @Transactional(readOnly = true)
     public Collection<DifferentialExpressionAnalysis> getAnalyses( BioAssaySet expressionExperiment ) {
-        return this.differentialExpressionAnalysisDao.findByInvestigation( expressionExperiment );
+        return this.differentialExpressionAnalysisDao.findByExperiment( expressionExperiment );
     }
 
     @Override
@@ -202,7 +201,7 @@ public class DifferentialExpressionAnalysisServiceImpl implements DifferentialEx
         // Remove meta analyses that use the analyzed experiment
         log.info( "Removing meta analyses with this experiment..." );
         Collection<GeneDifferentialExpressionMetaAnalysis> metas = this.geneDiffExMetaAnalysisDao
-                .findByInvestigation( toDelete.getExperimentAnalyzed() );
+                .findByExperiment( toDelete.getExperimentAnalyzed() );
         geneDiffExMetaAnalysisDao.remove( metas );
 
         // Remove result sets
@@ -213,9 +212,10 @@ public class DifferentialExpressionAnalysisServiceImpl implements DifferentialEx
     }
 
     @Override
-    public void removeForExperiment( ExpressionExperiment ee ) {
+    @Transactional
+    public void removeForExperiment( BioAssaySet ee ) {
         Collection<DifferentialExpressionAnalysis> diffAnalyses = this.differentialExpressionAnalysisDao
-                .findByInvestigation( ee );
+                .findByExperiment( ee );
         for ( DifferentialExpressionAnalysis de : diffAnalyses ) {
             this.remove( de );
         }
@@ -223,36 +223,23 @@ public class DifferentialExpressionAnalysisServiceImpl implements DifferentialEx
 
     @Override
     @Transactional(readOnly = true)
-    public Collection<DifferentialExpressionAnalysis> findByInvestigation( Investigation investigation ) {
-        return this.differentialExpressionAnalysisDao.findByInvestigation( investigation );
+    public Collection<DifferentialExpressionAnalysis> findByExperiment( BioAssaySet experiment ) {
+        return this.differentialExpressionAnalysisDao.findByExperiment( experiment );
     }
 
     @SuppressWarnings("unchecked")
     @Override
     @Transactional(readOnly = true)
-    public Map<Investigation, Collection<DifferentialExpressionAnalysis>> findByInvestigations(
-            Collection<? extends Investigation> investigations ) {
+    public Map<BioAssaySet, Collection<DifferentialExpressionAnalysis>> findByExperiments(
+            Collection<? extends BioAssaySet> experiments ) {
         return this.differentialExpressionAnalysisDao
-                .findByInvestigations( ( Collection<Investigation> ) investigations );
+                .findByExperiments( experiments );
     }
 
     @Override
     @Transactional(readOnly = true)
     public Collection<DifferentialExpressionAnalysis> findByName( String name ) {
         return this.differentialExpressionAnalysisDao.findByName( name );
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public DifferentialExpressionAnalysis findByUniqueInvestigations(
-            Collection<? extends Investigation> investigations ) {
-        if ( investigations == null || investigations.isEmpty() || investigations.size() > 1 ) {
-            return null;
-        }
-        Collection<DifferentialExpressionAnalysis> found = this.findByInvestigation( investigations.iterator().next() );
-        if ( found.isEmpty() )
-            return null;
-        return found.iterator().next();
     }
 
     @Override

@@ -79,6 +79,7 @@ public interface CompositeSequenceService
     /**
      * Include gene mapping summary in the {@link CompositeSequenceValueObject}.
      */
+    @Nullable
     @Transactional(readOnly = true)
     CompositeSequenceValueObject loadValueObjectWithGeneMappingSummary( CompositeSequence cs );
 

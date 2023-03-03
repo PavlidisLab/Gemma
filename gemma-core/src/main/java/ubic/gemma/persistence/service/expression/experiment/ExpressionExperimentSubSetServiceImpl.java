@@ -74,7 +74,7 @@ public class ExpressionExperimentSubSetServiceImpl extends AbstractService<Expre
 
         // Remove differential expression analyses
         Collection<DifferentialExpressionAnalysis> diffAnalyses = this.differentialExpressionAnalysisService
-                .findByInvestigation( subset );
+                .findByExperiment( subset );
         for ( DifferentialExpressionAnalysis de : diffAnalyses ) {
             this.differentialExpressionAnalysisService.remove( de );
         }

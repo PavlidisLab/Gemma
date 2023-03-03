@@ -21,9 +21,9 @@ package ubic.gemma.persistence.service.analysis.expression.coexpression;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ubic.gemma.model.analysis.Investigation;
 import ubic.gemma.model.analysis.expression.coexpression.CoexpCorrelationDistribution;
 import ubic.gemma.model.analysis.expression.coexpression.CoexpressionAnalysis;
+import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.association.coexpression.CoexpressionService;
@@ -89,7 +89,7 @@ public class CoexpressionAnalysisServiceImpl implements CoexpressionAnalysisServ
     @Transactional
     public void addCoexpCorrelationDistribution( ExpressionExperiment expressionExperiment,
             CoexpCorrelationDistribution coexpd ) {
-        Collection<CoexpressionAnalysis> analyses = this.findByInvestigation( expressionExperiment );
+        Collection<CoexpressionAnalysis> analyses = this.findByExperiment( expressionExperiment );
         if ( analyses.size() > 1 ) {
             throw new IllegalStateException( "Multiple coexpression analyses for one experiment" );
         } else if ( analyses.isEmpty() ) {
@@ -115,34 +115,22 @@ public class CoexpressionAnalysisServiceImpl implements CoexpressionAnalysisServ
 
     @Override
     @Transactional(readOnly = true)
-    public Collection<CoexpressionAnalysis> findByInvestigation( Investigation investigation ) {
-        return this.coexpressionAnalysisDao.findByInvestigation( investigation );
+    public Collection<CoexpressionAnalysis> findByExperiment( BioAssaySet investigation ) {
+        return this.coexpressionAnalysisDao.findByExperiment( investigation );
     }
 
     @SuppressWarnings("unchecked")
     @Override
     @Transactional(readOnly = true)
-    public Map<Investigation, Collection<CoexpressionAnalysis>> findByInvestigations(
-            Collection<? extends Investigation> investigations ) {
-        return this.coexpressionAnalysisDao.findByInvestigations( ( Collection<Investigation> ) investigations );
+    public Map<BioAssaySet, Collection<CoexpressionAnalysis>> findByExperiments(
+            Collection<? extends BioAssaySet> investigations ) {
+        return this.coexpressionAnalysisDao.findByExperiments( investigations );
     }
 
     @Override
     @Transactional(readOnly = true)
     public Collection<CoexpressionAnalysis> findByName( String name ) {
         return this.coexpressionAnalysisDao.findByName( name );
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public CoexpressionAnalysis findByUniqueInvestigations( Collection<? extends Investigation> investigations ) {
-        if ( investigations == null || investigations.isEmpty() || investigations.size() > 1 ) {
-            return null;
-        }
-        Collection<CoexpressionAnalysis> found = this.findByInvestigation( investigations.iterator().next() );
-        if ( found.isEmpty() )
-            return null;
-        return found.iterator().next();
     }
 
     @Override
@@ -160,8 +148,8 @@ public class CoexpressionAnalysisServiceImpl implements CoexpressionAnalysisServ
 
     @Override
     @Transactional
-    public void removeForExperiment( ExpressionExperiment ee ) {
-        this.coexpressionAnalysisDao.remove( this.coexpressionAnalysisDao.findByInvestigation( ee ) );
+    public void removeForExperiment( BioAssaySet ee ) {
+        this.coexpressionAnalysisDao.remove( this.coexpressionAnalysisDao.findByExperiment( ee ) );
     }
 
 }

@@ -17,11 +17,12 @@ package ubic.gemma.persistence.service.analysis.expression.sampleCoexpression;
 import ubic.gemma.model.analysis.expression.coexpression.SampleCoexpressionAnalysis;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.analysis.AnalysisDao;
+import ubic.gemma.persistence.service.analysis.SingleExperimentAnalysisDao;
 
 /**
  * @author paul
  */
-interface SampleCoexpressionAnalysisDao extends AnalysisDao<SampleCoexpressionAnalysis> {
+interface SampleCoexpressionAnalysisDao extends SingleExperimentAnalysisDao<SampleCoexpressionAnalysis> {
 
     SampleCoexpressionAnalysis load( ExpressionExperiment ee );
 

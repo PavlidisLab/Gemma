@@ -29,7 +29,6 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 
 import ubic.gemma.core.security.authentication.UserManager;
 import ubic.gemma.core.util.test.BaseSpringContextTest;
-import ubic.gemma.model.analysis.Investigation;
 import ubic.gemma.model.analysis.expression.coexpression.CoexpressionAnalysis;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -89,7 +88,7 @@ public class AclCollectionBeforeTest extends BaseSpringContextTest {
         securityService.makePrivate( one );
         super.runAsUser( userName );
         assertTrue( securityService.isPrivate( one ) );
-        coexpressionAnalysisService.findByInvestigations( ees );
+        coexpressionAnalysisService.findByExperiments( ees );
         super.runAsUser( userName );
     }
 
@@ -97,8 +96,8 @@ public class AclCollectionBeforeTest extends BaseSpringContextTest {
     public final void testAclCollectionEntryVoterOK() {
         // both data sets are public here.
         super.runAsUser( userName );
-        Map<Investigation, Collection<CoexpressionAnalysis>> r = coexpressionAnalysisService
-                .findByInvestigations( ees );
+        Map<BioAssaySet, Collection<CoexpressionAnalysis>> r = coexpressionAnalysisService
+                .findByExperiments( ees );
         assertNotNull( r );
 
     }

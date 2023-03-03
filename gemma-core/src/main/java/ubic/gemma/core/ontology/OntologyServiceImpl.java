@@ -37,6 +37,8 @@ import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.compass.core.util.concurrent.ConcurrentHashSet;
+import org.springframework.beans.factory.DisposableBean;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
@@ -92,7 +94,7 @@ import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialService;
  * @author pavlidis
  */
 @Service
-public class OntologyServiceImpl implements OntologyService {
+public class OntologyServiceImpl implements OntologyService, InitializingBean, DisposableBean {
     /**
      * Throttle how many ontology terms we retrieve. We search the ontologies in a favored order, so we can stop when we
      * find "enough stuff".
@@ -185,6 +187,16 @@ public class OntologyServiceImpl implements OntologyService {
             log.info( "Auto-loading of ontologies suppressed" );
         }
 
+    }
+
+    @Override
+    public void destroy() throws Exception {
+        String doLoad = Configuration.getString( "load.ontologies" );
+        if ( StringUtils.isBlank( doLoad ) || Configuration.getBoolean( "load.ontologies" ) ) {
+            for ( AbstractOntologyService serv : this.ontologyServices ) {
+                serv.cancelInitializationThread();
+            }
+        }
     }
 
     private void countOccurrences( Collection<CharacteristicValueObject> searchResults,
@@ -298,6 +310,9 @@ public class OntologyServiceImpl implements OntologyService {
         Collection<OntologyIndividual> results = new HashSet<>();
 
         for ( AbstractOntologyService ontology : ontologyServices ) {
+            if ( !ontology.isOntologyLoaded() ) {
+                continue;
+            }
             Collection<OntologyIndividual> found = ontology.findIndividuals( query );
             if ( found != null )
                 results.addAll( found );
@@ -317,6 +332,9 @@ public class OntologyServiceImpl implements OntologyService {
         }
 
         for ( AbstractOntologyService ontology : ontologyServices ) {
+            if ( !ontology.isOntologyLoaded() ) {
+                continue;
+            }
             Collection<OntologyTerm> found = ontology.findTerm( query );
             if ( found != null )
                 results.addAll( this.convert( new HashSet<>( found ) ) );
@@ -549,6 +567,9 @@ public class OntologyServiceImpl implements OntologyService {
     @Override
     public OntologyResource getResource( String uri ) {
         for ( AbstractOntologyService ontology : ontologyServices ) {
+            if ( !ontology.isOntologyLoaded() ) {
+                continue;
+            }
             OntologyResource resource = ontology.getResource( uri );
             if ( resource != null )
                 return resource;
@@ -564,6 +585,9 @@ public class OntologyServiceImpl implements OntologyService {
     @Override
     public OntologyTerm getTerm( String uri ) {
         for ( AbstractOntologyService ontology : ontologyServices ) {
+            if ( !ontology.isOntologyLoaded() ) {
+                continue;
+            }
             OntologyTerm term = ontology.getTerm( uri );
             if ( term != null )
                 return term;
@@ -889,6 +913,9 @@ public class OntologyServiceImpl implements OntologyService {
 
         // search all Ontology
         for ( AbstractOntologyService ontologyService : ontologyServicesToUse ) {
+            if ( !ontologyService.isOntologyLoaded() ) {
+                continue;
+            }
 
             Collection<OntologyTerm> ontologyTerms = ontologyService.findTerm( searchQuery );
 

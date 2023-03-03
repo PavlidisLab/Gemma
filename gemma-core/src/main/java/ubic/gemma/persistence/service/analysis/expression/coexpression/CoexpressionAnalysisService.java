@@ -21,9 +21,11 @@ package ubic.gemma.persistence.service.analysis.expression.coexpression;
 import org.springframework.security.access.annotation.Secured;
 import ubic.gemma.model.analysis.expression.coexpression.CoexpCorrelationDistribution;
 import ubic.gemma.model.analysis.expression.coexpression.CoexpressionAnalysis;
+import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.analysis.AnalysisService;
+import ubic.gemma.persistence.service.analysis.SingleExperimentAnalysisService;
 
 import java.util.Collection;
 
@@ -32,7 +34,7 @@ import java.util.Collection;
  *
  * @author kelsey
  */
-public interface CoexpressionAnalysisService extends AnalysisService<CoexpressionAnalysis> {
+public interface CoexpressionAnalysisService extends SingleExperimentAnalysisService<CoexpressionAnalysis> {
 
     @SuppressWarnings("unused") // Possible external use
     @Secured({ "GROUP_USER" })
@@ -58,7 +60,7 @@ public interface CoexpressionAnalysisService extends AnalysisService<Coexpressio
     Boolean hasCoexpCorrelationDistribution( ExpressionExperiment ee );
 
     @Override
-    void removeForExperiment( ExpressionExperiment ee );
+    void removeForExperiment( BioAssaySet ee );
 
     @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })

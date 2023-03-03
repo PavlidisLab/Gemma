@@ -20,8 +20,7 @@ package ubic.gemma.persistence.service.analysis;
 
 import org.springframework.security.access.annotation.Secured;
 import ubic.gemma.model.analysis.Analysis;
-import ubic.gemma.model.analysis.Investigation;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.genome.Taxon;
 
 import java.util.Collection;
@@ -41,42 +40,11 @@ public interface AnalysisService<T extends Analysis> {
     @Secured({ "GROUP_USER", "ACL_ANALYSIS_EDIT" })
     void remove( T toDelete );
 
-    /**
-     * Removes all analyses for the given experiment
-     * @param ee the expriment to remove all analyses for
-     */
-    @Secured({ "GROUP_USER", "ACL_ANALYSIS_EDIT" })
-    void removeForExperiment( ExpressionExperiment ee );
-
-    /**
-     * @param investigation investigation
-     * @return find all the analyses that involved the given investigation
-     */
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    Collection<T> findByInvestigation( Investigation investigation );
-
-    /**
-     * @param investigations investigations
-     * @return Given a collection of investigations returns a Map of Analysis --&gt; collection of Investigations
-     * The collection of investigations returned by the map will include all the investigations for the analysis key iff
-     * one of the investigations for that analysis was in the given collection started with
-     */
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_COLLECTION_READ", "AFTER_ACL_MAP_READ" })
-    Map<Investigation, Collection<T>> findByInvestigations( Collection<? extends Investigation> investigations );
-
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     Collection<T> findByName( String name );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     Collection<T> findByTaxon( Taxon taxon );
-
-    /**
-     * @param investigations investigations
-     * @return An analysis is uniquely determined by its set of investigations. Only returns an analysis if the collection of
-     * investigations given exactly matches other wise returns null
-     */
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
-    T findByUniqueInvestigations( Collection<? extends Investigation> investigations );
 
     /**
      * Not secured: for internal use only

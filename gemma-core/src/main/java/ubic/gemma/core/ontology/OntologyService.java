@@ -14,7 +14,6 @@
  */
 package ubic.gemma.core.ontology;
 
-import org.springframework.beans.factory.InitializingBean;
 import ubic.basecode.ontology.model.OntologyIndividual;
 import ubic.basecode.ontology.model.OntologyResource;
 import ubic.basecode.ontology.model.OntologyTerm;
@@ -28,6 +27,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 
+import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -36,7 +36,7 @@ import java.util.Map;
  * @author Paul
  */
 @SuppressWarnings("unused") // Possible external use
-public interface OntologyService extends InitializingBean {
+public interface OntologyService {
 
     /**
      * Will add the give vocab characteristic to the expression experiment.
@@ -147,6 +147,7 @@ public interface OntologyService extends InitializingBean {
      * @param  uri uri
      * @return     the OntologyResource
      */
+    @Nullable
     OntologyResource getResource( String uri );
 
     SequenceOntologyService getSequenceOntologyService();
@@ -155,6 +156,7 @@ public interface OntologyService extends InitializingBean {
      * @param  uri uri
      * @return     the OntologyTerm for the specified URI.
      */
+    @Nullable
     OntologyTerm getTerm( String uri );
 
     /**

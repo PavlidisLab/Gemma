@@ -23,10 +23,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.BaseValueObject;
-import ubic.gemma.model.analysis.Investigation;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.analysis.expression.diff.*;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.genome.Taxon;
 
 import java.util.Collection;
@@ -115,42 +114,9 @@ public class GeneDiffExMetaAnalysisServiceImpl implements GeneDiffExMetaAnalysis
     }
 
     @Override
-    @Transactional
-    public void removeForExperiment( ExpressionExperiment ee ){
-        this.geneDiffExMetaAnalysisDao.removeForExperiment(ee);
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public Collection<GeneDifferentialExpressionMetaAnalysis> findByInvestigation( Investigation investigation ) {
-        return geneDiffExMetaAnalysisDao.findByInvestigation( investigation );
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public Map<Investigation, Collection<GeneDifferentialExpressionMetaAnalysis>> findByInvestigations(
-            Collection<? extends Investigation> investigations ) {
-        return geneDiffExMetaAnalysisDao.findByInvestigations( investigations );
-    }
-
-    @Override
     @Transactional(readOnly = true)
     public Collection<GeneDifferentialExpressionMetaAnalysis> findByName( String name ) {
         return geneDiffExMetaAnalysisDao.findByName( name );
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public GeneDifferentialExpressionMetaAnalysis findByUniqueInvestigations(
-            Collection<? extends Investigation> investigations ) {
-        if ( investigations == null || investigations.isEmpty() || investigations.size() > 1 ) {
-            return null;
-        }
-        Collection<GeneDifferentialExpressionMetaAnalysis> found = this
-                .findByInvestigation( investigations.iterator().next() );
-        if ( found.isEmpty() )
-            return null;
-        return found.iterator().next();
     }
 
     @Override

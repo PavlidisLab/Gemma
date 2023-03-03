@@ -182,7 +182,13 @@ public class ExpressionExperimentFormController extends BaseFormController {
         List<QuantitationTypeValueObject> qts = new ArrayList<>(
                 quantitationTypeService.loadValueObjects( expressionExperimentService.getQuantitationTypes( ee ) ) );
 
-        obj = new ExpressionExperimentEditValueObject( expressionExperimentService.loadValueObject( ee ) );
+        ExpressionExperimentValueObject vo = expressionExperimentService.loadValueObject( ee );
+
+        if ( vo == null ) {
+            throw new IllegalArgumentException( String.format( "Could load experiment VO with ID %d", id ) );
+        }
+
+        obj = new ExpressionExperimentEditValueObject( vo );
 
         obj.setQuantitationTypes( qts );
         obj.setBioAssays( BioAssayValueObject.convert2ValueObjects( ee.getBioAssays() ) );

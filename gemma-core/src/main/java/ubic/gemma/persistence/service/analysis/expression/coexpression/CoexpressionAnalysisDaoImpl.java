@@ -24,7 +24,7 @@ import org.springframework.stereotype.Repository;
 import ubic.gemma.model.analysis.expression.coexpression.CoexpCorrelationDistribution;
 import ubic.gemma.model.analysis.expression.coexpression.CoexpressionAnalysis;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.persistence.service.analysis.AnalysisDaoBase;
+import ubic.gemma.persistence.service.analysis.SingleExperimentAnalysisDaoBase;
 
 import java.util.Collection;
 
@@ -37,7 +37,7 @@ import java.util.Collection;
  * @see ubic.gemma.model.analysis.expression.coexpression.CoexpressionAnalysis
  */
 @Repository
-public class CoexpressionAnalysisDaoImpl extends AnalysisDaoBase<CoexpressionAnalysis>
+public class CoexpressionAnalysisDaoImpl extends SingleExperimentAnalysisDaoBase<CoexpressionAnalysis>
         implements CoexpressionAnalysisDao {
 
     @Autowired
@@ -58,7 +58,7 @@ public class CoexpressionAnalysisDaoImpl extends AnalysisDaoBase<CoexpressionAna
     public Collection<Long> getExperimentsWithAnalysis( Collection<Long> idsToFilter ) {
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession().createQuery(
-                "select experimentAnalyzed.id from CoexpressionAnalysis where experimentAnalyzed.id in (:ids)" )
+                        "select experimentAnalyzed.id from CoexpressionAnalysis where experimentAnalyzed.id in (:ids)" )
                 .setParameterList( "ids", idsToFilter ).list();
     }
 

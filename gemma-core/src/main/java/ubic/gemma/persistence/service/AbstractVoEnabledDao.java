@@ -4,8 +4,10 @@ import org.hibernate.SessionFactory;
 import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.common.Identifiable;
 
+import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -33,6 +35,7 @@ public abstract class AbstractVoEnabledDao<O extends Identifiable, VO extends Id
      * This should be fast and efficient, and avoid any database query or post-processing. If you need to perform
      * additional queries, consider overriding {@link #loadValueObject(Identifiable)} or {@link #loadValueObjects(Collection)}.
      */
+    @Nullable
     protected abstract VO doLoadValueObject( O entity );
 
     @Override
@@ -47,10 +50,13 @@ public abstract class AbstractVoEnabledDao<O extends Identifiable, VO extends Id
     }
 
     /**
-     * The default implementation calls {@link #doLoadValueObject(Identifiable)} for each entity.
+     * The default implementation calls {@link #doLoadValueObject(Identifiable)} for each entity and filters out nulls.
      */
     protected List<VO> doLoadValueObjects( Collection<O> entities ) {
-        return entities.stream().map( this::doLoadValueObject ).collect( Collectors.toList() );
+        return entities.stream()
+                .map( this::doLoadValueObject )
+                .filter( Objects::nonNull )
+                .collect( Collectors.toList() );
     }
 
     @Override
