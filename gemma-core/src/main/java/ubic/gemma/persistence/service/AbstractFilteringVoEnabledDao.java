@@ -5,9 +5,7 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.hibernate.SessionFactory;
 import org.hibernate.metadata.ClassMetadata;
-import org.hibernate.type.CustomType;
-import org.hibernate.type.EnumType;
-import org.hibernate.type.Type;
+import org.hibernate.type.*;
 import org.springframework.beans.factory.InitializingBean;
 import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.common.Identifiable;
@@ -144,15 +142,23 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
                 registerProperty( prefix + classMetadata.getIdentifierPropertyName() );
             }
             for ( int i = 0; i < propertyNames.length; i++ ) {
-                if ( propertyTypes[i].isEntityType() ) {
+                String propertyName = propertyNames[i];
+                Type propertyType = propertyTypes[i];
+                if ( propertyType.isEntityType() ) {
                     if ( maxDepth > 1 ) {
-                        registerEntity( prefix + propertyNames[i] + ".", propertyTypes[i].getReturnedClass(), maxDepth - 1 );
+                        registerEntity( prefix + propertyName + ".", propertyType.getReturnedClass(), maxDepth - 1 );
                     }
                 } else if ( propertyTypes[i].isCollectionType() ) {
                     // special case for collection size, regardless of its type
-                    registerProperty( prefix + propertyNames[i] + ".size" );
-                } else if ( Filter.getConversionService().canConvert( String.class, propertyTypes[i].getReturnedClass() ) ) {
-                    registerProperty( prefix + propertyNames[i] );
+                    registerProperty( prefix + propertyName + ".size" );
+                } else if ( propertyTypes[i] instanceof MaterializedBlobType || propertyType instanceof MaterializedClobType || propertyType instanceof MaterializedNClobType ) {
+                    log.debug( String.format( "Property %s%s of type %s was excluded in %s: BLOBs and CLOBs are not exposed by default.",
+                            prefix, propertyName, propertyType, entityClass.getName() ) );
+                } else if ( Filter.getConversionService().canConvert( String.class, propertyType.getReturnedClass() ) ) {
+                    registerProperty( prefix + propertyName );
+                } else {
+                    log.debug( String.format( "Property %s%s of type %s in %s is not supported and will be skipped.",
+                            prefix, propertyName, propertyType, entityClass.getName() ) );
                 }
             }
         }
