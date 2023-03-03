@@ -19,8 +19,7 @@
 
 package ubic.gemma.core.analysis.sequence;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.apachecommons.CommonsLog;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResultValueObject;
 
@@ -32,9 +31,8 @@ import java.util.Set;
 /**
  * @author paul
  */
+@CommonsLog
 public class ProbeMapUtils {
-
-    private static final Logger log = LoggerFactory.getLogger( ProbeMapUtils.class );
 
     /**
      * Prune a set of results that have the same coordinates and query. See bug 4037

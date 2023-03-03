@@ -19,11 +19,10 @@
 
 package ubic.gemma.core.loader.association.phenotype;
 
+import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.ClassPathUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.core.io.ClassPathResource;
 import org.xml.sax.SAXException;
 import ubic.basecode.ontology.model.OntologyTerm;
@@ -51,6 +50,7 @@ import java.util.*;
  *
  * @author paul (code originally from Nicolas)
  */
+@CommonsLog
 class PhenotypeProcessingUtil {
     // this is where the results and files downloaded are put
     static final String WRITE_FOLDER = Settings.getString( "gemma.appdata.home" ) + File.separator + "Phenocarta";
@@ -72,7 +72,6 @@ class PhenotypeProcessingUtil {
     private static final String MANUAL_MAPPING = RESOURCE_CLASSPATH + "ManualDescriptionMapping.tsv";
     // results we exclude, we know those results are not good
     private static final String RESULTS_TO_IGNORE = RESOURCE_CLASSPATH + "ResultsToIgnore.tsv";
-    private static Logger log = LoggerFactory.getLogger( PhenotypeProcessingUtil.class );
     private static MedicOntologyService medicOntologyService = null;
     // keep a log file of the process and error
     final TreeSet<String> logMessages = new TreeSet<>();

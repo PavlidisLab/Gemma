@@ -18,8 +18,7 @@
  */
 package ubic.gemma.web.controller.expression.experiment;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.apachecommons.CommonsLog;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import ubic.gemma.core.loader.expression.geo.model.GeoRecord;
@@ -33,9 +32,8 @@ import java.util.Collection;
  * @author pavlidis
  */
 @Component
+@CommonsLog
 public class GeoRecordBrowserController {
-
-    private static Logger log = LoggerFactory.getLogger( GeoRecordBrowserController.class );
 
     @Autowired
     private GeoBrowserService geoBrowserService;

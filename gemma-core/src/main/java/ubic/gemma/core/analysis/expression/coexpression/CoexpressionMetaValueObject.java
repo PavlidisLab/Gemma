@@ -18,8 +18,7 @@
  */
 package ubic.gemma.core.analysis.expression.coexpression;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.apachecommons.CommonsLog;
 import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.persistence.util.Settings;
 
@@ -29,6 +28,7 @@ import java.util.*;
 /**
  * @author luke
  */
+@CommonsLog
 @SuppressWarnings({ "unused", "WeakerAccess" }) // Frontend use
 public class CoexpressionMetaValueObject implements Serializable {
 
@@ -36,8 +36,6 @@ public class CoexpressionMetaValueObject implements Serializable {
      * The default maximum number of edges to send to the client.
      */
     private static final int DEFAULT_MAX_EDGES_PER_GRAPH = 2000;
-
-    private static final Logger log = LoggerFactory.getLogger( CoexpressionMetaValueObject.class );
 
     /**
      * Error message for the client.

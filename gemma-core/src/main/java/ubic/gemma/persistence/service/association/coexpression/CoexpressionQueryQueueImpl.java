@@ -19,8 +19,7 @@
 
 package ubic.gemma.persistence.service.association.coexpression;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.apachecommons.CommonsLog;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.security.concurrent.DelegatingSecurityContextRunnable;
@@ -34,10 +33,10 @@ import java.util.concurrent.*;
 /**
  * @author Paul
  */
+@CommonsLog
 class CoexpressionQueryQueueImpl implements CoexpressionQueryQueue, InitializingBean, DisposableBean {
 
     private static final int QUEUE_SIZE = 1000;
-    private static final Logger log = LoggerFactory.getLogger( CoexpressionQueryQueueImpl.class );
     private final BlockingQueue<Long> geneQueue = new ArrayBlockingQueue<>(
             CoexpressionQueryQueueImpl.QUEUE_SIZE );
 

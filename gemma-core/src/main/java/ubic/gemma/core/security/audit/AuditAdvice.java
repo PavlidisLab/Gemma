@@ -18,6 +18,7 @@
  */
 package ubic.gemma.core.security.audit;
 
+import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.collections4.CollectionUtils;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.Signature;
@@ -28,8 +29,6 @@ import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.CascadingAction;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.Type;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import ubic.gemma.core.security.authentication.UserManager;
@@ -54,10 +53,9 @@ import java.util.*;
 @Aspect
 @Component
 @ParametersAreNonnullByDefault
+// Note that we have a special logger configured for this class, so remove events get stored.
+@CommonsLog
 public class AuditAdvice {
-
-    // Note that we have a special logger configured for this class, so remove events get stored.
-    private static final Logger log = LoggerFactory.getLogger( AuditAdvice.class.getName() );
 
     private enum OperationType {
         CREATE,
