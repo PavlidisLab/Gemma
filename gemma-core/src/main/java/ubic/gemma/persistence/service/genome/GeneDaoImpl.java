@@ -21,6 +21,7 @@ package ubic.gemma.persistence.service.genome;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.hibernate.Criteria;
+import org.hibernate.Hibernate;
 import org.hibernate.Query;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.InitializingBean;
@@ -43,6 +44,7 @@ import ubic.gemma.persistence.util.*;
 
 import javax.annotation.Nullable;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Base Spring DAO Class: is able to create, update, remove, load, and find objects of type <code>Gene</code>.
@@ -532,12 +534,12 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
     protected Query getFilteringQuery( @Nullable Filters filters, @Nullable Sort sort ) {
 
         //noinspection JpaQlInspection // the constants for aliases is messing with the inspector
-        String queryString = "select distinct " + OBJECT_ALIAS + " "
-                + "from Gene as " + OBJECT_ALIAS + " " // gene
-                + "left join fetch " + OBJECT_ALIAS + ".multifunctionality " // multifunctionality, if available
-                + "left join fetch " + OBJECT_ALIAS + ".taxon as " + "taxon" + " "// taxon
-                + "left join fetch " + OBJECT_ALIAS + ".aliases " // aliases
-                + "where " + OBJECT_ALIAS + ".id is not null "; // needed to use formRestrictionCause()
+        String queryString = "select distinct gene "
+                + "from Gene as gene " // gene
+                + "left join fetch gene.multifunctionality " // multifunctionality, if available
+                + "left join fetch gene.taxon as taxon "// taxon
+                + "left join gene.aliases " // aliases
+                + "where gene.id is not null"; // needed to use formRestrictionCause()
 
         queryString += FilterQueryUtils.formRestrictionClause( filters );
         queryString += FilterQueryUtils.formOrderByClause( sort );
@@ -552,9 +554,11 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
     @Override
     protected Query getFilteringCountQuery( @Nullable Filters filters ) {
         //noinspection JpaQlInspection // the constants for aliases is messing with the inspector
-        String queryString = "select count(distinct " + OBJECT_ALIAS + ") from Gene as " + OBJECT_ALIAS + " " // gene
-                + "left join " + OBJECT_ALIAS + ".taxon as " + "taxon" + " "// taxon
-                + "where " + OBJECT_ALIAS + ".id is not null "; // needed to use formRestrictionCause()
+        String queryString = "select count(distinct gene) from Gene as gene " // gene
+                + "left join gene.multifunctionality " // multifunctionality, if available
+                + "left join gene.taxon as taxon "// taxon
+                + "left join gene.aliases " // aliases
+                + "where gene.id is not null"; // needed to use formRestrictionCause()
 
         queryString += FilterQueryUtils.formRestrictionClause( filters );
 
@@ -563,6 +567,11 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
         FilterQueryUtils.addRestrictionParameters( query, filters );
 
         return query;
+    }
+
+    @Override
+    protected void postProcessValueObjects( List<GeneValueObject> geneValueObjects ) {
+        fillAliases( geneValueObjects );
     }
 
     private Collection<Gene> doLoadThawedLite( Collection<Long> ids ) {
@@ -625,5 +634,26 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
         }
         AbstractDao.log.error( buf );
 
+    }
+
+    private void fillAliases( List<GeneValueObject> geneValueObjects ) {
+        if ( geneValueObjects.isEmpty() ) {
+            return;
+        }
+        //noinspection unchecked
+        List<Object[]> results = getSessionFactory().getCurrentSession()
+                .createQuery( "select g.id, a.alias from Gene g join g.aliases a where g.id in :ids" )
+                .setParameterList( "ids", geneValueObjects.stream().map( GeneValueObject::getId ).collect( Collectors.toSet() ) )
+                .list();
+        Map<Long, List<String>> aliasByGeneId = results.stream()
+                .collect( Collectors.groupingBy(
+                        row -> ( Long ) row[0],
+                        Collectors.mapping( row -> ( String ) row[1], Collectors.toList() ) ) );
+        for ( GeneValueObject gvo : geneValueObjects ) {
+            List<String> aliases = aliasByGeneId.get( gvo.getId() );
+            if ( aliases != null ) {
+                gvo.setAliases( new TreeSet<>( aliases ) );
+            }
+        }
     }
 }
