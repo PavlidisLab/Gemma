@@ -40,6 +40,7 @@ package ubic.gemma.core.genome.gene;
 import ubic.gemma.model.genome.TaxonValueObject;
 import ubic.gemma.model.genome.gene.GeneSetValueObject;
 
+import javax.annotation.Nullable;
 import java.util.Collection;
 
 /**
@@ -70,7 +71,7 @@ public class PhenotypeGroupValueObject extends SessionBoundGeneSetValueObject {
      * @param phenotypeName     phenotype name
      */
     public PhenotypeGroupValueObject( String name, String description, Long taxonId, String taxonName,
-            Collection<Long> memberIds, String phenotypeName, String phenotypeCategory, String searchTerm ) {
+            @Nullable Collection<Long> memberIds, String phenotypeName, String phenotypeCategory, String searchTerm ) {
 
         this.setName( name );
         this.setDescription( description );

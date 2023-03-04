@@ -24,17 +24,20 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.DatabaseBackedGeneSetValueObject;
 import ubic.gemma.model.genome.gene.GeneSet;
-import ubic.gemma.persistence.service.BaseDao;
+import ubic.gemma.persistence.service.BaseVoEnabledDao;
 
 import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.Collection;
+import java.util.List;
 
 /**
  * The interface for managing groupings of genes.
  *
  * @author kelsey
  */
-public interface GeneSetDao extends BaseDao<GeneSet> {
+@ParametersAreNonnullByDefault
+public interface GeneSetDao extends BaseVoEnabledDao<GeneSet, DatabaseBackedGeneSetValueObject> {
 
     /**
      * This method does not do any permissions filtering. It assumes that id the user can see the set, they can see all
@@ -66,19 +69,17 @@ public interface GeneSetDao extends BaseDao<GeneSet> {
     Collection<GeneSet> loadMyGeneSets();
 
     @Secured({ "GROUP_USER", "AFTER_ACL_FILTER_MY_DATA" })
-    Collection<? extends GeneSet> loadMyGeneSets( Taxon tax );
+    Collection<GeneSet> loadMyGeneSets( Taxon tax );
 
     @Secured({ "GROUP_USER", "AFTER_ACL_FILTER_MY_PRIVATE_DATA" })
-    Collection<? extends GeneSet> loadMySharedGeneSets();
+    Collection<GeneSet> loadMySharedGeneSets();
 
     @Secured({ "GROUP_USER", "AFTER_ACL_FILTER_MY_PRIVATE_DATA" })
-    Collection<? extends GeneSet> loadMySharedGeneSets( Taxon tax );
+    Collection<GeneSet> loadMySharedGeneSets( Taxon tax );
 
-    DatabaseBackedGeneSetValueObject loadValueObject( GeneSet geneSet );
+    DatabaseBackedGeneSetValueObject loadValueObjectByIdLite( Long id );
 
-    Collection<? extends DatabaseBackedGeneSetValueObject> loadValueObjects( Collection<Long> ids );
-
-    Collection<? extends DatabaseBackedGeneSetValueObject> loadValueObjectsLite( Collection<Long> ids );
+    List<DatabaseBackedGeneSetValueObject> loadValueObjectsByIdsLite( Collection<Long> geneSetIds );
 
     @Override
     @Secured({ "GROUP_USER" })
@@ -127,14 +128,13 @@ public interface GeneSetDao extends BaseDao<GeneSet> {
     Collection<GeneSet> findByName( String name );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    Collection<GeneSet> findByName( String name, Taxon taxon );
+    Collection<GeneSet> findByName( String name, @Nullable Taxon taxon );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    Collection<GeneSet> loadAll( Taxon tax );
+    Collection<GeneSet> loadAll( @Nullable Taxon tax );
 
     /**
      * @param geneSet gene set
      */
     void thaw( GeneSet geneSet );
-
 }

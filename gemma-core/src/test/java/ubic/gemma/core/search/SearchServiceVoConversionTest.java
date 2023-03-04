@@ -64,7 +64,7 @@ public class SearchServiceVoConversionTest extends AbstractJUnit4SpringContextTe
         when( expressionExperimentService.loadValueObject( any( ExpressionExperiment.class ) ) ).thenAnswer( a -> new ExpressionExperimentValueObject( a.getArgument( 0, ExpressionExperiment.class ) ) );
         when( geneSetService.loadValueObject( any( GeneSet.class ) ) ).thenAnswer( a -> {
             GeneSet geneSet = a.getArgument( 0, GeneSet.class );
-            return new DatabaseBackedGeneSetValueObject( geneSet );
+            return new DatabaseBackedGeneSetValueObject( geneSet, null, null );
         } );
     }
 

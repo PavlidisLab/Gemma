@@ -324,7 +324,7 @@ public class SearchResultDisplayObject implements Comparable<SearchResultDisplay
 
     private void setValues( GeneSetValueObject geneSet ) {
         this.isGroup = true;
-        this.size = geneSet.getSize();
+        this.size = geneSet.getSize().intValue();
         this.taxonId = geneSet.getTaxonId();
         this.taxonName = geneSet.getTaxonName();
         this.name = geneSet.getName();

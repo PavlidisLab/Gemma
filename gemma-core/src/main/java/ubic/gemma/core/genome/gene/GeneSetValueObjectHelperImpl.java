@@ -62,9 +62,7 @@ public class GeneSetValueObjectHelperImpl implements GeneSetValueObjectHelper {
             return null;
         }
 
-        return this.geneSetService.loadValueObjectsLite( EntityUtils.getIds( Collections.singleton( gs ) ) ).iterator()
-                .next();
-
+        return this.geneSetService.loadValueObjectByIdLite( gs.getId() );
     }
 
     @Override
@@ -82,7 +80,7 @@ public class GeneSetValueObjectHelperImpl implements GeneSetValueObjectHelper {
 
         Collection<Long> ids = EntityUtils
                 .getIds( this.geneSetService.getGenesInGroup( new GeneSetValueObject( gs.getId() ) ) );
-        dbgsvo.getGeneIds().addAll( ids );
+        dbgsvo.setGeneIds( ids );
         dbgsvo.setSize( ids.size() );
 
         return dbgsvo;
@@ -114,20 +112,16 @@ public class GeneSetValueObjectHelperImpl implements GeneSetValueObjectHelper {
         List<DatabaseBackedGeneSetValueObject> results = new ArrayList<>();
 
         if ( light ) {
-            results.addAll( geneSetService.loadValueObjectsLite( genesetIds ) );
+            results.addAll( geneSetService.loadValueObjectsByIdsLite( genesetIds ) );
         } else {
-            results.addAll( geneSetService.loadValueObjects( genesetIds ) );
+            results.addAll( geneSetService.loadValueObjectsByIds( genesetIds ) );
         }
 
         if ( !includeOnesWithoutGenes ) {
-            for ( Iterator<DatabaseBackedGeneSetValueObject> it = results.iterator(); it.hasNext(); ) {
-                if ( it.next().getSize() == 0 ) {
-                    it.remove();
-                }
-            }
+            results.removeIf( databaseBackedGeneSetValueObject -> databaseBackedGeneSetValueObject.getSize() == 0 );
         }
 
-        results.sort( Comparator.comparingInt( GeneSetValueObject::getSize ) );
+        results.sort( Comparator.comparingLong( GeneSetValueObject::getSize ) );
 
         return results;
     }

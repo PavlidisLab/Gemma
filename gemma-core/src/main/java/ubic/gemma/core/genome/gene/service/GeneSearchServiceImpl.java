@@ -684,8 +684,10 @@ public class GeneSearchServiceImpl implements GeneSearchService {
                 geneIdsByTaxonId.get( srDo.getTaxonId() ).add( ( ( GeneValueObject ) resultValueObject ).getId() );
 
             } else if ( resultValueObject instanceof GeneSetValueObject ) {
-                geneIdsByTaxonId.get( srDo.getTaxonId() )
-                        .addAll( ( ( GeneSetValueObject ) resultValueObject ).getGeneIds() );
+                GeneSetValueObject gsvo = ( GeneSetValueObject ) resultValueObject;
+                if ( gsvo.getGeneIds() != null ) {
+                    geneIdsByTaxonId.get( srDo.getTaxonId() ).addAll( gsvo.getGeneIds() );
+                }
 
             } else {
                 throw new UnsupportedOperationException(

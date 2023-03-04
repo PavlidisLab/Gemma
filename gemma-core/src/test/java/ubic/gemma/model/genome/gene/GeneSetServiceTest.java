@@ -18,6 +18,7 @@
  */
 package ubic.gemma.model.genome.gene;
 
+import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.junit.After;
@@ -37,6 +38,7 @@ import ubic.gemma.persistence.service.association.Gene2GOAssociationService;
 
 import java.io.InputStream;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.zip.GZIPInputStream;
 
 import static org.junit.Assert.*;
@@ -201,13 +203,13 @@ public class GeneSetServiceTest extends BaseSpringContextTest {
         }
 
         // add one.
-        gset = geneSetService.load( gset.getId() );
+        gset = geneSetService.loadOrFail( gset.getId() );
 
         // make sure members collection is initialized
         session = sessionFactory.openSession();
         try {
             session.update( gset );
-            gset.getMembers().size();
+            Hibernate.initialize( gset.getMembers() );
         } finally {
             session.close();
         }
@@ -223,13 +225,13 @@ public class GeneSetServiceTest extends BaseSpringContextTest {
         geneSetService.update( gset );
 
         // check
-        gset = geneSetService.load( gset.getId() );
+        gset = geneSetService.loadOrFail( gset.getId() );
 
         // make sure members collection is initialized
         session = sessionFactory.openSession();
         try {
             session.update( gset );
-            gset.getMembers().size();
+            Hibernate.initialize( gset.getMembers() );
         } finally {
             session.close();
         }
@@ -241,12 +243,12 @@ public class GeneSetServiceTest extends BaseSpringContextTest {
         geneSetService.update( gset );
 
         // check
-        gset = geneSetService.load( gset.getId() );
+        gset = geneSetService.loadOrFail( gset.getId() );
         // make sure members collection is initialized
         session = sessionFactory.openSession();
         try {
             session.update( gset );
-            gset.getMembers().size();
+            Hibernate.initialize( gset.getMembers() );
         } finally {
             session.close();
         }
@@ -259,4 +261,31 @@ public class GeneSetServiceTest extends BaseSpringContextTest {
 
     }
 
+    @Test
+    public void testLoadValueObject() {
+        GeneSet gset = GeneSet.Factory.newInstance();
+        gset.getMembers().add( GeneSetMember.Factory.newInstance( 1.0, g ) );
+        gset = geneSetService.create( gset );
+        assertNotNull( gset.getId() );
+        assertEquals( 1, gset.getMembers().size() );
+        DatabaseBackedGeneSetValueObject vo = geneSetService.loadValueObject( gset );
+        assertNotNull( vo );
+        assertNotNull( vo.getGeneIds() );
+        assertEquals( 1, vo.getGeneIds().size() );
+        assertNotNull( geneSetService.loadValueObjectById( gset.getId() ) );
+        assertEquals( 1, geneSetService.loadAllValueObjects().size() );
+    }
+
+    @Test
+    public void testLoadValueObjectLite() {
+        GeneSet gset = GeneSet.Factory.newInstance();
+        gset.getMembers().add( GeneSetMember.Factory.newInstance( 1.0, g ) );
+        gset = geneSetService.create( gset );
+        assertNotNull( gset.getId() );
+        DatabaseBackedGeneSetValueObject vo = geneSetService.loadValueObjectByIdLite( gset.getId() );
+        assertNotNull( vo );
+        assertNull( vo.getGeneIds() );
+        assertNotNull( geneSetService.loadValueObjectByIdLite( gset.getId() ) );
+        assertEquals( 1, geneSetService.loadValueObjectsByIdsLite( Collections.singleton( gset.getId() ) ).size() );
+    }
 }

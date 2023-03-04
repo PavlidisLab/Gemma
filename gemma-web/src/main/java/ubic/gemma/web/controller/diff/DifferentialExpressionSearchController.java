@@ -226,10 +226,10 @@ public class DifferentialExpressionSearchController {
 
         // Load genes
         Collection<GeneValueObject> genes;
-        if ( gsvo.getGeneIds().isEmpty() ) {
-            genes = geneSetService.getGenesInGroup( gsvo );
-        } else {
+        if ( gsvo.getGeneIds() != null ) {
             genes = geneService.loadValueObjectsByIds( gsvo.getGeneIds() );
+        } else {
+            genes = geneSetService.getGenesInGroup( gsvo );
         }
 
         log.info( "Got genes" );

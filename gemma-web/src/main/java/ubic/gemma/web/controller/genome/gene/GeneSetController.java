@@ -288,7 +288,7 @@ public class GeneSetController {
         if ( id == null ) {
             throw new IllegalArgumentException( "Cannot load a gene set with a null id." );
         }
-        return geneSetService.getValueObject( id );
+        return geneSetService.loadValueObjectById( id );
 
     }
 
@@ -493,7 +493,7 @@ public class GeneSetController {
             } catch ( NumberFormatException e ) {
                 throw new IllegalArgumentException( "You must provide a valid numerical identifier" );
             }
-            geneSet = geneSetService.getValueObject( id );
+            geneSet = geneSetService.loadValueObjectById( id );
 
             if ( geneSet == null ) {
                 throw new IllegalArgumentException( "Unable to access gene set with id=" + id );

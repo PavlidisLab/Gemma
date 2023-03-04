@@ -349,7 +349,7 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
                     .map( s -> new SearchResultValueObject<>( ( SearchResult<BioSequenceValueObject> ) s ) )
                     .collect( Collectors.toList() );
         } else if ( GeneSet.class.isAssignableFrom( entityClass ) ) {
-            vos = geneSetService.getValueObjects( ids );
+            vos = geneSetService.loadValueObjectsByIds( ids );
         } else if ( ExpressionExperimentSet.class.isAssignableFrom( entityClass ) ) {
             vos = experimentSetService.loadValueObjects( experimentSetService.load( ids ) );
         } else if ( BlacklistedEntity.class.isAssignableFrom( entityClass ) ) {
