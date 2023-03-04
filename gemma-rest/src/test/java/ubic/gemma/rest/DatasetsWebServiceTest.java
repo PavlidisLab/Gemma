@@ -124,8 +124,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
     private ExpressionExperiment ee;
 
     @Before
-    public void setUp() throws Exception {
-        super.setUp();
+    public void setUpMocks() {
         ee = ExpressionExperiment.Factory.newInstance();
         when( expressionExperimentService.load( 1L ) ).thenReturn( ee );
         when( expressionExperimentService.getFiltersWithInferredAnnotations( any() ) ).thenAnswer( a -> a.getArgument( 0 ) );

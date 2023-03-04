@@ -1,5 +1,5 @@
 resourcePackages:
-  - ubic.gemma.web.services.rest
+  - ubic.gemma.rest
 openAPI:
   servers:
     - description: Gemma

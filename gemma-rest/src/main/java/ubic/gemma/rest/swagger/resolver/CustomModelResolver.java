@@ -72,9 +72,6 @@ public class CustomModelResolver extends ModelResolver {
         }
     }
 
-    @Autowired
-    private SessionFactory sessionFactory;
-
     /**
      * Resolves allowed values for the {@link ubic.gemma.rest.SearchWebService#search(String, TaxonArg, PlatformArg, List, LimitArg)}
      * resultTypes argument.
@@ -146,7 +143,7 @@ public class CustomModelResolver extends ModelResolver {
         FilteringService<?> filteringService = filteringServices.stream()
                 .filter( s -> clazz.isAssignableFrom( s.getElementClass() ) )
                 .findAny()
-                .orElseThrow( () -> new IllegalArgumentException( String.format( "Could not find filtering service for %s.", clazz.getName() ) ) );
+                .orElseThrow( () -> new IllegalArgumentException( String.format( "Could not find filtering service for %s for resolving available properties of %s.", clazz.getName(), a ) ) );
         // FIXME: make this locale-sensitive
         Locale locale = Locale.getDefault();
         return filteringService.getFilterableProperties().stream()

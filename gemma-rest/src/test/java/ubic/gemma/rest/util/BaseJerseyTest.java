@@ -7,6 +7,8 @@ import org.glassfish.jersey.test.JerseyTest;
 import org.glassfish.jersey.test.inmemory.InMemoryTestContainerFactory;
 import org.glassfish.jersey.test.spi.TestContainerException;
 import org.glassfish.jersey.test.spi.TestContainerFactory;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,7 +17,6 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.context.web.WebAppConfiguration;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.context.support.GenericWebApplicationContext;
-import ubic.gemma.rest.providers.ObjectMapperResolver;
 
 import javax.ws.rs.core.Application;
 
@@ -35,7 +36,7 @@ public abstract class BaseJerseyTest extends JerseyTest implements InitializingB
      * for testing purposes.
      */
     @Autowired
-    protected WebApplicationContext applicationContext;
+    private WebApplicationContext applicationContext;
 
     @Override
     protected final TestContainerFactory getTestContainerFactory() throws TestContainerException {
@@ -43,12 +44,12 @@ public abstract class BaseJerseyTest extends JerseyTest implements InitializingB
     }
 
     @Override
-    public void afterPropertiesSet() {
+    public final void afterPropertiesSet() throws Exception {
         application.property( "contextConfig", applicationContext );
     }
 
     @Override
-    protected Application configure() {
+    protected final Application configure() {
         SecurityContextHolder.setStrategyName( SecurityContextHolder.MODE_INHERITABLETHREADLOCAL );
         application = new ResourceConfig()
                 .packages( "io.swagger.v3.jaxrs2.integration.resources", "ubic.gemma.rest" )
@@ -60,8 +61,20 @@ public abstract class BaseJerseyTest extends JerseyTest implements InitializingB
     }
 
     @Override
-    protected void configureClient( ClientConfig config ) {
+    protected final void configureClient( ClientConfig config ) {
         // ensures that the test client can decompress gzipped payloads
         config.register( GZipEncoder.class );
+    }
+
+    @Before
+    @Override
+    public final void setUp() throws Exception {
+        super.setUp();
+    }
+
+    @After
+    @Override
+    public void tearDown() throws Exception {
+        super.tearDown();
     }
 }
