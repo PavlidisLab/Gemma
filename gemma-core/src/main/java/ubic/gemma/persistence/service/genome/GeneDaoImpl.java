@@ -30,6 +30,8 @@ import org.springframework.cache.CacheManager;
 import org.springframework.stereotype.Repository;
 import ubic.basecode.util.BatchIterator;
 import ubic.gemma.model.common.Describable;
+import ubic.gemma.model.common.description.DatabaseEntry;
+import ubic.gemma.model.common.description.DatabaseEntryValueObject;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
@@ -572,6 +574,7 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
     @Override
     protected void postProcessValueObjects( List<GeneValueObject> geneValueObjects ) {
         fillAliases( geneValueObjects );
+        fillAccessions( geneValueObjects );
     }
 
     private Collection<Gene> doLoadThawedLite( Collection<Long> ids ) {
@@ -653,6 +656,28 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
             List<String> aliases = aliasByGeneId.get( gvo.getId() );
             if ( aliases != null ) {
                 gvo.setAliases( new TreeSet<>( aliases ) );
+            }
+        }
+    }
+
+    private void fillAccessions( List<GeneValueObject> geneValueObjects ) {
+        if ( geneValueObjects.isEmpty() ) {
+            return;
+        }
+        //noinspection unchecked
+        List<Object[]> results = getSessionFactory().getCurrentSession()
+                .createQuery( "select g.id, a from Gene g join g.accessions a where g.id in :ids" )
+                .setParameterList( "ids", geneValueObjects.stream().map( GeneValueObject::getId ).collect( Collectors.toSet() ) )
+                .list();
+        Map<Long, List<DatabaseEntry>> accessionsByGeneId = results.stream()
+                .collect( Collectors.groupingBy(
+                        row -> ( Long ) row[0],
+                        Collectors.mapping( row -> ( DatabaseEntry ) row[1], Collectors.toList() ) ) );
+        for ( GeneValueObject gvo : geneValueObjects ) {
+            List<DatabaseEntry> accessions = accessionsByGeneId.get( gvo.getId() );
+            if ( accessions != null ) {
+                gvo.setAccessions( accessions.stream().map( DatabaseEntryValueObject::new )
+                        .collect( Collectors.toSet() ) );
             }
         }
     }
