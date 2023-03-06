@@ -715,7 +715,7 @@ public class ExpressionExperimentServiceImpl
         try {
             confounds = BatchConfoundUtils.test( ee );
         } catch ( NotStrictlyPositiveException e ) {
-            AbstractService.log.error( "Batch confound test threw a NonStrictlyPositiveException! Returning null." );
+            AbstractService.log.error( String.format( "Batch confound test for %s threw a NonStrictlyPositiveException! Returning null.", ee ), e );
             return null;
         }
 
