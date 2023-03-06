@@ -1049,8 +1049,8 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
         addNonTroubledFilter( filters, OBJECT_ALIAS );
 
         queryString += AclQueryUtils.formAclJoinClause( OBJECT_ALIAS + ".id" );
-        queryString += " and " + AclQueryUtils.formAclRestrictionClause();
-        queryString += " and " + FilterQueryUtils.formRestrictionClause( filters );
+        queryString += AclQueryUtils.formAclRestrictionClause();
+        queryString += FilterQueryUtils.formRestrictionClause( filters );
         queryString += FilterQueryUtils.formOrderByClause( sort );
 
         Query query = this.getSessionFactory().getCurrentSession().createQuery( queryString );
