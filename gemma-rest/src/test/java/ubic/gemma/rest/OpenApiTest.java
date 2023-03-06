@@ -32,6 +32,7 @@ import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.persistence.util.TestComponent;
 import ubic.gemma.rest.swagger.resolver.CustomModelResolver;
 import ubic.gemma.rest.util.BaseJerseyTest;
+import ubic.gemma.rest.util.JacksonConfig;
 
 import javax.ws.rs.core.Response;
 import java.io.IOException;
@@ -45,7 +46,7 @@ import static ubic.gemma.rest.util.Assertions.assertThat;
 @ContextConfiguration
 public class OpenApiTest extends BaseJerseyTest {
 
-    @Import(JsonConfig.class)
+    @Import(JacksonConfig.class)
     @Configuration
     @TestComponent
     static class OpenApiTestContextConfiguration {
