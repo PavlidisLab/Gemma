@@ -21,7 +21,6 @@ package ubic.gemma.persistence.service.genome;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.hibernate.Criteria;
-import org.hibernate.Hibernate;
 import org.hibernate.Query;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.InitializingBean;
@@ -30,6 +29,7 @@ import org.springframework.cache.CacheManager;
 import org.springframework.stereotype.Repository;
 import ubic.basecode.util.BatchIterator;
 import ubic.gemma.model.common.Describable;
+import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.DatabaseEntryValueObject;
 import ubic.gemma.model.common.description.ExternalDatabase;
@@ -575,6 +575,7 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
     protected void postProcessValueObjects( List<GeneValueObject> geneValueObjects ) {
         fillAliases( geneValueObjects );
         fillAccessions( geneValueObjects );
+        fillMultifunctionalityRank( geneValueObjects );
     }
 
     private Collection<Gene> doLoadThawedLite( Collection<Long> ids ) {
@@ -656,6 +657,8 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
             List<String> aliases = aliasByGeneId.get( gvo.getId() );
             if ( aliases != null ) {
                 gvo.setAliases( new TreeSet<>( aliases ) );
+            } else {
+                gvo.setAliases( Collections.emptySortedSet() );
             }
         }
     }
@@ -676,8 +679,42 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
         for ( GeneValueObject gvo : geneValueObjects ) {
             List<DatabaseEntry> accessions = accessionsByGeneId.get( gvo.getId() );
             if ( accessions != null ) {
-                gvo.setAccessions( accessions.stream().map( DatabaseEntryValueObject::new )
+                gvo.setAccessions( accessions.stream()
+                        .map( DatabaseEntryValueObject::new )
                         .collect( Collectors.toSet() ) );
+            } else {
+                gvo.setAccessions( Collections.emptySet() );
+            }
+        }
+    }
+
+    /**
+     * Fill multifuctionality ranks.
+     * <p>
+     * Usually, if genes are loaded via {@link #loadValueObject(Identifiable)}-family of functions, this is unnecessary
+     * because of the {@code join fetch}, but in the search service, entities are retrieved via other methods that do
+     * always retrieve multifunctionality scores eagerly.
+     */
+    private void fillMultifunctionalityRank( List<GeneValueObject> geneValueObjects ) {
+        // only fill ranks that are null
+        Set<Long> ids = geneValueObjects.stream()
+                .filter( gvo -> gvo.getMultifunctionalityRank() == null )
+                .map( GeneValueObject::getId )
+                .collect( Collectors.toSet() );
+        if ( ids.isEmpty() ) {
+            return;
+        }
+        //noinspection unchecked
+        List<Object[]> results = getSessionFactory().getCurrentSession()
+                .createQuery( "select g.id, g.multifunctionality.rank from Gene g where g.id in :ids" )
+                .setParameterList( "ids", ids )
+                .list();
+        Map<Long, Double> result = results.stream()
+                .collect( Collectors.toMap( row -> ( Long ) row[0], row -> ( Double ) row[1] ) );
+        for ( GeneValueObject gvo : geneValueObjects ) {
+            Double rank = result.get( gvo.getId() );
+            if ( rank != null ) {
+                gvo.setMultifunctionalityRank( rank );
             }
         }
     }
