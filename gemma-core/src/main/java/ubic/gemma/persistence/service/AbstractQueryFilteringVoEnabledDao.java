@@ -65,9 +65,8 @@ public abstract class AbstractQueryFilteringVoEnabledDao<O extends Identifiable,
         }
 
         @Override
-        public List<O> transformList( List collection ) {
-            //noinspection unchecked
-            return ( ( List<O> ) collection ).stream()
+        public List<O> transformListTyped( List<O> collection ) {
+            return collection.stream()
                     .filter( Objects::nonNull )
                     .collect( Collectors.toList() );
         }
@@ -89,9 +88,8 @@ public abstract class AbstractQueryFilteringVoEnabledDao<O extends Identifiable,
             }
 
             @Override
-            public List<VO> transformList( List collection ) {
-                //noinspection unchecked
-                List<VO> results = ( ( List<VO> ) collection ).stream().filter( Objects::nonNull ).collect( Collectors.toList() );
+            public List<VO> transformListTyped( List<VO> collection ) {
+                List<VO> results = collection.stream().filter( Objects::nonNull ).collect( Collectors.toList() );
                 postProcessValueObjects( results );
                 return results;
             }
@@ -107,10 +105,10 @@ public abstract class AbstractQueryFilteringVoEnabledDao<O extends Identifiable,
             }
 
             @Override
-            public List<VO> transformList( List collection ) {
+            public List<VO> transformListTyped( List<VO> collection ) {
                 try {
                     postProcessingStopWatch.start();
-                    return transformer.transformList( collection );
+                    return transformer.transformListTyped( collection );
                 } finally {
                     postProcessingStopWatch.stop();
                 }

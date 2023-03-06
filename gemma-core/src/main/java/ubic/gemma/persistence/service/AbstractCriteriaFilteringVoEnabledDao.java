@@ -60,7 +60,7 @@ public abstract class AbstractCriteriaFilteringVoEnabledDao<O extends Identifiab
             }
 
             @Override
-            public List<VO> transformList( List collection ) {
+            public List<VO> transformListTyped( List<VO> collection ) {
                 try {
                     postProcessingStopWatch.start();
                     //noinspection unchecked

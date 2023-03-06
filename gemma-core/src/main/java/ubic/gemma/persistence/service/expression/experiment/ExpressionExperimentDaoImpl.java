@@ -1162,10 +1162,7 @@ public class ExpressionExperimentDaoImpl
             }
 
             @Override
-            public List<ExpressionExperimentDetailsValueObject> transformList( List collection ) {
-                //noinspection unchecked
-                List<ExpressionExperimentDetailsValueObject> vos = ( List<ExpressionExperimentDetailsValueObject> ) collection;
-
+            public List<ExpressionExperimentDetailsValueObject> transformListTyped( List<ExpressionExperimentDetailsValueObject> vos ) {
                 postProcessingTimer.start();
 
                 // sort + distinct for cache consistency
@@ -1392,8 +1389,8 @@ public class ExpressionExperimentDaoImpl
             }
 
             @Override
-            public List<ExpressionExperimentValueObject> transformList( List collection ) {
-                return transformer.transformList( collection );
+            public List<ExpressionExperimentValueObject> transformListTyped( List<ExpressionExperimentValueObject> collection ) {
+                return transformer.transformListTyped( collection );
             }
         };
     }

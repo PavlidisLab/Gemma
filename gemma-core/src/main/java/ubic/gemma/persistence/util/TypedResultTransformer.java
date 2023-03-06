@@ -13,6 +13,15 @@ public interface TypedResultTransformer<T> extends ResultTransformer {
     @Override
     T transformTuple( Object[] tuple, String[] aliases );
 
+    /**
+     * @deprecated Use {@link #transformListTyped(List)} instead.
+     */
     @Override
-    List<T> transformList( List collection );
+    @Deprecated
+    default List<T> transformList( List collection ) {
+        //noinspection unchecked
+        return transformListTyped( collection );
+    }
+
+    List<T> transformListTyped( List<T> collection );
 }
