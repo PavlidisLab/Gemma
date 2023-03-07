@@ -3,6 +3,7 @@ package ubic.gemma.persistence.service;
 import lombok.*;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.time.StopWatch;
 import org.hibernate.SessionFactory;
 import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.type.*;
@@ -65,9 +66,15 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
     @Override
     @OverridingMethodsMustInvokeSuper
     public void afterPropertiesSet() {
-        log.debug( String.format( "Configuring filterable properties for %s...", elementClass ) );
+        log.debug( String.format( "Configuring filterable properties for %s...", elementClass.getName() ) );
+        StopWatch timer = StopWatch.createStarted();
         configureFilterableProperties( new FilterablePropertiesConfigurer() );
-        log.debug( String.format( "Done configuring for %s. %d properties were registered.", elementClass, filterableProperties.size() ) );
+        String message = String.format( "Done configuring for %s. %d properties were registered in %d ms.", elementClass.getName(), filterableProperties.size(), timer.getTime() );
+        if ( timer.getTime() > 100 ) {
+            log.warn( message );
+        } else {
+            log.debug( message );
+        }
     }
 
     @Override
