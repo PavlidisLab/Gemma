@@ -25,7 +25,6 @@ import org.hibernate.Query;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cache.CacheManager;
 import org.springframework.stereotype.Repository;
 import ubic.basecode.util.BatchIterator;
 import ubic.gemma.model.common.Describable;
@@ -58,13 +57,10 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
 
     private static final int BATCH_SIZE = 100;
     private static final int MAX_RESULTS = 100;
-    private static final String G2CS_CACHE_NAME = "Gene2CsCache";
-    private final CacheManager cacheManager;
 
     @Autowired
-    public GeneDaoImpl( SessionFactory sessionFactory, CacheManager cacheManager ) {
+    public GeneDaoImpl( SessionFactory sessionFactory ) {
         super( GeneDao.OBJECT_ALIAS, Gene.class, sessionFactory );
-        this.cacheManager = cacheManager;
     }
 
     @Override
@@ -519,12 +515,6 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
     @Override
     protected GeneValueObject doLoadValueObject( Gene entity ) {
         return new GeneValueObject( entity );
-    }
-
-    @Override
-    public void afterPropertiesSet() {
-        super.afterPropertiesSet();
-        CacheUtils.getCache( cacheManager, GeneDaoImpl.G2CS_CACHE_NAME );
     }
 
     /**
