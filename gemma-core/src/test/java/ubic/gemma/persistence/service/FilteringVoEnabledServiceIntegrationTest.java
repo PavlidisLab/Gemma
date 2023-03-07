@@ -11,8 +11,10 @@ import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.persistence.util.Sort;
 
+import java.net.URL;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -23,16 +25,17 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class FilteringVoEnabledServiceIntegrationTest extends BaseSpringContextTest {
 
     @Autowired
-    private List<FilteringVoEnabledService<?, ?>> filteringServices;
+    private Map<String, FilteringVoEnabledService<?, ?>> filteringServices;
 
 
     @Test
     @Category(SlowTest.class)
     public void testFilteringByAllFilterableProperties() {
-        for ( FilteringVoEnabledService<?, ?> filteringService : filteringServices ) {
+        for ( Map.Entry<String, FilteringVoEnabledService<?, ?>> entry : filteringServices.entrySet() ) {
+            FilteringVoEnabledService<?, ?> filteringService = entry.getValue();
             for ( String property : filteringService.getFilterableProperties() ) {
                 Filter filter = filteringService.getFilter( property, Filter.Operator.eq, getStubForPropType( filteringService, property ) );
-                log.info( String.format( "Testing %s with %s", filteringService, filter ) );
+                log.info( String.format( "%s.loadValueObjects(%s, null, 0, 1)", entry.getKey(), filter ) );
                 Slice<?> slice = filteringService.loadValueObjects( Filters.by( filter ), null, 0, 1 );
                 long count = filteringService.count( Filters.by( filter ) );
                 assertThat( slice.getTotalElements() ).isEqualTo( count );
@@ -43,13 +46,15 @@ public class FilteringVoEnabledServiceIntegrationTest extends BaseSpringContextT
     @Test
     @Category(SlowTest.class)
     public void testSortingByAllFilterableProperties() {
-        for ( FilteringVoEnabledService<?, ?> filteringService : filteringServices ) {
+        for ( Map.Entry<String, FilteringVoEnabledService<?, ?>> entry : filteringServices.entrySet() ) {
+            FilteringVoEnabledService<?, ?> filteringService = entry.getValue();
             for ( String property : filteringService.getFilterableProperties() ) {
                 if ( filteringService instanceof ExpressionAnalysisResultSetService && property.endsWith( ".size" ) ) {
                     log.warn( "Skipping collection size test with the Criteria API." );
                     continue;
                 }
                 Sort sort = filteringService.getSort( property, Sort.Direction.ASC );
+                log.info( String.format( "%s.loadValueObjects(null, %s, 0, 1)", entry.getKey(), sort ) );
                 filteringService.loadValueObjects( null, sort, 0, 1 );
             }
         }
@@ -61,7 +66,9 @@ public class FilteringVoEnabledServiceIntegrationTest extends BaseSpringContextT
             return availableValues.stream().findAny().map( String::valueOf ).orElse( null );
         }
         Class<?> clazz = filteringService.getFilterablePropertyType( prop );
-        if ( Integer.class.isAssignableFrom( clazz ) ) {
+        if ( Byte.class.isAssignableFrom( clazz ) ) {
+            return "0";
+        } else if ( Integer.class.isAssignableFrom( clazz ) ) {
             return "0";
         } else if ( Long.class.isAssignableFrom( clazz ) ) {
             return "0";
@@ -71,6 +78,8 @@ public class FilteringVoEnabledServiceIntegrationTest extends BaseSpringContextT
             return "0";
         } else if ( Date.class.isAssignableFrom( clazz ) ) {
             return "2022-01-01";
+        } else if ( URL.class.isAssignableFrom( clazz ) ) {
+            return "https://example.com/";
         } else {
             return "";
         }

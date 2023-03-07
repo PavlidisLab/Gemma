@@ -65,7 +65,9 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
     @Override
     @OverridingMethodsMustInvokeSuper
     public void afterPropertiesSet() {
+        log.debug( String.format( "Configuring filterable properties for %s...", elementClass ) );
         configureFilterableProperties( new FilterablePropertiesConfigurer() );
+        log.debug( String.format( "Done configuring for %s. %d properties were registered.", elementClass, filterableProperties.size() ) );
     }
 
     @Override
@@ -78,11 +80,19 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
      */
     protected class FilterablePropertiesConfigurer {
 
+        private final Map<String, Class<?>> entityByPrefix = new HashMap<>();
+
+        /**
+         * Register a given property.
+         * @throws IllegalArgumentException if the property is already registered
+         */
         public void registerProperty( String propertyName ) {
-            if ( filterableProperties.contains( propertyName ) ) {
-                throw new IllegalArgumentException( "Filterable property %s is already registered." );
+            if ( filterableProperties.add( propertyName ) ) {
+                log.debug( String.format( "Registered property %s.", propertyName ) );
+            } else {
+                throw new IllegalArgumentException( String.format( "Filterable property %s is already registered.",
+                        propertyName ) );
             }
-            filterableProperties.add( propertyName );
         }
 
         /**
@@ -96,19 +106,29 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
                         props.stream().filter( filterableProperties::contains ).collect( Collectors.joining( ", " ) ) ) );
             }
             filterableProperties.addAll( props );
+            log.debug( String.format( "Registered properties: %s.", String.join( ", ", propertyNames ) ) );
         }
 
+        /**
+         * @throws IllegalArgumentException if no properties match the given name
+         */
         public void unregisterProperty( String propertyName ) {
-            if ( !filterableProperties.remove( propertyName ) ) {
+            if ( filterableProperties.remove( propertyName ) ) {
+                log.debug( String.format( "Unregistered property %s.", propertyName ) );
+            } else {
                 throw new IllegalArgumentException( String.format( "No such filterable properties %s.", propertyName ) );
             }
         }
 
         /**
          * Unregister all the properties matching the given predicate.
+         * @throws IllegalArgumentException if no properties match the given predicate
          */
-        public void unregisterProperties( Predicate<? super String> predicate ) {
-            if ( !filterableProperties.removeIf( predicate ) ) {
+        public void unregisterProperties( Predicate<? super String> predicate ) throws IllegalArgumentException {
+            int sizeBefore = filterableProperties.size();
+            if ( filterableProperties.removeIf( predicate ) ) {
+                log.debug( String.format( "Unregistered %d properties using a predicate.", sizeBefore - filterableProperties.size() ) );
+            } else {
                 throw new IllegalArgumentException( "No filterable properties matched the supplied predicate." );
             }
         }
@@ -122,20 +142,23 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
          * @param maxDepth    maximum depth for visiting properties. For example, zero would expose no property but the
          *                    entity itself, 1 would expose the properties of the alias, 2 would expose the properties
          *                    of any entity directly related to the given entity, etc.
+         * @throws IllegalArgumentException if no entity of the given type is registered under the given prefix or if
+         * the prefix is invalid
          */
         public void registerEntity( String prefix, Class<?> entityClass, int maxDepth ) throws IllegalArgumentException {
             if ( !prefix.isEmpty() && !prefix.endsWith( "." ) ) {
                 throw new IllegalArgumentException( "A non-empty prefix must end with a '.' character." );
             }
             if ( maxDepth <= 0 ) {
-                throw new IllegalArgumentException( String.format( "Maximum depth for adding filterable properties of %s to %s must be strictly positive.",
-                        entityClass.getName(), prefix ) );
+                throw new IllegalArgumentException( String.format( "Maximum depth for adding filterable properties of %s %s must be strictly positive.",
+                        entityClass.getName(), summarizePrefix( prefix ) ) );
             }
             ClassMetadata classMetadata = getSessionFactory().getClassMetadata( entityClass );
             if ( classMetadata == null ) {
-                throw new IllegalArgumentException( String.format( "Cannot add filterable properties for unmapped class %s.",
-                        entityClass.getName() ) );
+                throw new IllegalArgumentException( String.format( "Cannot add filterable properties for unmapped class %s %s.",
+                        entityClass.getName(), summarizePrefix( prefix ) ) );
             }
+            entityByPrefix.put( prefix, entityClass );
             String[] propertyNames = classMetadata.getPropertyNames();
             Type[] propertyTypes = classMetadata.getPropertyTypes();
             if ( classMetadata.getIdentifierPropertyName() != null ) {
@@ -147,30 +170,49 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
                 if ( propertyType.isEntityType() ) {
                     if ( maxDepth > 1 ) {
                         registerEntity( prefix + propertyName + ".", propertyType.getReturnedClass(), maxDepth - 1 );
+                    } else {
+                        log.debug( String.format( "Max depth reached, will not recurse into %s", propertyName ) );
                     }
-                } else if ( propertyTypes[i].isCollectionType() ) {
+                } else if ( propertyType.isCollectionType() ) {
                     // special case for collection size, regardless of its type
                     registerProperty( prefix + propertyName + ".size" );
-                } else if ( propertyTypes[i] instanceof MaterializedBlobType || propertyType instanceof MaterializedClobType || propertyType instanceof MaterializedNClobType ) {
+                } else if ( propertyType instanceof MaterializedBlobType || propertyType instanceof MaterializedClobType || propertyType instanceof MaterializedNClobType ) {
                     log.debug( String.format( "Property %s%s of type %s was excluded in %s: BLOBs and CLOBs are not exposed by default.",
-                            prefix, propertyName, propertyType, entityClass.getName() ) );
+                            prefix, propertyName, propertyType.getName(), entityClass.getName() ) );
                 } else if ( Filter.getConversionService().canConvert( String.class, propertyType.getReturnedClass() ) ) {
                     registerProperty( prefix + propertyName );
                 } else {
-                    log.debug( String.format( "Property %s%s of type %s in %s is not supported and will be skipped.",
-                            prefix, propertyName, propertyType, entityClass.getName() ) );
+                    log.warn( String.format( "Property %s%s of type %s in %s is not supported and will be skipped.",
+                            prefix, propertyName, propertyType.getReturnedClass().getName(), entityClass.getName() ) );
                 }
             }
+            log.debug( String.format( "Registered entity %s %s.", entityClass.getName(), summarizePrefix( prefix ) ) );
         }
 
         /**
-         * Unregister an entity at a given prefix.
+         * Unregister an entity at a given prefix previously registered via {@link #registerEntity(String, Class, int)}.
+         * <p>
+         * Note that since {@link #registerEntity(String, Class, int)} works recursively, you can unregister an entity
+         * registered under a longer prefix. For example, if you registered an {@link ubic.gemma.model.analysis.Analysis}
+         * under {@code analysis.}, you can then unregister an {@link ubic.gemma.model.expression.experiment.ExpressionExperiment}
+         * under {@code analysis.experimentAnalyzed}.
+         * @throws IllegalArgumentException if no entity of the given type is registered under the given prefix or if
+         * the prefix is invalid
          */
-        public void unregisterEntity( String prefix ) {
+        public void unregisterEntity( String prefix, Class<?> entityClass ) {
             if ( !prefix.isEmpty() && !prefix.endsWith( "." ) ) {
                 throw new IllegalArgumentException( "A non-empty prefix must end with a '.' character." );
             }
-            unregisterProperties( s -> s.startsWith( prefix ) );
+            if ( entityByPrefix.remove( prefix, entityClass ) ) {
+                if ( !filterableProperties.removeIf( s -> s.startsWith( prefix ) ) ) {
+                    log.warn( String.format( "While unregistering %s %s, no properties were removed. Is it possible that a parent prefix was already removed?",
+                            entityClass.getName(), summarizePrefix( prefix ) ) );
+                }
+                log.debug( String.format( "Registered entity %s under %s.", entityClass.getName(), summarizePrefix( prefix ) ) );
+            } else {
+                throw new IllegalArgumentException( String.format( "No entity of type %s is registered %s.",
+                        entityClass.getName(), summarizePrefix( prefix ) ) );
+            }
         }
 
         /**
@@ -181,8 +223,13 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
          * @see #registerEntity(String, Class, int)
          */
         public void registerAlias( String prefix, @Nullable String objectAlias, Class<?> propertyType, @Nullable String aliasFor, int maxDepth ) {
-            filterablePropertyAliases.add( new FilterablePropertyAlias( prefix, objectAlias, propertyType, aliasFor, maxDepth ) );
             registerEntity( prefix, propertyType, maxDepth );
+            filterablePropertyAliases.add( new FilterablePropertyAlias( prefix, objectAlias, propertyType, aliasFor, maxDepth ) );
+            log.debug( String.format( "Registered alias for %s (%s) %s.", objectAlias, propertyType.getName(), summarizePrefix( prefix ) ) );
+        }
+
+        private String summarizePrefix( String prefix ) {
+            return prefix.isEmpty() ? "as root" : String.format( "under prefix '%s'", prefix );
         }
     }
 
@@ -294,7 +341,7 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
         Key key = new Key( clazz, propertyName );
         PartialFilterablePropertyMeta partialMeta = partialFilterablePropertiesMeta.computeIfAbsent( key, ignored -> {
             try {
-                return resolveFilterablePropertyMetaInternal( propertyName, clazz, FILTERABLE_PROPERTIES_MAX_DEPTH );
+                return resolveFilterablePropertyMetaInternal( propertyName, clazz );
             } catch ( NoSuchFieldException e ) {
                 throw new IllegalArgumentException( String.format( "Could not resolve property %s on %s.", propertyName, clazz.getName() ), e );
             }
@@ -305,7 +352,7 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
     /**
      * Partial property meta.
      * <p>
-     * This is used by {@link #resolveFilterablePropertyMetaInternal(String, Class, int)} which uses a recursion that
+     * This is used by {@link #resolveFilterablePropertyMetaInternal(String, Class)} which uses a recursion that
      * does not need to track information about object alias, full property path, etc.
      */
     @Value
@@ -326,12 +373,7 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
      * @param cls      the class to check the property on.
      * @return the class of the property last in the line of nesting.
      */
-    private PartialFilterablePropertyMeta resolveFilterablePropertyMetaInternal( String property, Class<?> cls, int maxDepth ) throws NoSuchFieldException {
-        if ( maxDepth == 0 ) {
-            throw new IllegalArgumentException( String.format( "At most %d levels can be used for filtering.",
-                    FILTERABLE_PROPERTIES_MAX_DEPTH ) );
-        }
-
+    private PartialFilterablePropertyMeta resolveFilterablePropertyMetaInternal( String property, Class<?> cls ) throws NoSuchFieldException {
         ClassMetadata classMetadata = getSessionFactory().getClassMetadata( cls );
 
         String[] parts = property.split( "\\.", 2 );
@@ -353,7 +395,7 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
         // recurse only on entity type
         if ( parts.length > 1 ) {
             if ( propertyType.isEntityType() ) {
-                return resolveFilterablePropertyMetaInternal( parts[1], propertyType.getReturnedClass(), maxDepth - 1 );
+                return resolveFilterablePropertyMetaInternal( parts[1], propertyType.getReturnedClass() );
             } else if ( propertyType.isCollectionType() && "size".equals( parts[1] ) ) {
                 return new PartialFilterablePropertyMeta( Integer.class, null ); /* special case for collection size */
             } else {
@@ -365,7 +407,7 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
 
         // available values, only for enumerated types
         List<Object> availableValues;
-        if ( propertyType instanceof CustomType && ( ( CustomType ) propertyType ).getUserType() instanceof EnumType ) {
+        if ( isEnumType( propertyType ) ) {
             EnumType et = ( EnumType ) ( ( CustomType ) propertyType ).getUserType();
             //noinspection unchecked,rawtypes
             availableValues = new ArrayList<>( EnumSet.allOf( et.returnedClass() ) );
@@ -380,7 +422,7 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
         }
     }
 
-    private String getIdPropertyName() {
-        return getSessionFactory().getClassMetadata( elementClass ).getIdentifierPropertyName();
+    private static boolean isEnumType( Type type ) {
+        return type instanceof CustomType && ( ( CustomType ) type ).getUserType() instanceof EnumType;
     }
 }

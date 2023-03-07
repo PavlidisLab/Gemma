@@ -11,10 +11,10 @@
          <generator class="native">
          </generator>
       </id>
-      <property name="means" type="byte[]">
+      <property name="means" type="org.hibernate.type.MaterializedBlobType">
          <column name="MEANS" not-null="false" unique="false" sql-type="MEDIUMBLOB"/>
       </property>
-      <property name="variances" type="byte[]">
+      <property name="variances" type="org.hibernate.type.MaterializedBlobType">
          <column name="VARIANCES" not-null="false" unique="false" sql-type="MEDIUMBLOB"/>
       </property>
    </class>

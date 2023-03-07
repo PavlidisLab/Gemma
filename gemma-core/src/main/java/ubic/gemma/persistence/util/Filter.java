@@ -30,10 +30,24 @@ import org.springframework.core.convert.TypeDescriptor;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.core.convert.support.ConfigurableConversionService;
 import org.springframework.core.convert.support.GenericConversionService;
+import ubic.gemma.model.association.GOEvidenceCode;
+import ubic.gemma.model.common.auditAndSecurity.AuditAction;
 import ubic.gemma.model.common.description.DatabaseType;
+import ubic.gemma.model.common.measurement.MeasurementKind;
+import ubic.gemma.model.common.measurement.MeasurementType;
+import ubic.gemma.model.common.quantitationtype.GeneralType;
+import ubic.gemma.model.common.quantitationtype.PrimitiveType;
+import ubic.gemma.model.common.quantitationtype.ScaleType;
+import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
+import ubic.gemma.model.expression.bioAssayData.MeanVarianceRelation;
+import ubic.gemma.model.expression.experiment.FactorType;
+import ubic.gemma.model.genome.biosequence.PolymerType;
+import ubic.gemma.model.genome.biosequence.SequenceType;
 
 import javax.annotation.Nullable;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.util.Collection;
@@ -60,7 +74,7 @@ public class Filter implements PropertyMapping {
      */
     private static final ConfigurableConversionService conversionService = new GenericConversionService();
 
-    private static <T> void addConverter( Class<?> targetClass, Converter<String, T> converter, Converter<T, String> reverseConverter ) {
+    private static <T> void addConverter( Class<T> targetClass, Converter<String, T> converter, Converter<T, String> reverseConverter ) {
         conversionService.addConverter( String.class, targetClass, converter );
         conversionService.addConverter( targetClass, String.class, reverseConverter );
     }
@@ -70,6 +84,7 @@ public class Filter implements PropertyMapping {
         addConverter( Boolean.class, Boolean::parseBoolean, Object::toString );
         addConverter( Double.class, Double::parseDouble, Object::toString );
         addConverter( Float.class, Float::parseFloat, Object::toString );
+        addConverter( Byte.class, Byte::parseByte, Object::toString );
         addConverter( Long.class, Long::parseLong, Object::toString );
         addConverter( Integer.class, Integer::parseInt, Object::toString );
         addConverter( Date.class, s -> {
@@ -79,9 +94,27 @@ public class Filter implements PropertyMapping {
                 throw new ConversionFailedException( TypeDescriptor.valueOf( Date.class ), TypeDescriptor.valueOf( String.class ), s, e );
             }
         }, DATE_FORMAT::format );
+        addConverter( URL.class, s -> {
+            try {
+                return new URL( s );
+            } catch ( MalformedURLException e ) {
+                throw new RuntimeException( e );
+            }
+        }, URL::toString );
         // FIXME: move these into AbstractFilteringVoEnabledDao
         addConverter( DatabaseType.class, DatabaseType::valueOf, DatabaseType::name );
         addConverter( TechnologyType.class, TechnologyType::valueOf, TechnologyType::name );
+        addConverter( GOEvidenceCode.class, GOEvidenceCode::valueOf, GOEvidenceCode::name );
+        addConverter( ScaleType.class, ScaleType::valueOf, ScaleType::name );
+        addConverter( MeasurementKind.class, MeasurementKind::valueOf, MeasurementKind::name );
+        addConverter( MeasurementType.class, MeasurementType::valueOf, MeasurementType::name );
+        addConverter( SequenceType.class, SequenceType::valueOf, SequenceType::name );
+        addConverter( AuditAction.class, AuditAction::valueOf, AuditAction::name );
+        addConverter( PrimitiveType.class, PrimitiveType::valueOf, PrimitiveType::name );
+        addConverter( PolymerType.class, PolymerType::valueOf, PolymerType::name );
+        addConverter( FactorType.class, FactorType::valueOf, FactorType::name );
+        addConverter( GeneralType.class, GeneralType::valueOf, GeneralType::name );
+        addConverter( StandardQuantitationType.class, StandardQuantitationType::valueOf, StandardQuantitationType::name );
     }
 
     /**

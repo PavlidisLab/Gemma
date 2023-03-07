@@ -14,7 +14,9 @@ import ubic.gemma.persistence.util.Filters;
 
 import javax.annotation.Nullable;
 import javax.annotation.OverridingMethodsMustInvokeSuper;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Map;
 import java.util.regex.Pattern;
 
 /**
@@ -95,9 +97,9 @@ public abstract class AbstractCuratableDao<C extends Curatable, VO extends Abstr
         super.configureFilterableProperties( configurer );
         configurer.registerProperties( "lastUpdated", "troubled", "needsAttention" );
         configurer.unregisterProperty( "curationDetails.id" );
-        configurer.unregisterEntity(  "curationDetails.lastNeedsAttentionEvent."  );
-        configurer.unregisterEntity(  "curationDetails.lastNoteUpdateEvent."  );
-        configurer.unregisterEntity( "curationDetails.lastTroubledEvent.");
+        configurer.unregisterEntity( "curationDetails.lastNeedsAttentionEvent.", AuditEvent.class );
+        configurer.unregisterEntity( "curationDetails.lastNoteUpdateEvent.", AuditEvent.class );
+        configurer.unregisterEntity( "curationDetails.lastTroubledEvent.", AuditEvent.class );
         // remove audit trails
         configurer.unregisterProperties( Pattern.compile( "auditTrail\\..+$" ).asPredicate() );
     }
