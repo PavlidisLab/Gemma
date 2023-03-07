@@ -68,11 +68,11 @@
 					<column name="METADATA" not-null="false" unique="false"
 							sql-type="text"/>
 				</property>
-				<property name="batchEffect" type="java.lang.String">
+				<property name="batchEffect" type="org.hibernate.type.MaterializedClobType">
 					<column name="BATCH_EFFECT" not-null="false" unique="false"
 							sql-type="TEXT"/>
 				</property>
-				<property name="batchConfound" type="java.lang.String">
+				<property name="batchConfound" type="org.hibernate.type.MaterializedClobType">
 					<column name="BATCH_CONFOUND" not-null="false" unique="false"
 							sql-type="TEXT"/>
 				</property>

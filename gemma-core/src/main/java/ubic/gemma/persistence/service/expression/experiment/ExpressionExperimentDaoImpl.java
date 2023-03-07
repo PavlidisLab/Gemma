@@ -1648,13 +1648,33 @@ public class ExpressionExperimentDaoImpl
     @Override
     protected void configureFilterableProperties( FilterablePropertiesConfigurer configurer ) {
         super.configureFilterableProperties( configurer );
+
         configurer.registerProperties( "taxon", "bioAssayCount" );
+
+        // irrelevant
+        configurer.unregisterProperty( "accession.Uri" );
         configurer.unregisterProperty( "geeq.id" );
+        configurer.unregisterProperty( "source" );
+        configurer.unregisterProperty( "otherParts.size" );
+        configurer.unregisterProperty( "otherRelevantPublications.size" );
+
+        // the primary publication is not very useful, but its attached database entry is
+        configurer.unregisterEntity( "primaryPublication.", BibliographicReference.class );
+        configurer.registerEntity( "primaryPublication.pubAccession.", DatabaseEntry.class, 2 );
+        configurer.unregisterProperty( "primaryPublication.pubAccession.Uri" );
+
+        // attached terms
         configurer.registerAlias( "characteristics.", CHARACTERISTIC_ALIAS, Characteristic.class, null, 1 );
+        configurer.unregisterProperty( "characteristics.originalValue" );
         configurer.registerAlias( "experimentalDesign.experimentalFactors.factorValues.characteristics.", FACTOR_VALUE_CHARACTERISTIC_ALIAS, Characteristic.class, null, 1 );
+        configurer.unregisterProperty( "experimentalDesign.experimentalFactors.factorValues.characteristics.originalValue" );
         configurer.registerAlias( "bioAssays.sampleUsed.characteristics.", BIO_MATERIAL_CHARACTERISTIC_ALIAS, Characteristic.class, null, 1 );
+        configurer.unregisterProperty( "bioAssays.sampleUsed.characteristics.originalValue" );
         configurer.registerAlias( "allCharacteristics.", ALL_CHARACTERISTIC_ALIAS, Characteristic.class, null, 1 );
+        configurer.unregisterProperty( "allCharacteristics.originalValue" );
+
         configurer.registerAlias( "bioAssays.", BIO_ASSAY_ALIAS, BioAssay.class, null, 2 );
+        configurer.unregisterProperty( "bioAssays.accession.Uri" );
     }
 
     /**
