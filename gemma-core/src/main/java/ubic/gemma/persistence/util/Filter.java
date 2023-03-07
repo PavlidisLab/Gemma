@@ -28,22 +28,9 @@ import org.springframework.core.convert.ConversionFailedException;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.core.convert.TypeDescriptor;
 import org.springframework.core.convert.converter.Converter;
+import org.springframework.core.convert.converter.ConverterFactory;
 import org.springframework.core.convert.support.ConfigurableConversionService;
 import org.springframework.core.convert.support.GenericConversionService;
-import ubic.gemma.model.association.GOEvidenceCode;
-import ubic.gemma.model.common.auditAndSecurity.AuditAction;
-import ubic.gemma.model.common.description.DatabaseType;
-import ubic.gemma.model.common.measurement.MeasurementKind;
-import ubic.gemma.model.common.measurement.MeasurementType;
-import ubic.gemma.model.common.quantitationtype.GeneralType;
-import ubic.gemma.model.common.quantitationtype.PrimitiveType;
-import ubic.gemma.model.common.quantitationtype.ScaleType;
-import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
-import ubic.gemma.model.expression.arrayDesign.TechnologyType;
-import ubic.gemma.model.expression.bioAssayData.MeanVarianceRelation;
-import ubic.gemma.model.expression.experiment.FactorType;
-import ubic.gemma.model.genome.biosequence.PolymerType;
-import ubic.gemma.model.genome.biosequence.SequenceType;
 
 import javax.annotation.Nullable;
 import java.net.MalformedURLException;
@@ -101,20 +88,17 @@ public class Filter implements PropertyMapping {
                 throw new RuntimeException( e );
             }
         }, URL::toString );
-        // FIXME: move these into AbstractFilteringVoEnabledDao
-        addConverter( DatabaseType.class, DatabaseType::valueOf, DatabaseType::name );
-        addConverter( TechnologyType.class, TechnologyType::valueOf, TechnologyType::name );
-        addConverter( GOEvidenceCode.class, GOEvidenceCode::valueOf, GOEvidenceCode::name );
-        addConverter( ScaleType.class, ScaleType::valueOf, ScaleType::name );
-        addConverter( MeasurementKind.class, MeasurementKind::valueOf, MeasurementKind::name );
-        addConverter( MeasurementType.class, MeasurementType::valueOf, MeasurementType::name );
-        addConverter( SequenceType.class, SequenceType::valueOf, SequenceType::name );
-        addConverter( AuditAction.class, AuditAction::valueOf, AuditAction::name );
-        addConverter( PrimitiveType.class, PrimitiveType::valueOf, PrimitiveType::name );
-        addConverter( PolymerType.class, PolymerType::valueOf, PolymerType::name );
-        addConverter( FactorType.class, FactorType::valueOf, FactorType::name );
-        addConverter( GeneralType.class, GeneralType::valueOf, GeneralType::name );
-        addConverter( StandardQuantitationType.class, StandardQuantitationType::valueOf, StandardQuantitationType::name );
+        // handle ann enum to string conversion using Enum::name
+        //noinspection rawtypes
+        conversionService.addConverterFactory( new ConverterFactory<String, Enum>() {
+
+            @Override
+            public <T extends Enum> Converter<String, T> getConverter( Class<T> targetType ) {
+                //noinspection unchecked
+                return source -> ( T ) Enum.valueOf( targetType, source );
+            }
+        } );
+        conversionService.addConverter( Enum.class, String.class, ( Converter<Enum<?>, String> ) Enum::name );
     }
 
     /**
