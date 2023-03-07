@@ -55,4 +55,15 @@ public class ExpressionAnalysisResultSetServiceTest extends BaseSpringContextTes
                 Filters.by( null, "analysis.experimentAnalyzed.characteristics.size", Integer.class, Filter.Operator.greaterOrEq, 2 ),
                 null );
     }
+
+    @Test
+    public void testFilterableProperties() {
+        assertThat( expressionAnalysisResultSetService.getFilterableProperties() )
+                .contains( "analysis.id", "analysis.numberOfElementsAnalyzed" )
+                .contains( "analysis.subsetFactorValue.characteristics.id" )
+                .contains( "baselineGroup.characteristics.id" )
+                .contains( "baselineGroup.measurement.type", "baselineGroup.measurement.kindCV", "baselineGroup.measurement.representation" )
+                .doesNotContain( "analysis.name", "analysis.description" )
+                .doesNotContain( "protocol.id", "protocol.name", "protocol.description" );
+    }
 }

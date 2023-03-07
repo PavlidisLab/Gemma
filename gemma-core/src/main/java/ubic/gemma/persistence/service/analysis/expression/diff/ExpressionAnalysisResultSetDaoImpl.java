@@ -26,11 +26,13 @@ import org.hibernate.criterion.Restrictions;
 import org.hibernate.sql.JoinType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
-import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
-import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
-import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResultSetValueObject;
-import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
+import org.springframework.transaction.PlatformTransactionManager;
+import ubic.gemma.model.analysis.expression.diff.*;
+import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.DatabaseEntry;
+import ubic.gemma.model.common.measurement.Measurement;
+import ubic.gemma.model.common.measurement.MeasurementImpl;
+import ubic.gemma.model.common.protocol.Protocol;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
@@ -212,9 +214,12 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilterin
                 .createAlias( "analysis.experimentAnalyzed", "e" )
                 // we need a left outer jointure so that we do not miss any result set that lacks one of these associations
                 // these aliases are necessary to resolve filterable properties
+                .createAlias( "analysis.experimentAnalyzed.accession", "ea", JoinType.LEFT_OUTER_JOIN )
                 .createAlias( "analysis.protocol", "p", JoinType.LEFT_OUTER_JOIN )
                 .createAlias( "analysis.subsetFactorValue", "sfv", JoinType.LEFT_OUTER_JOIN )
+                .createAlias( "analysis.subsetFactorValue.characteristics", "sfvc", JoinType.LEFT_OUTER_JOIN )
                 .createAlias( "baselineGroup", "b", JoinType.LEFT_OUTER_JOIN )
+                .createAlias( "baselineGroup.characteristics", "bc", JoinType.LEFT_OUTER_JOIN )
                 .createAlias( "baselineGroup.experimentalFactor", "bef", JoinType.LEFT_OUTER_JOIN )
                 .createAlias( "baselineGroup.measurement", "bm", JoinType.LEFT_OUTER_JOIN )
                 .createAlias( "pvalueDistribution", "pvd", JoinType.LEFT_OUTER_JOIN )
@@ -236,7 +241,31 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilterin
     @Override
     protected void configureFilterableProperties( FilterablePropertiesConfigurer configurer ) {
         super.configureFilterableProperties( configurer );
-        // these cause a org.hibernate.MappingException: Unknown collection role exception (see https://github.com/PavlidisLab/Gemma/issues/518)
+
+        // this column is mostly null
+        configurer.unregisterProperty( "analysis.name" );
+
+        // this is useless
+        configurer.unregisterEntity( "analysis.protocol.", Protocol.class );
+
+        // use the characteristics instead
+        configurer.registerAlias( "analysis.subsetFactorValue.characteristics.", "sfvc", Characteristic.class, null, 1 );
+        configurer.unregisterProperty( "analysis.subsetFactorValue.characteristics.originalValue" );
+        configurer.unregisterProperty( "analysis.subsetFactorValue.value" );
+
+        // baseline is always baseline
+        configurer.unregisterProperty( "baselineGroup.isBaseline" );
+        configurer.registerAlias( "baselineGroup.characteristics.", "bc", Characteristic.class, null, 1 );
+        configurer.unregisterProperty( "baselineGroup.characteristics.originalValue" );
+        configurer.unregisterProperty( "baselineGroup.value" );
+
+        // not relevant
+        configurer.unregisterProperty( "hitListSizes.size" );
+        configurer.unregisterEntity( "pvalueDistribution.", PvalueDistribution.class );
+
+        // FIXME: these cause a org.hibernate.MappingException: Unknown collection role exception (see https://github.com/PavlidisLab/Gemma/issues/518)
+        configurer.unregisterProperty( "analysis.subsetFactorValue.characteristics.size" );
+        configurer.unregisterProperty( "baselineGroup.characteristics.size" );
         configurer.unregisterProperty( "analysis.experimentAnalyzed.characteristics.size" );
         configurer.unregisterProperty( "analysis.experimentAnalyzed.otherRelevantPublications.size" );
         configurer.unregisterProperty( "experimentalFactors.size" );
