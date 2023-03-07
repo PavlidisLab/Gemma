@@ -50,6 +50,7 @@ public class DatabaseEntry implements Identifiable, Serializable {
 
     private String accession;
     private String accessionVersion;
+    @Deprecated
     private String Uri;
     private Long id;
     private ExternalDatabase externalDatabase;
@@ -140,10 +141,12 @@ public class DatabaseEntry implements Identifiable, Serializable {
         this.id = id;
     }
 
+    @Deprecated
     public String getUri() {
         return this.Uri;
     }
 
+    @Deprecated
     public void setUri( String Uri ) {
         this.Uri = Uri;
     }
