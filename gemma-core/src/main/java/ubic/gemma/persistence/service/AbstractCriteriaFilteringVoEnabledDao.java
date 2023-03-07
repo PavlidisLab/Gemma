@@ -47,8 +47,8 @@ public abstract class AbstractCriteriaFilteringVoEnabledDao<O extends Identifiab
 
     @Override
     public void afterPropertiesSet() {
-        super.afterPropertiesSet();
         this.filterablePropertyCriteriaAliases = getFilterablePropertyCriteriaAliases();
+        super.afterPropertiesSet();
     }
 
     /**

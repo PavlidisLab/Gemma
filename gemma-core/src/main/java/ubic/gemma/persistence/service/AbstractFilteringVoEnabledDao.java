@@ -87,6 +87,9 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
          * @throws IllegalArgumentException if the property is already registered
          */
         public void registerProperty( String propertyName ) {
+            if ( getFilterablePropertyMeta( propertyName ) == null ) {
+                throw new IllegalArgumentException( "Property %s does not have any associated meta information." );
+            }
             if ( filterableProperties.add( propertyName ) ) {
                 log.debug( String.format( "Registered property %s.", propertyName ) );
             } else {
@@ -100,6 +103,13 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
          * @throws IllegalArgumentException if any of the given properties is already registered
          */
         public void registerProperties( String... propertyNames ) throws IllegalArgumentException {
+            List<String> propsMissingMeta = Arrays.stream( propertyNames )
+                    .filter( p -> getFilterablePropertyMeta( p ) == null )
+                    .collect( Collectors.toList() );
+            if ( !propsMissingMeta.isEmpty() ) {
+                throw new IllegalArgumentException( String.format( "The following properties are missing meta information: %s.",
+                        String.join( ", ", propsMissingMeta ) ) );
+            }
             List<String> props = Arrays.asList( propertyNames );
             if ( CollectionUtils.containsAny( filterableProperties, props ) ) {
                 throw new IllegalArgumentException( String.format( "The following filterable properties are already registered: %s.",
@@ -223,8 +233,8 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
          * @see #registerEntity(String, Class, int)
          */
         public void registerAlias( String prefix, @Nullable String objectAlias, Class<?> propertyType, @Nullable String aliasFor, int maxDepth ) {
-            registerEntity( prefix, propertyType, maxDepth );
             filterablePropertyAliases.add( new FilterablePropertyAlias( prefix, objectAlias, propertyType, aliasFor, maxDepth ) );
+            registerEntity( prefix, propertyType, maxDepth );
             log.debug( String.format( "Registered alias for %s (%s) %s.", objectAlias, propertyType.getName(), summarizePrefix( prefix ) ) );
         }
 
