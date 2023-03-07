@@ -33,9 +33,22 @@ public abstract class AbstractCriteriaFilteringVoEnabledDao<O extends Identifiab
     @Autowired
     private PlatformTransactionManager platformTransactionManager;
 
+    /**
+     * List of aliases used in the criteria query from {@link #getFilteringCriteria(Filters)}.
+     * <p>
+     * This is used to resolve properties to specific aliases.
+     */
+    private List<FilterablePropertyCriteriaAlias> filterablePropertyCriteriaAliases;
+
     protected AbstractCriteriaFilteringVoEnabledDao( Class<? extends O> elementClass, SessionFactory sessionFactory ) {
         // This is a good default objet alias for Hibernate Criteria since null is used to refer to the root entity.
         super( null, elementClass, sessionFactory );
+    }
+
+    @Override
+    public void afterPropertiesSet() {
+        super.afterPropertiesSet();
+        this.filterablePropertyCriteriaAliases = getFilterablePropertyCriteriaAliases();
     }
 
     /**
@@ -251,10 +264,7 @@ public abstract class AbstractCriteriaFilteringVoEnabledDao<O extends Identifiab
     @Override
     protected FilterablePropertyMeta getFilterablePropertyMeta( String propertyName ) throws IllegalArgumentException {
         FilterablePropertyMeta meta = super.getFilterablePropertyMeta( propertyName );
-        List<FilterablePropertyCriteriaAlias> aliases = getFilterablePropertyCriteriaAliases();
-        // substitute longest path first
-        aliases.sort( Comparator.comparing( a -> a.propertyName.length(), Comparator.reverseOrder() ) );
-        for ( FilterablePropertyCriteriaAlias alias : aliases ) {
+        for ( FilterablePropertyCriteriaAlias alias : filterablePropertyCriteriaAliases ) {
             if ( propertyName.startsWith( alias.propertyName + "." ) ) {
                 propertyName = propertyName.replaceFirst( "^" + Pattern.quote( alias.propertyName + "." ), "" );
                 return meta
@@ -282,6 +292,8 @@ public abstract class AbstractCriteriaFilteringVoEnabledDao<O extends Identifiab
                 CriteriaImpl.Subcriteria sc = it.next();
                 result.add( new FilterablePropertyCriteriaAlias( sc.getPath(), sc.getAlias() ) );
             }
+            // substitute longest paths first
+            result.sort( Comparator.comparing( a -> a.propertyName.length(), Comparator.reverseOrder() ) );
             return result;
         }
         return Collections.emptyList();

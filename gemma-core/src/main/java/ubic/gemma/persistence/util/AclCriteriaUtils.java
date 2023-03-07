@@ -10,6 +10,7 @@ import org.hibernate.criterion.*;
 import org.hibernate.type.StringType;
 import org.hibernate.type.Type;
 import org.springframework.security.acls.domain.BasePermission;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 /**
  * Utilities for integrating ACLs with Hibernate {@link Criteria} API.
@@ -32,13 +33,17 @@ public class AclCriteriaUtils {
                 .add( Restrictions.eqProperty( "aoi.identifier", aoiIdColumn ) )
                 .add( Restrictions.eq( "aoi.type", aoiType.getCanonicalName() ) );
 
-        if ( !SecurityUtil.isUserAdmin() ) {
+        // if this is called before a user login (i.e. in AbstractCriteriaFilteringVoEnabledDao), treat a missing
+        // authentication as an anonymous login
+        boolean hasAuthentication = SecurityContextHolder.getContext().getAuthentication() != null;
+
+        if ( !hasAuthentication || !SecurityUtil.isUserAdmin() ) {
             dc.createAlias( "aoi.entries", "ace" );
         }
 
         int readMask = BasePermission.READ.getMask();
         int writeMask = BasePermission.WRITE.getMask();
-        if ( SecurityUtil.isUserAnonymous() ) {
+        if ( !hasAuthentication || SecurityUtil.isUserAnonymous() ) {
             // the object is public
             dc.add( Restrictions.conjunction()
                     // FIXME: ace2_ is generated, but sqlRestriction can only replace the root alias
