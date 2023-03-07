@@ -168,7 +168,11 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
                 throw new IllegalArgumentException( String.format( "Cannot add filterable properties for unmapped class %s %s.",
                         entityClass.getName(), summarizePrefix( prefix ) ) );
             }
-            entityByPrefix.put( prefix, entityClass );
+            Class<?> prevValue = entityByPrefix.putIfAbsent( prefix, entityClass );
+            if ( prevValue != null ) {
+                throw new IllegalArgumentException( String.format( "An entity of type %s is already registered %s.",
+                        prevValue.getName(), summarizePrefix( prefix ) ) );
+            }
             String[] propertyNames = classMetadata.getPropertyNames();
             Type[] propertyTypes = classMetadata.getPropertyTypes();
             if ( classMetadata.getIdentifierPropertyName() != null ) {
