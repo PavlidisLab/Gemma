@@ -152,6 +152,9 @@ public class FilterArg<O extends Identifiable> extends AbstractArg<FilterArg.Fil
                 String property = subClause.PROPERTY().getText();
                 ubic.gemma.persistence.util.Filter.Operator operator;
                 try {
+                    if ( !service.getFilterableProperties().contains( property ) ) {
+                        throw new IllegalArgumentException( String.format( "The property of %s is unknown", property ) );
+                    }
                     if ( subClause.operator() != null ) {
                         operator = operatorToOperator( subClause.operator() );
                         String requiredValue = scalarToString( subClause.scalar() );
