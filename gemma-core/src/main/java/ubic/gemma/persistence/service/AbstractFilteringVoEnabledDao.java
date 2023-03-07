@@ -218,7 +218,10 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
                 throw new IllegalArgumentException( "A non-empty prefix must end with a '.' character." );
             }
             if ( entityByPrefix.remove( prefix, entityClass ) ) {
-                if ( !filterableProperties.removeIf( s -> s.startsWith( prefix ) ) ) {
+                if ( filterableProperties.removeIf( s -> s.startsWith( prefix ) ) ) {
+                    // remove entities registered under sub-prefixes
+                    entityByPrefix.keySet().removeIf( p -> p.startsWith( prefix ) );
+                } else {
                     log.warn( String.format( "While unregistering %s %s, no properties were removed. Is it possible that a parent prefix was already removed?",
                             entityClass.getName(), summarizePrefix( prefix ) ) );
                 }

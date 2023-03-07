@@ -1065,7 +1065,8 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     protected void configureFilterableProperties( FilterablePropertiesConfigurer configurer ) {
         super.configureFilterableProperties( configurer );
         configurer.registerProperty( "taxon" );
-        configurer.unregisterProperty( "alternateNames.size" );
+        // this is not useful, unless we add an alias to the alternate names
+        configurer.unregisterProperties( p -> p.endsWith( "alternateNames.size" ) );
         // because the ArrayDesign is the root property, and we allow at most 3 level, some of the recursive properties
         // (i.e. referring to another AD) will properties in a bunch of useless prefix such as mergedInto.mergedInto. To
         // disallow this, we remove those properties.
