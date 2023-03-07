@@ -18,37 +18,22 @@
  */
 package ubic.gemma.core.loader.entrez;
 
-import junit.framework.TestCase;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.junit.Test;
 
-import java.io.FileNotFoundException;
-import java.io.IOException;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static ubic.gemma.core.util.test.Assumptions.assumeThatResourceIsAvailable;
 
 /**
  * @author paul
  */
-public class EutilFetchTest extends TestCase {
+public class EutilFetchTest {
 
-    private static final Log log = LogFactory.getLog( EutilFetchTest.class.getName() );
-
-    final public void testFetch() throws Exception {
-        try {
-            String result = EutilFetch.fetch( "gds", "GSE4595", 2 );
-            TestCase.assertNotNull( result );
-            TestCase.assertTrue( "Got " + result, result.startsWith( "<?xml" ) );
-        } catch ( Exception e ) {
-            if ( e.getCause() instanceof IOException && e.getCause().getMessage().contains( "502" ) ) {
-                EutilFetchTest.log.warn( "Error 502 from NCBI, skipping test" );
-                return;
-            } else if ( e.getCause() instanceof IOException && e.getCause().getMessage().contains( "503" ) ) {
-                EutilFetchTest.log.warn( "Error 503 from NCBI, skipping test" );
-                return;
-            } else if ( e.getCause() instanceof FileNotFoundException ) {
-                EutilFetchTest.log.warn( "FileNotFound - is Eutil down? Skipping test" );
-                return;
-            }
-            throw ( e );
-        }
+    @Test
+    public void testFetch() throws Exception {
+        assumeThatResourceIsAvailable( "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi" );
+        String result = EutilFetch.fetch( "gds", "GSE4595", 2 );
+        assertNotNull( result );
+        assertTrue( "Got " + result, result.startsWith( "<?xml" ) );
     }
 }

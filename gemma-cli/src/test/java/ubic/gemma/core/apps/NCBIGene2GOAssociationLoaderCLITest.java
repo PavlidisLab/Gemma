@@ -18,6 +18,7 @@ import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.persistence.util.TestComponent;
 
 import static org.mockito.Mockito.*;
+import static ubic.gemma.core.util.test.Assumptions.assumeThatResourceIsAvailable;
 
 @Category(SlowTest.class)
 @ContextConfiguration
@@ -66,7 +67,8 @@ public class NCBIGene2GOAssociationLoaderCLITest extends BaseCliTest {
     private TestAuthenticationUtils testAuthenticationUtils;
 
     @Test
-    public void test() {
+    public void test() throws Exception {
+        assumeThatResourceIsAvailable( "ftp://ftp.ncbi.nih.gov/gene/DATA/gene2go.gz" );
         testAuthenticationUtils.runAsAdmin();
         ExternalDatabase gene2go = ExternalDatabase.Factory.newInstance( "go", DatabaseType.OTHER );
         when( externalDatabaseService.findByNameWithAuditTrail( "go" ) ).thenReturn( gene2go );

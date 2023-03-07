@@ -29,9 +29,11 @@ import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 import java.io.IOException;
+import java.net.UnknownHostException;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assume.assumeNoException;
 
 /**
  * @author pavlidis
@@ -87,30 +89,25 @@ public class ExpressionExperimentBibRefFinderTest {
     }
 
     private void checkCause( Exception e ) throws Exception {
-
-        Throwable k;
+        IOException k;
         if ( e instanceof IOException ) {
-            k = e;
+            k = ( IOException ) e;
         } else if ( e.getCause() instanceof IOException ) {
-            k = e.getCause();
+            k = ( IOException ) e.getCause();
         } else {
             throw e;
         }
-
-        if ( k instanceof IOException && k.getMessage().contains( "503" ) ) {
-            log.warn( "Test skipped due to a 503 error from NCBI" );
-            return;
-        }
-        if ( k instanceof IOException && k.getMessage().contains( "502" ) ) {
+        if ( k instanceof UnknownHostException ) {
+            assumeNoException( e );
+        } else if ( k.getMessage().contains( "503" ) ) {
+            assumeNoException( "Test skipped due to a 503 error from NCBI", e );
+        } else if ( k.getMessage().contains( "502" ) ) {
             log.warn( "Test skipped due to a 502 error from NCBI" );
-            return;
-        }
-        if ( k instanceof IOException && k.getMessage().contains( "500" ) ) {
+        } else if ( k.getMessage().contains( "500" ) ) {
             log.warn( "Test skipped due to a 500 error from NCBI" );
-            return;
+        } else {
+            throw e;
         }
-        throw e;
-
     }
 
 }

@@ -32,6 +32,7 @@ import java.nio.charset.StandardCharsets;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.*;
+import static ubic.gemma.core.util.test.Assumptions.assumeThatResourceIsAvailable;
 
 /**
  * @author paul
@@ -41,6 +42,7 @@ public class GeoBrowserServiceParseTest {
 
     @Test
     public void testParse() throws Exception {
+        assumeThatResourceIsAvailable( "http://www.ncbi.nlm.nih.gov/entrez/query/DTD/eSummary_041029.dtd" );
         String response = "<?xml version=\"1.0\"?>\n<!DOCTYPE eSummaryResult PUBLIC \"-//NLM//DTD eSummaryResult, 29 October 2004//EN\" \"http://www.ncbi.nlm.nih.gov/entrez/query/DTD/eSummary_041029.dtd\">\n"
                 + "<eSummaryResult> <DocSum>   <Id>200004595</Id>  <Item Name=\"GDS\" Type=\"String\"></Item>  <Item Name=\"title\" Type=\"String\">Expression profiling of motor cortex in sporadic amyotrophic lateral sclerosis</Item> "
                 + " <Item Name=\"summary\" Type=\"String\">We used oligonucleotide microarrays to find differentially"
@@ -165,6 +167,7 @@ public class GeoBrowserServiceParseTest {
 
     @Test
     public void testParse2() throws Exception {
+        assumeThatResourceIsAvailable( "http://www.ncbi.nlm.nih.gov/entrez/query/DTD/eSummary_041029.dtd" );
         try ( InputStream is = new ClassPathResource( "/data/loader/expression/geo/geo.esummary.test1.xml" ).getInputStream();
                 BufferedReader r = new BufferedReader( new InputStreamReader( is ) ) ) {
 
@@ -191,6 +194,7 @@ public class GeoBrowserServiceParseTest {
 
     @Test
     public void testParse3() throws Exception {
+        assumeThatResourceIsAvailable( "http://www.ncbi.nlm.nih.gov/entrez/query/DTD/eSummary_041029.dtd" );
         try ( InputStream is = new ClassPathResource( "/data/loader/expression/geo/geo.esummary.test2.xml" ).getInputStream();
                 BufferedReader r = new BufferedReader( new InputStreamReader( is ) ) ) {
 

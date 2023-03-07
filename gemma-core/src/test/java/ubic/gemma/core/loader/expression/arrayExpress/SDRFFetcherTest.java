@@ -18,39 +18,29 @@
  */
 package ubic.gemma.core.loader.expression.arrayExpress;
 
-import junit.framework.TestCase;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.junit.Assume;
+import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.common.description.LocalFile;
 
 import java.util.Collection;
 
+import static org.junit.Assert.assertEquals;
+import static ubic.gemma.core.util.test.Assumptions.assumeThatResourceIsAvailable;
+
 /**
  * @author paul
  */
 @Category(SlowTest.class)
-public class SDRFFetcherTest extends TestCase {
+public class SDRFFetcherTest {
 
-    private static final Log log = LogFactory.getLog( SDRFFetcherTest.class.getName() );
-
+    @Test
     @Category(SlowTest.class)
-    public final void testFetch() {
-        try {
-            SDRFFetcher f = new SDRFFetcher();
-            Collection<LocalFile> fetch = f.fetch( "E-SMDB-1853" );
-            TestCase.assertEquals( 1, fetch.size() );
-        } catch ( RuntimeException e ) {
-            if ( e.getCause() instanceof java.net.ConnectException ) {
-                Assume.assumeNoException( "Test skipped due to connection exception", e );
-            } else if ( e.getCause() instanceof java.net.UnknownHostException ) {
-                Assume.assumeNoException( "Test skipped due to unknown host exception", e );
-            } else {
-                throw ( e );
-            }
-        }
+    public final void testFetch() throws Exception {
+        assumeThatResourceIsAvailable( "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/SMDB/E-SMDB-1853/E-SMDB-1853.sdrf.txt" );
+        SDRFFetcher f = new SDRFFetcher();
+        Collection<LocalFile> fetch = f.fetch( "E-SMDB-1853" );
+        assertEquals( 1, fetch.size() );
     }
 
 }
