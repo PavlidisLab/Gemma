@@ -1663,9 +1663,6 @@ public class ExpressionExperimentDaoImpl
         configurer.registerEntity( "primaryPublication.pubAccession.", DatabaseEntry.class, 2 );
         configurer.unregisterProperty( "primaryPublication.pubAccession.Uri" );
 
-        // this is not useful, unless we add an alias to the alternate names
-        configurer.unregisterProperties( p -> p.endsWith( "alternateNames.size" ) );
-
         // attached terms
         configurer.registerAlias( "characteristics.", CHARACTERISTIC_ALIAS, Characteristic.class, null, 1 );
         configurer.unregisterProperty( "characteristics.originalValue" );
