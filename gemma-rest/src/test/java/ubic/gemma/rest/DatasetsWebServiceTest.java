@@ -34,6 +34,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.util.Collections;
+import java.util.Set;
 
 import static org.mockito.Mockito.*;
 import static ubic.gemma.rest.util.Assertions.assertThat;
@@ -126,6 +127,9 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
     @Before
     public void setUpMocks() {
         ee = ExpressionExperiment.Factory.newInstance();
+        Set<String> universe = mock( Set.class );
+        when( universe.contains( any( String.class ) ) ).thenReturn( true );
+        when( expressionExperimentService.getFilterableProperties() ).thenReturn( universe );
         when( expressionExperimentService.load( 1L ) ).thenReturn( ee );
         when( expressionExperimentService.getFiltersWithInferredAnnotations( any() ) ).thenAnswer( a -> a.getArgument( 0 ) );
     }

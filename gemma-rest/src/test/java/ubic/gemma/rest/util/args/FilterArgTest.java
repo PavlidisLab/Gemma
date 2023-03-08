@@ -22,8 +22,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyCollection;
-import static org.mockito.Mockito.verifyNoInteractions;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 public class FilterArgTest {
 
@@ -34,6 +33,9 @@ public class FilterArgTest {
     private FilteringService<Identifiable> mockVoService;
 
     private void setUpMockVoService() {
+        Set<String> universe = mock( Set.class );
+        when( universe.contains( any( String.class ) ) ).thenReturn( true );
+        when( mockVoService.getFilterableProperties() ).thenReturn( universe );
         when( mockVoService.getFilter( any(), any(), any( String.class ) ) )
                 .thenAnswer( arg -> Filter.parse( "alias",
                         arg.getArgument( 0, String.class ),
@@ -175,6 +177,9 @@ public class FilterArgTest {
 
     @Test
     public void testParseDate() {
+        Set<String> universe = mock( Set.class );
+        when( universe.contains( any( String.class ) ) ).thenReturn( true );
+        when( mockVoService.getFilterableProperties() ).thenReturn( universe );
         when( mockVoService.getFilter( any(), any(), any( String.class ) ) )
                 .thenAnswer( a -> Filter.parse( "alias", a.getArgument( 0 ), Date.class, a.getArgument( 1 ), a.getArgument( 2, String.class ) ) );
         FilterArg<Identifiable> fa = FilterArg.valueOf( "lastUpdated >= 2022-01-01" );
@@ -241,6 +246,9 @@ public class FilterArgTest {
 
     @Test
     public void testParseCollection() {
+        Set<String> universe = mock( Set.class );
+        when( universe.contains( any( String.class ) ) ).thenReturn( true );
+        when( mockVoService.getFilterableProperties() ).thenReturn( universe );
         //noinspection unchecked
         when( mockVoService.getFilter( any(), any(), anyCollection() ) )
                 .thenAnswer( a -> Filter.parse( "alias", a.getArgument( 0 ), String.class,
