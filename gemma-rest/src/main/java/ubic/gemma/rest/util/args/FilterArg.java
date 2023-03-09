@@ -163,7 +163,7 @@ public class FilterArg<O extends Identifiable> extends AbstractArg<FilterArg.Fil
                         operator = collectionOperatorToOperator( subClause.collectionOperator() );
                         List<String> requiredValue = subClause.collection().scalar().stream().map( FilterArg::scalarToString ).collect( Collectors.toList() );
                         ubic.gemma.persistence.util.Filter f = service.getFilter( property, operator, requiredValue );
-                        if ( ( ( Collection<?> ) f.getRequiredValue() ).isEmpty() ) {
+                        if ( f.getRequiredValue() == null || ( ( Collection<?> ) f.getRequiredValue() ).isEmpty() ) {
                             // collections must be non-empty
                             throw new MalformedArgException( String.format( "The right hand side collection in '%s' must be non-empty.", f ) );
                         }
