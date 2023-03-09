@@ -247,7 +247,7 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
          * @see #registerEntity(String, Class, int)
          */
         public void registerAlias( String prefix, @Nullable String objectAlias, Class<?> propertyType, @Nullable String aliasFor, int maxDepth ) {
-            filterablePropertyAliases.add( new FilterablePropertyAlias( prefix, objectAlias, propertyType, aliasFor, maxDepth ) );
+            filterablePropertyAliases.add( new FilterablePropertyAlias( prefix, objectAlias, propertyType, aliasFor ) );
             registerEntity( prefix, propertyType, maxDepth );
             log.debug( String.format( "Registered alias for %s (%s) %s.", objectAlias, propertyType.getName(), summarizePrefix( prefix ) ) );
         }
@@ -333,7 +333,6 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
         Class<?> propertyType;
         @Nullable
         String aliasFor;
-        int maxDepth;
     }
 
     /**
