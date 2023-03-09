@@ -264,8 +264,10 @@ public abstract class AbstractCriteriaFilteringVoEnabledDao<O extends Identifiab
     @Override
     protected FilterablePropertyMeta getFilterablePropertyMeta( String propertyName ) throws IllegalArgumentException {
         FilterablePropertyMeta meta = super.getFilterablePropertyMeta( propertyName );
+        // the .size is not actually part of the property name, so don't account for it when substituting aliases
+        String propNameWithoutSize = propertyName.replaceFirst( "\\.size$", "" );
         for ( FilterablePropertyCriteriaAlias alias : filterablePropertyCriteriaAliases ) {
-            if ( propertyName.startsWith( alias.propertyName + "." ) ) {
+            if ( propNameWithoutSize.startsWith( alias.propertyName + "." ) ) {
                 propertyName = propertyName.replaceFirst( "^" + Pattern.quote( alias.propertyName + "." ), "" );
                 return meta
                         .withObjectAlias( alias.alias )

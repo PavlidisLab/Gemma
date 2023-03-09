@@ -264,8 +264,6 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilterin
         configurer.unregisterEntity( "pvalueDistribution.", PvalueDistribution.class );
 
         // FIXME: these cause a org.hibernate.MappingException: Unknown collection role exception (see https://github.com/PavlidisLab/Gemma/issues/518)
-        configurer.unregisterProperty( "analysis.subsetFactorValue.characteristics.size" );
-        configurer.unregisterProperty( "baselineGroup.characteristics.size" );
         configurer.unregisterProperty( "analysis.experimentAnalyzed.characteristics.size" );
         configurer.unregisterProperty( "analysis.experimentAnalyzed.otherRelevantPublications.size" );
         configurer.unregisterProperty( "experimentalFactors.size" );

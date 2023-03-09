@@ -11,6 +11,7 @@ import ubic.gemma.persistence.util.Filter;
 import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.persistence.util.Sort;
 
+import javax.annotation.Nullable;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -43,17 +44,31 @@ public class ExpressionAnalysisResultSetServiceTest extends BaseSpringContextTes
 
     @Test
     public void testFilterVosByNumberOfResults() {
-        expressionAnalysisResultSetService.loadValueObjects(
-                Filters.by( null, "results.size", Integer.class, Filter.Operator.greaterOrEq, 2 ),
-                null );
+        validateSizeProperty( "results.size", null, "results.size" );
     }
 
     @Test
     @Ignore("See https://github.com/PavlidisLab/Gemma/issues/518")
     public void testFilterVosByNumberOfCharacteristics() {
-        expressionAnalysisResultSetService.loadValueObjects(
-                Filters.by( null, "analysis.experimentAnalyzed.characteristics.size", Integer.class, Filter.Operator.greaterOrEq, 2 ),
-                null );
+        validateSizeProperty( "analysis.experimentAnalyzed.characteristics.size", "e", "characteristics.size" );
+    }
+
+    /**
+     * There's a few quirks for the Criteria API when it comes to treating size.
+     */
+    @Test
+    public void testFilterBySize() {
+        validateSizeProperty( "analysis.subsetFactorValue.characteristics.size", "sfv", "characteristics.size" );
+        validateSizeProperty( "baselineGroup.characteristics.size", "b", "characteristics.size" );
+    }
+
+    private void validateSizeProperty( String property, @Nullable String expectedAlias, String expectedPropertyName ) {
+        log.info( property );
+        Filter f = expressionAnalysisResultSetService.getFilter( property, Filter.Operator.greaterOrEq, "2" );
+        assertThat( f )
+                .hasFieldOrPropertyWithValue( "objectAlias", expectedAlias )
+                .hasFieldOrPropertyWithValue( "propertyName", expectedPropertyName );
+        expressionAnalysisResultSetService.loadValueObjects( Filters.by( f ), null );
     }
 
     @Test
