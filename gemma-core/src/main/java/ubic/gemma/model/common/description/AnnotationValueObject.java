@@ -36,6 +36,7 @@ public class AnnotationValueObject extends IdentifiableValueObject<Characteristi
     private String className;
     private String termUri;
     private String termName;
+    @GemmaWebOnly
     private String description;
     private String evidenceCode;
     private String objectClass;
