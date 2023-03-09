@@ -31,7 +31,7 @@ public class ArgUtils {
      * @param name a name to use, since the passed argument can be null
      * @return the argument if it exists
      */
-    public static <T extends Arg> T requiredArg( T arg, @NonNull String name ) throws BadRequestException {
+    public static <T extends Arg<?>> T requiredArg( T arg, @NonNull String name ) throws BadRequestException {
         if ( arg == null || arg.toString().isEmpty() ) {
             throw new BadRequestException( String.format( "Value for required parameter '%s' not found.", name ) );
         } else {

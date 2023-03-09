@@ -25,6 +25,7 @@ import io.swagger.v3.oas.annotations.enums.Explode;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import lombok.Value;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.text.StringEscapeUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,13 +41,15 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
-import ubic.gemma.persistence.service.FilteringVoEnabledService;
 import ubic.gemma.persistence.service.common.description.CharacteristicService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.persistence.util.Sort;
-import ubic.gemma.rest.util.*;
+import ubic.gemma.rest.util.FilteringAndPaginatedResponseDataObject;
+import ubic.gemma.rest.util.Responder;
+import ubic.gemma.rest.util.ResponseDataObject;
+import ubic.gemma.rest.util.ResponseErrorObject;
 import ubic.gemma.rest.util.args.*;
 
 import javax.ws.rs.*;
@@ -291,10 +294,10 @@ public class AnnotationsWebService {
         for ( String value : values ) {
             Set<Long> valueIds = new HashSet<>();
 
-            SearchSettings settings = SearchSettings.expressionExperimentSearch( value );
-
-            SearchService.SearchResultMap results = searchService.search( settings, false, false );
-            List<SearchResult<ExpressionExperiment>> eeResults = results.get( ExpressionExperiment.class );
+            SearchSettings settings = SearchSettings.builder()
+                    .fillResults( false )
+                    .build();
+            List<SearchResult<ExpressionExperiment>> eeResults = searchService.search( settings, ExpressionExperiment.class );
 
             // Working only with IDs
             for ( SearchResult<ExpressionExperiment> result : eeResults ) {
@@ -342,17 +345,11 @@ public class AnnotationsWebService {
         }
     }
 
-    private static class AnnotationSearchResultValueObject {
-        public String value;
-        public String valueUri;
-        public String category;
-        public String categoryUri;
-
-        AnnotationSearchResultValueObject( String value, String valueUri, String category, String categoryUri ) {
-            this.value = value;
-            this.valueUri = valueUri;
-            this.category = category;
-            this.categoryUri = categoryUri;
-        }
+    @Value
+    public static class AnnotationSearchResultValueObject {
+        String value;
+        String valueUri;
+        String category;
+        String categoryUri;
     }
 }

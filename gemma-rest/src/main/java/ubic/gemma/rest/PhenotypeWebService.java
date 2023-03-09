@@ -22,7 +22,6 @@ import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.DumpsValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.EvidenceValueObject;
 import ubic.gemma.persistence.service.association.phenotype.PhenotypeAssociationDaoImpl;
-import ubic.gemma.rest.util.ArgUtils;
 import ubic.gemma.rest.util.Responder;
 import ubic.gemma.rest.util.ResponseDataObject;
 import ubic.gemma.rest.util.args.*;

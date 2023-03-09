@@ -54,7 +54,6 @@ import java.util.regex.Pattern;
 @Path("/platforms")
 public class PlatformsWebService {
 
-    private static final Log log = LogFactory.getLog( PlatformsWebService.class.getName() );
     private static final String ERROR_ANNOTATION_FILE_NOT_AVAILABLE = "Annotation file for platform %s does not exist or can not be accessed.";
 
     private GeneService geneService;

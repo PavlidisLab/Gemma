@@ -805,7 +805,6 @@ public class DatasetsWebService {
         return map.get( map.keySet().iterator().next() );
     }
 
-    @SuppressWarnings("unused") // Used for json serialization
     @Value
     private static class SimpleSVDValueObject {
         /**
