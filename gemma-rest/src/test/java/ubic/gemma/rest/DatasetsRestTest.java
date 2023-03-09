@@ -244,8 +244,8 @@ public class DatasetsRestTest extends BaseSpringContextTest {
 
     @Test
     @Category(SlowTest.class)
-    public void testFilterByGeeqPublicationScore() {
-        datasetsWebService.getDatasets( FilterArg.valueOf( "geeq.sScorePublication <= 1.0" ),
+    public void testFilterByGeeqQualityScore() {
+        datasetsWebService.getDatasets( FilterArg.valueOf( "geeq.publicQualityScore <= 1.0" ),
                 OffsetArg.valueOf( "0" ),
                 LimitArg.valueOf( "10" ),
                 SortArg.valueOf( "+id" )
