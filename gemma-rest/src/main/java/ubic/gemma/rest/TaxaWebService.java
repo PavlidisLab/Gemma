@@ -148,12 +148,18 @@ public class TaxaWebService {
             @PathParam("taxon") TaxonArg<?> taxonArg, // Required
             @PathParam("chromosome") String chromosomeName, // Required
             @QueryParam("strand") @DefaultValue("+") String strand, //Optional, default +
-            @QueryParam("start") LongArg start, // Required
-            @QueryParam("size") IntArg size // Required
+            @QueryParam("start") Long start, // Required
+            @QueryParam("size") Integer size // Required
     ) {
+        if ( start == null ) {
+            throw new BadRequestException( "The 'start' query parameter must be supplied." );
+        }
+        if ( size == null ) {
+            throw new BadRequestException( "The 'size' query parameter must be supplied." );
+        }
         return Responder.respond(
                 taxonArg.getGenesOnChromosome( taxonService, chromosomeService, geneService, chromosomeName,
-                        requiredArg( start, "start" ).getValue(), requiredArg( size, "size" ).getValue() ) );
+                        start, size ) );
     }
 
     /**
@@ -266,16 +272,16 @@ public class TaxaWebService {
     @Operation(summary = "Retrieve the phenotypes for a given taxon", hidden = true)
     public ResponseDataObject<Collection<?>> getTaxonPhenotypes( // Params:
             @PathParam("taxon") TaxonArg<?> taxonArg, // Required
-            @QueryParam("editableOnly") @DefaultValue("false") BoolArg editableOnly, // Optional, default false
-            @QueryParam("tree") @DefaultValue("false") BoolArg tree // Optional, default false
+            @QueryParam("editableOnly") @DefaultValue("false") Boolean editableOnly, // Optional, default false
+            @QueryParam("tree") @DefaultValue("false") Boolean tree // Optional, default false
     ) {
         Taxon taxon = taxonArgService.getEntity( taxonArg );
-        if ( tree.getValue() ) {
+        if ( tree ) {
             return Responder.respond( phenotypeAssociationManagerService
-                    .loadAllPhenotypesAsTree( new EvidenceFilter( taxon.getId(), editableOnly.getValue() ) ) );
+                    .loadAllPhenotypesAsTree( new EvidenceFilter( taxon.getId(), editableOnly ) ) );
         }
         return Responder.respond( phenotypeAssociationManagerService
-                .loadAllPhenotypesByTree( new EvidenceFilter( taxon.getId(), editableOnly.getValue() ) ) );
+                .loadAllPhenotypesByTree( new EvidenceFilter( taxon.getId(), editableOnly ) ) );
     }
 
     /**
@@ -293,12 +299,12 @@ public class TaxaWebService {
     public ResponseDataObject<Set<GeneEvidenceValueObject>> findCandidateGenesInTaxon( // Params:
             @PathParam("taxon") TaxonArg<?> taxonArg, // Required
             @Parameter(schema = @Schema(implementation = StringArrayArg.class), explode = Explode.FALSE) @QueryParam("phenotypes") StringArrayArg phenotypes, // Required
-            @QueryParam("editableOnly") @DefaultValue("false") BoolArg editableOnly // Optional, default false
+            @QueryParam("editableOnly") @DefaultValue("false") Boolean editableOnly // Optional, default false
     ) {
         requiredArg( phenotypes, "phenotypes" );
         Set<GeneEvidenceValueObject> response;
         response = this.phenotypeAssociationManagerService.findCandidateGenes(
-                new EvidenceFilter( taxonArgService.getEntity( taxonArg ).getId(), editableOnly.getValue() ),
+                new EvidenceFilter( taxonArgService.getEntity( taxonArg ).getId(), editableOnly ),
                 new HashSet<>( phenotypes.getValue() ) );
         return Responder.respond( response );
     }

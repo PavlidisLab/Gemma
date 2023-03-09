@@ -101,7 +101,7 @@ public class GeneWebService {
         SortArg<Gene> sort = SortArg.valueOf( "+id" );
         Filters filters = Filters.empty();
         filters.and( geneArgService.getFilters( genes ) );
-        return Responder.respond( geneService.loadValueObjects( filters, geneArgService.getSort( sort ), IntArg.valueOf( "0" ).getValue(), IntArg.valueOf( "-1" ).getValue() ) );
+        return Responder.respond( geneService.loadValueObjects( filters, geneArgService.getSort( sort ), 0, -1 ) );
     }
 
     /**
@@ -193,7 +193,7 @@ public class GeneWebService {
             @PathParam("gene") final GeneArg<?> geneArg, // Required
             @QueryParam("with") final GeneArg<?> with, // Required
             @QueryParam("limit") @DefaultValue("100") LimitArg limit, // Optional, default 100
-            @QueryParam("stringency") @DefaultValue("1") IntArg stringency // Optional, default 1
+            @QueryParam("stringency") @DefaultValue("1") Integer stringency // Optional, default 1
     ) {
         ArgUtils.requiredArg( with, "with" );
         return Responder

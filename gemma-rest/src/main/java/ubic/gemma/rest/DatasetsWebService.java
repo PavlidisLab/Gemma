@@ -499,11 +499,11 @@ public class DatasetsWebService {
                             content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class))) }, deprecated = true)
     public Response getDatasetExpression( // Params:
             @PathParam("dataset") DatasetArg<?> datasetArg, // Required
-            @QueryParam("filter") @DefaultValue("false") BoolArg filterData // Optional, default false
+            @QueryParam("filter") @DefaultValue("false") Boolean filterData // Optional, default false
     ) {
         ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
         try {
-            return this.outputDataFile( ee, filterData.getValue() );
+            return this.outputDataFile( ee, filterData );
         } catch ( NoRowsLeftAfterFilteringException e ) {
             return Response.noContent().build();
         } catch ( FilteringException e ) {
@@ -676,12 +676,12 @@ public class DatasetsWebService {
     public ResponseDataObject<List<ExperimentExpressionLevelsValueObject>> getDatasetExpressionForGenes( // Params:
             @PathParam("datasets") DatasetArrayArg datasets, // Required
             @PathParam("genes") GeneArrayArg genes, // Required
-            @QueryParam("keepNonSpecific") @DefaultValue("false") BoolArg keepNonSpecific, // Optional, default false
+            @QueryParam("keepNonSpecific") @DefaultValue("false") Boolean keepNonSpecific, // Optional, default false
             @QueryParam("consolidate") ExpLevelConsolidationArg consolidate // Optional, default everything is returned
     ) {
         return Responder.respond( processedExpressionDataVectorService
                 .getExpressionLevels( datasetArgService.getEntities( datasets ),
-                        geneArgService.getEntities( genes ), keepNonSpecific.getValue(),
+                        geneArgService.getEntities( genes ), keepNonSpecific,
                         consolidate == null ? null : consolidate.getValue() )
         );
     }
@@ -715,15 +715,14 @@ public class DatasetsWebService {
     @Operation(summary = "Retrieve the principal components (PCA) of a set of datasets")
     public ResponseDataObject<List<ExperimentExpressionLevelsValueObject>> getDatasetExpressionPca( // Params:
             @PathParam("datasets") DatasetArrayArg datasets, // Required
-            @QueryParam("component") @DefaultValue("1") IntArg component, // Required, default 1
+            @QueryParam("component") @DefaultValue("1") Integer component, // Required, default 1
             @QueryParam("limit") @DefaultValue("100") LimitArg limit, // Optional, default 100
-            @QueryParam("keepNonSpecific") @DefaultValue("false") BoolArg keepNonSpecific, // Optional, default false
+            @QueryParam("keepNonSpecific") @DefaultValue("false") Boolean keepNonSpecific, // Optional, default false
             @QueryParam("consolidate") ExpLevelConsolidationArg consolidate // Optional, default everything is returned
     ) {
-        ArgUtils.requiredArg( component, "component" );
         return Responder.respond( processedExpressionDataVectorService
                 .getExpressionLevelsPca( datasetArgService.getEntities( datasets ), limit.getValueNoMaximum(),
-                        component.getValue(), keepNonSpecific.getValue(),
+                        component, keepNonSpecific,
                         consolidate == null ? null : consolidate.getValue() )
         );
     }
@@ -758,16 +757,18 @@ public class DatasetsWebService {
     @Operation(summary = "Retrieve the expression levels of a set of datasets subject to a threshold on their differential expressions")
     public ResponseDataObject<List<ExperimentExpressionLevelsValueObject>> getDatasetDifferentialExpression( // Params:
             @PathParam("datasets") DatasetArrayArg datasets, // Required
-            @QueryParam("diffExSet") LongArg diffExSet, // Required
-            @QueryParam("threshold") @DefaultValue("1.0") DoubleArg threshold, // Optional, default 1.0
+            @QueryParam("diffExSet") Long diffExSet, // Required
+            @QueryParam("threshold") @DefaultValue("1.0") Double threshold, // Optional, default 1.0
             @QueryParam("limit") @DefaultValue("100") LimitArg limit, // Optional, default 100
-            @QueryParam("keepNonSpecific") @DefaultValue("false") BoolArg keepNonSpecific, // Optional, default false
+            @QueryParam("keepNonSpecific") @DefaultValue("false") Boolean keepNonSpecific, // Optional, default false
             @QueryParam("consolidate") ExpLevelConsolidationArg consolidate // Optional, default everything is returned
     ) {
-        ArgUtils.requiredArg( diffExSet, "diffExSet" );
+        if ( diffExSet == null ) {
+            throw new BadRequestException( "The 'diffExSet' query parameter must be supplied." );
+        }
         return Responder.respond( processedExpressionDataVectorService
                 .getExpressionLevelsDiffEx( datasetArgService.getEntities( datasets ),
-                        diffExSet.getValue(), threshold.getValue(), limit.getValueNoMaximum(), keepNonSpecific.getValue(),
+                        diffExSet, threshold, limit.getValueNoMaximum(), keepNonSpecific,
                         consolidate == null ? null : consolidate.getValue() )
         );
     }

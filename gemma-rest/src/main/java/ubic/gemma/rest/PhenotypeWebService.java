@@ -34,7 +34,7 @@ import java.util.Set;
 /**
  * RESTful interface for phenotypes.
  * Does not have an 'all' endpoint (no use-cases). To list all phenotypes on a specific taxon,
- * see {@link TaxaWebService#getTaxonPhenotypes(TaxonArg, BoolArg, BoolArg)}}.
+ * see {@link TaxaWebService#getTaxonPhenotypes(TaxonArg, Boolean, Boolean)}}.
  *
  * @author tesarst
  */
@@ -71,13 +71,15 @@ public class PhenotypeWebService {
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve all the evidence from a given external database name", hidden = true)
     public ResponseDataObject<Set<EvidenceValueObject<? extends PhenotypeAssociation>>> getPhenotypeEvidence( // Params:
-            @QueryParam("database") StringArg database, // required
+            @QueryParam("database") String database, // required
             @QueryParam("offset") @DefaultValue("0") OffsetArg offset, // Optional, default 0
             @QueryParam("limit") @DefaultValue(PhenotypeAssociationDaoImpl.DEFAULT_PA_LIMIT + "") LimitArg limit // Opt.
     ) {
-        ArgUtils.requiredArg( database, "database" );
+        if ( database == null ) {
+            throw new BadRequestException( "The 'database' query parameter must be supplied." );
+        }
         return Responder.respond( this.phenotypeAssociationManagerService
-                .loadEvidenceWithExternalDatabaseName( database.getValue(), limit.getValueNoMaximum(), offset.getValue() ) );
+                .loadEvidenceWithExternalDatabaseName( database, limit.getValueNoMaximum(), offset.getValue() ) );
     }
 
     /**
