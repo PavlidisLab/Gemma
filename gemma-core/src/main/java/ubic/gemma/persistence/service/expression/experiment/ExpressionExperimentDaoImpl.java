@@ -1659,6 +1659,9 @@ public class ExpressionExperimentDaoImpl
         configurer.unregisterProperty( "otherParts.size" );
         configurer.unregisterProperty( "otherRelevantPublications.size" );
 
+        // reserved for curators
+        configurer.unregisterProperty( "curationDetails.curationNote" );
+
         // only expose selected fields for GEEQ
         configurer.unregisterEntity( "geeq.", Geeq.class );
         configurer.registerProperty( "geeq.publicQualityScore" );
