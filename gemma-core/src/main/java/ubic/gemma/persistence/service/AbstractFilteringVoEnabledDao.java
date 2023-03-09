@@ -305,8 +305,8 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
      */
     @With
     @Value
-    @AllArgsConstructor(access = AccessLevel.PRIVATE)
     protected static class FilterablePropertyMeta {
+        @Nullable
         String objectAlias;
         String propertyName;
         Class<?> propertyType;

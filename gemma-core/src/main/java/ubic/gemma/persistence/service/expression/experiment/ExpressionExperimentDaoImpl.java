@@ -64,6 +64,7 @@ import ubic.gemma.persistence.util.*;
 
 import javax.annotation.Nullable;
 import java.util.*;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import static java.util.stream.Collectors.groupingBy;
@@ -1658,6 +1659,11 @@ public class ExpressionExperimentDaoImpl
         configurer.unregisterProperty( "otherParts.size" );
         configurer.unregisterProperty( "otherRelevantPublications.size" );
 
+        // only expose selected fields for GEEQ
+        configurer.unregisterEntity( "geeq.", Geeq.class );
+        configurer.registerProperty( "geeq.publicQualityScore" );
+        configurer.registerProperty( "geeq.publicSuitabilityScore" );
+
         // the primary publication is not very useful, but its attached database entry is
         configurer.unregisterEntity( "primaryPublication.", BibliographicReference.class );
         configurer.registerEntity( "primaryPublication.pubAccession.", DatabaseEntry.class, 2 );
@@ -1694,6 +1700,14 @@ public class ExpressionExperimentDaoImpl
         if ( propertyName.equals( "bioAssayCount" ) ) {
             return getFilterablePropertyMeta( "bioAssays.size" )
                     .withDescription( "alias for bioAssays.size" );
+        }
+
+        if ( propertyName.equals( "geeq.publicQualityScore" ) ) {
+            return new FilterablePropertyMeta( null, "(case when geeq.manualQualityOverride = true then geeq.manualQualityScore else geeq.detectedQualityScore end)", Double.class, null, null );
+        }
+
+        if ( propertyName.equals( "geeq.publicSuitabilityScore" ) ) {
+            return new FilterablePropertyMeta( null, "(case when geeq.manualSuitabilityOverride = true then geeq.manualSuitabilityScore else geeq.detectedSuitabilityScore end)", Double.class, null, null );
         }
 
         return super.getFilterablePropertyMeta( propertyName );

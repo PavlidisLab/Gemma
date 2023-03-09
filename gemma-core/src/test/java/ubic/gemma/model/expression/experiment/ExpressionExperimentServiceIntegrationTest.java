@@ -367,6 +367,18 @@ public class ExpressionExperimentServiceIntegrationTest extends BaseSpringContex
     }
 
     @Test
+    public void testFilterByGeeqScore() {
+        Filter f = expressionExperimentService.getFilter( "geeq.publicQualityScore", Filter.Operator.greaterOrEq, "0.9" );
+        assertThat( f )
+                .hasFieldOrPropertyWithValue( "objectAlias", null )
+                .hasFieldOrPropertyWithValue( "propertyName", "(case when geeq.manualQualityOverride = true then geeq.manualQualityScore else geeq.detectedQualityScore end)" )
+                .hasFieldOrPropertyWithValue( "requiredValue", 0.9 )
+                .hasFieldOrPropertyWithValue( "originalProperty", "geeq.publicQualityScore" );
+        assertThat( expressionExperimentService.load( Filters.by( f ), null ) )
+                .isEmpty();
+    }
+
+    @Test
     public void testCacheInvalidationWhenACharacteristicIsDeleted() {
         Characteristic c = new Characteristic();
         c.setCategory( "bar" );
