@@ -174,7 +174,7 @@ public class FilterQueryUtils {
     }
 
     private static String formParamName( PropertyMapping mapping, int i ) {
-        return mapping.getProperty().replaceAll("\\W", "_");
+        return mapping.getProperty().replaceAll( "\\W", "_" ) + i;
     }
 
     private static String escapeLike( String s ) {
