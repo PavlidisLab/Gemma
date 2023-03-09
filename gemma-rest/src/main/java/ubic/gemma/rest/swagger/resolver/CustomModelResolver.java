@@ -12,7 +12,6 @@ import io.swagger.v3.core.jackson.ModelResolver;
 import io.swagger.v3.oas.models.media.Schema;
 import lombok.Value;
 import lombok.extern.apachecommons.CommonsLog;
-import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.MessageSource;
@@ -20,9 +19,6 @@ import org.springframework.context.MessageSourceResolvable;
 import org.springframework.stereotype.Component;
 import ubic.gemma.core.search.SearchService;
 import ubic.gemma.model.common.Identifiable;
-import ubic.gemma.persistence.service.FilteringService;
-import ubic.gemma.persistence.service.analysis.expression.diff.ExpressionAnalysisResultSetService;
-import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeService;
 import ubic.gemma.rest.SearchWebService;
 import ubic.gemma.rest.util.args.*;
 
@@ -73,7 +69,7 @@ public class CustomModelResolver extends ModelResolver {
     }
 
     /**
-     * Resolves allowed values for the {@link ubic.gemma.rest.SearchWebService#search(String, TaxonArg, PlatformArg, List, LimitArg)}
+     * Resolves allowed values for the {@link ubic.gemma.rest.SearchWebService#search(String, TaxonArg, PlatformArg, List, LimitArg, StringArrayArg)}
      * resultTypes argument.
      * <p>
      * This ensures that the OpenAPI specification exposes all supported search result types in the {@link SearchService} as
@@ -112,7 +108,7 @@ public class CustomModelResolver extends ModelResolver {
     }
 
     @Autowired
-    private List<FilteringService<?>> filteringServices;
+    private List<EntityArgService<?, ?>> entityArgServices;
 
     @Value
     private static class FilterablePropMeta {
@@ -140,7 +136,7 @@ public class CustomModelResolver extends ModelResolver {
         //noinspection unchecked
         Class<Identifiable> clazz = ( Class<Identifiable> ) candidateServiceTypes[0].getRawClass();
         // kind of silly, this can be done with Spring 4+ with generic injection
-        FilteringService<?> filteringService = filteringServices.stream()
+        EntityArgService<?, ?> filteringService = entityArgServices.stream()
                 .filter( s -> clazz.isAssignableFrom( s.getElementClass() ) )
                 .findAny()
                 .orElseThrow( () -> new IllegalArgumentException( String.format( "Could not find filtering service for %s for resolving available properties of %s.", clazz.getName(), a ) ) );
@@ -157,7 +153,7 @@ public class CustomModelResolver extends ModelResolver {
                 .collect( Collectors.toList() );
     }
 
-    private List<FilterablePropMetaAllowedValue> resolveAllowedValues( FilteringService<?> filteringService, String p, Locale locale ) {
+    private List<FilterablePropMetaAllowedValue> resolveAllowedValues( EntityArgService<?, ?> filteringService, String p, Locale locale ) {
         List<Object> allowedValues = filteringService.getFilterablePropertyAllowedValues( p );
         List<MessageSourceResolvable> allowedValuesLabels = filteringService.getFilterablePropertyResolvableAvailableValuesLabels( p );
         if ( allowedValues != null && allowedValuesLabels != null ) {
@@ -200,10 +196,10 @@ public class CustomModelResolver extends ModelResolver {
             return "";
     }
 
-    private static boolean isCriteriaBased( FilteringService<?> service ) {
+    private static boolean isCriteriaBased( EntityArgService<?, ?> service ) {
         // this is a temporary fix, there's no way to tell if the DAO is implemented with AbstractCriteriaFilteringVoEnabledDao
         // from the service layer
-        return service instanceof ExpressionAnalysisResultSetService || service instanceof QuantitationTypeService;
+        return service instanceof ExpressionAnalysisResultSetArgService;
     }
 
     /**

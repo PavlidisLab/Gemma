@@ -1,5 +1,6 @@
 package ubic.gemma.rest.util.args;
 
+import org.springframework.context.MessageSourceResolvable;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.persistence.service.FilteringService;
 import ubic.gemma.persistence.util.Filters;
@@ -9,13 +10,45 @@ import javax.annotation.Nonnull;
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.NotFoundException;
 import java.util.List;
+import java.util.Set;
 
 public abstract class AbstractEntityArgService<T extends Identifiable, S extends FilteringService<T>> implements EntityArgService<T, S> {
 
     protected final S service;
 
+
     protected AbstractEntityArgService( S service ) {
         this.service = service;
+    }
+
+    @Override
+    public Class<? extends T> getElementClass() {
+        return service.getElementClass();
+    }
+
+    @Override
+    public Set<String> getFilterableProperties() {
+        return service.getFilterableProperties();
+    }
+
+    @Override
+    public Class<?> getFilterablePropertyType( String p ) {
+        return service.getFilterablePropertyType( p );
+    }
+
+    @Override
+    public String getFilterablePropertyDescription( String p ) {
+        return service.getFilterablePropertyDescription( p );
+    }
+
+    @Override
+    public List<Object> getFilterablePropertyAllowedValues( String p ) {
+        return service.getFilterablePropertyAllowedValues( p );
+    }
+
+    @Override
+    public List<MessageSourceResolvable> getFilterablePropertyResolvableAvailableValuesLabels( String p ) {
+        return service.getFilterablePropertyResolvableAvailableValuesLabels( p );
     }
 
     @Override
