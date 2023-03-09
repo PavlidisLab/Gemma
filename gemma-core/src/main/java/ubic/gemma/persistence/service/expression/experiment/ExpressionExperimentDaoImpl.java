@@ -1659,6 +1659,8 @@ public class ExpressionExperimentDaoImpl
         configurer.unregisterProperty( "otherParts.size" );
         configurer.unregisterProperty( "otherRelevantPublications.size" );
 
+        configurer.unregisterProperties( p -> p.endsWith( "externalDatabases.size" ) );
+
         // reserved for curators
         configurer.unregisterProperty( "curationDetails.curationNote" );
 

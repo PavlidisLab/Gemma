@@ -23,6 +23,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonValueObject;
+import ubic.gemma.persistence.service.AbstractFilteringVoEnabledDao;
 import ubic.gemma.persistence.service.AbstractQueryFilteringVoEnabledDao;
 import ubic.gemma.persistence.util.BusinessKey;
 import ubic.gemma.persistence.util.Filters;
@@ -98,6 +99,12 @@ public class TaxonDaoImpl extends AbstractQueryFilteringVoEnabledDao<Taxon, Taxo
     @Override
     protected TaxonValueObject doLoadValueObject( Taxon entity ) {
         return new TaxonValueObject( entity );
+    }
+
+    @Override
+    protected void configureFilterableProperties( AbstractFilteringVoEnabledDao<Taxon, TaxonValueObject>.FilterablePropertiesConfigurer configurer ) {
+        super.configureFilterableProperties( configurer );
+        configurer.unregisterProperty( "externalDatabase.externalDatabases.size" );
     }
 
     @Override
