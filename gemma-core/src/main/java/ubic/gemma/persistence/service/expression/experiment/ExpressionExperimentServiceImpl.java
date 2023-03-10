@@ -89,7 +89,6 @@ import java.util.stream.Stream;
  * @see ExpressionExperimentService
  */
 @Service
-@Transactional
 public class ExpressionExperimentServiceImpl
         extends AbstractFilteringVoEnabledService<ExpressionExperiment, ExpressionExperimentValueObject>
         implements ExpressionExperimentService {
@@ -142,6 +141,7 @@ public class ExpressionExperimentServiceImpl
 
     @Override
     @Timed
+    @Transactional(readOnly = true)
     public ExpressionExperiment load( Long id ) {
         return super.load( id );
     }
