@@ -24,15 +24,11 @@ import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.persistence.service.FilteringService;
-import ubic.gemma.persistence.service.analysis.expression.diff.ExpressionAnalysisResultSetService;
-import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
-import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.persistence.util.TestComponent;
 import ubic.gemma.rest.swagger.resolver.CustomModelResolver;
 import ubic.gemma.rest.util.BaseJerseyTest;
 import ubic.gemma.rest.util.JacksonConfig;
+import ubic.gemma.rest.util.args.*;
 
 import javax.ws.rs.core.Response;
 import java.io.IOException;
@@ -57,26 +53,26 @@ public class OpenApiTest extends BaseJerseyTest {
         }
 
         @Bean
-        public ExpressionExperimentService expressionExperimentService() {
-            return mockFilteringService( ExpressionExperimentService.class, ExpressionExperiment.class );
+        public DatasetArgService datasetArgService() {
+            return mockFilteringService( DatasetArgService.class, ExpressionExperiment.class );
         }
 
         @Bean
-        public ExpressionAnalysisResultSetService expressionAnalysisResultSetService() {
-            return mockFilteringService( ExpressionAnalysisResultSetService.class, ExpressionAnalysisResultSet.class );
+        public ExpressionAnalysisResultSetArgService expressionAnalysisResultSetArgService() {
+            return mockFilteringService( ExpressionAnalysisResultSetArgService.class, ExpressionAnalysisResultSet.class );
         }
 
         @Bean
-        public ArrayDesignService arrayDesignService() {
-            return mockFilteringService( ArrayDesignService.class, ArrayDesign.class );
+        public PlatformArgService platformArgService() {
+            return mockFilteringService( PlatformArgService.class, ArrayDesign.class );
         }
 
         @Bean
-        public TaxonService taxonService() {
-            return mockFilteringService( TaxonService.class, Taxon.class );
+        public TaxonArgService taxonService() {
+            return mockFilteringService( TaxonArgService.class, Taxon.class );
         }
 
-        private static <S extends Identifiable, T extends FilteringService<S>> T mockFilteringService( Class<T> clazz, Class<S> elementClass ) {
+        private static <S extends Identifiable, T extends EntityArgService<S, ?>> T mockFilteringService( Class<T> clazz, Class<S> elementClass ) {
             T ees = mock( clazz );
             when( ees.getElementClass() ).thenAnswer( a -> elementClass );
             when( ees.getFilterableProperties() ).thenReturn( Collections.emptySet() );
