@@ -19,17 +19,16 @@
 
 package ubic.gemma.core.analysis.preprocess;
 
+import ubic.gemma.model.common.quantitationtype.ScaleType;
+
 /**
- * This exception gets thrown when the log scale is unknown or ambiguous.
+ * Exception raised when data from a given scale cannot be converted to another scale.
  *
  * @author ptan
  */
-public class UnknownLogScaleException extends UnsupportedOperationException {
+public class UnsupportedQuantitationScaleConversionException extends QuantitationTypeConversionException {
 
-    private static final long serialVersionUID = -8809686106256692856L;
-
-    public UnknownLogScaleException( String message ) {
-        super( message );
+    public UnsupportedQuantitationScaleConversionException( ScaleType sourceScaleType, ScaleType targetScaleType ) {
+        super( String.format( "Cannot transform data from %s to %s scale.", sourceScaleType, targetScaleType ) );
     }
-
 }

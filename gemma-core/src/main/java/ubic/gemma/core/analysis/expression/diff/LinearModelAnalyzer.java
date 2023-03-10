@@ -20,7 +20,6 @@ package ubic.gemma.core.analysis.expression.diff;
 
 import cern.colt.matrix.DoubleMatrix1D;
 import cern.colt.matrix.impl.DenseDoubleMatrix1D;
-import cern.colt.matrix.impl.DenseDoubleMatrix2D;
 import org.apache.commons.collections4.Transformer;
 import org.apache.commons.collections4.TransformerUtils;
 import org.apache.commons.lang3.ArrayUtils;
@@ -707,7 +706,7 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
         /*
          * FIXME: remove columns that are marked as outliers, this will make some steps cleaner
          */
-        expressionData = ExpressionDataDoubleMatrixUtil.filterAndLog2Transform( quantitationType, expressionData );
+        expressionData = ExpressionDataDoubleMatrixUtil.filterAndLog2Transform( expressionData );
         DoubleMatrix<CompositeSequence, BioMaterial> bareFilteredDataMatrix = expressionData.getMatrix();
 
         DoubleMatrix1D librarySizes = getLibrarySizes( config, expressionData );

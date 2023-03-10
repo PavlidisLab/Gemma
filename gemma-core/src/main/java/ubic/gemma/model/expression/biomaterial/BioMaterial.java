@@ -29,6 +29,7 @@ import ubic.gemma.model.genome.Taxon;
 
 import javax.persistence.Transient;
 import java.io.Serializable;
+import java.util.Collections;
 import java.util.Set;
 import java.util.HashSet;
 
@@ -115,6 +116,13 @@ public class BioMaterial extends AbstractDescribable implements gemma.gsec.model
     public static final class Factory {
         public static BioMaterial newInstance() {
             return new BioMaterial();
+        }
+
+        public static BioMaterial newInstance( String name, BioAssay ba ) {
+            BioMaterial bm = new BioMaterial();
+            bm.setName( name );
+            bm.setBioAssaysUsedIn( Collections.singleton( ba ) );
+            return bm;
         }
     }
 

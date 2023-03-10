@@ -305,9 +305,9 @@ public class ProcessedExpressionDataVectorServiceImpl
             ee = helperService.updateRanks( ee );
             assert ee.getNumberOfDataVectors() != null;
             return ee.getProcessedExpressionDataVectors();
-        } catch ( Exception e ) {
+        } catch ( RuntimeException e ) {
             auditTrailService.addUpdateEvent( ee, FailedProcessedVectorComputationEvent.class, "Failed to create processed expression data vectors.", e );
-            throw new RuntimeException( e );
+            throw e;
         }
 
     }

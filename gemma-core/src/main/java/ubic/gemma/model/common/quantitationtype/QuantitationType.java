@@ -18,10 +18,12 @@
  */
 package ubic.gemma.model.common.quantitationtype;
 
+import lombok.ToString;
 import ubic.gemma.model.common.AbstractDescribable;
 
 import java.io.Serializable;
 
+@ToString(callSuper = true)
 public abstract class QuantitationType extends AbstractDescribable implements Serializable {
 
     /**
@@ -202,6 +204,28 @@ public abstract class QuantitationType extends AbstractDescribable implements Se
 
         public static QuantitationType newInstance() {
             return new QuantitationTypeImpl();
+        }
+
+        /**
+         * Create a new QT with the same spec as the provided one.
+         * <p>
+         * Note: since this is a new instance, we don't copy the {@link #getId()}, {@link #getIsPreferred()} or
+         * {@link #getIsMaskedPreferred()} over.
+         */
+        public static QuantitationType newInstance( QuantitationType quantitationType ) {
+            QuantitationType result = newInstance();
+            result.setName( quantitationType.getName() );
+            result.setDescription( quantitationType.getDescription() );
+            result.scale = quantitationType.scale;
+            result.representation = quantitationType.representation;
+            result.type = quantitationType.type;
+            result.generalType = quantitationType.generalType;
+            result.isNormalized = quantitationType.isNormalized;
+            result.isRatio = quantitationType.isRatio;
+            result.isBackground = quantitationType.isBackground;
+            result.isBackgroundSubtracted = quantitationType.isBackgroundSubtracted;
+            result.isBatchCorrected = quantitationType.isBatchCorrected;
+            return result;
         }
 
     }

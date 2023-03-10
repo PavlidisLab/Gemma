@@ -18,18 +18,29 @@
  */
 package ubic.gemma.core.datastructure.matrix;
 
+import cern.colt.list.DoubleArrayList;
 import cern.colt.matrix.DoubleMatrix1D;
+import cern.colt.matrix.DoubleMatrix2D;
+import cern.colt.matrix.impl.DenseDoubleMatrix2D;
+import cern.jet.math.Functions;
+import cern.jet.stat.Descriptive;
+import lombok.Value;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.math.MatrixStats;
-import ubic.gemma.core.analysis.preprocess.UnknownLogScaleException;
+import ubic.gemma.core.analysis.preprocess.QuantitationTypeConversionException;
+import ubic.gemma.core.analysis.preprocess.UnsupportedQuantitationScaleConversionException;
+import ubic.gemma.core.analysis.preprocess.UnsupportedQuantitationTypeConversionException;
 import ubic.gemma.core.analysis.preprocess.filter.ExpressionExperimentFilter;
-import ubic.gemma.model.common.quantitationtype.QuantitationType;
-import ubic.gemma.model.common.quantitationtype.ScaleType;
+import ubic.gemma.model.common.quantitationtype.*;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
+
+import javax.annotation.CheckReturnValue;
+import java.util.*;
+import java.util.stream.Collectors;
 
 
 /**
@@ -38,8 +49,6 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
  * @author pavlidis
  */
 public class ExpressionDataDoubleMatrixUtil {
-
-    private static final int LARGEST_EXPECTED_LOGGED_VALUE = 20;
 
     private static final double LOGARITHM_BASE = 2.0;
     private static final int COLUMNS_LIMIT = 4;
@@ -51,14 +60,11 @@ public class ExpressionDataDoubleMatrixUtil {
      * Log2 transform if necessary, do any required filtering prior to analysis. Count data is converted to log2CPM (but
      * we store log2cpm as the processed data, so that is what would generally be used).
      *
-     * @param quantitationType QT
      * @param dmatrix matrix
      * @return ee data double matrix
      */
-    public static ExpressionDataDoubleMatrix filterAndLog2Transform( QuantitationType quantitationType,
-            ExpressionDataDoubleMatrix dmatrix ) {
-
-        dmatrix = ExpressionDataDoubleMatrixUtil.ensureLog2Scale( quantitationType, dmatrix );
+    public static ExpressionDataDoubleMatrix filterAndLog2Transform( ExpressionDataDoubleMatrix dmatrix ) {
+        dmatrix = ExpressionDataDoubleMatrixUtil.ensureLog2Scale( dmatrix, false );
 
         /*
          * We do this second because doing it first causes some kind of subtle problem ... (round off? I could not
@@ -81,11 +87,9 @@ public class ExpressionDataDoubleMatrixUtil {
              * the data are log transformed the threshold should be transformed as well (it's not that simple),
              * but that's a minor effect.
              * To somewhat counter the effect of lowering this stringency, increasing the stringency on VALUES_LIMIT may help */
-            dmatrix = ExpressionExperimentFilter
-                    .tooFewDistinctValues( dmatrix, ExpressionDataDoubleMatrixUtil.VALUES_LIMIT, 0.001 );
+            dmatrix = ExpressionExperimentFilter.tooFewDistinctValues( dmatrix, ExpressionDataDoubleMatrixUtil.VALUES_LIMIT, 0.001 );
             if ( dmatrix.rows() < r ) {
-                ExpressionDataDoubleMatrixUtil.log
-                        .info( ( r - dmatrix.rows() ) + " rows removed due to too many identical values" );
+                ExpressionDataDoubleMatrixUtil.log.info( ( r - dmatrix.rows() ) + " rows removed due to too many identical values" );
             }
         }
 
@@ -97,84 +101,366 @@ public class ExpressionDataDoubleMatrixUtil {
      * Ensures that the given matrix is on a Log2 scale.
      * ! Does not update the QT !
      *
-     * @param quantitationType the quantitation type to be checked for the scale.
-     * @param dmatrix the matrix to be transformed to a log2 scale if necessary.
-     * @return a data matrix that is guaranteed to be on a log2 scale.
+     * @param dmatrix             the matrix to be transformed to a log2 scale if necessary.
+     * @param detectScaleFromData if true, the scale is detected from data, otherwise it is assumed from the matrix's
+     *                            quantitation types
+     * @throws QuantitationTypeConversionException if transformation to log2 scale is impossible
+     * @return a data matrix that is guaranteed to be on a log2 scale or the original input matrix if it was already the
+     * case
      */
-    public static ExpressionDataDoubleMatrix ensureLog2Scale( QuantitationType quantitationType,
-            ExpressionDataDoubleMatrix dmatrix ) {
-        ScaleType scaleType = ExpressionDataDoubleMatrixUtil.findScale( quantitationType, dmatrix.getMatrix() );
-
-        if ( scaleType.equals( ScaleType.LOG2 ) ) {
-            ExpressionDataDoubleMatrixUtil.log.info( "Data is already on a log2 scale" );
-        } else if ( scaleType.equals( ScaleType.LN ) ) {
-            ExpressionDataDoubleMatrixUtil.log.info( " **** Converting from ln to log2 **** " );
-            MatrixStats.convertToLog2( dmatrix.getMatrix(), Math.E );
-        } else if ( scaleType.equals( ScaleType.LOG10 ) ) {
-            ExpressionDataDoubleMatrixUtil.log.info( " **** Converting from log10 to log2 **** " );
-            MatrixStats.convertToLog2( dmatrix.getMatrix(), 10 );
-        } else if ( scaleType.equals( ScaleType.LINEAR ) ) {
-            ExpressionDataDoubleMatrixUtil.log.info( " **** LOG TRANSFORMING **** " );
-            MatrixStats.logTransform( dmatrix.getMatrix() );
-        } else if ( scaleType.equals( ScaleType.COUNT ) ) {
-            /*
-             * Since we store log2cpm this shouldn't be reached any more. We don't do it in place.
-             */
-            ExpressionDataDoubleMatrixUtil.log.info( " **** Converting from count to log2 counts per million **** " );
-            DoubleMatrix1D librarySize = MatrixStats.colSums( dmatrix.getMatrix() );
-            DoubleMatrix<CompositeSequence, BioMaterial> log2cpm = MatrixStats
-                    .convertToLog2Cpm( dmatrix.getMatrix(), librarySize );
-            dmatrix = new ExpressionDataDoubleMatrix( dmatrix, log2cpm );
-        } else {
-            throw new UnknownLogScaleException( "Can't figure out what scale the data are on" );
+    @CheckReturnValue
+    public static ExpressionDataDoubleMatrix ensureLog2Scale( ExpressionDataDoubleMatrix dmatrix, boolean detectScaleFromData ) throws QuantitationTypeConversionException {
+        QuantitationType quantitationType = dmatrix.getQuantitationTypes().iterator().next();
+        if ( quantitationType == null ) {
+            throw new IllegalArgumentException( "Expression data matrix lacks a quantitation type." );
         }
-        return dmatrix;
+        if ( isHeterogeneous( dmatrix ) ) {
+            throw new IllegalArgumentException( "Transforming a dataset to log2 scale with mixed quantitation types is not supported." );
+        }
+        if ( quantitationType.getGeneralType() != GeneralType.QUANTITATIVE ) {
+            throw new IllegalArgumentException( "Only quantitative data is supported on a log2 scale." );
+        }
+        if ( quantitationType.getType() != StandardQuantitationType.AMOUNT && quantitationType.getType() != StandardQuantitationType.COUNT ) {
+            throw new IllegalArgumentException( "Only amounts and counts can be represented on a log2 scale." );
+        }
+        if ( quantitationType.getRepresentation() != PrimitiveType.DOUBLE ) {
+            throw new IllegalArgumentException( ( String.format( "This method only support expression matrices of doubles, but the quantitation type claims the data contains %s.",
+                    quantitationType.getRepresentation() ) ) );
+        }
+
+        InferredQuantitationType inferredQuantitationType = infer( dmatrix );
+
+        StandardQuantitationType type;
+        boolean isRatio;
+        ScaleType scaleType;
+        if ( detectScaleFromData ) {
+            type = inferredQuantitationType.getType();
+            scaleType = inferredQuantitationType.getScale();
+            isRatio = inferredQuantitationType.isRatio;
+        } else {
+            type = quantitationType.getType();
+            scaleType = quantitationType.getScale();
+            isRatio = quantitationType.getIsRatio();
+        }
+
+        if ( quantitationType.getType() != type ) {
+            // if data is meant to be detected, then
+            if ( detectScaleFromData ) {
+                throw new UnsupportedQuantitationTypeConversionException( quantitationType.getType(), inferredQuantitationType.getType() );
+            } else {
+                log.warn( String.format( "The type of %s differs from the one inferred from data: %s.",
+                        quantitationType, inferredQuantitationType.getType() ) );
+            }
+        }
+
+        if ( quantitationType.getScale() != scaleType ) {
+            log.warn( String.format( "The scale of %s differs from the one inferred from data: %s.",
+                    quantitationType, inferredQuantitationType.getScale() ) );
+        }
+
+        // special case for log2, we don't need to transform anything
+        if ( quantitationType.getScale() == ScaleType.LOG2 && scaleType == ScaleType.LOG2 ) {
+            log.info( "Data is already on a log2-scale, will not transform it." );
+            return dmatrix;
+        }
+
+        DoubleMatrix<CompositeSequence, BioMaterial> transformedMatrix = dmatrix.getMatrix().copy();
+        switch ( scaleType ) {
+            case LOG2:
+                log.warn( String.format( "Data was detected on a log2-scale, but the quantitation type indicate %s. No transformation is necessary.",
+                        quantitationType.getScale() ) );
+                break;
+            case LN:
+                ExpressionDataDoubleMatrixUtil.log.info( " **** Converting from ln to log2 **** " );
+                MatrixStats.convertToLog2( transformedMatrix, Math.E );
+                break;
+            case LOG10:
+                ExpressionDataDoubleMatrixUtil.log.info( " **** Converting from log10 to log2 **** " );
+                MatrixStats.convertToLog2( transformedMatrix, 10 );
+                break;
+            case LINEAR:
+                ExpressionDataDoubleMatrixUtil.log.info( " **** LOG TRANSFORMING **** " );
+                MatrixStats.logTransform( transformedMatrix );
+                break;
+            case COUNT:
+                /*
+                 * Since we store log2cpm this shouldn't be reached any more. We don't do it in place.
+                 */
+                ExpressionDataDoubleMatrixUtil.log.info( " **** Converting from count to log2 counts per million **** " );
+                DoubleMatrix1D librarySize = MatrixStats.colSums( transformedMatrix );
+                transformedMatrix = MatrixStats.convertToLog2Cpm( transformedMatrix, librarySize );
+                // as we convert counts to log2cpm
+                type = StandardQuantitationType.AMOUNT;
+                break;
+            default:
+                throw new UnsupportedQuantitationScaleConversionException( scaleType, ScaleType.LOG2 );
+        }
+
+        StandardQuantitationType finalType = type;
+        List<QuantitationType> log2Qts = dmatrix.getQuantitationTypes().stream()
+                .map( QuantitationTypeImpl.Factory::newInstance )
+                .peek( qt -> {
+                    qt.setType( finalType );
+                    qt.setScale( ScaleType.LOG2 );
+                    qt.setIsRatio( isRatio );
+                } )
+                .collect( Collectors.toList() );
+        return new ExpressionDataDoubleMatrix( dmatrix, transformedMatrix, log2Qts );
     }
 
     /**
-     * @param quantitationType QT
-     * @param namedMatrix named matrix
-     * @return ScaleType
-     * @see ExpressionExperimentFilter for a related implementation.
+     * Check if an expression data matrix has heterogeneous quantitations.
+     * <p>
+     * This happens when data from multiple platforms are mixed together. If the data is transformed in the same way,
+     * it's generally okay to mix them together.
      */
-    @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
-    public static ScaleType findScale( QuantitationType quantitationType,
-            DoubleMatrix<CompositeSequence, BioMaterial> namedMatrix ) {
+    private static boolean isHeterogeneous( ExpressionDataDoubleMatrix expressionData ) {
+        QuantitationType firstQt = expressionData.getQuantitationTypes().iterator().next();
+        if ( firstQt == null ) {
+            throw new IllegalArgumentException( "At least one quantitation type is needed." );
+        }
+        for ( QuantitationType qt : expressionData.getQuantitationTypes() ) {
+            if ( qt.getRepresentation() != firstQt.getRepresentation()
+                    || qt.getGeneralType() != firstQt.getGeneralType()
+                    || qt.getType() != firstQt.getType()
+                    || qt.getScale() != firstQt.getScale()
+                    || qt.getIsNormalized() != firstQt.getIsNormalized()
+                    || qt.getIsBackground() != firstQt.getIsBackground()
+                    || qt.getIsBackgroundSubtracted() != firstQt.getIsBackgroundSubtracted()
+                    || qt.getIsBatchCorrected() != firstQt.getIsBatchCorrected() ) {
+                return true;
+            }
+        }
+        return false;
+    }
 
-        if ( quantitationType.getScale() != null ) {
-            if ( quantitationType.getScale().equals( ScaleType.LOG2 ) ) {
-                return ScaleType.LOG2;
-            } else if ( quantitationType.getScale().equals( ScaleType.LOG10 ) ) {
-                return ScaleType.LOG10;
-            } else if ( quantitationType.getScale().equals( ScaleType.LN ) ) {
-                return ScaleType.LN;
-            } else if ( quantitationType.getScale().equals( ScaleType.COUNT ) ) {
-                return ScaleType.COUNT;
-            } else if ( quantitationType.getScale().equals( ScaleType.LOGBASEUNKNOWN ) ) {
-                throw new UnknownLogScaleException(
-                        "Sorry, data on an unknown log scale is not supported. Please check the quantitation types, "
-                                + "and make sure the data is expressed in terms of log2 or un-logged data  ("
-                                + quantitationType + ")" );
+    @Value
+    private static class InferredQuantitationType {
+        StandardQuantitationType type;
+        ScaleType scale;
+        boolean isRatio;
+    }
+
+    /**
+     * Infer scale type from data.
+     */
+    public static ScaleType inferScaleType( ExpressionDataDoubleMatrix expressionData ) {
+        return infer( expressionData ).scale;
+    }
+
+    /**
+     * Infer the standard quantitation type from expression data.
+     */
+    public static StandardQuantitationType inferStandardQuantitationType( ExpressionDataDoubleMatrix expressionData ) {
+        return infer( expressionData ).type;
+    }
+
+    /**
+     * Infer if data is ratiometric.
+     */
+    public static boolean inferIsRatio( ExpressionDataDoubleMatrix expressionData ) {
+        return infer( expressionData ).isRatio;
+    }
+
+    private static InferredQuantitationType infer( ExpressionDataDoubleMatrix expressionData ) {
+        DoubleMatrix2D matrix = new DenseDoubleMatrix2D( expressionData.getMatrix().asArray() );
+
+        // no data, there's nothing we can do
+        if ( matrix.rows() == 0 || matrix.columns() == 0 ) {
+            throw new IllegalArgumentException( "Cannot infer scale type without data." );
+        }
+
+        boolean ip = isPercent( matrix );
+        boolean ic = isCount( matrix );
+
+        if ( ip && ic ) {
+            log.warn( String.format( "Data only contains zeroes and ones, we don't have a binary scale so will report it as %s.",
+                    ScaleType.OTHER ) );
+            return new InferredQuantitationType( StandardQuantitationType.PRESENTABSENT, ScaleType.OTHER, false );
+        }
+
+        if ( ip ) {
+            log.info( String.format( "Data contains values between 0 and 1, will report as %s.", ScaleType.PERCENT1 ) );
+            return new InferredQuantitationType( StandardQuantitationType.AMOUNT, ScaleType.PERCENT1, false );
+        }
+
+        if ( ic ) {
+            log.info( String.format( "Data appears to contains counts, will report as %s", ScaleType.COUNT ) );
+            return new InferredQuantitationType( StandardQuantitationType.COUNT, ScaleType.COUNT, false );
+        }
+
+        // obtain min/max right now, they are used in tests below
+        double maximum = Arrays.stream( matrix.toArray() )
+                .flatMapToDouble( Arrays::stream )
+                .max()
+                .orElseThrow( RuntimeException::new );
+
+        if ( isPercent100( matrix, maximum ) ) {
+            log.info( String.format( "Data contains values between 0 and 100 close enough to the boundaries, will report at %s.", ScaleType.PERCENT ) );
+            return new InferredQuantitationType( StandardQuantitationType.AMOUNT, ScaleType.PERCENT, false );
+        }
+
+        if ( isZScore( matrix ) ) {
+            log.info( "Data is normalized sample-wise: one or more sample has either zero mean or median." );
+            return new InferredQuantitationType( StandardQuantitationType.ZSCORE, maximum < 20 ? ScaleType.LOGBASEUNKNOWN : ScaleType.OTHER, false );
+        }
+
+        // various upper-bounds to use for log-based scales
+        // see https://github.com/PavlidisLab/Gemma/issues/600 for the rationale behind the following thresholds
+        final double[] upperBounds = { 4.81, 12, 20 };
+        final double[] ratiometricUpperBounds = { 2.5, 2.5, 12 };
+        final ScaleType[] types = { ScaleType.LOG10, ScaleType.LOGBASEUNKNOWN, ScaleType.LOG2 };
+
+        boolean ir = isRatiometric( matrix );
+        for ( int i = 0; i < upperBounds.length; i++ ) {
+            if ( maximum < ( ir ? ratiometricUpperBounds[i] : upperBounds[i] ) ) {
+                log.info( String.format( "Data appears to be in the %s%s scale.", ir ? "ratiometric " : "", types[i] ) );
+                return new InferredQuantitationType( StandardQuantitationType.AMOUNT, types[i], ir );
             }
         }
 
-        if ( namedMatrix.rows() == 0 || namedMatrix.columns() == 0 ) {
-            throw new UnknownLogScaleException( "Cannot figure out scale without data (" + quantitationType + ")" );
+        double minimum = Arrays.stream( matrix.toArray() )
+                .flatMapToDouble( Arrays::stream )
+                .min()
+                .orElseThrow( RuntimeException::new );
+
+        // negative values indicate log-transformation
+        if ( minimum < 0 ) {
+            return new InferredQuantitationType( StandardQuantitationType.AMOUNT, ScaleType.LOGBASEUNKNOWN, ir );
         }
 
-        // at this point it's supposedly 'linear', but we need to double-check.
-        for ( int i = 0; i < namedMatrix.rows(); i++ ) {
-            for ( int j = 0; j < namedMatrix.columns(); j++ ) {
-                double v = namedMatrix.get( i, j );
-                if ( v > ExpressionDataDoubleMatrixUtil.LARGEST_EXPECTED_LOGGED_VALUE ) {
-                    ExpressionDataDoubleMatrixUtil.log.debug( "Data has large values, doesn't look log transformed" );
-                    return ScaleType.LINEAR;
-                }
+        // from that point-on, it's clear that data is not log-transformed
+        // there's a range of unknown between the end of LOG2 and beginning LINEAR
+        ScaleType scaleType = maximum >= Math.pow( 10, 3.2 ) ? ScaleType.LINEAR : ScaleType.OTHER;
+
+        // check if the data is log-normalized before reporting it as linear
+        // because we're testing for zero (log-reported as 1 in linear scale)
+        DoubleMatrix2D logMatrix = matrix
+                .copy()
+                .assign( Functions.log );
+        if ( isZScore( logMatrix ) ) {
+            log.info( "Data appears to be normalized sample-wise in the log-space." );
+            return new InferredQuantitationType( StandardQuantitationType.ZSCORE, scaleType, false );
+        }
+
+        return new InferredQuantitationType( StandardQuantitationType.AMOUNT, scaleType, false );
+    }
+
+    /**
+     * Check if data in the given matrix are counts.
+     * <p>
+     * At this stage, the data has already been transformed to double, so we only check if all the values are positive
+     * and  equal to their closest integer using {@link Math#rint(double)}.
+     */
+    private static boolean isCount( DoubleMatrix2D matrix ) {
+        if ( matrix.size() < 10 ) {
+            log.warn( "Matrix is too small to detect counts, will likely be reported as LINEAR." );
+            return false;
+        }
+        boolean isCount = true;
+        for ( int i = 0; i < matrix.rows(); i++ ) {
+            for ( int j = 0; j < matrix.columns(); j++ ) {
+                double x = matrix.get( i, j );
+                isCount &= x >= 0 && Math.rint( x ) == x;
             }
         }
+        return isCount;
+    }
 
-        log.warn( "Data look log transformed, not sure about base (" + quantitationType + "). Will report as LINEAR!" );
-        return ScaleType.LINEAR;
+    private static boolean isPercent( DoubleMatrix2D matrix ) {
+        // check if the data is within 0 and 1
+        boolean isWithinZeroAndOne = true;
+        for ( int i = 0; i < matrix.rows(); i++ ) {
+            for ( int j = 0; j < matrix.columns(); j++ ) {
+                double x = matrix.get( i, j );
+                isWithinZeroAndOne &= x >= 0.0 && x <= 1.0;
+            }
+        }
+        return isWithinZeroAndOne;
+    }
+
+    /**
+     * Check if data is constituted of percent ranging from 0 to 100.
+     * <p>
+     * To set apart those from regular log-transformed data, we also require the maximum to be close to 100 as per
+     * {@link #isClose(double, double)}.
+     */
+    private static boolean isPercent100( DoubleMatrix2D matrix, double maximum ) {
+        if ( !isClose( maximum, 100 ) ) {
+            return false;
+        }
+        // check if the data is within 0 and 1
+        boolean isWithinZeroAndOne = true;
+        for ( int i = 0; i < matrix.rows(); i++ ) {
+            for ( int j = 0; j < matrix.columns(); j++ ) {
+                double x = matrix.get( i, j );
+                isWithinZeroAndOne &= x >= 0.0 && x <= 100.0;
+            }
+        }
+        return isWithinZeroAndOne;
+    }
+
+    /**
+     * Check if any of the rows of a given matrix are normalized.
+     * @see #isZScore(DoubleMatrix1D)
+     */
+    private static boolean isZScore( DoubleMatrix2D matrix ) {
+        // check if the data is Z-transformed sample-wise
+        for ( int j = 0; j < matrix.columns(); j++ ) {
+            if ( isZScore( matrix.viewColumn( j ) ) ) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Check if a vector is normalized by having either zero mean, one standard deviation or zero median.
+     */
+    private static boolean isZScore( DoubleMatrix1D vector ) {
+        DoubleArrayList v = new DoubleArrayList( vector.toArray() );
+        if ( isCloseToZero( Descriptive.mean( v ) ) ) {
+            double var = Descriptive.sampleVariance( v, v.size() - 1 );
+            if ( !isClose( var, 1 ) ) {
+                log.warn( String.format( "Mean is zero, but standard deviation %f is not close enough to one. Will still report as Z-score.", Math.sqrt( var ) ) );
+            }
+            return true;
+        }
+        // FIXME: use a faster algorithm for the median, there's a O(n) approach
+        // sort only if necessary, median expects a sorted input
+        v.sort();
+        return isCloseToZero( Descriptive.median( v ) );
+    }
+
+    /**
+     * If the data is centered around zero, but not exactly as per {@link #isZScore(DoubleMatrix1D)} it may be
+     * ratiometric as it the log ratio (generally 2) of two raw signals. When that occurs, the max has to be interpreted
+     * differently.
+     */
+    private static boolean isRatiometric( DoubleMatrix2D matrix ) {
+        boolean ratiometric = true;
+        for ( int j = 0; j < matrix.columns(); j++ ) {
+            double mean = Descriptive.mean( new DoubleArrayList( matrix.viewColumn( j ).toArray() ) );
+            ratiometric &= Math.abs( mean ) < 2;
+        }
+        return ratiometric;
+    }
+
+    private static final double ATOL = 1e-8;
+    private static final double RTOL = 1e-5;
+
+    /**
+     * Check if a double is close to zero.
+     * <p>
+     * The default is borrowed from Numpy's <a href="https://numpy.org/doc/stable/reference/generated/numpy.isclose.html">isclose</a>.
+     * The relative tolerance does not have to be accounted for comparing to zero.
+     */
+    private static boolean isCloseToZero( double a ) {
+        return a == 0.0 || Math.abs( a ) < ATOL;
+    }
+
+    private static boolean isClose( double a, double b ) {
+        return a == b || Math.abs( a - b ) < RTOL * Math.abs( b ) + ATOL;
     }
 
     /**
@@ -200,8 +486,7 @@ public class ExpressionDataDoubleMatrixUtil {
             CompositeSequence del = el.getDesignElement();
 
             if ( b.getRow( del ) == null ) {
-                ExpressionDataDoubleMatrixUtil.log
-                        .warn( "Matrix 'b' is missing a row for " + del + ", it will not be subtracted" );
+                ExpressionDataDoubleMatrixUtil.log.warn( "Matrix 'b' is missing a row for " + del + ", it will not be subtracted" );
                 continue;
             }
 
@@ -259,8 +544,7 @@ public class ExpressionDataDoubleMatrixUtil {
             CompositeSequence del = el.getDesignElement();
 
             if ( b.getRow( del ) == null ) {
-                ExpressionDataDoubleMatrixUtil.log
-                        .warn( "Matrix 'b' is missing a row for " + del + ", this row will not be added" );
+                ExpressionDataDoubleMatrixUtil.log.warn( "Matrix 'b' is missing a row for " + del + ", this row will not be added" );
                 continue;
             }
             for ( int i = 0; i < columns; i++ ) {
@@ -280,8 +564,7 @@ public class ExpressionDataDoubleMatrixUtil {
      * @throws IllegalArgumentException if dividend == 0.
      */
     public static void scalarDivideMatrix( ExpressionDataDoubleMatrix matrix, double dividend ) {
-        if ( dividend == 0 )
-            throw new IllegalArgumentException( "Can't divide by zero" );
+        if ( dividend == 0 ) throw new IllegalArgumentException( "Can't divide by zero" );
         int columns = matrix.columns();
         for ( ExpressionDataMatrixRowElement el : matrix.getRowElements() ) {
             CompositeSequence del = el.getDesignElement();
@@ -304,12 +587,10 @@ public class ExpressionDataDoubleMatrixUtil {
      * @param mask if null, masking is not attempted.
      */
     public static void maskMatrix( ExpressionDataDoubleMatrix matrix, ExpressionDataBooleanMatrix mask ) {
-        if ( mask == null )
-            return;
+        if ( mask == null ) return;
         // checkConformant( a, b );
         if ( matrix.columns() != mask.columns() )
-            throw new IllegalArgumentException(
-                    "Unequal column counts: " + matrix.columns() + " != " + mask.columns() );
+            throw new IllegalArgumentException( "Unequal column counts: " + matrix.columns() + " != " + mask.columns() );
         int columns = matrix.columns();
         for ( ExpressionDataMatrixRowElement el : matrix.getRowElements() ) {
             CompositeSequence del = el.getDesignElement();
