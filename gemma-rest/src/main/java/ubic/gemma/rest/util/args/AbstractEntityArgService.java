@@ -1,6 +1,7 @@
 package ubic.gemma.rest.util.args;
 
 import org.springframework.context.MessageSourceResolvable;
+import org.springframework.security.access.ConfigAttribute;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.persistence.service.FilteringService;
 import ubic.gemma.persistence.util.Filters;
@@ -9,6 +10,7 @@ import ubic.gemma.persistence.util.Sort;
 import javax.annotation.Nonnull;
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.NotFoundException;
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
@@ -49,6 +51,11 @@ public abstract class AbstractEntityArgService<T extends Identifiable, S extends
     @Override
     public List<MessageSourceResolvable> getFilterablePropertyResolvableAvailableValuesLabels( String p ) {
         return service.getFilterablePropertyResolvableAvailableValuesLabels( p );
+    }
+
+    @Override
+    public Collection<ConfigAttribute> getFilterablePropertyConfigAttributes( String p ) {
+        return service.getFilterablePropertyConfigAttributes( p );
     }
 
     @Override

@@ -24,6 +24,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.AccessDeniedException;
 import ubic.gemma.core.util.test.BaseSpringContextTest;
 import ubic.gemma.model.common.auditAndSecurity.Contact;
 import ubic.gemma.model.common.description.Characteristic;
@@ -376,6 +377,21 @@ public class ExpressionExperimentServiceIntegrationTest extends BaseSpringContex
                 .hasFieldOrPropertyWithValue( "originalProperty", "geeq.publicQualityScore" );
         assertThat( expressionExperimentService.load( Filters.by( f ), null ) )
                 .isEmpty();
+    }
+
+    @Test
+    public void testFilterBySuitabilityScoreAsAdmin() {
+        expressionExperimentService.getFilter( "geeq.publicSuitabilityScore", Filter.Operator.greaterOrEq, "0.9" );
+    }
+
+    @Test(expected = AccessDeniedException.class)
+    public void testFilterBySuitabilityScoreAsNonAdmin() {
+        runAsAnonymous();
+        try {
+            expressionExperimentService.getFilter( "geeq.publicSuitabilityScore", Filter.Operator.greaterOrEq, "0.9" );
+        } finally {
+            runAsAdmin(); // for cleanups
+        }
     }
 
     @Test

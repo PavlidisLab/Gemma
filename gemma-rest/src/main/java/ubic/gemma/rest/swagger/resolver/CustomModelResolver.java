@@ -1,5 +1,6 @@
 package ubic.gemma.rest.swagger.resolver;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.introspect.Annotated;
@@ -10,12 +11,14 @@ import io.swagger.v3.core.converter.ModelConverterContext;
 import io.swagger.v3.core.converter.ModelConverters;
 import io.swagger.v3.core.jackson.ModelResolver;
 import io.swagger.v3.oas.models.media.Schema;
+import io.swagger.v3.oas.models.security.SecurityRequirement;
 import lombok.Value;
 import lombok.extern.apachecommons.CommonsLog;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.MessageSource;
 import org.springframework.context.MessageSourceResolvable;
+import org.springframework.security.access.ConfigAttribute;
 import org.springframework.stereotype.Component;
 import ubic.gemma.core.search.SearchService;
 import ubic.gemma.model.common.Identifiable;
@@ -118,6 +121,9 @@ public class CustomModelResolver extends ModelResolver {
         String description;
         @Nullable
         List<FilterablePropMetaAllowedValue> allowedValues;
+        @Nullable
+        @JsonInclude(JsonInclude.Include.NON_NULL)
+        SecurityRequirement security;
     }
 
     @Value
@@ -149,8 +155,20 @@ public class CustomModelResolver extends ModelResolver {
                 .map( p -> new FilterablePropMeta( p,
                         resolveType( SimpleType.constructUnsafe( filteringService.getFilterablePropertyType( p ) ) ),
                         filteringService.getFilterablePropertyDescription( p ),
-                        resolveAllowedValues( filteringService, p, locale ) ) )
+                        resolveAllowedValues( filteringService, p, locale ),
+                        securityRequirementFromConfigAttributes( filteringService.getFilterablePropertyConfigAttributes( p ) ) ) )
                 .collect( Collectors.toList() );
+    }
+
+    @Nullable
+    private SecurityRequirement securityRequirementFromConfigAttributes( @Nullable Collection<ConfigAttribute> configAttributes ) {
+        if ( configAttributes == null ) {
+            return null;
+        }
+        List<String> scopes = configAttributes.stream().map( ConfigAttribute::getAttribute ).collect( Collectors.toList() );
+        return new SecurityRequirement()
+                .addList( "basicAuth", scopes )
+                .addList( "cookieAuth", scopes );
     }
 
     private List<FilterablePropMetaAllowedValue> resolveAllowedValues( EntityArgService<?, ?> filteringService, String p, Locale locale ) {
@@ -189,6 +207,13 @@ public class CustomModelResolver extends ModelResolver {
                 desc.append( ", " );
             desc.append( "available values: " )
                     .append( prop.allowedValues.stream().map( FilterablePropMetaAllowedValue::getValue ).collect( Collectors.joining( ", " ) ) );
+        }
+        // don't bother with cookie-based authentication
+        if ( prop.security != null && prop.security.containsKey( "basicAuth" ) ) {
+            if ( desc.length() > 0 )
+                desc.append( ", " );
+            desc.append( "security: " )
+                    .append( String.join( ", ", prop.security.get( "basicAuth" ) ) );
         }
         if ( desc.length() > 0 )
             return " (" + desc + ")";

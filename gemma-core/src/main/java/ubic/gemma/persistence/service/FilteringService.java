@@ -1,6 +1,7 @@
 package ubic.gemma.persistence.service;
 
 import org.springframework.context.MessageSourceResolvable;
+import org.springframework.security.access.ConfigAttribute;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.persistence.util.Filter;
 import ubic.gemma.persistence.util.Filters;
@@ -50,6 +51,13 @@ public interface FilteringService<O extends Identifiable> extends BaseService<O>
      */
     @Nullable
     List<MessageSourceResolvable> getFilterablePropertyResolvableAvailableValuesLabels( String property );
+
+    /**
+     * Obtain the Spring Security config attributes for a given property.
+     * @return the config attributes, or null if no security check should be performed
+     */
+    @Nullable
+    Collection<ConfigAttribute> getFilterablePropertyConfigAttributes( String property );
 
     /**
      * @see FilteringDao#getFilterableProperties()

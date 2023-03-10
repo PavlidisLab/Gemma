@@ -26,6 +26,8 @@ import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.math3.exception.NotStrictlyPositiveException;
 import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.ConfigAttribute;
+import org.springframework.security.access.SecurityConfig;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.basecode.ontology.model.OntologyTerm;
@@ -1327,5 +1329,15 @@ public class ExpressionExperimentServiceImpl
     @Transactional(readOnly = true)
     public Collection<ExpressionExperiment> getExperimentsLackingPublications() {
         return this.expressionExperimentDao.getExperimentsLackingPublications();
+    }
+
+    @Nullable
+    @Override
+    public Collection<ConfigAttribute> getFilterablePropertyConfigAttributes( String property ) {
+        if ( property.equals( "geeq.publicSuitabilityScore" ) ) {
+            return SecurityConfig.createList( "GROUP_ADMIN" );
+        } else {
+            return null;
+        }
     }
 }

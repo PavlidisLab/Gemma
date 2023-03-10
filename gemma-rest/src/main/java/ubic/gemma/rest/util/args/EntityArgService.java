@@ -1,6 +1,7 @@
 package ubic.gemma.rest.util.args;
 
 import org.springframework.context.MessageSourceResolvable;
+import org.springframework.security.access.ConfigAttribute;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.persistence.service.FilteringService;
 import ubic.gemma.persistence.service.FilteringVoEnabledService;
@@ -10,6 +11,7 @@ import ubic.gemma.persistence.util.Sort;
 import javax.annotation.Nonnull;
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.NotFoundException;
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
@@ -43,6 +45,11 @@ public interface EntityArgService<T extends Identifiable, S extends FilteringSer
      * @see FilteringVoEnabledService#getFilterablePropertyAllowedValues(String)
      */
     List<Object> getFilterablePropertyAllowedValues( String p );
+
+    /**
+     * @see FilteringVoEnabledService#getFilterablePropertyConfigAttributes(String)
+     */
+    Collection<ConfigAttribute> getFilterablePropertyConfigAttributes( String roles );
 
     /**
      * @see FilteringVoEnabledService#getFilterablePropertyResolvableAvailableValuesLabels(String)
