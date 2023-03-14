@@ -293,8 +293,7 @@ public class BusinessKey {
 
         queryObject.add( Restrictions.eq( "type", quantitationType.getType() ) );
 
-        if ( quantitationType.getIsBackground() != null )
-            queryObject.add( Restrictions.eq( "isBackground", quantitationType.getIsBackground() ) );
+        queryObject.add( Restrictions.eq( "isBackground", quantitationType.getIsBackground() ) );
 
         if ( quantitationType.getRepresentation() != null )
             queryObject.add( Restrictions.eq( "representation", quantitationType.getRepresentation() ) );
@@ -302,15 +301,11 @@ public class BusinessKey {
         if ( quantitationType.getScale() != null )
             queryObject.add( Restrictions.eq( "scale", quantitationType.getScale() ) );
 
-        if ( quantitationType.getIsBackgroundSubtracted() != null )
-            queryObject
-                    .add( Restrictions.eq( "isBackgroundSubtracted", quantitationType.getIsBackgroundSubtracted() ) );
+        queryObject.add( Restrictions.eq( "isBackgroundSubtracted", quantitationType.getIsBackgroundSubtracted() ) );
 
-        if ( quantitationType.getIsPreferred() != null )
-            queryObject.add( Restrictions.eq( "isPreferred", quantitationType.getIsPreferred() ) );
+        queryObject.add( Restrictions.eq( "isPreferred", quantitationType.getIsPreferred() ) );
 
-        if ( quantitationType.getIsNormalized() != null )
-            queryObject.add( Restrictions.eq( "isNormalized", quantitationType.getIsNormalized() ) );
+        queryObject.add( Restrictions.eq( "isNormalized", quantitationType.getIsNormalized() ) );
 
     }
 
