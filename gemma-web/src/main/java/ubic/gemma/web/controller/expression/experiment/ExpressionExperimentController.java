@@ -68,7 +68,6 @@ import ubic.gemma.persistence.service.analysis.expression.coexpression.Coexpress
 import ubic.gemma.persistence.service.analysis.expression.sampleCoexpression.SampleCoexpressionAnalysisService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
-import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
 import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialService;
@@ -635,23 +634,25 @@ public class ExpressionExperimentController {
     }
 
     public void recalculateBatchConfound( Long id ) {
-        ExpressionExperiment ee = expressionExperimentService.load( id );
+        ExpressionExperiment ee = expressionExperimentService.loadOrFail( id );
         ee.setBatchConfound( expressionExperimentService.getBatchConfound( ee ) );
         expressionExperimentService.update( ee );
     }
 
     public void recalculateBatchEffect( Long id ) {
-        ExpressionExperiment ee = expressionExperimentService.load( id );
+        ExpressionExperiment ee = expressionExperimentService.loadOrFail( id );
         ee.setBatchEffect( expressionExperimentService.getBatchStatusDescription( ee ) );
         expressionExperimentService.update( ee );
     }
 
     public void runGeeq( Long id, String mode ) {
-        geeqService.calculateScore( id, mode );
+        ExpressionExperiment ee = expressionExperimentService.loadOrFail( id );
+        geeqService.calculateScore( ee, GeeqService.ScoreMode.valueOf( mode ) );
     }
 
     public void setGeeqManualSettings( long id, GeeqAdminValueObject vo ) {
-        geeqService.setManualOverrides( id, vo );
+        ExpressionExperiment ee = expressionExperimentService.loadOrFail( id );
+        geeqService.setManualOverrides( ee, vo );
     }
 
     /**

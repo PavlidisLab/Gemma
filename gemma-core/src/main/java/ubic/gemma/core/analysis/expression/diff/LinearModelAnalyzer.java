@@ -38,7 +38,6 @@ import ubic.basecode.dataStructure.matrix.ObjectMatrix;
 import ubic.basecode.math.DescriptiveWithMissing;
 import ubic.basecode.math.MathUtil;
 import ubic.basecode.math.linearmodels.*;
-import ubic.gemma.core.analysis.service.NoProcessedExpressionDataVectorsException;
 import ubic.gemma.core.analysis.util.ExperimentalDesignUtils;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrixUtil;
@@ -319,12 +318,10 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
         /*
          * Start by setting it up like the full experiment.
          */
-        ExpressionDataDoubleMatrix dmatrix = null;
-        try {
-            dmatrix = expressionDataMatrixService
-                    .getProcessedExpressionDataMatrix( subset.getSourceExperiment() );
-        } catch ( NoProcessedExpressionDataVectorsException e ) {
-            throw new RuntimeException( e );
+        ExpressionDataDoubleMatrix dmatrix = expressionDataMatrixService
+                .getProcessedExpressionDataMatrix( subset.getSourceExperiment() );
+        if ( dmatrix == null ) {
+            throw new RuntimeException( String.format( "There are no processed EVs for %s.", subset.getSourceExperiment() ) );
         }
 
         ExperimentalFactor ef = config.getSubsetFactor();
@@ -384,12 +381,10 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
     public Collection<DifferentialExpressionAnalysis> run( ExpressionExperiment expressionExperiment,
             DifferentialExpressionAnalysisConfig config ) {
 
-        ExpressionDataDoubleMatrix dmatrix = null;
-        try {
-            dmatrix = expressionDataMatrixService
-                    .getProcessedExpressionDataMatrix( expressionExperiment );
-        } catch ( NoProcessedExpressionDataVectorsException e ) {
-            throw new RuntimeException( e );
+        ExpressionDataDoubleMatrix dmatrix = expressionDataMatrixService
+                .getProcessedExpressionDataMatrix( expressionExperiment );
+        if ( dmatrix == null ) {
+            throw new RuntimeException( String.format( "There are no processed EVs for %s.", expressionExperiment ) );
         }
 
         /*

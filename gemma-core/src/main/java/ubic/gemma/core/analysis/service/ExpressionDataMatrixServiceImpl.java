@@ -42,7 +42,10 @@ import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressio
 import ubic.gemma.persistence.service.expression.bioAssayData.RawExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Map;
 
 /**
  * Tools for easily getting data matrices for analysis in a consistent way.
@@ -70,6 +73,9 @@ public class ExpressionDataMatrixServiceImpl implements ExpressionDataMatrixServ
     public ExpressionDataDoubleMatrix getFilteredMatrix( ExpressionExperiment ee, FilterConfig filterConfig ) throws FilteringException {
         Collection<ProcessedExpressionDataVector> dataVectors = processedExpressionDataVectorService
                 .getProcessedDataVectors( ee );
+        if ( dataVectors.isEmpty() ) {
+            return null;
+        }
         return this.getFilteredMatrix( ee, filterConfig, dataVectors );
     }
 
@@ -96,12 +102,12 @@ public class ExpressionDataMatrixServiceImpl implements ExpressionDataMatrixServ
 
     @Override
     @Transactional(readOnly = true)
-    public ExpressionDataDoubleMatrix getProcessedExpressionDataMatrix( ExpressionExperiment ee ) throws NoProcessedExpressionDataVectorsException {
+    public ExpressionDataDoubleMatrix getProcessedExpressionDataMatrix( ExpressionExperiment ee ) {
         Collection<ProcessedExpressionDataVector> dataVectors = this.processedExpressionDataVectorService
                 .getProcessedDataVectors( ee );
         if ( dataVectors.isEmpty() ) {
-            throw new NoProcessedExpressionDataVectorsException(
-                    "There are no ProcessedExpressionDataVectors for " + ee + ", they must be created first" );
+            log.warn( "There are no ProcessedExpressionDataVectors for " + ee + ", they must be created first" );
+            return null;
         }
         this.processedExpressionDataVectorService.thaw( dataVectors );
         return new ExpressionDataDoubleMatrix( dataVectors );
@@ -110,7 +116,11 @@ public class ExpressionDataMatrixServiceImpl implements ExpressionDataMatrixServ
     @Override
     @Transactional(readOnly = true)
     public ExpressionDataDoubleMatrix getProcessedExpressionDataMatrix( ExpressionExperiment ee, QuantitationType quantitationType ) {
-        return new ExpressionDataDoubleMatrix( processedExpressionDataVectorService.findByExpressionExperiment( ee, quantitationType ) );
+        Collection<ProcessedExpressionDataVector> vectors = processedExpressionDataVectorService.findByExpressionExperiment( ee, quantitationType );
+        if ( vectors.isEmpty() ) {
+            return null;
+        }
+        return new ExpressionDataDoubleMatrix( vectors );
     }
 
     @Override

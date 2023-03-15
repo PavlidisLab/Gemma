@@ -22,6 +22,7 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalyzerService;
 import ubic.gemma.core.analysis.preprocess.batcheffects.ExpressionExperimentBatchCorrectionService;
 import ubic.gemma.core.analysis.preprocess.svd.SVDServiceHelper;
@@ -108,6 +109,7 @@ public class PreprocessorServiceImpl implements PreprocessorService {
     private GeeqService geeqService;
 
     @Override
+    @Transactional
     public ExpressionExperiment process( ExpressionExperiment ee ) throws PreprocessingException {
 
         ee = expressionExperimentService.thaw( ee );
@@ -116,7 +118,7 @@ public class PreprocessorServiceImpl implements PreprocessorService {
             this.removeInvalidatedData( ee );
             this.processForMissingValues( ee );
             processedExpressionDataVectorService.computeProcessedExpressionData( ee );
-            ee = this.processExceptForVectorCreate( ee, true ); // includes diagnostics and batch corr.
+            this.processExceptForVectorCreate( ee, true ); // includes diagnostics and batch corr.
             expressionExperimentReportService.recalculateExperimentBatchInfo( ee );
             return ee;
         } catch ( Exception e ) {
@@ -128,6 +130,7 @@ public class PreprocessorServiceImpl implements PreprocessorService {
      * Only used for TwoChannelMissingValueCLI? Possibly redundant? FIXME
      */
     @Override
+    @Transactional
     public void process( ExpressionExperiment ee, boolean light ) throws PreprocessingException {
         if ( light ) {
             try {
@@ -149,6 +152,7 @@ public class PreprocessorServiceImpl implements PreprocessorService {
      * updated
      */
     @Override
+    @Transactional
     public void batchCorrect( ExpressionExperiment ee, boolean force ) throws PreprocessingException {
         String note = "ComBat batch correction";
         String detail = null;
@@ -229,10 +233,7 @@ public class PreprocessorServiceImpl implements PreprocessorService {
      * @param  batchCorrect if true, attempt to do batch correction (should always be true really)
      * @return the experiment
      */
-    private ExpressionExperiment processExceptForVectorCreate( ExpressionExperiment ee, Boolean batchCorrect ) {
-        // refresh into context.
-        ee = expressionExperimentService.thawLite( ee );
-
+    private void processExceptForVectorCreate( ExpressionExperiment ee, Boolean batchCorrect ) {
         assert ee.getNumberOfDataVectors() != null;
 
         // batch correct
@@ -267,18 +268,18 @@ public class PreprocessorServiceImpl implements PreprocessorService {
 
         expressionExperimentService.update( ee );
         assert ee.getNumberOfDataVectors() != null;
-        return ee;
     }
 
     /**
      */
     @Override
+    @Transactional
     public void processDiagnostics( ExpressionExperiment ee ) {
         this.processForSampleCorrelation( ee );
         this.processForMeanVarianceRelation( ee );
         this.processForPca( ee );
-        geeqService.calculateScore( ee.getId(), GeeqService.OPT_MODE_ALL );
-        // FIXME OPT_MODE_ALL is overkill, but none of the options currently address the exact need. No big deal.
+        // FIXME: OPT_MODE_ALL is overkill, but none of the options currently address the exact need. No big deal.
+        geeqService.calculateScore( ee, GeeqService.ScoreMode.all );
     }
 
     /**

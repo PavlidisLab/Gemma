@@ -22,7 +22,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import ubic.basecode.io.ByteArrayConverter;
 import ubic.basecode.math.linearmodels.MeanVarianceEstimator;
-import ubic.gemma.core.analysis.service.NoProcessedExpressionDataVectorsException;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrixUtil;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
@@ -92,12 +91,7 @@ public class MeanVarianceServiceImpl implements MeanVarianceService {
         }
 
         ee = expressionExperimentService.thawLiter( ee );
-        ExpressionDataDoubleMatrix intensities;
-        try {
-            intensities = meanVarianceServiceHelper.getIntensities( ee );
-        } catch ( NoProcessedExpressionDataVectorsException e ) {
-            throw new RuntimeException( e );
-        }
+        ExpressionDataDoubleMatrix intensities = meanVarianceServiceHelper.getIntensities( ee );
         if ( intensities == null ) {
             throw new IllegalStateException( "Could not locate intensity matrix for " + ee.getShortName() );
         }

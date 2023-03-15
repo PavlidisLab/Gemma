@@ -36,6 +36,8 @@ import ubic.gemma.core.loader.util.AlreadyExistsInSystemException;
 import ubic.gemma.core.security.authorization.acl.AclTestUtils;
 import ubic.gemma.core.util.test.category.GeoTest;
 import ubic.gemma.core.util.test.category.SlowTest;
+import ubic.gemma.model.common.auditAndSecurity.AuditAction;
+import ubic.gemma.model.common.auditAndSecurity.eventType.GeeqEvent;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -43,10 +45,10 @@ import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
-import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.Geeq;
 import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeService;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.bioAssayData.RawExpressionDataVectorService;
@@ -57,6 +59,7 @@ import java.io.File;
 import java.util.Collection;
 
 import static org.junit.Assert.*;
+import static org.junit.Assume.assumeNoException;
 
 /**
  * Test full procedure of loading GEO data, focus on corner cases. Tests deletion of data sets as well.
@@ -329,14 +332,24 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
             Collection<?> results = geoService.fetchAndLoad( "GSE5949", false, true, false );
             ee = ( ExpressionExperiment ) results.iterator().next();
         } catch ( AlreadyExistsInSystemException e ) {
-            log.info( "Test skipped because GSE5949 was already loaded - clean the DB before running the test" );
+            assumeNoException( "Test skipped because GSE5949 was already loaded - clean the DB before running the test", e );
             return;
         }
         ee = this.eeService.thawLite( ee );
         Collection<QuantitationType> qts = eeService.getQuantitationTypes( ee );
         assertEquals( 1, qts.size() );
-        geeqService.calculateScore( ee.getId(), GeeqService.OPT_MODE_ALL );
-
+        Geeq geeq = geeqService.calculateScore( ee, GeeqService.ScoreMode.all );
+        assertNotNull( geeq.getId() );
+        ee = this.eeService.thawLite( ee );
+        assertEquals( geeq, ee.getGeeq() );
+        assertEquals( 3, ee.getAuditTrail().getEvents().size() );
+        // creation, followed by a GeeqEvent and followed by an update
+        assertEquals( AuditAction.CREATE, ee.getAuditTrail().getEvents().get( 0 ).getAction() );
+        assertNull( ee.getAuditTrail().getEvents().get( 0 ).getEventType() );
+        assertEquals( AuditAction.UPDATE, ee.getAuditTrail().getEvents().get( 1 ).getAction() );
+        assertEquals( GeeqEvent.class, ee.getAuditTrail().getEvents().get( 1 ).getEventType().getClass() );
+        assertEquals( AuditAction.UPDATE, ee.getAuditTrail().getEvents().get( 2 ).getAction() );
+        assertNull( ee.getAuditTrail().getEvents().get( 2 ).getEventType() );
     }
 
     @Test

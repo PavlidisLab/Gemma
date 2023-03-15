@@ -30,7 +30,6 @@ import ubic.basecode.util.r.RClient;
 import ubic.basecode.util.r.RConnectionFactory;
 import ubic.basecode.util.r.RServeClient;
 import ubic.gemma.core.analysis.service.ExpressionDataMatrixService;
-import ubic.gemma.core.analysis.service.NoProcessedExpressionDataVectorsException;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.core.util.test.BaseSpringContextTest;
 import ubic.gemma.model.common.description.Characteristic;
@@ -381,7 +380,6 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
      * Mocks the method getVectors in the {@link ExpressionDataMatrixService}.
      *
      */
-    @SneakyThrows(NoProcessedExpressionDataVectorsException.class)
     void configureMockAnalysisServiceHelper() {
         this.expressionDataMatrixService = mock( ExpressionDataMatrixService.class );
         when( expressionDataMatrixService.getProcessedExpressionDataMatrix( expressionExperiment ) )
