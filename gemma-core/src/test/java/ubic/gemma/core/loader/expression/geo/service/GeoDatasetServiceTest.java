@@ -19,18 +19,17 @@
 package ubic.gemma.core.loader.expression.geo.service;
 
 import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.gemma.core.analysis.preprocess.ExpressionDataMatrixBuilder;
-import ubic.gemma.core.analysis.preprocess.PreprocessingException;
 import ubic.gemma.core.analysis.preprocess.PreprocessorService;
 import ubic.gemma.core.analysis.preprocess.TwoChannelMissingValues;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataMatrix;
 import ubic.gemma.core.loader.expression.geo.AbstractGeoServiceTest;
-import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGenerator;
 import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 import ubic.gemma.core.loader.util.AlreadyExistsInSystemException;
 import ubic.gemma.core.security.authorization.acl.AclTestUtils;
@@ -56,6 +55,7 @@ import ubic.gemma.persistence.service.expression.experiment.ExpressionExperiment
 import ubic.gemma.persistence.service.expression.experiment.GeeqService;
 
 import java.io.File;
+import java.net.URISyntaxException;
 import java.util.Collection;
 
 import static org.junit.Assert.*;
@@ -73,7 +73,6 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
     private ProcessedExpressionDataVectorService processedExpressionDataVectorService;
     @Autowired
     private TwoChannelMissingValues twoChannelMissingValues;
-
     @Autowired
     private ExpressionDataFileService dataFileService;
     @Autowired
@@ -84,7 +83,6 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
     private GeoService geoService;
     @Autowired
     private ExpressionExperimentService eeService;
-    private ExpressionExperiment ee;
     @Autowired
     private RawExpressionDataVectorService rawExpressionDataVectorService;
     @Autowired
@@ -94,109 +92,94 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
     @Autowired
     private PreprocessorService preprocessorService;
 
+    private Collection<ExpressionExperiment> ees;
+    private ExpressionExperiment ee;
+
+    @Before
+    public void setUp() throws URISyntaxException {
+        geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( this.getTestFileBasePath() ) );
+    }
+
+    private void setUpDatasetFromGeo( String geoAccession ) {
+        try {
+            Collection<?> results = geoService.fetchAndLoad( geoAccession, false, true, false );
+            ees = ( Collection<ExpressionExperiment> ) results;
+        } catch ( AlreadyExistsInSystemException e ) {
+            ees = ( Collection<ExpressionExperiment> ) e.getData();
+            assumeNoException( String.format( "%s is already loaded in the database.", geoAccession ), e );
+        }
+        ee = ees.iterator().next();
+    }
+
+    @After
+    public void tearDown() {
+        if ( ees != null ) {
+            eeService.remove( ees );
+        }
+    }
+
     /*
      * Has multiple species (mouse and human, one and two platforms respectively), also test publication entry.
      */
     @Test
     @Category(SlowTest.class)
     public void testFetchAndLoadGSE1133() throws Exception {
-
         geoService.setGeoDomainObjectGenerator(
                 new GeoDomainObjectGeneratorLocal( this.getTestFileBasePath( "gse1133Short" ) ) );
-        Collection<?> results;
+        setUpDatasetFromGeo( "GSE1133" );
 
-        try {
-            results = geoService.fetchAndLoad( "GSE1133", false, true, false );
-        } catch ( AlreadyExistsInSystemException e ) {
-            log.warn( "Test skipped because GSE1133 was not removed from the system prior to test" );
-            return;
-        }
+        assertEquals( 2, this.ees.size() );
 
-        assertEquals( 2, results.size() );
-
-        for ( Object o : results ) {
-            ExpressionExperiment e = ( ExpressionExperiment ) o;
+        for ( ExpressionExperiment e : this.ees ) {
             e = eeService.thawLite( e );
 
             aclTestUtils.checkEEAcls( e );
 
             assertNotNull( e.getPrimaryPublication() );
             assertEquals( "6062-7", e.getPrimaryPublication().getPages() );
-
-            try {
-                eeService.remove( e );
-            } catch ( Exception ex ) {
-                log.info( "Failed to remove EE after test" );
-            }
         }
 
     }
 
     @Test
-    public void testFetchAndLoadGSE37646RNASEQ() throws Exception {
-        geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( this.getTestFileBasePath() ) );
-        try {
-            Collection<?> results = geoService.fetchAndLoad( "GSE37646", false, true, false );
-            ee = ( ExpressionExperiment ) results.iterator().next();
-            aclTestUtils.checkEEAcls( ee );
-        } catch ( AlreadyExistsInSystemException e ) {
-            log.warn( "Test skipped because GSE1133 was not removed from the system prior to test" );
-        }
+    public void testFetchAndLoadGSE37646RNASEQ() {
+        setUpDatasetFromGeo( "GSE37646" );
     }
 
     @Test
     @Category(SlowTest.class)
-    public void testFetchAndLoadGSE16035() throws Exception, PreprocessingException {
-        geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( this.getTestFileBasePath() ) );
-        try {
-            Collection<?> results = geoService.fetchAndLoad( "GSE16035", false, true, false );
-            ee = ( ExpressionExperiment ) results.iterator().next();
-            ee = preprocessorService.process( ee );
+    public void testFetchAndLoadGSE16035() {
+        setUpDatasetFromGeo( "GSE16035" );
 
-            ee = eeService.thaw( ee );
-            Collection<ProcessedExpressionDataVector> vecs = ee.getProcessedExpressionDataVectors();
-            dataVectorService.thaw( vecs );
+        ee = preprocessorService.process( ee );
 
-            ExpressionDataMatrixBuilder builder = new ExpressionDataMatrixBuilder( vecs );
+        ee = eeService.thaw( ee );
+        Collection<ProcessedExpressionDataVector> vecs = ee.getProcessedExpressionDataVectors();
+        dataVectorService.thaw( vecs );
 
-            ExpressionDataMatrix<Double> matrix = builder.getProcessedData();
-            double a = matrix.get( 0, 0 );
-            double b = matrix.get( 0, 1 );
-            assertTrue( a - b != 0.0 );
+        ExpressionDataMatrixBuilder builder = new ExpressionDataMatrixBuilder( vecs );
 
-        } catch ( AlreadyExistsInSystemException e ) {
-            log.warn( "Test skipped because GSE16035 was not removed from the system prior to test" );
-        }
+        ExpressionDataMatrix<Double> matrix = builder.getProcessedData();
+        double a = matrix.get( 0, 0 );
+        double b = matrix.get( 0, 1 );
+        assertTrue( a - b != 0.0 );
     }
 
     @Test
     @Category(SlowTest.class)
-    public void testFetchAndLoadGSE12135EXON() throws Exception {
-        geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( this.getTestFileBasePath() ) );
-        try {
-            Collection<?> results = geoService.fetchAndLoad( "GSE12135", false, true, false );
-            ee = ( ExpressionExperiment ) results.iterator().next();
-            aclTestUtils.checkEEAcls( ee );
-        } catch ( AlreadyExistsInSystemException e ) {
-            log.warn( "Test skipped because GSE1133 was not removed from the system prior to test" );
-        }
-
+    public void testFetchAndLoadGSE12135EXON() {
+        setUpDatasetFromGeo( "GSE12135" );
+        aclTestUtils.checkEEAcls( ee );
     }
 
     /*
      * Left out quantitation types due to bug in how quantitation types were cached during persisting, if the QTs didn't
      * have descriptions. Converted into a test of taxon filtering.
      */
-    @Test
-    public void testFetchAndLoadGSE13657() throws Exception {
-        try {
-            geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( this.getTestFileBasePath() ) );
-            geoService.fetchAndLoad( "GSE13657", false, true, false );
-            fail( "Expected an exception for no supported taxa" );
-            // ee = ( ExpressionExperiment ) results.iterator().next();
-        } catch ( IllegalStateException e ) {
-            // expected
-        }
+    @Test(expected = IllegalStateException.class)
+    public void testFetchAndLoadGSE13657() {
+        setUpDatasetFromGeo( "GSE13657" );
+        fail( "Expected an exception for no supported taxa" );
 
         // part of original test, for checking QT inclusion
         //        ee = this.eeService.thawLite( ee );
@@ -219,29 +202,10 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
 
     }
 
-    @After
-    public void tearDown() {
-        if ( ee != null )
-            try {
-                eeService.remove( ee );
-            } catch ( Exception e ) {
-                log.info( "Failed to remove EE after test: " + e.getMessage() );
-                throw e;
-            }
-    }
-
     @Test
     @Category(SlowTest.class)
     public void testFetchAndLoadGSE9048() throws Exception {
-        try {
-            geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( this.getTestFileBasePath() ) );
-
-            Collection<?> results = geoService.fetchAndLoad( "GSE9048", false, true, false );
-            ee = ( ExpressionExperiment ) results.iterator().next();
-        } catch ( AlreadyExistsInSystemException e ) {
-            log.info( "Test skipped because GSE9048 was already loaded - clean the DB before running the test" );
-            return;
-        }
+        setUpDatasetFromGeo( "GSE9048" );
 
         ee = eeService.load( ee.getId() );
         assertNotNull( ee );
@@ -274,8 +238,8 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
 
         processedExpressionDataVectorService.thaw( dataVectors );
         for ( ProcessedExpressionDataVector v : dataVectors ) {
-            assertTrue( v.getRankByMax() != null );
-            assertTrue( v.getRankByMean() != null );
+            assertNotNull( v.getRankByMax() );
+            assertNotNull( v.getRankByMean() );
         }
 
         ee = eeService.load( ee.getId() );
@@ -292,16 +256,8 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
      * For bug 2312 - qts getting dropped.
      */
     @Test
-    public void testFetchAndLoadGSE18707() throws Exception {
-        try {
-            geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( this.getTestFileBasePath() ) );
-
-            Collection<?> results = geoService.fetchAndLoad( "GSE18707", false, true, false );
-            ee = ( ExpressionExperiment ) results.iterator().next();
-        } catch ( AlreadyExistsInSystemException e ) {
-            log.info( "Test skipped because GSE18707 was already loaded - clean the DB before running the test" );
-            return;
-        }
+    public void testFetchAndLoadGSE18707() {
+        setUpDatasetFromGeo( "GSE18707" );
 
         // Mouse430A_2.
         ee = eeService.findByShortName( "GSE18707" );
@@ -326,15 +282,9 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
 
     @Test
     public void testFetchAndLoadGSE5949() throws Exception {
-        try {
-            geoService.setGeoDomainObjectGenerator(
-                    new GeoDomainObjectGeneratorLocal( this.getTestFileBasePath( "GSE5949short" ) ) );
-            Collection<?> results = geoService.fetchAndLoad( "GSE5949", false, true, false );
-            ee = ( ExpressionExperiment ) results.iterator().next();
-        } catch ( AlreadyExistsInSystemException e ) {
-            assumeNoException( "Test skipped because GSE5949 was already loaded - clean the DB before running the test", e );
-            return;
-        }
+        geoService.setGeoDomainObjectGenerator(
+                new GeoDomainObjectGeneratorLocal( this.getTestFileBasePath( "GSE5949short" ) ) );
+        setUpDatasetFromGeo( "GSE5949" );
         ee = this.eeService.thawLite( ee );
         Collection<QuantitationType> qts = eeService.getQuantitationTypes( ee );
         assertEquals( 1, qts.size() );
@@ -361,17 +311,9 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
          * HG-U133A. GDS473 is for the other chip (B). Series is GSE674. see
          * http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=gds&term=GSE674[Accession]&cmd=search
          */
-        ExpressionExperiment newee;
-        try {
-            Collection<?> results = geoService.fetchAndLoad( "GSE674", false, true, false );
-            newee = ( ExpressionExperiment ) results.iterator().next();
-
-        } catch ( AlreadyExistsInSystemException e ) {
-            log.info( "Skipping test, data already exists in db" );
-            return;
-        }
-        assertNotNull( newee );
-        newee = eeService.thaw( newee );
+        setUpDatasetFromGeo( "GSE674" );
+        assertNotNull( this.ee );
+        ExpressionExperiment newee = eeService.thaw( this.ee );
 
         /*
          * Test for bug 468 (merging of subsets across GDS's)
@@ -403,15 +345,8 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
 
     @Test
     @Category(SlowTest.class)
-    public void testLoadGSE30521ExonArray() throws Exception {
-        try {
-            geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( this.getTestFileBasePath() ) );
-            Collection<?> results = geoService.fetchAndLoad( "GSE30521", false, true, false );
-            ee = ( ExpressionExperiment ) results.iterator().next();
-        } catch ( AlreadyExistsInSystemException e ) {
-            log.info( "Test skipped because GSE30521 was already loaded - clean the DB before running the test" );
-            return;
-        }
+    public void testLoadGSE30521ExonArray() {
+        setUpDatasetFromGeo( "GSE30521" );
         ee = this.eeService.thawLite( ee );
 
         /*
@@ -428,15 +363,8 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
 
     @Test
     @Category(SlowTest.class)
-    public void testLoadGSE28383ExonArray() throws Exception {
-        try {
-            geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( this.getTestFileBasePath() ) );
-            Collection<?> results = geoService.fetchAndLoad( "GSE28383", false, true, false );
-            ee = ( ExpressionExperiment ) results.iterator().next();
-        } catch ( AlreadyExistsInSystemException e ) {
-            log.info( "Test skipped because GSE28383 was already loaded - clean the DB before running the test" );
-            return;
-        }
+    public void testLoadGSE28383ExonArray() {
+        setUpDatasetFromGeo( "GSE28383" );
         ee = this.eeService.thawLite( ee );
 
         /*
@@ -449,13 +377,6 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
             // OK
         }
 
-    }
-
-    @SuppressWarnings("unused")
-        // !! Please leave this here, we use it to load data sets for chopping.
-    ExpressionExperiment fetchASeries( String accession ) {
-        geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGenerator() );
-        return ( ExpressionExperiment ) geoService.fetchAndLoad( accession, false, false, false ).iterator().next();
     }
 
     @SuppressWarnings("unused")

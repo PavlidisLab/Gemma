@@ -1061,6 +1061,20 @@ public class ExpressionExperimentServiceImpl
         super.remove( ee );
     }
 
+    @Override
+    @Transactional
+    public void remove( Collection<ExpressionExperiment> entities ) {
+        for ( ExpressionExperiment ee : entities ) {
+            remove( ee );
+        }
+    }
+
+    @Override
+    @Transactional
+    public void removeAll() {
+        throw new UnsupportedOperationException( "That would be nut." );
+    }
+
     private Collection<? extends AnnotationValueObject> getAnnotationsByFactorValues( Long eeId ) {
         return this.expressionExperimentDao.getAnnotationsByFactorvalues( eeId );
     }
