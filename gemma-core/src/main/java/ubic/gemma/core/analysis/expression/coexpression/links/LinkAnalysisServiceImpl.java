@@ -160,9 +160,9 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
     private void checkDatamatrix( ExpressionDataDoubleMatrix datamatrix ) throws InsufficientProbesException {
         if ( datamatrix.rows() == 0 ) {
             LinkAnalysisServiceImpl.log.info( "No rows left after filtering" );
-            throw new InsufficientProbesException( "No rows left after filtering" );
+            throw new InsufficientProbesException( datamatrix.getExpressionExperiment(), "No rows left after filtering" );
         } else if ( datamatrix.rows() < FilterConfig.MINIMUM_ROWS_TO_BOTHER ) {
-            throw new InsufficientProbesException(
+            throw new InsufficientProbesException(datamatrix.getExpressionExperiment(),
                     "To few rows (" + datamatrix.rows() + "), data sets are not analyzed unless they have at least "
                             + FilterConfig.MINIMUM_ROWS_TO_BOTHER + " rows" );
         }

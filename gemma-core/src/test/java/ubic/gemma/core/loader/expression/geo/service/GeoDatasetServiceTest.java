@@ -151,7 +151,7 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
     public void testFetchAndLoadGSE16035() {
         setUpDatasetFromGeo( "GSE16035" );
 
-        ee = preprocessorService.process( ee );
+        preprocessorService.process( ee );
 
         ee = eeService.thaw( ee );
         Collection<ProcessedExpressionDataVector> vecs = ee.getProcessedExpressionDataVectors();

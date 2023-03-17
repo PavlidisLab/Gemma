@@ -18,6 +18,8 @@
  */
 package ubic.gemma.core.analysis.preprocess.filter;
 
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+
 /**
  * Used to indicate that analysis was skipped, not necessarily an error.
  *
@@ -27,8 +29,8 @@ public class InsufficientDataException extends FilteringException {
 
     private static final long serialVersionUID = 1L;
 
-    protected InsufficientDataException( String message ) {
-        super( message );
+    protected InsufficientDataException( ExpressionExperiment ee, String message ) {
+        super( ee, message );
     }
 
 }

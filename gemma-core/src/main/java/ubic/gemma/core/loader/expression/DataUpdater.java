@@ -1157,7 +1157,7 @@ public class DataUpdater {
     private ExpressionExperiment postprocess( ExpressionExperiment ee ) {
         // several transactions
         try {
-            ee = preprocessorService.process( ee );
+            preprocessorService.process( ee );
         } catch ( PreprocessingException e ) {
             DataUpdater.log.error( "Error during postprocessing", e );
         }

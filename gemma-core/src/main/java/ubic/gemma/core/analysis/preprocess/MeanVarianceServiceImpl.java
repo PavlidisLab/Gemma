@@ -20,6 +20,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 import ubic.basecode.io.ByteArrayConverter;
 import ubic.basecode.math.linearmodels.MeanVarianceEstimator;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
@@ -77,6 +78,7 @@ public class MeanVarianceServiceImpl implements MeanVarianceService {
     }
 
     @Override
+    @Transactional
     public MeanVarianceRelation create( ExpressionExperiment ee, boolean forceRecompute ) {
 
         if ( ee == null ) {
@@ -129,16 +131,19 @@ public class MeanVarianceServiceImpl implements MeanVarianceService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public MeanVarianceRelation findOrCreate( ExpressionExperiment ee ) {
         return create( ee, false );
     }
 
     @Override
+    @Transactional(readOnly = true)
     public boolean hasMeanVariance( ExpressionExperiment ee ) {
         return ee.getMeanVarianceRelation() != null;
     }
 
     @Override
+    @Transactional(readOnly = true)
     public MeanVarianceRelation find( ExpressionExperiment ee ) {
         ee = expressionExperimentService.thawLiter( ee );
         return ee.getMeanVarianceRelation();

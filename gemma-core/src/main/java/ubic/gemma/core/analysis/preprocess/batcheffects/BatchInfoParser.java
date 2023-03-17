@@ -28,6 +28,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.text.ParseException;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -95,7 +96,7 @@ public class BatchInfoParser {
                             .size() + " while processing " + ee.getShortName() );
         }
 
-        return this.getBatchInformationFromFiles( bioAssays2Files );
+        return this.getBatchInformationFromFiles( ee, bioAssays2Files );
     }
 
     /**
@@ -112,11 +113,12 @@ public class BatchInfoParser {
      * corrupted date in CEL files, for example. However, downstream code has to be careful, and the batch factor could
      * be a problem too.
      *
+     * @param ee
      * @param bioAssays2Files BA 2 files
      * @return map of biomaterials to dates. Biomaterials which did not have associated dates are not included in the
      * map.
      */
-    private Map<BioMaterial, Date> getBatchInformationFromFiles( Map<BioAssay, File> bioAssays2Files ) {
+    private Map<BioMaterial, Date> getBatchInformationFromFiles( ExpressionExperiment ee, Map<BioAssay, File> bioAssays2Files ) {
 
         Map<BioMaterial, Date> result = new HashMap<>();
         Collection<File> missingDate = new HashSet<>();
@@ -127,7 +129,7 @@ public class BatchInfoParser {
 
             try ( InputStream is = FileTools.getInputStreamFromPlainOrCompressedFile( f.getAbsolutePath() ) ) {
 
-                this.locateExtractor( arrayDesignUsed, ba, f );
+                this.locateExtractor( ee, arrayDesignUsed, ba, f );
 
                 Date d = scanDateExtractor.extract( is );
 
@@ -140,7 +142,7 @@ public class BatchInfoParser {
                 BioMaterial bm = ba.getSampleUsed();
                 result.put( bm, d );
 
-            } catch ( IOException | UnsupportedRawdataFileFormatException e ) {
+            } catch ( IOException | ParseException e ) {
                 BatchInfoParser.log.warn( "Failure while parsing: " + f + ": " + e.getMessage() );
                 missingDate.add( f );
             }
@@ -161,7 +163,7 @@ public class BatchInfoParser {
         return result;
     }
 
-    private void locateExtractor( ArrayDesign arrayDesignUsed, BioAssay ba, File f ) throws UnsupportedRawdataFileFormatException {
+    private void locateExtractor( ExpressionExperiment ee, ArrayDesign arrayDesignUsed, BioAssay ba, File f ) throws UnsupportedRawdataFileFormatException {
         String providerName =
                 arrayDesignUsed.getDesignProvider() == null ? "" : arrayDesignUsed.getDesignProvider().getName();
         if ( providerName.equalsIgnoreCase( "affymetrix" ) || arrayDesignUsed.getName().toLowerCase()
@@ -187,7 +189,7 @@ public class BatchInfoParser {
                  * We can attempt to use the slide number as the key, if the data is in the beadarray file format.s
                  */
 
-                throw new UnsupportedRawdataFileFormatException(
+                throw new UnsupportedRawdataFileFormatException( ee,
                         arrayDesignUsed + " not matched to a supported platform type for scan date extraction for " + ba
                                 + "(Illumina files do not contain dates)" );
             }

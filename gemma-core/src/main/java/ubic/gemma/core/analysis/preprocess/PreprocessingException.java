@@ -14,6 +14,8 @@
  */
 package ubic.gemma.core.analysis.preprocess;
 
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+
 /**
  * Allows us to catch preprocessing errors and handle them correctly.
  *
@@ -26,15 +28,11 @@ public class PreprocessingException extends RuntimeException {
 
     private static final long serialVersionUID = -8463478950898408838L;
 
-    public PreprocessingException( Exception e ) {
-        super( e );
+    public PreprocessingException( ExpressionExperiment ee, String message ) {
+        super( String.format( "Failed to pre-process %s: %s", ee.getShortName(), message ) );
     }
 
-    public PreprocessingException( String message ) {
-        super( message );
-    }
-
-    public PreprocessingException( Throwable cause ) {
-        super( cause );
+    public PreprocessingException( ExpressionExperiment ee, Throwable cause ) {
+        super( String.format( "Failed to pre-process %s", ee.getShortName() ), cause );
     }
 }
