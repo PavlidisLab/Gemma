@@ -19,7 +19,7 @@
             </type>
         </property>
         <property name="value" type="java.lang.String">
-            <column name="VALUE" not-null="false" unique="false" sql-type="VARCHAR(255)"/>
+            <column name="`VALUE`" not-null="false" unique="false" sql-type="VARCHAR(255)"/>
         </property>
         <property name="kindCV">
             <column name="KIND_C_V" not-null="false" unique="false" sql-type="VARCHAR(255)"/>
