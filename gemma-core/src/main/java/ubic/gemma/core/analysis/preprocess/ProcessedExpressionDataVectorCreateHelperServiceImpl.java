@@ -119,8 +119,8 @@ public class ProcessedExpressionDataVectorCreateHelperServiceImpl
 
     @Override
     @Transactional
-    public ExpressionExperiment createProcessedExpressionData( ExpressionExperiment ee ) {
-        ee = processedExpressionDataVectorService.createProcessedDataVectors( ee );
+    public ExpressionExperiment createProcessedExpressionData( ExpressionExperiment ee, boolean detectScaleFromData ) {
+        ee = processedExpressionDataVectorService.createProcessedDataVectors( ee, detectScaleFromData );
         assert ee.getNumberOfDataVectors() != null;
         this.audit( ee );
         return ee;

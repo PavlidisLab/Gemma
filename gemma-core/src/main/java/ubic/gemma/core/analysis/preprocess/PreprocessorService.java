@@ -24,12 +24,20 @@ public interface PreprocessorService {
     /**
      * Preprocess a dataset.
      * @param ee the expression experiment to process
-     * @throws PreprocessingException if there was a problem during the processing
      */
     void process( ExpressionExperiment ee ) throws PreprocessingException;
 
     /**
-     * A lightweight flavour of {@link #process(ExpressionExperiment)}.
+     * Preprocess a dataset.
+     * @param ee the expression experiment to process
+     * @param detectScaleFromData when generating processed EVs, detect the scale type from the raw data instead of
+     *                            relying on their QTs
+     * @throws PreprocessingException if there was a problem during the processing
+     */
+    void process( ExpressionExperiment ee, boolean detectScaleFromData ) throws PreprocessingException;
+
+    /**
+     * A lightweight flavour of {@link #process(ExpressionExperiment, boolean)}.
      * <p>
      * The following are skipped: two-channel missing values; redoing differential expression; batch correction.
      */

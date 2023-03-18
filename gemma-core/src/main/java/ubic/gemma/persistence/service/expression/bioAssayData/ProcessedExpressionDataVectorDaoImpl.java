@@ -79,7 +79,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
     }
 
     @Override
-    public ExpressionExperiment createProcessedDataVectors( ExpressionExperiment ee ) {
+    public ExpressionExperiment createProcessedDataVectors( ExpressionExperiment ee, boolean detectScaleFromData ) {
         if ( ee == null ) {
             throw new IllegalStateException( "ExpressionExperiment cannot be null" );
         }
@@ -123,7 +123,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
 
         /* log-transform if necessary */
         Collection<RawExpressionDataVector> preferredDataVectors = ensureLog2Scale( rawPreferredDataVectors,
-                preferredMaskedDataQuantitationType );
+                preferredMaskedDataQuantitationType, detectScaleFromData );
 
         Map<CompositeSequence, DoubleVectorValueObject> maskedVectorObjects = this
                 .maskAndUnpack( preferredDataVectors, missingValueVectors );
@@ -490,15 +490,16 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
      * @param  preferredMaskedDataQuantitationType preferred masked data QT
      * @return collection containing the vectors
      */
-    public Collection<RawExpressionDataVector> ensureLog2Scale(
+    private Collection<RawExpressionDataVector> ensureLog2Scale(
             Collection<RawExpressionDataVector> rawPreferredDataVectors,
-            QuantitationType preferredMaskedDataQuantitationType ) {
+            QuantitationType preferredMaskedDataQuantitationType,
+            boolean detectScaleFromData ) {
         Collection<RawExpressionDataVector> preferredDataVectors = new HashSet<>();
 
         if ( !preferredMaskedDataQuantitationType.getScale().equals( ScaleType.LOG2 ) ) {
             log.info( String.format( "Converting from %s to %s", preferredMaskedDataQuantitationType.getScale(), ScaleType.LOG2 ) );
             ExpressionDataDoubleMatrix matrix = ExpressionDataDoubleMatrixUtil
-                    .ensureLog2Scale( new ExpressionDataDoubleMatrix( rawPreferredDataVectors ), true );
+                    .ensureLog2Scale( new ExpressionDataDoubleMatrix( rawPreferredDataVectors ), detectScaleFromData );
             preferredDataVectors.addAll( matrix.toRawDataVectors() );
             preferredMaskedDataQuantitationType.setScale( ScaleType.LOG2 );
             this.getSessionFactory().getCurrentSession().update( preferredMaskedDataQuantitationType );

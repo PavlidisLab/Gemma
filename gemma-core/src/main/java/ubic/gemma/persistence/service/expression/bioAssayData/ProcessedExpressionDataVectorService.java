@@ -53,6 +53,9 @@ public interface ProcessedExpressionDataVectorService
     @Secured({ "GROUP_ADMIN" })
     void clearCache();
 
+    @Secured({ "GROUP_USER" })
+    ExpressionExperiment createProcessedDataVectors( ExpressionExperiment expressionExperiment );
+
     /**
      * Populate the processed data for the given experiment. For two-channel studies, the missing value information
      * should already have been computed.
@@ -61,7 +64,7 @@ public interface ProcessedExpressionDataVectorService
      * @return updated expressionExperiment
      */
     @Secured({ "GROUP_USER" })
-    ExpressionExperiment createProcessedDataVectors( ExpressionExperiment expressionExperiment );
+    ExpressionExperiment createProcessedDataVectors( ExpressionExperiment expressionExperiment, boolean detectScaleFromData );
 
     /**
      * @param bioassaySets - expressionExperiments or expressionExperimentSubSets
@@ -182,16 +185,21 @@ public interface ProcessedExpressionDataVectorService
 
     List<DoubleVectorValueObject> getDiffExVectors( Long resultSetId, Double threshold, int maxNumberOfResults );
 
+    @Secured({ "GROUP_ADMIN" })
+    Collection<ProcessedExpressionDataVector> computeProcessedExpressionData( ExpressionExperiment ee );
+
     /**
      * This method should not be called on its own, if possible. Use the PreprocessorService to do all necessary
      * refreshing.
      *
-     * @param ee the experiment
+     * @param ee                  the experiment
+     * @param detectScaleFromData
      * @return processed data vectors
      * @see PreprocessorService
      */
     @Secured({ "GROUP_ADMIN" })
-    Collection<ProcessedExpressionDataVector> computeProcessedExpressionData( ExpressionExperiment ee );
+    Collection<ProcessedExpressionDataVector> computeProcessedExpressionData( ExpressionExperiment ee, boolean detectScaleFromData );
+
 
     /**
      * Creates new bioAssayDimensions to match the experimental design, reorders the data to match, updates.

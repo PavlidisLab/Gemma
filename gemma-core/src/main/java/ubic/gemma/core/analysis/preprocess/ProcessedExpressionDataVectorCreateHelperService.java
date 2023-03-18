@@ -27,7 +27,7 @@ public interface ProcessedExpressionDataVectorCreateHelperService {
     ExpressionExperiment createProcessedDataVectors( ExpressionExperiment ee,
             Collection<ProcessedExpressionDataVector> vecs );
 
-    ExpressionExperiment createProcessedExpressionData( ExpressionExperiment ee );
+    ExpressionExperiment createProcessedExpressionData( ExpressionExperiment ee, boolean detectScaleFromData );
 
     void reorderByDesign( Long eeId );
 

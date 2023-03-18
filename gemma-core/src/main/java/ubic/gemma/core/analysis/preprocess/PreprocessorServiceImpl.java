@@ -111,10 +111,16 @@ public class PreprocessorServiceImpl implements PreprocessorService {
     @Override
     @Transactional
     public void process( ExpressionExperiment ee ) throws PreprocessingException {
+        process( ee, false );
+    }
+
+    @Override
+    @Transactional
+    public void process( ExpressionExperiment ee, boolean detectScaleFromData ) throws PreprocessingException {
         ee = expressionExperimentService.thaw( ee );
         removeInvalidatedData( ee );
         processForMissingValues( ee );
-        processVectorCreate( ee );
+        processVectorCreate( ee, detectScaleFromData );
         batchCorrect( ee );
     }
 
@@ -124,7 +130,7 @@ public class PreprocessorServiceImpl implements PreprocessorService {
         // we dont do processForMissingValues missing values
         ee = expressionExperimentService.thaw( ee );
         removeInvalidatedData( ee );
-        processVectorCreate( ee );
+        processVectorCreate( ee, false );
         processDiagnostics( ee );
         processBatchInfo( ee );
     }
@@ -184,8 +190,8 @@ public class PreprocessorServiceImpl implements PreprocessorService {
         geeqService.calculateScore( ee, GeeqService.ScoreMode.all );
     }
 
-    private void processVectorCreate( ExpressionExperiment ee ) {
-        processedExpressionDataVectorService.computeProcessedExpressionData( ee );
+    private void processVectorCreate( ExpressionExperiment ee, boolean detectScaleFromData ) {
+        processedExpressionDataVectorService.computeProcessedExpressionData( ee, detectScaleFromData );
     }
 
     private void processBatchInfo( ExpressionExperiment ee ) {

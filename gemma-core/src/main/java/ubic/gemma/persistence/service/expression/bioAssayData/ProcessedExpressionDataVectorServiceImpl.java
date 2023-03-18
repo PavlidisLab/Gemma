@@ -90,7 +90,13 @@ public class ProcessedExpressionDataVectorServiceImpl
     @Override
     @Transactional
     public ExpressionExperiment createProcessedDataVectors( ExpressionExperiment expressionExperiment ) {
-        return this.processedExpressionDataVectorDao.createProcessedDataVectors( expressionExperiment );
+        return createProcessedDataVectors( expressionExperiment, false );
+    }
+
+    @Override
+    @Transactional
+    public ExpressionExperiment createProcessedDataVectors( ExpressionExperiment expressionExperiment, boolean detectScaleFromData ) {
+        return this.processedExpressionDataVectorDao.createProcessedDataVectors( expressionExperiment, detectScaleFromData );
     }
 
     @Override
@@ -295,10 +301,16 @@ public class ProcessedExpressionDataVectorServiceImpl
     @Override
     @Transactional
     public Collection<ProcessedExpressionDataVector> computeProcessedExpressionData( ExpressionExperiment ee ) {
+        return computeProcessedExpressionData( ee, false );
+    }
+
+    @Override
+    @Transactional
+    public Collection<ProcessedExpressionDataVector> computeProcessedExpressionData( ExpressionExperiment ee, boolean detectScaleFromData ) {
         try {
 
             // transaction
-            ee = helperService.createProcessedExpressionData( ee );
+            ee = helperService.createProcessedExpressionData( ee, detectScaleFromData );
             assert ee.getNumberOfDataVectors() != null;
 
             // transaction. We load the vectors again because otherwise we have a long dirty check? See bug 3597

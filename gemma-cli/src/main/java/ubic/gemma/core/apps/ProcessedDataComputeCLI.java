@@ -19,15 +19,14 @@
 package ubic.gemma.core.apps;
 
 import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
-import ubic.gemma.core.analysis.preprocess.PreprocessingException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 import ubic.gemma.core.analysis.preprocess.PreprocessorService;
 import ubic.gemma.core.analysis.preprocess.ProcessedExpressionDataVectorCreateHelperService;
 import ubic.gemma.core.util.AbstractCLI;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorServiceImpl;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
@@ -37,53 +36,44 @@ import ubic.gemma.persistence.service.expression.experiment.ExpressionExperiment
  * @author xwan, paul
  * @see    ProcessedExpressionDataVectorServiceImpl
  */
+@Component
 public class ProcessedDataComputeCLI extends ExpressionExperimentManipulatingCLI {
 
-    //   private boolean batchCorrect = false;
+    @Autowired
     private PreprocessorService preprocessorService;
+    @Autowired
     private ProcessedExpressionDataVectorCreateHelperService proccessedVectorService;
+    @Autowired
     private ExpressionExperimentService expressionExperimentService;
+
+    //   private boolean batchCorrect = false;
     private boolean updateRanks = false;
     private boolean updateDiagnostics = false;
+    private boolean detectDataFromScale = false;
 
     @Override
     public GemmaCLI.CommandGroup getCommandGroup() {
         return GemmaCLI.CommandGroup.EXPERIMENT;
     }
 
-    @SuppressWarnings("static-access")
     @Override
     protected void buildOptions( Options options ) {
-
         super.buildOptions( options );
-
         super.addForceOption( options );
         this.addDateOption( options );
-
-        options.addOption( "diagupdate",
+        options.addOption( "diagupdate", false,
                 "Only update the diagnostics without recomputing data (PCA, M-V, sample correlation, GEEQ; may be combined with other options)" );
-        options.addOption( "rankupdate", "Only update the expression intensity rank information (may be combined with other options)" );
-
+        options.addOption( "rankupdate", false, "Only update the expression intensity rank information (may be combined with other options)" );
+        options.addOption( "detectScale", false, "Detect scale from data" );
         //  options.addOption( outputFileOption );
     }
 
     @Override
     protected void processOptions( CommandLine commandLine ) {
         super.processOptions( commandLine );
-        preprocessorService = this.getBean( PreprocessorService.class );
-        expressionExperimentService = this.getBean( ExpressionExperimentService.class );
-        proccessedVectorService = this.getBean( ProcessedExpressionDataVectorCreateHelperService.class );
-        this.auditTrailService = this.getBean( AuditTrailService.class );
-        eeService = this.getBean( ExpressionExperimentService.class );
-
-        if ( commandLine.hasOption( "diagupdate" ) ) {
-            this.updateDiagnostics = true;
-        }
-
-        if ( commandLine.hasOption( "rankupdate" ) ) {
-
-            this.updateRanks = true;
-        }
+        this.updateDiagnostics = commandLine.hasOption( "diagupdate" );
+        this.updateRanks = commandLine.hasOption( "rankupdate" );
+        this.detectDataFromScale = commandLine.hasOption( "detectScale" );
     }
 
     @Override
@@ -130,7 +120,7 @@ public class ProcessedDataComputeCLI extends ExpressionExperimentManipulatingCLI
                 }
             } else {
                 // this does all of the steps including batch correction
-                this.preprocessorService.process( ee );
+                this.preprocessorService.process( ee, detectDataFromScale );
             }
 
             // Note the auditing is done by the service.

@@ -42,9 +42,11 @@ public interface ProcessedExpressionDataVectorDao extends DesignElementDataVecto
      * quantile normalized (with some exceptions: ratios and count data will not be normalized).
      *
      * @param expressionExperiment ee
+     * @param detectScaleFromData  use raw data to infer scale type and the adequate transformation for producing
+     *                             processed EVs instead of relying on the QT
      * @return the updated expressionExperiment.
      */
-    ExpressionExperiment createProcessedDataVectors( ExpressionExperiment expressionExperiment );
+    ExpressionExperiment createProcessedDataVectors( ExpressionExperiment expressionExperiment, boolean detectScaleFromData );
 
     Collection<DoubleVectorValueObject> getProcessedDataArrays( BioAssaySet expressionExperiment );
 
