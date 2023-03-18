@@ -1,0 +1,152 @@
+package ubic.gemma.persistence.service.expression.bioAssayData;
+
+import org.apache.commons.math3.distribution.LogNormalDistribution;
+import org.apache.commons.math3.distribution.NormalDistribution;
+import org.apache.commons.math3.distribution.RealDistribution;
+import org.hibernate.SessionFactory;
+import org.junit.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.test.context.ContextConfiguration;
+import ubic.basecode.io.ByteArrayConverter;
+import ubic.gemma.core.util.test.BaseDatabaseTest;
+import ubic.gemma.model.common.auditAndSecurity.AuditTrailImpl;
+import ubic.gemma.model.common.quantitationtype.*;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.bioAssay.BioAssay;
+import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
+import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
+import ubic.gemma.model.expression.biomaterial.BioMaterial;
+import ubic.gemma.model.expression.designElement.CompositeSequence;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.persistence.util.TestComponent;
+
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
+
+@ContextConfiguration
+public class ProcessedExpressionDataVectorDaoTest extends BaseDatabaseTest {
+
+    @Configuration
+    @TestComponent
+    static class ProcessedExpressionDataVectorDaoTestContextConfiguration extends BaseDatabaseTestContextConfiguration {
+
+        @Bean
+        public ProcessedDataVectorCache processedDataVectorCache() {
+            return mock( ProcessedDataVectorCache.class );
+        }
+
+        @Bean
+        public ProcessedExpressionDataVectorDao processedExpressionDataVectorDao( SessionFactory sessionFactory, ProcessedDataVectorCache cache ) {
+            return new ProcessedExpressionDataVectorDaoImpl( sessionFactory, cache );
+        }
+    }
+
+    @Autowired
+    private ProcessedExpressionDataVectorDao processedExpressionDataVectorDao;
+
+    private ByteArrayConverter bac = new ByteArrayConverter();
+
+    @Test
+    public void testCreateProcessedDataVectors() {
+        double[][] matrix = randomExpressionMatrix( 100, 4, new LogNormalDistribution( 10, 1 ) );
+        ExpressionExperiment ee = getTestExpressionExperimentForRawExpressionMatrix( matrix );
+        assertThat( ee.getProcessedExpressionDataVectors() ).isEmpty();
+        assertThat( ee.getRawExpressionDataVectors() ).hasSize( 100 );
+        ee = processedExpressionDataVectorDao.createProcessedDataVectors( ee, true );
+        assertThat( ee.getProcessedExpressionDataVectors() ).hasSize( 100 );
+    }
+
+    @Test
+    public void testCreateProcessedDataVectorsFromLog2Data() {
+        double[][] matrix = randomExpressionMatrix( 100, 4, new NormalDistribution( 15, 1 ) );
+        ExpressionExperiment ee = getTestExpressionExperimentForRawExpressionMatrix( matrix );
+        assertThat( ee.getProcessedExpressionDataVectors() ).isEmpty();
+        assertThat( ee.getRawExpressionDataVectors() ).hasSize( 100 );
+        ee = processedExpressionDataVectorDao.createProcessedDataVectors( ee, true );
+        assertThat( ee.getProcessedExpressionDataVectors() ).hasSize( 100 );
+    }
+
+    @Test
+    public void testCreateProcessedDataVectorsFromLog2RatiometricData() {
+        double[][] matrix = randomExpressionMatrix( 100, 4, new NormalDistribution( 0, 1 ) );
+        ExpressionExperiment ee = getTestExpressionExperimentForRawExpressionMatrix( matrix );
+        assertThat( ee.getProcessedExpressionDataVectors() ).isEmpty();
+        assertThat( ee.getRawExpressionDataVectors() ).hasSize( 100 );
+        ee = processedExpressionDataVectorDao.createProcessedDataVectors( ee, true );
+        assertThat( ee.getProcessedExpressionDataVectors() ).hasSize( 100 );
+    }
+
+
+    private ExpressionExperiment getTestExpressionExperimentForRawExpressionMatrix( double[][] matrix ) {
+        ExpressionExperiment ee = new ExpressionExperiment();
+
+        Taxon taxon = new Taxon();
+        sessionFactory.getCurrentSession().persist( taxon );
+
+        ArrayDesign ad = new ArrayDesign();
+        ad.setPrimaryTaxon( taxon );
+        ad.setAuditTrail( new AuditTrailImpl() );
+        sessionFactory.getCurrentSession().persist( ad );
+
+        QuantitationType qt = new QuantitationTypeImpl();
+        qt.setRepresentation( PrimitiveType.DOUBLE );
+        qt.setScale( ScaleType.LINEAR );
+        qt.setGeneralType( GeneralType.QUANTITATIVE );
+        qt.setType( StandardQuantitationType.AMOUNT );
+        qt.setIsPreferred( true );
+        sessionFactory.getCurrentSession().persist( qt );
+
+        BioAssayDimension bad = new BioAssayDimension();
+        List<BioAssay> bas = new ArrayList<>();
+        for ( int i = 0; i < matrix[0].length; i++ ) {
+            BioMaterial bm = new BioMaterial();
+            bm.setSourceTaxon( taxon );
+            sessionFactory.getCurrentSession().persist( bm );
+            BioAssay ba = new BioAssay();
+            ba.setArrayDesignUsed( ad );
+            ba.setSampleUsed( bm );
+            sessionFactory.getCurrentSession().persist( ba );
+            bas.add( ba );
+        }
+        bad.setBioAssays( bas );
+        sessionFactory.getCurrentSession().persist( bad );
+
+        Set<RawExpressionDataVector> vectors = new HashSet<>();
+        for ( double[] row : matrix ) {
+            RawExpressionDataVector ev = new RawExpressionDataVector();
+            ev.setBioAssayDimension( bad );
+            CompositeSequence cs = new CompositeSequence();
+            cs.setArrayDesign( ad );
+            sessionFactory.getCurrentSession().persist( cs );
+            ev.setDesignElement( cs );
+            ev.setData( bac.doubleArrayToBytes( row ) );
+            ev.setExpressionExperiment( ee );
+            ev.setQuantitationType( qt );
+            vectors.add( ev );
+        }
+
+        ee.setRawExpressionDataVectors( vectors );
+        ee.setAuditTrail( new AuditTrailImpl() );
+        sessionFactory.getCurrentSession().persist( ee );
+        return ee;
+    }
+
+    private static double[][] randomExpressionMatrix( int rows, int cols, RealDistribution distribution ) {
+        double[][] matrix = new double[rows][cols];
+        double[] samples = distribution.sample( rows * cols );
+        for ( int i = 0; i < rows; i++ ) {
+            for ( int j = 0; j < cols; j++ ) {
+                matrix[i][j] = samples[i + rows * j];
+            }
+        }
+        return matrix;
+    }
+}

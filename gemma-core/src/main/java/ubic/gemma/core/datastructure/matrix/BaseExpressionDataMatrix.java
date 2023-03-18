@@ -506,12 +506,10 @@ abstract public class BaseExpressionDataMatrix<T> implements ExpressionDataMatri
     private List<DesignElementDataVector> sortVectorsByDesignElement(
             Collection<? extends DesignElementDataVector> vectors ) {
         List<DesignElementDataVector> vectorSort = new ArrayList<>( vectors );
-        Collections.sort( vectorSort, new Comparator<DesignElementDataVector>() {
-            @Override
-            public int compare( DesignElementDataVector o1, DesignElementDataVector o2 ) {
-                return o1.getDesignElement().getName().compareTo( o2.getDesignElement().getName() );
-            }
-        } );
+        Comparator<DesignElementDataVector> cmp = Comparator
+                .comparing( ( DesignElementDataVector vector ) -> vector.getDesignElement().getName(), Comparator.nullsLast( Comparator.naturalOrder() ) )
+                .thenComparing( ( DesignElementDataVector vector ) -> vector.getDesignElement().getId() );
+        vectorSort.sort( cmp );
         return vectorSort;
     }
 
