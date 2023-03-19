@@ -118,10 +118,9 @@ public class BioMaterial extends AbstractDescribable implements gemma.gsec.model
             return new BioMaterial();
         }
 
-        public static BioMaterial newInstance( String name, BioAssay ba ) {
+        public static BioMaterial newInstance( String name ) {
             BioMaterial bm = new BioMaterial();
             bm.setName( name );
-            bm.setBioAssaysUsedIn( Collections.singleton( ba ) );
             return bm;
         }
     }

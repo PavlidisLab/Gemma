@@ -1,7 +1,6 @@
 package ubic.gemma.core.datastructure.matrix;
 
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.springframework.core.io.ClassPathResource;
 import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix;
@@ -9,21 +8,27 @@ import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.io.ByteArrayConverter;
 import ubic.basecode.io.reader.DoubleMatrixReader;
 import ubic.gemma.model.common.quantitationtype.*;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.persistence.service.expression.bioAssayData.RandomExpressionDataMatrixUtils;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.zip.GZIPInputStream;
 
 import static org.assertj.core.api.Assertions.*;
 import static ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrixUtil.*;
+import static ubic.gemma.persistence.service.expression.bioAssayData.RandomExpressionDataMatrixUtils.*;
 
 public class ExpressionDataDoubleMatrixUtilTest {
 
@@ -52,6 +57,7 @@ public class ExpressionDataDoubleMatrixUtilTest {
         ev.setBioAssayDimension( bad );
         matrix = new ExpressionDataDoubleMatrix( Collections.singleton( ev ), Collections.singleton( qt ) );
         matrix.set( 0, 0, 4.0 );
+        RandomExpressionDataMatrixUtils.setSeed( 123L );
     }
 
     @Test
@@ -101,18 +107,32 @@ public class ExpressionDataDoubleMatrixUtilTest {
 
     @Test
     public void testCounts() {
-        ExpressionDataDoubleMatrix data = readTestMatrix( "GSE110031" );
-        assertThat( inferScaleType( data ) ).isEqualTo( ScaleType.COUNT );
-        assertThat( inferStandardQuantitationType( data ) ).isEqualTo( StandardQuantitationType.COUNT );
-        assertThat( inferIsRatio( data ) ).isFalse();
+        ExpressionDataDoubleMatrix data = readTestMatrix( "GSE110031", TechnologyType.SEQUENCING );
+        assertThat( inferQuantitationType( data ) ).satisfies( qt -> {
+            assertThat( qt.getType() ).isEqualTo( StandardQuantitationType.COUNT );
+            assertThat( qt.getScale() ).isEqualTo( ScaleType.COUNT );
+            assertThat( qt.getIsRatio() ).isFalse();
+        } );
+    }
+
+    @Test
+    public void testCountsWhenPlatformIsNotSequencing() {
+        ExpressionDataDoubleMatrix data = readTestMatrix( "GSE110031", TechnologyType.ONECOLOR );
+        assertThat( inferQuantitationType( data ) ).satisfies( qt -> {
+            assertThat( qt.getType() ).isEqualTo( StandardQuantitationType.AMOUNT );
+            assertThat( qt.getScale() ).isEqualTo( ScaleType.LINEAR );
+            assertThat( qt.getIsRatio() ).isFalse();
+        } );
     }
 
     @Test
     public void testCountsWhenValueIsNegativeTreatAsLogbaseUnknown() {
-        ExpressionDataDoubleMatrix data = readTestMatrix( "GSE107314" );
-        assertThat( inferScaleType( data ) ).isEqualTo( ScaleType.LOGBASEUNKNOWN );
-        assertThat( inferStandardQuantitationType( data ) ).isEqualTo( StandardQuantitationType.AMOUNT );
-        assertThat( inferIsRatio( data ) ).isFalse();
+        ExpressionDataDoubleMatrix data = readTestMatrix( "GSE107314", TechnologyType.SEQUENCING );
+        assertThat( inferQuantitationType( data ) ).satisfies( qt -> {
+            assertThat( qt.getType() ).isEqualTo( StandardQuantitationType.AMOUNT );
+            assertThat( qt.getScale() ).isEqualTo( ScaleType.LOGBASEUNKNOWN );
+            assertThat( qt.getIsRatio() ).isFalse();
+        } );
     }
 
     @Test
@@ -122,72 +142,169 @@ public class ExpressionDataDoubleMatrixUtilTest {
 
     @Test
     public void testPercent1() {
-        ExpressionDataDoubleMatrix data = readTestMatrix( "GSE11135" );
-        assertThat( inferScaleType( data ) ).isEqualTo( ScaleType.PERCENT1 );
-        assertThat( inferStandardQuantitationType( data ) ).isEqualTo( StandardQuantitationType.AMOUNT );
-        assertThat( inferIsRatio( data ) ).isFalse();
+        ExpressionDataDoubleMatrix data = readTestMatrix( "GSE11135", TechnologyType.ONECOLOR );
+        assertThat( inferQuantitationType( data ) ).satisfies( qt -> {
+            assertThat( qt.getType() ).isEqualTo( StandardQuantitationType.AMOUNT );
+            assertThat( qt.getScale() ).isEqualTo( ScaleType.PERCENT1 );
+            assertThat( qt.getIsRatio() ).isFalse();
+        } );
     }
 
     @Test
     public void testPercent() {
-        ExpressionDataDoubleMatrix data = readTestMatrix( "GSE2" );
-        assertThat( inferScaleType( data ) ).isEqualTo( ScaleType.PERCENT );
-        assertThat( inferStandardQuantitationType( data ) ).isEqualTo( StandardQuantitationType.AMOUNT );
-        assertThat( inferIsRatio( data ) ).isFalse();
+        ExpressionDataDoubleMatrix data = readTestMatrix( "GSE2", TechnologyType.ONECOLOR );
+        assertThat( inferQuantitationType( data ) ).satisfies( qt -> {
+            assertThat( qt.getType() ).isEqualTo( StandardQuantitationType.AMOUNT );
+            assertThat( qt.getScale() ).isEqualTo( ScaleType.PERCENT );
+            assertThat( qt.getIsRatio() ).isFalse();
+        } );
     }
 
     @Test
     public void testZtransformed() {
-        ExpressionDataDoubleMatrix data = readTestMatrix( "GSE97677" );
-        assertThat( inferScaleType( data ) ).isEqualTo( ScaleType.LOGBASEUNKNOWN );
-        assertThat( inferStandardQuantitationType( data ) ).isEqualTo( StandardQuantitationType.ZSCORE );
-        assertThat( inferIsRatio( data ) ).isFalse();
+        ExpressionDataDoubleMatrix data = readTestMatrix( "GSE97677", TechnologyType.ONECOLOR );
+        assertThat( inferQuantitationType( data ) ).satisfies( qt -> {
+            assertThat( qt.getType() ).isEqualTo( StandardQuantitationType.ZSCORE );
+            assertThat( qt.getScale() ).isEqualTo( ScaleType.LOGBASEUNKNOWN );
+            assertThat( qt.getIsRatio() ).isFalse();
+        } );
     }
 
     @Test
     public void testZTransformedByMedian() {
-        ExpressionDataDoubleMatrix data = readTestMatrix( "GSE100366" );
-        assertThat( inferScaleType( data ) ).isEqualTo( ScaleType.LOGBASEUNKNOWN );
-        assertThat( inferStandardQuantitationType( data ) ).isEqualTo( StandardQuantitationType.ZSCORE );
-        assertThat( inferIsRatio( data ) ).isFalse();
+        ExpressionDataDoubleMatrix data = readTestMatrix( "GSE100366", TechnologyType.ONECOLOR );
+        assertThat( inferQuantitationType( data ) ).satisfies( qt -> {
+            assertThat( qt.getType() ).isEqualTo( StandardQuantitationType.ZSCORE );
+            assertThat( qt.getScale() ).isEqualTo( ScaleType.LOGBASEUNKNOWN );
+            assertThat( qt.getIsRatio() ).isFalse();
+        } );
     }
 
     @Test
     public void testZtransformedInLogSpace() {
-        ExpressionDataDoubleMatrix data = readTestMatrix( "GSE109035" );
+        ExpressionDataDoubleMatrix data = readTestMatrix( "GSE109035", TechnologyType.ONECOLOR );
         // should be LINEAR, but the values in this dataset are not large enough
-        assertThat( inferScaleType( data ) ).isEqualTo( ScaleType.OTHER );
-        assertThat( inferStandardQuantitationType( data ) ).isEqualTo( StandardQuantitationType.ZSCORE );
-        assertThat( inferIsRatio( data ) ).isFalse();
+        assertThat( inferQuantitationType( data ) ).satisfies( qt -> {
+            assertThat( qt.getType() ).isEqualTo( StandardQuantitationType.ZSCORE );
+            assertThat( qt.getScale() ).isEqualTo( ScaleType.OTHER );
+            assertThat( qt.getIsRatio() ).isFalse();
+        } );
     }
 
     @Test
     public void testIsLog10Ratiometric() {
-        ExpressionDataDoubleMatrix data = readTestMatrix( "GSE3087" );
-        assertThat( inferScaleType( data ) ).isEqualTo( ScaleType.LOG10 );
-        assertThat( inferStandardQuantitationType( data ) ).isEqualTo( StandardQuantitationType.AMOUNT );
-        assertThat( inferIsRatio( data ) ).isTrue();
+        ExpressionDataDoubleMatrix data = readTestMatrix( "GSE3087", TechnologyType.ONECOLOR );
+        assertThat( inferQuantitationType( data ) ).satisfies( qt -> {
+            assertThat( qt.getType() ).isEqualTo( StandardQuantitationType.AMOUNT );
+            assertThat( qt.getScale() ).isEqualTo( ScaleType.LOG10 );
+            assertThat( qt.getIsRatio() ).isTrue();
+        } );
     }
 
     @Test
-    @Ignore
     public void testLog2Ratiometric() {
-        ExpressionDataDoubleMatrix data = readTestMatrix( "GSE2178" );
-        assertThat( inferScaleType( data ) ).isEqualTo( ScaleType.LOG2 );
-        assertThat( inferStandardQuantitationType( data ) ).isEqualTo( StandardQuantitationType.AMOUNT );
-        assertThat( inferIsRatio( data ) ).isTrue();
+        ExpressionDataDoubleMatrix data = readTestMatrix( "GSE2178", TechnologyType.ONECOLOR );
+        assertThat( inferQuantitationType( data ) ).satisfies( qt -> {
+            assertThat( qt.getType() ).isEqualTo( StandardQuantitationType.AMOUNT );
+            assertThat( qt.getScale() ).isEqualTo( ScaleType.LOG2 );
+            assertThat( qt.getIsRatio() ).isTrue();
+        } );
     }
 
-    private ExpressionDataDoubleMatrix readTestMatrix( String shortName ) {
+    @Test
+    public void testRandomLinearMatrix() {
+        ExpressionExperiment ee = getTestExpressionExperiment();
+        matrix = randomLinearMatrix( ee );
+        assertThat( matrix.rows() ).isEqualTo( 10000 );
+        assertThat( matrix.columns() ).isEqualTo( 2 );
+        assertThat( inferQuantitationType( matrix ) ).satisfies( qt -> {
+            assertThat( qt.getScale() ).isEqualTo( ScaleType.LINEAR );
+            assertThat( qt.getIsRatio() ).isFalse();
+        } );
+    }
+
+    @Test
+    public void testRandomLog2Matrix() {
+        ExpressionExperiment ee = getTestExpressionExperiment();
+        matrix = randomLog2Matrix( ee );
+        assertThat( matrix.rows() ).isEqualTo( 10000 );
+        assertThat( matrix.columns() ).isEqualTo( 2 );
+        assertThat( inferQuantitationType( matrix ) ).satisfies( qt -> {
+            assertThat( qt.getScale() ).isEqualTo( ScaleType.LOG2 );
+            assertThat( qt.getIsRatio() ).isFalse();
+        } );
+    }
+
+
+    @Test
+    public void testRandomRatiometricLog2Matrix() {
+        ExpressionExperiment ee = getTestExpressionExperiment();
+        matrix = randomLog2RatiometricMatrix( ee );
+        assertThat( matrix.rows() ).isEqualTo( 10000 );
+        assertThat( matrix.columns() ).isEqualTo( 2 );
+        assertThat( inferQuantitationType( matrix ) ).satisfies( qt -> {
+            assertThat( qt.getScale() ).isEqualTo( ScaleType.LOG2 );
+            assertThat( qt.getIsRatio() ).isTrue();
+        } );
+    }
+
+    @Test
+    public void testRandomCountMatrix() {
+        ExpressionExperiment ee = getTestExpressionExperiment();
+        matrix = randomCountMatrix( ee );
+        assertThat( matrix.rows() ).isEqualTo( 10000 );
+        assertThat( matrix.columns() ).isEqualTo( 2 );
+        assertThat( inferQuantitationType( matrix ) ).satisfies( qt -> {
+            assertThat( qt.getScale() ).isEqualTo( ScaleType.COUNT );
+            assertThat( qt.getIsRatio() ).isFalse();
+        } );
+    }
+
+    private ExpressionExperiment getTestExpressionExperiment() {
+        ExpressionExperiment ee = new ExpressionExperiment();
+        Set<BioAssay> bioAssays = new HashSet<>();
+        ArrayDesign ad = ArrayDesign.Factory.newInstance();
+        Set<CompositeSequence> seqs = new HashSet<>();
+        for ( int j = 0; j < 10000; j++ ) {
+            seqs.add( CompositeSequence.Factory.newInstance( String.valueOf( j ) ) );
+        }
+        ad.setCompositeSequences( seqs );
+        for ( int i = 0; i < 2; i++ ) {
+            BioAssay ba = BioAssay.Factory.newInstance( String.valueOf( i ) );
+            ba.setArrayDesignUsed( ad );
+            BioMaterial bm = BioMaterial.Factory.newInstance( String.valueOf( i ) );
+            bm.setBioAssaysUsedIn( Collections.singleton( ba ) );
+            ba.setSampleUsed( bm );
+            bioAssays.add( ba );
+        }
+        ee.setBioAssays( bioAssays );
+        ee.setNumberOfSamples( 2 );
+        ee.setNumberOfDataVectors( 10000 );
+        return ee;
+    }
+
+    private ExpressionDataDoubleMatrix readTestMatrix( String shortName, TechnologyType technologyType ) {
         try ( InputStream is = new GZIPInputStream( new ClassPathResource( "/data/analysis/scale/" + shortName + ".gz" ).getInputStream() ) ) {
+            ArrayDesign ad = ArrayDesign.Factory.newInstance();
+            ad.setTechnologyType( technologyType );
+            Set<BioAssay> bas = new HashSet<>();
             DoubleMatrix<String, String> rawMatrix = new DoubleMatrixReader().read( is );
             DenseDoubleMatrix<CompositeSequence, BioMaterial> matrix = new DenseDoubleMatrix<>( rawMatrix.getRawMatrix() );
-            BioAssay ba = BioAssay.Factory.newInstance();
             matrix.setRowNames( rawMatrix.getRowNames().stream().map( CompositeSequence.Factory::newInstance ).collect( Collectors.toList() ) );
-            matrix.setColumnNames( rawMatrix.getColNames().stream().map( name -> BioMaterial.Factory.newInstance( name, ba ) ).collect( Collectors.toList() ) );
+            matrix.setColumnNames( rawMatrix.getColNames().stream().map( name -> {
+                BioMaterial bm = BioMaterial.Factory.newInstance( name );
+
+                BioAssay ba = BioAssay.Factory.newInstance();
+                ba.setArrayDesignUsed( ad );
+                ba.setSampleUsed( bm );
+                bas.add( ba );
+
+                bm.setBioAssaysUsedIn( Collections.singleton( ba ) );
+                return bm;
+            } ).collect( Collectors.toList() ) );
             ExpressionExperiment ee = new ExpressionExperiment();
             ee.setShortName( shortName );
-            ee.setBioAssays( Collections.singleton( ba ) );
+            ee.setBioAssays( bas );
             QuantitationType qt = new QuantitationTypeImpl();
             return new ExpressionDataDoubleMatrix( ee, qt, matrix );
         } catch ( IOException e ) {

@@ -24,10 +24,12 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 import ubic.basecode.io.ByteArrayConverter;
 import ubic.basecode.math.distribution.Histogram;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataMatrixRowElement;
+import ubic.gemma.model.common.auditAndSecurity.eventType.MissingValueAnalysisEvent;
 import ubic.gemma.model.common.quantitationtype.*;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
@@ -35,6 +37,7 @@ import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeService;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.bioAssayData.RawExpressionDataVectorService;
@@ -85,11 +88,11 @@ public class TwoChannelMissingValuesImpl implements TwoChannelMissingValues {
     @Autowired
     private QuantitationTypeService quantitationTypeService;
     @Autowired
-    private TwoChannelMissingValueHelperService twoChannelMissingValueHelperService;
-    @Autowired
     private RawExpressionDataVectorService rawExpressionDataVectorService;
     @Autowired
     private ProcessedExpressionDataVectorService processedExpressionDataVectorService;
+    @Autowired
+    private AuditTrailService auditTrailService;
 
     @Override
     public Collection<RawExpressionDataVector> computeMissingValues( ExpressionExperiment ee ) {
@@ -97,6 +100,7 @@ public class TwoChannelMissingValuesImpl implements TwoChannelMissingValues {
     }
 
     @Override
+    @Transactional
     public Collection<RawExpressionDataVector> computeMissingValues( ExpressionExperiment ee,
             double signalToNoiseThreshold, Collection<Double> extraMissingValueIndicators ) {
 
@@ -236,7 +240,13 @@ public class TwoChannelMissingValuesImpl implements TwoChannelMissingValues {
         }
         TwoChannelMissingValuesImpl.log.info( "Finished: " + count + " vectors examined for missing values" );
 
-        results = twoChannelMissingValueHelperService.persist( source, results );
+        log.info( "Persisting " + results.size() + " vectors ... " );
+        // saving twice is needed to get the QT filled in properly.
+        source = expressionExperimentService.save( source );
+        source.getRawExpressionDataVectors().addAll( results );
+        source = expressionExperimentService.save( source );
+        auditTrailService.addUpdateEvent( source, MissingValueAnalysisEvent.class,
+                "Computed missing value data" );
 
         return results;
     }

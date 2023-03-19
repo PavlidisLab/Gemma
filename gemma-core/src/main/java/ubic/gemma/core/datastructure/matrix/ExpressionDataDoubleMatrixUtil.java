@@ -23,23 +23,29 @@ import cern.colt.matrix.DoubleMatrix1D;
 import cern.colt.matrix.DoubleMatrix2D;
 import cern.colt.matrix.impl.DenseDoubleMatrix2D;
 import cern.jet.math.Functions;
-import cern.jet.stat.Descriptive;
 import lombok.Value;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.hibernate.Hibernate;
+import org.hibernate.LazyInitializationException;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
+import ubic.basecode.math.DescriptiveWithMissing;
 import ubic.basecode.math.MatrixStats;
 import ubic.gemma.core.analysis.preprocess.QuantitationTypeConversionException;
 import ubic.gemma.core.analysis.preprocess.UnsupportedQuantitationScaleConversionException;
 import ubic.gemma.core.analysis.preprocess.UnsupportedQuantitationTypeConversionException;
 import ubic.gemma.core.analysis.preprocess.filter.ExpressionExperimentFilter;
 import ubic.gemma.model.common.quantitationtype.*;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 
 import javax.annotation.CheckReturnValue;
-import java.util.*;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 
@@ -242,36 +248,46 @@ public class ExpressionDataDoubleMatrixUtil {
     }
 
     /**
-     * Infer scale type from data.
+     * Infer a {@link QuantitationType} from expression data.
      */
-    public static ScaleType inferScaleType( ExpressionDataDoubleMatrix expressionData ) {
-        return infer( expressionData ).scale;
-    }
-
-    /**
-     * Infer the standard quantitation type from expression data.
-     */
-    public static StandardQuantitationType inferStandardQuantitationType( ExpressionDataDoubleMatrix expressionData ) {
-        return infer( expressionData ).type;
-    }
-
-    /**
-     * Infer if data is ratiometric.
-     */
-    public static boolean inferIsRatio( ExpressionDataDoubleMatrix expressionData ) {
-        return infer( expressionData ).isRatio;
+    public static QuantitationType inferQuantitationType( ExpressionDataDoubleMatrix expressionDataDoubleMatrix ) {
+        QuantitationType qt = new QuantitationTypeImpl();
+        InferredQuantitationType iqt = infer( expressionDataDoubleMatrix );
+        qt.setGeneralType( GeneralType.QUANTITATIVE );
+        qt.setType( iqt.type );
+        qt.setScale( iqt.scale );
+        qt.setRepresentation( PrimitiveType.DOUBLE );
+        qt.setIsRatio( iqt.isRatio );
+        return qt;
     }
 
     private static InferredQuantitationType infer( ExpressionDataDoubleMatrix expressionData ) {
         DoubleMatrix2D matrix = new DenseDoubleMatrix2D( expressionData.getMatrix().asArray() );
 
+        boolean isMicroarray;
+        try {
+            isMicroarray = expressionData.getExpressionExperiment() != null &&
+                    expressionData.getExpressionExperiment().getBioAssays().stream()
+                            .map( BioAssay::getArrayDesignUsed )
+                            .map( ArrayDesign::getTechnologyType )
+                            .anyMatch( TechnologyType.MICROARRAY::contains );
+        } catch ( LazyInitializationException e ) {
+            log.warn( String.format( "Failed to determine if the data matrix contains microarray platforms: %s.", e.getMessage() ) );
+            isMicroarray = false;
+        }
+
         // no data, there's nothing we can do
         if ( matrix.rows() == 0 || matrix.columns() == 0 ) {
-            throw new IllegalArgumentException( "Cannot infer scale type without data." );
+            throw new IllegalArgumentException( "Cannot infer quantitation type without data." );
         }
 
         boolean ip = isPercent( matrix );
         boolean ic = isCount( matrix );
+
+        if ( ic && isMicroarray ) {
+            log.warn( "Data appears to have been rounded and a microarray platform has been detected in the bioassays, will not treat as counts." );
+            ic = false;
+        }
 
         if ( ip && ic ) {
             log.warn( String.format( "Data only contains zeroes and ones, we don't have a binary scale so will report it as %s.",
@@ -292,6 +308,7 @@ public class ExpressionDataDoubleMatrixUtil {
         // obtain min/max right now, they are used in tests below
         double maximum = Arrays.stream( matrix.toArray() )
                 .flatMapToDouble( Arrays::stream )
+                .filter( Double::isFinite )
                 .max()
                 .orElseThrow( RuntimeException::new );
 
@@ -307,20 +324,23 @@ public class ExpressionDataDoubleMatrixUtil {
 
         // various upper-bounds to use for log-based scales
         // see https://github.com/PavlidisLab/Gemma/issues/600 for the rationale behind the following thresholds
-        final double[] upperBounds = { 4.81, 12, 20 };
+        final double[] upperBounds = { 4.81, 11, 20 };
         final double[] ratiometricUpperBounds = { 2.5, 2.5, 12 };
         final ScaleType[] types = { ScaleType.LOG10, ScaleType.LOGBASEUNKNOWN, ScaleType.LOG2 };
 
         boolean ir = isRatiometric( matrix );
-        for ( int i = 0; i < upperBounds.length; i++ ) {
-            if ( maximum < ( ir ? ratiometricUpperBounds[i] : upperBounds[i] ) ) {
-                log.info( String.format( "Data appears to be in the %s%s scale.", ir ? "ratiometric " : "", types[i] ) );
+        double[] bounds = ir ? ratiometricUpperBounds : upperBounds;
+        for ( int i = 0; i < bounds.length; i++ ) {
+            if ( maximum < bounds[i] ) {
+                log.info( String.format( "Data appears to be in the %s%s scale: maximum value observed is %f which is within bounds [%f, %f[.", ir ? "ratiometric " : "",
+                        types[i], maximum, i > 0 ? bounds[i - 1] : 0.0, bounds[i] ) );
                 return new InferredQuantitationType( StandardQuantitationType.AMOUNT, types[i], ir );
             }
         }
 
         double minimum = Arrays.stream( matrix.toArray() )
                 .flatMapToDouble( Arrays::stream )
+                .filter( Double::isFinite )
                 .min()
                 .orElseThrow( RuntimeException::new );
 
@@ -419,8 +439,8 @@ public class ExpressionDataDoubleMatrixUtil {
      */
     private static boolean isZScore( DoubleMatrix1D vector ) {
         DoubleArrayList v = new DoubleArrayList( vector.toArray() );
-        if ( isCloseToZero( Descriptive.mean( v ) ) ) {
-            double var = Descriptive.sampleVariance( v, v.size() - 1 );
+        if ( isCloseToZero( DescriptiveWithMissing.mean( v ) ) ) {
+            double var = DescriptiveWithMissing.sampleVariance( v, v.size() - 1 );
             if ( !isClose( var, 1 ) ) {
                 log.warn( String.format( "Mean is zero, but standard deviation %f is not close enough to one. Will still report as Z-score.", Math.sqrt( var ) ) );
             }
@@ -429,7 +449,7 @@ public class ExpressionDataDoubleMatrixUtil {
         // FIXME: use a faster algorithm for the median, there's a O(n) approach
         // sort only if necessary, median expects a sorted input
         v.sort();
-        return isCloseToZero( Descriptive.median( v ) );
+        return isCloseToZero( DescriptiveWithMissing.median( v ) );
     }
 
     /**
@@ -440,7 +460,7 @@ public class ExpressionDataDoubleMatrixUtil {
     private static boolean isRatiometric( DoubleMatrix2D matrix ) {
         boolean ratiometric = true;
         for ( int j = 0; j < matrix.columns(); j++ ) {
-            double mean = Descriptive.mean( new DoubleArrayList( matrix.viewColumn( j ).toArray() ) );
+            double mean = DescriptiveWithMissing.mean( new DoubleArrayList( matrix.viewColumn( j ).toArray() ) );
             ratiometric &= Math.abs( mean ) < 2;
         }
         return ratiometric;

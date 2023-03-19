@@ -31,6 +31,7 @@ import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
+import javax.annotation.Nullable;
 import java.io.Serializable;
 import java.util.*;
 
@@ -44,6 +45,8 @@ import java.util.*;
 abstract public class BaseExpressionDataMatrix<T> implements ExpressionDataMatrix<T>, Serializable {
 
     private static final Log log = LogFactory.getLog( ExpressionDataDoubleMatrix.class );
+
+    @Nullable
     ExpressionExperiment expressionExperiment;
     Collection<QuantitationType> quantitationTypes;
 
@@ -163,7 +166,11 @@ abstract public class BaseExpressionDataMatrix<T> implements ExpressionDataMatri
         return this.rowDesignElementMapByInteger.get( index );
     }
 
+    /**
+     * The associated {@link ExpressionExperiment}, if known.
+     */
     @Override
+    @Nullable
     public ExpressionExperiment getExpressionExperiment() {
         return this.expressionExperiment;
     }

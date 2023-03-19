@@ -62,6 +62,11 @@ public class ProcessedExpressionDataVectorDaoTest extends BaseDatabaseTest {
         assertThat( ee.getRawExpressionDataVectors() ).hasSize( 100 );
         ee = processedExpressionDataVectorDao.createProcessedDataVectors( ee, true );
         assertThat( ee.getProcessedExpressionDataVectors() ).hasSize( 100 );
+        assertThat( ee.getQuantitationTypes() ).hasSize( 1 ).first().satisfies( qt -> {
+            assertThat( qt.getGeneralType() ).isEqualTo( GeneralType.QUANTITATIVE );
+            assertThat( qt.getScale() ).isEqualTo( ScaleType.LOG2 );
+            assertThat( qt.getIsRatio() ).isFalse();
+        } );
     }
 
     @Test

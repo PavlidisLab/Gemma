@@ -141,16 +141,18 @@ public class PreprocessorServiceImpl implements PreprocessorService {
      * course) the processed data are already available.
      */
     private void batchCorrect( ExpressionExperiment ee ) throws PreprocessingException {
+        if ( !expressionExperimentBatchCorrectionService.checkCorrectability( ee, true ) ) {
+            log.warn( String.format( "%s cannot be batch-corrected: either already batch-corrected, no batch information, or invalid design.", ee ) );
+            return;
+        }
+
+        if ( expressionExperimentService.getArrayDesignsUsed( ee ).size() > 1 ) {
+            log.warn( String.format( "%s cannot be batch-corrected: can only batch-correct data for an experiment that uses one platform; you must switch/merge first.", ee ) );
+            return;
+        }
+
         String note = "ComBat batch correction";
         String detail;
-
-        /*
-         * This leaves the raw data alone; it updates the processed data.
-         */
-
-        this.checkArrayDesign( ee );
-
-        this.checkCorrectable( ee );
 
         /*
          * If there are predicted outliers, but which we decide are okay, we just go ahead.
@@ -255,8 +257,8 @@ public class PreprocessorServiceImpl implements PreprocessorService {
     private void processForMissingValues( ExpressionExperiment ee ) {
         Collection<ArrayDesign> arrayDesignsUsed = expressionExperimentService.getArrayDesignsUsed( ee );
         if ( arrayDesignsUsed.size() > 1 ) {
-            throw new UnsupportedOperationException( "Skipping postprocessing because experiment uses "
-                    + "multiple platform types. Please check valid entry and run postprocessing separately." );
+            log.warn( "Skipping postprocessing because experiment uses multiple platform types. Please check valid entry and run postprocessing separately." );
+            return;
         }
 
         ArrayDesign arrayDesignUsed = arrayDesignsUsed.iterator().next();
@@ -339,24 +341,8 @@ public class PreprocessorServiceImpl implements PreprocessorService {
         return vecs;
     }
 
-    private void checkCorrectable( ExpressionExperiment ee ) throws PreprocessingException {
-        boolean correctable = expressionExperimentBatchCorrectionService.checkCorrectability( ee, true );
-
-        if ( !correctable ) {
-            // throwing exception kind of annoying but not a big deal.
-            throw new PreprocessingException( ee, "could not be batch-corrected (either already batch-corrected, no batch information, or invalid design)" );
-        }
-    }
-
-    private void checkArrayDesign( ExpressionExperiment ee ) throws PreprocessingException {
-        Collection<ArrayDesign> ads = expressionExperimentService.getArrayDesignsUsed( ee );
-        if ( ads.size() > 1 ) {
-            throw new PreprocessingException( ee, "Can only batch-correct data for an experiment that uses one platform; you must switch/merge first." );
-        }
-    }
-
     @SuppressWarnings("unused")
-    private void checkOutliers( ExpressionExperiment ee ) throws PreprocessingException {
+    private void checkOutliers( ExpressionExperiment ee ) {
         Collection<OutlierDetails> outliers = outlierDetectionService.identifyOutliersByMedianCorrelation( ee );
         if ( !outliers.isEmpty() ) {
             Collection<OutlierDetails> knownOutliers = this.getAlreadyKnownOutliers( ee );
