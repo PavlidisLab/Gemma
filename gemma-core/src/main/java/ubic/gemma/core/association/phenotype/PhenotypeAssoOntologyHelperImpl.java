@@ -21,7 +21,6 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import ubic.basecode.ontology.model.OntologyTerm;
-import ubic.basecode.ontology.providers.AbstractOntologyService;
 import ubic.basecode.ontology.providers.DiseaseOntologyService;
 import ubic.basecode.ontology.providers.HumanPhenotypeOntologyService;
 import ubic.basecode.ontology.providers.MammalianPhenotypeOntologyService;
@@ -40,7 +39,7 @@ public class PhenotypeAssoOntologyHelperImpl implements InitializingBean, Phenot
 
     private static final Log log = LogFactory.getLog( PhenotypeAssoOntologyHelperImpl.class );
 
-    private final List<AbstractOntologyService> ontologies = new ArrayList<>();
+    private final List<ubic.basecode.ontology.providers.OntologyService> ontologies = new ArrayList<>();
 
     private final OntologyService ontologyService;
 
@@ -170,7 +169,7 @@ public class PhenotypeAssoOntologyHelperImpl implements InitializingBean, Phenot
         }
 
         OntologyTerm ontologyTerm;
-        for ( AbstractOntologyService ontology : this.ontologies ) {
+        for ( ubic.basecode.ontology.providers.OntologyService ontology : this.ontologies ) {
             ontologyTerm = ontology.getTerm( valueUri );
             if ( ontologyTerm != null )
                 return ontologyTerm;
@@ -183,7 +182,7 @@ public class PhenotypeAssoOntologyHelperImpl implements InitializingBean, Phenot
     public Set<CharacteristicValueObject> findPhenotypesInOntology( String searchQuery ) throws OntologySearchException {
         Map<String, OntologyTerm> uniqueValueTerm = new HashMap<>();
 
-        for ( AbstractOntologyService ontology : this.ontologies ) {
+        for ( ubic.basecode.ontology.providers.OntologyService ontology : this.ontologies ) {
             Collection<OntologyTerm> hits = ontology.findTerm( searchQuery );
 
             for ( OntologyTerm ontologyTerm : hits ) {
@@ -200,7 +199,7 @@ public class PhenotypeAssoOntologyHelperImpl implements InitializingBean, Phenot
     public Collection<OntologyTerm> findValueUriInOntology( String searchQuery ) throws OntologySearchException {
 
         Collection<OntologyTerm> results = new TreeSet<>();
-        for ( AbstractOntologyService ontology : this.ontologies ) {
+        for ( ubic.basecode.ontology.providers.OntologyService ontology : this.ontologies ) {
             assert ontology != null;
             Collection<OntologyTerm> found = ontology.findTerm( searchQuery );
             if ( found != null && !found.isEmpty() )

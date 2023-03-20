@@ -30,8 +30,7 @@ import java.io.InputStream;
 import java.util.Collection;
 import java.util.zip.GZIPInputStream;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.*;
 
 /**
  * @author Paul
@@ -50,7 +49,7 @@ public class GeneOntologyServiceTest {
          */
         InputStream is = new GZIPInputStream(
                 new ClassPathResource( "/data/loader/ontology/molecular-function.test.owl.gz" ).getInputStream() );
-        GeneOntologyServiceTest.gos.loadTermsInNameSpace( is );
+        GeneOntologyServiceTest.gos.loadTermsInNameSpace( is, false );
     }
 
     @AfterClass
@@ -66,7 +65,7 @@ public class GeneOntologyServiceTest {
         assertNotNull( termForId );
         Collection<OntologyTerm> terms = GeneOntologyServiceTest.gos.getAllParents( termForId );
 
-        assertEquals( 9, terms.size() );
+        assertEquals( 10, terms.size() );
     }
 
     @Test
@@ -76,7 +75,8 @@ public class GeneOntologyServiceTest {
         assertNotNull( termForId );
         Collection<OntologyTerm> terms = GeneOntologyServiceTest.gos.getAllParents( termForId );
 
-        assertEquals( 11, terms.size() );
+        assertFalse( terms.contains( termForId ) );
+        assertEquals( 12, terms.size() );
     }
 
     @Test
@@ -161,7 +161,7 @@ public class GeneOntologyServiceTest {
             GeneOntologyServiceTest.log.info( term );
         }
         // is a subclass and partof.
-        assertEquals( 12, terms.size() );
+        assertEquals( 7, terms.size() );
     }
 
     @Test

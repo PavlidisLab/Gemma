@@ -167,7 +167,7 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
 
         this.waitForGeneOntologyReady();
 
-        this.goService.init( true );
+        this.goService.initialize( true, false );
 
         log.info( "***** Annotation file(s) will be written to " + ArrayDesignAnnotationService.ANNOT_DATA_DIR + " ******" );
 
@@ -402,9 +402,9 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
 
     private void waitForGeneOntologyReady() {
 
-        goService.init( true );
+        goService.initialize( true, false );
 
-        while ( !goService.isReady() ) {
+        while ( !goService.isOntologyLoaded() ) {
             try {
                 Thread.sleep( 10000 );
                 AbstractCLI.log.info( "Waiting for Gene Ontology to load ..." );

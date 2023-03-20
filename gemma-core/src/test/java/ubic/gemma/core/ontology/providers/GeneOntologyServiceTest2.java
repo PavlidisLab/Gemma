@@ -42,7 +42,7 @@ public class GeneOntologyServiceTest2 {
         GeneOntologyServiceTest2.gos = new GeneOntologyServiceImpl();
         InputStream is = new GZIPInputStream(
                 new ClassPathResource( "/data/loader/ontology/go.bptest.owl.gz" ).getInputStream() );
-        GeneOntologyServiceTest2.gos.loadTermsInNameSpace( is );
+        GeneOntologyServiceTest2.gos.loadTermsInNameSpace( is, false );
     }
 
     @AfterClass

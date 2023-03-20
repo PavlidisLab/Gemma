@@ -210,11 +210,11 @@ public class GeneMultifunctionalityPopulationServiceImpl implements GeneMultifun
 
     private Map<Gene, Collection<String>> fetchGoAnnotations( Collection<Gene> genes ) {
 
-        if ( !goService.isRunning() ) {
-            goService.init( true );
+        if ( !goService.isOntologyLoaded() ) {
+            goService.startInitializationThread( true, false );
         }
 
-        while ( !goService.isReady() ) {
+        while ( !goService.isOntologyLoaded() ) {
             try {
                 Thread.sleep( 2000 );
             } catch ( InterruptedException e ) {
