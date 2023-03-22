@@ -198,8 +198,6 @@ public class DataUpdaterTest extends AbstractGeoServiceTest {
         } catch ( IllegalArgumentException e ) {
             // okay.
         }
-
-        dataUpdater.deleteData( ee, qt );
     }
 
     /*
