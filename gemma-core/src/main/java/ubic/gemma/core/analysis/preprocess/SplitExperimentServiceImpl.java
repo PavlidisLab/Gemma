@@ -376,13 +376,14 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
         clone.setTypes( this.cloneCharacteristics( experimentalDesign.getTypes() ) );
 
         clone.getExperimentalFactors()
-                .addAll( this.cloneExperimentalFactors( experimentalDesign.getExperimentalFactors(), experimentalDesign, old2cloneFV ) );
+                .addAll( this.cloneExperimentalFactors( experimentalDesign.getExperimentalFactors(), clone, old2cloneFV ) );
 
         return clone;
     }
 
     private Collection<ExperimentalFactor> cloneExperimentalFactors( Collection<ExperimentalFactor> experimentalFactors, ExperimentalDesign ed,
             Map<FactorValue, FactorValue> old2cloneFV ) {
+        assert ed.getId() == null;
         Collection<ExperimentalFactor> result = new HashSet<>();
         for ( ExperimentalFactor ef : experimentalFactors ) {
             ExperimentalFactor clone = ExperimentalFactor.Factory.newInstance();
@@ -403,6 +404,7 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
 
     private Collection<FactorValue> cloneFactorValues( Collection<FactorValue> factorValues, ExperimentalFactor ef,
             Map<FactorValue, FactorValue> old2cloneFV ) {
+        assert ef.getId() == null;
         Collection<FactorValue> result = new HashSet<>();
         for ( FactorValue fv : factorValues ) {
             FactorValue clone = FactorValue.Factory.newInstance( ef );
@@ -480,7 +482,7 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
         clone.setSequenceReadCount( ba.getSequenceReadCount() );
         clone.setSequenceReadLength( ba.getSequenceReadLength() );
 
-        clone.setSampleUsed( this.cloneBioMaterial( ba.getSampleUsed(), ba ) );
+        clone.setSampleUsed( this.cloneBioMaterial( ba.getSampleUsed(), clone ) );
         clone.setAccession( this.cloneAccession( ba.getAccession() ) );
 
         return clone;
@@ -493,6 +495,7 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
     }
 
     private BioMaterial cloneBioMaterial( BioMaterial bm, BioAssay ba ) {
+        assert ba.getId() == null; // should be a clone
         BioMaterial clone = BioMaterial.Factory.newInstance();
         clone.setName( bm.getName() + " (Split)" ); // it is important we make a new name, so we don't confuse this with the previous one in findOrCreate();
         clone.setDescription( bm.getDescription() );
