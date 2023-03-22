@@ -591,19 +591,6 @@ public class DataUpdater {
     }
 
     /**
-     * Generic. Remove all raw data for an experiment
-     *
-     * @param  ee experiment
-     * @param  qt quantitation type
-     * @return amount of vectors removed
-     */
-    @SuppressWarnings("UnusedReturnValue")
-    // Possible external use
-    int deleteData( ExpressionExperiment ee, QuantitationType qt ) {
-        return this.experimentService.removeRawVectors( ee, qt );
-    }
-
-    /**
      * Replace the data associated with the experiment (or add it if there is none). These data become the 'preferred'
      * quantitation type. Note that this replaces the "raw" data.
      * Similar to AffyPowerToolsProbesetSummarize.convertDesignElementDataVectors and code in

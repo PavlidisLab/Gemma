@@ -885,27 +885,6 @@ public class ExpressionExperimentServiceImpl
 
     @Override
     @Transactional
-    public int removeRawVectors( ExpressionExperiment ee, QuantitationType qt ) {
-        ExpressionExperiment eeToUpdate = Objects.requireNonNull( this.load( ee.getId() ) );
-        Set<RawExpressionDataVector> vectorsToRemove = new HashSet<>();
-        for ( RawExpressionDataVector oldV : eeToUpdate.getRawExpressionDataVectors() ) {
-            if ( oldV.getQuantitationType().equals( qt ) ) {
-                vectorsToRemove.add( oldV );
-            }
-        }
-
-        if ( vectorsToRemove.isEmpty() ) {
-            throw new IllegalArgumentException( "No vectors to remove for quantitation type=" + qt );
-        }
-
-        eeToUpdate.getRawExpressionDataVectors().removeAll( vectorsToRemove );
-        AbstractService.log.info( "Removing unused quantitation type: " + qt );
-        eeToUpdate.getQuantitationTypes().remove( qt );
-        return vectorsToRemove.size();
-    }
-
-    @Override
-    @Transactional
     public ExpressionExperiment replaceRawVectors( ExpressionExperiment ee,
             Collection<RawExpressionDataVector> newVectors ) {
 
