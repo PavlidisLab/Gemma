@@ -21,6 +21,8 @@ package ubic.gemma.persistence.service.expression.bioAssayData;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.core.analysis.preprocess.PreprocessorService;
+import ubic.gemma.core.datastructure.matrix.InferredQuantitationMismatchException;
+import ubic.gemma.core.datastructure.matrix.QuantitationMismatchException;
 import ubic.gemma.model.expression.bioAssayData.DoubleVectorValueObject;
 import ubic.gemma.model.expression.bioAssayData.ExperimentExpressionLevelsValueObject;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
@@ -64,7 +66,7 @@ public interface ProcessedExpressionDataVectorService
      * @return updated expressionExperiment
      */
     @Secured({ "GROUP_USER" })
-    ExpressionExperiment createProcessedDataVectors( ExpressionExperiment expressionExperiment, boolean detectScaleFromData );
+    ExpressionExperiment createProcessedDataVectors( ExpressionExperiment expressionExperiment, boolean ignoreInferredScale ) throws QuantitationMismatchException;
 
     /**
      * @param bioassaySets - expressionExperiments or expressionExperimentSubSets
@@ -191,14 +193,9 @@ public interface ProcessedExpressionDataVectorService
     /**
      * This method should not be called on its own, if possible. Use the PreprocessorService to do all necessary
      * refreshing.
-     *
-     * @param ee                  the experiment
-     * @param detectScaleFromData
-     * @return processed data vectors
-     * @see PreprocessorService
      */
     @Secured({ "GROUP_ADMIN" })
-    Collection<ProcessedExpressionDataVector> computeProcessedExpressionData( ExpressionExperiment ee, boolean detectScaleFromData );
+    Collection<ProcessedExpressionDataVector> computeProcessedExpressionData( ExpressionExperiment ee, boolean ignoreInferredScale ) throws QuantitationMismatchException;
 
 
     /**

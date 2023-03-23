@@ -29,12 +29,11 @@ public interface PreprocessorService {
 
     /**
      * Preprocess a dataset.
-     * @param ee the expression experiment to process
-     * @param detectScaleFromData when generating processed EVs, detect the scale type from the raw data instead of
-     *                            relying on their QTs
+     * @param ee                         the expression experiment to process
+     * @param ignoreQuantitationMismatch ignore quantitation mismatch when generating processed EVs
      * @throws PreprocessingException if there was a problem during the processing
      */
-    void process( ExpressionExperiment ee, boolean detectScaleFromData ) throws PreprocessingException;
+    void process( ExpressionExperiment ee, boolean ignoreQuantitationMismatch ) throws PreprocessingException;
 
     /**
      * A lightweight flavour of {@link #process(ExpressionExperiment, boolean)}.

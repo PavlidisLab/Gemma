@@ -70,7 +70,7 @@ public class RandomExpressionDataMatrixUtils {
         return randomExpressionMatrix( ee, qt, new NormalDistribution( 6.25, 1.46 ) );
     }
 
-    private static ExpressionDataDoubleMatrix randomExpressionMatrix( ExpressionExperiment ee, QuantitationType qt, RealDistribution distribution ) {
+    public static ExpressionDataDoubleMatrix randomExpressionMatrix( ExpressionExperiment ee, QuantitationType qt, RealDistribution distribution ) {
         int numSamples = ee.getBioAssays().size();
         if ( numSamples == 0 ) {
             throw new IllegalArgumentException( "ExpressionExperiment must have at least one bioassay." );

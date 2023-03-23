@@ -26,14 +26,11 @@ import cern.jet.math.Functions;
 import lombok.Value;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.hibernate.Hibernate;
 import org.hibernate.LazyInitializationException;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.math.DescriptiveWithMissing;
 import ubic.basecode.math.MatrixStats;
-import ubic.gemma.core.analysis.preprocess.QuantitationTypeConversionException;
 import ubic.gemma.core.analysis.preprocess.UnsupportedQuantitationScaleConversionException;
-import ubic.gemma.core.analysis.preprocess.UnsupportedQuantitationTypeConversionException;
 import ubic.gemma.core.analysis.preprocess.filter.ExpressionExperimentFilter;
 import ubic.gemma.model.common.quantitationtype.*;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -43,9 +40,9 @@ import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 
 import javax.annotation.CheckReturnValue;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 
@@ -70,7 +67,7 @@ public class ExpressionDataDoubleMatrixUtil {
      * @return ee data double matrix
      */
     public static ExpressionDataDoubleMatrix filterAndLog2Transform( ExpressionDataDoubleMatrix dmatrix ) {
-        dmatrix = ExpressionDataDoubleMatrixUtil.ensureLog2Scale( dmatrix, false );
+        dmatrix = ExpressionDataDoubleMatrixUtil.ensureLog2Scale( dmatrix );
 
         /*
          * We do this second because doing it first causes some kind of subtle problem ... (round off? I could not
@@ -107,15 +104,16 @@ public class ExpressionDataDoubleMatrixUtil {
      * Ensures that the given matrix is on a Log2 scale.
      * ! Does not update the QT !
      *
-     * @param dmatrix             the matrix to be transformed to a log2 scale if necessary.
-     * @param detectScaleFromData if true, the scale is detected from data, otherwise it is assumed from the matrix's
-     *                            quantitation types
+     * @param dmatrix                    the matrix to be transformed to a log2 scale if necessary.
+     * @param ignoreQuantitationMismatch if true, ignore mismatch between matrix quantitation types and that inferred
+     *                                   from data
      * @throws QuantitationTypeConversionException if transformation to log2 scale is impossible
+     * @throws InferredQuantitationMismatchException              if the inferred scale type differs that inferred from data
      * @return a data matrix that is guaranteed to be on a log2 scale or the original input matrix if it was already the
      * case
      */
     @CheckReturnValue
-    public static ExpressionDataDoubleMatrix ensureLog2Scale( ExpressionDataDoubleMatrix dmatrix, boolean detectScaleFromData ) throws QuantitationTypeConversionException {
+    public static ExpressionDataDoubleMatrix ensureLog2Scale( ExpressionDataDoubleMatrix dmatrix, boolean ignoreQuantitationMismatch ) throws QuantitationMismatchException {
         QuantitationType quantitationType = dmatrix.getQuantitationTypes().iterator().next();
         if ( quantitationType == null ) {
             throw new IllegalArgumentException( "Expression data matrix lacks a quantitation type." );
@@ -136,42 +134,46 @@ public class ExpressionDataDoubleMatrixUtil {
 
         InferredQuantitationType inferredQuantitationType = infer( dmatrix );
 
-        StandardQuantitationType type;
-        boolean isRatio;
-        ScaleType scaleType;
-        if ( detectScaleFromData ) {
-            type = inferredQuantitationType.getType();
-            scaleType = inferredQuantitationType.getScale();
-            isRatio = inferredQuantitationType.isRatio;
-        } else {
-            type = quantitationType.getType();
-            scaleType = quantitationType.getScale();
-            isRatio = quantitationType.getIsRatio();
-        }
-
-        if ( quantitationType.getType() != type ) {
+        if ( quantitationType.getType() != inferredQuantitationType.getType() ) {
+            String message = String.format( "The type of %s differs from the one inferred from data: %s.",
+                    quantitationType, inferredQuantitationType.getType() );
             // if data is meant to be detected, then
-            if ( detectScaleFromData ) {
-                throw new UnsupportedQuantitationTypeConversionException( quantitationType.getType(), inferredQuantitationType.getType() );
+            if ( ignoreQuantitationMismatch ) {
+                log.warn( message );
             } else {
-                log.warn( String.format( "The type of %s differs from the one inferred from data: %s.",
-                        quantitationType, inferredQuantitationType.getType() ) );
+                throw new InferredQuantitationMismatchException( message );
             }
         }
 
-        if ( quantitationType.getScale() != scaleType ) {
-            log.warn( String.format( "The scale of %s differs from the one inferred from data: %s.",
-                    quantitationType, inferredQuantitationType.getScale() ) );
+        if ( quantitationType.getScale() != inferredQuantitationType.getScale() ) {
+            String message = String.format( "The scale of %s differs from the one inferred from data: %s.",
+                    quantitationType, inferredQuantitationType.getScale() );
+            if ( ignoreQuantitationMismatch ) {
+                log.warn( message );
+            } else {
+                throw new InferredQuantitationMismatchException( message );
+            }
+        }
+
+        if ( quantitationType.getIsRatio() != inferredQuantitationType.isRatio ) {
+            String message = String.format( "The expression data of %s %s to ratiometric.", quantitationType,
+                    inferredQuantitationType.isRatio ? "appears" : "does not appear" );
+            if ( ignoreQuantitationMismatch ) {
+                log.warn( message );
+            } else {
+                throw new InferredQuantitationMismatchException( message );
+            }
         }
 
         // special case for log2, we don't need to transform anything
-        if ( quantitationType.getScale() == ScaleType.LOG2 && scaleType == ScaleType.LOG2 ) {
+        if ( quantitationType.getScale() == ScaleType.LOG2 ) {
             log.info( "Data is already on a log2-scale, will not transform it." );
             return dmatrix;
         }
 
+        StandardQuantitationType type = quantitationType.getType();
         DoubleMatrix<CompositeSequence, BioMaterial> transformedMatrix = dmatrix.getMatrix().copy();
-        switch ( scaleType ) {
+        switch ( quantitationType.getScale() ) {
             case LOG2:
                 log.warn( String.format( "Data was detected on a log2-scale, but the quantitation type indicate %s. No transformation is necessary.",
                         quantitationType.getScale() ) );
@@ -199,7 +201,7 @@ public class ExpressionDataDoubleMatrixUtil {
                 type = StandardQuantitationType.AMOUNT;
                 break;
             default:
-                throw new UnsupportedQuantitationScaleConversionException( scaleType, ScaleType.LOG2 );
+                throw new UnsupportedQuantitationScaleConversionException( quantitationType.getScale(), ScaleType.LOG2 );
         }
 
         StandardQuantitationType finalType = type;
@@ -208,10 +210,34 @@ public class ExpressionDataDoubleMatrixUtil {
                 .peek( qt -> {
                     qt.setType( finalType );
                     qt.setScale( ScaleType.LOG2 );
-                    qt.setIsRatio( isRatio );
                 } )
                 .collect( Collectors.toList() );
-        return new ExpressionDataDoubleMatrix( dmatrix, transformedMatrix, log2Qts );
+
+        ExpressionDataDoubleMatrix log2Matrix = new ExpressionDataDoubleMatrix( dmatrix, transformedMatrix, log2Qts );
+
+        try {
+            detectSuspiciousValues( log2Matrix, log2Qts.iterator().next() );
+        } catch ( SuspiciousValuesForQuantitationException e ) {
+            if ( ignoreQuantitationMismatch ) {
+                log.warn( String.format( "Expression data matrix contains suspicious values:\n\n - %s",
+                        e.getLintResults().stream()
+                                .map( SuspiciousValuesForQuantitationException.SuspiciousValueResult::toString )
+                                .collect( Collectors.joining( "\n - " ) ) ) );
+            } else {
+                throw e;
+            }
+        }
+
+        return log2Matrix;
+    }
+
+    public static ExpressionDataDoubleMatrix ensureLog2Scale( ExpressionDataDoubleMatrix expressionData ) {
+        try {
+            return ensureLog2Scale( expressionData, true );
+        } catch ( QuantitationMismatchException e ) {
+            // never happening
+            throw new RuntimeException( e );
+        }
     }
 
     /**
@@ -481,6 +507,100 @@ public class ExpressionDataDoubleMatrixUtil {
 
     private static boolean isClose( double a, double b ) {
         return a == b || Math.abs( a - b ) < RTOL * Math.abs( b ) + ATOL;
+    }
+
+    /**
+     * Detect suspicious values for a given quantitation type.
+     * @throws SuspiciousValuesForQuantitationException if there are any suspicious values
+     */
+    public static void detectSuspiciousValues( ExpressionDataDoubleMatrix a, QuantitationType qt ) throws SuspiciousValuesForQuantitationException {
+        DoubleMatrix2D matrix = new DenseDoubleMatrix2D( a.getMatrix().asArray() );
+
+        List<SuspiciousValuesForQuantitationException.SuspiciousValueResult> lintResults = new ArrayList<>();
+
+        // TODO: handle normalization and background-substracted linting
+        if ( qt.getIsBackgroundSubtracted() || qt.getIsNormalized() ) {
+            log.warn( "Expression data is either background subtracted or normalized, suspicious values will not be linted." );
+            return;
+        }
+
+        switch ( qt.getScale() ) {
+            case LOG2:
+                if ( qt.getIsRatio() ) {
+                    ensureWithin( matrix, -15, 15, lintResults );
+                    ensureWithin( matrix, "mean", DescriptiveWithMissing::mean, -0.5, 0.5, lintResults );
+                } else {
+                    ensureWithin( matrix, 0, 20, lintResults );
+                    ensureOutside( matrix, "mean", DescriptiveWithMissing::mean, -0.1, 0.1, lintResults );
+                }
+                break;
+            case LOG10: // basically 0.3 time the log2 thresholds since log(2)/log(10) = 0.3
+                if ( qt.getIsRatio() ) {
+                    ensureWithin( matrix, -4.5, 4.5, lintResults );
+                    ensureWithin( matrix, "mean", DescriptiveWithMissing::mean, -0.5, 0.5, lintResults );
+                } else {
+                    ensureWithin( matrix, 0, 9, lintResults );
+                    ensureOutside( matrix, "mean", DescriptiveWithMissing::mean, -0.03, 0.03, lintResults );
+                }
+                break;
+            case LINEAR:
+                if ( qt.getIsRatio() ) {
+                    lintResults.add( new SuspiciousValuesForQuantitationException.SuspiciousValueResult( -1, -1, "Linear data should not be ratiometric" ) );
+                } else {
+                    ensureWithin( matrix, 1e-3, 1e6, lintResults );
+                    ensureWithin( matrix, "mean", DescriptiveWithMissing::mean, 50, 10000, lintResults );
+                }
+                break;
+            case COUNT:
+                ensureWithin( matrix, 0, 1e8, lintResults );
+                if ( !isCount( matrix ) ) {
+                    lintResults.add( new SuspiciousValuesForQuantitationException.SuspiciousValueResult( -1, -1, "Counting data contains a non-integer valus." ) );
+                }
+                break;
+        }
+
+        if ( !lintResults.isEmpty() ) {
+            throw new SuspiciousValuesForQuantitationException( "Expression data matrix contains suspicious values.", lintResults );
+        }
+    }
+
+    @FunctionalInterface
+    private interface DescriptiveFunction {
+        double apply( DoubleArrayList a );
+    }
+
+    private static void ensureWithin( DoubleMatrix2D a, double lowerBound, double upperBound, List<SuspiciousValuesForQuantitationException.SuspiciousValueResult> results ) {
+        for ( int j = 0; j < a.columns(); j++ ) {
+            DoubleArrayList col = new DoubleArrayList( a.viewColumn( j ).toArray() );
+            double minimum = DescriptiveWithMissing.min( col );
+            double maximum = DescriptiveWithMissing.max( col );
+            if ( minimum < lowerBound ) {
+                results.add( new SuspiciousValuesForQuantitationException.SuspiciousValueResult( -1, j, String.format( "minimum is too small (%s < %f)", minimum, lowerBound ) ) );
+            }
+            if ( maximum > upperBound ) {
+                results.add( new SuspiciousValuesForQuantitationException.SuspiciousValueResult( -1, j, String.format( "maximum is too small (%s > %f)", maximum, upperBound ) ) );
+            }
+        }
+    }
+
+    private static void ensureWithin( DoubleMatrix2D a, String funcName, DescriptiveFunction func, double lowerBound, double upperBound, List<SuspiciousValuesForQuantitationException.SuspiciousValueResult> results ) {
+        for ( int j = 0; j < a.columns(); j++ ) {
+            DoubleArrayList col = new DoubleArrayList( a.viewColumn( j ).toArray() );
+            double r = func.apply( col );
+            if ( r < lowerBound || r > upperBound ) {
+                results.add( new SuspiciousValuesForQuantitationException.SuspiciousValueResult( -1, j, String.format( "%s %f is outside expected range: [%f, %f]", funcName, r, lowerBound, upperBound ) ) );
+            }
+        }
+    }
+
+    private static void ensureOutside( DoubleMatrix2D a, String funcName, DescriptiveFunction func, double lowerBound, double upperBound, List<SuspiciousValuesForQuantitationException.SuspiciousValueResult> results ) {
+        for ( int j = 0; j < a.columns(); j++ ) {
+            DoubleArrayList col = new DoubleArrayList( a.viewColumn( j ).toArray() );
+            double r = func.apply( col );
+            if ( r >= lowerBound && r <= upperBound ) {
+                results.add( new SuspiciousValuesForQuantitationException.SuspiciousValueResult( -1, j, String.format( "%s %f is inside suspicious range: [%f, %f]", funcName, r, lowerBound, upperBound ) ) );
+            }
+        }
     }
 
     /**

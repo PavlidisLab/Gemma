@@ -29,6 +29,7 @@ import ubic.basecode.util.BatchIterator;
 import ubic.gemma.core.analysis.preprocess.normalize.QuantileNormalizer;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrixUtil;
+import ubic.gemma.core.datastructure.matrix.QuantitationMismatchException;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.QuantitationTypeImpl;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
@@ -79,7 +80,16 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
     }
 
     @Override
-    public ExpressionExperiment createProcessedDataVectors( ExpressionExperiment ee, boolean detectScaleFromData ) {
+    public ExpressionExperiment createProcessedDataVectors( ExpressionExperiment ee ) {
+        try {
+            return createProcessedDataVectors( ee, true );
+        } catch ( QuantitationMismatchException e ) {
+            throw new RuntimeException( e );
+        }
+    }
+
+    @Override
+    public ExpressionExperiment createProcessedDataVectors( ExpressionExperiment ee, boolean ignoreQuantitationMismatch ) throws QuantitationMismatchException {
         if ( ee == null ) {
             throw new IllegalStateException( "ExpressionExperiment cannot be null" );
         }
@@ -123,7 +133,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
 
         /* log-transform if necessary */
         Collection<RawExpressionDataVector> preferredDataVectors = ensureLog2Scale( rawPreferredDataVectors,
-                preferredMaskedDataQuantitationType, detectScaleFromData );
+                preferredMaskedDataQuantitationType, ignoreQuantitationMismatch );
 
         Map<CompositeSequence, DoubleVectorValueObject> maskedVectorObjects = this
                 .maskAndUnpack( preferredDataVectors, missingValueVectors );
@@ -493,9 +503,9 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
     private Collection<RawExpressionDataVector> ensureLog2Scale(
             Collection<RawExpressionDataVector> rawPreferredDataVectors,
             QuantitationType preferredMaskedDataQuantitationType,
-            boolean detectScaleFromData ) {
+            boolean ignoreQuantitationMismatch ) throws QuantitationMismatchException {
         ExpressionDataDoubleMatrix matrix = ExpressionDataDoubleMatrixUtil
-                .ensureLog2Scale( new ExpressionDataDoubleMatrix( rawPreferredDataVectors ), detectScaleFromData );
+                .ensureLog2Scale( new ExpressionDataDoubleMatrix( rawPreferredDataVectors ), ignoreQuantitationMismatch );
         preferredMaskedDataQuantitationType.setScale( ScaleType.LOG2 );
         this.getSessionFactory().getCurrentSession().update( preferredMaskedDataQuantitationType );
         return new HashSet<>( matrix.toRawDataVectors() );
