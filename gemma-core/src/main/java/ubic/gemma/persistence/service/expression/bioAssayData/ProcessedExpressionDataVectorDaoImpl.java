@@ -134,7 +134,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
                 .getPreferredMaskedDataQuantitationType( expressionExperiment, preferredDataVectorExemplar.getQuantitationType() );
 
         /* log-transform if necessary */
-        Collection<RawExpressionDataVector> preferredDataVectors = ensureLog2Scale( rawPreferredDataVectors,
+        Collection<RawExpressionDataVector> preferredDataVectors = ensureLog2Scale( ee, rawPreferredDataVectors,
                 preferredMaskedDataQuantitationType, ignoreQuantitationMismatch );
 
         Map<CompositeSequence, DoubleVectorValueObject> maskedVectorObjects = this
@@ -503,11 +503,12 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
      * @return collection containing the vectors
      */
     private Collection<RawExpressionDataVector> ensureLog2Scale(
+            ExpressionExperiment ee,
             Collection<RawExpressionDataVector> rawPreferredDataVectors,
             QuantitationType preferredMaskedDataQuantitationType,
             boolean ignoreQuantitationMismatch ) throws QuantitationMismatchException {
         ExpressionDataDoubleMatrix matrix = ExpressionDataDoubleMatrixUtil
-                .ensureLog2Scale( new ExpressionDataDoubleMatrix( rawPreferredDataVectors ), ignoreQuantitationMismatch );
+                .ensureLog2Scale( new ExpressionDataDoubleMatrix( ee, rawPreferredDataVectors ), ignoreQuantitationMismatch );
         preferredMaskedDataQuantitationType.setScale( ScaleType.LOG2 );
         this.getSessionFactory().getCurrentSession().update( preferredMaskedDataQuantitationType );
         return new HashSet<>( matrix.toRawDataVectors() );

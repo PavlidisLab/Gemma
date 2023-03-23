@@ -18,10 +18,13 @@
  */
 package ubic.gemma.core.datastructure.matrix;
 
+import org.apache.commons.math3.analysis.function.Exp;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
+import ubic.gemma.model.expression.experiment.BioAssaySet;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 import java.util.Collection;
 import java.util.List;
@@ -37,17 +40,15 @@ public class EmptyExpressionMatrix extends BaseExpressionDataMatrix<Object> {
     private static final long serialVersionUID = 1L;
     private final int numCols;
 
-    public EmptyExpressionMatrix( BioAssayDimension ba ) {
-        super();
-        super.init();
+    public EmptyExpressionMatrix( ExpressionExperiment ee, BioAssayDimension ba ) {
+        super( ee );
         CompositeSequence dummy = CompositeSequence.Factory.newInstance();
         this.bioAssayDimensions.put( dummy, ba );
         this.numCols = this.setUpColumnElements();
     }
 
-    public EmptyExpressionMatrix( Collection<BioAssayDimension> dims ) {
-        super();
-        super.init();
+    public EmptyExpressionMatrix( ExpressionExperiment ee, Collection<BioAssayDimension> dims ) {
+        super( ee );
         long i = -1;
         for ( BioAssayDimension ba : dims ) {
             CompositeSequence dummy = CompositeSequence.Factory.newInstance();
@@ -74,46 +75,6 @@ public class EmptyExpressionMatrix extends BaseExpressionDataMatrix<Object> {
     }
 
     @Override
-    public Object[][] get( List<CompositeSequence> designElements, List<BioAssay> bioAssays ) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public Object[] getColumn( BioAssay bioAssay ) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public Object[] getColumn( Integer column ) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public Object[][] getColumns( List<BioAssay> bioAssays ) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public Object[][] getRawMatrix() {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public Object[] getRow( CompositeSequence designElement ) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public Object[] getRow( Integer index ) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public Object[][] getRows( List<CompositeSequence> designElements ) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
     public boolean hasMissingValues() {
         return false;
     }
@@ -126,7 +87,6 @@ public class EmptyExpressionMatrix extends BaseExpressionDataMatrix<Object> {
     @Override
     public void set( int row, int column, Object value ) {
         throw new UnsupportedOperationException();
-
     }
 
     @Override

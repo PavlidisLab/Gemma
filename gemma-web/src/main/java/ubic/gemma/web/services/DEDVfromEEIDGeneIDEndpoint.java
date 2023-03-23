@@ -171,21 +171,4 @@ public class DEDVfromEEIDGeneIDEndpoint extends AbstractGemmaEndpoint {
 
     }
 
-    /**
-     * @return a string delimited representation of the double array passed in.
-     */
-    private String encode( double[] data ) {
-
-        StringBuffer result = new StringBuffer();
-
-        for ( int i = 0; i < data.length; i++ ) {
-            if ( i == 0 )
-                result.append( data[i] );
-            else
-                result.append( AbstractGemmaEndpoint.DELIMITER + data[i] );
-        }
-
-        return result.toString();
-    }
-
 }

@@ -58,7 +58,7 @@ public interface ExpressionDataMatrixService {
     ExpressionDataDoubleMatrix getFilteredMatrix( ExpressionExperiment ee, FilterConfig filterConfig,
             Collection<ProcessedExpressionDataVector> dataVectors ) throws FilteringException;
 
-    ExpressionDataDoubleMatrix getFilteredMatrix( String arrayDesignName, FilterConfig filterConfig,
+    ExpressionDataDoubleMatrix getFilteredMatrix( ExpressionExperiment ee, String arrayDesignName, FilterConfig filterConfig,
             Collection<ProcessedExpressionDataVector> dataVectors ) throws FilteringException;
 
     /**

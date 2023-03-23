@@ -381,7 +381,7 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
     void configureMockAnalysisServiceHelper() {
         this.expressionDataMatrixService = mock( ExpressionDataMatrixService.class );
         when( expressionDataMatrixService.getProcessedExpressionDataMatrix( expressionExperiment ) )
-                .thenReturn( new ExpressionDataDoubleMatrix( this.vectors ) );
+                .thenReturn( new ExpressionDataDoubleMatrix( expressionExperiment, this.vectors ) );
     }
 
     /**

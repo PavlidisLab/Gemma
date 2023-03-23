@@ -314,7 +314,7 @@ public class PreprocessorServiceImpl implements PreprocessorService {
          */
 
         ExpressionDataDoubleMatrix correctedData = expressionExperimentBatchCorrectionService
-                .comBat( new ExpressionDataDoubleMatrix( vecs ) );
+                .comBat( new ExpressionDataDoubleMatrix( ee, vecs ) );
 
         /*
          * FIXME: this produces two plots that can be used as diagnostics, we could link them into this.

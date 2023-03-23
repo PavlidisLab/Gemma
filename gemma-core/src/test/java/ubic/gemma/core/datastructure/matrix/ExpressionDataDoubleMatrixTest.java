@@ -159,18 +159,18 @@ public class ExpressionDataDoubleMatrixTest extends AbstractGeoServiceTest {
 
         /* Constructor 1 */
         ExpressionDataDoubleMatrix expressionDataDoubleMatrix = new ExpressionDataDoubleMatrix(
-                designElementDataVectors );
+                ee, designElementDataVectors );
 
         /* Assertions */
         CompositeSequence deToQuery = designElements.iterator().next();
 
-        Double[] row = expressionDataDoubleMatrix.getRow( deToQuery );
+        double[] row = expressionDataDoubleMatrix.getRow( deToQuery );
         assertNotNull( row );
         for ( Double aRow : row ) {
             log.debug( aRow );
         }
 
-        Double[][] dMatrix = expressionDataDoubleMatrix.getRawMatrix();
+        double[][] dMatrix = expressionDataDoubleMatrix.getRawMatrix();
         assertEquals( dMatrix.length, 200 );
         assertEquals( dMatrix[0].length, 59 );
 
@@ -272,7 +272,7 @@ public class ExpressionDataDoubleMatrixTest extends AbstractGeoServiceTest {
 
         ee.setRawExpressionDataVectors( eeVectors );
 
-        ExpressionDataDoubleMatrix expressionDataMatrix = new ExpressionDataDoubleMatrix( eeVectors );
+        ExpressionDataDoubleMatrix expressionDataMatrix = new ExpressionDataDoubleMatrix( ee, eeVectors );
 
         assertNotNull( expressionDataMatrix );
         assertEquals( expressionDataMatrix.rows(), 2 );

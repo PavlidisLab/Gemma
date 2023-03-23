@@ -353,7 +353,7 @@ public class ProcessedExpressionDataVectorCreateHelperServiceImpl
         } else {
             ProcessedExpressionDataVectorCreateHelperServiceImpl.log
                     .info( "Computing intensities directly from processed data" );
-            intensities = new ExpressionDataDoubleMatrix( processedVectors );
+            intensities = new ExpressionDataDoubleMatrix( ee, processedVectors );
         }
 
         return intensities;
@@ -425,7 +425,7 @@ public class ProcessedExpressionDataVectorCreateHelperServiceImpl
         DoubleArrayList result = new DoubleArrayList( intensities.rows() );
 
         for ( ExpressionDataMatrixRowElement de : intensities.getRowElements() ) {
-            double[] rowObj = ArrayUtils.toPrimitive( intensities.getRow( de.getDesignElement() ) );
+            double[] rowObj = intensities.getRow( de.getDesignElement() );
             double valueForRank = Double.MIN_VALUE;
             if ( rowObj != null ) {
                 DoubleArrayList row = new DoubleArrayList( rowObj );

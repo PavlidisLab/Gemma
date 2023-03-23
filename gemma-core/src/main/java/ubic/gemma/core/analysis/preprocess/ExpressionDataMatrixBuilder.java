@@ -87,11 +87,11 @@ public class ExpressionDataMatrixBuilder {
      * @param vectors raw vectors
      * @return matrix of appropriate type.
      */
-    public static ExpressionDataMatrix<?> getMatrix( Collection<? extends DesignElementDataVector> vectors ) {
+    public static ExpressionDataMatrix<?> getMatrix( ExpressionExperiment ee, Collection<? extends DesignElementDataVector> vectors ) {
         if ( vectors == null || vectors.isEmpty() )
             throw new IllegalArgumentException( "No vectors" );
         PrimitiveType representation = vectors.iterator().next().getQuantitationType().getRepresentation();
-        return getMatrix( representation, vectors );
+        return getMatrix( ee, representation, vectors );
     }
 
     /**
@@ -99,17 +99,17 @@ public class ExpressionDataMatrixBuilder {
      * @param vectors        raw vectors
      * @return matrix of appropriate type.
      */
-    private static ExpressionDataMatrix<?> getMatrix( PrimitiveType representation,
+    private static ExpressionDataMatrix<?> getMatrix( ExpressionExperiment ee, PrimitiveType representation,
             Collection<? extends DesignElementDataVector> vectors ) {
         ExpressionDataMatrix<?> expressionDataMatrix;
         if ( representation.equals( PrimitiveType.DOUBLE ) ) {
-            expressionDataMatrix = new ExpressionDataDoubleMatrix( vectors );
+            expressionDataMatrix = new ExpressionDataDoubleMatrix( ee, vectors );
         } else if ( representation.equals( PrimitiveType.STRING ) ) {
-            expressionDataMatrix = new ExpressionDataStringMatrix( vectors );
+            expressionDataMatrix = new ExpressionDataStringMatrix( ee, vectors );
         } else if ( representation.equals( PrimitiveType.INT ) ) {
-            expressionDataMatrix = new ExpressionDataIntegerMatrix( vectors );
+            expressionDataMatrix = new ExpressionDataIntegerMatrix( ee, vectors );
         } else if ( representation.equals( PrimitiveType.BOOLEAN ) ) {
-            expressionDataMatrix = new ExpressionDataBooleanMatrix( vectors );
+            expressionDataMatrix = new ExpressionDataBooleanMatrix( ee, vectors );
         } else {
             throw new UnsupportedOperationException( "Don't know how to deal with matrices of type " + representation );
         }
@@ -387,7 +387,7 @@ public class ExpressionDataMatrixBuilder {
         List<QuantitationType> qtypes = this.getMissingValueQTypes();
         if ( qtypes == null || qtypes.size() == 0 )
             return null;
-        return new ExpressionDataBooleanMatrix( vectors, qtypes );
+        return new ExpressionDataBooleanMatrix( expressionExperiment, vectors, qtypes );
     }
 
     public Integer getNumMissingValues( QuantitationType qt ) {
@@ -408,7 +408,7 @@ public class ExpressionDataMatrixBuilder {
             return null;
         }
 
-        return new ExpressionDataDoubleMatrix( this.getPreferredDataVectors(), qtypes );
+        return new ExpressionDataDoubleMatrix( expressionExperiment, this.getPreferredDataVectors(), qtypes );
     }
 
     public List<QuantitationType> getPreferredQTypes() {
@@ -446,7 +446,7 @@ public class ExpressionDataMatrixBuilder {
             return null;
         }
 
-        return new ExpressionDataDoubleMatrix( this.getProcessedDataVectors(), qtypes );
+        return new ExpressionDataDoubleMatrix( expressionExperiment, this.getProcessedDataVectors(), qtypes );
     }
 
     public Map<CompositeSequence, Double> getRanksByMean() {
@@ -748,13 +748,13 @@ public class ExpressionDataMatrixBuilder {
         if ( channelANeedsReconstruction ) {
             ExpressionDataDoubleMatrix bkgDataA = null;
             if ( backgroundChannelA != null ) {
-                bkgDataA = new ExpressionDataDoubleMatrix( vectors, backgroundChannelA );
+                bkgDataA = new ExpressionDataDoubleMatrix( expressionExperiment, vectors, backgroundChannelA );
             }
 
             // use background-subtracted data and add bkg back on
             assert bkgDataA != null;
             assert bkgSubChannelA != null;
-            signalDataA = new ExpressionDataDoubleMatrix( vectors, bkgSubChannelA );
+            signalDataA = new ExpressionDataDoubleMatrix( expressionExperiment, vectors, bkgSubChannelA );
             this.addBackgroundBack( signalDataA, bkgDataA );
             return signalDataA;
 
@@ -785,7 +785,7 @@ public class ExpressionDataMatrixBuilder {
 
     private ExpressionDataDoubleMatrix makeMatrix( List<QuantitationType> qTypes ) {
         if ( qTypes.size() > 0 ) {
-            return new ExpressionDataDoubleMatrix( vectors, qTypes );
+            return new ExpressionDataDoubleMatrix( expressionExperiment, vectors, qTypes );
         }
         return null;
     }

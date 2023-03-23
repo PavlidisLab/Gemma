@@ -360,7 +360,7 @@ public class ExperimentalDesignVisualizationServiceImpl implements ExperimentalD
      *                    avoid
      *                    making ExpressionMatrix use value objects, otherwise we could use the
      *                    BioAssayDimensionValueObject
-     * @return            A "Layout": a map of bioassays to map of factors to doubles that represent the position in the
+     * @return A "Layout": a map of bioassays to map of factors to doubles that represent the position in the
      *                    layout.
      */
     private LinkedHashMap<BioAssayValueObject, LinkedHashMap<ExperimentalFactor, Double>> getExperimentalDesignLayout(
@@ -368,14 +368,14 @@ public class ExperimentalDesignVisualizationServiceImpl implements ExperimentalD
 
         LinkedHashMap<BioAssayValueObject, LinkedHashMap<ExperimentalFactor, Double>> result = new LinkedHashMap<>();
 
-        ExpressionDataMatrix<Object> mat = new EmptyExpressionMatrix( bds );
-
-        ExpressionExperiment sourceExperiment = null;
+        ExpressionExperiment sourceExperiment;
         if ( experiment instanceof ExpressionExperimentSubSet ) {
             sourceExperiment = ( ( ExpressionExperimentSubSet ) experiment ).getSourceExperiment();
         } else {
             sourceExperiment = ( ExpressionExperiment ) experiment;
         }
+
+        ExpressionDataMatrix<Object> mat = new EmptyExpressionMatrix( sourceExperiment, bds );
 
         // This is the place the actual sort order is determined.
         List<BioMaterial> bms = ExpressionDataMatrixColumnSort.orderByExperimentalDesign( mat );

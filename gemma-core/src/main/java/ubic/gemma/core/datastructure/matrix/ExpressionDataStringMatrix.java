@@ -42,27 +42,9 @@ public class ExpressionDataStringMatrix extends BaseExpressionDataMatrix<String>
     private static final Log log = LogFactory.getLog( ExpressionDataStringMatrix.class.getName() );
     private StringMatrix<Integer, Integer> matrix;
 
-    public ExpressionDataStringMatrix( Collection<? extends DesignElementDataVector> vectors ) {
-        this.init();
-        this.selectVectors( vectors );
+    public ExpressionDataStringMatrix( ExpressionExperiment ee, Collection<? extends DesignElementDataVector> vectors ) {
+        super( ee, vectors );
         this.vectorsToMatrix( vectors );
-    }
-
-    @SuppressWarnings("unused")
-    public ExpressionDataStringMatrix( Collection<? extends DesignElementDataVector> dataVectors,
-            QuantitationType quantitationType ) {
-        throw new UnsupportedOperationException();
-    }
-
-    @SuppressWarnings("unused")
-    public ExpressionDataStringMatrix( ExpressionExperiment expressionExperiment,
-            Collection<CompositeSequence> designElements, QuantitationType quantitationType ) {
-        throw new UnsupportedOperationException();
-    }
-
-    @SuppressWarnings("unused")
-    public ExpressionDataStringMatrix( ExpressionExperiment expressionExperiment, QuantitationType quantitationType ) {
-        throw new UnsupportedOperationException();
     }
 
     @Override
@@ -77,37 +59,10 @@ public class ExpressionDataStringMatrix extends BaseExpressionDataMatrix<String>
         return this.matrix.get( i, j );
     }
 
-    @Override
     public String get( int row, int column ) {
         return matrix.get( row, column );
     }
 
-    @Override
-    public String[][] get( List<CompositeSequence> designElements, List<BioAssay> bioAssays ) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public String[] getColumn( BioAssay bioAssay ) {
-        int index = this.columnAssayMap.get( bioAssay );
-        return this.getColumn( index );
-    }
-
-    @Override
-    public String[] getColumn( Integer index ) {
-        return this.matrix.getColumn( index );
-    }
-
-    @Override
-    public String[][] getColumns( List<BioAssay> bioAssays ) {
-        String[][] res = new String[bioAssays.size()][];
-        for ( int i = 0; i < bioAssays.size(); i++ ) {
-            res[i] = this.getColumn( bioAssays.get( i ) );
-        }
-        return res;
-    }
-
-    @Override
     public String[][] getRawMatrix() {
         String[][] res = new String[this.rows()][];
         for ( int i = 0; i < this.rows(); i++ ) {
@@ -116,23 +71,12 @@ public class ExpressionDataStringMatrix extends BaseExpressionDataMatrix<String>
         return res;
     }
 
-    @Override
     public String[] getRow( CompositeSequence designElement ) {
         return this.matrix.getRow( this.getRowIndex( designElement ) );
     }
 
-    @Override
     public String[] getRow( Integer index ) {
         return matrix.getRow( index );
-    }
-
-    @Override
-    public String[][] getRows( List<CompositeSequence> designElements ) {
-        String[][] res = new String[this.rows()][];
-        for ( int i = 0; i < designElements.size(); i++ ) {
-            res[i] = this.matrix.getRow( this.getRowIndex( designElements.get( i ) ) );
-        }
-        return res;
     }
 
     @Override

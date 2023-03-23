@@ -52,7 +52,7 @@ public interface LinkAnalysisService {
      */
     @SuppressWarnings("UnusedReturnValue")
     // Possible external use
-    LinkAnalysis processVectors( Taxon t, Collection<ProcessedExpressionDataVector> dataVectors,
+    LinkAnalysis processVectors( ExpressionExperiment ee, Taxon t, Collection<ProcessedExpressionDataVector> dataVectors,
             FilterConfig filterConfig, LinkAnalysisConfig linkAnalysisConfig ) throws FilteringException;
 
 }

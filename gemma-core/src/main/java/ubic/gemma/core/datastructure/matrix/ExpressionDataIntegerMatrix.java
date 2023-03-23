@@ -11,6 +11,7 @@ import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 import java.util.*;
 
@@ -27,8 +28,8 @@ public class ExpressionDataIntegerMatrix extends BaseExpressionDataMatrix<Intege
 
     private IntegerMatrix<CompositeSequence, Integer> matrix;
 
-    public ExpressionDataIntegerMatrix( Collection<? extends DesignElementDataVector> vectors ) {
-        this.init();
+    public ExpressionDataIntegerMatrix( ExpressionExperiment ee, Collection<? extends DesignElementDataVector> vectors ) {
+        super( ee, vectors );
 
         for ( DesignElementDataVector dedv : vectors ) {
             if ( !dedv.getQuantitationType().getRepresentation().equals( PrimitiveType.INT ) ) {
@@ -36,7 +37,6 @@ public class ExpressionDataIntegerMatrix extends BaseExpressionDataMatrix<Intege
             }
         }
 
-        this.selectVectors( vectors );
         this.vectorsToMatrix( vectors );
     }
 
@@ -57,23 +57,15 @@ public class ExpressionDataIntegerMatrix extends BaseExpressionDataMatrix<Intege
         return matrix.get( row, column );
     }
 
-    @Override
-    public Integer[][] get( List<CompositeSequence> designElements, List<BioAssay> bioAssays ) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
     public Integer[] getColumn( BioAssay bioAssay ) {
         int index = this.columnAssayMap.get( bioAssay );
         return this.getColumn( index );
     }
 
-    @Override
     public Integer[] getColumn( Integer index ) {
         return this.matrix.getColumn( index );
     }
 
-    @Override
     public Integer[][] getColumns( List<BioAssay> bioAssays ) {
         Integer[][] res = new Integer[bioAssays.size()][];
         for ( int i = 0; i < bioAssays.size(); i++ ) {
@@ -82,7 +74,6 @@ public class ExpressionDataIntegerMatrix extends BaseExpressionDataMatrix<Intege
         return res;
     }
 
-    @Override
     public Integer[][] getRawMatrix() {
         Integer[][] res = new Integer[this.rows()][];
         for ( int i = 0; i < this.rows(); i++ ) {
@@ -91,17 +82,14 @@ public class ExpressionDataIntegerMatrix extends BaseExpressionDataMatrix<Intege
         return res;
     }
 
-    @Override
     public Integer[] getRow( CompositeSequence designElement ) {
         return this.matrix.getRow( this.getRowIndex( designElement ) );
     }
 
-    @Override
     public Integer[] getRow( Integer index ) {
         return this.matrix.getRow( index );
     }
 
-    @Override
     public Integer[][] getRows( List<CompositeSequence> designElements ) {
         Integer[][] res = new Integer[this.rows()][];
         for ( int i = 0; i < designElements.size(); i++ ) {

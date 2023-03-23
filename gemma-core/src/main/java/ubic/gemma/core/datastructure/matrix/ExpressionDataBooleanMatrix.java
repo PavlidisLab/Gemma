@@ -18,7 +18,6 @@
  */
 package ubic.gemma.core.datastructure.matrix;
 
-import cern.colt.matrix.ObjectMatrix1D;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import ubic.basecode.dataStructure.matrix.ObjectMatrixImpl;
@@ -29,6 +28,7 @@ import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 import java.util.*;
 
@@ -42,8 +42,8 @@ public class ExpressionDataBooleanMatrix extends BaseExpressionDataMatrix<Boolea
     private static final long serialVersionUID = 1L;
     private ObjectMatrixImpl<CompositeSequence, Integer, Boolean> matrix;
 
-    public ExpressionDataBooleanMatrix( Collection<? extends DesignElementDataVector> vectors ) {
-        this.init();
+    public ExpressionDataBooleanMatrix( ExpressionExperiment ee, Collection<? extends DesignElementDataVector> vectors ) {
+        super( ee, vectors );
 
         for ( DesignElementDataVector dedv : vectors ) {
             if ( !dedv.getQuantitationType().getRepresentation().equals( PrimitiveType.BOOLEAN ) ) {
@@ -51,14 +51,13 @@ public class ExpressionDataBooleanMatrix extends BaseExpressionDataMatrix<Boolea
             }
         }
 
-        this.selectVectors( vectors );
         this.vectorsToMatrix( vectors );
     }
 
-    public ExpressionDataBooleanMatrix( Collection<? extends DesignElementDataVector> vectors,
+    public ExpressionDataBooleanMatrix( ExpressionExperiment ee, Collection<? extends DesignElementDataVector> vectors,
             List<QuantitationType> qtypes ) {
-        this.init();
-        Collection<DesignElementDataVector> selectedVectors = this.selectVectors( vectors, qtypes );
+        super( ee, vectors, qtypes );
+        Collection<DesignElementDataVector> selectedVectors = selectVectors( vectors, qtypes );
         this.vectorsToMatrix( selectedVectors );
     }
 
@@ -78,35 +77,6 @@ public class ExpressionDataBooleanMatrix extends BaseExpressionDataMatrix<Boolea
         return matrix.get( row, column );
     }
 
-    @Override
-    public Boolean[][] get( List<CompositeSequence> designElements, List<BioAssay> bioAssays ) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public Boolean[] getColumn( BioAssay bioAssay ) {
-        int index = this.columnAssayMap.get( bioAssay );
-        return this.getColumn( index );
-    }
-
-    @Override
-    public Boolean[] getColumn( Integer index ) {
-        ObjectMatrix1D rawResult = this.matrix.viewColumn( index );
-        Boolean[] res = new Boolean[rawResult.size()];
-        int i = 0;
-        for ( Object o : rawResult.toArray() ) {
-            res[i] = ( Boolean ) o;
-            i++;
-        }
-        return res;
-    }
-
-    @Override
-    public Boolean[][] getColumns( List<BioAssay> bioAssays ) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
     public Boolean[][] getRawMatrix() {
         Boolean[][] dMatrix = new Boolean[matrix.rows()][matrix.columns()];
         for ( int i = 0; i < matrix.rows(); i++ ) {
@@ -119,7 +89,6 @@ public class ExpressionDataBooleanMatrix extends BaseExpressionDataMatrix<Boolea
         return dMatrix;
     }
 
-    @Override
     public Boolean[] getRow( CompositeSequence designElement ) {
         Integer row = this.rowElementMap.get( designElement );
         if ( row == null )
@@ -133,25 +102,8 @@ public class ExpressionDataBooleanMatrix extends BaseExpressionDataMatrix<Boolea
         return result;
     }
 
-    @Override
     public Boolean[] getRow( Integer index ) {
         return matrix.getRow( index );
-    }
-
-    @Override
-    public Boolean[][] getRows( List<CompositeSequence> designElements ) {
-        if ( designElements == null ) {
-            return null;
-        }
-
-        Boolean[][] result = new Boolean[designElements.size()][];
-        int i = 0;
-        for ( CompositeSequence element : designElements ) {
-            Boolean[] rowResult = this.getRow( element );
-            result[i] = rowResult;
-            i++;
-        }
-        return result;
     }
 
     @Override

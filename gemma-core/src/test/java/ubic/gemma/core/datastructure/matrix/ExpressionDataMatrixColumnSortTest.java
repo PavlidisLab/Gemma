@@ -28,6 +28,7 @@ import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorType;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.persistence.service.expression.experiment.ExperimentalFactorService;
@@ -126,7 +127,7 @@ public class ExpressionDataMatrixColumnSortTest extends BaseSpringContextTest {
             }
         }
 
-        EmptyExpressionMatrix mat = new EmptyExpressionMatrix( bad );
+        EmptyExpressionMatrix mat = new EmptyExpressionMatrix( ExpressionExperiment.Factory.newInstance(), bad );
 
         assertEquals( 100, mat.columns() );
 

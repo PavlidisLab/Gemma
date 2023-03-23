@@ -160,7 +160,7 @@ public class SVDServiceHelperImpl implements SVDServiceHelper {
         }
 
         processedExpressionDataVectorService.thaw( vectors );
-        ExpressionDataDoubleMatrix mat = new ExpressionDataDoubleMatrix( vectors );
+        ExpressionDataDoubleMatrix mat = new ExpressionDataDoubleMatrix( ee, vectors );
 
         SVDServiceHelperImpl.log.info( "Starting SVD" );
         ExpressionDataSVD svd = new ExpressionDataSVD( mat );

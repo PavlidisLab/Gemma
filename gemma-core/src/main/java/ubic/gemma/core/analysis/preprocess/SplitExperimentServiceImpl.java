@@ -142,7 +142,7 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
                 }
                 log.info( vectors.size() + " vectors for " + qt + "; preferred=" + qt.getIsPreferred() );
 
-                qt2mat.put( qt, ExpressionDataMatrixBuilder.getMatrix( vectors ) );
+                qt2mat.put( qt, ExpressionDataMatrixBuilder.getMatrix( toSplit, vectors ) );
             }
 
             if ( !foundPreferred ) {

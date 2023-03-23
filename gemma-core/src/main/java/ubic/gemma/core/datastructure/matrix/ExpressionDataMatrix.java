@@ -23,10 +23,12 @@ import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
+import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Represents a matrix of data from an expression experiment.
@@ -87,15 +89,6 @@ public interface ExpressionDataMatrix<T> {
     T get( int row, int column );
 
     /**
-     * Access a submatrix
-     *
-     * @param designElements de
-     * @param bioAssays      bas
-     * @return T[][]
-     */
-    T[][] get( List<CompositeSequence> designElements, List<BioAssay> bioAssays );
-
-    /**
      * @return The bioassaydimension that covers all the biomaterials in this matrix.
      * @throws IllegalStateException if there isn't a single bioassaydimension that encapsulates all the biomaterials
      *                               used in the experiment.
@@ -128,34 +121,10 @@ public interface ExpressionDataMatrix<T> {
     BioMaterial getBioMaterialForColumn( int index );
 
     /**
-     * Access a single column of the matrix.
-     *
-     * @param bioAssay i
-     * @return T[]
-     */
-    T[] getColumn( BioAssay bioAssay );
-
-    /**
-     * Access a single column of the matrix.
-     *
-     * @param column index
-     * @return T[]
-     */
-    T[] getColumn( Integer column );
-
-    /**
      * @param bioMaterial bm
      * @return the index of the column for the data for the bioMaterial.
      */
     int getColumnIndex( BioMaterial bioMaterial );
-
-    /**
-     * Access a submatrix slice by columns
-     *
-     * @param bioAssays ba
-     * @return t[][]
-     */
-    T[][] getColumns( List<BioAssay> bioAssays );
 
     /**
      * Obtain all the design elements in this data matrix.
@@ -180,30 +149,7 @@ public interface ExpressionDataMatrix<T> {
      *
      * @return qts
      */
-    Collection<QuantitationType> getQuantitationTypes();
-
-    /**
-     * Access the entire matrix.
-     *
-     * @return T[][]
-     */
-    T[][] getRawMatrix();
-
-    /**
-     * Return a row that 'came from' the given design element.
-     *
-     * @param designElement de
-     * @return t
-     */
-    T[] getRow( CompositeSequence designElement );
-
-    /**
-     * Access a single row of the matrix, by index. A complete row is returned.
-     *
-     * @param index i
-     * @return t[]
-     */
-    T[] getRow( Integer index );
+    Set<QuantitationType> getQuantitationTypes();
 
     /**
      * @return list of elements representing the row 'labels'.
@@ -211,14 +157,6 @@ public interface ExpressionDataMatrix<T> {
     List<ExpressionDataMatrixRowElement> getRowElements();
 
     int getRowIndex( CompositeSequence designElement );
-
-    /**
-     * Access a submatrix
-     *
-     * @param designElements de
-     * @return T[][]
-     */
-    T[][] getRows( List<CompositeSequence> designElements );
 
     /**
      * @return true if any values are null or NaN (for Doubles); all other values are considered non-missing.
@@ -238,5 +176,4 @@ public interface ExpressionDataMatrix<T> {
      * @param value  val
      */
     void set( int row, int column, T value );
-
 }

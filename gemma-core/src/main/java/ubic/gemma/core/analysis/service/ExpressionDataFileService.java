@@ -178,7 +178,7 @@ public interface ExpressionDataFileService extends TsvFileService<ExpressionExpe
      * @param type       the quantitaion type
      * @return file
      */
-    File writeOrLocateDataFile( QuantitationType type, boolean forceWrite );
+    File writeOrLocateDataFile( ExpressionExperiment ee, QuantitationType type, boolean forceWrite );
 
     /**
      * Locate or create an experimental design file for a given experiment.
@@ -208,7 +208,7 @@ public interface ExpressionDataFileService extends TsvFileService<ExpressionExpe
      */
     File writeOrLocateJSONDataFile( ExpressionExperiment ee, boolean forceWrite, boolean filtered ) throws FilteringException;
 
-    File writeOrLocateJSONDataFile( QuantitationType type, boolean forceWrite );
+    File writeOrLocateJSONDataFile( ExpressionExperiment ee, QuantitationType type, boolean forceWrite );
 
     void deleteDiffExArchiveFile( DifferentialExpressionAnalysis analysis );
 

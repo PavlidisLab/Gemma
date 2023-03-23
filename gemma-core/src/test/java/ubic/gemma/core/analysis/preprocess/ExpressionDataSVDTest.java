@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2008 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -26,15 +26,23 @@ import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.util.RegressionTesting;
 import ubic.gemma.core.analysis.preprocess.svd.ExpressionDataSVD;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
-import ubic.gemma.core.datastructure.matrix.ExpressionDataTestMatrix;
 import ubic.gemma.core.loader.expression.geo.*;
 import ubic.gemma.core.loader.expression.geo.model.GeoSeries;
+import ubic.gemma.core.loader.expression.simple.SimpleExpressionDataLoaderService;
+import ubic.gemma.core.loader.expression.simple.SimpleExpressionDataLoaderServiceImpl;
+import ubic.gemma.core.loader.expression.simple.model.SimpleExpressionExperimentMetaData;
 import ubic.gemma.core.util.test.category.SlowTest;
+import ubic.gemma.model.common.quantitationtype.GeneralType;
+import ubic.gemma.model.common.quantitationtype.ScaleType;
+import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.genome.Taxon;
 
 import java.io.InputStream;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.zip.GZIPInputStream;
 
@@ -51,7 +59,38 @@ public class ExpressionDataSVDTest {
     @Before
     public void setUp() throws Exception {
 
-        testData = new ExpressionDataTestMatrix();
+        ExpressionDataDoubleMatrix result;
+        Collection<ArrayDesign> ads = new HashSet<>();
+        SimpleExpressionDataLoaderService service = new SimpleExpressionDataLoaderServiceImpl();
+
+        SimpleExpressionExperimentMetaData metaData = new SimpleExpressionExperimentMetaData();
+
+        Taxon taxon = Taxon.Factory.newInstance();
+        taxon.setCommonName( "mouse" );
+        taxon.setIsGenesUsable( true );
+
+        ArrayDesign ad = ArrayDesign.Factory.newInstance();
+        ad.setName( "new ad" );
+        ad.setPrimaryTaxon( taxon );
+        ads.add( ad );
+        metaData.setArrayDesigns( ads );
+
+        metaData.setTaxon( taxon );
+        metaData.setName( "ee" );
+
+        metaData.setQuantitationTypeName( "testing" );
+        metaData.setGeneralType( GeneralType.QUANTITATIVE );
+        metaData.setScale( ScaleType.LOG2 );
+        metaData.setType( StandardQuantitationType.AMOUNT );
+        metaData.setIsRatio( true );
+
+        try ( InputStream data = ExpressionDataSVDTest.class
+                .getResourceAsStream( "/data/loader/aov.results-2-monocyte-data-bytime.bypat.data.sort" ) ) {
+            DoubleMatrix<String, String> matrix = service.parse( data );
+            ExpressionExperiment ee = service.convert( metaData, matrix );
+            result = new ExpressionDataDoubleMatrix( ee, ee.getRawExpressionDataVectors(), ee.getQuantitationTypes().iterator().next() );
+        }
+        testData = result;
         svd = new ExpressionDataSVD( testData, false );
 
     }
@@ -85,7 +124,7 @@ public class ExpressionDataSVDTest {
      *          header=T, row.names=1)
      * testdata.s <- testdata
      * for(i in 1:5) {
-     *   testdata.s <-  t(scale(t(scale(testdata.s))));  
+     *   testdata.s <-  t(scale(t(scale(testdata.s))));
      * }
      * s<-svd(testdata.s)
      * s$d
@@ -131,7 +170,7 @@ public class ExpressionDataSVDTest {
 
     /*
      * See testEigenvalues
-     * 
+     *
      * <pre>
      * cat( signif( p$sdev &circ; 2 / sum( p$sdev &circ; 2 ), 3 ), sep = &quot;,\n&quot; )
      * </pre>
@@ -171,7 +210,7 @@ public class ExpressionDataSVDTest {
         assertEquals( 1, result.size() );
         ExpressionExperiment ee = result.iterator().next();
 
-        ExpressionDataDoubleMatrix matrix = new ExpressionDataDoubleMatrix( ee.getRawExpressionDataVectors(),
+        ExpressionDataDoubleMatrix matrix = new ExpressionDataDoubleMatrix( ee, ee.getRawExpressionDataVectors(),
                 ee.getQuantitationTypes().iterator().next() );
 
         svd = new ExpressionDataSVD( matrix, false );

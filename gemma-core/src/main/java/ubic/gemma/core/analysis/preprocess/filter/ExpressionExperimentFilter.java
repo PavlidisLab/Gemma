@@ -33,6 +33,7 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 import java.util.Collection;
 import java.util.Map;
@@ -159,8 +160,8 @@ public class ExpressionExperimentFilter {
      * @return filtered matrix
      * @throws NoRowsLeftAfterFilteringException if filtering results in no row left in the expression matrix
      */
-    public ExpressionDataDoubleMatrix getFilteredMatrix( Collection<ProcessedExpressionDataVector> dataVectors ) throws FilteringException {
-        ExpressionDataDoubleMatrix eeDoubleMatrix = new ExpressionDataDoubleMatrix( dataVectors );
+    public ExpressionDataDoubleMatrix getFilteredMatrix( ExpressionExperiment ee, Collection<ProcessedExpressionDataVector> dataVectors ) throws FilteringException {
+        ExpressionDataDoubleMatrix eeDoubleMatrix = new ExpressionDataDoubleMatrix( ee, dataVectors );
         this.transform( eeDoubleMatrix );
         return this.filter( eeDoubleMatrix );
     }

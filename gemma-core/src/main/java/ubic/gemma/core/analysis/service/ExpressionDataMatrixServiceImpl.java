@@ -84,12 +84,12 @@ public class ExpressionDataMatrixServiceImpl implements ExpressionDataMatrixServ
     public ExpressionDataDoubleMatrix getFilteredMatrix( ExpressionExperiment ee, FilterConfig filterConfig,
             Collection<ProcessedExpressionDataVector> dataVectors ) throws FilteringException {
         Collection<ArrayDesign> arrayDesignsUsed = expressionExperimentService.getArrayDesignsUsed( ee );
-        return this.getFilteredMatrix( filterConfig, dataVectors, arrayDesignsUsed );
+        return this.getFilteredMatrix( ee, filterConfig, dataVectors, arrayDesignsUsed );
     }
 
     @Override
     @Transactional(readOnly = true)
-    public ExpressionDataDoubleMatrix getFilteredMatrix( String arrayDesignName, FilterConfig filterConfig,
+    public ExpressionDataDoubleMatrix getFilteredMatrix( ExpressionExperiment ee, String arrayDesignName, FilterConfig filterConfig,
             Collection<ProcessedExpressionDataVector> dataVectors ) throws FilteringException {
         ArrayDesign ad = arrayDesignService.findByShortName( arrayDesignName );
         if ( ad == null ) {
@@ -97,7 +97,7 @@ public class ExpressionDataMatrixServiceImpl implements ExpressionDataMatrixServ
         }
         Collection<ArrayDesign> arrayDesignsUsed = new HashSet<>();
         arrayDesignsUsed.add( ad );
-        return this.getFilteredMatrix( filterConfig, dataVectors, arrayDesignsUsed );
+        return this.getFilteredMatrix( ee, filterConfig, dataVectors, arrayDesignsUsed );
     }
 
     @Override
@@ -110,7 +110,7 @@ public class ExpressionDataMatrixServiceImpl implements ExpressionDataMatrixServ
             return null;
         }
         this.processedExpressionDataVectorService.thaw( dataVectors );
-        return new ExpressionDataDoubleMatrix( dataVectors );
+        return new ExpressionDataDoubleMatrix( ee, dataVectors );
     }
 
     @Override
@@ -120,13 +120,13 @@ public class ExpressionDataMatrixServiceImpl implements ExpressionDataMatrixServ
         if ( vectors.isEmpty() ) {
             return null;
         }
-        return new ExpressionDataDoubleMatrix( vectors );
+        return new ExpressionDataDoubleMatrix( ee, vectors );
     }
 
     @Override
     @Transactional(readOnly = true)
     public ExpressionDataDoubleMatrix getRawExpressionDataMatrix( ExpressionExperiment ee, QuantitationType quantitationType ) {
-        return new ExpressionDataDoubleMatrix( rawExpressionDataVectorService.findByExpressionExperiment( ee, quantitationType ) );
+        return new ExpressionDataDoubleMatrix( ee, rawExpressionDataVectorService.findByExpressionExperiment( ee, quantitationType ) );
     }
 
     @Override
@@ -170,13 +170,13 @@ public class ExpressionDataMatrixServiceImpl implements ExpressionDataMatrixServ
         return matrix;
     }
 
-    private ExpressionDataDoubleMatrix getFilteredMatrix( FilterConfig filterConfig,
+    private ExpressionDataDoubleMatrix getFilteredMatrix( ExpressionExperiment ee, FilterConfig filterConfig,
             Collection<ProcessedExpressionDataVector> dataVectors, Collection<ArrayDesign> arrayDesignsUsed ) throws FilteringException {
         if ( dataVectors == null || dataVectors.isEmpty() )
             throw new IllegalArgumentException( "Vectors must be provided" );
         ExpressionExperimentFilter filter = new ExpressionExperimentFilter( arrayDesignsUsed, filterConfig );
         this.processedExpressionDataVectorService.thaw( dataVectors );
-        return filter.getFilteredMatrix( dataVectors );
+        return filter.getFilteredMatrix( ee, dataVectors );
     }
 
 }

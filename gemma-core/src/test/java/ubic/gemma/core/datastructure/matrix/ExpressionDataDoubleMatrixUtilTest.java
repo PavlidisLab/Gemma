@@ -41,6 +41,7 @@ public class ExpressionDataDoubleMatrixUtilTest {
 
     @Before
     public void setUp() {
+        ExpressionExperiment ee = new ExpressionExperiment();
         RawExpressionDataVector ev = new RawExpressionDataVector();
         CompositeSequence cs = new CompositeSequence();
         ev.setDesignElement( cs );
@@ -56,7 +57,7 @@ public class ExpressionDataDoubleMatrixUtilTest {
         ba.setSampleUsed( bm );
         bad.setBioAssays( Collections.singletonList( ba ) );
         ev.setBioAssayDimension( bad );
-        matrix = new ExpressionDataDoubleMatrix( Collections.singleton( ev ), Collections.singleton( qt ) );
+        matrix = new ExpressionDataDoubleMatrix( ee, Collections.singleton( ev ), Collections.singleton( qt ) );
         matrix.set( 0, 0, 4.0 );
         RandomExpressionDataMatrixUtils.setSeed( 123L );
     }

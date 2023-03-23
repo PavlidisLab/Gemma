@@ -270,19 +270,19 @@ public class TwoChannelMissingValuesImpl implements TwoChannelMissingValues {
         int numCols = preferred.columns( designElement );
 
         Boolean[] detectionCalls = new Boolean[numCols];
-        Double[] prefRow = preferred.getRow( designElement );
+        double[] prefRow = preferred.getRow( designElement );
 
-        Double[] signalA = null;
+        double[] signalA = null;
         if ( signalChannelA != null ) {
             signalA = signalChannelA.getRow( designElement );
         }
 
-        Double[] signalB = null;
+        double[] signalB = null;
         if ( signalChannelB != null ) {
             signalB = signalChannelB.getRow( designElement );
         }
-        Double[] bkgA = null;
-        Double[] bkgB = null;
+        double[] bkgA = null;
+        double[] bkgB = null;
 
         if ( bkgChannelA != null )
             bkgA = bkgChannelA.getRow( designElement );
@@ -297,16 +297,16 @@ public class TwoChannelMissingValuesImpl implements TwoChannelMissingValues {
             if ( this.checkMissingValue( extraMissingValueIndicators, detectionCalls, prefRow, col ) )
                 continue;
 
-            Double bkgAV = Double.NaN;
-            Double bkgBV = Double.NaN;
+            double bkgAV = Double.NaN;
+            double bkgBV = Double.NaN;
 
             if ( bkgA != null )
                 bkgAV = bkgA[col];
             if ( bkgB != null )
                 bkgBV = bkgB[col];
 
-            Double sigAV = ( signalA == null || signalA[col] == null ) ? Double.NaN : signalA[col];
-            Double sigBV = ( signalB == null || signalB[col] == null ) ? Double.NaN : signalB[col];
+            double sigAV = ( signalA == null ) ? Double.NaN : signalA[col];
+            double sigBV = ( signalB == null ) ? Double.NaN : signalB[col];
 
             /*
              * Missing values here wreak havoc. Sometimes in multiarray studies data are missing.
@@ -334,7 +334,7 @@ public class TwoChannelMissingValuesImpl implements TwoChannelMissingValues {
     }
 
     private boolean checkMissingValue( Collection<Double> extraMissingValueIndicators, Boolean[] detectionCalls,
-            Double[] prefRow, int col ) {
+            double[] prefRow, int col ) {
         // If the "preferred" value is already missing, we retain that, or if it is a special value
         Double pref = prefRow == null ? Double.NaN : prefRow[col];
         if ( pref.isNaN() || ( extraMissingValueIndicators != null && extraMissingValueIndicators.contains( pref ) ) ) {
@@ -351,8 +351,8 @@ public class TwoChannelMissingValuesImpl implements TwoChannelMissingValues {
             ExpressionDataDoubleMatrix signalChannelA, ExpressionDataDoubleMatrix signalChannelB,
             ExpressionDataDoubleMatrix baseChannel ) {
 
-        Double min = Double.MAX_VALUE;
-        Double max = Double.MIN_VALUE;
+        double min = Double.MAX_VALUE;
+        double max = Double.MIN_VALUE;
 
         for ( ExpressionDataMatrixRowElement element : baseChannel.getRowElements() ) {
             CompositeSequence designElement = element.getDesignElement();
@@ -360,26 +360,26 @@ public class TwoChannelMissingValuesImpl implements TwoChannelMissingValues {
             int numCols = preferred.columns( designElement );
             for ( int col = 0; col < numCols; col++ ) {
 
-                Double[] signalA = null;
+                double[] signalA = null;
                 if ( signalChannelA != null ) {
                     signalA = signalChannelA.getRow( designElement );
                 }
 
-                Double[] signalB = null;
+                double[] signalB = null;
                 if ( signalChannelB != null ) {
                     signalB = signalChannelB.getRow( designElement );
                 }
 
-                Double sigAV = ( signalA == null || signalA[col] == null ) ? Double.NaN : signalA[col];
-                Double sigBV = ( signalB == null || signalB[col] == null ) ? Double.NaN : signalB[col];
+                double sigAV = ( signalA == null ) ? Double.NaN : signalA[col];
+                double sigBV = ( signalB == null ) ? Double.NaN : signalB[col];
 
-                if ( !sigAV.isNaN() && sigAV < min ) {
+                if ( !Double.isNaN( sigAV ) && sigAV < min ) {
                     min = sigAV;
-                } else if ( !sigBV.isNaN() && sigBV < min ) {
+                } else if ( !Double.isNaN( sigBV ) && sigBV < min ) {
                     min = sigBV;
-                } else if ( !sigAV.isNaN() && sigAV > max ) {
+                } else if ( !Double.isNaN( sigAV ) && sigAV > max ) {
                     max = sigAV;
-                } else if ( !sigBV.isNaN() && sigBV > max ) {
+                } else if ( !Double.isNaN( sigBV ) && sigBV > max ) {
                     max = sigBV;
                 }
 
@@ -393,22 +393,22 @@ public class TwoChannelMissingValuesImpl implements TwoChannelMissingValues {
             int numCols = preferred.columns( designElement );
             for ( int col = 0; col < numCols; col++ ) {
 
-                Double[] signalA = null;
+                double[] signalA = null;
                 if ( signalChannelA != null ) {
                     signalA = signalChannelA.getRow( designElement );
                 }
 
-                Double[] signalB = null;
+                double[] signalB = null;
                 if ( signalChannelB != null ) {
                     signalB = signalChannelB.getRow( designElement );
                 }
 
-                Double sigAV = ( signalA == null || signalA[col] == null ) ? Double.NaN : signalA[col];
-                Double sigBV = ( signalB == null || signalB[col] == null ) ? Double.NaN : signalB[col];
+                double sigAV = ( signalA == null ) ? Double.NaN : signalA[col];
+                double sigBV = ( signalB == null ) ? Double.NaN : signalB[col];
 
-                if ( !sigAV.isNaN() )
+                if ( !Double.isNaN( sigAV ) )
                     h.fill( sigAV );
-                if ( !sigBV.isNaN() )
+                if ( !Double.isNaN( sigBV ) )
                     h.fill( sigBV );
 
             }

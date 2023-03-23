@@ -16,7 +16,6 @@ package ubic.gemma.core.loader.expression;
 
 import cern.colt.list.DoubleArrayList;
 import cern.colt.matrix.DoubleMatrix1D;
-import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -30,8 +29,6 @@ import ubic.basecode.math.MatrixStats;
 import ubic.gemma.core.analysis.preprocess.PreprocessingException;
 import ubic.gemma.core.analysis.preprocess.PreprocessorService;
 import ubic.gemma.core.analysis.preprocess.VectorMergingService;
-import ubic.gemma.core.analysis.preprocess.filter.RowLevelFilter;
-import ubic.gemma.core.analysis.preprocess.filter.RowLevelFilter.Method;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.core.loader.expression.arrayDesign.AffyChipTypeExtractor;
 import ubic.gemma.core.loader.expression.geo.fetcher.RawDataFetcher;
@@ -291,7 +288,7 @@ public class DataUpdater {
          * We need to do this from the Raw data, not the data that has been normalized etc.
          */
         Collection<RawExpressionDataVector> counts = rawExpressionDataVectorService.find( qt );
-        ExpressionDataDoubleMatrix countMatrix = new ExpressionDataDoubleMatrix( counts );
+        ExpressionDataDoubleMatrix countMatrix = new ExpressionDataDoubleMatrix( ee, counts );
 
         try {
             /*
@@ -666,8 +663,8 @@ public class DataUpdater {
     private void addTotalCountInformation( ExpressionExperiment ee, ExpressionDataDoubleMatrix countEEMatrix,
             Integer readLength, Boolean isPairedReads ) {
         for ( BioAssay ba : ee.getBioAssays() ) {
-            Double[] col = countEEMatrix.getColumn( ba );
-            int librarySize = ( int ) Math.floor( DescriptiveWithMissing.sum( new DoubleArrayList( ArrayUtils.toPrimitive( col ) ) ) );
+            double[] col = countEEMatrix.getColumn( ba );
+            int librarySize = ( int ) Math.floor( DescriptiveWithMissing.sum( new DoubleArrayList( col ) ) );
 
             if ( librarySize <= 0 ) {
                 // unlike readLength and isPairedReads, we might want to use this value! Sanity check, anyway.

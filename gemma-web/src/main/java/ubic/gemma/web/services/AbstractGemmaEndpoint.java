@@ -123,6 +123,19 @@ public abstract class AbstractGemmaEndpoint extends AbstractDomPayloadEndpoint {
         return responseWrapper;
     }
 
+    protected String encode( double[] data ) {
+        StringBuilder result = new StringBuilder();
+
+        for ( int i = 0; i < data.length; i++ ) {
+            if ( i == 0 )
+                result.append( data[i] );
+            else
+                result.append( AbstractGemmaEndpoint.DELIMITER ).append( data[i] );
+        }
+
+        return result.toString();
+    }
+
     /**
      * @param data data
      * @return a string delimited representation of the objects array passed in.

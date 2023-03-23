@@ -134,10 +134,10 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
     }
 
     @Override
-    public LinkAnalysis processVectors( Taxon t, Collection<ProcessedExpressionDataVector> dataVectors,
+    public LinkAnalysis processVectors( ExpressionExperiment ee, Taxon t, Collection<ProcessedExpressionDataVector> dataVectors,
             FilterConfig filterConfig, LinkAnalysisConfig linkAnalysisConfig ) throws FilteringException {
         ExpressionDataDoubleMatrix datamatrix = expressionDataMatrixService
-                .getFilteredMatrix( linkAnalysisConfig.getArrayName(), filterConfig, dataVectors );
+                .getFilteredMatrix( ee, linkAnalysisConfig.getArrayName(), filterConfig, dataVectors );
 
         this.checkDatamatrix( datamatrix );
         LinkAnalysis la = new LinkAnalysis( linkAnalysisConfig );
@@ -162,7 +162,7 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
             LinkAnalysisServiceImpl.log.info( "No rows left after filtering" );
             throw new InsufficientProbesException( datamatrix.getExpressionExperiment(), "No rows left after filtering" );
         } else if ( datamatrix.rows() < FilterConfig.MINIMUM_ROWS_TO_BOTHER ) {
-            throw new InsufficientProbesException(datamatrix.getExpressionExperiment(),
+            throw new InsufficientProbesException( datamatrix.getExpressionExperiment(),
                     "To few rows (" + datamatrix.rows() + "), data sets are not analyzed unless they have at least "
                             + FilterConfig.MINIMUM_ROWS_TO_BOTHER + " rows" );
         }

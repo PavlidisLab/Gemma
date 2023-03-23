@@ -26,12 +26,10 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
-import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
-import javax.annotation.Nullable;
 import java.io.Serializable;
 import java.util.*;
 
@@ -46,21 +44,76 @@ abstract public class BaseExpressionDataMatrix<T> implements ExpressionDataMatri
 
     private static final Log log = LogFactory.getLog( ExpressionDataDoubleMatrix.class );
 
-    @Nullable
-    ExpressionExperiment expressionExperiment;
-    Collection<QuantitationType> quantitationTypes;
+    protected final ExpressionExperiment expressionExperiment;
+    protected final Set<QuantitationType> quantitationTypes;
+    protected final Map<CompositeSequence, BioAssayDimension> bioAssayDimensions;
 
-    Map<CompositeSequence, BioAssayDimension> bioAssayDimensions;
     // maps for bioassays/biomaterials/columns
-    Map<BioAssay, Integer> columnAssayMap;
-    Map<BioMaterial, Integer> columnBioMaterialMap;
-    Map<Integer, Collection<BioAssay>> columnBioAssayMapByInteger;
-    Map<Integer, BioMaterial> columnBioMaterialMapByInteger;
-    // maps for designElements/sequences/rows
-    Map<CompositeSequence, Integer> rowElementMap;
-    Map<Integer, CompositeSequence> rowDesignElementMapByInteger;
+    protected final Map<BioAssay, Integer> columnAssayMap;
+    protected final Map<BioMaterial, Integer> columnBioMaterialMap;
+    private final Map<Integer, Collection<BioAssay>> columnBioAssayMapByInteger;
+    private final Map<Integer, BioMaterial> columnBioMaterialMapByInteger;
 
+    // maps for designElements/sequences/rows
+    protected final Map<CompositeSequence, Integer> rowElementMap;
+    protected final Map<Integer, CompositeSequence> rowDesignElementMapByInteger;
     private List<ExpressionDataMatrixRowElement> rowElements = null;
+
+    protected BaseExpressionDataMatrix( ExpressionExperiment ee ) {
+        expressionExperiment = ee;
+        quantitationTypes = new HashSet<>();
+        bioAssayDimensions = new HashMap<>();
+        rowElementMap = new LinkedHashMap<>();
+        rowDesignElementMapByInteger = new LinkedHashMap<>();
+        columnAssayMap = new LinkedHashMap<>();
+        columnBioMaterialMap = new LinkedHashMap<>();
+        columnBioMaterialMapByInteger = new LinkedHashMap<>();
+        columnBioAssayMapByInteger = new LinkedHashMap<>();
+    }
+
+    protected BaseExpressionDataMatrix( ExpressionExperiment ee, Collection<? extends DesignElementDataVector> vectors ) {
+        this( ee );
+        int i = 0;
+        List<DesignElementDataVector> sortedVectors = new ArrayList<>( vectors );
+        Comparator<DesignElementDataVector> cmp = Comparator
+                .comparing( ( DesignElementDataVector v ) -> v.getDesignElement().getName(), Comparator.nullsLast( Comparator.naturalOrder() ) )
+                .thenComparing( ( DesignElementDataVector v ) -> v.getDesignElement().getId() );
+        sortedVectors.sort( cmp );
+        for ( DesignElementDataVector vector : sortedVectors ) {
+            QuantitationType vectorQuantitationType = vector.getQuantitationType();
+            CompositeSequence designElement = vector.getDesignElement();
+            this.bioAssayDimensions.put( designElement, vector.getBioAssayDimension() );
+            this.quantitationTypes.add( vectorQuantitationType );
+            this.addToRowMaps( i++, designElement );
+        }
+    }
+
+    public BaseExpressionDataMatrix( ExpressionExperiment ee, Collection<? extends DesignElementDataVector> dataVectors, Collection<QuantitationType> quantitationTypes ) {
+        this( ee, selectVectors( dataVectors, quantitationTypes ) );
+        this.quantitationTypes.addAll( quantitationTypes );
+    }
+
+    public BaseExpressionDataMatrix( ExpressionExperiment ee, Collection<? extends DesignElementDataVector> dataVectors, QuantitationType quantitationType ) {
+        this( ee, selectVectors( dataVectors, quantitationType ) );
+        this.quantitationTypes.add( quantitationType );
+    }
+
+    protected BaseExpressionDataMatrix( BaseExpressionDataMatrix<T> sourceMatrix ) {
+        this( sourceMatrix, sourceMatrix.quantitationTypes );
+    }
+
+    protected BaseExpressionDataMatrix( BaseExpressionDataMatrix<T> sourceMatrix, Set<QuantitationType> quantitationTypes ) {
+        this.expressionExperiment = sourceMatrix.expressionExperiment;
+        this.bioAssayDimensions = sourceMatrix.bioAssayDimensions;
+        this.columnAssayMap = sourceMatrix.columnAssayMap;
+        this.columnBioAssayMapByInteger = sourceMatrix.columnBioAssayMapByInteger;
+        this.columnBioMaterialMap = sourceMatrix.columnBioMaterialMap;
+        this.columnBioMaterialMapByInteger = sourceMatrix.columnBioMaterialMapByInteger;
+        this.quantitationTypes = quantitationTypes;
+        this.rowElementMap = sourceMatrix.rowElementMap;
+        this.rowDesignElementMapByInteger = sourceMatrix.rowDesignElementMapByInteger;
+        this.rowElements = sourceMatrix.rowElements;
+    }
 
     @Override
     public int columns( CompositeSequence el ) {
@@ -126,14 +179,11 @@ abstract public class BaseExpressionDataMatrix<T> implements ExpressionDataMatri
         }
 
         return b;
-
     }
 
     @Override
     public BioAssayDimension getBioAssayDimension( CompositeSequence designElement ) {
-
         return this.bioAssayDimensions.get( designElement );
-
     }
 
     @Override
@@ -170,13 +220,12 @@ abstract public class BaseExpressionDataMatrix<T> implements ExpressionDataMatri
      * The associated {@link ExpressionExperiment}, if known.
      */
     @Override
-    @Nullable
     public ExpressionExperiment getExpressionExperiment() {
         return this.expressionExperiment;
     }
 
     @Override
-    public Collection<QuantitationType> getQuantitationTypes() {
+    public Set<QuantitationType> getQuantitationTypes() {
         return quantitationTypes;
     }
 
@@ -206,25 +255,11 @@ abstract public class BaseExpressionDataMatrix<T> implements ExpressionDataMatri
     @SuppressWarnings("unused") // useful interface
     protected abstract void vectorsToMatrix( Collection<? extends DesignElementDataVector> vectors );
 
-    int getColumnIndex( BioAssay bioAssay ) {
+    protected int getColumnIndex( BioAssay bioAssay ) {
         return columnAssayMap.get( bioAssay );
     }
 
-    void init() {
-        quantitationTypes = new HashSet<>();
-        bioAssayDimensions = new HashMap<>();
-
-        rowElementMap = new LinkedHashMap<>();
-        rowDesignElementMapByInteger = new LinkedHashMap<>();
-
-        columnAssayMap = new LinkedHashMap<>();
-        columnBioMaterialMap = new LinkedHashMap<>();
-        columnBioMaterialMapByInteger = new LinkedHashMap<>();
-        columnBioAssayMapByInteger = new LinkedHashMap<>();
-
-    }
-
-    <R, C, V> void setMatBioAssayValues( AbstractMatrix<R, C, V> mat, Integer rowIndex, V[] vals,
+    protected <R, C, V> void setMatBioAssayValues( AbstractMatrix<R, C, V> mat, Integer rowIndex, V[] vals,
             Collection<BioAssay> bioAssays, Iterator<BioAssay> it ) {
         for ( int j = 0; j < bioAssays.size(); j++ ) {
             BioAssay bioAssay = it.next();
@@ -239,7 +274,7 @@ abstract public class BaseExpressionDataMatrix<T> implements ExpressionDataMatri
      *
      * @param row The row number to be used by this design element.
      */
-    void addToRowMaps( Integer row, CompositeSequence designElement ) {
+    protected void addToRowMaps( Integer row, CompositeSequence designElement ) {
         rowDesignElementMapByInteger.put( row, designElement );
         rowElementMap.put( designElement, row );
     }
@@ -258,7 +293,7 @@ abstract public class BaseExpressionDataMatrix<T> implements ExpressionDataMatri
      * For example, in the following diagram "-" indicates a biomaterial, while "*" indicates a bioassay. Each row of
      * "*" indicates samples run on a different microarray design (a different bio assay material). In the examples we
      * assume there is just a single biomaterial dimension.
-     * 
+     *
      * <pre>
      * ---------------
      * *****              -- only a few samples run on this platform
@@ -268,7 +303,7 @@ abstract public class BaseExpressionDataMatrix<T> implements ExpressionDataMatri
      * <p>
      * A simpler case:
      * </p>
-     * 
+     *
      * <pre>
      * ---------------
      * ***************
@@ -278,7 +313,7 @@ abstract public class BaseExpressionDataMatrix<T> implements ExpressionDataMatri
      * <p>
      * A more typical and easy case (one microarray design used):
      * </p>
-     * 
+     *
      * <pre>
      * ----------------
      * ****************
@@ -286,7 +321,7 @@ abstract public class BaseExpressionDataMatrix<T> implements ExpressionDataMatri
      * <p>
      * If every sample was run on two different array designs:
      * </p>
-     * 
+     *
      * <pre>
      * ----------------
      * ****************
@@ -294,7 +329,7 @@ abstract public class BaseExpressionDataMatrix<T> implements ExpressionDataMatri
      * </pre>
      * <p>
      * Every sample was run on a different array design:
-     * 
+     *
      * <pre>
      * -----------------------
      * ******
@@ -307,7 +342,7 @@ abstract public class BaseExpressionDataMatrix<T> implements ExpressionDataMatri
      * overlap is fixed by sample matching or vector merging; this class has to deal with the general case.
      * </p>
      */
-    int setUpColumnElements() {
+    protected int setUpColumnElements() {
         BaseExpressionDataMatrix.log.debug( "Setting up column elements" );
         assert this.bioAssayDimensions != null && this.bioAssayDimensions.size() > 0 : "No bioAssayDimensions defined";
 
@@ -332,9 +367,7 @@ abstract public class BaseExpressionDataMatrix<T> implements ExpressionDataMatri
                     if ( BaseExpressionDataMatrix.log.isDebugEnabled() )
                         BaseExpressionDataMatrix.log.debug( assay + " --> column " + existingColumn );
 
-                    if ( columnBioAssayMapByInteger.get( existingColumn ) == null ) {
-                        columnBioAssayMapByInteger.put( existingColumn, new HashSet<BioAssay>() );
-                    }
+                    columnBioAssayMapByInteger.computeIfAbsent( existingColumn, k -> new HashSet<>() );
                     columnBioAssayMapByInteger.get( existingColumn ).add( assay );
                 } else {
                     if ( BaseExpressionDataMatrix.log.isDebugEnabled() ) {
@@ -343,9 +376,7 @@ abstract public class BaseExpressionDataMatrix<T> implements ExpressionDataMatri
                     }
                     this.columnBioMaterialMap.put( bioMaterial, column );
                     this.columnAssayMap.put( assay, column );
-                    if ( columnBioAssayMapByInteger.get( column ) == null ) {
-                        columnBioAssayMapByInteger.put( column, new HashSet<BioAssay>() );
-                    }
+                    columnBioAssayMapByInteger.computeIfAbsent( column, k -> new HashSet<>() );
 
                     columnBioMaterialMapByInteger.put( column, bioMaterial );
                     columnBioAssayMapByInteger.get( column ).add( assay );
@@ -365,134 +396,23 @@ abstract public class BaseExpressionDataMatrix<T> implements ExpressionDataMatri
         return columnBioMaterialMapByInteger.keySet().size();
     }
 
-    /**
-     * Selects all the vectors passed in (uses them to initialize the data)
-     */
-    void selectVectors( Collection<? extends DesignElementDataVector> vectors ) {
-        QuantitationType quantitationType = null;
-        int i = 0;
-        List<DesignElementDataVector> sorted = this.sortVectorsByDesignElement( vectors );
-        for ( DesignElementDataVector vector : sorted ) {
-            if ( this.expressionExperiment == null )
-                this.expressionExperiment = vector.getExpressionExperiment();
-            QuantitationType vectorQuantitationType = vector.getQuantitationType();
-            CompositeSequence designElement = vector.getDesignElement();
-            this.bioAssayDimensions.put( designElement, vector.getBioAssayDimension() );
-            if ( quantitationType == null ) {
-                quantitationType = vectorQuantitationType;
-
-                this.getQuantitationTypes().add( vectorQuantitationType );
-            } else {
-                if ( quantitationType != vectorQuantitationType ) {
-                    throw new IllegalArgumentException( "Cannot pass vectors from more than one quantitation type" );
-                }
-
-            }
-
-            this.addToRowMaps( i, designElement );
-            i++;
-        }
-
-    }
-
-    Collection<DesignElementDataVector> selectVectors( Collection<? extends DesignElementDataVector> vectors,
+    protected static Collection<DesignElementDataVector> selectVectors(
+            Collection<? extends DesignElementDataVector> vectors,
             Collection<QuantitationType> qTypes ) {
-        this.quantitationTypes.addAll( qTypes );
-
         Collection<DesignElementDataVector> vectorsOfInterest = new LinkedHashSet<>();
-        int i = 0;
-
         for ( DesignElementDataVector vector : vectors ) {
             QuantitationType vectorQuantitationType = vector.getQuantitationType();
             if ( qTypes.contains( vectorQuantitationType ) ) {
-                if ( this.expressionExperiment == null )
-                    this.expressionExperiment = vector.getExpressionExperiment();
                 vectorsOfInterest.add( vector );
-                CompositeSequence designElement = vector.getDesignElement();
-                bioAssayDimensions.put( designElement, vector.getBioAssayDimension() );
-                this.addToRowMaps( i, designElement );
-                this.getQuantitationTypes().add( vectorQuantitationType );
-                i++;
             }
-
         }
         return vectorsOfInterest;
     }
 
-    Collection<DesignElementDataVector> selectVectors( Collection<? extends DesignElementDataVector> vectors,
-            List<QuantitationType> qTypes ) {
-        this.quantitationTypes.addAll( qTypes );
-        List<DesignElementDataVector> sorted = this.sortVectorsByDesignElement( vectors );
-        Collection<DesignElementDataVector> vectorsOfInterest = new LinkedHashSet<>();
-        int rowIndex = 0;
-        for ( QuantitationType soughtType : qTypes ) {
-            for ( DesignElementDataVector vector : sorted ) {
-                QuantitationType vectorQuantitationType = vector.getQuantitationType();
-                if ( vectorQuantitationType.equals( soughtType ) ) {
-                    if ( this.expressionExperiment == null )
-                        this.expressionExperiment = vector.getExpressionExperiment();
-                    vectorsOfInterest.add( vector );
-                    this.getQuantitationTypes().add( vectorQuantitationType );
-                    CompositeSequence designElement = vector.getDesignElement();
-                    this.bioAssayDimensions.put( designElement, vector.getBioAssayDimension() );
-                    this.addToRowMaps( rowIndex, designElement );
-                    rowIndex++;
-                }
-            }
-        }
-        BaseExpressionDataMatrix.log.debug( "Selected " + vectorsOfInterest.size() + " vectors" );
-        return vectorsOfInterest;
-    }
-
-    Collection<DesignElementDataVector> selectVectors( Collection<? extends DesignElementDataVector> vectors,
+    protected static Collection<DesignElementDataVector> selectVectors(
+            Collection<? extends DesignElementDataVector> vectors,
             QuantitationType quantitationType ) {
-        this.quantitationTypes.add( quantitationType );
-
-        Collection<DesignElementDataVector> vectorsOfInterest = new LinkedHashSet<>();
-        int i = 0;
-
-        for ( DesignElementDataVector vector : vectors ) {
-            QuantitationType vectorQuantitationType = vector.getQuantitationType();
-            if ( vectorQuantitationType.equals( quantitationType ) ) {
-                if ( this.expressionExperiment == null )
-                    this.expressionExperiment = vector.getExpressionExperiment();
-                vectorsOfInterest.add( vector );
-                this.getQuantitationTypes().add( vectorQuantitationType );
-                CompositeSequence designElement = vector.getDesignElement();
-                bioAssayDimensions.put( designElement, vector.getBioAssayDimension() );
-                this.addToRowMaps( i, designElement );
-                i++;
-            }
-
-        }
-        return vectorsOfInterest;
-    }
-
-    Collection<DesignElementDataVector> selectVectors( ExpressionExperiment ee, QuantitationType quantitationType ) {
-        Collection<RawExpressionDataVector> vectors = ee.getRawExpressionDataVectors();
-        return this.selectVectors( quantitationType, vectors );
-    }
-
-    private Collection<DesignElementDataVector> selectVectors( QuantitationType quantitationType,
-            Collection<? extends DesignElementDataVector> vectors ) {
-        Collection<DesignElementDataVector> vectorsOfInterest = new LinkedHashSet<>();
-        this.quantitationTypes.add( quantitationType );
-        List<DesignElementDataVector> sorted = this.sortVectorsByDesignElement( vectors );
-        int i = 0;
-        for ( DesignElementDataVector vector : sorted ) {
-            QuantitationType vectorQuantitationType = vector.getQuantitationType();
-            if ( this.expressionExperiment == null )
-                this.expressionExperiment = vector.getExpressionExperiment();
-            if ( vectorQuantitationType.equals( quantitationType ) ) {
-                vectorsOfInterest.add( vector );
-                CompositeSequence designElement = vector.getDesignElement();
-                this.getQuantitationTypes().add( vectorQuantitationType );
-                this.bioAssayDimensions.put( designElement, vector.getBioAssayDimension() );
-                this.addToRowMaps( i, designElement );
-                i++;
-            }
-        }
-        return vectorsOfInterest;
+        return selectVectors( vectors, Collections.singleton( quantitationType ) );
     }
 
     private void getBioMaterialGroupsForAssays( Map<BioMaterial, Collection<BioAssay>> bioMaterialMap,
@@ -503,21 +423,9 @@ abstract public class BaseExpressionDataMatrix<T> implements ExpressionDataMatri
             BioMaterial bm = ba.getSampleUsed();
 
             if ( !bioMaterialMap.containsKey( bm ) ) {
-                bioMaterialMap.put( bm, new HashSet<BioAssay>() );
+                bioMaterialMap.put( bm, new HashSet<>() );
             }
             bioMaterialMap.get( bm ).add( ba );
-
         }
     }
-
-    private List<DesignElementDataVector> sortVectorsByDesignElement(
-            Collection<? extends DesignElementDataVector> vectors ) {
-        List<DesignElementDataVector> vectorSort = new ArrayList<>( vectors );
-        Comparator<DesignElementDataVector> cmp = Comparator
-                .comparing( ( DesignElementDataVector vector ) -> vector.getDesignElement().getName(), Comparator.nullsLast( Comparator.naturalOrder() ) )
-                .thenComparing( ( DesignElementDataVector vector ) -> vector.getDesignElement().getId() );
-        vectorSort.sort( cmp );
-        return vectorSort;
-    }
-
 }

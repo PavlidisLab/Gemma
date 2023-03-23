@@ -175,24 +175,6 @@ public class DEDVRankEndpoint extends AbstractGemmaEndpoint {
     }
 
     /**
-     * @param data data
-     * @return a string delimited representation of the double array passed in.
-     */
-    private String encode( double[] data ) {
-
-        StringBuffer result = new StringBuffer();
-
-        for ( int i = 0; i < data.length; i++ ) {
-            if ( i == 0 )
-                result.append( data[i] );
-            else
-                result.append( AbstractGemmaEndpoint.DELIMITER + data[i] );
-        }
-
-        return result.toString();
-    }
-
-    /**
      * Return the corresponding DedvRankService constant for max and mean options
      *
      * @param methodString method string

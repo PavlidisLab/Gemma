@@ -148,12 +148,12 @@ public class ProcessedExpressionDataCreateServiceTest extends AbstractGeoService
         ee = this.eeService.thawLite( ee );
         processedExpressionDataVectorService.thaw( preferredVectors );
 
-        ExpressionDataDoubleMatrix mat = new ExpressionDataDoubleMatrix( preferredVectors );
+        ExpressionDataDoubleMatrix mat = new ExpressionDataDoubleMatrix( ee, preferredVectors );
         assertEquals( 10, mat.columns() );
 
         boolean found = false;
         for ( int i = 0; i < mat.rows(); i++ ) {
-            Double[] row = mat.getRow( i );
+            double[] row = mat.getRow( i );
 
             // debugging
             if ( i == 0 ) {

@@ -417,7 +417,7 @@ public class ExpressionDataFileServiceImpl extends AbstractTsvFileService<Expres
     }
 
     @Override
-    public File writeOrLocateDataFile( QuantitationType type, boolean forceWrite ) {
+    public File writeOrLocateDataFile( ExpressionExperiment ee, QuantitationType type, boolean forceWrite ) {
 
         try {
             File f = this.getOutputFile( type );
@@ -438,7 +438,7 @@ public class ExpressionDataFileServiceImpl extends AbstractTsvFileService<Expres
                 return null;
             }
 
-            this.writeVectors( f, vectors, geneAnnotations );
+            this.writeVectors( f, ee, vectors, geneAnnotations );
             return f;
         } catch ( IOException e ) {
             throw new RuntimeException( e );
@@ -501,7 +501,7 @@ public class ExpressionDataFileServiceImpl extends AbstractTsvFileService<Expres
     }
 
     @Override
-    public File writeOrLocateJSONDataFile( QuantitationType type, boolean forceWrite ) {
+    public File writeOrLocateJSONDataFile( ExpressionExperiment ee, QuantitationType type, boolean forceWrite ) {
 
         try {
             File f = this.getJSONOutputFile( type );
@@ -519,7 +519,7 @@ public class ExpressionDataFileServiceImpl extends AbstractTsvFileService<Expres
                 return null;
             }
 
-            this.writeJson( f, vectors );
+            this.writeJson( f, ee, vectors );
             return f;
         } catch ( IOException e ) {
             throw new RuntimeException( e );
@@ -1122,9 +1122,9 @@ public class ExpressionDataFileServiceImpl extends AbstractTsvFileService<Expres
         return file;
     }
 
-    private void writeJson( File file, Collection<DesignElementDataVector> vectors ) throws IOException {
+    private void writeJson( File file, ExpressionExperiment ee, Collection<DesignElementDataVector> vectors ) throws IOException {
         this.rawExpressionDataVectorService.thawRawAndProcessed( vectors );
-        ExpressionDataMatrix<?> expressionDataMatrix = ExpressionDataMatrixBuilder.getMatrix( vectors );
+        ExpressionDataMatrix<?> expressionDataMatrix = ExpressionDataMatrixBuilder.getMatrix( ee, vectors );
         try ( Writer writer = new OutputStreamWriter( new GZIPOutputStream( new FileOutputStream( file ) ) ) ) {
             MatrixWriter matrixWriter = new MatrixWriter();
             matrixWriter.writeJSON( writer, expressionDataMatrix );
@@ -1161,11 +1161,11 @@ public class ExpressionDataFileServiceImpl extends AbstractTsvFileService<Expres
 
     }
 
-    private void writeVectors( File file, Collection<DesignElementDataVector> vectors,
+    private void writeVectors( File file, ExpressionExperiment ee, Collection<DesignElementDataVector> vectors,
             Map<CompositeSequence, String[]> geneAnnotations ) throws IOException {
         this.rawExpressionDataVectorService.thawRawAndProcessed( vectors );
 
-        ExpressionDataMatrix<?> expressionDataMatrix = ExpressionDataMatrixBuilder.getMatrix( vectors );
+        ExpressionDataMatrix<?> expressionDataMatrix = ExpressionDataMatrixBuilder.getMatrix( ee, vectors );
 
         this.writeMatrix( file, geneAnnotations, expressionDataMatrix );
     }

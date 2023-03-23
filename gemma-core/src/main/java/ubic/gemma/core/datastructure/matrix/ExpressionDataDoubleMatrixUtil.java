@@ -43,6 +43,7 @@ import javax.annotation.CheckReturnValue;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 
@@ -205,13 +206,13 @@ public class ExpressionDataDoubleMatrixUtil {
         }
 
         StandardQuantitationType finalType = type;
-        List<QuantitationType> log2Qts = dmatrix.getQuantitationTypes().stream()
+        Set<QuantitationType> log2Qts = dmatrix.getQuantitationTypes().stream()
                 .map( QuantitationTypeImpl.Factory::newInstance )
                 .peek( qt -> {
                     qt.setType( finalType );
                     qt.setScale( ScaleType.LOG2 );
                 } )
-                .collect( Collectors.toList() );
+                .collect( Collectors.toSet() );
 
         ExpressionDataDoubleMatrix log2Matrix = new ExpressionDataDoubleMatrix( dmatrix, transformedMatrix, log2Qts );
 
