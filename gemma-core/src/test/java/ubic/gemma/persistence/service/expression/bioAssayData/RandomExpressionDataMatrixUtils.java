@@ -1,12 +1,7 @@
 package ubic.gemma.persistence.service.expression.bioAssayData;
 
 import cern.jet.random.engine.MersenneTwister;
-import org.apache.commons.math3.distribution.IntegerDistribution;
-import org.apache.commons.math3.distribution.LogNormalDistribution;
-import org.apache.commons.math3.distribution.NormalDistribution;
-import org.apache.commons.math3.distribution.RealDistribution;
-import org.apache.commons.math3.exception.NumberIsTooLargeException;
-import org.apache.commons.math3.exception.OutOfRangeException;
+import org.apache.commons.math3.distribution.*;
 import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.common.quantitationtype.*;
@@ -67,7 +62,7 @@ public class RandomExpressionDataMatrixUtils {
         qt.setType( StandardQuantitationType.AMOUNT );
         qt.setScale( ScaleType.LOG2 );
         qt.setRepresentation( PrimitiveType.DOUBLE );
-        return randomExpressionMatrix( ee, qt, new NormalDistribution( 6.25, 1.46 ) );
+        return randomExpressionMatrix( ee, qt, new TruncatedNormalDistribution( 6.25, 1.46, 0, Double.POSITIVE_INFINITY ) );
     }
 
     public static ExpressionDataDoubleMatrix randomExpressionMatrix( ExpressionExperiment ee, QuantitationType qt, RealDistribution distribution ) {
@@ -128,13 +123,14 @@ public class RandomExpressionDataMatrixUtils {
         return matrix;
     }
 
-    private static class NegativeBinomialDistribution implements IntegerDistribution {
+    private static class NegativeBinomialDistribution extends AbstractIntegerDistribution {
 
         private final int i;
         private final double v;
         private cern.jet.random.NegativeBinomial distribution;
 
         private NegativeBinomialDistribution( int i, double v ) {
+            super( null );
             this.i = i;
             this.v = v;
             this.distribution = new cern.jet.random.NegativeBinomial( i, v, new MersenneTwister() );
@@ -148,16 +144,6 @@ public class RandomExpressionDataMatrixUtils {
         @Override
         public double cumulativeProbability( int x ) {
             return distribution.cdf( x );
-        }
-
-        @Override
-        public double cumulativeProbability( int x0, int x1 ) throws NumberIsTooLargeException {
-            return cumulativeProbability( x1 ) - cumulativeProbability( x0 );
-        }
-
-        @Override
-        public int inverseCumulativeProbability( double p ) throws OutOfRangeException {
-            return 0;
         }
 
         @Override
@@ -194,14 +180,84 @@ public class RandomExpressionDataMatrixUtils {
         public int sample() {
             return distribution.nextInt();
         }
+    }
+
+    /**
+     * Truncated normal distribution.
+     * <p>
+     * Only sampling is supported.
+     */
+    private static class TruncatedNormalDistribution extends AbstractRealDistribution {
+
+        private final NormalDistribution normalDistribution;
+        private final double min;
+        private final double max;
+
+        public TruncatedNormalDistribution( double mean, double sd, double min, double max ) {
+            super( null );
+            normalDistribution = new NormalDistribution( mean, sd );
+            this.min = min;
+            this.max = max;
+        }
 
         @Override
-        public int[] sample( int sampleSize ) {
-            int[] X = new int[sampleSize];
-            for ( int i = 0; i < X.length; i++ ) {
-                X[i] = sample();
+        public double density( double x ) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public double cumulativeProbability( double x ) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public double getNumericalMean() {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public double getNumericalVariance() {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public double getSupportLowerBound() {
+            return min;
+        }
+
+        @Override
+        public double getSupportUpperBound() {
+            return max;
+        }
+
+        @Override
+        public boolean isSupportLowerBoundInclusive() {
+            return true;
+        }
+
+        @Override
+        public boolean isSupportUpperBoundInclusive() {
+            return true;
+        }
+
+        @Override
+        public boolean isSupportConnected() {
+            return true;
+        }
+
+        @Override
+        public void reseedRandomGenerator( long seed ) {
+            normalDistribution.reseedRandomGenerator( seed );
+        }
+
+        @Override
+        public double sample() {
+            while ( true ) {
+                double s = normalDistribution.sample();
+                if ( s >= min && s <= max ) {
+                    return s;
+                }
             }
-            return X;
         }
     }
 }
