@@ -202,7 +202,7 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
         ee = expressionExperimentService.thawLite( ee );
 
         if ( hasData ) {
-            ee = processedExpressionDataVectorService.createProcessedDataVectors( ee, false ); // this still fails sometimes? works fine if run later by cli
+            ee = processedExpressionDataVectorService.createProcessedDataVectors( ee ); // this still fails sometimes? works fine if run later by cli
         }
         return ee;
     }

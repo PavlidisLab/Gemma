@@ -19,6 +19,9 @@
 
 package ubic.gemma.persistence.service.expression.bioAssayData;
 
+import ubic.gemma.core.analysis.preprocess.PreprocessingException;
+import ubic.gemma.core.datastructure.matrix.InferredQuantitationMismatchException;
+import ubic.gemma.core.datastructure.matrix.QuantitationMismatchException;
 import ubic.gemma.model.expression.bioAssayData.DoubleVectorValueObject;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
@@ -37,16 +40,21 @@ public interface ProcessedExpressionDataVectorDao extends DesignElementDataVecto
     void clearCache();
 
     /**
+     * @see #createProcessedDataVectors(ExpressionExperiment, boolean)
+     */
+    ExpressionExperiment createProcessedDataVectors( ExpressionExperiment expressionExperiment );
+
+    /**
      * Populate the processed data for the given experiment. For two-channel studies, the missing value information
      * should already have been computed. If the values already exist, they will be re-written. The data will be
      * quantile normalized (with some exceptions: ratios and count data will not be normalized).
      *
      * @param expressionExperiment ee
-     * @param detectScaleFromData  use raw data to infer scale type and the adequate transformation for producing
+     * @param ignoreQuantitationMismatch  use raw data to infer scale type and the adequate transformation for producing
      *                             processed EVs instead of relying on the QT
      * @return the updated expressionExperiment.
      */
-    ExpressionExperiment createProcessedDataVectors( ExpressionExperiment expressionExperiment, boolean detectScaleFromData );
+    ExpressionExperiment createProcessedDataVectors( ExpressionExperiment expressionExperiment, boolean ignoreQuantitationMismatch ) throws QuantitationMismatchException;
 
     Collection<DoubleVectorValueObject> getProcessedDataArrays( BioAssaySet expressionExperiment );
 

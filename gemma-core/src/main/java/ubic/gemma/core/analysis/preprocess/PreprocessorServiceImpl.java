@@ -29,6 +29,8 @@ import ubic.gemma.core.analysis.preprocess.svd.SVDServiceHelper;
 import ubic.gemma.core.analysis.report.ExpressionExperimentReportService;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
+import ubic.gemma.core.datastructure.matrix.InferredQuantitationMismatchException;
+import ubic.gemma.core.datastructure.matrix.QuantitationMismatchException;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.common.auditAndSecurity.eventType.BatchCorrectionEvent;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
@@ -111,16 +113,16 @@ public class PreprocessorServiceImpl implements PreprocessorService {
     @Override
     @Transactional
     public void process( ExpressionExperiment ee ) throws PreprocessingException {
-        process( ee, false );
+        process( ee, true );
     }
 
     @Override
     @Transactional
-    public void process( ExpressionExperiment ee, boolean detectScaleFromData ) throws PreprocessingException {
+    public void process( ExpressionExperiment ee, boolean ignoreQuantitationMismatch ) throws PreprocessingException {
         ee = expressionExperimentService.thaw( ee );
         removeInvalidatedData( ee );
         processForMissingValues( ee );
-        processVectorCreate( ee, detectScaleFromData );
+        processVectorCreate( ee, ignoreQuantitationMismatch );
         batchCorrect( ee );
     }
 
@@ -130,7 +132,7 @@ public class PreprocessorServiceImpl implements PreprocessorService {
         // we dont do processForMissingValues missing values
         ee = expressionExperimentService.thaw( ee );
         removeInvalidatedData( ee );
-        processVectorCreate( ee, false );
+        processVectorCreate( ee, true );
         processDiagnostics( ee );
         processBatchInfo( ee );
     }
@@ -192,8 +194,13 @@ public class PreprocessorServiceImpl implements PreprocessorService {
         geeqService.calculateScore( ee, GeeqService.ScoreMode.all );
     }
 
-    private void processVectorCreate( ExpressionExperiment ee, boolean detectScaleFromData ) {
-        processedExpressionDataVectorService.computeProcessedExpressionData( ee, detectScaleFromData );
+    private void processVectorCreate( ExpressionExperiment ee, boolean ignoreQuantitationMismatch ) throws PreprocessingException {
+        try {
+            processedExpressionDataVectorService.computeProcessedExpressionData( ee, ignoreQuantitationMismatch );
+        } catch ( QuantitationMismatchException e ) {
+            // wrap it in a runtime exception, which will result in a rollback of the current transaction
+            throw new QuantitationMismatchPreprocessingException( ee, e );
+        }
     }
 
     private void processBatchInfo( ExpressionExperiment ee ) {

@@ -1,5 +1,6 @@
 package ubic.gemma.core.datastructure.matrix;
 
+import org.apache.commons.math3.distribution.NormalDistribution;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.core.io.ClassPathResource;
@@ -63,14 +64,14 @@ public class ExpressionDataDoubleMatrixUtilTest {
     @Test
     public void testLog2ShouldDoNothing() {
         qt.setScale( ScaleType.LOG2 );
-        assertThat( ExpressionDataDoubleMatrixUtil.ensureLog2Scale( matrix, false ) )
+        assertThat( ExpressionDataDoubleMatrixUtil.ensureLog2Scale( matrix ) )
                 .isSameAs( matrix );
     }
 
     @Test
     public void testLinearConversion() {
         qt.setScale( ScaleType.LINEAR );
-        assertThat( ExpressionDataDoubleMatrixUtil.ensureLog2Scale( matrix, false ) )
+        assertThat( ExpressionDataDoubleMatrixUtil.ensureLog2Scale( matrix ) )
                 .satisfies( this::basicBasicLog2MatrixChecks )
                 .satisfies( m -> {
                     assertThat( m.getMatrix().get( 0, 0 ) ).isEqualTo( Math.log( 4.0 ) / Math.log( 2 ) );
@@ -80,7 +81,7 @@ public class ExpressionDataDoubleMatrixUtilTest {
     @Test
     public void testLog10Conversion() {
         qt.setScale( ScaleType.LOG10 );
-        assertThat( ExpressionDataDoubleMatrixUtil.ensureLog2Scale( matrix, false ) )
+        assertThat( ExpressionDataDoubleMatrixUtil.ensureLog2Scale( matrix ) )
                 .satisfies( this::basicBasicLog2MatrixChecks )
                 .satisfies( m -> {
                     assertThat( m.getMatrix().get( 0, 0 ) ).isEqualTo( 4.0 * Math.log( 10 ) / Math.log( 2 ), within( 1e-10 ) );
@@ -91,7 +92,7 @@ public class ExpressionDataDoubleMatrixUtilTest {
     public void testCountConversion() {
         qt.setType( StandardQuantitationType.COUNT );
         qt.setScale( ScaleType.COUNT );
-        assertThat( ExpressionDataDoubleMatrixUtil.ensureLog2Scale( matrix, false ) )
+        assertThat( ExpressionDataDoubleMatrixUtil.ensureLog2Scale( matrix ) )
                 .satisfies( this::basicBasicLog2MatrixChecks )
                 .satisfies( m -> {
                     assertThat( m.getMatrix().get( 0, 0 ) )
@@ -100,9 +101,9 @@ public class ExpressionDataDoubleMatrixUtilTest {
     }
 
     @Test
-    public void testInferredLogbase() {
-        assertThat( ExpressionDataDoubleMatrixUtil.ensureLog2Scale( matrix, true ) )
-                .satisfies( this::basicBasicLog2MatrixChecks );
+    public void testInferredLogbaseDifferFromQuantitations() {
+        assertThatThrownBy( () -> ExpressionDataDoubleMatrixUtil.ensureLog2Scale( matrix, false ) )
+                .isInstanceOf( InferredQuantitationMismatchException.class );
     }
 
     @Test
@@ -112,6 +113,7 @@ public class ExpressionDataDoubleMatrixUtilTest {
             assertThat( qt.getType() ).isEqualTo( StandardQuantitationType.COUNT );
             assertThat( qt.getScale() ).isEqualTo( ScaleType.COUNT );
             assertThat( qt.getIsRatio() ).isFalse();
+            detectSuspiciousValues( data, qt );
         } );
     }
 
@@ -122,6 +124,7 @@ public class ExpressionDataDoubleMatrixUtilTest {
             assertThat( qt.getType() ).isEqualTo( StandardQuantitationType.AMOUNT );
             assertThat( qt.getScale() ).isEqualTo( ScaleType.LINEAR );
             assertThat( qt.getIsRatio() ).isFalse();
+            detectSuspiciousValues( data, qt );
         } );
     }
 
@@ -132,6 +135,7 @@ public class ExpressionDataDoubleMatrixUtilTest {
             assertThat( qt.getType() ).isEqualTo( StandardQuantitationType.AMOUNT );
             assertThat( qt.getScale() ).isEqualTo( ScaleType.LOGBASEUNKNOWN );
             assertThat( qt.getIsRatio() ).isFalse();
+            detectSuspiciousValues( data, qt );
         } );
     }
 
@@ -147,6 +151,7 @@ public class ExpressionDataDoubleMatrixUtilTest {
             assertThat( qt.getType() ).isEqualTo( StandardQuantitationType.AMOUNT );
             assertThat( qt.getScale() ).isEqualTo( ScaleType.PERCENT1 );
             assertThat( qt.getIsRatio() ).isFalse();
+            detectSuspiciousValues( data, qt );
         } );
     }
 
@@ -157,6 +162,7 @@ public class ExpressionDataDoubleMatrixUtilTest {
             assertThat( qt.getType() ).isEqualTo( StandardQuantitationType.AMOUNT );
             assertThat( qt.getScale() ).isEqualTo( ScaleType.PERCENT );
             assertThat( qt.getIsRatio() ).isFalse();
+            detectSuspiciousValues( data, qt );
         } );
     }
 
@@ -167,6 +173,7 @@ public class ExpressionDataDoubleMatrixUtilTest {
             assertThat( qt.getType() ).isEqualTo( StandardQuantitationType.ZSCORE );
             assertThat( qt.getScale() ).isEqualTo( ScaleType.LOGBASEUNKNOWN );
             assertThat( qt.getIsRatio() ).isFalse();
+            detectSuspiciousValues( data, qt );
         } );
     }
 
@@ -177,6 +184,7 @@ public class ExpressionDataDoubleMatrixUtilTest {
             assertThat( qt.getType() ).isEqualTo( StandardQuantitationType.ZSCORE );
             assertThat( qt.getScale() ).isEqualTo( ScaleType.LOGBASEUNKNOWN );
             assertThat( qt.getIsRatio() ).isFalse();
+            detectSuspiciousValues( data, qt );
         } );
     }
 
@@ -188,6 +196,7 @@ public class ExpressionDataDoubleMatrixUtilTest {
             assertThat( qt.getType() ).isEqualTo( StandardQuantitationType.ZSCORE );
             assertThat( qt.getScale() ).isEqualTo( ScaleType.OTHER );
             assertThat( qt.getIsRatio() ).isFalse();
+            detectSuspiciousValues( data, qt );
         } );
     }
 
@@ -198,6 +207,7 @@ public class ExpressionDataDoubleMatrixUtilTest {
             assertThat( qt.getType() ).isEqualTo( StandardQuantitationType.AMOUNT );
             assertThat( qt.getScale() ).isEqualTo( ScaleType.LOG10 );
             assertThat( qt.getIsRatio() ).isTrue();
+            detectSuspiciousValues( data, qt );
         } );
     }
 
@@ -208,6 +218,7 @@ public class ExpressionDataDoubleMatrixUtilTest {
             assertThat( qt.getType() ).isEqualTo( StandardQuantitationType.AMOUNT );
             assertThat( qt.getScale() ).isEqualTo( ScaleType.LOG2 );
             assertThat( qt.getIsRatio() ).isTrue();
+            detectSuspiciousValues( data, qt );
         } );
     }
 
@@ -220,6 +231,7 @@ public class ExpressionDataDoubleMatrixUtilTest {
         assertThat( inferQuantitationType( matrix ) ).satisfies( qt -> {
             assertThat( qt.getScale() ).isEqualTo( ScaleType.LINEAR );
             assertThat( qt.getIsRatio() ).isFalse();
+            detectSuspiciousValues( matrix, qt );
         } );
     }
 
@@ -232,6 +244,7 @@ public class ExpressionDataDoubleMatrixUtilTest {
         assertThat( inferQuantitationType( matrix ) ).satisfies( qt -> {
             assertThat( qt.getScale() ).isEqualTo( ScaleType.LOG2 );
             assertThat( qt.getIsRatio() ).isFalse();
+            detectSuspiciousValues( matrix, qt );
         } );
     }
 
@@ -245,6 +258,7 @@ public class ExpressionDataDoubleMatrixUtilTest {
         assertThat( inferQuantitationType( matrix ) ).satisfies( qt -> {
             assertThat( qt.getScale() ).isEqualTo( ScaleType.LOG2 );
             assertThat( qt.getIsRatio() ).isTrue();
+            detectSuspiciousValues( matrix, qt );
         } );
     }
 
@@ -257,7 +271,23 @@ public class ExpressionDataDoubleMatrixUtilTest {
         assertThat( inferQuantitationType( matrix ) ).satisfies( qt -> {
             assertThat( qt.getScale() ).isEqualTo( ScaleType.COUNT );
             assertThat( qt.getIsRatio() ).isFalse();
+            detectSuspiciousValues( matrix, qt );
         } );
+    }
+
+    @Test
+    public void testRandomSuspiciousLog2Matrix() {
+        ExpressionExperiment ee = getTestExpressionExperiment();
+        QuantitationType qt = new QuantitationTypeImpl();
+        qt.setGeneralType( GeneralType.QUANTITATIVE );
+        qt.setType( StandardQuantitationType.AMOUNT );
+        qt.setScale( ScaleType.LOG2 );
+        qt.setRepresentation( PrimitiveType.DOUBLE );
+        matrix = randomExpressionMatrix( ee, qt, new NormalDistribution( 25, 2 ) );
+        assertThatThrownBy( () -> detectSuspiciousValues( matrix, qt ) )
+                .isInstanceOf( SuspiciousValuesForQuantitationException.class ).satisfies( e -> {
+                    assertThat( ( ( SuspiciousValuesForQuantitationException ) e ).getLintResults() ).isNotEmpty();
+                } );
     }
 
     private ExpressionExperiment getTestExpressionExperiment() {

@@ -4,12 +4,15 @@ import org.apache.commons.math3.distribution.LogNormalDistribution;
 import org.apache.commons.math3.distribution.NormalDistribution;
 import org.apache.commons.math3.distribution.RealDistribution;
 import org.hibernate.SessionFactory;
+import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.ContextConfiguration;
 import ubic.basecode.io.ByteArrayConverter;
+import ubic.gemma.core.datastructure.matrix.InferredQuantitationMismatchException;
+import ubic.gemma.core.datastructure.matrix.QuantitationMismatchException;
 import ubic.gemma.core.util.test.BaseDatabaseTest;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrailImpl;
 import ubic.gemma.model.common.quantitationtype.*;
@@ -54,13 +57,18 @@ public class ProcessedExpressionDataVectorDaoTest extends BaseDatabaseTest {
 
     private ByteArrayConverter bac = new ByteArrayConverter();
 
+    @Before
+    public void setUp() {
+        RandomExpressionDataMatrixUtils.setSeed( 123L );
+    }
+
     @Test
-    public void testCreateProcessedDataVectors() {
+    public void testCreateProcessedDataVectors() throws QuantitationMismatchException {
         double[][] matrix = randomExpressionMatrix( 100, 4, new LogNormalDistribution( 10, 1 ) );
-        ExpressionExperiment ee = getTestExpressionExperimentForRawExpressionMatrix( matrix );
+        ExpressionExperiment ee = getTestExpressionExperimentForRawExpressionMatrix( matrix, ScaleType.LINEAR, false );
         assertThat( ee.getProcessedExpressionDataVectors() ).isEmpty();
         assertThat( ee.getRawExpressionDataVectors() ).hasSize( 100 );
-        ee = processedExpressionDataVectorDao.createProcessedDataVectors( ee, true );
+        ee = processedExpressionDataVectorDao.createProcessedDataVectors( ee, false );
         assertThat( ee.getProcessedExpressionDataVectors() ).hasSize( 100 );
         assertThat( ee.getQuantitationTypes() ).hasSize( 1 ).first().satisfies( qt -> {
             assertThat( qt.getGeneralType() ).isEqualTo( GeneralType.QUANTITATIVE );
@@ -70,27 +78,27 @@ public class ProcessedExpressionDataVectorDaoTest extends BaseDatabaseTest {
     }
 
     @Test
-    public void testCreateProcessedDataVectorsFromLog2Data() {
+    public void testCreateProcessedDataVectorsFromLog2Data() throws QuantitationMismatchException {
         double[][] matrix = randomExpressionMatrix( 100, 4, new NormalDistribution( 15, 1 ) );
-        ExpressionExperiment ee = getTestExpressionExperimentForRawExpressionMatrix( matrix );
+        ExpressionExperiment ee = getTestExpressionExperimentForRawExpressionMatrix( matrix, ScaleType.LOG2, false );
         assertThat( ee.getProcessedExpressionDataVectors() ).isEmpty();
         assertThat( ee.getRawExpressionDataVectors() ).hasSize( 100 );
-        ee = processedExpressionDataVectorDao.createProcessedDataVectors( ee, true );
+        ee = processedExpressionDataVectorDao.createProcessedDataVectors( ee, false );
         assertThat( ee.getProcessedExpressionDataVectors() ).hasSize( 100 );
     }
 
     @Test
-    public void testCreateProcessedDataVectorsFromLog2RatiometricData() {
+    public void testCreateProcessedDataVectorsFromLog2RatiometricData() throws QuantitationMismatchException {
         double[][] matrix = randomExpressionMatrix( 100, 4, new NormalDistribution( 0, 1 ) );
-        ExpressionExperiment ee = getTestExpressionExperimentForRawExpressionMatrix( matrix );
+        ExpressionExperiment ee = getTestExpressionExperimentForRawExpressionMatrix( matrix, ScaleType.LOG2, true );
         assertThat( ee.getProcessedExpressionDataVectors() ).isEmpty();
         assertThat( ee.getRawExpressionDataVectors() ).hasSize( 100 );
-        ee = processedExpressionDataVectorDao.createProcessedDataVectors( ee, true );
+        ee = processedExpressionDataVectorDao.createProcessedDataVectors( ee, false );
         assertThat( ee.getProcessedExpressionDataVectors() ).hasSize( 100 );
     }
 
 
-    private ExpressionExperiment getTestExpressionExperimentForRawExpressionMatrix( double[][] matrix ) {
+    private ExpressionExperiment getTestExpressionExperimentForRawExpressionMatrix( double[][] matrix, ScaleType scaleType, boolean isRatio ) {
         ExpressionExperiment ee = new ExpressionExperiment();
 
         Taxon taxon = new Taxon();
@@ -103,9 +111,10 @@ public class ProcessedExpressionDataVectorDaoTest extends BaseDatabaseTest {
 
         QuantitationType qt = new QuantitationTypeImpl();
         qt.setRepresentation( PrimitiveType.DOUBLE );
-        qt.setScale( ScaleType.LINEAR );
+        qt.setScale( scaleType );
         qt.setGeneralType( GeneralType.QUANTITATIVE );
-        qt.setType( StandardQuantitationType.AMOUNT );
+        qt.setType( scaleType == ScaleType.COUNT ? StandardQuantitationType.COUNT : StandardQuantitationType.AMOUNT );
+        qt.setIsRatio( isRatio );
         qt.setIsPreferred( true );
         sessionFactory.getCurrentSession().persist( qt );
 

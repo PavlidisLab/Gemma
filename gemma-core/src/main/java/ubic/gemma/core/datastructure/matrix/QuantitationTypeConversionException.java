@@ -1,4 +1,4 @@
-package ubic.gemma.core.analysis.preprocess;
+package ubic.gemma.core.datastructure.matrix;
 
 /**
  * Base class for representing problematic {@link ubic.gemma.model.common.quantitationtype.QuantitationType} conversion.
