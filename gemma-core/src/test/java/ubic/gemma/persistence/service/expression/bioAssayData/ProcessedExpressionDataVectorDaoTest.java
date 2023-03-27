@@ -2,7 +2,6 @@ package ubic.gemma.persistence.service.expression.bioAssayData;
 
 import org.apache.commons.math3.distribution.LogNormalDistribution;
 import org.apache.commons.math3.distribution.NormalDistribution;
-import org.apache.commons.math3.distribution.RealDistribution;
 import org.hibernate.SessionFactory;
 import org.junit.Before;
 import org.junit.Test;
@@ -11,7 +10,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.ContextConfiguration;
 import ubic.basecode.io.ByteArrayConverter;
-import ubic.gemma.core.datastructure.matrix.InferredQuantitationMismatchException;
 import ubic.gemma.core.datastructure.matrix.QuantitationMismatchException;
 import ubic.gemma.core.util.test.BaseDatabaseTest;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrailImpl;
@@ -33,6 +31,7 @@ import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
+import static ubic.gemma.persistence.service.expression.bioAssayData.RandomExpressionDataMatrixUtils.randomExpressionMatrix;
 
 @ContextConfiguration
 public class ProcessedExpressionDataVectorDaoTest extends BaseDatabaseTest {
@@ -151,16 +150,5 @@ public class ProcessedExpressionDataVectorDaoTest extends BaseDatabaseTest {
         ee.setAuditTrail( new AuditTrailImpl() );
         sessionFactory.getCurrentSession().persist( ee );
         return ee;
-    }
-
-    private static double[][] randomExpressionMatrix( int rows, int cols, RealDistribution distribution ) {
-        double[][] matrix = new double[rows][cols];
-        double[] samples = distribution.sample( rows * cols );
-        for ( int i = 0; i < rows; i++ ) {
-            for ( int j = 0; j < cols; j++ ) {
-                matrix[i][j] = samples[i + rows * j];
-            }
-        }
-        return matrix;
     }
 }

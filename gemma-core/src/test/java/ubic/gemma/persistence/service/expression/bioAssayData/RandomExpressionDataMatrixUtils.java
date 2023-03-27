@@ -95,29 +95,35 @@ public class RandomExpressionDataMatrixUtils {
         return new ExpressionDataDoubleMatrix( ee, qt, matrix );
     }
 
-    private static double[][] randomExpressionMatrix( int rows, int cols, RealDistribution distribution ) {
+    /**
+     * Generate a random raw expression matrix following the given continuous distribution.
+     */
+    public static double[][] randomExpressionMatrix( int numProbes, int numSamples, RealDistribution distribution ) {
         if ( seed != null ) {
             distribution.reseedRandomGenerator( seed );
         }
-        double[][] matrix = new double[rows][cols];
-        double[] samples = distribution.sample( rows * cols );
-        for ( int i = 0; i < rows; i++ ) {
-            for ( int j = 0; j < cols; j++ ) {
-                matrix[i][j] = samples[i + rows * j];
+        double[][] matrix = new double[numProbes][numSamples];
+        double[] samples = distribution.sample( numProbes * numSamples );
+        for ( int i = 0; i < numProbes; i++ ) {
+            for ( int j = 0; j < numSamples; j++ ) {
+                matrix[i][j] = samples[i + numProbes * j];
             }
         }
         return matrix;
     }
 
-    private static double[][] randomExpressionMatrix( int rows, int cols, IntegerDistribution distribution ) {
+    /**
+     * Generate a random raw expression matrix following the given discrete distribution.
+     */
+    public static double[][] randomExpressionMatrix( int numProbes, int numSamples, IntegerDistribution distribution ) {
         if ( seed != null ) {
             distribution.reseedRandomGenerator( seed );
         }
-        double[][] matrix = new double[rows][cols];
-        int[] samples = distribution.sample( rows * cols );
-        for ( int i = 0; i < rows; i++ ) {
-            for ( int j = 0; j < cols; j++ ) {
-                matrix[i][j] = samples[i + rows * j];
+        double[][] matrix = new double[numProbes][numSamples];
+        int[] samples = distribution.sample( numProbes * numSamples );
+        for ( int i = 0; i < numProbes; i++ ) {
+            for ( int j = 0; j < numSamples; j++ ) {
+                matrix[i][j] = samples[i + numProbes * j];
             }
         }
         return matrix;
