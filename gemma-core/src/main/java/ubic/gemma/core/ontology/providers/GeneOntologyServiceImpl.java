@@ -86,7 +86,7 @@ public class GeneOntologyServiceImpl extends AbstractOntologyMemoryBackedService
 
     @Override
     protected String getOntologyName() {
-        return "go";
+        return "geneOntology";
     }
 
     @Override
