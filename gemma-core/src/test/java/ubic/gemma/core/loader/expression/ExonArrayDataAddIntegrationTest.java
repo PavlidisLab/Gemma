@@ -19,6 +19,7 @@
 
 package ubic.gemma.core.loader.expression;
 
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.loader.expression.geo.AbstractGeoServiceTest;
@@ -32,6 +33,8 @@ import ubic.gemma.persistence.util.Settings;
 import java.io.File;
 import java.util.Collection;
 import java.util.List;
+
+import static org.junit.Assume.assumeTrue;
 
 /**
  * Uses the Affy Power Tools, and full-sized data sets.
@@ -49,23 +52,14 @@ public class ExonArrayDataAddIntegrationTest extends AbstractGeoServiceTest {
     @Autowired
     private ExpressionExperimentService experimentService;
 
-    private boolean hasApt = false;
-
-    @org.junit.Before
-    public void startup() {
+    @BeforeClass
+    public static void checkAptIsAvailable() {
         String apt = Settings.getString( "affy.power.tools.exec" );
-        if ( new File( apt ).canExecute() ) {
-            hasApt = true;
-        }
+        assumeTrue( "Test skipped due to lack of Affy Power Tools executable", new File( apt ).canExecute() );
     }
 
     @Test
     public void testAddAffyExonArrayDataExpressionExperiment() throws Exception {
-
-        if ( !hasApt ) {
-            log.warn( "Test skipped due to lack of Affy Power Tools executable" );
-            return;
-        }
         //    mouse  GPL6096 gene level, no switch needed
         ExpressionExperiment ee;
         try {
@@ -86,10 +80,6 @@ public class ExonArrayDataAddIntegrationTest extends AbstractGeoServiceTest {
 
     @Test
     public void testAddAffyExonHuman() {
-        if ( !hasApt ) {
-            log.warn( "Test skipped due to lack of Affy Power Tools executable" );
-            return;
-        }
         ExpressionExperiment ee; // GSE22498,  GPL5188 - exon level, so will be switched to GPL5175 (human)
         try {
             geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGenerator() );
@@ -104,10 +94,6 @@ public class ExonArrayDataAddIntegrationTest extends AbstractGeoServiceTest {
 
     @Test
     public void testAddAffyExonRat() {
-        if ( !hasApt ) {
-            log.warn( "Test skipped due to lack of Affy Power Tools executable" );
-            return;
-        }
         ExpressionExperiment ee; // GSE33597 -  GPL6543, gene level so shouldn't switch (though GEO version of platform needs to be filtered)
         try {
             geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGenerator() );
