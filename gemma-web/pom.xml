@@ -92,6 +92,7 @@
 					<webDriverCapabilities>
 						<capability>
 							<name>phantomjs.binary.path</name>
+							<!--suppress MavenModelInspection -->
 							<value>${phantomjs.binary}</value>
 						</capability>
 					</webDriverCapabilities>
