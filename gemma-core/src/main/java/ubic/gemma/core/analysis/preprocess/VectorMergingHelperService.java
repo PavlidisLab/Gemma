@@ -27,7 +27,8 @@ public interface VectorMergingHelperService {
     /**
      * @param expExp     the experiment
      * @param newVectors the new vectors
+     * @return
      */
-    void persist( ExpressionExperiment expExp, Collection<RawExpressionDataVector> newVectors );
+    ExpressionExperiment persist( ExpressionExperiment expExp, Collection<RawExpressionDataVector> newVectors );
 
 }

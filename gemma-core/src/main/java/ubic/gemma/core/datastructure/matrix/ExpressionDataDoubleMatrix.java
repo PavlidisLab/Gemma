@@ -36,6 +36,7 @@ import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
+import javax.annotation.Nullable;
 import java.text.NumberFormat;
 import java.util.*;
 
@@ -102,13 +103,16 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
     }
 
     /**
-     * Create a data matrix like sourceMatrix but use the values from dataMatrix.
+     * Create a data matrix like sourceMatrix but use the values and quantitations from dataMatrix.
+     * <p>
+     * Note: The rows can be different from the original matrix, but the columns must be the same.
      *
-     * @param sourceMatrix source matrix
-     * @param dataMatrix the rows can be different than the original matrix, but the columns must be the same.
+     * @param sourceMatrix      source matrix from which most of the meta-data will be imported
+     * @param dataMatrix        data matrix to use
+     * @param quantitationTypes quantitation types used by the dataMatrix
      */
     public ExpressionDataDoubleMatrix( ExpressionDataDoubleMatrix sourceMatrix,
-            DoubleMatrix<CompositeSequence, BioMaterial> dataMatrix ) {
+            DoubleMatrix<CompositeSequence, BioMaterial> dataMatrix, Collection<QuantitationType> quantitationTypes ) {
         this.init();
         this.expressionExperiment = sourceMatrix.expressionExperiment;
         this.bioAssayDimensions = sourceMatrix.bioAssayDimensions;
@@ -116,7 +120,7 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
         this.columnBioAssayMapByInteger = sourceMatrix.columnBioAssayMapByInteger;
         this.columnBioMaterialMap = sourceMatrix.columnBioMaterialMap;
         this.columnBioMaterialMapByInteger = sourceMatrix.columnBioMaterialMapByInteger;
-        this.quantitationTypes = sourceMatrix.quantitationTypes;
+        this.quantitationTypes = quantitationTypes;
         this.matrix = dataMatrix;
 
         for ( int i = 0; i < dataMatrix.rows(); i++ ) {
@@ -425,7 +429,7 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
 
     /**
      * Same as toProcessedDataVectors but uses RawExpressionDataVector
-     * 
+     *
      * @return Convert this to a collection of vectors.
      */
     public Collection<RawExpressionDataVector> toRawDataVectors() {
@@ -451,7 +455,7 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
 
             result.add( v );
         }
-        
+
         assert result.size() == this.rows();
 
         return result;

@@ -24,14 +24,16 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.springframework.core.io.ClassPathResource;
+import ubic.basecode.ontology.model.OntologyIndividual;
+import ubic.basecode.ontology.model.OntologyResource;
 import ubic.basecode.ontology.model.OntologyTerm;
+import ubic.basecode.ontology.search.OntologySearchException;
 
 import java.io.InputStream;
 import java.util.Collection;
 import java.util.zip.GZIPInputStream;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.*;
 
 /**
  * @author Paul
@@ -50,12 +52,42 @@ public class GeneOntologyServiceTest {
          */
         InputStream is = new GZIPInputStream(
                 new ClassPathResource( "/data/loader/ontology/molecular-function.test.owl.gz" ).getInputStream() );
-        GeneOntologyServiceTest.gos.loadTermsInNameSpace( is );
+        // we must force indexing to get consistent test results
+        GeneOntologyServiceTest.gos.loadTermsInNameSpace( is, true );
     }
 
     @AfterClass
     public static void tearDown() {
-        GeneOntologyServiceTest.gos.shutDown();
+        GeneOntologyServiceTest.gos.clearCaches();
+    }
+
+    @Test
+    public void testFindTerm() throws OntologySearchException {
+        Collection<OntologyTerm> matches = gos.findTerm( "toxin" );
+        assertEquals( 4, matches.size() );
+    }
+
+    @Test
+    public void testFindTermWithMultipleTerms() throws OntologySearchException {
+        Collection<OntologyTerm> matches = gos.findTerm( "toxin transporter activity" );
+        assertEquals( 1, matches.size() );
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testFindTermWithEmptyQuery() throws OntologySearchException {
+        gos.findTerm( " " );
+    }
+
+    @Test
+    public void testFindIndividuals() throws OntologySearchException {
+        Collection<OntologyIndividual> matches = gos.findIndividuals( "protein tag" );
+        assertEquals( 1, matches.size() );
+    }
+
+    @Test
+    public void testFindResources() throws OntologySearchException {
+        Collection<OntologyResource> matches = gos.findResources( "electron carrier" );
+        assertEquals( 4, matches.size() );
     }
 
     @Test
@@ -64,9 +96,9 @@ public class GeneOntologyServiceTest {
 
         OntologyTerm termForId = GeneOntologyServiceTest.gos.getTermForId( id );
         assertNotNull( termForId );
-        Collection<OntologyTerm> terms = GeneOntologyServiceTest.gos.getAllParents( termForId );
+        Collection<OntologyTerm> terms = termForId.getParents( false, false );
 
-        assertEquals( 9, terms.size() );
+        assertEquals( 10, terms.size() );
     }
 
     @Test
@@ -74,9 +106,10 @@ public class GeneOntologyServiceTest {
         String id = "GO:0000006";
         OntologyTerm termForId = GeneOntologyServiceTest.gos.getTermForId( id );
         assertNotNull( termForId );
-        Collection<OntologyTerm> terms = GeneOntologyServiceTest.gos.getAllParents( termForId );
+        Collection<OntologyTerm> terms = termForId.getParents( false, false );
 
-        assertEquals( 11, terms.size() );
+        assertFalse( terms.contains( termForId ) );
+        assertEquals( 12, terms.size() );
     }
 
     @Test
@@ -93,7 +126,7 @@ public class GeneOntologyServiceTest {
         String id = "GO:0016791";
         OntologyTerm termForId = GeneOntologyServiceTest.gos.getTermForId( id );
         assertNotNull( termForId );
-        Collection<OntologyTerm> terms = GeneOntologyServiceTest.gos.getAllChildren( termForId );
+        Collection<OntologyTerm> terms = termForId.getChildren( false, false );
 
         assertEquals( 136, terms.size() );
     }
@@ -113,7 +146,7 @@ public class GeneOntologyServiceTest {
         String id = "GO:0016791";
         OntologyTerm termForId = GeneOntologyServiceTest.gos.getTermForId( id );
         assertNotNull( termForId );
-        Collection<OntologyTerm> terms = GeneOntologyServiceTest.gos.getChildren( termForId );
+        Collection<OntologyTerm> terms = termForId.getChildren( true, false );
 
         assertEquals( 65, terms.size() );
     }
@@ -131,7 +164,7 @@ public class GeneOntologyServiceTest {
         String id = "GO:0023025";
         OntologyTerm termForId = GeneOntologyServiceTest.gos.getTermForId( id );
         assertNotNull( termForId );
-        Collection<OntologyTerm> terms = GeneOntologyServiceTest.gos.getAllChildren( termForId, true );
+        Collection<OntologyTerm> terms = termForId.getChildren( false, true );
 
         // has a part.
         assertEquals( 1, terms.size() );
@@ -142,7 +175,7 @@ public class GeneOntologyServiceTest {
         String id = "GO:0000014";
         OntologyTerm termForId = GeneOntologyServiceTest.gos.getTermForId( id );
         assertNotNull( termForId );
-        Collection<OntologyTerm> terms = GeneOntologyServiceTest.gos.getParents( termForId );
+        Collection<OntologyTerm> terms = termForId.getParents( true, false );
 
         for ( OntologyTerm term : terms ) {
             GeneOntologyServiceTest.log.info( term );
@@ -155,13 +188,13 @@ public class GeneOntologyServiceTest {
         String id = "GO:0000332";
         OntologyTerm termForId = GeneOntologyServiceTest.gos.getTermForId( id );
         assertNotNull( termForId );
-        Collection<OntologyTerm> terms = GeneOntologyServiceTest.gos.getAllParents( termForId, true );
+        Collection<OntologyTerm> terms = termForId.getParents( false, true );
 
         for ( OntologyTerm term : terms ) {
             GeneOntologyServiceTest.log.info( term );
         }
         // is a subclass and partof.
-        assertEquals( 12, terms.size() );
+        assertEquals( 7, terms.size() );
     }
 
     @Test

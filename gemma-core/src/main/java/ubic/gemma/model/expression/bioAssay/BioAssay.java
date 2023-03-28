@@ -221,6 +221,11 @@ public class BioAssay extends AbstractDescribable implements gemma.gsec.model.Se
             return new BioAssay();
         }
 
+        public static BioAssay newInstance( String name ) {
+            BioAssay ba = new BioAssay();
+            ba.setName( name );
+            return ba;
+        }
     }
 
 }

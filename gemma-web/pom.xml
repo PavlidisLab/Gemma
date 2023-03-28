@@ -3,7 +3,7 @@
 	<parent>
 		<artifactId>gemma</artifactId>
 		<groupId>gemma</groupId>
-		<version>1.29.6</version>
+		<version>1.29.7</version>
 	</parent>
 	<modelVersion>4.0.0</modelVersion>
 	<artifactId>gemma-web</artifactId>
@@ -92,6 +92,7 @@
 					<webDriverCapabilities>
 						<capability>
 							<name>phantomjs.binary.path</name>
+							<!--suppress MavenModelInspection -->
 							<value>${phantomjs.binary}</value>
 						</capability>
 					</webDriverCapabilities>

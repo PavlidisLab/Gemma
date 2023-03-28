@@ -18,6 +18,8 @@ import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
+import javax.annotation.Nullable;
+
 /**
  * @author Paul
  */
@@ -37,10 +39,12 @@ public interface ExpressionExperimentBatchCorrectionService {
      * Run ComBat using default settings (parametric)
      *
      * @param mat the matrix
-     * @return batch corrected matrix
+     * @return batch corrected matrix, or null if there's no batching factor
      */
+    @Nullable
     ExpressionDataDoubleMatrix comBat( ExpressionDataDoubleMatrix mat );
 
+    @Nullable
     ExpressionDataDoubleMatrix comBat( ExpressionExperiment ee );
 
     /**
@@ -49,6 +53,7 @@ public interface ExpressionExperimentBatchCorrectionService {
      * @param ee the experiment to get the batch factor for
      * @return the batch factor of the experiment, or null, if experiment has no batch factor
      */
+    @Nullable
     ExperimentalFactor getBatchFactor( ExpressionExperiment ee );
 
 }

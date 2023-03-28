@@ -28,6 +28,7 @@ import ubic.basecode.util.FileTools;
 import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 import ubic.gemma.core.loader.expression.geo.service.GeoService;
 import ubic.gemma.core.loader.expression.simple.ExperimentalDesignImporter;
+import ubic.gemma.core.loader.util.AlreadyExistsInSystemException;
 import ubic.gemma.core.util.test.BaseSpringContextTest;
 import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
@@ -42,6 +43,7 @@ import java.io.InputStream;
 import java.util.Collection;
 
 import static org.junit.Assert.*;
+import static org.junit.Assume.assumeNoException;
 
 /**
  *
@@ -68,9 +70,7 @@ public class SplitExperimentTest extends BaseSpringContextTest {
     @Autowired
     private SecurityService securityService;
 
-    private ExpressionExperiment ee;
-
-    private ExpressionExperimentSet results;
+    private Collection<ExpressionExperiment> ees;
 
     @Test
     @Category(SlowTest.class)
@@ -81,9 +81,17 @@ public class SplitExperimentTest extends BaseSpringContextTest {
         geoService.setGeoDomainObjectGenerator(
                 new GeoDomainObjectGeneratorLocal( FileTools.resourceToPath( "/data/analysis/preprocess" ) ) );
 
-        @SuppressWarnings("unchecked")
-        Collection<ExpressionExperiment> ees = ( Collection<ExpressionExperiment> ) geoService.fetchAndLoad( geoId, false, false, false );
-        ee = ees.iterator().next();
+        try {
+            //noinspection unchecked
+            ees = ( Collection<ExpressionExperiment> ) geoService.fetchAndLoad( geoId, false, false, false );
+        } catch ( AlreadyExistsInSystemException e ) {
+            //noinspection unchecked
+            ees = ( Collection<ExpressionExperiment> ) e.getData();
+            assumeNoException( e );
+        }
+
+        ExpressionExperiment ee = ees.iterator().next();
+        assertNotNull( ee );
 
         ee = eeService.thaw( ee );
 
@@ -106,7 +114,7 @@ public class SplitExperimentTest extends BaseSpringContextTest {
 
         assertNotNull( splitOn );
 
-        results = splitService.split( ee, splitOn, true );
+        ExpressionExperimentSet results = splitService.split( ee, splitOn, true );
         assertEquals( splitOn.getFactorValues().size(), results.getExperiments().size() );
 
         for ( BioAssaySet b : results.getExperiments() ) {
@@ -134,9 +142,17 @@ public class SplitExperimentTest extends BaseSpringContextTest {
         geoService.setGeoDomainObjectGenerator(
                 new GeoDomainObjectGeneratorLocal( FileTools.resourceToPath( "/data/analysis/preprocess" ) ) );
 
-        @SuppressWarnings("unchecked")
-        Collection<ExpressionExperiment> ees = ( Collection<ExpressionExperiment> ) geoService.fetchAndLoad( geoId, false, false, false );
-        ee = ees.iterator().next();
+        try {
+            //noinspection unchecked
+            ees = ( Collection<ExpressionExperiment> ) geoService.fetchAndLoad( geoId, false, false, false );
+        } catch ( AlreadyExistsInSystemException e ) {
+            //noinspection unchecked
+            ees = ( ( Collection<ExpressionExperiment> ) e.getData() );
+            assumeNoException( e );
+        }
+
+        ExpressionExperiment ee = ees.iterator().next();
+        assertNotNull( ee );
 
         ee = eeService.thaw( ee );
 
@@ -159,20 +175,14 @@ public class SplitExperimentTest extends BaseSpringContextTest {
 
         assertNotNull( splitOn );
 
-        results = splitService.split( ee, splitOn, false );
+        ExpressionExperimentSet results = splitService.split( ee, splitOn, false );
         assertEquals( splitOn.getFactorValues().size(), results.getExperiments().size() );
     }
 
     @After
     public void teardown() throws Exception {
-        if ( ee != null ) {
-            eeService.remove( ee );
-        }
-        if ( results != null ) {
-            for ( BioAssaySet splitEE : results.getExperiments() ) {
-                eeService.remove( ( ExpressionExperiment ) splitEE );
-            }
+        if ( ees != null ) {
+            eeService.remove( ees );
         }
     }
-
 }

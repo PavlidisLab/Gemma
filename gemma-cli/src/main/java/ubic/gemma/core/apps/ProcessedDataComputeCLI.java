@@ -19,17 +19,20 @@
 package ubic.gemma.core.apps;
 
 import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
-import ubic.gemma.core.analysis.preprocess.PreprocessingException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 import ubic.gemma.core.analysis.preprocess.PreprocessorService;
 import ubic.gemma.core.analysis.preprocess.ProcessedExpressionDataVectorCreateHelperService;
+import ubic.gemma.core.analysis.preprocess.QuantitationMismatchPreprocessingException;
+import ubic.gemma.core.datastructure.matrix.SuspiciousValuesForQuantitationException;
 import ubic.gemma.core.util.AbstractCLI;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorServiceImpl;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+
+import java.util.stream.Collectors;
 
 /**
  * Prepare the "processed" expression data vectors, and can also do batch correction.
@@ -37,53 +40,49 @@ import ubic.gemma.persistence.service.expression.experiment.ExpressionExperiment
  * @author xwan, paul
  * @see    ProcessedExpressionDataVectorServiceImpl
  */
+@Component
 public class ProcessedDataComputeCLI extends ExpressionExperimentManipulatingCLI {
 
-    //   private boolean batchCorrect = false;
+    private static final String
+            UPDATE_DIAGNOSTICS_OPTION = "diagupdate",
+            UPDATE_RANKS_OPTION = "rankupdate",
+            IGNORE_QUANTITATION_MISMATCH_OPTION = "ignoreqm";
+
+    @Autowired
     private PreprocessorService preprocessorService;
+    @Autowired
     private ProcessedExpressionDataVectorCreateHelperService proccessedVectorService;
+    @Autowired
     private ExpressionExperimentService expressionExperimentService;
+
+    //   private boolean batchCorrect = false;
     private boolean updateRanks = false;
     private boolean updateDiagnostics = false;
+    private boolean ignoreQuantitationMismatch = false;
 
     @Override
     public GemmaCLI.CommandGroup getCommandGroup() {
         return GemmaCLI.CommandGroup.EXPERIMENT;
     }
 
-    @SuppressWarnings("static-access")
     @Override
     protected void buildOptions( Options options ) {
-
         super.buildOptions( options );
-
-        super.addForceOption( options );
-        this.addDateOption( options );
-
-        options.addOption( "diagupdate",
+        addForceOption( options );
+        addDateOption( options );
+        options.addOption( UPDATE_DIAGNOSTICS_OPTION, false,
                 "Only update the diagnostics without recomputing data (PCA, M-V, sample correlation, GEEQ; may be combined with other options)" );
-        options.addOption( "rankupdate", "Only update the expression intensity rank information (may be combined with other options)" );
-
+        options.addOption( UPDATE_RANKS_OPTION, false, "Only update the expression intensity rank information (may be combined with other options)" );
+        options.addOption( IGNORE_QUANTITATION_MISMATCH_OPTION, false, "Ignore mismatch between raw quantitations and that inferred from data" );
         //  options.addOption( outputFileOption );
     }
 
     @Override
     protected void processOptions( CommandLine commandLine ) {
         super.processOptions( commandLine );
-        preprocessorService = this.getBean( PreprocessorService.class );
-        expressionExperimentService = this.getBean( ExpressionExperimentService.class );
-        proccessedVectorService = this.getBean( ProcessedExpressionDataVectorCreateHelperService.class );
-        this.auditTrailService = this.getBean( AuditTrailService.class );
-        eeService = this.getBean( ExpressionExperimentService.class );
-
-        if ( commandLine.hasOption( "diagupdate" ) ) {
-            this.updateDiagnostics = true;
-        }
-
-        if ( commandLine.hasOption( "rankupdate" ) ) {
-
-            this.updateRanks = true;
-        }
+        this.updateDiagnostics = commandLine.hasOption( UPDATE_DIAGNOSTICS_OPTION );
+        this.updateRanks = commandLine.hasOption( UPDATE_RANKS_OPTION );
+        this.ignoreQuantitationMismatch = commandLine.hasOption( IGNORE_QUANTITATION_MISMATCH_OPTION );
     }
 
     @Override
@@ -130,11 +129,22 @@ public class ProcessedDataComputeCLI extends ExpressionExperimentManipulatingCLI
                 }
             } else {
                 // this does all of the steps including batch correction
-                this.preprocessorService.process( ee );
+                this.preprocessorService.process( ee, ignoreQuantitationMismatch );
             }
 
             // Note the auditing is done by the service.
             addSuccessObject( ee, "Successfully processed: " + ee );
+        } catch ( QuantitationMismatchPreprocessingException e ) {
+            if ( e.getCause() instanceof SuspiciousValuesForQuantitationException ) {
+                log.error( String.format( "The following issues were found in expression data of %s:\n\n - %s\n\nYou may ignore this by setting the -%s option.",
+                        ee, ( ( SuspiciousValuesForQuantitationException ) e.getCause() )
+                                .getLintResults().stream()
+                                .map( SuspiciousValuesForQuantitationException.SuspiciousValueResult::toString )
+                                .collect( Collectors.joining( "\n - " ) ), IGNORE_QUANTITATION_MISMATCH_OPTION ) );
+            } else {
+                log.error( e.getMessage() );
+            }
+            addErrorObject( ee, e.getMessage(), e );
         } catch ( Exception e ) {
             addErrorObject( ee, e.getMessage(), e );
         }

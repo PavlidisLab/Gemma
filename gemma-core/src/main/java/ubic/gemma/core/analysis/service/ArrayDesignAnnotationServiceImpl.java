@@ -334,7 +334,7 @@ public class ArrayDesignAnnotationServiceImpl implements ArrayDesignAnnotationSe
     @Override
     public void create( ArrayDesign inputAd, Boolean overWrite ) throws IOException {
 
-        if ( !goService.isReady() ) {
+        if ( !goService.isOntologyLoaded() ) {
             throw new IllegalStateException( "GO was not loaded" );
         }
 

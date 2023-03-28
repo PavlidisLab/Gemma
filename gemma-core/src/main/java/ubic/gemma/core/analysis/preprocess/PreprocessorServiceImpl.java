@@ -22,12 +22,15 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalyzerService;
 import ubic.gemma.core.analysis.preprocess.batcheffects.ExpressionExperimentBatchCorrectionService;
 import ubic.gemma.core.analysis.preprocess.svd.SVDServiceHelper;
 import ubic.gemma.core.analysis.report.ExpressionExperimentReportService;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
+import ubic.gemma.core.datastructure.matrix.InferredQuantitationMismatchException;
+import ubic.gemma.core.datastructure.matrix.QuantitationMismatchException;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.common.auditAndSecurity.eventType.BatchCorrectionEvent;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
@@ -108,97 +111,100 @@ public class PreprocessorServiceImpl implements PreprocessorService {
     private GeeqService geeqService;
 
     @Override
-    public ExpressionExperiment process( ExpressionExperiment ee ) throws PreprocessingException {
+    @Transactional
+    public void process( ExpressionExperiment ee ) throws PreprocessingException {
+        process( ee, true );
+    }
 
+    @Override
+    @Transactional
+    public void process( ExpressionExperiment ee, boolean ignoreQuantitationMismatch ) throws PreprocessingException {
         ee = expressionExperimentService.thaw( ee );
-
-        try {
-            this.removeInvalidatedData( ee );
-            this.processForMissingValues( ee );
-            processedExpressionDataVectorService.computeProcessedExpressionData( ee );
-            ee = this.processExceptForVectorCreate( ee, true ); // includes diagnostics and batch corr.
-            expressionExperimentReportService.recalculateExperimentBatchInfo( ee );
-            return ee;
-        } catch ( Exception e ) {
-            throw new PreprocessingException( e );
-        }
+        removeInvalidatedData( ee );
+        processForMissingValues( ee );
+        processVectorCreate( ee, ignoreQuantitationMismatch );
+        batchCorrect( ee );
     }
 
-    /*
-     * Only used for TwoChannelMissingValueCLI? Possibly redundant? FIXME
-     */
     @Override
-    public void process( ExpressionExperiment ee, boolean light ) throws PreprocessingException {
-        if ( light ) {
-            try {
-                // we dont do processForMissingValues missing values 
-                this.removeInvalidatedData( ee );
-                processedExpressionDataVectorService.computeProcessedExpressionData( ee );
-                processDiagnostics( ee );
-                expressionExperimentReportService.recalculateExperimentBatchInfo( ee );
-            } catch ( Exception e ) {
-                throw new PreprocessingException( e );
-            }
-        } else {
-            this.process( ee );
-        }
+    @Transactional
+    public void processLight( ExpressionExperiment ee ) throws PreprocessingException {
+        // we dont do processForMissingValues missing values
+        ee = expressionExperimentService.thaw( ee );
+        removeInvalidatedData( ee );
+        processVectorCreate( ee, true );
+        processDiagnostics( ee );
+        processBatchInfo( ee );
     }
 
-    /*
-     * public for situations where we don't need to recreate the processed data e.g. when the experimental design is
-     * updated
+    /**
+     * If possible, batch correct the processed data vectors. This entails repeating the other preprocessing steps. But
+     * it should only be run after the experimental design is set up, the batch information has been fetched, and (of
+     * course) the processed data are already available.
      */
-    @Override
-    public void batchCorrect( ExpressionExperiment ee, boolean force ) throws PreprocessingException {
+    private void batchCorrect( ExpressionExperiment ee ) throws PreprocessingException {
+        if ( !expressionExperimentBatchCorrectionService.checkCorrectability( ee, true ) ) {
+            log.warn( String.format( "%s cannot be batch-corrected: either already batch-corrected, no batch information, or invalid design.", ee ) );
+            return;
+        }
+
+        if ( expressionExperimentService.getArrayDesignsUsed( ee ).size() > 1 ) {
+            log.warn( String.format( "%s cannot be batch-corrected: can only batch-correct data for an experiment that uses one platform; you must switch/merge first.", ee ) );
+            return;
+        }
+
         String note = "ComBat batch correction";
-        String detail = null;
-
-        /*
-         * This leaves the raw data alone; it updates the processed data.
-         */
-
-        this.checkArrayDesign( ee );
-
-        ee = expressionExperimentService.thaw( ee ); // need to get at vectors
-
-        this.checkCorrectable( ee, force );
+        String detail;
 
         /*
          * If there are predicted outliers, but which we decide are okay, we just go ahead.
          */
-        if ( !force ) {
-            this.checkOutliers( ee );
-        } else {
-            note = "[Forced]" + note;
-            detail = "Batch correction skipped outlier check.";
-            PreprocessorServiceImpl.log.warn( detail );
-        }
+        note = "[Forced]" + note;
+        detail = "Batch correction skipped outlier check.";
+        PreprocessorServiceImpl.log.warn( detail );
 
+        Collection<ProcessedExpressionDataVector> vecs = this.getProcessedExpressionDataVectors( ee );
+
+        ExpressionDataDoubleMatrix correctedData = this.getCorrectedData( ee, vecs );
+
+        // Convert to vectors (persist QT)
+        processedExpressionDataVectorService
+                .createProcessedDataVectors( ee, correctedData.toProcessedDataVectors() );
+
+        String bConf = expressionExperimentService.getBatchConfound( ee );
+        if ( bConf != null ) {
+            String add = "Batch correction forced over a detected confound: " + bConf;
+            //noinspection ConstantConditions // That is simply false.
+            detail = ( detail == null ) ? add : detail + "\n" + add;
+        }
+        auditTrailService.addUpdateEvent( ee, BatchCorrectionEvent.class, note, detail );
+
+        removeInvalidatedData( ee );
+        processExceptForVectorCreate( ee );
+        processBatchInfo( ee );
+    }
+
+    @Override
+    @Transactional
+    public void processDiagnostics( ExpressionExperiment ee ) throws PreprocessingException {
+        this.processForSampleCorrelation( ee );
+        this.processForMeanVarianceRelation( ee );
+        this.processForPca( ee );
+        // FIXME: OPT_MODE_ALL is overkill, but none of the options currently address the exact need. No big deal.
+        geeqService.calculateScore( ee, GeeqService.ScoreMode.all );
+    }
+
+    private void processVectorCreate( ExpressionExperiment ee, boolean ignoreQuantitationMismatch ) throws PreprocessingException {
         try {
-
-            Collection<ProcessedExpressionDataVector> vecs = this.getProcessedExpressionDataVectors( ee );
-
-            ExpressionDataDoubleMatrix correctedData = this.getCorrectedData( ee, vecs );
-
-            // Convert to vectors (persist QT)
-            processedExpressionDataVectorService
-                    .createProcessedDataVectors( ee, correctedData.toProcessedDataVectors() );
-
-            String bConf = expressionExperimentService.getBatchConfound( ee );
-            if ( bConf != null && force ) {
-                String add = "Batch correction forced over a detected confound: " + bConf;
-                //noinspection ConstantConditions // That is simply false.
-                detail = ( detail == null ) ? add : detail + "\n" + add;
-            }
-            auditTrailService.addUpdateEvent( ee, BatchCorrectionEvent.class, note, detail );
-
-            this.removeInvalidatedData( ee );
-            this.processExceptForVectorCreate( ee, false ); // don't batch correct again!
-            expressionExperimentReportService.recalculateExperimentBatchInfo( ee );
-
-        } catch ( Exception e ) {
-            throw new PreprocessingException( e );
+            processedExpressionDataVectorService.computeProcessedExpressionData( ee, ignoreQuantitationMismatch );
+        } catch ( QuantitationMismatchException e ) {
+            // wrap it in a runtime exception, which will result in a rollback of the current transaction
+            throw new QuantitationMismatchPreprocessingException( ee, e );
         }
+    }
+
+    private void processBatchInfo( ExpressionExperiment ee ) {
+        expressionExperimentReportService.recalculateExperimentBatchInfo( ee );
     }
 
     /**
@@ -224,25 +230,9 @@ public class PreprocessorServiceImpl implements PreprocessorService {
     /**
      * Do all processing steps except making the vectors (so it uses the vectors that are there) including batch
      * correction, diagnostics, and refreshing of old analyses.
-     *
-     * @param  ee           the experiment
-     * @param  batchCorrect if true, attempt to do batch correction (should always be true really)
-     * @return the experiment
      */
-    private ExpressionExperiment processExceptForVectorCreate( ExpressionExperiment ee, Boolean batchCorrect ) {
-        // refresh into context.
-        ee = expressionExperimentService.thawLite( ee );
-
+    private void processExceptForVectorCreate( ExpressionExperiment ee ) {
         assert ee.getNumberOfDataVectors() != null;
-
-        // batch correct
-        if ( batchCorrect ) {
-            try {
-                this.batchCorrect( ee, true );
-            } catch ( PreprocessingException e ) {
-                log.warn( "Batch correction skipped, proceeding with experiment preprocessing...", e );
-            }
-        }
 
         /*
          * Redo any old diff ex analyses
@@ -254,12 +244,7 @@ public class PreprocessorServiceImpl implements PreprocessorService {
 
             PreprocessorServiceImpl.log.info( "Will attempt to redo " + oldAnalyses.size() + " analyses for " + ee );
             for ( DifferentialExpressionAnalysis copyMe : oldAnalyses ) {
-                try {
-                    this.analyzerService.redoAnalysis( ee, copyMe, true );
-                } catch ( Exception e ) {
-                    PreprocessorServiceImpl.log
-                            .error( "Could not redo analysis: " + " " + copyMe + ": " + e.getMessage(), e );
-                }
+                this.analyzerService.redoAnalysis( ee, copyMe, true );
             }
         }
 
@@ -267,36 +252,20 @@ public class PreprocessorServiceImpl implements PreprocessorService {
 
         expressionExperimentService.update( ee );
         assert ee.getNumberOfDataVectors() != null;
-        return ee;
-    }
-
-    /**
-     */
-    @Override
-    public void processDiagnostics( ExpressionExperiment ee ) {
-        this.processForSampleCorrelation( ee );
-        this.processForMeanVarianceRelation( ee );
-        this.processForPca( ee );
-        geeqService.calculateScore( ee.getId(), GeeqService.OPT_MODE_ALL );
-        // FIXME OPT_MODE_ALL is overkill, but none of the options currently address the exact need. No big deal.
     }
 
     /**
      * Create the scatter plot to evaluate heteroscedasticity.
      */
     private void processForMeanVarianceRelation( ExpressionExperiment ee ) {
-        try {
-            meanVarianceService.create( ee, true );
-        } catch ( Exception e ) {
-            PreprocessorServiceImpl.log.error( "Could not compute mean-variance relation: " + e.getMessage(), e );
-        }
+        meanVarianceService.create( ee, true );
     }
 
     private void processForMissingValues( ExpressionExperiment ee ) {
         Collection<ArrayDesign> arrayDesignsUsed = expressionExperimentService.getArrayDesignsUsed( ee );
         if ( arrayDesignsUsed.size() > 1 ) {
-            throw new UnsupportedOperationException( "Skipping postprocessing because experiment uses "
-                    + "multiple platform types. Please check valid entry and run postprocessing separately." );
+            log.warn( "Skipping postprocessing because experiment uses multiple platform types. Please check valid entry and run postprocessing separately." );
+            return;
         }
 
         ArrayDesign arrayDesignUsed = arrayDesignsUsed.iterator().next();
@@ -305,29 +274,20 @@ public class PreprocessorServiceImpl implements PreprocessorService {
         if ( tt == TechnologyType.TWOCOLOR || tt == TechnologyType.DUALMODE ) {
             PreprocessorServiceImpl.log
                     .info( ee + " uses a two-color array design, processing for missing values ..." );
-            ee = expressionExperimentService.thawLite( ee );
             twoChannelMissingValueService.computeMissingValues( ee );
         }
 
     }
 
     private void processForPca( ExpressionExperiment ee ) {
-        try {
-            svdService.svd( ee );
-        } catch ( Exception e ) {
-            PreprocessorServiceImpl.log.error( "SVD could not be performed: " + e.getMessage(), e );
-        }
+        svdService.svd( ee );
     }
 
     /**
      * Create the heatmaps used to judge similarity among samples.
      */
     private void processForSampleCorrelation( ExpressionExperiment ee ) {
-        try {
-            sampleCoexpressionAnalysisService.compute( ee );
-        } catch ( Exception e ) {
-            PreprocessorServiceImpl.log.error( "SampleCorrelation could not be computed: " + e.getMessage(), e );
-        }
+        sampleCoexpressionAnalysisService.compute( ee );
     }
 
     private void removeInvalidatedData( ExpressionExperiment expExp ) {
@@ -360,9 +320,12 @@ public class PreprocessorServiceImpl implements PreprocessorService {
          * FIXME: this produces two plots that can be used as diagnostics, we could link them into this.
          */
 
-        if ( correctedData == null || correctedData.rows() != vecs.size() ) {
-            throw new PreprocessingException( ee.getShortName()
-                    + " could not be batch-corrected (matrix returned by ComBat had wrong number of rows)" );
+        if ( correctedData == null ) {
+            throw new PreprocessingException( ee, "could not be batch-corrected: ComBat did not found a suitable batch factor" );
+        }
+
+        if ( correctedData.rows() != vecs.size() ) {
+            throw new PreprocessingException( ee, "could not be batch-corrected: matrix returned by ComBat had wrong number of rows" );
         }
 
         this.checkQuantitationType( correctedData );
@@ -377,36 +340,16 @@ public class PreprocessorServiceImpl implements PreprocessorService {
     private Collection<ProcessedExpressionDataVector> getProcessedExpressionDataVectors( ExpressionExperiment ee ) {
         Collection<ProcessedExpressionDataVector> vecs = processedExpressionDataVectorService
                 .getProcessedDataVectors( ee );
-
-        if ( vecs == null || vecs.isEmpty() ) {
-            vecs = this.processedExpressionDataVectorService.computeProcessedExpressionData( ee );
+        if ( vecs.isEmpty() ) {
+            log.info( String.format( "No processed vectors for %s, they will be computed from raw data...", ee ) );
+            return this.processedExpressionDataVectorService.computeProcessedExpressionData( ee );
         }
-
-        assert vecs != null;
-
         processedExpressionDataVectorService.thaw( vecs );
         return vecs;
     }
 
-    private void checkCorrectable( ExpressionExperiment ee, boolean force ) throws PreprocessingException {
-        boolean correctable = expressionExperimentBatchCorrectionService.checkCorrectability( ee, force );
-
-        if ( !correctable ) {
-            // throwing exception kind of annoying but not a big deal.
-            throw new PreprocessingException( ee.getShortName()
-                    + " could not be batch-corrected (either already batch-corrected, no batch information, or invalid design)" );
-        }
-    }
-
-    private void checkArrayDesign( ExpressionExperiment ee ) throws PreprocessingException {
-        Collection<ArrayDesign> ads = expressionExperimentService.getArrayDesignsUsed( ee );
-        if ( ads.size() > 1 ) {
-            throw new PreprocessingException( "Can only batch-correct data for an experiment that uses one platform; "
-                    + "you must switch/merge first." );
-        }
-    }
-
-    private void checkOutliers( ExpressionExperiment ee ) throws PreprocessingException {
+    @SuppressWarnings("unused")
+    private void checkOutliers( ExpressionExperiment ee ) {
         Collection<OutlierDetails> outliers = outlierDetectionService.identifyOutliersByMedianCorrelation( ee );
         if ( !outliers.isEmpty() ) {
             Collection<OutlierDetails> knownOutliers = this.getAlreadyKnownOutliers( ee );
@@ -427,9 +370,9 @@ public class PreprocessorServiceImpl implements PreprocessorService {
                     newOutliersString.append( od.getBioAssay().toString() ).append( newline );
                 }
 
-                throw new PreprocessingException( ee.getShortName()
-                        + " could not be batch-corrected because new outliers were identified. Please remove the outliers and try again."
-                        + newline + " Newly detected outliers: " + newline + newOutliersString );
+                throw new PreprocessingException( ee,
+                        String.format( "Could not be batch-corrected because new outliers were identified. Please remove the outliers and try again.%s Newly detected outliers: %s%s",
+                                newline, newline, newOutliersString ) );
             }
         }
     }

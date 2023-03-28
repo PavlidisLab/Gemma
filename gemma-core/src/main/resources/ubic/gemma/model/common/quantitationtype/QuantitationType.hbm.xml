@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
- 
+
 <!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
     "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
 
@@ -49,26 +49,25 @@
            </type>
        </property>
        <property name="isPreferred" type="java.lang.Boolean">
-         <column name="IS_PREFERRED" not-null="false" unique="false" sql-type="TINYINT"/>
+         <column name="IS_PREFERRED" not-null="true" unique="false" sql-type="TINYINT"/>
       </property>
       <property name="isNormalized" type="java.lang.Boolean">
-         <column name="IS_NORMALIZED" not-null="false" unique="false" sql-type="TINYINT"/>
+         <column name="IS_NORMALIZED" not-null="true" unique="false" sql-type="TINYINT"/>
       </property>
       <property name="isBackgroundSubtracted" type="java.lang.Boolean">
-         <column name="IS_BACKGROUND_SUBTRACTED" not-null="false" unique="false" sql-type="TINYINT"/>
+         <column name="IS_BACKGROUND_SUBTRACTED" not-null="true" unique="false" sql-type="TINYINT"/>
       </property>
       <property name="isRatio" type="java.lang.Boolean">
-         <column name="IS_RATIO" not-null="false" unique="false" sql-type="TINYINT"/>
+         <column name="IS_RATIO" not-null="true" unique="false" sql-type="TINYINT"/>
       </property>
       <property name="isMaskedPreferred" type="java.lang.Boolean">
          <column name="IS_MASKED_PREFERRED" not-null="true" unique="false" sql-type="TINYINT"/>
       </property>
       <property name="isBatchCorrected" type="java.lang.Boolean">
-         <column name="IS_BATCH_CORRECTED" not-null="false" unique="false" sql-type="TINYINT"/>
+         <column name="IS_BATCH_CORRECTED" not-null="true" unique="false" sql-type="TINYINT"/>
       </property>
        <property name="isRecomputedFromRawData" type="java.lang.Boolean">
-         <column name="IS_RECOMPUTED_FROM_RAW_DATA" not-null="false" unique="false" sql-type="TINYINT"/>
+         <column name="IS_RECOMPUTED_FROM_RAW_DATA" not-null="true" unique="false" sql-type="TINYINT"/>
       </property>
-       
    </class>
 </hibernate-mapping>

@@ -29,8 +29,6 @@ import org.hibernate.Hibernate;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.cache.Cache;
-import org.springframework.cache.CacheManager;
 import org.springframework.core.convert.ConverterNotFoundException;
 import org.springframework.core.convert.support.ConfigurableConversionService;
 import org.springframework.core.convert.support.GenericConversionService;
@@ -73,7 +71,6 @@ import ubic.gemma.persistence.service.expression.experiment.ExpressionExperiment
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSetService;
 import ubic.gemma.persistence.service.genome.biosequence.BioSequenceService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
-import ubic.gemma.persistence.util.CacheUtils;
 import ubic.gemma.persistence.util.EntityUtils;
 import ubic.gemma.persistence.util.Settings;
 
@@ -139,13 +136,7 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
 
     private static final String NCBI_GENE = "ncbi_gene";
 
-    private static final String ONTOLOGY_CHILDREN_CACHE_NAME = "OntologyChildrenCache";
-
     private final Map<String, Taxon> nameToTaxonMap = new LinkedHashMap<>();
-
-    @Autowired
-    private CacheManager cacheManager;
-    private Cache childTermCache;
 
     /* sources */
     @Autowired
@@ -311,7 +302,6 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
     public void afterPropertiesSet() throws Exception {
         initializeSupportedResultTypes();
         initializeResultObjectConversionService();
-        this.childTermCache = CacheUtils.getCache( cacheManager, SearchServiceImpl.ONTOLOGY_CHILDREN_CACHE_NAME );
         this.initializeNameToTaxonMap();
     }
 
@@ -1446,7 +1436,7 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
     private void getCharacteristicsAnnotatedToChildren( OntologyTerm term,
             Collection<SearchResult<ExpressionExperiment>> results, Collection<OntologyTerm> seenTerms, @Nullable Taxon t, int limit ) {
 
-        Collection<OntologyTerm> children = this.getDirectChildTerms( term );
+        Collection<OntologyTerm> children = term.getChildren( false );
         if ( children.isEmpty() ) {
             return;
         }
@@ -1468,45 +1458,6 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
         }
 
         findExperimentsByUris( uris, results, t, limit, uri2value );
-        if ( limit > 0 && results.size() >= limit ) {
-            return;
-        }
-
-        for ( OntologyTerm child : children ) { // recurse
-            this.getCharacteristicsAnnotatedToChildren( child, results, seenTerms, t, limit );
-        }
-    }
-
-    /**
-     * Returns ontology terms one step down in the DAG
-     *
-     * @param term starting point
-     */
-    @SuppressWarnings("unchecked")
-    private Collection<OntologyTerm> getDirectChildTerms( OntologyTerm term ) {
-        String uri = term.getUri();
-
-        Collection<OntologyTerm> children = null;
-        if ( StringUtils.isBlank( uri ) ) {
-            // shouldn't happen, but just in case
-            SearchServiceImpl.log.warn( "Blank uri for " + term );
-            return new HashSet<>();
-        }
-
-        Cache.ValueWrapper cachedChildren = this.childTermCache.get( uri );
-        if ( cachedChildren == null ) {
-            try {
-                children = term.getChildren( true );
-                childTermCache.put( uri, children );
-            } catch ( com.hp.hpl.jena.ontology.ConversionException ce ) {
-                SearchServiceImpl.log.warn( "getting children for term: " + term
-                        + " caused com.hp.hpl.jena.ontology.ConversionException. " + ce.getMessage() );
-            }
-        } else {
-            children = ( Collection<OntologyTerm> ) cachedChildren.get();
-        }
-
-        return children;
     }
 
     /**

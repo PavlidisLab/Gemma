@@ -20,7 +20,6 @@ package ubic.gemma.core.analysis.expression.diff;
 
 import cern.colt.matrix.DoubleMatrix1D;
 import cern.colt.matrix.impl.DenseDoubleMatrix1D;
-import cern.colt.matrix.impl.DenseDoubleMatrix2D;
 import org.apache.commons.collections4.Transformer;
 import org.apache.commons.collections4.TransformerUtils;
 import org.apache.commons.lang3.ArrayUtils;
@@ -38,7 +37,6 @@ import ubic.basecode.dataStructure.matrix.ObjectMatrix;
 import ubic.basecode.math.DescriptiveWithMissing;
 import ubic.basecode.math.MathUtil;
 import ubic.basecode.math.linearmodels.*;
-import ubic.gemma.core.analysis.service.NoProcessedExpressionDataVectorsException;
 import ubic.gemma.core.analysis.util.ExperimentalDesignUtils;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrixUtil;
@@ -319,12 +317,10 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
         /*
          * Start by setting it up like the full experiment.
          */
-        ExpressionDataDoubleMatrix dmatrix = null;
-        try {
-            dmatrix = expressionDataMatrixService
-                    .getProcessedExpressionDataMatrix( subset.getSourceExperiment() );
-        } catch ( NoProcessedExpressionDataVectorsException e ) {
-            throw new RuntimeException( e );
+        ExpressionDataDoubleMatrix dmatrix = expressionDataMatrixService
+                .getProcessedExpressionDataMatrix( subset.getSourceExperiment() );
+        if ( dmatrix == null ) {
+            throw new RuntimeException( String.format( "There are no processed EVs for %s.", subset.getSourceExperiment() ) );
         }
 
         ExperimentalFactor ef = config.getSubsetFactor();
@@ -384,12 +380,10 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
     public Collection<DifferentialExpressionAnalysis> run( ExpressionExperiment expressionExperiment,
             DifferentialExpressionAnalysisConfig config ) {
 
-        ExpressionDataDoubleMatrix dmatrix = null;
-        try {
-            dmatrix = expressionDataMatrixService
-                    .getProcessedExpressionDataMatrix( expressionExperiment );
-        } catch ( NoProcessedExpressionDataVectorsException e ) {
-            throw new RuntimeException( e );
+        ExpressionDataDoubleMatrix dmatrix = expressionDataMatrixService
+                .getProcessedExpressionDataMatrix( expressionExperiment );
+        if ( dmatrix == null ) {
+            throw new RuntimeException( String.format( "There are no processed EVs for %s.", expressionExperiment ) );
         }
 
         /*
@@ -712,7 +706,7 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
         /*
          * FIXME: remove columns that are marked as outliers, this will make some steps cleaner
          */
-        expressionData = ExpressionDataDoubleMatrixUtil.filterAndLog2Transform( quantitationType, expressionData );
+        expressionData = ExpressionDataDoubleMatrixUtil.filterAndLog2Transform( expressionData );
         DoubleMatrix<CompositeSequence, BioMaterial> bareFilteredDataMatrix = expressionData.getMatrix();
 
         DoubleMatrix1D librarySizes = getLibrarySizes( config, expressionData );

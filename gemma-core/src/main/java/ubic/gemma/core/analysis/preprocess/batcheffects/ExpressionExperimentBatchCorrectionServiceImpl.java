@@ -237,17 +237,14 @@ public class ExpressionExperimentBatchCorrectionServiceImpl implements Expressio
             MatrixStats.unLogTransform( correctedDataMatrix );
         }
 
-        ExpressionDataDoubleMatrix correctedExpressionDataMatrix = new ExpressionDataDoubleMatrix( originalDataMatrix,
-                correctedDataMatrix );
-
-        assert correctedExpressionDataMatrix.getQuantitationTypes().size() == 1;
         /*
          * It is easier if we make a new quantitationtype.
          */
-        QuantitationType oldQt = correctedExpressionDataMatrix.getQuantitationTypes().iterator().next();
+        QuantitationType oldQt = originalDataMatrix.getQuantitationTypes().iterator().next();
         QuantitationType newQt = this.makeNewQuantitationType( oldQt );
-        correctedExpressionDataMatrix.getQuantitationTypes().clear();
-        correctedExpressionDataMatrix.getQuantitationTypes().add( newQt );
+        ExpressionDataDoubleMatrix correctedExpressionDataMatrix = new ExpressionDataDoubleMatrix( originalDataMatrix,
+                correctedDataMatrix, Collections.singleton( newQt ) );
+        assert correctedExpressionDataMatrix.getQuantitationTypes().size() == 1;
 
         // Sanity check...
         for ( int i = 0; i < correctedExpressionDataMatrix.columns(); i++ ) {

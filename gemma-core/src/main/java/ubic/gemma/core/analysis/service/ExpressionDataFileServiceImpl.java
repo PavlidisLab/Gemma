@@ -56,6 +56,7 @@ import ubic.gemma.persistence.service.expression.experiment.ExpressionExperiment
 import ubic.gemma.persistence.util.DifferentialExpressionAnalysisResultComparator;
 import ubic.gemma.persistence.util.EntityUtils;
 
+import javax.annotation.Nullable;
 import java.io.*;
 import java.util.*;
 import java.util.Map.Entry;
@@ -746,6 +747,9 @@ public class ExpressionDataFileServiceImpl extends AbstractTsvFileService<Expres
             matrix = expressionDataMatrixService.getFilteredMatrix( ee, filterConfig );
         } else {
             matrix = expressionDataMatrixService.getProcessedExpressionDataMatrix( ee );
+        }
+        if ( matrix == null ) {
+            throw new RuntimeException( String.format( "%s has no processed expression vectors.", ee ) );
         }
         return matrix;
     }

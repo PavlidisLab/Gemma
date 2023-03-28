@@ -82,7 +82,7 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
         Map<String, Collection<String>> batchIdToHeaders;
         try {
             batchIdToHeaders = this
-                    .convertHeadersToBatches( headers.values() );
+                    .convertHeadersToBatches( ee, headers.values() );
         } catch ( FASTQHeadersPresentButNotUsableException e ) {
             this.auditTrailService.addUpdateEvent( ee, UninformativeFASTQHeadersForBatchingEvent.class, "Batches unable to be determined",
                     "RNA-seq experiment, FASTQ headers and platform not informative for batches" );
@@ -131,7 +131,7 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
      * batches) are to be treated as the same batch (see implementation for details).
      *
      * @param  allDates all dates
-     * @return          map of batch identifiers to dates
+     * @return map of batch identifiers to dates
      */
     Map<String, Collection<Date>> convertDatesToBatches( Collection<Date> allDates ) {
         List<Date> lDates = new ArrayList<>( allDates );
@@ -264,12 +264,13 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
      * testing
      * easier.
      *
-     * @param  headers                                  collection of fastq headers for all samples.
-     * @return                                          map of batch names to the headers (sample-specific) for that
-     *                                                  batch. It will be empty if batches
-     *                                                  couldn't be determined.
+     * @param ee
+     * @param headers collection of fastq headers for all samples.
+     * @return map of batch names to the headers (sample-specific) for that
+     * batch. It will be empty if batches
+     * couldn't be determined.
      */
-    Map<String, Collection<String>> convertHeadersToBatches( Collection<String> headers )
+    private Map<String, Collection<String>> convertHeadersToBatches( ExpressionExperiment ee, Collection<String> headers )
             throws FASTQHeadersPresentButNotUsableException, SingletonBatchesException {
         Map<String, Collection<String>> result = new LinkedHashMap<>();
 
@@ -317,7 +318,7 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
          * Case 4a: mix of case 1 and 2. We would put all the "unusable" ones in one batch, and batch the others.
          * Case 4b: mix of case 1 and 3. Again, samples with usable headers will be batched, ones without will be
          * batches as best we can
-         * 
+         *
          * Complication: Batches with one sample. It is going to be hard to determine what batch they belong to. This is
          * annoying if the other samples are batchable.
          * Complication: Case 3 for when there is more than one platform, and one or both platforms have a mix of usable
@@ -362,7 +363,7 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
         // However, if all the headers were "bad", that's a different situation
         if ( result.size() == 1 ) {
             if ( goodHeaderSampleInfos.isEmpty() ) {
-                throw new FASTQHeadersPresentButNotUsableException( "Samples didn't have any useable information for batching" );
+                throw new FASTQHeadersPresentButNotUsableException( ee, "Samples didn't have any useable information for batching" );
                 // perhaps we should just return an empty result to signal this instead of raising an exception
                 //  result.clear();
             }
@@ -376,7 +377,7 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
                 }
             }
             if ( singleton ) {
-                throw new SingletonBatchesException( "Could not resolve singleton batches" );
+                throw new SingletonBatchesException( ee, "Could not resolve singleton batches" );
             }
         }
 
@@ -387,16 +388,23 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
     }
 
     /**
-     * 
-     * 
+     * For tests only.
+     */
+    Map<String, Collection<String>> convertHeadersToBatches( Collection<String> headers ) {
+        return convertHeadersToBatches( ExpressionExperiment.Factory.newInstance(), headers );
+    }
+
+    /**
+     *
+     *
      * RNA-seq, for the case of when we have "usable" headers with device, lane etc.: See how many batches we have for
      * each level of granularity; pick the best number. This is pretty crude,
      * and involves recreating the map multiple times
-     * 
-     * 
+     *
+     *
      * @param  batchInfos only of samples that have "good" headers
      * @param  numSamples how many samples
-     * @return            Map of batches (represented by the appropriate FastqHeaderData) to samples that are in the
+     * @return Map of batches (represented by the appropriate FastqHeaderData) to samples that are in the
      *                    batch.
      */
     private Map<FastqHeaderData, Collection<String>> batch( Map<FastqHeaderData, Collection<String>> batchInfos, int numSamples ) {
@@ -488,7 +496,7 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
      * Format 2: {@code <platform id>;;;<machine_id>:<lane>:<tile>:<x_coord>:<y_coord>;} we can use machine and lane.
      *
      * @param  header FASTQ header (can be multi-headers for cases where there is more than on FASTQ file)
-     * @return        representation of the batch info, which is going to be a portion of the header string
+     * @return representation of the batch info, which is going to be a portion of the header string
      */
     FastqHeaderData parseFASTQHeaderForBatch( String header ) {
 
@@ -626,7 +634,7 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
         }
 
         /**
-         * 
+         *
          * @return the unusable header, or null if the header was usable
          */
         public String getUnusableHeader() {
@@ -722,7 +730,7 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
 
         /**
          * Only for use when we don't have a useable device:run etc.
-         * 
+         *
          * @param platform e.g. GPLXXXX
          */
         FastqHeaderData( String platform ) {
@@ -834,7 +842,7 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
 
     /*
      * This also handles case where we decide not to create a batch factor - i.e. there is only one batch.
-     * 
+     *
      * For RNA-seq, descriptorsToBatch is a map of batchids to headers
      * for microarrays, it a map of batchids to dates
      * d2fv is populated by this call to be a map of headers or dates to factor values
@@ -849,7 +857,7 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
                  * Corner case. It's possible we are not sure there are actually batches or not
                  * because of the lack of information. The example would be when we don't have usable FASTQ headers, and
                  * all the GPL ids are the same.
-                 * 
+                 *
                  */
 
                 // I don't think this case will happen with the code revisions and we don't want to throw an exception.
@@ -929,14 +937,14 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
         batchDateString = ExperimentalDesignUtils.BATCH_FACTOR_NAME_PREFIX + StringUtils
                 .leftPad( Integer.toString( batchNum ), 2, "0" ) + "_"
                 + df
-                        .format( DateUtils.truncate( d, Calendar.HOUR ) );
+                .format( DateUtils.truncate( d, Calendar.HOUR ) );
         return batchDateString;
     }
 
     /**
      * @param  earlierDate earlier date
      * @param  date        data
-     * @return             false if 'date' is considered to be in the same batch as 'earlierDate', true if we should
+     * @return false if 'date' is considered to be in the same batch as 'earlierDate', true if we should
      *                     treat it as a
      *                     separate batch.
      */

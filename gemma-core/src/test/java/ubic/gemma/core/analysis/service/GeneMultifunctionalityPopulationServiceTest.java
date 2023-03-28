@@ -21,7 +21,6 @@ package ubic.gemma.core.analysis.service;
 
 import org.apache.commons.lang3.RandomUtils;
 import org.apache.commons.lang3.RandomStringUtils;
-import org.apache.commons.lang3.time.DateUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -45,7 +44,6 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.association.Gene2GOAssociationService;
 import ubic.gemma.persistence.service.common.description.ExternalDatabaseService;
 
-import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
@@ -83,13 +81,13 @@ public class GeneMultifunctionalityPopulationServiceTest extends BaseSpringConte
     @Before
     public void setUp() throws Exception {
 
-        if ( goService.isRunning() ) {
-            goService.shutDown();
+        if ( goService.isOntologyLoaded() ) {
+            goService.clearCaches();
         }
         gene2GoService.removeAll();
 
         goService.loadTermsInNameSpace( new GZIPInputStream(
-                new ClassPathResource( "/data/loader/ontology/molecular-function.test.owl.gz" ).getInputStream() ) );
+                new ClassPathResource( "/data/loader/ontology/molecular-function.test.owl.gz" ).getInputStream() ), false );
 
         testTaxon = taxonService.findOrCreate( Taxon.Factory
                 .newInstance( "foobly" + RandomStringUtils.randomAlphabetic( 2 ),
@@ -134,7 +132,7 @@ public class GeneMultifunctionalityPopulationServiceTest extends BaseSpringConte
         assertThat( genes )
                 .extracting( "multifunctionality" )
                 .extracting( "rank", "numGoTerms" )
-                .contains( tuple( 0.9125, 5 ) );
+                .contains( tuple( 0.4125, 11 ) );
 
         ExternalDatabase ed = externalDatabaseService.findByNameWithAuditTrail( ExternalDatabases.MULTIFUNCTIONALITY );
         assertThat( ed ).isNotNull();

@@ -42,8 +42,9 @@ public interface ExpressionDataMatrixService {
      *
      * @param ee           the expression experiment.
      * @param filterConfig the configuration.
-     * @return data matrix
+     * @return data matrix or null if the EE has no processed EVs
      */
+    @Nullable
     ExpressionDataDoubleMatrix getFilteredMatrix( ExpressionExperiment ee, FilterConfig filterConfig ) throws FilteringException;
 
     /**
@@ -62,22 +63,23 @@ public interface ExpressionDataMatrixService {
 
     /**
      * @param ee the expression experiment.
-     * @return matrix of preferred data, with all missing values masked. If the ProcessedExpressionDataVectors are
-     * missing, this will throw an exception.
+     * @return matrix of preferred data, with all missing values masked or null if there are no processed EVs
      */
-    ExpressionDataDoubleMatrix getProcessedExpressionDataMatrix( ExpressionExperiment ee ) throws NoProcessedExpressionDataVectorsException;
+    @Nullable
+    ExpressionDataDoubleMatrix getProcessedExpressionDataMatrix( ExpressionExperiment ee );
 
     /**
      * Obtain a processed expression data matrix for a given quantitation type.
      * @param quantitationType the quantitation type, or null to pick the preferred one
      */
-    ExpressionDataDoubleMatrix getProcessedExpressionDataMatrix( ExpressionExperiment ee, QuantitationType quantitationType );
+    @Nullable
+    ExpressionDataDoubleMatrix getProcessedExpressionDataMatrix( ExpressionExperiment ee, @Nullable QuantitationType quantitationType );
 
     /**
      * Obtain a raw expression data matrix for a given quantitation type
      * @param quantitationType the quantitation type, or null to pick the preferred one
      */
-    ExpressionDataDoubleMatrix getRawExpressionDataMatrix( ExpressionExperiment ee, QuantitationType quantitationType );
+    ExpressionDataDoubleMatrix getRawExpressionDataMatrix( ExpressionExperiment ee, @Nullable QuantitationType quantitationType );
 
     DoubleMatrix<Gene, ExpressionExperiment> getRankMatrix( Collection<Gene> genes,
             Collection<ExpressionExperiment> ees, ProcessedExpressionDataVectorDao.RankMethod method );

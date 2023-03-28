@@ -184,7 +184,7 @@ public class TwoChannelMissingValueCLI extends ExpressionExperimentManipulatingC
         }
 
         try {
-            preprocessorService.process( ee, true );
+            preprocessorService.processLight( ee );
         } catch ( PreprocessingException e ) {
             AbstractCLI.log
                     .error( "Error during postprocessing of " + ee + " , make sure additional steps are completed", e );

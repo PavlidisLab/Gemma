@@ -18,10 +18,12 @@
  */
 package ubic.gemma.model.common.quantitationtype;
 
+import lombok.ToString;
 import ubic.gemma.model.common.AbstractDescribable;
 
 import java.io.Serializable;
 
+@ToString(callSuper = true)
 public abstract class QuantitationType extends AbstractDescribable implements Serializable {
 
     /**
@@ -32,43 +34,43 @@ public abstract class QuantitationType extends AbstractDescribable implements Se
     /**
      * This will be false except for some Qts on two-colour platforms.
      */
-    private Boolean isBackground = false;
+    private boolean isBackground;
 
     /**
      * True if this is explicitly background-subtracted by Gemma. This is not very important and would only apply to
      * two-colour platforms since we don't background-subtract otherwise.
      */
-    private Boolean isBackgroundSubtracted;
+    private boolean isBackgroundSubtracted;
 
     /**
      * Refers to batch correction by Gemma. This should only ever be true for the ProcessedData.
      */
-    private Boolean isBatchCorrected = false;
+    private boolean isBatchCorrected;
 
     /**
      * This is useless because the processed data is always masked
      */
-    private Boolean isMaskedPreferred;
+    private boolean isMaskedPreferred;
 
     /**
      * This is pretty confusing since we don't make clear what we mean by "normalized", so this isn't that useful.
      * It might be wise to separate out "quantile normalized", but since we always quantile normalize ProcessedData, this
      * isn't very useful.
      */
-    private Boolean isNormalized;
+    private boolean isNormalized;
 
     /**
      * This is only useful for RawExpressionDataVectors; for the ProcessedData it is just confusing
      */
-    private Boolean isPreferred;
+    private boolean isPreferred;
 
     /**
      * This is also confusing: it is an attempt to capture whether we just used the data from GEO (or whatever) or went
      * back to raw CEL or fastq files.
      */
-    private Boolean isRecomputedFromRawData = false;
+    private boolean isRecomputedFromRawData = false;
 
-    private Boolean isRatio;
+    private boolean isRatio;
     private GeneralType generalType;
     private PrimitiveType representation;
     private ScaleType scale;
@@ -93,11 +95,11 @@ public abstract class QuantitationType extends AbstractDescribable implements Se
     /**
      * @return True if this is just a background measurement.
      */
-    public Boolean getIsBackground() {
+    public boolean getIsBackground() {
         return this.isBackground;
     }
 
-    public void setIsBackground( Boolean isBackground ) {
+    public void setIsBackground( boolean isBackground ) {
         this.isBackground = isBackground;
     }
 
@@ -105,46 +107,46 @@ public abstract class QuantitationType extends AbstractDescribable implements Se
      * @return True if this is explicitly background-subtracted by Gemma (if it was background-subtracted before the data got to
      * us, we might not know)
      */
-    public Boolean getIsBackgroundSubtracted() {
+    public boolean getIsBackgroundSubtracted() {
         return this.isBackgroundSubtracted;
     }
 
-    public void setIsBackgroundSubtracted( Boolean isBackgroundSubtracted ) {
+    public void setIsBackgroundSubtracted( boolean isBackgroundSubtracted ) {
         this.isBackgroundSubtracted = isBackgroundSubtracted;
     }
 
-    public Boolean getIsBatchCorrected() {
+    public boolean getIsBatchCorrected() {
         return this.isBatchCorrected;
     }
 
-    public void setIsBatchCorrected( Boolean isBatchCorrected ) {
+    public void setIsBatchCorrected( boolean isBatchCorrected ) {
         this.isBatchCorrected = isBatchCorrected;
     }
 
     /**
      * @return If the data represented is a missing-value masked version of the preferred data.
      */
-    public Boolean getIsMaskedPreferred() {
+    public boolean getIsMaskedPreferred() {
         return this.isMaskedPreferred;
     }
 
-    public void setIsMaskedPreferred( Boolean isMaskedPreferred ) {
+    public void setIsMaskedPreferred( boolean isMaskedPreferred ) {
         this.isMaskedPreferred = isMaskedPreferred;
     }
 
-    public Boolean getIsNormalized() {
+    public boolean getIsNormalized() {
         return this.isNormalized;
     }
 
-    public void setIsNormalized( Boolean isNormalized ) {
+    public void setIsNormalized( boolean isNormalized ) {
         this.isNormalized = isNormalized;
     }
 
-    public Boolean getIsPreferred() {
+    public boolean getIsPreferred() {
         return this.isPreferred;
     }
 
-    public void setIsPreferred( Boolean isPreferred ) {
+    public void setIsPreferred( boolean isPreferred ) {
         this.isPreferred = isPreferred;
     }
 
@@ -152,25 +154,25 @@ public abstract class QuantitationType extends AbstractDescribable implements Se
      * @return Indicates whether the quantitation type is expressed as a ratio (e.g., of expression to a reference or
      * pseudo-reference). This has a natural impact on the interpretation. If false, the value is "absolute".
      */
-    public Boolean getIsRatio() {
+    public boolean getIsRatio() {
         return this.isRatio;
     }
 
-    public void setIsRatio( Boolean isRatio ) {
+    public void setIsRatio( boolean isRatio ) {
         this.isRatio = isRatio;
     }
 
     /**
      * @return the isRecomputedFromRawData
      */
-    public Boolean getIsRecomputedFromRawData() {
+    public boolean getIsRecomputedFromRawData() {
         return isRecomputedFromRawData;
     }
 
     /**
      * @param isRecomputedFromRawData the isRecomputedFromRawData to set
      */
-    public void setIsRecomputedFromRawData( Boolean isRecomputedFromRawData ) {
+    public void setIsRecomputedFromRawData( boolean isRecomputedFromRawData ) {
         this.isRecomputedFromRawData = isRecomputedFromRawData;
     }
 
@@ -202,6 +204,28 @@ public abstract class QuantitationType extends AbstractDescribable implements Se
 
         public static QuantitationType newInstance() {
             return new QuantitationTypeImpl();
+        }
+
+        /**
+         * Create a new QT with the same spec as the provided one.
+         * <p>
+         * Note: since this is a new instance, we don't copy the {@link #getId()}, {@link #getIsPreferred()} or
+         * {@link #getIsMaskedPreferred()} over.
+         */
+        public static QuantitationType newInstance( QuantitationType quantitationType ) {
+            QuantitationType result = newInstance();
+            result.setName( quantitationType.getName() );
+            result.setDescription( quantitationType.getDescription() );
+            result.scale = quantitationType.scale;
+            result.representation = quantitationType.representation;
+            result.type = quantitationType.type;
+            result.generalType = quantitationType.generalType;
+            result.isNormalized = quantitationType.isNormalized;
+            result.isRatio = quantitationType.isRatio;
+            result.isBackground = quantitationType.isBackground;
+            result.isBackgroundSubtracted = quantitationType.isBackgroundSubtracted;
+            result.isBatchCorrected = quantitationType.isBatchCorrected;
+            return result;
         }
 
     }

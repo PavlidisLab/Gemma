@@ -24,8 +24,8 @@ import org.apache.commons.math3.exception.NotStrictlyPositiveException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ubic.gemma.core.analysis.preprocess.batcheffects.BatchConfoundUtils;
 import ubic.gemma.core.analysis.preprocess.batcheffects.BatchConfound;
+import ubic.gemma.core.analysis.preprocess.batcheffects.BatchConfoundUtils;
 import ubic.gemma.core.analysis.preprocess.batcheffects.BatchEffectDetails;
 import ubic.gemma.core.analysis.preprocess.batcheffects.BatchInfoPopulationServiceImpl;
 import ubic.gemma.core.analysis.preprocess.svd.SVDService;
@@ -61,12 +61,11 @@ import ubic.gemma.persistence.service.analysis.expression.coexpression.Coexpress
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.persistence.service.analysis.expression.pca.PrincipalComponentAnalysisService;
 import ubic.gemma.persistence.service.analysis.expression.sampleCoexpression.SampleCoexpressionAnalysisService;
-import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventDao;
+import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.persistence.service.common.description.CharacteristicDao;
 import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeService;
 import ubic.gemma.persistence.service.expression.bioAssay.BioAssayDao;
 import ubic.gemma.persistence.service.expression.bioAssayData.BioAssayDimensionService;
-import ubic.gemma.persistence.service.expression.bioAssayData.RawExpressionDataVectorDao;
 import ubic.gemma.persistence.service.genome.taxon.TaxonDao;
 import ubic.gemma.persistence.util.EntityUtils;
 import ubic.gemma.persistence.util.Slice;
@@ -93,7 +92,7 @@ public class ExpressionExperimentServiceImpl
     private final ExpressionExperimentDao expressionExperimentDao;
 
     @Autowired
-    private AuditEventDao auditEventDao;
+    private AuditEventService auditEventService;
     @Autowired
     private BioAssayDimensionService bioAssayDimensionService;
     @Autowired
@@ -103,11 +102,9 @@ public class ExpressionExperimentServiceImpl
     @Autowired
     private ExpressionExperimentSubSetService expressionExperimentSubSetService;
     @Autowired
-    private ExperimentalFactorDao experimentalFactorDao;
+    private ExperimentalFactorService experimentalFactorService;
     @Autowired
-    private FactorValueDao factorValueDao;
-    @Autowired
-    private RawExpressionDataVectorDao rawExpressionDataVectorDao;
+    private FactorValueService factorValueService;
     @Autowired
     private OntologyService ontologyService;
     @Autowired
@@ -142,7 +139,7 @@ public class ExpressionExperimentServiceImpl
         }
         factor.setExperimentalDesign( experiment.getExperimentalDesign() );
         factor.setSecurityOwner( experiment );
-        factor = experimentalFactorDao.create( factor ); // to make sure we get acls.
+        factor = experimentalFactorService.create( factor ); // to make sure we get acls.
         experiment.getExperimentalDesign().getExperimentalFactors().add( factor );
         expressionExperimentDao.update( experiment );
         return factor;
@@ -155,7 +152,7 @@ public class ExpressionExperimentServiceImpl
         ExpressionExperiment experiment = Objects.requireNonNull( expressionExperimentDao.load( ee.getId() ) );
         fv.setSecurityOwner( experiment );
         Collection<ExperimentalFactor> efs = experiment.getExperimentalDesign().getExperimentalFactors();
-        fv = this.factorValueDao.create( fv );
+        fv = this.factorValueService.create( fv );
         for ( ExperimentalFactor ef : efs ) {
             if ( fv.getExperimentalFactor().equals( ef ) ) {
                 ef.getFactorValues().add( fv );
@@ -170,6 +167,9 @@ public class ExpressionExperimentServiceImpl
     @Transactional
     public ExpressionExperiment addRawVectors( ExpressionExperiment ee,
             Collection<RawExpressionDataVector> newVectors ) {
+
+        // reload to ensure it is in the session
+        ee = loadOrFail( ee.getId() );
 
         Collection<BioAssayDimension> BADs = new HashSet<>();
         Collection<QuantitationType> qts = new HashSet<>();
@@ -212,11 +212,12 @@ public class ExpressionExperimentServiceImpl
             vec.setQuantitationType( newQt );
         }
 
-        ee = rawExpressionDataVectorDao.addVectors( ee.getId(),
-                newVectors ); // FIXME should be able to just do ee.getRawExpressionDataVectors.addAll(newVectors)
+        ee.getRawExpressionDataVectors().addAll( newVectors );
 
         // this is a denormalization; easy to forget to update this.
         ee.getQuantitationTypes().add( newQt );
+
+        update( ee );
 
         AbstractService.log.info( ee.getRawExpressionDataVectors().size() + " vectors for experiment" );
 
@@ -239,7 +240,7 @@ public class ExpressionExperimentServiceImpl
             }
         }
 
-        AuditEvent ev = this.auditEventDao.getLastEvent( ee, BatchInformationFetchingEvent.class );
+        AuditEvent ev = this.auditEventService.getLastEvent( ee, BatchInformationFetchingEvent.class );
         if ( ev == null ) return false;
         return ev.getEventType().getClass().isAssignableFrom( BatchInformationFetchingEvent.class )
                 || ev.getEventType().getClass().isAssignableFrom( SingleBatchDeterminationEvent.class ); // 
@@ -255,7 +256,7 @@ public class ExpressionExperimentServiceImpl
             }
         }
 
-        AuditEvent ev = this.auditEventDao.getLastEvent( ee, BatchInformationFetchingEvent.class );
+        AuditEvent ev = this.auditEventService.getLastEvent( ee, BatchInformationFetchingEvent.class );
         if ( ev == null ) return null;
         return ( BatchInformationFetchingEvent ) ev.getEventType();
 
@@ -559,7 +560,7 @@ public class ExpressionExperimentServiceImpl
     }
 
     private boolean checkIfSingleBatch( ExpressionExperiment ee ) {
-        AuditEvent ev = this.auditEventDao.getLastEvent( ee, BatchInformationFetchingEvent.class );
+        AuditEvent ev = this.auditEventService.getLastEvent( ee, BatchInformationFetchingEvent.class );
         if ( ev == null ) return false;
 
         if ( SingleBatchDeterminationEvent.class.isAssignableFrom( ev.getEventType().getClass() ) ) {
@@ -885,27 +886,6 @@ public class ExpressionExperimentServiceImpl
 
     @Override
     @Transactional
-    public int removeRawVectors( ExpressionExperiment ee, QuantitationType qt ) {
-        ExpressionExperiment eeToUpdate = Objects.requireNonNull( this.load( ee.getId() ) );
-        Set<RawExpressionDataVector> vectorsToRemove = new HashSet<>();
-        for ( RawExpressionDataVector oldV : eeToUpdate.getRawExpressionDataVectors() ) {
-            if ( oldV.getQuantitationType().equals( qt ) ) {
-                vectorsToRemove.add( oldV );
-            }
-        }
-
-        if ( vectorsToRemove.isEmpty() ) {
-            throw new IllegalArgumentException( "No vectors to remove for quantitation type=" + qt );
-        }
-
-        eeToUpdate.getRawExpressionDataVectors().removeAll( vectorsToRemove );
-        AbstractService.log.info( "Removing unused quantitation type: " + qt );
-        eeToUpdate.getQuantitationTypes().remove( qt );
-        return vectorsToRemove.size();
-    }
-
-    @Override
-    @Transactional
     public ExpressionExperiment replaceRawVectors( ExpressionExperiment ee,
             Collection<RawExpressionDataVector> newVectors ) {
 
@@ -913,35 +893,33 @@ public class ExpressionExperimentServiceImpl
             throw new UnsupportedOperationException( "Only use this method for replacing vectors, not erasing them" );
         }
 
-        // to attach to session correctly.
-        ExpressionExperiment eeToUpdate = Objects.requireNonNull( this.load( ee.getId() ) );
+        Set<QuantitationType> newQts = newVectors.stream()
+                .map( RawExpressionDataVector::getQuantitationType )
+                .collect( Collectors.toSet() );
 
-        Collection<QuantitationType> qtsToRemove = new HashSet<>();
-        for ( RawExpressionDataVector oldV : eeToUpdate.getRawExpressionDataVectors() ) {
-            qtsToRemove.add( oldV.getQuantitationType() );
+        Set<QuantitationType> preferredQts = newQts.stream().filter( QuantitationType::getIsPreferred ).collect( Collectors.toSet() );
+        if ( preferredQts.size() != 1 ) {
+            throw new IllegalArgumentException( String.format( "New vectors for %s must have exactly one preferred quantitation type.",
+                    ee ) );
         }
-        eeToUpdate.getProcessedExpressionDataVectors().clear();
+
+        // to attach to session correctly.
+        ExpressionExperiment eeToUpdate = this.loadOrFail( ee.getId() );
+
+        // remove existing QTs attached to raw vectors
+        Collection<QuantitationType> qtsToRemove = eeToUpdate.getRawExpressionDataVectors().stream()
+                .map( RawExpressionDataVector::getQuantitationType )
+                // These QTs might still be getting used by the replaced vectors.
+                .filter( q -> !newQts.contains( q ) )
+                .collect( Collectors.toSet() );
+        ee.getQuantitationTypes().removeAll( qtsToRemove );
+
+        // remove the vectors
         eeToUpdate.getRawExpressionDataVectors().clear();
 
-        // These QTs might still be getting used by the replaced vectors.
-        for ( RawExpressionDataVector newVec : newVectors ) {
-            qtsToRemove.remove( newVec.getQuantitationType() );
-        }
-
-        // this actually causes more problems; if we are careful to re-use QTs when possible we can avoid cruft building up.
-        //        for ( QuantitationType oldQt : qtsToRemove ) {
-        //            quantitationTypeDao.remove( oldQt );
-        //        }
-
-        // Split the vectors up by bioassay dimension, if need be. This could be modified to handle multiple quantitation types if need be.
-        Map<BioAssayDimension, Collection<RawExpressionDataVector>> BADs = new HashMap<>();
-        for ( RawExpressionDataVector vec : newVectors ) {
-            BioAssayDimension b = vec.getBioAssayDimension();
-            if ( !BADs.containsKey( b ) ) {
-                BADs.put( b, new HashSet<>() );
-            }
-            BADs.get( b ).add( vec );
-        }
+        // group the vectors up by bioassay dimension, if need be. This could be modified to handle multiple quantitation types if need be.
+        Map<BioAssayDimension, Set<RawExpressionDataVector>> BADs = newVectors.stream()
+                .collect( Collectors.groupingBy( RawExpressionDataVector::getBioAssayDimension, Collectors.toSet() ) );
 
         for ( Collection<RawExpressionDataVector> vectors : BADs.values() ) {
             ee = this.addRawVectors( eeToUpdate, vectors );
@@ -1061,6 +1039,20 @@ public class ExpressionExperimentServiceImpl
         super.remove( ee );
     }
 
+    @Override
+    @Transactional
+    public void remove( Collection<ExpressionExperiment> entities ) {
+        for ( ExpressionExperiment ee : entities ) {
+            remove( ee );
+        }
+    }
+
+    @Override
+    @Transactional
+    public void removeAll() {
+        throw new UnsupportedOperationException( "That would be nut." );
+    }
+
     private Collection<? extends AnnotationValueObject> getAnnotationsByFactorValues( Long eeId ) {
         return this.expressionExperimentDao.getAnnotationsByFactorvalues( eeId );
     }
@@ -1091,7 +1083,7 @@ public class ExpressionExperimentServiceImpl
         Map<Long, AuditEvent> lastEventMap = new HashMap<>();
         AuditEvent last;
         for ( ExpressionExperiment experiment : ees ) {
-            last = this.auditEventDao.getLastEvent( experiment, type.getClass() );
+            last = this.auditEventService.getLastEvent( experiment, type.getClass() );
             lastEventMap.put( experiment.getId(), last );
         }
         return lastEventMap;
@@ -1112,7 +1104,7 @@ public class ExpressionExperimentServiceImpl
     @Override
     @Transactional(readOnly = true)
     public Boolean isSuitableForDEA( ExpressionExperiment ee ) {
-        AuditEvent ev = auditEventDao.getLastEvent( ee, DifferentialExpressionSuitabilityEvent.class );
+        AuditEvent ev = auditEventService.getLastEvent( ee, DifferentialExpressionSuitabilityEvent.class );
         return ev == null || !UnsuitableForDifferentialExpressionAnalysisEvent.class.isAssignableFrom( ev.getEventType().getClass() );
     }
 

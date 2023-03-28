@@ -1,8 +1,8 @@
 /*
  * The gemma-core project
- * 
+ *
  * Copyright (c) 2021 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -19,18 +19,20 @@
 
 package ubic.gemma.core.analysis.preprocess.batcheffects;
 
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+
 /**
- * 
+ *
  * Indicates that FASTQ headers were present, but were not in a format that yields usable information on batches.
- * 
+ *
  * @author paul
  */
 public class FASTQHeadersPresentButNotUsableException extends BatchInfoPopulationException {
 
     /**
      */
-    public FASTQHeadersPresentButNotUsableException( String message ) {
-        super( message );
+    public FASTQHeadersPresentButNotUsableException( ExpressionExperiment ee, String message ) {
+        super( ee, message );
     }
 
     private static final long serialVersionUID = 1917074433646650950L;

@@ -31,7 +31,6 @@ import ubic.basecode.io.ByteArrayConverter;
 import ubic.basecode.math.DescriptiveWithMissing;
 import ubic.basecode.math.Rank;
 import ubic.gemma.core.datastructure.matrix.*;
-import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ProcessedVectorComputationEvent;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -119,8 +118,8 @@ public class ProcessedExpressionDataVectorCreateHelperServiceImpl
 
     @Override
     @Transactional
-    public ExpressionExperiment createProcessedExpressionData( ExpressionExperiment ee ) {
-        ee = processedExpressionDataVectorService.createProcessedDataVectors( ee );
+    public ExpressionExperiment createProcessedExpressionData( ExpressionExperiment ee, boolean ignoreQuantitationMismatch ) throws QuantitationMismatchException {
+        ee = processedExpressionDataVectorService.createProcessedDataVectors( ee, ignoreQuantitationMismatch );
         assert ee.getNumberOfDataVectors() != null;
         this.audit( ee );
         return ee;

@@ -479,16 +479,6 @@ public interface ExpressionExperimentService
     List<ExpressionExperimentValueObject> loadValueObjectsByIds( Collection<Long> ids );
 
     /**
-     * Remove raw vectors associated with the given quantitation type. It does not touch processed data.
-     *
-     * @param ee experiment
-     * @param qt quantitation type
-     * @return number of vectors removed.
-     */
-    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    int removeRawVectors( ExpressionExperiment ee, QuantitationType qt );
-
-    /**
      * Used when we are replacing data, such as when converting an experiment from one platform to another. Examples
      * would be exon array or RNA-seq data sets, or other situations where we are replacing data. Does not take care of
      * computing the processed data vectors, but it does clear them out.
