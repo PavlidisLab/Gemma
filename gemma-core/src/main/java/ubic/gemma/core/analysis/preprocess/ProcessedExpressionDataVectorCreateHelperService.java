@@ -14,6 +14,8 @@
  */
 package ubic.gemma.core.analysis.preprocess;
 
+import ubic.gemma.core.datastructure.matrix.InferredQuantitationMismatchException;
+import ubic.gemma.core.datastructure.matrix.QuantitationMismatchException;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
@@ -27,7 +29,7 @@ public interface ProcessedExpressionDataVectorCreateHelperService {
     ExpressionExperiment createProcessedDataVectors( ExpressionExperiment ee,
             Collection<ProcessedExpressionDataVector> vecs );
 
-    ExpressionExperiment createProcessedExpressionData( ExpressionExperiment ee );
+    ExpressionExperiment createProcessedExpressionData( ExpressionExperiment ee, boolean ignoreInferredScale ) throws PreprocessingException, QuantitationMismatchException;
 
     void reorderByDesign( Long eeId );
 

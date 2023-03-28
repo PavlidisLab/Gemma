@@ -18,20 +18,15 @@
  */
 package ubic.gemma.core.apps;
 
-import static ubic.gemma.persistence.service.expression.experiment.GeeqService.OPT_MODE_ALL;
-import static ubic.gemma.persistence.service.expression.experiment.GeeqService.OPT_MODE_BATCH;
-import static ubic.gemma.persistence.service.expression.experiment.GeeqService.OPT_MODE_PUB;
-import static ubic.gemma.persistence.service.expression.experiment.GeeqService.OPT_MODE_REPS;
-
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
-
 import org.apache.commons.cli.Options;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 import ubic.gemma.core.util.AbstractCLI;
 import ubic.gemma.model.common.auditAndSecurity.eventType.GeeqEvent;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.expression.experiment.GeeqService;
 
 /**
@@ -39,10 +34,13 @@ import ubic.gemma.persistence.service.expression.experiment.GeeqService;
  *
  * @author tesar
  */
+@Component
 public class GeeqCli extends ExpressionExperimentManipulatingCLI {
+
+    @Autowired
     private GeeqService geeqService;
 
-    private String mode = GeeqService.OPT_MODE_ALL;
+    private GeeqService.ScoreMode mode = GeeqService.ScoreMode.all;
 
     @Override
     public String getShortDesc() {
@@ -52,12 +50,8 @@ public class GeeqCli extends ExpressionExperimentManipulatingCLI {
     @Override
     protected void processOptions( CommandLine commandLine ) {
         super.processOptions( commandLine );
-
-        eeService = this.getBean( ExpressionExperimentService.class );
-        geeqService = this.getBean( GeeqService.class );
-
         if ( commandLine.hasOption( 'm' ) ) {
-            this.mode = commandLine.getOptionValue( 'm' );
+            this.mode = GeeqService.ScoreMode.valueOf( commandLine.getOptionValue( 'm' ) );
         }
     }
 
@@ -66,7 +60,6 @@ public class GeeqCli extends ExpressionExperimentManipulatingCLI {
         return "runGeeq";
     }
 
-    @SuppressWarnings("AccessStaticViaInstance")
     @Override
     protected void buildOptions( Options options ) {
 
@@ -79,10 +72,10 @@ public class GeeqCli extends ExpressionExperimentManipulatingCLI {
         Option modeOption = Option.builder( "m" ).longOpt( "mode" )
                 .desc( "If specified, switches the scoring mode. By default the mode is set to 'all'" //
                         + "\n Possible values are:" //
-                        + "\n " + OPT_MODE_ALL + " - runs all scoring" //
-                        + "\n " + OPT_MODE_BATCH + "- recalculates batch related scores - info, confound and batch effect" //
-                        + "\n " + OPT_MODE_REPS + " - recalculates score for replicates" //
-                        + "\n " + OPT_MODE_PUB + " - recalculates score for publication" )
+                        + "\n " + GeeqService.ScoreMode.all.name() + " - runs all scoring" //
+                        + "\n " + GeeqService.ScoreMode.batch.name() + "- recalculates batch related scores - info, confound and batch effect" //
+                        + "\n " + GeeqService.ScoreMode.reps.name() + " - recalculates score for replicates" //
+                        + "\n " + GeeqService.ScoreMode.pub.name() + " - recalculates score for publication" )
                 .hasArg().build();
         options.addOption( modeOption );
     }
@@ -102,7 +95,7 @@ public class GeeqCli extends ExpressionExperimentManipulatingCLI {
             }
 
             try {
-                geeqService.calculateScore( ee.getId(), mode );
+                geeqService.calculateScore( ee, mode );
                 addSuccessObject( ee, "Successfully processed " + ee );
             } catch ( Exception e ) {
                 addErrorObject( ee, " failed: " + e.getMessage(), e );

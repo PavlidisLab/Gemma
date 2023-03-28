@@ -226,7 +226,7 @@ public class ExpressionExperimentFilter {
             config.setAfterMinPresentFilter( afterMinPresentFilter );
 
             if ( filteredMatrix.rows() == 0 ) {
-                throw new NoRowsLeftAfterFilteringException( "No rows left after minimum non-missing data filtering" );
+                throw new NoRowsLeftAfterFilteringException( eeDoubleMatrix.getExpressionExperiment(), "No rows left after minimum non-missing data filtering" );
             }
         }
 
@@ -238,7 +238,7 @@ public class ExpressionExperimentFilter {
         afterZeroVarianceCut = filteredMatrix.rows();
         config.setAfterZeroVarianceCut( afterZeroVarianceCut );
         if ( filteredMatrix.rows() == 0 ) {
-            throw new NoRowsLeftAfterFilteringException( "No rows left after filtering rows with zero variance" );
+            throw new NoRowsLeftAfterFilteringException( eeDoubleMatrix.getExpressionExperiment(), "No rows left after filtering rows with zero variance" );
         }
 
         /*
@@ -252,7 +252,7 @@ public class ExpressionExperimentFilter {
             config.setAfterLowExpressionCut( afterLowExpressionCut );
 
             if ( filteredMatrix.rows() == 0 ) {
-                throw new NoRowsLeftAfterFilteringException( "No rows left after expression level filtering" );
+                throw new NoRowsLeftAfterFilteringException( eeDoubleMatrix.getExpressionExperiment(), "No rows left after expression level filtering" );
             }
         }
 
@@ -273,7 +273,7 @@ public class ExpressionExperimentFilter {
             config.setAfterLowVarianceCut( afterLowVarianceCut );
 
             if ( filteredMatrix.rows() == 0 ) {
-                throw new NoRowsLeftAfterFilteringException( "No rows left after variance filtering" );
+                throw new NoRowsLeftAfterFilteringException( eeDoubleMatrix.getExpressionExperiment(), "No rows left after variance filtering" );
             }
         }
 
@@ -312,14 +312,13 @@ public class ExpressionExperimentFilter {
 
         if ( !config.isIgnoreMinimumSampleThreshold() ) {
             if ( eeDoubleMatrix.columns() < FilterConfig.MINIMUM_SAMPLE ) {
-                throw new InsufficientSamplesException(
-                        "Not enough samples, must have at least " + FilterConfig.MINIMUM_SAMPLE
-                                + " to be eligble for link analysis." );
+                throw new InsufficientSamplesException( eeDoubleMatrix.getExpressionExperiment(),
+                        String.format( "Not enough samples, must have at least %d to be eligible for link analysis.", FilterConfig.MINIMUM_SAMPLE ) );
             } else if ( !config.isIgnoreMinimumRowsThreshold()
                     && eeDoubleMatrix.rows() < FilterConfig.MINIMUM_ROWS_TO_BOTHER ) {
-                throw new InsufficientProbesException( "To few rows in (" + eeDoubleMatrix.rows()
-                        + ") prior to filtering, data sets are not analyzed unless they have at least "
-                        + FilterConfig.MINIMUM_ROWS_TO_BOTHER + " to be eligble for analysis." );
+                throw new InsufficientProbesException( eeDoubleMatrix.getExpressionExperiment(),
+                        String.format( "To few rows in (%d) prior to filtering, data sets are not analyzed unless they have at least %d to be eligible for analysis.",
+                                eeDoubleMatrix.rows(), FilterConfig.MINIMUM_ROWS_TO_BOTHER ) );
             }
         }
 
@@ -330,17 +329,17 @@ public class ExpressionExperimentFilter {
 
         if ( eeDoubleMatrix.rows() == 0 ) {
             ExpressionExperimentFilter.log.info( "No rows left after filtering" );
-            throw new InsufficientProbesException( "No rows left after filtering" );
+            throw new InsufficientProbesException( eeDoubleMatrix.getExpressionExperiment(), "No rows left after filtering." );
         } else if ( !config.isIgnoreMinimumRowsThreshold()
                 && eeDoubleMatrix.rows() < FilterConfig.MINIMUM_ROWS_TO_BOTHER ) {
-            throw new InsufficientProbesException( "To few rows in   (" + eeDoubleMatrix.rows()
-                    + ") after filtering, data sets are not analyzed unless they have at least "
-                    + FilterConfig.MINIMUM_ROWS_TO_BOTHER + " rows" );
+            throw new InsufficientProbesException( eeDoubleMatrix.getExpressionExperiment(),
+                    String.format( "To few rows (%d) after filtering, data sets are not analyzed unless they have at least %d rows.",
+                            eeDoubleMatrix.rows(), FilterConfig.MINIMUM_ROWS_TO_BOTHER ) );
         } else if ( !config.isIgnoreMinimumSampleThreshold()
                 && eeDoubleMatrix.columns() < FilterConfig.MINIMUM_SAMPLE ) {
-            throw new InsufficientSamplesException(
-                    "Not enough samples, must have at least " + FilterConfig.MINIMUM_SAMPLE
-                            + " to be eligible for link analysis." );
+            throw new InsufficientSamplesException( eeDoubleMatrix.getExpressionExperiment(),
+                    String.format( "Not enough samples, must have at least %d to be eligible for link analysis.",
+                            FilterConfig.MINIMUM_SAMPLE ) );
         }
 
         return eeDoubleMatrix;

@@ -210,11 +210,11 @@ public class GeneMultifunctionalityPopulationServiceImpl implements GeneMultifun
 
     private Map<Gene, Collection<String>> fetchGoAnnotations( Collection<Gene> genes ) {
 
-        if ( !goService.isRunning() ) {
-            goService.init( true );
+        if ( !goService.isOntologyLoaded() ) {
+            goService.startInitializationThread( true, false );
         }
 
-        while ( !goService.isReady() ) {
+        while ( !goService.isOntologyLoaded() ) {
             try {
                 Thread.sleep( 2000 );
             } catch ( InterruptedException e ) {
@@ -251,8 +251,7 @@ public class GeneMultifunctionalityPopulationServiceImpl implements GeneMultifun
 
                 termsForGene.add( t.getValue() );
 
-                Collection<OntologyTerm> parents = goService
-                        .getAllParents( goService.getTerm( t.getValueUri() ) );
+                Collection<OntologyTerm> parents = goService.getTerm( t.getValueUri() ).getParents( false, false );
 
                 for ( OntologyTerm p : parents ) {
                     if ( p == null ) continue;

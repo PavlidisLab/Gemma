@@ -43,23 +43,23 @@ public class QuantitationTypeImpl extends ubic.gemma.model.common.quantitationty
             return false;
         }
 
-        if ( !this.getIsPreferred().equals( that.getIsPreferred() ) ) {
+        if ( this.getIsPreferred() != that.getIsPreferred() ) {
             return false;
         }
 
-        if ( !this.getIsRatio().equals( that.getIsRatio() ) ) {
+        if ( this.getIsRatio() != that.getIsRatio() ) {
             return false;
         }
 
-        if ( !this.getIsNormalized().equals( that.getIsNormalized() ) ) {
+        if ( this.getIsNormalized() != that.getIsNormalized() ) {
             return false;
         }
 
-        if ( !this.getIsBackground().equals( that.getIsBackground() ) ) {
+        if ( this.getIsBackground() != that.getIsBackground() ) {
             return false;
         }
 
-        if ( !this.getIsBackgroundSubtracted().equals( that.getIsBackgroundSubtracted() ) ) {
+        if ( this.getIsBackgroundSubtracted() != that.getIsBackgroundSubtracted() ) {
             return false;
         }
 
@@ -101,16 +101,11 @@ public class QuantitationTypeImpl extends ubic.gemma.model.common.quantitationty
         if ( this.getScale() != null ) {
             hashCode = hashCode + this.getScale().hashCode();
         }
-        if ( this.getIsBackground() != null )
-            hashCode += this.getIsBackground().hashCode();
-        if ( this.getIsBackgroundSubtracted() != null )
-            hashCode += this.getIsBackgroundSubtracted().hashCode();
-        if ( this.getIsNormalized() != null )
-            hashCode += this.getIsNormalized().hashCode();
-        if ( this.getIsPreferred() != null )
-            hashCode += this.getIsPreferred().hashCode();
-        if ( this.getIsRatio() != null )
-            hashCode += this.getIsRatio().hashCode();
+        hashCode += Boolean.hashCode( this.getIsBackground() );
+        hashCode += Boolean.hashCode( this.getIsBackgroundSubtracted() );
+        hashCode += Boolean.hashCode( this.getIsNormalized() );
+        hashCode += Boolean.hashCode( this.getIsPreferred() );
+        hashCode += Boolean.hashCode( this.getIsRatio() );
 
         return hashCode;
     }

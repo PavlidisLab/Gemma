@@ -55,7 +55,7 @@ public class VectorMergingHelperServiceImpl implements VectorMergingHelperServic
 
     @Override
     @Transactional
-    public void persist( ExpressionExperiment ee,
+    public ExpressionExperiment persist( ExpressionExperiment ee,
             Collection<RawExpressionDataVector> newVectors ) {
         VectorMergingHelperServiceImpl.log
                 .info( "Creating " + newVectors.size() + " merged raw data vectors; removing " + ee.getRawExpressionDataVectors().size()
@@ -64,7 +64,7 @@ public class VectorMergingHelperServiceImpl implements VectorMergingHelperServic
         ee.getProcessedExpressionDataVectors().clear();
         ee.getRawExpressionDataVectors().clear();
         ee.getRawExpressionDataVectors().addAll( newVectors );
-        expressionExperimentDao.update( ee );
+        return expressionExperimentDao.save( ee );
 
     }
 

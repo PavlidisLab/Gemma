@@ -14,6 +14,8 @@
  */
 package ubic.gemma.core.analysis.preprocess.batcheffects;
 
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+
 /**
  * Used to indicate failure was due to the format being unusable, but the files are available.
  *
@@ -24,8 +26,8 @@ public class UnsupportedRawdataFileFormatException extends BatchInfoPopulationEx
 
     private static final long serialVersionUID = 1L;
 
-    public UnsupportedRawdataFileFormatException( String string ) {
-        super( string );
+    public UnsupportedRawdataFileFormatException( ExpressionExperiment ee, String message ) {
+        super( ee, message );
     }
 
 }

@@ -86,17 +86,17 @@ public class QuantitationTypeValueObject extends IdentifiableValueObject<Quantit
         this.name = qt.getName();
         this.description = qt.getDescription();
         this.generalType = qt.getGeneralType().toString();
-        this.isBackground = qt.getIsBackground() != null && qt.getIsBackground();
-        this.isBackgroundSubtracted = qt.getIsBackgroundSubtracted() != null && qt.getIsBackgroundSubtracted();
-        this.isBatchCorrected = qt.getIsBatchCorrected() != null && qt.getIsBatchCorrected();
-        this.isMaskedPreferred = qt.getIsMaskedPreferred() != null && qt.getIsMaskedPreferred();
-        this.isNormalized = qt.getIsNormalized() != null && qt.getIsNormalized();
-        this.isPreferred = qt.getIsPreferred() != null && qt.getIsPreferred();
-        this.isRatio = qt.getIsRatio() != null && qt.getIsRatio();
+        this.isBackground = qt.getIsBackground();
+        this.isBackgroundSubtracted = qt.getIsBackgroundSubtracted();
+        this.isBatchCorrected = qt.getIsBatchCorrected();
+        this.isMaskedPreferred = qt.getIsMaskedPreferred();
+        this.isNormalized = qt.getIsNormalized();
+        this.isPreferred = qt.getIsPreferred();
+        this.isRatio = qt.getIsRatio();
         this.representation = qt.getRepresentation().toString();
         this.scale = qt.getScale().toString();
         this.type = qt.getType().toString();
-        this.isRecomputedFromRawData = qt.getIsRecomputedFromRawData() != null && qt.getIsRecomputedFromRawData();
+        this.isRecomputedFromRawData = qt.getIsRecomputedFromRawData();
     }
 
     /**

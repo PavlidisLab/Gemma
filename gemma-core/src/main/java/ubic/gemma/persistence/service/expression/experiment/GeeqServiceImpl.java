@@ -32,10 +32,8 @@ import ubic.basecode.math.DescriptiveWithMissing;
 import ubic.gemma.core.analysis.preprocess.OutlierDetectionService;
 import ubic.gemma.core.analysis.preprocess.batcheffects.BatchEffectDetails;
 import ubic.gemma.core.analysis.service.ExpressionDataMatrixService;
-import ubic.gemma.core.analysis.service.NoProcessedExpressionDataVectorsException;
 import ubic.gemma.core.analysis.util.ExperimentalDesignUtils;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
-import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.GeeqEvent;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
@@ -48,7 +46,6 @@ import ubic.gemma.persistence.service.AbstractVoEnabledService;
 import ubic.gemma.persistence.service.analysis.expression.sampleCoexpression.SampleCoexpressionAnalysisService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
-import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.persistence.util.EntityUtils;
 
 import javax.annotation.Nullable;
@@ -104,13 +101,12 @@ public class GeeqServiceImpl extends AbstractVoEnabledService<Geeq, GeeqValueObj
     private final OutlierDetectionService outlierDetectionService;
     private final AuditTrailService auditTrailService;
     private final SampleCoexpressionAnalysisService sampleCoexpressionAnalysisService;
-    private final TaxonService taxonService;
 
     @Autowired
     public GeeqServiceImpl( GeeqDao geeqDao, ExpressionExperimentService expressionExperimentService,
             ArrayDesignService arrayDesignService, ExpressionDataMatrixService expressionDataMatrixService,
             OutlierDetectionService outlierDetectionService, AuditTrailService auditTrailService,
-            SampleCoexpressionAnalysisService sampleCoexpressionAnalysisService, TaxonService taxonService ) {
+            SampleCoexpressionAnalysisService sampleCoexpressionAnalysisService ) {
         super( geeqDao );
         this.expressionExperimentService = expressionExperimentService;
         this.arrayDesignService = arrayDesignService;
@@ -118,20 +114,76 @@ public class GeeqServiceImpl extends AbstractVoEnabledService<Geeq, GeeqValueObj
         this.outlierDetectionService = outlierDetectionService;
         this.auditTrailService = auditTrailService;
         this.sampleCoexpressionAnalysisService = sampleCoexpressionAnalysisService;
-        this.taxonService = taxonService;
     }
 
     @Override
     @Transactional
-    public void calculateScore( Long eeId, String mode ) {
-        this.doScoring( eeId, mode );
+    public Geeq calculateScore( ExpressionExperiment ee, ScoreMode mode ) {
+        // reload in this session
+        ee = expressionExperimentService.loadOrFail( ee.getId() );
+
+        Geeq gq = ee.getGeeq();
+        if ( gq == null ) {
+            gq = new Geeq();
+            ee.setGeeq( gq );
+        }
+
+        StopWatch stopwatch = new StopWatch();
+        stopwatch.start();
+
+        try {
+            // Update score values
+            switch ( mode ) {
+                case all:
+                    log.info( GeeqServiceImpl.LOG_PREFIX + " Starting full geeq scoring for  " + ee );
+                    this.scoreAll( ee );
+                    break;
+                case batch:
+                    log.info( GeeqServiceImpl.LOG_PREFIX + " Starting batch info, confound and batch effect geeq re-scoring for " + ee );
+                    this.scoreOnlyBatchArtifacts( ee );
+                    break;
+                case reps:
+                    log.info( GeeqServiceImpl.LOG_PREFIX + " Starting replicates geeq re-scoring for " + ee );
+                    this.scoreOnlyReplicates( ee );
+                    break;
+                case pub:
+                    log.info( GeeqServiceImpl.LOG_PREFIX + " Starting publication geeq re-scoring for " + ee );
+                    this.scoreOnlyPublication( ee );
+                    break;
+                default:
+                    log.warn( GeeqServiceImpl.LOG_PREFIX + " Did not recognize the given mode " + mode + " for " + ee );
+            }
+            log.info( GeeqServiceImpl.LOG_PREFIX + " Finished geeq re-scoring for " + ee
+                    + ", saving results..." );
+        } catch ( Exception e ) {
+            log.error( GeeqServiceImpl.LOG_PREFIX + " Major problem encountered, scoring did not finish for " + ee + ".", e );
+            gq.addOtherIssues( e.getMessage() );
+        }
+
+        // Recalculate final scores
+        this.updateQualityScore( gq );
+        this.updateSuitabilityScore( gq );
+
+        // Add note if experiment curation not finished
+        if ( ee.getCurationDetails().getNeedsAttention() ) {
+            gq.addOtherIssues( "Experiment was not fully curated when the score was calculated." );
+        }
+
+        stopwatch.stop();
+        this.createGeeqEvent( ee, "Re-ran geeq scoring (mode: " + mode + ")",
+                "Took " + stopwatch.getTime() + " ms.\nUnexpected problems encountered: \n" + gq
+                        .getOtherIssues() );
+
+        log.info( GeeqServiceImpl.LOG_PREFIX + " took " + Math.round( stopwatch.getTime( TimeUnit.SECONDS ) / 60.0 )
+                + " minutes to process " + ee );
+
+        return gq;
     }
 
     @Override
     @Transactional
-    public void setManualOverrides( Long eeId, GeeqAdminValueObject gqVo ) {
-        ExpressionExperiment ee = expressionExperimentService.loadOrFail( eeId );
-        ee = expressionExperimentService.thawLiter( ee );
+    public void setManualOverrides( ExpressionExperiment ee, GeeqAdminValueObject gqVo ) {
+        ee = expressionExperimentService.loadOrFail( ee.getId() );
         Geeq gq = ee.getGeeq();
 
 //        // Update manual quality score value
@@ -193,88 +245,7 @@ public class GeeqServiceImpl extends AbstractVoEnabledService<Geeq, GeeqValueObj
 //        }
 
         this.update( gq );
-        log.info( GeeqServiceImpl.LOG_PREFIX + " Updated manual override settings for ee id " + eeId );
-    }
-
-    /**
-     * Does all the preparations and calls the appropriate scoring methods.
-     *
-     * @param eeId the id of experiment to be scored.
-     * @param mode the mode of scoring. All will redo all scores, batchEffect and batchConfound will only recalculate
-     *             scores relevant to batch effect and batch confound, respectively.
-     *             Scoring batch effect and confound is fairly fast, especially compared to the 'all' mode, which goes
-     *             through almost all information associated with the experiment, and can therefore be very slow,
-     *             depending on the experiment.
-     */
-    private void doScoring( Long eeId, String mode ) {
-        ExpressionExperiment ee = expressionExperimentService.load( eeId );
-
-        if ( ee == null ) {
-            return;
-        }
-
-        this.ensureEeHasGeeq( ee );
-        Geeq gq = ee.getGeeq();
-
-        StopWatch stopwatch = new StopWatch();
-        stopwatch.start();
-
-        try {
-            // Update score values
-            switch ( mode ) {
-                case GeeqService.OPT_MODE_ALL:
-                    log.info(
-                            GeeqServiceImpl.LOG_PREFIX + " Starting full geeq scoring for ee id " + eeId );
-                    gq = this.scoreAll( ee );
-                    break;
-                case GeeqService.OPT_MODE_BATCH:
-                    log.info(
-                            GeeqServiceImpl.LOG_PREFIX + " Starting batch info, confound and batch effect geeq re-scoring for ee id " + eeId );
-                    gq = this.scoreOnlyBatchArtifacts( ee );
-                    break;
-                case GeeqService.OPT_MODE_REPS:
-                    log.info(
-                            GeeqServiceImpl.LOG_PREFIX + " Starting replicates geeq re-scoring for ee id " + eeId );
-                    gq = this.scoreOnlyReplicates( ee );
-                    break;
-                case GeeqService.OPT_MODE_PUB:
-                    log.info(
-                            GeeqServiceImpl.LOG_PREFIX + " Starting publication geeq re-scoring for ee id " + eeId );
-                    gq = this.scoreOnlyPublication( ee );
-                    break;
-                default:
-                    log.warn(
-                            GeeqServiceImpl.LOG_PREFIX + " Did not recognize the given mode " + mode + " for ee id "
-                                    + eeId );
-            }
-            log.info( GeeqServiceImpl.LOG_PREFIX + " Finished geeq re-scoring for ee id " + eeId
-                    + ", saving results..." );
-        } catch ( Exception e ) {
-            log.error(
-                    GeeqServiceImpl.LOG_PREFIX + " Major problem encountered, scoring did not finish for ee id " + eeId
-                            + ".", e );
-            gq.addOtherIssues( e.getMessage() );
-        }
-
-        // Recalculate final scores
-        this.updateQualityScore( gq );
-        this.updateSuitabilityScore( gq );
-
-        // Add note if experiment curation not finished
-        if ( ee.getCurationDetails().getNeedsAttention() ) {
-            gq.addOtherIssues( "Experiment was not fully curated when the score was calculated." );
-        }
-
-        stopwatch.stop();
-        this.createGeeqEvent( ee, "Re-ran geeq scoring (mode: " + mode + ")",
-                "Took " + stopwatch.getTime() + " ms.\nUnexpected problems encountered: \n" + gq
-                        .getOtherIssues() );
-
-        this.update( gq );
-        log.info(
-                GeeqServiceImpl.LOG_PREFIX + " took " + Math.round( stopwatch.getTime( TimeUnit.SECONDS ) / 60.0 )
-                        + " minutes to process ee id " + eeId );
-
+        log.info( GeeqServiceImpl.LOG_PREFIX + " Updated manual override settings for " + ee );
     }
 
     private void updateSuitabilityScore( Geeq gq ) {
@@ -291,8 +262,7 @@ public class GeeqServiceImpl extends AbstractVoEnabledService<Geeq, GeeqValueObj
         gq.setDetectedQualityScore( score );
     }
 
-    private Geeq scoreAll( ExpressionExperiment ee ) {
-        ee = expressionExperimentService.thaw( ee );
+    private void scoreAll( ExpressionExperiment ee ) {
         Geeq gq = ee.getGeeq();
         Collection<ArrayDesign> ads = expressionExperimentService.getArrayDesignsUsed( ee );
 
@@ -322,41 +292,23 @@ public class GeeqServiceImpl extends AbstractVoEnabledService<Geeq, GeeqValueObj
         boolean hasBatchInfo = this.scoreBatchInfo( ee, gq );
         boolean hasBatchConfound = this.scoreBatchConfound( ee, gq, hasBatchInfo );
         this.scoreBatchEffect( ee, gq, hasBatchInfo, hasBatchConfound );
-
-        return gq;
     }
 
-    private Geeq scoreOnlyBatchArtifacts( ExpressionExperiment ee ) {
-        ee = expressionExperimentService.thawLiter( ee );
+    private void scoreOnlyBatchArtifacts( ExpressionExperiment ee ) {
         Geeq gq = ee.getGeeq();
         boolean info = this.scoreBatchInfo( ee, gq );
         boolean confound = this.scoreBatchConfound( ee, gq, info );
         this.scoreBatchEffect( ee, gq, info, confound );
-        return gq;
     }
 
-    private Geeq scoreOnlyReplicates( ExpressionExperiment ee ) {
-        ee = expressionExperimentService.thaw( ee );
+    private void scoreOnlyReplicates( ExpressionExperiment ee ) {
         Geeq gq = ee.getGeeq();
         this.scoreReplicates( ee, gq );
-        return gq;
     }
 
-    private Geeq scoreOnlyPublication( ExpressionExperiment ee ) {
-        ee = expressionExperimentService.thawLiter( ee );
+    private void scoreOnlyPublication( ExpressionExperiment ee ) {
         Geeq gq = ee.getGeeq();
         this.scorePublication( ee, gq );
-        return gq;
-    }
-
-    private void ensureEeHasGeeq( ExpressionExperiment ee ) {
-        Geeq gq = ee.getGeeq();
-        if ( gq == null ) {
-            gq = new Geeq();
-            gq = this.create( gq );
-            ee.setGeeq( gq );
-            expressionExperimentService.update( ee );
-        }
     }
 
     /*
@@ -406,7 +358,7 @@ public class GeeqServiceImpl extends AbstractVoEnabledService<Geeq, GeeqValueObj
 
     private void scoreAvgPlatformPopularity( Collection<ArrayDesign> ads, Geeq gq ) {
         double score;
-        double scores[] = new double[ads.size()];
+        double[] scores = new double[ads.size()];
 
         // FIXME factor out magic numbers. Rationale: rarely used platforms are less favored
         int i = 0;
@@ -425,7 +377,7 @@ public class GeeqServiceImpl extends AbstractVoEnabledService<Geeq, GeeqValueObj
      */
     private void scoreAvgPlatformSize( Collection<ArrayDesign> ads, Geeq gq ) {
         double score;
-        double scores[] = new double[ads.size()];
+        double[] scores = new double[ads.size()];
 
         int i = 0;
         for ( ArrayDesign ad : ads ) {
@@ -438,21 +390,28 @@ public class GeeqServiceImpl extends AbstractVoEnabledService<Geeq, GeeqValueObj
              */
 
             // human, rat, mouse, zebrafish and worm all have on the order 20k protein-coding genes.
-            if ( taxon.getCommonName().equals( "human" ) || taxon.getCommonName().equals( "rat" ) || taxon.getCommonName().equals( "mouse" )
-                    || taxon.getCommonName().equals( "zebrafish" ) || taxon.getCommonName().equals( "worm" ) ) {
-                scores[i++] = cnt < 5000 ? GeeqServiceImpl.N_10
-                        : cnt < 10000 ? GeeqServiceImpl.N_05
-                        : cnt < 15000 ? GeeqServiceImpl.P_00 : cnt < 18000 ? GeeqServiceImpl.P_05 : GeeqServiceImpl.P_10;
-            } else if ( taxon.getCommonName().equals( "yeast" ) ) {
-                // Yeast has about 6k protein-coding genes
-                scores[i++] = cnt < 1000 ? GeeqServiceImpl.N_10
-                        : cnt < 2500 ? GeeqServiceImpl.N_05
-                        : cnt < 4000 ? GeeqServiceImpl.P_00 : cnt < 5000 ? GeeqServiceImpl.P_05 : GeeqServiceImpl.P_10;
-            } else if ( taxon.getCommonName().equals( "fly" ) ) {
-                // Fly has about 14k protein coding genes
-                scores[i++] = cnt < 2000 ? GeeqServiceImpl.N_10
-                        : cnt < 5000 ? GeeqServiceImpl.N_05
-                        : cnt < 8000 ? GeeqServiceImpl.P_00 : cnt < 10000 ? GeeqServiceImpl.P_05 : GeeqServiceImpl.P_10;
+            switch ( taxon.getCommonName() ) {
+                case "human":
+                case "rat":
+                case "mouse":
+                case "zebrafish":
+                case "worm":
+                    scores[i++] = cnt < 5000 ? GeeqServiceImpl.N_10
+                            : cnt < 10000 ? GeeqServiceImpl.N_05
+                            : cnt < 15000 ? GeeqServiceImpl.P_00 : cnt < 18000 ? GeeqServiceImpl.P_05 : GeeqServiceImpl.P_10;
+                    break;
+                case "yeast":
+                    // Yeast has about 6k protein-coding genes
+                    scores[i++] = cnt < 1000 ? GeeqServiceImpl.N_10
+                            : cnt < 2500 ? GeeqServiceImpl.N_05
+                            : cnt < 4000 ? GeeqServiceImpl.P_00 : cnt < 5000 ? GeeqServiceImpl.P_05 : GeeqServiceImpl.P_10;
+                    break;
+                case "fly":
+                    // Fly has about 14k protein coding genes
+                    scores[i++] = cnt < 2000 ? GeeqServiceImpl.N_10
+                            : cnt < 5000 ? GeeqServiceImpl.N_05
+                            : cnt < 8000 ? GeeqServiceImpl.P_00 : cnt < 10000 ? GeeqServiceImpl.P_05 : GeeqServiceImpl.P_10;
+                    break;
             }
 
         }
@@ -495,6 +454,7 @@ public class GeeqServiceImpl extends AbstractVoEnabledService<Geeq, GeeqValueObj
         for ( QuantitationType qt : quantitationTypes ) {
             if ( qt.getIsRecomputedFromRawData() ) {
                 dataReprocessedFromRaw = true;
+                break;
             }
         }
 
@@ -510,12 +470,9 @@ public class GeeqServiceImpl extends AbstractVoEnabledService<Geeq, GeeqValueObj
         String problems = "";
 
         if ( !hasRawData ) {
-            try {
-                ExpressionDataDoubleMatrix dmatrix = expressionDataMatrixService.getProcessedExpressionDataMatrix( ee );
-                hasMissingValues = dmatrix.hasMissingValues();
-            } catch ( NoProcessedExpressionDataVectorsException e ) {
-                hasProcessedVectors = false;
-            }
+            ExpressionDataDoubleMatrix dmatrix = expressionDataMatrixService.getProcessedExpressionDataMatrix( ee );
+            hasProcessedVectors = dmatrix != null;
+            hasMissingValues = dmatrix != null && dmatrix.hasMissingValues();
         }
 
         score = hasRawData || ( !hasMissingValues && hasProcessedVectors ) ? GeeqServiceImpl.P_10 : GeeqServiceImpl.N_10;
@@ -567,7 +524,7 @@ public class GeeqServiceImpl extends AbstractVoEnabledService<Geeq, GeeqValueObj
         boolean twoColor = false;
 
         for ( ArrayDesign ad : ads ) {
-            if ( ad.getTechnologyType().equals( TechnologyType.TWOCOLOR) ) {
+            if ( ad.getTechnologyType().equals( TechnologyType.TWOCOLOR ) ) {
                 twoColor = true;
                 break;
             }
@@ -678,10 +635,6 @@ public class GeeqServiceImpl extends AbstractVoEnabledService<Geeq, GeeqValueObj
         auditTrailService.addUpdateEvent( ee, GeeqEvent.class, note, details );
     }
 
-    private String fromTo( Object from, Object to ) {
-        return "From: " + from + " To: " + to;
-    }
-
     /**
      * Checks for all combinations of factor values in the experiments bio assays, and counts the amount of
      * their occurrences, then checks what the lowest amount is. The method only combines factor values from
@@ -743,6 +696,7 @@ public class GeeqServiceImpl extends AbstractVoEnabledService<Geeq, GeeqValueObj
 
     }
 
+    @Nullable
     private DoubleMatrix<BioAssay, BioAssay> getCormat( ExpressionExperiment ee, Geeq gq ) {
         DoubleMatrix<BioAssay, BioAssay> cormat = null;
         try {
@@ -758,7 +712,7 @@ public class GeeqServiceImpl extends AbstractVoEnabledService<Geeq, GeeqValueObj
         return cormat;
     }
 
-    private double[] getLowerTriCormat( DoubleMatrix<BioAssay, BioAssay> cormat ) {
+    private double[] getLowerTriCormat( @Nullable DoubleMatrix<BioAssay, BioAssay> cormat ) {
         if ( cormat == null || cormat.rows() == 0 ) {
             return new double[] {};
         }
@@ -780,7 +734,7 @@ public class GeeqServiceImpl extends AbstractVoEnabledService<Geeq, GeeqValueObj
         double value = 0;
         boolean hasCorrMat = true;
 
-        if ( cormatLTri == null || cormatLTri.length == 0 ) {
+        if ( cormatLTri.length == 0 ) {
             hasCorrMat = false;
         } else {
             switch ( type ) {
@@ -815,7 +769,7 @@ public class GeeqServiceImpl extends AbstractVoEnabledService<Geeq, GeeqValueObj
     }
 
     private double getWeightedMean( double[] vals, double[] weights ) {
-        if ( vals == null || weights == null || vals.length != weights.length ) {
+        if ( vals.length != weights.length ) {
             throw new IllegalArgumentException( GeeqServiceImpl.ERR_W_MEAN_BAD_ARGS );
         }
         double sum = GeeqServiceImpl.P_00;

@@ -29,6 +29,7 @@ import ubic.basecode.util.BatchIterator;
 import ubic.gemma.core.analysis.preprocess.normalize.QuantileNormalizer;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrixUtil;
+import ubic.gemma.core.datastructure.matrix.QuantitationMismatchException;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.QuantitationTypeImpl;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
@@ -80,6 +81,15 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
 
     @Override
     public ExpressionExperiment createProcessedDataVectors( ExpressionExperiment ee ) {
+        try {
+            return createProcessedDataVectors( ee, true );
+        } catch ( QuantitationMismatchException e ) {
+            throw new RuntimeException( e );
+        }
+    }
+
+    @Override
+    public ExpressionExperiment createProcessedDataVectors( ExpressionExperiment ee, boolean ignoreQuantitationMismatch ) throws QuantitationMismatchException {
         if ( ee == null ) {
             throw new IllegalStateException( "ExpressionExperiment cannot be null" );
         }
@@ -123,7 +133,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
 
         /* log-transform if necessary */
         Collection<RawExpressionDataVector> preferredDataVectors = ensureLog2Scale( rawPreferredDataVectors,
-                preferredMaskedDataQuantitationType );
+                preferredMaskedDataQuantitationType, ignoreQuantitationMismatch );
 
         Map<CompositeSequence, DoubleVectorValueObject> maskedVectorObjects = this
                 .maskAndUnpack( preferredDataVectors, missingValueVectors );
@@ -475,7 +485,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
         //        }
         if ( !qtsToRemove.isEmpty() ) {
             AbstractDao.log.info( "Deleting " + qtsToRemove.size() + " old quantitation types" );
-            expressionExperiment.getQuantitationTypes().removeAll( qtsToRemove );
+            qtsToRemove.forEach( expressionExperiment.getQuantitationTypes()::remove );
             this.getSessionFactory().getCurrentSession().update( expressionExperiment );
             this.getSessionFactory().getCurrentSession()
                     .createQuery( "delete from QuantitationTypeImpl where id in (:ids)" )
@@ -490,23 +500,15 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
      * @param  preferredMaskedDataQuantitationType preferred masked data QT
      * @return                                     collection containing the vectors
      */
-    public Collection<RawExpressionDataVector> ensureLog2Scale(
+    private Collection<RawExpressionDataVector> ensureLog2Scale(
             Collection<RawExpressionDataVector> rawPreferredDataVectors,
-            QuantitationType preferredMaskedDataQuantitationType ) {
-        Collection<RawExpressionDataVector> preferredDataVectors = new HashSet<>();
-
-        if ( !preferredMaskedDataQuantitationType.getScale().equals( ScaleType.LOG2 ) ) {
-            log.info( "Converting from " + preferredMaskedDataQuantitationType.getScale() + " to log2" );
-            ExpressionDataDoubleMatrix matrix = ExpressionDataDoubleMatrixUtil
-                    .ensureLog2Scale( preferredMaskedDataQuantitationType,
-                            new ExpressionDataDoubleMatrix( rawPreferredDataVectors ) );
-            preferredDataVectors.addAll( matrix.toRawDataVectors() );
-            preferredMaskedDataQuantitationType.setScale( ScaleType.LOG2 );
-            this.getSessionFactory().getCurrentSession().update( preferredMaskedDataQuantitationType );
-        } else {
-            preferredDataVectors.addAll( rawPreferredDataVectors );
-        }
-        return preferredDataVectors;
+            QuantitationType preferredMaskedDataQuantitationType,
+            boolean ignoreQuantitationMismatch ) throws QuantitationMismatchException {
+        ExpressionDataDoubleMatrix matrix = ExpressionDataDoubleMatrixUtil
+                .ensureLog2Scale( new ExpressionDataDoubleMatrix( rawPreferredDataVectors ), ignoreQuantitationMismatch );
+        preferredMaskedDataQuantitationType.setScale( ScaleType.LOG2 );
+        this.getSessionFactory().getCurrentSession().update( preferredMaskedDataQuantitationType );
+        return new HashSet<>( matrix.toRawDataVectors() );
     }
 
     @Override

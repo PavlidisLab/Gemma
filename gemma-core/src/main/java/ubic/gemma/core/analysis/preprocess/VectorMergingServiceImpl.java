@@ -24,9 +24,12 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ubic.basecode.io.ByteArrayConverter;
 import ubic.gemma.core.analysis.expression.AnalysisUtilService;
 import ubic.gemma.core.analysis.service.ExpressionExperimentVectorManipulatingService;
+import ubic.gemma.model.common.AbstractDescribable;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ExpressionExperimentVectorMergeEvent;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
@@ -67,7 +70,7 @@ import java.util.*;
  * @author pavlidis
  * @see ExpressionDataMatrixBuilder
  */
-@Component
+@Service
 public class VectorMergingServiceImpl extends ExpressionExperimentVectorManipulatingService
         implements VectorMergingService {
 
@@ -95,7 +98,9 @@ public class VectorMergingServiceImpl extends ExpressionExperimentVectorManipula
     private VectorMergingHelperService vectorMergingHelperService;
 
     @Override
+    @Transactional
     public ExpressionExperiment mergeVectors( ExpressionExperiment ee ) {
+        ee = expressionExperimentService.thaw( ee );
 
         Collection<ArrayDesign> arrayDesigns = expressionExperimentService.getArrayDesignsUsed( ee );
 
@@ -104,7 +109,6 @@ public class VectorMergingServiceImpl extends ExpressionExperimentVectorManipula
                     "Cannot cope with more than one platform; switch experiment to use a (merged) platform first" );
         }
 
-        ee = expressionExperimentService.thaw( ee );
         Collection<QuantitationType> qts = expressionExperimentService.getQuantitationTypes( ee );
         VectorMergingServiceImpl.log.info( qts.size() + " quantitation types for potential merge" );
 
@@ -233,7 +237,7 @@ public class VectorMergingServiceImpl extends ExpressionExperimentVectorManipula
 
         // TRANSACTION
         log.info( ee.getRawExpressionDataVectors().size() );
-        vectorMergingHelperService.persist( ee, newVectors );
+        ee = vectorMergingHelperService.persist( ee, newVectors );
 
         ee = expressionExperimentService.loadOrFail( ee.getId() );
         ee = expressionExperimentService.thaw( ee );
@@ -567,12 +571,7 @@ public class VectorMergingServiceImpl extends ExpressionExperimentVectorManipula
      */
     private List<BioAssayDimension> sortedBioAssayDimensions( Collection<BioAssayDimension> oldBioAssayDims ) {
         List<BioAssayDimension> sortedOldDims = new ArrayList<>( oldBioAssayDims );
-        Collections.sort( sortedOldDims, new Comparator<BioAssayDimension>() {
-            @Override
-            public int compare( BioAssayDimension o1, BioAssayDimension o2 ) {
-                return o1.getId().compareTo( o2.getId() );
-            }
-        } );
+        sortedOldDims.sort( Comparator.comparing( AbstractDescribable::getId ) );
         return sortedOldDims;
     }
 }

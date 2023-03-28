@@ -124,9 +124,4 @@ class SearchServiceTestContextConfiguration {
     public BibliographicReferenceService bibliographicReferenceService() {
         return mock( BibliographicReferenceService.class );
     }
-
-    @Bean
-    public OntologyChildrenCache ontologyChildrenCache() {
-        return new OntologyChildrenCache();
-    }
 }

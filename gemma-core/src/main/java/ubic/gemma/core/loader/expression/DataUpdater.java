@@ -26,10 +26,6 @@ public interface DataUpdater {
 
     ExpressionExperiment addData( ExpressionExperiment ee, ArrayDesign targetPlatform, ExpressionDataDoubleMatrix data );
 
-    @SuppressWarnings("UnusedReturnValue")
-    // Possible external use
-    int deleteData( ExpressionExperiment ee, QuantitationType qt );
-
     ExpressionExperiment replaceData( ExpressionExperiment ee, ArrayDesign targetPlatform,
             ExpressionDataDoubleMatrix data );
 }

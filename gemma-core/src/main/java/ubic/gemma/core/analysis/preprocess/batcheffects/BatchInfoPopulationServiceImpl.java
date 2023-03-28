@@ -140,13 +140,13 @@ public class BatchInfoPopulationServiceImpl implements BatchInfoPopulationServic
             if ( files == null || files.isEmpty() ) {
                 this.auditTrailService
                         .addUpdateEvent( ee, FailedBatchInformationMissingEvent.class, "No files were found" );
-                throw new BatchInfoPopulationException( "No file were found." );
+                throw new BatchInfoPopulationException( ee, "No file were found." );
             }
             this.getBatchDataFromRawFiles( ee, files );
 
         } catch ( Exception e ) {
             this.auditTrailService.addUpdateEvent( ee, FailedBatchInformationFetchingEvent.class, e.getMessage(), e );
-            throw new BatchInfoPopulationException( e );
+            throw new BatchInfoPopulationException( ee, e );
         } finally {
             if ( BatchInfoPopulationServiceImpl.CLEAN_UP && files != null ) {
                 for ( LocalFile localFile : files ) {
@@ -267,7 +267,7 @@ public class BatchInfoPopulationServiceImpl implements BatchInfoPopulationServic
         ExperimentalFactor factor = batchInfoPopulationHelperService.createBatchFactor( ee, dates );
 
         if ( dates.isEmpty() ) {
-            throw new BatchInfoPopulationException( "No biomaterials were associated to " + ee.getShortName() + "." );
+            throw new BatchInfoPopulationException( ee, "No biomaterials were associated" );
         }
 
         // we don't make a batch factor if there is just one batch.

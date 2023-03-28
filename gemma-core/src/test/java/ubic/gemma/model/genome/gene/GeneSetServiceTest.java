@@ -72,7 +72,7 @@ public class GeneSetServiceTest extends BaseSpringContextTest {
 
         InputStream is = new GZIPInputStream(
                 new ClassPathResource( "/data/loader/ontology/molecular-function.test.owl.gz" ).getInputStream() );
-        geneOntologyService.loadTermsInNameSpace( is );
+        geneOntologyService.loadTermsInNameSpace( is, false );
 
         g = this.getTestPersistentGene();
         g3 = this.getTestPersistentGene();

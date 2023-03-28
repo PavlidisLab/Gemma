@@ -97,7 +97,7 @@ public abstract class AbstractService<O extends Identifiable> implements BaseSer
     @Nonnull
     @Override
     @Transactional(readOnly = true)
-    public final O loadOrFail( Long id ) {
+    public O loadOrFail( Long id ) {
         return Objects.requireNonNull( mainDao.load( id ),
                 String.format( "No %s with ID %d.", mainDao.getElementClass().getName(), id ) );
     }

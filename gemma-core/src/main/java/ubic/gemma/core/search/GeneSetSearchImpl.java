@@ -296,7 +296,7 @@ public class GeneSetSearchImpl implements GeneSetSearch {
         Collection<OntologyResource> allMatches = new HashSet<>();
         allMatches.add( term );
         assert term instanceof OntologyTerm;
-        allMatches.addAll( this.geneOntologyService.getAllChildren( ( OntologyTerm ) term ) );
+        allMatches.addAll( ( ( OntologyTerm ) term ).getChildren( false, false ) );
         // GeneSetSearchImpl.log.info( term );
         /*
          * Gather up uris
@@ -339,7 +339,7 @@ public class GeneSetSearchImpl implements GeneSetSearch {
 
         Collection<OntologyResource> allMatches = new HashSet<>();
         allMatches.add( term );
-        allMatches.addAll( this.geneOntologyService.getAllChildren( term ) );
+        allMatches.addAll( term.getChildren( false, false ) );
         GeneSetSearchImpl.log.info( term );
         /*
          * Gather up uris

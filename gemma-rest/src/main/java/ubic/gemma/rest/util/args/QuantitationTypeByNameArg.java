@@ -1,6 +1,5 @@
 package ubic.gemma.rest.util.args;
 
-import com.hp.hpl.jena.shared.NotFoundException;
 import io.swagger.v3.oas.annotations.media.Schema;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
@@ -24,7 +23,7 @@ public class QuantitationTypeByNameArg extends QuantitationTypeArg<String> {
 
     @Nonnull
     @Override
-    public QuantitationType getEntity( QuantitationTypeService service ) throws NotFoundException, BadRequestException {
+    public QuantitationType getEntity( QuantitationTypeService service ) throws BadRequestException {
         throw new UnsupportedOperationException( "A name is insufficient to retrieve a unique quantitation type." );
     }
 

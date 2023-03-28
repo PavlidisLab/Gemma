@@ -19,6 +19,7 @@
 package ubic.gemma.core.analysis.preprocess;
 
 import ubic.gemma.core.analysis.preprocess.filter.InsufficientDataException;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
  * @author paul
@@ -27,8 +28,8 @@ public class InsufficientProbesException extends InsufficientDataException {
 
     private static final long serialVersionUID = 1L;
 
-    public InsufficientProbesException( String message ) {
-        super( message );
+    public InsufficientProbesException( ExpressionExperiment ee, String message ) {
+        super( ee, message );
     }
 
 }

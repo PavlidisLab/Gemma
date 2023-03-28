@@ -239,7 +239,7 @@ public class DataUpdaterImpl implements DataUpdater {
         ee = this.replaceData( ee, targetArrayDesign, log2cpmEEMatrix );
 
         QuantitationType countqt = this.makeCountQt();
-        for ( QuantitationType oldqt : oldQts ) { // use old QT if possible 
+        for ( QuantitationType oldqt : oldQts ) { // use old QT if possible
             if ( oldqt.getName().equals( countqt.getName() ) ) {
                 countqt = oldqt;
                 break;
@@ -592,20 +592,6 @@ public class DataUpdaterImpl implements DataUpdater {
         }
 
         return ee;
-    }
-
-    /**
-     * Generic. Remove all raw data for an experiment
-     *
-     * @param  ee experiment
-     * @param  qt quantitation type
-     * @return amount of vectors removed
-     */
-    @SuppressWarnings("UnusedReturnValue")
-    // Possible external use
-    @Override
-    public int deleteData( ExpressionExperiment ee, QuantitationType qt ) {
-        return this.experimentService.removeRawVectors( ee, qt );
     }
 
     /**
@@ -1163,7 +1149,7 @@ public class DataUpdaterImpl implements DataUpdater {
     private ExpressionExperiment postprocess( ExpressionExperiment ee ) {
         // several transactions
         try {
-            ee = preprocessorService.process( ee );
+            preprocessorService.process( ee );
         } catch ( PreprocessingException e ) {
             DataUpdaterImpl.log.error( "Error during postprocessing", e );
         }
@@ -1172,7 +1158,7 @@ public class DataUpdaterImpl implements DataUpdater {
 
     //    /**
     //     * For a RNA-seq count matrix, remove rows that have only zeros.
-    //     * 
+    //     *
     //     * @param  countEEMatrix
     //     * @return               filtered matrix
     //     */

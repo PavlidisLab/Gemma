@@ -21,7 +21,6 @@ package ubic.gemma.core.analysis.preprocess;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import ubic.gemma.core.analysis.service.ExpressionDataMatrixService;
-import ubic.gemma.core.analysis.service.NoProcessedExpressionDataVectorsException;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.expression.bioAssayData.MeanVarianceRelation;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -47,7 +46,7 @@ public class MeanVarianceServiceHelperImpl implements MeanVarianceServiceHelper 
     }
 
     @Override
-    public ExpressionDataDoubleMatrix getIntensities( ExpressionExperiment ee ) throws NoProcessedExpressionDataVectorsException {
+    public ExpressionDataDoubleMatrix getIntensities( ExpressionExperiment ee ) {
         return expressionDataMatrixService.getProcessedExpressionDataMatrix( ee );
     }
 

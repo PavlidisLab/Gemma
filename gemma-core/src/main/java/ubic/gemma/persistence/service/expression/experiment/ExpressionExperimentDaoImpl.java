@@ -1401,94 +1401,61 @@ public class ExpressionExperimentDaoImpl
         log.info( "Deleting " + ee.getShortName() + "..." );
 
         // reload EE as deletion will not work if it came from a different session
-        ee = load( ee.getId() );
+        ee = ( ExpressionExperiment ) getSessionFactory().getCurrentSession().merge( ee );
 
         if ( ee == null ) {
             return;
         }
 
-        Session session = this.getSessionFactory().getCurrentSession();
-
         // Note that links and analyses are deleted separately - see the ExpressionExperimentService.
-
-        // At this point, the ee is probably still in the session, as the service already has gotten it
-        // in this transaction.
-        session.flush();
-        session.clear();
-
-        log.debug( " ... clearing curation details associations" );
 
         // these are tied to the audit trail and will cause lock problems it we don't clear first (due to cascade=all on the curation details, but
         // this may be okay now with updated config - see CurationDetails.hbm.xml)
         ee.getCurationDetails().setLastNeedsAttentionEvent( null );
         ee.getCurationDetails().setLastNoteUpdateEvent( null );
         ee.getCurationDetails().setLastTroubledEvent( null );
-        session.update( ee.getCurationDetails() );
-
-        session.update( ee );
-
-        /*
-         * This will fail because of multiple cascade=all on audit events.
-         */
-        //    session.buildLockRequest( LockOptions.NONE ).lock( ee );
-
-        Hibernate.initialize( ee.getAuditTrail() );
 
         Collection<BioAssayDimension> dims = this.getBioAssayDimensions( ee );
-        Collection<QuantitationType> qts = this.getQuantitationTypes( ee );
 
-        log.debug( " ... clearing vectors" );
-
-        ee.getRawExpressionDataVectors().clear();
-
-        ee.getProcessedExpressionDataVectors().clear();
-
+        // dissociate this EE from other parts
         for ( ExpressionExperiment e : ee.getOtherParts() ) {
             e.getOtherParts().remove( ee );
-            session.update( e );
         }
         ee.getOtherParts().clear();
 
-        log.debug( " ... calling update&flush" );
-
-        session.update( ee );
-        session.flush();
-
-        AbstractDao.log.debug( "... removing " + dims.size() + " BioAssayDimensions ..." );
         for ( BioAssayDimension dim : dims ) {
             dim.getBioAssays().clear();
-            session.update( dim );
-            session.delete( dim );
         }
-        //   dims.clear();
-        session.flush();
 
-        AbstractDao.log.debug( "... removing Bioassays and biomaterials ..." );
-
-        // keep to put back in the object.
-        Map<BioAssay, BioMaterial> copyOfRelations = new HashMap<>();
-
+        // we don't want to remove a biomaterial twice if it is attached to multiple BAs
         Collection<BioMaterial> bioMaterialsToDelete = new HashSet<>();
         Collection<BioAssay> bioAssays = ee.getBioAssays();
-        this.removeBioAssays( copyOfRelations, bioMaterialsToDelete, bioAssays );
-
-        AbstractDao.log.debug( ".. Last bits ..." );
+        for ( BioAssay ba : bioAssays ) {
+            // relations to files cascade, so we only have to worry about biomaterials, which aren't cascaded from
+            // anywhere. BioAssay -> BioMaterial is many-to-one, but bioassaySet (experiment) owns the bioAssay.
+            BioMaterial biomaterial = ba.getSampleUsed();
+            if ( biomaterial == null ) {
+                log.warn( "BioAssay " + ba + " has no associated BioMaterial when attempting to remove its parent ExpressionExperiment. It will be skipped for now." );
+                continue;
+            }
+            bioMaterialsToDelete.add( biomaterial );
+            ba.setSampleUsed( null );
+        }
 
         // We remove them here in case they are associated to more than one bioassay-- no cascade is possible.
         for ( BioMaterial bm : bioMaterialsToDelete ) {
-            session.delete( bm );
+            bm.getFactorValues().clear();
+            bm.getBioAssaysUsedIn().clear();
+            getSessionFactory().getCurrentSession().delete( bm );
         }
 
-        for ( QuantitationType qt : qts ) {
-            session.delete( qt );
-        }
+        // FIXME: factors and vectors are not removed before the design if the entity is out-of-sync
+        getSessionFactory().getCurrentSession().refresh( ee );
 
-        log.info( ".... flush and final deletion ..." );
+        AbstractDao.log.debug( ".. Last bits ..." );
 
-        session.flush();
+        log.info( ".... final deletion ..." );
         super.remove( ee );
-
-        AbstractDao.log.info( "Deleted " + ee );
     }
 
     @Override
@@ -1752,128 +1719,21 @@ public class ExpressionExperimentDaoImpl
                 .list();
     }
 
-    private void removeBioAssays( Map<BioAssay, BioMaterial> copyOfRelations,
-            Collection<BioMaterial> bioMaterialsToDelete, Collection<BioAssay> bioAssays ) {
-        for ( BioAssay ba : bioAssays ) {
-            // relations to files cascade, so we only have to worry about biomaterials, which aren't cascaded from
-            // anywhere. BioAssay -> BioMaterial is many-to-one, but bioassaySet (experiment) owns the bioAssay.
-            BioMaterial biomaterial = ba.getSampleUsed();
+    private ExpressionExperiment thaw( ExpressionExperiment ee, boolean vectorsAlso ) {
+        ExpressionExperiment result = thawLiter( ee );
 
-            if ( biomaterial == null ) {
-                log.warn( "BioAssay " + ba + " has no associated BioMaterial when attempting to remove its parent ExpressionExperiment. It will be skipped for now." );
-                continue;
-            }
-
-            bioMaterialsToDelete.add( biomaterial );
-
-            copyOfRelations.put( ba, biomaterial );
-
-            Hibernate.initialize( biomaterial );
-
-            // this can easily end up with an unattached object.
-            Hibernate.initialize( biomaterial.getBioAssaysUsedIn() );
-
-            biomaterial.getFactorValues().clear();
-            biomaterial.getBioAssaysUsedIn().clear();
-
-            ba.setSampleUsed( null );
-        }
-    }
-
-    private int removeDataVectors( Session session, Set<BioAssayDimension> dims, Set<QuantitationType> qts,
-            Collection<RawExpressionDataVector> designElementDataVectors, int count ) {
-        AbstractDao.log.info( "Removing Design Element Data Vectors ..." );
-        for ( RawExpressionDataVector dv : designElementDataVectors ) {
-            BioAssayDimension bad = dv.getBioAssayDimension();
-            dims.add( bad );
-            QuantitationType qt = dv.getQuantitationType();
-            qts.add( qt );
-            dv.setBioAssayDimension( null );
-            dv.setQuantitationType( null );
-            session.delete( dv );
-            if ( ++count % 1000 == 0 ) {
-                session.flush();
-                session.clear();
-            }
-            // put back...
-            dv.setBioAssayDimension( bad );
-            dv.setQuantitationType( qt );
-
-            if ( count % 20000 == 0 ) {
-                AbstractDao.log.info( count + " design Element data vectors deleted" );
-            }
-        }
-        count = 0;
-        return count;
-    }
-
-    private void removeProcessedVectors( Session
-            session, Set<BioAssayDimension> dims, Set<QuantitationType> qts,
-            int count, Collection<ProcessedExpressionDataVector> processedVectors ) {
-        for ( ProcessedExpressionDataVector dv : processedVectors ) {
-            BioAssayDimension bad = dv.getBioAssayDimension();
-            dims.add( bad );
-            QuantitationType qt = dv.getQuantitationType();
-            qts.add( qt );
-            dv.setBioAssayDimension( null );
-            dv.setQuantitationType( null );
-            session.delete( dv );
-            if ( ++count % 1000 == 0 ) {
-                session.flush();
-                session.clear();
-            }
-            if ( count % 20000 == 0 ) {
-                AbstractDao.log.info( count + " processed design Element data vectors deleted" );
-            }
-
-            // put back..
-            dv.setBioAssayDimension( bad );
-            dv.setQuantitationType( qt );
-        }
-    }
-
-    private ExpressionExperiment thaw( @Nullable ExpressionExperiment ee, boolean vectorsAlso ) {
-        if ( ee == null ) {
-            return null;
-        }
-
-        if ( ee.getId() == null )
-            throw new IllegalArgumentException( "id cannot be null, cannot be thawed: " + ee );
-
-        /*
-         * Trying to do everything fails miserably, so we still need a hybrid approach. But returning the thawed object,
-         * as opposed to thawing the one passed in, solves problems.
-         */
-        String thawQuery = "select distinct e from ExpressionExperiment e "
-                + " left join fetch e.accession acc left join fetch acc.externalDatabase where e.id=:eeId";
-
-        //noinspection unchecked
-        List<ExpressionExperiment> res = this.getSessionFactory().getCurrentSession().createQuery( thawQuery )
-                .setParameter( "eeId", ee.getId() ).list();
-
-        if ( res.size() == 0 ) {
-            throw new IllegalArgumentException( "No experiment with id=" + ee.getId() + " could be loaded." );
-        }
-        ExpressionExperiment result = res.iterator().next();
-        Hibernate.initialize( result.getMeanVarianceRelation() );
         Hibernate.initialize( result.getQuantitationTypes() );
         Hibernate.initialize( result.getCharacteristics() );
-        Hibernate.initialize( result.getPrimaryPublication() );
-        Hibernate.initialize( result.getOtherRelevantPublications() );
-        Hibernate.initialize( result.getBioAssays() );
-        Hibernate.initialize( result.getAuditTrail() );
-        Hibernate.initialize( result.getGeeq() );
-        Hibernate.initialize( result.getOtherParts() );
 
-        if ( result.getAuditTrail() != null )
+        if ( result.getAuditTrail() != null ) {
             Hibernate.initialize( result.getAuditTrail().getEvents() );
-        Hibernate.initialize( result.getCurationDetails() );
+        }
 
+        Hibernate.initialize( result.getBioAssays() );
         for ( BioAssay ba : result.getBioAssays() ) {
             Hibernate.initialize( ba.getArrayDesignUsed() );
             Hibernate.initialize( ba.getArrayDesignUsed().getDesignProvider() );
             Hibernate.initialize( ba.getOriginalPlatform() );
-
             Hibernate.initialize( ba.getSampleUsed() );
             BioMaterial bm = ba.getSampleUsed();
             if ( bm != null ) {
@@ -1884,7 +1744,6 @@ public class ExpressionExperimentDaoImpl
 
         ExperimentalDesign experimentalDesign = result.getExperimentalDesign();
         if ( experimentalDesign != null ) {
-            Hibernate.initialize( experimentalDesign );
             Hibernate.initialize( experimentalDesign.getExperimentalFactors() );
             Hibernate.initialize( experimentalDesign.getTypes() );
             for ( ExperimentalFactor factor : experimentalDesign.getExperimentalFactors() ) {
@@ -1901,90 +1760,62 @@ public class ExpressionExperimentDaoImpl
             }
         }
 
-        this.thawReferences( result );
-        this.thawMeanVariance( result );
-
         if ( vectorsAlso ) {
             /*
              * Optional because this could be slow.
              */
             Hibernate.initialize( result.getRawExpressionDataVectors() );
             Hibernate.initialize( result.getProcessedExpressionDataVectors() );
-
         }
 
         return result;
     }
 
-    /**
-     * Method for the front end display
-     *
-     * @param ee expression experiment to be thawed
-     * @return thawed expression experiment.
-     */
-    private ExpressionExperiment thawLiter( @Nullable ExpressionExperiment ee ) {
-        if ( ee == null ) {
-            return null;
+    private ExpressionExperiment thawLiter( ExpressionExperiment ee ) {
+        if ( ee.getId() == null ) {
+            throw new IllegalArgumentException( "id cannot be null, cannot be thawed: " + ee );
         }
 
-        if ( ee.getId() == null )
-            throw new IllegalArgumentException( "id cannot be null, cannot be thawed: " + ee );
+        ExpressionExperiment result = ( ExpressionExperiment ) this.getSessionFactory().getCurrentSession()
+                .createQuery( "select distinct e from ExpressionExperiment e "
+                        + "left join fetch e.accession acc "
+                        + "left join fetch acc.externalDatabase "
+                        + "left join fetch e.meanVarianceRelation "
+                        + "left join fetch e.primaryPublication p "
+                        + "left join fetch p.pubAccession pa "
+                        + "left join fetch pa.externalDatabase "
+                        + "left join fetch e.auditTrail "
+                        + "left join fetch e.geeq "
+                        + "left join fetch e.curationDetails "
+                        + "left join fetch e.experimentalDesign "
+                        + "where e = :ee" )
+                .setParameter( "ee", ee )
+                .uniqueResult();
 
-        /*
-         * Trying to do everything fails miserably, so we still need a hybrid approach. But returning the thawed object,
-         * as opposed to thawing the one passed in, solves problems.
-         */
-        String thawQuery = "select distinct e from ExpressionExperiment e "
-                + " left join fetch e.accession acc left join fetch acc.externalDatabase " + "where e.id=:eeId";
-
-        List res = this.getSessionFactory().getCurrentSession().createQuery( thawQuery )
-                .setParameter( "eeId", ee.getId() ).list();
-
-        if ( res.size() == 0 ) {
+        if ( result == null ) {
             throw new IllegalArgumentException( "No experiment with id=" + ee.getId() + " could be loaded." );
         }
-        ExpressionExperiment result = ( ExpressionExperiment ) res.iterator().next();
-        Hibernate.initialize( result.getPrimaryPublication() );
-        Hibernate.initialize( result.getCurationDetails() );
-        Hibernate.initialize( result.getGeeq() );
+
         Hibernate.initialize( result.getOtherParts() );
 
-        ExperimentalDesign experimentalDesign = result.getExperimentalDesign();
-        if ( experimentalDesign != null ) {
-            Hibernate.initialize( experimentalDesign );
-            Hibernate.initialize( experimentalDesign.getExperimentalFactors() );
+        if ( result.getExperimentalDesign() != null ) {
+            Hibernate.initialize( result.getExperimentalDesign().getExperimentalFactors() );
         }
 
-        this.thawReferences( result );
-        this.thawMeanVariance( result );
-
-        return result;
-    }
-
-    private void thawMeanVariance( final ExpressionExperiment expressionExperiment ) {
-        if ( expressionExperiment.getMeanVarianceRelation() != null ) {
-            Hibernate.initialize( expressionExperiment.getMeanVarianceRelation() );
-            Hibernate.initialize( expressionExperiment.getMeanVarianceRelation().getMeans() );
-            Hibernate.initialize( expressionExperiment.getMeanVarianceRelation().getVariances() );
-        }
-    }
-
-    private void thawReferences( final ExpressionExperiment expressionExperiment ) {
-        if ( expressionExperiment.getPrimaryPublication() != null ) {
-            Hibernate.initialize( expressionExperiment.getPrimaryPublication() );
-            Hibernate.initialize( expressionExperiment.getPrimaryPublication().getPubAccession() );
-            Hibernate.initialize(
-                    expressionExperiment.getPrimaryPublication().getPubAccession().getExternalDatabase() );
-            //   Hibernate.initialize( expressionExperiment.getPrimaryPublication().getPublicationTypes() );
-        }
-        if ( expressionExperiment.getOtherRelevantPublications() != null ) {
-            Hibernate.initialize( expressionExperiment.getOtherRelevantPublications() );
-            for ( BibliographicReference bf : expressionExperiment.getOtherRelevantPublications() ) {
+        if ( result.getOtherRelevantPublications() != null ) {
+            Hibernate.initialize( result.getOtherRelevantPublications() );
+            for ( BibliographicReference bf : result.getOtherRelevantPublications() ) {
                 Hibernate.initialize( bf.getPubAccession() );
                 Hibernate.initialize( bf.getPubAccession().getExternalDatabase() );
-                //     Hibernate.initialize( bf.getPublicationTypes() );
             }
         }
+
+        if ( result.getMeanVarianceRelation() != null ) {
+            Hibernate.initialize( result.getMeanVarianceRelation().getMeans() );
+            Hibernate.initialize( result.getMeanVarianceRelation().getVariances() );
+        }
+
+        return result;
     }
 
     private void populateArrayDesignCount( Collection<ExpressionExperimentValueObject> eevos ) {

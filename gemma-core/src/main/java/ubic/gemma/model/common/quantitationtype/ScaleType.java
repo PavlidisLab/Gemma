@@ -39,6 +39,10 @@ public enum ScaleType {
      */
     UNSCALED,
     /**
+     * Constrained to be a value between 0 and 1.
+     */
+    PERCENT1,
+    /**
      * Constrained to be a value between 0 and 100.
      */
     PERCENT,

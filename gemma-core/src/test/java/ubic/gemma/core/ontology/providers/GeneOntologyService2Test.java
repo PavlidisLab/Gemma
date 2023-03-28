@@ -33,21 +33,21 @@ import static org.junit.Assert.assertNotNull;
  *
  * @author Paul
  */
-public class GeneOntologyServiceTest2 {
+public class GeneOntologyService2Test {
     private static GeneOntologyServiceImpl gos;
 
     // note: no spring context.
     @BeforeClass
     public static void setUp() throws Exception {
-        GeneOntologyServiceTest2.gos = new GeneOntologyServiceImpl();
+        GeneOntologyService2Test.gos = new GeneOntologyServiceImpl();
         InputStream is = new GZIPInputStream(
                 new ClassPathResource( "/data/loader/ontology/go.bptest.owl.gz" ).getInputStream() );
-        GeneOntologyServiceTest2.gos.loadTermsInNameSpace( is );
+        GeneOntologyService2Test.gos.loadTermsInNameSpace( is, false );
     }
 
     @AfterClass
     public static void tearDown() {
-        GeneOntologyServiceTest2.gos.shutDown();
+        GeneOntologyService2Test.gos.clearCaches();
     }
 
     @Test
@@ -56,7 +56,7 @@ public class GeneOntologyServiceTest2 {
 
         OntologyTerm termForId = gos.getTermForId( id );
         assertNotNull( termForId );
-        Collection<OntologyTerm> terms = GeneOntologyServiceTest2.gos.getParents( termForId );
+        Collection<OntologyTerm> terms = termForId.getParents( true, false );
         assertEquals( 1, terms.size() );
         OntologyTerm par = terms.iterator().next();
         assertEquals( "http://purl.obolibrary.org/obo/GO_0034110", par.getUri() ); // regulation of homotypic cell-cell
@@ -69,7 +69,7 @@ public class GeneOntologyServiceTest2 {
 
         OntologyTerm termForId = gos.getTermForId( id );
         assertNotNull( termForId );
-        Collection<OntologyTerm> terms = GeneOntologyServiceTest2.gos.getAllParents( termForId );
+        Collection<OntologyTerm> terms = termForId.getParents( false, false );
 
         // excludes "regulates" relations, excludes root.
 
@@ -88,13 +88,13 @@ public class GeneOntologyServiceTest2 {
          *
          * (biological process)
          */
-        assertEquals( 6, terms.size() );
+        assertEquals( 7, terms.size() );
     }
 
 
     @Test
     public final void testGetAspect() {
-        GOAspect termAspect = GeneOntologyServiceTest2.gos
+        GOAspect termAspect = GeneOntologyService2Test.gos
                 .getTermAspect( "GO:0034118" ); // regulation of erythrocyte aggregationS
         assertNotNull( termAspect );
 
@@ -106,7 +106,7 @@ public class GeneOntologyServiceTest2 {
 
     @Test
     public final void testGetAspect2() {
-        GOAspect termAspect = GeneOntologyServiceTest2.gos.getTermAspect( "GO:0007272" ); // ensheathment of neurons
+        GOAspect termAspect = GeneOntologyService2Test.gos.getTermAspect( "GO:0007272" ); // ensheathment of neurons
         assertNotNull( termAspect );
         String aspect = termAspect.toString().toLowerCase();
         assertEquals( "biological_process", aspect );

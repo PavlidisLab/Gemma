@@ -30,7 +30,7 @@ public class Taxon implements Identifiable, java.io.Serializable {
     private String scientificName;
     private String commonName;
     private Integer ncbiId;
-    private Boolean isGenesUsable;
+    private boolean isGenesUsable;
     private Integer secondaryNcbiId;
     private Long id;
     private ExternalDatabase externalDatabase;
@@ -131,11 +131,11 @@ public class Taxon implements Identifiable, java.io.Serializable {
         this.id = id;
     }
 
-    public Boolean getIsGenesUsable() {
+    public boolean getIsGenesUsable() {
         return this.isGenesUsable;
     }
 
-    public void setIsGenesUsable( Boolean isGenesUsable ) {
+    public void setIsGenesUsable( boolean isGenesUsable ) {
         this.isGenesUsable = isGenesUsable;
     }
 
@@ -187,7 +187,7 @@ public class Taxon implements Identifiable, java.io.Serializable {
             return new Taxon();
         }
 
-        public static Taxon newInstance( String scientificName, String commonName, Integer ncbiId, Boolean isGenesUsable ) {
+        public static Taxon newInstance( String scientificName, String commonName, Integer ncbiId, boolean isGenesUsable ) {
             final Taxon entity = new Taxon();
             entity.setScientificName( scientificName );
             entity.setCommonName( commonName );

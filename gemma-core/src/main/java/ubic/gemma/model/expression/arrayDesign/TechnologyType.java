@@ -28,4 +28,9 @@ public enum TechnologyType {
 
     /** We don't know */
     OTHER;
+
+    /**
+     * Enumeration of microarray platforms.
+     */
+    public static final EnumSet<TechnologyType> MICROARRAY = EnumSet.of( ONECOLOR, TWOCOLOR, DUALMODE );
 }

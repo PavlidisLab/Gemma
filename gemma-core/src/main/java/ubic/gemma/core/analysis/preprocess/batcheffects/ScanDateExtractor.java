@@ -16,6 +16,7 @@ package ubic.gemma.core.analysis.preprocess.batcheffects;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.text.ParseException;
 import java.util.Date;
 
 /**
@@ -25,6 +26,6 @@ import java.util.Date;
  */
 public interface ScanDateExtractor {
 
-    Date extract( InputStream is ) throws IOException, UnsupportedRawdataFileFormatException;
+    Date extract( InputStream is ) throws IOException, ParseException;
 
 }

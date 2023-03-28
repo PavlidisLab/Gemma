@@ -74,6 +74,8 @@ import ubic.gemma.persistence.service.expression.experiment.ExpressionExperiment
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSetService;
 import ubic.gemma.persistence.service.genome.biosequence.BioSequenceService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
+import ubic.gemma.persistence.util.EntityUtils;
+import ubic.gemma.persistence.util.Settings;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -180,8 +182,6 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
     private TaxonService taxonService;
     @Autowired
     private BibliographicReferenceService bibliographicReferenceService;
-    @Autowired
-    private OntologyChildrenCache ontologyChildrenCache;
 
     private final Set<Class<? extends Identifiable>> supportedResultTypes = new HashSet<>();
     private final ConfigurableConversionService resultObjectConversionService = new GenericConversionService();
@@ -729,9 +729,11 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
             watch.reset();
             watch.start();
 
-            Set<OntologyTerm> terms = new HashSet<>();
-            terms.addAll( matchingTerms );
-            terms.addAll( ontologyChildrenCache.getChildren( matchingTerms ) );
+            Set<OntologyTerm> terms = new HashSet<>( matchingTerms );
+            // TODO: move this logic in baseCode, this can be done far more efficiently with Jena API
+            for ( OntologyTerm ot : matchingTerms ) {
+                terms.addAll( ot.getChildren( false, true ) );
+            }
 
             // query current term before going to children
             int sizeBefore = results.size();

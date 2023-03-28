@@ -609,11 +609,13 @@ public class ExpressionExperimentController {
     }
 
     public void runGeeq( Long id, String mode ) {
-        geeqService.calculateScore( id, mode );
+        ExpressionExperiment ee = expressionExperimentService.loadOrFail( id );
+        geeqService.calculateScore( ee, GeeqService.ScoreMode.valueOf( mode ) );
     }
 
     public void setGeeqManualSettings( long id, GeeqAdminValueObject vo ) {
-        geeqService.setManualOverrides( id, vo );
+        ExpressionExperiment ee = expressionExperimentService.loadOrFail( id );
+        geeqService.setManualOverrides( ee, vo );
     }
 
     /**

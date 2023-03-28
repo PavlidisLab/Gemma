@@ -30,14 +30,10 @@ import ubic.basecode.util.r.RClient;
 import ubic.basecode.util.r.RConnectionFactory;
 import ubic.basecode.util.r.RServeClient;
 import ubic.gemma.core.analysis.service.ExpressionDataMatrixService;
-import ubic.gemma.core.analysis.service.NoProcessedExpressionDataVectorsException;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.core.util.test.BaseSpringContextTest;
 import ubic.gemma.model.common.description.Characteristic;
-import ubic.gemma.model.common.quantitationtype.PrimitiveType;
-import ubic.gemma.model.common.quantitationtype.QuantitationType;
-import ubic.gemma.model.common.quantitationtype.ScaleType;
-import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
+import ubic.gemma.model.common.quantitationtype.*;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -353,6 +349,7 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
 
         quantitationType = QuantitationType.Factory.newInstance();
         quantitationType.setName( "quantitation type" );
+        quantitationType.setGeneralType( GeneralType.QUANTITATIVE );
         quantitationType.setRepresentation( PrimitiveType.DOUBLE );
         quantitationType.setType( StandardQuantitationType.AMOUNT );
         quantitationType.setIsPreferred( true );
@@ -381,7 +378,6 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
      * Mocks the method getVectors in the {@link ExpressionDataMatrixService}.
      *
      */
-    @SneakyThrows(NoProcessedExpressionDataVectorsException.class)
     void configureMockAnalysisServiceHelper() {
         this.expressionDataMatrixService = mock( ExpressionDataMatrixService.class );
         when( expressionDataMatrixService.getProcessedExpressionDataMatrix( expressionExperiment ) )

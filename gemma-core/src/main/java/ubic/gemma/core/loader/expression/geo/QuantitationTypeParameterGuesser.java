@@ -419,23 +419,17 @@ public class QuantitationTypeParameterGuesser {
         if ( qt.getRepresentation() == null )
             qt.setRepresentation( rType );
 
-        if ( qt.getIsBackground() == null )
-            qt.setIsBackground( isBackground );
+        qt.setIsBackground( isBackground );
 
-        if ( qt.getIsBackgroundSubtracted() == null )
-            qt.setIsBackgroundSubtracted( isBackgroundSubtracted );
+        qt.setIsBackgroundSubtracted( isBackgroundSubtracted );
 
-        if ( qt.getIsNormalized() == null )
-            qt.setIsNormalized( isNormalized );
+        qt.setIsNormalized( isNormalized );
 
-        if ( qt.getIsRatio() == null )
-            qt.setIsRatio( isRatio );
+        qt.setIsRatio( isRatio );
 
-        if ( qt.getIsPreferred() == null )
-            qt.setIsPreferred( QuantitationTypeParameterGuesser.isPreferred( qt ) );
+        qt.setIsPreferred( QuantitationTypeParameterGuesser.isPreferred( qt ) );
 
-        if ( qt.getIsMaskedPreferred() == null )
-            qt.setIsMaskedPreferred( Boolean.FALSE );
+        qt.setIsMaskedPreferred( Boolean.FALSE );
 
     }
 

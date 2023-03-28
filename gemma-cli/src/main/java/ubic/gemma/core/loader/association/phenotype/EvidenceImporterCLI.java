@@ -14,9 +14,8 @@
  */
 package ubic.gemma.core.loader.association.phenotype;
 
-import org.apache.commons.cli.CommandLine;
 import ubic.basecode.ontology.model.OntologyTerm;
-import ubic.basecode.ontology.providers.AbstractOntologyService;
+import ubic.basecode.ontology.providers.OntologyService;
 import ubic.basecode.ontology.search.OntologySearchException;
 import ubic.basecode.util.StringUtil;
 import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
@@ -255,7 +254,7 @@ public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
     }
 
     private Set<CharacteristicValueObject> experimentTags2Ontology( Set<String> values, String category,
-                                                                    String categoryUri, AbstractOntologyService ontologyUsed ) throws OntologySearchException {
+                                                                    String categoryUri, OntologyService ontologyUsed ) throws OntologySearchException {
 
         Set<CharacteristicValueObject> experimentTags = new HashSet<>();
 

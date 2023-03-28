@@ -16,7 +16,7 @@
             <column name="COMPONENT_NUMBER" not-null="true" unique="false" sql-type="INTEGER"/>
         </property>
         <property name="value" type="java.lang.Double">
-            <column name="VALUE" not-null="true" unique="false" sql-type="DOUBLE"/>
+            <column name="`VALUE`" not-null="true" unique="false" sql-type="DOUBLE"/>
         </property>
         <property name="varianceFraction" type="java.lang.Double">
             <column name="VARIANCE_FRACTION" not-null="false" unique="false" sql-type="DOUBLE"/>

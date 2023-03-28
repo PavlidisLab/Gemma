@@ -1,12 +1,13 @@
 package ubic.gemma.persistence.service.expression.bioAssayData;
 
 import lombok.extern.apachecommons.CommonsLog;
-import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.core.analysis.preprocess.ProcessedExpressionDataVectorCreateHelperService;
 import ubic.gemma.core.analysis.preprocess.svd.SVDService;
+import ubic.gemma.core.datastructure.matrix.InferredQuantitationMismatchException;
+import ubic.gemma.core.datastructure.matrix.QuantitationMismatchException;
 import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionValueObject;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
@@ -90,7 +91,13 @@ public class ProcessedExpressionDataVectorServiceImpl
     @Override
     @Transactional
     public ExpressionExperiment createProcessedDataVectors( ExpressionExperiment expressionExperiment ) {
-        return this.processedExpressionDataVectorDao.createProcessedDataVectors( expressionExperiment );
+        return this.processedExpressionDataVectorDao.createProcessedDataVectors( expressionExperiment);
+    }
+
+    @Override
+    @Transactional
+    public ExpressionExperiment createProcessedDataVectors( ExpressionExperiment expressionExperiment, boolean ignoreQuantitationMismatch ) throws QuantitationMismatchException {
+        return this.processedExpressionDataVectorDao.createProcessedDataVectors( expressionExperiment, ignoreQuantitationMismatch );
     }
 
     @Override
@@ -296,18 +303,28 @@ public class ProcessedExpressionDataVectorServiceImpl
     @Transactional
     public Collection<ProcessedExpressionDataVector> computeProcessedExpressionData( ExpressionExperiment ee ) {
         try {
+            return computeProcessedExpressionData( ee, true );
+        } catch ( QuantitationMismatchException e ) {
+            throw new RuntimeException( e );
+        }
+    }
+
+    @Override
+    @Transactional
+    public Collection<ProcessedExpressionDataVector> computeProcessedExpressionData( ExpressionExperiment ee, boolean ignoreQuantitationMismatch ) throws QuantitationMismatchException {
+        try {
 
             // transaction
-            ee = helperService.createProcessedExpressionData( ee );
+            ee = helperService.createProcessedExpressionData( ee, ignoreQuantitationMismatch );
             assert ee.getNumberOfDataVectors() != null;
 
             // transaction. We load the vectors again because otherwise we have a long dirty check? See bug 3597
             ee = helperService.updateRanks( ee );
             assert ee.getNumberOfDataVectors() != null;
             return ee.getProcessedExpressionDataVectors();
-        } catch ( Exception e ) {
+        } catch ( RuntimeException e ) {
             auditTrailService.addUpdateEvent( ee, FailedProcessedVectorComputationEvent.class, "Failed to create processed expression data vectors.", e );
-            throw new RuntimeException( e );
+            throw e;
         }
 
     }

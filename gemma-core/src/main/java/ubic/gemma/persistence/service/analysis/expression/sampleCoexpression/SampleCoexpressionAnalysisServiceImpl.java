@@ -383,6 +383,6 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
                 f.set( i, j, f.get( i, j ) + rowmean );
             }
         }
-        return new ExpressionDataDoubleMatrix( dmatrix, f );
+        return new ExpressionDataDoubleMatrix( dmatrix, f, dmatrix.getQuantitationTypes() );
     }
 }
