@@ -52,7 +52,8 @@ public class GeneOntologyServiceTest {
          */
         InputStream is = new GZIPInputStream(
                 new ClassPathResource( "/data/loader/ontology/molecular-function.test.owl.gz" ).getInputStream() );
-        GeneOntologyServiceTest.gos.loadTermsInNameSpace( is, false );
+        // we must force indexing to get consistent test results
+        GeneOntologyServiceTest.gos.loadTermsInNameSpace( is, true );
     }
 
     @AfterClass
@@ -62,14 +63,14 @@ public class GeneOntologyServiceTest {
 
     @Test
     public void testFindTerm() throws OntologySearchException {
-        Collection<OntologyTerm> matches = gos.findTerm( "metabolism" );
-        assertEquals( 331, matches.size() );
+        Collection<OntologyTerm> matches = gos.findTerm( "toxin" );
+        assertEquals( 4, matches.size() );
     }
 
     @Test
     public void testFindTermWithMultipleTerms() throws OntologySearchException {
-        Collection<OntologyTerm> matches = gos.findTerm( "rna metabolism" );
-        assertEquals( 18, matches.size() );
+        Collection<OntologyTerm> matches = gos.findTerm( "toxin transporter activity" );
+        assertEquals( 1, matches.size() );
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -79,14 +80,14 @@ public class GeneOntologyServiceTest {
 
     @Test
     public void testFindIndividuals() throws OntologySearchException {
-        Collection<OntologyIndividual> matches = gos.findIndividuals( "metabolism" );
-        assertEquals( 443, matches.size() );
+        Collection<OntologyIndividual> matches = gos.findIndividuals( "protein tag" );
+        assertEquals( 1, matches.size() );
     }
 
     @Test
     public void testFindResources() throws OntologySearchException {
-        Collection<OntologyResource> matches = gos.findResources( "metabolism" );
-        assertEquals( 443, matches.size() );
+        Collection<OntologyResource> matches = gos.findResources( "electron carrier" );
+        assertEquals( 4, matches.size() );
     }
 
     @Test
