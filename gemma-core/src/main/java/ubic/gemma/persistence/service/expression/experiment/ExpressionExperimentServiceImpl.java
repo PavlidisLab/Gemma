@@ -892,35 +892,33 @@ public class ExpressionExperimentServiceImpl
             throw new UnsupportedOperationException( "Only use this method for replacing vectors, not erasing them" );
         }
 
-        // to attach to session correctly.
-        ExpressionExperiment eeToUpdate = Objects.requireNonNull( this.load( ee.getId() ) );
+        Set<QuantitationType> newQts = newVectors.stream()
+                .map( RawExpressionDataVector::getQuantitationType )
+                .collect( Collectors.toSet() );
 
-        Collection<QuantitationType> qtsToRemove = new HashSet<>();
-        for ( RawExpressionDataVector oldV : eeToUpdate.getRawExpressionDataVectors() ) {
-            qtsToRemove.add( oldV.getQuantitationType() );
+        Set<QuantitationType> preferredQts = newQts.stream().filter( QuantitationType::getIsPreferred ).collect( Collectors.toSet() );
+        if ( preferredQts.size() != 1 ) {
+            throw new IllegalArgumentException( String.format( "New vectors for %s must have exactly one preferred quantitation type.",
+                    ee ) );
         }
-        eeToUpdate.getProcessedExpressionDataVectors().clear();
+
+        // to attach to session correctly.
+        ExpressionExperiment eeToUpdate = this.loadOrFail( ee.getId() );
+
+        // remove existing QTs attached to raw vectors
+        Collection<QuantitationType> qtsToRemove = eeToUpdate.getRawExpressionDataVectors().stream()
+                .map( RawExpressionDataVector::getQuantitationType )
+                // These QTs might still be getting used by the replaced vectors.
+                .filter( q -> !newQts.contains( q ) )
+                .collect( Collectors.toSet() );
+        ee.getQuantitationTypes().removeAll( qtsToRemove );
+
+        // remove the vectors
         eeToUpdate.getRawExpressionDataVectors().clear();
 
-        // These QTs might still be getting used by the replaced vectors.
-        for ( RawExpressionDataVector newVec : newVectors ) {
-            qtsToRemove.remove( newVec.getQuantitationType() );
-        }
-
-        // this actually causes more problems; if we are careful to re-use QTs when possible we can avoid cruft building up.
-        //        for ( QuantitationType oldQt : qtsToRemove ) {
-        //            quantitationTypeDao.remove( oldQt );
-        //        }
-
-        // Split the vectors up by bioassay dimension, if need be. This could be modified to handle multiple quantitation types if need be.
-        Map<BioAssayDimension, Collection<RawExpressionDataVector>> BADs = new HashMap<>();
-        for ( RawExpressionDataVector vec : newVectors ) {
-            BioAssayDimension b = vec.getBioAssayDimension();
-            if ( !BADs.containsKey( b ) ) {
-                BADs.put( b, new HashSet<>() );
-            }
-            BADs.get( b ).add( vec );
-        }
+        // group the vectors up by bioassay dimension, if need be. This could be modified to handle multiple quantitation types if need be.
+        Map<BioAssayDimension, Set<RawExpressionDataVector>> BADs = newVectors.stream()
+                .collect( Collectors.groupingBy( RawExpressionDataVector::getBioAssayDimension, Collectors.toSet() ) );
 
         for ( Collection<RawExpressionDataVector> vectors : BADs.values() ) {
             ee = this.addRawVectors( eeToUpdate, vectors );

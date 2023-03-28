@@ -53,6 +53,8 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import static org.junit.Assert.*;
 
@@ -164,6 +166,12 @@ public class DataUpdaterTest extends AbstractGeoServiceTest {
         }
 
         ee = experimentService.thaw( ee );
+
+        Set<QuantitationType> qts = ee.getRawExpressionDataVectors().stream()
+                .map( RawExpressionDataVector::getQuantitationType )
+                .collect( Collectors.toSet() );
+        assertTrue( ee.getQuantitationTypes().containsAll( qts ) );
+        assertEquals( 2, ee.getQuantitationTypes().size() );
 
         for ( BioAssay ba : ee.getBioAssays() ) {
             assertEquals( targetArrayDesign, ba.getArrayDesignUsed() );
@@ -299,7 +307,7 @@ public class DataUpdaterTest extends AbstractGeoServiceTest {
         ee = experimentService.load( ee.getId() );
         assertNotNull( ee );
         ee = this.experimentService.thawLite( ee );
-        assertEquals( 4, ee.getQuantitationTypes().size() );
+        assertEquals( 6, ee.getQuantitationTypes().size() );
 
     }
 
