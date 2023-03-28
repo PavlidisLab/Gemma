@@ -23,7 +23,6 @@ import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.compass.core.util.concurrent.ConcurrentHashSet;
-import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
@@ -36,7 +35,6 @@ import ubic.basecode.ontology.model.OntologyTermSimple;
 import ubic.basecode.ontology.providers.*;
 import ubic.basecode.ontology.search.OntologySearch;
 import ubic.basecode.ontology.search.OntologySearchException;
-import ubic.basecode.util.Configuration;
 import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.core.ontology.providers.GemmaOntologyService;
 import ubic.gemma.core.ontology.providers.GeneOntologyService;
@@ -60,6 +58,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Has a static method for finding out which ontologies are loaded into the system and a general purpose find method
@@ -69,7 +68,7 @@ import java.util.*;
  * @author pavlidis
  */
 @Service
-public class OntologyServiceImpl implements OntologyService, InitializingBean, DisposableBean {
+public class OntologyServiceImpl implements OntologyService, InitializingBean {
     /**
      * Throttle how many ontology terms we retrieve. We search the ontologies in a favored order, so we can stop when we
      * find "enough stuff".
@@ -77,101 +76,68 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean, D
     private static final int MAX_TERMS_TO_FETCH = 200;
     private static final Log log = LogFactory.getLog( OntologyServiceImpl.class.getName() );
     private static Collection<OntologyTerm> categoryTerms = null;
-    private final CellLineOntologyService cellLineOntologyService = new CellLineOntologyService();
-    private final CellTypeOntologyService cellTypeOntologyService = new CellTypeOntologyService();
-    private final ChebiOntologyService chebiOntologyService = new ChebiOntologyService();
-    private final DiseaseOntologyService diseaseOntologyService = new DiseaseOntologyService();
-    private final ExperimentalFactorOntologyService experimentalFactorOntologyService = new ExperimentalFactorOntologyService();
 
-    @Deprecated
-    private final FMAOntologyService fmaOntologyService = new FMAOntologyService();
-
-    private final GemmaOntologyService gemmaOntologyService = new GemmaOntologyService();
-    private final HumanDevelopmentOntologyService humanDevelopmentOntologyService = new HumanDevelopmentOntologyService();
-    private final HumanPhenotypeOntologyService humanPhenotypeOntologyService = new HumanPhenotypeOntologyService();
-    private final MammalianPhenotypeOntologyService mammalianPhenotypeOntologyService = new MammalianPhenotypeOntologyService();
-    private final MouseDevelopmentOntologyService mouseDevelopmentOntologyService = new MouseDevelopmentOntologyService();
-
-    @Deprecated
-    private final NIFSTDOntologyService nifstdOntologyService = new NIFSTDOntologyService();
-    private final ObiService obiService = new ObiService();
-
-    private final Collection<ubic.basecode.ontology.providers.OntologyService> ontologyServices = new ArrayList<>();
-    private final SequenceOntologyService sequenceOntologyService = new SequenceOntologyService();
-    private final UberonOntologyService uberonOntologyService = new UberonOntologyService();
-
+    @Autowired
     private BioMaterialService bioMaterialService;
+    @Autowired
     private CharacteristicService characteristicService;
+    @Autowired
     private SearchService searchService;
+    @Autowired
     private GeneOntologyService geneOntologyService;
+    @Autowired
     private GeneService geneService;
 
     @Autowired
-    public void setBioMaterialService( BioMaterialService bioMaterialService ) {
-        this.bioMaterialService = bioMaterialService;
-    }
+    private CellLineOntologyService cellLineOntologyService;
+    @Autowired
+    private CellTypeOntologyService cellTypeOntologyService;
+    @Autowired
+    private ChebiOntologyService chebiOntologyService;
+    @Autowired
+    private DiseaseOntologyService diseaseOntologyService;
+    @Autowired
+    private ExperimentalFactorOntologyService experimentalFactorOntologyService;
+    @Deprecated
+    @Autowired
+    private FMAOntologyService fmaOntologyService;
+    @Autowired
+    private GemmaOntologyService gemmaOntologyService;
+    @Autowired
+    private HumanDevelopmentOntologyService humanDevelopmentOntologyService;
+    @Autowired
+    private HumanPhenotypeOntologyService humanPhenotypeOntologyService;
+    @Autowired
+    private MammalianPhenotypeOntologyService mammalianPhenotypeOntologyService;
+    @Autowired
+    private MouseDevelopmentOntologyService mouseDevelopmentOntologyService;
+    @Deprecated
+    @Autowired
+    private NIFSTDOntologyService nifstdOntologyService;
+    @Autowired
+    private ObiService obiService;
+    @Autowired
+    private SequenceOntologyService sequenceOntologyService;
+    @Autowired
+    private UberonOntologyService uberonOntologyService;
 
     @Autowired
-    public void setCharacteristicService( CharacteristicService characteristicService ) {
-        this.characteristicService = characteristicService;
-    }
-
-    @Autowired
-    public void setSearchService( SearchService searchService ) {
-        this.searchService = searchService;
-    }
-
-    @Autowired
-    public void setGeneOntologyService( GeneOntologyService geneOntologyService ) {
-        this.geneOntologyService = geneOntologyService;
-    }
-
-    @Autowired
-    public void setGeneService( GeneService geneService ) {
-        this.geneService = geneService;
-    }
+    private List<ubic.basecode.ontology.providers.OntologyService> ontologyServices;
 
     @Override
-    public void afterPropertiesSet() {
-
-        this.ontologyServices.add( this.gemmaOntologyService );
-        this.ontologyServices.add( this.experimentalFactorOntologyService );
-        this.ontologyServices.add( this.obiService );
-        this.ontologyServices.add( this.nifstdOntologyService ); // DEPRECATED
-        this.ontologyServices.add( this.fmaOntologyService ); // DEPRECATED
-        this.ontologyServices.add( this.diseaseOntologyService );
-        this.ontologyServices.add( this.cellTypeOntologyService );
-        this.ontologyServices.add( this.chebiOntologyService );
-        this.ontologyServices.add( this.mammalianPhenotypeOntologyService );
-        this.ontologyServices.add( this.humanPhenotypeOntologyService );
-        this.ontologyServices.add( this.mouseDevelopmentOntologyService );
-        this.ontologyServices.add( this.humanDevelopmentOntologyService );
-        this.ontologyServices.add( this.sequenceOntologyService );
-        this.ontologyServices.add( this.cellLineOntologyService );
-        this.ontologyServices.add( this.uberonOntologyService );
-
-        /*
-         * If this load.ontologies is NOT configured, we go ahead (per-ontology config will be checked).
-         */
-        String doLoad = Configuration.getString( "load.ontologies" );
-        if ( StringUtils.isBlank( doLoad ) || Configuration.getBoolean( "load.ontologies" ) ) {
-            for ( ubic.basecode.ontology.providers.OntologyService serv : this.ontologyServices ) {
-                serv.startInitializationThread( false, false );
-            }
+    public void afterPropertiesSet() throws Exception {
+        List<ubic.basecode.ontology.providers.OntologyService> enabledOntologyServices = ontologyServices.stream()
+                .filter( ubic.basecode.ontology.providers.OntologyService::isEnabled )
+                .collect( Collectors.toList() );
+        if ( enabledOntologyServices.isEmpty() ) {
+            log.warn( "No ontology services are enabled, consider enabling them by setting 'load.{name}Ontology' options in Gemma.properties." );
         } else {
-            log.info( "Auto-loading of ontologies suppressed" );
+            log.info( "The following ontology services are enabled: " + enabledOntologyServices.stream()
+                    .map( os -> os.getClass().getSimpleName() )
+                    .collect( Collectors.joining( ", " ) ) );
         }
-
-    }
-
-    @Override
-    public void destroy() throws Exception {
-        String doLoad = Configuration.getString( "load.ontologies" );
-        if ( StringUtils.isBlank( doLoad ) || Configuration.getBoolean( "load.ontologies" ) ) {
-            for ( ubic.basecode.ontology.providers.OntologyService serv : this.ontologyServices ) {
-                serv.cancelInitializationThread();
-            }
-        }
+        // remove GeneOntologyService, it was originally not included in the list before bean injection was used
+        ontologyServices.remove( geneOntologyService );
     }
 
     private void countOccurrences( Collection<CharacteristicValueObject> searchResults,

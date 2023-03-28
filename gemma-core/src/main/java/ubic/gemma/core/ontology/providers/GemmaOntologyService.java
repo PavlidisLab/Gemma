@@ -19,7 +19,6 @@
 
 package ubic.gemma.core.ontology.providers;
 
-import org.springframework.stereotype.Component;
 import ubic.basecode.ontology.providers.AbstractOntologyMemoryBackedService;
 import ubic.gemma.persistence.util.Settings;
 
@@ -28,7 +27,6 @@ import ubic.gemma.persistence.util.Settings;
  *
  * @author paul
  */
-@Component
 public class GemmaOntologyService extends AbstractOntologyMemoryBackedService {
     private static final String GEMMA_ONTOLOGY_URL_CONFIG = "url.gemmaOntology";
 

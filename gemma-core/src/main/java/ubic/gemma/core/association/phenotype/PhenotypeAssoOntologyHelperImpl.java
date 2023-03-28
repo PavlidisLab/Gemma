@@ -26,6 +26,7 @@ import ubic.basecode.ontology.providers.HumanPhenotypeOntologyService;
 import ubic.basecode.ontology.providers.MammalianPhenotypeOntologyService;
 import ubic.basecode.ontology.search.OntologySearchException;
 import ubic.gemma.core.ontology.OntologyService;
+import ubic.gemma.core.ontology.providers.OntologyServiceFactory;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 
@@ -35,43 +36,31 @@ import java.util.*;
  * @author nicolas
  */
 @Component
-public class PhenotypeAssoOntologyHelperImpl implements InitializingBean, PhenotypeAssoOntologyHelper {
+public class PhenotypeAssoOntologyHelperImpl implements PhenotypeAssoOntologyHelper {
 
     private static final Log log = LogFactory.getLog( PhenotypeAssoOntologyHelperImpl.class );
 
-    private final List<ubic.basecode.ontology.providers.OntologyService> ontologies = new ArrayList<>();
-
     private final OntologyService ontologyService;
+    private final DiseaseOntologyService diseaseOntologyService;
+    private final MammalianPhenotypeOntologyService mammalianPhenotypeOntologyService;
+    private final HumanPhenotypeOntologyService humanPhenotypeOntologyService;
+
+    private final List<ubic.basecode.ontology.providers.OntologyService> ontologies;
 
     @Autowired
-    public PhenotypeAssoOntologyHelperImpl( OntologyService ontologyService ) {
+    public PhenotypeAssoOntologyHelperImpl( OntologyService ontologyService, DiseaseOntologyService diseaseOntologyService, MammalianPhenotypeOntologyService mammalianPhenotypeOntologyService, HumanPhenotypeOntologyService humanPhenotypeOntologyService ) {
         this.ontologyService = ontologyService;
-    }
-
-    @Override
-    public void afterPropertiesSet() {
-
-        /*
-         * We add them even when they aren't available so we can use unit tests that mock or fake the ontologies.
-         */
-
-        DiseaseOntologyService diseaseOntologyService = ontologyService.getDiseaseOntologyService();
-        this.ontologies.add( diseaseOntologyService );
+        this.diseaseOntologyService = diseaseOntologyService;
+        this.mammalianPhenotypeOntologyService = mammalianPhenotypeOntologyService;
+        this.humanPhenotypeOntologyService = humanPhenotypeOntologyService;
+        //  We add them even when they aren't available so we can use unit tests that mock or fake the ontologies.
+        this.ontologies = Arrays.asList( diseaseOntologyService, mammalianPhenotypeOntologyService, humanPhenotypeOntologyService );
         if ( !diseaseOntologyService.isEnabled() ) {
             log.debug( "DO is not enabled, phenotype tools will not work correctly" );
         }
-
-        MammalianPhenotypeOntologyService mammalianPhenotypeOntologyService = ontologyService
-                .getMammalianPhenotypeOntologyService();
-        this.ontologies.add( mammalianPhenotypeOntologyService );
         if ( !mammalianPhenotypeOntologyService.isEnabled() ) {
             log.debug( "MPO is not enabled, phenotype tools will not work correctly" );
         }
-
-        HumanPhenotypeOntologyService humanPhenotypeOntologyService = ontologyService
-                .getHumanPhenotypeOntologyService();
-        this.ontologies.add( humanPhenotypeOntologyService );
-
         if ( !humanPhenotypeOntologyService.isEnabled() ) {
             log.debug( "HPO is not enabled, phenotype tools will not work correctly" );
         }
@@ -82,26 +71,26 @@ public class PhenotypeAssoOntologyHelperImpl implements InitializingBean, Phenot
         /*
          * if these ontologies are not configured, we will never be ready. Check for valid configuration.
          */
-        if ( !this.ontologyService.getDiseaseOntologyService().isEnabled() ) {
+        if ( !this.diseaseOntologyService.isEnabled() ) {
             log.warn( "DO is not enabled" );
             return false;
-        } else if ( !this.ontologyService.getDiseaseOntologyService().isOntologyLoaded() ) {
+        } else if ( !this.diseaseOntologyService.isOntologyLoaded() ) {
             log.warn( "DO not loaded" );
             return false;
         }
 
-        if ( !this.ontologyService.getHumanPhenotypeOntologyService().isEnabled() ) {
+        if ( !this.humanPhenotypeOntologyService.isEnabled() ) {
             log.warn( "HPO is not enabled" );
             return false;
-        } else if ( !this.ontologyService.getHumanPhenotypeOntologyService().isOntologyLoaded() ) {
+        } else if ( !this.humanPhenotypeOntologyService.isOntologyLoaded() ) {
             log.warn( "HPO not loaded" );
             return false;
         }
 
-        if ( !this.ontologyService.getMammalianPhenotypeOntologyService().isEnabled() ) {
+        if ( !this.mammalianPhenotypeOntologyService.isEnabled() ) {
             log.warn( "MPO is not enabled" );
             return false;
-        } else if ( !this.ontologyService.getMammalianPhenotypeOntologyService().isOntologyLoaded() ) {
+        } else if ( !this.mammalianPhenotypeOntologyService.isOntologyLoaded() ) {
             log.warn( "MPO not loaded" );
             return false;
         }

@@ -337,7 +337,6 @@ public class GeneOntologyServiceImpl extends AbstractOntologyMemoryBackedService
         }
         Collection<AnnotationProperty> annotations = t.getAnnotations();
         for ( AnnotationProperty annot : annotations ) {
-            GeneOntologyServiceImpl.log.info( annot.getProperty() );
             if ( annot.getProperty().equals( "hasDefinition" ) ) {
                 return annot.getContents();
             }
