@@ -22,16 +22,17 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.task.TaskExecutor;
 import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 import ubic.basecode.ontology.model.AnnotationProperty;
+import ubic.basecode.ontology.model.OntologyIndividual;
 import ubic.basecode.ontology.model.OntologyResource;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.basecode.ontology.providers.AbstractOntologyMemoryBackedService;
 import ubic.basecode.ontology.search.OntologySearchException;
-import ubic.basecode.ontology.search.SearchIndex;
 import ubic.basecode.util.Configuration;
 import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.model.common.description.Characteristic;
@@ -47,9 +48,8 @@ import java.util.*;
  *
  * @author pavlidis
  */
-@SuppressWarnings({ "WeakerAccess", "unused" }) // Possible external use
-@Component
-public class GeneOntologyServiceImpl extends AbstractOntologyMemoryBackedService implements GeneOntologyService, InitializingBean {
+@Service
+public class GeneOntologyServiceImpl extends AbstractOntologyMemoryBackedService implements GeneOntologyService, InitializingBean, DisposableBean {
 
     public enum GOAspect {
         BIOLOGICAL_PROCESS, CELLULAR_COMPONENT, MOLECULAR_FUNCTION
@@ -112,21 +112,28 @@ public class GeneOntologyServiceImpl extends AbstractOntologyMemoryBackedService
      */
     private final Map<Gene, Collection<OntologyTerm>> goTerms = new HashMap<>();
 
-    private final Collection<SearchIndex> indices = new HashSet<>();
-
-    @Autowired
-    private TaskExecutor taskExecutor;
+    /**
+     * If this load.ontologies is NOT configured, we go ahead (per-ontology config will be checked).
+     */
+    private static boolean isAutoLoad() {
+        String doLoad = Configuration.getString( "load.ontologies" );
+        return StringUtils.isBlank( doLoad ) || Configuration.getBoolean( "load.ontologies" );
+    }
 
     @Override
     public void afterPropertiesSet() {
-        /*
-         * If this load.ontologies is NOT configured, we go ahead (per-ontology config will be checked).
-         */
-        String doLoad = Configuration.getString( "load.ontologies" );
-        if ( StringUtils.isBlank( doLoad ) || Configuration.getBoolean( "load.ontologies" ) ) {
-            this.initialize( false, false );
+        if ( isAutoLoad() ) {
+            startInitializationThread( false, false );
+        } else {
+            log.info( "Auto-loading of ontologies is disabled, GO terms will not be available." );
         }
+    }
 
+    @Override
+    public void destroy() throws Exception {
+        if ( isAutoLoad() ) {
+            cancelInitializationThread();
+        }
     }
 
     @Override
@@ -208,10 +215,7 @@ public class GeneOntologyServiceImpl extends AbstractOntologyMemoryBackedService
 
         StopWatch timer = new StopWatch();
         timer.start();
-        Collection<OntologyResource> rawMatches = new HashSet<>();
-        for ( SearchIndex index : this.indices ) {
-            rawMatches.addAll( findIndividuals( queryString ) );
-        }
+        Collection<OntologyTerm> rawMatches = findTerm( queryString );
         if ( timer.getTime() > 100 ) {
             GeneOntologyServiceImpl.log
                     .info( "Find " + rawMatches.size() + " raw go terms from " + queryString + ": " + timer.getTime()
@@ -551,8 +555,7 @@ public class GeneOntologyServiceImpl extends AbstractOntologyMemoryBackedService
 
     private void putOverlapGenes( Map<Long, Collection<OntologyTerm>> overlap, Collection<OntologyTerm> queryGeneTerms,
             Collection<Gene> genes ) {
-        for ( Object obj : genes ) {
-            Gene gene = ( Gene ) obj;
+        for ( Gene gene : genes ) {
             if ( queryGeneTerms.isEmpty() ) {
                 overlap.put( gene.getId(), new HashSet<OntologyTerm>() );
                 continue;
