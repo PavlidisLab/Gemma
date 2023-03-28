@@ -23,6 +23,7 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.GeneOntologyTermValueObject;
 import ubic.gemma.model.genome.Taxon;
 
+import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -72,14 +73,6 @@ public interface GeneOntologyService extends OntologyService {
     Collection<OntologyTerm> findTerm( String queryString ) throws OntologySearchException;
 
     /**
-     * @param  entry entry
-     * @return children, NOT including part-of relations.
-     */
-    Collection<OntologyTerm> getAllChildren( OntologyTerm entry );
-
-    Collection<OntologyTerm> getAllChildren( OntologyTerm entry, boolean includePartOf );
-
-    /**
      * @param  entries NOTE terms that are in this collection are NOT explicitly included; however, some of them may be
      *                 included incidentally if they are parents of other terms in the collection.
      * @return ontology terms
@@ -89,34 +82,12 @@ public interface GeneOntologyService extends OntologyService {
     Collection<OntologyTerm> getAllParents( Collection<OntologyTerm> entries, boolean includePartOf );
 
     /**
-     * Return all the parents of GO OntologyEntry, up to the root, as well as terms that this has a restriction
-     * relationship with (part_of). NOTE: the term itself is NOT included; nor is the root.
-     *
-     * @param  entry entry
-     * @return parents (excluding the root)
-     */
-    Collection<OntologyTerm> getAllParents( OntologyTerm entry );
-
-    Collection<OntologyTerm> getAllParents( OntologyTerm entry, boolean includePartOf );
-
-    /**
-     * Returns the immediate children of the given entry
-     *
-     * @param  entry entry
-     * @return children of entry, or null if there are no children (or if entry is null)
-     */
-
-    Collection<OntologyTerm> getChildren( OntologyTerm entry );
-
-    Collection<OntologyTerm> getChildren( OntologyTerm entry, boolean includePartOf );
-
-    /**
      * @param  taxon taxon
      * @param  goId  go id
      * @return Collection of all genes in the given taxon that are annotated with the given id, including its
-     *               child
-     *               terms in the hierarchy.
+     *         child terms in the hierarchy, or null if the GO term is not found
      */
+    @Nullable
     Collection<Gene> getGenes( String goId, Taxon taxon );
 
     /**
@@ -131,45 +102,20 @@ public interface GeneOntologyService extends OntologyService {
      *
      * @param  gene          gene
      * @param  includePartOf include part of
-     * @return ontology terms
-     */
-    Collection<OntologyTerm> getGOTerms( Gene gene, boolean includePartOf );
-
-    /**
-     * Get all GO terms for a gene, including parents of terms via is-a relationships; and optionally also parents via
-     * part-of relationships.
-     *
-     * @param  gene          gene
-     * @param  includePartOf include part of
      * @param  goAspect      limit only to the given aspect (pass null to use all)
      * @return ontology terms
      */
-    Collection<OntologyTerm> getGOTerms( Gene gene, boolean includePartOf, GOAspect goAspect );
-
-    Collection<OntologyTerm> getGOTerms( Long geneId );
-
-    /**
-     * Return the immediate parent(s) of the given entry. The root node is never returned.
-     *
-     * @param  entry entry
-     * @return collection, because entries can have multiple parents. (only allroot is excluded)
-     */
-    Collection<OntologyTerm> getParents( OntologyTerm entry );
-
-    /**
-     * @param  entry         entry
-     * @param  includePartOf include part of
-     * @return ontology terms
-     */
-    Collection<OntologyTerm> getParents( OntologyTerm entry, boolean includePartOf );
+    Collection<OntologyTerm> getGOTerms( Gene gene, boolean includePartOf, @Nullable  GOAspect goAspect );
 
     /**
      *
      * @param  uri of the term
      * @return term if found or null otherwise.
      */
+    @Nullable
     OntologyTerm getTerm( String uri );
 
+    @Nullable
     GOAspect getTermAspect( Characteristic goId );
 
     /**
@@ -177,6 +123,7 @@ public interface GeneOntologyService extends OntologyService {
      * @param  goId GO ID e.g. GO:0038128 (not URI)
      * @return aspect if found, null otherwise
      */
+    @Nullable
     GOAspect getTermAspect( String goId );
 
     /**
@@ -185,12 +132,14 @@ public interface GeneOntologyService extends OntologyService {
      * @param  goId e.g. GO:0094491
      * @return Definition or null if there is no definition.
      */
+    @Nullable
     String getTermDefinition( String goId );
 
     /**
      * @param  value e.g. GO:0038128
      * @return term or null if not found
      */
+    @Nullable
     OntologyTerm getTermForId( String value );
 
     /**
@@ -224,24 +173,6 @@ public interface GeneOntologyService extends OntologyService {
      * @return Gene Ontology VOs representing all GO Terms associated with the given gene.
      */
     List<GeneOntologyTermValueObject> getValueObjects( Gene gene );
-
-    /**
-     * Determines if one ontology entry is a child (direct or otherwise) of a given parent term.
-     *
-     * @param  parent         parent
-     * @param  potentialChild potential child
-     * @return is a child of
-     */
-    boolean isAChildOf( OntologyTerm parent, OntologyTerm potentialChild );
-
-    /**
-     * Determines if one ontology entry is a parent (direct or otherwise) of a given child term.
-     *
-     * @param  child           child
-     * @param  potentialParent potential parent
-     * @return True if potentialParent is in the parent graph of the child; false otherwise.
-     */
-    boolean isAParentOf( OntologyTerm child, OntologyTerm potentialParent );
 
     boolean isBiologicalProcess( OntologyTerm term );
 

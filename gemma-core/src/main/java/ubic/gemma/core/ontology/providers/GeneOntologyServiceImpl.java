@@ -25,10 +25,8 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 import ubic.basecode.ontology.model.AnnotationProperty;
-import ubic.basecode.ontology.model.OntologyIndividual;
 import ubic.basecode.ontology.model.OntologyResource;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.basecode.ontology.providers.AbstractOntologyMemoryBackedService;
@@ -42,6 +40,7 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.association.Gene2GOAssociationService;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Holds a complete copy of the GeneOntology. This gets loaded on startup.
@@ -103,14 +102,16 @@ public class GeneOntologyServiceImpl extends AbstractOntologyMemoryBackedService
         return GeneOntologyService.BASE_GO_URI + uriTerm;
     }
 
+    @Autowired
     private Gene2GOAssociationService gene2GOAssociationService;
 
+    @Autowired
     private GeneService geneService;
 
     /**
      * Cache of gene -> go terms.
      */
-    private final Map<Gene, Collection<OntologyTerm>> goTerms = new HashMap<>();
+    private final Map<Gene, Collection<OntologyTerm>> goTerms = new ConcurrentHashMap<>();
 
     /**
      * If this load.ontologies is NOT configured, we go ahead (per-ontology config will be checked).
@@ -121,7 +122,7 @@ public class GeneOntologyServiceImpl extends AbstractOntologyMemoryBackedService
     }
 
     @Override
-    public void afterPropertiesSet() {
+    public void afterPropertiesSet() throws InterruptedException {
         if ( isAutoLoad() ) {
             startInitializationThread( false, false );
         } else {
@@ -177,7 +178,7 @@ public class GeneOntologyServiceImpl extends AbstractOntologyMemoryBackedService
         if ( geneIds.size() == 0 )
             return overlap;
 
-        Collection<OntologyTerm> queryGeneTerms = this.getGOTerms( queryGene );
+        Collection<OntologyTerm> queryGeneTerms = this.getGOTerms( queryGene, true, null );
 
         overlap.put( queryGene, queryGeneTerms ); // include the query gene in the list. Clearly 100% overlap
         // with itself!
@@ -248,18 +249,6 @@ public class GeneOntologyServiceImpl extends AbstractOntologyMemoryBackedService
     }
 
     @Override
-    public Collection<OntologyTerm> getAllChildren( OntologyTerm entry ) {
-        return this.getAllChildren( entry, false );
-    }
-
-    @Override
-    public Collection<OntologyTerm> getAllChildren( OntologyTerm entry, boolean includePartOf ) {
-        synchronized ( this ) {
-            return entry.getChildren( false, includePartOf );
-        }
-    }
-
-    @Override
     public Collection<OntologyTerm> getAllParents( Collection<OntologyTerm> entries ) {
         return this.getAllParents( entries, false );
     }
@@ -270,34 +259,9 @@ public class GeneOntologyServiceImpl extends AbstractOntologyMemoryBackedService
             return null;
         Collection<OntologyTerm> result = new HashSet<>();
         for ( OntologyTerm entry : entries ) {
-            Collection<OntologyTerm> result1;
-            synchronized ( this ) {
-                result1 = entry.getParents( false, includePartOf );
-            }
-            result.addAll( result1 );
+            result.addAll( entry.getParents( false, includePartOf ) );
         }
         return result;
-    }
-
-    @Override
-    public Collection<OntologyTerm> getAllParents( OntologyTerm entry ) {
-        return this.getAllParents( entry, false );
-    }
-
-    @Override
-    public Collection<OntologyTerm> getAllParents( OntologyTerm entry, boolean includePartOf ) {
-        return entry.getParents( false, includePartOf );
-    }
-
-    @Override
-    public Collection<OntologyTerm> getChildren( OntologyTerm entry ) {
-        return this.getChildren( entry, false );
-
-    }
-
-    @Override
-    public Collection<OntologyTerm> getChildren( OntologyTerm entry, boolean includePartOf ) {
-        return entry.getChildren( true, includePartOf );
     }
 
     @Override
@@ -305,7 +269,7 @@ public class GeneOntologyServiceImpl extends AbstractOntologyMemoryBackedService
         OntologyTerm t = getTermForId( goId );
         if ( t == null )
             return null;
-        Collection<OntologyTerm> terms = this.getAllChildren( t );
+        Collection<OntologyTerm> terms = t.getChildren( false, false );
         Collection<Gene> results = new HashSet<>( this.gene2GOAssociationService.findByGOTerm( goId, taxon ) );
 
         for ( OntologyTerm term : terms ) {
@@ -318,11 +282,6 @@ public class GeneOntologyServiceImpl extends AbstractOntologyMemoryBackedService
     @Override
     public Collection<OntologyTerm> getGOTerms( Gene gene ) {
         return this.getGOTerms( gene, true, null );
-    }
-
-    @Override
-    public Collection<OntologyTerm> getGOTerms( Gene gene, boolean includePartOf ) {
-        return this.getGOTerms( gene, includePartOf, null );
     }
 
     @Override
@@ -371,11 +330,6 @@ public class GeneOntologyServiceImpl extends AbstractOntologyMemoryBackedService
         return cachedTerms;
     }
 
-    @Override
-    public Collection<OntologyTerm> getGOTerms( Long geneId ) {
-        return this.getGOTerms( geneId, true, null );
-    }
-
     /**
      * @param  gene          gene
      * @param  goAspect      go aspect
@@ -383,17 +337,7 @@ public class GeneOntologyServiceImpl extends AbstractOntologyMemoryBackedService
      * @return collection of ontology terms
      */
     public Collection<OntologyTerm> getGOTerms( Long gene, boolean includePartOf, GOAspect goAspect ) {
-        return this.getGOTerms( geneService.load( gene ), includePartOf, goAspect );
-    }
-
-    @Override
-    public Collection<OntologyTerm> getParents( OntologyTerm entry ) {
-        return entry.getParents( true, false );
-    }
-
-    @Override
-    public Collection<OntologyTerm> getParents( OntologyTerm entry, boolean includePartOf ) {
-        return entry.getParents( false, true );
+        return this.getGOTerms( geneService.loadOrFail( gene ), includePartOf, goAspect );
     }
 
     @Override
@@ -413,7 +357,9 @@ public class GeneOntologyServiceImpl extends AbstractOntologyMemoryBackedService
     @Override
     public String getTermDefinition( String goId ) {
         OntologyTerm t = getTermForId( goId );
-        assert t != null;
+        if ( t == null ) {
+            return null;
+        }
         Collection<AnnotationProperty> annotations = t.getAnnotations();
         for ( AnnotationProperty annot : annotations ) {
             GeneOntologyServiceImpl.log.info( annot.getProperty() );
@@ -435,7 +381,6 @@ public class GeneOntologyServiceImpl extends AbstractOntologyMemoryBackedService
 
     @Override
     public String getTermName( String goId ) {
-
         OntologyTerm t = getTermForId( goId );
         if ( t == null )
             return "[Not available]"; // not ready yet?
@@ -462,19 +407,6 @@ public class GeneOntologyServiceImpl extends AbstractOntologyMemoryBackedService
     }
 
     @Override
-    public boolean isAChildOf( OntologyTerm parent, OntologyTerm potentialChild ) {
-        return this.isAParentOf( potentialChild, parent );
-    }
-
-    @Override
-    public boolean isAParentOf( OntologyTerm child, OntologyTerm potentialParent ) {
-        if ( potentialParent.isRoot() )
-            return true; // well....
-        Collection<OntologyTerm> parents = this.getAllParents( child );
-        return parents.contains( potentialParent );
-    }
-
-    @Override
     public boolean isBiologicalProcess( OntologyTerm term ) {
 
         GOAspect nameSpace = this.getTermAspect( term );
@@ -484,16 +416,6 @@ public class GeneOntologyServiceImpl extends AbstractOntologyMemoryBackedService
         }
 
         return nameSpace.equals( GOAspect.BIOLOGICAL_PROCESS );
-    }
-
-    @Autowired
-    public void setGene2GOAssociationService( Gene2GOAssociationService gene2GOAssociationService ) {
-        this.gene2GOAssociationService = gene2GOAssociationService;
-    }
-
-    @Autowired
-    public void setGeneService( GeneService geneService ) {
-        this.geneService = geneService;
     }
 
     @Override

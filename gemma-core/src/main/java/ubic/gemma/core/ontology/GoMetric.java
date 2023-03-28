@@ -303,7 +303,7 @@ public class GoMetric {
         int termCount = termCountMap.get( term );
         OntologyTerm ont = geneOntologyService.getTerm( term );
 
-        Collection<OntologyTerm> children = geneOntologyService.getAllChildren( ont, partOf );
+        Collection<OntologyTerm> children = ont.getChildren( false, partOf );
 
         if ( children.isEmpty() ) {
             return termCount;
@@ -373,9 +373,9 @@ public class GoMetric {
      */
     private Double checkParents( OntologyTerm ontoM, OntologyTerm ontoC, Map<String, Double> GOProbMap ) {
 
-        Collection<OntologyTerm> parentM = geneOntologyService.getAllParents( ontoM, partOf );
+        Collection<OntologyTerm> parentM = ontoM.getParents( false, partOf );
         parentM.add( ontoM );
-        Collection<OntologyTerm> parentC = geneOntologyService.getAllParents( ontoC, partOf );
+        Collection<OntologyTerm> parentC = ontoC.getParents( false, partOf );
         parentC.add( ontoC );
 
         double pMin = 1;

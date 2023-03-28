@@ -63,7 +63,7 @@ public class GeneOntologyServiceTest {
 
         OntologyTerm termForId = GeneOntologyServiceTest.gos.getTermForId( id );
         assertNotNull( termForId );
-        Collection<OntologyTerm> terms = GeneOntologyServiceTest.gos.getAllParents( termForId );
+        Collection<OntologyTerm> terms = termForId.getParents( false, false );
 
         assertEquals( 10, terms.size() );
     }
@@ -73,7 +73,7 @@ public class GeneOntologyServiceTest {
         String id = "GO:0000006";
         OntologyTerm termForId = GeneOntologyServiceTest.gos.getTermForId( id );
         assertNotNull( termForId );
-        Collection<OntologyTerm> terms = GeneOntologyServiceTest.gos.getAllParents( termForId );
+        Collection<OntologyTerm> terms = termForId.getParents( false, false );
 
         assertFalse( terms.contains( termForId ) );
         assertEquals( 12, terms.size() );
@@ -93,7 +93,7 @@ public class GeneOntologyServiceTest {
         String id = "GO:0016791";
         OntologyTerm termForId = GeneOntologyServiceTest.gos.getTermForId( id );
         assertNotNull( termForId );
-        Collection<OntologyTerm> terms = GeneOntologyServiceTest.gos.getAllChildren( termForId );
+        Collection<OntologyTerm> terms = termForId.getChildren( false, false );
 
         assertEquals( 136, terms.size() );
     }
@@ -113,7 +113,7 @@ public class GeneOntologyServiceTest {
         String id = "GO:0016791";
         OntologyTerm termForId = GeneOntologyServiceTest.gos.getTermForId( id );
         assertNotNull( termForId );
-        Collection<OntologyTerm> terms = GeneOntologyServiceTest.gos.getChildren( termForId );
+        Collection<OntologyTerm> terms = termForId.getChildren( true, false );
 
         assertEquals( 65, terms.size() );
     }
@@ -131,7 +131,7 @@ public class GeneOntologyServiceTest {
         String id = "GO:0023025";
         OntologyTerm termForId = GeneOntologyServiceTest.gos.getTermForId( id );
         assertNotNull( termForId );
-        Collection<OntologyTerm> terms = GeneOntologyServiceTest.gos.getAllChildren( termForId, true );
+        Collection<OntologyTerm> terms = termForId.getChildren( false, true );
 
         // has a part.
         assertEquals( 1, terms.size() );
@@ -142,7 +142,7 @@ public class GeneOntologyServiceTest {
         String id = "GO:0000014";
         OntologyTerm termForId = GeneOntologyServiceTest.gos.getTermForId( id );
         assertNotNull( termForId );
-        Collection<OntologyTerm> terms = GeneOntologyServiceTest.gos.getParents( termForId );
+        Collection<OntologyTerm> terms = termForId.getParents( true, false );
 
         for ( OntologyTerm term : terms ) {
             GeneOntologyServiceTest.log.info( term );
@@ -155,7 +155,7 @@ public class GeneOntologyServiceTest {
         String id = "GO:0000332";
         OntologyTerm termForId = GeneOntologyServiceTest.gos.getTermForId( id );
         assertNotNull( termForId );
-        Collection<OntologyTerm> terms = GeneOntologyServiceTest.gos.getAllParents( termForId, true );
+        Collection<OntologyTerm> terms = termForId.getParents( false, true );
 
         for ( OntologyTerm term : terms ) {
             GeneOntologyServiceTest.log.info( term );

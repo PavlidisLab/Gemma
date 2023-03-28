@@ -251,8 +251,7 @@ public class GeneMultifunctionalityPopulationServiceImpl implements GeneMultifun
 
                 termsForGene.add( t.getValue() );
 
-                Collection<OntologyTerm> parents = goService
-                        .getAllParents( goService.getTerm( t.getValueUri() ) );
+                Collection<OntologyTerm> parents = goService.getTerm( t.getValueUri() ).getParents( false, false );
 
                 for ( OntologyTerm p : parents ) {
                     if ( p == null ) continue;
