@@ -20,7 +20,6 @@
 package ubic.gemma.core.loader.expression;
 
 import org.junit.After;
-import org.junit.Assume;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -57,6 +56,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import static org.junit.Assert.*;
+import static org.junit.Assume.assumeNoException;
 
 /**
  * @author paul
@@ -91,32 +91,23 @@ public class DataUpdaterTest extends AbstractGeoServiceTest {
         }
         if ( targetArrayDesign != null )
             arrayDesignService.remove( targetArrayDesign );
-
     }
 
     @Test
     @Category(SlowTest.class)
     public void testAddData() throws Exception {
-
         /*
          * Load a regular data set that has no data. Platform is (basically) irrelevant.
          */
         geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( this.getTestFileBasePath() ) );
-
-        // These tests were failing due to too many requests being made to geo, this is a workaround
-        try {
-            Thread.sleep( 1000 );
-        } catch ( InterruptedException ex ) {
-            Thread.currentThread().interrupt();
-        }
 
         try {
             // RNA-seq data.
             Collection<?> results = geoService.fetchAndLoad( "GSE37646", false, true, false );
             ee = ( ExpressionExperiment ) results.iterator().next();
         } catch ( AlreadyExistsInSystemException e ) {
-            // log.warn( "Test skipped because GSE37646 was not removed from the system prior to test" );
-            ee = ( ExpressionExperiment ) ( ( List<?> ) e.getData() ).get( 0 );
+            ee = ( ( Collection<ExpressionExperiment> ) e.getData() ).iterator().next();
+            assumeNoException( "Test skipped because GSE37646 was not removed from the system prior to test", e );
         }
 
         ee = experimentService.thawLite( ee );
@@ -214,22 +205,13 @@ public class DataUpdaterTest extends AbstractGeoServiceTest {
     @Test
     @Category(SlowTest.class)
     public void testLoadRNASeqData() throws Exception {
-
-        geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGenerator() );
-
-        // These tests were failing due to too many requests being made to geo, this is a workaround
         try {
-            Thread.sleep( 1000 );
-        } catch ( InterruptedException ex ) {
-            Thread.currentThread().interrupt();
-        }
-
-        try {
+            geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGenerator() );
             Collection<?> results = geoService.fetchAndLoad( "GSE19166", false, false, false );
             ee = ( ExpressionExperiment ) results.iterator().next();
-
         } catch ( AlreadyExistsInSystemException e ) {
-            ee = ( ExpressionExperiment ) ( ( List<?> ) e.getData() ).get( 0 );
+            ee = ( ( Collection<ExpressionExperiment> ) e.getData() ).iterator().next();
+            assumeNoException( "Need to remove this data set before test is run", e );
         }
 
         ee = experimentService.thaw( ee );
@@ -260,8 +242,7 @@ public class DataUpdaterTest extends AbstractGeoServiceTest {
 
         // Main step.
         dataUpdater.addCountData( ee, targetArrayDesign, countMatrix, rpkmMatrix, 36, true, false );
-        ee = experimentService.load( ee.getId() );
-        assertNotNull( ee );
+        ee = experimentService.loadOrFail( ee.getId() );
         ee = experimentService.thaw( ee );
 
         // should have: log2cpm, counts, rpkm, and counts-masked ('preferred')
@@ -278,6 +259,7 @@ public class DataUpdaterTest extends AbstractGeoServiceTest {
         // 3949585 3929008 3712314 3693219 3574068 3579631
 
         ExpressionDataDoubleMatrix mat = dataMatrixService.getProcessedExpressionDataMatrix( ee );
+        assertNotNull( mat );
         assertEquals( 199, mat.rows() );
 
         TestUtils.assertBAs( ee, targetArrayDesign, "GSM475204", 3949585 );
@@ -317,24 +299,13 @@ public class DataUpdaterTest extends AbstractGeoServiceTest {
     @Test
     @Category(SlowTest.class)
     public void testLoadRNASeqDataWithMissingSamples() throws Exception {
-
-        geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGenerator() );
-
-        Assume.assumeTrue( String.format( "%s was not properly cleaned up by another test.", "GSE29006" ),
-                experimentService.findByShortName( "GSE29006" ) == null );
-
-        // These tests were failing due to too many requests being made to geo, this is a workaround
         try {
-            Thread.sleep( 1000 );
-        } catch ( InterruptedException ex ) {
-            Thread.currentThread().interrupt();
-        }
-
-        try {
+            geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGenerator() );
             Collection<?> results = geoService.fetchAndLoad( "GSE29006", false, false, false );
             ee = ( ExpressionExperiment ) results.iterator().next();
         } catch ( AlreadyExistsInSystemException e ) {
-            throw new IllegalStateException( "Need to remove this data set before test is run" );
+            ee = ( ( Collection<ExpressionExperiment> ) e.getData() ).iterator().next();
+            assumeNoException( "Need to remove this data set before test is run", e );
         }
 
         ee = experimentService.thaw( ee );
@@ -375,6 +346,7 @@ public class DataUpdaterTest extends AbstractGeoServiceTest {
         }
 
         ExpressionDataDoubleMatrix mat = dataMatrixService.getProcessedExpressionDataMatrix( ee );
+        assertNotNull( mat );
         assertEquals( 199, mat.rows() );
         assertTrue( mat.getQuantitationTypes().iterator().next().getName().startsWith( "log2cpm" ) );
 
