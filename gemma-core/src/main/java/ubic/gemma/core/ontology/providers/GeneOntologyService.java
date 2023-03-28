@@ -179,5 +179,5 @@ public interface GeneOntologyService extends OntologyService {
     /**
      * Primarily here for testing, to recover memory.
      */
-    void shutDown();
+    void clearCaches();
 }

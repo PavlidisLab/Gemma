@@ -27,6 +27,7 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ubic.basecode.ontology.model.AnnotationProperty;
+import ubic.basecode.ontology.model.OntologyIndividual;
 import ubic.basecode.ontology.model.OntologyResource;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.basecode.ontology.providers.AbstractOntologyMemoryBackedService;
@@ -41,6 +42,7 @@ import ubic.gemma.persistence.service.association.Gene2GOAssociationService;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 /**
  * Holds a complete copy of the GeneOntology. This gets loaded on startup.
@@ -56,9 +58,6 @@ public class GeneOntologyServiceImpl extends AbstractOntologyMemoryBackedService
 
     private final static String GO_URL = "http://purl.obolibrary.org/obo/go.owl";
     private static final Log log = LogFactory.getLog( GeneOntologyServiceImpl.class.getName() );
-    // cache
-    private static final Map<String, GOAspect> term2Aspect = new HashMap<>();
-    // cache
 
     /**
      * @param  term the term
@@ -111,7 +110,12 @@ public class GeneOntologyServiceImpl extends AbstractOntologyMemoryBackedService
     /**
      * Cache of gene -> go terms.
      */
-    private final Map<Gene, Collection<OntologyTerm>> goTerms = new ConcurrentHashMap<>();
+    private final Map<Long, Collection<OntologyTerm>> goTerms = new ConcurrentHashMap<>();
+
+    /**
+     * Cache term -> aspect.
+     */
+    private final Map<String, GOAspect> term2Aspect = new ConcurrentHashMap<>();
 
     /**
      * If this load.ontologies is NOT configured, we go ahead (per-ontology config will be checked).
@@ -201,50 +205,20 @@ public class GeneOntologyServiceImpl extends AbstractOntologyMemoryBackedService
 
     @Override
     public Collection<OntologyTerm> findTerm( String queryString ) throws OntologySearchException {
-
-        if ( !this.isOntologyLoaded() )
-            return new HashSet<>();
-
-        if ( GeneOntologyServiceImpl.log.isDebugEnabled() )
-            GeneOntologyServiceImpl.log.debug( "Searching Gene Ontology for '" + queryString + "'" );
-
         // make sure we are all-inclusive
-        queryString = queryString.trim();
         queryString = queryString
+                .trim()
                 .replaceAll( "\\s+AND\\s+", "" )
                 .replaceAll( "\\s+", " AND " );
-
-        StopWatch timer = new StopWatch();
-        timer.start();
-        Collection<OntologyTerm> rawMatches = findTerm( queryString );
+        StopWatch timer = StopWatch.createStarted();
+        Set<OntologyTerm> matches = super.findTerm( queryString )
+                .stream()
+                .filter( r -> StringUtils.isNotBlank( r.getUri() ) )
+                .collect( Collectors.toSet() );
         if ( timer.getTime() > 100 ) {
-            GeneOntologyServiceImpl.log
-                    .info( "Find " + rawMatches.size() + " raw go terms from " + queryString + ": " + timer.getTime()
-                            + " ms" );
+            GeneOntologyServiceImpl.log.warn( String.format( "Finding %d GO terms for '%s' took %d ms",
+                    matches.size(), queryString, timer.getTime() ) );
         }
-        timer.reset();
-        timer.start();
-
-        /*
-         * Required to make sure the descriptions are filled in.
-         */
-        Collection<OntologyTerm> matches = new HashSet<>();
-        for ( OntologyResource r : rawMatches ) {
-            if ( StringUtils.isBlank( r.getUri() ) )
-                continue;
-            OntologyTerm termForURI = getTerm( r.getUri() );
-            if ( termForURI == null ) {
-                GeneOntologyServiceImpl.log.warn( "No term for : " + r );
-                continue;
-            }
-            matches.add( termForURI );
-        }
-
-        if ( timer.getTime() > 100 ) {
-            GeneOntologyServiceImpl.log
-                    .info( "Convert " + rawMatches.size() + " raw go terms to terms: " + timer.getTime() + " ms" );
-        }
-
         return matches;
     }
 
@@ -255,6 +229,7 @@ public class GeneOntologyServiceImpl extends AbstractOntologyMemoryBackedService
 
     @Override
     public Collection<OntologyTerm> getAllParents( Collection<OntologyTerm> entries, boolean includePartOf ) {
+        // TODO: move this in baseCode, this can be done far more efficiently with Jena API
         if ( entries == null )
             return null;
         Collection<OntologyTerm> result = new HashSet<>();
@@ -286,9 +261,9 @@ public class GeneOntologyServiceImpl extends AbstractOntologyMemoryBackedService
 
     @Override
     public Collection<OntologyTerm> getGOTerms( Gene gene, boolean includePartOf, GOAspect goAspect ) {
-        Collection<OntologyTerm> cachedTerms = goTerms.get( gene );
+        Collection<OntologyTerm> cachedTerms = goTerms.get( gene.getId() );
         if ( GeneOntologyServiceImpl.log.isTraceEnabled() && cachedTerms != null ) {
-            this.logIds( "found cached GO terms for " + gene.getOfficialSymbol(), goTerms.get( gene ) );
+            this.logIds( "found cached GO terms for " + gene.getOfficialSymbol(), goTerms.get( gene.getId() ) );
         }
 
         if ( cachedTerms == null ) {
@@ -310,7 +285,7 @@ public class GeneOntologyServiceImpl extends AbstractOntologyMemoryBackedService
             cachedTerms = Collections.unmodifiableCollection( allGOTermSet );
             if ( GeneOntologyServiceImpl.log.isTraceEnabled() )
                 this.logIds( "caching GO terms for " + gene.getOfficialSymbol(), allGOTermSet );
-            goTerms.put( gene, cachedTerms );
+            goTerms.put( gene.getId(), cachedTerms );
         }
 
         if ( goAspect != null ) {
@@ -419,47 +394,35 @@ public class GeneOntologyServiceImpl extends AbstractOntologyMemoryBackedService
     }
 
     @Override
-    public void shutDown() {
-        if ( this.isOntologyLoaded() ) {
-            try {
-                this.goTerms.clear();
-                GeneOntologyServiceImpl.term2Aspect.clear();
-            } catch ( Exception e ) {
-                throw new RuntimeException( e );
-            }
-        }
+    public void clearCaches() {
+        goTerms.clear();
+        term2Aspect.clear();
     }
 
     private GOAspect getTermAspect( OntologyTerm term ) {
         assert term != null;
         String goId = term.getTerm();
-
-        if ( GeneOntologyServiceImpl.term2Aspect.containsKey( goId ) ) {
-            return GeneOntologyServiceImpl.term2Aspect.get( goId );
-        }
-
-        String nameSpace = null;
-        for ( AnnotationProperty annot : term.getAnnotations() ) {
-            /*
-             * Why they changed this, I can't say. It used to be hasOBONamespace but now comes through as
-             * has_obo_namespace.
-             */
-            if ( annot.getProperty().equals( "hasOBONamespace" ) || annot.getProperty()
-                    .equals( "has_obo_namespace" ) ) {
-                nameSpace = annot.getContents();
-                break;
+        return term2Aspect.computeIfAbsent( goId, goId2 -> {
+            String nameSpace = null;
+            for ( AnnotationProperty annot : term.getAnnotations() ) {
+                /*
+                 * Why they changed this, I can't say. It used to be hasOBONamespace but now comes through as
+                 * has_obo_namespace.
+                 */
+                if ( annot.getProperty().equals( "hasOBONamespace" ) || annot.getProperty()
+                        .equals( "has_obo_namespace" ) ) {
+                    nameSpace = annot.getContents();
+                    break;
+                }
             }
-        }
 
-        if ( nameSpace == null ) {
-            GeneOntologyServiceImpl.log.warn( "aspect could not be determined for: " + term );
-            return null;
-        }
+            if ( nameSpace == null ) {
+                GeneOntologyServiceImpl.log.warn( "aspect could not be determined for: " + term );
+                return null;
+            }
 
-        GOAspect aspect = GOAspect.valueOf( nameSpace.toUpperCase() );
-        GeneOntologyServiceImpl.term2Aspect.put( goId, aspect );
-
-        return aspect;
+            return GOAspect.valueOf( nameSpace.toUpperCase() );
+        });
     }
 
     private void logIds( String prefix, Collection<OntologyTerm> terms ) {

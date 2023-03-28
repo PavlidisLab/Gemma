@@ -21,7 +21,6 @@ package ubic.gemma.core.analysis.service;
 
 import org.apache.commons.lang3.RandomUtils;
 import org.apache.commons.lang3.RandomStringUtils;
-import org.apache.commons.lang3.time.DateUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -45,7 +44,6 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.association.Gene2GOAssociationService;
 import ubic.gemma.persistence.service.common.description.ExternalDatabaseService;
 
-import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
@@ -84,7 +82,7 @@ public class GeneMultifunctionalityPopulationServiceTest extends BaseSpringConte
     public void setUp() throws Exception {
 
         if ( goService.isOntologyLoaded() ) {
-            goService.shutDown();
+            goService.clearCaches();
         }
         gene2GoService.removeAll();
 

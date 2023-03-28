@@ -24,7 +24,10 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.springframework.core.io.ClassPathResource;
+import ubic.basecode.ontology.model.OntologyIndividual;
+import ubic.basecode.ontology.model.OntologyResource;
 import ubic.basecode.ontology.model.OntologyTerm;
+import ubic.basecode.ontology.search.OntologySearchException;
 
 import java.io.InputStream;
 import java.util.Collection;
@@ -54,7 +57,36 @@ public class GeneOntologyServiceTest {
 
     @AfterClass
     public static void tearDown() {
-        GeneOntologyServiceTest.gos.shutDown();
+        GeneOntologyServiceTest.gos.clearCaches();
+    }
+
+    @Test
+    public void testFindTerm() throws OntologySearchException {
+        Collection<OntologyTerm> matches = gos.findTerm( "metabolism" );
+        assertEquals( 331, matches.size() );
+    }
+
+    @Test
+    public void testFindTermWithMultipleTerms() throws OntologySearchException {
+        Collection<OntologyTerm> matches = gos.findTerm( "rna metabolism" );
+        assertEquals( 18, matches.size() );
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testFindTermWithEmptyQuery() throws OntologySearchException {
+        gos.findTerm( " " );
+    }
+
+    @Test
+    public void testFindIndividuals() throws OntologySearchException {
+        Collection<OntologyIndividual> matches = gos.findIndividuals( "metabolism" );
+        assertEquals( 443, matches.size() );
+    }
+
+    @Test
+    public void testFindResources() throws OntologySearchException {
+        Collection<OntologyResource> matches = gos.findResources( "metabolism" );
+        assertEquals( 443, matches.size() );
     }
 
     @Test

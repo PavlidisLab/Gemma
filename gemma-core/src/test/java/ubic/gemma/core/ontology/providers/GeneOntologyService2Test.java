@@ -47,7 +47,7 @@ public class GeneOntologyService2Test {
 
     @AfterClass
     public static void tearDown() {
-        GeneOntologyService2Test.gos.shutDown();
+        GeneOntologyService2Test.gos.clearCaches();
     }
 
     @Test
