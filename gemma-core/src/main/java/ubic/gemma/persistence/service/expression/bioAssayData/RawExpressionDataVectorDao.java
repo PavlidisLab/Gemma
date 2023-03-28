@@ -18,5 +18,4 @@ import java.util.Collection;
  */
 public interface RawExpressionDataVectorDao extends DesignElementDataVectorDao<RawExpressionDataVector> {
 
-    ExpressionExperiment addVectors( Long eeId, Collection<RawExpressionDataVector> vectors );
 }
