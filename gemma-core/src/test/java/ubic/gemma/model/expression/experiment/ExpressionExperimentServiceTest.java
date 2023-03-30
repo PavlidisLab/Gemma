@@ -5,6 +5,7 @@ import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.access.AccessDecisionManager;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
 import ubic.gemma.core.analysis.preprocess.svd.SVDService;
@@ -14,7 +15,7 @@ import ubic.gemma.persistence.service.analysis.expression.coexpression.Coexpress
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.persistence.service.analysis.expression.pca.PrincipalComponentAnalysisService;
 import ubic.gemma.persistence.service.analysis.expression.sampleCoexpression.SampleCoexpressionAnalysisService;
-import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventDao;
+import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeService;
 import ubic.gemma.persistence.service.expression.bioAssayData.BioAssayDimensionService;
 import ubic.gemma.persistence.service.expression.bioAssayData.RawExpressionDataVectorDao;
@@ -48,8 +49,8 @@ public class ExpressionExperimentServiceTest extends AbstractJUnit4SpringContext
         }
 
         @Bean
-        public AuditEventDao auditEventDao() {
-            return mock( AuditEventDao.class );
+        public AuditEventService auditEventService() {
+            return mock( AuditEventService.class );
         }
 
         @Bean
@@ -73,13 +74,13 @@ public class ExpressionExperimentServiceTest extends AbstractJUnit4SpringContext
         }
 
         @Bean
-        public ExperimentalFactorDao experimentalFactorDao() {
-            return mock( ExperimentalFactorDao.class );
+        public ExperimentalFactorService experimentalFactorService() {
+            return mock( ExperimentalFactorService.class );
         }
 
         @Bean
-        public FactorValueDao factorValueDao() {
-            return mock( FactorValueDao.class );
+        public FactorValueService factorValueService() {
+            return mock( FactorValueService.class );
         }
 
         @Bean
@@ -130,6 +131,11 @@ public class ExpressionExperimentServiceTest extends AbstractJUnit4SpringContext
         @Bean
         public BlacklistedEntityService blacklistedEntityService() {
             return mock( BlacklistedEntityService.class );
+        }
+
+        @Bean
+        public AccessDecisionManager accessDecisionManager() {
+            return mock( AccessDecisionManager.class );
         }
     }
 
