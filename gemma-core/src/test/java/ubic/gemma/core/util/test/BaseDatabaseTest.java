@@ -32,7 +32,6 @@ public abstract class BaseDatabaseTest extends AbstractTransactionalJUnit4Spring
             LocalSessionFactoryBean factory = new LocalSessionFactoryBean();
             factory.setDataSource( dataSource );
             factory.setConfigLocations(
-                    new ClassPathResource( "/gemma/gsec/hibernate.cfg.xml" ),
                     new ClassPathResource( "/hibernate.cfg.xml" ) );
             Properties props = new Properties();
             props.setProperty( "hibernate.hbm2ddl.auto", "create" );
