@@ -95,6 +95,7 @@ public class TwoChannelMissingValuesImpl implements TwoChannelMissingValues {
     private AuditTrailService auditTrailService;
 
     @Override
+    @Transactional
     public Collection<RawExpressionDataVector> computeMissingValues( ExpressionExperiment ee ) {
         return this.computeMissingValues( ee, TwoChannelMissingValues.DEFAULT_SIGNAL_TO_NOISE_THRESHOLD, null );
     }
