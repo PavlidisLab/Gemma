@@ -71,6 +71,7 @@ import java.nio.file.Files;
 import java.util.*;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * High Level Service used to add Candidate Gene Management System capabilities
@@ -711,28 +712,18 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     @Override
     @Transactional(readOnly = true)
     public Collection<CharacteristicValueObject> searchInDatabaseForPhenotype( String searchQuery ) throws OntologySearchException {
-
-        Collection<CharacteristicValueObject> results = new TreeSet<>();
-
         String newSearchQuery = this.prepareOntologyQuery( searchQuery );
 
         // search the Ontology with the search query
         Collection<OntologyTerm> ontologyTermsFound = this.ontologyHelper.findValueUriInOntology( newSearchQuery );
 
         // Set of valueUri of all Ontology Terms found + their children
-        Set<String> phenotypesFoundAndChildren = this.ontologyHelper.findAllChildrenAndParent( ontologyTermsFound );
+        Set<OntologyTerm> phenotypesFoundAndChildren = ontologyService.getChildren( ontologyTermsFound, false, true );
 
-        if ( !phenotypesFoundAndChildren.isEmpty() ) {
-
-            // gene counts for all phenotypes used
-            for ( int i = 0; i < PhenotypeAssociationConstants.TAXA_IN_USE.length; i++ ) {
-                results.addAll( this.findPhenotypeCount( ontologyTermsFound,
-                        this.taxonService.findByCommonName( PhenotypeAssociationConstants.TAXA_IN_USE[i] ),
-                        phenotypesFoundAndChildren ) );
-            }
-        }
-
-        return results;
+        return Stream.concat( ontologyTermsFound.stream(), phenotypesFoundAndChildren.stream() )
+                .distinct()
+                .map( t -> new CharacteristicValueObject( -1L, t.getLabel().toLowerCase(), t.getUri() ) )
+                .collect( Collectors.toCollection( TreeSet::new ) );
     }
 
     @Override
