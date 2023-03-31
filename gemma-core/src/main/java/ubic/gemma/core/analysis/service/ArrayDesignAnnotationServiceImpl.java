@@ -25,11 +25,13 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.basecode.util.DateUtil;
 import ubic.basecode.util.FileTools;
 import ubic.gemma.core.ontology.providers.GeneOntologyService;
+import ubic.gemma.core.ontology.providers.GeneOntologyServiceFactory;
 import ubic.gemma.core.ontology.providers.GeneOntologyServiceImpl;
 import ubic.gemma.model.association.BioSequence2GeneProduct;
 import ubic.gemma.model.common.description.Characteristic;
@@ -40,13 +42,17 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.persistence.service.association.Gene2GOAssociationService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
+import ubic.gemma.persistence.util.AsyncFactoryBeanUtils;
 import ubic.gemma.persistence.util.EntityUtils;
 import ubic.gemma.persistence.util.Settings;
 
 import java.io.*;
 import java.util.*;
+import java.util.concurrent.Future;
 import java.util.regex.Pattern;
 import java.util.zip.GZIPOutputStream;
+
+import static ubic.gemma.persistence.util.AsyncFactoryBeanUtils.getSilently;
 
 /**
  * @author Paul
@@ -68,7 +74,7 @@ public class ArrayDesignAnnotationServiceImpl implements ArrayDesignAnnotationSe
      * Remove file separators (e.g., "/") from the file names.
      *
      * @param  fileBaseName file base name
-     * @return              munged name
+     * @return munged name
      */
     public static String mungeFileName( String fileBaseName ) {
         if ( fileBaseName == null ) {
@@ -79,7 +85,7 @@ public class ArrayDesignAnnotationServiceImpl implements ArrayDesignAnnotationSe
 
     /**
      * @param  arrayDesign array design
-     * @return             Map of composite sequence ids and transient (incomplete) genes. The genes only have the
+     * @return Map of composite sequence ids and transient (incomplete) genes. The genes only have the
      *                     symbol filled in.
      */
     public static Map<Long, Collection<Gene>> readAnnotationFile( ArrayDesign arrayDesign ) {
@@ -95,7 +101,7 @@ public class ArrayDesignAnnotationServiceImpl implements ArrayDesignAnnotationSe
         Map<String, Long> probeNameToId = new HashMap<>();
         ArrayDesignAnnotationServiceImpl.populateProbeNameToIdMap( arrayDesign, results, probeNameToId );
         ArrayDesignAnnotationServiceImpl.log.info( "Reading annotations from: " + f );
-        try (InputStream is = FileTools.getInputStreamFromPlainOrCompressedFile( f.getAbsolutePath() )) {
+        try ( InputStream is = FileTools.getInputStreamFromPlainOrCompressedFile( f.getAbsolutePath() ) ) {
             return ArrayDesignAnnotationServiceImpl.parseAnnotationFile( results, is, probeNameToId );
         } catch ( IOException e ) {
             throw new RuntimeException( e );
@@ -107,7 +113,7 @@ public class ArrayDesignAnnotationServiceImpl implements ArrayDesignAnnotationSe
      * GO annotations are not part of the result.
      *
      * @param  arrayDesign array design
-     * @return             Map of composite sequence ids to an array of delimited strings: [probe name,genes symbol,
+     * @return Map of composite sequence ids to an array of delimited strings: [probe name,genes symbol,
      *                     gene Name,
      *                     gemma gene id, ncbi id] for a given probe id. format of string is geneSymbol then geneNames
      *                     same as found
@@ -155,8 +161,8 @@ public class ArrayDesignAnnotationServiceImpl implements ArrayDesignAnnotationSe
             probeNameToId.put( cs.getName(), cs.getId() );
         }
 
-        try (InputStream is = FileTools.getInputStreamFromPlainOrCompressedFile( f.getAbsolutePath() );
-                BufferedReader br = new BufferedReader( new InputStreamReader( is ) )) {
+        try ( InputStream is = FileTools.getInputStreamFromPlainOrCompressedFile( f.getAbsolutePath() );
+                BufferedReader br = new BufferedReader( new InputStreamReader( is ) ) ) {
             ArrayDesignAnnotationServiceImpl.log.info( "Reading annotations from: " + f );
 
             String line;
@@ -315,7 +321,8 @@ public class ArrayDesignAnnotationServiceImpl implements ArrayDesignAnnotationSe
     private Gene2GOAssociationService gene2GOAssociationService;
 
     @Autowired
-    private GeneOntologyService goService;
+    @Qualifier("geneOntologyServiceFactory")
+    private Future<GeneOntologyService> goService;
 
     private final Transformer goTermExtractor = new Transformer() {
         @Override
@@ -326,7 +333,7 @@ public class ArrayDesignAnnotationServiceImpl implements ArrayDesignAnnotationSe
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see
      * ubic.gemma.core.analysis.service.ArrayDesignAnnotationService#create(ubic.gemma.model.expression.arrayDesign.
      * ArrayDesign, java.lang.Boolean)
@@ -334,7 +341,7 @@ public class ArrayDesignAnnotationServiceImpl implements ArrayDesignAnnotationSe
     @Override
     public void create( ArrayDesign inputAd, Boolean overWrite ) throws IOException {
 
-        if ( !goService.isOntologyLoaded() ) {
+        if ( !goService.isDone() ) {
             throw new IllegalStateException( "GO was not loaded" );
         }
 
@@ -387,8 +394,9 @@ public class ArrayDesignAnnotationServiceImpl implements ArrayDesignAnnotationSe
              * them (or no annotations)
              */
             Collection<ExpressionExperiment> ees = arrayDesignService.getExpressionExperiments( ad );
-            if ( !ees.isEmpty() ) log.info( "Deleting data files for " + ees.size() + " experiments which use " + ad.getShortName()
-                    + ", that may have outdated annotations" );
+            if ( !ees.isEmpty() )
+                log.info( "Deleting data files for " + ees.size() + " experiments which use " + ad.getShortName()
+                        + ", that may have outdated annotations" );
             for ( ExpressionExperiment ee : ees ) {
                 this.expressionDataFileService.deleteAllFiles( ee );
             }
@@ -440,7 +448,7 @@ public class ArrayDesignAnnotationServiceImpl implements ArrayDesignAnnotationSe
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see ubic.gemma.core.analysis.service.ArrayDesignAnnotationService#generateAnnotationFile(java.io.Writer,
      * java.util.Collection)
      */
@@ -573,7 +581,7 @@ public class ArrayDesignAnnotationServiceImpl implements ArrayDesignAnnotationSe
     /**
      * @param  ty Configures which GO terms to return: With all parents, biological process only, or direct annotations
      *            only.
-     * @return    the goTerms for a given gene, as configured
+     * @return the goTerms for a given gene, as configured
      */
     private Collection<OntologyTerm> getGoTerms( Collection<Characteristic> ontologyTerms, OutputType ty ) {
 
@@ -582,14 +590,14 @@ public class ArrayDesignAnnotationServiceImpl implements ArrayDesignAnnotationSe
             return results;
 
         for ( Characteristic vc : ontologyTerms ) {
-            results.add( goService.getTermForId( vc.getValue() ) );
+            results.add( getSilently( goService, GeneOntologyServiceFactory.class ).getTermForId( vc.getValue() ) );
         }
 
         if ( ty.equals( OutputType.SHORT ) )
             return results;
 
         if ( ty.equals( OutputType.LONG ) ) {
-            Collection<OntologyTerm> oes = goService.getAllParents( results );
+            Collection<OntologyTerm> oes = getSilently( goService, GeneOntologyServiceFactory.class ).getAllParents( results );
             results.addAll( oes );
         } else if ( ty.equals( OutputType.BIOPROCESS ) ) {
             Collection<OntologyTerm> toRemove = new HashSet<>();
@@ -598,7 +606,7 @@ public class ArrayDesignAnnotationServiceImpl implements ArrayDesignAnnotationSe
                 if ( ( ont == null ) ) {
                     continue; // / shouldn't happen!
                 }
-                if ( !goService.isBiologicalProcess( ont ) ) {
+                if ( !getSilently( goService, GeneOntologyServiceFactory.class ).isBiologicalProcess( ont ) ) {
                     toRemove.add( ont );
                 }
             }
@@ -663,7 +671,7 @@ public class ArrayDesignAnnotationServiceImpl implements ArrayDesignAnnotationSe
             return;
         }
 
-        try (Writer writer = initOutputFile( arrayDesign, fileBaseName, overWrite )) {
+        try ( Writer writer = initOutputFile( arrayDesign, fileBaseName, overWrite ) ) {
 
             // if no writer then we should abort (this could happen in case where we don't want to overwrite files)
             if ( writer == null ) {

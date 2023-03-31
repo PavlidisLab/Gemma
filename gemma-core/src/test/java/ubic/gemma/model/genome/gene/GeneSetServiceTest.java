@@ -25,9 +25,11 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.io.ClassPathResource;
 import ubic.gemma.core.genome.gene.service.GeneSetService;
 import ubic.gemma.core.ontology.providers.GeneOntologyService;
+import ubic.gemma.core.ontology.providers.GeneOntologyServiceFactory;
 import ubic.gemma.core.search.GeneSetSearch;
 import ubic.gemma.core.util.test.BaseSpringContextTest;
 import ubic.gemma.model.association.GOEvidenceCode;
@@ -39,9 +41,11 @@ import ubic.gemma.persistence.service.association.Gene2GOAssociationService;
 import java.io.InputStream;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.concurrent.Future;
 import java.util.zip.GZIPInputStream;
 
 import static org.junit.Assert.*;
+import static ubic.gemma.persistence.util.AsyncFactoryBeanUtils.getSilently;
 
 /**
  * @author klc
@@ -56,7 +60,8 @@ public class GeneSetServiceTest extends BaseSpringContextTest {
     private GeneSetService geneSetService;
 
     @Autowired
-    private GeneOntologyService geneOntologyService;
+    @Qualifier("geneOntologyServiceFactory")
+    private Future<GeneOntologyService> geneOntologyService;
 
     @Autowired
     private GeneSetSearch geneSetSearch;
@@ -72,7 +77,7 @@ public class GeneSetServiceTest extends BaseSpringContextTest {
 
         InputStream is = new GZIPInputStream(
                 new ClassPathResource( "/data/loader/ontology/molecular-function.test.owl.gz" ).getInputStream() );
-        geneOntologyService.loadTermsInNameSpace( is, false );
+        getSilently( geneOntologyService, GeneOntologyServiceFactory.class ).loadTermsInNameSpace( is, false );
 
         g = this.getTestPersistentGene();
         g3 = this.getTestPersistentGene();

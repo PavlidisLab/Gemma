@@ -39,7 +39,7 @@ public class GeneOntologyService2Test {
     // note: no spring context.
     @BeforeClass
     public static void setUp() throws Exception {
-        GeneOntologyService2Test.gos = new GeneOntologyServiceImpl();
+        GeneOntologyService2Test.gos = new GeneOntologyServiceImpl( null, null );
         InputStream is = new GZIPInputStream(
                 new ClassPathResource( "/data/loader/ontology/go.bptest.owl.gz" ).getInputStream() );
         GeneOntologyService2Test.gos.loadTermsInNameSpace( is, false );

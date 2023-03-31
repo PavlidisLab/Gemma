@@ -22,17 +22,22 @@ package ubic.gemma.core.ontology;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.dataStructure.matrix.SparseDoubleMatrix;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.gemma.core.ontology.providers.GeneOntologyService;
+import ubic.gemma.core.ontology.providers.GeneOntologyServiceFactory;
 import ubic.gemma.core.ontology.providers.GeneOntologyServiceImpl;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.persistence.service.association.Gene2GOAssociationService;
 
 import java.util.*;
+import java.util.concurrent.Future;
+
+import static ubic.gemma.persistence.util.AsyncFactoryBeanUtils.getSilently;
 
 /**
  * @author meeta
@@ -52,13 +57,14 @@ public class GoMetricImpl implements GoMetric {
     @Autowired
     private Gene2GOAssociationService gene2GOAssociationService;
     @Autowired
-    private GeneOntologyService geneOntologyService;
+    @Qualifier("geneOntologyServiceFactory")
+    private Future<GeneOntologyService> geneOntologyService;
 
     @Override
     public Double computeMatrixSimilarity( Gene gene1, Gene gene2, DoubleMatrix<Long, String> gene2TermMatrix,
             Metric metric ) {
 
-        if ( !geneOntologyService.isOntologyLoaded() )
+        if ( !geneOntologyService.isDone() )
             GoMetricImpl.log.error( "Method called before geneOntologyService is ready!!!" );
         Double score = null;
 
@@ -263,7 +269,7 @@ public class GoMetricImpl implements GoMetric {
     public DoubleMatrix<Long, String> createVectorMatrix( Map<Long, Collection<String>> gene2go, boolean weight ) {
 
         Map<String, Double> GOTermFrequency = new HashMap<>();
-        List<String> goTerms = new ArrayList<>( geneOntologyService.getAllURIs() );
+        List<String> goTerms = new ArrayList<>( getSilently( geneOntologyService, GeneOntologyServiceFactory.class ).getAllURIs() );
 
         // Remove 'BiologicalProcess' etc.
         goTerms.remove( GoMetricImpl.BASE_GO_URI + "GO_0008150" );
@@ -308,7 +314,7 @@ public class GoMetricImpl implements GoMetric {
     public Integer getChildrenOccurrence( Map<String, Integer> termCountMap, String term ) {
 
         int termCount = termCountMap.get( term );
-        OntologyTerm ont = geneOntologyService.getTerm( term );
+        OntologyTerm ont = getSilently( geneOntologyService, GeneOntologyServiceFactory.class ).getTerm( term );
 
         Collection<OntologyTerm> children = ont.getChildren( false, partOf );
 
@@ -324,22 +330,6 @@ public class GoMetricImpl implements GoMetric {
         }
         return termCount;
 
-    }
-
-    /**
-     * @param gene2GOAssociationService the gene2GOAssociationService to set
-     */
-    @Override
-    public void setGene2GOAssociationService( Gene2GOAssociationService gene2GOAssociationService ) {
-        this.gene2GOAssociationService = gene2GOAssociationService;
-    }
-
-    /**
-     * @param geneOntologyService the geneOntologyService to set
-     */
-    @Override
-    public void setGeneOntologyService( GeneOntologyService geneOntologyService ) {
-        this.geneOntologyService = geneOntologyService;
     }
 
     protected void logIds( String prefix, Collection<OntologyTerm> terms ) {
@@ -549,12 +539,12 @@ public class GoMetricImpl implements GoMetric {
      * @return percent of overlapping terms wrt to the gene with the lower number of GO terms
      */
     private Double computePercentOverlap( Gene gene1, Gene gene2, boolean includePartOf ) {
-        if ( !geneOntologyService.isOntologyLoaded() )
+        if ( !getSilently( geneOntologyService, GeneOntologyServiceFactory.class ).isOntologyLoaded() )
             GoMetricImpl.log.error( "computeSimpleOverlap called before geneOntologyService is ready!!!" );
 
         Double avgScore = 0.0;
-        Collection<OntologyTerm> masterGO = geneOntologyService.getGOTerms( gene1, includePartOf, null );
-        Collection<OntologyTerm> coExpGO = geneOntologyService.getGOTerms( gene2, includePartOf, null );
+        Collection<OntologyTerm> masterGO = getSilently( geneOntologyService, GeneOntologyServiceFactory.class ).getGOTerms( gene1, includePartOf, null );
+        Collection<OntologyTerm> coExpGO = getSilently( geneOntologyService, GeneOntologyServiceFactory.class ).getGOTerms( gene2, includePartOf, null );
 
         Collection<OntologyTerm> overlappingTerms = new HashSet<>();
         for ( OntologyTerm o : masterGO ) {
@@ -582,11 +572,11 @@ public class GoMetricImpl implements GoMetric {
      * @return number of overlapping terms
      */
     private Double computeSimpleOverlap( Gene gene1, Gene gene2, boolean includePartOf ) {
-        if ( !geneOntologyService.isOntologyLoaded() )
+        if ( !geneOntologyService.isDone() )
             GoMetricImpl.log.error( "computeSimpleOverlap called before geneOntologyService is ready!!!" );
 
-        Collection<OntologyTerm> masterGO = geneOntologyService.getGOTerms( gene1, includePartOf, null );
-        Collection<OntologyTerm> coExpGO = geneOntologyService.getGOTerms( gene2, includePartOf, null );
+        Collection<OntologyTerm> masterGO = getSilently( geneOntologyService, GeneOntologyServiceFactory.class ).getGOTerms( gene1, includePartOf, null );
+        Collection<OntologyTerm> coExpGO = getSilently( geneOntologyService, GeneOntologyServiceFactory.class ).getGOTerms( gene2, includePartOf, null );
 
         Collection<OntologyTerm> overlappingTerms = new HashSet<>();
         for ( OntologyTerm o : masterGO ) {
@@ -680,7 +670,7 @@ public class GoMetricImpl implements GoMetric {
         HashSet<OntologyTerm> termsGO = new HashSet<>();
 
         for ( Characteristic characteristic : termsVoc ) {
-            OntologyTerm term = geneOntologyService.getTermForId( characteristic.getValue() );
+            OntologyTerm term = getSilently( geneOntologyService, GeneOntologyServiceFactory.class ).getTermForId( characteristic.getValue() );
             if ( ( term != null ) )
                 termsGO.add( term );
         }

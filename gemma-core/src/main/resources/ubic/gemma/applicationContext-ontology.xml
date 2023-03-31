@@ -2,7 +2,7 @@
 <beans xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.springframework.org/schema/beans"
        xsi:schemaLocation="http://www.springframework.org/schema/beans
    http://www.springframework.org/schema/beans/spring-beans.xsd">
-    <bean id="gemmaOntology" class="ubic.gemma.core.ontology.providers.OntologyServiceFactory">
+    <bean id="gemmaOntologyService" class="ubic.gemma.core.ontology.providers.OntologyServiceFactory">
         <property name="ontologyServiceClass" value="ubic.gemma.core.ontology.providers.GemmaOntologyService"/>
     </bean>
     <bean id="experimentalFactorOntologyService" class="ubic.gemma.core.ontology.providers.OntologyServiceFactory">
@@ -12,7 +12,7 @@
     <bean id="obiService" class="ubic.gemma.core.ontology.providers.OntologyServiceFactory">
         <property name="ontologyServiceClass" value="ubic.basecode.ontology.providers.ObiService"/>
     </bean>
-    <bean id="nifstOntologyService" class="ubic.gemma.core.ontology.providers.OntologyServiceFactory">
+    <bean id="nifstdOntologyService" class="ubic.gemma.core.ontology.providers.OntologyServiceFactory">
         <property name="ontologyServiceClass" value="ubic.basecode.ontology.providers.NIFSTDOntologyService"/>
     </bean>
     <bean id="fmaOntologyService" class="ubic.gemma.core.ontology.providers.OntologyServiceFactory">

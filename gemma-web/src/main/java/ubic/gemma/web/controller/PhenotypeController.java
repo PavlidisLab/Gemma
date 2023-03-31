@@ -25,6 +25,7 @@ import org.springframework.web.servlet.ModelAndView;
 import ubic.basecode.ontology.search.OntologySearchException;
 import ubic.gemma.core.association.phenotype.PhenotypeAssociationManagerService;
 import ubic.gemma.core.association.phenotype.PhenotypeAssociationManagerServiceImpl;
+import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.core.security.authentication.UserManager;
 import ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysis;
 import ubic.gemma.model.association.phenotype.PhenotypeAssociation;

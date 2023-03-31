@@ -114,18 +114,6 @@ public interface OntologyService {
     Set<OntologyTerm> getChildren( Collection<OntologyTerm> matchingTerms, boolean direct, boolean includeAdditionalProperties );
 
     /**
-     * @return the cellLineOntologyService
-     */
-    CellLineOntologyService getCellLineOntologyService();
-
-    CellTypeOntologyService getCellTypeOntologyService();
-
-    /**
-     * @return the chebiOntologyService
-     */
-    ChebiOntologyService getChebiOntologyService();
-
-    /**
      * @return the diseaseOntologyService
      */
     DiseaseOntologyService getDiseaseOntologyService();
@@ -134,10 +122,6 @@ public interface OntologyService {
      * @return the experimentalFactorOntologyService
      */
     ExperimentalFactorOntologyService getExperimentalFactorOntologyService();
-
-    GemmaOntologyService getGemmaOntologyService();
-
-    HumanDevelopmentOntologyService getHumanDevelopmentOntologyService();
 
     /**
      * @return the HumanPhenotypeOntologyService
@@ -148,8 +132,6 @@ public interface OntologyService {
      * @return the MammalianPhenotypeOntologyService
      */
     MammalianPhenotypeOntologyService getMammalianPhenotypeOntologyService();
-
-    MouseDevelopmentOntologyService getMouseDevelopmentOntologyService();
 
     /**
      * @return the ObiService
@@ -162,8 +144,6 @@ public interface OntologyService {
      */
     @Nullable
     OntologyResource getResource( String uri );
-
-    SequenceOntologyService getSequenceOntologyService();
 
     /**
      * @param  uri uri

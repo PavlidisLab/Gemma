@@ -46,7 +46,7 @@ public class GeneOntologyServiceTest {
     // note: no spring context.
     @BeforeClass
     public static void setUp() throws Exception {
-        GeneOntologyServiceTest.gos = new GeneOntologyServiceImpl();
+        GeneOntologyServiceTest.gos = new GeneOntologyServiceImpl( null, null );
         /*
          * Note that this test file is out of date in some ways. See GeneOntologyServiceTest2
          */

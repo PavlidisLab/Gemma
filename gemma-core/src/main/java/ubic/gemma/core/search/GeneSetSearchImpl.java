@@ -24,6 +24,7 @@ import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 import ubic.basecode.ontology.model.OntologyResource;
 import ubic.basecode.ontology.model.OntologyTerm;
@@ -33,6 +34,7 @@ import ubic.gemma.core.genome.gene.GOGroupValueObject;
 import ubic.gemma.core.genome.gene.GeneSetValueObjectHelper;
 import ubic.gemma.core.genome.gene.service.GeneSetService;
 import ubic.gemma.core.ontology.providers.GeneOntologyService;
+import ubic.gemma.core.ontology.providers.GeneOntologyServiceFactory;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonValueObject;
@@ -43,10 +45,14 @@ import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 import ubic.gemma.persistence.service.association.Gene2GOAssociationService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
+import ubic.gemma.persistence.util.AsyncFactoryBeanUtils;
 import ubic.gemma.persistence.util.EntityUtils;
 
 import javax.annotation.Nullable;
 import java.util.*;
+import java.util.concurrent.Future;
+
+import static ubic.gemma.persistence.util.AsyncFactoryBeanUtils.getSilently;
 
 /**
  * @author paul
@@ -63,7 +69,8 @@ public class GeneSetSearchImpl implements GeneSetSearch {
     @Autowired
     private Gene2GOAssociationService gene2GoService;
     @Autowired
-    private GeneOntologyService geneOntologyService;
+    @Qualifier("geneOntologyServiceFactory")
+    private Future<GeneOntologyService> geneOntologyService;
     @Autowired
     private GeneSetService geneSetService;
     @Autowired
@@ -107,7 +114,7 @@ public class GeneSetSearchImpl implements GeneSetSearch {
     @Override
     @Nullable
     public GeneSet findByGoId( String goId, @Nullable Taxon taxon ) {
-        OntologyTerm goTerm = geneOntologyService.getTermForId( StringUtils.strip( goId ) );
+        OntologyTerm goTerm = getSilently( geneOntologyService, GeneOntologyServiceFactory.class ).getTermForId( StringUtils.strip( goId ) );
 
         if ( goTerm == null ) {
             return null;
@@ -124,7 +131,7 @@ public class GeneSetSearchImpl implements GeneSetSearch {
     @Override
     public Collection<GeneSet> findByGoTermName( String goTermName, @Nullable Taxon taxon, @Nullable Integer maxGoTermsProcessed,
             @Nullable Integer maxGeneSetSize ) throws OntologySearchException {
-        Collection<? extends OntologyResource> matches = this.geneOntologyService
+        Collection<? extends OntologyResource> matches = getSilently( this.geneOntologyService, GeneOntologyServiceFactory.class )
                 .findTerm( StringUtils.strip( goTermName ) );
 
         Collection<GeneSet> results = new HashSet<>();
@@ -271,7 +278,7 @@ public class GeneSetSearchImpl implements GeneSetSearch {
     }
 
     private Collection<GeneSet> findByGoId( String query ) {
-        OntologyTerm goTerm = geneOntologyService.getTermForId( StringUtils.strip( query ) );
+        OntologyTerm goTerm = getSilently( geneOntologyService, GeneOntologyServiceFactory.class ).getTermForId( StringUtils.strip( query ) );
 
         if ( goTerm == null ) {
             return new HashSet<>();

@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2008 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -27,6 +27,7 @@ import org.w3c.dom.Element;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.core.ontology.providers.GeneOntologyService;
+import ubic.gemma.core.ontology.providers.GeneOntologyServiceFactory;
 import ubic.gemma.core.ontology.providers.GeneOntologyServiceImpl;
 import ubic.gemma.model.genome.Gene;
 
@@ -34,6 +35,9 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.concurrent.Future;
+
+import static ubic.gemma.persistence.util.AsyncFactoryBeanUtils.getSilently;
 
 /**
  * given a query gene id &amp; collection of target gene ids will determine the overlapping Go terms (intersection) between
@@ -50,13 +54,13 @@ public class GeneOverlapEndpoint extends AbstractGemmaEndpoint {
      * The local name of the expected request/response.
      */
     private static final String LOCAL_NAME = "geneOverlap";
-    private GeneOntologyService geneOntologyService;
+    private Future<GeneOntologyService> geneOntologyService;
     private GeneService geneService;
 
     /**
      * Sets the "business service" to delegate to.
      */
-    public void setGeneOntologyService( GeneOntologyService goS ) {
+    public void setGeneOntologyService( Future<GeneOntologyService> goS ) {
         this.geneOntologyService = goS;
     }
 
@@ -112,7 +116,7 @@ public class GeneOverlapEndpoint extends AbstractGemmaEndpoint {
             return buildBadResponse( document, msg );
         }
 
-        Map<Long, Collection<OntologyTerm>> gene2Ot = geneOntologyService
+        Map<Long, Collection<OntologyTerm>> gene2Ot = getSilently( geneOntologyService, GeneOntologyServiceFactory.class )
                 .calculateGoTermOverlap( queryGene, geneIdLongs );
 
         Collection<Long> geneCol = gene2Ot.keySet();

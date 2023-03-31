@@ -9,6 +9,8 @@ import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.persistence.util.AbstractAsyncFactoryBean;
 import ubic.gemma.persistence.util.Settings;
 
+import java.util.concurrent.Future;
+
 /**
  * Factory for {@link HomologeneService}.
  */

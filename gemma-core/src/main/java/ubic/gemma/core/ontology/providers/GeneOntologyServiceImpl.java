@@ -22,17 +22,10 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.springframework.beans.factory.DisposableBean;
-import org.springframework.beans.factory.InitializingBean;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-import ubic.basecode.ontology.model.AnnotationProperty;
-import ubic.basecode.ontology.model.OntologyIndividual;
-import ubic.basecode.ontology.model.OntologyResource;
-import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.basecode.ontology.jena.AbstractOntologyMemoryBackedService;
+import ubic.basecode.ontology.model.AnnotationProperty;
+import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.basecode.ontology.search.OntologySearchException;
-import ubic.basecode.util.Configuration;
 import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.genome.Gene;
@@ -49,8 +42,7 @@ import java.util.stream.Collectors;
  *
  * @author pavlidis
  */
-@Service
-public class GeneOntologyServiceImpl extends AbstractOntologyMemoryBackedService implements GeneOntologyService, InitializingBean, DisposableBean {
+public class GeneOntologyServiceImpl extends AbstractOntologyMemoryBackedService implements GeneOntologyService {
 
     public enum GOAspect {
         BIOLOGICAL_PROCESS, CELLULAR_COMPONENT, MOLECULAR_FUNCTION
@@ -101,11 +93,8 @@ public class GeneOntologyServiceImpl extends AbstractOntologyMemoryBackedService
         return GeneOntologyService.BASE_GO_URI + uriTerm;
     }
 
-    @Autowired
-    private Gene2GOAssociationService gene2GOAssociationService;
-
-    @Autowired
-    private GeneService geneService;
+    private final Gene2GOAssociationService gene2GOAssociationService;
+    private final GeneService geneService;
 
     /**
      * Cache of gene -> go terms.
@@ -117,28 +106,9 @@ public class GeneOntologyServiceImpl extends AbstractOntologyMemoryBackedService
      */
     private final Map<String, GOAspect> term2Aspect = new ConcurrentHashMap<>();
 
-    /**
-     * If this load.ontologies is NOT configured, we go ahead (per-ontology config will be checked).
-     */
-    private static boolean isAutoLoad() {
-        String doLoad = Configuration.getString( "load.ontologies" );
-        return StringUtils.isBlank( doLoad ) || Configuration.getBoolean( "load.ontologies" );
-    }
-
-    @Override
-    public void afterPropertiesSet() throws InterruptedException {
-        if ( isAutoLoad() ) {
-            startInitializationThread( false, false );
-        } else {
-            log.info( "Auto-loading of ontologies is disabled, GO terms will not be available." );
-        }
-    }
-
-    @Override
-    public void destroy() throws Exception {
-        if ( isAutoLoad() ) {
-            cancelInitializationThread();
-        }
+    public GeneOntologyServiceImpl(Gene2GOAssociationService gene2GOAssociationService, GeneService geneService) {
+        this.gene2GOAssociationService = gene2GOAssociationService;
+        this.geneService = geneService;
     }
 
     @Override
@@ -414,7 +384,7 @@ public class GeneOntologyServiceImpl extends AbstractOntologyMemoryBackedService
             }
 
             return GOAspect.valueOf( nameSpace.toUpperCase() );
-        });
+        } );
     }
 
     private void logIds( String prefix, Collection<OntologyTerm> terms ) {
@@ -434,14 +404,14 @@ public class GeneOntologyServiceImpl extends AbstractOntologyMemoryBackedService
             Collection<Gene> genes ) {
         for ( Gene gene : genes ) {
             if ( queryGeneTerms.isEmpty() ) {
-                overlap.put( gene.getId(), new HashSet<OntologyTerm>() );
+                overlap.put( gene.getId(), new HashSet<>() );
                 continue;
             }
 
             Collection<OntologyTerm> comparisonOntos = this.getGOTerms( gene );
 
             if ( comparisonOntos == null || comparisonOntos.isEmpty() ) {
-                overlap.put( gene.getId(), new HashSet<OntologyTerm>() );
+                overlap.put( gene.getId(), new HashSet<>() );
                 continue;
             }
 

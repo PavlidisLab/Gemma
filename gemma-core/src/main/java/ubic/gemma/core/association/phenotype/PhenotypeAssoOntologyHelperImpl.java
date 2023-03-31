@@ -19,6 +19,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.basecode.ontology.providers.DiseaseOntologyService;
@@ -31,6 +32,8 @@ import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 
 import java.util.*;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 
 /**
  * @author nicolas
@@ -41,29 +44,33 @@ public class PhenotypeAssoOntologyHelperImpl implements PhenotypeAssoOntologyHel
     private static final Log log = LogFactory.getLog( PhenotypeAssoOntologyHelperImpl.class );
 
     private final OntologyService ontologyService;
-    private final DiseaseOntologyService diseaseOntologyService;
-    private final MammalianPhenotypeOntologyService mammalianPhenotypeOntologyService;
-    private final HumanPhenotypeOntologyService humanPhenotypeOntologyService;
+    private final Future<DiseaseOntologyService> diseaseOntologyService;
+    private final Future<MammalianPhenotypeOntologyService> mammalianPhenotypeOntologyService;
+    private final Future<HumanPhenotypeOntologyService> humanPhenotypeOntologyService;
 
-    private final List<ubic.basecode.ontology.providers.OntologyService> ontologies;
+    private final List<Future<? extends ubic.basecode.ontology.providers.OntologyService>> ontologies;
 
     @Autowired
-    public PhenotypeAssoOntologyHelperImpl( OntologyService ontologyService, DiseaseOntologyService diseaseOntologyService, MammalianPhenotypeOntologyService mammalianPhenotypeOntologyService, HumanPhenotypeOntologyService humanPhenotypeOntologyService ) {
+    public PhenotypeAssoOntologyHelperImpl( OntologyService ontologyService,
+            @Qualifier("diseaseOntologyService") Future<DiseaseOntologyService> diseaseOntologyService,
+            @Qualifier("mammalianPhenotypeOntologyService") Future<MammalianPhenotypeOntologyService> mammalianPhenotypeOntologyService,
+            @Qualifier("humanPhenotypeOntologyService") Future<HumanPhenotypeOntologyService> humanPhenotypeOntologyService ) {
         this.ontologyService = ontologyService;
+        // FIXME: don't use .get() here!
         this.diseaseOntologyService = diseaseOntologyService;
         this.mammalianPhenotypeOntologyService = mammalianPhenotypeOntologyService;
         this.humanPhenotypeOntologyService = humanPhenotypeOntologyService;
         //  We add them even when they aren't available so we can use unit tests that mock or fake the ontologies.
-        this.ontologies = Arrays.asList( diseaseOntologyService, mammalianPhenotypeOntologyService, humanPhenotypeOntologyService );
-        if ( !diseaseOntologyService.isEnabled() ) {
-            log.debug( "DO is not enabled, phenotype tools will not work correctly" );
-        }
-        if ( !mammalianPhenotypeOntologyService.isEnabled() ) {
-            log.debug( "MPO is not enabled, phenotype tools will not work correctly" );
-        }
-        if ( !humanPhenotypeOntologyService.isEnabled() ) {
-            log.debug( "HPO is not enabled, phenotype tools will not work correctly" );
-        }
+        this.ontologies = Arrays.asList( this.diseaseOntologyService, this.mammalianPhenotypeOntologyService, this.humanPhenotypeOntologyService );
+        // if ( !this.diseaseOntologyService.isEnabled() ) {
+        //     log.debug( "DO is not enabled, phenotype tools will not work correctly" );
+        // }
+        // if ( !this.mammalianPhenotypeOntologyService.isEnabled() ) {
+        //     log.debug( "MPO is not enabled, phenotype tools will not work correctly" );
+        // }
+        // if ( !this.humanPhenotypeOntologyService.isEnabled() ) {
+        //     log.debug( "HPO is not enabled, phenotype tools will not work correctly" );
+        // }
     }
 
     @Override
@@ -71,26 +78,35 @@ public class PhenotypeAssoOntologyHelperImpl implements PhenotypeAssoOntologyHel
         /*
          * if these ontologies are not configured, we will never be ready. Check for valid configuration.
          */
-        if ( !this.diseaseOntologyService.isEnabled() ) {
+        if ( !this.diseaseOntologyService.isDone() ) {
+            log.warn( "DO is ready yet" );
+            return false;
+        } else if ( !getSilently( this.diseaseOntologyService ).isEnabled() ) {
             log.warn( "DO is not enabled" );
             return false;
-        } else if ( !this.diseaseOntologyService.isOntologyLoaded() ) {
+        } else if ( !getSilently( this.diseaseOntologyService ).isOntologyLoaded() ) {
             log.warn( "DO not loaded" );
             return false;
         }
 
-        if ( !this.humanPhenotypeOntologyService.isEnabled() ) {
+        if ( !this.humanPhenotypeOntologyService.isDone() ) {
+            log.warn( "HPO is not ready yet" );
+            return false;
+        } else if ( !getSilently( this.humanPhenotypeOntologyService ).isEnabled() ) {
             log.warn( "HPO is not enabled" );
             return false;
-        } else if ( !this.humanPhenotypeOntologyService.isOntologyLoaded() ) {
+        } else if ( !getSilently( this.humanPhenotypeOntologyService ).isOntologyLoaded() ) {
             log.warn( "HPO not loaded" );
             return false;
         }
 
-        if ( !this.mammalianPhenotypeOntologyService.isEnabled() ) {
+        if ( !this.mammalianPhenotypeOntologyService.isDone() ) {
+            log.warn( "MPI is not ready yet" );
+            return false;
+        } else if ( !getSilently( this.mammalianPhenotypeOntologyService ).isEnabled() ) {
             log.warn( "MPO is not enabled" );
             return false;
-        } else if ( !this.mammalianPhenotypeOntologyService.isOntologyLoaded() ) {
+        } else if ( !getSilently( this.mammalianPhenotypeOntologyService ).isOntologyLoaded() ) {
             log.warn( "MPO not loaded" );
             return false;
         }
@@ -158,8 +174,8 @@ public class PhenotypeAssoOntologyHelperImpl implements PhenotypeAssoOntologyHel
         }
 
         OntologyTerm ontologyTerm;
-        for ( ubic.basecode.ontology.providers.OntologyService ontology : this.ontologies ) {
-            ontologyTerm = ontology.getTerm( valueUri );
+        for ( Future<? extends ubic.basecode.ontology.providers.OntologyService> ontology : this.ontologies ) {
+            ontologyTerm = getSilently( ontology ).getTerm( valueUri );
             if ( ontologyTerm != null )
                 return ontologyTerm;
         }
@@ -171,8 +187,8 @@ public class PhenotypeAssoOntologyHelperImpl implements PhenotypeAssoOntologyHel
     public Set<CharacteristicValueObject> findPhenotypesInOntology( String searchQuery ) throws OntologySearchException {
         Map<String, OntologyTerm> uniqueValueTerm = new HashMap<>();
 
-        for ( ubic.basecode.ontology.providers.OntologyService ontology : this.ontologies ) {
-            Collection<OntologyTerm> hits = ontology.findTerm( searchQuery );
+        for ( Future<? extends ubic.basecode.ontology.providers.OntologyService> ontology : this.ontologies ) {
+            Collection<OntologyTerm> hits = getSilently( ontology ).findTerm( searchQuery );
 
             for ( OntologyTerm ontologyTerm : hits ) {
                 if ( ontologyTerm.getLabel() != null && uniqueValueTerm.get( ontologyTerm.getLabel().toLowerCase() ) == null ) {
@@ -188,9 +204,9 @@ public class PhenotypeAssoOntologyHelperImpl implements PhenotypeAssoOntologyHel
     public Collection<OntologyTerm> findValueUriInOntology( String searchQuery ) throws OntologySearchException {
 
         Collection<OntologyTerm> results = new TreeSet<>();
-        for ( ubic.basecode.ontology.providers.OntologyService ontology : this.ontologies ) {
+        for ( Future<? extends ubic.basecode.ontology.providers.OntologyService> ontology : this.ontologies ) {
             assert ontology != null;
-            Collection<OntologyTerm> found = ontology.findTerm( searchQuery );
+            Collection<OntologyTerm> found = getSilently( ontology ).findTerm( searchQuery );
             if ( found != null && !found.isEmpty() )
                 results.addAll( found );
         }
@@ -235,5 +251,16 @@ public class PhenotypeAssoOntologyHelperImpl implements PhenotypeAssoOntologyHel
             characteristicsVO.add( phenotype );
         }
         return characteristicsVO;
+    }
+
+    private <T extends ubic.basecode.ontology.providers.OntologyService> T getSilently( Future<T> future ) {
+        try {
+            return future.get();
+        } catch ( InterruptedException e ) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException( e );
+        } catch ( ExecutionException e ) {
+            throw new RuntimeException( e.getCause() );
+        }
     }
 }

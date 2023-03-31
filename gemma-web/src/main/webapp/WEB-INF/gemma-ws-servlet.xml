@@ -166,7 +166,7 @@
 		</description>
 		<property name="geneService" ref="geneService" />
 		<property name="manualAuthenticationService" ref="manualAuthenticationService" />
-		<property name="geneOntologyService" ref="geneOntologyService" />
+		<property name="geneOntologyService" ref="geneOntologyServiceFactory" />
 	</bean>
 
 	<bean id="geneOverlapEndpoint" class="ubic.gemma.web.services.GeneOverlapEndpoint">
@@ -175,7 +175,7 @@
 		</description>
 		<property name="geneService" ref="geneService" />
 		<property name="manualAuthenticationService" ref="manualAuthenticationService" />
-		<property name="geneOntologyService" ref="geneOntologyService" />
+		<property name="geneOntologyService" ref="geneOntologyServiceFactory" />
 	</bean>
 
 	<bean id="goTerm2GeneEndpoint" class="ubic.gemma.web.services.GoTerm2GeneEndpoint">
@@ -183,7 +183,7 @@
 			returns a list of gene ids
 		</description>
 		<property name="manualAuthenticationService" ref="manualAuthenticationService" />
-		<property name="geneOntologyService" ref="geneOntologyService" />
+		<property name="geneOntologyService" ref="geneOntologyServiceFactory" />
 		<property name="taxonService" ref="taxonService" />
 	</bean>
 
@@ -319,7 +319,7 @@
 		</description>
 		<property name="geneService" ref="geneService" />
 		<property name="manualAuthenticationService" ref="manualAuthenticationService" />
-		<property name="geneOntologyService" ref="geneOntologyService" />
+		<property name="geneOntologyService" ref="geneOntologyServiceFactory" />
 	</bean>
 
 </beans>

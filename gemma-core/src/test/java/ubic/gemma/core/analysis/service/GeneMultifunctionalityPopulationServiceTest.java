@@ -26,9 +26,11 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.io.ClassPathResource;
 import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.core.ontology.providers.GeneOntologyService;
+import ubic.gemma.core.ontology.providers.GeneOntologyServiceFactory;
 import ubic.gemma.core.util.test.BaseSpringContextTest;
 import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.association.GOEvidenceCode;
@@ -47,10 +49,12 @@ import ubic.gemma.persistence.service.common.description.ExternalDatabaseService
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.Future;
 import java.util.zip.GZIPInputStream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
+import static ubic.gemma.persistence.util.AsyncFactoryBeanUtils.getSilently;
 
 /**
  * @author paul
@@ -64,7 +68,8 @@ public class GeneMultifunctionalityPopulationServiceTest extends BaseSpringConte
     @Autowired
     private Gene2GOAssociationService gene2GoService;
     @Autowired
-    private GeneOntologyService goService;
+    @Qualifier("geneOntologyServiceFactory")
+    private Future<GeneOntologyService> goService;
     @Autowired
     private GeneService geneService;
     @Autowired
@@ -81,12 +86,12 @@ public class GeneMultifunctionalityPopulationServiceTest extends BaseSpringConte
     @Before
     public void setUp() throws Exception {
 
-        if ( goService.isOntologyLoaded() ) {
-            goService.clearCaches();
+        if ( goService.isDone() ) {
+            getSilently( goService, GeneOntologyServiceFactory.class ).clearCaches();
         }
         gene2GoService.removeAll();
 
-        goService.loadTermsInNameSpace( new GZIPInputStream(
+        getSilently( goService, GeneOntologyServiceFactory.class ).loadTermsInNameSpace( new GZIPInputStream(
                 new ClassPathResource( "/data/loader/ontology/molecular-function.test.owl.gz" ).getInputStream() ), false );
 
         testTaxon = taxonService.findOrCreate( Taxon.Factory

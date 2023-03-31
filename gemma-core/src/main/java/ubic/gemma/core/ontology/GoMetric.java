@@ -27,10 +27,6 @@ public interface GoMetric {
 
     Integer getChildrenOccurrence( Map<String, Integer> termCountMap, String term );
 
-    void setGene2GOAssociationService( Gene2GOAssociationService gene2GOAssociationService );
-
-    void setGeneOntologyService( GeneOntologyService geneOntologyService );
-
     public enum Metric {
         jiang, lin, resnik, simple, percent, kappa, cosine
     }

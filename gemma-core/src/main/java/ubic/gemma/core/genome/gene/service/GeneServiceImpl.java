@@ -20,12 +20,14 @@
 package ubic.gemma.core.genome.gene.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.core.genome.gene.GeneSetValueObjectHelper;
 import ubic.gemma.core.loader.genome.gene.ncbi.homology.HomologeneService;
 import ubic.gemma.core.loader.genome.gene.ncbi.homology.HomologeneServiceFactory;
 import ubic.gemma.core.ontology.providers.GeneOntologyService;
+import ubic.gemma.core.ontology.providers.GeneOntologyServiceFactory;
 import ubic.gemma.core.search.GeneSetSearch;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.search.SearchResult;
@@ -52,6 +54,7 @@ import ubic.gemma.persistence.service.association.coexpression.CoexpressionServi
 import ubic.gemma.persistence.service.genome.GeneDao;
 import ubic.gemma.persistence.service.genome.sequenceAnalysis.AnnotationAssociationService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
+import ubic.gemma.persistence.util.AbstractAsyncFactoryBean;
 import ubic.gemma.persistence.util.AsyncFactoryBeanUtils;
 
 import javax.annotation.Nullable;
@@ -59,6 +62,8 @@ import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.*;
 import java.util.Map.Entry;
 import java.util.concurrent.Future;
+
+import static ubic.gemma.persistence.util.AsyncFactoryBeanUtils.getSilently;
 
 /**
  * @author pavlidis
@@ -78,7 +83,8 @@ public class GeneServiceImpl extends AbstractFilteringVoEnabledService<Gene, Gen
     @Autowired
     private Gene2GOAssociationService gene2GOAssociationService;
     @Autowired
-    private GeneOntologyService geneOntologyService;
+    @Qualifier("geneOntologyServiceFactory")
+    private Future<GeneOntologyService> geneOntologyService;
     @Autowired
     private GeneSetSearch geneSetSearch;
     @Autowired
@@ -88,6 +94,7 @@ public class GeneServiceImpl extends AbstractFilteringVoEnabledService<Gene, Gen
     @Autowired
     private TaxonService taxonService;
     @Autowired
+    @Qualifier("homologeneServiceFactory")
     private Future<HomologeneService> homologeneService;
 
     @Autowired
@@ -190,6 +197,11 @@ public class GeneServiceImpl extends AbstractFilteringVoEnabledService<Gene, Gen
     public Collection<AnnotationValueObject> findGOTerms( Long geneId ) {
         if ( geneId == null )
             throw new IllegalArgumentException( "Null id for gene" );
+        if ( !this.geneOntologyService.isDone() ) {
+            log.warn( "The Gene Ontology service is not ready yet!" );
+            return Collections.emptySet();
+        }
+        GeneOntologyService geneOntologyService = getSilently( this.geneOntologyService, GeneOntologyServiceFactory.class );
         Collection<AnnotationValueObject> ontologies = new HashSet<>();
         Gene g = this.load( geneId );
 
@@ -331,7 +343,7 @@ public class GeneServiceImpl extends AbstractFilteringVoEnabledService<Gene, Gen
 
         gvo.setGeneSets( gsVos );
 
-        Collection<Gene> geneHomologues = AsyncFactoryBeanUtils.getSilently( this.homologeneService, HomologeneServiceFactory.class ).getHomologues( gene );
+        Collection<Gene> geneHomologues = getSilently( this.homologeneService, HomologeneServiceFactory.class ).getHomologues( gene );
         geneHomologues = this.thawLite( geneHomologues );
         Collection<GeneValueObject> homologues = this.loadValueObjects( geneHomologues );
 
@@ -400,7 +412,7 @@ public class GeneServiceImpl extends AbstractFilteringVoEnabledService<Gene, Gen
         gsVos.addAll( geneSetValueObjectHelper.convertToValueObjects( geneSets, false ) );
         details.setGeneSets( gsVos );
 
-        Collection<Gene> geneHomologues = AsyncFactoryBeanUtils.getSilently( homologeneService, HomologeneServiceFactory.class ).getHomologues( gene );
+        Collection<Gene> geneHomologues = getSilently( homologeneService, HomologeneServiceFactory.class ).getHomologues( gene );
         geneHomologues = this.thawLite( geneHomologues );
         Collection<GeneValueObject> homologues = this.loadValueObjects( geneHomologues );
         details.setHomologues( homologues );

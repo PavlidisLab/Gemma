@@ -16,12 +16,14 @@ package ubic.gemma.rest;
 
 import io.swagger.v3.oas.annotations.Operation;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import ubic.gemma.core.analysis.expression.coexpression.CoexpressionValueObjectExt;
 import ubic.gemma.core.analysis.expression.coexpression.GeneCoexpressionSearchService;
 import ubic.gemma.core.association.phenotype.PhenotypeAssociationManagerService;
 import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.core.ontology.providers.GeneOntologyService;
+import ubic.gemma.core.ontology.providers.GeneOntologyServiceFactory;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.model.expression.designElement.CompositeSequenceValueObject;
 import ubic.gemma.model.genome.Gene;
@@ -38,6 +40,9 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Future;
+
+import static ubic.gemma.persistence.util.AsyncFactoryBeanUtils.getSilently;
 
 /**
  * RESTful interface for genes.
@@ -52,7 +57,7 @@ import java.util.List;
 public class GeneWebService {
 
     private GeneService geneService;
-    private GeneOntologyService geneOntologyService;
+    private Future<GeneOntologyService> geneOntologyService;
     private CompositeSequenceService compositeSequenceService;
     private PhenotypeAssociationManagerService phenotypeAssociationManagerService;
     private GeneCoexpressionSearchService geneCoexpressionSearchService;
@@ -68,7 +73,7 @@ public class GeneWebService {
      * Constructor for service autowiring
      */
     @Autowired
-    public GeneWebService( GeneService geneService, GeneOntologyService geneOntologyService,
+    public GeneWebService( GeneService geneService, @Qualifier("geneOntologyServiceFactory") Future<GeneOntologyService> geneOntologyService,
             CompositeSequenceService compositeSequenceService,
             PhenotypeAssociationManagerService phenotypeAssociationManagerService,
             GeneCoexpressionSearchService geneCoexpressionSearchService,
@@ -174,7 +179,7 @@ public class GeneWebService {
     public ResponseDataObject<List<GeneOntologyTermValueObject>> getGeneGoTerms( // Params:
             @PathParam("gene") GeneArg<?> geneArg // Required
     ) {
-        return Responder.respond( geneArg.getGoTerms( geneService, geneOntologyService ) );
+        return Responder.respond( geneArg.getGoTerms( geneService, getSilently( geneOntologyService, GeneOntologyServiceFactory.class ) ) );
     }
 
     /**

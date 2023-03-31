@@ -638,16 +638,18 @@ public class ExpressionExperimentServiceImpl
                 term = ontologyService.getTerm( entry.getKey().getCategoryUri() );
                 if ( term != null ) {
                     // create a fake term with its category as parent
-                    final Set<OntologyTerm> parentTerms = Collections.singleton( term );
+                    final OntologyTerm parentTerm = term;
                     term = new OntologyTermSimple( entry.getKey().getValueUri(), entry.getKey().getValue() ) {
                         @Override
                         public Collection<OntologyTerm> getParents( boolean direct ) {
                             if ( direct ) {
-                                return parentTerms;
+                                return Collections.singleton( parentTerm );
                             } else {
                                 // combine the direct parents + all the parents from the parents
-                                return Stream.concat( parentTerms.stream(), parentTerms.stream().flatMap( t -> getParents( false ).stream() ) )
-                                        .collect( Collectors.toSet() );
+                                Set<OntologyTerm> p = new HashSet<>();
+                                p.add( parentTerm );
+                                p.addAll( parentTerm.getParents( false ) );
+                                return p;
                             }
                         }
 

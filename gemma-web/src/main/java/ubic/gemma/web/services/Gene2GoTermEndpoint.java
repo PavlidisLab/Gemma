@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2008 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -28,16 +28,20 @@ import org.w3c.dom.Element;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.core.ontology.providers.GeneOntologyService;
+import ubic.gemma.core.ontology.providers.GeneOntologyServiceFactory;
 import ubic.gemma.core.ontology.providers.GeneOntologyServiceImpl;
 import ubic.gemma.model.genome.Gene;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.concurrent.Future;
+
+import static ubic.gemma.persistence.util.AsyncFactoryBeanUtils.getSilently;
 
 /**
  * Given a collection of Gene IDs, will return a collection of Gene Ontology URIs for each gene.
- * 
+ *
  * @author klc, gavin
  *
  */
@@ -46,7 +50,7 @@ public class Gene2GoTermEndpoint extends AbstractGemmaEndpoint {
 
     private static Log log = LogFactory.getLog( Gene2GoTermEndpoint.class );
 
-    private GeneOntologyService geneOntologyService;
+    private Future<GeneOntologyService> geneOntologyService;
 
     private GeneService geneService;
 
@@ -58,7 +62,7 @@ public class Gene2GoTermEndpoint extends AbstractGemmaEndpoint {
     /**
      * Sets the "business service" to delegate to.
      */
-    public void setGeneOntologyService( GeneOntologyService goS ) {
+    public void setGeneOntologyService( Future<GeneOntologyService> goS ) {
         this.geneOntologyService = goS;
     }
 
@@ -68,7 +72,7 @@ public class Gene2GoTermEndpoint extends AbstractGemmaEndpoint {
 
     /**
      * Reads the given <code>requestElement</code>, and sends a the response back.
-     * 
+     *
      * @param requestElement the contents of the SOAP message as DOM elements
      * @param document a DOM document to be used for constructing <code>Node</code>s
      * @return the response element
@@ -103,7 +107,7 @@ public class Gene2GoTermEndpoint extends AbstractGemmaEndpoint {
                 return buildBadResponse( document, msg );
             }
 
-            Collection<OntologyTerm> terms = geneOntologyService.getGOTerms( gene );
+            Collection<OntologyTerm> terms = getSilently( geneOntologyService, GeneOntologyServiceFactory.class ).getGOTerms( gene );
 
             // get the labels and store them
             Collection<String> goTerms = new HashSet<String>();

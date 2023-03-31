@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2008 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -27,16 +27,20 @@ import org.w3c.dom.Element;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.core.ontology.providers.GeneOntologyService;
+import ubic.gemma.core.ontology.providers.GeneOntologyServiceFactory;
 import ubic.gemma.core.ontology.providers.GeneOntologyServiceImpl;
 import ubic.gemma.model.genome.Gene;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.concurrent.Future;
+
+import static ubic.gemma.persistence.util.AsyncFactoryBeanUtils.getSilently;
 
 /**
  * Given a collection of Gene ID, will return a collection of Gene Ontology IDs (ie. GO:0039392) and their corresponding
  * descriptions.
- * 
+ *
  * @author klc, gavin
  *
  */
@@ -45,7 +49,7 @@ public class Gene2GOdescriptionEndpoint extends AbstractGemmaEndpoint {
 
     private static Log log = LogFactory.getLog( Gene2GOdescriptionEndpoint.class );
 
-    private GeneOntologyService geneOntologyService;
+    private Future<GeneOntologyService> geneOntologyService;
 
     private GeneService geneService;
 
@@ -57,7 +61,7 @@ public class Gene2GOdescriptionEndpoint extends AbstractGemmaEndpoint {
     /**
      * Sets the "business service" to delegate to.
      */
-    public void setGeneOntologyService( GeneOntologyService goS ) {
+    public void setGeneOntologyService( Future<GeneOntologyService> goS ) {
         this.geneOntologyService = goS;
     }
 
@@ -67,7 +71,7 @@ public class Gene2GOdescriptionEndpoint extends AbstractGemmaEndpoint {
 
     /**
      * Reads the given <code>requestElement</code>, and sends a the response back.
-     * 
+     *
      * @param requestElement the contents of the SOAP message as DOM elements
      * @param document a DOM document to be used for constructing <code>Node</code>s
      * @return the response element
@@ -95,7 +99,7 @@ public class Gene2GOdescriptionEndpoint extends AbstractGemmaEndpoint {
             return buildBadResponse( document, msg );
         }
         for ( Gene gene : geneCol ) {
-            Collection<OntologyTerm> terms = geneOntologyService.getGOTerms( gene );
+            Collection<OntologyTerm> terms = getSilently( geneOntologyService, GeneOntologyServiceFactory.class ).getGOTerms( gene );
 
             // see if there the gene is annotated with any go terms else, print NaN for the 2 output fields
             // get the labels for the gene and store them

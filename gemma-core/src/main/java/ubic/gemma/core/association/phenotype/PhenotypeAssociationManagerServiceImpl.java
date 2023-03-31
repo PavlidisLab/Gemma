@@ -27,6 +27,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.basecode.ontology.model.OntologyTerm;
@@ -74,6 +75,8 @@ import java.util.*;
 import java.util.Map.Entry;
 import java.util.concurrent.Future;
 import java.util.stream.Collectors;
+
+import static ubic.gemma.persistence.util.AsyncFactoryBeanUtils.getSilently;
 
 /**
  * High Level Service used to add Candidate Gene Management System capabilities
@@ -129,6 +132,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     private ExpressionExperimentService expressionExperimentService;
 
     @Autowired
+    @Qualifier("homologeneServiceFactory")
     private Future<HomologeneService> homologeneService;
 
     @Override
@@ -1811,7 +1815,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         // Get the Gene object for finding homologues' evidence.
         Gene gene = this.geneService.load( geneId );
 
-        Collection<Gene> homologues = AsyncFactoryBeanUtils.getSilently( homologeneService, HomologeneServiceFactory.class ).getHomologues( gene );
+        Collection<Gene> homologues = getSilently( homologeneService, HomologeneServiceFactory.class ).getHomologues( gene );
 
         Collection<PhenotypeAssociation> homologuePhenotypeAssociations = new HashSet<>();
 
@@ -2111,7 +2115,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     private void writeForErmineJ( TreeCharacteristicValueObject t, Taxon taxon, HashMap<Integer, String> cacheMap,
             BufferedWriter phenoCartageneSets ) throws IOException {
 
-        HomologeneService hs = hs = AsyncFactoryBeanUtils.getSilently( this.homologeneService, HomologeneServiceFactory.class );
+        HomologeneService hs = getSilently( this.homologeneService, HomologeneServiceFactory.class );
 
         Set<String> geneSymbols = new HashSet<>();
 

@@ -25,11 +25,13 @@ import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import ubic.basecode.ontology.search.OntologySearchException;
 import ubic.gemma.core.genome.gene.*;
 import ubic.gemma.core.ontology.providers.GeneOntologyService;
+import ubic.gemma.core.ontology.providers.GeneOntologyServiceFactory;
 import ubic.gemma.core.search.*;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.search.SearchSettings;
@@ -38,11 +40,13 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonValueObject;
 import ubic.gemma.model.genome.gene.*;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
+import ubic.gemma.persistence.util.AsyncFactoryBeanUtils;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.StringReader;
 import java.util.*;
+import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 
 /**
@@ -64,7 +68,7 @@ public class GeneSearchServiceImpl implements GeneSearchService {
     private GeneSetSearch geneSetSearch;
     private GeneSetService geneSetService;
     private GeneService geneService;
-    private GeneOntologyService geneOntologyService;
+    private Future<GeneOntologyService> geneOntologyService;
     private GeneSetValueObjectHelper geneSetValueObjectHelper;
 
     public GeneSearchServiceImpl() {
@@ -73,7 +77,8 @@ public class GeneSearchServiceImpl implements GeneSearchService {
     @Autowired
     public GeneSearchServiceImpl( SearchService searchService, SecurityService securityService,
             TaxonService taxonService, GeneSetSearch geneSetSearch, GeneSetService geneSetService,
-            GeneService geneService, GeneOntologyService geneOntologyService,
+            GeneService geneService,
+            @Qualifier("geneOntologyServiceFactory") Future<GeneOntologyService> geneOntologyService,
             GeneSetValueObjectHelper geneSetValueObjectHelper ) {
         this.searchService = searchService;
         this.securityService = securityService;
@@ -92,7 +97,7 @@ public class GeneSearchServiceImpl implements GeneSearchService {
 
         if ( !StringUtils.isBlank( goId ) && tax != null && goId.toUpperCase().startsWith( "GO" ) ) {
 
-            Collection<Gene> results = geneOntologyService.getGenes( goId, tax );
+            Collection<Gene> results = AsyncFactoryBeanUtils.getSilently( geneOntologyService, GeneOntologyServiceFactory.class ).getGenes( goId, tax );
             if ( results != null ) {
                 results = geneService.thawLite( results );
                 return geneService.loadValueObjects( results );

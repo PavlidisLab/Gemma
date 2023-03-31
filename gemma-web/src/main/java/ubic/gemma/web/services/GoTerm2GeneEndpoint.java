@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2008 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -24,17 +24,21 @@ import org.apache.commons.logging.LogFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import ubic.gemma.core.ontology.providers.GeneOntologyService;
+import ubic.gemma.core.ontology.providers.GeneOntologyServiceFactory;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.concurrent.Future;
+
+import static ubic.gemma.persistence.util.AsyncFactoryBeanUtils.getSilently;
 
 /**
  * Given a Gene Ontology Term URI and a Taxon ID as input, will return a collection of gene IDs that match the GO Term
  * and Taxon.
- * 
+ *
  * @author gavin, klc
  *
  */
@@ -48,14 +52,14 @@ public class GoTerm2GeneEndpoint extends AbstractGemmaEndpoint {
 
     private static Log log = LogFactory.getLog( GoTerm2GeneEndpoint.class );
 
-    private GeneOntologyService geneOntologyService;
+    private Future<GeneOntologyService> geneOntologyService;
 
     private TaxonService taxonService;
 
     /**
      * Sets the "business service" to delegate to.
      */
-    public void setGeneOntologyService( GeneOntologyService goS ) {
+    public void setGeneOntologyService( Future<GeneOntologyService> goS ) {
         this.geneOntologyService = goS;
     }
 
@@ -69,7 +73,7 @@ public class GoTerm2GeneEndpoint extends AbstractGemmaEndpoint {
 
     /**
      * Reads the given <code>requestElement</code>, and sends a the response back.
-     * 
+     *
      * @param requestElement the contents of the SOAP message as DOM elements
      * @param document a DOM document to be used for constructing <code>Node</code>s
      * @return the response element
@@ -104,7 +108,7 @@ public class GoTerm2GeneEndpoint extends AbstractGemmaEndpoint {
             return buildBadResponse( document, msg );
         }
 
-        Collection<Gene> genes = geneOntologyService.getGenes( goId, taxon );
+        Collection<Gene> genes = getSilently( geneOntologyService, GeneOntologyServiceFactory.class ).getGenes( goId, taxon );
         if ( genes == null || genes.isEmpty() ) {
             return buildBadResponse( document,
                     "No genes associated with goId = " + goId + " and taxon = " + taxon.getCommonName() );

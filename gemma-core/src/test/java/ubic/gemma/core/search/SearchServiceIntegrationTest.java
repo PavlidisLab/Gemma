@@ -26,6 +26,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.basecode.ontology.model.OntologyTerm;
+import ubic.basecode.ontology.providers.UberonOntologyService;
 import ubic.basecode.ontology.search.OntologySearchException;
 import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.core.loader.entrez.pubmed.PubMedXMLFetcher;
@@ -87,7 +88,10 @@ public class SearchServiceIntegrationTest extends BaseSpringContextTest {
 
             // this abuses the service as our example is a legacy FMA test (not uberon), but it doesn't matter since we're loading from a file anyway.
             // this will fail if the loading of uberon is enabled - it will collide.
-            ontologyService.getUberonService().loadTermsInNameSpace( is, true );
+            UberonOntologyService uberonService = ontologyService.getUberonService();
+            assertTrue( uberonService.isOntologyLoaded() );
+            assertTrue( uberonService.isEnabled() );
+            uberonService.loadTermsInNameSpace( is, true );
         }
         ee = this.getTestPersistentBasicExpressionExperiment();
 

@@ -22,12 +22,13 @@ package ubic.gemma.core.analysis.service;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 import ubic.basecode.math.Rank;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.gemma.core.genome.gene.service.GeneService;
-import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.core.ontology.providers.GeneOntologyService;
+import ubic.gemma.core.ontology.providers.GeneOntologyServiceFactory;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.common.description.ExternalDatabases;
@@ -39,6 +40,9 @@ import ubic.gemma.persistence.service.common.description.ExternalDatabaseService
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 
 import java.util.*;
+import java.util.concurrent.Future;
+
+import static ubic.gemma.persistence.util.AsyncFactoryBeanUtils.getSilently;
 
 /**
  * Compute gene multifunctionality and store it in the database.
@@ -57,10 +61,8 @@ public class GeneMultifunctionalityPopulationServiceImpl implements GeneMultifun
     private GeneService geneService;
 
     @Autowired
-    private GeneOntologyService goService;
-
-    @Autowired
-    private OntologyService ontologyService;
+    @Qualifier("geneOntologyServiceFactory")
+    private Future<GeneOntologyService> goService;
 
     @Autowired
     private ExternalDatabaseService externalDatabaseService;
@@ -209,20 +211,6 @@ public class GeneMultifunctionalityPopulationServiceImpl implements GeneMultifun
     }
 
     private Map<Gene, Collection<String>> fetchGoAnnotations( Collection<Gene> genes ) {
-
-        if ( !goService.isOntologyLoaded() ) {
-            goService.startInitializationThread( true, false );
-        }
-
-        while ( !goService.isOntologyLoaded() ) {
-            try {
-                Thread.sleep( 2000 );
-            } catch ( InterruptedException e ) {
-                //
-            }
-            GeneMultifunctionalityPopulationServiceImpl.log.info( "Waiting for GO to load" );
-        }
-
         /*
          * Build the GO 'matrix'.
          */
@@ -243,7 +231,7 @@ public class GeneMultifunctionalityPopulationServiceImpl implements GeneMultifun
              */
             Set<OntologyTerm> terms = new HashSet<>( annots.size() );
             for ( Characteristic t : annots ) {
-                OntologyTerm term = goService.getTerm( t.getValueUri() );
+                OntologyTerm term = getSilently( goService, GeneOntologyServiceFactory.class ).getTerm( t.getValueUri() );
                 if ( term == null || term.isObsolete() ) {
                     GeneMultifunctionalityPopulationServiceImpl.log
                             .warn( "Obsolete term annotated to " + gene + " : " + t );
@@ -254,7 +242,7 @@ public class GeneMultifunctionalityPopulationServiceImpl implements GeneMultifun
             }
 
             // add all the parents
-            Collection<OntologyTerm> parents = goService.getAllParents( terms );
+            Collection<OntologyTerm> parents = getSilently( goService, GeneOntologyServiceFactory.class ).getAllParents( terms );
             for ( OntologyTerm p : parents ) {
                 if ( p.isObsolete() ) {
                     continue;
