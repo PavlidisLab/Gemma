@@ -1,6 +1,7 @@
 package ubic.gemma.persistence.util;
 
 import org.assertj.core.api.Assertions;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
@@ -11,8 +12,13 @@ import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
 
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 @DirtiesContext
 @ContextConfiguration
@@ -30,7 +36,7 @@ public class AsyncBeanAutowiringTest extends AbstractJUnit4SpringContextTests {
 
         @Override
         public boolean isSingleton() {
-            return false;
+            return true;
         }
     }
 
@@ -76,20 +82,44 @@ public class AsyncBeanAutowiringTest extends AbstractJUnit4SpringContextTests {
     @Autowired
     MyServiceFactory myServiceFactory;
 
+    @Autowired
+    List<Future<MyService>> myServiceList;
+
+    @Autowired
+    Map<String, Future<MyService>> myServiceByName;
+
+    @Autowired
+    List<MyServiceFactory> myServiceFactories;
+
     @Test
     public void testAutowiredBean() {
-        Assertions.assertThat( myService ).succeedsWithin( 1, TimeUnit.SECONDS );
-        Assertions.assertThat( myService2 ).succeedsWithin( 1, TimeUnit.SECONDS );
+        assertThat( myService ).succeedsWithin( 1, TimeUnit.SECONDS );
+        assertThat( myService2 ).succeedsWithin( 1, TimeUnit.SECONDS );
+    }
+
+    @Test
+    @Ignore("Injecting parametrized bean is not supported by Spring 3 (see issue https://github.com/PavlidisLab/Gemma/issues/612)")
+    public void testAutowiredMapAndList() {
+        assertThat( myServiceList ).containsExactly( myService );
+        assertThat( myServiceByName ).containsExactlyEntriesOf( Collections.singletonMap( "myService", myService ) );
+    }
+
+    @Test
+    public void testAutowiredListOfFactories() {
+        assertThat( myServiceFactories ).hasSize( 1 ).allSatisfy( f -> {
+            assertThat( f.isInitialized() ).isTrue();
+            assertThat( f.getObject() ).isSameAs( myService );
+        } );
     }
 
     @Test
     public void testInjectViaBeanFactory() {
-        Assertions.assertThat( beanFactory.getBean( MyServiceFactory.class ).getObject() ).succeedsWithin( 1, TimeUnit.SECONDS );
+        assertThat( beanFactory.getBean( MyServiceFactory.class ).getObject() ).succeedsWithin( 1, TimeUnit.SECONDS );
     }
 
     @Test
     public void testInjectViaServiceFactory() {
-        Assertions.assertThat( myServiceFactory.getObject() ).succeedsWithin( 1, TimeUnit.SECONDS );
+        assertThat( myServiceFactory.getObject() ).succeedsWithin( 1, TimeUnit.SECONDS );
     }
 
     @Test(expected = NoSuchBeanDefinitionException.class)
