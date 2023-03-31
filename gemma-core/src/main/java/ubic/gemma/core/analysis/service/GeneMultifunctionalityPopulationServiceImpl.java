@@ -241,22 +241,25 @@ public class GeneMultifunctionalityPopulationServiceImpl implements GeneMultifun
             /*
              * Propagate.
              */
-
+            Set<OntologyTerm> terms = new HashSet<>( annots.size() );
             for ( Characteristic t : annots ) {
-                if ( ontologyService.isObsolete( t.getValueUri() ) ) {
+                OntologyTerm term = goService.getTerm( t.getValueUri() );
+                if ( term == null || term.isObsolete() ) {
                     GeneMultifunctionalityPopulationServiceImpl.log
                             .warn( "Obsolete term annotated to " + gene + " : " + t );
                     continue;
                 }
-
+                terms.add( term );
                 termsForGene.add( t.getValue() );
+            }
 
-                Collection<OntologyTerm> parents = goService.getTerm( t.getValueUri() ).getParents( false, false );
-
-                for ( OntologyTerm p : parents ) {
-                    if ( p == null ) continue;
-                    termsForGene.add( p.getTerm() );
+            // add all the parents
+            Collection<OntologyTerm> parents = goService.getAllParents( terms );
+            for ( OntologyTerm p : parents ) {
+                if ( p.isObsolete() ) {
+                    continue;
                 }
+                termsForGene.add( p.getTerm() );
             }
 
             //noinspection StatementWithEmptyBody // TODO we just count it as a gene with lowest multifunctionality

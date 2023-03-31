@@ -229,14 +229,7 @@ public class GeneOntologyServiceImpl extends AbstractOntologyMemoryBackedService
 
     @Override
     public Collection<OntologyTerm> getAllParents( Collection<OntologyTerm> entries, boolean includePartOf ) {
-        // TODO: move this in baseCode, this can be done far more efficiently with Jena API
-        if ( entries == null )
-            return null;
-        Collection<OntologyTerm> result = new HashSet<>();
-        for ( OntologyTerm entry : entries ) {
-            result.addAll( entry.getParents( false, includePartOf ) );
-        }
-        return result;
+        return super.getParents( entries, false, includePartOf );
     }
 
     @Override
