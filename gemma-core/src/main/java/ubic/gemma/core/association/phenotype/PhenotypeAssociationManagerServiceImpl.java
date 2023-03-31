@@ -73,6 +73,7 @@ import java.nio.file.Files;
 import java.util.*;
 import java.util.Map.Entry;
 import java.util.concurrent.Future;
+import java.util.stream.Collectors;
 
 /**
  * High Level Service used to add Candidate Gene Management System capabilities
@@ -1408,10 +1409,9 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
                                 .add( bibliographicPhenotypesValueObject.getEvidenceId() );
                     }
 
-                    Set<String> parentOrChildTerm = new HashSet<>();
-
                     // for the phenotype already present we add his children and direct parents, and check that
                     // the phenotype we want to add is not in that subset
+                    Set<OntologyTerm> terms = new HashSet<>();
                     for ( CharacteristicValueObject phenotypeAlreadyPresent : bibliographicPhenotypesValueObject
                             .getPhenotypesValues() ) {
 
@@ -1423,14 +1423,13 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
                             continue;
                         }
 
-                        for ( OntologyTerm ot : ontologyTerm.getParents( true ) ) {
-                            parentOrChildTerm.add( ot.getUri() );
-                        }
-
-                        for ( OntologyTerm ot : ontologyTerm.getChildren( false ) ) {
-                            parentOrChildTerm.add( ot.getUri() );
-                        }
+                        terms.add( ontologyTerm );
                     }
+
+                    Set<String> parentOrChildTerm = this.ontologyService.getParents( terms, false, true )
+                            .stream()
+                            .map( OntologyTerm::getUri )
+                            .collect( Collectors.toSet() );
 
                     for ( CharacteristicValueObject characteristicValueObject : evidence.getPhenotypes() ) {
 
@@ -1639,7 +1638,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
                     OntologyTerm ontologyTerm = this.ontologyHelper.findOntologyTermByUri( valueUri );
 
                     // we don't show obsolete terms
-                    if ( ontologyTerm.isTermObsolete() ) {
+                    if ( ontologyTerm.isObsolete() ) {
                         PhenotypeAssociationManagerServiceImpl.log
                                 .warn( "A valueUri found in the database is obsolete: " + valueUri );
                     } else {

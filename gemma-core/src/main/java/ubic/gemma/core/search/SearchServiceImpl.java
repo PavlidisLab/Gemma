@@ -74,8 +74,6 @@ import ubic.gemma.persistence.service.expression.experiment.ExpressionExperiment
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSetService;
 import ubic.gemma.persistence.service.genome.biosequence.BioSequenceService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
-import ubic.gemma.persistence.util.EntityUtils;
-import ubic.gemma.persistence.util.Settings;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -672,91 +670,77 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
      * @return collection of SearchResults (Experiments)
      */
     private Collection<SearchResult<ExpressionExperiment>> characteristicEESearchTerm( SearchSettings settings ) throws SearchException {
-
+        // overall timer
         StopWatch watch = StopWatch.createStarted();
+        // per-step timer
+        StopWatch timer = StopWatch.create();
+
         Set<SearchResult<ExpressionExperiment>> results = new SearchResultSet<>();
+
+        Collection<OntologyResource> terms = new HashSet<>();
 
         // Phase 1: We first search for individuals.
         Collection<OntologyIndividual> individuals;
         try {
+            timer.start();
             individuals = ontologyService.findIndividuals( settings.getQuery() );
+            terms.addAll( individuals );
         } catch ( OntologySearchException e ) {
             throw new BaseCodeOntologySearchException( e );
+        } finally {
+            timer.stop();
         }
 
         if ( watch.getTime() > 500 ) {
             SearchServiceImpl.log.warn( String.format( "Found %d terms (individual) matching '%s' in %d ms",
-                    individuals.size(), settings.getQuery(), watch.getTime() ) );
+                    individuals.size(), settings.getQuery(), timer.getTime() ) );
         }
 
-        watch.reset();
-        watch.start();
-
-        findExperimentsByTerms( individuals, results, 0.9, settings );
-
-        if ( results.size() > 0 && watch.getTime() > 500 ) {
-            SearchServiceImpl.log.warn( String.format( "Found %d experiments matching '%s' via characteristic terms (individuals) in %d ms",
-                    results.size(), settings.getQuery(), watch.getTime() ) );
-        }
-
-        if ( isFilled( results, settings ) ) {
-            return results;
-        }
-
-        watch.reset();
-        watch.start();
-
-        /*
-         * Phase 2: Search ontology classes matches to the query
-         */
+        // Phase 2: Search ontology classes matches to the query
+        timer.reset();
+        timer.start();
         Collection<OntologyTerm> matchingTerms;
         try {
             matchingTerms = ontologyService.findTerms( settings.getQuery() );
+            terms.addAll( matchingTerms );
         } catch ( OntologySearchException e ) {
             throw new BaseCodeOntologySearchException( "Failed to find terms via ontology search.", e );
+        } finally {
+            timer.stop();
         }
 
         if ( watch.getTime() > 500 ) {
             SearchServiceImpl.log
                     .warn( String.format( "Found %d ontology classes matching '%s' in %d ms",
-                            matchingTerms.size(), settings.getQuery(), watch.getTime() ) );
+                            matchingTerms.size(), settings.getQuery(), timer.getTime() ) );
         }
 
         /*
          * Search for child terms.
          */
         if ( !matchingTerms.isEmpty() ) {
-            watch.reset();
-            watch.start();
-
-            Set<OntologyTerm> terms = new HashSet<>( matchingTerms );
             // TODO: move this logic in baseCode, this can be done far more efficiently with Jena API
-            for ( OntologyTerm ot : matchingTerms ) {
-                terms.addAll( ot.getChildren( false, true ) );
-            }
+            timer.reset();
+            timer.start();
+            terms.addAll( ontologyService.getChildren( matchingTerms, false, true ) );
+            timer.stop();
 
-            // query current term before going to children
-            int sizeBefore = results.size();
-
-            findExperimentsByTerms( terms, results, 0.8, settings );
-
-            if ( SearchServiceImpl.log.isDebugEnabled() && results.size() > sizeBefore ) {
-                SearchServiceImpl.log
-                        .debug( ( results.size() - sizeBefore ) + " characteristics matching children terms" );
-            }
-
-            if ( watch.getTime() > 1000 ) {
-                SearchServiceImpl.log.warn( String.format( "Found %d characteristics for '%s' including child terms in %d ms",
-                        results.size(), settings.getQuery(), watch.getTime() ) );
+            if ( watch.getTime() > 500 ) {
+                SearchServiceImpl.log.warn(
+                        String.format( "Found %d ontology subclasses or related terms matching '%s' in %d ms",
+                                terms.size() - matchingTerms.size(), settings.getQuery(), timer.getTime() ) );
             }
         }
 
-        watch.stop();
+        timer.reset();
+        timer.start();
+        findExperimentsByTerms( terms, results, 0.9, settings );
+        timer.stop();
 
         if ( watch.getTime() > 500 ) {
             SearchServiceImpl.log
-                    .warn( String.format( "Retrieved %d entities via characteristics for '%s' in %d ms",
-                            results.size(), settings.getQuery(), watch.getTime() ) );
+                    .warn( String.format( "Retrieved %d datasets via characteristics for '%s' in %d ms",
+                            results.size(), settings.getQuery(), timer.getTime() ) );
         }
 
         return results;
