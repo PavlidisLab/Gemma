@@ -150,7 +150,7 @@ public class CompassSearchSource implements SearchSource {
             results.addAll( seqsFromDb.get( gene ).stream()
                     .filter( Objects::nonNull )
                     .filter( entity -> entity.getId() != null )
-                    .map( entity -> SearchResult.from( entity, compassHitDerivedFrom.getScore() * CompassSearchSource.INDIRECT_DB_HIT_PENALTY, compassHitDerivedFrom.getHighlightedText(), compassHitDerivedFrom.getSource() ) )
+                    .map( entity -> SearchResult.from( BioSequence.class, entity, compassHitDerivedFrom.getScore() * CompassSearchSource.INDIRECT_DB_HIT_PENALTY, compassHitDerivedFrom.getHighlightedText(), compassHitDerivedFrom.getSource() ) )
                     .collect( Collectors.toList() ) );
         }
 
@@ -291,7 +291,7 @@ public class CompassSearchSource implements SearchSource {
             }
 
             //noinspection unchecked
-            results.add( SearchResult.from( ( T ) resultObject, score * CompassSearchSource.COMPASS_HIT_SCORE_PENALTY_FACTOR, ht, source ) );
+            results.add( SearchResult.from( clazz, ( T ) resultObject, score * CompassSearchSource.COMPASS_HIT_SCORE_PENALTY_FACTOR, ht, source ) );
         }
 
         watch.stop();

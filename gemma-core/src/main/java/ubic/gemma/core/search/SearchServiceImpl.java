@@ -567,14 +567,14 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
 
         ArrayDesign shortNameResult = arrayDesignService.findByShortName( searchString );
         if ( shortNameResult != null ) {
-            results.add( SearchResult.from( shortNameResult, DatabaseSearchSource.MATCH_BY_SHORT_NAME_SCORE, null, "ArrayDesignService.findByShortName" ) );
+            results.add( SearchResult.from( ArrayDesign.class, shortNameResult, DatabaseSearchSource.MATCH_BY_SHORT_NAME_SCORE, null, "ArrayDesignService.findByShortName" ) );
             return results;
         }
 
         Collection<ArrayDesign> nameResult = arrayDesignService.findByName( searchString );
         if ( nameResult != null && !nameResult.isEmpty() ) {
             for ( ArrayDesign ad : nameResult ) {
-                results.add( SearchResult.from( ad, DatabaseSearchSource.MATCH_BY_NAME_SCORE, null, "ArrayDesignService.findByShortName" ) );
+                results.add( SearchResult.from( ArrayDesign.class, ad, DatabaseSearchSource.MATCH_BY_NAME_SCORE, null, "ArrayDesignService.findByShortName" ) );
             }
             return results;
         }
@@ -591,14 +591,14 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
 
         Collection<ArrayDesign> altNameResults = arrayDesignService.findByAlternateName( searchString );
         for ( ArrayDesign arrayDesign : altNameResults ) {
-            SearchResult<ArrayDesign> sr = new SearchResult<>( arrayDesign, "ArrayDesignService.findByAlternateName" );
+            SearchResult<ArrayDesign> sr = SearchResult.from( ArrayDesign.class, arrayDesign, 1.0, null, "ArrayDesignService.findByAlternateName" );
             sr.setScore( 0.9 );
             results.add( sr );
         }
 
         Collection<ArrayDesign> manufacturerResults = arrayDesignService.findByManufacturer( searchString );
         for ( ArrayDesign arrayDesign : manufacturerResults ) {
-            SearchResult<ArrayDesign> sr = new SearchResult<>( arrayDesign, "ArrayDesignService.findByManufacturer" );
+            SearchResult<ArrayDesign> sr = SearchResult.from( ArrayDesign.class, arrayDesign, 1.0, null, "ArrayDesignService.findByManufacturer" );
             sr.setScore( 0.9 );
             results.add( sr );
         }
@@ -803,7 +803,7 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
                     if ( !clazz.isAssignableFrom( ExpressionExperiment.class ) ) {
                         matchedText = matchedText + " via " + clazz.getSimpleName();
                     }
-                    SearchResult<ExpressionExperiment> sr = new SearchResult<>( ee, "CharacteristicService.findExperimentsByUris" );
+                    SearchResult<ExpressionExperiment> sr = SearchResult.from( ExpressionExperiment.class, ee, 1.0, null, "CharacteristicService.findExperimentsByUris" );
                     sr.setHighlightedText( matchedText );
                     results.add( sr );
                     if ( limit > 0 && results.size() >= limit ) {
@@ -1354,7 +1354,7 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
                         Gene g = Gene.Factory.newInstance();
                         g.setId( gvo.getId() );
                         g.setTaxon( settings.getTaxon() );
-                        SearchResult<Gene> sr = new SearchResult<>( g, "PhenotypeAssociationManagerService.findCandidateGenes" );
+                        SearchResult<Gene> sr = SearchResult.from( Gene.class, g, 1.0, null, "PhenotypeAssociationManagerService.findCandidateGenes" );
                         sr.setHighlightedText( phenotype.getValue() + " (" + phenotype.getValueUri() + ")" );
 
                         // if ( gvo.getScore() != null ) {
@@ -1557,7 +1557,7 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
 
                 ////
                 if ( settings.hasResultType( Gene.class ) ) {
-                    results.add( new SearchResult<>( g, "GeneService.findByNCBIId" ) );
+                    results.add( SearchResult.from( Gene.class, g, 1.0, null, "GeneService.findByNCBIId" ) );
 
                 }
             }
