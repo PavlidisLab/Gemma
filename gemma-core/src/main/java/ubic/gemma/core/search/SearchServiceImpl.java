@@ -440,9 +440,9 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
         try {
             // FIXME: add support for OR, but there's a bug in baseCode that prevents this https://github.com/PavlidisLab/baseCode/issues/22
             String query = settings.getQuery().replaceAll( "\\s+OR\\s+", "" );
-            return this.phenotypeAssociationManagerService.searchInDatabaseForPhenotype( query ).stream()
+            return this.phenotypeAssociationManagerService.searchInDatabaseForPhenotype( query, settings.getMaxResults() ).stream()
                     .map( r -> SearchResult.from( PhenotypeAssociation.class, r, 1.0, null, "PhenotypeAssociationManagerService.searchInDatabaseForPhenotype" ) )
-                    .collect( Collectors.toSet() );
+                    .collect( Collectors.toCollection( SearchResultSet::new ) );
         } catch ( OntologySearchException e ) {
             throw new BaseCodeOntologySearchException( "Failed to search for phenotype associations.", e );
         }
@@ -1334,7 +1334,7 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
                 // FIXME: add support for OR, but there's a bug in baseCode that prevents this https://github.com/PavlidisLab/baseCode/issues/22
                 String query = settings.getQuery().replaceAll( "\\s+OR\\s+", "" );
                 phenotypeTermHits = this.phenotypeAssociationManagerService
-                        .searchInDatabaseForPhenotype( query );
+                        .searchInDatabaseForPhenotype( query, settings.getMaxResults() );
             } catch ( OntologySearchException e ) {
                 throw new BaseCodeOntologySearchException( e );
             }

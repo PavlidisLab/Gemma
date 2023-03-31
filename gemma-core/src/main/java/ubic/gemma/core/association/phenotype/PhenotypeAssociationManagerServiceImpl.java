@@ -711,18 +711,21 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
     @Override
     @Transactional(readOnly = true)
-    public Collection<CharacteristicValueObject> searchInDatabaseForPhenotype( String searchQuery ) throws OntologySearchException {
+    public Collection<CharacteristicValueObject> searchInDatabaseForPhenotype( String searchQuery, int maxResults ) throws OntologySearchException {
         String newSearchQuery = this.prepareOntologyQuery( searchQuery );
 
         // search the Ontology with the search query
         Collection<OntologyTerm> ontologyTermsFound = this.ontologyHelper.findValueUriInOntology( newSearchQuery );
 
-        // Set of valueUri of all Ontology Terms found + their children
-        Set<OntologyTerm> phenotypesFoundAndChildren = ontologyService.getChildren( ontologyTermsFound, false, true );
+        // add children if we did not reach max results
+        if ( maxResults > 0 && ontologyTermsFound.size() < maxResults ) {
+            // Set of valueUri of all Ontology Terms found + their children
+            ontologyTermsFound.addAll( ontologyService.getChildren( ontologyTermsFound, false, true ) );
+        }
 
-        return Stream.concat( ontologyTermsFound.stream(), phenotypesFoundAndChildren.stream() )
-                .distinct()
+        return ontologyTermsFound.stream()
                 .map( t -> new CharacteristicValueObject( -1L, t.getLabel().toLowerCase(), t.getUri() ) )
+                .limit( maxResults > 0 ? maxResults : Long.MAX_VALUE )
                 .collect( Collectors.toCollection( TreeSet::new ) );
     }
 
