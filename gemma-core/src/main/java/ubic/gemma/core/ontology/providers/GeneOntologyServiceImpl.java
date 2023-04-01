@@ -349,9 +349,10 @@ public class GeneOntologyServiceImpl extends AbstractOntologyMemoryBackedService
     @Override
     public String getTermName( String goId ) {
         OntologyTerm t = getTermForId( goId );
-        if ( t == null )
+        String label = t != null ? t.getLabel() : null;
+        if ( label == null )
             return "[Not available]"; // not ready yet?
-        return t.getTerm();
+        return label;
     }
 
     @Override
@@ -393,7 +394,7 @@ public class GeneOntologyServiceImpl extends AbstractOntologyMemoryBackedService
 
     private GOAspect getTermAspect( OntologyTerm term ) {
         assert term != null;
-        String goId = term.getTerm();
+        String goId = term.getLabel();
         return term2Aspect.computeIfAbsent( goId, goId2 -> {
             String nameSpace = null;
             for ( AnnotationProperty annot : term.getAnnotations() ) {

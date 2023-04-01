@@ -530,7 +530,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
         if ( uri == null )
             return false;
         OntologyTerm t = this.getTerm( uri );
-        return t != null && t.isTermObsolete();
+        return t != null && t.isObsolete();
     }
 
     @Override
@@ -761,7 +761,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
 
             if ( res instanceof OntologyTerm ) {
                 OntologyTerm term = ( OntologyTerm ) res;
-                vc.setValue( term.getTerm() );
+                vc.setValue( term.getLabel() );
                 vc.setValueUri( term.getUri() );
                 vc.setDescription( term.getComment() );
             }

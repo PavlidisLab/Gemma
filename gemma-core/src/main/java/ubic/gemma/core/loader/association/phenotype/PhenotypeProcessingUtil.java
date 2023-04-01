@@ -291,7 +291,7 @@ class PhenotypeProcessingUtil {
             o = humanPhenotypeOntologyService.getTerm( valueUri );
         }
 
-        if ( o == null || o.isTermObsolete() ) {
+        if ( o == null || o.isObsolete() ) {
             return null;
         }
 
@@ -521,7 +521,7 @@ class PhenotypeProcessingUtil {
         if ( o == null ) {
             o = humanPhenotypeOntologyService.getTerm( valueUri );
         }
-        return o != null && !o.isTermObsolete();
+        return o != null && !o.isObsolete();
     }
 
     /**
