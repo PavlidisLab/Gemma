@@ -61,8 +61,8 @@ import ubic.gemma.persistence.service.association.phenotype.service.PhenotypeAss
 import ubic.gemma.persistence.service.common.description.CharacteristicService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
-import ubic.gemma.persistence.util.EntityUtils;
 import ubic.gemma.persistence.util.AsyncFactoryBeanUtils;
+import ubic.gemma.persistence.util.EntityUtils;
 import ubic.gemma.persistence.util.Settings;
 
 import java.io.BufferedWriter;
@@ -714,29 +714,22 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
     @Override
     @Transactional(readOnly = true)
-    public Collection<CharacteristicValueObject> searchInDatabaseForPhenotype( String searchQuery ) throws OntologySearchException {
-
-        Collection<CharacteristicValueObject> results = new TreeSet<>();
-
+    public Collection<CharacteristicValueObject> searchInDatabaseForPhenotype( String searchQuery, int maxResults ) throws OntologySearchException {
         String newSearchQuery = this.prepareOntologyQuery( searchQuery );
 
         // search the Ontology with the search query
         Collection<OntologyTerm> ontologyTermsFound = this.ontologyHelper.findValueUriInOntology( newSearchQuery );
 
-        // Set of valueUri of all Ontology Terms found + their children
-        Set<String> phenotypesFoundAndChildren = this.ontologyHelper.findAllChildrenAndParent( ontologyTermsFound );
-
-        if ( !phenotypesFoundAndChildren.isEmpty() ) {
-
-            // gene counts for all phenotypes used
-            for ( int i = 0; i < PhenotypeAssociationConstants.TAXA_IN_USE.length; i++ ) {
-                results.addAll( this.findPhenotypeCount( ontologyTermsFound,
-                        this.taxonService.findByCommonName( PhenotypeAssociationConstants.TAXA_IN_USE[i] ),
-                        phenotypesFoundAndChildren ) );
-            }
+        // add children if we did not reach max results
+        if ( maxResults > 0 && ontologyTermsFound.size() < maxResults ) {
+            // Set of valueUri of all Ontology Terms found + their children
+            ontologyTermsFound.addAll( ontologyService.getChildren( ontologyTermsFound, false, true ) );
         }
 
-        return results;
+        return ontologyTermsFound.stream()
+                .map( t -> new CharacteristicValueObject( -1L, t.getLabel().toLowerCase(), t.getUri() ) )
+                .limit( maxResults > 0 ? maxResults : Long.MAX_VALUE )
+                .collect( Collectors.toCollection( TreeSet::new ) );
     }
 
     @Override

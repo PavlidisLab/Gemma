@@ -132,25 +132,6 @@ public class PhenotypeAssoOntologyHelperImpl implements PhenotypeAssoOntologyHel
     }
 
     @Override
-    public Set<String> findAllChildrenAndParent( Collection<OntologyTerm> ontologyTerms ) {
-
-        Set<String> phenotypesFoundAndChildren = new HashSet<>();
-
-        for ( OntologyTerm ontologyTerm : ontologyTerms ) {
-            // add the parent term found
-            assert ontologyTerm.getUri() != null;
-            phenotypesFoundAndChildren.add( ontologyTerm.getUri() );
-
-            // add all children of the term
-            for ( OntologyTerm ontologyTermChildren : ontologyTerm.getChildren( false ) ) {
-                assert ontologyTermChildren.getUri() != null;
-                phenotypesFoundAndChildren.add( ontologyTermChildren.getUri() );
-            }
-        }
-        return phenotypesFoundAndChildren;
-    }
-
-    @Override
     public OntologyTerm findOntologyTermByUri( String valueUri ) throws EntityNotFoundException {
 
         if ( valueUri == null || valueUri.isEmpty() ) {

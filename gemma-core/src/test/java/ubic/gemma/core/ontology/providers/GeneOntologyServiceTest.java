@@ -202,7 +202,7 @@ public class GeneOntologyServiceTest {
         String id = "GO:0000310";
         OntologyTerm termForId = GeneOntologyServiceTest.gos.getTermForId( id );
         assertNotNull( termForId );
-        assertEquals( "xanthine phosphoribosyltransferase activity", termForId.getTerm() );
+        assertEquals( "xanthine phosphoribosyltransferase activity", termForId.getLabel() );
     }
 
 }

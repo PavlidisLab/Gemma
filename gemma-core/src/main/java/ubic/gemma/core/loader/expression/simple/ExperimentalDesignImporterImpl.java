@@ -591,7 +591,7 @@ public class ExperimentalDesignImporterImpl implements ExperimentalDesignImporte
         OntologyTerm t = null;
         String lookup = category.replaceAll( "_", " " ).toLowerCase();
         for ( OntologyTerm to : terms ) {
-            if ( to.getTerm().equals( category ) || to.getTerm().toLowerCase()
+            if ( to.getLabel().equals( category ) || to.getLabel().toLowerCase()
                     .equals( lookup ) ) {
                 t = to;
                 break;
@@ -604,9 +604,9 @@ public class ExperimentalDesignImporterImpl implements ExperimentalDesignImporte
 
         Characteristic vc = Characteristic.Factory.newInstance();
         vc.setCategoryUri( t.getUri() );
-        vc.setCategory( t.getTerm() );
+        vc.setCategory( t.getLabel() );
         vc.setValueUri( t.getUri() );
-        vc.setValue( t.getTerm() );
+        vc.setValue( t.getLabel() );
         vc.setEvidenceCode( GOEvidenceCode.IC );
         return vc;
     }

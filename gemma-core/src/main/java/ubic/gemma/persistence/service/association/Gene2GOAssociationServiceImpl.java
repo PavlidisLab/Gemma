@@ -71,6 +71,12 @@ public class Gene2GOAssociationServiceImpl extends AbstractService<Gene2GOAssoci
 
     @Override
     @Transactional(readOnly = true)
+    public Collection<Gene2GOAssociation> findAssociationByGenes( Collection<Gene> genes ) {
+        return gene2GOAssociationDao.findAssociationByGenes( genes );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public Collection<Characteristic> findByGene( Gene gene ) {
 
         Cache.ValueWrapper element = this.gene2goCache.get( gene );

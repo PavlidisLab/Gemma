@@ -44,6 +44,8 @@ public interface Gene2GOAssociationService extends BaseService<Gene2GOAssociatio
 
     Collection<Gene2GOAssociation> findAssociationByGene( Gene gene );
 
+    Collection<Gene2GOAssociation> findAssociationByGenes( Collection<Gene> genes );
+
     Collection<Characteristic> findByGene( Gene gene );
 
     Map<Gene, Collection<Characteristic>> findByGenes( Collection<Gene> genes );
@@ -62,5 +64,4 @@ public interface Gene2GOAssociationService extends BaseService<Gene2GOAssociatio
     Collection<Gene> findByGOTerms( Collection<String> termsToFetch, @Nullable Taxon taxon );
 
     Map<Taxon, Collection<Gene>> findByGOTermsPerTaxon( Collection<String> termsToFetch );
-
 }

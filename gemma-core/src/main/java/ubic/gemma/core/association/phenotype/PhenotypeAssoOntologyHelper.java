@@ -41,14 +41,6 @@ public interface PhenotypeAssoOntologyHelper {
     Characteristic characteristicValueObject2Characteristic( CharacteristicValueObject characteristicValueObject );
 
     /**
-     * Giving some Ontology terms return all valueUri of Ontology Terms + children
-     *
-     * @param  ontologyTerms ontology terms
-     * @return               all valueUri of Ontology Terms + children
-     */
-    Set<String> findAllChildrenAndParent( Collection<OntologyTerm> ontologyTerms );
-
-    /**
      * For a valueUri return the OntologyTerm found
      *
      * @param  valueUri value uri
