@@ -267,10 +267,11 @@ public interface PhenotypeAssociationManagerService {
      * For a given search string find all Ontology terms related, and then count their gene occurrence by taxon,
      * including ontology children terms
      *
-     * @param  searchQuery the query search that was type by the user
-     * @return             the terms found in the database with taxon and gene occurrence
+     * @param searchQuery the query search that was type by the user
+     * @param maxResults
+     * @return the terms found in the database with taxon and gene occurrence
      */
-    Collection<CharacteristicValueObject> searchInDatabaseForPhenotype( String searchQuery ) throws OntologySearchException;
+    Collection<CharacteristicValueObject> searchInDatabaseForPhenotype( String searchQuery, int maxResults ) throws OntologySearchException;
 
     /**
      * Giving a phenotype searchQuery, returns a selection choice to the user

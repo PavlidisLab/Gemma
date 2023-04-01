@@ -39,6 +39,7 @@ import ubic.gemma.persistence.service.common.description.ExternalDatabaseService
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Compute gene multifunctionality and store it in the database.
@@ -58,9 +59,6 @@ public class GeneMultifunctionalityPopulationServiceImpl implements GeneMultifun
 
     @Autowired
     private GeneOntologyService goService;
-
-    @Autowired
-    private OntologyService ontologyService;
 
     @Autowired
     private ExternalDatabaseService externalDatabaseService;
@@ -101,7 +99,7 @@ public class GeneMultifunctionalityPopulationServiceImpl implements GeneMultifun
             return;
         }
 
-        Map<Gene, Collection<String>> gomap = this.fetchGoAnnotations( genes );
+        Map<Gene, Set<String>> gomap = this.fetchGoAnnotations( genes );
 
         Map<Gene, Multifunctionality> mfs = this.computeMultifunctionality( gomap );
 
@@ -138,7 +136,7 @@ public class GeneMultifunctionalityPopulationServiceImpl implements GeneMultifun
      * @param  gomap gomap
      * @return map
      */
-    private Map<Gene, Multifunctionality> computeMultifunctionality( Map<Gene, Collection<String>> gomap ) {
+    private Map<Gene, Multifunctionality> computeMultifunctionality( Map<Gene, Set<String>> gomap ) {
 
         /*
          * See ermineJ Multifunctionality.java for another implementation.
@@ -169,7 +167,6 @@ public class GeneMultifunctionalityPopulationServiceImpl implements GeneMultifun
             double mfscore = 0.0;
             Collection<String> sets = gomap.get( gene );
             for ( String goset : sets ) {
-
                 assert goGroupSizes.containsKey( goset );
                 int inGroup = goGroupSizes.get( goset );
                 assert inGroup > 0;
@@ -208,7 +205,7 @@ public class GeneMultifunctionalityPopulationServiceImpl implements GeneMultifun
         return geneMultifunctionality;
     }
 
-    private Map<Gene, Collection<String>> fetchGoAnnotations( Collection<Gene> genes ) {
+    private Map<Gene, Set<String>> fetchGoAnnotations( Collection<Gene> genes ) {
 
         if ( !goService.isOntologyLoaded() ) {
             goService.startInitializationThread( true, false );
@@ -227,11 +224,11 @@ public class GeneMultifunctionalityPopulationServiceImpl implements GeneMultifun
          * Build the GO 'matrix'.
          */
         int count = 0;
-        Map<Gene, Collection<String>> gomap = new HashMap<>();
+        Map<Gene, Set<String>> gomap = new HashMap<>();
         for ( Gene gene : genes ) {
             Collection<Characteristic> annots = gene2GOService.findByGene( gene );
 
-            Collection<String> termsForGene = new HashSet<>();
+            Set<String> termsForGene = new HashSet<>();
 
             //noinspection StatementWithEmptyBody // TODO we just count it as a gene with lowest multifunctionality
             if ( annots.isEmpty() ) {
@@ -241,22 +238,25 @@ public class GeneMultifunctionalityPopulationServiceImpl implements GeneMultifun
             /*
              * Propagate.
              */
-
+            Set<OntologyTerm> terms = new HashSet<>( annots.size() );
             for ( Characteristic t : annots ) {
-                if ( ontologyService.isObsolete( t.getValueUri() ) ) {
+                OntologyTerm term = goService.getTerm( t.getValueUri() );
+                if ( term == null || term.isObsolete() ) {
                     GeneMultifunctionalityPopulationServiceImpl.log
                             .warn( "Obsolete term annotated to " + gene + " : " + t );
                     continue;
                 }
+                terms.add( term );
+                termsForGene.add( term.getLabel() );
+            }
 
-                termsForGene.add( t.getValue() );
-
-                Collection<OntologyTerm> parents = goService.getTerm( t.getValueUri() ).getParents( false, false );
-
-                for ( OntologyTerm p : parents ) {
-                    if ( p == null ) continue;
-                    termsForGene.add( p.getTerm() );
+            // add all the parents
+            Set<OntologyTerm> parents = goService.getParents( terms, true, false );
+            for ( OntologyTerm p : parents ) {
+                if ( p.isObsolete() ) {
+                    continue;
                 }
+                termsForGene.add( p.getLabel() );
             }
 
             //noinspection StatementWithEmptyBody // TODO we just count it as a gene with lowest multifunctionality

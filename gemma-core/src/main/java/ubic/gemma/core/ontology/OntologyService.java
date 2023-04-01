@@ -31,6 +31,7 @@ import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * @author Paul
@@ -99,6 +100,18 @@ public interface OntologyService {
      * @return terms which are allowed for use in the Category of a Characteristic
      */
     Collection<OntologyTerm> getCategoryTerms();
+
+    /**
+     * Obtain the parents of a collection of terms.
+     * @see OntologyTerm#getParents(boolean, boolean)
+     */
+    Set<OntologyTerm> getParents( Collection<OntologyTerm> terms, boolean direct, boolean includeAdditionalProperties );
+
+    /**
+     * Obtain the children of a collection of terms.
+     * @see OntologyTerm#getChildren(boolean, boolean)
+     */
+    Set<OntologyTerm> getChildren( Collection<OntologyTerm> matchingTerms, boolean direct, boolean includeAdditionalProperties );
 
     /**
      * @return the cellLineOntologyService

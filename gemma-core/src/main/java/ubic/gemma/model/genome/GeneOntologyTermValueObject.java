@@ -27,7 +27,7 @@ public class GeneOntologyTermValueObject implements Serializable {
         this.uri = term.getUri();
         this.comment = term.getComment();
         this.localName = term.getLocalName();
-        this.term = term.getTerm();
-        this.isObsolete = term.isTermObsolete();
+        this.term = term.getLabel();
+        this.isObsolete = term.isObsolete();
     }
 }

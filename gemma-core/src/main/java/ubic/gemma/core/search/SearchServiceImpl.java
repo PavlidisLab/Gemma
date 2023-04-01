@@ -36,6 +36,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.LinkedMultiValueMap;
 import ubic.basecode.ontology.model.OntologyIndividual;
+import ubic.basecode.ontology.model.OntologyResource;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.basecode.ontology.search.OntologySearchException;
 import ubic.basecode.util.BatchIterator;
@@ -439,9 +440,9 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
         try {
             // FIXME: add support for OR, but there's a bug in baseCode that prevents this https://github.com/PavlidisLab/baseCode/issues/22
             String query = settings.getQuery().replaceAll( "\\s+OR\\s+", "" );
-            return this.phenotypeAssociationManagerService.searchInDatabaseForPhenotype( query ).stream()
+            return this.phenotypeAssociationManagerService.searchInDatabaseForPhenotype( query, settings.getMaxResults() ).stream()
                     .map( r -> SearchResult.from( PhenotypeAssociation.class, r, 1.0, null, "PhenotypeAssociationManagerService.searchInDatabaseForPhenotype" ) )
-                    .collect( Collectors.toSet() );
+                    .collect( Collectors.toCollection( SearchResultSet::new ) );
         } catch ( OntologySearchException e ) {
             throw new BaseCodeOntologySearchException( "Failed to search for phenotype associations.", e );
         }
@@ -566,14 +567,14 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
 
         ArrayDesign shortNameResult = arrayDesignService.findByShortName( searchString );
         if ( shortNameResult != null ) {
-            results.add( SearchResult.from( shortNameResult, DatabaseSearchSource.MATCH_BY_SHORT_NAME_SCORE, null, "ArrayDesignService.findByShortName" ) );
+            results.add( SearchResult.from( ArrayDesign.class, shortNameResult, DatabaseSearchSource.MATCH_BY_SHORT_NAME_SCORE, null, "ArrayDesignService.findByShortName" ) );
             return results;
         }
 
         Collection<ArrayDesign> nameResult = arrayDesignService.findByName( searchString );
         if ( nameResult != null && !nameResult.isEmpty() ) {
             for ( ArrayDesign ad : nameResult ) {
-                results.add( SearchResult.from( ad, DatabaseSearchSource.MATCH_BY_NAME_SCORE, null, "ArrayDesignService.findByShortName" ) );
+                results.add( SearchResult.from( ArrayDesign.class, ad, DatabaseSearchSource.MATCH_BY_NAME_SCORE, null, "ArrayDesignService.findByShortName" ) );
             }
             return results;
         }
@@ -590,14 +591,14 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
 
         Collection<ArrayDesign> altNameResults = arrayDesignService.findByAlternateName( searchString );
         for ( ArrayDesign arrayDesign : altNameResults ) {
-            SearchResult<ArrayDesign> sr = new SearchResult<>( arrayDesign, "ArrayDesignService.findByAlternateName" );
+            SearchResult<ArrayDesign> sr = SearchResult.from( ArrayDesign.class, arrayDesign, 1.0, null, "ArrayDesignService.findByAlternateName" );
             sr.setScore( 0.9 );
             results.add( sr );
         }
 
         Collection<ArrayDesign> manufacturerResults = arrayDesignService.findByManufacturer( searchString );
         for ( ArrayDesign arrayDesign : manufacturerResults ) {
-            SearchResult<ArrayDesign> sr = new SearchResult<>( arrayDesign, "ArrayDesignService.findByManufacturer" );
+            SearchResult<ArrayDesign> sr = SearchResult.from( ArrayDesign.class, arrayDesign, 1.0, null, "ArrayDesignService.findByManufacturer" );
             sr.setScore( 0.9 );
             results.add( sr );
         }
@@ -707,112 +708,84 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
      * @return collection of SearchResults (Experiments)
      */
     private Collection<SearchResult<ExpressionExperiment>> characteristicEESearchTerm( String query, @Nullable Taxon t, int limit ) throws SearchException {
-
+        // overall timer
         StopWatch watch = StopWatch.createStarted();
+        // per-step timer
+        StopWatch timer = StopWatch.create();
+
         Collection<SearchResult<ExpressionExperiment>> results = new HashSet<>();
 
+        Collection<OntologyResource> terms = new HashSet<>();
+
         // Phase 1: We first search for individuals.
-        Map<String, String> uri2value = new HashMap<>();
         Collection<OntologyIndividual> individuals;
         try {
+            timer.start();
             individuals = ontologyService.findIndividuals( query );
+            terms.addAll( individuals );
         } catch ( OntologySearchException e ) {
             throw new BaseCodeOntologySearchException( e );
-        }
-        for ( Collection<OntologyIndividual> individualbatch : BatchIterator.batches( individuals, 10 ) ) {
-            Collection<String> uris = new HashSet<>();
-            for ( OntologyIndividual individual : individualbatch ) {
-                uris.add( individual.getUri() );
-                uri2value.put( individual.getUri(), individual.getLabel() );
-            }
-
-            findExperimentsByUris( uris, results, t, limit, uri2value );
-            if ( limit > 0 && results.size() > limit ) {
-                break;
-            }
-        } // end phase 1
-
-        if ( results.size() > 0 && watch.getTime() > 500 ) {
-            SearchServiceImpl.log.info( "Found " + individuals.size() + " experiments matching '" + query
-                    + "' via characteristic terms (individuals) in " + watch.getTime() + "ms" );
+        } finally {
+            timer.stop();
         }
 
-        if ( limit > 0 && results.size() >= limit ) {
-            return results;
+        if ( watch.getTime() > 500 ) {
+            SearchServiceImpl.log.warn( String.format( "Found %d terms (individual) matching '%s' in %d ms",
+                    individuals.size(), query, timer.getTime() ) );
         }
 
-        /*
-         * Phase 2: Search ontology classes matches to the query
-         */
+        // Phase 2: Search ontology classes matches to the query
+        timer.reset();
+        timer.start();
         Collection<OntologyTerm> matchingTerms;
         try {
             matchingTerms = ontologyService.findTerms( query );
+            terms.addAll( matchingTerms );
         } catch ( OntologySearchException e ) {
             throw new BaseCodeOntologySearchException( "Failed to find terms via ontology search.", e );
+        } finally {
+            timer.stop();
         }
 
         if ( watch.getTime() > 500 ) {
             SearchServiceImpl.log
-                    .info( "Found " + matchingTerms.size() + " ontology classes matching '" + query + "' in "
-                            + watch.getTime() + "ms" );
+                    .warn( String.format( "Found %d ontology classes matching '%s' in %d ms",
+                            matchingTerms.size(), query, timer.getTime() ) );
         }
 
         /*
          * Search for child terms.
          */
         if ( !matchingTerms.isEmpty() ) {
-            Collection<OntologyTerm> seenTerms = new HashSet<>();
-            watch.reset();
-            watch.start();
+            // TODO: move this logic in baseCode, this can be done far more efficiently with Jena API
+            timer.reset();
+            timer.start();
+            terms.addAll( ontologyService.getChildren( matchingTerms, false, true ) );
+            timer.stop();
 
-            for ( OntologyTerm term : matchingTerms ) {
-                /*
-                 * In this loop, each term is a match directly to our query, and we do a depth-first fetch of the
-                 * children.
-                 */
-                String uri = term.getUri();
-                if ( StringUtils.isBlank( uri ) )
-                    continue;
-
-                if ( seenTerms.contains( term ) )
-                    continue;
-
-                uri2value.put( uri, term.getLabel() );
-
-                // query current term before going to children
-                int sizeBefore = results.size();
-                findExperimentsByUris( Collections.singleton( uri ), results, t, limit, uri2value );
-
-                if ( limit > 0 && results.size() >= limit ) break;
-
-                this.getCharacteristicsAnnotatedToChildren( term, results, seenTerms, t, limit );
-
-                seenTerms.add( term );
-
-                if ( SearchServiceImpl.log.isDebugEnabled() && results.size() > sizeBefore ) {
-                    SearchServiceImpl.log
-                            .debug( ( results.size() - sizeBefore ) + " characteristics matching children term of "
-                                    + term );
-                }
-
-                if ( limit > 0 && results.size() >= limit ) {
-                    break;
-                }
+            if ( watch.getTime() > 500 ) {
+                SearchServiceImpl.log.warn(
+                        String.format( "Found %d ontology subclasses or related terms matching '%s' in %d ms",
+                                terms.size() - matchingTerms.size(), query, timer.getTime() ) );
             }
-
-            if ( watch.getTime() > 1000 ) {
-                SearchServiceImpl.log.info( "Found " + results.size() + " characteristics for '" + query
-                        + "' including child terms in " + watch.getTime() + "ms" );
-            }
-            watch.reset();
-            watch.start();
-
         }
+
+        Collection<String> uris = new HashSet<>();
+        Map<String, String> uri2value = new HashMap<>();
+        for ( OntologyResource individual : terms ) {
+            uris.add( individual.getUri() );
+            uri2value.put( individual.getUri(), individual.getLabel() );
+        }
+
+        timer.reset();
+        timer.start();
+        findExperimentsByUris( uris, results, t, limit, uri2value );
+        timer.stop();
 
         if ( watch.getTime() > 500 ) {
             SearchServiceImpl.log
-                    .info( "Retrieved " + results.size() + " entities via characteristics for '" + query
-                            + "' in " + watch.getTime() + "ms" );
+                    .warn( String.format( "Retrieved %d datasets via characteristics for '%s' in %d ms",
+                            results.size(), query, timer.getTime() ) );
         }
 
         return results;
@@ -830,7 +803,7 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
                     if ( !clazz.isAssignableFrom( ExpressionExperiment.class ) ) {
                         matchedText = matchedText + " via " + clazz.getSimpleName();
                     }
-                    SearchResult<ExpressionExperiment> sr = new SearchResult<>( ee, "CharacteristicService.findExperimentsByUris" );
+                    SearchResult<ExpressionExperiment> sr = SearchResult.from( ExpressionExperiment.class, ee, 1.0, null, "CharacteristicService.findExperimentsByUris" );
                     sr.setHighlightedText( matchedText );
                     results.add( sr );
                     if ( limit > 0 && results.size() >= limit ) {
@@ -1361,7 +1334,7 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
                 // FIXME: add support for OR, but there's a bug in baseCode that prevents this https://github.com/PavlidisLab/baseCode/issues/22
                 String query = settings.getQuery().replaceAll( "\\s+OR\\s+", "" );
                 phenotypeTermHits = this.phenotypeAssociationManagerService
-                        .searchInDatabaseForPhenotype( query );
+                        .searchInDatabaseForPhenotype( query, settings.getMaxResults() );
             } catch ( OntologySearchException e ) {
                 throw new BaseCodeOntologySearchException( e );
             }
@@ -1381,7 +1354,7 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
                         Gene g = Gene.Factory.newInstance();
                         g.setId( gvo.getId() );
                         g.setTaxon( settings.getTaxon() );
-                        SearchResult<Gene> sr = new SearchResult<>( g, "PhenotypeAssociationManagerService.findCandidateGenes" );
+                        SearchResult<Gene> sr = SearchResult.from( Gene.class, g, 1.0, null, "PhenotypeAssociationManagerService.findCandidateGenes" );
                         sr.setHighlightedText( phenotype.getValue() + " (" + phenotype.getValueUri() + ")" );
 
                         // if ( gvo.getScore() != null ) {
@@ -1584,7 +1557,7 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
 
                 ////
                 if ( settings.hasResultType( Gene.class ) ) {
-                    results.add( new SearchResult<>( g, "GeneService.findByNCBIId" ) );
+                    results.add( SearchResult.from( Gene.class, g, 1.0, null, "GeneService.findByNCBIId" ) );
 
                 }
             }

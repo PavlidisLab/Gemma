@@ -46,16 +46,6 @@ public class SearchResult<T extends Identifiable> implements Comparable<SearchRe
     }
 
     /**
-     * Create a search result from an entity, a score and some highlighted text.
-     */
-    public static <T extends Identifiable> SearchResult<T> from( T entity, double score, @Nullable String highlightedText, Object source ) {
-        SearchResult<T> sr = new SearchResult<>( entity, source );
-        sr.setScore( score );
-        sr.setHighlightedText( highlightedText );
-        return sr;
-    }
-
-    /**
      * Create a search result whose result class differ from the object.
      * <p>
      * This can be useful if you wrap a proxy, or don't want to expose the object class publicly. For example, our

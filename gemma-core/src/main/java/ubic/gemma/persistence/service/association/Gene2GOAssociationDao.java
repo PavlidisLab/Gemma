@@ -41,6 +41,7 @@ public interface Gene2GOAssociationDao extends BaseDao<Gene2GOAssociation> {
 
     Collection<Gene2GOAssociation> findAssociationByGene( Gene gene );
 
+    Collection<Gene2GOAssociation> findAssociationByGenes( Collection<Gene> genes );
     Collection<Characteristic> findByGene( Gene gene );
 
     Map<Gene, Collection<Characteristic>> findByGenes( Collection<Gene> needToFind );
@@ -56,5 +57,4 @@ public interface Gene2GOAssociationDao extends BaseDao<Gene2GOAssociation> {
     Collection<Gene> getGenes( Collection<String> ids, @Nullable Taxon taxon );
 
     void removeAll();
-
 }

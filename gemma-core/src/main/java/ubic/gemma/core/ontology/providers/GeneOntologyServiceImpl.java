@@ -30,7 +30,7 @@ import ubic.basecode.ontology.model.AnnotationProperty;
 import ubic.basecode.ontology.model.OntologyIndividual;
 import ubic.basecode.ontology.model.OntologyResource;
 import ubic.basecode.ontology.model.OntologyTerm;
-import ubic.basecode.ontology.providers.AbstractOntologyMemoryBackedService;
+import ubic.basecode.ontology.jena.AbstractOntologyMemoryBackedService;
 import ubic.basecode.ontology.search.OntologySearchException;
 import ubic.basecode.util.Configuration;
 import ubic.gemma.core.genome.gene.service.GeneService;
@@ -223,20 +223,13 @@ public class GeneOntologyServiceImpl extends AbstractOntologyMemoryBackedService
     }
 
     @Override
-    public Collection<OntologyTerm> getAllParents( Collection<OntologyTerm> entries ) {
+    public Set<OntologyTerm> getAllParents( Collection<OntologyTerm> entries ) {
         return this.getAllParents( entries, false );
     }
 
     @Override
-    public Collection<OntologyTerm> getAllParents( Collection<OntologyTerm> entries, boolean includePartOf ) {
-        // TODO: move this in baseCode, this can be done far more efficiently with Jena API
-        if ( entries == null )
-            return null;
-        Collection<OntologyTerm> result = new HashSet<>();
-        for ( OntologyTerm entry : entries ) {
-            result.addAll( entry.getParents( false, includePartOf ) );
-        }
-        return result;
+    public Set<OntologyTerm> getAllParents( Collection<OntologyTerm> entries, boolean includePartOf ) {
+        return super.getParents( entries, false, includePartOf );
     }
 
     @Override
@@ -356,9 +349,10 @@ public class GeneOntologyServiceImpl extends AbstractOntologyMemoryBackedService
     @Override
     public String getTermName( String goId ) {
         OntologyTerm t = getTermForId( goId );
-        if ( t == null )
+        String label = t != null ? t.getLabel() : null;
+        if ( label == null )
             return "[Not available]"; // not ready yet?
-        return t.getTerm();
+        return label;
     }
 
     @Override
@@ -400,7 +394,7 @@ public class GeneOntologyServiceImpl extends AbstractOntologyMemoryBackedService
 
     private GOAspect getTermAspect( OntologyTerm term ) {
         assert term != null;
-        String goId = term.getTerm();
+        String goId = term.getLabel();
         return term2Aspect.computeIfAbsent( goId, goId2 -> {
             String nameSpace = null;
             for ( AnnotationProperty annot : term.getAnnotations() ) {

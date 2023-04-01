@@ -19,7 +19,7 @@
 
 package ubic.gemma.core.ontology.providers;
 
-import ubic.basecode.ontology.providers.AbstractOntologyMemoryBackedService;
+import ubic.basecode.ontology.jena.AbstractOntologyMemoryBackedService;
 import ubic.gemma.persistence.util.Settings;
 
 /**

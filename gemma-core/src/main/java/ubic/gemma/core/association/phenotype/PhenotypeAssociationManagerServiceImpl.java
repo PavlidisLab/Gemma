@@ -70,6 +70,8 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.util.*;
 import java.util.Map.Entry;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * High Level Service used to add Candidate Gene Management System capabilities
@@ -709,29 +711,22 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
     @Override
     @Transactional(readOnly = true)
-    public Collection<CharacteristicValueObject> searchInDatabaseForPhenotype( String searchQuery ) throws OntologySearchException {
-
-        Collection<CharacteristicValueObject> results = new TreeSet<>();
-
+    public Collection<CharacteristicValueObject> searchInDatabaseForPhenotype( String searchQuery, int maxResults ) throws OntologySearchException {
         String newSearchQuery = this.prepareOntologyQuery( searchQuery );
 
         // search the Ontology with the search query
         Collection<OntologyTerm> ontologyTermsFound = this.ontologyHelper.findValueUriInOntology( newSearchQuery );
 
-        // Set of valueUri of all Ontology Terms found + their children
-        Set<String> phenotypesFoundAndChildren = this.ontologyHelper.findAllChildrenAndParent( ontologyTermsFound );
-
-        if ( !phenotypesFoundAndChildren.isEmpty() ) {
-
-            // gene counts for all phenotypes used
-            for ( int i = 0; i < PhenotypeAssociationConstants.TAXA_IN_USE.length; i++ ) {
-                results.addAll( this.findPhenotypeCount( ontologyTermsFound,
-                        this.taxonService.findByCommonName( PhenotypeAssociationConstants.TAXA_IN_USE[i] ),
-                        phenotypesFoundAndChildren ) );
-            }
+        // add children if we did not reach max results
+        if ( maxResults > 0 && ontologyTermsFound.size() < maxResults ) {
+            // Set of valueUri of all Ontology Terms found + their children
+            ontologyTermsFound.addAll( ontologyService.getChildren( ontologyTermsFound, false, true ) );
         }
 
-        return results;
+        return ontologyTermsFound.stream()
+                .map( t -> new CharacteristicValueObject( -1L, t.getLabel().toLowerCase(), t.getUri() ) )
+                .limit( maxResults > 0 ? maxResults : Long.MAX_VALUE )
+                .collect( Collectors.toCollection( TreeSet::new ) );
     }
 
     @Override
@@ -1409,10 +1404,9 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
                                 .add( bibliographicPhenotypesValueObject.getEvidenceId() );
                     }
 
-                    Set<String> parentOrChildTerm = new HashSet<>();
-
                     // for the phenotype already present we add his children and direct parents, and check that
                     // the phenotype we want to add is not in that subset
+                    Set<OntologyTerm> terms = new HashSet<>();
                     for ( CharacteristicValueObject phenotypeAlreadyPresent : bibliographicPhenotypesValueObject
                             .getPhenotypesValues() ) {
 
@@ -1424,14 +1418,13 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
                             continue;
                         }
 
-                        for ( OntologyTerm ot : ontologyTerm.getParents( true ) ) {
-                            parentOrChildTerm.add( ot.getUri() );
-                        }
-
-                        for ( OntologyTerm ot : ontologyTerm.getChildren( false ) ) {
-                            parentOrChildTerm.add( ot.getUri() );
-                        }
+                        terms.add( ontologyTerm );
                     }
+
+                    Set<String> parentOrChildTerm = this.ontologyService.getParents( terms, false, true )
+                            .stream()
+                            .map( OntologyTerm::getUri )
+                            .collect( Collectors.toSet() );
 
                     for ( CharacteristicValueObject characteristicValueObject : evidence.getPhenotypes() ) {
 
@@ -1640,7 +1633,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
                     OntologyTerm ontologyTerm = this.ontologyHelper.findOntologyTermByUri( valueUri );
 
                     // we don't show obsolete terms
-                    if ( ontologyTerm.isTermObsolete() ) {
+                    if ( ontologyTerm.isObsolete() ) {
                         PhenotypeAssociationManagerServiceImpl.log
                                 .warn( "A valueUri found in the database is obsolete: " + valueUri );
                     } else {
