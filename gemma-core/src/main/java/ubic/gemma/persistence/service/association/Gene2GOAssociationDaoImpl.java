@@ -63,6 +63,11 @@ public class Gene2GOAssociationDaoImpl extends AbstractDao<Gene2GOAssociation> i
     }
 
     @Override
+    public Collection<Gene2GOAssociation> findAssociationByGenes( Collection<Gene> genes ) {
+        return this.findByPropertyIn( "gene", genes );
+    }
+
+    @Override
     public Collection<Characteristic> findByGene( Gene gene ) {
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession().createQuery(

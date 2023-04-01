@@ -223,12 +223,12 @@ public class GeneOntologyServiceImpl extends AbstractOntologyMemoryBackedService
     }
 
     @Override
-    public Collection<OntologyTerm> getAllParents( Collection<OntologyTerm> entries ) {
+    public Set<OntologyTerm> getAllParents( Collection<OntologyTerm> entries ) {
         return this.getAllParents( entries, false );
     }
 
     @Override
-    public Collection<OntologyTerm> getAllParents( Collection<OntologyTerm> entries, boolean includePartOf ) {
+    public Set<OntologyTerm> getAllParents( Collection<OntologyTerm> entries, boolean includePartOf ) {
         return super.getParents( entries, false, includePartOf );
     }
 

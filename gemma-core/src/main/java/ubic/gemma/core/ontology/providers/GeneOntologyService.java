@@ -27,6 +27,7 @@ import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * @author paul
@@ -77,9 +78,9 @@ public interface GeneOntologyService extends OntologyService {
      *                 included incidentally if they are parents of other terms in the collection.
      * @return ontology terms
      */
-    Collection<OntologyTerm> getAllParents( Collection<OntologyTerm> entries );
+    Set<OntologyTerm> getAllParents( Collection<OntologyTerm> entries );
 
-    Collection<OntologyTerm> getAllParents( Collection<OntologyTerm> entries, boolean includePartOf );
+    Set<OntologyTerm> getAllParents( Collection<OntologyTerm> entries, boolean includePartOf );
 
     /**
      * @param  taxon taxon

@@ -19,14 +19,15 @@
 
 package ubic.gemma.core.analysis.service;
 
-import org.apache.commons.lang3.RandomUtils;
 import org.apache.commons.lang3.RandomStringUtils;
+import org.apache.commons.lang3.RandomUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.test.annotation.DirtiesContext;
 import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.core.ontology.providers.GeneOntologyService;
 import ubic.gemma.core.util.test.BaseSpringContextTest;
@@ -55,6 +56,7 @@ import static org.assertj.core.api.Assertions.tuple;
 /**
  * @author paul
  */
+@DirtiesContext
 public class GeneMultifunctionalityPopulationServiceTest extends BaseSpringContextTest {
 
     private final String[] goTerms = new String[] { "GO_0047500", "GO_0051530", "GO_0051724", "GO_0004118",
@@ -73,19 +75,23 @@ public class GeneMultifunctionalityPopulationServiceTest extends BaseSpringConte
 
     @After
     public void tearDown() {
-        gene2GoService.removeAll();
-        Collection<Gene> genes = geneService.loadAll( testTaxon );
-        geneService.remove( genes );
+        if ( testTaxon != null ) {
+            Collection<Gene> genes = geneService.loadAll( testTaxon );
+            Collection<Gene2GOAssociation> g2go = gene2GoService.findAssociationByGenes( genes );
+            gene2GoService.remove( g2go );
+            geneService.remove( genes );
+            taxonService.remove( testTaxon );
+        }
     }
 
     @Before
     public void setUp() throws Exception {
-
-        if ( goService.isOntologyLoaded() ) {
+        if ( goService.isInitializationThreadAlive() ) {
+            log.info( "Cancelled GO service initialization, will take over with." );
+            goService.cancelInitializationThread();
+            goService.waitForInitializationThread();
             goService.clearCaches();
         }
-        gene2GoService.removeAll();
-
         goService.loadTermsInNameSpace( new GZIPInputStream(
                 new ClassPathResource( "/data/loader/ontology/molecular-function.test.owl.gz" ).getInputStream() ), false );
 
@@ -106,7 +112,7 @@ public class GeneMultifunctionalityPopulationServiceTest extends BaseSpringConte
             /*
              * Add up to 5 GO terms. Parents mean more will be added.
              */
-            for ( int j = 0; j <= Math.floor( i / 20 ); j++ ) {
+            for ( int j = 0; j <= ( double ) ( i / 20 ); j++ ) {
                 Characteristic oe = Characteristic.Factory.newInstance();
                 oe.setValueUri( GeneOntologyService.BASE_GO_URI + goTerms[j] );
                 oe.setValue( goTerms[j] );
@@ -132,7 +138,13 @@ public class GeneMultifunctionalityPopulationServiceTest extends BaseSpringConte
         assertThat( genes )
                 .extracting( "multifunctionality" )
                 .extracting( "rank", "numGoTerms" )
-                .contains( tuple( 0.4125, 11 ) );
+                .contains(
+                        tuple( 0.07916666666666672, 0 ),
+                        tuple( 0.24583333333333335, 2 ),
+                        tuple( 0.4125, 4 ),
+                        tuple( 0.5791666666666666, 6 ),
+                        tuple( 0.7458333333333333, 8 ),
+                        tuple( 0.9125, 10 ) );
 
         ExternalDatabase ed = externalDatabaseService.findByNameWithAuditTrail( ExternalDatabases.MULTIFUNCTIONALITY );
         assertThat( ed ).isNotNull();
