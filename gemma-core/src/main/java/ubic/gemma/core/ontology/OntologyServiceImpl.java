@@ -139,9 +139,9 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
         if ( enabledOntologyServices.isEmpty() ) {
             log.warn( "No ontology services are enabled, consider enabling them by setting 'load.{name}Ontology' options in Gemma.properties." );
         } else {
-            log.info( "The following ontology services are enabled: " + enabledOntologyServices.stream()
-                    .map( os -> os.getClass().getSimpleName() )
-                    .collect( Collectors.joining( ", " ) ) );
+            log.info( "The following ontology services are enabled:\n" + enabledOntologyServices.stream()
+                    .map( ubic.basecode.ontology.providers.OntologyService::toString )
+                    .collect( Collectors.joining( "\n\t" ) ) );
         }
         // remove GeneOntologyService, it was originally not included in the list before bean injection was used
         ontologyServices.remove( geneOntologyService );
