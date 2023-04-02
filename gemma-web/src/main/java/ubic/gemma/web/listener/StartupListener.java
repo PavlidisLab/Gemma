@@ -41,6 +41,8 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+import static ubic.gemma.persistence.util.SpringContextUtil.prepareContext;
+
 /**
  * StartupListener class used to initialize the spring context and make it available to the servlet context, so filters
  * that need the spring context can be configured. It also fills in parameters used by the application:
@@ -77,11 +79,9 @@ public class StartupListener extends ContextLoaderListener {
                     cac.getEnvironment().addActiveProfile( activeProfile.trim() );
                 }
             }
-            if ( !cac.getEnvironment().acceptsProfiles( SpringProfiles.PRODUCTION, SpringProfiles.DEV, SpringProfiles.TEST ) ) {
-                log.warn( "No profiles were detected, activating the 'dev' profile as a fallback. Use -Dspring.profiles.active=dev explicitly to remove this warning." );
-                cac.getEnvironment().addActiveProfile( SpringProfiles.DEV );
-            }
         }
+
+        prepareContext( ctx );
 
         return ctx;
     }

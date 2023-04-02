@@ -38,6 +38,8 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static ubic.gemma.persistence.util.SpringContextUtil.getApplicationVersion;
+
 /**
  * Generic command line for Gemma. Commands are referred by shorthand names; this class prints out available commands
  * when given no arguments.
@@ -98,7 +100,7 @@ public class GemmaCLI {
         }
 
         if ( commandLine.hasOption( VERSION_OPTION ) ) {
-            System.err.printf( "Gemma version %s%n", getAppVersion() );
+            System.err.printf( "Gemma version %s%n", getApplicationVersion() );
             System.exit( 0 );
             return;
         }
@@ -201,11 +203,6 @@ public class GemmaCLI {
                 System.err.println( "========= Gemma CLI run of " + commandRequested + " complete ============" );
             }
         }
-    }
-
-    private static String getAppVersion() {
-        String appVersion = Settings.getAppVersion();
-        return appVersion != null ? appVersion : "?";
     }
 
     /**

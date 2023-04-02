@@ -61,11 +61,7 @@ public class SpringContextUtil {
             for ( String activeProfile : activeProfiles ) {
                 context.getEnvironment().addActiveProfile( activeProfile );
             }
-            if ( !context.getEnvironment().acceptsProfiles( SpringProfiles.PRODUCTION, SpringProfiles.DEV, SpringProfiles.TEST ) ) {
-                log.warn( "No profiles were detected, activating the 'dev' profile as a fallback. Use -Dspring.profiles.active=dev explicitly to remove this warning." );
-                context.getEnvironment().addActiveProfile( SpringProfiles.DEV );
-            }
-            SpringContextUtil.log.info( "Loading Gemma context (active profiles: " + String.join( ", ", context.getEnvironment().getActiveProfiles() ) + "), hold on!" );
+            prepareContext( context );
             context.refresh();
             return context;
         } finally {
@@ -88,5 +84,35 @@ public class SpringContextUtil {
             throw new UnsupportedOperationException( "The Web app context cannot be retrieved from here, use WebApplicationContextUtils.getWebApplicationContext() instead." );
         }
         return getApplicationContext( testing ? new String[] { "testing" } : new String[0], additionalConfigurationLocations );
+    }
+
+    /**
+     * Prepare a given context for prime time.
+     * <p>
+     * Perform the following steps:
+     * <ul>
+     * <li>activate the {@code dev} profile as a fallback if no profile are active</li>
+     * <li>log an informative message with the context version and active profiles</li>
+     * </ul>
+     */
+    public static void prepareContext( ApplicationContext context ) {
+        if ( context instanceof ConfigurableApplicationContext ) {
+            ConfigurableApplicationContext cac = ( ConfigurableApplicationContext ) context;
+            if ( !cac.getEnvironment().acceptsProfiles( SpringProfiles.PRODUCTION, SpringProfiles.DEV, SpringProfiles.TEST ) ) {
+                log.warn( "No profiles were detected, activating the 'dev' profile as a fallback. Use -Dspring.profiles.active=dev explicitly to remove this warning." );
+                cac.getEnvironment().addActiveProfile( SpringProfiles.DEV );
+            }
+        }
+        SpringContextUtil.log.info( String.format( "Loading Gemma %s (active profiles: %s), hold on!",
+                getApplicationVersion(),
+                String.join( ", ", context.getEnvironment().getActiveProfiles() ) ) );
+    }
+
+    /**
+     * Return the current Gemma version.
+     */
+    public static String getApplicationVersion() {
+        String appVersion = Settings.getAppVersion();
+        return appVersion != null ? appVersion : "?";
     }
 }
