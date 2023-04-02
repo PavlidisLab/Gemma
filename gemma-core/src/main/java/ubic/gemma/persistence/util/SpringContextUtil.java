@@ -23,6 +23,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
+import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 
 import java.util.ArrayList;
@@ -63,8 +64,10 @@ public class SpringContextUtil {
 
         StopWatch timer = StopWatch.createStarted();
         try {
-            SpringContextUtil.log.info( "Loading Gemma" + ( testing ? " test " : " " ) + "context, hold on!" );
-            return new ClassPathXmlApplicationContext( paths.toArray( new String[0] ) );
+            ConfigurableApplicationContext context = new ClassPathXmlApplicationContext( paths.toArray( new String[0] ), false );
+            prepareContext( context );
+            context.refresh();
+            return context;
         } finally {
             SpringContextUtil.log.info( "Got Gemma context in " + timer.getTime( TimeUnit.MILLISECONDS ) + " ms." );
         }
@@ -85,5 +88,27 @@ public class SpringContextUtil {
             throw new UnsupportedOperationException( "The Web app context cannot be retrieved from here, use WebApplicationContextUtils.getWebApplicationContext() instead." );
         }
         return getApplicationContext( testing, additionalConfigurationLocations );
+    }
+
+    /**
+     * Prepare a given context for prime time.
+     * <p>
+     * Perform the following steps:
+     * <ul>
+     * <li>log an informative message with the context version and active profiles</li>
+     * </ul>
+     */
+    public static void prepareContext( ApplicationContext context ) {
+        SpringContextUtil.log.info( String.format( "Loading Gemma %s (active profiles: %s), hold on!",
+                getApplicationVersion(),
+                String.join( ", ", context.getEnvironment().getActiveProfiles() ) ) );
+    }
+
+    /**
+     * Return the current Gemma version.
+     */
+    public static String getApplicationVersion() {
+        String appVersion = Settings.getAppVersion();
+        return appVersion != null ? appVersion : "?";
     }
 }

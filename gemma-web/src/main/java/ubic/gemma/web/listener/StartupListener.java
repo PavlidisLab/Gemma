@@ -26,6 +26,7 @@ import org.quartz.Scheduler;
 import org.springframework.context.ApplicationContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.context.ContextLoaderListener;
+import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.context.support.WebApplicationContextUtils;
 import ubic.gemma.core.loader.genome.gene.ncbi.homology.HomologeneService;
 import ubic.gemma.web.scheduler.SchedulerUtils;
@@ -37,6 +38,8 @@ import javax.servlet.ServletContextEvent;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+
+import static ubic.gemma.persistence.util.SpringContextUtil.prepareContext;
 
 /**
  * StartupListener class used to initialize the spring context and make it available to the servlet context, so filters
@@ -62,8 +65,14 @@ public class StartupListener extends ContextLoaderListener {
     private static final Log log = LogFactory.getLog( StartupListener.class );
 
     @Override
+    protected WebApplicationContext createWebApplicationContext( ServletContext servletContext ) {
+        WebApplicationContext ctx = super.createWebApplicationContext( servletContext );
+        prepareContext( ctx );
+        return ctx;
+    }
+
+    @Override
     public void contextInitialized( ServletContextEvent event ) {
-        StartupListener.log.info( "Initializing Gemma Web context..." );
         StopWatch sw = new StopWatch();
         sw.start();
 
