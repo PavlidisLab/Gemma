@@ -442,7 +442,7 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
             String query = settings.getQuery().replaceAll( "\\s+OR\\s+", "" );
             return this.phenotypeAssociationManagerService.searchInDatabaseForPhenotype( query, settings.getMaxResults() ).stream()
                     .map( r -> SearchResult.from( PhenotypeAssociation.class, r, 1.0, null, "PhenotypeAssociationManagerService.searchInDatabaseForPhenotype" ) )
-                    .collect( Collectors.toCollection( SearchResultSet::new ) );
+                    .collect( Collectors.toSet() );
         } catch ( OntologySearchException e ) {
             throw new BaseCodeOntologySearchException( "Failed to search for phenotype associations.", e );
         }
