@@ -93,7 +93,7 @@ public class GemmaCLI {
         // quick help without loading the context
         if ( commandLine.hasOption( HELP_OPTION ) ) {
             GemmaCLI.printHelp( options, null );
-            System.exit( 1 );
+            System.exit( 0 );
             return;
         }
 
