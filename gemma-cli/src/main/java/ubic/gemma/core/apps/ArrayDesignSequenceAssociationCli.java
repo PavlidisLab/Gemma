@@ -170,7 +170,7 @@ public class ArrayDesignSequenceAssociationCli extends ArrayDesignSequenceManipu
         super.buildOptions( options );
 
         Option fileOption = Option.builder( "f" ).argName( "Input sequence file" ).hasArg()
-                .desc( "Path to file (FASTA). If the FASTA file doesn't have " +
+                .desc( "Path to file (FASTA for cDNA or three-column format for OLIGO). If the FASTA file doesn't have " +
                         "probe identifiers included, provide identifiers via the -i option." ).longOpt( "file" ).build();
 
         options.addOption( fileOption );
