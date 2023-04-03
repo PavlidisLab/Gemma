@@ -39,6 +39,7 @@ import ubic.basecode.ontology.search.OntologySearchException;
 import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.core.ontology.providers.GemmaOntologyService;
 import ubic.gemma.core.ontology.providers.GeneOntologyService;
+import ubic.gemma.core.ontology.providers.OntologyServiceFactory;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.search.SearchResult;
 import ubic.gemma.core.search.SearchService;
@@ -129,11 +130,16 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
     private UberonOntologyService uberonOntologyService;
 
     @Autowired
+    private List<OntologyServiceFactory<?>> ontologyServiceFactories;
+
+    @Autowired
     private List<ubic.basecode.ontology.providers.OntologyService> ontologyServices;
 
     @Override
     public void afterPropertiesSet() throws Exception {
-        List<ubic.basecode.ontology.providers.OntologyService> enabledOntologyServices = ontologyServices.stream()
+        List<ubic.basecode.ontology.providers.OntologyService> enabledOntologyServices = ontologyServiceFactories.stream()
+                .filter( OntologyServiceFactory::isAutoLoaded )
+                .map( OntologyServiceFactory::getObject )
                 .filter( ubic.basecode.ontology.providers.OntologyService::isEnabled )
                 .collect( Collectors.toList() );
         if ( enabledOntologyServices.isEmpty() ) {
