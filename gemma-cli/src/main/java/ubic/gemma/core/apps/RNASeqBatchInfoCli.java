@@ -69,10 +69,10 @@ public class RNASeqBatchInfoCli extends ExpressionExperimentManipulatingCLI {
                     batchService.fillBatchInformation( ( ExpressionExperiment ) ee, this.force );
                     addSuccessObject( ee, "Added batch information" );
                 } catch ( Exception e ) {
-                    addErrorObject( ee, "Failed to add batch information to " + ee, e );
+                    addErrorObject( ee, "Failed to add batch information.", e );
                 }
             } else {
-                addErrorObject( ee, String.format( "%s is not an ExpressionExperiment", ee ) );
+                addErrorObject( ee, "This is not an ExpressionExperiment" );
             }
         }
     }

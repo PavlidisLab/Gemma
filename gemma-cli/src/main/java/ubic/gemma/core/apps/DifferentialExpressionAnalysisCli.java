@@ -391,11 +391,10 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
                 }
             }
 
-            addSuccessObject( ee, "Successfully processed " + ee.getShortName() );
+            addSuccessObject( ee );
 
         } catch ( Exception e ) {
-            ExceptionUtils.printRootCauseStackTrace( e );
-            addErrorObject( ee, e.getMessage(), e );
+            addErrorObject( ee, e.getMessage(), ExceptionUtils.getRootCause( e ) );
         }
 
     }

@@ -71,9 +71,9 @@ public class SVDCli extends ExpressionExperimentManipulatingCLI {
 
                 svdService.svd( ee.getId() );
 
-                addSuccessObject( bas, "Successfully processed " + bas );
+                addSuccessObject( bas );
             } catch ( Exception e ) {
-                addErrorObject( bas, e.getMessage(), e );
+                addErrorObject( bas, e );
             }
         }
     }

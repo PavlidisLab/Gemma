@@ -331,11 +331,11 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractCLICont
                     Long id = Long.parseLong( eeName );
                     ee = arrayDesignService.load( id );
                     if ( ee == null ) {
-                        addErrorObject( eeName, "No ArrayDesign " + eeName + " found" );
+                        addErrorObject( null, "No ArrayDesign found with ID " + eeName );
                         continue;
                     }
                 } catch ( NumberFormatException e ) {
-                    addErrorObject( eeName, "No ArrayDesign " + eeName + " found" );
+                    addErrorObject( null, "No ArrayDesign found with ID " + eeName );
                     continue;
                 }
 

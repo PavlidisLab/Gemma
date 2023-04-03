@@ -98,9 +98,9 @@ public class DeleteExperimentsCli extends ExpressionExperimentManipulatingCLI {
                 try {
                     log.info( "--------- Deleting " + a + " --------" );
                     ads.remove( a );
-                    addSuccessObject( a, "Successfully deleted " + a );
+                    addSuccessObject( a );
                 } catch ( Exception e ) {
-                    addErrorObject( a, e.getMessage(), e );
+                    addErrorObject( a, e );
                 }
             }
             return;
@@ -110,10 +110,10 @@ public class DeleteExperimentsCli extends ExpressionExperimentManipulatingCLI {
             try {
                 log.info( "--------- Deleting " + bas + " --------" );
                 this.eeService.remove( ( ExpressionExperiment ) bas );
-                addSuccessObject( bas, "Successfully deleted " + bas );
+                addSuccessObject( bas );
                 log.info( "--------- Finished Deleting " + bas + " -------" );
             } catch ( Exception ex ) {
-                addErrorObject( bas, ex.getMessage(), ex );
+                addErrorObject( bas, ex );
             }
         }
     }

@@ -67,17 +67,13 @@ public class BatchEffectPopulationCli extends ExpressionExperimentManipulatingCL
                 try {
                     ExpressionExperiment ee = ( ExpressionExperiment ) bas;
                     ser.fillBatchInformation( ee, force );
-                    addSuccessObject( bas, "Successfully processed " + bas );
-                } catch ( BatchInfoPopulationException e ) {
-
-                    addErrorObject( bas, "Failed to process " + bas + e.getMessage(), e );
-
+                    addSuccessObject( bas );
                 } catch ( Exception e ) {
-                    addErrorObject( bas, e.getMessage(), e );
+                    addErrorObject( bas, e );
                 }
 
             } else {
-                addErrorObject( bas, String.format( "%s is not an ExpressionExperiment", bas ) );
+                addErrorObject( bas, "Is not an ExpressionExperiment" );
             }
 
         }

@@ -47,9 +47,9 @@ public class ExpressionDataCorrMatCli extends ExpressionExperimentManipulatingCL
                     continue;
                 }
                 this.processExperiment( ( ExpressionExperiment ) ee );
-                addSuccessObject( ee, "Successfully processed " + ( ( ExpressionExperiment ) ee ).getShortName() );
+                addSuccessObject( ee );
             } catch ( Exception e ) {
-                addErrorObject( ee, "Error while processing", e );
+                addErrorObject( ee, e );
             }
 
         }
@@ -68,7 +68,7 @@ public class ExpressionDataCorrMatCli extends ExpressionExperimentManipulatingCL
 
     private void audit( ExpressionExperiment ee ) {
         auditTrailService.addUpdateEvent( ee, "Generated sample correlation matrix" );
-        addSuccessObject( ee, "Successfully processed " + ee.getShortName() );
+        addSuccessObject( ee );
     }
 
     private void processExperiment( ExpressionExperiment ee ) throws FilteringException {
