@@ -124,7 +124,7 @@ public class ExpressionExperimentDataFileGeneratorCli extends ExpressionExperime
             addSuccessObject( ee, "Success:  generated data file for " + ee.getShortName() + " ID=" + ee.getId() );
 
         } catch ( Exception e ) {
-            addErrorObject( ee, "FAILED: for ee: " + ee.getShortName() + " ID= " + ee.getId() + " Error: " + e.getMessage(), e );
+            addErrorObject( ee, e );
         }
     }
 

@@ -72,9 +72,9 @@ public class VectorMergingCli extends ExpressionExperimentManipulatingCLI {
         try {
             expressionExperiment = eeService.thawLite( expressionExperiment );
             expressionExperiment = mergingService.mergeVectors( expressionExperiment );
-            addSuccessObject( expressionExperiment.toString(), "Finished processing " + expressionExperiment );
+            addSuccessObject( expressionExperiment );
         } catch ( Exception e ) {
-            addErrorObject( expressionExperiment, e.getMessage(), e );
+            addErrorObject( expressionExperiment, e );
         }
     }
 }

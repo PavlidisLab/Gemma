@@ -159,9 +159,9 @@ public class RNASeqDataAddCli extends ExpressionExperimentManipulatingCLI {
                         continue;
                     }
                     serv.log2cpmFromCounts( ee, qt );
-                    addSuccessObject( ee, "Successfully processed " + ee.getShortName() );
+                    addSuccessObject( ee );
                 } catch ( Exception e ) {
-                    addErrorObject( ( ( ExpressionExperiment ) bas ).getShortName(), e.getMessage(), e );
+                    addErrorObject( bas, e );
                 }
             }
         }

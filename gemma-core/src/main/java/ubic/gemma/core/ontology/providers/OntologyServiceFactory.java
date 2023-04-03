@@ -29,7 +29,7 @@ public class OntologyServiceFactory<T extends OntologyService> implements Factor
     private final Class<T> ontologyServiceClass;
     private boolean forceLoad = false;
     private boolean forceIndexing = false;
-    private boolean initializeInBackground = true;
+    private boolean loadInBackground = true;
 
 
     /**
@@ -59,8 +59,18 @@ public class OntologyServiceFactory<T extends OntologyService> implements Factor
      * @see OntologyService#startInitializationThread(boolean, boolean)
      * @see OntologyService#initialize(boolean, boolean)
      */
-    public void setInitializeInBackground( boolean initializeInBackground ) {
-        this.initializeInBackground = initializeInBackground;
+    public void setLoadInBackground( boolean loadInBackground ) {
+        this.loadInBackground = loadInBackground;
+    }
+
+    /**
+     * Check if the ontology returned by this factory will be loaded.
+     * <p>
+     * This happens if either the {@code load.ontologies} configuration key is set to true or the loading is forced via
+     * {@link #setForceLoad(boolean)}.
+     */
+    public boolean isAutoLoaded() {
+        return isAutoLoad || forceLoad;
     }
 
     private T service = null;
@@ -71,7 +81,7 @@ public class OntologyServiceFactory<T extends OntologyService> implements Factor
             return service;
         service = BeanUtils.instantiate( ontologyServiceClass );
         if ( isAutoLoad || forceLoad ) {
-            if ( initializeInBackground ) {
+            if ( loadInBackground ) {
                 service.startInitializationThread( forceLoad, forceIndexing );
             } else {
                 service.initialize( forceLoad, forceIndexing );
@@ -88,14 +98,6 @@ public class OntologyServiceFactory<T extends OntologyService> implements Factor
     @Override
     public boolean isSingleton() {
         return true;
-    }
-
-    private T createOntologyService() {
-        if ( ontologyServiceClass != null ) {
-            return BeanUtils.instantiate( ontologyServiceClass );
-        } else {
-            throw new RuntimeException( "You must override this createOntologyService() if ontologyServiceClass is not provided." );
-        }
     }
 
     @Override

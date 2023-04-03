@@ -18,6 +18,7 @@
  */
 package ubic.gemma.core.util;
 
+import lombok.Value;
 import org.apache.commons.cli.*;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
@@ -27,6 +28,7 @@ import ubic.basecode.util.DateUtil;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.persistence.util.Settings;
 
+import javax.annotation.Nullable;
 import java.io.File;
 import java.io.PrintWriter;
 import java.util.*;
@@ -34,10 +36,10 @@ import java.util.concurrent.*;
 
 /**
  * Base Command Line Interface. Provides some default functionality.
- *
+ * <p>
  * To use this, in your concrete subclass, implement a main method. You must implement buildOptions and processOptions
  * to handle any application-specific options (they can be no-ops).
- *
+ * <p>
  * To facilitate testing of your subclass, your main method must call a non-static 'doWork' method, that will be exposed
  * for testing. In that method call processCommandline. You should return any non-null return value from
  * processCommandLine.
@@ -94,16 +96,16 @@ public abstract class AbstractCLI implements CLI {
 
     // hold the results of the command execution
     // needs to be concurrently modifiable and kept in-order
-    private final List<BatchProcessingResult> errorObjects = Collections.synchronizedList( new ArrayList<BatchProcessingResult>() );
-    private final List<BatchProcessingResult> successObjects = Collections.synchronizedList( new ArrayList<BatchProcessingResult>() );
+    private final List<BatchProcessingResult> errorObjects = Collections.synchronizedList( new ArrayList<>() );
+    private final List<BatchProcessingResult> successObjects = Collections.synchronizedList( new ArrayList<>() );
 
     /**
      * Run the command.
-     *
+     * <p>
      * Parse and process CLI arguments, invoke the command doWork implementation, and print basic statistics about time
      * usage.
      *
-     * @param args arguments Arguments to pass to {@link #processCommandLine(Options, String[])}
+     * @param args Arguments to pass to {@link #processCommandLine(Options, String[])}
      * @return Exit code intended to be used with {@link System#exit(int)} to indicate a success or failure to the
      * end-user. Any exception raised by doWork results in a value of {@link #FAILURE}, and any error set in the
      * internal error objects will result in a value of {@link #FAILURE_FROM_ERROR_OBJECTS}.
@@ -143,7 +145,6 @@ public abstract class AbstractCLI implements CLI {
     /**
      * You must implement the handling for this option.
      */
-    @SuppressWarnings("static-access")
     protected void addAutoOption( Options options ) {
         Option autoSeekOption = Option.builder( AUTO_OPTION_NAME )
                 .desc( "Attempt to process entities that need processing based on workflow criteria." )
@@ -152,7 +153,6 @@ public abstract class AbstractCLI implements CLI {
         options.addOption( autoSeekOption );
     }
 
-    @SuppressWarnings("static-access")
     protected void addDateOption( Options options ) {
         Option dateOption = Option.builder( DATE_OPTION ).hasArg().desc(
                         "Constrain to run only on entities with analyses older than the given date. "
@@ -169,7 +169,6 @@ public abstract class AbstractCLI implements CLI {
      * @param hostRequired Whether the host name is required
      * @param portRequired Whether the port is required
      */
-    @SuppressWarnings("static-access")
     protected void addHostAndPortOptions( Options options, boolean hostRequired, boolean portRequired ) {
         Option hostOpt = Option.builder( HOST_OPTION ).argName( "host name" ).longOpt( "host" ).hasArg()
                 .desc( "Hostname to use (Default = " + DEFAULT_HOST + ")" )
@@ -190,7 +189,6 @@ public abstract class AbstractCLI implements CLI {
     /**
      * Convenience method to add an option for parallel processing option.
      */
-    @SuppressWarnings("static-access")
     protected void addThreadsOption( Options options ) {
         Option threadsOpt = Option.builder( THREADS_OPTION ).argName( "numThreads" ).hasArg()
                 .desc( "Number of threads to use for batch processing." )
@@ -200,14 +198,13 @@ public abstract class AbstractCLI implements CLI {
 
     /**
      * Build option implementation.
-     *
+     * <p>
      * Implement this method to add options to your command line, using the OptionBuilder.
-     *
+     * <p>
      * This is called right after {@link #buildStandardOptions(Options)} so the options will be added after standard options.
      */
     protected abstract void buildOptions( Options options );
 
-    @SuppressWarnings("static-access")
     protected void buildStandardOptions( Options options ) {
         AbstractCLI.log.debug( "Creating standard options" );
         Option helpOpt = new Option( HELP_OPTION, "help", false, "Print this message" );
@@ -218,7 +215,7 @@ public abstract class AbstractCLI implements CLI {
 
     /**
      * Command line implementation.
-     *
+     * <p>
      * This is called after {@link #buildOptions(Options)} and {@link #processOptions(CommandLine)}, so the implementation can assume that
      * all its arguments have already been initialized.
      *
@@ -231,7 +228,7 @@ public abstract class AbstractCLI implements CLI {
         try {
             return Double.parseDouble( commandLine.getOptionValue( option ) );
         } catch ( NumberFormatException e ) {
-            throw new RuntimeException( this.invalidOptionString( commandLine, "" + option ) + ", not a valid double", e );
+            throw new RuntimeException( this.invalidOptionString( commandLine, String.valueOf( option ) ) + ", not a valid double", e );
         }
     }
 
@@ -247,7 +244,7 @@ public abstract class AbstractCLI implements CLI {
         String fileName = commandLine.getOptionValue( c );
         File f = new File( fileName );
         if ( !f.canRead() ) {
-            throw new RuntimeException( this.invalidOptionString( commandLine, "" + c ) + ", cannot read from file" );
+            throw new RuntimeException( this.invalidOptionString( commandLine, String.valueOf( c ) ) + ", cannot read from file" );
         }
         return fileName;
     }
@@ -256,7 +253,7 @@ public abstract class AbstractCLI implements CLI {
         String fileName = commandLine.getOptionValue( c );
         File f = new File( fileName );
         if ( !f.canRead() ) {
-            throw new RuntimeException( this.invalidOptionString( commandLine, "" + c ) + ", cannot read from file" );
+            throw new RuntimeException( this.invalidOptionString( commandLine, c ) + ", cannot read from file" );
         }
         return fileName;
     }
@@ -265,7 +262,7 @@ public abstract class AbstractCLI implements CLI {
         try {
             return Integer.parseInt( commandLine.getOptionValue( option ) );
         } catch ( NumberFormatException e ) {
-            throw new RuntimeException( this.invalidOptionString( commandLine, "" + option ) + ", not a valid integer", e );
+            throw new RuntimeException( this.invalidOptionString( commandLine, String.valueOf( option ) ) + ", not a valid integer", e );
         }
     }
 
@@ -300,7 +297,7 @@ public abstract class AbstractCLI implements CLI {
      * @param args args
      * @return Exception; null if nothing went wrong.
      */
-    private final CommandLine processCommandLine( Options options, String[] args ) throws Exception {
+    private CommandLine processCommandLine( Options options, String[] args ) throws Exception {
         /* COMMAND LINE PARSER STAGE */
         DefaultParser parser = new DefaultParser();
         String appVersion = Settings.getAppVersion();
@@ -340,7 +337,7 @@ public abstract class AbstractCLI implements CLI {
 
     /**
      * Process command line options.
-     *
+     * <p>
      * Implement this to provide processing of options. It is called after {@link #buildOptions(Options)} and right before
      * {@link #doWork()}.
      *
@@ -351,41 +348,55 @@ public abstract class AbstractCLI implements CLI {
 
     /**
      * Add a success object to indicate success in a batch processing.
-     *
+     * <p>
      * This is further used in {@link #summarizeProcessing()} to summarize the execution of the command.
      *
      * @param successObject object that was processed
      * @param message       success message
      */
     protected void addSuccessObject( Object successObject, String message ) {
-        successObjects.add( new BatchProcessingResult( successObject, message ) );
-        log.info( successObject + ": " + message );
+        successObjects.add( new BatchProcessingResult( successObject, message, null ) );
+    }
+
+    /**
+     * @see #addSuccessObject(Object, String)
+     */
+    protected void addSuccessObject( Object successObject ) {
+        successObjects.add( new BatchProcessingResult( successObject, null, null ) );
     }
 
     /**
      * Add an error object with a stacktrace to indicate failure in a batch processing.
-     *
+     * <p>
      * This is further used in {@link #summarizeProcessing()} to summarize the execution of the command.
-     *
+     * <p>
      * This is intended to be used when an {@link Exception} is caught.
      *
      * @param errorObject object that was processed
      * @param message     error message
      * @param throwable   throwable to produce a stacktrace
      */
-    protected void addErrorObject( Object errorObject, String message, Throwable throwable ) {
-        errorObjects.add( new BatchProcessingResult( errorObject, message ) );
-        log.error( errorObject + ": " + message, throwable );
+    protected void addErrorObject( @Nullable Object errorObject, String message, Throwable throwable ) {
+        errorObjects.add( new BatchProcessingResult( errorObject, message, throwable ) );
+        log.error( message, throwable );
     }
 
     /**
-     * Add an error object to indicate failure in a batch processing.
-     *
-     * This is further used in {@link #summarizeProcessing()} to summarize the execution of the command.
+     * Add an error object without a cause stacktrace.
+     * @see #addErrorObject(Object, String)
      */
-    protected void addErrorObject( Object errorObject, String message ) {
-        errorObjects.add( new BatchProcessingResult( errorObject, message ) );
-        log.error( errorObject + ": " + message );
+    protected void addErrorObject( @Nullable  Object errorObject, String message ) {
+        errorObjects.add( new BatchProcessingResult( errorObject, message, null ) );
+        log.error( message );
+    }
+
+    /**
+     * Add an error object based on an exception.
+     * @see #addErrorObject(Object, String, Throwable)
+     */
+    protected void addErrorObject( @Nullable Object errorObject, Exception exception ) {
+        errorObjects.add( new BatchProcessingResult( errorObject, exception.getMessage(), exception ) );
+        log.error( exception.getMessage(), exception );
     }
 
     /**
@@ -398,9 +409,7 @@ public abstract class AbstractCLI implements CLI {
             buf.append( "\n---------------------\nSuccessfully processed " ).append( successObjects.size() )
                     .append( " objects:\n" );
             for ( BatchProcessingResult result : successObjects ) {
-                buf.append( "Success\t" )
-                        .append( result.source ).append( ": " )
-                        .append( result.message ).append( "\n" );
+                buf.append( result ).append( "\n" );
             }
             buf.append( "---------------------\n" );
 
@@ -412,9 +421,7 @@ public abstract class AbstractCLI implements CLI {
             buf.append( "\n---------------------\nErrors occurred during the processing of " )
                     .append( errorObjects.size() ).append( " objects:\n" );
             for ( BatchProcessingResult result : errorObjects ) {
-                buf.append( "Error\t" )
-                        .append( result.source ).append( ": " )
-                        .append( result.message ).append( "\n" );
+                buf.append( result ).append( "\n" );
             }
             buf.append( "---------------------\n" );
             AbstractCLI.log.error( buf );
@@ -428,11 +435,12 @@ public abstract class AbstractCLI implements CLI {
     protected <T> List<T> executeBatchTasks( Collection<? extends Callable<T>> tasks ) throws InterruptedException {
         List<Future<T>> futures = executorService.invokeAll( tasks );
         List<T> futureResults = new ArrayList<>( futures.size() );
+        int i = 0;
         for ( Future<T> future : futures ) {
             try {
                 futureResults.add( future.get() );
-            } catch ( ExecutionException | InterruptedException e ) {
-                addErrorObject( null, "Batch task failed.", e );
+            } catch ( ExecutionException e ) {
+                addErrorObject( null, String.format( "Batch task #%d failed", ++i ), e.getCause() );
             }
         }
         return futureResults;
@@ -443,7 +451,7 @@ public abstract class AbstractCLI implements CLI {
     }
 
     /**
-     * Somewhat annoying: This causes subclasses to be unable to safely use 'h', 'p', 'u' and 'P' etc for their own
+     * Somewhat annoying: This causes subclasses to be unable to safely use 'h', 'p', 'u' and 'P' etc. for their own
      * purposes.
      */
     protected void processStandardOptions( CommandLine commandLine ) {
@@ -473,20 +481,30 @@ public abstract class AbstractCLI implements CLI {
     /**
      * Represents an individual result in a batch processing.
      */
+    @Value
     private static class BatchProcessingResult {
-        private Object source;
-        private String message;
-        private Throwable throwable;
+        @Nullable
+        Object source;
+        @Nullable
+        String message;
+        @Nullable
+        Throwable throwable;
 
-        public BatchProcessingResult( Object source, String message ) {
-            this.source = source;
-            this.message = message;
-        }
-
-        public BatchProcessingResult( Object source, String message, Throwable throwable ) {
+        public BatchProcessingResult( @Nullable Object source, @Nullable String message, @Nullable Throwable throwable ) {
             this.source = source;
             this.message = message;
             this.throwable = throwable;
+        }
+
+        @Override
+        public String toString() {
+            StringBuilder buf = new StringBuilder();
+            buf.append( source != null ? source : "Unknown object" );
+            if ( message != null ) {
+                buf.append( ":\n\t" )
+                        .append( message );
+            }
+            return buf.toString();
         }
     }
 }
