@@ -136,9 +136,9 @@ public class LoadSimpleExpressionDataCli extends AbstractCLIContextCLI {
 
                     try {
                         this.loadExperiment( conf );
-                        addSuccessObject( expName, "Successfully Loaded " + expName );
+                        addSuccessObject( expName );
                     } catch ( Exception e ) {
-                        addErrorObject( expName, "Failure loading " + expName, e );
+                        addErrorObject( expName, e );
                     }
                 }
             }

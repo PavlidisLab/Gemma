@@ -300,7 +300,7 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
             try {
                 this.processOneAD( ad );
             } catch ( Exception e ) {
-                addErrorObject( ad, e.getMessage(), e );
+                addErrorObject( ad, e );
             }
         }
     }
@@ -339,7 +339,7 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
                 try {
                     this.processAD( arrayDesign );
                 } catch ( Exception e ) {
-                    addErrorObject( arrayDesign, e.getMessage(), e );
+                    addErrorObject( arrayDesign, e );
                 }
 
             }
@@ -396,7 +396,7 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
 
         this.arrayDesignAnnotationService.create( inputAd, overWrite );
 
-        addSuccessObject( inputAd, "Successfully processed " + inputAd );
+        addSuccessObject( inputAd );
 
     }
 

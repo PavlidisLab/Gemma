@@ -153,8 +153,7 @@ public class LoadExpressionDataCli extends AbstractCLIContextCLI {
                         ArrayDesign ad = ( ArrayDesign ) object;
                         ad = ads.thawLite( ad );
 
-                        addSuccessObject( ad, ad.getName() + " (" + ad.getExternalReferences().iterator().next()
-                                .getAccession() + ")" );
+                        addSuccessObject( ad );
                     }
                 } else {
                     this.processAccession( geoService, accession );
@@ -239,13 +238,11 @@ public class LoadExpressionDataCli extends AbstractCLIContextCLI {
                 this.postProcess( ees );
             }
 
-            for ( Object object : ees ) {
-                assert object instanceof ExpressionExperiment;
-                addSuccessObject( object, ( ( Describable ) object ).getName() + " (" + ( ( ExpressionExperiment ) object )
-                        .getAccession().getAccession() + ")" );
+            for ( ExpressionExperiment object : ees ) {
+                addSuccessObject( object );
             }
         } catch ( Exception e ) {
-            addErrorObject( accession, e.getMessage(), e );
+            addErrorObject( accession, e );
         }
     }
 
@@ -282,8 +279,7 @@ public class LoadExpressionDataCli extends AbstractCLIContextCLI {
             try {
                 preprocessorService.process( ee );
             } catch ( PreprocessingException e ) {
-                addErrorObject( ee, "Experiment was loaded, but there was an error during postprocessing: " + ee
-                        + " , make sure additional steps are completed", e );
+                addErrorObject( ee, "Experiment was loaded, but there was an error during postprocessing, make sure additional steps are completed", e );
             }
 
         }

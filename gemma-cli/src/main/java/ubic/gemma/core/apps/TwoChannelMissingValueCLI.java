@@ -72,8 +72,8 @@ public class TwoChannelMissingValueCLI extends ExpressionExperimentManipulatingC
         super.buildOptions( options );
 
         Option signal2noiseOption = Option.builder( "s" ).hasArg().argName( "Signal-to-noise" ).desc(
-                "Signal to noise ratio, below which values are considered missing; default="
-                        + TwoChannelMissingValues.DEFAULT_SIGNAL_TO_NOISE_THRESHOLD )
+                        "Signal to noise ratio, below which values are considered missing; default="
+                                + TwoChannelMissingValues.DEFAULT_SIGNAL_TO_NOISE_THRESHOLD )
                 .longOpt( "signal2noise" )
                 .build();
 
@@ -211,9 +211,9 @@ public class TwoChannelMissingValueCLI extends ExpressionExperimentManipulatingC
         }
 
         if ( wasProcessed ) {
-            addSuccessObject( ee.toString(), "Was processed" );
+            addSuccessObject( ee );
         } else {
-            addErrorObject( ee.getShortName(), "Was not processed" );
+            addErrorObject( ee, "Was not processed" );
         }
     }
 }

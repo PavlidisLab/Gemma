@@ -239,7 +239,7 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
         options.addOption( useDB );
 
         Option fileOpt = Option.builder( "dataFile" ).hasArg().argName( "Expression data file" ).desc(
-                "Provide expression data from a tab-delimited text file, rather than from the database. Implies 'nodb' and must also provide 'array' and 't' option" )
+                        "Provide expression data from a tab-delimited text file, rather than from the database. Implies 'nodb' and must also provide 'array' and 't' option" )
                 .build();
         options.addOption( fileOpt );
 
@@ -249,13 +249,13 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
         options.addOption( taxonNameOption );
 
         Option arrayOpt = Option.builder( "array" ).hasArg().argName( "Array Design" ).desc(
-                "Provide the short name of the array design used. Only needed if you are using the 'dataFile' option" )
+                        "Provide the short name of the array design used. Only needed if you are using the 'dataFile' option" )
                 .build();
         options.addOption( arrayOpt );
 
         Option textOutOpt = Option.builder( "text" ).desc(
-                "Output links as text. If multiple experiments are analyzed (e.g. using -f option) "
-                        + "results for each are put in a separate file in the current directory with the format {shortname}-links.txt. Otherwise output is to STDOUT" )
+                        "Output links as text. If multiple experiments are analyzed (e.g. using -f option) "
+                                + "results for each are put in a separate file in the current directory with the format {shortname}-links.txt. Otherwise output is to STDOUT" )
                 .build();
         options.addOption( textOutOpt );
 
@@ -268,7 +268,7 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
         options.addOption( imagesOption );
 
         Option normalizationOption = Option.builder( "normalizemethod" ).hasArg().argName( "method" ).desc(
-                "Normalization method to apply to the data matrix first: SVD, BALANCE, SPELL or omit this option for none (default=none)" )
+                        "Normalization method to apply to the data matrix first: SVD, BALANCE, SPELL or omit this option for none (default=none)" )
                 .build();
         options.addOption( normalizationOption );
 
@@ -285,7 +285,7 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
         options.addOption( subsetOption );
 
         Option chooseCutOption = Option.builder( "choosecut" ).hasArg().argName( "Singular correlation threshold" ).desc(
-                "Choose correlation threshold {fwe|cdfCut} to be used independently to select best links, default is none" )
+                        "Choose correlation threshold {fwe|cdfCut} to be used independently to select best links, default is none" )
                 .build();
         options.addOption( chooseCutOption );
 
@@ -296,7 +296,7 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
         options.addOption( skipQC );
 
         Option deleteOption = Option.builder( "delete" ).desc(
-                "Delete analyses for selected experiments, instead of doing analysis; supersedes all other options" )
+                        "Delete analyses for selected experiments, instead of doing analysis; supersedes all other options" )
                 .build();
         options.addOption( deleteOption );
 
@@ -432,20 +432,20 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
     @SuppressWarnings("static-access")
     private void buildFilterConfigOptions( Options options ) {
         Option minPresentFraction = Option.builder( "m" ).hasArg().argName( "Missing Value Threshold" ).desc(
-                "Fraction of data points that must be present in a profile to be retained , default="
-                        + FilterConfig.DEFAULT_MINPRESENT_FRACTION )
+                        "Fraction of data points that must be present in a profile to be retained , default="
+                                + FilterConfig.DEFAULT_MINPRESENT_FRACTION )
                 .longOpt( "missingcut" ).build();
         options.addOption( minPresentFraction );
 
         Option lowExpressionCut = Option.builder( "l" ).hasArg().argName( "Expression Threshold" ).desc(
-                "Fraction of expression vectors to reject based on low values, default="
-                        + FilterConfig.DEFAULT_LOWEXPRESSIONCUT )
+                        "Fraction of expression vectors to reject based on low values, default="
+                                + FilterConfig.DEFAULT_LOWEXPRESSIONCUT )
                 .longOpt( "lowcut" ).build();
         options.addOption( lowExpressionCut );
 
         Option lowVarianceCut = Option.builder( "lv" ).hasArg().argName( "Variance Threshold" ).desc(
-                "Fraction of expression vectors to reject based on low variance (or coefficient of variation), default="
-                        + FilterConfig.DEFAULT_LOWVARIANCECUT )
+                        "Fraction of expression vectors to reject based on low variance (or coefficient of variation), default="
+                                + FilterConfig.DEFAULT_LOWVARIANCECUT )
                 .longOpt( "lowvarcut" ).build();
         options.addOption( lowVarianceCut );
 
@@ -525,7 +525,7 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
         if ( this.deleteAnalyses ) {
             AbstractCLI.log.info( "======= Deleting coexpression analysis (if any) for: " + ee );
             if ( this.getBean( LinkAnalysisPersister.class ).deleteAnalyses( ee ) ) {
-                addSuccessObject( ee, "Successfully processed" + ee.getShortName() );
+                addSuccessObject( ee );
             } else {
                 addErrorObject( ee, "Seems to not have any eligible link analysis to remove" );
             }
@@ -556,9 +556,9 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
 
             linkAnalysisService.process( ee, filterConfig, linkAnalysisConfig );
 
-            addSuccessObject( ee, "Successfully processed " + ee.getShortName() );
+            addSuccessObject( ee );
         } catch ( Exception e ) {
-            addErrorObject( ee, e.getMessage(), e );
+            addErrorObject( ee, e );
         }
         AbstractCLI.log.info( "==== Done: [" + ee.getShortName() + "] ======" );
         AbstractCLI.log.info( "Time elapsed: " + String.format( "%.2f", sw.getTime() / 1000.0 / 60.0 ) + " minutes" );
