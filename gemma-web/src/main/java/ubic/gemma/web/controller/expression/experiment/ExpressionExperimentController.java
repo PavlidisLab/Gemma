@@ -604,7 +604,7 @@ public class ExpressionExperimentController {
 
     public void recalculateBatchEffect( Long id ) {
         ExpressionExperiment ee = expressionExperimentService.loadOrFail( id );
-        ee.setBatchEffect( expressionExperimentService.getBatchStatusDescription( ee ) );
+        ee.setBatchEffect( expressionExperimentService.getBatchEffect( ee ) );
         expressionExperimentService.update( ee );
     }
 
@@ -1192,7 +1192,7 @@ public class ExpressionExperimentController {
             finalResult.setBatchConfound( expressionExperimentService.getBatchConfound( ee ) );
         }
 
-        finalResult.setBatchEffect( expressionExperimentService.getBatchStatusDescription( ee ) );
+        finalResult.setBatchEffect( expressionExperimentService.getBatchEffect( ee ) );
     }
 
     /**

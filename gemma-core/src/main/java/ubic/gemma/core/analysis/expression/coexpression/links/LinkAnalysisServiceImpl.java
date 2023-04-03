@@ -37,7 +37,6 @@ import ubic.gemma.core.analysis.preprocess.batcheffects.BatchEffectDetails;
 import ubic.gemma.core.analysis.preprocess.filter.FilterConfig;
 import ubic.gemma.core.analysis.preprocess.filter.FilteringException;
 import ubic.gemma.core.analysis.preprocess.filter.InsufficientSamplesException;
-import ubic.gemma.core.analysis.preprocess.filter.NoRowsLeftAfterFilteringException;
 import ubic.gemma.core.analysis.preprocess.svd.ExpressionDataSVD;
 import ubic.gemma.core.analysis.report.ExpressionExperimentReportService;
 import ubic.gemma.core.analysis.service.ExpressionDataMatrixService;
@@ -433,14 +432,14 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
         }
 
         if ( config.isCheckForBatchEffect() ) {
-            BatchEffectDetails batchEffect = eeService.getBatchEffect( ee );
+            BatchEffectDetails batchEffect = eeService.getBatchEffectDetails( ee );
 
             if ( batchEffect.getDataWasBatchCorrected() ) {
                 LinkAnalysisServiceImpl.log.info( "Data are batch-corrected" );
                 return;
             }
 
-            if ( batchEffect.hasNoBatchInfo() ) {
+            if ( !batchEffect.hasBatchInformation() ) {
                 // we may change this behaviour...
                 throw new UnsuitableForAnalysisException( ee,
                         "No batch information available, out of an abundance of caution we are skipping" );

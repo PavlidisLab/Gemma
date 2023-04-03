@@ -781,13 +781,13 @@ public class ExpressionExperimentServiceImpl
 
     @Override
     @Transactional(readOnly = true)
-    public BatchEffectDetails getBatchEffect( ExpressionExperiment ee ) {
+    public BatchEffectDetails getBatchEffectDetails( ExpressionExperiment ee ) {
         ee = this.thawLiter( ee );
 
         BatchEffectDetails details = new BatchEffectDetails( this.checkBatchFetchStatus( ee ),
                 this.getHasBeenBatchCorrected( ee ), this.checkIfSingleBatch( ee ) );
 
-        if ( details.hasNoBatchInfo() || details.isSingleBatch() || details.isFailedToGetBatchInformation()
+        if ( !details.hasBatchInformation() || details.isSingleBatch() || details.isFailedToGetBatchInformation()
                 || details.getHadUninformativeHeaders() || details.getHadSingletonBatches() ) {
             return details;
         }
@@ -816,38 +816,36 @@ public class ExpressionExperimentServiceImpl
         return details;
     }
 
+    /**
+     * WARNING: do not change these strings as they are used directly in ExpressionExperimentPage.js
+     */
     @Override
     @Transactional(readOnly = true)
-    public String getBatchStatusDescription( ExpressionExperiment ee ) {
-        /*
-         * WARNING: do not change these strings as they are used directly in ExpressionExperimentPage.js
-         */
-        BatchEffectDetails beDetails = this.getBatchEffect( ee );
-        //log.info( beDetails );
-        String result;
-        if ( beDetails != null ) {
+    public String getBatchEffect( ExpressionExperiment ee ) {
+        BatchEffectDetails beDetails = this.getBatchEffectDetails( ee );
 
-            if ( beDetails.getHadSingletonBatches() ) {
-                result = "SINGLETON_BATCHES_FAILURE";
-            } else if ( beDetails.getHadUninformativeHeaders() ) {
-                result = "UNINFORMATIVE_HEADERS_FAILURE";
-            } else if ( beDetails.isSingleBatch() ) {
-                result = "SINGLE_BATCH_SUCCESS";
-            } else if ( beDetails.getDataWasBatchCorrected() ) {
-                result = "BATCH_CORRECTED_SUCCESS"; // Checked for in ExpressionExperimentDetails.js::renderStatus()
-            } else if ( beDetails.isFailedToGetBatchInformation() ) {
-                result = "NO_BATCH_INFO"; // sort of generic
-            } else if ( beDetails.getPvalue() < ExpressionExperimentServiceImpl.BATCH_EFFECT_THRESHOLD ) {
-                String pc = beDetails.getComponent() != null ? " (PC " + beDetails.getComponent() + ")" : "";
-                result = "This data set may have a batch artifact" + pc + ", p=" + String
-                        .format( "%.5g", beDetails.getPvalue() );
-            } else {
-                result = "NO_BATCH_EFFECT_SUCCESS";
-            }
-        } else {
+        String result;
+        if ( !beDetails.hasBatchInformation() ) {
             result = "NO_BATCH_INFO";
+        } else if ( beDetails.getHadSingletonBatches() ) {
+            result = "SINGLETON_BATCHES_FAILURE";
+        } else if ( beDetails.getHadUninformativeHeaders() ) {
+            result = "UNINFORMATIVE_HEADERS_FAILURE";
+        } else if ( beDetails.isSingleBatch() ) {
+            result = "SINGLE_BATCH_SUCCESS";
+        } else if ( beDetails.getDataWasBatchCorrected() ) {
+            result = "BATCH_CORRECTED_SUCCESS"; // Checked for in ExpressionExperimentDetails.js::renderStatus()
+        } else if ( beDetails.isFailedToGetBatchInformation() ) {
+            result = "NO_BATCH_INFO"; // sort of generic
+        } else if ( beDetails.getPvalue() < ExpressionExperimentServiceImpl.BATCH_EFFECT_THRESHOLD ) {
+            result = String.format( "This data set may have a batch artifact%s, p=%.5g",
+                    beDetails.getComponent() != null ? " (PC " + beDetails.getComponent() + ")" : "",
+                    beDetails.getPvalue() );
+        } else {
+            result = "NO_BATCH_EFFECT_SUCCESS";
         }
-        return Strings.emptyToNull( result );
+
+        return result;
     }
 
     @Override

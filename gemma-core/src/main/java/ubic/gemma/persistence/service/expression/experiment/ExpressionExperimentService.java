@@ -323,15 +323,15 @@ public interface ExpressionExperimentService
      * @param ee the experiment to check.
      * @return a string describing the batch confound, or null if there was no batch confound.[FIXME: String return value is unsafe]
      */
+    @Nullable
     String getBatchConfound( ExpressionExperiment ee );
 
     /**
      * @param ee experiment
-     * @return details for the principal component most associated with batches (even if it isn't "significant"), or
-     * null if there was no batch information available. Note that we don't look at every component, just the
-     * first few.
+     * @return details for the principal component most associated with batches (even if it isn't "significant"). Note
+     * that we don't look at every component, just the first few.
      */
-    BatchEffectDetails getBatchEffect( ExpressionExperiment ee );
+    BatchEffectDetails getBatchEffectDetails( ExpressionExperiment ee );
 
     /**
      * Composes a string describing the batch effect state of the given experiment.
@@ -339,7 +339,7 @@ public interface ExpressionExperimentService
      * @param ee the experiment to get the batch effect for.
      * @return a string describing the batch effect. If there is no batch effect on the given ee, null is returned.
      */
-    String getBatchStatusDescription( ExpressionExperiment ee );
+    String getBatchEffect( ExpressionExperiment ee );
 
     /**
      * @param expressionExperiment experiment

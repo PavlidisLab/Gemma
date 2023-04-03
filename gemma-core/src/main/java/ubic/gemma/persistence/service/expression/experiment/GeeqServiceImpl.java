@@ -582,19 +582,15 @@ public class GeeqServiceImpl extends AbstractVoEnabledService<Geeq, GeeqValueObj
 
         if ( infoDetected && !confound ) {
             boolean manual = gq.isManualBatchEffectActive();
-            if ( !manual ) {
-                BatchEffectDetails be = expressionExperimentService.getBatchEffect( ee );
-                if ( be == null ) {
-                    log.warn( GeeqServiceImpl.ERR_B_EFFECT_BAD_STATE );
-                    hasInfo = false;
-                } else {
-                    hasStrong = be.getPvalue() < 0.0001;
-                    hasNone = be.getPvalue() > 0.1;
-                    corrected = be.getDataWasBatchCorrected();
-                }
-            } else {
+            if ( manual ) {
                 hasStrong = gq.isManualHasStrongBatchEffect();
                 hasNone = gq.isManualHasNoBatchEffect();
+            } else {
+                BatchEffectDetails be = expressionExperimentService.getBatchEffectDetails( ee );
+                hasInfo = be.hasBatchInformation();
+                hasStrong = be.getPvalue() < 0.0001;
+                hasNone = be.getPvalue() > 0.1;
+                corrected = be.getDataWasBatchCorrected();
             }
         }
 
