@@ -40,7 +40,6 @@ import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedDataVectorCache;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.persistence.util.CacheUtils;
 import ubic.gemma.persistence.util.EntityUtils;
 
 import java.util.*;
@@ -373,7 +372,7 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
     @Secured({ "GROUP_AGENT" })
     public void recalculateExperimentBatchInfo( ExpressionExperiment ee ) {
         String confound = expressionExperimentService.getBatchConfound( ee );
-        String effect = expressionExperimentService.getBatchStatusDescription( ee );
+        String effect = expressionExperimentService.getBatchEffect( ee );
         boolean update = false;
 
         if ( !Objects.equals( confound, ee.getBatchConfound() ) ) {

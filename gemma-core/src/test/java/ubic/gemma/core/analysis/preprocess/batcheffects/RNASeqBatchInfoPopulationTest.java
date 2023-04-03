@@ -19,7 +19,6 @@
 
 package ubic.gemma.core.analysis.preprocess.batcheffects;
 
-import java.io.File;
 import java.util.Collection;
 import java.util.Map;
 
@@ -122,7 +121,7 @@ public class RNASeqBatchInfoPopulationTest extends AbstractGeoServiceTest {
 
         batchInfoPopulationService.fillBatchInformation( ee, true );
 
-        BatchEffectDetails batchEffect = eeService.getBatchEffect( ee );
+        BatchEffectDetails batchEffect = eeService.getBatchEffectDetails( ee );
 
         assertNotNull( batchEffect );
 
