@@ -53,6 +53,7 @@ public class DeleteExperimentsCli extends ExpressionExperimentManipulatingCLI {
 
     @Override
     protected void processOptions( CommandLine commandLine ) {
+        this.force = true; // we delete troubled / unusuable items, has to be set prior to processOptions.
         super.processOptions( commandLine );
         if ( commandLine.hasOption( 'a' ) ) {
             this.platformAccs = Arrays.asList( StringUtils.split( commandLine.getOptionValue( 'a' ), "," ) );
@@ -65,7 +66,6 @@ public class DeleteExperimentsCli extends ExpressionExperimentManipulatingCLI {
 
     @Override
     protected void doWork() throws Exception {
-        this.force = true;
 
         if ( platformAccs != null ) {
 
