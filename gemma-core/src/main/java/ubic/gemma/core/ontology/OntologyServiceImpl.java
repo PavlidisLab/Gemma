@@ -65,6 +65,8 @@ import java.util.concurrent.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import static java.util.function.Function.identity;
+
 /**
  * Has a static method for finding out which ontologies are loaded into the system and a general purpose find method
  * that delegates to the many ontology services. NOTE: Logging messages from this service are important for tracking
@@ -354,7 +356,13 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
         this.searchForGenes( queryString, taxon, searchResults );
         searchForGenesTimer.stop();
 
-        searchResults.addAll( searchInThreads( service -> {
+        StopWatch countOccurrencesTimerAfter = StopWatch.createStarted();
+        this.countOccurrences( searchResults, previouslyUsedInSystem );
+        countOccurrencesTimerAfter.stop();
+
+        // get ontology terms
+        Set<CharacteristicValueObject> ontologySearchResults = new HashSet<>();
+        ontologySearchResults.addAll( searchInThreads( service -> {
             Collection<OntologyResource> results;
             results = service.findResources( queryString );
             if ( results.isEmpty() )
@@ -362,17 +370,24 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
             return CharacteristicValueObject.characteristic2CharacteristicVO( this.termsToCharacteristics( results ) );
         } ) );
 
-        StopWatch countOccurrencesTimerAfter = StopWatch.createStarted();
-        this.countOccurrences( searchResults, previouslyUsedInSystem );
-        countOccurrencesTimerAfter.stop();
-
         // get GO terms, if we don't already have a lot of possibilities. (might have to adjust this)
         StopWatch findGoTerms = StopWatch.createStarted();
-        if ( searchResults.size() < OntologyServiceImpl.MAX_TERMS_TO_FETCH && geneOntologyService.isOntologyLoaded() ) {
-            searchResults.addAll( CharacteristicValueObject.characteristic2CharacteristicVO(
+        if ( geneOntologyService.isOntologyLoaded() ) {
+            ontologySearchResults.addAll( CharacteristicValueObject.characteristic2CharacteristicVO(
                     this.termsToCharacteristics( geneOntologyService.findTerm( queryString ) ) ) );
         }
         findGoTerms.stop();
+
+        // replace terms labels by their ontology equivalent
+        Map<CharacteristicValueObject, CharacteristicValueObject> ontologySearchResultsMap = ontologySearchResults.stream().collect( Collectors.toMap( identity(), identity() ) );
+        searchResults.forEach( ( k ) -> {
+            CharacteristicValueObject x = ontologySearchResultsMap.get( k );
+            if ( x != null ) {
+                k.setValue( k.getValue() );
+            }
+        } );
+
+        searchResults.addAll( ontologySearchResults );
 
         // Sort the results rather elaborately.
         Collection<CharacteristicValueObject> sortedResults = this
