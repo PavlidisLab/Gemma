@@ -200,7 +200,5 @@ public interface OntologyService {
      */
     void saveBioMaterialStatement( Characteristic vc, BioMaterial bm );
 
-    void sort( List<CharacteristicValueObject> characteristics );
-
     Collection<Characteristic> termsToCharacteristics( Collection<? extends OntologyResource> terms );
 }
