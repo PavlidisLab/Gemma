@@ -36,13 +36,6 @@ public interface PreprocessorService {
     void process( ExpressionExperiment ee, boolean ignoreQuantitationMismatch ) throws PreprocessingException;
 
     /**
-     * A lightweight flavour of {@link #process(ExpressionExperiment, boolean)}.
-     * <p>
-     * The following are skipped: two-channel missing values; redoing differential expression; batch correction.
-     */
-    void processLight( ExpressionExperiment ee ) throws PreprocessingException;
-
-    /**
      * Create or update the sample correlation, PCA and M-V data. This is also done as part of process so should only be
      * called if only a refresh is needed.
      */
