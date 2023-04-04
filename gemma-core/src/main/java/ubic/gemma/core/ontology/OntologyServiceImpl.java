@@ -139,7 +139,13 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
     public void afterPropertiesSet() throws Exception {
         List<ubic.basecode.ontology.providers.OntologyService> enabledOntologyServices = ontologyServiceFactories.stream()
                 .filter( OntologyServiceFactory::isAutoLoaded )
-                .map( OntologyServiceFactory::getObject )
+                .map( factory -> {
+                    try {
+                        return factory.getObject();
+                    } catch ( Exception e ) {
+                        throw new RuntimeException( e );
+                    }
+                } )
                 .filter( ubic.basecode.ontology.providers.OntologyService::isEnabled )
                 .collect( Collectors.toList() );
         if ( enabledOntologyServices.isEmpty() ) {
