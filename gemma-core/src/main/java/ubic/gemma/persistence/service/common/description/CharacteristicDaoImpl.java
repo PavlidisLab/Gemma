@@ -225,20 +225,17 @@ public class CharacteristicDaoImpl extends AbstractVoEnabledDao<Characteristic, 
 
     @Override
     public Map<String, CharacteristicByValueUriOrValueCount> countCharacteristicValueUriInByNormalizedValue( Collection<String> uris ) {
-        List<Object[]> results = new ArrayList<>();
         List<String> uniqueUris = uris.stream().distinct().sorted().collect( Collectors.toList() );
         if ( uniqueUris.isEmpty() )
             return Collections.emptyMap();
-        for ( List<String> batch : ListUtils.partition( uniqueUris, 100 ) ) {
-            //noinspection unchecked
-            results.addAll( this.getSessionFactory().getCurrentSession()
-                    .createQuery( "select lower(coalesce(nullif(char.valueUri, ''), char.value)), max(char.valueUri), max(char.value), count(char) from Characteristic char "
-                            + "where char.valueUri in :batch "
-                            + "group by lower(coalesce(nullif(char.valueUri, ''), char.value))" )
-                    .setParameterList( "batch", batch )
-                    .list() );
-        }
-        return results.stream()
+        //noinspection unchecked
+        return ( ( List<Object[]> ) this.getSessionFactory().getCurrentSession()
+                .createQuery( "select lower(coalesce(char.valueUri, char.value)), max(char.valueUri), max(char.value), count(char) from Characteristic char "
+                        + "where char.valueUri in :uris "
+                        + "group by coalesce(char.valueUri, char.value)" )
+                .setParameterList( "uris", uniqueUris )
+                .list() )
+                .stream()
                 .collect( Collectors.toMap( row -> ( String ) row[0], row -> new CharacteristicByValueUriOrValueCount( ( String ) row[1], ( String ) row[2], ( Long ) row[3] ) ) );
     }
 
@@ -246,9 +243,9 @@ public class CharacteristicDaoImpl extends AbstractVoEnabledDao<Characteristic, 
     public Map<String, CharacteristicByValueUriOrValueCount> countCharacteristicValueLikeByNormalizedValue( String value ) {
         //noinspection unchecked
         return ( ( List<Object[]> ) this.getSessionFactory().getCurrentSession()
-                .createQuery( "select lower(coalesce(nullif(char.valueUri, ''), char.value)), max(char.valueUri), max(char.value), count(char) as cnt from Characteristic char "
+                .createQuery( "select lower(coalesce(char.valueUri, char.value)), max(char.valueUri), max(char.value), count(char) from Characteristic char "
                         + "where char.value like :value "
-                        + "group by lower(coalesce(nullif(char.valueUri, ''), char.value))" )
+                        + "group by coalesce(char.valueUri, char.value)" )
                 .setParameter( "value", value )
                 .list() )
                 .stream()
