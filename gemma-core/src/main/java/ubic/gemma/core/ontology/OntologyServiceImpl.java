@@ -182,12 +182,11 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
             }
         }
 
-        if ( OntologyServiceImpl.log.isDebugEnabled() || ( watch.getTime() > 100
+        if ( OntologyServiceImpl.log.isDebugEnabled() || ( watch.getTime() > 200
                 && previouslyUsedInSystem.size() > 0 ) )
-            OntologyServiceImpl.log
-                    .info( "found " + previouslyUsedInSystem.size() + " matching characteristics used in the database"
-                            + " in " + watch.getTime() + " ms " + " Filtered from initial set of "
-                            + existingCharacteristicsUsingTheseTerms.size() );
+            OntologyServiceImpl.log.warn( String.format(
+                    "Found %d matching characteristics used in the database in %d ms  Filtered from initial set of %d",
+                    previouslyUsedInSystem.size(), watch.getTime(), existingCharacteristicsUsingTheseTerms.size() ) );
     }
 
     /**
@@ -760,13 +759,13 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
             }
         }
 
-        if ( OntologyServiceImpl.log.isDebugEnabled() || ( watch.getTime() > 100
-                && previouslyUsedInSystem.size() > 0 ) )
-            OntologyServiceImpl.log
-                    .info( "found " + previouslyUsedInSystem.size() + " matching characteristics used in the database"
-                            + " in " + watch.getTime() + " ms " + " Filtered from initial set of " + foundChars
-                            .size() );
-
+        String message = String.format( "Found %d matching characteristics used in the database in %d ms  Filtered from initial set of %d",
+                previouslyUsedInSystem.size(), watch.getTime(), foundChars.size() );
+        if ( watch.getTime() > 300 ) {
+            OntologyServiceImpl.log.warn( message );
+        } else {
+            OntologyServiceImpl.log.debug( message );
+        }
     }
 
     private CharacteristicValueObject characteristicByValueCountToValueObject( CharacteristicDao.CharacteristicByValueUriOrValueCount characteristic ) {
@@ -1092,7 +1091,9 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
                     throw new OntologySearchExceptionWrapper( e );
                 } finally {
                     timer.stop();
-                    log.warn( String.format( "Gathering search results from %s took %d ms.", os, timer.getTime() ) );
+                    if ( timer.getTime() > 50 ) {
+                        log.warn( String.format( "Gathering search results from %s took %d ms.", os, timer.getTime() ) );
+                    }
                 }
             }, ontologyServices );
         } catch ( OntologySearchExceptionWrapper e ) {

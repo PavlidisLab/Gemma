@@ -170,10 +170,11 @@ public class PhenotypeAssoOntologyHelperImpl implements PhenotypeAssoOntologyHel
 
         Collection<OntologyTerm> results = new TreeSet<>();
         for ( ubic.basecode.ontology.providers.OntologyService ontology : this.ontologies ) {
-            assert ontology != null;
-            Collection<OntologyTerm> found = ontology.findTerm( searchQuery );
-            if ( found != null && !found.isEmpty() )
-                results.addAll( found );
+            if ( ontology.isOntologyLoaded() ) {
+                Collection<OntologyTerm> found = ontology.findTerm( searchQuery );
+                if ( found != null && !found.isEmpty() )
+                    results.addAll( found );
+            }
         }
 
         return results;
