@@ -41,6 +41,7 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.GeneOntologyTermValueObject;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.association.Gene2GOAssociationService;
+import ubic.gemma.persistence.util.CacheUtils;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -111,6 +112,8 @@ public class GeneOntologyServiceImpl extends AbstractOntologyMemoryBackedService
     @Autowired
     private CacheManager cacheManager;
 
+    private final boolean autoLoad;
+
     /**
      * Cache of gene -> go terms.
      */
@@ -129,11 +132,20 @@ public class GeneOntologyServiceImpl extends AbstractOntologyMemoryBackedService
         return StringUtils.isBlank( doLoad ) || Configuration.getBoolean( "load.ontologies" );
     }
 
+    public GeneOntologyServiceImpl() {
+        this( isAutoLoad() );
+    }
+
+    public GeneOntologyServiceImpl( boolean autoLoad ) {
+        this.autoLoad = autoLoad;
+    }
+
+
     @Override
     public void afterPropertiesSet() throws InterruptedException {
-        goTerms = cacheManager.getCache( "GeneOntologyService.goTerms" );
-        term2Aspect = cacheManager.getCache( "GeneOntologyService.term2Aspect" );
-        if ( isAutoLoad() ) {
+        goTerms = CacheUtils.getCache( cacheManager, "GeneOntologyService.goTerms" );
+        term2Aspect = CacheUtils.getCache( cacheManager, "GeneOntologyService.term2Aspect" );
+        if ( autoLoad ) {
             startInitializationThread( false, false );
         } else {
             log.info( "Auto-loading of ontologies is disabled, GO terms will not be available." );
