@@ -58,26 +58,31 @@ public class ExpressionExperimentBatchCorrectionServiceImpl implements Expressio
     private ProcessedExpressionDataVectorService processedExpressionDataVectorService;
 
     @Override
-    public boolean checkCorrectability( ExpressionExperiment ee, boolean force ) {
+    public boolean checkCorrectability( ExpressionExperiment ee ) {
 
-        for ( QuantitationType qt : expressionExperimentService.getQuantitationTypes( ee ) ) {
-            if ( qt.getIsBatchCorrected() && !force ) { // this avoids batch correcting when we don't need to, but might be the wrong place for this check
-                ExpressionExperimentBatchCorrectionServiceImpl.log
-                        .warn( "Experiment already has a batch-corrected quantitation type (use 'force' to override): " + ee + ": " + qt );
-                return false;
-            }
-        }
+//        for ( QuantitationType qt : expressionExperimentService.getQuantitationTypes( ee ) ) {
+//            if ( qt.getIsBatchCorrected() ) { // this avoids batch correcting when we don't need to
+//                ExpressionExperimentBatchCorrectionServiceImpl.log
+//                        .info( "Experiment already has a batch-corrected quantitation type: " + ee + ": " + qt );
+//                return false;
+//            }
+//        }
 
         ExperimentalFactor batch = this.getBatchFactor( ee );
         if ( batch == null ) {
-            ExpressionExperimentBatchCorrectionServiceImpl.log.warn( "No batch factor found: " + ee );
+            ExpressionExperimentBatchCorrectionServiceImpl.log.info( "No batch factor found: " + ee );
+            return false;
+        }
+
+        if ( expressionExperimentService.getArrayDesignsUsed( ee ).size() > 1 ) {
+            log.info( String.format( "%s cannot be batch-corrected: multiplatform; you must switch/merge first.", ee ) );
             return false;
         }
 
         String bConf = expressionExperimentService.getBatchConfound( ee );
         if ( bConf != null ) { // we used to let force override this, but that behavior is undesirable: if there is a confound, we don't batch correct
             ExpressionExperimentBatchCorrectionServiceImpl.log
-                    .warn( "Experiment cannot be batch corrected due to a confound: " + bConf );
+                    .info( "Experiment cannot be batch corrected due to a confound: " + bConf );
             return false;
         }
 
