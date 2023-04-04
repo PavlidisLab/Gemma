@@ -688,4 +688,8 @@
 
     <cache name="Gene2CsCache" maxElementsInMemory="500000" timeToLiveSeconds="0" timeToIdleSeconds="0"
            overflowToDisk="false"/>
+
+    <!-- both caches are evicted when GO terms are updated -->
+    <cache name="GeneOntologyService.goTerms" maxElementsInMemory="10000" eternal="true" overflowToDisk="false"/>
+    <cache name="GeneOntologyService.term2Aspect" maxElementsInMemory="10000" eternal="true" overflowToDisk="false"/>
 </ehcache>
