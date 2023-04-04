@@ -80,7 +80,6 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
      */
     private static final int MAX_TERMS_TO_FETCH = 200;
     private static final Log log = LogFactory.getLog( OntologyServiceImpl.class.getName() );
-    private static Collection<OntologyTerm> categoryTerms = null;
 
     private static final Comparator<CharacteristicValueObject> CHARACTERISTIC_VO_COMPARATOR = new CharacteristicComparator();
 
@@ -136,6 +135,8 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
     @Autowired
     private List<ubic.basecode.ontology.providers.OntologyService> ontologyServices;
 
+    private Set<OntologyTerm> categoryTerms = null;
+
     @Override
     public void afterPropertiesSet() throws Exception {
         List<ubic.basecode.ontology.providers.OntologyService> enabledOntologyServices = ontologyServiceFactories.stream()
@@ -152,12 +153,13 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
         if ( enabledOntologyServices.isEmpty() ) {
             log.warn( "No ontology services are enabled, consider enabling them by setting 'load.{name}Ontology' options in Gemma.properties." );
         } else {
-            log.info( "The following ontology services are enabled:\n" + enabledOntologyServices.stream()
+            log.info( "The following ontology services are enabled:\n\t" + enabledOntologyServices.stream()
                     .map( ubic.basecode.ontology.providers.OntologyService::toString )
                     .collect( Collectors.joining( "\n\t" ) ) );
         }
         // remove GeneOntologyService, it was originally not included in the list before bean injection was used
         ontologyServices.remove( geneOntologyService );
+        initializeCategoryTerms();
     }
 
     private void countOccurrences( Collection<CharacteristicValueObject> searchResults,
@@ -404,22 +406,16 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
 
     @Override
     public Collection<OntologyTerm> getCategoryTerms() {
-
-        if ( !experimentalFactorOntologyService.isOntologyLoaded() ) {
-            OntologyServiceImpl.log.warn( "EFO is not loaded" );
+        if ( experimentalFactorOntologyService.isOntologyLoaded() ) {
+            return categoryTerms.stream()
+                    .map( OntologyTerm::getUri )
+                    .map( experimentalFactorOntologyService::getTerm )
+                    .map( Objects::requireNonNull )
+                    .collect( Collectors.toSet() );
+        } else {
+            OntologyServiceImpl.log.warn( "Ontology needed is not loaded? Using light-weight placeholder for categories." );
+            return categoryTerms;
         }
-
-        /*
-         * Requires EFO, OBI and SO. If one of them isn't loaded, the terms are filled in with placeholders.
-         */
-
-        if ( OntologyServiceImpl.categoryTerms == null || OntologyServiceImpl.categoryTerms.isEmpty() ) {
-
-            this.initializeCategoryTerms();
-
-        }
-        return OntologyServiceImpl.categoryTerms;
-
     }
 
     @Override
@@ -845,13 +841,11 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
         return vc;
     }
 
-    private synchronized void initializeCategoryTerms() {
-
-        OntologyServiceImpl.categoryTerms = new ConcurrentHashSet<>();
+    private void initializeCategoryTerms() throws IOException {
+        Set<OntologyTerm> categoryTerms = new HashSet<>();
         Resource resource = new ClassPathResource( "/ubic/gemma/core/ontology/EFO.factor.categories.txt" );
         try ( BufferedReader reader = new BufferedReader( new InputStreamReader( resource.getInputStream() ) ) ) {
             String line;
-            boolean warned = false;
             while ( ( line = reader.readLine() ) != null ) {
                 if ( line.startsWith( "#" ) || StringUtils.isEmpty( line ) )
                     continue;
@@ -859,29 +853,9 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
                 if ( f.length < 2 ) {
                     continue;
                 }
-                OntologyTerm t = this.getTerm( f[0] );
-                if ( t == null ) {
-                    // this is not great. We might want to let it expire and redo it later if the ontology
-                    // becomes
-                    // available. Inference will not be available.
-                    if ( !warned ) {
-                        OntologyServiceImpl.log
-                                .info( "Ontology needed is not loaded? Using light-weight placeholder for " + f[0]
-                                        + " (further warnings hidden)" );
-
-                        warned = true;
-                    }
-                    t = new OntologyTermSimple( f[0], f[1] );
-                }
-
-                OntologyServiceImpl.categoryTerms.add( t );
+                categoryTerms.add( new OntologyTermSimple( f[0], f[1] ) );
             }
-
-            OntologyServiceImpl.categoryTerms = Collections.unmodifiableCollection( OntologyServiceImpl.categoryTerms );
-        } catch ( IOException ioe ) {
-            OntologyServiceImpl.log
-                    .error( "Error reading from term list '" + resource + "'; returning general term list", ioe );
-            OntologyServiceImpl.categoryTerms = null;
+            this.categoryTerms = Collections.unmodifiableSet( categoryTerms );
         }
     }
 
