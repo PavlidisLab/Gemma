@@ -142,14 +142,14 @@ public class SVDServiceHelperImpl implements SVDServiceHelper {
     }
 
     @Override
-    public void svd( Collection<ExpressionExperiment> ees ) {
+    public void svd( Collection<ExpressionExperiment> ees ) throws SVDException {
         for ( ExpressionExperiment ee : ees ) {
             this.svd( ee );
         }
     }
 
     @Override
-    public SVDValueObject svd( ExpressionExperiment ee ) {
+    public SVDValueObject svd( ExpressionExperiment ee ) throws SVDException {
         assert ee != null;
 
         Collection<ProcessedExpressionDataVector> vectors = processedExpressionDataVectorService

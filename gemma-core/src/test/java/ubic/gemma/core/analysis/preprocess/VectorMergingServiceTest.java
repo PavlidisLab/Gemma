@@ -223,7 +223,7 @@ public class VectorMergingServiceTest extends AbstractGeoServiceTest {
 
         vectorMergingService.mergeVectors( ee );
 
-        preprocessorService.process( ee );
+        preprocessorService.process( ee, true, true );
 
         // check we got the right processed data
         Collection<ProcessedExpressionDataVector> pvs = processedExpressionDataVectorService

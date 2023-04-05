@@ -19,6 +19,7 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
+import ubic.gemma.core.analysis.preprocess.svd.SVDException;
 import ubic.gemma.core.analysis.preprocess.svd.SVDService;
 import ubic.gemma.core.job.TaskResult;
 import ubic.gemma.core.tasks.AbstractTask;
@@ -36,7 +37,7 @@ public class SvdTaskImpl extends AbstractTask<TaskResult, SvdTaskCommand> implem
     private SVDService svdService;
 
     @Override
-    public TaskResult call() {
+    public TaskResult call() throws SVDException {
         TaskResult result = new TaskResult( taskCommand, null );
 
         if ( taskCommand.getExpressionExperiment() != null ) {

@@ -26,6 +26,7 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalyzerService;
 import ubic.gemma.core.analysis.preprocess.batcheffects.ExpressionExperimentBatchCorrectionService;
+import ubic.gemma.core.analysis.preprocess.svd.SVDException;
 import ubic.gemma.core.analysis.preprocess.svd.SVDServiceHelper;
 import ubic.gemma.core.analysis.report.ExpressionExperimentReportService;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
@@ -82,20 +83,23 @@ public class PreprocessorServiceImpl implements PreprocessorService {
 
     @Override
     @Transactional(propagation = Propagation.NEVER)
-    public void process( ExpressionExperiment ee ) throws PreprocessingException {
-        process( ee, true );
-    }
-
-    @Override
-    @Transactional(propagation = Propagation.NEVER)
-    public void process( ExpressionExperiment ee, boolean ignoreQuantitationMismatch ) throws PreprocessingException {
+    public void process( ExpressionExperiment ee, boolean ignoreQuantitationMismatch, boolean ignoreDiagnosticsFailure ) throws PreprocessingException {
         ee = expressionExperimentService.thaw( ee );
         removeInvalidatedData( ee ); // clear out old files
         processForMissingValues( ee ); // only relevant for two-channel arrays
         processVectorCreate( ee, ignoreQuantitationMismatch ); // key step
         batchCorrect( ee ); // will be a no-op in many cases
         processBatchInfo( ee ); // update status
-        processDiagnostics( ee ); // PCA, GEEQ, MV etc.
+        try {
+            processDiagnostics( ee ); // PCA, GEEQ, MV etc.
+        } catch ( PreprocessingException e ) {
+            if ( ignoreDiagnosticsFailure ) {
+                log.warn( String.format( "Processing diagnostics failed for %s, will attempt to update DEAs anyway, but the plots might be incorrect.", ee.getShortName() ), e );
+            } else {
+                throw e;
+            }
+
+        }
         updateDEAs( ee ); // if existing, redo it
     }
 
@@ -203,24 +207,28 @@ public class PreprocessorServiceImpl implements PreprocessorService {
         Collection<ArrayDesign> arrayDesignsUsed = expressionExperimentService.getArrayDesignsUsed( ee );
 
         // this is in a loop so we only issue a multiplatform warning if this is even relevant.
-        for ( ArrayDesign arrayDesignUsed: arrayDesignsUsed)  {
-             TechnologyType tt = arrayDesignUsed.getTechnologyType();
-             if ( tt == TechnologyType.TWOCOLOR || tt == TechnologyType.DUALMODE ) {
+        for ( ArrayDesign arrayDesignUsed : arrayDesignsUsed ) {
+            TechnologyType tt = arrayDesignUsed.getTechnologyType();
+            if ( tt == TechnologyType.TWOCOLOR || tt == TechnologyType.DUALMODE ) {
 
-                 if ( arrayDesignsUsed.size() > 1 ) {
-                     log.warn( "Skipping two-channel missing value computation: experiment uses multiple platform types. Please check valid entry and run postprocessing separately." );
-                     return;
-                 }
+                if ( arrayDesignsUsed.size() > 1 ) {
+                    log.warn( "Skipping two-channel missing value computation: experiment uses multiple platform types. Please check valid entry and run postprocessing separately." );
+                    return;
+                }
 
-                 PreprocessorServiceImpl.log
-                         .info( ee + " uses a two-color array design, processing for missing values ..." );
-                 twoChannelMissingValueService.computeMissingValues( ee );
-             }
+                PreprocessorServiceImpl.log
+                        .info( ee + " uses a two-color array design, processing for missing values ..." );
+                twoChannelMissingValueService.computeMissingValues( ee );
+            }
         }
     }
 
-    private void processForPca( ExpressionExperiment ee ) {
-        svdService.svd( ee );
+    private void processForPca( ExpressionExperiment ee ) throws SVDRelatedPreprocessingException {
+        try {
+            svdService.svd( ee );
+        } catch ( SVDException e ) {
+            throw new SVDRelatedPreprocessingException( ee, e );
+        }
     }
 
     /**

@@ -74,7 +74,7 @@ public class SVDServiceImpl implements SVDService {
     }
 
     @Override
-    public SVDValueObject svd( Long eeId ) {
+    public SVDValueObject svd( Long eeId ) throws SVDException {
 
         ExpressionExperiment ee = expressionExperimentService.load( eeId );
 

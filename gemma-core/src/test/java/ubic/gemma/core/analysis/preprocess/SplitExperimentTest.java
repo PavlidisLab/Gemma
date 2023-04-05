@@ -56,9 +56,6 @@ public class SplitExperimentTest extends BaseSpringContextTest {
     private SplitExperimentService splitService;
 
     @Autowired
-    private PreprocessorService preprocessorService;
-
-    @Autowired
     private GeoService geoService;
 
     @Autowired
@@ -106,7 +103,7 @@ public class SplitExperimentTest extends BaseSpringContextTest {
             experimentalDesignImporter.importDesign( ee, is );
         }
 
-        preprocessor.process( ee ); // to mimic real life better
+        preprocessor.process( ee, true, true ); // to mimic real life better
 
         ExperimentalFactor splitOn = null;
         for ( ExperimentalFactor ef : ee.getExperimentalDesign().getExperimentalFactors() ) {

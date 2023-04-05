@@ -43,22 +43,44 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 public interface PreprocessorService {
 
     /**
-     * Preprocess a dataset, mismatched quantitation types are ignored by default.
-     * @see #process(ExpressionExperiment, boolean)
+     * Preprocess a dataset.
+     * <p>
+     * Mismatched quantitation types are ignored by default, diagnostics failure will in a {@link PreprocessingException}.
+     *
+     * @see #process(ExpressionExperiment, boolean, boolean)
      */
-    void process( ExpressionExperiment ee ) throws PreprocessingException;
+    default void process( ExpressionExperiment ee ) throws PreprocessingException {
+        process( ee, true, false );
+    }
 
     /**
      * Preprocess a dataset.
-     * @param ee                         the expression experiment to process
-     * @param ignoreQuantitationMismatch ignore quantitation mismatch when generating processed EVs
-     * @throws PreprocessingException if there was a problem during the processing
+     * <p>
+     * Diagnostic failure will result in a {@link PreprocessingException}.
+     *
+     * @see #process(ExpressionExperiment, boolean, boolean)
      */
-    void process( ExpressionExperiment ee, boolean ignoreQuantitationMismatch ) throws PreprocessingException;
+    default void process( ExpressionExperiment ee, boolean ignoreQuantitationMismatch ) throws PreprocessingException {
+        process( ee, ignoreQuantitationMismatch, false );
+    }
+
 
     /**
-     * Create or update the sample correlation, PCA and M-V data. This is also done as part of process so should only be
-     * called if only a refresh is needed.
+     * Preprocess a dataset.
+     *
+     * @param ee                         the expression experiment to process
+     * @param ignoreQuantitationMismatch ignore quantitation mismatch when generating processed EVs
+     * @param ignoreDiagnosticFailure    simply warn if a diagnostic fails instead of interrupting the pre-processing
+     *                                   and raising an exception
+     * @throws PreprocessingException if there was a problem during the processing
+     */
+    void process( ExpressionExperiment ee, boolean ignoreQuantitationMismatch, boolean ignoreDiagnosticFailure ) throws PreprocessingException;
+
+    /**
+     * Create or update the sample correlation, PCA and M-V data.
+     * <p>
+     * This is also done as part of {@link #process(ExpressionExperiment, boolean, boolean)} so should only be called if
+     * only a refresh is needed.
      */
     void processDiagnostics( ExpressionExperiment ee ) throws PreprocessingException;
 }
