@@ -43,7 +43,10 @@ public interface DesignElementDataVectorDao<T extends DesignElementDataVector> e
 
     Collection<DesignElementDataVector> findRawAndProcessed( QuantitationType qt );
 
-    void thawRawAndProcessed( Collection<DesignElementDataVector> designElementDataVectors );
+    /**
+     * Thaw both raw and processed vectors.
+     */
+    void thawRawAndProcessed( Collection<? extends DesignElementDataVector> designElementDataVectors );
 
     /**
      * Creates a new instance of ubic.gemma.model.expression.bioAssayData.DesignElementDataVector and adds from the

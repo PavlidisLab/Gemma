@@ -68,16 +68,12 @@ public abstract class DesignElementDataVectorDaoImpl<T extends DesignElementData
     }
 
     @Override
-    public void thawRawAndProcessed( Collection<DesignElementDataVector> designElementDataVectors ) {
-        if ( designElementDataVectors == null )
-            return;
-
-        Session session = this.getSessionFactory().getCurrentSession();
+    public void thawRawAndProcessed( Collection<? extends DesignElementDataVector> designElementDataVectors ) {
+        StopWatch timer = new StopWatch();
+        timer.start();
 
         Hibernate.initialize( designElementDataVectors );
 
-        StopWatch timer = new StopWatch();
-        timer.start();
         Collection<ExpressionExperiment> ees = new HashSet<>();
         Map<BioAssayDimension, Collection<DesignElementDataVector>> dims = new HashMap<>();
         Collection<CompositeSequence> cs = new HashSet<>();
@@ -94,8 +90,6 @@ public abstract class DesignElementDataVectorDaoImpl<T extends DesignElementData
             dims.get( bad ).add( vector );
             cs.add( vector.getDesignElement() );
             ees.add( vector.getExpressionExperiment() );
-            session.evict( vector.getQuantitationType() );
-            session.evict( vector );
         }
 
         if ( timer.getTime() > designElementDataVectors.size() ) {
@@ -109,7 +103,6 @@ public abstract class DesignElementDataVectorDaoImpl<T extends DesignElementData
         // lightly thaw the EEs we saw
         for ( ExpressionExperiment ee : ees ) {
             Hibernate.initialize( ee );
-            session.evict( ee );
         }
 
         if ( timer.getTime() > 200 ) {
@@ -173,8 +166,7 @@ public abstract class DesignElementDataVectorDaoImpl<T extends DesignElementData
 
     @Override
     public void thaw( Collection<T> designElementDataVectors ) {
-        //noinspection unchecked // Doesnt matter which implementation it is
-        this.thawRawAndProcessed( ( Collection<DesignElementDataVector> ) designElementDataVectors );
+        this.thawRawAndProcessed( designElementDataVectors );
     }
 
     @Override
