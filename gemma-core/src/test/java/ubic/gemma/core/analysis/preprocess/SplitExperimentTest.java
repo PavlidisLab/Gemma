@@ -56,6 +56,9 @@ public class SplitExperimentTest extends BaseSpringContextTest {
     private SplitExperimentService splitService;
 
     @Autowired
+    private PreprocessorService preprocessorService;
+
+    @Autowired
     private GeoService geoService;
 
     @Autowired

@@ -14,16 +14,37 @@
  */
 package ubic.gemma.core.analysis.preprocess;
 
+import org.springframework.transaction.annotation.Propagation;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
- * @author Paul
+ * Encapsulates steps that are done to expression data sets after they are loaded and experimental design curated.
+ * <p>
+ * This can also be used to 'refresh' everything.
+ * <p>
+ * The following steps are performed:
+ * <ol>
+ * <li>Deleting old analysis files and results, as these are invalidated by the subsequent steps.S
+ * <li>Computing missing values (two-channel)
+ * <li>Creation of "processed" vectors
+ * <li>Batch-correction</li>
+ * <li>PCA
+ * <li>Computing sample-wise correlation matrices for diagnostic plot
+ * <li>Computing mean-variance data for diagnostic plots
+ * <li>GEEQ scoring</li>
+ * <li>Redoing any DEA (if this is a 'refresh')</li>
+ * </ol>
+ *
+ * Note that since each step can be replayed and the whole process is lengthy and likely to lock parts of not whole
+ * tables, it is marked as {@link Propagation#NEVER} to prevent execution within another transaction.
+ *
+ * @author paul
  */
 public interface PreprocessorService {
 
     /**
-     * Preprocess a dataset.
-     * @param ee the expression experiment to process
+     * Preprocess a dataset, mismatched quantitation types are ignored by default.
+     * @see #process(ExpressionExperiment, boolean)
      */
     void process( ExpressionExperiment ee ) throws PreprocessingException;
 

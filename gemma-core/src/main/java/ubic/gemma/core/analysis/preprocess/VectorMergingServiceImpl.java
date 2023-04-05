@@ -22,15 +22,12 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
-
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.basecode.io.ByteArrayConverter;
 import ubic.gemma.core.analysis.expression.AnalysisUtilService;
 import ubic.gemma.core.analysis.service.ExpressionExperimentVectorManipulatingService;
 import ubic.gemma.model.common.AbstractDescribable;
-import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ExpressionExperimentVectorMergeEvent;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
@@ -92,14 +89,11 @@ public class VectorMergingServiceImpl extends ExpressionExperimentVectorManipula
     private ExpressionExperimentService expressionExperimentService;
 
     @Autowired
-    private PreprocessorService preprocessorService;
-
-    @Autowired
     private VectorMergingHelperService vectorMergingHelperService;
 
     @Override
     @Transactional
-    public ExpressionExperiment mergeVectors( ExpressionExperiment ee ) {
+    public void mergeVectors( ExpressionExperiment ee ) {
         ee = expressionExperimentService.thaw( ee );
 
         Collection<ArrayDesign> arrayDesigns = expressionExperimentService.getArrayDesignsUsed( ee );
@@ -135,7 +129,7 @@ public class VectorMergingServiceImpl extends ExpressionExperimentVectorManipula
         if ( allOldBioAssayDims.size() == 1 ) {
             VectorMergingServiceImpl.log
                     .warn( "Experiment already has only a single bioAssayDimension, nothing seems to need merging. Bailing" );
-            return ee;
+            return;
         }
 
         VectorMergingServiceImpl.log.info( allOldBioAssayDims.size() + " bioAssayDimensions to merge" );
@@ -250,15 +244,6 @@ public class VectorMergingServiceImpl extends ExpressionExperimentVectorManipula
         this.audit( ee,
                 "Vector merging performed, merged " + allOldBioAssayDims + " old bioassay dimensions for " + qts.size()
                         + " quantitation types." );
-
-        // several transactions
-        try {
-            preprocessorService.process( ee );
-        } catch ( PreprocessingException e ) {
-            VectorMergingServiceImpl.log.error( "Error during postprocessing: " + e.getMessage(), e );
-        }
-
-        return ee;
     }
 
     private void audit( ExpressionExperiment ee, String note ) {

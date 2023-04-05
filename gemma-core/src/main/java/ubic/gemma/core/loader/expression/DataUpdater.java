@@ -22,6 +22,8 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.io.ByteArrayConverter;
@@ -30,8 +32,6 @@ import ubic.basecode.math.MatrixStats;
 import ubic.gemma.core.analysis.preprocess.PreprocessingException;
 import ubic.gemma.core.analysis.preprocess.PreprocessorService;
 import ubic.gemma.core.analysis.preprocess.VectorMergingService;
-import ubic.gemma.core.analysis.preprocess.filter.RowLevelFilter;
-import ubic.gemma.core.analysis.preprocess.filter.RowLevelFilter.Method;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.core.loader.expression.arrayDesign.AffyChipTypeExtractor;
 import ubic.gemma.core.loader.expression.geo.fetcher.RawDataFetcher;
@@ -131,6 +131,7 @@ public class DataUpdater {
      *                             exon-level)
      * @throws IOException         when IO problems occur.
      */
+    @Transactional(propagation = Propagation.NEVER)
     public void addAffyDataFromAPTOutput( ExpressionExperiment ee, String pathToAptOutputFile ) throws IOException {
 
         Collection<ArrayDesign> ads = experimentService.getArrayDesignsUsed( ee );
@@ -187,6 +188,7 @@ public class DataUpdater {
      * @param isPairedReads       is paired reads
      * @param readLength          read length
      */
+    @Transactional(propagation = Propagation.NEVER)
     public void addCountData( ExpressionExperiment ee, ArrayDesign targetArrayDesign,
             DoubleMatrix<String, String> countMatrix, DoubleMatrix<String, String> rpkmMatrix, Integer readLength,
             Boolean isPairedReads, boolean allowMissingSamples ) {
@@ -239,7 +241,7 @@ public class DataUpdater {
         ee = this.replaceData( ee, targetArrayDesign, log2cpmEEMatrix );
 
         QuantitationType countqt = this.makeCountQt();
-        for ( QuantitationType oldqt : oldQts ) { // use old QT if possible 
+        for ( QuantitationType oldqt : oldQts ) { // use old QT if possible
             if ( oldqt.getName().equals( countqt.getName() ) ) {
                 countqt = oldqt;
                 break;
@@ -283,6 +285,7 @@ public class DataUpdater {
      * @param ee ee
      * @param qt qt
      */
+    @Transactional(propagation = Propagation.NEVER)
     public void log2cpmFromCounts( ExpressionExperiment ee, QuantitationType qt ) {
         ee = experimentService.thawLite( ee );
 
@@ -340,6 +343,7 @@ public class DataUpdater {
      * @return ee
      */
     @SuppressWarnings("UnusedReturnValue") // Possible external use
+    @Transactional(propagation = Propagation.NEVER)
     public ExpressionExperiment replaceData( ExpressionExperiment ee, ArrayDesign targetPlatform, QuantitationType qt,
             DoubleMatrix<String, String> data ) {
         targetPlatform = this.arrayDesignService.thaw( targetPlatform );
@@ -365,6 +369,7 @@ public class DataUpdater {
      *
      * @param ee the experiment (already lightly thawed)
      */
+    @Transactional(propagation = Propagation.NEVER)
     public void reprocessAffyDataFromCel( ExpressionExperiment ee ) {
         DataUpdater.log.info( "------  Begin processing: " + ee + " -----" );
         Collection<ArrayDesign> associatedPlats = experimentService.getArrayDesignsUsed( ee );
@@ -538,7 +543,8 @@ public class DataUpdater {
      * @param  data           to slot in
      * @return ee
      */
-    ExpressionExperiment addData( ExpressionExperiment ee, ArrayDesign targetPlatform, ExpressionDataDoubleMatrix data ) {
+    @Transactional(propagation = Propagation.NEVER)
+    public ExpressionExperiment addData( ExpressionExperiment ee, ArrayDesign targetPlatform, ExpressionDataDoubleMatrix data ) {
 
         if ( data.rows() == 0 ) {
             throw new IllegalArgumentException( "Data had no rows" );
@@ -602,7 +608,8 @@ public class DataUpdater {
      * @param  data           the data to be used
      * @return ee
      */
-    ExpressionExperiment replaceData( ExpressionExperiment ee, ArrayDesign targetPlatform,
+    @Transactional(propagation = Propagation.NEVER)
+    public ExpressionExperiment replaceData( ExpressionExperiment ee, ArrayDesign targetPlatform,
             ExpressionDataDoubleMatrix data ) {
 
         Collection<ArrayDesign> ads = experimentService.getArrayDesignsUsed( ee );
@@ -1153,7 +1160,7 @@ public class DataUpdater {
 
     //    /**
     //     * For a RNA-seq count matrix, remove rows that have only zeros.
-    //     * 
+    //     *
     //     * @param  countEEMatrix
     //     * @return               filtered matrix
     //     */

@@ -83,6 +83,9 @@ public class VectorMergingServiceTest extends AbstractGeoServiceTest {
     @Autowired
     private QuantitationTypeService quantitationTypeService;
 
+    @Autowired
+    private PreprocessorService preprocessorService;
+
     @Before
     @After
     public void tearDown() {
@@ -218,7 +221,9 @@ public class VectorMergingServiceTest extends AbstractGeoServiceTest {
         assertEquals( 16, ee.getQuantitationTypes().size() );
         assertEquals( 1828, ee.getRawExpressionDataVectors().size() );
 
-        ee = vectorMergingService.mergeVectors( ee );
+        vectorMergingService.mergeVectors( ee );
+
+        preprocessorService.process( ee );
 
         // check we got the right processed data
         Collection<ProcessedExpressionDataVector> pvs = processedExpressionDataVectorService

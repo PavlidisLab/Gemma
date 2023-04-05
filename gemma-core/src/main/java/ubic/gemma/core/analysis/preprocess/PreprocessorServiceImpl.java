@@ -22,6 +22,7 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalyzerService;
 import ubic.gemma.core.analysis.preprocess.batcheffects.ExpressionExperimentBatchCorrectionService;
@@ -45,23 +46,6 @@ import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressio
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.expression.experiment.GeeqService;
 
-/**
- * Encapsulates steps that are done to expression data sets after they are loaded and experimental design curated.
- * This can also be used to 'refresh' everything
- * <ol>
- * <li>Deleting old analysis files and results, as these are invalidated by the subsequent steps.S
- * <li>Computing missing values (two-channel)
- * <li>Creation of "processed" vectors
- * <li>Batch-correction</li>
- * <li>PCA
- * <li>Computing sample-wise correlation matrices for diagnostic plot
- * <li>Computing mean-variance data for diagnostic plots
- * <li>GEEQ scoring</li>
- * <li>Redoing any DEA (if this is a 'refresh')</li>
- * </ol>
- *
- * @author paul
- */
 @Service
 public class PreprocessorServiceImpl implements PreprocessorService {
 
@@ -97,13 +81,13 @@ public class PreprocessorServiceImpl implements PreprocessorService {
     private GeeqService geeqService;
 
     @Override
-    @Transactional
+    @Transactional(propagation = Propagation.NEVER)
     public void process( ExpressionExperiment ee ) throws PreprocessingException {
         process( ee, true );
     }
 
     @Override
-    @Transactional
+    @Transactional(propagation = Propagation.NEVER)
     public void process( ExpressionExperiment ee, boolean ignoreQuantitationMismatch ) throws PreprocessingException {
         ee = expressionExperimentService.thaw( ee );
         removeInvalidatedData( ee ); // clear out old files
@@ -141,7 +125,7 @@ public class PreprocessorServiceImpl implements PreprocessorService {
     }
 
     @Override
-    @Transactional
+    @Transactional(propagation = Propagation.NEVER)
     public void processDiagnostics( ExpressionExperiment ee ) throws PreprocessingException {
         this.processForSampleCorrelation( ee );
         this.processForMeanVarianceRelation( ee );

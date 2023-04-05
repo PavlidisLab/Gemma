@@ -20,7 +20,11 @@ package ubic.gemma.core.apps;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
+import org.springframework.beans.factory.annotation.Autowired;
+import ubic.gemma.core.analysis.preprocess.PreprocessingException;
+import ubic.gemma.core.analysis.preprocess.PreprocessorService;
 import ubic.gemma.core.analysis.preprocess.VectorMergingService;
+import ubic.gemma.core.analysis.preprocess.VectorMergingServiceImpl;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
@@ -31,7 +35,11 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  */
 public class VectorMergingCli extends ExpressionExperimentManipulatingCLI {
 
+    @Autowired
     private VectorMergingService mergingService;
+
+    @Autowired
+    private PreprocessorService preprocessorService;
 
     @Override
     public GemmaCLI.CommandGroup getCommandGroup() {
@@ -51,8 +59,6 @@ public class VectorMergingCli extends ExpressionExperimentManipulatingCLI {
 
     @Override
     protected void doWork() throws Exception {
-        mergingService = this.getBean( VectorMergingService.class );
-
         for ( BioAssaySet ee : expressionExperiments ) {
             if ( ee instanceof ExpressionExperiment ) {
                 this.processExperiment( ( ExpressionExperiment ) ee );
@@ -70,8 +76,8 @@ public class VectorMergingCli extends ExpressionExperimentManipulatingCLI {
 
     private void processExperiment( ExpressionExperiment expressionExperiment ) {
         try {
-            expressionExperiment = eeService.thawLite( expressionExperiment );
-            expressionExperiment = mergingService.mergeVectors( expressionExperiment );
+            mergingService.mergeVectors( expressionExperiment );
+            preprocessorService.process( expressionExperiment );
             addSuccessObject( expressionExperiment );
         } catch ( Exception e ) {
             addErrorObject( expressionExperiment, e );
