@@ -99,9 +99,10 @@ public class SpringContextUtil {
      * </ul>
      */
     public static void prepareContext( ApplicationContext context ) {
-        SpringContextUtil.log.info( String.format( "Loading Gemma %s (active profiles: %s), hold on!",
+        SpringContextUtil.log.info( String.format( "Loading Gemma %s%s, hold on!",
                 getApplicationVersion(),
-                String.join( ", ", context.getEnvironment().getActiveProfiles() ) ) );
+                context.getEnvironment().getActiveProfiles().length > 0 ?
+                        " (active profiles: " + String.join( ", ", context.getEnvironment().getActiveProfiles() ) + ")" : "" ) );
     }
 
     /**
