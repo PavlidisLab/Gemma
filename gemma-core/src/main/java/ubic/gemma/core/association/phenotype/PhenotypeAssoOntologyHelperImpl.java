@@ -68,34 +68,8 @@ public class PhenotypeAssoOntologyHelperImpl implements PhenotypeAssoOntologyHel
 
     @Override
     public boolean areOntologiesAllLoaded() {
-        /*
-         * if these ontologies are not configured, we will never be ready. Check for valid configuration.
-         */
-        if ( !this.diseaseOntologyService.isEnabled() ) {
-            log.warn( "DO is not enabled" );
-            return false;
-        } else if ( !this.diseaseOntologyService.isOntologyLoaded() ) {
-            log.warn( "DO not loaded" );
-            return false;
-        }
-
-        if ( !this.humanPhenotypeOntologyService.isEnabled() ) {
-            log.warn( "HPO is not enabled" );
-            return false;
-        } else if ( !this.humanPhenotypeOntologyService.isOntologyLoaded() ) {
-            log.warn( "HPO not loaded" );
-            return false;
-        }
-
-        if ( !this.mammalianPhenotypeOntologyService.isEnabled() ) {
-            log.warn( "MPO is not enabled" );
-            return false;
-        } else if ( !this.mammalianPhenotypeOntologyService.isOntologyLoaded() ) {
-            log.warn( "MPO not loaded" );
-            return false;
-        }
-
-        return true;
+        // if these ontologies are not configured, we will never be ready. Check for valid configuration.
+        return ontologies.stream().allMatch( ubic.basecode.ontology.providers.OntologyService::isOntologyLoaded );
     }
 
     @Override
