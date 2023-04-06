@@ -45,8 +45,7 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
+import static org.junit.Assert.*;
 
 /**
  * Tests loading, platform switch, vector merge, and complex deletion (in teardown)
@@ -172,7 +171,6 @@ public class VectorMergingServiceTest extends AbstractGeoServiceTest {
             arrayDesign = arrayDesignService.thaw( arrayDesign );
             taas.add( arrayDesign );
             for ( CompositeSequence cs : arrayDesign.getCompositeSequences() ) {
-                log.info( cs + " " + cs.getBiologicalCharacteristic() );
                 oldbs.add( cs.getBiologicalCharacteristic() );
             }
         }
@@ -223,17 +221,29 @@ public class VectorMergingServiceTest extends AbstractGeoServiceTest {
 
         vectorMergingService.mergeVectors( ee );
 
+        // make sure the EE is up-to-date
+        ee = eeService.thaw( ee );
+
+        assertEquals( 46, ee.getNumberOfSamples().intValue() );
+        assertEquals( 978, ee.getRawExpressionDataVectors().size() );
+        assertTrue( ee.getProcessedExpressionDataVectors().isEmpty() );
+        assertEquals( 0, ee.getNumberOfDataVectors().intValue() );
+
         preprocessorService.process( ee, true, true );
+
+        // make sure the EE is up-to-date
+        ee = eeService.thaw( ee );
 
         // check we got the right processed data
         Collection<ProcessedExpressionDataVector> pvs = processedExpressionDataVectorService
                 .getProcessedDataVectors( ee );
 
         assertEquals( 72, pvs.size() );
+        assertEquals( 72, ee.getNumberOfDataVectors().intValue() );
+        // missing values are filled in, so we get more raw vectors
+        assertEquals( 1033, ee.getRawExpressionDataVectors().size() );
+        assertEquals( 46, ee.getNumberOfSamples().intValue() );
 
-        assertEquals( 978, ee.getRawExpressionDataVectors().size() );
-
-        ee = eeService.thaw( ee );
         Collection<DoubleVectorValueObject> processedDataArrays = processedExpressionDataVectorService
                 .getProcessedDataArrays( ee, 50 );
 

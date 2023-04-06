@@ -88,9 +88,6 @@ public class VectorMergingServiceImpl extends ExpressionExperimentVectorManipula
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
 
-    @Autowired
-    private VectorMergingHelperService vectorMergingHelperService;
-
     @Override
     @Transactional
     public void mergeVectors( ExpressionExperiment ee ) {
@@ -229,18 +226,18 @@ public class VectorMergingServiceImpl extends ExpressionExperimentVectorManipula
 
         ee.setNumberOfSamples( ee.getBioAssays().size() );
 
-        // TRANSACTION
-        log.info( ee.getRawExpressionDataVectors().size() );
-        ee = vectorMergingHelperService.persist( ee, newVectors );
+        log.info( String.format( "Creating %d merged raw data vectors; removing %d old ones",
+                newVectors.size(), ee.getRawExpressionDataVectors().size() ) );
+        // replace raw vectors with
+        ee.getRawExpressionDataVectors().clear();
+        ee.getRawExpressionDataVectors().addAll( newVectors );
 
-        ee = expressionExperimentService.loadOrFail( ee.getId() );
-        ee = expressionExperimentService.thaw( ee );
-        log.info( ee.getRawExpressionDataVectors().size() );
+        // remove processed vectors
+        ee.getProcessedExpressionDataVectors().clear();
+        ee.setNumberOfDataVectors( 0 );
 
-        // Several transactions
         this.cleanUp( ee, allOldBioAssayDims, newBioAd );
 
-        // transaction
         this.audit( ee,
                 "Vector merging performed, merged " + allOldBioAssayDims + " old bioassay dimensions for " + qts.size()
                         + " quantitation types." );
@@ -382,7 +379,7 @@ public class VectorMergingServiceImpl extends ExpressionExperimentVectorManipula
                 if ( VectorMergingServiceImpl.log.isDebugEnabled() )
                     VectorMergingServiceImpl.log
                             .debug( "adding " + designElement + " " + designElement.getBiologicalCharacteristic() );
-                deVMap.put( designElement, new HashSet<RawExpressionDataVector>() );
+                deVMap.put( designElement, new HashSet<>() );
             }
             deVMap.get( designElement ).add( vector );
 
@@ -438,7 +435,7 @@ public class VectorMergingServiceImpl extends ExpressionExperimentVectorManipula
                 qtsToAdd.add( qt );
             }
             if ( !qt2Vec.containsKey( qt ) ) {
-                qt2Vec.put( qt, new HashSet<RawExpressionDataVector>() );
+                qt2Vec.put( qt, new HashSet<>() );
             }
 
             qt2Vec.get( qt ).add( v );
