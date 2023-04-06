@@ -26,14 +26,16 @@ import javax.annotation.Nullable;
 public interface ExpressionExperimentBatchCorrectionService {
 
     /**
-     * Has it already been batch corrected? Is there a Batch factor provided? Is there a confound problem? Do we have at
+     * Is there a Batch factor provided? Is there a confound problem? Do we have at
      * least two samples per batch?
      *
+     * This will return true even if there is evidence the data has been batch-corrected before;
+     * we assume the caller wants to redo it based on the raw data
+     *
      * @param ee    the experiment
-     * @param force whether the correctability should ignore detected batch confound
      * @return whether it is correctable
      */
-    boolean checkCorrectability( ExpressionExperiment ee, boolean force );
+    boolean checkCorrectability( ExpressionExperiment ee );
 
     /**
      * Run ComBat using default settings (parametric)

@@ -112,10 +112,10 @@ public class ArrayDesignRepeatScanCli extends ArrayDesignSequenceManipulatingCli
                 try {
                     design = getArrayDesignService().thaw( design );
                     this.processArrayDesign( design );
-                    addSuccessObject( design, "Successfully processed " + design.getName() );
+                    addSuccessObject( design );
                     this.audit( design, "" );
                 } catch ( Exception e ) {
-                    addErrorObject( design, e.getMessage(), e );
+                    addErrorObject( design, e );
                 }
 
             }

@@ -16,6 +16,8 @@ package ubic.gemma.core.analysis.preprocess.batcheffects;
 
 import ubic.gemma.model.common.auditAndSecurity.eventType.*;
 
+import javax.annotation.Nullable;
+
 /**
  * provide some basic information about the properties and strength of a batch effect, if any.
  *
@@ -35,7 +37,7 @@ public class BatchEffectDetails {
 
     private final boolean singleBatch;
 
-    public BatchEffectDetails( BatchInformationFetchingEvent infoEvent, boolean dataWasBatchCorrected, boolean singleBatch ) {
+    public BatchEffectDetails( @Nullable BatchInformationFetchingEvent infoEvent, boolean dataWasBatchCorrected, boolean singleBatch ) {
 
         if ( infoEvent == null ) {
             this.hasBatchInformation = false;
@@ -49,7 +51,7 @@ public class BatchEffectDetails {
             } else if ( FailedBatchInformationMissingEvent.class.isAssignableFrom( infoEvent.getClass() ) ) {
                 this.hasBatchInformation = false;
                 this.failedToGetBatchInformation = true;
-            } else if ( FailedBatchInformationFetchingEvent.class.isAssignableFrom( (infoEvent.getClass()) ) ) {
+            } else if ( FailedBatchInformationFetchingEvent.class.isAssignableFrom( ( infoEvent.getClass() ) ) ) {
                 this.hasBatchInformation = false;
                 this.failedToGetBatchInformation = true;
             } else {
@@ -86,8 +88,8 @@ public class BatchEffectDetails {
         return pvalue;
     }
 
-    public boolean hasNoBatchInfo() {
-        return !hasBatchInformation;
+    public boolean hasBatchInformation() {
+        return hasBatchInformation;
     }
 
     public boolean isFailedToGetBatchInformation() {

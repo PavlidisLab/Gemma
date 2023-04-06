@@ -2,19 +2,17 @@ package ubic.gemma.core.ontology.providers;
 
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.factory.DisposableBean;
-import org.springframework.beans.factory.FactoryBean;
+import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.config.AbstractFactoryBean;
 import ubic.basecode.ontology.providers.OntologyService;
 import ubic.basecode.util.Configuration;
-
-import javax.annotation.Nullable;
 
 /**
  * Factory bean for baseCode's {@link OntologyService}.
  * @param <T> the type of ontology service this factory produces
  */
 @CommonsLog
-public class OntologyServiceFactory<T extends OntologyService> implements FactoryBean<T>, DisposableBean {
+public class OntologyServiceFactory<T extends OntologyService> extends AbstractFactoryBean<T> {
 
     /**
      * Determine if ontologies are to be loaded on startup.
@@ -27,18 +25,16 @@ public class OntologyServiceFactory<T extends OntologyService> implements Factor
         }
     }
 
-    @Nullable
-    private Class<T> ontologyServiceClass;
+    private final Class<T> ontologyServiceClass;
     private boolean forceLoad = false;
     private boolean forceIndexing = false;
-    private boolean initializeInBackground = true;
+    private boolean loadInBackground = true;
+
 
     /**
-     * Class for the ontology service.
-     * <p>
-     * If null, {@link #createOntologyService()} must be implemented by a subclass.
+     * @param ontologyServiceClass Class for the ontology service.
      */
-    public void setOntologyServiceClass( @Nullable Class<T> ontologyServiceClass ) {
+    public OntologyServiceFactory( Class<T> ontologyServiceClass ) {
         this.ontologyServiceClass = ontologyServiceClass;
     }
 
@@ -62,27 +58,18 @@ public class OntologyServiceFactory<T extends OntologyService> implements Factor
      * @see OntologyService#startInitializationThread(boolean, boolean)
      * @see OntologyService#initialize(boolean, boolean)
      */
-    public void setInitializeInBackground( boolean initializeInBackground ) {
-        this.initializeInBackground = initializeInBackground;
+    public void setLoadInBackground( boolean loadInBackground ) {
+        this.loadInBackground = loadInBackground;
     }
 
-    private T service = null;
-    private boolean initializationThreadStarted;
-
-    @Override
-    public synchronized T getObject() {
-        if ( service != null )
-            return service;
-        service = createOntologyService();
-        if ( isAutoLoad ) {
-            if ( initializeInBackground ) {
-                service.startInitializationThread( forceLoad, forceIndexing );
-                initializationThreadStarted = true;
-            } else {
-                service.initialize( forceLoad, forceIndexing );
-            }
-        }
-        return service;
+    /**
+     * Check if the ontology returned by this factory will be loaded.
+     * <p>
+     * This happens if either the {@code load.ontologies} configuration key is set to true or the loading is forced via
+     * {@link #setForceLoad(boolean)}.
+     */
+    public boolean isAutoLoaded() {
+        return isAutoLoad || forceLoad;
     }
 
     @Override
@@ -95,23 +82,24 @@ public class OntologyServiceFactory<T extends OntologyService> implements Factor
         return true;
     }
 
-    protected T createOntologyService() {
-        if ( ontologyServiceClass != null ) {
-            try {
-                return ontologyServiceClass.newInstance();
-            } catch ( InstantiationException | IllegalAccessException e ) {
-                throw new RuntimeException( String.format( "Failed to create the ontology service using the supplied class: %s.", ontologyServiceClass ), e );
+    @Override
+    protected T createInstance() throws Exception {
+        T service = BeanUtils.instantiate( ontologyServiceClass );
+        if ( isAutoLoad || forceLoad ) {
+            if ( loadInBackground ) {
+                service.startInitializationThread( forceLoad, forceIndexing );
+            } else {
+                service.initialize( forceLoad, forceIndexing );
             }
-        } else {
-            throw new RuntimeException( "You must override this createOntologyService() if ontologyServiceClass is not provided." );
         }
+        return service;
     }
 
     @Override
-    public void destroy() throws Exception {
-        if ( service.isInitializationThreadAlive() ) {
-            log.info( String.format( "Cancelling initialization thread for %s...", service.getClass().getName() ) );
-            service.cancelInitializationThread();
+    protected void destroyInstance( T instance ) {
+        if ( instance.isInitializationThreadAlive() ) {
+            log.info( String.format( "Cancelling initialization thread for %s...", instance ) );
+            instance.cancelInitializationThread();
         }
     }
 }

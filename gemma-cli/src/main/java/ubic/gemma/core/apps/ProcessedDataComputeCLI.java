@@ -25,6 +25,7 @@ import org.springframework.stereotype.Component;
 import ubic.gemma.core.analysis.preprocess.PreprocessorService;
 import ubic.gemma.core.analysis.preprocess.ProcessedExpressionDataVectorCreateHelperService;
 import ubic.gemma.core.analysis.preprocess.QuantitationMismatchPreprocessingException;
+import ubic.gemma.core.datastructure.matrix.QuantitationMismatchException;
 import ubic.gemma.core.datastructure.matrix.SuspiciousValuesForQuantitationException;
 import ubic.gemma.core.util.AbstractCLI;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
@@ -133,20 +134,19 @@ public class ProcessedDataComputeCLI extends ExpressionExperimentManipulatingCLI
             }
 
             // Note the auditing is done by the service.
-            addSuccessObject( ee, "Successfully processed: " + ee );
+            addSuccessObject( ee );
         } catch ( QuantitationMismatchPreprocessingException e ) {
             if ( e.getCause() instanceof SuspiciousValuesForQuantitationException ) {
-                log.error( String.format( "The following issues were found in expression data of %s:\n\n - %s\n\nYou may ignore this by setting the -%s option.",
+                addErrorObject( ee, String.format( "The following issues were found in expression data of %s:\n\n - %s\n\nYou may ignore this by setting the -%s option.",
                         ee, ( ( SuspiciousValuesForQuantitationException ) e.getCause() )
                                 .getLintResults().stream()
                                 .map( SuspiciousValuesForQuantitationException.SuspiciousValueResult::toString )
                                 .collect( Collectors.joining( "\n - " ) ), IGNORE_QUANTITATION_MISMATCH_OPTION ) );
             } else {
-                log.error( e.getMessage() );
+                addErrorObject( ee, e );
             }
-            addErrorObject( ee, e.getMessage(), e );
         } catch ( Exception e ) {
-            addErrorObject( ee, e.getMessage(), e );
+            addErrorObject( ee, e );
         }
     }
 }

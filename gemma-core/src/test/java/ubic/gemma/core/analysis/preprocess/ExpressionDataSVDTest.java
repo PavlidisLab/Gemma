@@ -25,6 +25,7 @@ import org.springframework.core.io.ClassPathResource;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.util.RegressionTesting;
 import ubic.gemma.core.analysis.preprocess.svd.ExpressionDataSVD;
+import ubic.gemma.core.analysis.preprocess.svd.SVDException;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataTestMatrix;
 import ubic.gemma.core.loader.expression.geo.*;
@@ -99,7 +100,7 @@ public class ExpressionDataSVDTest {
      * </pre>
      */
     @Test
-    public void testEigenvalues() {
+    public void testEigenvalues() throws SVDException {
         svd = new ExpressionDataSVD( testData, true );
 
         double[] singularValues = svd.getSingularValues();
@@ -181,7 +182,7 @@ public class ExpressionDataSVDTest {
     }
 
     @Test
-    public void testUMatrixAsExpressionData() {
+    public void testUMatrixAsExpressionData() throws SVDException {
         svd = new ExpressionDataSVD( testData, true );
         ExpressionDataDoubleMatrix matrixAsExpressionData = svd.uMatrixAsExpressionData();
         assertNotNull( matrixAsExpressionData );

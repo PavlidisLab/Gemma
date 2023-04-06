@@ -128,7 +128,9 @@ public class GeneSearchServiceImpl implements GeneSearchService {
                 }
             }
         }
-        GeneSearchServiceImpl.log.info( "GO search: " + timer.getTime() + "ms" );
+        if ( timer.getTime() > 50 ) {
+            GeneSearchServiceImpl.log.warn( "GO search: " + timer.getTime() + "ms" );
+        }
         return genes;
     }
 

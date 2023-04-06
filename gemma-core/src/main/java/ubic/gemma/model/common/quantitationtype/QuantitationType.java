@@ -48,8 +48,11 @@ public abstract class QuantitationType extends AbstractDescribable implements Se
     private boolean isBatchCorrected;
 
     /**
-     * This is useless because the processed data is always masked
+     * Indicate if this quantitation is the preferred for processed data.
+     * <p>
+     * @deprecated this is useless as there can only be one QT for processed data per dataset.
      */
+    @Deprecated
     private boolean isMaskedPreferred;
 
     /**
@@ -126,10 +129,12 @@ public abstract class QuantitationType extends AbstractDescribable implements Se
     /**
      * @return If the data represented is a missing-value masked version of the preferred data.
      */
+    @Deprecated
     public boolean getIsMaskedPreferred() {
         return this.isMaskedPreferred;
     }
 
+    @Deprecated
     public void setIsMaskedPreferred( boolean isMaskedPreferred ) {
         this.isMaskedPreferred = isMaskedPreferred;
     }

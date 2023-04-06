@@ -27,6 +27,8 @@ import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.core.visualization.ExperimentalDesignVisualizationService;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisValueObject;
 import ubic.gemma.model.common.Auditable;
@@ -40,7 +42,6 @@ import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedDataVectorCache;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.persistence.util.CacheUtils;
 import ubic.gemma.persistence.util.EntityUtils;
 
 import java.util.*;
@@ -103,23 +104,29 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
     }
 
     @Override
+    @Transactional(readOnly = true)
     public ExpressionExperimentDetailsValueObject generateSummary( Long id ) {
         assert id != null;
         Collection<Long> ids = Collections.singletonList( id );
-        Collection<ExpressionExperimentDetailsValueObject> results = this.generateSummaryObjects( ids );
-        if ( results.size() > 0 ) {
-            return results.iterator().next();
+        Collection<ExpressionExperimentDetailsValueObject> vos = expressionExperimentService
+                .loadDetailsValueObjects( ids );
+        ExpressionExperimentDetailsValueObject vo = vos.iterator().next();
+        if ( vo == null ) {
+            return null;
         }
-        return null;
+        this.getStats( vo );
+        return vo;
     }
 
     @Override
     @Secured({ "GROUP_AGENT" })
-    public void generateSummaryObjects() {
+    @Transactional(propagation = Propagation.NEVER)
+    public Collection<ExpressionExperimentDetailsValueObject> generateSummaryObjects() {
         Collection<Long> ids = EntityUtils.getIds( expressionExperimentService.loadAll() );
         Collection<ExpressionExperimentDetailsValueObject> vos = expressionExperimentService
                 .loadDetailsValueObjects( ids );
         this.getStats( vos );
+        return vos;
     }
 
     /**
@@ -127,6 +134,7 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
      * counted towards the number of factors
      */
     @Override
+    @Transactional(readOnly = true)
     public void getAnnotationInformation( Collection<ExpressionExperimentDetailsValueObject> vos ) {
 
         StopWatch timer = new StopWatch();
@@ -159,6 +167,7 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
      * This is rather slow so should be avoided if the information isn't needed.
      */
     @Override
+    @Transactional(readOnly = true)
     public void populateEventInformation( Collection<ExpressionExperimentDetailsValueObject> vos ) {
 
         StopWatch timer = new StopWatch();
@@ -274,6 +283,7 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
     }
 
     @Override
+    @Transactional(readOnly = true)
     public void populateReportInformation( Collection<ExpressionExperimentDetailsValueObject> vos ) {
         StopWatch timer = new StopWatch();
         timer.start();
@@ -306,6 +316,7 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Collection<ExpressionExperimentDetailsValueObject> retrieveSummaryObjects( Collection<Long> ids ) {
         Collection<ExpressionExperimentDetailsValueObject> eeValueObjects = new ArrayList<>();
         Collection<Long> filteredIds = this.securityFilterExpressionExperimentIds( ids );
@@ -334,6 +345,7 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
 
     @Override
     @Secured({ "GROUP_AGENT" })
+    @Transactional(propagation = Propagation.NEVER)
     public void recalculateBatchInfo() {
         log.info( "Started batch info recalculation task." );
         Map<Long, Exception> failed = new HashMap<>();
@@ -371,9 +383,11 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
 
     @Override
     @Secured({ "GROUP_AGENT" })
+    @Transactional
     public void recalculateExperimentBatchInfo( ExpressionExperiment ee ) {
+        ee = expressionExperimentService.thaw( ee );
         String confound = expressionExperimentService.getBatchConfound( ee );
-        String effect = expressionExperimentService.getBatchStatusDescription( ee );
+        String effect = expressionExperimentService.getBatchEffect( ee );
         boolean update = false;
 
         if ( !Objects.equals( confound, ee.getBatchConfound() ) ) {
@@ -394,19 +408,6 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
             log.info( "New batch info for experiment " + ee.getShortName() + " id:" + ee.getId() );
             expressionExperimentService.update( ee );
         }
-    }
-
-    private Collection<ExpressionExperimentDetailsValueObject> generateSummaryObjects( Collection<Long> ids ) {
-
-        Collection<ExpressionExperimentDetailsValueObject> vos = expressionExperimentService
-                .loadDetailsValueObjects( ids );
-        this.getStats( vos );
-
-        for ( ExpressionExperimentValueObject vo : vos ) {
-            this.evictFromCache( vo.getId() );
-            statsCache.put( vo.getId(), vo );
-        }
-        return vos;
     }
 
     private Map<Class<? extends AuditEventType>, Map<Auditable, AuditEvent>> getEvents(
@@ -459,6 +460,9 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
         eeVo.setDateCached( timestamp );
         assert eeVo.getLastUpdated() != null;
 
+        // update cached detailed VOs
+        this.evictFromCache( eeVo.getId() );
+        statsCache.put( eeVo.getId(), eeVo );
     }
 
     private Collection<Long> securityFilterExpressionExperimentIds( Collection<Long> ids ) {

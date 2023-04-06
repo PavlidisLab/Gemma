@@ -335,12 +335,16 @@ public class MeanVarianceServiceTest extends AbstractGeoServiceTest {
     }
 
     private void prepareGSE2892() throws Exception {
-        assertNull( eeService.findByShortName( "GSE2982" ) );
-
-        geoService.setGeoDomainObjectGenerator(
-                new GeoDomainObjectGeneratorLocal( this.getTestFileBasePath( "gse2982Short" ) ) );
-
-        Collection<?> results = geoService.fetchAndLoad( "GSE2982", false, false, false );
+        Collection<?> results;
+        try {
+            geoService.setGeoDomainObjectGenerator(
+                    new GeoDomainObjectGeneratorLocal( this.getTestFileBasePath( "gse2982Short" ) ) );
+            results = geoService.fetchAndLoad( "GSE2982", false, false, false );
+        } catch ( AlreadyExistsInSystemException e ) {
+            ee = ( ( Collection<ExpressionExperiment> ) e.getData() ).iterator().next();
+            Assume.assumeNoException( e );
+            return;
+        }
 
         // scale is not correctly recorded.
         ee = ( ExpressionExperiment ) results.iterator().next();

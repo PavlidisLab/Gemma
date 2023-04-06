@@ -214,12 +214,7 @@ public class SimpleExpressionDataLoaderServiceImpl implements SimpleExpressionDa
 
         assert experiment.getShortName() != null;
 
-        try {
-            preprocessorService.process( experiment );
-        } catch ( PreprocessingException e ) {
-            SimpleExpressionDataLoaderServiceImpl.log
-                    .error( "Error during postprocessing: " + e.getMessage(), e.getCause() != null ? e.getCause() : e );
-        }
+        preprocessorService.process( experiment, true, true);
 
         return experiment;
     }

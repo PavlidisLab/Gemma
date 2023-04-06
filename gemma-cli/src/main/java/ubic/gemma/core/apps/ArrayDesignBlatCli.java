@@ -174,7 +174,7 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
                     }
                     AbstractCLI.log.info( "Persisted " + persistedResults.size() + " results" );
                 } catch ( IOException e ) {
-                    addErrorObject( null, e.getMessage(), e );
+                    addErrorObject( arrayDesign, e );
                 }
             }
 
@@ -233,12 +233,12 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
         try {
             // thaw is already done.
             arrayDesignSequenceAlignmentService.processArrayDesign( design, this.sensitive );
-            addSuccessObject( design, "Successfully processed " + design.getName() );
+            addSuccessObject( design );
             this.audit( design, "Part of a batch job; BLAT score threshold was " + this.blatScoreThreshold );
             this.updateMergedOrSubsumed( design );
 
         } catch ( Exception e ) {
-            addErrorObject( design, e.getMessage(), e );
+            addErrorObject( design, e );
         }
     }
 
@@ -281,7 +281,7 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
             }
             arrayDesign = getArrayDesignService().thaw( arrayDesign );
             ArrayDesignBlatCli.this.processArrayDesign( arrayDesign );
-            addSuccessObject( arrayDesign, "Processed " + arrayDesign.getShortName() );
+            addSuccessObject( arrayDesign );
             return null;
         }
     }

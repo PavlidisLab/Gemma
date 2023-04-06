@@ -108,9 +108,9 @@ public class ExpressionExperimentPlatformSwitchCli extends ExpressionExperimentM
                 ats.addUpdateEvent( ee, ExpressionExperimentPlatformSwitchEvent.class, "Switched to use merged array Design " );
             }
 
-            addSuccessObject( ee, "Successfully processed " + ee.getShortName() );
+            addSuccessObject( ee );
         } catch ( Exception e ) {
-            addErrorObject( ee, e.getMessage(), e );
+            addErrorObject( ee, e );
         }
     }
 }

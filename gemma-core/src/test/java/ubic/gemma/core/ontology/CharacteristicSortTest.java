@@ -64,7 +64,7 @@ public class CharacteristicSortTest {
         cl.add( new CharacteristicValueObject( Characteristic.Factory
                 .newInstance( "af", "aaaf", null, "aaaff", "http://aaaff", "af", null ) ) );
 
-        ontologyService.sort( cl );
+        cl.sort( new OntologyServiceImpl.CharacteristicComparator() );
 
         assertEquals( "bbbbb", cl.get( 0 ).getValue() );
 

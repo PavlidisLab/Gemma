@@ -52,7 +52,7 @@ public interface ExpressionExperimentReportService {
      * takes a while to run.
      */
     @Secured({ "GROUP_AGENT" })
-    void generateSummaryObjects();
+    Collection<ExpressionExperimentDetailsValueObject> generateSummaryObjects();
 
     void getAnnotationInformation( Collection<ExpressionExperimentDetailsValueObject> vos );
 

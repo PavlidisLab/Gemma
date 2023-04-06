@@ -23,6 +23,8 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.core.analysis.preprocess.PreprocessingException;
 import ubic.gemma.core.analysis.preprocess.PreprocessorService;
 import ubic.gemma.model.common.auditAndSecurity.eventType.SampleRemovalEvent;
@@ -62,6 +64,7 @@ public class OutlierFlaggingServiceImpl extends ExpressionExperimentVectorManipu
     private PreprocessorService preprocessorService;
 
     @Override
+    @Transactional(propagation = Propagation.NEVER)
     public void markAsMissing( Collection<BioAssay> bioAssays ) {
 
         if ( bioAssays == null || bioAssays.size() == 0 )
@@ -99,6 +102,7 @@ public class OutlierFlaggingServiceImpl extends ExpressionExperimentVectorManipu
     }
 
     @Override
+    @Transactional(propagation = Propagation.NEVER)
     public void unmarkAsMissing( Collection<BioAssay> bioAssays ) {
         if ( bioAssays.isEmpty() )
             return;

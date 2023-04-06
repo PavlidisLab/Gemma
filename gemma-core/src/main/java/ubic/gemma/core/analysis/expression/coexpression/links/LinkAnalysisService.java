@@ -15,6 +15,7 @@
 package ubic.gemma.core.analysis.expression.coexpression.links;
 
 import ubic.gemma.core.analysis.preprocess.InsufficientProbesException;
+import ubic.gemma.core.analysis.preprocess.SVDRelatedPreprocessingException;
 import ubic.gemma.core.analysis.preprocess.filter.FilterConfig;
 import ubic.gemma.core.analysis.preprocess.filter.FilteringException;
 import ubic.gemma.core.analysis.preprocess.filter.NoRowsLeftAfterFilteringException;
@@ -53,6 +54,6 @@ public interface LinkAnalysisService {
     @SuppressWarnings("UnusedReturnValue")
     // Possible external use
     LinkAnalysis processVectors( Taxon t, Collection<ProcessedExpressionDataVector> dataVectors,
-            FilterConfig filterConfig, LinkAnalysisConfig linkAnalysisConfig ) throws FilteringException;
+            FilterConfig filterConfig, LinkAnalysisConfig linkAnalysisConfig ) throws FilteringException, SVDRelatedPreprocessingException;
 
 }

@@ -14,41 +14,68 @@
  */
 package ubic.gemma.core.ontology.providers;
 
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
 import org.junit.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.CacheManager;
+import org.springframework.cache.concurrent.ConcurrentMapCacheManager;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
 import ubic.basecode.ontology.model.OntologyTerm;
+import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.core.ontology.providers.GeneOntologyServiceImpl.GOAspect;
+import ubic.gemma.persistence.service.association.Gene2GOAssociationService;
+import ubic.gemma.persistence.util.TestComponent;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collection;
 import java.util.zip.GZIPInputStream;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.mockito.Mockito.mock;
 
 /**
  * Additional tests with updated ontology file, fixing problems getting aspects.
  *
  * @author Paul
  */
-public class GeneOntologyService2Test {
-    private static GeneOntologyServiceImpl gos;
+@ContextConfiguration
+public class GeneOntologyService2Test extends AbstractJUnit4SpringContextTests {
 
-    // note: no spring context.
-    @BeforeClass
-    public static void setUp() throws Exception {
-        GeneOntologyService2Test.gos = new GeneOntologyServiceImpl();
-        InputStream is = new GZIPInputStream(
-                new ClassPathResource( "/data/loader/ontology/go.bptest.owl.gz" ).getInputStream() );
-        GeneOntologyService2Test.gos.loadTermsInNameSpace( is, false );
+    @Configuration
+    @TestComponent
+    public static class GeneOntologyService2TestContextConfiguration {
+        @Bean
+        public GeneOntologyService geneOntologyService() throws IOException {
+            GeneOntologyServiceImpl gos = new GeneOntologyServiceImpl( false );
+            InputStream is = new GZIPInputStream(
+                    new ClassPathResource( "/data/loader/ontology/go.bptest.owl.gz" ).getInputStream() );
+            gos.loadTermsInNameSpace( is, false );
+            return gos;
+        }
+
+        @Bean
+        public Gene2GOAssociationService gene2GOAssociationService() {
+            return mock( Gene2GOAssociationService.class );
+        }
+
+        @Bean
+        public GeneService geneService() {
+            return mock( GeneService.class );
+        }
+
+        @Bean
+        public CacheManager cacheManager() {
+            return new ConcurrentMapCacheManager( "GeneOntologyService.goTerms", "GeneOntologyService.term2Aspect" );
+        }
     }
 
-    @AfterClass
-    public static void tearDown() {
-        GeneOntologyService2Test.gos.clearCaches();
-    }
+    @Autowired
+    private GeneOntologyService gos;
 
     @Test
     public final void testParents() {
@@ -94,7 +121,7 @@ public class GeneOntologyService2Test {
 
     @Test
     public final void testGetAspect() {
-        GOAspect termAspect = GeneOntologyService2Test.gos
+        GOAspect termAspect = gos
                 .getTermAspect( "GO:0034118" ); // regulation of erythrocyte aggregationS
         assertNotNull( termAspect );
 
@@ -106,7 +133,7 @@ public class GeneOntologyService2Test {
 
     @Test
     public final void testGetAspect2() {
-        GOAspect termAspect = GeneOntologyService2Test.gos.getTermAspect( "GO:0007272" ); // ensheathment of neurons
+        GOAspect termAspect = gos.getTermAspect( "GO:0007272" ); // ensheathment of neurons
         assertNotNull( termAspect );
         String aspect = termAspect.toString().toLowerCase();
         assertEquals( "biological_process", aspect );

@@ -442,7 +442,7 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
                                 .processArrayDesign( arrayDesign, taxon, f, this.sourceDatabase, this.ncbiIds );
                         this.audit( arrayDesign, "Imported from " + f, AnnotationBasedGeneMappingEvent.class );
                     } catch ( IOException e ) {
-                        addErrorObject( arrayDesign, e.getMessage(), e );
+                        addErrorObject( arrayDesign, e );
                     }
                 } else {
 
@@ -471,9 +471,9 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
                             updateMergedOrSubsumed( arrayDesign );
                         }
 
-                        addSuccessObject( arrayDesign, "Successfully processed " + arrayDesign );
+                        addSuccessObject( arrayDesign );
                     } catch ( Exception e ) {
-                        addErrorObject( arrayDesign, e.getMessage(), e );
+                        addErrorObject( arrayDesign, e );
                     }
                 }
 
@@ -613,13 +613,13 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
                 log.info( getRelatedDesigns( design ).size() + " subsumed or merged platforms will be implicitly updated" );
             }
             arrayDesignProbeMapperService.processArrayDesign( design, this.config, this.useDB );
-            addSuccessObject( design, "Successfully processed " + design );
+            addSuccessObject( design );
             this.audit( design, "Part of a batch job", AlignmentBasedGeneMappingEvent.class );
 
             updateMergedOrSubsumed( design );
 
         } catch ( Exception e ) {
-            addErrorObject( design, e.getMessage(), e );
+            addErrorObject( design, e );
         }
     }
 

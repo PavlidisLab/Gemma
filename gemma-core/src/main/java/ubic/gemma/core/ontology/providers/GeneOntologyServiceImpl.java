@@ -25,6 +25,8 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
 import org.springframework.stereotype.Service;
 import ubic.basecode.ontology.model.AnnotationProperty;
 import ubic.basecode.ontology.model.OntologyIndividual;
@@ -39,6 +41,7 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.GeneOntologyTermValueObject;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.association.Gene2GOAssociationService;
+import ubic.gemma.persistence.util.CacheUtils;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -106,16 +109,20 @@ public class GeneOntologyServiceImpl extends AbstractOntologyMemoryBackedService
 
     @Autowired
     private GeneService geneService;
+    @Autowired
+    private CacheManager cacheManager;
+
+    private final boolean autoLoad;
 
     /**
      * Cache of gene -> go terms.
      */
-    private final Map<Long, Collection<OntologyTerm>> goTerms = new ConcurrentHashMap<>();
+    private Cache goTerms;
 
     /**
      * Cache term -> aspect.
      */
-    private final Map<String, GOAspect> term2Aspect = new ConcurrentHashMap<>();
+    private Cache term2Aspect;
 
     /**
      * If this load.ontologies is NOT configured, we go ahead (per-ontology config will be checked).
@@ -125,9 +132,20 @@ public class GeneOntologyServiceImpl extends AbstractOntologyMemoryBackedService
         return StringUtils.isBlank( doLoad ) || Configuration.getBoolean( "load.ontologies" );
     }
 
+    public GeneOntologyServiceImpl() {
+        this( isAutoLoad() );
+    }
+
+    public GeneOntologyServiceImpl( boolean autoLoad ) {
+        this.autoLoad = autoLoad;
+    }
+
+
     @Override
     public void afterPropertiesSet() throws InterruptedException {
-        if ( isAutoLoad() ) {
+        goTerms = CacheUtils.getCache( cacheManager, "GeneOntologyService.goTerms" );
+        term2Aspect = CacheUtils.getCache( cacheManager, "GeneOntologyService.term2Aspect" );
+        if ( autoLoad ) {
             startInitializationThread( false, false );
         } else {
             log.info( "Auto-loading of ontologies is disabled, GO terms will not be available." );
@@ -254,9 +272,11 @@ public class GeneOntologyServiceImpl extends AbstractOntologyMemoryBackedService
 
     @Override
     public Collection<OntologyTerm> getGOTerms( Gene gene, boolean includePartOf, GOAspect goAspect ) {
-        Collection<OntologyTerm> cachedTerms = goTerms.get( gene.getId() );
+        Cache.ValueWrapper value = goTerms.get( gene.getId() );
+        //noinspection unchecked
+        Collection<OntologyTerm> cachedTerms = value != null ? ( Collection<OntologyTerm> ) value.get() : null;
         if ( GeneOntologyServiceImpl.log.isTraceEnabled() && cachedTerms != null ) {
-            this.logIds( "found cached GO terms for " + gene.getOfficialSymbol(), goTerms.get( gene.getId() ) );
+            this.logIds( "found cached GO terms for " + gene.getOfficialSymbol(), cachedTerms );
         }
 
         if ( cachedTerms == null ) {
@@ -392,10 +412,20 @@ public class GeneOntologyServiceImpl extends AbstractOntologyMemoryBackedService
         term2Aspect.clear();
     }
 
+    @Override
+    public void initialize( boolean forceLoad, boolean forceIndexing ) {
+        super.initialize( forceLoad, forceIndexing );
+        clearCaches();
+    }
+
     private GOAspect getTermAspect( OntologyTerm term ) {
         assert term != null;
         String goId = term.getLabel();
-        return term2Aspect.computeIfAbsent( goId, goId2 -> {
+        Cache.ValueWrapper value = term2Aspect.get( goId );
+        GOAspect aspect;
+        if ( value != null ) {
+            aspect = ( GOAspect ) value.get();
+        } else {
             String nameSpace = null;
             for ( AnnotationProperty annot : term.getAnnotations() ) {
                 /*
@@ -409,13 +439,17 @@ public class GeneOntologyServiceImpl extends AbstractOntologyMemoryBackedService
                 }
             }
 
-            if ( nameSpace == null ) {
+            if ( nameSpace != null ) {
+                aspect = GOAspect.valueOf( nameSpace.toUpperCase() );
+            } else {
                 GeneOntologyServiceImpl.log.warn( "aspect could not be determined for: " + term );
-                return null;
+                aspect = null;
             }
 
-            return GOAspect.valueOf( nameSpace.toUpperCase() );
-        });
+            term2Aspect.put( goId, aspect );
+        }
+
+        return aspect;
     }
 
     private void logIds( String prefix, Collection<OntologyTerm> terms ) {

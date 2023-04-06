@@ -161,13 +161,13 @@ public class AffyDataFromCelCli extends ExpressionExperimentManipulatingCLI {
                 if ( ( GeoPlatform.isAffyPlatform( ad.getShortName() ) ) ) {
                     AbstractCLI.log.info( ad + " looks like Affy array" );
                     serv.reprocessAffyDataFromCel( thawedEe );
-                    addSuccessObject( thawedEe, "Successfully processed: " + thawedEe );
+                    addSuccessObject( thawedEe );
                 } else if ( asd.isMerged( Collections.singleton( ad.getId() ) ).get( ad.getId() ) ) {
                     ad = asd.thawLite( ad );
                     if ( GeoPlatform.isAffyPlatform( ad.getMergees().iterator().next().getShortName() ) ) {
                         AbstractCLI.log.info( ad + " looks like Affy array made from merger of other platforms" );
                         serv.reprocessAffyDataFromCel( thawedEe );
-                        addSuccessObject( thawedEe, "Successfully processed: " + thawedEe );
+                        addSuccessObject( thawedEe );
                     }
                 } else {
 
@@ -175,7 +175,7 @@ public class AffyDataFromCelCli extends ExpressionExperimentManipulatingCLI {
                 }
 
             } catch ( Exception exception ) {
-                addErrorObject( ee, exception.getMessage(), exception );
+                addErrorObject( ee, exception );
             }
 
         }

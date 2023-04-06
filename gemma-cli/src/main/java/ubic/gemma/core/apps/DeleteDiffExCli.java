@@ -43,12 +43,12 @@ public class DeleteDiffExCli extends ExpressionExperimentManipulatingCLI {
                     continue;
                 }
                 log.info( "--------- Deleting any diff ex analyses for " + bas + " --------" );
-                deas.removeForExperiment( ( ExpressionExperiment ) bas );
-                addSuccessObject( bas, "Successfully processed " + bas );
+                deas.removeForExperiment( bas );
+                addSuccessObject( bas );
                 log.info( "--------- Finished Deleting for " + bas + " -------" );
 
             } catch ( Exception ex ) {
-                addErrorObject( bas, ex.getMessage(), ex );
+                addErrorObject( bas, ex );
             }
         }
     }
