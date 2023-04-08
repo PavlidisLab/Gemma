@@ -150,17 +150,24 @@ public class ExpressionDataMatrixColumnSort {
                                 break;
                         }
 
+                        if ( arbitraryBaselineFV == null ) {
+                            // If we get here, we had passed in the samples in consideration but none had a value assigned.
+                            throw new IllegalStateException(
+                                    "None of the samplesUsed have a value for factor:  " + factor + " (" + factor
+                                            .getFactorValues().size() + " factor values) - ensure samples are assigned this factor" );
+                        }
+
                     } else {
+                        // I'm not sure the use case of this line but it would only be used if we didn't pass in any samples to consider.
                         arbitraryBaselineFV = factor.getFactorValues().iterator().next();
                     }
 
-                    if ( arbitraryBaselineFV == null ) {
-                        throw new IllegalStateException(
-                                "No baseline could be identified for factor:  " + factor + " has " + factor
-                                        .getFactorValues().size() + " factor values" );
+                    // There's no need to log this for batch factors, they are inherently arbitrary and only used
+                    // during batch correction.
+                    if (!ExperimentalDesignUtils.isBatch( factor )) {
+                        ExpressionDataMatrixColumnSort.log
+                                .info( "Falling back on choosing baseline arbitrarily: " + arbitraryBaselineFV );
                     }
-                    ExpressionDataMatrixColumnSort.log
-                            .info( "Falling back on choosing baseline arbitrarily: " + arbitraryBaselineFV );
                     result.put( factor, arbitraryBaselineFV );
                 }
             }
