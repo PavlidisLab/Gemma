@@ -137,7 +137,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
     @Autowired
     private List<ubic.basecode.ontology.providers.OntologyService> ontologyServices;
 
-    private Set<OntologyTerm> categoryTerms = null;
+    private Set<OntologyTermSimple> categoryTerms = null;
 
     @Override
     public void afterPropertiesSet() throws Exception {
@@ -420,16 +420,17 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
 
     @Override
     public Collection<OntologyTerm> getCategoryTerms() {
-        if ( experimentalFactorOntologyService.isOntologyLoaded() ) {
-            return categoryTerms.stream()
-                    .map( OntologyTerm::getUri )
-                    .map( experimentalFactorOntologyService::getTerm )
-                    .map( Objects::requireNonNull )
-                    .collect( Collectors.toSet() );
-        } else {
-            OntologyServiceImpl.log.warn( "Ontology needed is not loaded? Using light-weight placeholder for categories." );
-            return categoryTerms;
-        }
+        return categoryTerms.stream()
+                .map( term -> {
+                    if ( experimentalFactorOntologyService.isOntologyLoaded() ) {
+                        OntologyTerm efoTerm = experimentalFactorOntologyService.getTerm( term.getUri() );
+                        if ( efoTerm != null ) {
+                            return efoTerm;
+                        }
+                    }
+                    return term;
+                } )
+                .collect( Collectors.toSet() );
     }
 
     @Override
@@ -856,7 +857,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
     }
 
     private void initializeCategoryTerms() throws IOException {
-        Set<OntologyTerm> categoryTerms = new HashSet<>();
+        Set<OntologyTermSimple> categoryTerms = new HashSet<>();
         Resource resource = new ClassPathResource( "/ubic/gemma/core/ontology/EFO.factor.categories.txt" );
         try ( BufferedReader reader = new BufferedReader( new InputStreamReader( resource.getInputStream() ) ) ) {
             String line;
@@ -870,6 +871,10 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
                 categoryTerms.add( new OntologyTermSimple( f[0], f[1] ) );
             }
             this.categoryTerms = Collections.unmodifiableSet( categoryTerms );
+        }
+        if ( !experimentalFactorOntologyService.isEnabled() ) {
+            OntologyServiceImpl.log.warn( String.format( "%s is not enabled; using light-weight placeholder for categories.",
+                    experimentalFactorOntologyService ) );
         }
     }
 
