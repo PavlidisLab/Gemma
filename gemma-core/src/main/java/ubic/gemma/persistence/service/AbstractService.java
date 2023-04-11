@@ -126,7 +126,7 @@ public abstract class AbstractService<O extends Identifiable> implements BaseSer
     @Override
     @Transactional
     public void removeAll() {
-        mainDao.removeAll();
+        mainDao.removeAllInBatch();
     }
 
     @Override

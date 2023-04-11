@@ -586,7 +586,7 @@ public class GeneSetServiceImpl implements GeneSetService {
     @Override
     @Transactional
     public void removeAll() {
-        this.geneSetDao.removeAll();
+        this.geneSetDao.removeAllInBatch();
     }
 
 }

@@ -84,18 +84,27 @@ public abstract class AbstractDao<T extends Identifiable> implements BaseDao<T> 
     @Override
     public Collection<T> create( Collection<T> entities ) {
         StopWatch stopWatch = StopWatch.createStarted();
-        warnIfBatchingIsNotAdvisable( "remove", entities );
         Collection<T> results = new ArrayList<>( entities.size() );
-        int i = 0;
         for ( T t : entities ) {
             results.add( this.create( t ) );
+        }
+        AbstractDao.log.debug( String.format( "Created %d %s entities in %s ms.", results.size(), elementClass.getSimpleName(), stopWatch.getTime( TimeUnit.MILLISECONDS ) ) );
+        return results;
+    }
+
+    @Override
+    public void createInBatch( Collection<T> entities ) {
+        StopWatch stopWatch = StopWatch.createStarted();
+        warnIfBatchingIsNotAdvisable( "create", entities );
+        int i = 0;
+        for ( T t : entities ) {
+            this.create( t );
             if ( ++i % batchSize == 0 && isBatchingAdvisable() ) {
                 flushAndClear();
                 AbstractDao.log.debug( String.format( "Flushed and cleared after creating %d/%d %s entities.", i, entities.size(), elementClass ) );
             }
         }
-        AbstractDao.log.debug( String.format( "Created %d %s entities in %s ms.", results.size(), elementClass.getSimpleName(), stopWatch.getTime( TimeUnit.MILLISECONDS ) ) );
-        return results;
+        AbstractDao.log.debug( String.format( "Created %d %s entities in %s ms.", entities.size(), elementClass.getSimpleName(), stopWatch.getTime( TimeUnit.MILLISECONDS ) ) );
     }
 
     @Override
@@ -110,16 +119,26 @@ public abstract class AbstractDao<T extends Identifiable> implements BaseDao<T> 
     public Collection<T> save( Collection<T> entities ) {
         StopWatch timer = StopWatch.createStarted();
         Collection<T> results = new ArrayList<>( entities.size() );
-        int i = 0;
         for ( T entity : entities ) {
             results.add( this.save( entity ) );
+        }
+        AbstractDao.log.debug( String.format( "Saved %d entities in %d ms.", entities.size(), timer.getTime( TimeUnit.MILLISECONDS ) ) );
+        return results;
+    }
+
+    @Override
+    public void saveInBatch( Collection<T> entities ) {
+        StopWatch timer = StopWatch.createStarted();
+        int i = 0;
+        for ( T entity : entities ) {
+            //noinspection ResultOfMethodCallIgnored
+            this.save( entity );
             if ( ++i % batchSize == 0 && isBatchingAdvisable() ) {
                 flushAndClear();
                 AbstractDao.log.trace( String.format( "Flushed and cleared after saving %d/%d %s entities.", i, entities.size(), elementClass ) );
             }
         }
         AbstractDao.log.debug( String.format( "Saved %d entities in %d ms.", entities.size(), timer.getTime( TimeUnit.MILLISECONDS ) ) );
-        return results;
     }
 
     @Override
@@ -182,6 +201,15 @@ public abstract class AbstractDao<T extends Identifiable> implements BaseDao<T> 
     @Override
     public void remove( Collection<T> entities ) {
         StopWatch timer = StopWatch.createStarted();
+        for ( T e : entities ) {
+            this.remove( e );
+        }
+        AbstractDao.log.debug( String.format( "Removed %d entities in %d ms.", entities.size(), timer.getTime( TimeUnit.MILLISECONDS ) ) );
+    }
+
+    @Override
+    public void removeInBatch( Collection<T> entities ) {
+        StopWatch timer = StopWatch.createStarted();
         warnIfBatchingIsNotAdvisable( "remove", entities );
         int i = 0;
         for ( T e : entities ) {
@@ -212,7 +240,7 @@ public abstract class AbstractDao<T extends Identifiable> implements BaseDao<T> 
     }
 
     @Override
-    public void removeAll() {
+    public void removeAllInBatch() {
         StopWatch timer = StopWatch.createStarted();
         while ( true ) {
             //noinspection unchecked
@@ -222,13 +250,22 @@ public abstract class AbstractDao<T extends Identifiable> implements BaseDao<T> 
             if ( results.isEmpty() ) {
                 break;
             }
-            this.remove( results );
+            this.removeInBatch( results );
         }
         AbstractDao.log.debug( String.format( "Removed all %s entities in %d ms.", elementClass.getSimpleName(), timer.getTime( TimeUnit.MILLISECONDS ) ) );
     }
 
     @Override
     public void update( Collection<T> entities ) {
+        StopWatch timer = StopWatch.createStarted();
+        for ( T entity : entities ) {
+            this.update( entity );
+        }
+        AbstractDao.log.debug( String.format( "Updated %d %s entities in %d ms.", entities.size(), elementClass.getSimpleName(), timer.getTime( TimeUnit.MILLISECONDS ) ) );
+    }
+
+    @Override
+    public void updateInBatch( Collection<T> entities ) {
         StopWatch timer = StopWatch.createStarted();
         warnIfBatchingIsNotAdvisable( "update", entities );
         int i = 0;

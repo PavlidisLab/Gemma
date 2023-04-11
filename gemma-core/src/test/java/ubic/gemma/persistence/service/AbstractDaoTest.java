@@ -53,8 +53,6 @@ public class AbstractDaoTest {
     private Session session;
     private MyDao myDao;
 
-    private long i = 0;
-
     @Before
     public void setUp() {
         session = mock( Session.class );
@@ -69,8 +67,7 @@ public class AbstractDaoTest {
     @Test
     public void testBatchSizeFlushRightAway() {
         myDao = new MyDao( sessionFactory, 1 );
-        Collection<MyEntity> entities = myDao.create( generateEntities( 10 ) );
-        assertThat( entities ).hasSize( 10 );
+        myDao.createInBatch( generateEntities( 10 ) );
         verify( session, times( 10 ) ).persist( any( MyEntity.class ) );
         verify( session, times( 10 ) ).flush();
         verify( session, times( 10 ) ).clear();
@@ -79,8 +76,7 @@ public class AbstractDaoTest {
     @Test
     public void testBatchSizeUnlimited() {
         myDao = new MyDao( sessionFactory, Integer.MAX_VALUE );
-        Collection<MyEntity> entities = myDao.create( generateEntities( 10 ) );
-        assertThat( entities ).hasSize( 10 );
+        myDao.createInBatch( generateEntities( 10 ) );
         verify( session, times( 10 ) ).persist( any( MyEntity.class ) );
         verify( session, VerificationModeFactory.times( 0 ) ).flush();
         verify( session, times( 0 ) ).clear();
@@ -89,8 +85,7 @@ public class AbstractDaoTest {
     @Test
     public void testBatchSizeSmall() {
         myDao = new MyDao( sessionFactory, 10 );
-        Collection<MyEntity> entities = myDao.create( generateEntities( 10 ) );
-        assertThat( entities ).hasSize( 10 );
+        myDao.createInBatch( generateEntities( 10 ) );
         verify( session, times( 10 ) ).persist( any( MyEntity.class ) );
         verify( session, VerificationModeFactory.times( 1 ) ).flush();
         verify( session, times( 1 ) ).clear();
@@ -100,8 +95,7 @@ public class AbstractDaoTest {
     public void testBatchingNotAdvisableWhenFlushModeIsManual() {
         myDao = new MyDao( sessionFactory, 10 );
         when( session.getFlushMode() ).thenReturn( FlushMode.MANUAL );
-        Collection<MyEntity> entities = myDao.create( generateEntities( 20 ) );
-        assertThat( entities ).hasSize( 20 );
+        myDao.createInBatch( generateEntities( 20 ) );
         verify( session, times( 20 ) ).persist( any( MyEntity.class ) );
         verify( session, times( 0 ) ).flush();
         verify( session, times( 0 ) ).clear();
