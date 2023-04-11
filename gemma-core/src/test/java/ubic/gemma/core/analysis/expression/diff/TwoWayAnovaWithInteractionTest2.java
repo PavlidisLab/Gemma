@@ -154,7 +154,7 @@ public class TwoWayAnovaWithInteractionTest2 extends BaseSpringContextTest {
         DifferentialExpressionAnalysis refetched = differentialExpressionAnalysisService
                 .load( persistent.iterator().next().getId() );
 
-        differentialExpressionAnalysisService.thaw( refetched );
+        refetched = differentialExpressionAnalysisService.thaw( refetched );
         for ( ExpressionAnalysisResultSet ears : refetched.getResultSets() ) {
             expressionAnalysisResultSetService.thaw( ears );
         }

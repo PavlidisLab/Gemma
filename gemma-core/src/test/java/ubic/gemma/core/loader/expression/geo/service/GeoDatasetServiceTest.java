@@ -155,7 +155,7 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
 
         ee = eeService.thaw( ee );
         Collection<ProcessedExpressionDataVector> vecs = ee.getProcessedExpressionDataVectors();
-        dataVectorService.thaw( vecs );
+        vecs = dataVectorService.thaw( vecs );
 
         ExpressionDataMatrixBuilder builder = new ExpressionDataMatrixBuilder( vecs );
 
@@ -236,7 +236,7 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
 
         assertEquals( 10, dataVectors.size() );
 
-        processedExpressionDataVectorService.thaw( dataVectors );
+        dataVectors = processedExpressionDataVectorService.thaw( dataVectors );
         for ( ProcessedExpressionDataVector v : dataVectors ) {
             assertNotNull( v.getRankByMax() );
             assertNotNull( v.getRankByMean() );
@@ -323,7 +323,7 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
 
         Collection<RawExpressionDataVector> vectors = newee.getRawExpressionDataVectors();
 
-        rawExpressionDataVectorService.thaw( vectors );
+        vectors = rawExpressionDataVectorService.thaw( vectors );
 
         ExpressionDataMatrixBuilder builder = new ExpressionDataMatrixBuilder( vectors );
 

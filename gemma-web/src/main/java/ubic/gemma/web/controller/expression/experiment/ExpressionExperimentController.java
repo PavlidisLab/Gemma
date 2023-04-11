@@ -1033,7 +1033,7 @@ public class ExpressionExperimentController {
 
         for ( BioAssay ba : ee.getBioAssays() ) {
             BioMaterial bm = ba.getSampleUsed();
-            this.bioMaterialService.thaw( bm );
+            bm = this.bioMaterialService.thaw( bm );
             Collection<BioAssay> bioAssaysUsedIn = bm.getBioAssaysUsedIn();
             if ( bioAssaysUsedIn.size() > 1 ) {
                 needToProcess.add( bm );
@@ -1046,7 +1046,7 @@ public class ExpressionExperimentController {
             for ( BioAssay baU : bm.getBioAssaysUsedIn() ) {
                 if ( i > 0 ) {
                     BioMaterial newMaterial = bioMaterialService.copy( bm );
-                    this.bioMaterialService.thaw( newMaterial );
+                    newMaterial = this.bioMaterialService.thaw( newMaterial );
                     newMaterial.setName( "Modeled after " + bm.getName() );
                     newMaterial.getFactorValues().clear();
                     newMaterial.getBioAssaysUsedIn().add( baU );

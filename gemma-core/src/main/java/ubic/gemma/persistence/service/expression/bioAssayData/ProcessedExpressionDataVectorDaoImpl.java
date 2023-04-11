@@ -1400,7 +1400,6 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
         if ( obs == null || obs.isEmpty() )
             return sliced;
 
-        reattach( ee );
         Hibernate.initialize( ee.getBioAssays() );
         List<BioAssayValueObject> sliceBioAssays = new ArrayList<>();
 

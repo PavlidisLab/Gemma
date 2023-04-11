@@ -41,7 +41,8 @@ public class ListUtils {
     }
 
     private static <T> void fillMap( Map<T, Integer> element2position, List<T> list ) {
-        for ( int i = 0; i < list.size(); i++ ) {
+        int size = list.size();
+        for ( int i = 0; i < size; i++ ) {
             T element = list.get( i );
             if ( !element2position.containsKey( element ) ) {
                 element2position.put( element, i );

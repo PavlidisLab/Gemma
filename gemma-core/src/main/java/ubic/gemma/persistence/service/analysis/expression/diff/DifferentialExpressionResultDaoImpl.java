@@ -735,22 +735,16 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
 
     @Override
     public void thaw( final Collection<DifferentialExpressionAnalysisResult> results ) {
-        Session session = this.getSessionFactory().getCurrentSession();
         for ( DifferentialExpressionAnalysisResult result : results ) {
-            reattach( result );
             Hibernate.initialize( result );
             CompositeSequence cs = result.getProbe();
             Hibernate.initialize( cs );
             Hibernate.initialize( result.getContrasts() );
         }
-
     }
 
     @Override
     public void thaw( final DifferentialExpressionAnalysisResult result ) {
-        Session session = this.getSessionFactory().getCurrentSession();
-
-        reattach( result );
         Hibernate.initialize( result );
 
         CompositeSequence cs = result.getProbe();
@@ -763,7 +757,6 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
             //noinspection ResultOfMethodCallIgnored
             f.getIsBaseline();
         }
-
     }
 
     @Override

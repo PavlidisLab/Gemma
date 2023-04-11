@@ -21,6 +21,7 @@ package ubic.gemma.persistence.service.analysis.expression.diff;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -132,21 +133,54 @@ public class DifferentialExpressionAnalysisServiceImpl implements DifferentialEx
 
     @Override
     @Transactional(readOnly = true)
-    public void thaw( Collection<DifferentialExpressionAnalysis> expressionAnalyses ) {
-        this.differentialExpressionAnalysisDao.thaw( expressionAnalyses );
+    public Collection<DifferentialExpressionAnalysis> thaw( Collection<DifferentialExpressionAnalysis> expressionAnalyses ) {
+        HashSet<DifferentialExpressionAnalysis> results = new HashSet<>();
+        for ( DifferentialExpressionAnalysis ea : expressionAnalyses ) {
+            results.add( this.thaw( ea ) );
+        }
+        return results;
     }
 
     @Override
     @Transactional(readOnly = true)
-    public void thaw( DifferentialExpressionAnalysis differentialExpressionAnalysis ) {
-        this.differentialExpressionAnalysisDao.thaw( differentialExpressionAnalysis );
+    public DifferentialExpressionAnalysis thaw( DifferentialExpressionAnalysis differentialExpressionAnalysis ) {
+        StopWatch timer = new StopWatch();
+        timer.start();
+
+        differentialExpressionAnalysis = load( differentialExpressionAnalysis.getId() );
+
+        Hibernate.initialize( differentialExpressionAnalysis );
+        Hibernate.initialize( differentialExpressionAnalysis.getExperimentAnalyzed() );
+        Hibernate.initialize( differentialExpressionAnalysis.getExperimentAnalyzed().getBioAssays() );
+
+        Hibernate.initialize( differentialExpressionAnalysis.getProtocol() );
+
+        if ( differentialExpressionAnalysis.getSubsetFactorValue() != null ) {
+            Hibernate.initialize( differentialExpressionAnalysis.getSubsetFactorValue() );
+        }
+
+        Collection<ExpressionAnalysisResultSet> ears = differentialExpressionAnalysis.getResultSets();
+        Hibernate.initialize( ears );
+        for ( ExpressionAnalysisResultSet ear : ears ) {
+            Hibernate.initialize( ear );
+            Hibernate.initialize( ear.getExperimentalFactors() );
+        }
+        if ( timer.getTime() > 1000 ) {
+            log.info( "Thaw: " + timer.getTime() + "ms" );
+        }
+
+        return differentialExpressionAnalysis;
     }
 
     @Override
     @Transactional(readOnly = true)
     public DifferentialExpressionAnalysis thawFully( DifferentialExpressionAnalysis differentialExpressionAnalysis ) {
-        this.differentialExpressionAnalysisDao.thaw( differentialExpressionAnalysis );
-        return this.expressionAnalysisResultSetDao.thawFully( differentialExpressionAnalysis );
+        differentialExpressionAnalysis = thaw( differentialExpressionAnalysis );
+        // just loading the entities in the session is sufficient for thawing them
+        for ( ExpressionAnalysisResultSet dears : differentialExpressionAnalysis.getResultSets() ) {
+            expressionAnalysisResultSetDao.loadWithResultsAndContrasts( dears.getId() );
+        }
+        return differentialExpressionAnalysis;
     }
 
     @Override
@@ -269,7 +303,7 @@ public class DifferentialExpressionAnalysisServiceImpl implements DifferentialEx
     }
 
     private void removeResultSets( DifferentialExpressionAnalysis toDelete ) {
-        this.differentialExpressionAnalysisDao.thawResultSets( toDelete );
+        Hibernate.initialize( toDelete.getResultSets() );
         Collection<ExpressionAnalysisResultSet> rss = toDelete.getResultSets();
         log.info( "Removing result sets..." );
 

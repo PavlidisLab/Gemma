@@ -20,6 +20,7 @@
 package ubic.gemma.model.analysis;
 
 import org.apache.commons.lang3.RandomStringUtils;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -114,6 +115,13 @@ public class DifferentialExpressionAnalysisServiceTest extends BaseSpringContext
         eAnalysis4.setDescription( "An analysis Test 4" );
         analysisService.create( eAnalysis4 );
 
+    }
+
+    @After
+    public void tearDown() {
+        expressionExperimentService.remove( e1 );
+        expressionExperimentService.remove( e2 );
+        expressionExperimentService.remove( e3 );
     }
 
     @Test

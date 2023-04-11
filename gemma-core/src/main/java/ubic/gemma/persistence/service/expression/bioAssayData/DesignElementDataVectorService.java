@@ -9,6 +9,7 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.BaseService;
 
+import javax.annotation.CheckReturnValue;
 import java.util.Collection;
 
 @SuppressWarnings("unused")
@@ -21,7 +22,7 @@ interface DesignElementDataVectorService<T extends DesignElementDataVector> exte
      * @param vectors the vectors to be thawed
      */
     @Secured({ "GROUP_ADMIN" })
-    void thawRawAndProcessed( Collection<DesignElementDataVector> vectors );
+    void thawRawAndProcessed( Collection<? extends DesignElementDataVector> vectors );
 
     /**
      * Finds all vectors for the given BA Dimension
@@ -30,7 +31,7 @@ interface DesignElementDataVectorService<T extends DesignElementDataVector> exte
      * @return the found data vectors
      */
     @Secured({ "GROUP_ADMIN" })
-    Collection<DesignElementDataVector> findRawAndProcessed( BioAssayDimension dim );
+    Collection<? extends DesignElementDataVector> findRawAndProcessed( BioAssayDimension dim );
 
     /**
      * Finds all vectors for the given quantitation type
@@ -39,7 +40,7 @@ interface DesignElementDataVectorService<T extends DesignElementDataVector> exte
      * @return the found data vectors
      */
     @Secured({ "GROUP_ADMIN" })
-    Collection<DesignElementDataVector> findRawAndProcessed( QuantitationType qt );
+    Collection<? extends DesignElementDataVector> findRawAndProcessed( QuantitationType qt );
 
     /**
      * Removes specific type ({@link T}) of vectors for the given CS.
@@ -62,7 +63,8 @@ interface DesignElementDataVectorService<T extends DesignElementDataVector> exte
      *
      * @param designElementDataVectors the vectors to thaw.
      */
-    void thaw( Collection<T> designElementDataVectors );
+    @CheckReturnValue
+    Collection<T> thaw( Collection<T> designElementDataVectors );
 
     /**
      * Find specific type ({@link T}) of vectors that meet the given criteria.

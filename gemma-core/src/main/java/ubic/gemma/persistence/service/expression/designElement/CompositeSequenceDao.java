@@ -25,7 +25,6 @@ import ubic.gemma.model.expression.designElement.CompositeSequenceValueObject;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.persistence.service.FilteringVoEnabledDao;
-import ubic.gemma.persistence.util.ObjectFilter;
 import ubic.gemma.persistence.util.Slice;
 
 import java.util.Collection;
@@ -83,6 +82,6 @@ public interface CompositeSequenceDao extends FilteringVoEnabledDao<CompositeSeq
 
     void thaw( Collection<CompositeSequence> compositeSequences );
 
-    CompositeSequence thaw( CompositeSequence compositeSequence );
+    void thaw( CompositeSequence compositeSequence );
 
 }

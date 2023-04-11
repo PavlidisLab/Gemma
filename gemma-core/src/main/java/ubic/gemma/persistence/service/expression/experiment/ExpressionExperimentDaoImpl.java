@@ -281,9 +281,6 @@ public class ExpressionExperimentDaoImpl
 
         eeIds = new HashSet<>( results );
 
-        session.flush();
-        session.clear();
-
         return this.load( eeIds );
     }
 
@@ -1179,13 +1176,6 @@ public class ExpressionExperimentDaoImpl
     public void remove( ExpressionExperiment ee ) {
         log.info( "Deleting " + ee.getShortName() + "..." );
 
-        // reload EE as deletion will not work if it came from a different session
-        ee = ( ExpressionExperiment ) getSessionFactory().getCurrentSession().merge( ee );
-
-        if ( ee == null ) {
-            return;
-        }
-
         // Note that links and analyses are deleted separately - see the ExpressionExperimentService.
 
         // these are tied to the audit trail and will cause lock problems it we don't clear first (due to cascade=all on the curation details, but
@@ -1227,11 +1217,6 @@ public class ExpressionExperimentDaoImpl
             bm.getBioAssaysUsedIn().clear();
             getSessionFactory().getCurrentSession().delete( bm );
         }
-
-        // FIXME: factors and vectors are not removed before the design if the entity is out-of-sync
-        getSessionFactory().getCurrentSession().refresh( ee );
-
-        AbstractDao.log.debug( ".. Last bits ..." );
 
         log.info( ".... final deletion ..." );
         super.remove( ee );

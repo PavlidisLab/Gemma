@@ -21,7 +21,6 @@ package ubic.gemma.persistence.service.expression.bioAssayData;
 import org.apache.commons.lang3.time.StopWatch;
 import org.hibernate.*;
 import org.hibernate.criterion.Restrictions;
-import org.springframework.transaction.annotation.Transactional;
 import ubic.basecode.util.BatchIterator;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -33,7 +32,6 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.persistence.service.AbstractDao;
 
-import java.sql.Connection;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -51,19 +49,19 @@ public abstract class DesignElementDataVectorDaoImpl<T extends DesignElementData
     }
 
     @Override
-    public final void removeRawAndProcessed( Collection<DesignElementDataVector> vectors ) {
+    public final void removeRawAndProcessed( Collection<? extends DesignElementDataVector> vectors ) {
         for ( DesignElementDataVector v : vectors ) {
             this.getSessionFactory().getCurrentSession().delete( v );
         }
     }
 
     @Override
-    public final Collection<DesignElementDataVector> findRawAndProcessed( BioAssayDimension dim ) {
+    public final Collection<? extends DesignElementDataVector> findRawAndProcessed( BioAssayDimension dim ) {
         return this.findRawAndProcessed( "bioAssayDimension", dim );
     }
 
     @Override
-    public final Collection<DesignElementDataVector> findRawAndProcessed( QuantitationType qt ) {
+    public final Collection<? extends DesignElementDataVector> findRawAndProcessed( QuantitationType qt ) {
         return this.findRawAndProcessed( "quantitationType", qt );
     }
 
@@ -78,13 +76,12 @@ public abstract class DesignElementDataVectorDaoImpl<T extends DesignElementData
         Map<BioAssayDimension, Collection<DesignElementDataVector>> dims = new HashMap<>();
         Collection<CompositeSequence> cs = new HashSet<>();
         for ( DesignElementDataVector vector : designElementDataVectors ) {
-            reattach( vector );
             Hibernate.initialize( vector );
             Hibernate.initialize( vector.getQuantitationType() );
 
             BioAssayDimension bad = vector.getBioAssayDimension();
             if ( !dims.containsKey( bad ) ) {
-                dims.put( bad, new HashSet<DesignElementDataVector>() );
+                dims.put( bad, new HashSet<>() );
             }
 
             dims.get( bad ).add( vector );
@@ -118,8 +115,8 @@ public abstract class DesignElementDataVectorDaoImpl<T extends DesignElementData
         for ( BioAssayDimension bad : dims.keySet() ) {
 
             BioAssayDimension tbad = ( BioAssayDimension ) this.getSessionFactory().getCurrentSession().createQuery(
-                    "select distinct bad from BioAssayDimension bad join fetch bad.bioAssays ba join fetch ba.sampleUsed "
-                            + "bm join fetch ba.arrayDesignUsed left join fetch bm.factorValues fetch all properties where bad.id= :bad " )
+                            "select distinct bad from BioAssayDimension bad join fetch bad.bioAssays ba join fetch ba.sampleUsed "
+                                    + "bm join fetch ba.arrayDesignUsed left join fetch bm.factorValues fetch all properties where bad.id= :bad " )
                     .setParameter( "bad", bad.getId() ).uniqueResult();
 
             assert tbad != null;
@@ -146,7 +143,6 @@ public abstract class DesignElementDataVectorDaoImpl<T extends DesignElementData
             BioSequence seq = de.getBiologicalCharacteristic();
             if ( seq == null )
                 continue;
-            reattach( seq );
             Hibernate.initialize( seq );
 
             if ( ++count % 10000 == 0 ) {
@@ -166,7 +162,7 @@ public abstract class DesignElementDataVectorDaoImpl<T extends DesignElementData
 
     @Override
     public void thaw( Collection<T> designElementDataVectors ) {
-        this.thawRawAndProcessed( designElementDataVectors );
+        this.thawRawAndProcessed(  designElementDataVectors  );
     }
 
     @Override
@@ -174,7 +170,6 @@ public abstract class DesignElementDataVectorDaoImpl<T extends DesignElementData
         Session session = this.getSessionFactory().getCurrentSession();
         BioSequence seq = designElementDataVector.getDesignElement().getBiologicalCharacteristic();
         if ( seq != null ) {
-            reattach( seq );
             Hibernate.initialize( seq );
         }
 
@@ -198,7 +193,7 @@ public abstract class DesignElementDataVectorDaoImpl<T extends DesignElementData
     /**
      * @param  ee      ee
      * @param  cs2gene Map of probes to genes.
-     * @return         map of vectors to gene ids.
+     * @return map of vectors to gene ids.
      */
     Map<T, Collection<Long>> getVectorsForProbesInExperiments( Long ee, Map<Long, Collection<Long>> cs2gene ) {
 

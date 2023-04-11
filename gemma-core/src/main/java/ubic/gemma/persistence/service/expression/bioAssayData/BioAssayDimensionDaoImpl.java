@@ -28,7 +28,6 @@ import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimensionValueObject;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
-import ubic.gemma.persistence.service.AbstractDao;
 import ubic.gemma.persistence.service.AbstractVoEnabledDao;
 
 import java.util.Collection;
@@ -107,46 +106,28 @@ public class BioAssayDimensionDaoImpl extends AbstractVoEnabledDao<BioAssayDimen
     }
 
     @Override
-    public BioAssayDimension thawLite( final BioAssayDimension bioAssayDimension ) {
-        if ( bioAssayDimension == null )
-            return null;
-        if ( bioAssayDimension.getId() == null )
-            return bioAssayDimension;
-        Session session = getSessionFactory().getCurrentSession();
-        reattach( bioAssayDimension );
+    public void thawLite( final BioAssayDimension bioAssayDimension ) {
         Hibernate.initialize( bioAssayDimension );
         Hibernate.initialize( bioAssayDimension.getBioAssays() );
-        return bioAssayDimension;
     }
 
     @Override
-    public BioAssayDimension thaw( final BioAssayDimension bioAssayDimension ) {
-        if ( bioAssayDimension == null )
-            return null;
-        if ( bioAssayDimension.getId() == null )
-            return bioAssayDimension;
-
-        Session session = getSessionFactory().getCurrentSession();
-        reattach( bioAssayDimension );
+    public void thaw( final BioAssayDimension bioAssayDimension ) {
         Hibernate.initialize( bioAssayDimension );
         Hibernate.initialize( bioAssayDimension.getBioAssays() );
 
         for ( BioAssay ba : bioAssayDimension.getBioAssays() ) {
             if ( ba != null ) {
-                reattach( ba );
                 Hibernate.initialize( ba );
                 Hibernate.initialize( ba.getSampleUsed() );
                 Hibernate.initialize( ba.getArrayDesignUsed() );
                 Hibernate.initialize( ba.getOriginalPlatform() );
                 BioMaterial bm = ba.getSampleUsed();
-                reattach( bm );
                 Hibernate.initialize( bm );
                 Hibernate.initialize( bm.getBioAssaysUsedIn() );
                 Hibernate.initialize( bm.getFactorValues() );
             }
         }
-
-        return bioAssayDimension;
     }
 
     @Override

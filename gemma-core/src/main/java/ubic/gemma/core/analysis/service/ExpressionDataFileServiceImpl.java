@@ -56,7 +56,6 @@ import ubic.gemma.persistence.service.expression.experiment.ExpressionExperiment
 import ubic.gemma.persistence.util.DifferentialExpressionAnalysisResultComparator;
 import ubic.gemma.persistence.util.EntityUtils;
 
-import javax.annotation.Nullable;
 import java.io.*;
 import java.util.*;
 import java.util.Map.Entry;
@@ -325,7 +324,7 @@ public class ExpressionDataFileServiceImpl extends AbstractTsvFileService<Expres
             zipOut.closeEntry();
 
             if ( analysis.getId() != null ) // might be transient if using -nodb from CLI
-                differentialExpressionAnalysisService.thaw( analysis );
+                analysis = differentialExpressionAnalysisService.thawFully( analysis );
 
             // Add a file for each result set with contrasts information.
             int i = 0;
@@ -429,7 +428,7 @@ public class ExpressionDataFileServiceImpl extends AbstractTsvFileService<Expres
             ExpressionDataFileServiceImpl.log
                     .info( "Creating new quantitation type expression data file: " + f.getName() );
 
-            Collection<DesignElementDataVector> vectors = rawExpressionDataVectorService.findRawAndProcessed( type );
+            Collection<? extends DesignElementDataVector> vectors = rawExpressionDataVectorService.findRawAndProcessed( type );
             Collection<ArrayDesign> arrayDesigns = this.getArrayDesigns( vectors );
             Map<CompositeSequence, String[]> geneAnnotations = this.getGeneAnnotationsAsStringsByProbe( arrayDesigns );
 
@@ -512,7 +511,7 @@ public class ExpressionDataFileServiceImpl extends AbstractTsvFileService<Expres
 
             ExpressionDataFileServiceImpl.log.info( "Creating new quantitation type  JSON data file: " + f.getName() );
 
-            Collection<DesignElementDataVector> vectors = rawExpressionDataVectorService.findRawAndProcessed( type );
+            Collection<? extends DesignElementDataVector> vectors = rawExpressionDataVectorService.findRawAndProcessed( type );
 
             if ( vectors.size() == 0 ) {
                 ExpressionDataFileServiceImpl.log.warn( "No vectors for " + type );
@@ -908,7 +907,7 @@ public class ExpressionDataFileServiceImpl extends AbstractTsvFileService<Expres
             DifferentialExpressionAnalysisConfig config ) {
 
         if ( analysis.getId() != null ) // It might not be a persistent analysis: using -nodb
-            differentialExpressionAnalysisService.thaw( analysis );
+            analysis = differentialExpressionAnalysisService.thaw( analysis );
 
         StringBuilder buf = new StringBuilder();
 
@@ -1122,7 +1121,7 @@ public class ExpressionDataFileServiceImpl extends AbstractTsvFileService<Expres
         return file;
     }
 
-    private void writeJson( File file, Collection<DesignElementDataVector> vectors ) throws IOException {
+    private void writeJson( File file, Collection<? extends DesignElementDataVector> vectors ) throws IOException {
         this.rawExpressionDataVectorService.thawRawAndProcessed( vectors );
         ExpressionDataMatrix<?> expressionDataMatrix = ExpressionDataMatrixBuilder.getMatrix( vectors );
         try ( Writer writer = new OutputStreamWriter( new GZIPOutputStream( new FileOutputStream( file ) ) ) ) {
@@ -1161,7 +1160,7 @@ public class ExpressionDataFileServiceImpl extends AbstractTsvFileService<Expres
 
     }
 
-    private void writeVectors( File file, Collection<DesignElementDataVector> vectors,
+    private void writeVectors( File file, Collection<? extends DesignElementDataVector> vectors,
             Map<CompositeSequence, String[]> geneAnnotations ) throws IOException {
         this.rawExpressionDataVectorService.thawRawAndProcessed( vectors );
 

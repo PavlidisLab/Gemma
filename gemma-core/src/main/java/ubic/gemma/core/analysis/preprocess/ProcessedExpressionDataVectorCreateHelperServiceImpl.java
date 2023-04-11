@@ -258,7 +258,7 @@ public class ProcessedExpressionDataVectorCreateHelperServiceImpl
 
         ee = expressionExperimentDao.thaw( ee );
         Collection<ProcessedExpressionDataVector> processedVectors = ee.getProcessedExpressionDataVectors();
-        processedExpressionDataVectorService.thaw( processedVectors );
+        processedVectors = processedExpressionDataVectorService.thaw( processedVectors );
         StopWatch timer = new StopWatch();
         timer.start();
         ExpressionDataDoubleMatrix intensities = this.loadIntensities( ee, processedVectors );
@@ -326,7 +326,7 @@ public class ProcessedExpressionDataVectorCreateHelperServiceImpl
 
             ProcessedExpressionDataVectorCreateHelperServiceImpl.log.info( "Vectors loaded ..." );
 
-            Collection<DesignElementDataVector> vs = new HashSet<>( vectors );
+            Collection<? extends DesignElementDataVector> vs = new HashSet<>( vectors );
             rawExpressionDataVectorService.thawRawAndProcessed( vs );
             ExpressionDataMatrixBuilder builder = new ExpressionDataMatrixBuilder( processedVectors, vectors );
             intensities = builder.getIntensity();

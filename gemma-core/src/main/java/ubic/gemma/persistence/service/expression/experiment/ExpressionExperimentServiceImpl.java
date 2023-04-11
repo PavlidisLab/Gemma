@@ -998,6 +998,9 @@ public class ExpressionExperimentServiceImpl
                             + " You do not have permission to edit this experiment." );
         }
 
+        // thaw everything
+        ee = thaw( ee );
+
         // Remove subsets
         Collection<ExpressionExperimentSubSet> subsets = this.getSubSets( ee );
         for ( ExpressionExperimentSubSet subset : subsets ) {

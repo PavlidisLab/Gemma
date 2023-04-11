@@ -358,30 +358,6 @@ public abstract class AbstractDao<T extends Identifiable> implements BaseDao<T> 
     }
 
     /**
-     * Reattach an entity to the current persistence context.
-     * <p>
-     * This is a hack to avoid {@link org.hibernate.LazyInitializationException} when manipulating an unmanaged or
-     * detached entity. If you need this, it means that the session scope does not encompass loading and updating the
-     * entity, and can generally be better addressed by annotating a calling method with {@link org.springframework.transaction.annotation.Transactional}.
-     * <p>
-     * Note that this does not propagate to children entities even of lock cascading is set.
-     */
-    @Deprecated
-    protected void reattach( T entity ) {
-        this.getSessionFactory().getCurrentSession().buildLockRequest( LockOptions.NONE ).lock( entity );
-        AbstractDao.log.trace( String.format( "Reattached %s using a noop lock.", formatEntity( entity ) ) );
-    }
-
-    /**
-     * If you thought that {@link #remove(Identifiable)} was a bad idea, this is even worse.
-     */
-    @Deprecated
-    protected void reattach( Object entity ) {
-        this.getSessionFactory().getCurrentSession().buildLockRequest( LockOptions.NONE ).lock( entity );
-        AbstractDao.log.trace( "Reattached unknown entity using a noop lock." );
-    }
-
-    /**
      * Flush pending changes to the persistent storage.
      */
     protected void flush() {
@@ -393,7 +369,7 @@ public abstract class AbstractDao<T extends Identifiable> implements BaseDao<T> 
      * <p>
      * Use this carefully, cleared entities referenced later will be retrieved from the persistent storage.
      */
-    protected void flushAndClear() {
+    private void flushAndClear() {
         this.getSessionFactory().getCurrentSession().flush();
         this.getSessionFactory().getCurrentSession().clear();
     }

@@ -540,7 +540,7 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
                     + " to " + arrayDesign.getShortName()
                     + ( targetBioAssayDimension == null ? "" : ", BioAssayDimension=" + targetBioAssayDimension ) );
 
-            rawExpressionDataVectorService.thaw( vecsForQt );
+            vecsForQt = rawExpressionDataVectorService.thaw( vecsForQt );
 
             int numwarns = 0;
             int maxwarns = 30;

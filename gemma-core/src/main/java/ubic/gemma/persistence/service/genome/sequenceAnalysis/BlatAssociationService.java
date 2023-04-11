@@ -24,6 +24,7 @@ import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
 import ubic.gemma.persistence.service.BaseService;
 
+import javax.annotation.CheckReturnValue;
 import java.util.Collection;
 
 /**
@@ -48,8 +49,6 @@ public interface BlatAssociationService extends BaseService<BlatAssociation> {
 
     Collection<BlatAssociation> find( Gene gene );
 
-    void thaw( Collection<BlatAssociation> blatAssociations );
-
-    void thaw( BlatAssociation blatAssociation );
-
+    @CheckReturnValue
+    Collection<BlatAssociation> thaw( Collection<BlatAssociation> blatAssociations );
 }

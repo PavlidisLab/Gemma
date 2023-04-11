@@ -143,16 +143,4 @@ public class DifferentialExpressionResultServiceImpl extends AbstractService<Dif
         return this.DERDao.loadPvalueDistribution( resultSetId );
     }
 
-    @Override
-    @Transactional(readOnly = true)
-    public void thaw( Collection<DifferentialExpressionAnalysisResult> results ) {
-        this.DERDao.thaw( results );
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public void thaw( DifferentialExpressionAnalysisResult result ) {
-        this.DERDao.thaw( result );
-    }
-
 }

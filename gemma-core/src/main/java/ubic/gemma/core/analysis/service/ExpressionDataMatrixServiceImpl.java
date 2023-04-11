@@ -109,7 +109,7 @@ public class ExpressionDataMatrixServiceImpl implements ExpressionDataMatrixServ
             log.warn( "There are no ProcessedExpressionDataVectors for " + ee + ", they must be created first" );
             return null;
         }
-        this.processedExpressionDataVectorService.thaw( dataVectors );
+        dataVectors = this.processedExpressionDataVectorService.thaw( dataVectors );
         return new ExpressionDataDoubleMatrix( dataVectors );
     }
 
@@ -175,7 +175,7 @@ public class ExpressionDataMatrixServiceImpl implements ExpressionDataMatrixServ
         if ( dataVectors == null || dataVectors.isEmpty() )
             throw new IllegalArgumentException( "Vectors must be provided" );
         ExpressionExperimentFilter filter = new ExpressionExperimentFilter( arrayDesignsUsed, filterConfig );
-        this.processedExpressionDataVectorService.thaw( dataVectors );
+        dataVectors = this.processedExpressionDataVectorService.thaw( dataVectors );
         return filter.getFilteredMatrix( dataVectors );
     }
 

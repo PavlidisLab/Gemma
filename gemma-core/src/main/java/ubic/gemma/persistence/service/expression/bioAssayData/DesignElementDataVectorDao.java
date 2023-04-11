@@ -37,11 +37,11 @@ import java.util.Collection;
 @Repository
 public interface DesignElementDataVectorDao<T extends DesignElementDataVector> extends BaseDao<T> {
 
-    void removeRawAndProcessed( Collection<DesignElementDataVector> vectors );
+    void removeRawAndProcessed( Collection<? extends DesignElementDataVector> vectors );
 
-    Collection<DesignElementDataVector> findRawAndProcessed( BioAssayDimension dim );
+    Collection<? extends DesignElementDataVector> findRawAndProcessed( BioAssayDimension dim );
 
-    Collection<DesignElementDataVector> findRawAndProcessed( QuantitationType qt );
+    Collection<? extends DesignElementDataVector> findRawAndProcessed( QuantitationType qt );
 
     /**
      * Thaw both raw and processed vectors.

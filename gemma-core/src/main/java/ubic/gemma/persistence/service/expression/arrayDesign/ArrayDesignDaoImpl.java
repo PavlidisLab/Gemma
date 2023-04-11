@@ -209,10 +209,10 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
                     "Done deleting " + blatAssociations.size() + " blat associations for " + arrayDesign );
         }
 
-        flushAndClear();
+        flush();
 
         final String annotationAssociationQueryString = "select ba from CompositeSequence cs "
-                + " inner join cs.biologicalCharacteristic bs, AnnotationAssociation ba "
+                + " inner join cs.biologicalCharacteristic bs, Annott add -ationAssociation ba "
                 + " where ba.bioSequence = bs and cs.arrayDesign=:arrayDesign";
 
         //noinspection unchecked
@@ -759,20 +759,16 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     }
 
     @Override
-    public void removeBiologicalCharacteristics( final ArrayDesign arrayDesign ) {
+    public void removeBiologicalCharacteristics( ArrayDesign arrayDesign ) {
         Session session = this.getSessionFactory().getCurrentSession();
-        reattach( arrayDesign );
-
+        arrayDesign = ( ArrayDesign ) session.get( ArrayDesign.class, arrayDesign.getId() );
         int count = 0;
         for ( CompositeSequence cs : arrayDesign.getCompositeSequences() ) {
             cs.setBiologicalCharacteristic( null );
-            session.update( cs );
-            session.evict( cs );
             if ( ++count % ArrayDesignDaoImpl.LOGGING_UPDATE_EVENT_COUNT == 0 ) {
                 AbstractDao.log.info( "Cleared sequence association for " + count + " composite sequences" );
             }
         }
-
     }
 
     @Override
@@ -830,7 +826,6 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
                 lastTime = timer.getTime();
                 batch.clear();
             }
-            this.getSessionFactory().getCurrentSession().evict( cs );
         }
 
         if ( !batch.isEmpty() ) { // tail end
@@ -948,11 +943,12 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
         }
         candidateSubsumer.getSubsumedArrayDesigns().add( candidateSubsumee );
         candidateSubsumee.setSubsumingArrayDesign( candidateSubsumer );
-        this.update( candidateSubsumer );
 
-        flushAndClear();
+        this.update( candidateSubsumer );
+        flush();
+
         this.update( candidateSubsumee );
-        flushAndClear();
+        flush();
 
         return true;
     }

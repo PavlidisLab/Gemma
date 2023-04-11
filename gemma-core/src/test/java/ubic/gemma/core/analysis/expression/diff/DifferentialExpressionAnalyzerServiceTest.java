@@ -321,7 +321,7 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
         Collection<DifferentialExpressionAnalysis> analyses = differentialExpressionAnalyzerService
                 .runDifferentialExpressionAnalyses( ee, config );
         for ( DifferentialExpressionAnalysis analysis : analyses ) {
-            differentialExpressionAnalysisService.thaw( analysis );
+            analysis = differentialExpressionAnalysisService.thaw( analysis );
             for ( ExpressionAnalysisResultSet resultSet : analysis.getResultSets() ) {
                 Histogram hist = resultService.loadPvalueDistribution( resultSet.getId() );
                 assertNotNull( hist );

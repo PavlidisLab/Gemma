@@ -657,7 +657,7 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
                 continue;
             }
 
-            compositeSequenceService.thaw( Collections.singleton( probe ) );
+            probe = compositeSequenceService.thaw( probe );
 
             Map<String, Collection<BlatAssociation>> results = this.arrayDesignProbeMapperService
                     .processCompositeSequence( this.config, taxon, null, probe );

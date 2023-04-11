@@ -392,7 +392,6 @@ public class ArrayDesignServiceImpl extends AbstractFilteringVoEnabledService<Ar
     @Transactional
     public void removeBiologicalCharacteristics( ArrayDesign arrayDesign ) {
         this.arrayDesignDao.removeBiologicalCharacteristics( arrayDesign );
-
     }
 
     @Override

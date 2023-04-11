@@ -292,8 +292,7 @@ public class PreprocessorServiceImpl implements PreprocessorService {
             log.info( String.format( "No processed vectors for %s, they will be computed from raw data...", ee ) );
             return this.processedExpressionDataVectorService.computeProcessedExpressionData( ee );
         }
-        processedExpressionDataVectorService.thaw( vecs );
-        return vecs;
+        return processedExpressionDataVectorService.thaw( vecs );
     }
 
     @SuppressWarnings("unused")

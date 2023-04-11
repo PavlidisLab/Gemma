@@ -21,7 +21,7 @@ public interface ExpressionAnalysisResultSetService extends AnalysisResultSetSer
 
     ExpressionAnalysisResultSet loadWithResultsAndContrasts( Long value );
 
-    void thaw( ExpressionAnalysisResultSet e );
+    ExpressionAnalysisResultSet thaw( ExpressionAnalysisResultSet e );
 
     ExpressionAnalysisResultSet loadWithExperimentAnalyzed( Long id );
 
