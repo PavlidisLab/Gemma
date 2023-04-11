@@ -109,6 +109,7 @@ public class NcbiGeneConverter implements Converter<Object, Object> {
         gene.setOfficialSymbol( info.getDefaultSymbol() );
         gene.setOfficialName( info.getDescription() );
         gene.setEnsemblId( info.getEnsemblId() );
+        gene.setType(info.getGeneType().toString());
 
         /*
          * NOTE we allow multiple discontinued or previous ids, separated by commas. This is a hack to account for cases

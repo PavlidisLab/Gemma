@@ -20,6 +20,7 @@ package ubic.gemma.core.loader.genome.gene.ncbi;
 
 import junit.framework.TestCase;
 import org.springframework.core.io.ClassPathResource;
+import ubic.gemma.core.loader.genome.gene.ncbi.model.NCBIGeneInfo;
 
 import java.io.InputStream;
 import java.util.HashMap;
@@ -45,6 +46,8 @@ public class NCBIGeneParserTest extends TestCase {
         ncbiGeneInfoParser.setFilter( false );
         ncbiGeneInfoParser.parse( is );
         TestCase.assertEquals( 99, ncbiGeneInfoParser.getResults().size() );
+        NCBIGeneInfo n = ncbiGeneInfoParser.getResults().iterator().next();
+        assertNotNull( n.getGeneType() );
     }
 
 }
