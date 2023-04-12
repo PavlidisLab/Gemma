@@ -17,7 +17,6 @@ package ubic.gemma.core.association.phenotype;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import ubic.basecode.ontology.model.OntologyTerm;
@@ -26,7 +25,6 @@ import ubic.basecode.ontology.providers.HumanPhenotypeOntologyService;
 import ubic.basecode.ontology.providers.MammalianPhenotypeOntologyService;
 import ubic.basecode.ontology.search.OntologySearchException;
 import ubic.gemma.core.ontology.OntologyService;
-import ubic.gemma.core.ontology.providers.OntologyServiceFactory;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 
@@ -41,18 +39,12 @@ public class PhenotypeAssoOntologyHelperImpl implements PhenotypeAssoOntologyHel
     private static final Log log = LogFactory.getLog( PhenotypeAssoOntologyHelperImpl.class );
 
     private final OntologyService ontologyService;
-    private final DiseaseOntologyService diseaseOntologyService;
-    private final MammalianPhenotypeOntologyService mammalianPhenotypeOntologyService;
-    private final HumanPhenotypeOntologyService humanPhenotypeOntologyService;
 
     private final List<ubic.basecode.ontology.providers.OntologyService> ontologies;
 
     @Autowired
     public PhenotypeAssoOntologyHelperImpl( OntologyService ontologyService, DiseaseOntologyService diseaseOntologyService, MammalianPhenotypeOntologyService mammalianPhenotypeOntologyService, HumanPhenotypeOntologyService humanPhenotypeOntologyService ) {
         this.ontologyService = ontologyService;
-        this.diseaseOntologyService = diseaseOntologyService;
-        this.mammalianPhenotypeOntologyService = mammalianPhenotypeOntologyService;
-        this.humanPhenotypeOntologyService = humanPhenotypeOntologyService;
         //  We add them even when they aren't available so we can use unit tests that mock or fake the ontologies.
         this.ontologies = Arrays.asList( diseaseOntologyService, mammalianPhenotypeOntologyService, humanPhenotypeOntologyService );
         if ( !diseaseOntologyService.isEnabled() ) {
