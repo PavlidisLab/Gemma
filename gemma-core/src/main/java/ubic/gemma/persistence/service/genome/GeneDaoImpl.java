@@ -36,6 +36,7 @@ import ubic.gemma.model.genome.Chromosome;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.PhysicalLocation;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.model.genome.gene.GeneSetMember;
 import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.persistence.service.AbstractDao;
 import ubic.gemma.persistence.service.AbstractQueryFilteringVoEnabledDao;
@@ -430,7 +431,13 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
         for ( Object association : associations ) {
             getSessionFactory().getCurrentSession().delete( association );
         }
-
+        List<?> geneSetMembers = this.getSessionFactory().getCurrentSession()
+                .createQuery( "select gm from GeneSetMember gm where gm.gene = :g" )
+                .setParameter( "g", gene )
+                .list();
+        for ( Object gm : geneSetMembers ) {
+            getSessionFactory().getCurrentSession().delete( gm );
+        }
         super.remove( gene );
     }
 
