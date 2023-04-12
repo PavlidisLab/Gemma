@@ -34,6 +34,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import javax.annotation.Nullable;
 import java.io.Serializable;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Base class for ExpressionDataMatrix implementations.
@@ -127,6 +128,14 @@ abstract public class BaseExpressionDataMatrix<T> implements ExpressionDataMatri
 
         return b;
 
+    }
+
+    @Override
+    public Collection<Integer> findRowsByName( String name ) {
+        return rowElementMap.entrySet().stream()
+                .filter( entry -> entry.getKey().getName().equals( name ) )
+                .map( entry -> entry.getValue() )
+                .collect( Collectors.toList() );
     }
 
     @Override
@@ -258,7 +267,7 @@ abstract public class BaseExpressionDataMatrix<T> implements ExpressionDataMatri
      * For example, in the following diagram "-" indicates a biomaterial, while "*" indicates a bioassay. Each row of
      * "*" indicates samples run on a different microarray design (a different bio assay material). In the examples we
      * assume there is just a single biomaterial dimension.
-     * 
+     *
      * <pre>
      * ---------------
      * *****              -- only a few samples run on this platform
@@ -268,7 +277,7 @@ abstract public class BaseExpressionDataMatrix<T> implements ExpressionDataMatri
      * <p>
      * A simpler case:
      * </p>
-     * 
+     *
      * <pre>
      * ---------------
      * ***************
@@ -278,7 +287,7 @@ abstract public class BaseExpressionDataMatrix<T> implements ExpressionDataMatri
      * <p>
      * A more typical and easy case (one microarray design used):
      * </p>
-     * 
+     *
      * <pre>
      * ----------------
      * ****************
@@ -286,7 +295,7 @@ abstract public class BaseExpressionDataMatrix<T> implements ExpressionDataMatri
      * <p>
      * If every sample was run on two different array designs:
      * </p>
-     * 
+     *
      * <pre>
      * ----------------
      * ****************
@@ -294,7 +303,7 @@ abstract public class BaseExpressionDataMatrix<T> implements ExpressionDataMatri
      * </pre>
      * <p>
      * Every sample was run on a different array design:
-     * 
+     *
      * <pre>
      * -----------------------
      * ******

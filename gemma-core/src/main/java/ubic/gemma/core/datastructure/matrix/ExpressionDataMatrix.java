@@ -221,6 +221,23 @@ public interface ExpressionDataMatrix<T> {
     T[][] getRows( List<CompositeSequence> designElements );
 
     /**
+     * Access a submatrix
+     * @param rowIndices of integers to select
+     * @return T[][] or null if rowIndices is null or empty.
+     */
+    T[][] getRows( Collection<Integer> rowIndices);
+
+
+    /**
+     * Convenience function to locate the indices with an (exact match) CompositeSequence.name
+     *
+     * @param name The CompositeSequence name to look for
+     * @return array of row indices matching (usually will just be one value)
+     */
+    Collection<Integer> findRowsByName(String name);
+
+
+    /**
      * @return true if any values are null or NaN (for Doubles); all other values are considered non-missing.
      */
     boolean hasMissingValues();
