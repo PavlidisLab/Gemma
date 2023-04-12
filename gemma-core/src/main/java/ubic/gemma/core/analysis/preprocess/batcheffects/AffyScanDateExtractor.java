@@ -158,12 +158,13 @@ public class AffyScanDateExtractor extends BaseScanDateExtractor {
     public Date parseGenericCCHeader( DataInputStream str ) throws IOException {
 
         /*
-         * acquisition data, intensity data etc. Usually "intensity data" for the first header.
+         * acquisition data, intensity data etc. Usually "intensity data" for the first header or "affymetrix-calvin-intensity"
          */
         String datatypeIdentifier = this.readString( str );
 
         AffyScanDateExtractor.log.debug( datatypeIdentifier );
 
+        // e.g. 0000065535-1484943982-0000026962-0000029358-0000011478
         String guid = this.readString( str );
 
         AffyScanDateExtractor.log.debug( guid );
@@ -191,11 +192,15 @@ public class AffyScanDateExtractor extends BaseScanDateExtractor {
                     v = new String( value, "US-ASCII" );
 
                     if ( name.equals( "affymetrix-scan-date" ) ) {
-                        result = this.parseISO8601( new String( ( ( String ) v ).getBytes(), "UTF-16" ) );
-                        AffyScanDateExtractor.log.info( "Scan date = " + result );
-                    }
+                        String decodedValue = new String( ( ( String ) v ).getBytes(), "UTF-16" );
+                        result = this.parseISO8601( decodedValue );
 
-                    if ( name.equals( "affymetrix-Hyb-Start-Time" ) ) {
+                        if (result == null) { // might be in YYYY/MM/DD HH:mm:ss format ...
+                            result = this.parseGenePixDateTime( decodedValue );
+                        }
+
+                        AffyScanDateExtractor.log.info( "Scan date = " + result );
+                    } else if ( name.equals( "affymetrix-Hyb-Start-Time" ) ) {
                         // We don't use this but I'm curious to start looking at it.
                         AffyScanDateExtractor.log
                                 .info( "Hyb start date = " + new String( ( ( String ) v ).getBytes(), "UTF-16" ) );
