@@ -73,7 +73,10 @@ public class DoubleVectorValueObject extends DataVectorValueObject {
      */
     public DoubleVectorValueObject( ExpressionExperimentSubSet bioassaySet, DoubleVectorValueObject vec,
             BioAssayDimensionValueObject bad ) {
-        super( -1L ); // because this is a 'slice', not a persistent one.
+        // because this is a 'slice', not a persistent one,
+        // we don't want to use real IDs but need them to be unqique in hash/equals
+        // Using the negative of the real ID is convenient.
+        super( -vec.getId() );
         this.sourceVectorId = vec.getId(); // so we can track this!
         this.sliced = true;
 
