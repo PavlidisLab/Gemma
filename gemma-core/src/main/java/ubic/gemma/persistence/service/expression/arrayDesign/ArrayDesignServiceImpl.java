@@ -397,13 +397,13 @@ public class ArrayDesignServiceImpl extends AbstractFilteringVoEnabledService<Ar
     @Override
     @Transactional(readOnly = true)
     public ArrayDesign thaw( ArrayDesign arrayDesign ) {
-        return this.arrayDesignDao.thaw( arrayDesign );
+        return Objects.requireNonNull( this.arrayDesignDao.thaw( arrayDesign ) );
     }
 
     @Override
     @Transactional(readOnly = true)
     public ArrayDesign thawLite( ArrayDesign arrayDesign ) {
-        return this.arrayDesignDao.thawLite( arrayDesign );
+        return Objects.requireNonNull( this.arrayDesignDao.thawLite( arrayDesign ) );
     }
 
     @Override

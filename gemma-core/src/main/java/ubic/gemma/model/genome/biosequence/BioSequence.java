@@ -206,6 +206,13 @@ public class BioSequence extends AbstractDescribable implements Serializable {
             entity.setTaxon( taxon );
             return entity;
         }
+
+        public static BioSequence newInstance( String name, Taxon taxon ) {
+            final BioSequence entity = new BioSequence();
+            entity.setName( name );
+            entity.setTaxon( taxon );
+            return entity;
+        }
     }
 
 }
