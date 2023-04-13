@@ -1783,10 +1783,15 @@ public class ExpressionExperimentController {
             BibliographicReference publication = bibliographicReferenceService.findByExternalId( pubmedId );
 
             if ( publication != null ) {
-
-                ExpressionExperimentController.log.info( "Reference exists in system, associating..." );
-                expressionExperiment.setPrimaryPublication( publication );
-                expressionExperimentService.update( expressionExperiment );
+                // check if the publication is actually being modified
+                if ( expressionExperiment.getPrimaryPublication() == null ||
+                        !expressionExperiment.getPrimaryPublication().equals( publication ) ) {
+                    ExpressionExperimentController.log.info( "Reference exists in system, copying over the metadata and associating..." );
+                    publication.setId( null );
+                    publication = ( BibliographicReference ) persisterHelper.persist( publication );
+                    expressionExperiment.setPrimaryPublication( publication );
+                    expressionExperimentService.update( expressionExperiment );
+                }
             } else {
                 ExpressionExperimentController.log.info( "Searching pubmed on line .." );
 
