@@ -341,9 +341,11 @@ Gemma.ExpressionExperimentPage = Ext.extend(Ext.TabPanel, {
                 params: [[eeId], geneList]
             });
         });
+
         var geneTBar = new Gemma.VisualizationWidgetGeneSelectionToolbar({
             eeId: eeId,
             visPanel: viz
+            , taxonId :  experimentDetails.taxonId
             // ,showRefresh : (isAdmin || this.editable)
         });
         geneTBar.on('refreshVisualisation', function () {
