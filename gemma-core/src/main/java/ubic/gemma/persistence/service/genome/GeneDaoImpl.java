@@ -425,7 +425,7 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
     public void remove( Gene gene ) {
         // remove associations
         this.getSessionFactory().getCurrentSession()
-                .createQuery( "delete from BioSequence2GeneProduct ba where ba.geneProduct.gene = :g" )
+                .createQuery( "delete from BioSequence2GeneProduct ba where ba.geneProduct in (select gp from GeneProduct gp where gp.gene = :g)" )
                 .setParameter( "g", gene )
                 .executeUpdate();
         this.getSessionFactory().getCurrentSession()
