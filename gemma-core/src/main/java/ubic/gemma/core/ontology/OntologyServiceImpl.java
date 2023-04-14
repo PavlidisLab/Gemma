@@ -920,22 +920,15 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
                 .taxon( taxon )
                 .resultType( Gene.class )
                 .build();
-        SearchService.SearchResultMap geneResults = this.searchService.search( ss, false, false );
+        SearchService.SearchResultMap geneResults = this.searchService.search( ss, true, false );
 
         for ( SearchResult<Gene> sr : geneResults.get( Gene.class ) ) {
-            if ( !sr.getResultClass().isAssignableFrom( Gene.class ) ) {
-                throw new IllegalStateException( "Expected a gene search result, got a " + sr.getResultClass() );
-            }
-
-            GeneValueObject g = this.geneService.loadValueObjectById( sr.getResultId() );
-
-            if ( g == null ) {
-                log.warn(
-                        "There is no gene with ID=" + sr.getResultId() + " (in response to search for "
-                                + queryString + ") - index out of date?" );
+            if ( sr.getResultObject() == null ) {
+                log.warn( String.format( "There is no gene with ID=%d (in response to search for %s) - index out of date?",
+                        sr.getResultId(), queryString ) );
                 continue;
             }
-
+            GeneValueObject g = this.geneService.loadValueObject( sr.getResultObject() );
             if ( OntologyServiceImpl.log.isDebugEnabled() )
                 OntologyServiceImpl.log.debug( "Search for " + queryString + " returned: " + g );
             searchResults.add( new CharacteristicValueObject( this.gene2Characteristic( g ) ) );
