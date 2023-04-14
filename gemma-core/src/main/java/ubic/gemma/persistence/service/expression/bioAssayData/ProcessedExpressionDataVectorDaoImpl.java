@@ -52,6 +52,7 @@ import ubic.gemma.persistence.util.EntityUtils;
 
 import javax.annotation.Nullable;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * @author Paul
@@ -912,18 +913,21 @@ public class ProcessedExpressionDataVectorDaoImpl extends AbstractDesignElementD
             genes.addAll( cs2gene.get( cs ) );
         }
 
+        // this will be populated with experiments for which we don't have all the needed results cached
         Collection<ExpressionExperiment> needToSearch = new HashSet<>();
+        // will contain IDs of genes that weren't covered by the cache
         Collection<Long> genesToSearch = new HashSet<>();
         this.checkCache( ees, genes, results, needToSearch, genesToSearch );
 
         if ( !results.isEmpty() )
             AbstractDao.log.info( results.size() + " vectors fetched from cache" );
 
-        Map<ProcessedExpressionDataVector, Collection<Long>> rawResults = new HashMap<>();
-
         /*
-         * Small problem: noGeneProbes are never really cached since we use the gene as part of that.
+         * Get data that wasn't in the cache.
+         *
+         * Small problem: noGeneProbes are never really cached since we use the gene as part of that. So always need to get them.
          */
+        Map<ProcessedExpressionDataVector, Collection<Long>> noncached = new HashMap<>();
         if ( !noGeneProbes.isEmpty() ) {
             Collection<ExpressionExperiment> eesForNoGeneProbes = new HashSet<>();
             for ( BioAssaySet ee : ees ) {
@@ -934,21 +938,31 @@ public class ProcessedExpressionDataVectorDaoImpl extends AbstractDesignElementD
                 }
             }
             needToSearch.addAll( eesForNoGeneProbes );
-            rawResults.putAll( this.getProcessedVectorsAndGenes( eesForNoGeneProbes, noGeneProbes ) );
+            noncached.putAll( this.getProcessedVectorsAndGenes(  eesForNoGeneProbes , noGeneProbes ) );
         }
 
-        if ( !rawResults.isEmpty() )
-            AbstractDao.log.info( rawResults.size() + " vectors retrieved so far, for noGeneProbes" );
+        if ( !noncached.isEmpty() )
+            AbstractDao.log.info( noncached.size() + " vectors retrieved so far, for noGeneProbes" );
 
         /*
          * Non-cached items.
          */
-        if ( !needToSearch.isEmpty() ) {
-            rawResults.putAll( this.getProcessedVectorsAndGenes( needToSearch, cs2gene ) );
+        Map<ProcessedExpressionDataVector, Collection<Long>> moreNonCached = new HashMap<>();
+        if ( !needToSearch.isEmpty() && !genesToSearch.isEmpty() ) {
+            /*
+             * cut cs2gene down, otherwise we're probably fetching everything again.
+             */
+            Map<Long, Collection<Long>> filteredcs2gene = cs2gene.entrySet().stream()
+                    .filter(entry -> entry.getValue().stream().anyMatch(genesToSearch::contains))
+                    .collect( Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+
+            moreNonCached = this.getProcessedVectorsAndGenes(  needToSearch , filteredcs2gene );
         }
 
-        if ( !rawResults.isEmpty() )
-            AbstractDao.log.info( rawResults.size() + " vectors retrieved so far, after fetching non-cached." );
+        if ( !moreNonCached.isEmpty() )
+            AbstractDao.log.info( noncached.size() + " more fetched from db" );
+
+        noncached.putAll( moreNonCached );
 
         /*
          * Deal with possibility of 'gaps' and unpack the vectors.
@@ -959,7 +973,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends AbstractDesignElementD
             Collection<BioAssayDimension> bioAssayDimensions = this.getBioAssayDimensions( ee );
 
             if ( bioAssayDimensions.size() == 1 ) {
-                newResults.addAll( this.unpack( rawResults ) );
+                newResults.addAll( this.unpack( noncached ) );
             } else {
                 /*
                  * See handleGetProcessedExpressionDataArrays(Collection<? extends BioAssaySet>, Collection<Gene>,
@@ -967,8 +981,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends AbstractDesignElementD
                  */
                 BioAssayDimension longestBad = this.checkRagged( bioAssayDimensions );
                 assert longestBad != null;
-                newResults.addAll( this.unpack( rawResults, longestBad ) );
-
+                newResults.addAll( this.unpack( noncached, longestBad ) );
             }
 
             if ( !newResults.isEmpty() ) {
