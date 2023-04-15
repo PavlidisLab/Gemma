@@ -53,7 +53,7 @@ public interface Gene2GOAssociationService extends BaseService<Gene2GOAssociatio
     Collection<Gene> findByGOTerm( String goID, Taxon taxon );
 
     @Secured({ "GROUP_ADMIN" })
-    void removeAll();
+    void removeAllInBatch();
 
     /**
      * @param  termsToFetch terms

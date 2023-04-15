@@ -125,7 +125,7 @@ public interface BaseService<O extends Identifiable> {
     /**
      * Remove all entities from the persistent storage.
      */
-    void removeAll();
+    void removeAllInBatch();
 
     /**
      * Updates all entities in the given collection in the persistent storage.

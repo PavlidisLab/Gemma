@@ -1050,7 +1050,7 @@ public class ExpressionExperimentServiceImpl
 
     @Override
     @Transactional
-    public void removeAll() {
+    public void removeAllInBatch() {
         throw new UnsupportedOperationException( "That would be nut." );
     }
 
