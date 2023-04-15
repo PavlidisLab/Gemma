@@ -293,11 +293,11 @@ public class ExpressionDataDoubleMatrixUtil {
 
         boolean isMicroarray;
         try {
-            isMicroarray = expressionData.getExpressionExperiment() != null &&
-                    expressionData.getExpressionExperiment().getBioAssays().stream()
-                            .map( BioAssay::getArrayDesignUsed )
-                            .map( ArrayDesign::getTechnologyType )
-                            .anyMatch( TechnologyType.MICROARRAY::contains );
+            isMicroarray = expressionData.getRowNames().stream()
+                    .map( CompositeSequence::getArrayDesign )
+                    .distinct()
+                    .map( ArrayDesign::getTechnologyType )
+                    .anyMatch( TechnologyType.MICROARRAY::contains );
         } catch ( LazyInitializationException e ) {
             log.warn( String.format( "Failed to determine if the data matrix contains microarray platforms: %s.", e.getMessage() ) );
             isMicroarray = false;

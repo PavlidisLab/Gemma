@@ -42,7 +42,9 @@ public class ExpressionDataDoubleMatrixUtilTest {
     @Before
     public void setUp() {
         RawExpressionDataVector ev = new RawExpressionDataVector();
-        CompositeSequence cs = new CompositeSequence();
+        ArrayDesign ad = ArrayDesign.Factory.newInstance();
+        ad.setTechnologyType( TechnologyType.ONECOLOR );
+        CompositeSequence cs = CompositeSequence.Factory.newInstance( "test", ad );
         ev.setDesignElement( cs );
         ev.setData( byteArrayConverter.doubleArrayToBytes( new Double[] { 4.0 } ) );
         qt = new QuantitationTypeImpl();
@@ -224,7 +226,7 @@ public class ExpressionDataDoubleMatrixUtilTest {
 
     @Test
     public void testRandomLinearMatrix() {
-        ExpressionExperiment ee = getTestExpressionExperiment();
+        ExpressionExperiment ee = getTestExpressionExperiment( TechnologyType.ONECOLOR );
         matrix = randomLinearMatrix( ee );
         assertThat( matrix.rows() ).isEqualTo( 10000 );
         assertThat( matrix.columns() ).isEqualTo( 2 );
@@ -237,7 +239,7 @@ public class ExpressionDataDoubleMatrixUtilTest {
 
     @Test
     public void testRandomLog2Matrix() {
-        ExpressionExperiment ee = getTestExpressionExperiment();
+        ExpressionExperiment ee = getTestExpressionExperiment( TechnologyType.ONECOLOR );
         matrix = randomLog2Matrix( ee );
         assertThat( matrix.rows() ).isEqualTo( 10000 );
         assertThat( matrix.columns() ).isEqualTo( 2 );
@@ -251,7 +253,7 @@ public class ExpressionDataDoubleMatrixUtilTest {
 
     @Test
     public void testRandomRatiometricLog2Matrix() {
-        ExpressionExperiment ee = getTestExpressionExperiment();
+        ExpressionExperiment ee = getTestExpressionExperiment( TechnologyType.ONECOLOR );
         matrix = randomLog2RatiometricMatrix( ee );
         assertThat( matrix.rows() ).isEqualTo( 10000 );
         assertThat( matrix.columns() ).isEqualTo( 2 );
@@ -264,7 +266,7 @@ public class ExpressionDataDoubleMatrixUtilTest {
 
     @Test
     public void testRandomCountMatrix() {
-        ExpressionExperiment ee = getTestExpressionExperiment();
+        ExpressionExperiment ee = getTestExpressionExperiment( TechnologyType.SEQUENCING );
         matrix = randomCountMatrix( ee );
         assertThat( matrix.rows() ).isEqualTo( 10000 );
         assertThat( matrix.columns() ).isEqualTo( 2 );
@@ -277,7 +279,7 @@ public class ExpressionDataDoubleMatrixUtilTest {
 
     @Test
     public void testRandomSuspiciousLog2Matrix() {
-        ExpressionExperiment ee = getTestExpressionExperiment();
+        ExpressionExperiment ee = getTestExpressionExperiment( TechnologyType.ONECOLOR );
         QuantitationType qt = new QuantitationTypeImpl();
         qt.setGeneralType( GeneralType.QUANTITATIVE );
         qt.setType( StandardQuantitationType.AMOUNT );
@@ -290,13 +292,14 @@ public class ExpressionDataDoubleMatrixUtilTest {
                 } );
     }
 
-    private ExpressionExperiment getTestExpressionExperiment() {
+    private ExpressionExperiment getTestExpressionExperiment( TechnologyType technologyType ) {
         ExpressionExperiment ee = new ExpressionExperiment();
         Set<BioAssay> bioAssays = new HashSet<>();
         ArrayDesign ad = ArrayDesign.Factory.newInstance();
+        ad.setTechnologyType( technologyType );
         Set<CompositeSequence> seqs = new HashSet<>();
         for ( int j = 0; j < 10000; j++ ) {
-            seqs.add( CompositeSequence.Factory.newInstance( String.valueOf( j ) ) );
+            seqs.add( CompositeSequence.Factory.newInstance( String.valueOf( j ), ad ) );
         }
         ad.setCompositeSequences( seqs );
         for ( int i = 0; i < 2; i++ ) {
@@ -320,7 +323,7 @@ public class ExpressionDataDoubleMatrixUtilTest {
             Set<BioAssay> bas = new HashSet<>();
             DoubleMatrix<String, String> rawMatrix = new DoubleMatrixReader().read( is );
             DenseDoubleMatrix<CompositeSequence, BioMaterial> matrix = new DenseDoubleMatrix<>( rawMatrix.getRawMatrix() );
-            matrix.setRowNames( rawMatrix.getRowNames().stream().map( CompositeSequence.Factory::newInstance ).collect( Collectors.toList() ) );
+            matrix.setRowNames( rawMatrix.getRowNames().stream().map( n -> CompositeSequence.Factory.newInstance( n, ad ) ).collect( Collectors.toList() ) );
             matrix.setColumnNames( rawMatrix.getColNames().stream().map( name -> {
                 BioMaterial bm = BioMaterial.Factory.newInstance( name );
 
