@@ -447,8 +447,9 @@ public class ExpressionExperimentController {
         try {
             qc.setNumPossibleOutliers( this.numPossibleOutliers( ee ) );
         } catch ( java.lang.ArrayIndexOutOfBoundsException e ) {
-            ExpressionExperimentController.log.fatal( e );
-            e.printStackTrace();
+            ExpressionExperimentController.log.error( e );
+        } catch (IllegalStateException e) {
+            ExpressionExperimentController.log.error( e );
         }
         return qc.getQChtml();
     }
