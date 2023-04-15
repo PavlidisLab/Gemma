@@ -155,15 +155,14 @@ public abstract class AbstractService<O extends Identifiable> implements BaseSer
     protected O ensureInSession( O entity ) {
         if ( entity.getId() == null )
             return entity; // transient
-        return requireNonNull( mainDao.load( entity.getId() ),
-                String.format( "No %s with ID %d.", mainDao.getElementClass().getName(), entity.getId() ) );
+        return loadOrFail( entity.getId() );
     }
 
     /**
      * Ensure that a collection of entities are in the current session.
      * <p>
      * Implementation note: if all entities are already in the session - or are transient, this call is very fast and
-     * does not involve any database interaction, otherwise.
+     * does not involve any database interaction, otherwise the persistent entities are fetched in bulk.
      *
      * @see #ensureInSession(Identifiable)
      */
