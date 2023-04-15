@@ -67,7 +67,7 @@ public class ExpressionDataSVD {
      *
      * @param expressionData expression data
      */
-    public ExpressionDataSVD( ExpressionDataDoubleMatrix expressionData ) {
+    public ExpressionDataSVD( ExpressionDataDoubleMatrix expressionData ) throws SVDException {
         this( expressionData, true );
     }
 
@@ -76,7 +76,7 @@ public class ExpressionDataSVD {
      * @param normalizeMatrix If true, the data matrix will be rescaled and centred to mean zero, variance one, for both
      *                        rows and columns ("double-standardized")
      */
-    public ExpressionDataSVD( ExpressionDataDoubleMatrix expressionData, boolean normalizeMatrix ) {
+    public ExpressionDataSVD( ExpressionDataDoubleMatrix expressionData, boolean normalizeMatrix ) throws SVDException {
         this.expressionData = expressionData;
 
         ArrayDesign arrayDesign = expressionData.getRowElement( 0 ).getDesignElement().getArrayDesign();
@@ -108,11 +108,11 @@ public class ExpressionDataSVD {
         this.expressionData = rlf.filter( this.expressionData );
 
         if ( this.expressionData.rows() == 0 ) {
-            throw new IllegalStateException( "After filtering, matrix has no rows, SVD cannot be computed" );
+            throw new SVDException( "After filtering, matrix has no rows, SVD cannot be computed" );
         }
 
         if ( this.expressionData.rows() < this.expressionData.columns() ) {
-            throw new IllegalStateException(
+            throw new SVDException(
                     "After filtering, this data set has more samples than rows; SVD not supported." );
         }
 

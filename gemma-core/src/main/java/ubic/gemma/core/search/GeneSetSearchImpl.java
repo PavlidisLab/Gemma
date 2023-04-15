@@ -124,6 +124,9 @@ public class GeneSetSearchImpl implements GeneSetSearch {
     @Override
     public Collection<GeneSet> findByGoTermName( String goTermName, @Nullable Taxon taxon, @Nullable Integer maxGoTermsProcessed,
             @Nullable Integer maxGeneSetSize ) throws OntologySearchException {
+        if ( !geneOntologyService.isOntologyLoaded() ) {
+            return Collections.emptySet();
+        }
         Collection<? extends OntologyResource> matches = this.geneOntologyService
                 .findTerm( StringUtils.strip( goTermName ) );
 

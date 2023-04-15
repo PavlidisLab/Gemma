@@ -25,6 +25,6 @@ public interface VectorMergingService {
      * @param expExp the experiment
      * @return experiment with merged vectors
      */
-    ExpressionExperiment mergeVectors( ExpressionExperiment expExp );
+    void mergeVectors( ExpressionExperiment expExp );
 
 }

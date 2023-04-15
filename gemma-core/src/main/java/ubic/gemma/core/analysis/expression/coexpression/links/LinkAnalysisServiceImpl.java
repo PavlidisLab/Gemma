@@ -30,14 +30,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import ubic.basecode.dataStructure.Link;
 import ubic.basecode.io.ByteArrayConverter;
-import ubic.gemma.core.analysis.preprocess.InsufficientProbesException;
-import ubic.gemma.core.analysis.preprocess.OutlierDetails;
-import ubic.gemma.core.analysis.preprocess.OutlierDetectionService;
+import ubic.gemma.core.analysis.preprocess.*;
 import ubic.gemma.core.analysis.preprocess.batcheffects.BatchEffectDetails;
 import ubic.gemma.core.analysis.preprocess.filter.FilterConfig;
 import ubic.gemma.core.analysis.preprocess.filter.FilteringException;
 import ubic.gemma.core.analysis.preprocess.filter.InsufficientSamplesException;
 import ubic.gemma.core.analysis.preprocess.svd.ExpressionDataSVD;
+import ubic.gemma.core.analysis.preprocess.svd.SVDException;
 import ubic.gemma.core.analysis.report.ExpressionExperimentReportService;
 import ubic.gemma.core.analysis.service.ExpressionDataMatrixService;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
@@ -134,14 +133,18 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
 
     @Override
     public LinkAnalysis processVectors( Taxon t, Collection<ProcessedExpressionDataVector> dataVectors,
-            FilterConfig filterConfig, LinkAnalysisConfig linkAnalysisConfig ) throws FilteringException {
+            FilterConfig filterConfig, LinkAnalysisConfig linkAnalysisConfig ) throws FilteringException, SVDRelatedPreprocessingException {
         ExpressionDataDoubleMatrix datamatrix = expressionDataMatrixService
                 .getFilteredMatrix( linkAnalysisConfig.getArrayName(), filterConfig, dataVectors );
 
         this.checkDatamatrix( datamatrix );
         LinkAnalysis la = new LinkAnalysis( linkAnalysisConfig );
 
-        datamatrix = this.normalize( datamatrix, linkAnalysisConfig );
+        try {
+            datamatrix = this.normalize( datamatrix, linkAnalysisConfig );
+        } catch ( SVDException e ) {
+            throw new SVDRelatedPreprocessingException( datamatrix.getExpressionExperiment(), e );
+        }
 
         this.setUpForAnalysis( t, la, dataVectors, datamatrix );
 
@@ -161,7 +164,7 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
             LinkAnalysisServiceImpl.log.info( "No rows left after filtering" );
             throw new InsufficientProbesException( datamatrix.getExpressionExperiment(), "No rows left after filtering" );
         } else if ( datamatrix.rows() < FilterConfig.MINIMUM_ROWS_TO_BOTHER ) {
-            throw new InsufficientProbesException(datamatrix.getExpressionExperiment(),
+            throw new InsufficientProbesException( datamatrix.getExpressionExperiment(),
                     "To few rows (" + datamatrix.rows() + "), data sets are not analyzed unless they have at least "
                             + FilterConfig.MINIMUM_ROWS_TO_BOTHER + " rows" );
         }
@@ -206,7 +209,11 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
 
         LinkAnalysisServiceImpl.log.info( "Starting link analysis... " + ee );
 
-        this.normalize( datamatrix, linkAnalysisConfig );
+        try {
+            this.normalize( datamatrix, linkAnalysisConfig );
+        } catch ( SVDException e ) {
+            throw new SVDRelatedPreprocessingException( datamatrix.getExpressionExperiment(), e );
+        }
 
         /*
          * Link analysis section.
@@ -396,7 +403,7 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
     /**
      * Normalize the data, as configured (possibly no normalization).
      */
-    private ExpressionDataDoubleMatrix normalize( ExpressionDataDoubleMatrix datamatrix, LinkAnalysisConfig config ) {
+    private ExpressionDataDoubleMatrix normalize( ExpressionDataDoubleMatrix datamatrix, LinkAnalysisConfig config ) throws SVDException {
 
         ExpressionDataSVD svd;
         switch ( config.getNormalizationMethod() ) {

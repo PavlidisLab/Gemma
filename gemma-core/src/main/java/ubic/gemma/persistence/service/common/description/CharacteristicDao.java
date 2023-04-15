@@ -19,6 +19,7 @@
 package ubic.gemma.persistence.service.common.description;
 
 import lombok.Data;
+import lombok.Value;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -95,11 +96,11 @@ public interface CharacteristicDao
     /**
      * Represents a set of characteristics grouped by {@link Characteristic#getValueUri()} or {@link Characteristic#getValue()}.
      */
-    @Data
+    @Value
     class CharacteristicByValueUriOrValueCount {
-        private final String valueUri;
-        private final String value;
-        private final Long count;
+        String valueUri;
+        String value;
+        Long count;
     }
 
     /**

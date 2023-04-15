@@ -23,6 +23,7 @@ import cern.colt.matrix.DoubleMatrix1D;
 import cern.colt.matrix.DoubleMatrix2D;
 import cern.colt.matrix.impl.DenseDoubleMatrix2D;
 import cern.jet.math.Functions;
+import cern.jet.stat.Descriptive;
 import lombok.Value;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -465,8 +466,9 @@ public class ExpressionDataDoubleMatrixUtil {
      */
     private static boolean isZScore( DoubleMatrix1D vector ) {
         DoubleArrayList v = new DoubleArrayList( vector.toArray() );
-        if ( isCloseToZero( DescriptiveWithMissing.mean( v ) ) ) {
-            double var = DescriptiveWithMissing.sampleVariance( v, v.size() - 1 );
+        double mean = DescriptiveWithMissing.mean( v );
+        if ( isCloseToZero( mean ) ) {
+            double var = DescriptiveWithMissing.sampleVariance( v, mean );
             if ( !isClose( var, 1 ) ) {
                 log.warn( String.format( "Mean is zero, but standard deviation %f is not close enough to one. Will still report as Z-score.", Math.sqrt( var ) ) );
             }

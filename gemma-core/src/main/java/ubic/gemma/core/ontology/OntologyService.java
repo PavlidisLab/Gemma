@@ -56,7 +56,7 @@ public interface OntologyService {
      *
      * @param  searchQuery           search query
      * @param  useNeuroCartaOntology use neurocarta ontology
-     * @return                       characteristic vos
+     * @return characteristic vos
      */
     Collection<CharacteristicValueObject> findExperimentsCharacteristicTags( String searchQuery,
             boolean useNeuroCartaOntology ) throws OntologySearchException;
@@ -68,7 +68,7 @@ public interface OntologyService {
      * match the search term. this a lucene backed search, is inexact and for general terms can return a lot of results.
      *
      * @param  search search
-     * @return        a collection of Characteristics that are backed by the corresponding found OntologyTerm
+     * @return a collection of Characteristics that are backed by the corresponding found OntologyTerm
      */
     Collection<Characteristic> findTermAsCharacteristic( String search ) throws OntologySearchException;
 
@@ -78,7 +78,7 @@ public interface OntologyService {
      * For other queries, this a lucene backed search, is inexact and for general terms can return a lot of results.
      *
      * @param  search search
-     * @return        returns a collection of ontologyTerm's
+     * @return returns a collection of ontologyTerm's
      */
     Collection<OntologyTerm> findTerms( String search ) throws OntologySearchException;
 
@@ -92,7 +92,7 @@ public interface OntologyService {
      *                          restriction is
      *                          not used.
      * @param  givenQueryString query string
-     * @return                  characteristic vos
+     * @return characteristic vos
      */
     Collection<CharacteristicValueObject> findTermsInexact( String givenQueryString, Taxon taxon ) throws OntologySearchException, SearchException;
 
@@ -158,7 +158,7 @@ public interface OntologyService {
 
     /**
      * @param  uri uri
-     * @return     the OntologyResource
+     * @return the OntologyResource
      */
     @Nullable
     OntologyResource getResource( String uri );
@@ -167,7 +167,7 @@ public interface OntologyService {
 
     /**
      * @param  uri uri
-     * @return     the OntologyTerm for the specified URI.
+     * @return the OntologyTerm for the specified URI.
      */
     @Nullable
     OntologyTerm getTerm( String uri );
@@ -199,8 +199,6 @@ public interface OntologyService {
      * @param vc vc
      */
     void saveBioMaterialStatement( Characteristic vc, BioMaterial bm );
-
-    void sort( List<CharacteristicValueObject> characteristics );
 
     Collection<Characteristic> termsToCharacteristics( Collection<? extends OntologyResource> terms );
 }

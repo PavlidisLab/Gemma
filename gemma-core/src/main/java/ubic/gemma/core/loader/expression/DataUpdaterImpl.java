@@ -22,6 +22,8 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.io.ByteArrayConverter;
@@ -72,7 +74,7 @@ import java.util.*;
 @Service
 public class DataUpdaterImpl implements DataUpdater {
 
-    private static final Log log = LogFactory.getLog( DataUpdaterImpl.class );
+    private static final Log log = LogFactory.getLog( DataUpdater.class );
 
     @Autowired
     private ArrayDesignService arrayDesignService;
@@ -129,7 +131,7 @@ public class DataUpdaterImpl implements DataUpdater {
      *                             exon-level)
      * @throws IOException         when IO problems occur.
      */
-    @Override
+    @Transactional(propagation = Propagation.NEVER)
     public void addAffyDataFromAPTOutput( ExpressionExperiment ee, String pathToAptOutputFile ) throws IOException {
 
         Collection<ArrayDesign> ads = experimentService.getArrayDesignsUsed( ee );
@@ -186,7 +188,7 @@ public class DataUpdaterImpl implements DataUpdater {
      * @param isPairedReads       is paired reads
      * @param readLength          read length
      */
-    @Override
+    @Transactional(propagation = Propagation.NEVER)
     public void addCountData( ExpressionExperiment ee, ArrayDesign targetArrayDesign,
             DoubleMatrix<String, String> countMatrix, DoubleMatrix<String, String> rpkmMatrix, Integer readLength,
             Boolean isPairedReads, boolean allowMissingSamples ) {
@@ -283,7 +285,7 @@ public class DataUpdaterImpl implements DataUpdater {
      * @param ee ee
      * @param qt qt
      */
-    @Override
+    @Transactional(propagation = Propagation.NEVER)
     public void log2cpmFromCounts( ExpressionExperiment ee, QuantitationType qt ) {
         ee = experimentService.thawLite( ee );
 
@@ -340,8 +342,8 @@ public class DataUpdaterImpl implements DataUpdater {
      * @param  data           data
      * @return ee
      */
-    @Override
     @SuppressWarnings("UnusedReturnValue") // Possible external use
+    @Transactional(propagation = Propagation.NEVER)
     public ExpressionExperiment replaceData( ExpressionExperiment ee, ArrayDesign targetPlatform, QuantitationType qt,
             DoubleMatrix<String, String> data ) {
         targetPlatform = this.arrayDesignService.thaw( targetPlatform );
@@ -367,7 +369,7 @@ public class DataUpdaterImpl implements DataUpdater {
      *
      * @param ee the experiment (already lightly thawed)
      */
-    @Override
+    @Transactional(propagation = Propagation.NEVER)
     public void reprocessAffyDataFromCel( ExpressionExperiment ee ) {
         DataUpdaterImpl.log.info( "------  Begin processing: " + ee + " -----" );
         Collection<ArrayDesign> associatedPlats = experimentService.getArrayDesignsUsed( ee );
@@ -541,7 +543,7 @@ public class DataUpdaterImpl implements DataUpdater {
      * @param  data           to slot in
      * @return ee
      */
-    @Override
+    @Transactional(propagation = Propagation.NEVER)
     public ExpressionExperiment addData( ExpressionExperiment ee, ArrayDesign targetPlatform, ExpressionDataDoubleMatrix data ) {
 
         if ( data.rows() == 0 ) {
@@ -606,7 +608,7 @@ public class DataUpdaterImpl implements DataUpdater {
      * @param  data           the data to be used
      * @return ee
      */
-    @Override
+    @Transactional(propagation = Propagation.NEVER)
     public ExpressionExperiment replaceData( ExpressionExperiment ee, ArrayDesign targetPlatform,
             ExpressionDataDoubleMatrix data ) {
 

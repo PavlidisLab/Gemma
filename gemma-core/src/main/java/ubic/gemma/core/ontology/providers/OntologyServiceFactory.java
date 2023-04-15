@@ -3,8 +3,7 @@ package ubic.gemma.core.ontology.providers;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
-import org.springframework.beans.factory.DisposableBean;
-import org.springframework.beans.factory.FactoryBean;
+import org.springframework.beans.factory.config.AbstractFactoryBean;
 import ubic.basecode.ontology.providers.OntologyService;
 import ubic.basecode.util.Configuration;
 
@@ -13,7 +12,7 @@ import ubic.basecode.util.Configuration;
  * @param <T> the type of ontology service this factory produces
  */
 @CommonsLog
-public class OntologyServiceFactory<T extends OntologyService> implements FactoryBean<T>, DisposableBean {
+public class OntologyServiceFactory<T extends OntologyService> extends AbstractFactoryBean<T> {
 
     /**
      * Determine if ontologies are to be loaded on startup.
@@ -73,23 +72,6 @@ public class OntologyServiceFactory<T extends OntologyService> implements Factor
         return isAutoLoad || forceLoad;
     }
 
-    private T service = null;
-
-    @Override
-    public synchronized T getObject() {
-        if ( service != null )
-            return service;
-        service = BeanUtils.instantiate( ontologyServiceClass );
-        if ( isAutoLoad || forceLoad ) {
-            if ( loadInBackground ) {
-                service.startInitializationThread( forceLoad, forceIndexing );
-            } else {
-                service.initialize( forceLoad, forceIndexing );
-            }
-        }
-        return service;
-    }
-
     @Override
     public Class<?> getObjectType() {
         return ontologyServiceClass;
@@ -101,10 +83,23 @@ public class OntologyServiceFactory<T extends OntologyService> implements Factor
     }
 
     @Override
-    public void destroy() throws Exception {
-        if ( service.isInitializationThreadAlive() ) {
-            log.info( String.format( "Cancelling initialization thread for %s...", service.getClass().getName() ) );
-            service.cancelInitializationThread();
+    protected T createInstance() throws Exception {
+        T service = BeanUtils.instantiate( ontologyServiceClass );
+        if ( isAutoLoad || forceLoad ) {
+            if ( loadInBackground ) {
+                service.startInitializationThread( forceLoad, forceIndexing );
+            } else {
+                service.initialize( forceLoad, forceIndexing );
+            }
+        }
+        return service;
+    }
+
+    @Override
+    protected void destroyInstance( T instance ) {
+        if ( instance.isInitializationThreadAlive() ) {
+            log.info( String.format( "Cancelling initialization thread for %s...", instance ) );
+            instance.cancelInitializationThread();
         }
     }
 }

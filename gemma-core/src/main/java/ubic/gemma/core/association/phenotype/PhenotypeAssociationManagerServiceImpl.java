@@ -1660,11 +1660,9 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
                             PhenotypeAssociationManagerServiceImpl.log.debug(
                                     // this ends up being pretty verbose.
                                     "A valueUri in the database was not found in the ontology; DB out of date?; valueUri: "
-                                            + valueUri );
+                                            + valueUri, entityNotFoundException );
                     } else {
-                        throw new RuntimeException(
-                                PhenotypeAssociationManagerServiceImpl.ERROR_MSG_ONTOLOGIES_NOT_LOADED + " ( "
-                                        + entityNotFoundException.getMessage() + " )" );
+                        throw new RuntimeException( PhenotypeAssociationManagerServiceImpl.ERROR_MSG_ONTOLOGIES_NOT_LOADED, entityNotFoundException );
                     }
                 }
             }
@@ -1743,11 +1741,9 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
                     continue;
             } catch ( EntityNotFoundException e ) {
                 if ( !ontologyHelper.areOntologiesAllLoaded() ) {
-                    throw new RuntimeException(
-                            PhenotypeAssociationManagerServiceImpl.ERROR_MSG_ONTOLOGIES_NOT_LOADED + " ( " + e
-                                    .getMessage() + " )" );
+                    log.warn( PhenotypeAssociationManagerServiceImpl.ERROR_MSG_ONTOLOGIES_NOT_LOADED, e );
                 }
-                throw e;
+                return Collections.emptyMap();
             }
             Collection<OntologyTerm> ontologyChildrenFound = ontologyTermFound.getChildren( false );
 

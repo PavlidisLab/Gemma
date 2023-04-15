@@ -88,8 +88,8 @@ public class StartupListener extends ContextLoaderListener {
 
     @Override
     public void contextInitialized( ServletContextEvent event ) {
-        StartupListener.log.info( "Initializing Gemma Web context..." );
-        StopWatch sw = StopWatch.createStarted();
+        StopWatch sw = new StopWatch();
+        sw.start();
 
         SecurityContextHolder.setStrategyName( SecurityContextHolder.MODE_INHERITABLETHREADLOCAL );
 

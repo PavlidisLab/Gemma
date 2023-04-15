@@ -14,37 +14,73 @@
  */
 package ubic.gemma.core.analysis.preprocess;
 
+import org.springframework.transaction.annotation.Propagation;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
- * @author Paul
+ * Encapsulates steps that are done to expression data sets after they are loaded and experimental design curated.
+ * <p>
+ * This can also be used to 'refresh' everything.
+ * <p>
+ * The following steps are performed:
+ * <ol>
+ * <li>Deleting old analysis files and results, as these are invalidated by the subsequent steps.S
+ * <li>Computing missing values (two-channel)
+ * <li>Creation of "processed" vectors
+ * <li>Batch-correction</li>
+ * <li>PCA
+ * <li>Computing sample-wise correlation matrices for diagnostic plot
+ * <li>Computing mean-variance data for diagnostic plots
+ * <li>GEEQ scoring</li>
+ * <li>Redoing any DEA (if this is a 'refresh')</li>
+ * </ol>
+ *
+ * Note that since each step can be replayed and the whole process is lengthy and likely to lock parts of not whole
+ * tables, it is marked as {@link Propagation#NEVER} to prevent execution within another transaction.
+ *
+ * @author paul
  */
 public interface PreprocessorService {
 
     /**
      * Preprocess a dataset.
-     * @param ee the expression experiment to process
+     * <p>
+     * Mismatched quantitation types are ignored by default, diagnostics failure will in a {@link PreprocessingException}.
+     *
+     * @see #process(ExpressionExperiment, boolean, boolean)
      */
-    void process( ExpressionExperiment ee ) throws PreprocessingException;
+    default void process( ExpressionExperiment ee ) throws PreprocessingException {
+        process( ee, true, false );
+    }
 
     /**
      * Preprocess a dataset.
+     * <p>
+     * Diagnostic failure will result in a {@link PreprocessingException}.
+     *
+     * @see #process(ExpressionExperiment, boolean, boolean)
+     */
+    default void process( ExpressionExperiment ee, boolean ignoreQuantitationMismatch ) throws PreprocessingException {
+        process( ee, ignoreQuantitationMismatch, false );
+    }
+
+
+    /**
+     * Preprocess a dataset.
+     *
      * @param ee                         the expression experiment to process
      * @param ignoreQuantitationMismatch ignore quantitation mismatch when generating processed EVs
+     * @param ignoreDiagnosticFailure    simply warn if a diagnostic fails instead of interrupting the pre-processing
+     *                                   and raising an exception
      * @throws PreprocessingException if there was a problem during the processing
      */
-    void process( ExpressionExperiment ee, boolean ignoreQuantitationMismatch ) throws PreprocessingException;
+    void process( ExpressionExperiment ee, boolean ignoreQuantitationMismatch, boolean ignoreDiagnosticFailure ) throws PreprocessingException;
 
     /**
-     * A lightweight flavour of {@link #process(ExpressionExperiment, boolean)}.
+     * Create or update the sample correlation, PCA and M-V data.
      * <p>
-     * The following are skipped: two-channel missing values; redoing differential expression; batch correction.
-     */
-    void processLight( ExpressionExperiment ee ) throws PreprocessingException;
-
-    /**
-     * Create or update the sample correlation, PCA and M-V data. This is also done as part of process so should only be
-     * called if only a refresh is needed.
+     * This is also done as part of {@link #process(ExpressionExperiment, boolean, boolean)} so should only be called if
+     * only a refresh is needed.
      */
     void processDiagnostics( ExpressionExperiment ee ) throws PreprocessingException;
 }

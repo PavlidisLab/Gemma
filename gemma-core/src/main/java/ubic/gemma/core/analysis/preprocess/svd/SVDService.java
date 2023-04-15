@@ -30,7 +30,7 @@ public interface SVDService {
 
     SVDValueObject getSvd( Long eeId );
 
-    SVDValueObject svd( Long eeId );
+    SVDValueObject svd( Long eeId ) throws SVDException;
 
     SVDValueObject getSvdFactorAnalysis( Long eeId );
 

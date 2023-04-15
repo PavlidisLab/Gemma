@@ -22,14 +22,15 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalyzerService;
 import ubic.gemma.core.analysis.preprocess.batcheffects.ExpressionExperimentBatchCorrectionService;
+import ubic.gemma.core.analysis.preprocess.svd.SVDException;
 import ubic.gemma.core.analysis.preprocess.svd.SVDServiceHelper;
 import ubic.gemma.core.analysis.report.ExpressionExperimentReportService;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
-import ubic.gemma.core.datastructure.matrix.InferredQuantitationMismatchException;
 import ubic.gemma.core.datastructure.matrix.QuantitationMismatchException;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.common.auditAndSecurity.eventType.BatchCorrectionEvent;
@@ -46,36 +47,6 @@ import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressio
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.expression.experiment.GeeqService;
 
-/**
- * Encapsulates steps that are done to expression data sets after they are loaded, or which can be triggered by certain
- * later events in the lifecycle of a data set. These include:
- * <ol>
- * <li>Deleting old analysis files and results, as these are invalidated by the subsequent steps.S
- * <li>Computing missing values - Basic processing
- * <li>Creation of "processed" vectors
- * <li>PCA
- * <li>Computing sample-wise correlation matrices for diagnostic plot
- * <li>Computing mean-variance data for diagnostic plots
- * </ol>
- * <p>
- * WORK IN PROGRESS
- * </p>
- * Other elements that can be considered
- * <ol>
- * <li>Reprocess from raw data? - not yet
- * <li>Switching to a merged array design and merging vectors
- * <li>(Re)normalization
- * <li>Getting information on batches
- * <li>Outlier detection
- * <li>Batch correction -- should be done after the experimental design is done, and after batch info has been obtained,
- * and after outliers have been removed.
- * <li>Ordering of vectors with respect to the experimental design? [probably not, this isn't a big problem]
- * <li>Populating the experimental design (guesses)?
- * <li>Autotagger
- * </ol>
- *
- * @author paul
- */
 @Service
 public class PreprocessorServiceImpl implements PreprocessorService {
 
@@ -111,57 +82,38 @@ public class PreprocessorServiceImpl implements PreprocessorService {
     private GeeqService geeqService;
 
     @Override
-    @Transactional
-    public void process( ExpressionExperiment ee ) throws PreprocessingException {
-        process( ee, true );
-    }
-
-    @Override
-    @Transactional
-    public void process( ExpressionExperiment ee, boolean ignoreQuantitationMismatch ) throws PreprocessingException {
+    @Transactional(propagation = Propagation.NEVER)
+    public void process( ExpressionExperiment ee, boolean ignoreQuantitationMismatch, boolean ignoreDiagnosticsFailure ) throws PreprocessingException {
         ee = expressionExperimentService.thaw( ee );
-        removeInvalidatedData( ee );
-        processForMissingValues( ee );
-        processVectorCreate( ee, ignoreQuantitationMismatch );
-        batchCorrect( ee );
-    }
+        removeInvalidatedData( ee ); // clear out old files
+        processForMissingValues( ee ); // only relevant for two-channel arrays
+        processVectorCreate( ee, ignoreQuantitationMismatch ); // key step
+        batchCorrect( ee ); // will be a no-op in many cases
+        processBatchInfo( ee ); // update status
+        try {
+            processDiagnostics( ee ); // PCA, GEEQ, MV etc.
+        } catch ( PreprocessingException e ) {
+            if ( ignoreDiagnosticsFailure ) {
+                log.warn( String.format( "Processing diagnostics failed for %s, will attempt to update DEAs anyway, but the plots might be incorrect.", ee.getShortName() ), e );
+            } else {
+                throw e;
+            }
 
-    @Override
-    @Transactional
-    public void processLight( ExpressionExperiment ee ) throws PreprocessingException {
-        // we dont do processForMissingValues missing values
-        ee = expressionExperimentService.thaw( ee );
-        removeInvalidatedData( ee );
-        processVectorCreate( ee, true );
-        processDiagnostics( ee );
-        processBatchInfo( ee );
+        }
+        updateDEAs( ee ); // if existing, redo it
     }
 
     /**
      * If possible, batch correct the processed data vectors. This entails repeating the other preprocessing steps. But
      * it should only be run after the experimental design is set up, the batch information has been fetched, and (of
-     * course) the processed data are already available.
+     * course) the data needed are already available.
      */
     private void batchCorrect( ExpressionExperiment ee ) throws PreprocessingException {
-        if ( !expressionExperimentBatchCorrectionService.checkCorrectability( ee, true ) ) {
-            log.warn( String.format( "%s cannot be batch-corrected: either already batch-corrected, no batch information, or invalid design.", ee ) );
-            return;
-        }
-
-        if ( expressionExperimentService.getArrayDesignsUsed( ee ).size() > 1 ) {
-            log.warn( String.format( "%s cannot be batch-corrected: can only batch-correct data for an experiment that uses one platform; you must switch/merge first.", ee ) );
+        if ( !expressionExperimentBatchCorrectionService.checkCorrectability( ee ) ) {
             return;
         }
 
         String note = "ComBat batch correction";
-        String detail;
-
-        /*
-         * If there are predicted outliers, but which we decide are okay, we just go ahead.
-         */
-        note = "[Forced]" + note;
-        detail = "Batch correction skipped outlier check.";
-        PreprocessorServiceImpl.log.warn( detail );
 
         Collection<ProcessedExpressionDataVector> vecs = this.getProcessedExpressionDataVectors( ee );
 
@@ -171,21 +123,13 @@ public class PreprocessorServiceImpl implements PreprocessorService {
         processedExpressionDataVectorService
                 .createProcessedDataVectors( ee, correctedData.toProcessedDataVectors() );
 
-        String bConf = expressionExperimentService.getBatchConfound( ee );
-        if ( bConf != null ) {
-            String add = "Batch correction forced over a detected confound: " + bConf;
-            //noinspection ConstantConditions // That is simply false.
-            detail = ( detail == null ) ? add : detail + "\n" + add;
-        }
-        auditTrailService.addUpdateEvent( ee, BatchCorrectionEvent.class, note, detail );
+        auditTrailService.addUpdateEvent( ee, BatchCorrectionEvent.class, note, "" );
 
-        removeInvalidatedData( ee );
-        processExceptForVectorCreate( ee );
-        processBatchInfo( ee );
+
     }
 
     @Override
-    @Transactional
+    @Transactional(propagation = Propagation.NEVER)
     public void processDiagnostics( ExpressionExperiment ee ) throws PreprocessingException {
         this.processForSampleCorrelation( ee );
         this.processForMeanVarianceRelation( ee );
@@ -203,6 +147,10 @@ public class PreprocessorServiceImpl implements PreprocessorService {
         }
     }
 
+    /**
+     * Refresh the batch status of the data set.
+     * @param ee
+     */
     private void processBatchInfo( ExpressionExperiment ee ) {
         expressionExperimentReportService.recalculateExperimentBatchInfo( ee );
     }
@@ -228,10 +176,9 @@ public class PreprocessorServiceImpl implements PreprocessorService {
     }
 
     /**
-     * Do all processing steps except making the vectors (so it uses the vectors that are there) including batch
-     * correction, diagnostics, and refreshing of old analyses.
+     * Update DEA if needed.
      */
-    private void processExceptForVectorCreate( ExpressionExperiment ee ) {
+    private void updateDEAs( ExpressionExperiment ee ) {
         assert ee.getNumberOfDataVectors() != null;
 
         /*
@@ -247,11 +194,6 @@ public class PreprocessorServiceImpl implements PreprocessorService {
                 this.analyzerService.redoAnalysis( ee, copyMe, true );
             }
         }
-
-        processDiagnostics( ee );
-
-        expressionExperimentService.update( ee );
-        assert ee.getNumberOfDataVectors() != null;
     }
 
     /**
@@ -263,24 +205,30 @@ public class PreprocessorServiceImpl implements PreprocessorService {
 
     private void processForMissingValues( ExpressionExperiment ee ) {
         Collection<ArrayDesign> arrayDesignsUsed = expressionExperimentService.getArrayDesignsUsed( ee );
-        if ( arrayDesignsUsed.size() > 1 ) {
-            log.warn( "Skipping postprocessing because experiment uses multiple platform types. Please check valid entry and run postprocessing separately." );
-            return;
+
+        // this is in a loop so we only issue a multiplatform warning if this is even relevant.
+        for ( ArrayDesign arrayDesignUsed : arrayDesignsUsed ) {
+            TechnologyType tt = arrayDesignUsed.getTechnologyType();
+            if ( tt == TechnologyType.TWOCOLOR || tt == TechnologyType.DUALMODE ) {
+
+                if ( arrayDesignsUsed.size() > 1 ) {
+                    log.warn( "Skipping two-channel missing value computation: experiment uses multiple platform types. Please check valid entry and run postprocessing separately." );
+                    return;
+                }
+
+                PreprocessorServiceImpl.log
+                        .info( ee + " uses a two-color array design, processing for missing values ..." );
+                twoChannelMissingValueService.computeMissingValues( ee );
+            }
         }
-
-        ArrayDesign arrayDesignUsed = arrayDesignsUsed.iterator().next();
-
-        TechnologyType tt = arrayDesignUsed.getTechnologyType();
-        if ( tt == TechnologyType.TWOCOLOR || tt == TechnologyType.DUALMODE ) {
-            PreprocessorServiceImpl.log
-                    .info( ee + " uses a two-color array design, processing for missing values ..." );
-            twoChannelMissingValueService.computeMissingValues( ee );
-        }
-
     }
 
-    private void processForPca( ExpressionExperiment ee ) {
-        svdService.svd( ee );
+    private void processForPca( ExpressionExperiment ee ) throws SVDRelatedPreprocessingException {
+        try {
+            svdService.svd( ee );
+        } catch ( SVDException e ) {
+            throw new SVDRelatedPreprocessingException( ee, e );
+        }
     }
 
     /**

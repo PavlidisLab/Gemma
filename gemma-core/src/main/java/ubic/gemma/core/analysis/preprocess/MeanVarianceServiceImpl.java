@@ -23,6 +23,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.basecode.io.ByteArrayConverter;
 import ubic.basecode.math.linearmodels.MeanVarianceEstimator;
+import ubic.gemma.core.analysis.service.ExpressionDataMatrixService;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrixUtil;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
@@ -42,11 +43,11 @@ public class MeanVarianceServiceImpl implements MeanVarianceService {
 
     private static final Log log = LogFactory.getLog( MeanVarianceServiceImpl.class );
     private static final ByteArrayConverter bac = new ByteArrayConverter();
-    @Autowired
-    private MeanVarianceServiceHelper meanVarianceServiceHelper;
 
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
+    @Autowired
+    private ExpressionDataMatrixService expressionDataMatrixService;
 
     /**
      * @param  matrix on which mean variance relation is computed with
@@ -93,7 +94,7 @@ public class MeanVarianceServiceImpl implements MeanVarianceService {
         }
 
         ee = expressionExperimentService.thawLiter( ee );
-        ExpressionDataDoubleMatrix intensities = meanVarianceServiceHelper.getIntensities( ee );
+        ExpressionDataDoubleMatrix intensities = expressionDataMatrixService.getProcessedExpressionDataMatrix( ee );
         if ( intensities == null ) {
             throw new IllegalStateException( "Could not locate intensity matrix for " + ee.getShortName() );
         }
@@ -123,7 +124,9 @@ public class MeanVarianceServiceImpl implements MeanVarianceService {
 
         MeanVarianceRelation mvr = calculateMeanVariance( intensities, null );
 
-        meanVarianceServiceHelper.createMeanVariance( ee, mvr );
+        mvr.setSecurityOwner( ee );
+        ee.setMeanVarianceRelation( mvr );
+        expressionExperimentService.update( ee );
         log.info( "Mean-variance computation is complete" );
 
         return mvr;
