@@ -39,11 +39,11 @@ public interface ArrayDesignMergeService {
      * @param otherArrayDesigns    array designs to merge with the arrayDesign
      * @param nameOfNewDesign      can be null if "add" is true (ignored)
      * @param shortNameOfNewDesign can be null if "add" is true (ignored)
-     * @param add                  if "arrayDesign" is already merged, add the "otherArrayDesign"s to it. Otherwise force the creation of
-     *                             a new design.
+     * @param mergeWithExisting    if "arrayDesign" is already merged, add the "otherArrayDesign"s to it. Otherwise,
+     *                             force the creation of  a new design.
      * @return the merged design. If add=true, then this will be "arrayDesign". Otherwise it will be a new array design.
      */
     ArrayDesign merge( ArrayDesign arrayDesign, Collection<ArrayDesign> otherArrayDesigns, String nameOfNewDesign,
-            String shortNameOfNewDesign, boolean add );
+            String shortNameOfNewDesign, boolean mergeWithExisting );
 
 }

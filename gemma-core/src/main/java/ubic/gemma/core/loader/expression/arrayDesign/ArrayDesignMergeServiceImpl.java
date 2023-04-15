@@ -65,7 +65,7 @@ public class ArrayDesignMergeServiceImpl implements ArrayDesignMergeService {
 
     @Override
     public ArrayDesign merge( ArrayDesign arrayDesign, Collection<ArrayDesign> otherArrayDesigns,
-            String nameOfNewDesign, String shortNameOfNewDesign, boolean add ) {
+            String nameOfNewDesign, String shortNameOfNewDesign, boolean mergeWithExisting ) {
 
         if ( otherArrayDesigns.isEmpty() )
             throw new IllegalArgumentException( "Must merge at least one array design" );
@@ -78,9 +78,9 @@ public class ArrayDesignMergeServiceImpl implements ArrayDesignMergeService {
                     "Sorry, can't merge an array design that is already a mergee (" + arrayDesign + ")" );
         }
 
-        if ( add && arrayDesign.getMergees().isEmpty() ) {
+        if ( mergeWithExisting && arrayDesign.getMergees().isEmpty() ) {
             throw new IllegalArgumentException(
-                    "Can't use 'add' when arrayDesign isn't already a mergee (" + arrayDesign + ")" );
+                    "Can't use 'mergeWithExisting' when arrayDesign isn't already a mergee (" + arrayDesign + ")" );
         }
 
         // make map of biosequence -> design elements for all the array designs. But watch out for biosequences that
@@ -90,7 +90,7 @@ public class ArrayDesignMergeServiceImpl implements ArrayDesignMergeService {
         ArrayDesign thawed = this.makeBioSeqMap( globalBsMap, arrayDesign );
 
         ArrayDesignMergeServiceImpl.log.info( globalBsMap.keySet().size() + " sequences in first array design." );
-        // Now check the other designs, add slots for additional probes if necessary.
+        // Now check the other designs, mergeWithExisting slots for additional probes if necessary.
         Collection<ArrayDesign> thawedOthers = new HashSet<>();
         for ( ArrayDesign otherArrayDesign : otherArrayDesigns ) {
 
@@ -111,11 +111,11 @@ public class ArrayDesignMergeServiceImpl implements ArrayDesignMergeService {
                     .info( globalBsMap.keySet().size() + " unique sequences encountered in total so far" );
         }
 
-        return this.createMerged( thawed, thawedOthers, globalBsMap, nameOfNewDesign, shortNameOfNewDesign, add );
+        return this.createMerged( thawed, thawedOthers, globalBsMap, nameOfNewDesign, shortNameOfNewDesign, mergeWithExisting );
     }
 
     /**
-     * @param mergeWithExisting i.e., "add", assuming arrayDesign is already a merged design.
+     * @param mergeWithExisting i.e., "mergeWithExisting", assuming arrayDesign is already a merged design.
      */
     private ArrayDesign createMerged( ArrayDesign arrayDesign, Collection<ArrayDesign> otherArrayDesigns,
             Map<BioSequence, Collection<CompositeSequence>> globalBsMap, String newName, String newShortName,
@@ -151,7 +151,7 @@ public class ArrayDesignMergeServiceImpl implements ArrayDesignMergeService {
         if ( mergeWithExisting ) {
             if ( arrayDesign.getMergees().isEmpty() ) {
                 throw new IllegalArgumentException(
-                        "Cannot use 'add' unless the array design is already a merged design: " + arrayDesign );
+                        "Cannot use 'mergeWithExisting' unless the array design is already a merged design: " + arrayDesign );
             }
             assert arrayDesign.getId() != null;
             ArrayDesignMergeServiceImpl.log
@@ -240,7 +240,7 @@ public class ArrayDesignMergeServiceImpl implements ArrayDesignMergeService {
 
     /**
      * Makes the new or additional probes (non-persistent) for the merged array design. If mergeWithExisting=true,
-     * probes from arrayDesign will not be included; just the ones that we need to add to it will be returned.
+     * probes from arrayDesign will not be included; just the ones that we need to mergeWithExisting to it will be returned.
      *
      * @param globalBsMap Map that tells us, in effect, how many probes to make for the sequence.
      */
@@ -258,7 +258,7 @@ public class ArrayDesignMergeServiceImpl implements ArrayDesignMergeService {
                 if ( mergeWithExisting && cs.getArrayDesign().equals( arrayDesign ) ) {
                     assert arrayDesign.getId() != null;
                     /*
-                     * Only add probes from the _other_ array designs.
+                     * Only mergeWithExisting probes from the _other_ array designs.
                      */
                     continue;
                 }

@@ -21,6 +21,8 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.context.SecurityContextHolder;
+import ubic.basecode.dataStructure.Link;
 import ubic.gemma.core.loader.expression.ExpressionExperimentPlatformSwitchService;
 import ubic.gemma.core.loader.expression.arrayDesign.ArrayDesignMergeService;
 import ubic.gemma.core.loader.expression.geo.AbstractGeoServiceTest;
@@ -42,9 +44,8 @@ import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import static org.junit.Assert.*;
 
@@ -61,8 +62,6 @@ public class VectorMergingServiceTest extends AbstractGeoServiceTest {
     @Autowired
     private ArrayDesignService arrayDesignService;
 
-    private ExpressionExperiment ee = null;
-
     @Autowired
     private ExpressionExperimentPlatformSwitchService eePlatformSwitchService;
 
@@ -71,8 +70,6 @@ public class VectorMergingServiceTest extends AbstractGeoServiceTest {
 
     @Autowired
     private GeoService geoService;
-
-    private ArrayDesign mergedAA = null;
 
     @Autowired
     private ProcessedExpressionDataVectorService processedExpressionDataVectorService;
@@ -86,44 +83,27 @@ public class VectorMergingServiceTest extends AbstractGeoServiceTest {
     @Autowired
     private PreprocessorService preprocessorService;
 
-    @Before
+    private ExpressionExperiment ee = null;
+    private Collection<ArrayDesign> aas = null;
+    private ArrayDesign mergedAA = null;
+
     @After
     public void tearDown() {
-        try {
-            ee = eeService.findByShortName( "GSE3443" );
-
-            if ( ee != null ) {
-                mergedAA = eeService.getArrayDesignsUsed( ee ).iterator().next();
-                eeService.remove( ee );
-
-                if ( mergedAA != null ) {
-                    mergedAA.setMergees( new HashSet<ArrayDesign>() );
-                    arrayDesignService.update( mergedAA );
-
-                    mergedAA = arrayDesignService.thawLite( mergedAA );
-                    for ( ArrayDesign arrayDesign : mergedAA.getMergees() ) {
-                        arrayDesign.setMergedInto( null );
-                        arrayDesignService.update( arrayDesign );
-                    }
-
-                    for ( ExpressionExperiment e : arrayDesignService.getExpressionExperiments( mergedAA ) ) {
-                        eeService.remove( e );
-                    }
-
-                    arrayDesignService.remove( mergedAA );
-                    for ( ArrayDesign arrayDesign : mergedAA.getMergees() ) {
-                        for ( ExpressionExperiment e : arrayDesignService.getExpressionExperiments( arrayDesign ) ) {
-                            eeService.remove( e );
-                        }
-                        arrayDesignService.remove( arrayDesign );
-
-                    }
-                }
-
-            }
-        } catch ( Exception e ) {
-            log.info( "Tear-down failed: " + e.getMessage() );
+        if ( ee != null ) {
+            eeService.remove( ee );
         }
+        LinkedHashSet<ArrayDesign> toRemove = new LinkedHashSet<>();
+        if ( aas != null ) {
+            Set<ArrayDesign> mergedInto = aas.stream().map( ArrayDesign::getMergedInto ).filter( Objects::nonNull ).collect( Collectors.toSet() );
+            toRemove.addAll( aas );
+            toRemove.addAll( mergedInto );
+            arrayDesignService.remove( aas );
+        }
+        if ( mergedAA != null ) {
+            toRemove.add( mergedAA );
+            toRemove.addAll( mergedAA.getMergees() );
+        }
+        arrayDesignService.remove( toRemove );
     }
 
     @Test
@@ -148,7 +128,6 @@ public class VectorMergingServiceTest extends AbstractGeoServiceTest {
 
         Collection<?> results = geoService.fetchAndLoad( "GSE3443", false, false, false );
         ee = ( ExpressionExperiment ) results.iterator().next();
-
         ee = this.eeService.thawLite( ee );
 
         // fix for unknown log scale
@@ -159,19 +138,16 @@ public class VectorMergingServiceTest extends AbstractGeoServiceTest {
             }
         }
 
-        Collection<ArrayDesign> aas = eeService.getArrayDesignsUsed( ee );
-
+        aas = eeService.getArrayDesignsUsed( ee );
+        aas = arrayDesignService.thaw( aas );
         assertEquals( 7, aas.size() );
 
         /*
          * Check number of sequences across all platforms. This is how many elements we need on the new platform, plus
          * extras for duplicated sequences (e.g. elements that don't have a sequence...)
          */
-        Collection<ArrayDesign> taas = new HashSet<>();
         Set<BioSequence> oldbs = new HashSet<>();
         for ( ArrayDesign arrayDesign : aas ) {
-            arrayDesign = arrayDesignService.thaw( arrayDesign );
-            taas.add( arrayDesign );
             for ( CompositeSequence cs : arrayDesign.getCompositeSequences() ) {
                 oldbs.add( cs.getBiologicalCharacteristic() );
             }
@@ -182,19 +158,27 @@ public class VectorMergingServiceTest extends AbstractGeoServiceTest {
          * Check total size of elements across all 7 platforms.
          */
         int totalElements = 0;
-        for ( ArrayDesign arrayDesign : taas ) {
+        for ( ArrayDesign arrayDesign : aas ) {
             totalElements += arrayDesign.getCompositeSequences().size();
         }
         assertEquals( 140, totalElements );
 
-        ArrayDesign firstaa = taas.iterator().next();
-        aas.remove( firstaa );
+        // make sure that the platforms are not already merged
+        for ( ArrayDesign aa : aas ) {
+            assertNull( aa.getMergedInto() );
+            assertTrue( aa.getMergees().isEmpty() );
+        }
 
-        assertNull( firstaa.getMergedInto() );
+        Iterator<ArrayDesign> it = aas.iterator();
+        ArrayDesign firstAA = it.next();
+        Collection<ArrayDesign> remainingAAs = new HashSet<>();
+        it.forEachRemaining( remainingAAs::add );
 
-        mergedAA = arrayDesignMergeService.merge( firstaa, taas, "testMerge" + RandomStringUtils.randomAlphabetic( 5 ),
+        mergedAA = arrayDesignMergeService.merge( firstAA, remainingAAs, "testMerge" + RandomStringUtils.randomAlphabetic( 5 ),
                 "merged" + RandomStringUtils.randomAlphabetic( 5 ), false );
 
+        // ensure a new platform is created
+        assertNotEquals( firstAA, mergedAA );
         assertEquals( 72, mergedAA.getCompositeSequences().size() );
 
         Set<BioSequence> seenBs = new HashSet<>();
