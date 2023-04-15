@@ -208,12 +208,8 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractCLICont
 
     }
 
-    ArrayDesign thaw( ArrayDesign arrayDesign ) {
-        return arrayDesignService.thaw( arrayDesign );
-    }
-
     ArrayDesign thawLite( ArrayDesign arrayDesign ) {
-        return arrayDesignService.thawLite( arrayDesign );
+        return getArrayDesignService().thawLite( arrayDesign );
     }
 
     private void arraysFromCliList( CommandLine commandLine ) {

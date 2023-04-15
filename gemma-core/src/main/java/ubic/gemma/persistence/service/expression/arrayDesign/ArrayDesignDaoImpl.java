@@ -811,6 +811,27 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
         return result;
     }
 
+    @Override
+    public Collection<ArrayDesign> thaw( Collection<ArrayDesign> aas ) {
+        aas = thawLite( aas );
+
+        // Thaw the composite sequences
+        //noinspection unchecked
+        Map<ArrayDesign, Set<CompositeSequence>> probes = ( ( List<Object[]> ) this.getSessionFactory().getCurrentSession()
+                .createQuery( "select cs.arrayDesign, cs from CompositeSequence cs left join fetch cs.biologicalCharacteristic where cs.arrayDesign in :ads" )
+                .setParameterList( "ads", aas )
+                .list() )
+                .stream()
+                .collect( Collectors.groupingBy( row -> ( ArrayDesign ) row[0],
+                        Collectors.mapping( row -> ( CompositeSequence ) row[1], Collectors.toSet() ) ) );
+
+        for ( ArrayDesign ad : aas ) {
+            ad.setCompositeSequences( probes.getOrDefault( ad, Collections.emptySet() ) );
+        }
+
+        return aas;
+    }
+
     //language=HQL
     private static final String THAW_QUERY =
             "select distinct a from ArrayDesign a "

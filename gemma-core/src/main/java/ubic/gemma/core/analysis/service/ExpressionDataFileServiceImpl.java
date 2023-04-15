@@ -835,8 +835,8 @@ public class ExpressionDataFileServiceImpl extends AbstractTsvFileService<Expres
      */
     private Map<Long, String[]> getGeneAnnotationsAsStrings( Collection<ArrayDesign> ads ) {
         Map<Long, String[]> annotations = new HashMap<>();
+        ads = arrayDesignService.thaw( ads );
         for ( ArrayDesign arrayDesign : ads ) {
-            arrayDesign = arrayDesignService.thaw( arrayDesign );
             annotations.putAll( ArrayDesignAnnotationServiceImpl.readAnnotationFileAsString( arrayDesign ) );
         }
         return annotations;
@@ -844,9 +844,8 @@ public class ExpressionDataFileServiceImpl extends AbstractTsvFileService<Expres
 
     private Map<CompositeSequence, String[]> getGeneAnnotationsAsStringsByProbe( Collection<ArrayDesign> ads ) {
         Map<CompositeSequence, String[]> annotations = new HashMap<>();
+        ads = arrayDesignService.thaw( ads );
         for ( ArrayDesign arrayDesign : ads ) {
-            arrayDesign = arrayDesignService.thaw( arrayDesign );
-
             Map<Long, CompositeSequence> csIdMap = EntityUtils.getIdMap( arrayDesign.getCompositeSequences() );
 
             Map<Long, String[]> geneAnnotations = ArrayDesignAnnotationServiceImpl

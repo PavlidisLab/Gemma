@@ -26,7 +26,6 @@ import ubic.basecode.util.FileTools;
 import ubic.gemma.core.loader.expression.arrayDesign.ArrayDesignSequenceProcessingService;
 import ubic.gemma.core.util.AbstractCLI;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignSequenceUpdateEvent;
-import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
@@ -74,7 +73,7 @@ public class ArrayDesignSequenceAssociationCli extends ArrayDesignSequenceManipu
 
         ArrayDesign arrayDesign = this.getArrayDesignsToProcess().iterator().next();
 
-        arrayDesign = this.thaw( arrayDesign );
+        arrayDesign = getArrayDesignService().thaw( arrayDesign );
 
         SequenceType sequenceTypeEn = SequenceType.valueOf( sequenceType );
 

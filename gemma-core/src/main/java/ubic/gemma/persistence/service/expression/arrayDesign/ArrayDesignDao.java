@@ -123,9 +123,18 @@ public interface ArrayDesignDao extends CuratableDao<ArrayDesign, ArrayDesignVal
 
     void removeBiologicalCharacteristics( ArrayDesign arrayDesign );
 
+    /**
+     * Thaw the given platform as per {@link #thawLite(ArrayDesign)} with its probes and genes.
+     */
     @Nullable
     @CheckReturnValue
     ArrayDesign thaw( ArrayDesign arrayDesign );
+
+    /**
+     * Thaw the given platforms as per {@link #thawLite(Collection)} with its probes and genes.
+     */
+    @CheckReturnValue
+    Collection<ArrayDesign> thaw( Collection<ArrayDesign> aas );
 
     @Nullable
     @CheckReturnValue

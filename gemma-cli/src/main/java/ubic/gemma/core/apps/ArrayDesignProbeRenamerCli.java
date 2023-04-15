@@ -25,7 +25,6 @@ import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.core.util.AbstractCLI;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignProbeRenamingEvent;
-import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 
@@ -89,7 +88,7 @@ public class ArrayDesignProbeRenamerCli extends ArrayDesignSequenceManipulatingC
         }
 
         ArrayDesign arrayDesign = this.getArrayDesignsToProcess().iterator().next();
-        arrayDesign = this.thaw( arrayDesign );
+        arrayDesign = getArrayDesignService().thaw( arrayDesign );
 
         File file = new File( fileName );
         if ( !file.canRead() ) {

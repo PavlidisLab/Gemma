@@ -362,9 +362,19 @@ public interface ArrayDesignService extends FilteringVoEnabledService<ArrayDesig
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     void removeBiologicalCharacteristics( ArrayDesign arrayDesign );
 
+    /**
+     * @see ArrayDesignDao#thaw(ArrayDesign)
+     */
     @CheckReturnValue
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     ArrayDesign thaw( ArrayDesign arrayDesign );
+
+    /**
+     * @see ArrayDesignDao#thaw(Collection)
+     */
+    @CheckReturnValue
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    Collection<ArrayDesign> thaw( Collection<ArrayDesign> aas );
 
     /**
      * Perform a less intensive thaw of an array design: not the composite sequences.

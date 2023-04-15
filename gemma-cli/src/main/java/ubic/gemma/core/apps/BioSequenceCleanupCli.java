@@ -114,9 +114,9 @@ public class BioSequenceCleanupCli extends ArrayDesignSequenceManipulatingCli {
             ads = this.getArrayDesignService().loadAll();
         }
 
+        ads = getArrayDesignService().thaw( ads );
         for ( ArrayDesign design : ads ) {
             log.info( design );
-            design = this.getArrayDesignService().thaw( design );
 
             Collection<BioSequence> bioSequences = new HashSet<>();
 
