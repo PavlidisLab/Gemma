@@ -22,6 +22,7 @@ package ubic.gemma.model.association.phenotype;
  * Evidence that is supported only by a free-text description. One of the other evidence types is always preferred if
  * possible.
  */
+@Deprecated
 public class GenericEvidence extends PhenotypeAssociation {
 
     private static final long serialVersionUID = 9049824856704318367L;

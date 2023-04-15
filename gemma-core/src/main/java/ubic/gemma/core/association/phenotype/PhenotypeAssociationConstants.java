@@ -23,6 +23,7 @@ import ubic.gemma.persistence.util.Settings;
 import java.io.File;
 
 @SuppressWarnings({ "WeakerAccess", "unused" }) // Possible external use (ermineJ)
+@Deprecated
 public class PhenotypeAssociationConstants {
 
     public final static String PHENOTYPE = "Phenotype";

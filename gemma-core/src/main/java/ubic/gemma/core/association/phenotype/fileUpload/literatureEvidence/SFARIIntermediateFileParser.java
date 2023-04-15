@@ -5,6 +5,7 @@ import java.io.BufferedWriter;
 import java.io.FileReader;
 import java.io.FileWriter;
 
+@Deprecated
 public class SFARIIntermediateFileParser {
 
     public static void main( String[] args ) throws Exception {

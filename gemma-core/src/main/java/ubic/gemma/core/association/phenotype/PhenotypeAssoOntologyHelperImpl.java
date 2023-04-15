@@ -34,6 +34,7 @@ import java.util.*;
  * @author nicolas
  */
 @Component
+@Deprecated
 public class PhenotypeAssoOntologyHelperImpl implements PhenotypeAssoOntologyHelper {
 
     private static final Log log = LogFactory.getLog( PhenotypeAssoOntologyHelperImpl.class );

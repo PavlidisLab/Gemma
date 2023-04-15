@@ -20,6 +20,7 @@ package ubic.gemma.model.association.phenotype;
 
 import ubic.gemma.model.common.description.BibliographicReference;
 
+@Deprecated
 public abstract class PhenotypeAssociationPublication implements java.io.Serializable {
 
     /**
