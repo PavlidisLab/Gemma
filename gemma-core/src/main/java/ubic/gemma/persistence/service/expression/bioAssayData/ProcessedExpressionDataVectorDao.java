@@ -19,9 +19,9 @@
 
 package ubic.gemma.persistence.service.expression.bioAssayData;
 
-import ubic.gemma.core.analysis.preprocess.PreprocessingException;
-import ubic.gemma.core.datastructure.matrix.InferredQuantitationMismatchException;
 import ubic.gemma.core.datastructure.matrix.QuantitationMismatchException;
+import ubic.gemma.model.common.quantitationtype.QuantitationType;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssayData.DoubleVectorValueObject;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
@@ -99,15 +99,13 @@ public interface ProcessedExpressionDataVectorDao extends DesignElementDataVecto
 
     void removeProcessedDataVectors( final ExpressionExperiment expressionExperiment );
 
-    //    /**
-    //     * When the processed data is being computed separately.
-    //     *
-    //     * @param ee   ee
-    //     * @param data data
-    //     * @return ee
-    //     */
-    //    ExpressionExperiment createProcessedDataVectors( ExpressionExperiment ee,
-    //            Collection<ProcessedExpressionDataVector> data );
+    Collection<ProcessedExpressionDataVector> find( ArrayDesign arrayDesign,
+            QuantitationType quantitationType );
+
+    Collection<ProcessedExpressionDataVector> find( Collection<CompositeSequence> designElements,
+            QuantitationType quantitationType );
+
+    Collection<ProcessedExpressionDataVector> findByExpressionExperiment( ExpressionExperiment ee, QuantitationType quantitationType );
 
     enum RankMethod {
         max, mean

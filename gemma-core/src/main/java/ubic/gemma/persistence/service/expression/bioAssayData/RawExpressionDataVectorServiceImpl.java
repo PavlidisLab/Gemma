@@ -16,7 +16,14 @@ package ubic.gemma.persistence.service.expression.bioAssayData;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import ubic.gemma.model.common.quantitationtype.QuantitationType;
+import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
+import ubic.gemma.model.expression.designElement.CompositeSequence;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+
+import java.util.Collection;
 
 /**
  * Provides methods that can be applied to both RawExpressionDataVector and ProcessedExpressionDataVector
@@ -25,8 +32,23 @@ import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 public class RawExpressionDataVectorServiceImpl extends AbstractDesignElementDataVectorService<RawExpressionDataVector>
         implements RawExpressionDataVectorService {
 
+    private final RawExpressionDataVectorDao mainDao;
+
     @Autowired
     protected RawExpressionDataVectorServiceImpl( RawExpressionDataVectorDao mainDao ) {
         super( mainDao );
+        this.mainDao = mainDao;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Collection<RawExpressionDataVector> findByExpressionExperiment( ExpressionExperiment ee, QuantitationType quantitationType ) {
+        return mainDao.findByExpressionExperiment( ee, quantitationType );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Collection<RawExpressionDataVector> find( Collection<CompositeSequence> designElements, QuantitationType quantitationType ) {
+        return mainDao.find( designElements, quantitationType );
     }
 }

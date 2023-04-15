@@ -44,10 +44,7 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeService;
-import ubic.gemma.persistence.service.expression.bioAssayData.BioAssayDimensionService;
-import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorDao;
-import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
-import ubic.gemma.persistence.service.expression.bioAssayData.RawExpressionDataVectorService;
+import ubic.gemma.persistence.service.expression.bioAssayData.*;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentDao;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
@@ -85,6 +82,9 @@ public class ProcessedExpressionDataVectorCreateHelperServiceImpl
 
     @Autowired
     private ProcessedExpressionDataVectorService processedExpressionDataVectorService;
+
+    @Autowired
+    private RawAndProcessedExpressionDataVectorService rawAndProcessedExpressionDataVectorService;
 
     @SuppressWarnings("unchecked")
     @Override
@@ -326,8 +326,8 @@ public class ProcessedExpressionDataVectorCreateHelperServiceImpl
 
             ProcessedExpressionDataVectorCreateHelperServiceImpl.log.info( "Vectors loaded ..." );
 
-            Collection<? extends DesignElementDataVector> vs = new HashSet<>( vectors );
-            rawExpressionDataVectorService.thawRawAndProcessed( vs );
+            Collection<DesignElementDataVector> vs = new HashSet<>( vectors );
+            vs = rawAndProcessedExpressionDataVectorService.thaw( vs );
             ExpressionDataMatrixBuilder builder = new ExpressionDataMatrixBuilder( processedVectors, vectors );
             intensities = builder.getIntensity();
 

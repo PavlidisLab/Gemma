@@ -12,6 +12,7 @@ import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionValueObject;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.common.auditAndSecurity.eventType.FailedProcessedVectorComputationEvent;
+import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssayData.DoubleVectorValueObject;
 import ubic.gemma.model.expression.bioAssayData.ExperimentExpressionLevelsValueObject;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
@@ -91,7 +92,7 @@ public class ProcessedExpressionDataVectorServiceImpl
     @Override
     @Transactional
     public ExpressionExperiment createProcessedDataVectors( ExpressionExperiment expressionExperiment ) {
-        return this.processedExpressionDataVectorDao.createProcessedDataVectors( expressionExperiment);
+        return this.processedExpressionDataVectorDao.createProcessedDataVectors( expressionExperiment );
     }
 
     @Override
@@ -333,6 +334,11 @@ public class ProcessedExpressionDataVectorServiceImpl
     @Transactional
     public void reorderByDesign( Long eeId ) {
         this.helperService.reorderByDesign( eeId );
+    }
+
+    @Override
+    public Collection<ProcessedExpressionDataVector> findByExpressionExperiment( ExpressionExperiment ee, QuantitationType quantitationType ) {
+        return processedExpressionDataVectorDao.findByExpressionExperiment( ee, quantitationType );
     }
 
     /**

@@ -204,7 +204,7 @@ public class ExpressionExperimentServiceTest extends BaseSpringContextTest {
 
         assertEquals( 2, designElements.size() );
 
-        Collection<? extends DesignElementDataVector> vectors = rawExpressionDataVectorService
+        Collection<RawExpressionDataVector> vectors = rawExpressionDataVectorService
                 .find( designElements, quantitationType );
 
         assertEquals( 2, vectors.size() );

@@ -20,7 +20,7 @@ package ubic.gemma.persistence.service.expression.bioAssayData;
 
 import org.apache.commons.lang3.time.StopWatch;
 import org.hibernate.*;
-import org.hibernate.criterion.Restrictions;
+import org.hibernate.metadata.ClassMetadata;
 import ubic.basecode.util.BatchIterator;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -41,32 +41,30 @@ import java.util.Map;
  * @author pavlidis
  * @see    ubic.gemma.model.expression.bioAssayData.DesignElementDataVector
  */
-public abstract class DesignElementDataVectorDaoImpl<T extends DesignElementDataVector> extends AbstractDao<T>
+public abstract class AbstractDesignElementDataVectorDao<T extends DesignElementDataVector> extends AbstractDao<T>
         implements DesignElementDataVectorDao<T> {
 
-    DesignElementDataVectorDaoImpl( Class<T> elementClass, SessionFactory sessionFactory ) {
+    protected AbstractDesignElementDataVectorDao( Class<T> elementClass, SessionFactory sessionFactory ) {
         super( elementClass, sessionFactory );
     }
 
-    @Override
-    public final void removeRawAndProcessed( Collection<? extends DesignElementDataVector> vectors ) {
-        for ( DesignElementDataVector v : vectors ) {
-            this.getSessionFactory().getCurrentSession().delete( v );
-        }
+    protected AbstractDesignElementDataVectorDao( Class<T> elementClass, SessionFactory sessionFactory, ClassMetadata classMetadata ) {
+        super( elementClass, sessionFactory, classMetadata );
     }
 
     @Override
-    public final Collection<? extends DesignElementDataVector> findRawAndProcessed( BioAssayDimension dim ) {
-        return this.findRawAndProcessed( "bioAssayDimension", dim );
+    public Collection<T> find( BioAssayDimension bioAssayDimension ) {
+        return findByProperty( "bioAssayDimension", bioAssayDimension );
     }
 
     @Override
-    public final Collection<? extends DesignElementDataVector> findRawAndProcessed( QuantitationType qt ) {
-        return this.findRawAndProcessed( "quantitationType", qt );
+    public Collection<T> find( Collection<QuantitationType> quantitationTypes ) {
+        return findByPropertyIn( "quantitationType", quantitationTypes );
     }
 
+
     @Override
-    public void thawRawAndProcessed( Collection<? extends DesignElementDataVector> designElementDataVectors ) {
+    public void thaw( Collection<T> designElementDataVectors ) {
         StopWatch timer = new StopWatch();
         timer.start();
 
@@ -161,11 +159,6 @@ public abstract class DesignElementDataVectorDaoImpl<T extends DesignElementData
     }
 
     @Override
-    public void thaw( Collection<T> designElementDataVectors ) {
-        this.thawRawAndProcessed(  designElementDataVectors  );
-    }
-
-    @Override
     public void thaw( T designElementDataVector ) {
         Session session = this.getSessionFactory().getCurrentSession();
         BioSequence seq = designElementDataVector.getDesignElement().getBiologicalCharacteristic();
@@ -227,44 +220,7 @@ public abstract class DesignElementDataVectorDaoImpl<T extends DesignElementData
         return dedv2genes;
     }
 
-    Map<T, Collection<Long>> getVectorsForProbesInExperiments( Map<Long, Collection<Long>> cs2gene ) {
-
-        //language=HQL
-        String queryString = "select dedv, dedv.designElement.id from ProcessedExpressionDataVector dedv fetch all properties"
-                + " where dedv.designElement.id in ( :cs ) ";
-
-        Session session = this.getSessionFactory().getCurrentSession();
-        org.hibernate.Query queryObject = session.createQuery( queryString );
-        queryObject.setReadOnly( true );
-        queryObject.setFlushMode( FlushMode.MANUAL );
-
-        Map<T, Collection<Long>> dedv2genes = new HashMap<>();
-        StopWatch timer = new StopWatch();
-        timer.start();
-
-        int batchSize = 100;
-        for ( Collection<Long> batch : new BatchIterator<>( cs2gene.keySet(), batchSize ) ) {
-            this.getVectorsBatch( cs2gene, queryObject, dedv2genes, batch );
-        }
-
-        if ( timer.getTime() > Math.max( 200, 20 * dedv2genes.size() ) ) {
-            AbstractDao.log
-                    .info( "Fetched " + dedv2genes.size() + " vectors for " + cs2gene.size() + " probes in " + timer
-                            .getTime() + "ms\n" + "Vector query was: " + queryString );
-
-        }
-        return dedv2genes;
-    }
-
-    private Collection<DesignElementDataVector> findRawAndProcessed( String propName, Object value ) {
-        Criteria criteria = this.getSessionFactory().getCurrentSession()
-                .createCriteria( DesignElementDataVector.class );
-        criteria.add( Restrictions.eq( propName, value ) );
-        //noinspection unchecked
-        return criteria.list();
-    }
-
-    private void getVectorsBatch( Map<Long, Collection<Long>> cs2gene, org.hibernate.Query queryObject,
+    protected void getVectorsBatch( Map<Long, Collection<Long>> cs2gene, org.hibernate.Query queryObject,
             Map<T, Collection<Long>> dedv2genes, Collection<Long> batch ) {
         queryObject.setParameterList( "cs", batch );
         queryObject.setFlushMode( FlushMode.MANUAL );

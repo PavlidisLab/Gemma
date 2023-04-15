@@ -16,11 +16,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
-import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.persistence.service.AbstractDao;
 import ubic.gemma.persistence.util.BusinessKey;
 
 import java.util.Collection;
@@ -30,30 +28,12 @@ import java.util.HashSet;
  * @author paul
  */
 @Repository
-public class RawExpressionDataVectorDaoImpl extends DesignElementDataVectorDaoImpl<RawExpressionDataVector>
+public class RawExpressionDataVectorDaoImpl extends AbstractDesignElementDataVectorDao<RawExpressionDataVector>
         implements RawExpressionDataVectorDao {
 
     @Autowired
     public RawExpressionDataVectorDaoImpl( SessionFactory sessionFactory ) {
         super( RawExpressionDataVector.class, sessionFactory );
-    }
-
-    @Override
-    public Collection<RawExpressionDataVector> find( BioAssayDimension bioAssayDimension ) {
-        //noinspection unchecked
-        return new HashSet<>( this.getSessionFactory().getCurrentSession()
-                .createQuery( "select d from RawExpressionDataVector d where d.bioAssayDimension = :bad" )
-                .setParameter( "bad", bioAssayDimension ).list() );
-    }
-
-    @Override
-    public Collection<RawExpressionDataVector> find( Collection<QuantitationType> quantitationTypes ) {
-        //language=HQL
-        final String queryString = "select dev from RawExpressionDataVector dev where  "
-                + "  dev.quantitationType in ( :quantitationTypes) ";
-        //noinspection unchecked
-        return new HashSet<>( this.getSessionFactory().getCurrentSession().createQuery( queryString )
-                .setParameterList( "quantitationTypes", quantitationTypes ).list() );
     }
 
     @Override
@@ -92,26 +72,6 @@ public class RawExpressionDataVectorDaoImpl extends DesignElementDataVectorDaoIm
     }
 
     @Override
-    public void removeDataForCompositeSequence( final CompositeSequence compositeSequence ) {
-        final String dedvRemovalQuery = "delete RawExpressionDataVector dedv where dedv.designElement = :cs";
-        int deleted = this.getSessionFactory().getCurrentSession()
-                .createQuery( dedvRemovalQuery )
-                .setParameter( "cs", compositeSequence )
-                .executeUpdate();
-        AbstractDao.log.info( "Deleted: " + deleted );
-    }
-
-    @Override
-    public void removeDataForQuantitationType( final QuantitationType quantitationType ) {
-        final String dedvRemovalQuery = "delete from RawExpressionDataVector as dedv where dedv.quantitationType = :quantitationType";
-        int deleted = this.getSessionFactory().getCurrentSession()
-                .createQuery( dedvRemovalQuery )
-                .setParameter( "quantitationType", quantitationType )
-                .executeUpdate();
-        AbstractDao.log.info( "Deleted " + deleted + " data vector elements" );
-    }
-
-    @Override
     public RawExpressionDataVector find( RawExpressionDataVector designElementDataVector ) {
 
         BusinessKey.checkKey( designElementDataVector );
@@ -121,7 +81,7 @@ public class RawExpressionDataVectorDaoImpl extends DesignElementDataVectorDaoIm
         crit.createCriteria( "designElement" )
                 .add( Restrictions.eq( "name", designElementDataVector.getDesignElement().getName() ) )
                 .createCriteria( "arrayDesign" ).add( Restrictions
-                .eq( "name", designElementDataVector.getDesignElement().getArrayDesign().getName() ) );
+                        .eq( "name", designElementDataVector.getDesignElement().getArrayDesign().getName() ) );
 
         crit.createCriteria( "quantitationType" )
                 .add( Restrictions.eq( "name", designElementDataVector.getQuantitationType().getName() ) );

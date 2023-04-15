@@ -37,76 +37,19 @@ import java.util.Collection;
 @Repository
 public interface DesignElementDataVectorDao<T extends DesignElementDataVector> extends BaseDao<T> {
 
-    void removeRawAndProcessed( Collection<? extends DesignElementDataVector> vectors );
-
-    Collection<? extends DesignElementDataVector> findRawAndProcessed( BioAssayDimension dim );
-
-    Collection<? extends DesignElementDataVector> findRawAndProcessed( QuantitationType qt );
-
-    /**
-     * Thaw both raw and processed vectors.
-     */
-    void thawRawAndProcessed( Collection<? extends DesignElementDataVector> designElementDataVectors );
-
-    /**
-     * Creates a new instance of ubic.gemma.model.expression.bioAssayData.DesignElementDataVector and adds from the
-     * passed in <code>entities</code> collection
-     *
-     * @param entities the collection of ubic.gemma.model.expression.bioAssayData.DesignElementDataVector instances to
-     *                 create.
-     * @return the created instances.
-     */
-    @Override
-    Collection<T> create( Collection<T> entities );
-
-    /**
-     * @param designElementDataVector DE data vector
-     * @return Creates an instance of ubic.gemma.model.expression.bioAssayData.DesignElementDataVector and adds it to the
-     * persistent store.
-     */
-    @Override
-    T create( T designElementDataVector );
-
-    /**
-     * @param id id
-     * @return Loads an instance of ubic.gemma.model.expression.bioAssayData.DesignElementDataVector from the persistent store.
-     */
-    @Override
-    T load( Long id );
-
-    /**
-     * Loads all entities of type {@link DesignElementDataVector}.
-     *
-     * @return the loaded entities.
-     */
-    @Override
-    Collection<T> loadAll();
-
-    void thaw( Collection<T> designElementDataVectors );
-
-    /**
-     * @param designElementDataVector Thaws associations of the given DesignElementDataVector
-     */
-    @SuppressWarnings("unused")
-    // Possible external use
-    void thaw( T designElementDataVector );
-
     Collection<T> find( BioAssayDimension bioAssayDimension );
 
     Collection<T> find( Collection<QuantitationType> quantitationTypes );
 
     Collection<T> find( QuantitationType quantitationType );
 
-    Collection<T> find( ArrayDesign arrayDesign, QuantitationType quantitationType );
-
-    Collection<T> find( Collection<CompositeSequence> designElements, QuantitationType quantitationType );
+    /**
+     * Thaw the given vector.
+     */
+    void thaw( T designElementDataVector );
 
     /**
-     * Find expression vectors by {@link ExpressionExperiment}.
+     * Thaw a collection of vectors.
      */
-    Collection<T> findByExpressionExperiment( ExpressionExperiment ee, QuantitationType quantitationType );
-
-    void removeDataForCompositeSequence( CompositeSequence compositeSequence );
-
-    void removeDataForQuantitationType( QuantitationType quantitationType );
+    void thaw( Collection<T> designElementDataVectors );
 }

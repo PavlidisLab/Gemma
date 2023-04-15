@@ -56,6 +56,7 @@ import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeSe
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
 import ubic.gemma.persistence.service.expression.bioAssayData.BioAssayDimensionService;
+import ubic.gemma.persistence.service.expression.bioAssayData.RawAndProcessedExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.bioAssayData.RawExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.util.EntityUtils;
@@ -117,6 +118,9 @@ public class DataUpdater {
 
     @Autowired
     private VectorMergingService vectorMergingService;
+
+    @Autowired
+    private RawAndProcessedExpressionDataVectorService rawAndProcessedExpressionDataVectorService;
 
     /**
      * Affymetrix: Use to bypass the automated running of apt-probeset-summarize. For example if GEO doesn't have
@@ -566,7 +570,7 @@ public class DataUpdater {
             for ( QuantitationType existingQt : ee.getQuantitationTypes() ) {
                 if ( existingQt.getIsPreferred() ) {
                     // this is okay if there is not actually any data associated with the QT.
-                    if ( this.rawExpressionDataVectorService.findRawAndProcessed( existingQt ).size() > 0 ) {
+                    if ( this.rawAndProcessedExpressionDataVectorService.find( existingQt ).size() > 0 ) {
                         throw new IllegalArgumentException(
                                 "You cannot add 'preferred' data to an experiment that already has it. "
                                         + "You should first delete the existing data or make it non-preferred." );

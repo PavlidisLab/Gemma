@@ -23,6 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.core.analysis.preprocess.PreprocessorService;
 import ubic.gemma.core.datastructure.matrix.InferredQuantitationMismatchException;
 import ubic.gemma.core.datastructure.matrix.QuantitationMismatchException;
+import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssayData.DoubleVectorValueObject;
 import ubic.gemma.model.expression.bioAssayData.ExperimentExpressionLevelsValueObject;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
@@ -206,4 +207,6 @@ public interface ProcessedExpressionDataVectorService
     @Secured({ "GROUP_ADMIN" })
     void reorderByDesign( Long eeId );
 
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_DATAVECTOR_COLLECTION_READ" })
+    Collection<ProcessedExpressionDataVector> findByExpressionExperiment( ExpressionExperiment ee, QuantitationType quantitationType );
 }

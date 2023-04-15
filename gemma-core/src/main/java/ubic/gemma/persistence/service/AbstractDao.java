@@ -33,6 +33,8 @@ import javax.annotation.OverridingMethodsMustInvokeSuper;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
+import static java.util.Objects.requireNonNull;
+
 /**
  * AbstractDao can find the generic type at runtime and simplify the code implementation of the BaseDao interface
  *
@@ -43,15 +45,10 @@ public abstract class AbstractDao<T extends Identifiable> implements BaseDao<T> 
     protected static final Log log = LogFactory.getLog( AbstractDao.class );
 
     /**
-     * Default batch size to reach before flushing and clearing the Hibernate session.
-     * <p>
-     * You should use {@link #AbstractDao(Class, SessionFactory, int)} to adjust this value to an optimal one for the
-     * DAO. Large model should have a relatively small batch size to reduce memory usage.
-     * <p>
-     * See <a href="https://docs.jboss.org/hibernate/core/3.6/reference/en-US/html/batch.html">Chapter 15. Batch processing</a>
-     * for more details.
+     * Default batch size to reach before flushing and clearing the Hibernate session when a batch-supporting method
+     * used in a batch-advisable flush mode.
      */
-    private static final int DEFAULT_BATCH_SIZE = 100;
+    protected static final int DEFAULT_BATCH_SIZE = 100;
 
     protected final Class<? extends T> elementClass;
 
@@ -60,20 +57,32 @@ public abstract class AbstractDao<T extends Identifiable> implements BaseDao<T> 
     private final ClassMetadata classMetadata;
 
     protected AbstractDao( Class<? extends T> elementClass, SessionFactory sessionFactory ) {
-        this( elementClass, sessionFactory, DEFAULT_BATCH_SIZE );
+        this( elementClass, sessionFactory, requireNonNull( sessionFactory.getClassMetadata( elementClass ),
+                String.format( "%s is missing from Hibernate mapping.", elementClass.getName() ) ), DEFAULT_BATCH_SIZE );
+    }
+
+    protected AbstractDao( Class<? extends T> elementClass, SessionFactory sessionFactory, ClassMetadata classMetadata ) {
+        this( elementClass, sessionFactory, classMetadata, DEFAULT_BATCH_SIZE );
     }
 
     /**
-     * @param batchSize a strictly positive batch size for creating, updating or deleting collection of entities. Use
-     *                  {@link Integer#MAX_VALUE} to effectively disable batching and '1' to flush changes right away.
+     * @param classMetadata the class metadata to use to retrieve information about {@link T}
+     * @param batchSize     a strictly positive batch size for creating, updating or deleting collection of entities.
+     *                      Use {@link Integer#MAX_VALUE} to effectively disable batching and '1' to flush changes right
+     *                      away. Batching only applies if the current flush mode is {@link FlushMode#MANUAL} or
+     *                      {@link FlushMode#AUTO} in a batch-supporting method such as {@link #createInBatch(Collection)}.
+     *                      This value should be adjusted to an optimal one for the DAO. Large model should have a
+     *                      relatively small batch size to reduce memory usage. See <a href="https://docs.jboss.org/hibernate/core/4.2/manual/en-US/html/ch15.html">Chapter 15. Batch processing</a>
+     *                      for more details.
      */
-    protected AbstractDao( Class<? extends T> elementClass, SessionFactory sessionFactory, int batchSize ) {
-        Assert.notNull( sessionFactory.getClassMetadata( elementClass ), String.format( "%s is missing from Hibernate mapping.", elementClass.getName() ) );
+    protected AbstractDao( Class<? extends T> elementClass, SessionFactory sessionFactory, ClassMetadata classMetadata, int batchSize ) {
+        Assert.isTrue( elementClass.isAssignableFrom( ( Class<?> ) classMetadata.getMappedClass() ),
+                String.format( "The mapped class must be assignable from %s.", elementClass.getName() ) );
         Assert.isTrue( batchSize >= 1, "Batch size must be greater or equal to 1." );
-        this.sessionFactory = sessionFactory;
         this.elementClass = elementClass;
+        this.sessionFactory = sessionFactory;
+        this.classMetadata = classMetadata;
         this.batchSize = batchSize;
-        this.classMetadata = sessionFactory.getClassMetadata( elementClass );
     }
 
     @Override

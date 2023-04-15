@@ -45,7 +45,7 @@ public class AbstractDaoTest {
         }
 
         public MyDao( SessionFactory sessionFactory, int batchSize ) {
-            super( MyEntity.class, sessionFactory, batchSize );
+            super( MyEntity.class, sessionFactory, sessionFactory.getClassMetadata( MyEntity.class ), batchSize );
         }
     }
 
