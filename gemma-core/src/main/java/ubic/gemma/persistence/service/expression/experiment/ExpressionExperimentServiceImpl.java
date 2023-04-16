@@ -246,6 +246,9 @@ public class ExpressionExperimentServiceImpl
     @Override
     @Transactional(readOnly = true)
     public boolean checkHasBatchInfo( ExpressionExperiment ee ) {
+        if ( ee.getExperimentalDesign() == null ) {
+            return false;
+        }
 
         for ( ExperimentalFactor ef : ee.getExperimentalDesign().getExperimentalFactors() ) {
             if ( BatchInfoPopulationServiceImpl.isBatchFactor( ef ) ) {
@@ -262,6 +265,8 @@ public class ExpressionExperimentServiceImpl
     @Override
     @Transactional(readOnly = true)
     public BatchInformationFetchingEvent checkBatchFetchStatus( ExpressionExperiment ee ) {
+        if ( ee.getExperimentalDesign() == null )
+            return null;
 
         for ( ExperimentalFactor ef : ee.getExperimentalDesign().getExperimentalFactors() ) {
             if ( BatchInfoPopulationServiceImpl.isBatchFactor( ef ) ) {

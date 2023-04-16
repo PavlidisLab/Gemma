@@ -1398,7 +1398,7 @@ public class ExpressionExperimentDaoImpl
 
     @Override
     public void remove( ExpressionExperiment ee ) {
-        log.info( "Deleting " + ee.getShortName() + "..." );
+        log.info( "Deleting " + ee + "..." );
 
         // reload EE as deletion will not work if it came from a different session
         ee = ( ExpressionExperiment ) getSessionFactory().getCurrentSession().merge( ee );

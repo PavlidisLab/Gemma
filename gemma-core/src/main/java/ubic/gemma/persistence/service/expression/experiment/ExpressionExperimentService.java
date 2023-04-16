@@ -80,6 +80,7 @@ public interface ExpressionExperimentService
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     List<ExpressionExperiment> browse( int start, int limit );
 
+    @Nullable
     BatchInformationFetchingEvent checkBatchFetchStatus( ExpressionExperiment ee );
 
     boolean checkHasBatchInfo( ExpressionExperiment ee );
