@@ -1174,7 +1174,7 @@ public class ExpressionExperimentDaoImpl
 
     @Override
     public void remove( ExpressionExperiment ee ) {
-        log.info( "Deleting " + ee.getShortName() + "..." );
+        log.info( "Deleting " + ee + "..." );
 
         // Note that links and analyses are deleted separately - see the ExpressionExperimentService.
 
