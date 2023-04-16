@@ -1,15 +1,15 @@
 package ubic.gemma.web.services.rest.swagger;
 
 import io.swagger.v3.core.converter.ModelConverter;
-import io.swagger.v3.core.converter.ModelConverters;
+import org.springframework.core.Ordered;
 
 /**
  * @author poirigui
  */
-public interface CustomModelConverter extends ModelConverter {
+public interface CustomModelConverter extends ModelConverter, Ordered {
 
-    /**
-     * Precedence to use when appending converters to {@link ModelConverters#getInstance()}.
-     */
-    int getPrecedence();
+    @Override
+    default int getOrder() {
+        return 0;
+    }
 }
