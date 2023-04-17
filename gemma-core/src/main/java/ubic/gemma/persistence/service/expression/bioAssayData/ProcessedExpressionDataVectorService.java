@@ -32,6 +32,7 @@ import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 
+import javax.annotation.CheckReturnValue;
 import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.List;
@@ -177,15 +178,6 @@ public interface ProcessedExpressionDataVectorService
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     void removeProcessedDataVectors( final ExpressionExperiment expressionExperiment );
 
-    /**
-     * @deprecated never use this method, you can use {@link #removeProcessedDataVectors(ExpressionExperiment)}
-     * instead, or clear {@link ExpressionExperiment#getProcessedExpressionDataVectors()} directly. The relationship is
-     * actually managed by Hibernate.
-     */
-    @Override
-    @Deprecated
-    void remove( Collection<ProcessedExpressionDataVector> processedExpressionDataVectors );
-
     List<DoubleVectorValueObject> getDiffExVectors( Long resultSetId, Double threshold, int maxNumberOfResults );
 
     @Secured({ "GROUP_ADMIN" })
@@ -209,4 +201,15 @@ public interface ProcessedExpressionDataVectorService
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_DATAVECTOR_COLLECTION_READ" })
     Collection<ProcessedExpressionDataVector> findByExpressionExperiment( ExpressionExperiment ee, QuantitationType quantitationType );
+
+    @Secured({ "GROUP_USER" })
+    void update( Collection<ProcessedExpressionDataVector> updatedVectors );
+
+    /**
+     * Thaws the given vectors.
+     *
+     * @param designElementDataVectors the vectors to thaw.
+     */
+    @CheckReturnValue
+    Collection<ProcessedExpressionDataVector> thaw( Collection<ProcessedExpressionDataVector> designElementDataVectors );
 }

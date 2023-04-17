@@ -19,6 +19,7 @@
 package ubic.gemma.persistence.service.expression.bioAssayData;
 
 import org.springframework.security.access.annotation.Secured;
+import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
@@ -42,25 +43,6 @@ public interface RawExpressionDataVectorService extends DesignElementDataVectorS
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_DATAVECTOR_COLLECTION_READ" })
     Collection<RawExpressionDataVector> findByExpressionExperiment( ExpressionExperiment ee, QuantitationType quantitationType );
 
-    /**
-     * @deprecated never use this method, instead clear {@link ExpressionExperiment#getProcessedExpressionDataVectors()}
-     * directly. The relationship is actually managed by Hibernate.
-     */
-    @Override
-    @Secured({ "GROUP_ADMIN" })
-    @Deprecated
-    void remove( Collection<RawExpressionDataVector> vectors );
-
-    /**
-     * @deprecated never use this method, instead clear {@link ExpressionExperiment#getProcessedExpressionDataVectors()}
-     * directly. The relationship is actually managed by Hibernate.
-     */
-    @Override
-    @Secured({ "GROUP_ADMIN" })
-    @Deprecated
-    void remove( RawExpressionDataVector designElementDataVector );
-
-    @Override
-    @Secured({ "GROUP_USER" })
-    void update( Collection<RawExpressionDataVector> dedvs );
+    @Transactional(readOnly = true)
+    Collection<RawExpressionDataVector> thaw( Collection<RawExpressionDataVector> vectors );
 }

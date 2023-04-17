@@ -3,6 +3,9 @@ package ubic.gemma.persistence.service.expression.bioAssayData;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 
+import javax.annotation.Nullable;
+import java.util.Collection;
+
 public interface RawAndProcessedExpressionDataVectorDao extends DesignElementDataVectorDao<DesignElementDataVector> {
 
     /**

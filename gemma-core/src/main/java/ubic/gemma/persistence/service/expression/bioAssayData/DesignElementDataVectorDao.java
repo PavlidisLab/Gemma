@@ -18,6 +18,7 @@
  */
 package ubic.gemma.persistence.service.expression.bioAssayData;
 
+import org.springframework.security.access.annotation.Secured;
 import org.springframework.stereotype.Repository;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -33,7 +34,6 @@ import java.util.Collection;
 /**
  * @see ubic.gemma.model.expression.bioAssayData.DesignElementDataVector
  */
-@SuppressWarnings("unused") // Possible external use
 @Repository
 public interface DesignElementDataVectorDao<T extends DesignElementDataVector> extends BaseDao<T> {
 
