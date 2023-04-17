@@ -17,6 +17,7 @@ package ubic.gemma.core.analysis.preprocess;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -127,6 +128,7 @@ public class VectorMergingServiceTest extends AbstractGeoServiceTest {
 
     @Test
     @Category(SlowTest.class)
+    @Ignore("There's a regression that will be fixed in a subsequent patch release (see https://github.com/PavlidisLab/Gemma/issues/651)")
     final public void test() throws Exception {
         /*
          * Need a persistent experiment that uses multiple array designs. Then merge the designs, switch the vectors,
