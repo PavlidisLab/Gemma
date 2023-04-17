@@ -50,6 +50,7 @@ import ubic.gemma.persistence.service.AbstractDao;
 import ubic.gemma.persistence.util.CommonQueries;
 import ubic.gemma.persistence.util.EntityUtils;
 
+import javax.annotation.Nullable;
 import java.util.*;
 
 /**
@@ -940,7 +941,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends AbstractDesignElementD
                 }
             }
             needToSearch.addAll( eesForNoGeneProbes );
-            rawResults.putAll( this.getProcessedVectors( EntityUtils.getIds( eesForNoGeneProbes ), noGeneProbes ) );
+            rawResults.putAll( this.getProcessedVectorsAndGenes( eesForNoGeneProbes, noGeneProbes ) );
         }
 
         if ( !rawResults.isEmpty() )
@@ -950,7 +951,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends AbstractDesignElementD
          * Non-cached items.
          */
         if ( !needToSearch.isEmpty() ) {
-            rawResults.putAll( this.getProcessedVectors( EntityUtils.getIds( needToSearch ), cs2gene ) );
+            rawResults.putAll( this.getProcessedVectorsAndGenes( needToSearch, cs2gene ) );
         }
 
         if ( !rawResults.isEmpty() )
@@ -990,22 +991,54 @@ public class ProcessedExpressionDataVectorDaoImpl extends AbstractDesignElementD
     }
 
     /**
+     * Obtain processed expression vectors with their associated genes.
+     *
      * @param  cs2gene Map of probe to genes.
      * @param  ees     ees
      * @return map of vectors to genes.
      */
-    private Map<ProcessedExpressionDataVector, Collection<Long>> getProcessedVectors( Collection<Long> ees,
+    private Map<ProcessedExpressionDataVector, Collection<Long>> getProcessedVectorsAndGenes( @Nullable Collection<ExpressionExperiment> ees,
             Map<Long, Collection<Long>> cs2gene ) {
-
-        if ( ees == null || ees.size() == 0 ) {
-            return this.getVectorsForProbesInExperiments( cs2gene );
+        if ( ( ees != null && ees.isEmpty() ) || cs2gene.isEmpty() ) {
+            return Collections.emptyMap();
         }
-        Map<ProcessedExpressionDataVector, Collection<Long>> result = new HashMap<>();
-        for ( Long ee : ees ) {
-            result.putAll( this.getVectorsForProbesInExperiments( ee, cs2gene ) );
-        }
-        return result;
 
+        StopWatch timer = StopWatch.createStarted();
+
+        // Do not do in clause for experiments, as it can't use the indices
+        Query queryObject = this.getSessionFactory().getCurrentSession().createQuery(
+                        "select dedv, dedv.designElement.id from ProcessedExpressionDataVector dedv fetch all properties"
+                                + " where dedv.designElement.id in ( :cs ) "
+                                + ( ees != null ? " and dedv.expressionExperiment in :ees" : "" ) )
+                .setParameterList( "cs", cs2gene.keySet() );
+        if ( ees != null ) {
+            queryObject.setParameter( "ees", ees );
+        }
+        Map<ProcessedExpressionDataVector, Collection<Long>> dedv2genes = new HashMap<>();
+        //noinspection unchecked
+        List<Object[]> results = queryObject
+                .setFlushMode( FlushMode.MANUAL )
+                .setReadOnly( true )
+                .list();
+        for ( Object[] row : results ) {
+            ProcessedExpressionDataVector dedv = ( ProcessedExpressionDataVector ) row[0];
+            Long cs = ( Long ) row[1];
+            Collection<Long> associatedGenes = cs2gene.get( cs );
+            if ( !dedv2genes.containsKey( dedv ) ) {
+                dedv2genes.put( dedv, associatedGenes );
+            } else {
+                Collection<Long> mappedGenes = dedv2genes.get( dedv );
+                mappedGenes.addAll( associatedGenes );
+            }
+        }
+
+        if ( timer.getTime() > Math.max( 200, 20 * dedv2genes.size() ) ) {
+            AbstractDao.log.warn( String.format( "Fetched %d vectors for %d probes in %dms",
+                    dedv2genes.size(), cs2gene.size(), timer.getTime() ) );
+
+        }
+
+        return dedv2genes;
     }
 
     /**
@@ -1115,7 +1148,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends AbstractDesignElementD
                 .getCs2GeneMapForProbes( cs2gene.keySet(), this.getSessionFactory().getCurrentSession() );
 
         Map<ProcessedExpressionDataVector, Collection<Long>> processedDataVectors = this
-                .getProcessedVectors( EntityUtils.getIds( needToSearch ), cs2gene );
+                .getProcessedVectorsAndGenes( needToSearch, cs2gene );
 
         Map<BioAssaySet, Collection<BioAssayDimension>> bioAssayDimensions = this.getBioAssayDimensions( needToSearch );
 
@@ -1500,95 +1533,4 @@ public class ProcessedExpressionDataVectorDaoImpl extends AbstractDesignElementD
         }
         return result;
     }
-
-    private Map<ProcessedExpressionDataVector, Collection<Long>> getVectorsForProbesInExperiments( Map<Long, Collection<Long>> cs2gene ) {
-
-        //language=HQL
-        String queryString = "select dedv, dedv.designElement.id from ProcessedExpressionDataVector dedv fetch all properties"
-                + " where dedv.designElement.id in ( :cs ) ";
-
-        Session session = this.getSessionFactory().getCurrentSession();
-        org.hibernate.Query queryObject = session.createQuery( queryString );
-        queryObject.setReadOnly( true );
-        queryObject.setFlushMode( FlushMode.MANUAL );
-
-        Map<ProcessedExpressionDataVector, Collection<Long>> dedv2genes = new HashMap<>();
-        StopWatch timer = new StopWatch();
-        timer.start();
-
-        int batchSize = 100;
-        for ( Collection<Long> batch : new BatchIterator<>( cs2gene.keySet(), batchSize ) ) {
-            this.getVectorsBatch( cs2gene, queryObject, dedv2genes, batch );
-        }
-
-        if ( timer.getTime() > Math.max( 200, 20 * dedv2genes.size() ) ) {
-            AbstractDao.log
-                    .info( "Fetched " + dedv2genes.size() + " vectors for " + cs2gene.size() + " probes in " + timer
-                            .getTime() + "ms\n" + "Vector query was: " + queryString );
-
-        }
-        return dedv2genes;
-    }
-
-    /**
-     * @param  ee      ee
-     * @param  cs2gene Map of probes to genes.
-     * @return map of vectors to gene ids.
-     */
-    private Map<ProcessedExpressionDataVector, Collection<Long>> getVectorsForProbesInExperiments( Long ee, Map<Long, Collection<Long>> cs2gene ) {
-
-        // Do not do in clause for experiments, as it can't use the indices
-        //language=HQL
-        String queryString = "select dedv, dedv.designElement.id from ProcessedExpressionDataVector dedv fetch all properties"
-                + " where dedv.designElement.id in ( :cs ) and dedv.expressionExperiment.id = :eeId ";
-
-        Session session = this.getSessionFactory().getCurrentSession();
-        org.hibernate.Query queryObject = session.createQuery( queryString );
-        queryObject.setReadOnly( true );
-        queryObject.setFlushMode( FlushMode.MANUAL );
-
-        Map<ProcessedExpressionDataVector, Collection<Long>> dedv2genes = new HashMap<>();
-        StopWatch timer = new StopWatch();
-        timer.start();
-
-        queryObject.setLong( "eeId", ee );
-
-        int batchSize = 100;
-        for ( Collection<Long> batch : new BatchIterator<>( cs2gene.keySet(), batchSize ) ) {
-            this.getVectorsBatch( cs2gene, queryObject, dedv2genes, batch );
-        }
-
-        if ( timer.getTime() > Math.max( 200, 20 * dedv2genes.size() ) ) {
-            AbstractDao.log
-                    .info( "Fetched " + dedv2genes.size() + " vectors for " + cs2gene.size() + " probes in " + timer
-                            .getTime() + "ms\n" + "Vector query was: " + queryString );
-
-        }
-        return dedv2genes;
-    }
-
-    private void getVectorsBatch( Map<Long, Collection<Long>> cs2gene, org.hibernate.Query queryObject,
-            Map<ProcessedExpressionDataVector, Collection<Long>> dedv2genes, Collection<Long> batch ) {
-        queryObject.setParameterList( "cs", batch );
-        queryObject.setFlushMode( FlushMode.MANUAL );
-        queryObject.setReadOnly( true );
-        ScrollableResults results = queryObject.scroll( ScrollMode.FORWARD_ONLY );
-
-        try {
-            while ( results.next() ) {
-                ProcessedExpressionDataVector dedv = ( ProcessedExpressionDataVector ) results.get( 0 );
-                Long cs = ( Long ) results.get( 1 );
-                Collection<Long> associatedGenes = cs2gene.get( cs );
-                if ( !dedv2genes.containsKey( dedv ) ) {
-                    dedv2genes.put( dedv, associatedGenes );
-                } else {
-                    Collection<Long> mappedGenes = dedv2genes.get( dedv );
-                    mappedGenes.addAll( associatedGenes );
-                }
-            }
-        } finally {
-            results.close();
-        }
-    }
-
 }
