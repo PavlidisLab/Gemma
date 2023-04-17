@@ -1012,7 +1012,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends AbstractDesignElementD
                                 + ( ees != null ? " and dedv.expressionExperiment in :ees" : "" ) )
                 .setParameterList( "cs", cs2gene.keySet() );
         if ( ees != null ) {
-            queryObject.setParameter( "ees", ees );
+            queryObject.setParameterList( "ees", ees );
         }
         Map<ProcessedExpressionDataVector, Collection<Long>> dedv2genes = new HashMap<>();
         //noinspection unchecked
