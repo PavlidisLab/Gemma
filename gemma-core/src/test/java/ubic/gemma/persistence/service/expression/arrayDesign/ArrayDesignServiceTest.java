@@ -11,6 +11,7 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventDao;
 import ubic.gemma.persistence.service.expression.experiment.BlacklistedEntityService;
 import ubic.gemma.persistence.util.ObjectFilter;
+import ubic.gemma.persistence.util.TestComponent;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.InstanceOfAssertFactories.array;
@@ -22,7 +23,8 @@ import static org.mockito.Mockito.when;
 public class ArrayDesignServiceTest {
 
     @Configuration
-    static class ArrayDesignServiceTestContextConfiguration {
+    @TestComponent
+    public static class ArrayDesignServiceTestContextConfiguration {
 
         @Bean
         public ArrayDesignDao arrayDesignDao() {
