@@ -22,9 +22,11 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.util.TestComponent;
 
+import java.util.Arrays;
 import java.util.Collections;
 
 import static org.junit.Assert.*;
+import static org.mockito.Mockito.*;
 
 @ContextConfiguration
 public class RawAndProcessedExpressionDataVectorDaoTest extends BaseDatabaseTest {
@@ -32,6 +34,16 @@ public class RawAndProcessedExpressionDataVectorDaoTest extends BaseDatabaseTest
     @Configuration
     @TestComponent
     static class RawAndProcessedExpressionDataVectorDaoTestContextConfiguration extends BaseDatabaseTestContextConfiguration {
+
+        @Bean
+        public RawExpressionDataVectorDao rawExpressionDataVectorDao() {
+            return mock( RawExpressionDataVectorDao.class );
+        }
+
+        @Bean
+        public ProcessedExpressionDataVectorDao processedExpressionDataVectorDao() {
+            return mock( ProcessedExpressionDataVectorDao.class );
+        }
 
         @Bean
         public RawAndProcessedExpressionDataVectorDao rawAndProcessedExpressionDataVectorDao( SessionFactory sessionFactory ) {
@@ -42,8 +54,27 @@ public class RawAndProcessedExpressionDataVectorDaoTest extends BaseDatabaseTest
     @Autowired
     private RawAndProcessedExpressionDataVectorDao rawAndProcessedExpressionDataVectorDao;
 
+    @Autowired
+    private RawExpressionDataVectorDao rawExpressionDataVectorDao;
+
+    @Autowired
+    private ProcessedExpressionDataVectorDao processedExpressionDataVectorDao;
+
+    @After
+    public void tearDown() {
+        reset( rawExpressionDataVectorDao, processedExpressionDataVectorDao );
+    }
+
     @Test
-    public void test() {
+    public void testFind() {
+        RawExpressionDataVector ev = new RawExpressionDataVector();
+        assertNull( rawAndProcessedExpressionDataVectorDao.find( ev ) );
+        verify( rawExpressionDataVectorDao ).find( ev );
+        verifyNoInteractions( processedExpressionDataVectorDao );
+    }
+
+    @Test
+    public void testRemoveByCompositeSequence() {
         Session session = sessionFactory.getCurrentSession();
         Taxon taxon = Taxon.Factory.newInstance( "test" );
         session.persist( taxon );
