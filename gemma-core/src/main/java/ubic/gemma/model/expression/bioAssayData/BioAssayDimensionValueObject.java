@@ -98,10 +98,6 @@ public class BioAssayDimensionValueObject extends IdentifiableValueObject<BioAss
         this.bioAssays.addAll( bvos );
     }
 
-    public void setSubset( boolean subset ) {
-        isSubset = subset;
-    }
-
     public String getDescription() {
         return description;
     }
