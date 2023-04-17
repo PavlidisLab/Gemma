@@ -47,7 +47,6 @@ public class ExperimentPlatformSwitchHelperServiceImpl implements ExperimentPlat
     @Transactional
     public void persist( ExpressionExperiment ee, ArrayDesign arrayDesign ) {
         expressionExperimentService.update( ee );
-        rawVectorService.update( ee.getRawExpressionDataVectors() ); // no processed vectors at this point.
 
         // a redundant check, but there have been problems.
         for ( RawExpressionDataVector v : ee.getRawExpressionDataVectors() ) {

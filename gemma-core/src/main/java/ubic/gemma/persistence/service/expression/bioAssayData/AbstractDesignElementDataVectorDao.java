@@ -21,7 +21,6 @@ package ubic.gemma.persistence.service.expression.bioAssayData;
 import org.apache.commons.lang3.time.StopWatch;
 import org.hibernate.*;
 import org.hibernate.metadata.ClassMetadata;
-import ubic.basecode.util.BatchIterator;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -187,67 +186,4 @@ public abstract class AbstractDesignElementDataVectorDao<T extends DesignElement
     public Collection<T> findByExpressionExperiment( ExpressionExperiment ee ) {
         return findByProperty( "expressionExperiment", ee );
     }
-
-    /**
-     * @param  ee      ee
-     * @param  cs2gene Map of probes to genes.
-     * @return map of vectors to gene ids.
-     */
-    Map<T, Collection<Long>> getVectorsForProbesInExperiments( Long ee, Map<Long, Collection<Long>> cs2gene ) {
-
-        // Do not do in clause for experiments, as it can't use the indices
-        //language=HQL
-        String queryString = "select dedv, dedv.designElement.id from ProcessedExpressionDataVector dedv fetch all properties"
-                + " where dedv.designElement.id in ( :cs ) and dedv.expressionExperiment.id = :eeId ";
-
-        Session session = this.getSessionFactory().getCurrentSession();
-        org.hibernate.Query queryObject = session.createQuery( queryString );
-        queryObject.setReadOnly( true );
-        queryObject.setFlushMode( FlushMode.MANUAL );
-
-        Map<T, Collection<Long>> dedv2genes = new HashMap<>();
-        StopWatch timer = new StopWatch();
-        timer.start();
-
-        queryObject.setLong( "eeId", ee );
-
-        int batchSize = 100;
-        for ( Collection<Long> batch : new BatchIterator<>( cs2gene.keySet(), batchSize ) ) {
-            this.getVectorsBatch( cs2gene, queryObject, dedv2genes, batch );
-        }
-
-        if ( timer.getTime() > Math.max( 200, 20 * dedv2genes.size() ) ) {
-            AbstractDao.log
-                    .info( "Fetched " + dedv2genes.size() + " vectors for " + cs2gene.size() + " probes in " + timer
-                            .getTime() + "ms\n" + "Vector query was: " + queryString );
-
-        }
-        return dedv2genes;
-    }
-
-    protected void getVectorsBatch( Map<Long, Collection<Long>> cs2gene, org.hibernate.Query queryObject,
-            Map<T, Collection<Long>> dedv2genes, Collection<Long> batch ) {
-        queryObject.setParameterList( "cs", batch );
-        queryObject.setFlushMode( FlushMode.MANUAL );
-        queryObject.setReadOnly( true );
-        ScrollableResults results = queryObject.scroll( ScrollMode.FORWARD_ONLY );
-
-        try {
-            while ( results.next() ) {
-                @SuppressWarnings("unchecked")
-                T dedv = ( T ) results.get( 0 );
-                Long cs = ( Long ) results.get( 1 );
-                Collection<Long> associatedGenes = cs2gene.get( cs );
-                if ( !dedv2genes.containsKey( dedv ) ) {
-                    dedv2genes.put( dedv, associatedGenes );
-                } else {
-                    Collection<Long> mappedGenes = dedv2genes.get( dedv );
-                    mappedGenes.addAll( associatedGenes );
-                }
-            }
-        } finally {
-            results.close();
-        }
-    }
-
 }

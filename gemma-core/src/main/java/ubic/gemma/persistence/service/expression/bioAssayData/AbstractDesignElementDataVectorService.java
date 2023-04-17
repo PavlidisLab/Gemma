@@ -20,14 +20,6 @@ public abstract class AbstractDesignElementDataVectorService<T extends DesignEle
 
     @Override
     @Transactional(readOnly = true)
-    public Collection<T> thaw( Collection<T> designElementDataVectors ) {
-        designElementDataVectors = ensureInSession( designElementDataVectors );
-        this.designElementDataVectorDao.thaw( designElementDataVectors );
-        return designElementDataVectors;
-    }
-
-    @Override
-    @Transactional(readOnly = true)
     public Collection<T> find( BioAssayDimension bioAssayDimension ) {
         return this.designElementDataVectorDao.find( bioAssayDimension );
     }

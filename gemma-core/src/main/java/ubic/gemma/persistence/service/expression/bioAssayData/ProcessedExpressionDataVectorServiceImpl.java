@@ -6,7 +6,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.core.analysis.preprocess.ProcessedExpressionDataVectorCreateHelperService;
 import ubic.gemma.core.analysis.preprocess.svd.SVDService;
-import ubic.gemma.core.datastructure.matrix.InferredQuantitationMismatchException;
 import ubic.gemma.core.datastructure.matrix.QuantitationMismatchException;
 import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionValueObject;
@@ -383,4 +382,11 @@ public class ProcessedExpressionDataVectorServiceImpl
                 consolidateMode ) );
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public Collection<ProcessedExpressionDataVector> thaw( Collection<ProcessedExpressionDataVector> vectors ) {
+        vectors = ensureInSession( vectors );
+        this.processedExpressionDataVectorDao.thaw( vectors );
+        return vectors;
+    }
 }

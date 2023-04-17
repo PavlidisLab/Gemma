@@ -315,9 +315,9 @@ public class ProcessedExpressionDataVectorCreateHelperServiceImpl
                 throw new IllegalStateException( "No useful quantitation types for " + ee.getShortName() );
             }
 
-            Collection<? extends DesignElementDataVector> vectors = rawExpressionDataVectorService.find( usefulQuantitationTypes );
+            Collection<? extends DesignElementDataVector> vectors = rawExpressionDataVectorService.thaw( rawExpressionDataVectorService.find( usefulQuantitationTypes ) );
             if ( vectors.isEmpty() ) {
-                vectors = processedExpressionDataVectorService.find( usefulQuantitationTypes );
+                vectors = processedExpressionDataVectorService.thaw( processedExpressionDataVectorService.find( usefulQuantitationTypes ) );
             }
 
             if ( vectors.isEmpty() ) {
@@ -326,8 +326,6 @@ public class ProcessedExpressionDataVectorCreateHelperServiceImpl
 
             ProcessedExpressionDataVectorCreateHelperServiceImpl.log.info( "Vectors loaded ..." );
 
-            Collection<DesignElementDataVector> vs = new HashSet<>( vectors );
-            vs = rawAndProcessedExpressionDataVectorService.thaw( vs );
             ExpressionDataMatrixBuilder builder = new ExpressionDataMatrixBuilder( processedVectors, vectors );
             intensities = builder.getIntensity();
 

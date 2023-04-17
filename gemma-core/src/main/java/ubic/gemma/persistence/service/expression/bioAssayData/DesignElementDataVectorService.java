@@ -2,27 +2,14 @@ package ubic.gemma.persistence.service.expression.bioAssayData;
 
 import org.springframework.security.access.annotation.Secured;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
-import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
-import ubic.gemma.model.expression.designElement.CompositeSequence;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.persistence.service.BaseService;
+import ubic.gemma.persistence.service.BaseReadOnlyService.BaseReadOnlyService;
 
 import javax.annotation.CheckReturnValue;
 import java.util.Collection;
 
-@SuppressWarnings("unused")
-        // Possible external use
-interface DesignElementDataVectorService<T extends DesignElementDataVector> extends BaseService<T> {
-
-    /**
-     * Thaws the given vectors.
-     *
-     * @param designElementDataVectors the vectors to thaw.
-     */
-    @CheckReturnValue
-    Collection<T> thaw( Collection<T> designElementDataVectors );
+interface DesignElementDataVectorService<T extends DesignElementDataVector> extends BaseReadOnlyService<T> {
 
     /**
      * Find specific type (raw or processed, depending on the service) of vectors that meet the given criteria.
@@ -50,8 +37,4 @@ interface DesignElementDataVectorService<T extends DesignElementDataVector> exte
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_DATAVECTOR_COLLECTION_READ" })
     Collection<T> find( QuantitationType quantitationType );
-
-    @Override
-    @Secured({ "GROUP_USER" })
-    void update( T dedv );
 }

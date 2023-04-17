@@ -4,15 +4,45 @@ import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
+import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
+
+import java.util.Collection;
 
 @Repository
 public class RawAndProcessedExpressionDataVectorDaoImpl extends AbstractDesignElementDataVectorDao<DesignElementDataVector> implements RawAndProcessedExpressionDataVectorDao {
 
     @Autowired
+    private RawExpressionDataVectorDao rawExpressionDataVectorDao;
+
+    @Autowired
+    private ProcessedExpressionDataVectorDao processedExpressionDataVectorDao;
+
+    @Autowired
     public RawAndProcessedExpressionDataVectorDaoImpl( SessionFactory sessionFactory ) {
         super( DesignElementDataVector.class, sessionFactory, sessionFactory.getClassMetadata( RawExpressionDataVector.class ) );
+    }
+
+    @Override
+    public DesignElementDataVector load( Long id ) {
+        throw new UnsupportedOperationException( "Use a specific expression vector DAO to load by ID." );
+    }
+
+    @Override
+    public Collection<DesignElementDataVector> load( Collection<Long> ids ) {
+        throw new UnsupportedOperationException( "Use a specific expression vector DAO to load by IDs." );
+    }
+
+    @Override
+    public DesignElementDataVector find( DesignElementDataVector entity ) {
+        if ( entity instanceof RawExpressionDataVector ) {
+            return rawExpressionDataVectorDao.find( ( RawExpressionDataVector ) entity );
+        } else if ( entity instanceof ProcessedExpressionDataVector ) {
+            return processedExpressionDataVectorDao.find( ( ProcessedExpressionDataVector ) entity );
+        } else {
+            throw new UnsupportedOperationException( "Only raw and processed vectors can be used with this service." );
+        }
     }
 
     @Override
