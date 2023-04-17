@@ -43,6 +43,8 @@ public interface DesignElementDataVectorDao<T extends DesignElementDataVector> e
 
     Collection<T> find( QuantitationType quantitationType );
 
+    Collection<T> findByExpressionExperiment( ExpressionExperiment ee );
+
     /**
      * Thaw the given vector.
      */

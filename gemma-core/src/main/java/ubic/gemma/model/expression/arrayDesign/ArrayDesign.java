@@ -44,6 +44,12 @@ public class ArrayDesign extends AbstractAuditable implements gemma.gsec.model.S
             return new ArrayDesign();
         }
 
+        public static ArrayDesign newInstance( String shortName, Taxon taxon ) {
+            ArrayDesign ad = new ArrayDesign();
+            ad.setShortName( shortName );
+            ad.setPrimaryTaxon( taxon );
+            return ad;
+        }
     }
 
     /**

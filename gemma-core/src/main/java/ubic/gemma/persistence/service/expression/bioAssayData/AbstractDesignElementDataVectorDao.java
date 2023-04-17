@@ -183,6 +183,11 @@ public abstract class AbstractDesignElementDataVectorDao<T extends DesignElement
         return new HashSet<>( this.findByProperty( "quantitationType", quantitationType ) );
     }
 
+    @Override
+    public Collection<T> findByExpressionExperiment( ExpressionExperiment ee ) {
+        return findByProperty( "expressionExperiment", ee );
+    }
+
     /**
      * @param  ee      ee
      * @param  cs2gene Map of probes to genes.

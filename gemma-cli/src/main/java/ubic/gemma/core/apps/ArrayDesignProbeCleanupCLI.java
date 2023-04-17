@@ -22,12 +22,12 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.lang3.StringUtils;
-import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 import ubic.gemma.core.util.AbstractCLI;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
-import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
-import ubic.gemma.persistence.service.expression.bioAssayData.RawExpressionDataVectorService;
+import ubic.gemma.persistence.service.expression.bioAssayData.RawAndProcessedExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
 
 import java.io.*;
@@ -38,20 +38,16 @@ import java.io.*;
  *
  * @author Paul
  */
+@Component
 public class ArrayDesignProbeCleanupCLI extends ArrayDesignSequenceManipulatingCli {
 
+    @Autowired
     private CompositeSequenceService compositeSequenceService;
-    private RawExpressionDataVectorService rawExpressionDataVectorService;
-    private ProcessedExpressionDataVectorService processedExpressionDataVectorService;
+    @Autowired
+    private RawAndProcessedExpressionDataVectorService rawAndProcessedExpressionDataVectorService;
     private String file;
 
     @Override
-    public CommandGroup getCommandGroup() {
-        return CommandGroup.PLATFORM;
-    }
-
-    @Override
-    @SuppressWarnings("static-access")
     protected void buildOptions( Options options ) {
         super.buildOptions( options );
         Option fileOption = Option.builder( "f" ).hasArg().required().argName( "file" )
@@ -65,9 +61,6 @@ public class ArrayDesignProbeCleanupCLI extends ArrayDesignSequenceManipulatingC
     @Override
     protected void processOptions( CommandLine commandLine ) {
         super.processOptions( commandLine );
-        this.compositeSequenceService = this.getBean( CompositeSequenceService.class );
-        this.rawExpressionDataVectorService = this.getBean( RawExpressionDataVectorService.class );
-        this.processedExpressionDataVectorService = this.getBean( ProcessedExpressionDataVectorService.class );
         if ( commandLine.hasOption( 'f' ) ) {
             file = commandLine.getOptionValue( 'f' );
         }
@@ -92,10 +85,11 @@ public class ArrayDesignProbeCleanupCLI extends ArrayDesignSequenceManipulatingC
 
         ArrayDesign arrayDesign = this.getArrayDesignsToProcess().iterator().next();
         try ( InputStream is = new FileInputStream( f );
-              BufferedReader br = new BufferedReader( new InputStreamReader( is ) ) ) {
+                BufferedReader br = new BufferedReader( new InputStreamReader( is ) ) ) {
 
             String line;
-            int count = 0;
+            int removedProbes = 0;
+            int removedVectors = 0;
             while ( ( line = br.readLine() ) != null ) {
 
                 if ( StringUtils.isBlank( line ) ) {
@@ -108,15 +102,12 @@ public class ArrayDesignProbeCleanupCLI extends ArrayDesignSequenceManipulatingC
                 CompositeSequence cs = compositeSequenceService.findByName( arrayDesign, probe );
                 if ( cs != null ) {
                     AbstractCLI.log.info( "Removing: " + cs );
-                    rawExpressionDataVectorService.removeDataForCompositeSequence( cs );
-                    processedExpressionDataVectorService.removeDataForCompositeSequence( cs );
+                    removedVectors += rawAndProcessedExpressionDataVectorService.removeByCompositeSequence( cs );
                     compositeSequenceService.remove( cs );
-                    count++;
+                    removedProbes++;
                 }
             }
-            AbstractCLI.log.info( "Deleted " + count + " probes" );
-        } catch ( Exception e ) {
-            throw e;
+            AbstractCLI.log.info( String.format( "Deleted %d probes and %d corresponding data vectors.", removedProbes, removedVectors ) );
         }
     }
 }
