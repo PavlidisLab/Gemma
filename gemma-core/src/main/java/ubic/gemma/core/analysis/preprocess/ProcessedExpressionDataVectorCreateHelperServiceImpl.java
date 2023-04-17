@@ -256,7 +256,7 @@ public class ProcessedExpressionDataVectorCreateHelperServiceImpl
     @Override
     public ExpressionExperiment updateRanks( ExpressionExperiment ee ) {
 
-        ee = expressionExperimentDao.thaw( ee );
+        ee = eeService.thaw( ee );
         Collection<ProcessedExpressionDataVector> processedVectors = ee.getProcessedExpressionDataVectors();
         processedVectors = processedExpressionDataVectorService.thaw( processedVectors );
         StopWatch timer = new StopWatch();

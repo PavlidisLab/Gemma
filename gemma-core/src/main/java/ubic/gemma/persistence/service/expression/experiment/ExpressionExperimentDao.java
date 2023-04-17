@@ -155,13 +155,13 @@ public interface ExpressionExperimentDao
 
     List<ExpressionExperimentValueObject> loadValueObjectsByIds( Collection<Long> ids );
 
-    ExpressionExperiment thaw( ExpressionExperiment expressionExperiment );
+    void thaw( ExpressionExperiment expressionExperiment );
 
-    ExpressionExperiment thawBioAssays( ExpressionExperiment expressionExperiment );
+    void thawWithoutVectors( ExpressionExperiment expressionExperiment );
 
-    ExpressionExperiment thawForFrontEnd( ExpressionExperiment expressionExperiment );
+    void thawBioAssays( ExpressionExperiment expressionExperiment );
 
-    ExpressionExperiment thawWithoutVectors( ExpressionExperiment expressionExperiment );
+    void thawForFrontEnd( ExpressionExperiment expressionExperiment );
 
     Collection<? extends AnnotationValueObject> getAnnotationsByBioMaterials( Long eeId );
 

@@ -962,25 +962,33 @@ public class ExpressionExperimentServiceImpl
     @Override
     @Transactional(readOnly = true)
     public ExpressionExperiment thaw( final ExpressionExperiment expressionExperiment ) {
-        return this.expressionExperimentDao.thaw( expressionExperiment );
+        ExpressionExperiment result = ensureInSession( expressionExperiment );
+        this.expressionExperimentDao.thaw( result );
+        return result;
     }
 
     @Override
     @Transactional(readOnly = true)
     public ExpressionExperiment thawBioAssays( final ExpressionExperiment expressionExperiment ) {
-        return this.expressionExperimentDao.thawBioAssays( expressionExperiment );
+        ExpressionExperiment result = ensureInSession( expressionExperiment );
+        this.expressionExperimentDao.thawBioAssays( result );
+        return result;
     }
 
     @Override
     @Transactional(readOnly = true)
     public ExpressionExperiment thawLite( final ExpressionExperiment expressionExperiment ) {
-        return this.expressionExperimentDao.thawWithoutVectors( expressionExperiment );
+        ExpressionExperiment result = ensureInSession( expressionExperiment );
+        this.expressionExperimentDao.thawWithoutVectors( result );
+        return result;
     }
 
     @Override
     @Transactional(readOnly = true)
     public ExpressionExperiment thawLiter( final ExpressionExperiment expressionExperiment ) {
-        return this.expressionExperimentDao.thawForFrontEnd( expressionExperiment );
+        ExpressionExperiment result = ensureInSession( expressionExperiment );
+        this.expressionExperimentDao.thawForFrontEnd( result );
+        return result;
     }
 
     @Override
