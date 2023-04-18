@@ -39,5 +39,5 @@ public interface CurationDetailsService {
      * @param curatable  curatable
      */
     @Secured({ "GROUP_AGENT", "ACL_SECURABLE_EDIT" })
-    void update( Curatable curatable, AuditEvent auditEvent );
+    CurationDetails save( Curatable curatable, AuditEvent auditEvent );
 }

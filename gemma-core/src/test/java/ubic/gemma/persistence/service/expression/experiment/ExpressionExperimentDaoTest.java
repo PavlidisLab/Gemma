@@ -8,7 +8,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.ContextConfiguration;
 import ubic.gemma.core.util.test.BaseDatabaseTest;
-import ubic.gemma.model.common.auditAndSecurity.AuditTrailImpl;
+import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
@@ -102,7 +102,7 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest {
 
     private ExpressionExperiment createExpressionExperiment() {
         ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
-        ee.setAuditTrail( new AuditTrailImpl() );
+        ee.setAuditTrail( new AuditTrail() );
         ee.setExperimentalDesign( new ExperimentalDesign() );
         return expressionExperimentDao.create( ee );
     }

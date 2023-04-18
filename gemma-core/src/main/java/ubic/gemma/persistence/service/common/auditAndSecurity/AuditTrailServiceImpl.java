@@ -24,6 +24,7 @@ import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.metadata.ClassMetadata;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.core.security.authentication.UserManager;
 import ubic.gemma.model.common.Auditable;
@@ -76,8 +77,12 @@ public class AuditTrailServiceImpl extends AbstractService<AuditTrail> implement
         return doAddUpdateEvent( auditable, getAuditEventType( type ), note, null );
     }
 
+    /**
+     * This is using the {@link Propagation#REQUIRES_NEW} so that if the throwable is raised, it will not roll back the
+     * audit trail event.
+     */
     @Override
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public AuditEvent addUpdateEvent( Auditable auditable, Class<? extends AuditEventType> type, @Nullable String note, Throwable throwable ) {
         return doAddUpdateEvent( auditable, getAuditEventType( type ), note, ExceptionUtils.getStackTrace( throwable ) );
     }
@@ -99,7 +104,7 @@ public class AuditTrailServiceImpl extends AbstractService<AuditTrail> implement
         AuditEvent auditEvent = AuditEvent.Factory.newInstance( new Date(), AuditAction.UPDATE, note, detail, userManager.getCurrentUser(), auditEventType );
         //If object is curatable, update curation details
         if ( auditable instanceof Curatable && auditEvent.getEventType() != null ) {
-            curationDetailsService.update( ( Curatable ) auditable, auditEvent );
+            curationDetailsService.save( ( Curatable ) auditable, auditEvent );
         }
         return this.addEvent( auditable, auditEvent );
     }
@@ -115,9 +120,10 @@ public class AuditTrailServiceImpl extends AbstractService<AuditTrail> implement
                     auditable ) );
             trail = AuditTrail.Factory.newInstance();
         }
+        trail = ensureInSession( trail );
         // this is necessary otherwise we would have to guess the event from the audit trail
         AuditEvent persistedAuditEvent = auditEventDao.save( auditEvent );
-        trail.addEvent( auditEvent );
+        trail.getEvents().add( auditEvent );
         auditable.setAuditTrail( auditTrailDao.save( trail ) );
         return persistedAuditEvent;
     }

@@ -8,7 +8,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.ContextConfiguration;
 import ubic.gemma.core.util.test.BaseDatabaseTest;
-import ubic.gemma.model.common.auditAndSecurity.AuditTrailImpl;
+import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
 import ubic.gemma.model.common.description.DatabaseType;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.persistence.service.common.description.ExternalDatabaseDao;
@@ -45,7 +45,7 @@ public class AbstractServiceTest extends BaseDatabaseTest {
     @Test
     public void testEnsureInSession() {
         ExternalDatabase ed = ExternalDatabase.Factory.newInstance( "test", DatabaseType.OTHER );
-        ed.setAuditTrail( new AuditTrailImpl() );
+        ed.setAuditTrail( new AuditTrail() );
 
         // a transient instance
         assertThat( myService.ensureInSession( ed ) ).isSameAs( ed );
@@ -110,7 +110,7 @@ public class AbstractServiceTest extends BaseDatabaseTest {
 
     private ExternalDatabase createFixture() {
         ExternalDatabase ed = ExternalDatabase.Factory.newInstance( "test" + ( ++i ), DatabaseType.OTHER );
-        ed.setAuditTrail( new AuditTrailImpl() );
+        ed.setAuditTrail( new AuditTrail() );
         return myService.create( ed );
     }
 

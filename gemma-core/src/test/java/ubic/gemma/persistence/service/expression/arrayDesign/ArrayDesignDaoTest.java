@@ -8,8 +8,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.ContextConfiguration;
 import ubic.gemma.core.util.test.BaseDatabaseTest;
-import ubic.gemma.model.common.auditAndSecurity.AuditTrailImpl;
-import ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails;
+import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.genome.Taxon;
@@ -50,7 +49,7 @@ public class ArrayDesignDaoTest extends BaseDatabaseTest {
         sessionFactory.getCurrentSession().persist( taxon );
         ArrayDesign ad = new ArrayDesign();
         ad.setPrimaryTaxon( taxon );
-        ad.setAuditTrail( new AuditTrailImpl() );
+        ad.setAuditTrail( new AuditTrail() );
         ad = arrayDesignDao.create( ad );
 
         Set<CompositeSequence> probes = new HashSet<>();

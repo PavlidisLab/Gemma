@@ -19,7 +19,7 @@
 package ubic.gemma.model.common.auditAndSecurity.eventType;
 
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
-import ubic.gemma.model.common.auditAndSecurity.curation.Curatable;
+import ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails;
 
 /**
  * <p>
@@ -42,9 +42,9 @@ public class CurationNoteUpdateEvent extends CurationDetailsEvent {
      *                   contain the new text of the note. This can be any String object, including a null object.
      */
     @Override
-    public void setCurationDetails( Curatable curatable, AuditEvent auditEvent ) {
-        curatable.getCurationDetails().setCurationNote( auditEvent.getNote() );
-        curatable.getCurationDetails().setLastNoteUpdateEvent( auditEvent );
+    public void updateCurationDetails( CurationDetails curationDetails, AuditEvent auditEvent ) {
+        curationDetails.setCurationNote( auditEvent.getNote() );
+        curationDetails.setLastNoteUpdateEvent( auditEvent );
     }
 
 }

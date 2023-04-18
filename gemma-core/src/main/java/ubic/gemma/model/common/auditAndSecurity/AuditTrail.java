@@ -20,34 +20,26 @@ package ubic.gemma.model.common.auditAndSecurity;
 
 import ubic.gemma.model.common.Identifiable;
 
+import javax.annotation.Nullable;
+import javax.persistence.Transient;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * The trail of events (create or update) that occurred in an objects lifetime. The first event added must be a "Create"
  * event, or an exception will be thrown.
  */
-@SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
-public abstract class AuditTrail implements Identifiable, Serializable {
+public class AuditTrail implements Identifiable, Serializable {
 
     private static final long serialVersionUID = -7450755789163303140L;
     private Long id;
     private List<AuditEvent> events = new ArrayList<>();
 
-    /**
-     * Add an event to the AuditTrail
-     *
-     * @param event event
-     */
-    public abstract void addEvent( AuditEvent event );
-
     @Override
     public int hashCode() {
-        int hashCode = 0;
-        hashCode = 29 * hashCode + ( id == null ? 0 : id.hashCode() );
-
-        return hashCode;
+        return Objects.hash( id );
     }
 
     @Override
@@ -61,11 +53,6 @@ public abstract class AuditTrail implements Identifiable, Serializable {
         final AuditTrail that = ( AuditTrail ) object;
         return !( this.id == null || that.getId() == null || !this.id.equals( that.getId() ) );
     }
-
-    /**
-     * @return the first event in the audit trail.
-     */
-    public abstract AuditEvent getCreationEvent();
 
     public List<AuditEvent> getEvents() {
         return this.events;
@@ -86,32 +73,37 @@ public abstract class AuditTrail implements Identifiable, Serializable {
     }
 
     /**
+     * @return the first event in the audit trail.
+     */
+    @Transient
+    public AuditEvent getCreationEvent() {
+        assert this.getEvents() != null;
+        if ( this.getEvents().size() == 0 ) {
+            return null;
+        }
+        AuditEvent auditEvent = this.getEvents().get( 0 );
+
+        assert auditEvent.getAction().equals( AuditAction.CREATE );
+
+        return auditEvent;
+    }
+
+    /**
      * @return the last (most recent) event in the AuditTrail.
      */
-    public abstract AuditEvent getLast();
-
-    public abstract void read();
-
-    public abstract void read( String note );
-
-    public abstract void read( String note, User actor );
-
-    public abstract void start();
-
-    public abstract void start( String note );
-
-    public abstract void start( String note, User actor );
-
-    public abstract void update();
-
-    public abstract void update( String note );
-
-    public abstract void update( String note, User actor );
+    @Transient
+    public AuditEvent getLast() {
+        assert this.getEvents() != null;
+        if ( this.getEvents().size() == 0 ) {
+            return null;
+        }
+        return this.getEvents().get( this.getEvents().size() - 1 );
+    }
 
     public static final class Factory {
 
         public static AuditTrail newInstance() {
-            return new AuditTrailImpl();
+            return new AuditTrail();
         }
 
     }

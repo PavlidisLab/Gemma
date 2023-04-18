@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.curation.AbstractCuratableValueObject;
 import ubic.gemma.model.common.auditAndSecurity.curation.Curatable;
+import ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails;
 import ubic.gemma.persistence.service.AbstractQueryFilteringVoEnabledDao;
 import ubic.gemma.persistence.service.common.auditAndSecurity.CurationDetailsDao;
 import ubic.gemma.persistence.util.Filters;
@@ -14,6 +15,7 @@ import ubic.gemma.persistence.util.ObjectFilter;
 import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Date;
 import java.util.Map;
 
 /**
@@ -35,7 +37,9 @@ public abstract class AbstractCuratableDao<C extends Curatable, VO extends Abstr
     @Override
     public C create( C entity ) {
         if ( entity.getCurationDetails() == null ) {
-            entity.setCurationDetails( curationDetailsDao.create() );
+            CurationDetails cd = new CurationDetails( new Date(), null, true, null, false, null, null );
+            getSessionFactory().getCurrentSession().persist( cd );
+            entity.setCurationDetails( cd );
         }
         return super.create( entity );
     }

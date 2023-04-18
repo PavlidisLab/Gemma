@@ -12,11 +12,12 @@ import org.springframework.test.context.ContextConfiguration;
 import ubic.basecode.io.ByteArrayConverter;
 import ubic.gemma.core.datastructure.matrix.QuantitationMismatchException;
 import ubic.gemma.core.util.test.BaseDatabaseTest;
-import ubic.gemma.model.common.auditAndSecurity.AuditTrailImpl;
+import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
 import ubic.gemma.model.common.quantitationtype.*;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
+import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
@@ -54,7 +55,7 @@ public class ProcessedExpressionDataVectorDaoTest extends BaseDatabaseTest {
     @Autowired
     private ProcessedExpressionDataVectorDao processedExpressionDataVectorDao;
 
-    private ByteArrayConverter bac = new ByteArrayConverter();
+    private final ByteArrayConverter bac = new ByteArrayConverter();
 
     @Before
     public void setUp() {
@@ -67,8 +68,8 @@ public class ProcessedExpressionDataVectorDaoTest extends BaseDatabaseTest {
         ExpressionExperiment ee = getTestExpressionExperimentForRawExpressionMatrix( matrix, ScaleType.LINEAR, false );
         assertThat( ee.getProcessedExpressionDataVectors() ).isEmpty();
         assertThat( ee.getRawExpressionDataVectors() ).hasSize( 100 );
-        ee = processedExpressionDataVectorDao.createProcessedDataVectors( ee, false );
-        assertThat( ee.getProcessedExpressionDataVectors() ).hasSize( 100 );
+        Set<ProcessedExpressionDataVector> vectors = processedExpressionDataVectorDao.createProcessedDataVectors( ee, false );
+        assertThat( vectors ).hasSize( 100 );
         assertThat( ee.getQuantitationTypes() ).hasSize( 1 ).first().satisfies( qt -> {
             assertThat( qt.getGeneralType() ).isEqualTo( GeneralType.QUANTITATIVE );
             assertThat( qt.getScale() ).isEqualTo( ScaleType.LOG2 );
@@ -82,8 +83,8 @@ public class ProcessedExpressionDataVectorDaoTest extends BaseDatabaseTest {
         ExpressionExperiment ee = getTestExpressionExperimentForRawExpressionMatrix( matrix, ScaleType.LOG2, false );
         assertThat( ee.getProcessedExpressionDataVectors() ).isEmpty();
         assertThat( ee.getRawExpressionDataVectors() ).hasSize( 100 );
-        ee = processedExpressionDataVectorDao.createProcessedDataVectors( ee, false );
-        assertThat( ee.getProcessedExpressionDataVectors() ).hasSize( 100 );
+        Set<ProcessedExpressionDataVector> vectors = processedExpressionDataVectorDao.createProcessedDataVectors( ee, false );
+        assertThat( vectors ).hasSize( 100 );
     }
 
     @Test
@@ -92,8 +93,8 @@ public class ProcessedExpressionDataVectorDaoTest extends BaseDatabaseTest {
         ExpressionExperiment ee = getTestExpressionExperimentForRawExpressionMatrix( matrix, ScaleType.LOG2, true );
         assertThat( ee.getProcessedExpressionDataVectors() ).isEmpty();
         assertThat( ee.getRawExpressionDataVectors() ).hasSize( 100 );
-        ee = processedExpressionDataVectorDao.createProcessedDataVectors( ee, false );
-        assertThat( ee.getProcessedExpressionDataVectors() ).hasSize( 100 );
+        Set<ProcessedExpressionDataVector> vectors = processedExpressionDataVectorDao.createProcessedDataVectors( ee, false );
+        assertThat( vectors ).hasSize( 100 );
     }
 
 
@@ -105,7 +106,7 @@ public class ProcessedExpressionDataVectorDaoTest extends BaseDatabaseTest {
 
         ArrayDesign ad = new ArrayDesign();
         ad.setPrimaryTaxon( taxon );
-        ad.setAuditTrail( new AuditTrailImpl() );
+        ad.setAuditTrail( new AuditTrail() );
         sessionFactory.getCurrentSession().persist( ad );
 
         QuantitationType qt = new QuantitationTypeImpl();
@@ -147,7 +148,7 @@ public class ProcessedExpressionDataVectorDaoTest extends BaseDatabaseTest {
         }
 
         ee.setRawExpressionDataVectors( vectors );
-        ee.setAuditTrail( new AuditTrailImpl() );
+        ee.setAuditTrail( new AuditTrail() );
         sessionFactory.getCurrentSession().persist( ee );
         return ee;
     }

@@ -20,6 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.curation.Curatable;
 import ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails;
+import ubic.gemma.model.common.auditAndSecurity.eventType.CurationDetailsEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.NotTroubledStatusFlagEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.TroubledStatusFlagEvent;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -43,8 +44,23 @@ public class CurationDetailsServiceImpl implements CurationDetailsService {
 
     @Override
     @Transactional
-    public void update( Curatable curatable, AuditEvent auditEvent ) {
-        this.curationDetailsDao.update( curatable, auditEvent );
+    public CurationDetails save( Curatable curatable, AuditEvent auditEvent ) {
+        CurationDetails curationDetails = curatable.getCurationDetails();
+
+        // Update the lastUpdated property to match the event date
+        curationDetails.setLastUpdated( auditEvent.getDate() );
+
+        // Update other curationDetails properties, if the event updates them.
+        if ( auditEvent.getEventType() != null
+                && CurationDetailsEvent.class.isAssignableFrom( auditEvent.getEventType().getClass() ) ) {
+            CurationDetailsEvent eventType = ( CurationDetailsEvent ) auditEvent.getEventType();
+            eventType.updateCurationDetails( curationDetails, auditEvent );
+        }
+
+        curationDetails = curationDetailsDao.save( curationDetails );
+
+        // if the details were persistent but not in the session, ensure that the curatable has up-to-date information
+        curatable.setCurationDetails( curationDetails );
 
         /*
          * The logic below addresses the special relationship between ArrayDesigns and ExpressionExperiments.
@@ -66,7 +82,6 @@ public class CurationDetailsServiceImpl implements CurationDetailsService {
                 Collection<ExpressionExperiment> ees = arrayDesignDao
                         .getExpressionExperiments( ( ArrayDesign ) curatable );
                 for ( ExpressionExperiment ee : ees ) {
-                    CurationDetails curationDetails = ee.getCurationDetails();
                     curationDetails.setTroubled( true );
                     curationDetailsDao.update( curationDetails );
                 }
@@ -80,8 +95,6 @@ public class CurationDetailsServiceImpl implements CurationDetailsService {
                 Collection<ExpressionExperiment> ees = arrayDesignDao
                         .getExpressionExperiments( ( ArrayDesign ) curatable );
                 for ( ExpressionExperiment ee : ees ) {
-                    CurationDetails curationDetails = ee.getCurationDetails();
-
                     if ( curationDetails.getLastTroubledEvent() == null ) {
                         curationDetails.setTroubled( false );
                         curationDetailsDao.update( curationDetails );
@@ -95,7 +108,7 @@ public class CurationDetailsServiceImpl implements CurationDetailsService {
         /*
          * If we're updating an experiment, only unset the trouble flag if all the array designs are NOT troubled.
          */
-        if ( NotTroubledStatusFlagEvent.class.isAssignableFrom( auditEvent.getClass() ) && ExpressionExperiment.class
+        if ( NotTroubledStatusFlagEvent.class.isAssignableFrom( auditEvent.getEventType().getClass() ) && ExpressionExperiment.class
                 .isAssignableFrom( curatable.getClass() ) ) {
 
             boolean troubledPlatform = false;
@@ -103,16 +116,17 @@ public class CurationDetailsServiceImpl implements CurationDetailsService {
             for ( ArrayDesign ad : expressionExperimentDao.getArrayDesignsUsed( ee ) ) {
                 if ( ad.getCurationDetails().getTroubled() ) {
                     troubledPlatform = true;
+                    break;
                 }
             }
 
             if ( !troubledPlatform ) {
-                CurationDetails curationDetails = ee.getCurationDetails();
                 curationDetails.setTroubled( false );
                 curationDetailsDao.update( curationDetails );
             }
 
         }
-    }
 
+        return curationDetails;
+    }
 }
