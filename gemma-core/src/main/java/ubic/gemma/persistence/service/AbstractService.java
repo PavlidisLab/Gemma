@@ -10,7 +10,6 @@ import javax.annotation.CheckReturnValue;
 import javax.annotation.Nonnull;
 import javax.annotation.OverridingMethodsMustInvokeSuper;
 import java.util.*;
-import java.util.stream.Collectors;
 
 import static java.util.Objects.requireNonNull;
 
@@ -153,9 +152,11 @@ public abstract class AbstractService<O extends Identifiable> implements BaseSer
      */
     @CheckReturnValue
     protected O ensureInSession( O entity ) {
-        if ( entity.getId() == null )
+        Long id = entity.getId();
+        if ( id == null )
             return entity; // transient
-        return loadOrFail( entity.getId() );
+        return requireNonNull( mainDao.load( id ),
+                String.format( "No %s with ID %d.", mainDao.getElementClass().getName(), id ) );
     }
 
     /**
