@@ -132,7 +132,7 @@ public class AnnotationController {
             log.warn( "Attempt to run ontology re-indexing as non-admin." );
             return;
         }
-        ontologyService.reinitializeAllOntologies();
+        ontologyService.reinitializeAndReindexAllOntologies();
     }
 
     public void removeBiomaterialTag( Characteristic vc, Long id ) {

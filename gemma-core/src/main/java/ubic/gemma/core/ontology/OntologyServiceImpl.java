@@ -108,9 +108,9 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
     private DiseaseOntologyService diseaseOntologyService;
     @Autowired
     private ExperimentalFactorOntologyService experimentalFactorOntologyService;
-    @Deprecated
-    @Autowired
-    private FMAOntologyService fmaOntologyService;
+//    @Deprecated
+//    @Autowired
+//    private FMAOntologyService fmaOntologyService;
     @Autowired
     private GemmaOntologyService gemmaOntologyService;
     @Autowired
@@ -121,9 +121,9 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
     private MammalianPhenotypeOntologyService mammalianPhenotypeOntologyService;
     @Autowired
     private MouseDevelopmentOntologyService mouseDevelopmentOntologyService;
-    @Deprecated
-    @Autowired
-    private NIFSTDOntologyService nifstdOntologyService;
+//    @Deprecated
+//    @Autowired
+//    private NIFSTDOntologyService nifstdOntologyService;
     @Autowired
     private ObiService obiService;
     @Autowired
@@ -153,7 +153,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
                 .filter( ubic.basecode.ontology.providers.OntologyService::isEnabled )
                 .collect( Collectors.toList() );
         if ( enabledOntologyServices.isEmpty() ) {
-            log.warn( "No ontology services are enabled, consider enabling them by setting 'load.{name}Ontology' options in Gemma.properties." );
+            log.info( "No ontology services are enabled, consider enabling them by setting 'load.{name}Ontology' options in Gemma.properties." );
         } else {
             log.info( "The following ontology services are enabled:\n\t" + enabledOntologyServices.stream()
                     .map( ubic.basecode.ontology.providers.OntologyService::toString )
@@ -537,7 +537,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
     }
 
     @Override
-    public void reinitializeAllOntologies() {
+    public void reinitializeAndReindexAllOntologies() {
         for ( ubic.basecode.ontology.providers.OntologyService serv : this.ontologyServices ) {
             serv.startInitializationThread( true, true );
         }
@@ -635,58 +635,72 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
     }
 
     @Override
-    public Map<String, CharacteristicValueObject> countObsoleteOccurrences( int start, int stop, int step ) {
-        Map<String, CharacteristicValueObject> vos = new HashMap<>();
-
-        int minId = start;
-        int maxId = step;
-
-        int nullCnt = 0;
-        int obsoleteCnt = 0;
-
-        // Loading all characteristics in steps
-        while ( maxId < stop ) {
-
-            OntologyServiceImpl.log.info( "Checking characteristics with IDs between " + minId + " and " + maxId );
-
-            List<Long> ids = new ArrayList<>( step );
-            for ( int i = minId; i < maxId + 1; i++ ) {
-                ids.add( ( long ) i );
-            }
-
-            minId = maxId + 1;
-            maxId += step;
-
-            Collection<Characteristic> chars = characteristicService.load( ids );
-
-            if ( chars == null || chars.isEmpty() ) {
-                OntologyServiceImpl.log.info( "No characteristics in the current ID range, moving on." );
+    public void initializeAllOntologies() {
+        for ( ubic.basecode.ontology.providers.OntologyService serv : this.ontologyServices ) {
+            if ( serv.isOntologyLoaded() ) {
+                log.info( "Already loaded: " + serv );
                 continue;
             }
-            OntologyServiceImpl.log.info( "Found " + chars.size()
+            log.info( "Initializing " + serv );
+            serv.startInitializationThread( true, false );
+        }
+    }
+
+    @Override
+    public boolean isInitializing() {
+        return ontologyServices.stream().allMatch( o -> !o.isInitializationThreadAlive() || o.isOntologyLoaded() );
+    }
+
+    @Override
+    public Map<String, CharacteristicValueObject> findObsoleteTermUsage() {
+        Map<String, CharacteristicValueObject> vos = new HashMap<>();
+
+        int start = 0;
+        int step = 5000;
+
+        int obsoleteCnt = 0;
+        int prevObsoleteCnt = 0;
+
+        while ( true ) {
+
+            Collection<Characteristic> chars = characteristicService.browse( start, step );
+            start += step;
+
+            if ( chars == null || chars.isEmpty() ) {
+                break;
+            }
+
+            OntologyServiceImpl.log.debug( "Found " + chars.size()
                     + " characteristics in the current ID range, checking for obsoletes." );
 
-            // Detect obsoletes
+            CharacteristicValueObject lastObsolete = null;
             for ( Characteristic ch : chars ) {
                 if ( StringUtils.isBlank( ch.getValueUri() ) ) {
-                    nullCnt++;
-                } else if ( this.isObsolete( ch.getValueUri() ) ) {
+                    continue;
+                }
+
+                if ( this.isObsolete( ch.getValueUri() ) ) {
                     String key = this.foundValueKey( ch );
                     if ( !vos.containsKey( key ) ) {
                         vos.put( key, new CharacteristicValueObject( ch ) );
                     }
                     vos.get( key ).incrementOccurrenceCount();
                     obsoleteCnt++;
-                    OntologyServiceImpl.log.info( "Found obsolete term: " + ch.getValue() + " / " + ch.getValueUri() );
+                    if ( log.isDebugEnabled() )
+                        OntologyServiceImpl.log.debug( "Found obsolete term: " + ch.getValue() + " -" + ch.getValueUri() );
+                    lastObsolete = vos.get( key );
                 }
             }
 
-            ids.clear();
-            chars.clear();
+            if ( obsoleteCnt > prevObsoleteCnt ) {
+                OntologyServiceImpl.log.info( "Found " + obsoleteCnt + " obsolete terms so far." );
+                OntologyServiceImpl.log.info( "Last obsolete term seen: " + lastObsolete.getValue() + " -" + lastObsolete.getValueUri() );
+            }
+
+            prevObsoleteCnt = obsoleteCnt;
         }
 
-        OntologyServiceImpl.log.info( "Terms with empty uri: " + nullCnt );
-        OntologyServiceImpl.log.info( "Obsolete terms found: " + obsoleteCnt );
+        OntologyServiceImpl.log.info( "Done, obsolete terms found: " + obsoleteCnt );
 
         return vos;
     }
@@ -803,8 +817,8 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
         List<ubic.basecode.ontology.providers.OntologyService> ontologyServicesToUse;
         if ( useNeuroCartaOntology ) {
             ontologyServicesToUse = Arrays.asList(
-                    nifstdOntologyService,
-                    fmaOntologyService,
+//                    nifstdOntologyService,
+//                    fmaOntologyService,
                     obiService );
         } else {
             ontologyServicesToUse = this.ontologyServices;

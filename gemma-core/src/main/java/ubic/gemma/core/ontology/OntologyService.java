@@ -29,7 +29,6 @@ import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObj
 
 import javax.annotation.Nullable;
 import java.util.Collection;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -48,7 +47,13 @@ public interface OntologyService {
      */
     void addExpressionExperimentStatement( Characteristic vc, ExpressionExperiment ee );
 
-    Map<String, CharacteristicValueObject> countObsoleteOccurrences( int start, int stop, int step );
+    /**
+     * Locates usages of obsolete terms in Characteristics, ignoring Gene Ontology annotations.
+     *
+     * @return map of value URI to a representative characteristic using the term. The latter will contain a count
+     * of how many ocurrences there were.
+     */
+    Map<String, CharacteristicValueObject> findObsoleteTermUsage(  );
 
     /**
      * Using the ontology and values in the database, for a search searchQuery given by the client give an ordered list
@@ -185,10 +190,10 @@ public interface OntologyService {
     void reindexAllOntologies();
 
     /**
-     * Reinitialize all the ontologies "from scratch". This is necessary if indices are old etc. This should be
+     * Reinitialize (and reindex) all the ontologies "from scratch". This is necessary if indices are old etc. This should be
      * admin-only.
      */
-    void reinitializeAllOntologies();
+    void reinitializeAndReindexAllOntologies();
 
     void removeBioMaterialStatement( Long characterId, BioMaterial bm );
 
@@ -201,4 +206,16 @@ public interface OntologyService {
     void saveBioMaterialStatement( Characteristic vc, BioMaterial bm );
 
     Collection<Characteristic> termsToCharacteristics( Collection<? extends OntologyResource> terms );
+
+    /**
+     * Force all ontologies to be initialized (enabled). Useful if a CLI needs access to all ontologies.
+     */
+    void initializeAllOntologies();
+
+    /**
+     *
+     * @return true if any ontologies are still inthe process of being initialized. False if no ontologies are being initialized.
+     * This means they either were initialized or failed to initialize, or weren't configured to be initialized.
+     */
+    boolean isInitializing();
 }
