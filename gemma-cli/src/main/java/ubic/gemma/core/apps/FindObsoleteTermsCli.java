@@ -10,8 +10,13 @@ import ubic.gemma.core.util.AbstractCLI;
 import ubic.gemma.core.util.AbstractCLIContextCLI;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 public class FindObsoleteTermsCli extends AbstractCLIContextCLI {
 
@@ -37,7 +42,7 @@ public class FindObsoleteTermsCli extends AbstractCLIContextCLI {
 
     @Override
     protected void processOptions( CommandLine commandLine ) {
-     // no extra options.
+        // no extra options.
     }
 
     @Override
@@ -52,27 +57,39 @@ public class FindObsoleteTermsCli extends AbstractCLIContextCLI {
 
     @Override
     protected void doWork() throws Exception {
+
+
         log.info( "Warming up ontologies ..." );
+        ExecutorService executorService = Executors.newFixedThreadPool( 5 );
+        List<Future<Void>> futures = new ArrayList<>();
+
         for ( ubic.basecode.ontology.providers.OntologyService ontology : ontologies ) {
-            ontology.startInitializationThread( true, false );
+            Future<Void> future = executorService.submit( () -> {
+                ontology.startInitializationThread( true, false );
+                return null;
+            } );
+            futures.add( future );
         }
 
-        log.info( "Waiting for ontologies to warm up ..." );
-        for ( ubic.basecode.ontology.providers.OntologyService ontology : ontologies ) {
-             ontology.waitForInitializationThread();
+        for ( Future<Void> future : futures ) {
+            try {
+                future.get();
+            } catch ( InterruptedException | ExecutionException e ) {
+                e.printStackTrace();
+            }
         }
+        executorService.shutdown();
 
         log.info( "Ontologies warmed up, starting check..." );
 
-        Map<String, CharacteristicValueObject> vos = ontologyService.findObsoleteTermUsage( );
+        Map<String, CharacteristicValueObject> vos = ontologyService.findObsoleteTermUsage();
 
         AbstractCLI.log.info( "Obsolete term check finished, printing ..." );
-
 
         System.out.println( "Value\tValueUri\tCount" );
         for ( CharacteristicValueObject vo : vos.values() ) {
             System.out.println( vo.getValue() + "\t" + vo.getValueUri() + "\t" + vo.getNumTimesUsed() );
         }
-        AbstractCLI.log.info( "========= done ========" );
+
     }
 }
