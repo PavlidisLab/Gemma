@@ -81,7 +81,6 @@ import java.util.stream.Collectors;
  * @see ExpressionExperimentService
  */
 @Service
-@Transactional
 public class ExpressionExperimentServiceImpl
         extends AbstractFilteringVoEnabledService<ExpressionExperiment, ExpressionExperimentValueObject>
         implements ExpressionExperimentService {
