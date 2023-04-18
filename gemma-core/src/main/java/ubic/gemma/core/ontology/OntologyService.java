@@ -48,12 +48,12 @@ public interface OntologyService {
     void addExpressionExperimentStatement( Characteristic vc, ExpressionExperiment ee );
 
     /**
-     * Locates usages of obsolete terms in Characteristics, ignoring Gene Ontology annotations.
+     * Locates usages of obsolete terms in Characteristics, ignoring Gene Ontology annotations. Requires the ontologies are loaded into memory.
      *
      * @return map of value URI to a representative characteristic using the term. The latter will contain a count
      * of how many ocurrences there were.
      */
-    Map<String, CharacteristicValueObject> findObsoleteTermUsage(  );
+    Map<String, CharacteristicValueObject> findObsoleteTermUsage();
 
     /**
      * Using the ontology and values in the database, for a search searchQuery given by the client give an ordered list
@@ -206,11 +206,6 @@ public interface OntologyService {
     void saveBioMaterialStatement( Characteristic vc, BioMaterial bm );
 
     Collection<Characteristic> termsToCharacteristics( Collection<? extends OntologyResource> terms );
-
-    /**
-     * Force all ontologies to be initialized (enabled). Useful if a CLI needs access to all ontologies.
-     */
-    void initializeAllOntologies();
 
     /**
      *

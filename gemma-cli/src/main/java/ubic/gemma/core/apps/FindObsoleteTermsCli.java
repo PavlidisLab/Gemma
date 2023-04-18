@@ -5,16 +5,21 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.ontology.OntologyService;
+import ubic.gemma.core.ontology.providers.OntologyServiceFactory;
 import ubic.gemma.core.util.AbstractCLI;
 import ubic.gemma.core.util.AbstractCLIContextCLI;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 
+import java.util.List;
 import java.util.Map;
 
 public class FindObsoleteTermsCli extends AbstractCLIContextCLI {
 
     @Autowired
     private OntologyService ontologyService;
+
+    @Autowired
+    private List<ubic.basecode.ontology.providers.OntologyService> ontologies;
 
     private int start = 1;
     private int step = 100000;
@@ -48,10 +53,19 @@ public class FindObsoleteTermsCli extends AbstractCLIContextCLI {
     @Override
     protected void doWork() throws Exception {
         log.info( "Warming up ontologies ..." );
-        ontologyService.initializeAllOntologies();
+        for ( ubic.basecode.ontology.providers.OntologyService ontology : ontologies ) {
+            ontology.startInitializationThread( true, false );
+        }
+
+        for ( ubic.basecode.ontology.providers.OntologyService ontology : ontologies ) {
+             ontology.waitForInitializationThread();
+        }
+
+        log.info( "Waiting for ontologies to warm up ..." );
+        ontologyService.waitForAllOntologiesToLoad();
 
         while ( ontologyService.isInitializing() ) {
-            log.info( "Waiting for ontologies to warm up ..." );
+
             Thread.sleep( 5000 );
         }
 

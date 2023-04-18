@@ -22,9 +22,9 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.compass.core.util.concurrent.ConcurrentHashSet;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.core.task.AsyncTaskExecutor;
@@ -108,7 +108,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
     private DiseaseOntologyService diseaseOntologyService;
     @Autowired
     private ExperimentalFactorOntologyService experimentalFactorOntologyService;
-//    @Deprecated
+    //    @Deprecated
 //    @Autowired
 //    private FMAOntologyService fmaOntologyService;
     @Autowired
@@ -121,7 +121,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
     private MammalianPhenotypeOntologyService mammalianPhenotypeOntologyService;
     @Autowired
     private MouseDevelopmentOntologyService mouseDevelopmentOntologyService;
-//    @Deprecated
+    //    @Deprecated
 //    @Autowired
 //    private NIFSTDOntologyService nifstdOntologyService;
     @Autowired
@@ -635,20 +635,8 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
     }
 
     @Override
-    public void initializeAllOntologies() {
-        for ( ubic.basecode.ontology.providers.OntologyService serv : this.ontologyServices ) {
-            if ( serv.isOntologyLoaded() ) {
-                log.info( "Already loaded: " + serv );
-                continue;
-            }
-            log.info( "Initializing " + serv );
-            serv.startInitializationThread( true, false );
-        }
-    }
-
-    @Override
     public boolean isInitializing() {
-        return ontologyServices.stream().allMatch( o -> !o.isInitializationThreadAlive() || o.isOntologyLoaded() );
+        return ontologyServices.stream().allMatch( o -> o.isInitializationThreadAlive() );
     }
 
     @Override
@@ -660,7 +648,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
 
         int obsoleteCnt = 0;
         int prevObsoleteCnt = 0;
-
+        int checked = 0;
         while ( true ) {
 
             Collection<Characteristic> chars = characteristicService.browse( start, step );
@@ -679,28 +667,29 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
                     continue;
                 }
 
+                checked++;
+
                 if ( this.isObsolete( ch.getValueUri() ) ) {
                     String key = this.foundValueKey( ch );
                     if ( !vos.containsKey( key ) ) {
                         vos.put( key, new CharacteristicValueObject( ch ) );
                     }
                     vos.get( key ).incrementOccurrenceCount();
-                    obsoleteCnt++;
                     if ( log.isDebugEnabled() )
-                        OntologyServiceImpl.log.debug( "Found obsolete term: " + ch.getValue() + " -" + ch.getValueUri() );
+                        OntologyServiceImpl.log.debug( "Found obsolete term: " + ch.getValue() + " - " + ch.getValueUri() );
                     lastObsolete = vos.get( key );
                 }
             }
 
             if ( obsoleteCnt > prevObsoleteCnt ) {
-                OntologyServiceImpl.log.info( "Found " + obsoleteCnt + " obsolete terms so far." );
+                OntologyServiceImpl.log.info( "Found " + vos.size() + " obsolete terms so far, tested " + checked + " characteristics" );
                 OntologyServiceImpl.log.info( "Last obsolete term seen: " + lastObsolete.getValue() + " -" + lastObsolete.getValueUri() );
             }
 
             prevObsoleteCnt = obsoleteCnt;
         }
 
-        OntologyServiceImpl.log.info( "Done, obsolete terms found: " + obsoleteCnt );
+        OntologyServiceImpl.log.info( "Done, obsolete terms found: " + vos.size() );
 
         return vos;
     }

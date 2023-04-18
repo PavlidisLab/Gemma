@@ -12,12 +12,12 @@
     <bean id="obiService" class="ubic.gemma.core.ontology.providers.OntologyServiceFactory">
         <constructor-arg value="ubic.basecode.ontology.providers.ObiService"/>
     </bean>
-    <bean id="nifstOntologyService" class="ubic.gemma.core.ontology.providers.OntologyServiceFactory">
+  <!--  <bean id="nifstOntologyService" class="ubic.gemma.core.ontology.providers.OntologyServiceFactory">
         <constructor-arg value="ubic.basecode.ontology.providers.NIFSTDOntologyService"/>
     </bean>
     <bean id="fmaOntologyService" class="ubic.gemma.core.ontology.providers.OntologyServiceFactory">
         <constructor-arg value="ubic.basecode.ontology.providers.FMAOntologyService"/>
-    </bean>
+    </bean>-->
     <bean id="diseaseOntologyService" class="ubic.gemma.core.ontology.providers.OntologyServiceFactory">
         <constructor-arg value="ubic.basecode.ontology.providers.DiseaseOntologyService"/>
     </bean>
