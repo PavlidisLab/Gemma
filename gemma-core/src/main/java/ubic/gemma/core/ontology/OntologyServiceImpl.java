@@ -646,7 +646,6 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
         int start = 0;
         int step = 5000;
 
-        int obsoleteCnt = 0;
         int prevObsoleteCnt = 0;
         int checked = 0;
         while ( true ) {
@@ -681,12 +680,12 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
                 }
             }
 
-            if ( obsoleteCnt > prevObsoleteCnt ) {
+            if ( vos.size() > prevObsoleteCnt ) {
                 OntologyServiceImpl.log.info( "Found " + vos.size() + " obsolete terms so far, tested " + checked + " characteristics" );
                 OntologyServiceImpl.log.info( "Last obsolete term seen: " + lastObsolete.getValue() + " -" + lastObsolete.getValueUri() );
             }
 
-            prevObsoleteCnt = obsoleteCnt;
+            prevObsoleteCnt = vos.size();
         }
 
         OntologyServiceImpl.log.info( "Done, obsolete terms found: " + vos.size() );
