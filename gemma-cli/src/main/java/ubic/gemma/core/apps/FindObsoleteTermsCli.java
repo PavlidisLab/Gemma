@@ -65,7 +65,7 @@ public class FindObsoleteTermsCli extends AbstractCLIContextCLI {
 
         for ( ubic.basecode.ontology.providers.OntologyService ontology : ontologies ) {
             Future<Void> future = executorService.submit( () -> {
-                ontology.startInitializationThread( true, false );
+                ontology.initialize( true, false );
                 return null;
             } );
             futures.add( future );
