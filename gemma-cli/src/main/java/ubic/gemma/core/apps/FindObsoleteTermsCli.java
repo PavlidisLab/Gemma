@@ -57,16 +57,9 @@ public class FindObsoleteTermsCli extends AbstractCLIContextCLI {
             ontology.startInitializationThread( true, false );
         }
 
+        log.info( "Waiting for ontologies to warm up ..." );
         for ( ubic.basecode.ontology.providers.OntologyService ontology : ontologies ) {
              ontology.waitForInitializationThread();
-        }
-
-        log.info( "Waiting for ontologies to warm up ..." );
-        ontologyService.waitForAllOntologiesToLoad();
-
-        while ( ontologyService.isInitializing() ) {
-
-            Thread.sleep( 5000 );
         }
 
         log.info( "Ontologies warmed up, starting check..." );
