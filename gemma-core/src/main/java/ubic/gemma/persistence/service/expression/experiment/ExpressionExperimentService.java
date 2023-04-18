@@ -45,6 +45,7 @@ import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.persistence.util.Sort;
 import ubic.gemma.persistence.util.monitor.Monitored;
 
+import javax.annotation.CheckReturnValue;
 import javax.annotation.Nullable;
 import java.util.*;
 
@@ -508,9 +509,11 @@ public interface ExpressionExperimentService
      */
     void saveExpressionExperimentStatements( Collection<Characteristic> vc, ExpressionExperiment ee );
 
+    @CheckReturnValue
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     ExpressionExperiment thaw( ExpressionExperiment expressionExperiment );
 
+    @CheckReturnValue
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     ExpressionExperiment thawBioAssays( ExpressionExperiment expressionExperiment );
 
@@ -520,9 +523,11 @@ public interface ExpressionExperimentService
      * @param expressionExperiment experiment
      * @return thawed experiment
      */
+    @CheckReturnValue
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     ExpressionExperiment thawLite( ExpressionExperiment expressionExperiment );
 
+    @CheckReturnValue
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     ExpressionExperiment thawLiter( ExpressionExperiment expressionExperiment );
 
