@@ -12,24 +12,23 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
-package ubic.gemma.core.analysis.preprocess;
+package ubic.gemma.persistence.service.expression.bioAssayData;
 
-import ubic.gemma.core.datastructure.matrix.InferredQuantitationMismatchException;
+import ubic.gemma.core.analysis.preprocess.PreprocessingException;
 import ubic.gemma.core.datastructure.matrix.QuantitationMismatchException;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 import java.util.Collection;
+import java.util.Set;
 
 /**
  * @author Paul
  */
-public interface ProcessedExpressionDataVectorCreateHelperService {
+interface ProcessedExpressionDataVectorCreateHelperService {
 
-    ExpressionExperiment createProcessedDataVectors( ExpressionExperiment ee,
+    void replaceProcessedDataVectors( ExpressionExperiment ee,
             Collection<ProcessedExpressionDataVector> vecs );
-
-    ExpressionExperiment createProcessedExpressionData( ExpressionExperiment ee, boolean ignoreInferredScale ) throws PreprocessingException, QuantitationMismatchException;
 
     void reorderByDesign( Long eeId );
 
@@ -38,7 +37,7 @@ public interface ProcessedExpressionDataVectorCreateHelperService {
      * provided, ranks will not be computable.
      *
      * @param ee the experiment
-     * @return updated experiment.
+     * @return processed vectors with updated ranks
      */
-    ExpressionExperiment updateRanks( ExpressionExperiment ee );
+    Set<ProcessedExpressionDataVector> updateRanks( ExpressionExperiment ee );
 }

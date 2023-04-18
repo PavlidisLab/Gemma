@@ -20,8 +20,6 @@ package ubic.gemma.persistence.service.expression.bioAssayData;
 
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.transaction.annotation.Transactional;
-import ubic.gemma.core.analysis.preprocess.PreprocessorService;
-import ubic.gemma.core.datastructure.matrix.InferredQuantitationMismatchException;
 import ubic.gemma.core.datastructure.matrix.QuantitationMismatchException;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssayData.DoubleVectorValueObject;
@@ -37,6 +35,7 @@ import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * @author Paul
@@ -46,19 +45,25 @@ public interface ProcessedExpressionDataVectorService
         extends DesignElementDataVectorService<ProcessedExpressionDataVector> {
 
     /**
+     * Replace the processed vectors of a EE with the given vectors.
+     * <p>
+     * Ranks are recomputed.
+     *
      * @param ee      ee
      * @param vectors non-persistent, all of the same quantitationtype
-     * @return ee
      */
     @Secured({ "GROUP_USER" })
-    ExpressionExperiment createProcessedDataVectors( ExpressionExperiment ee,
-            Collection<ProcessedExpressionDataVector> vectors );
+    void replaceProcessedDataVectors( ExpressionExperiment ee, Collection<ProcessedExpressionDataVector> vectors );
+
+    @Transactional
+    @Secured({ "GROUP_USER" })
+    void updateRanks( ExpressionExperiment ee );
 
     @Secured({ "GROUP_ADMIN" })
     void clearCache();
 
     @Secured({ "GROUP_USER" })
-    ExpressionExperiment createProcessedDataVectors( ExpressionExperiment expressionExperiment );
+    Set<ProcessedExpressionDataVector> createProcessedDataVectors( ExpressionExperiment expressionExperiment );
 
     /**
      * Populate the processed data for the given experiment. For two-channel studies, the missing value information
@@ -68,7 +73,7 @@ public interface ProcessedExpressionDataVectorService
      * @return updated expressionExperiment
      */
     @Secured({ "GROUP_USER" })
-    ExpressionExperiment createProcessedDataVectors( ExpressionExperiment expressionExperiment, boolean ignoreInferredScale ) throws QuantitationMismatchException;
+    Set<ProcessedExpressionDataVector> createProcessedDataVectors( ExpressionExperiment expressionExperiment, boolean ignoreInferredScale ) throws QuantitationMismatchException;
 
     /**
      * @param bioassaySets - expressionExperiments or expressionExperimentSubSets
@@ -180,15 +185,18 @@ public interface ProcessedExpressionDataVectorService
 
     List<DoubleVectorValueObject> getDiffExVectors( Long resultSetId, Double threshold, int maxNumberOfResults );
 
+    /**
+     * Compute processed expression data, ignoring mismatched with the inferred scale.
+     */
     @Secured({ "GROUP_ADMIN" })
-    Collection<ProcessedExpressionDataVector> computeProcessedExpressionData( ExpressionExperiment ee );
+    void computeProcessedExpressionData( ExpressionExperiment ee );
 
     /**
      * This method should not be called on its own, if possible. Use the PreprocessorService to do all necessary
      * refreshing.
      */
     @Secured({ "GROUP_ADMIN" })
-    Collection<ProcessedExpressionDataVector> computeProcessedExpressionData( ExpressionExperiment ee, boolean ignoreInferredScale ) throws QuantitationMismatchException;
+    void computeProcessedExpressionData( ExpressionExperiment ee, boolean ignoreInferredScale ) throws QuantitationMismatchException;
 
 
     /**

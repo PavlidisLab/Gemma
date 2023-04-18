@@ -31,6 +31,7 @@ import ubic.gemma.model.genome.Gene;
 
 import java.util.Collection;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * @author Paul
@@ -40,21 +41,16 @@ public interface ProcessedExpressionDataVectorDao extends DesignElementDataVecto
     void clearCache();
 
     /**
-     * @see #createProcessedDataVectors(ExpressionExperiment, boolean)
-     */
-    ExpressionExperiment createProcessedDataVectors( ExpressionExperiment expressionExperiment );
-
-    /**
      * Populate the processed data for the given experiment. For two-channel studies, the missing value information
      * should already have been computed. If the values already exist, they will be re-written. The data will be
      * quantile normalized (with some exceptions: ratios and count data will not be normalized).
      *
-     * @param expressionExperiment ee
-     * @param ignoreQuantitationMismatch  use raw data to infer scale type and the adequate transformation for producing
-     *                             processed EVs instead of relying on the QT
-     * @return the updated expressionExperiment.
+     * @param expressionExperiment       ee
+     * @param ignoreQuantitationMismatch use raw data to infer scale type and the adequate transformation for producing
+     *                                   processed EVs instead of relying on the QT
+     * @return
      */
-    ExpressionExperiment createProcessedDataVectors( ExpressionExperiment expressionExperiment, boolean ignoreQuantitationMismatch ) throws QuantitationMismatchException;
+    Set<ProcessedExpressionDataVector> createProcessedDataVectors( ExpressionExperiment expressionExperiment, boolean ignoreQuantitationMismatch ) throws QuantitationMismatchException;
 
     Collection<DoubleVectorValueObject> getProcessedDataArrays( BioAssaySet expressionExperiment );
 

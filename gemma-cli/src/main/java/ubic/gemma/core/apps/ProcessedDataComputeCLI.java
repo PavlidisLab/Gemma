@@ -23,13 +23,12 @@ import org.apache.commons.cli.Options;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import ubic.gemma.core.analysis.preprocess.PreprocessorService;
-import ubic.gemma.core.analysis.preprocess.ProcessedExpressionDataVectorCreateHelperService;
 import ubic.gemma.core.analysis.preprocess.QuantitationMismatchPreprocessingException;
-import ubic.gemma.core.datastructure.matrix.QuantitationMismatchException;
 import ubic.gemma.core.datastructure.matrix.SuspiciousValuesForQuantitationException;
 import ubic.gemma.core.util.AbstractCLI;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorServiceImpl;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
@@ -52,7 +51,7 @@ public class ProcessedDataComputeCLI extends ExpressionExperimentManipulatingCLI
     @Autowired
     private PreprocessorService preprocessorService;
     @Autowired
-    private ProcessedExpressionDataVectorCreateHelperService proccessedVectorService;
+    private ProcessedExpressionDataVectorService processedVectorService;
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
 
@@ -121,7 +120,7 @@ public class ProcessedDataComputeCLI extends ExpressionExperimentManipulatingCLI
 
                 if ( this.updateRanks ) {
                     log.info( "Updating ranks: " + ee );
-                    this.proccessedVectorService.updateRanks( ee );
+                    this.processedVectorService.updateRanks( ee );
                 }
 
                 if ( this.updateDiagnostics ) {

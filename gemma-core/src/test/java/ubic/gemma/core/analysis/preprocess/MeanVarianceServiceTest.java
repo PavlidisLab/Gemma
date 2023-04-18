@@ -359,6 +359,6 @@ public class MeanVarianceServiceTest extends AbstractGeoServiceTest {
         quantitationTypeService.update( qt );
 
         // important bit, need to createProcessedVectors manually before using it
-        ee = processedExpressionDataVectorService.createProcessedDataVectors( ee );
+        processedExpressionDataVectorService.createProcessedDataVectors( ee );
     }
 }

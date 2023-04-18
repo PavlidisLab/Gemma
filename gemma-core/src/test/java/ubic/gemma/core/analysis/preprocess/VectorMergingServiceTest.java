@@ -208,7 +208,7 @@ public class VectorMergingServiceTest extends AbstractGeoServiceTest {
 
         ee = eeService.thaw( ee );
 
-        ee = eePlatformSwitchService.switchExperimentToArrayDesign( ee, mergedAA );
+        eePlatformSwitchService.switchExperimentToArrayDesign( ee, mergedAA );
         ee = eeService.thaw( ee );
         // check we actually got switched over.
         for ( BioAssay ba : ee.getBioAssays() ) {

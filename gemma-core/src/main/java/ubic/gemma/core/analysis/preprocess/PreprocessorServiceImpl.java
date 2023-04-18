@@ -121,7 +121,7 @@ public class PreprocessorServiceImpl implements PreprocessorService {
 
         // Convert to vectors (persist QT)
         processedExpressionDataVectorService
-                .createProcessedDataVectors( ee, correctedData.toProcessedDataVectors() );
+                .replaceProcessedDataVectors( ee, correctedData.toProcessedDataVectors() );
 
         auditTrailService.addUpdateEvent( ee, BatchCorrectionEvent.class, note, "" );
 
@@ -290,7 +290,8 @@ public class PreprocessorServiceImpl implements PreprocessorService {
                 .getProcessedDataVectors( ee );
         if ( vecs.isEmpty() ) {
             log.info( String.format( "No processed vectors for %s, they will be computed from raw data...", ee ) );
-            return this.processedExpressionDataVectorService.computeProcessedExpressionData( ee );
+            this.processedExpressionDataVectorService.computeProcessedExpressionData( ee );
+            return this.processedExpressionDataVectorService.getProcessedDataVectors( ee );
         }
         return processedExpressionDataVectorService.thaw( vecs );
     }

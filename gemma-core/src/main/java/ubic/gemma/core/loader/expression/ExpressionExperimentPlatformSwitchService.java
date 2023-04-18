@@ -120,7 +120,7 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
      *                     changed for them.
      * @return the switched experiment
      */
-    public ExpressionExperiment switchExperimentToArrayDesign( ExpressionExperiment ee, ArrayDesign arrayDesign ) {
+    public void switchExperimentToArrayDesign( ExpressionExperiment ee, ArrayDesign arrayDesign ) {
         assert arrayDesign != null;
 
         // remove stuff that will be in the way.
@@ -202,9 +202,8 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
         ee = expressionExperimentService.thawLite( ee );
 
         if ( hasData ) {
-            ee = processedExpressionDataVectorService.createProcessedDataVectors( ee ); // this still fails sometimes? works fine if run later by cli
+            processedExpressionDataVectorService.createProcessedDataVectors( ee ); // this still fails sometimes? works fine if run later by cli
         }
-        return ee;
     }
 
     /**
@@ -213,11 +212,11 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
      * @param  expExp ee
      * @return ee
      */
-    public ExpressionExperiment switchExperimentToMergedPlatform( ExpressionExperiment expExp ) {
+    public void switchExperimentToMergedPlatform( ExpressionExperiment expExp ) {
         ArrayDesign arrayDesign = this.locateMergedDesign( expExp );
         if ( arrayDesign == null )
             throw new IllegalArgumentException( "Experiment has no merged design to switch to" );
-        return this.switchExperimentToArrayDesign( expExp, arrayDesign );
+        this.switchExperimentToArrayDesign( expExp, arrayDesign );
     }
 
     private boolean switchPlatform( ExpressionExperiment ee, ArrayDesign arrayDesign ) {

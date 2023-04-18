@@ -81,16 +81,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends AbstractDesignElementD
     }
 
     @Override
-    public ExpressionExperiment createProcessedDataVectors( ExpressionExperiment ee ) {
-        try {
-            return createProcessedDataVectors( ee, true );
-        } catch ( QuantitationMismatchException e ) {
-            throw new RuntimeException( e );
-        }
-    }
-
-    @Override
-    public ExpressionExperiment createProcessedDataVectors( ExpressionExperiment ee, boolean ignoreQuantitationMismatch ) throws QuantitationMismatchException {
+    public Set<ProcessedExpressionDataVector> createProcessedDataVectors( ExpressionExperiment ee, boolean ignoreQuantitationMismatch ) throws QuantitationMismatchException {
         if ( ee == null ) {
             throw new IllegalStateException( "ExpressionExperiment cannot be null" );
         }
@@ -196,8 +187,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends AbstractDesignElementD
 
         this.processedDataVectorCache.clearCache( expressionExperiment.getId() );
 
-        return expressionExperiment;
-
+        return expressionExperiment.getProcessedExpressionDataVectors();
     }
 
     @Override
