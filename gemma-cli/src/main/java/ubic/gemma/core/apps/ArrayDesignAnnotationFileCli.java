@@ -193,7 +193,7 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
 
     private void processAD( ArrayDesign arrayDesign ) throws IOException {
 
-        ArrayDesign thawed = this.thawLite( arrayDesign );
+        ArrayDesign thawed = getArrayDesignService().thawLite( arrayDesign );
 
         if ( thawed.getCurationDetails().getTroubled() ) {
             AbstractCLI.log.warn( "Troubled, will not generate annotation file: " + arrayDesign );

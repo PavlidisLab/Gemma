@@ -208,10 +208,6 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractCLICont
 
     }
 
-    ArrayDesign thawLite( ArrayDesign arrayDesign ) {
-        return getArrayDesignService().thawLite( arrayDesign );
-    }
-
     private void arraysFromCliList( CommandLine commandLine ) {
         String arrayShortNames = commandLine.getOptionValue( 'a' );
         String[] shortNames = arrayShortNames.split( "," );
