@@ -407,6 +407,7 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
         CompositeSequence soughtDesignElement = null;
         BioAssay soughtBioAssay = null;
         Collection<RawExpressionDataVector> vectors = exp.getRawExpressionDataVectors();
+        vectors = rawExpressionDataVectorService.thaw( vectors );
         for ( DesignElementDataVector vector : vectors ) {
             CompositeSequence de = vector.getDesignElement();
             if ( de.getName().equals( probeToTest ) ) {

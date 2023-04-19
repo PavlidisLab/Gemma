@@ -38,9 +38,9 @@
                <param name="useNamed">true</param>
            </type>
        </property>
-       <!-- considering lazy false on taxon, join fetch; we almost always need that (was: lazy=proxy, fetch=select) -->
       <!-- this is assumed available in ArrayDesignValueObject -->
-      <many-to-one name="primaryTaxon" class="ubic.gemma.model.genome.Taxon" lazy="false" fetch="join">
+      <!-- fetched with select because taxon are very redundant -->
+      <many-to-one name="primaryTaxon" class="ubic.gemma.model.genome.Taxon" lazy="false" fetch="select">
          <column name="PRIMARY_TAXON_FK" not-null="true" sql-type="BIGINT"/>
       </many-to-one>
       <set name="externalReferences" lazy="true" fetch="select" cascade="all">

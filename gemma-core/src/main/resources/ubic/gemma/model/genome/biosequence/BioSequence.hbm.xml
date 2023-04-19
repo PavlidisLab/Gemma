@@ -58,7 +58,8 @@
 			<column name="SEQUENCE_DATABASE_ENTRY_FK" not-null="false" sql-type="BIGINT" unique="true" />
 		</many-to-one>
 		<!-- assumed readily available in BioSequenceValueObject -->
-		<many-to-one name="taxon" class="ubic.gemma.model.genome.Taxon" lazy="false" fetch="join">
+		<!-- this should be accessed via a select because taxa are shared for many, many probes -->
+		<many-to-one name="taxon" class="ubic.gemma.model.genome.Taxon" lazy="false" fetch="select">
 			<column name="TAXON_FK" not-null="true" sql-type="BIGINT" />
 		</many-to-one>
 		<set name="bioSequence2GeneProduct" lazy="true" fetch="select" inverse="true">

@@ -270,12 +270,15 @@ public class ProcessedExpressionDataVectorDaoImpl extends AbstractDesignElementD
 
     @Override
     public Collection<ProcessedExpressionDataVector> getProcessedVectors( ExpressionExperiment ee ) {
-        //language=HQL
-        final String queryString = " from ProcessedExpressionDataVector dedv where dedv.expressionExperiment.id = :ee";
-
+        StopWatch timer = StopWatch.createStarted();
         //noinspection unchecked
-        return this.getSessionFactory().getCurrentSession().createQuery( queryString ).setParameter( "ee", ee.getId() )
+        List<ProcessedExpressionDataVector> result = this.getSessionFactory().getCurrentSession().createQuery(
+                        "select dedv from ProcessedExpressionDataVector dedv "
+                                + "where dedv.expressionExperiment = :ee" )
+                .setParameter( "ee", ee )
                 .list();
+        log.info( String.format( "Loading %d %s took %d ms", result.size(), elementClass.getSimpleName(), timer.getTime() ) );
+        return result;
     }
 
     @Override

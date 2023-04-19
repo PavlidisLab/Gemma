@@ -19,22 +19,20 @@
 package ubic.gemma.persistence.service.expression.bioAssayData;
 
 import org.apache.commons.lang3.time.StopWatch;
-import org.hibernate.*;
+import org.hibernate.Hibernate;
+import org.hibernate.SessionFactory;
 import org.hibernate.metadata.ClassMetadata;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
-import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.persistence.service.AbstractDao;
 
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
+import java.util.Set;
 
 /**
  * @author pavlidis
@@ -64,115 +62,65 @@ public abstract class AbstractDesignElementDataVectorDao<T extends DesignElement
 
     @Override
     public void thaw( Collection<T> designElementDataVectors ) {
-        StopWatch timer = new StopWatch();
-        timer.start();
+        StopWatch timer = StopWatch.createStarted();
+        StopWatch vTimer = StopWatch.create(),
+                eeTimer = StopWatch.create(),
+                dimTimer = StopWatch.create();
 
+        // this is generally fast since vectors should be in the session already
+        vTimer.start();
         Hibernate.initialize( designElementDataVectors );
+        vTimer.stop();
 
-        Collection<ExpressionExperiment> ees = new HashSet<>();
-        Map<BioAssayDimension, Collection<DesignElementDataVector>> dims = new HashMap<>();
-        Collection<CompositeSequence> cs = new HashSet<>();
+        // collect all the entities to thaw
+        Set<ExpressionExperiment> ees = new HashSet<>( designElementDataVectors.size() );
+        Set<BioAssayDimension> dims = new HashSet<>( designElementDataVectors.size() );
         for ( DesignElementDataVector vector : designElementDataVectors ) {
-            Hibernate.initialize( vector );
-            Hibernate.initialize( vector.getQuantitationType() );
-
-            BioAssayDimension bad = vector.getBioAssayDimension();
-            if ( !dims.containsKey( bad ) ) {
-                dims.put( bad, new HashSet<>() );
-            }
-
-            dims.get( bad ).add( vector );
-            cs.add( vector.getDesignElement() );
+            dims.add( vector.getBioAssayDimension() );
             ees.add( vector.getExpressionExperiment() );
         }
 
-        if ( timer.getTime() > designElementDataVectors.size() ) {
-            AbstractDao.log
-                    .info( "Thaw phase 1, " + designElementDataVectors.size() + " vectors initialized in " + timer
-                            .getTime() + "ms " );
-        }
-        timer.reset();
-        timer.start();
-
-        // lightly thaw the EEs we saw
-        for ( ExpressionExperiment ee : ees ) {
-            Hibernate.initialize( ee );
+        if ( !ees.isEmpty() ) {
+            eeTimer.start();
+            this.getSessionFactory().getCurrentSession()
+                    .createQuery( "select ee from ExpressionExperiment ee where ee in :ees" )
+                    .setParameterList( "ees", ees )
+                    .list();
+            eeTimer.stop();
         }
 
-        if ( timer.getTime() > 200 ) {
-            AbstractDao.log
-                    .info( "Thaw phase 2, " + ees.size() + " vector-associated expression experiments in " + timer
-                            .getTime() + "ms " );
-        }
-
-        timer.reset();
-        timer.start();
-
-        // thaw the bioassayDimensions we saw -- usually one, more rarely two.
-        for ( BioAssayDimension bad : dims.keySet() ) {
-
-            BioAssayDimension tbad = ( BioAssayDimension ) this.getSessionFactory().getCurrentSession().createQuery(
-                            "select distinct bad from BioAssayDimension bad join fetch bad.bioAssays ba join fetch ba.sampleUsed "
-                                    + "bm join fetch ba.arrayDesignUsed left join fetch bm.factorValues fetch all properties where bad.id= :bad " )
-                    .setParameter( "bad", bad.getId() ).uniqueResult();
-
-            assert tbad != null;
-            assert !dims.get( tbad ).isEmpty();
-
-            for ( DesignElementDataVector v : designElementDataVectors ) {
-                if ( v.getBioAssayDimension().getId().equals( tbad.getId() ) ) {
-                    v.setBioAssayDimension( tbad );
-                }
-            }
+        if ( !dims.isEmpty() ) {
+            dimTimer.start();
+            this.getSessionFactory().getCurrentSession().createQuery(
+                            "select distinct bad from BioAssayDimension bad "
+                                    + "left join fetch bad.bioAssays ba "
+                                    + "left join fetch ba.sampleUsed bm "
+                                    + "left join fetch ba.originalPlatform "
+                                    + "left join fetch ba.arrayDesignUsed "
+                                    + "left join fetch bm.factorValues "
+                                    + "fetch all properties "
+                                    + "where bad in :dims" )
+                    .setParameterList( "dims", dims )
+                    .list();
+            dimTimer.stop();
         }
 
         if ( timer.getTime() > 1000 ) {
-            AbstractDao.log.info( "Thaw phase 3, " + dims.size() + " vector-associated bioassaydimensions in " + timer
-                    .getTime() + "ms " );
-        }
-        timer.reset();
-        timer.start();
-
-        // thaw the designelements we saw. SLOW
-        long lastTime = 0;
-        int count = 0;
-        for ( CompositeSequence de : cs ) {
-            BioSequence seq = de.getBiologicalCharacteristic();
-            if ( seq == null )
-                continue;
-            Hibernate.initialize( seq );
-
-            if ( ++count % 10000 == 0 ) {
-                if ( timer.getTime() - lastTime > 1000 ) {
-                    AbstractDao.log.info( "Thawed " + count + " vector-associated probes " + timer.getTime() + " ms" );
-                }
-                lastTime = timer.getTime();
-            }
-        }
-
-        timer.stop();
-        if ( designElementDataVectors.size() >= 2000 || timer.getTime() > 200 ) {
-            AbstractDao.log.info( "Thaw phase 4 " + cs.size() + " vector-associated probes thawed in " + timer.getTime()
-                    + "ms" );
+            AbstractDao.log.warn( String.format( "Thawing %d %s took %d ms (vectors: %d ms, ee: %d ms, dims: %d ms)",
+                    designElementDataVectors.size(), elementClass.getSimpleName(), timer.getTime(),
+                    vTimer.getTime(), eeTimer.getTime(), dimTimer.getTime() ) );
         }
     }
 
     @Override
     public void thaw( T designElementDataVector ) {
-        Session session = this.getSessionFactory().getCurrentSession();
-        BioSequence seq = designElementDataVector.getDesignElement().getBiologicalCharacteristic();
-        if ( seq != null ) {
-            Hibernate.initialize( seq );
-        }
-
-        ArrayDesign arrayDesign = designElementDataVector.getDesignElement().getArrayDesign();
-        Hibernate.initialize( arrayDesign );
-
+        Hibernate.initialize( designElementDataVector.getExpressionExperiment() );
+        Hibernate.initialize( designElementDataVector.getBioAssayDimension() );
         // thaw the bioassays.
         for ( BioAssay ba : designElementDataVector.getBioAssayDimension().getBioAssays() ) {
-            ba = ( BioAssay ) session.get( BioAssay.class, ba.getId() );
             Hibernate.initialize( ba.getArrayDesignUsed() );
             Hibernate.initialize( ba.getSampleUsed() );
+            Hibernate.initialize( ba.getSampleUsed().getFactorValues() );
             Hibernate.initialize( ba.getOriginalPlatform() );
         }
     }
