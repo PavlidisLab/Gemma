@@ -1,5 +1,6 @@
 package ubic.gemma.persistence.service.expression.experiment;
 
+import ubic.gemma.core.security.audit.IgnoreAudit;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.description.AnnotationValueObject;
 import ubic.gemma.model.common.description.DatabaseEntry;
@@ -168,4 +169,16 @@ public interface ExpressionExperimentDao
     Collection<? extends AnnotationValueObject> getAnnotationsByFactorvalues( Long eeId );
 
     Collection<ExpressionExperiment> getExperimentsLackingPublications();
+
+    /**
+     * Update the troubled status of all experiments using a given platform.
+     * @return the number of expression experiments marked or unmarked as troubled
+     */
+    @IgnoreAudit
+    int updateTroubledByArrayDesign( ArrayDesign arrayDesign, boolean troubled );
+
+    /**
+     * Count the number of distict platforms used that are troubled.
+     */
+    long countTroubledPlatforms( ExpressionExperiment ee );
 }

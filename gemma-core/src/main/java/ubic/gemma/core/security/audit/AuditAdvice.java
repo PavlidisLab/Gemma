@@ -23,6 +23,7 @@ import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.Signature;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Before;
+import org.aspectj.lang.reflect.MethodSignature;
 import org.hibernate.*;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.CascadingAction;
@@ -130,7 +131,11 @@ public class AuditAdvice {
     }
 
     private void doAuditAdvice( JoinPoint pjp, OperationType operationType ) {
-        Signature signature = pjp.getSignature();
+        MethodSignature signature = ( MethodSignature ) pjp.getSignature();
+        if ( signature.getMethod().getAnnotation( IgnoreAudit.class ) != null ) {
+            AuditAdvice.log.trace( String.format( "Not auditing %s annotated with %s.", signature, IgnoreAudit.class.getName() ) );
+            return;
+        }
         Object[] args = pjp.getArgs();
         // only audit the first argument
         if ( args.length < 1 )

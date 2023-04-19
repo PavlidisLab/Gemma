@@ -577,6 +577,25 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
+    public int updateTroubledByArrayDesign( ArrayDesign arrayDesign, boolean troubled ) {
+        return getSessionFactory().getCurrentSession()
+                .createQuery(
+                        "update CurationDetails cd set cd.troubled = :troubled "
+                                + "where cd in (select ee.curationDetails from ExpressionExperiment ee join ee.bioAssays ba where ba.arrayDesignUsed = :ad) "
+                                + "and cd.troubled <> :troubled" )
+                .setParameter( "ad", arrayDesign )
+                .setParameter( "troubled", troubled )
+                .executeUpdate();
+    }
+
+    @Override
+    public long countTroubledPlatforms( ExpressionExperiment ee ) {
+        return ( Long ) getSessionFactory().getCurrentSession()
+                .createQuery( "select count(distinct ad) from ExpressionExperiment ee join ee.bioAssays ba join ba.arrayDesignUsed ad where ad.curationDetails.troubled" )
+                .uniqueResult();
+    }
+
+    @Override
     public Collection<ArrayDesign> getArrayDesignsUsed( BioAssaySet bas ) {
 
         ExpressionExperiment ee;

@@ -14,6 +14,7 @@
  */
 package ubic.gemma.persistence.service.common.auditAndSecurity;
 
+import lombok.extern.apachecommons.CommonsLog;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,26 +26,29 @@ import ubic.gemma.model.common.auditAndSecurity.eventType.NotTroubledStatusFlagE
 import ubic.gemma.model.common.auditAndSecurity.eventType.TroubledStatusFlagEvent;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignDao;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentDao;
 
-import java.util.Collection;
-
 @Service
+@CommonsLog
 public class CurationDetailsServiceImpl implements CurationDetailsService {
 
     @Autowired
     private CurationDetailsDao curationDetailsDao;
 
     @Autowired
-    private ArrayDesignDao arrayDesignDao;
-
-    @Autowired
     private ExpressionExperimentDao expressionExperimentDao;
 
     @Override
     @Transactional
-    public CurationDetails save( Curatable curatable, AuditEvent auditEvent ) {
+    public void updateCurationDetailsFromAuditEvent( Curatable curatable, AuditEvent auditEvent ) {
+        if ( curatable.getId() == null ) {
+            throw new IllegalArgumentException( "Cannot update curation details for a transient entity." );
+        }
+
+        if ( curatable.getCurationDetails() == null ) {
+            curatable.setCurationDetails( new CurationDetails() );
+        }
+
         CurationDetails curationDetails = curatable.getCurationDetails();
 
         // Update the lastUpdated property to match the event date
@@ -57,11 +61,6 @@ public class CurationDetailsServiceImpl implements CurationDetailsService {
             eventType.updateCurationDetails( curationDetails, auditEvent );
         }
 
-        curationDetails = curationDetailsDao.save( curationDetails );
-
-        // if the details were persistent but not in the session, ensure that the curatable has up-to-date information
-        curatable.setCurationDetails( curationDetails );
-
         /*
          * The logic below addresses the special relationship between ArrayDesigns and ExpressionExperiments.
          * To avoid us having to "reach through" to the ArrayDesign to check whether an Experiment is troubled,
@@ -69,64 +68,47 @@ public class CurationDetailsServiceImpl implements CurationDetailsService {
          * saves joins when querying troubled status of experiments.
          */
 
-        /*
-         * If we're updating an ArrayDesign, and this is a trouble event, update the associated experiments.
-         */
-        if ( ArrayDesign.class.isAssignableFrom( curatable.getClass() ) ) {
-
-            if ( TroubledStatusFlagEvent.class.isAssignableFrom( auditEvent.getEventType().getClass() ) ) {
-
-                /*
-                 * set the trouble status for all the experiments
-                 */
-                Collection<ExpressionExperiment> ees = arrayDesignDao
-                        .getExpressionExperiments( ( ArrayDesign ) curatable );
-                for ( ExpressionExperiment ee : ees ) {
-                    curationDetails.setTroubled( true );
-                    curationDetailsDao.update( curationDetails );
-                }
-
-            } else if ( NotTroubledStatusFlagEvent.class.isAssignableFrom( auditEvent.getEventType().getClass() ) ) {
-
-                /*
-                 * unset the trouble status for all the experiments; be careful not to do this if
-                 * the experiment is troubled independently of the array design.
-                 */
-                Collection<ExpressionExperiment> ees = arrayDesignDao
-                        .getExpressionExperiments( ( ArrayDesign ) curatable );
-                for ( ExpressionExperiment ee : ees ) {
-                    if ( curationDetails.getLastTroubledEvent() == null ) {
-                        curationDetails.setTroubled( false );
-                        curationDetailsDao.update( curationDetails );
-                    }
-                }
-
-            }
-
+        if ( curatable instanceof ArrayDesign ) {
+            updateArrayDesign( ( ArrayDesign ) curatable, auditEvent );
         }
 
-        /*
-         * If we're updating an experiment, only unset the trouble flag if all the array designs are NOT troubled.
-         */
-        if ( NotTroubledStatusFlagEvent.class.isAssignableFrom( auditEvent.getEventType().getClass() ) && ExpressionExperiment.class
-                .isAssignableFrom( curatable.getClass() ) ) {
-
-            boolean troubledPlatform = false;
-            ExpressionExperiment ee = ( ExpressionExperiment ) curatable;
-            for ( ArrayDesign ad : expressionExperimentDao.getArrayDesignsUsed( ee ) ) {
-                if ( ad.getCurationDetails().getTroubled() ) {
-                    troubledPlatform = true;
-                    break;
-                }
-            }
-
-            if ( !troubledPlatform ) {
-                curationDetails.setTroubled( false );
-                curationDetailsDao.update( curationDetails );
-            }
-
+        if ( curatable instanceof ExpressionExperiment ) {
+            updateExpressionExperiment( ( ExpressionExperiment ) curatable, auditEvent );
         }
 
-        return curationDetails;
+        curatable.setCurationDetails( curationDetailsDao.save( curationDetails ) );
+    }
+
+    /**
+     * If we're updating an ArrayDesign, and this is a trouble event, update the associated experiments.
+     */
+    private void updateArrayDesign( ArrayDesign curatable, AuditEvent auditEvent ) {
+        if ( isTroubledEvent( auditEvent ) ) {
+            expressionExperimentDao.updateTroubledByArrayDesign( curatable, true );
+        } else if ( isNotTroubledEvent( auditEvent ) ) {
+            /*
+             * unset the trouble status for all the experiments; be careful not to do this if
+             * the experiment is troubled independently of the array design.
+             */
+            expressionExperimentDao.updateTroubledByArrayDesign( curatable, false );
+        }
+    }
+
+    /**
+     * If we're marking an experiment as non-troubled, but it still uses a troubled platform, restore the troubled
+     * status.
+     */
+    private void updateExpressionExperiment( ExpressionExperiment ee, AuditEvent auditEvent ) {
+        if ( isNotTroubledEvent( auditEvent ) && expressionExperimentDao.countTroubledPlatforms( ee ) > 0 ) {
+            ee.getCurationDetails().setTroubled( true );
+        }
+    }
+
+    private static boolean isTroubledEvent( AuditEvent auditEvent ) {
+        return TroubledStatusFlagEvent.class.isAssignableFrom( auditEvent.getEventType().getClass() );
+    }
+
+    private static boolean isNotTroubledEvent( AuditEvent auditEvent ) {
+        return NotTroubledStatusFlagEvent.class.isAssignableFrom( auditEvent.getEventType().getClass() );
     }
 }

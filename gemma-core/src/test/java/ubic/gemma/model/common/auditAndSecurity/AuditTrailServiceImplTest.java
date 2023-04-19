@@ -21,7 +21,7 @@ package ubic.gemma.model.common.auditAndSecurity;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
-import org.hibernate.Transaction;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,9 +29,9 @@ import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.support.DefaultTransactionDefinition;
 import ubic.gemma.core.util.test.BaseSpringContextTest;
-import ubic.gemma.model.common.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.eventType.*;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 
@@ -63,8 +63,14 @@ public class AuditTrailServiceImplTest extends BaseSpringContextTest {
         auditable = ( ArrayDesign ) this.persisterHelper.persist( auditable );
 
         assertNotNull( auditable.getAuditTrail() );
+        assertNotNull( auditable.getCurationDetails() );
 
         size = auditable.getAuditTrail().getEvents().size();
+    }
+
+    @After
+    public void tearDown() {
+        arrayDesignService.remove( auditable );
     }
 
     @Test
@@ -82,7 +88,9 @@ public class AuditTrailServiceImplTest extends BaseSpringContextTest {
         assertNotNull( auditTrail );
         assertNotNull( auditable.getCurationDetails() );
         assertNotNull( auditable.getCurationDetails().getLastUpdated() );
+        assertEquals( ev.getDate(), auditable.getCurationDetails().getLastUpdated() );
         assertFalse( auditable.getCurationDetails().getTroubled() );
+        System.out.println( auditable.getAuditTrail().getEvents() );
         assertEquals( size + 1, auditTrail.getEvents().size() );
     }
 
@@ -102,6 +110,7 @@ public class AuditTrailServiceImplTest extends BaseSpringContextTest {
         assertNotNull( auditTrail );
         assertNotNull( auditable.getCurationDetails() );
         assertNotNull( auditable.getCurationDetails().getLastUpdated() );
+        assertEquals( ev.getDate(), auditable.getCurationDetails().getLastUpdated() );
         assertEquals( size + 1, auditTrail.getEvents().size() );
 
         assertTrue( auditable.getCurationDetails().getTroubled() );
@@ -120,6 +129,7 @@ public class AuditTrailServiceImplTest extends BaseSpringContextTest {
         assertNotNull( ev.getId() );
         assertNotNull( auditable.getCurationDetails() );
         assertNotNull( auditable.getCurationDetails().getLastUpdated() );
+        assertEquals( ev.getDate(), auditable.getCurationDetails().getLastUpdated() );
         assertEquals( size + 1, auditTrail.getEvents().size() );
         assertEquals( AlignmentBasedGeneMappingEvent.class, ev.getEventType().getClass() );
     }
@@ -153,6 +163,7 @@ public class AuditTrailServiceImplTest extends BaseSpringContextTest {
         assertNotNull( auditable.getCurationDetails() );
         assertEquals( size + 1, auditTrail.getEvents().size() );
         assertNotNull( auditable.getCurationDetails().getLastUpdated() );
+        assertEquals( ev.getDate(), auditable.getCurationDetails().getLastUpdated() );
         assertFalse( auditable.getCurationDetails().getTroubled() );
         assertTrue( auditable.getCurationDetails().getNeedsAttention() );
 
@@ -178,6 +189,7 @@ public class AuditTrailServiceImplTest extends BaseSpringContextTest {
         assertNotNull( auditable.getCurationDetails() );
         assertEquals( size + 1, auditTrail.getEvents().size() );
         assertNotNull( auditable.getCurationDetails().getLastUpdated() );
+        assertEquals( ev.getDate(), auditable.getCurationDetails().getLastUpdated() );
         assertFalse( auditable.getCurationDetails().getTroubled() );
         assertFalse( auditable.getCurationDetails().getNeedsAttention() );
 
@@ -240,5 +252,17 @@ public class AuditTrailServiceImplTest extends BaseSpringContextTest {
         assertTrue( e.getDetail().contains( "RuntimeException" ) );
         // ensure that the exception is logged
         assertEquals( size + 1, auditable.getAuditTrail().getEvents().size() );
+    }
+
+    @Test
+    public void testAddUpdateEventOnTransientEntity() {
+        ArrayDesign ad = new ArrayDesign();
+        assertThrows( IllegalArgumentException.class, () -> auditTrailService.addUpdateEvent( ad, SampleRemovalEvent.class, "test" ) );
+    }
+
+    @Test
+    public void testAddExceptionEventOnTransientEntity() {
+        ArrayDesign ad = new ArrayDesign();
+        assertThrows( IllegalArgumentException.class, () -> auditTrailService.addUpdateEvent( ad, SampleRemovalEvent.class, "test", new RuntimeException() ) );
     }
 }

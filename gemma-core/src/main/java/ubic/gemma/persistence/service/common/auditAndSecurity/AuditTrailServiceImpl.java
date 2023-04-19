@@ -100,11 +100,14 @@ public class AuditTrailServiceImpl extends AbstractService<AuditTrail> implement
     }
 
     private AuditEvent doAddUpdateEvent( Auditable auditable, @Nullable AuditEventType auditEventType, @Nullable String note, @Nullable String detail ) {
+        if ( auditable.getId() == null ) {
+            throw new IllegalArgumentException( "Cannot add an update event on a transient entity." );
+        }
         //Create new audit event
         AuditEvent auditEvent = AuditEvent.Factory.newInstance( new Date(), AuditAction.UPDATE, note, detail, userManager.getCurrentUser(), auditEventType );
         //If object is curatable, update curation details
         if ( auditable instanceof Curatable && auditEvent.getEventType() != null ) {
-            curationDetailsService.save( ( Curatable ) auditable, auditEvent );
+            curationDetailsService.updateCurationDetailsFromAuditEvent( ( Curatable ) auditable, auditEvent );
         }
         return this.addEvent( auditable, auditEvent );
     }
