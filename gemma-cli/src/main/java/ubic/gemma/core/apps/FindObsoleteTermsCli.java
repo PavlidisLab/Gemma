@@ -13,10 +13,7 @@ import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObj
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
+import java.util.concurrent.*;
 
 public class FindObsoleteTermsCli extends AbstractCLIContextCLI {
 
@@ -61,18 +58,20 @@ public class FindObsoleteTermsCli extends AbstractCLIContextCLI {
 
         log.info( "Warming up ontologies ..." );
         ExecutorService executorService = Executors.newFixedThreadPool( 5 );
-        List<Future<?>> futures = new ArrayList<>();
+        List<Future<ubic.basecode.ontology.providers.OntologyService>> futures = new ArrayList<>();
 
         for ( ubic.basecode.ontology.providers.OntologyService ontology : ontologies ) {
-            Future<?> future = executorService.submit( () -> {
+            Future<ubic.basecode.ontology.providers.OntologyService> future = executorService.submit( () -> {
                 ontology.initialize( true, false );
+                return ontology;
             } );
             futures.add( future );
         }
 
-        for ( Future<?> future : futures ) {
+        for ( Future<ubic.basecode.ontology.providers.OntologyService> future : futures ) {
             try {
-                future.get();
+                ubic.basecode.ontology.providers.OntologyService os = future.get();
+                log.info( " === Ontology warmed up: " + os );
             } catch ( InterruptedException | ExecutionException e ) {
                 e.printStackTrace();
             }
