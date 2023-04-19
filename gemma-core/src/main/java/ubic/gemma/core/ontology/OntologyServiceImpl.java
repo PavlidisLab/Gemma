@@ -664,8 +664,8 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
 
                 if ( this.getTerm( valueUri ) == null || this.isObsolete( valueUri ) ) {
 
-                    if (valueUri.contains( "http://purl.org/commons/record/ncbi_gene" )) {
-                        // these are false positives, they aren't in an ontology.
+                    if ( valueUri.startsWith( "http://purl.org/commons/record/ncbi_gene" ) || valueUri.startsWith( "http://purl.obolibrary.org/obo/GO_" ) ) {
+                        // these are false positives, they aren't in an ontology, and we aren't looking at GO Terms.
                         continue;
                     }
 
