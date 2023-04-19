@@ -648,6 +648,8 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
 
         int prevObsoleteCnt = 0;
         int checked = 0;
+        CharacteristicValueObject lastObsolete = null;
+
         while ( true ) {
 
             Collection<Characteristic> chars = characteristicService.browse( start, step );
@@ -660,29 +662,29 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
             OntologyServiceImpl.log.debug( "Found " + chars.size()
                     + " characteristics in the current ID range, checking for obsoletes." );
 
-            CharacteristicValueObject lastObsolete = null;
             for ( Characteristic ch : chars ) {
-                if ( StringUtils.isBlank( ch.getValueUri() ) ) {
+                String valueUri = ch.getValueUri();
+                if ( StringUtils.isBlank( valueUri ) ) {
                     continue;
                 }
 
                 checked++;
 
-                if ( this.isObsolete( ch.getValueUri() ) ) {
-                    String key = this.foundValueKey( ch );
-                    if ( !vos.containsKey( key ) ) {
-                        vos.put( key, new CharacteristicValueObject( ch ) );
+                if ( this.isObsolete( valueUri ) ) {
+
+                    if ( !vos.containsKey( valueUri ) ) {
+                        vos.put( valueUri, new CharacteristicValueObject( ch ) );
                     }
-                    vos.get( key ).incrementOccurrenceCount();
+                    vos.get( valueUri ).incrementOccurrenceCount();
                     if ( log.isDebugEnabled() )
-                        OntologyServiceImpl.log.debug( "Found obsolete term: " + ch.getValue() + " - " + ch.getValueUri() );
-                    lastObsolete = vos.get( key );
+                        OntologyServiceImpl.log.debug( "Found obsolete term: " + ch.getValue() + " - " + valueUri );
+                    lastObsolete = vos.get( valueUri );
                 }
             }
 
             if ( vos.size() > prevObsoleteCnt ) {
                 OntologyServiceImpl.log.info( "Found " + vos.size() + " obsolete terms so far, tested " + checked + " characteristics" );
-                OntologyServiceImpl.log.info( "Last obsolete term seen: " + lastObsolete.getValue() + " -" + lastObsolete.getValueUri() );
+                OntologyServiceImpl.log.info( "Last obsolete term seen: " + lastObsolete.getValue() + " - " + lastObsolete.getValueUri() );
             }
 
             prevObsoleteCnt = vos.size();
@@ -825,13 +827,6 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
             }
             return characteristicsFromOntology;
         }, ontologyServicesToUse );
-    }
-
-    private String foundValueKey( Characteristic c ) {
-        if ( StringUtils.isNotBlank( c.getValueUri() ) ) {
-            return c.getValueUri().toLowerCase();
-        }
-        return c.getValue().toLowerCase();
     }
 
     private String foundValueKey( CharacteristicValueObject c ) {

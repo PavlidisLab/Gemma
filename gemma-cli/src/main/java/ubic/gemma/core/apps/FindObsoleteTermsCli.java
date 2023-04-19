@@ -61,24 +61,22 @@ public class FindObsoleteTermsCli extends AbstractCLIContextCLI {
 
         log.info( "Warming up ontologies ..." );
         ExecutorService executorService = Executors.newFixedThreadPool( 5 );
-        List<Future<Void>> futures = new ArrayList<>();
+        List<Future<?>> futures = new ArrayList<>();
 
         for ( ubic.basecode.ontology.providers.OntologyService ontology : ontologies ) {
-            Future<Void> future = executorService.submit( () -> {
+            Future<?> future = executorService.submit( () -> {
                 ontology.initialize( true, false );
-                return null;
             } );
             futures.add( future );
         }
 
-        for ( Future<Void> future : futures ) {
+        for ( Future<?> future : futures ) {
             try {
                 future.get();
             } catch ( InterruptedException | ExecutionException e ) {
                 e.printStackTrace();
             }
         }
-        executorService.shutdown();
 
         log.info( "Ontologies warmed up, starting check..." );
 
