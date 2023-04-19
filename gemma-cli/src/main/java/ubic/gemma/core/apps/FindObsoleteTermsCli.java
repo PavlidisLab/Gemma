@@ -23,10 +23,6 @@ public class FindObsoleteTermsCli extends AbstractCLIContextCLI {
     @Autowired
     private List<ubic.basecode.ontology.providers.OntologyService> ontologies;
 
-    private int start = 1;
-    private int step = 100000;
-    private int stop = -1;
-
     @Override
     public GemmaCLI.CommandGroup getCommandGroup() {
         return GemmaCLI.CommandGroup.METADATA;
@@ -34,7 +30,7 @@ public class FindObsoleteTermsCli extends AbstractCLIContextCLI {
 
     @Override
     public String getShortDesc() {
-        return "Check for characteristics using obsolete terms as values (excluding GO)";
+        return "Check for characteristics using obsolete terms as values (excluding GO), prints to sdout";
     }
 
     @Override
