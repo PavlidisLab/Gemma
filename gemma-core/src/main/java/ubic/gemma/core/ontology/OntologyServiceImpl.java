@@ -664,6 +664,12 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
 
                 if ( this.getTerm( valueUri ) == null || this.isObsolete( valueUri ) ) {
 
+                    if (valueUri.contains( "http://purl.org/commons/record/ncbi_gene" )) {
+                        // these are false positives, they aren't in an ontology.
+                        continue;
+                    }
+
+
                     if ( !vos.containsKey( valueUri ) ) {
                         vos.put( valueUri, new CharacteristicValueObject( ch ) );
                     }
