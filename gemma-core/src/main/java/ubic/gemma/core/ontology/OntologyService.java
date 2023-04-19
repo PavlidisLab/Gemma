@@ -48,7 +48,12 @@ public interface OntologyService {
     void addExpressionExperimentStatement( Characteristic vc, ExpressionExperiment ee );
 
     /**
+     * <p>
      * Locates usages of obsolete terms in Characteristics, ignoring Gene Ontology annotations. Requires the ontologies are loaded into memory.
+     * </p>
+     * <p>
+     *     Will also find terms that are no longer in an ontology we use.
+     * </p>
      *
      * @return map of value URI to a representative characteristic using the term. The latter will contain a count
      * of how many ocurrences there were.
@@ -207,10 +212,5 @@ public interface OntologyService {
 
     Collection<Characteristic> termsToCharacteristics( Collection<? extends OntologyResource> terms );
 
-    /**
-     *
-     * @return true if any ontologies are still inthe process of being initialized. False if no ontologies are being initialized.
-     * This means they either were initialized or failed to initialize, or weren't configured to be initialized.
-     */
-    boolean isInitializing();
+
 }

@@ -635,11 +635,6 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
     }
 
     @Override
-    public boolean isInitializing() {
-        return ontologyServices.stream().allMatch( o -> o.isInitializationThreadAlive() );
-    }
-
-    @Override
     public Map<String, CharacteristicValueObject> findObsoleteTermUsage() {
         Map<String, CharacteristicValueObject> vos = new HashMap<>();
 
@@ -659,9 +654,6 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
                 break;
             }
 
-            OntologyServiceImpl.log.debug( "Found " + chars.size()
-                    + " characteristics in the current ID range, checking for obsoletes." );
-
             for ( Characteristic ch : chars ) {
                 String valueUri = ch.getValueUri();
                 if ( StringUtils.isBlank( valueUri ) ) {
@@ -670,27 +662,27 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
 
                 checked++;
 
-                if ( this.isObsolete( valueUri ) ) {
+                if ( this.getTerm( valueUri ) == null || this.isObsolete( valueUri ) ) {
 
                     if ( !vos.containsKey( valueUri ) ) {
                         vos.put( valueUri, new CharacteristicValueObject( ch ) );
                     }
                     vos.get( valueUri ).incrementOccurrenceCount();
                     if ( log.isDebugEnabled() )
-                        OntologyServiceImpl.log.debug( "Found obsolete term: " + ch.getValue() + " - " + valueUri );
+                        OntologyServiceImpl.log.debug( "Found obsolete or missing term: " + ch.getValue() + " - " + valueUri );
                     lastObsolete = vos.get( valueUri );
                 }
             }
 
             if ( vos.size() > prevObsoleteCnt ) {
-                OntologyServiceImpl.log.info( "Found " + vos.size() + " obsolete terms so far, tested " + checked + " characteristics" );
+                OntologyServiceImpl.log.info( "Found " + vos.size() + " obsolete or missing terms so far, tested " + checked + " characteristics" );
                 OntologyServiceImpl.log.info( "Last obsolete term seen: " + lastObsolete.getValue() + " - " + lastObsolete.getValueUri() );
             }
 
             prevObsoleteCnt = vos.size();
         }
 
-        OntologyServiceImpl.log.info( "Done, obsolete terms found: " + vos.size() );
+        OntologyServiceImpl.log.info( "Done, obsolete or missing terms found: " + vos.size() );
 
         return vos;
     }
