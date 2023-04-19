@@ -33,6 +33,11 @@ import java.util.Date;
 import java.util.List;
 
 /**
+ * Create and manipulate audit trails.
+ * <p>
+ * This service is mainly intended to create audit events manually. Part of the auditing is done automatically using
+ * aspects via {@link ubic.gemma.core.security.audit.AuditAdvice}.
+ *
  * @author kelsey
  */
 public interface AuditTrailService extends BaseService<AuditTrail> {
