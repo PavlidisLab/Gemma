@@ -26,6 +26,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.loader.expression.geo.AbstractGeoServiceTest;
 import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 import ubic.gemma.core.loader.expression.geo.service.GeoService;
+import ubic.gemma.core.loader.util.AlreadyExistsInSystemException;
 import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
@@ -36,6 +37,7 @@ import java.io.PrintWriter;
 import java.util.Collection;
 
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assume.assumeNoException;
 
 /**
  * @author keshav
@@ -51,13 +53,14 @@ public class ExperimentalDesignWriterTest extends AbstractGeoServiceTest {
 
     @Before
     public void setUp() throws Exception {
-        ee = eeService.findByShortName( shortName );
-
-        if ( ee == null ) {
+        try {
             geoService.setGeoDomainObjectGenerator(
                     new GeoDomainObjectGeneratorLocal( this.getTestFileBasePath( "gds994Medium" ) ) );
             Collection<?> results = geoService.fetchAndLoad( shortName, false, true, false );
             ee = ( ExpressionExperiment ) results.iterator().next();
+        } catch ( AlreadyExistsInSystemException e ) {
+            ee = ( ( Collection<ExpressionExperiment> ) e.getData() ).iterator().next();
+            assumeNoException( e );
         }
         ee = eeService.thaw( ee );
     }
@@ -80,13 +83,13 @@ public class ExperimentalDesignWriterTest extends AbstractGeoServiceTest {
         ExperimentalDesignWriter edWriter = new ExperimentalDesignWriter();
 
         File f = File.createTempFile( "test_writer_" + shortName + ".", ".txt" );
-        try (PrintWriter writer = new PrintWriter( f )) {
+        try ( PrintWriter writer = new PrintWriter( f ) ) {
 
             edWriter.write( writer, ee, true );
         }
 
         log.info( f );
-        try (FileReader fr = new FileReader( f )) {
+        try ( FileReader fr = new FileReader( f ) ) {
 
             char[] b = new char[( int ) f.length()];
             //noinspection ResultOfMethodCallIgnored // We are using the buffer char array
