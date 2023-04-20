@@ -115,11 +115,10 @@ public interface ExpressionExperimentDao
     QuantitationType getPreferredQuantitationType( ExpressionExperiment ee );
 
     /**
-     * Obtain the preferred quantitation type for a given data vector type.
-     *
-     * @return the data vector, or null if no preferred vector type can be found
+     * Obtain the masked preferred quantitation type, if available.
      */
-    QuantitationType getPreferredQuantitationTypeForDataVectorType( ExpressionExperiment ee, Class<? extends DesignElementDataVector> vectorType );
+    @Nullable
+    QuantitationType getMaskedPreferredQuantitationType( ExpressionExperiment ee );
 
     Map<ExpressionExperiment, Collection<AuditEvent>> getSampleRemovalEvents(
             Collection<ExpressionExperiment> expressionExperiments );

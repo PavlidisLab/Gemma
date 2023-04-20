@@ -32,7 +32,6 @@ import ubic.gemma.model.common.quantitationtype.QuantitationTypeValueObject;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
-import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.MeanVarianceRelation;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
@@ -370,11 +369,11 @@ public interface ExpressionExperimentService
     QuantitationType getPreferredQuantitationType( ExpressionExperiment ee );
 
     /**
-     * @see ExpressionExperimentDao#getPreferredQuantitationTypeForDataVectorType(ExpressionExperiment, Class)
+     * @see ExpressionExperimentDao#getMaskedPreferredQuantitationType(ExpressionExperiment, Class)
      */
     @Nullable
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    QuantitationType getPreferredQuantitationTypeForDataVectorType( ExpressionExperiment ee, Class<? extends DesignElementDataVector> vectorType );
+    QuantitationType getMaskedPreferredQuantitationType( ExpressionExperiment ee );
 
     /**
      * @param id id
