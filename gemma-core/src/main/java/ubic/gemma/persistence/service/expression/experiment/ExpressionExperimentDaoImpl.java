@@ -1248,7 +1248,6 @@ public class ExpressionExperimentDaoImpl
             getSessionFactory().getCurrentSession().delete( bm );
         }
 
-        log.info( ".... final deletion ..." );
         super.remove( ee );
     }
 
