@@ -288,7 +288,7 @@ public class ExpressionDataDoubleMatrixUtilTest {
         matrix = randomExpressionMatrix( ee, qt, new NormalDistribution( 25, 2 ) );
         assertThatThrownBy( () -> detectSuspiciousValues( matrix, qt ) )
                 .isInstanceOf( SuspiciousValuesForQuantitationException.class ).satisfies( e -> {
-                    assertThat( ( ( SuspiciousValuesForQuantitationException ) e ).getLintResults() ).isNotEmpty();
+                    assertThat( ( ( SuspiciousValuesForQuantitationException ) e ).getSuspiciousValues() ).isNotEmpty();
                 } );
     }
 

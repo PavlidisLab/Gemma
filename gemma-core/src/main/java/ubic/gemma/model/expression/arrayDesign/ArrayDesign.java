@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006-2012 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -106,7 +106,7 @@ public class ArrayDesign extends AbstractAuditable implements gemma.gsec.model.S
     }
 
     /**
-     * 
+     *
      * @return true if this is an Affymetrix platform that has a related "canonical" platform we use instead.
      */
     public ArrayDesign getAlternativeTo() {
@@ -252,7 +252,7 @@ public class ArrayDesign extends AbstractAuditable implements gemma.gsec.model.S
 
     @Override
     public String toString() {
-        return super.toString() + ( this.getShortName() == null ? "" : " (" + this.getShortName() + ")" );
+        return super.toString() + ( shortName != null ? " Short Name=" + shortName : "" );
     }
 
 }

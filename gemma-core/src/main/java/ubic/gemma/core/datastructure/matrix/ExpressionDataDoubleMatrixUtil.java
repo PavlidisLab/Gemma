@@ -23,7 +23,6 @@ import cern.colt.matrix.DoubleMatrix1D;
 import cern.colt.matrix.DoubleMatrix2D;
 import cern.colt.matrix.impl.DenseDoubleMatrix2D;
 import cern.jet.math.Functions;
-import cern.jet.stat.Descriptive;
 import lombok.Value;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -136,33 +135,33 @@ public class ExpressionDataDoubleMatrixUtil {
         InferredQuantitationType inferredQuantitationType = infer( dmatrix );
 
         if ( quantitationType.getType() != inferredQuantitationType.getType() ) {
-            String message = String.format( "The type of %s differs from the one inferred from data: %s.",
-                    quantitationType, inferredQuantitationType.getType() );
+            String message = String.format( "The type %s differs from the one inferred from data: %s.",
+                    quantitationType.getType(), inferredQuantitationType.getType() );
             // if data is meant to be detected, then
             if ( ignoreQuantitationMismatch ) {
                 log.warn( message );
             } else {
-                throw new InferredQuantitationMismatchException( message );
+                throw new InferredQuantitationMismatchException( quantitationType, inferredQuantitationType.asQuantitationType( quantitationType ), message );
             }
         }
 
         if ( quantitationType.getScale() != inferredQuantitationType.getScale() ) {
-            String message = String.format( "The scale of %s differs from the one inferred from data: %s.",
-                    quantitationType, inferredQuantitationType.getScale() );
+            String message = String.format( "The scale %s differs from the one inferred from data: %s.",
+                    quantitationType.getScale(), inferredQuantitationType.getScale() );
             if ( ignoreQuantitationMismatch ) {
                 log.warn( message );
             } else {
-                throw new InferredQuantitationMismatchException( message );
+                throw new InferredQuantitationMismatchException( quantitationType, inferredQuantitationType.asQuantitationType( quantitationType ), message );
             }
         }
 
         if ( quantitationType.getIsRatio() != inferredQuantitationType.isRatio ) {
-            String message = String.format( "The expression data of %s %s to ratiometric.", quantitationType,
+            String message = String.format( "The expression data %s to ratiometric, but the quantitation says otherwise.",
                     inferredQuantitationType.isRatio ? "appears" : "does not appear" );
             if ( ignoreQuantitationMismatch ) {
                 log.warn( message );
             } else {
-                throw new InferredQuantitationMismatchException( message );
+                throw new InferredQuantitationMismatchException( quantitationType, inferredQuantitationType.asQuantitationType( quantitationType ), message );
             }
         }
 
@@ -221,7 +220,7 @@ public class ExpressionDataDoubleMatrixUtil {
         } catch ( SuspiciousValuesForQuantitationException e ) {
             if ( ignoreQuantitationMismatch ) {
                 log.warn( String.format( "Expression data matrix contains suspicious values:\n\n - %s",
-                        e.getLintResults().stream()
+                        e.getSuspiciousValues().stream()
                                 .map( SuspiciousValuesForQuantitationException.SuspiciousValueResult::toString )
                                 .collect( Collectors.joining( "\n - " ) ) ) );
             } else {
@@ -272,6 +271,14 @@ public class ExpressionDataDoubleMatrixUtil {
         StandardQuantitationType type;
         ScaleType scale;
         boolean isRatio;
+
+        public QuantitationType asQuantitationType( QuantitationType baseQt ) {
+            QuantitationType qt = QuantitationType.Factory.newInstance( baseQt );
+            qt.setType( type );
+            qt.setScale( scale );
+            qt.setIsRatio( isRatio );
+            return qt;
+        }
     }
 
     /**
@@ -518,51 +525,55 @@ public class ExpressionDataDoubleMatrixUtil {
     public static void detectSuspiciousValues( ExpressionDataDoubleMatrix a, QuantitationType qt ) throws SuspiciousValuesForQuantitationException {
         DoubleMatrix2D matrix = new DenseDoubleMatrix2D( a.getMatrix().asArray() );
 
-        List<SuspiciousValuesForQuantitationException.SuspiciousValueResult> lintResults = new ArrayList<>();
+        List<SuspiciousValuesForQuantitationException.SuspiciousValueResult> flaggingResults = new ArrayList<>();
 
         // TODO: handle normalization and background-substracted linting
         if ( qt.getIsBackgroundSubtracted() || qt.getIsNormalized() ) {
-            log.warn( "Expression data is either background subtracted or normalized, suspicious values will not be linted." );
+            log.warn( "Expression data is either background subtracted or normalized, suspicious values will not be flagged." );
             return;
         }
+
+        String[] columnNames = a.getBestBioAssayDimension().getBioAssays().stream()
+                .map( BioAssay::getName )
+                .toArray( String[]::new );
 
         switch ( qt.getScale() ) {
             case LOG2:
                 if ( qt.getIsRatio() ) {
-                    ensureWithin( matrix, -15, 15, lintResults );
-                    ensureWithin( matrix, "mean", DescriptiveWithMissing::mean, -0.5, 0.5, lintResults );
+                    ensureWithin( matrix, columnNames, -15, 15, flaggingResults );
+                    ensureWithin( matrix, columnNames, "mean", DescriptiveWithMissing::mean, -0.5, 0.5, flaggingResults );
                 } else {
-                    ensureWithin( matrix, 0, 20, lintResults );
-                    ensureOutside( matrix, "mean", DescriptiveWithMissing::mean, -0.1, 0.1, lintResults );
+                    ensureWithin( matrix, columnNames, 0, 20, flaggingResults );
+                    ensureOutside( matrix, columnNames, "mean", DescriptiveWithMissing::mean, -0.1, 0.1, flaggingResults );
                 }
                 break;
             case LOG10: // basically 0.3 time the log2 thresholds since log(2)/log(10) = 0.3
                 if ( qt.getIsRatio() ) {
-                    ensureWithin( matrix, -4.5, 4.5, lintResults );
-                    ensureWithin( matrix, "mean", DescriptiveWithMissing::mean, -0.5, 0.5, lintResults );
+                    ensureWithin( matrix, columnNames, -4.5, 4.5, flaggingResults );
+                    ensureWithin( matrix, columnNames, "mean", DescriptiveWithMissing::mean, -0.5, 0.5, flaggingResults );
                 } else {
-                    ensureWithin( matrix, 0, 9, lintResults );
-                    ensureOutside( matrix, "mean", DescriptiveWithMissing::mean, -0.03, 0.03, lintResults );
+                    ensureWithin( matrix, columnNames, 0, 9, flaggingResults );
+                    ensureOutside( matrix, columnNames, "mean", DescriptiveWithMissing::mean, -0.03, 0.03, flaggingResults );
                 }
                 break;
             case LINEAR:
                 if ( qt.getIsRatio() ) {
-                    lintResults.add( new SuspiciousValuesForQuantitationException.SuspiciousValueResult( -1, -1, "Linear data should not be ratiometric" ) );
+                    flaggingResults.add( new SuspiciousValuesForQuantitationException.SuspiciousValueResult( -1, null, -1, null, "Linear data should not be ratiometric" ) );
                 } else {
-                    ensureWithin( matrix, 1e-3, 1e6, lintResults );
-                    ensureWithin( matrix, "mean", DescriptiveWithMissing::mean, 50, 10000, lintResults );
+                    ensureWithin( matrix, columnNames, 1e-3, 1e6, flaggingResults );
+                    ensureWithin( matrix, columnNames, "mean", DescriptiveWithMissing::mean, 50, 10000, flaggingResults );
                 }
                 break;
             case COUNT:
-                ensureWithin( matrix, 0, 1e8, lintResults );
+                ensureWithin( matrix, columnNames, 0, 1e8, flaggingResults );
                 if ( !isCount( matrix ) ) {
-                    lintResults.add( new SuspiciousValuesForQuantitationException.SuspiciousValueResult( -1, -1, "Counting data contains a non-integer valus." ) );
+                    flaggingResults.add( new SuspiciousValuesForQuantitationException.SuspiciousValueResult( -1, null, -1, null, "Counting data contains a non-integer valus." ) );
                 }
                 break;
         }
 
-        if ( !lintResults.isEmpty() ) {
-            throw new SuspiciousValuesForQuantitationException( "Expression data matrix contains suspicious values.", lintResults );
+        if ( !flaggingResults.isEmpty() ) {
+            throw new SuspiciousValuesForQuantitationException( qt, "Expression data matrix contains suspicious values.", flaggingResults );
         }
     }
 
@@ -571,36 +582,36 @@ public class ExpressionDataDoubleMatrixUtil {
         double apply( DoubleArrayList a );
     }
 
-    private static void ensureWithin( DoubleMatrix2D a, double lowerBound, double upperBound, List<SuspiciousValuesForQuantitationException.SuspiciousValueResult> results ) {
+    private static void ensureWithin( DoubleMatrix2D a, String[] columnNames, double lowerBound, double upperBound, List<SuspiciousValuesForQuantitationException.SuspiciousValueResult> results ) {
         for ( int j = 0; j < a.columns(); j++ ) {
             DoubleArrayList col = new DoubleArrayList( a.viewColumn( j ).toArray() );
             double minimum = DescriptiveWithMissing.min( col );
             double maximum = DescriptiveWithMissing.max( col );
             if ( minimum < lowerBound ) {
-                results.add( new SuspiciousValuesForQuantitationException.SuspiciousValueResult( -1, j, String.format( "minimum is too small (%s < %f)", minimum, lowerBound ) ) );
+                results.add( new SuspiciousValuesForQuantitationException.SuspiciousValueResult( -1, null, j, columnNames[j], String.format( "minimum of %.2f is too small; lower bound is %.2f", minimum, lowerBound ) ) );
             }
             if ( maximum > upperBound ) {
-                results.add( new SuspiciousValuesForQuantitationException.SuspiciousValueResult( -1, j, String.format( "maximum is too small (%s > %f)", maximum, upperBound ) ) );
+                results.add( new SuspiciousValuesForQuantitationException.SuspiciousValueResult( -1, null, j, columnNames[j], String.format( "maximum of %.2f is too small; upper bound is %.2f", maximum, upperBound ) ) );
             }
         }
     }
 
-    private static void ensureWithin( DoubleMatrix2D a, String funcName, DescriptiveFunction func, double lowerBound, double upperBound, List<SuspiciousValuesForQuantitationException.SuspiciousValueResult> results ) {
+    private static void ensureWithin( DoubleMatrix2D a, String[] columnNames, String funcName, DescriptiveFunction func, double lowerBound, double upperBound, List<SuspiciousValuesForQuantitationException.SuspiciousValueResult> results ) {
         for ( int j = 0; j < a.columns(); j++ ) {
             DoubleArrayList col = new DoubleArrayList( a.viewColumn( j ).toArray() );
             double r = func.apply( col );
             if ( r < lowerBound || r > upperBound ) {
-                results.add( new SuspiciousValuesForQuantitationException.SuspiciousValueResult( -1, j, String.format( "%s %f is outside expected range: [%f, %f]", funcName, r, lowerBound, upperBound ) ) );
+                results.add( new SuspiciousValuesForQuantitationException.SuspiciousValueResult( -1, null, j, columnNames[j], String.format( "%.2f is outside expected range of [%.2f, %.2f] for %f", r, lowerBound, upperBound, funcName ) ) );
             }
         }
     }
 
-    private static void ensureOutside( DoubleMatrix2D a, String funcName, DescriptiveFunction func, double lowerBound, double upperBound, List<SuspiciousValuesForQuantitationException.SuspiciousValueResult> results ) {
+    private static void ensureOutside( DoubleMatrix2D a, String[] columnNames, String funcName, DescriptiveFunction func, double lowerBound, double upperBound, List<SuspiciousValuesForQuantitationException.SuspiciousValueResult> results ) {
         for ( int j = 0; j < a.columns(); j++ ) {
             DoubleArrayList col = new DoubleArrayList( a.viewColumn( j ).toArray() );
             double r = func.apply( col );
             if ( r >= lowerBound && r <= upperBound ) {
-                results.add( new SuspiciousValuesForQuantitationException.SuspiciousValueResult( -1, j, String.format( "%s %f is inside suspicious range: [%f, %f]", funcName, r, lowerBound, upperBound ) ) );
+                results.add( new SuspiciousValuesForQuantitationException.SuspiciousValueResult( -1, null, j, columnNames[j], String.format( "%.2f is inside suspicious range of [%f, %f] for %s", r, lowerBound, upperBound, funcName ) ) );
             }
         }
     }
