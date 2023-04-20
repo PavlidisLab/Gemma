@@ -31,7 +31,7 @@ public interface ExperimentalDesignVisualizationService {
      * Put data vectors in the order you'd want to display the experimental design. This causes the "isReorganized" flag
      * of the dedVs to be set to true.
      *
-     * @param dedVs dedVs, already sliced for the subset of samples needed for display (if necessary)
+     * @param dedVs dedVs, already sliced for the subset of samples needed for display (if necessary); will be modified
      * @return Map of EE ids to "layouts", which are Maps of BioAssays to map of experimental factors to doubles.
      */
     Map<Long, LinkedHashMap<BioAssayValueObject, LinkedHashMap<ExperimentalFactor, Double>>> sortVectorDataByDesign(
