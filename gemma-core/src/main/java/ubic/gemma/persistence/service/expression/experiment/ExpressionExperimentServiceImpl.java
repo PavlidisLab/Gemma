@@ -21,6 +21,7 @@ package ubic.gemma.persistence.service.expression.experiment;
 import com.google.common.base.Strings;
 import gemma.gsec.SecurityService;
 import org.apache.commons.math3.exception.NotStrictlyPositiveException;
+import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -50,6 +51,7 @@ import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
+import ubic.gemma.model.expression.bioAssayData.MeanVarianceRelation;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.*;
@@ -301,6 +303,16 @@ public class ExpressionExperimentServiceImpl
     @Transactional(readOnly = true)
     public Collection<Long> filterByTaxon( Collection<Long> ids, Taxon taxon ) {
         return this.expressionExperimentDao.filterByTaxon( ids, taxon );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public ExpressionExperiment loadWithMeanVarianceRelation( Long id ) {
+        ExpressionExperiment ee = load( id );
+        if ( ee != null ) {
+            Hibernate.initialize( ee.getMeanVarianceRelation() );
+        }
+        return ee;
     }
 
     /**
@@ -1125,6 +1137,12 @@ public class ExpressionExperimentServiceImpl
     @Transactional(readOnly = true)
     public Collection<ExpressionExperiment> getExperimentsLackingPublications() {
         return this.expressionExperimentDao.getExperimentsLackingPublications();
+    }
+
+    @Override
+    @Transactional
+    public MeanVarianceRelation updateMeanVarianceRelation( ExpressionExperiment ee, MeanVarianceRelation mvr ) {
+        return expressionExperimentDao.updateMeanVarianceRelation( ee, mvr );
     }
 
     /**

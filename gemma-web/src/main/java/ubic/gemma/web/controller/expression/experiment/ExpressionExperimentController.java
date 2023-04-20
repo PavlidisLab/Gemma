@@ -468,14 +468,14 @@ public class ExpressionExperimentController {
         qc.setHasNodeDegreeDist( ExpressionExperimentQCUtils.hasNodeDegreeDistFile( ee ) );
         qc.setHasPCA( svdService.hasPca( ee.getId() ) );
         qc.setNumFactors( ExpressionExperimentQCUtils.numFactors( ee ) );
-        qc.setHasMeanVariance( meanVarianceService.hasMeanVariance( ee ) );
+        qc.setHasMeanVariance( ee.getMeanVarianceRelation() != null );
         qc.setHasCorrDist( this.coexpressionAnalysisService.hasCoexpCorrelationDistribution( ee ) );
         qc.setNumOutliersRemoved( this.numOutliersRemoved( ee ) );
         try {
             qc.setNumPossibleOutliers( this.numPossibleOutliers( ee ) );
         } catch ( java.lang.ArrayIndexOutOfBoundsException e ) {
             ExpressionExperimentController.log.error( e );
-        } catch (IllegalStateException e) {
+        } catch ( IllegalStateException e ) {
             ExpressionExperimentController.log.error( e );
         }
         return qc.getQChtml();
@@ -1372,7 +1372,7 @@ public class ExpressionExperimentController {
         mav.addObject( "hasCorrMat", sampleCoexpressionAnalysisService.hasAnalysis( expressionExperiment ) );
         mav.addObject( "hasPvalueDist", ExpressionExperimentQCUtils.hasPvalueDistFiles( expressionExperiment ) );
         mav.addObject( "hasPCA", svdService.hasPca( expressionExperiment.getId() ) );
-        mav.addObject( "hasMeanVariance", meanVarianceService.hasMeanVariance( expressionExperiment ) );
+        mav.addObject( "hasMeanVariance", expressionExperiment.getMeanVarianceRelation() != null );
 
         // FIXME don't store in a file.
         mav.addObject( "hasNodeDegreeDist", ExpressionExperimentQCUtils.hasNodeDegreeDistFile( expressionExperiment ) );

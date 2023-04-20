@@ -20,6 +20,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.basecode.io.ByteArrayConverter;
 import ubic.basecode.math.linearmodels.MeanVarianceEstimator;
@@ -38,7 +39,7 @@ import java.util.Collection;
  *
  * @author ptan
  */
-@Component
+@Service
 public class MeanVarianceServiceImpl implements MeanVarianceService {
 
     private static final Log log = LogFactory.getLog( MeanVarianceServiceImpl.class );
@@ -49,51 +50,22 @@ public class MeanVarianceServiceImpl implements MeanVarianceService {
     @Autowired
     private ExpressionDataMatrixService expressionDataMatrixService;
 
-    /**
-     * @param  matrix on which mean variance relation is computed with
-     * @param  mvr    object, if null, a new object is created
-     * @return MeanVarianceRelation object
-     */
-    private MeanVarianceRelation calculateMeanVariance( ExpressionDataDoubleMatrix matrix, MeanVarianceRelation mvr ) {
-
-        if ( matrix == null ) {
-            log.warn( "Data matrix is null" );
-            return null;
-        }
-
-        DoubleMatrix2D mat = new DenseDoubleMatrix2D( matrix.rows(), matrix.columns() );
-        for ( int row = 0; row < mat.rows(); row++ ) {
-            mat.viewRow( row ).assign( matrix.getRawRow( row ) );
-        }
-        MeanVarianceEstimator mve = new MeanVarianceEstimator( mat );
-        if ( mvr == null ) {
-            mvr = MeanVarianceRelation.Factory.newInstance();
-        }
-
-        if ( mve.getMeanVariance() != null ) {
-            mvr.setMeans( bac.doubleArrayToBytes( mve.getMeanVariance().viewColumn( 0 ).toArray() ) );
-            mvr.setVariances( bac.doubleArrayToBytes( mve.getMeanVariance().viewColumn( 1 ).toArray() ) );
-        }
-
-        return mvr;
-    }
-
     @Override
     @Transactional
     public MeanVarianceRelation create( ExpressionExperiment ee, boolean forceRecompute ) {
-
         if ( ee == null ) {
             log.warn( "Experiment is null" );
             return null;
         }
 
-        if ( !forceRecompute ) {
-            MeanVarianceRelation mvr = ee.getMeanVarianceRelation();
-            if ( mvr != null )
-                return mvr;
+        ee = expressionExperimentService.thawLiter( ee );
+
+        MeanVarianceRelation mvr = ee.getMeanVarianceRelation();
+
+        if ( mvr != null && !forceRecompute ) {
+            return mvr;
         }
 
-        ee = expressionExperimentService.thawLiter( ee );
         ExpressionDataDoubleMatrix intensities = expressionDataMatrixService.getProcessedExpressionDataMatrix( ee );
         if ( intensities == null ) {
             throw new IllegalStateException( "Could not locate intensity matrix for " + ee.getShortName() );
@@ -103,8 +75,7 @@ public class MeanVarianceServiceImpl implements MeanVarianceService {
         QuantitationType qt;
 
         if ( qtList.size() == 0 ) {
-            log.error( "Did not find any preferred quantitation type. Mean-variance relation was not computed." );
-            return null;
+            throw new IllegalStateException( "Did not find any preferred quantitation type. Mean-variance relation was not computed." );
         }
         qt = qtList.iterator().next();
         if ( qtList.size() > 1 ) {
@@ -116,39 +87,33 @@ public class MeanVarianceServiceImpl implements MeanVarianceService {
         try {
             intensities = ExpressionDataDoubleMatrixUtil.filterAndLog2Transform( intensities );
         } catch ( UnsupportedQuantitationScaleConversionException e ) {
-            log.warn(
-                    "Problem log transforming data. Check that the appropriate log scale is used. Mean-variance will be computed as is." );
+            log.warn( "Problem log transforming data. Check that the appropriate log scale is used. Mean-variance will be computed as is." );
         }
 
-        log.info( "Computing mean-variance relationship" );
+        mvr = expressionExperimentService.updateMeanVarianceRelation( ee, calculateMeanVariance( intensities ) );
 
-        MeanVarianceRelation mvr = calculateMeanVariance( intensities, null );
-
-        mvr.setSecurityOwner( ee );
-        ee.setMeanVarianceRelation( mvr );
-        expressionExperimentService.update( ee );
         log.info( "Mean-variance computation is complete" );
 
         return mvr;
-
     }
 
-    @Override
-    @Transactional(readOnly = true)
-    public MeanVarianceRelation findOrCreate( ExpressionExperiment ee ) {
-        return create( ee, false );
-    }
+    /**
+     * @param  matrix on which mean variance relation is computed with
+     * @return MeanVarianceRelation object
+     */
+    private MeanVarianceRelation calculateMeanVariance( ExpressionDataDoubleMatrix matrix ) {
+        DoubleMatrix2D mat = new DenseDoubleMatrix2D( matrix.rows(), matrix.columns() );
+        for ( int row = 0; row < mat.rows(); row++ ) {
+            mat.viewRow( row ).assign( matrix.getRawRow( row ) );
+        }
+        MeanVarianceEstimator mve = new MeanVarianceEstimator( mat );
 
-    @Override
-    @Transactional(readOnly = true)
-    public boolean hasMeanVariance( ExpressionExperiment ee ) {
-        return ee.getMeanVarianceRelation() != null;
-    }
+        MeanVarianceRelation mvr = MeanVarianceRelation.Factory.newInstance();
+        if ( mve.getMeanVariance() != null ) {
+            mvr.setMeans( bac.doubleArrayToBytes( mve.getMeanVariance().viewColumn( 0 ).toArray() ) );
+            mvr.setVariances( bac.doubleArrayToBytes( mve.getMeanVariance().viewColumn( 1 ).toArray() ) );
+        }
 
-    @Override
-    @Transactional(readOnly = true)
-    public MeanVarianceRelation find( ExpressionExperiment ee ) {
-        ee = expressionExperimentService.thawLiter( ee );
-        return ee.getMeanVarianceRelation();
+        return mvr;
     }
 }

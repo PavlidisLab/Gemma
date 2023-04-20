@@ -44,6 +44,7 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
+import ubic.gemma.model.expression.bioAssayData.MeanVarianceRelation;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.*;
@@ -593,6 +594,17 @@ public class ExpressionExperimentDaoImpl
         return ( Long ) getSessionFactory().getCurrentSession()
                 .createQuery( "select count(distinct ad) from ExpressionExperiment ee join ee.bioAssays ba join ba.arrayDesignUsed ad where ad.curationDetails.troubled" )
                 .uniqueResult();
+    }
+
+    @Override
+    public MeanVarianceRelation updateMeanVarianceRelation( ExpressionExperiment ee, MeanVarianceRelation mvr ) {
+        if ( mvr.getId() == null ) {
+            getSessionFactory().getCurrentSession().persist( mvr );
+        }
+        mvr.setSecurityOwner( ee );
+        ee.setMeanVarianceRelation( mvr );
+        update( ee );
+        return mvr;
     }
 
     @Override

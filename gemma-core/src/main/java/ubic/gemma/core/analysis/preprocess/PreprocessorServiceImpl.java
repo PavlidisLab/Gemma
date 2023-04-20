@@ -199,8 +199,12 @@ public class PreprocessorServiceImpl implements PreprocessorService {
     /**
      * Create the scatter plot to evaluate heteroscedasticity.
      */
-    private void processForMeanVarianceRelation( ExpressionExperiment ee ) {
-        meanVarianceService.create( ee, true );
+    private void processForMeanVarianceRelation( ExpressionExperiment ee ) throws PreprocessingException {
+        try {
+            meanVarianceService.create( ee, true );
+        } catch ( Exception e ) {
+            throw new PreprocessingException( ee, e );
+        }
     }
 
     private void processForMissingValues( ExpressionExperiment ee ) {

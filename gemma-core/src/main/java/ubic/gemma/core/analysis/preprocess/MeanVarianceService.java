@@ -34,27 +34,4 @@ public interface MeanVarianceService {
      */
     @Secured({ "GROUP_USER" })
     MeanVarianceRelation create( ExpressionExperiment ee, boolean forceRecompute );
-
-    /**
-     * @param ee the ee to find the relation for
-     * @return Retrieve existing mean-variance relation. Returns null if it does not already exist.
-     */
-    MeanVarianceRelation find( ExpressionExperiment ee );
-
-    /**
-     * Creates the matrix, or loads
-     *
-     * @param ee the experiment to retrieve or create the relation for
-     * @return MeanVarianceRelation
-     */
-    @SuppressWarnings("UnusedReturnValue") // Possible external use
-    @Secured({ "GROUP_USER", "ACL_SECURABLE_READ" })
-    MeanVarianceRelation findOrCreate( ExpressionExperiment ee );
-
-    /**
-     * @param ee the experiment to check
-     * @return true if the specified experiment already has a MeanVarianceRelation computed
-     */
-    boolean hasMeanVariance( ExpressionExperiment ee );
-
 }
