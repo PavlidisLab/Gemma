@@ -26,7 +26,6 @@ import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.AuditEventValueObject;
 import ubic.gemma.model.common.description.CitationValueObject;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
-import ubic.gemma.model.genome.TaxonValueObject;
 
 import java.util.Collection;
 import java.util.Date;
@@ -70,8 +69,8 @@ public class ExpressionExperimentDetailsValueObject extends ExpressionExperiment
     private String linkAnalysisEventType;
     private Double minPvalue;
     private String missingValueAnalysisEventType;
-    private Integer numAnnotations;
-    private Integer numPopulatedFactors;
+    private Long numAnnotations;
+    private Long numPopulatedFactors;
     // if it was switched
     private Collection<ArrayDesignValueObject> originalPlatforms;
 
@@ -255,7 +254,7 @@ public class ExpressionExperimentDetailsValueObject extends ExpressionExperiment
     /**
      * @return The number of terms (Characteristics) the experiment has to describe it.
      */
-    public Integer getNumAnnotations() {
+    public Long getNumAnnotations() {
         return this.numAnnotations;
     }
 
@@ -263,7 +262,7 @@ public class ExpressionExperimentDetailsValueObject extends ExpressionExperiment
      * @return The number of experimental factors the experiment has (counting those that are populated with
      * biomaterials)
      */
-    public Integer getNumPopulatedFactors() {
+    public Long getNumPopulatedFactors() {
         return this.numPopulatedFactors;
     }
 
@@ -526,11 +525,11 @@ public class ExpressionExperimentDetailsValueObject extends ExpressionExperiment
         this.missingValueAnalysisEventType = missingValueAnalysisEventType;
     }
 
-    public void setNumAnnotations( Integer numAnnotations ) {
+    public void setNumAnnotations( Long numAnnotations ) {
         this.numAnnotations = numAnnotations;
     }
 
-    public void setNumPopulatedFactors( Integer numPopulatedFactors ) {
+    public void setNumPopulatedFactors( Long numPopulatedFactors ) {
         this.numPopulatedFactors = numPopulatedFactors;
     }
 

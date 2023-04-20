@@ -242,13 +242,13 @@ public interface ExpressionExperimentService
      * @param ids ids
      * @return the map of ids to number of terms associated with each expression experiment.
      */
-    Map<Long, Integer> getAnnotationCounts( Collection<Long> ids );
+    Map<Long, Long> getAnnotationCountsByIds( Collection<Long> ids );
 
     /**
      * @param eeId experiment id.
      * @return the terms associated this expression experiment.
      */
-    Set<AnnotationValueObject> getAnnotations( Long eeId );
+    Set<AnnotationValueObject> getAnnotationsById( Long eeId );
 
     /**
      * @param expressionExperiment experiment
@@ -295,9 +295,10 @@ public interface ExpressionExperimentService
      * @return the amount of biomaterials associated with the given expression experiment.
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    Integer getBioMaterialCount( ExpressionExperiment expressionExperiment );
+    long getBioMaterialCount( ExpressionExperiment expressionExperiment );
 
-    Integer getDesignElementDataVectorCountById( Long id );
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    long getDesignElementDataVectorCount( ExpressionExperiment ee );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     Collection<ExpressionExperiment> getExperimentsWithOutliers();
@@ -347,7 +348,7 @@ public interface ExpressionExperimentService
      * associated
      * with biomaterials.
      */
-    Map<Long, Integer> getPopulatedFactorCounts( Collection<Long> ids );
+    Map<Long, Long> getPopulatedFactorCounts( Collection<Long> ids );
 
     /**
      * @param ids ids
@@ -355,7 +356,7 @@ public interface ExpressionExperimentService
      * associated
      * with biomaterials and only factors that aren't batch
      */
-    Map<Long, Integer> getPopulatedFactorCountsExcludeBatch( Collection<Long> ids );
+    Map<Long, Long> getPopulatedFactorCountsExcludeBatch( Collection<Long> ids );
 
     /**
      * Iterates over the quantitation types for a given expression experiment and returns the preferred quantitation
@@ -369,17 +370,17 @@ public interface ExpressionExperimentService
     QuantitationType getPreferredQuantitationType( ExpressionExperiment ee );
 
     /**
-     * @see ExpressionExperimentDao#getMaskedPreferredQuantitationType(ExpressionExperiment, Class)
+     * @see ExpressionExperimentDao#getMaskedPreferredQuantitationType(ExpressionExperiment)
      */
     @Nullable
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     QuantitationType getMaskedPreferredQuantitationType( ExpressionExperiment ee );
 
     /**
-     * @param id id
      * @return count of an expressionExperiment's design element data vectors, grouped by quantitation type
      */
-    Map<QuantitationType, Integer> getQuantitationTypeCountById( Long id );
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    Map<QuantitationType, Long> getQuantitationTypeCount( ExpressionExperiment ee );
 
     /**
      * @param expressionExperiment experiment

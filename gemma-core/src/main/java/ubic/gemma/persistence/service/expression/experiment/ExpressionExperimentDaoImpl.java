@@ -25,7 +25,6 @@ import org.apache.commons.lang3.NotImplementedException;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.hibernate.*;
-import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.type.LongType;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -43,9 +42,7 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
-import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.MeanVarianceRelation;
-import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.model.genome.Gene;
@@ -470,19 +467,24 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
-    public Map<Long, Integer> getAnnotationCounts( Collection<Long> ids ) {
-        Map<Long, Integer> results = new HashMap<>();
+    public Map<Long, Long> getAnnotationCounts( Collection<Long> ids ) {
+        Map<Long, Long> results = new HashMap<>();
         for ( Long id : ids ) {
-            results.put( id, 0 );
+            results.put( id, 0L );
         }
         if ( ids.size() == 0 ) {
             return results;
         }
         String queryString = "select e.id,count(c.id) from ExpressionExperiment e inner join e.characteristics c where e.id in (:ids) group by e.id";
-        List res = this.getSessionFactory().getCurrentSession().createQuery( queryString )
+        List<Object[]> res = this.getSessionFactory().getCurrentSession().createQuery( queryString )
                 .setParameterList( "ids", ids ).list();
 
-        this.addIdsToResults( results, res );
+        for ( Object[] ro : res ) {
+            Long id = ( Long ) ro[0];
+            Long count = ( Long ) ro[1];
+            results.put( id, count );
+        }
+
         return results;
     }
 
@@ -658,23 +660,6 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
-    public Integer getBioAssayCountById( long Id ) {
-        //language=HQL
-        final String queryString =
-                "select count(ba) from ExpressionExperiment ee " + "inner join ee.bioAssays ba where ee.id = :ee";
-
-        List list = this.getSessionFactory().getCurrentSession().createQuery( queryString ).setParameter( "ee", Id )
-                .list();
-
-        if ( list.size() == 0 ) {
-            AbstractDao.log.warn( "No vectors for experiment with id " + Id );
-            return 0;
-        }
-
-        return ( ( Long ) list.iterator().next() ).intValue();
-    }
-
-    @Override
     public Collection<BioAssayDimension> getBioAssayDimensions( ExpressionExperiment expressionExperiment ) {
         String queryString = "select distinct b from BioAssayDimension b, ExpressionExperiment e "
                 + "inner join b.bioAssays bba inner join e.bioAssays eb where eb = bba and e = :ee ";
@@ -684,37 +669,33 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
-    public Integer getBioMaterialCount( ExpressionExperiment expressionExperiment ) {
+    public long getBioMaterialCount( ExpressionExperiment expressionExperiment ) {
         //language=HQL
         final String queryString =
-                "select count(distinct sample) from ExpressionExperiment as ee " + "inner join ee.bioAssays as ba "
-                        + "inner join ba.sampleUsed as sample where ee.id = :eeId ";
+                "select count(distinct sample) from ExpressionExperiment as ee "
+                        + "inner join ee.bioAssays as ba "
+                        + "inner join ba.sampleUsed as sample "
+                        + "where ee = :ee";
 
-        List result = this.getSessionFactory().getCurrentSession().createQuery( queryString )
-                .setParameter( "eeId", expressionExperiment.getId() ).list();
-
-        return ( ( Long ) result.iterator().next() ).intValue();
+        return ( Long ) this.getSessionFactory().getCurrentSession()
+                .createQuery( queryString )
+                .setParameter( "ee", expressionExperiment )
+                .uniqueResult();
     }
 
     /**
-     * @param Id if of the expression experiment
+     * @param ee the expression experiment
      * @return count of RAW vectors.
      */
     @Override
-    public Integer getDesignElementDataVectorCountById( long Id ) {
-
+    public long getDesignElementDataVectorCount( ExpressionExperiment ee ) {
         //language=HQL
-        final String queryString = "select count(dedv) from ExpressionExperiment ee "
-                + "inner join ee.rawExpressionDataVectors dedv where ee.id = :ee";
-
-        List list = this.getSessionFactory().getCurrentSession().createQuery( queryString ).setParameter( "ee", Id )
-                .list();
-        if ( list.size() == 0 ) {
-            AbstractDao.log.warn( "No vectors for experiment with id " + Id );
-            return 0;
-        }
-        return ( ( Long ) list.iterator().next() ).intValue();
-
+        final String queryString = "select count(distinct dedv) from ExpressionExperiment ee "
+                + "inner join ee.rawExpressionDataVectors dedv where ee = :ee";
+        return ( Long ) this.getSessionFactory().getCurrentSession()
+                .createQuery( queryString )
+                .setParameter( "ee", ee )
+                .uniqueResult();
     }
 
     @Override
@@ -780,69 +761,84 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
-    public Map<Long, Integer> getPopulatedFactorCounts( Collection<Long> ids ) {
-        Map<Long, Integer> results = new HashMap<>();
+    public Map<Long, Long> getPopulatedFactorCounts( Collection<Long> ids ) {
+        Map<Long, Long> results = new HashMap<>();
         if ( ids.size() == 0 ) {
             return results;
         }
 
         for ( Long id : ids ) {
-            results.put( id, 0 );
+            results.put( id, 0L );
         }
 
         String queryString = "select e.id,count(distinct ef.id) from ExpressionExperiment e inner join e.bioAssays ba"
                 + " inner join ba.sampleUsed bm inner join bm.factorValues fv inner join fv.experimentalFactor "
                 + "ef where e.id in (:ids) group by e.id";
-        List res = this.getSessionFactory().getCurrentSession().createQuery( queryString )
+        //noinspection unchecked
+        List<Object[]> res = this.getSessionFactory().getCurrentSession().createQuery( queryString )
                 .setParameterList( "ids", ids ).list();
 
-        this.addIdsToResults( results, res );
+        for ( Object[] ro : res ) {
+            Long id = ( Long ) ro[0];
+            Long count = ( Long ) ro[1];
+            results.put( id, count );
+        }
         return results;
     }
 
     @Override
-    public Map<Long, Integer> getPopulatedFactorCountsExcludeBatch( Collection<Long> ids ) {
-        Map<Long, Integer> results = new HashMap<>();
+    public Map<Long, Long> getPopulatedFactorCountsExcludeBatch( Collection<Long> ids ) {
+        Map<Long, Long> results = new HashMap<>();
         if ( ids.size() == 0 ) {
             return results;
         }
 
         for ( Long id : ids ) {
-            results.put( id, 0 );
+            results.put( id, 0L );
         }
 
         String queryString = "select e.id,count(distinct ef.id) from ExpressionExperiment e inner join e.bioAssays ba"
                 + " inner join ba.sampleUsed bm inner join bm.factorValues fv inner join fv.experimentalFactor ef "
                 + " inner join ef.category cat where e.id in (:ids) and cat.category != (:category) and ef.name != (:name) group by e.id";
 
-        List res = this.getSessionFactory().getCurrentSession().createQuery( queryString )
+        //noinspection unchecked
+        List<Object[]> res = this.getSessionFactory().getCurrentSession().createQuery( queryString )
                 .setParameterList( "ids", ids ) // Set ids
                 .setParameter( "category", ExperimentalFactorService.BATCH_FACTOR_CATEGORY_NAME ) // Set batch category
                 .setParameter( "name", ExperimentalFactorService.BATCH_FACTOR_NAME ) // set batch name
                 .list();
 
-        this.addIdsToResults( results, res );
+        for ( Object[] ro : res ) {
+            Long id = ( Long ) ro[0];
+            Long count = ( Long ) ro[1];
+            results.put( id, count );
+        }
+
         return results;
     }
 
     @SuppressWarnings("unchecked")
     @Override
-    public Map<QuantitationType, Integer> getQuantitationTypeCountById( Long id ) {
+    public Map<QuantitationType, Long> getQuantitationTypeCount( ExpressionExperiment ee ) {
 
         //language=HQL
-        final String queryString = "select quantType,count(*) as count "
+        final String queryString = "select quantType, count(distinct vectors) as count "
                 + "from ubic.gemma.model.expression.experiment.ExpressionExperiment ee "
-                + "inner join ee.rawExpressionDataVectors as vectors "
-                + "inner join vectors.quantitationType as quantType " + "where ee.id = :id GROUP BY quantType.name";
+                + "join ee.rawExpressionDataVectors as vectors "
+                + "join vectors.quantitationType as quantType "
+                + "where ee = :ee "
+                + "group by quantType";
 
         //noinspection unchecked
-        List<Object[]> list = this.getSessionFactory().getCurrentSession().createQuery( queryString ).setParameter( "id", id )
+        List<Object[]> list = this.getSessionFactory().getCurrentSession()
+                .createQuery( queryString )
+                .setParameter( "ee", ee )
                 .list();
 
-        Map<QuantitationType, Integer> qtCounts = new HashMap<>();
+        Map<QuantitationType, Long> qtCounts = new HashMap<>();
 
         for ( Object[] tuple : list ) {
-            qtCounts.put( ( QuantitationType ) tuple[0], ( ( Long ) tuple[1] ).intValue() );
+            qtCounts.put( ( QuantitationType ) tuple[0], ( Long ) tuple[1] );
         }
 
         return qtCounts;
@@ -1361,16 +1357,6 @@ public class ExpressionExperimentDaoImpl
                 Hibernate.initialize( bf.getPubAccession() );
                 Hibernate.initialize( bf.getPubAccession().getExternalDatabase() );
             }
-        }
-    }
-
-
-    private void addIdsToResults( Map<Long, Integer> results, List res ) {
-        for ( Object r : res ) {
-            Object[] ro = ( Object[] ) r;
-            Long id = ( Long ) ro[0];
-            Integer count = ( ( Long ) ro[1] ).intValue();
-            results.put( id, count );
         }
     }
 

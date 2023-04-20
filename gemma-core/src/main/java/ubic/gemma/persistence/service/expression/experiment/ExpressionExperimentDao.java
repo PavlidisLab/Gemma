@@ -8,7 +8,6 @@ import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
-import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.MeanVarianceRelation;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.*;
@@ -74,7 +73,7 @@ public interface ExpressionExperimentDao
 
     Collection<ExpressionExperiment> findUpdatedAfter( Date date );
 
-    Map<Long, Integer> getAnnotationCounts( Collection<Long> ids );
+    Map<Long, Long> getAnnotationCounts( Collection<Long> ids );
 
     Collection<ArrayDesign> getArrayDesignsUsed( BioAssaySet bas );
 
@@ -82,13 +81,11 @@ public interface ExpressionExperimentDao
 
     Map<Long, Collection<AuditEvent>> getAuditEvents( Collection<Long> ids );
 
-    Integer getBioAssayCountById( long Id );
-
     Collection<BioAssayDimension> getBioAssayDimensions( ExpressionExperiment expressionExperiment );
 
-    Integer getBioMaterialCount( ExpressionExperiment expressionExperiment );
+    long getBioMaterialCount( ExpressionExperiment expressionExperiment );
 
-    Integer getDesignElementDataVectorCountById( long Id );
+    long getDesignElementDataVectorCount( ExpressionExperiment ee );
 
     Collection<ExpressionExperiment> getExperimentsWithOutliers();
 
@@ -98,11 +95,11 @@ public interface ExpressionExperimentDao
 
     Map<Taxon, Long> getPerTaxonCount();
 
-    Map<Long, Integer> getPopulatedFactorCounts( Collection<Long> ids );
+    Map<Long, Long> getPopulatedFactorCounts( Collection<Long> ids );
 
-    Map<Long, Integer> getPopulatedFactorCountsExcludeBatch( Collection<Long> ids );
+    Map<Long, Long> getPopulatedFactorCountsExcludeBatch( Collection<Long> ids );
 
-    Map<QuantitationType, Integer> getQuantitationTypeCountById( Long id );
+    Map<QuantitationType, Long> getQuantitationTypeCount( ExpressionExperiment ee );
 
     Collection<QuantitationType> getQuantitationTypes( ExpressionExperiment expressionExperiment );
 

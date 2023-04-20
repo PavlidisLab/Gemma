@@ -108,6 +108,6 @@ public abstract class DatasetArg<T>
      */
     public Set<AnnotationValueObject> getAnnotations( ExpressionExperimentService service ) {
         ExpressionExperiment ee = this.getEntity( service );
-        return service.getAnnotations( ee.getId() );
+        return service.getAnnotationsById( ee.getId() );
     }
 }

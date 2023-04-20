@@ -101,13 +101,15 @@ public class ExpressionExperimentFormController extends BaseFormController {
 
         ModelAndView mav = super.processFormSubmission( request, response, command, errors );
 
-        Set<Entry<QuantitationType, Integer>> s = expressionExperimentService.getQuantitationTypeCountById( id )
+        ExpressionExperiment ee = expressionExperimentService.loadOrFail( id );
+
+        Set<Entry<QuantitationType, Long>> s = expressionExperimentService.getQuantitationTypeCount( ee )
                 .entrySet();
         mav.addObject( "qtCountSet", s );
 
         // add count of designElementDataVectors
         mav.addObject( "designElementDataVectorCount",
-                new Long( expressionExperimentService.getDesignElementDataVectorCountById( id ) ) );
+                expressionExperimentService.getDesignElementDataVectorCount( ee ) );
         return mav;
     }
 

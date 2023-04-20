@@ -466,13 +466,13 @@ public class ExpressionExperimentServiceImpl
 
     @Override
     @Transactional(readOnly = true)
-    public Map<Long, Integer> getAnnotationCounts( final Collection<Long> ids ) {
+    public Map<Long, Long> getAnnotationCountsByIds( final Collection<Long> ids ) {
         return this.expressionExperimentDao.getAnnotationCounts( ids );
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Set<AnnotationValueObject> getAnnotations( Long eeId ) {
+    public Set<AnnotationValueObject> getAnnotationsById( Long eeId ) {
         ExpressionExperiment expressionExperiment = Objects.requireNonNull( this.load( eeId ) );
         Set<AnnotationValueObject> annotations = new HashSet<>();
 
@@ -673,14 +673,14 @@ public class ExpressionExperimentServiceImpl
 
     @Override
     @Transactional(readOnly = true)
-    public Integer getBioMaterialCount( final ExpressionExperiment expressionExperiment ) {
+    public long getBioMaterialCount( final ExpressionExperiment expressionExperiment ) {
         return this.expressionExperimentDao.getBioMaterialCount( expressionExperiment );
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Integer getDesignElementDataVectorCountById( final Long id ) {
-        return this.expressionExperimentDao.getDesignElementDataVectorCountById( id );
+    public long getDesignElementDataVectorCount( final ExpressionExperiment ee ) {
+        return this.expressionExperimentDao.getDesignElementDataVectorCount( ee );
     }
 
     @Override
@@ -727,13 +727,13 @@ public class ExpressionExperimentServiceImpl
 
     @Override
     @Transactional(readOnly = true)
-    public Map<Long, Integer> getPopulatedFactorCounts( final Collection<Long> ids ) {
+    public Map<Long, Long> getPopulatedFactorCounts( final Collection<Long> ids ) {
         return this.expressionExperimentDao.getPopulatedFactorCounts( ids );
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Map<Long, Integer> getPopulatedFactorCountsExcludeBatch( final Collection<Long> ids ) {
+    public Map<Long, Long> getPopulatedFactorCountsExcludeBatch( final Collection<Long> ids ) {
         return this.expressionExperimentDao.getPopulatedFactorCountsExcludeBatch( ids );
     }
 
@@ -751,8 +751,8 @@ public class ExpressionExperimentServiceImpl
 
     @Override
     @Transactional(readOnly = true)
-    public Map<QuantitationType, Integer> getQuantitationTypeCountById( final Long id ) {
-        return this.expressionExperimentDao.getQuantitationTypeCountById( id );
+    public Map<QuantitationType, Long> getQuantitationTypeCount( ExpressionExperiment ee ) {
+        return this.expressionExperimentDao.getQuantitationTypeCount( ee );
     }
 
     @Override
