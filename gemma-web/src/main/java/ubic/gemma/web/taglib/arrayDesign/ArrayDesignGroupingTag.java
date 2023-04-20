@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2007 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -83,11 +83,11 @@ public class ArrayDesignGroupingTag extends TagSupport {
     }
 
     private String arrayDesignLink( ArrayDesign ad ) {
-        return "<a href=\"" + Settings.getRootContext() + "/arrays/showArrayDesign.html?id=" + ad.getId() + "\">" + ad.getShortName() + "</a> ("
+        return "<a href=\"" + pageContext.getServletContext().getContextPath() + "/arrays/showArrayDesign.html?id=" + ad.getId() + "\">" + ad.getShortName() + "</a> ("
                 + ad.getName() + ")";
     }
 
     private String arrayDesignShortLink( ArrayDesign ad ) {
-        return "<a href=\"" + Settings.getRootContext() + "/arrays/showArrayDesign.html?id=" + ad.getId() + "\">" + ad.getShortName() + "</a>";
+        return "<a href=\"" + pageContext.getServletContext().getContextPath() + "/arrays/showArrayDesign.html?id=" + ad.getId() + "\">" + ad.getShortName() + "</a>";
     }
 }

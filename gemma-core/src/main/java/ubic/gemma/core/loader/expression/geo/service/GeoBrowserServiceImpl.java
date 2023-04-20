@@ -87,7 +87,7 @@ public class GeoBrowserServiceImpl implements GeoBrowserService {
     }
 
     @Override
-    public String getDetails( String accession ) throws IOException {
+    public String getDetails( String accession, String contextPath ) throws IOException {
         /*
          * The maxrecords is > 1 because it return platforms as well (and there are series with as many as 13 platforms
          * ... leaving some headroom)
@@ -107,7 +107,7 @@ public class GeoBrowserServiceImpl implements GeoBrowserService {
 
         this.saveLocalInfo();
 
-        return this.formatDetails( details );
+        return this.formatDetails( details, contextPath );
 
     }
 
@@ -146,9 +146,9 @@ public class GeoBrowserServiceImpl implements GeoBrowserService {
      * Take the details string from GEO and make it nice. Add links to series and platforms that are already in gemma.
      *
      * @param  details XML from eSummary
-     * @return         HTML-formatted
+     * @return HTML-formatted
      */
-    String formatDetails( String details ) throws IOException {
+    String formatDetails( String details, String contextPath ) throws IOException {
 
         /*
          * Bug 2690. There must be a better way.
@@ -169,7 +169,7 @@ public class GeoBrowserServiceImpl implements GeoBrowserService {
             ExpressionExperiment ee = this.expressionExperimentService.findByShortName( gse );
 
             if ( ee != null ) {
-                buf.append( "\n<p><strong><a target=\"_blank\" href=\"" ).append( Settings.getRootContext() )
+                buf.append( "\n<p><strong><a target=\"_blank\" href=\"" ).append( contextPath )
                         .append( "/expressionExperiment/showExpressionExperiment.html?id=" ).append( ee.getId() )
                         .append( "\">" ).append( gse ).append( "</a></strong>" );
             } else {
@@ -179,7 +179,7 @@ public class GeoBrowserServiceImpl implements GeoBrowserService {
             buf.append( "<p>" ).append( title ).append( "</p>\n" );
             buf.append( "<p>" ).append( summary ).append( "</p>\n" );
 
-            this.formatArrayDetails( gpls, buf );
+            this.formatArrayDetails( gpls, buf, contextPath );
 
             buf.append( "</div>" );
             details = buf.toString();
@@ -196,7 +196,8 @@ public class GeoBrowserServiceImpl implements GeoBrowserService {
         ExternalDatabase geo = externalDatabaseService.findByName( "GEO" );
         Collection<GeoRecord> toRemove = new HashSet<>();
         assert geo != null;
-        rec: for ( GeoRecord record : records ) {
+        rec:
+        for ( GeoRecord record : records ) {
 
             if ( record.getNumSamples() < GeoBrowserServiceImpl.MIN_SAMPLES ) {
                 toRemove.add( record );
@@ -244,7 +245,7 @@ public class GeoBrowserServiceImpl implements GeoBrowserService {
 
     }
 
-    private void formatArrayDetails( NodeList gpls, StringBuilder buf ) {
+    private void formatArrayDetails( NodeList gpls, StringBuilder buf, String contextPath ) {
         Set<String> seenGpl = new HashSet<>();
         for ( int i = 0; i < gpls.getLength(); i++ ) {
             String gpl = "GPL" + gpls.item( i ).getNodeValue();
@@ -261,13 +262,13 @@ public class GeoBrowserServiceImpl implements GeoBrowserService {
                 if ( arrayDesign.getCurationDetails().getTroubled() ) {
                     AuditEvent lastTroubleEvent = arrayDesign.getCurationDetails().getLastTroubledEvent();
                     if ( lastTroubleEvent != null ) {
-                        trouble = "&nbsp;<img src='" + Settings.getRootContext()
+                        trouble = "&nbsp;<img src='" + contextPath
                                 + "/images/icons/warning.png' height='16' width='16' alt=\"troubled\" title=\""
                                 + lastTroubleEvent.getNote() + "\"/>";
                     }
                 }
                 buf.append( "<p><strong>Platform in Gemma:&nbsp;<a target=\"_blank\" href=\"" )
-                        .append( Settings.getRootContext() ).append( "/arrays/showArrayDesign.html?id=" )
+                        .append( contextPath ).append( "/arrays/showArrayDesign.html?id=" )
                         .append( arrayDesign.getId() ).append( "\">" ).append( gpl ).append( "</a></strong>" )
                         .append( trouble );
             } else {
@@ -285,7 +286,7 @@ public class GeoBrowserServiceImpl implements GeoBrowserService {
     private void initializeLocalInfo() {
         File f = this.getInfoStoreFile();
         if ( f.exists() ) {
-            try (FileInputStream fis = new FileInputStream( f ); ObjectInputStream ois = new ObjectInputStream( fis )) {
+            try ( FileInputStream fis = new FileInputStream( f ); ObjectInputStream ois = new ObjectInputStream( fis ) ) {
 
                 //noinspection unchecked
                 this.localInfo = ( Map<String, GeoRecord> ) ois.readObject();
@@ -316,8 +317,8 @@ public class GeoBrowserServiceImpl implements GeoBrowserService {
     private void saveLocalInfo() {
         if ( this.localInfo == null )
             return;
-        try (FileOutputStream fos = new FileOutputStream( this.getInfoStoreFile() );
-                ObjectOutputStream oos = new ObjectOutputStream( fos )) {
+        try ( FileOutputStream fos = new FileOutputStream( this.getInfoStoreFile() );
+                ObjectOutputStream oos = new ObjectOutputStream( fos ) ) {
 
             oos.writeObject( this.localInfo );
             oos.flush();

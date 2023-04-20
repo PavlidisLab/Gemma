@@ -42,17 +42,17 @@ public class GeoBrowserServiceTest extends BaseSpringContextTest {
     public final void testGetDetails() throws Exception {
 
         try {
-            String details = gbs.getDetails( "GSE15904" );
+            String details = gbs.getDetails( "GSE15904", "" );
             assertTrue( "Got: " + details, details.contains( "GSE15904" ) );
 
             Thread.sleep( 400 );
 
-            details = gbs.getDetails( "GSE1295" );
+            details = gbs.getDetails( "GSE1295", "" );
             assertTrue( "Got: " + details, details.contains( "GSE1295" ) );
             Thread.sleep( 400 );
 
             // log.info( details );
-            details = gbs.getDetails( "GSE2565" );
+            details = gbs.getDetails( "GSE2565", "" );
             assertTrue( "Got: " + details, details.contains( "GSE2565" ) );
 
             // occurs in a "accessioned in GEO as..."
@@ -66,7 +66,7 @@ public class GeoBrowserServiceTest extends BaseSpringContextTest {
             if ( e.getCause() != null && ( e.getCause() instanceof UnknownHostException || e.getCause().getMessage()
                     .contains( "500" ) || e.getCause().getMessage().contains( "502" )
                     || e.getCause().getMessage()
-                            .contains( "503" ) ) ) {
+                    .contains( "503" ) ) ) {
                 log.warn( "NCBI returned error, skipping test" );
                 return;
             }
@@ -94,7 +94,7 @@ public class GeoBrowserServiceTest extends BaseSpringContextTest {
             String firstAccession = rec.getGeoAccession();
 
             // this should cause the increment.
-            gbs.getDetails( firstAccession );
+            gbs.getDetails( firstAccession, "" );
 
             recentGeoRecords = gbs.getRecentGeoRecords( 11, 10 );
 
@@ -123,7 +123,7 @@ public class GeoBrowserServiceTest extends BaseSpringContextTest {
             if ( e.getCause() != null && ( e.getCause() instanceof UnknownHostException || e.getCause().getMessage()
                     .contains( "500" ) || e.getCause().getMessage().contains( "502" )
                     || e.getCause().getMessage()
-                            .contains( "503" ) ) ) {
+                    .contains( "503" ) ) ) {
                 log.warn( "NCBI returned error, skipping test" );
                 return;
             }
