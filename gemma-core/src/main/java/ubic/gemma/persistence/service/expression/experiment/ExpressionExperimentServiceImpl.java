@@ -740,17 +740,8 @@ public class ExpressionExperimentServiceImpl
 
     @Override
     @Transactional(readOnly = true)
-    public Collection<QuantitationType> getPreferredQuantitationType( final ExpressionExperiment ee ) {
-        Collection<QuantitationType> preferredQuantitationTypes = new HashSet<>();
-
-        Collection<QuantitationType> quantitationTypes = this.getQuantitationTypes( ee );
-
-        for ( QuantitationType qt : quantitationTypes ) {
-            if ( qt.getIsPreferred() ) {
-                preferredQuantitationTypes.add( qt );
-            }
-        }
-        return preferredQuantitationTypes;
+    public QuantitationType getPreferredQuantitationType( final ExpressionExperiment ee ) {
+        return this.expressionExperimentDao.getPreferredQuantitationType( ee );
     }
 
     @Override
@@ -773,16 +764,15 @@ public class ExpressionExperimentServiceImpl
 
     @Override
     @Transactional(readOnly = true)
-    public Collection<QuantitationTypeValueObject> getQuantitationTypeValueObjects( ExpressionExperiment expressionExperiment ) {
-        Collection<QuantitationType> qts = this.expressionExperimentDao.getQuantitationTypes( expressionExperiment );
-        return quantitationTypeService.loadValueObjectsWithExpressionExperiment( qts, expressionExperiment );
+    public Collection<QuantitationType> getQuantitationTypes( ExpressionExperiment ee, ArrayDesign oldAd ) {
+        return this.expressionExperimentDao.getQuantitationTypes( ee, oldAd );
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Collection<QuantitationType> getQuantitationTypes( final ExpressionExperiment expressionExperiment,
-            final ArrayDesign arrayDesign ) {
-        return this.expressionExperimentDao.getQuantitationTypes( expressionExperiment, arrayDesign );
+    public Collection<QuantitationTypeValueObject> getQuantitationTypeValueObjects( ExpressionExperiment expressionExperiment ) {
+        expressionExperiment = ensureInSession( expressionExperiment );
+        return quantitationTypeService.loadValueObjectsWithExpressionExperiment( expressionExperiment.getQuantitationTypes(), expressionExperiment );
     }
 
     @Override
@@ -1088,7 +1078,7 @@ public class ExpressionExperimentServiceImpl
     }
 
     private boolean getHasBeenBatchCorrected( ExpressionExperiment ee ) {
-        for ( QuantitationType qt : this.expressionExperimentDao.getQuantitationTypes( ee ) ) {
+        for ( QuantitationType qt : ee.getQuantitationTypes() ) {
             if ( qt.getIsBatchCorrected() ) {
                 return true;
             }

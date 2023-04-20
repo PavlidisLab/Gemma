@@ -307,9 +307,8 @@ public class MeanVarianceServiceTest extends AbstractGeoServiceTest {
     }
 
     private QuantitationType createOrUpdateQt( ScaleType scale ) {
-
-        Collection<QuantitationType> qtList = eeService.getPreferredQuantitationType( ee );
-        if ( qtList.size() == 0 ) {
+        QuantitationType qt = eeService.getPreferredQuantitationType( ee );
+        if ( qt == null ) {
             qt = QuantitationType.Factory.newInstance();
             qt.setName( "testQt" );
             qt.setScale( scale );
@@ -327,12 +326,10 @@ public class MeanVarianceServiceTest extends AbstractGeoServiceTest {
             quantitationTypeService.create( qt );
             ee.getQuantitationTypes().add( qt );
         } else {
-            qt = qtList.iterator().next();
             qt.setScale( scale );
             quantitationTypeService.update( qt );
         }
-
-        return qt;
+        return this.qt;
     }
 
     private void prepareGSE2892() throws Exception {

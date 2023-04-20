@@ -147,12 +147,9 @@ public class RNASeqDataAddCli extends ExpressionExperimentManipulatingCLI {
             for ( BioAssaySet bas : this.expressionExperiments ) {
                 try {
                     ExpressionExperiment ee = ( ExpressionExperiment ) bas;
-                    Collection<QuantitationType> pqts = this.eeService.getPreferredQuantitationType( ee );
-                    if ( pqts.size() > 1 )
-                        throw new IllegalArgumentException( "Cannot process when there is more than one preferred QT" );
-                    if ( pqts.isEmpty() )
+                    QuantitationType qt = this.eeService.getPreferredQuantitationType( ee );
+                    if ( qt == null )
                         throw new IllegalArgumentException( "No preferred quantitation type for " + ee.getShortName() );
-                    QuantitationType qt = pqts.iterator().next();
                     if ( !qt.getType().equals( StandardQuantitationType.COUNT ) ) {
                         AbstractCLI.log.warn( "Preferred data is not counts for " + ee );
                         addErrorObject( ee.getShortName(), "Preferred data is not counts" );

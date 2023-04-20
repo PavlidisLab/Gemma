@@ -170,6 +170,13 @@ public class ExpressionExperimentServiceTest extends BaseSpringContextTest {
     }
 
     @Test
+    public void testGetPreferredQuantitationType() {
+        QuantitationType qt = expressionExperimentService.getPreferredQuantitationType( ee );
+        assertNotNull( qt );
+        assertTrue( qt.getIsPreferred() );
+    }
+
+    @Test
     public final void testGetQuantitationTypes() {
         Collection<QuantitationType> types = expressionExperimentService.getQuantitationTypes( ee );
         assertEquals( 2, types.size() );

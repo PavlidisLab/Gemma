@@ -880,8 +880,16 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
+    public QuantitationType getPreferredQuantitationType( ExpressionExperiment ee ) {
+        return ( QuantitationType ) getSessionFactory().getCurrentSession()
+                .createQuery( "select qt from ExpressionExperiment ee join ee.quantitationTypes qt where qt.isPreferred = true and ee = :ee" )
+                .setParameter( "ee", ee )
+                .uniqueResult();
+    }
+
+    @Override
     public QuantitationType getPreferredQuantitationTypeForDataVectorType( ExpressionExperiment ee, Class<? extends DesignElementDataVector> vectorType ) {
-        QuantitationType quantitationType = ( QuantitationType ) this.getSessionFactory().getCurrentSession()
+        return ( QuantitationType ) this.getSessionFactory().getCurrentSession()
                 .createCriteria( vectorType )
                 .createAlias( "quantitationType", "qt" )
                 .add( Restrictions.and(
@@ -889,7 +897,6 @@ public class ExpressionExperimentDaoImpl
                         Restrictions.eq( "expressionExperiment", ee ) ) )
                 .setProjection( Projections.distinct( Projections.property( "quantitationType" ) ) )
                 .uniqueResult();
-        return quantitationType;
     }
 
     @Override

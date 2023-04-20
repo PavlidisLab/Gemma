@@ -106,14 +106,16 @@ public interface ExpressionExperimentDao
 
     Collection<QuantitationType> getQuantitationTypes( ExpressionExperiment expressionExperiment );
 
-    Collection<QuantitationType> getQuantitationTypes( ExpressionExperiment expressionExperiment,
-            ArrayDesign arrayDesign );
+    Collection<QuantitationType> getQuantitationTypes( ExpressionExperiment ee, ArrayDesign oldAd );
+
+    /**
+     * Obtain the preferred quantitation type, if available.
+     */
+    @Nullable
+    QuantitationType getPreferredQuantitationType( ExpressionExperiment ee );
 
     /**
      * Obtain the preferred quantitation type for a given data vector type.
-     * <p>
-     * If more than one preferred QT exists, a warning is emitted and the latest one according to their {@link DesignElementDataVector#getId()}
-     * is returned.
      *
      * @return the data vector, or null if no preferred vector type can be found
      */

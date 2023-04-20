@@ -71,18 +71,9 @@ public class MeanVarianceServiceImpl implements MeanVarianceService {
             throw new IllegalStateException( "Could not locate intensity matrix for " + ee.getShortName() );
         }
 
-        Collection<QuantitationType> qtList = expressionExperimentService.getPreferredQuantitationType( ee );
-        QuantitationType qt;
-
-        if ( qtList.size() == 0 ) {
+        QuantitationType qt = expressionExperimentService.getPreferredQuantitationType( ee );
+        if ( qt == null ) {
             throw new IllegalStateException( "Did not find any preferred quantitation type. Mean-variance relation was not computed." );
-        }
-        qt = qtList.iterator().next();
-        if ( qtList.size() > 1 ) {
-            // Really this should be an error condition.
-            log.warn(
-                    "Found more than one preferred quantitation type. Only the first preferred quantitation type ("
-                            + qt + ") will be used." );
         }
         try {
             intensities = ExpressionDataDoubleMatrixUtil.filterAndLog2Transform( intensities );
