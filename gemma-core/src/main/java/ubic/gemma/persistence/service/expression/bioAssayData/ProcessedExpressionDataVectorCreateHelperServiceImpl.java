@@ -84,6 +84,8 @@ class ProcessedExpressionDataVectorCreateHelperServiceImpl
     public void replaceProcessedDataVectors( ExpressionExperiment ee,
             Collection<ProcessedExpressionDataVector> vecs ) {
 
+        ee = eeService.thaw( ee );
+
         // assumption: all the same QT. Further assumption: bioassaydimension already persistent.
         QuantitationType qt = vecs.iterator().next().getQuantitationType();
         if ( qt.getId() == null ) {
