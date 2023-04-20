@@ -489,7 +489,7 @@
 				<artifactId>maven-surefire-plugin</artifactId>
 				<version>2.22.2</version>
 				<configuration>
-					<argLine>-Dlog4j1.compatibility=true</argLine>
+					<argLine>-Dlog4j1.compatibility=true -Djava.util.logging.manager=org.apache.logging.log4j.jul.LogManager</argLine>
 					<redirectTestOutputToFile>true</redirectTestOutputToFile>
 					<excludes>
 						<exclude>**/*Abstract*</exclude>
@@ -506,7 +506,7 @@
 				<artifactId>maven-failsafe-plugin</artifactId>
 				<version>2.22.2</version>
 				<configuration>
-					<argLine>-Dlog4j1.compatibility=true</argLine>
+					<argLine>-Dlog4j1.compatibility=true -Djava.util.logging.manager=org.apache.logging.log4j.jul.LogManager</argLine>
 					<redirectTestOutputToFile>true</redirectTestOutputToFile>
 					<includes>
 						<include>**/*Test.java</include>
