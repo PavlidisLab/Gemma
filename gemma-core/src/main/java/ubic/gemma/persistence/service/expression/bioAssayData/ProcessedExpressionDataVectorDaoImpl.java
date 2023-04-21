@@ -472,6 +472,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends AbstractDesignElementD
         //        this.getSessionFactory().getCurrentSession().update( expressionExperiment );
 
         expressionExperiment.getProcessedExpressionDataVectors().clear();
+        expressionExperiment.setNumberOfDataVectors( 0 );
 
         //        if ( !vectors.isEmpty() ) {
         //            this.getSessionFactory().getCurrentSession()

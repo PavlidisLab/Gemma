@@ -100,6 +100,7 @@ class ProcessedExpressionDataVectorCreateHelperServiceImpl
 
         ee.getProcessedExpressionDataVectors().clear();
         ee.getProcessedExpressionDataVectors().addAll( vecs );
+        ee.setNumberOfDataVectors( vecs.size() );
 
         eeService.update( ee );
 
