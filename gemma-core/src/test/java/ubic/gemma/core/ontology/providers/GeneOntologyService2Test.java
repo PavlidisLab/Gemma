@@ -15,6 +15,7 @@
 package ubic.gemma.core.ontology.providers;
 
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.concurrent.ConcurrentMapCacheManager;
@@ -25,7 +26,9 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.gemma.core.genome.gene.service.GeneService;
+import ubic.gemma.core.ontology.OntologyTestUtils;
 import ubic.gemma.core.ontology.providers.GeneOntologyServiceImpl.GOAspect;
+import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.persistence.service.association.Gene2GOAssociationService;
 import ubic.gemma.persistence.util.TestComponent;
 
@@ -50,11 +53,11 @@ public class GeneOntologyService2Test extends AbstractJUnit4SpringContextTests {
     @TestComponent
     public static class GeneOntologyService2TestContextConfiguration {
         @Bean
-        public GeneOntologyService geneOntologyService() throws IOException {
+        public GeneOntologyService geneOntologyService() throws IOException, InterruptedException {
             GeneOntologyServiceImpl gos = new GeneOntologyServiceImpl( false );
             InputStream is = new GZIPInputStream(
                     new ClassPathResource( "/data/loader/ontology/go.bptest.owl.gz" ).getInputStream() );
-            gos.loadTermsInNameSpace( is, false );
+            OntologyTestUtils.initialize( gos, is );
             return gos;
         }
 
@@ -78,6 +81,7 @@ public class GeneOntologyService2Test extends AbstractJUnit4SpringContextTests {
     private GeneOntologyService gos;
 
     @Test
+    @Category(SlowTest.class)
     public final void testParents() {
         String id = "GO:0034118"; // regulation of erythrocyte aggregation
 
