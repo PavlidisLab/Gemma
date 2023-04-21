@@ -27,6 +27,7 @@ import ubic.basecode.ontology.search.OntologySearchException;
 import ubic.gemma.core.association.phenotype.PhenotypeAssociationManagerService;
 import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.core.ontology.OntologyService;
+import ubic.gemma.core.ontology.OntologyTestUtils;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.security.authentication.UserManager;
 import ubic.gemma.core.util.test.BaseSpringContextTest;
@@ -79,9 +80,8 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
 
         if ( !PhenotypeAssociationTest.dosLoaded ) {
             // fails if you have DO loaded
-            os.getDiseaseOntologyService().loadTermsInNameSpace(
-                    this.getClass().getResourceAsStream( "/data/loader/ontology/dotest.owl.xml" ), false );
-
+            OntologyTestUtils.initialize( os.getDiseaseOntologyService(),
+                    this.getClass().getResourceAsStream( "/data/loader/ontology/dotest.owl.xml" ) );
             PhenotypeAssociationTest.dosLoaded = true;
         }
 

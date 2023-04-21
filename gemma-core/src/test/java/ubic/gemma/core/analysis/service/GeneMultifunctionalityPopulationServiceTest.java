@@ -30,6 +30,7 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.test.annotation.DirtiesContext;
 import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.core.ontology.providers.GeneOntologyService;
+import ubic.gemma.core.ontology.OntologyTestUtils;
 import ubic.gemma.core.util.test.BaseSpringContextTest;
 import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.association.GOEvidenceCode;
@@ -86,14 +87,8 @@ public class GeneMultifunctionalityPopulationServiceTest extends BaseSpringConte
 
     @Before
     public void setUp() throws Exception {
-        if ( goService.isInitializationThreadAlive() ) {
-            log.info( "Cancelled GO service initialization, will take over with." );
-            goService.cancelInitializationThread();
-            goService.waitForInitializationThread();
-            goService.clearCaches();
-        }
-        goService.loadTermsInNameSpace( new GZIPInputStream(
-                new ClassPathResource( "/data/loader/ontology/molecular-function.test.owl.gz" ).getInputStream() ), false );
+        OntologyTestUtils.initialize( goService, new GZIPInputStream(
+                new ClassPathResource( "/data/loader/ontology/molecular-function.test.owl.gz" ).getInputStream() ) );
 
         testTaxon = taxonService.findOrCreate( Taxon.Factory
                 .newInstance( "foobly" + RandomStringUtils.randomAlphabetic( 2 ),
