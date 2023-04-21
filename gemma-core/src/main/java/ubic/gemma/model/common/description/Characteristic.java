@@ -191,10 +191,26 @@ public class Characteristic extends AbstractDescribable implements Serializable 
 
     @Override
     public String toString() {
-        if ( StringUtils.isBlank( this.getCategory() ) ) {
-            return "[No category] Value = " + this.getValue();
+        StringBuilder b = new StringBuilder( super.toString() );
+        if ( category != null ) {
+            b.append( " Category=" ).append( category );
+            if ( categoryUri != null ) {
+                b.append( " [" ).append( categoryUri ).append( "]" );
+            }
+        } else if ( categoryUri != null ) {
+            b.append( " Value URI=" ).append( categoryUri );
+        } else {
+            b.append( " [No Category]" );
         }
-        return "Category = " + this.getCategory() + " Value = " + this.getValue();
+        if ( value != null ) {
+            b.append( " Value=" ).append( value );
+            if ( valueUri != null ) {
+                b.append( " [" ).append( valueUri ).append( "]" );
+            }
+        } else if ( valueUri != null ) {
+            b.append( " Value URI=" ).append( valueUri );
+        }
+        return b.toString();
     }
 
     public static final class Factory {

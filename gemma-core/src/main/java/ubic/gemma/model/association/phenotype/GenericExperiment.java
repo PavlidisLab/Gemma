@@ -25,6 +25,7 @@ import ubic.gemma.model.analysis.Investigation;
  * An experiment that has no special features; the most basic concrete instantiation of an Investigation.
  * </p>
  */
+@Deprecated
 public class GenericExperiment extends Investigation {
 
     private static final long serialVersionUID = -1322252603261082189L;

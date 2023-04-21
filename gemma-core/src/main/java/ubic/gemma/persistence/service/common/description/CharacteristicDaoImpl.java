@@ -190,32 +190,43 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
     }
 
     @Override
-    public Map<String, CharacteristicByValueUriOrValueCount> countCharacteristicValueUriInByNormalizedValue( Collection<String> uris ) {
+    public Map<String, Long> countCharacteristicsByValueUriGroupedByNormalizedValue( Collection<String> uris ) {
         List<String> uniqueUris = uris.stream().distinct().sorted().collect( Collectors.toList() );
         if ( uniqueUris.isEmpty() )
             return Collections.emptyMap();
         //noinspection unchecked
         return ( ( List<Object[]> ) this.getSessionFactory().getCurrentSession()
-                .createQuery( "select lower(coalesce(char.valueUri, char.value)), max(char.valueUri), max(char.value), count(char) from Characteristic char "
+                .createQuery( "select lower(coalesce(char.valueUri, char.value)), count(char) from Characteristic char "
                         + "where char.valueUri in :uris "
                         + "group by coalesce(char.valueUri, char.value)" )
                 .setParameterList( "uris", uniqueUris )
                 .list() )
                 .stream()
-                .collect( Collectors.toMap( row -> ( String ) row[0], row -> new CharacteristicByValueUriOrValueCount( ( String ) row[1], ( String ) row[2], ( Long ) row[3] ) ) );
+                .collect( Collectors.toMap( row -> ( String ) row[0], row -> ( Long ) row[1] ) );
     }
 
     @Override
-    public Map<String, CharacteristicByValueUriOrValueCount> countCharacteristicValueLikeByNormalizedValue( String value ) {
+    public Map<String, Characteristic> findCharacteristicsByValueUriOrValueLikeGroupedByNormalizedValue( String value ) {
         //noinspection unchecked
         return ( ( List<Object[]> ) this.getSessionFactory().getCurrentSession()
-                .createQuery( "select lower(coalesce(char.valueUri, char.value)), max(char.valueUri), max(char.value), count(char) from Characteristic char "
-                        + "where char.value like :value "
+                .createQuery( "select lower(coalesce(char.valueUri, char.value)), max(char) from Characteristic char "
+                        + "where char.valueUri = :value or char.value like :value "
                         + "group by coalesce(char.valueUri, char.value)" )
                 .setParameter( "value", value )
                 .list() )
                 .stream()
-                .collect( Collectors.toMap( row -> ( String ) row[0], row -> new CharacteristicByValueUriOrValueCount( ( String ) row[1], ( String ) row[2], ( Long ) row[3] ) ) );
+                .collect( Collectors.toMap( row -> ( String ) row[0], row -> ( Characteristic ) row[1] ) );
+    }
+
+    @Override
+    public String normalizeByValue( Characteristic characteristic ) {
+        if ( characteristic.getValueUri() != null ) {
+            return characteristic.getValueUri().toLowerCase();
+        } else if ( characteristic.getValue() != null ) {
+            return characteristic.getValue().toLowerCase();
+        } else {
+            return null;
+        }
     }
 
     @Override

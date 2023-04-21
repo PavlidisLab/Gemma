@@ -33,6 +33,8 @@ import javax.annotation.OverridingMethodsMustInvokeSuper;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
+import static java.util.Objects.requireNonNull;
+
 /**
  * AbstractDao can find the generic type at runtime and simplify the code implementation of the BaseDao interface
  *
@@ -43,15 +45,10 @@ public abstract class AbstractDao<T extends Identifiable> implements BaseDao<T> 
     protected static final Log log = LogFactory.getLog( AbstractDao.class );
 
     /**
-     * Default batch size to reach before flushing and clearing the Hibernate session.
-     * <p>
-     * You should use {@link #AbstractDao(Class, SessionFactory, int)} to adjust this value to an optimal one for the
-     * DAO. Large model should have a relatively small batch size to reduce memory usage.
-     * <p>
-     * See <a href="https://docs.jboss.org/hibernate/core/3.6/reference/en-US/html/batch.html">Chapter 15. Batch processing</a>
-     * for more details.
+     * Default batch size to reach before flushing and clearing the Hibernate session when a batch-supporting method
+     * used in a batch-advisable flush mode.
      */
-    private static final int DEFAULT_BATCH_SIZE = 100;
+    protected static final int DEFAULT_BATCH_SIZE = 100;
 
     protected final Class<? extends T> elementClass;
 
@@ -60,21 +57,33 @@ public abstract class AbstractDao<T extends Identifiable> implements BaseDao<T> 
     private final ClassMetadata classMetadata;
 
     protected AbstractDao( Class<? extends T> elementClass, SessionFactory sessionFactory ) {
-        this( elementClass, sessionFactory, DEFAULT_BATCH_SIZE );
+        this( elementClass, sessionFactory, requireNonNull( sessionFactory.getClassMetadata( elementClass ),
+                String.format( "%s is missing from Hibernate mapping.", elementClass.getName() ) ), DEFAULT_BATCH_SIZE );
+    }
+
+    protected AbstractDao( Class<? extends T> elementClass, SessionFactory sessionFactory, ClassMetadata classMetadata ) {
+        this( elementClass, sessionFactory, classMetadata, DEFAULT_BATCH_SIZE );
     }
 
     /**
-     * @param batchSize a strictly positive batch size for creating, updating or deleting collection of entities. Use
-     *                  {@link Integer#MAX_VALUE} to effectively disable batching and '1' to flush changes right away.
+     * @param classMetadata the class metadata to use to retrieve information about {@link T}
+     * @param batchSize     a strictly positive batch size for creating, updating or deleting collection of entities.
+     *                      Use {@link Integer#MAX_VALUE} to effectively disable batching and '1' to flush changes right
+     *                      away. Batching only applies if the current flush mode is {@link FlushMode#MANUAL} or
+     *                      {@link FlushMode#AUTO} in a batch-supporting method such as {@link #createInBatch(Collection)}.
+     *                      This value should be adjusted to an optimal one for the DAO. Large model should have a
+     *                      relatively small batch size to reduce memory usage. See <a href="https://docs.jboss.org/hibernate/core/4.2/manual/en-US/html/ch15.html">Chapter 15. Batch processing</a>
+     *                      for more details.
      */
-    protected AbstractDao( Class<? extends T> elementClass, SessionFactory sessionFactory, int batchSize ) {
-        Assert.notNull( sessionFactory.getClassMetadata( elementClass ), String.format( "%s is missing from Hibernate mapping.", elementClass.getName() ) );
-        Assert.notNull( sessionFactory.getClassMetadata( elementClass ).getIdentifierPropertyName(), String.format( "%s does not have a ID.", elementClass.getName() ) );
+    protected AbstractDao( Class<? extends T> elementClass, SessionFactory sessionFactory, ClassMetadata classMetadata, int batchSize ) {
+        Assert.isTrue( elementClass.isAssignableFrom( ( Class<?> ) classMetadata.getMappedClass() ),
+                String.format( "The mapped class must be assignable from %s.", elementClass.getName() ) );
+        Assert.notNull( classMetadata.getIdentifierPropertyName(), String.format( "%s does not have a ID.", elementClass.getName() ) );
         Assert.isTrue( batchSize >= 1, "Batch size must be greater or equal to 1." );
-        this.sessionFactory = sessionFactory;
         this.elementClass = elementClass;
+        this.sessionFactory = sessionFactory;
+        this.classMetadata = classMetadata;
         this.batchSize = batchSize;
-        this.classMetadata = sessionFactory.getClassMetadata( elementClass );
     }
 
     @Override
@@ -90,18 +99,27 @@ public abstract class AbstractDao<T extends Identifiable> implements BaseDao<T> 
     @Override
     public Collection<T> create( Collection<T> entities ) {
         StopWatch stopWatch = StopWatch.createStarted();
-        warnIfBatchingIsNotAdvisable( "remove", entities );
         Collection<T> results = new ArrayList<>( entities.size() );
-        int i = 0;
         for ( T t : entities ) {
             results.add( this.create( t ) );
+        }
+        AbstractDao.log.debug( String.format( "Created %d %s entities in %s ms.", results.size(), elementClass.getSimpleName(), stopWatch.getTime( TimeUnit.MILLISECONDS ) ) );
+        return results;
+    }
+
+    @Override
+    public void createInBatch( Collection<T> entities ) {
+        StopWatch stopWatch = StopWatch.createStarted();
+        warnIfBatchingIsNotAdvisable( "create", entities );
+        int i = 0;
+        for ( T t : entities ) {
+            this.create( t );
             if ( ++i % batchSize == 0 && isBatchingAdvisable() ) {
                 flushAndClear();
                 AbstractDao.log.debug( String.format( "Flushed and cleared after creating %d/%d %s entities.", i, entities.size(), elementClass ) );
             }
         }
-        AbstractDao.log.debug( String.format( "Created %d %s entities in %s ms.", results.size(), elementClass.getSimpleName(), stopWatch.getTime( TimeUnit.MILLISECONDS ) ) );
-        return results;
+        AbstractDao.log.debug( String.format( "Created %d %s entities in %s ms.", entities.size(), elementClass.getSimpleName(), stopWatch.getTime( TimeUnit.MILLISECONDS ) ) );
     }
 
     @Override
@@ -116,16 +134,26 @@ public abstract class AbstractDao<T extends Identifiable> implements BaseDao<T> 
     public Collection<T> save( Collection<T> entities ) {
         StopWatch timer = StopWatch.createStarted();
         Collection<T> results = new ArrayList<>( entities.size() );
-        int i = 0;
         for ( T entity : entities ) {
             results.add( this.save( entity ) );
+        }
+        AbstractDao.log.debug( String.format( "Saved %d entities in %d ms.", entities.size(), timer.getTime( TimeUnit.MILLISECONDS ) ) );
+        return results;
+    }
+
+    @Override
+    public void saveInBatch( Collection<T> entities ) {
+        StopWatch timer = StopWatch.createStarted();
+        int i = 0;
+        for ( T entity : entities ) {
+            //noinspection ResultOfMethodCallIgnored
+            this.save( entity );
             if ( ++i % batchSize == 0 && isBatchingAdvisable() ) {
                 flushAndClear();
                 AbstractDao.log.trace( String.format( "Flushed and cleared after saving %d/%d %s entities.", i, entities.size(), elementClass ) );
             }
         }
         AbstractDao.log.debug( String.format( "Saved %d entities in %d ms.", entities.size(), timer.getTime( TimeUnit.MILLISECONDS ) ) );
-        return results;
     }
 
     @Override
@@ -188,6 +216,15 @@ public abstract class AbstractDao<T extends Identifiable> implements BaseDao<T> 
     @Override
     public void remove( Collection<T> entities ) {
         StopWatch timer = StopWatch.createStarted();
+        for ( T e : entities ) {
+            this.remove( e );
+        }
+        AbstractDao.log.debug( String.format( "Removed %d entities in %d ms.", entities.size(), timer.getTime( TimeUnit.MILLISECONDS ) ) );
+    }
+
+    @Override
+    public void removeInBatch( Collection<T> entities ) {
+        StopWatch timer = StopWatch.createStarted();
         warnIfBatchingIsNotAdvisable( "remove", entities );
         int i = 0;
         for ( T e : entities ) {
@@ -218,7 +255,7 @@ public abstract class AbstractDao<T extends Identifiable> implements BaseDao<T> 
     }
 
     @Override
-    public void removeAll() {
+    public void removeAllInBatch() {
         StopWatch timer = StopWatch.createStarted();
         while ( true ) {
             //noinspection unchecked
@@ -228,13 +265,22 @@ public abstract class AbstractDao<T extends Identifiable> implements BaseDao<T> 
             if ( results.isEmpty() ) {
                 break;
             }
-            this.remove( results );
+            this.removeInBatch( results );
         }
         AbstractDao.log.debug( String.format( "Removed all %s entities in %d ms.", elementClass.getSimpleName(), timer.getTime( TimeUnit.MILLISECONDS ) ) );
     }
 
     @Override
     public void update( Collection<T> entities ) {
+        StopWatch timer = StopWatch.createStarted();
+        for ( T entity : entities ) {
+            this.update( entity );
+        }
+        AbstractDao.log.debug( String.format( "Updated %d %s entities in %d ms.", entities.size(), elementClass.getSimpleName(), timer.getTime( TimeUnit.MILLISECONDS ) ) );
+    }
+
+    @Override
+    public void updateInBatch( Collection<T> entities ) {
         StopWatch timer = StopWatch.createStarted();
         warnIfBatchingIsNotAdvisable( "update", entities );
         int i = 0;
@@ -327,30 +373,6 @@ public abstract class AbstractDao<T extends Identifiable> implements BaseDao<T> 
     }
 
     /**
-     * Reattach an entity to the current persistence context.
-     * <p>
-     * This is a hack to avoid {@link org.hibernate.LazyInitializationException} when manipulating an unmanaged or
-     * detached entity. If you need this, it means that the session scope does not encompass loading and updating the
-     * entity, and can generally be better addressed by annotating a calling method with {@link org.springframework.transaction.annotation.Transactional}.
-     * <p>
-     * Note that this does not propagate to children entities even of lock cascading is set.
-     */
-    @Deprecated
-    protected void reattach( T entity ) {
-        sessionFactory.getCurrentSession().buildLockRequest( LockOptions.NONE ).lock( entity );
-        AbstractDao.log.trace( String.format( "Reattached %s using a noop lock.", formatEntity( entity ) ) );
-    }
-
-    /**
-     * If you thought that {@link #remove(Identifiable)} was a bad idea, this is even worse.
-     */
-    @Deprecated
-    protected void reattach( Object entity ) {
-        sessionFactory.getCurrentSession().buildLockRequest( LockOptions.NONE ).lock( entity );
-        AbstractDao.log.trace( "Reattached unknown entity using a noop lock." );
-    }
-
-    /**
      * Flush pending changes to the persistent storage.
      */
     protected void flush() {
@@ -362,9 +384,9 @@ public abstract class AbstractDao<T extends Identifiable> implements BaseDao<T> 
      * <p>
      * Use this carefully, cleared entities referenced later will be retrieved from the persistent storage.
      */
-    protected void flushAndClear() {
-        sessionFactory.getCurrentSession().flush();
-        sessionFactory.getCurrentSession().clear();
+    private void flushAndClear() {
+        this.getSessionFactory().getCurrentSession().flush();
+        this.getSessionFactory().getCurrentSession().clear();
     }
 
     /**

@@ -26,6 +26,7 @@ import java.sql.Types;
 /**
  * represents an enum of evidence mapping type, copied logic of GOEvidenceCodeEnum
  */
+@Deprecated
 public class PhenotypeMappingType
         implements java.io.Serializable, Comparable<PhenotypeMappingType>, org.hibernate.usertype.EnhancedUserType {
 

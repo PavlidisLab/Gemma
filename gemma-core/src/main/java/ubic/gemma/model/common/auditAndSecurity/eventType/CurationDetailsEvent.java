@@ -20,6 +20,7 @@ package ubic.gemma.model.common.auditAndSecurity.eventType;
 
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.curation.Curatable;
+import ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails;
 import ubic.gemma.persistence.service.common.auditAndSecurity.CurationDetailsDao;
 
 /**
@@ -43,5 +44,5 @@ public abstract class CurationDetailsEvent extends AuditEventType {
      * @param curatable  the curatable object to do the curation action on.
      * @param auditEvent the audit event containing information about the action that should be made.
      */
-    public abstract void setCurationDetails( Curatable curatable, AuditEvent auditEvent );
+    public abstract void updateCurationDetails( CurationDetails curatable, AuditEvent auditEvent );
 }

@@ -297,11 +297,11 @@ public class ExpressionDataDoubleMatrixTest extends AbstractGeoServiceTest {
         // make sure we really thaw them, so we can get the design element sequences.
 
         Collection<RawExpressionDataVector> vectors = newee.getRawExpressionDataVectors();
-        rawExpressionDataVectorService.thaw( vectors );
+        vectors = rawExpressionDataVectorService.thaw( vectors );
 
         ExpressionDataMatrixBuilder builder = new ExpressionDataMatrixBuilder( vectors );
         ExpressionDataDoubleMatrix matrix = builder.getPreferredData();
-        assertTrue( !Double.isNaN( matrix.get( 10, 0 ) ) );
+        assertFalse( Double.isNaN( matrix.get( 10, 0 ) ) );
         assertEquals( 66, matrix.rows() );
         assertEquals( 9, matrix.columns() );
 
@@ -317,7 +317,7 @@ public class ExpressionDataDoubleMatrixTest extends AbstractGeoServiceTest {
         assertTrue( f1.exists() );
 
         expressionDataFileService.deleteAllFiles( newee );
-        assertTrue( !f1.exists() );
+        assertFalse( f1.exists() );
 
         /*
          * outlier removal.
@@ -332,9 +332,9 @@ public class ExpressionDataDoubleMatrixTest extends AbstractGeoServiceTest {
         newee = expressionExperimentService.thaw( newee );
         Collection<ProcessedExpressionDataVector> vecs = newee.getProcessedExpressionDataVectors();
 
-        this.processedDataVectorService.thaw( vecs );
+        vecs = this.processedDataVectorService.thaw( vecs );
 
-        assertTrue( !vecs.isEmpty() );
+        assertFalse( vecs.isEmpty() );
 
         ExpressionDataMatrixBuilder matrixBuilder = new ExpressionDataMatrixBuilder( vecs );
         ExpressionDataDoubleMatrix data = matrixBuilder.getProcessedData();
@@ -349,14 +349,14 @@ public class ExpressionDataDoubleMatrixTest extends AbstractGeoServiceTest {
         newee = expressionExperimentService.thaw( newee );
         vecs = newee.getProcessedExpressionDataVectors();
 
-        this.processedDataVectorService.thaw( vecs );
+        vecs = this.processedDataVectorService.thaw( vecs );
 
-        assertTrue( !vecs.isEmpty() );
+        assertFalse( vecs.isEmpty() );
 
         matrixBuilder = new ExpressionDataMatrixBuilder( vecs );
         data = matrixBuilder.getProcessedData();
-        assertTrue( !tba.getIsOutlier() );
-        assertTrue( !Double.isNaN( data.getColumn( tba )[10] ) );
+        assertFalse( tba.getIsOutlier() );
+        assertFalse( Double.isNaN( data.getColumn( tba )[10] ) );
 
     }
 }

@@ -82,6 +82,7 @@ import java.util.stream.Collectors;
  */
 @SuppressWarnings("SpringAutowiredFieldsWarningInspection")
 @Service
+@Deprecated
 public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociationManagerService, InitializingBean {
 
     private static final int MAX_PHENOTYPES_FROM_ONTOLOGY = 100;

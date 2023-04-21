@@ -12,6 +12,7 @@ import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.persistence.util.Sort;
 
+import javax.annotation.CheckReturnValue;
 import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.List;
@@ -21,7 +22,8 @@ public interface ExpressionAnalysisResultSetService extends AnalysisResultSetSer
 
     ExpressionAnalysisResultSet loadWithResultsAndContrasts( Long value );
 
-    void thaw( ExpressionAnalysisResultSet e );
+    @CheckReturnValue
+    ExpressionAnalysisResultSet thaw( ExpressionAnalysisResultSet e );
 
     ExpressionAnalysisResultSet loadWithExperimentAnalyzed( Long id );
 

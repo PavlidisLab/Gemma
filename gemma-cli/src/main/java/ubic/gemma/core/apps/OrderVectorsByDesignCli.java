@@ -43,12 +43,9 @@ public class OrderVectorsByDesignCli extends ExpressionExperimentManipulatingCLI
                 .getBean( ProcessedExpressionDataVectorService.class );
 
         for ( BioAssaySet ee : this.expressionExperiments ) {
-
-            if ( !( ee instanceof ExpressionExperiment ) ) {
-                continue;
+            if ( ee instanceof ExpressionExperiment ) {
+                processedExpressionDataVectorService.reorderByDesign( ( ExpressionExperiment ) ee );
             }
-            ee = this.eeService.thawLite( ( ExpressionExperiment ) ee );
-            processedExpressionDataVectorService.reorderByDesign( ee.getId() );
         }
     }
 

@@ -119,7 +119,7 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
          * One way to do this is redo without saving, and then copy the results over to the given result sets that
          * match. But that requires matching up old and new result sets.
          */
-        differentialExpressionAnalysisService.thaw( toUpdate );
+        toUpdate = differentialExpressionAnalysisService.thaw( toUpdate );
         DifferentialExpressionAnalysisConfig config = this.copyConfig( toUpdate );
 
         Collection<DifferentialExpressionAnalysis> results = this.redoWithoutSave( ee, toUpdate, config );
@@ -137,8 +137,7 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
     public Collection<DifferentialExpressionAnalysis> getAnalyses( ExpressionExperiment expressionExperiment ) {
         Collection<DifferentialExpressionAnalysis> expressionAnalyses = differentialExpressionAnalysisService
                 .getAnalyses( expressionExperiment );
-        differentialExpressionAnalysisService.thaw( expressionAnalyses );
-        return expressionAnalyses;
+        return differentialExpressionAnalysisService.thaw( expressionAnalyses );
     }
 
     @Override
@@ -151,7 +150,7 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
                             + "Delete the constraining entity first." );
         }
 
-        differentialExpressionAnalysisService.thaw( copyMe );
+        copyMe = differentialExpressionAnalysisService.thaw( copyMe );
 
         DifferentialExpressionAnalyzerServiceImpl.log.info( "Will base analysis on old one: " + copyMe );
         DifferentialExpressionAnalysisConfig config = this.copyConfig( copyMe );
@@ -368,7 +367,7 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
             return;
         }
 
-        this.differentialExpressionAnalysisService.thaw( diffAnalyses );
+        diffAnalyses = this.differentialExpressionAnalysisService.thaw( diffAnalyses );
 
         for ( DifferentialExpressionAnalysis existingAnalysis : diffAnalyses ) {
 
@@ -444,7 +443,7 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
             for ( ExpressionAnalysisResultSet oldrs : toUpdateResultSets ) {
 
                 assert oldrs.getId() != null;
-                expressionAnalysisResultSetService.thaw( oldrs );
+                oldrs = expressionAnalysisResultSetService.thaw( oldrs );
 
                 for ( ExpressionAnalysisResultSet temprs : a.getResultSets() ) {
                     /*

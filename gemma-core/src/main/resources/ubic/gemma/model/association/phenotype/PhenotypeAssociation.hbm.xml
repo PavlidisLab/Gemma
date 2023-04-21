@@ -12,7 +12,7 @@
             </generator>
         </id>
         <discriminator column="class"/>
-        <many-to-one name="auditTrail" class="ubic.gemma.model.common.auditAndSecurity.AuditTrailImpl" cascade="all"
+        <many-to-one name="auditTrail" class="ubic.gemma.model.common.auditAndSecurity.AuditTrail" cascade="all"
                      lazy="proxy" fetch="select">
             <column name="AUDIT_TRAIL_FK" not-null="true" sql-type="BIGINT" unique="true"/>
         </many-to-one>

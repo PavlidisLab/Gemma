@@ -73,7 +73,7 @@ public class NCBIGene2GOAssociationLoaderCLITest extends BaseCliTest {
         ExternalDatabase gene2go = ExternalDatabase.Factory.newInstance( "go", DatabaseType.OTHER );
         when( externalDatabaseService.findByNameWithAuditTrail( "go" ) ).thenReturn( gene2go );
         ncbiGene2GOAssociationLoaderCLI.executeCommand( new String[] {} );
-        verify( gene2GOAssociationService ).removeAll();
+        verify( gene2GOAssociationService ).removeAllInBatch();
         verify( externalDatabaseService ).findByNameWithAuditTrail( "go" );
         verify( externalDatabaseService ).updateReleaseLastUpdated( same( gene2go ), isNull(), any() );
     }

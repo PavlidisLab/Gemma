@@ -307,6 +307,14 @@
 			<scope>runtime</scope>
 		</dependency>
 
+		<!-- needed for Java 9+ -->
+		<dependency>
+			<groupId>com.sun.xml.messaging.saaj</groupId>
+			<artifactId>saaj-impl</artifactId>
+			<version>1.4.0</version>
+			<scope>runtime</scope>
+		</dependency>
+
 		<!-- Gemma Slack Bot -->
 		<dependency>
 			<groupId>com.slack.api</groupId>

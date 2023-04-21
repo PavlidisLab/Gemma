@@ -19,7 +19,11 @@
 package ubic.gemma.persistence.service.expression.bioAssayData;
 
 import org.springframework.security.access.annotation.Secured;
+import org.springframework.transaction.annotation.Transactional;
+import ubic.gemma.model.common.quantitationtype.QuantitationType;
+import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
+import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 import java.util.Collection;
@@ -33,25 +37,12 @@ public interface RawExpressionDataVectorService extends DesignElementDataVectorS
     @Secured({ "GROUP_ADMIN" })
     RawExpressionDataVector load( Long id );
 
-    /**
-     * @deprecated never use this method, instead clear {@link ExpressionExperiment#getProcessedExpressionDataVectors()}
-     * directly. The relationship is actually managed by Hibernate.
-     */
-    @Override
-    @Secured({ "GROUP_ADMIN" })
-    @Deprecated
-    void remove( Collection<RawExpressionDataVector> vectors );
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_DATAVECTOR_COLLECTION_READ" })
+    Collection<RawExpressionDataVector> find( Collection<CompositeSequence> designElements, QuantitationType quantitationType );
 
-    /**
-     * @deprecated never use this method, instead clear {@link ExpressionExperiment#getProcessedExpressionDataVectors()}
-     * directly. The relationship is actually managed by Hibernate.
-     */
-    @Override
-    @Secured({ "GROUP_ADMIN" })
-    @Deprecated
-    void remove( RawExpressionDataVector designElementDataVector );
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_DATAVECTOR_COLLECTION_READ" })
+    Collection<RawExpressionDataVector> findByExpressionExperiment( ExpressionExperiment ee, QuantitationType quantitationType );
 
-    @Override
-    @Secured({ "GROUP_USER" })
-    void update( Collection<RawExpressionDataVector> dedvs );
+    @Transactional(readOnly = true)
+    Collection<RawExpressionDataVector> thaw( Collection<RawExpressionDataVector> vectors );
 }

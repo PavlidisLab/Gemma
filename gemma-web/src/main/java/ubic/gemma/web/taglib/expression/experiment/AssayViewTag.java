@@ -61,7 +61,7 @@ public class AssayViewTag extends TagSupport {
 
     @Override
     public int doStartTag() throws JspException {
-
+        String contextPath = pageContext.getServletContext().getContextPath();
         StringBuilder buf = new StringBuilder();
 
         buf.append( "<div>" );
@@ -114,7 +114,7 @@ public class AssayViewTag extends TagSupport {
         for ( ArrayDesignValueObject design : designs ) {
             Long count = arrayMaterialCount.get( design );
             buf.append( "<th>" + count
-                    + " BioAssays on<br /><a target='_blank' href=\"" + Settings.getRootContext() + "/arrays/showArrayDesign.html?id=" + design
+                    + " BioAssays on<br /><a target='_blank' href=\"" + contextPath + "/arrays/showArrayDesign.html?id=" + design
                     .getId() + "\" title=\"" + design.getName() + "\" >" + ( design.getShortName() == null ?
                     design.getName() :
                     design.getShortName() ) + "</a></th>" );
@@ -140,13 +140,13 @@ public class AssayViewTag extends TagSupport {
                 buf.append( "<tr class='odd' align=justify>" );
             }
 
-            String bmLink = "<a href='" + Settings.getRootContext() + "/bioMaterial/showBioMaterial.html?id=" + material.getId() + "'> " + material
+            String bmLink = "<a href='" + contextPath + "/bioMaterial/showBioMaterial.html?id=" + material.getId() + "'> " + material
                     .getName() + "</a>";
             buf.append( "<td>" + bmLink + "</td>" );
 
             Map<ArrayDesignValueObject, Collection<BioAssayValueObject>> assayMap = bioAssayMap.get( material );
 
-            String image = "&nbsp;&nbsp;&nbsp;<img height=16 width=16 src='" + Settings.getRootContext() + "/images/icons/arrow_switch.png' />&nbsp;&nbsp;&nbsp;";
+            String image = "&nbsp;&nbsp;&nbsp;<img height=16 width=16 src='" + contextPath + "/images/icons/arrow_switch.png' />&nbsp;&nbsp;&nbsp;";
             for ( ArrayDesignValueObject design : designs ) {
                 if ( assayMap.containsKey( design ) ) {
                     Collection<BioAssayValueObject> assays = assayMap.get( design );
@@ -160,7 +160,7 @@ public class AssayViewTag extends TagSupport {
 
                     if ( assayMap.get( design ).size() > 1 ) {
                         String link = "<a title='" + StringUtils.join( tooltips.toArray(), "\n" )
-                                + "' href='" + Settings.getRootContext() + "/bioAssay/showAllBioAssays.html?id=" + StringUtils
+                                + "' href='" + contextPath + "/bioAssay/showAllBioAssays.html?id=" + StringUtils
                                 .join( ids.toArray(), "," ) + "'> (list) </a>";
                         buf.append(
                                 "<td>" + assayMap.get( design ).size() + link + "&nbsp;" + elementCount + "</td>\n" );
@@ -175,7 +175,7 @@ public class AssayViewTag extends TagSupport {
                         BioAssayValueObject assay = ( ( List<BioAssayValueObject> ) assayMap.get( design ) ).get( 0 );
                         String shortDesc = StringUtils.abbreviate( assay.getDescription(), 60 );
                         String link = "<a target=\"_blank\" title='" + shortDesc
-                                + "' href='" + Settings.getRootContext() + "/bioAssay/showBioAssay.html?id=" + assay.getId() + "'>" + assay
+                                + "' href='" + contextPath + "/bioAssay/showBioAssay.html?id=" + assay.getId() + "'>" + assay
                                 .getName() + "</a>";
                         String editAttributes =
                                 " align='left' class='dragItem' id='bioassay." + assay.getId() + "' material='"
@@ -279,6 +279,7 @@ public class AssayViewTag extends TagSupport {
         if ( designs.size() == 1 ) {
             return;
         }
+        String contextPath = pageContext.getServletContext().getContextPath();
         for ( int i = 1; i <= NUM_EXTRA_BIOMATERIALS; i++ ) {
 
             if ( count % 2 == 0 ) {
@@ -292,7 +293,7 @@ public class AssayViewTag extends TagSupport {
 
             material.setName( "[New biomaterial " + i + "]" );
             buf.append( "<td>" + material.getName() + "</td>" );
-            String image = "<img height=10 width=20 src='" + Settings.getRootContext() + "/images/arrow_out.png' />";
+            String image = "<img height=10 width=20 src='" + contextPath + "/images/arrow_out.png' />";
             for ( ArrayDesignValueObject design : designs ) {
                 emptyCount = addEmpty( buf, assayToMaterial, emptyCount, material, image, design );
             }

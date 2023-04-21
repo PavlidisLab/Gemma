@@ -56,5 +56,5 @@ public interface Gene2GOAssociationDao extends BaseDao<Gene2GOAssociation> {
 
     Collection<Gene> getGenes( Collection<String> ids, @Nullable Taxon taxon );
 
-    void removeAll();
+    void removeAllInBatch();
 }

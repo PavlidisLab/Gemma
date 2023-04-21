@@ -286,9 +286,6 @@ public interface GeneSetService extends BaseVoEnabledService<GeneSet, DatabaseBa
      */
     Taxon getTaxon( GeneSet geneSet );
 
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
-    void thaw( GeneSet geneSet );
-
     @Secured({ "GROUP_ADMIN" })
     void removeAll();
 }

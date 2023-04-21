@@ -22,14 +22,11 @@ import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ubic.gemma.core.security.authentication.UserManager;
 import ubic.gemma.core.util.ListUtils;
-import ubic.gemma.model.common.auditAndSecurity.AuditAction;
-import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
-import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ReleaseDetailsUpdateEvent;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.persistence.service.AbstractService;
+import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 
 import javax.annotation.Nullable;
 import java.net.URL;
@@ -87,12 +84,11 @@ public class ExternalDatabaseServiceImpl extends AbstractService<ExternalDatabas
     }
 
     @Autowired
-    private UserManager userManager;
+    private AuditTrailService auditTrailService;
 
     @Override
     @Transactional
     public void updateReleaseDetails( ExternalDatabase ed, String releaseVersion, @Nullable URL releaseUrl, @Nullable String releaseNote, Date lastUpdated ) {
-        User performer = userManager.getCurrentUser();
         String detail;
         if ( ed.getReleaseVersion() == null ) {
             detail = String.format( "Initial release version set to %s.", releaseVersion );
@@ -104,17 +100,16 @@ public class ExternalDatabaseServiceImpl extends AbstractService<ExternalDatabas
         ed.setReleaseVersion( releaseVersion );
         ed.setReleaseUrl( releaseUrl );
         ed.setLastUpdated( lastUpdated );
-        ed.getAuditTrail().getEvents().add( AuditEvent.Factory.newInstance( lastUpdated, AuditAction.UPDATE, releaseNote, detail, performer, new ReleaseDetailsUpdateEvent() ) );
+        auditTrailService.addUpdateEvent( ed, ReleaseDetailsUpdateEvent.class, releaseNote, detail, lastUpdated );
         update( ed );
     }
 
     @Override
     @Transactional
     public void updateReleaseLastUpdated( ExternalDatabase ed, @Nullable String releaseNote, Date lastUpdated ) {
-        User performer = userManager.getCurrentUser();
         ed.setLastUpdated( lastUpdated );
         String detail = "Release last updated moment has been updated.";
-        ed.getAuditTrail().getEvents().add( AuditEvent.Factory.newInstance( lastUpdated, AuditAction.UPDATE, releaseNote, detail, performer, new ReleaseDetailsUpdateEvent() ) );
+        auditTrailService.addUpdateEvent( ed, ReleaseDetailsUpdateEvent.class, releaseNote, detail, lastUpdated );
         update( ed );
     }
 

@@ -2,6 +2,7 @@ package ubic.gemma.persistence.service.expression.bioAssayData;
 
 import org.apache.commons.math3.distribution.LogNormalDistribution;
 import org.apache.commons.math3.distribution.NormalDistribution;
+import org.hibernate.Hibernate;
 import org.hibernate.SessionFactory;
 import org.junit.Before;
 import org.junit.Test;
@@ -12,11 +13,12 @@ import org.springframework.test.context.ContextConfiguration;
 import ubic.basecode.io.ByteArrayConverter;
 import ubic.gemma.core.datastructure.matrix.QuantitationMismatchException;
 import ubic.gemma.core.util.test.BaseDatabaseTest;
-import ubic.gemma.model.common.auditAndSecurity.AuditTrailImpl;
+import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
 import ubic.gemma.model.common.quantitationtype.*;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
+import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
@@ -24,10 +26,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.util.TestComponent;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
@@ -54,7 +53,7 @@ public class ProcessedExpressionDataVectorDaoTest extends BaseDatabaseTest {
     @Autowired
     private ProcessedExpressionDataVectorDao processedExpressionDataVectorDao;
 
-    private ByteArrayConverter bac = new ByteArrayConverter();
+    private final ByteArrayConverter bac = new ByteArrayConverter();
 
     @Before
     public void setUp() {
@@ -67,8 +66,8 @@ public class ProcessedExpressionDataVectorDaoTest extends BaseDatabaseTest {
         ExpressionExperiment ee = getTestExpressionExperimentForRawExpressionMatrix( matrix, ScaleType.LINEAR, false );
         assertThat( ee.getProcessedExpressionDataVectors() ).isEmpty();
         assertThat( ee.getRawExpressionDataVectors() ).hasSize( 100 );
-        ee = processedExpressionDataVectorDao.createProcessedDataVectors( ee, false );
-        assertThat( ee.getProcessedExpressionDataVectors() ).hasSize( 100 );
+        Set<ProcessedExpressionDataVector> vectors = processedExpressionDataVectorDao.createProcessedDataVectors( ee, false );
+        assertThat( vectors ).hasSize( 100 );
         assertThat( ee.getQuantitationTypes() ).hasSize( 1 ).first().satisfies( qt -> {
             assertThat( qt.getGeneralType() ).isEqualTo( GeneralType.QUANTITATIVE );
             assertThat( qt.getScale() ).isEqualTo( ScaleType.LOG2 );
@@ -82,8 +81,8 @@ public class ProcessedExpressionDataVectorDaoTest extends BaseDatabaseTest {
         ExpressionExperiment ee = getTestExpressionExperimentForRawExpressionMatrix( matrix, ScaleType.LOG2, false );
         assertThat( ee.getProcessedExpressionDataVectors() ).isEmpty();
         assertThat( ee.getRawExpressionDataVectors() ).hasSize( 100 );
-        ee = processedExpressionDataVectorDao.createProcessedDataVectors( ee, false );
-        assertThat( ee.getProcessedExpressionDataVectors() ).hasSize( 100 );
+        Set<ProcessedExpressionDataVector> vectors = processedExpressionDataVectorDao.createProcessedDataVectors( ee, false );
+        assertThat( vectors ).hasSize( 100 );
     }
 
     @Test
@@ -92,8 +91,65 @@ public class ProcessedExpressionDataVectorDaoTest extends BaseDatabaseTest {
         ExpressionExperiment ee = getTestExpressionExperimentForRawExpressionMatrix( matrix, ScaleType.LOG2, true );
         assertThat( ee.getProcessedExpressionDataVectors() ).isEmpty();
         assertThat( ee.getRawExpressionDataVectors() ).hasSize( 100 );
-        ee = processedExpressionDataVectorDao.createProcessedDataVectors( ee, false );
-        assertThat( ee.getProcessedExpressionDataVectors() ).hasSize( 100 );
+        Set<ProcessedExpressionDataVector> vectors = processedExpressionDataVectorDao.createProcessedDataVectors( ee, false );
+        assertThat( vectors ).hasSize( 100 );
+    }
+
+    @Test
+    public void testThaw() throws QuantitationMismatchException {
+        double[][] matrix = randomExpressionMatrix( 20000, 8, new NormalDistribution( 0, 1 ) );
+        ExpressionExperiment ee = getTestExpressionExperimentForRawExpressionMatrix( matrix, ScaleType.LOG2, true );
+        assertThat( ee.getRawExpressionDataVectors() ).hasSize( 20000 );
+        Set<ProcessedExpressionDataVector> vectors = processedExpressionDataVectorDao.createProcessedDataVectors( ee, false );
+        assertThat( vectors ).hasSize( 20000 );
+
+        sessionFactory.getCurrentSession().flush();
+        sessionFactory.getCurrentSession().clear();
+
+        Collection<ProcessedExpressionDataVector> reloadedVectors;
+
+        // thaw a single vector
+        reloadedVectors = processedExpressionDataVectorDao.getProcessedVectors( ee );
+        ProcessedExpressionDataVector oneVector = reloadedVectors.iterator().next();
+        checkVectorInitializationBeforeThaw( oneVector );
+        processedExpressionDataVectorDao.thaw( oneVector );
+        checkVectorInitializationAfterThaw( oneVector );
+
+        sessionFactory.getCurrentSession().clear();
+
+        // thaw all vectors in bulk
+        reloadedVectors = processedExpressionDataVectorDao.getProcessedVectors( ee );
+        assertThat( reloadedVectors ).allSatisfy( ProcessedExpressionDataVectorDaoTest::checkVectorInitializationBeforeThaw );
+        processedExpressionDataVectorDao.thaw( reloadedVectors );
+        assertThat( reloadedVectors )
+                .allSatisfy( ProcessedExpressionDataVectorDaoTest::checkVectorInitializationAfterThaw );
+    }
+
+    private static void checkVectorInitializationBeforeThaw( ProcessedExpressionDataVector vector ) {
+        assertThat( Hibernate.isInitialized( vector ) ).isTrue();
+        assertThat( Hibernate.isInitialized( vector.getExpressionExperiment() ) ).isFalse();
+        assertThat( Hibernate.isInitialized( vector.getBioAssayDimension() ) ).isFalse();
+        assertThat( Hibernate.isInitialized( vector.getDesignElement() ) ).isTrue();
+        assertThat( Hibernate.isInitialized( vector.getDesignElement().getBiologicalCharacteristic() ) ).isTrue();
+        assertThat( Hibernate.isInitialized( vector.getQuantitationType() ) ).isTrue();
+    }
+
+    private static void checkVectorInitializationAfterThaw( ProcessedExpressionDataVector vector ) {
+        assertThat( Hibernate.isInitialized( vector ) ).isTrue();
+        assertThat( Hibernate.isInitialized( vector.getExpressionExperiment() ) ).isTrue();
+        assertThat( vector.getExpressionExperiment().getBioAssays() )
+                .allMatch( Hibernate::isInitialized );
+        assertThat( vector.getExpressionExperiment().getBioAssays() ).allSatisfy( ba -> {
+            assertThat( Hibernate.isInitialized( ba.getSampleUsed() ) ).isTrue();
+            assertThat( Hibernate.isInitialized( ba.getSampleUsed().getFactorValues() ) ).isTrue();
+            assertThat( Hibernate.isInitialized( ba.getArrayDesignUsed() ) ).isTrue();
+            assertThat( Hibernate.isInitialized( ba.getOriginalPlatform() ) ).isTrue();
+        } );
+        assertThat( Hibernate.isInitialized( vector.getBioAssayDimension() ) ).isTrue();
+        assertThat( Hibernate.isInitialized( vector.getDesignElement() ) ).isTrue();
+        assertThat( Hibernate.isInitialized( vector.getDesignElement().getArrayDesign() ) ).isTrue();
+        assertThat( Hibernate.isInitialized( vector.getDesignElement().getBiologicalCharacteristic() ) ).isTrue();
+        assertThat( Hibernate.isInitialized( vector.getQuantitationType() ) ).isTrue();
     }
 
 
@@ -105,7 +161,7 @@ public class ProcessedExpressionDataVectorDaoTest extends BaseDatabaseTest {
 
         ArrayDesign ad = new ArrayDesign();
         ad.setPrimaryTaxon( taxon );
-        ad.setAuditTrail( new AuditTrailImpl() );
+        ad.setAuditTrail( new AuditTrail() );
         sessionFactory.getCurrentSession().persist( ad );
 
         QuantitationType qt = new QuantitationTypeImpl();
@@ -147,7 +203,7 @@ public class ProcessedExpressionDataVectorDaoTest extends BaseDatabaseTest {
         }
 
         ee.setRawExpressionDataVectors( vectors );
-        ee.setAuditTrail( new AuditTrailImpl() );
+        ee.setAuditTrail( new AuditTrail() );
         sessionFactory.getCurrentSession().persist( ee );
         return ee;
     }

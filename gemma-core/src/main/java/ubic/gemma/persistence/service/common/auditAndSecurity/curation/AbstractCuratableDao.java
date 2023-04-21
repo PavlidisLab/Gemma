@@ -16,6 +16,7 @@ import javax.annotation.Nullable;
 import javax.annotation.OverridingMethodsMustInvokeSuper;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Date;
 import java.util.Map;
 import java.util.regex.Pattern;
 
@@ -43,7 +44,9 @@ public abstract class AbstractCuratableDao<C extends Curatable, VO extends Abstr
     @Override
     public C create( C entity ) {
         if ( entity.getCurationDetails() == null ) {
-            entity.setCurationDetails( curationDetailsDao.create() );
+            CurationDetails cd = new CurationDetails( new Date(), null, true, null, false, null, null );
+            getSessionFactory().getCurrentSession().persist( cd );
+            entity.setCurationDetails( cd );
         }
         return super.create( entity );
     }

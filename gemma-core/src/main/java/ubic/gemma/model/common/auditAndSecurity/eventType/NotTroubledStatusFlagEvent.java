@@ -19,7 +19,7 @@
 package ubic.gemma.model.common.auditAndSecurity.eventType;
 
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
-import ubic.gemma.model.common.auditAndSecurity.curation.Curatable;
+import ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails;
 
 /**
  * This event type resets the trouble flag of curation details of a curatable object.
@@ -40,9 +40,9 @@ public class NotTroubledStatusFlagEvent extends CurationDetailsEvent {
     }
 
     @Override
-    public void setCurationDetails( Curatable curatable, AuditEvent auditEvent ) {
-        curatable.getCurationDetails().setTroubled( false );
-        curatable.getCurationDetails().setLastTroubledEvent( auditEvent );
+    public void updateCurationDetails( CurationDetails curatable, AuditEvent auditEvent ) {
+        curatable.setTroubled( false );
+        curatable.setLastTroubledEvent( auditEvent );
     }
 
 }

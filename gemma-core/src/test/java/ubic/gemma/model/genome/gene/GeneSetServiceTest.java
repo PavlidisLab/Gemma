@@ -82,7 +82,7 @@ public class GeneSetServiceTest extends BaseSpringContextTest {
     @After
     public void tearDown() {
         geneSetService.removeAll();
-        gene2GoService.removeAll();
+        gene2GoService.removeAllInBatch();
     }
 
     /**

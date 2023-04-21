@@ -18,6 +18,7 @@
  */
 package ubic.gemma.model.association.phenotype;
 
+@Deprecated
 public class PhenotypeAssociationPublicationImpl extends PhenotypeAssociationPublication {
 
     /**

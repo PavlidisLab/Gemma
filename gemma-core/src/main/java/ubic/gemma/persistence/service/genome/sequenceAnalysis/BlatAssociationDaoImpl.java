@@ -92,8 +92,6 @@ public class BlatAssociationDaoImpl extends AbstractDao<BlatAssociation> impleme
 
     @Override
     public void thaw( final Collection<BlatAssociation> blatAssociations ) {
-        if ( blatAssociations == null )
-            return;
         for ( BlatAssociation blatAssociation : blatAssociations ) {
             this.thaw( blatAssociation );
         }
@@ -101,12 +99,6 @@ public class BlatAssociationDaoImpl extends AbstractDao<BlatAssociation> impleme
 
     @Override
     public void thaw( final BlatAssociation blatAssociation ) {
-        if ( blatAssociation == null )
-            return;
-        if ( blatAssociation.getId() == null )
-            return;
-        Session session = getSessionFactory().getCurrentSession();
-        reattach( blatAssociation );
         Hibernate.initialize( blatAssociation.getBioSequence() );
         Hibernate.initialize( blatAssociation.getGeneProduct() );
         Hibernate.initialize( blatAssociation.getBlatResult() );

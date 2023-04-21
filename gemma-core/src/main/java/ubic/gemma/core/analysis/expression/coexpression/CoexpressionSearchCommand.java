@@ -20,13 +20,14 @@ package ubic.gemma.core.analysis.expression.coexpression;
 
 import org.apache.commons.lang3.StringUtils;
 
+import java.io.Serializable;
 import java.util.Collection;
 
 /**
  * @author luke
  */
 @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
-public class CoexpressionSearchCommand {
+public class CoexpressionSearchCommand implements Serializable {
 
     /**
      * Set to true to signal that the eeSet has been modified from its stored version.

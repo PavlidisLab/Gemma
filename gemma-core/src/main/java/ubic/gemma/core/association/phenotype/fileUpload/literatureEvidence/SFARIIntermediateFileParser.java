@@ -2,6 +2,7 @@ package ubic.gemma.core.association.phenotype.fileUpload.literatureEvidence;
 
 import java.io.*;
 
+@Deprecated
 public class SFARIIntermediateFileParser {
 
     public static void main( String[] args ) {

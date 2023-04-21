@@ -49,4 +49,7 @@
     <bean id="uberonOntologyService" class="ubic.gemma.core.ontology.providers.OntologyServiceFactory">
         <constructor-arg value="ubic.basecode.ontology.providers.UberonOntologyService"/>
     </bean>
+    <bean id="patoOntologyService" class="ubic.gemma.core.ontology.providers.OntologyServiceFactory">
+        <constructor-arg value="ubic.gemma.core.ontology.providers.PatoOntologyService"/>
+    </bean>
 </beans>

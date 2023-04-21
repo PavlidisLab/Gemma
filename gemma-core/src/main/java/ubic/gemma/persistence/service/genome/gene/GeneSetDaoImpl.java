@@ -222,14 +222,11 @@ public class GeneSetDaoImpl extends AbstractDao<GeneSet> implements GeneSetDao {
      */
     @Override
     public void thaw( final GeneSet geneSet ) {
-        if ( geneSet == null || geneSet.getId() == null ) return;
-        reattach( geneSet );
         Hibernate.initialize( geneSet );
         Hibernate.initialize( geneSet.getMembers() );
         for ( GeneSetMember gsm : geneSet.getMembers() ) {
             Hibernate.initialize( gsm.getGene() );
         }
-
     }
 
     private List<DatabaseBackedGeneSetValueObject> fillValueObjects( List<Object[]> result ) {

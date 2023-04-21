@@ -18,12 +18,10 @@
  */
 package ubic.gemma.model.common.quantitationtype;
 
-import lombok.ToString;
 import ubic.gemma.model.common.AbstractDescribable;
 
 import java.io.Serializable;
 
-@ToString(callSuper = true)
 public abstract class QuantitationType extends AbstractDescribable implements Serializable {
 
     /**
@@ -203,6 +201,37 @@ public abstract class QuantitationType extends AbstractDescribable implements Se
 
     public void setType( StandardQuantitationType type ) {
         this.type = type;
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder b = new StringBuilder( super.toString() );
+        b.append( " General Type=" ).append( generalType )
+                .append( " Type=" ).append( type )
+                .append( " Scale=" ).append( scale )
+                .append( " Representation=" ).append( representation );
+        if ( isNormalized ) {
+            b.append( " [Normalized]" );
+        }
+        if ( isBackground ) {
+            b.append( " [Background]" );
+        }
+        if ( isBackgroundSubtracted ) {
+            b.append( " [Background Subtracted]" );
+        }
+        if ( isRatio ) {
+            b.append( " [Ratiometric]" );
+        }
+        if ( isBatchCorrected ) {
+            b.append( " [Batch Corrected]" );
+        }
+        if ( isRecomputedFromRawData ) {
+            b.append( " [Recomputed From Raw]" );
+        }
+        if ( isPreferred || isMaskedPreferred ) {
+            b.append( " [Preferred]" );
+        }
+        return b.toString();
     }
 
     public static final class Factory {

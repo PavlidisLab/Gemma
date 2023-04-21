@@ -91,9 +91,12 @@ public interface CharacteristicService extends BaseVoEnabledService<Characterist
      */
     Collection<Characteristic> findByValue( String search );
 
-    Map<String, CharacteristicDao.CharacteristicByValueUriOrValueCount> countCharacteristicValueLikeByValueUriOrValue( String search );
+    /**
+     * @see CharacteristicDao#findCharacteristicsByValueUriOrValueLikeGroupedByNormalizedValue(String)
+     */
+    Map<String, Characteristic> findCharacteristicsByValueUriOrValueLike( String search );
 
-    Map<String, CharacteristicDao.CharacteristicByValueUriOrValueCount> countCharacteristicValueUriInByValueUriOrValue( Collection<String> search );
+    Map<String, Long> countCharacteristicsByValueUri( Collection<String> uris );
 
     /**
      * @param  characteristics characteristics

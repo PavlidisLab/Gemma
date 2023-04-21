@@ -19,7 +19,7 @@
 package ubic.gemma.model.common.auditAndSecurity.eventType;
 
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
-import ubic.gemma.model.common.auditAndSecurity.curation.Curatable;
+import ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails;
 
 /**
  * <p>
@@ -42,9 +42,9 @@ public class NeedsAttentionEvent extends CurationDetailsEvent {
     }
 
     @Override
-    public void setCurationDetails( Curatable curatable, AuditEvent auditEvent ) {
-        curatable.getCurationDetails().setNeedsAttention( true );
-        curatable.getCurationDetails().setLastNeedsAttentionEvent( auditEvent );
+    public void updateCurationDetails( CurationDetails curatable, AuditEvent auditEvent ) {
+        curatable.setNeedsAttention( true );
+        curatable.setLastNeedsAttentionEvent( auditEvent );
     }
 
 }

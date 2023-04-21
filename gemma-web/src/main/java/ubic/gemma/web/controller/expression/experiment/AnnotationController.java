@@ -83,7 +83,7 @@ public class AnnotationController {
         if ( bm == null ) {
             throw new IllegalArgumentException( "No such BioMaterial with id=" + id );
         }
-        bioMaterialService.thaw( bm );
+        bm = bioMaterialService.thaw( bm );
         ontologyService.saveBioMaterialStatement( vc, bm );
     }
 
@@ -140,7 +140,7 @@ public class AnnotationController {
         if ( bm == null ) {
             throw new IllegalArgumentException( "No such BioMaterial with id=" + id );
         }
-        bioMaterialService.thaw( bm );
+        bm = bioMaterialService.thaw( bm );
         ontologyService.removeBioMaterialStatement( vc.getId(), bm );
     }
 

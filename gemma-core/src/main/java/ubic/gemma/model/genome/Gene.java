@@ -112,18 +112,17 @@ public class Gene extends ChromosomeFeature {
 
     @Override
     public String toString() {
-
-        // This causes too many lazy load problems.
-        // buf.append( this.getOfficialName() == null && this.getPhysicalLocationsValueObjects() != null ? "["
-        // + this.getPhysicalLocationsValueObjects() + "] " : "" );
-
-        return this.getClass().getSimpleName().replace( "Impl", "" ) + ( this.getId() == null ?
-                " " :
-                " Id:" + this.getId() + " " ) + this.getOfficialSymbol() + " " + ( this.getOfficialName() == null ?
-                "" :
-                this.getOfficialName() + " " ) + ( this.getNcbiGeneId() == null ?
-                "" :
-                " (NCBI " + this.getNcbiGeneId() + ")" );
+        StringBuilder b = new StringBuilder( super.toString() );
+        if ( officialSymbol != null ) {
+            b.append( " Official Symbol=" ).append( officialSymbol );
+        }
+        if ( officialName != null ) {
+            b.append( " Official Name=" ).append( officialName );
+        }
+        if ( ncbiGeneId != null ) {
+            b.append( " NCBI Gene ID=" ).append( ncbiGeneId );
+        }
+        return b.toString();
     }
 
     public Set<DatabaseEntry> getAccessions() {

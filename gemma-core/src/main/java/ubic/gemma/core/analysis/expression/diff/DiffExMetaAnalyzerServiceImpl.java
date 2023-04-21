@@ -418,7 +418,7 @@ public class DiffExMetaAnalyzerServiceImpl implements DiffExMetaAnalyzerService 
                 DiffExMetaAnalyzerServiceImpl.log.warn( "No diff ex result set with ID=" + analysisResultSetId );
                 throw new IllegalArgumentException( "No diff ex result set with ID=" + analysisResultSetId );
             }
-            expressionAnalysisResultSetService.thaw( expressionAnalysisResultSet );
+            expressionAnalysisResultSet = expressionAnalysisResultSetService.thaw( expressionAnalysisResultSet );
             resultSets.add( expressionAnalysisResultSet );
         }
         return resultSets;

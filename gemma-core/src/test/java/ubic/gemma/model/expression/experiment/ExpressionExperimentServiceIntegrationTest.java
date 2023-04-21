@@ -193,6 +193,29 @@ public class ExpressionExperimentServiceIntegrationTest extends BaseSpringContex
     }
 
     @Test
+    public void testGetPreferredQuantitationType() {
+        QuantitationType qt = expressionExperimentService.getPreferredQuantitationType( ee );
+        assertNotNull( qt );
+        assertTrue( qt.getIsPreferred() );
+    }
+
+    @Test
+    public void testGetBioMaterialCount() {
+        assertEquals( 8, expressionExperimentService.getBioMaterialCount( ee ) );
+    }
+
+    @Test
+    public void testGetQuantitationTypeCount() {
+        Map<QuantitationType, Long> qts = expressionExperimentService.getQuantitationTypeCount( ee );
+        assertEquals( 2, qts.size() );
+    }
+
+    @Test
+    public void testGetDesignElementDataVectorCount() {
+        assertEquals( 24, expressionExperimentService.getDesignElementDataVectorCount( ee ) );
+    }
+
+    @Test
     public final void testGetQuantitationTypesForArrayDesign() {
         ArrayDesign ad = ee.getRawExpressionDataVectors().iterator().next().getDesignElement().getArrayDesign();
         Collection<QuantitationType> types = expressionExperimentService.getQuantitationTypes( ee, ad );
@@ -225,7 +248,6 @@ public class ExpressionExperimentServiceIntegrationTest extends BaseSpringContex
                 .find( designElements, quantitationType );
 
         assertEquals( 2, vectors.size() );
-
     }
 
     @Test

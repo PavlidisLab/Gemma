@@ -242,13 +242,13 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
     @Test
     public void testGetDatasetProcessedExpression() {
         QuantitationType qt = QuantitationType.Factory.newInstance();
-        when( expressionExperimentService.getPreferredQuantitationTypeForDataVectorType( ee, ProcessedExpressionDataVector.class ) )
+        when( expressionExperimentService.getMaskedPreferredQuantitationType( ee ) )
                 .thenReturn( qt );
         assertThat( target( "/datasets/1/data/processed" ).request().get() )
                 .hasStatus( Response.Status.OK )
                 .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE )
                 .hasEncoding( "gzip" );
-        verify( expressionExperimentService ).getPreferredQuantitationTypeForDataVectorType( ee, ProcessedExpressionDataVector.class );
+        verify( expressionExperimentService ).getMaskedPreferredQuantitationType( ee );
     }
 
     @Test
@@ -268,13 +268,13 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
     @Test
     public void testGetDatasetRawExpression() throws IOException {
         QuantitationType qt = QuantitationType.Factory.newInstance();
-        when( expressionExperimentService.getPreferredQuantitationTypeForDataVectorType( ee, RawExpressionDataVector.class ) )
+        when( expressionExperimentService.getPreferredQuantitationType( ee ) )
                 .thenReturn( qt );
         assertThat( target( "/datasets/1/data/raw" ).request().get() )
                 .hasStatus( Response.Status.OK )
                 .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE )
                 .hasEncoding( "gzip" );
-        verify( expressionExperimentService ).getPreferredQuantitationTypeForDataVectorType( ee, RawExpressionDataVector.class );
+        verify( expressionExperimentService ).getPreferredQuantitationType( ee );
         verifyNoInteractions( quantitationTypeService );
         verify( expressionDataFileService ).writeRawExpressionData( eq( ee ), eq( qt ), any() );
     }

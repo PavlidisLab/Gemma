@@ -21,14 +21,11 @@ package ubic.gemma.core.apps;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
-import org.springframework.security.core.context.SecurityContext;
-import org.springframework.security.core.context.SecurityContextHolder;
 import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.core.loader.expression.arrayDesign.ArrayDesignSequenceAlignmentService;
 import ubic.gemma.core.loader.genome.BlatResultParser;
 import ubic.gemma.core.util.AbstractCLI;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignSequenceAnalysisEvent;
-import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
@@ -147,7 +144,7 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
                     return;
                 }
 
-                arrayDesign = this.thaw( arrayDesign );
+                arrayDesign = getArrayDesignService().thaw( arrayDesign );
                 AbstractCLI.log.info( "============== Start processing: " + arrayDesign.getShortName() + " ==================" );
                 Collection<BlatResult> persistedResults;
                 try {

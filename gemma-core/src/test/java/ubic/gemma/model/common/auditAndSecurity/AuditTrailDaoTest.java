@@ -71,10 +71,10 @@ public class AuditTrailDaoTest extends BaseSpringContextTest {
         AuditEvent auditEvent3 = AuditEvent.Factory
                 .newInstance( new Date(), AuditAction.CREATE, "bbbbb", null, null, null );
 
-        auditTrail.addEvent( auditEvent0 );
-        auditTrail.addEvent( auditEvent1 );
-        auditTrail.addEvent( auditEvent2 );
-        auditTrail.addEvent( auditEvent3 );
+        auditTrail.getEvents().add( auditEvent0 );
+        auditTrail.getEvents().add( auditEvent1 );
+        auditTrail.getEvents().add( auditEvent2 );
+        auditTrail.getEvents().add( auditEvent3 );
 
     }
 

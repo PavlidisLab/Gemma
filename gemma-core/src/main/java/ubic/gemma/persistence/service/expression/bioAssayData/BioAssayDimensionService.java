@@ -41,7 +41,7 @@ public interface BioAssayDimensionService
     @Secured({ "GROUP_USER" })
     void remove( BioAssayDimension bioAssayDimension );
 
-    void thawLite( BioAssayDimension bioAssayDimension );
+    BioAssayDimension thawLite( BioAssayDimension bioAssayDimension );
 
     BioAssayDimension thaw( BioAssayDimension bioAssayDimension );
 }

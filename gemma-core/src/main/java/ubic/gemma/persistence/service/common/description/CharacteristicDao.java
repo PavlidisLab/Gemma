@@ -18,7 +18,6 @@
  */
 package ubic.gemma.persistence.service.common.description;
 
-import lombok.Data;
 import lombok.Value;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.description.Characteristic;
@@ -97,26 +96,32 @@ public interface CharacteristicDao
      * Represents a set of characteristics grouped by {@link Characteristic#getValueUri()} or {@link Characteristic#getValue()}.
      */
     @Value
-    class CharacteristicByValueUriOrValueCount {
+    class CharacteristicUsageFrequency {
         String valueUri;
         String value;
         Long count;
     }
 
     /**
-     * Count characteristics by value matching the provided LIKE pattern.
+     * Find characteristics by value matching the provided LIKE pattern.
      * <p>
-     * The key in the mapping is either the group's shared value URI or value of the former is null or empty, in
-     * lowercase.
+     * The mapping key is the normalized value of the characteristics as per {@link #normalizeByValue(Characteristic)}.
      */
-    Map<String, CharacteristicByValueUriOrValueCount> countCharacteristicValueLikeByNormalizedValue( String value );
+    Map<String, Characteristic> findCharacteristicsByValueUriOrValueLikeGroupedByNormalizedValue( String value );
 
     /**
-     * Count characteristics by value URI in a given collection.
-     *
-     * @see #countCharacteristicValueUriInByNormalizedValue(Collection)
+     * Count characteristics matching the provided value URIs.
+     * <p>
+     * The mapping key is the normalized value of the characteristics as per {@link #normalizeByValue(Characteristic)}.
      */
-    Map<String, CharacteristicByValueUriOrValueCount> countCharacteristicValueUriInByNormalizedValue( Collection<String> uris );
+    Map<String, Long> countCharacteristicsByValueUriGroupedByNormalizedValue( Collection<String> uris );
+
+    /**
+     * Normalize a characteristic by value.
+     * <p>
+     * This is obtained by taking the value URI or value if the former is null and converting it to lowercase.
+     */
+    String normalizeByValue( Characteristic characteristic );
 
     /**
      * Finds all Characteristics whose value match the given search term

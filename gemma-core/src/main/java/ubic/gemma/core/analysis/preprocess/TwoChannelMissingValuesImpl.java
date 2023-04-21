@@ -117,9 +117,9 @@ public class TwoChannelMissingValuesImpl implements TwoChannelMissingValues {
 
         if ( rawVectors.isEmpty() ) {
             procVectors = processedExpressionDataVectorService.find( usefulQuantitationTypes );
-            processedExpressionDataVectorService.thaw( procVectors );
+            procVectors = processedExpressionDataVectorService.thaw( procVectors );
         } else {
-            rawExpressionDataVectorService.thaw( rawVectors );
+            rawVectors = rawExpressionDataVectorService.thaw( rawVectors );
         }
 
         timer.stop();

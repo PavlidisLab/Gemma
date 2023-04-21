@@ -271,17 +271,17 @@ public class PersistentDummyObjectHelper {
 
         ee.setExperimentalDesign( ed );
         ee.setOwner( this.getTestPersistentContact() );
-        List<ArrayDesign> arrayDesignsUsed = new ArrayList<>( eeService.getArrayDesignsUsed( prototype ) );
+        Collection<ArrayDesign> arrayDesignsUsed = eeService.getArrayDesignsUsed( prototype );
         Set<BioAssay> bioAssays = new HashSet<>();
 
         Set<QuantitationType> quantitationTypes = this.addQuantitationTypes( new HashSet<>() );
 
         eeService.thaw( prototype );
         Set<RawExpressionDataVector> vectors = new HashSet<>();
+        arrayDesignsUsed = adService.thaw( arrayDesignsUsed );
         for ( ArrayDesign ad : arrayDesignsUsed ) {
             List<BioAssay> bas = this.getBioAssays( bioMaterials, ad );
             bioAssays.addAll( bas );
-            ad = this.adService.thaw( ad );
             vectors.addAll( this.getDesignElementDataVectors( ee, quantitationTypes, bas, ad ) );
         }
 

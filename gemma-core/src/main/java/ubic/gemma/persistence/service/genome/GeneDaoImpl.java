@@ -38,6 +38,7 @@ import ubic.gemma.model.genome.Chromosome;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.PhysicalLocation;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.model.genome.gene.GeneSetMember;
 import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.persistence.service.AbstractDao;
 import ubic.gemma.persistence.service.AbstractQueryFilteringVoEnabledDao;
@@ -423,14 +424,18 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
     @Override
     public void remove( Gene gene ) {
         // remove associations
-        List<?> associations = this.getSessionFactory().getCurrentSession()
-                .createQuery( "select ba from BioSequence2GeneProduct ba join ba.geneProduct gp join gp.gene g where g=:g" )
+        this.getSessionFactory().getCurrentSession()
+                .createQuery( "delete from BioSequence2GeneProduct ba where ba.geneProduct in (select gp from GeneProduct gp where gp.gene = :g)" )
                 .setParameter( "g", gene )
-                .list();
-        for ( Object association : associations ) {
-            getSessionFactory().getCurrentSession().delete( association );
-        }
-
+                .executeUpdate();
+        this.getSessionFactory().getCurrentSession()
+                .createQuery( "delete from GeneSetMember gm where gm.gene = :g" )
+                .setParameter( "g", gene )
+                .executeUpdate();
+        this.getSessionFactory().getCurrentSession()
+                .createQuery( "delete from Gene2GOAssociation g2g where g2g.gene = :g" )
+                .setParameter( "g", gene )
+                .executeUpdate();
         super.remove( gene );
     }
 

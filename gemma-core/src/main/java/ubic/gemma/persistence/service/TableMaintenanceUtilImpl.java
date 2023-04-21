@@ -246,10 +246,6 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
         queryObject = session.createSQLQuery( queryString ); // for native query.
         queryObject.executeUpdate();
         TableMaintenanceUtilImpl.log.info( "Done regenerating Gene2Cs." );
-
-        session.flush();
-        session.clear();
-
     }
 
     /**

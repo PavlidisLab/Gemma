@@ -10,6 +10,7 @@ import org.springframework.orm.hibernate4.HibernateTransactionManager;
 import org.springframework.orm.hibernate4.LocalSessionFactoryBean;
 import org.springframework.test.context.junit4.AbstractTransactionalJUnit4SpringContextTests;
 import org.springframework.transaction.PlatformTransactionManager;
+import ubic.gemma.persistence.util.Settings;
 
 import javax.sql.DataSource;
 import java.util.Properties;
@@ -34,6 +35,8 @@ public abstract class BaseDatabaseTest extends AbstractTransactionalJUnit4Spring
             factory.setConfigLocations(
                     new ClassPathResource( "/hibernate.cfg.xml" ) );
             Properties props = new Properties();
+            Settings.getKeys( "gemma.hibernate" )
+                    .forEachRemaining( k -> props.setProperty( "hibernate." + k.replaceFirst( "^gemma\\.hibernate\\.", "" ), Settings.getString( k ) ) );
             props.setProperty( "hibernate.hbm2ddl.auto", "create" );
             props.setProperty( "hibernate.cache.use_second_level_cache", "false" );
             factory.setHibernateProperties( props );

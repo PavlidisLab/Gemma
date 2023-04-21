@@ -41,6 +41,7 @@ import ubic.gemma.persistence.util.Slice;
 
 import javax.annotation.Nullable;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * @author keshav
@@ -256,14 +257,18 @@ public class CompositeSequenceServiceImpl
 
     @Override
     @Transactional(readOnly = true)
-    public void thaw( Collection<CompositeSequence> compositeSequences ) {
+    public Collection<CompositeSequence> thaw( Collection<CompositeSequence> compositeSequences ) {
+        compositeSequences = load( compositeSequences.stream().map( CompositeSequence::getId ).collect( Collectors.toSet() ) );
         this.compositeSequenceDao.thaw( compositeSequences );
+        return compositeSequences;
     }
 
     @Override
     @Transactional(readOnly = true)
     public CompositeSequence thaw( CompositeSequence compositeSequence ) {
-        return this.compositeSequenceDao.thaw( compositeSequence );
+        compositeSequence = loadOrFail( compositeSequence.getId() );
+        this.compositeSequenceDao.thaw( compositeSequence );
+        return compositeSequence;
     }
 
     @Override

@@ -67,8 +67,7 @@ public class ExpressionExperimentPlatformSwitchTest extends AbstractGeoServiceTe
         ArrayDesign arrayDesign = ( ArrayDesign ) results.iterator().next();
         arrayDesign = arrayDesignService.thaw( arrayDesign );
 
-        ee = experimentPlatformSwitchService.switchExperimentToArrayDesign( ee, arrayDesign );
-        assertNotNull( ee );
+        experimentPlatformSwitchService.switchExperimentToArrayDesign( ee, arrayDesign );
         Collection<ArrayDesign> arrayDesignsUsed = experimentService.getArrayDesignsUsed( ee );
 
         assertEquals( 1, arrayDesignsUsed.size() );

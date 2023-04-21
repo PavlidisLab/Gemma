@@ -28,6 +28,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.persistence.service.BaseService;
 
+import javax.annotation.CheckReturnValue;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -151,8 +152,4 @@ public interface DifferentialExpressionResultService extends BaseService<Differe
     Map<Long, ContrastsValueObject> loadContrastDetailsForResults( Collection<Long> ids );
 
     Histogram loadPvalueDistribution( Long analysisResultSetId );
-
-    void thaw( Collection<DifferentialExpressionAnalysisResult> results );
-
-    void thaw( DifferentialExpressionAnalysisResult result );
 }

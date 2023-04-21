@@ -44,26 +44,33 @@ public class ESearchXMLParser {
 
     private static final Log log = LogFactory.getLog( ESearchXMLParser.class );
 
-    public Collection<String> parse( InputStream is ) throws IOException, ParserConfigurationException, SAXException {
+    public Collection<String> parse( InputStream is ) throws IOException, ParserConfigurationException, SAXException, ESearchException {
         Document document = this.openAndParse( is );
         return this.extractIds( document );
     }
 
-    public int getCount( InputStream is ) throws IOException, ParserConfigurationException, SAXException {
+    public int getCount( InputStream is ) throws IOException, ParserConfigurationException, SAXException, ESearchException {
         Document document = this.openAndParse( is );
         NodeList idList = document.getElementsByTagName( "Count" );
+        if ( idList.getLength() < 1 ) {
+            return 0;
+        }
         Node item = idList.item( 0 );
         String value = XMLUtils.getTextValue( ( Element ) item );
         ESearchXMLParser.log.debug( "Got " + value );
         return Integer.parseInt( value );
     }
 
-    private Document openAndParse( InputStream is ) throws IOException, ParserConfigurationException, SAXException {
+    private Document openAndParse( InputStream is ) throws IOException, ParserConfigurationException, SAXException, ESearchException {
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
         factory.setIgnoringComments( true );
-
         DocumentBuilder builder = factory.newDocumentBuilder();
-        return builder.parse( is );
+        Document doc = builder.parse( is );
+        NodeList error = doc.getDocumentElement().getElementsByTagName( "ERROR" );
+        if ( error.getLength() > 0 ) {
+            throw new ESearchException( error.item( 0 ).getTextContent() );
+        }
+        return doc;
     }
 
     private Collection<String> extractIds( Document doc ) {

@@ -240,9 +240,9 @@ public class DiffExMetaAnalyzerServiceTest extends AbstractGeoServiceTest {
         assertTrue( !ds2Analyses.isEmpty() );
         assertTrue( !ds3Analyses.isEmpty() );
 
-        differentialExpressionAnalysisService.thaw( ds1Analyses );
-        differentialExpressionAnalysisService.thaw( ds2Analyses );
-        differentialExpressionAnalysisService.thaw( ds3Analyses );
+        ds1Analyses = differentialExpressionAnalysisService.thaw( ds1Analyses );
+        ds2Analyses = differentialExpressionAnalysisService.thaw( ds2Analyses );
+        ds3Analyses = differentialExpressionAnalysisService.thaw( ds3Analyses );
 
         ExpressionAnalysisResultSet rs1 = ds1Analyses.iterator().next().getResultSets().iterator().next();
         ExpressionAnalysisResultSet rs2 = ds2Analyses.iterator().next().getResultSets().iterator().next();
@@ -531,15 +531,7 @@ public class DiffExMetaAnalyzerServiceTest extends AbstractGeoServiceTest {
             arrayDesignService.remove( gpl97 );
         }
 
-        Collection<Gene> genes = geneService.loadAll();
-        for ( Gene gene : genes ) {
-            try {
-                geneService.remove( gene );
-            } catch ( Exception e ) {
-                log.warn( "Failed to remove gene " + gene );
-            }
-        }
-
+        geneService.removeAllInBatch();
     }
 
     private void deleteSet( String shortName ) {

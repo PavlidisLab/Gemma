@@ -91,12 +91,15 @@ public class BioAssayServiceImpl extends AbstractFilteringVoEnabledService<BioAs
     }
 
     /**
+     * @return
      * @see BioAssayService#thaw(BioAssay)
      */
     @Override
     @Transactional(readOnly = true)
-    public void thaw( final BioAssay bioAssay ) {
+    public BioAssay thaw( BioAssay bioAssay ) {
+        bioAssay = loadOrFail( bioAssay.getId() );
         this.bioAssayDao.thaw( bioAssay );
+        return bioAssay;
     }
 
     @Override

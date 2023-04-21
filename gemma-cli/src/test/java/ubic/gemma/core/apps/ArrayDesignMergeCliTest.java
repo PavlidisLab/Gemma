@@ -71,7 +71,8 @@ public class ArrayDesignMergeCliTest extends BaseCliTest {
         when( arrayDesignService.findByShortName( "1" ) ).thenReturn( a );
         when( arrayDesignService.findByShortName( "2" ) ).thenReturn( b );
         when( arrayDesignService.findByShortName( "3" ) ).thenReturn( c );
-        when( arrayDesignService.thaw( any() ) ).thenAnswer( args -> args.getArgument( 0 ) );
+        when( arrayDesignService.thaw( any( ArrayDesign.class ) ) ).thenAnswer( args -> args.getArgument( 0 ) );
+        when( arrayDesignService.thaw( anyCollection() ) ).thenAnswer( args -> args.getArgument( 0 ) );
         Collection<ArrayDesign> otherPlatforms = new HashSet<>( Arrays.asList( b, c ) );
         assertThat( arrayDesignMergeCli.executeCommand( new String[] { "-a", "1", "-o", "2,3", "-s", "4", "-n", "four is better than one" } ) )
                 .isEqualTo( AbstractCLI.SUCCESS );

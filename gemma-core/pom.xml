@@ -265,7 +265,7 @@
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-csv</artifactId>
-            <version>1.9.0</version>
+            <version>1.10.0</version>
         </dependency>
         <dependency>
             <groupId>org.apache.commons</groupId>
@@ -288,12 +288,6 @@
             <groupId>obo</groupId>
             <artifactId>org.geneontology</artifactId>
             <version>1.002</version>
-        </dependency>
-        <!-- version determined by spring-aspects -->
-        <dependency>
-            <groupId>org.aspectj</groupId>
-            <artifactId>aspectjweaver</artifactId>
-            <version>1.9.9.1</version>
         </dependency>
         <!-- bit array -->
         <!-- it can't be updated though because the binary format has changed, and we store those in the database -->

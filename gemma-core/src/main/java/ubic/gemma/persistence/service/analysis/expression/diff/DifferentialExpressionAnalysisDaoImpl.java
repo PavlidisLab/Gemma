@@ -323,51 +323,6 @@ class DifferentialExpressionAnalysisDaoImpl extends SingleExperimentAnalysisDaoB
     }
 
     @Override
-    public void thaw( final Collection<DifferentialExpressionAnalysis> expressionAnalyses ) {
-        for ( DifferentialExpressionAnalysis ea : expressionAnalyses ) {
-            this.thaw( ea );
-        }
-    }
-
-    @Override
-    public void thaw( DifferentialExpressionAnalysis differentialExpressionAnalysis ) {
-        StopWatch timer = new StopWatch();
-        timer.start();
-
-        Session session = this.getSessionFactory().getCurrentSession();
-        session.flush();
-        session.clear();
-
-        reattach( differentialExpressionAnalysis );
-        Hibernate.initialize( differentialExpressionAnalysis );
-        Hibernate.initialize( differentialExpressionAnalysis.getExperimentAnalyzed() );
-        reattach( differentialExpressionAnalysis.getExperimentAnalyzed() );
-        Hibernate.initialize( differentialExpressionAnalysis.getExperimentAnalyzed().getBioAssays() );
-
-        Hibernate.initialize( differentialExpressionAnalysis.getProtocol() );
-
-        if ( differentialExpressionAnalysis.getSubsetFactorValue() != null ) {
-            Hibernate.initialize( differentialExpressionAnalysis.getSubsetFactorValue() );
-        }
-
-        Collection<ExpressionAnalysisResultSet> ears = differentialExpressionAnalysis.getResultSets();
-        Hibernate.initialize( ears );
-        for ( ExpressionAnalysisResultSet ear : ears ) {
-            reattach( ear );
-            Hibernate.initialize( ear );
-            Hibernate.initialize( ear.getExperimentalFactors() );
-        }
-        if ( timer.getTime() > 1000 ) {
-            AbstractDao.log.info( "Thaw: " + timer.getTime() + "ms" );
-        }
-    }
-
-    @Override
-    public void thawResultSets( DifferentialExpressionAnalysis dea ) {
-        Hibernate.initialize( dea.getResultSets() );
-    }
-
-    @Override
     public Map<Long, List<DifferentialExpressionAnalysisValueObject>> getAnalysesByExperimentIds(
             Collection<Long> expressionExperimentIds, int offset, int limit ) {
 
@@ -496,7 +451,7 @@ class DifferentialExpressionAnalysisDaoImpl extends SingleExperimentAnalysisDaoB
 
         super.remove( ( DifferentialExpressionAnalysis ) session.load( DifferentialExpressionAnalysis.class, analysis.getId() ) );
 
-        flushAndClear();
+        flush();
     }
 
     @Override

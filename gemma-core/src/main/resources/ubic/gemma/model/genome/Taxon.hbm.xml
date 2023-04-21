@@ -27,7 +27,7 @@
          <column name="SECONDARY_NCBI_ID" not-null="false" unique="false" sql-type="INTEGER"/>
       </property>
       <!-- this must be eager because TaxonValueObject assumes it is readily available -->
-      <many-to-one name="externalDatabase" class="ubic.gemma.model.common.description.ExternalDatabase"  cascade="none" lazy="false" fetch="join">
+      <many-to-one name="externalDatabase" class="ubic.gemma.model.common.description.ExternalDatabase"  cascade="none" lazy="false" fetch="select">
          <column name="EXTERNAL_DATABASE_FK" not-null="false" sql-type="BIGINT" unique="true"/>
       </many-to-one> 
    </class>

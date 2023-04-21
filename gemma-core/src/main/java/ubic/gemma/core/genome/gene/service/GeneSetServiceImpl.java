@@ -519,14 +519,9 @@ public class GeneSetServiceImpl extends AbstractVoEnabledService<GeneSet, Databa
         }
     }
 
-    /*
-     * (non-Javadoc)
-     *
-     * @see ubic.gemma.core.genome.gene.service.GeneSetService#thaw(ubic.gemma.model.genome.gene.GeneSet)
-     */
     @Override
-    @Transactional(readOnly = true)
-    public void thaw( GeneSet geneSet ) {
-        this.geneSetDao.thaw( geneSet );
+    @Transactional
+    public void removeAll() {
+        this.geneSetDao.removeAllInBatch();
     }
 }

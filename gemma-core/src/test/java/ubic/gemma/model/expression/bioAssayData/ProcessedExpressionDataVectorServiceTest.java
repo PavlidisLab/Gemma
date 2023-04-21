@@ -107,9 +107,7 @@ public class ProcessedExpressionDataVectorServiceTest extends AbstractGeoService
 
         ExpressionExperiment ee = ees.iterator().next();
 
-        ee = processedDataVectorService.createProcessedDataVectors( ee );
-
-        Collection<ProcessedExpressionDataVector> createProcessedDataVectors = ee.getProcessedExpressionDataVectors();
+        Collection<ProcessedExpressionDataVector> createProcessedDataVectors = processedDataVectorService.createProcessedDataVectors( ee );
 
         assertEquals( 40, createProcessedDataVectors.size() );
         Collection<DoubleVectorValueObject> v = processedDataVectorService.getProcessedDataArrays( ee );
@@ -165,10 +163,9 @@ public class ProcessedExpressionDataVectorServiceTest extends AbstractGeoService
     private Collection<Gene> getGeneAssociatedWithEe( ExpressionExperiment ee ) {
         Collection<ArrayDesign> ads = this.expressionExperimentService.getArrayDesignsUsed( ee );
         Collection<Gene> genes = new HashSet<>();
+        ads = arrayDesignService.thaw( ads );
         for ( ArrayDesign ad : ads ) {
             Taxon taxon = this.getTaxon( "mouse" );
-            ad = this.arrayDesignService.thaw( ad );
-
             for ( CompositeSequence cs : ad.getCompositeSequences() ) {
                 Gene g = this.getTestPersistentGene();
                 BlatAssociation blata = BlatAssociation.Factory.newInstance();

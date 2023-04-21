@@ -155,9 +155,9 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
             ids.add( id );
         }
 
-        Map<Long, Integer> annotationCounts = expressionExperimentService.getAnnotationCounts( ids );
+        Map<Long, Long> annotationCounts = expressionExperimentService.getAnnotationCountsByIds( ids );
 
-        Map<Long, Integer> factorCounts = expressionExperimentService.getPopulatedFactorCountsExcludeBatch( ids );
+        Map<Long, Long> factorCounts = expressionExperimentService.getPopulatedFactorCountsExcludeBatch( ids );
 
         for ( ExpressionExperimentDetailsValueObject eeVo : vos ) {
             Long id = eeVo.getId();
