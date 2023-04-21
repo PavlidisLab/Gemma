@@ -304,7 +304,7 @@ public class ProcessedExpressionDataCreateServiceTest extends AbstractGeoService
          * All that was setup. Now do the interesting bit
          */
 
-        processedExpressionDataVectorService.reorderByDesign( ee.getId() );
+        processedExpressionDataVectorService.reorderByDesign( ee );
 
         /*
          * Now check the vectors...

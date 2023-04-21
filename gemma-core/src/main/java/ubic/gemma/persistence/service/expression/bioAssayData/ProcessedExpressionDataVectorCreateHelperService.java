@@ -14,8 +14,6 @@
  */
 package ubic.gemma.persistence.service.expression.bioAssayData;
 
-import ubic.gemma.core.analysis.preprocess.PreprocessingException;
-import ubic.gemma.core.datastructure.matrix.QuantitationMismatchException;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
@@ -30,7 +28,7 @@ interface ProcessedExpressionDataVectorCreateHelperService {
     void replaceProcessedDataVectors( ExpressionExperiment ee,
             Collection<ProcessedExpressionDataVector> vecs );
 
-    void reorderByDesign( Long eeId );
+    void reorderByDesign( ExpressionExperiment ee );
 
     /**
      * If possible, update the ranks for the processed data vectors. For data sets with only ratio expression values

@@ -81,11 +81,12 @@ public class ProcessedExpressionDataVectorServiceImpl
             Collection<ProcessedExpressionDataVector> vectors ) {
         try {
             helperService.replaceProcessedDataVectors( ee, vectors );
-            self.updateRanks( ee );
+            auditTrailService.addUpdateEvent( ee, ProcessedVectorComputationEvent.class, String.format( "Replaced processed expression data for %s.", ee ) );
         } catch ( Exception e ) {
             auditTrailService.addUpdateEvent( ee, FailedProcessedVectorComputationEvent.class, "Failed to replace processed expression data vectors.", e );
             throw e;
         }
+        self.updateRanks( ee );
     }
 
     @Override
@@ -339,19 +340,15 @@ public class ProcessedExpressionDataVectorServiceImpl
     @Override
     @Transactional(propagation = Propagation.NEVER)
     public void computeProcessedExpressionData( ExpressionExperiment ee, boolean ignoreQuantitationMismatch ) throws QuantitationMismatchException {
-        try {
-            self.createProcessedDataVectors( ee, ignoreQuantitationMismatch );
-            self.updateRanks( ee );
-        } catch ( Exception e ) {
-            auditTrailService.addUpdateEvent( ee, FailedProcessedVectorComputationEvent.class, "Failed to create processed expression data vectors.", e );
-            throw e;
-        }
+        self.createProcessedDataVectors( ee, ignoreQuantitationMismatch );
+        self.updateRanks( ee );
     }
 
     @Override
     @Transactional
-    public void reorderByDesign( Long eeId ) {
-        this.helperService.reorderByDesign( eeId );
+    public void reorderByDesign( ExpressionExperiment ee ) {
+        this.helperService.reorderByDesign( ee );
+        this.auditTrailService.addUpdateEvent( ee, "Reordered the data vectors by experimental design" );
     }
 
     @Override

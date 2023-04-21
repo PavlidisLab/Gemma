@@ -205,7 +205,7 @@ public interface ProcessedExpressionDataVectorService
      * @param eeId the experiment id
      */
     @Secured({ "GROUP_ADMIN" })
-    void reorderByDesign( Long eeId );
+    void reorderByDesign( ExpressionExperiment ee );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_DATAVECTOR_COLLECTION_READ" })
     Collection<ProcessedExpressionDataVector> findByExpressionExperiment( ExpressionExperiment ee, QuantitationType quantitationType );

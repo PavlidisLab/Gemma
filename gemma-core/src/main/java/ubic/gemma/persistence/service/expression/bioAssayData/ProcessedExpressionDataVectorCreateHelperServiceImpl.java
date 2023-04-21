@@ -24,6 +24,7 @@ import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.commons.math3.analysis.function.Exp;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -65,9 +66,6 @@ class ProcessedExpressionDataVectorCreateHelperServiceImpl
     private ExpressionExperimentService eeService;
 
     @Autowired
-    private AuditTrailService auditTrailService;
-
-    @Autowired
     private BioAssayDimensionService bioAssayDimensionService;
 
     @Autowired
@@ -106,14 +104,12 @@ class ProcessedExpressionDataVectorCreateHelperServiceImpl
         eeService.update( ee );
 
         assert ee.getNumberOfDataVectors() != null;
-        auditTrailService.addUpdateEvent( ee, ProcessedVectorComputationEvent.class, String.format( "Replaced processed expression data for %s.", ee ) );
     }
 
     @Override
     @Transactional
-    public void reorderByDesign( Long eeId ) {
-        ExpressionExperiment ee = eeService.loadOrFail( eeId );
-
+    public void reorderByDesign( ExpressionExperiment ee ) {
+        ee = eeService.thaw( ee );
         if ( ee.getExperimentalDesign().getExperimentalFactors().size() == 0 ) {
             ProcessedExpressionDataVectorCreateHelperServiceImpl.log
                     .info( ee.getShortName() + " does not have a populated experimental design, skipping" );
@@ -230,7 +226,6 @@ class ProcessedExpressionDataVectorCreateHelperServiceImpl
         }
         ProcessedExpressionDataVectorCreateHelperServiceImpl.log
                 .info( "Updating bioassay ordering of " + processedDataVectors.size() + " vectors" );
-        this.auditTrailService.addUpdateEvent( ee, "Reordered the data vectors by experimental design" );
     }
 
     @Override
