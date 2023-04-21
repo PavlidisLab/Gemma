@@ -6,6 +6,7 @@ import org.hibernate.Hibernate;
 import org.hibernate.SessionFactory;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -13,6 +14,7 @@ import org.springframework.test.context.ContextConfiguration;
 import ubic.basecode.io.ByteArrayConverter;
 import ubic.gemma.core.datastructure.matrix.QuantitationMismatchException;
 import ubic.gemma.core.util.test.BaseDatabaseTest;
+import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
 import ubic.gemma.model.common.quantitationtype.*;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -96,6 +98,7 @@ public class ProcessedExpressionDataVectorDaoTest extends BaseDatabaseTest {
     }
 
     @Test
+    @Category(SlowTest.class)
     public void testThaw() throws QuantitationMismatchException {
         double[][] matrix = randomExpressionMatrix( 20000, 8, new NormalDistribution( 0, 1 ) );
         ExpressionExperiment ee = getTestExpressionExperimentForRawExpressionMatrix( matrix, ScaleType.LOG2, true );
