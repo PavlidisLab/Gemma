@@ -236,7 +236,7 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
         // Check consistency
         BioAssayDimension bestBioAssayDimension = mat.getBestBioAssayDimension();
         if ( cormat.rows() != bestBioAssayDimension.getBioAssays().size() ) {
-            throw new IllegalStateException(
+            throw new FilteringException( ee,
                     String.format( SampleCoexpressionAnalysisServiceImpl.MSG_ERR_BIOASSAY_MISMATCH,
                             bestBioAssayDimension.getBioAssays().size(), cormat.rows() ) );
         }
