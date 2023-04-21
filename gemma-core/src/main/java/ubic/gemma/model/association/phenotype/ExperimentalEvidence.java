@@ -21,6 +21,7 @@ package ubic.gemma.model.association.phenotype;
 /**
  * Evidence based on an experiment. This could be provided via a publication, or information known only to the provider.
  */
+@Deprecated
 public class ExperimentalEvidence extends ubic.gemma.model.association.phenotype.PhenotypeAssociation {
 
     /**

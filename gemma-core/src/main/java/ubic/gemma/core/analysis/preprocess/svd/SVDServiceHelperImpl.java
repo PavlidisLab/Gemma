@@ -159,7 +159,7 @@ public class SVDServiceHelperImpl implements SVDServiceHelper {
             throw new IllegalArgumentException( "Experiment must have processed data already to do SVD" );
         }
 
-        processedExpressionDataVectorService.thaw( vectors );
+        vectors = processedExpressionDataVectorService.thaw( vectors );
         ExpressionDataDoubleMatrix mat = new ExpressionDataDoubleMatrix( vectors );
 
         SVDServiceHelperImpl.log.info( "Starting SVD" );

@@ -174,8 +174,8 @@ public class BioMaterialController {
         if ( bm == null || bm.getId() == null )
             return null;
 
-        BioMaterial bioM = bioMaterialService.load( bm.getId() );
-        bioMaterialService.thaw( bioM );
+        BioMaterial bioM = bioMaterialService.loadOrFail( bm.getId() );
+        bioM = bioMaterialService.thaw( bioM );
         Collection<FactorValueValueObject> results = new HashSet<>();
         Collection<FactorValue> factorValues = bioM.getFactorValues();
 
@@ -221,7 +221,7 @@ public class BioMaterialController {
         if ( bioMaterial == null ) {
             throw new EntityNotFoundException( id + " not found" );
         }
-        bioMaterialService.thaw( bioMaterial );
+        bioMaterial = bioMaterialService.thaw( bioMaterial );
 
         request.setAttribute( "id", id ); // / ??
 

@@ -29,7 +29,6 @@ import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
-import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.genome.Taxon;
@@ -170,9 +169,32 @@ public class ExpressionExperimentServiceTest extends BaseSpringContextTest {
     }
 
     @Test
+    public void testGetPreferredQuantitationType() {
+        QuantitationType qt = expressionExperimentService.getPreferredQuantitationType( ee );
+        assertNotNull( qt );
+        assertTrue( qt.getIsPreferred() );
+    }
+
+    @Test
     public final void testGetQuantitationTypes() {
         Collection<QuantitationType> types = expressionExperimentService.getQuantitationTypes( ee );
         assertEquals( 2, types.size() );
+    }
+
+    @Test
+    public void testGetBioMaterialCount() {
+        assertEquals( 8, expressionExperimentService.getBioMaterialCount( ee ) );
+    }
+
+    @Test
+    public void testGetQuantitationTypeCount() {
+        Map<QuantitationType, Long> qts = expressionExperimentService.getQuantitationTypeCount( ee );
+        assertEquals( 2, qts.size() );
+    }
+
+    @Test
+    public void testGetDesignElementDataVectorCount() {
+        assertEquals( 24, expressionExperimentService.getDesignElementDataVectorCount( ee ) );
     }
 
     @Test
@@ -204,7 +226,7 @@ public class ExpressionExperimentServiceTest extends BaseSpringContextTest {
 
         assertEquals( 2, designElements.size() );
 
-        Collection<? extends DesignElementDataVector> vectors = rawExpressionDataVectorService
+        Collection<RawExpressionDataVector> vectors = rawExpressionDataVectorService
                 .find( designElements, quantitationType );
 
         assertEquals( 2, vectors.size() );

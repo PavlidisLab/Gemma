@@ -418,7 +418,7 @@ public abstract class AbstractCLI implements CLI {
      * Add an error object without a cause stacktrace.
      * @see #addErrorObject(Object, String)
      */
-    protected void addErrorObject( @Nullable  Object errorObject, String message ) {
+    protected void addErrorObject( @Nullable Object errorObject, String message ) {
         errorObjects.add( new BatchProcessingResult( errorObject, message, null ) );
         log.error( message );
     }
@@ -611,7 +611,7 @@ public abstract class AbstractCLI implements CLI {
             buf.append( source != null ? source : "Unknown object" );
             if ( message != null ) {
                 buf.append( ":\n\t" )
-                        .append( message );
+                        .append( message.replace( "\n", "\n\t" ) );
             }
             return buf.toString();
         }

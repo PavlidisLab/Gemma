@@ -35,6 +35,7 @@ import java.util.*;
  *
  * @author paul
  */
+@Deprecated
 public interface PhenotypeAssociationManagerService {
 
     /**

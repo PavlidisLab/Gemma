@@ -14,24 +14,22 @@
  */
 package ubic.gemma.core.ontology;
 
+import org.assertj.core.api.Assertions;
+import org.assertj.core.groups.Tuple;
 import org.junit.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-
-import ubic.gemma.core.util.test.BaseSpringContextTest;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.groups.Tuple.tuple;
 
 /**
  * @author Paul
  */
 public class CharacteristicSortTest {
-
-    OntologyService ontologyService = new OntologyServiceImpl();
 
     @Test
     public final void testSortCharacteristics() {
@@ -58,15 +56,23 @@ public class CharacteristicSortTest {
         cl.add( vo );
 
         cl.add( new CharacteristicValueObject( Characteristic.Factory
-                .newInstance( "a", "aaaa", null, "aaaa_", "http://aaaa_", "a", null ) ) );
+                .newInstance( "a", "aaaa", "", "aaaa_", "http://aaaa_", "a", null ) ) );
         cl.add( new CharacteristicValueObject( Characteristic.Factory
-                .newInstance( "d", "dddd", null, "dddd_", "http://dddd_", "d", null ) ) );
+                .newInstance( "d", "dddd", "", "dddd_", "http://dddd_", "d", null ) ) );
         cl.add( new CharacteristicValueObject( Characteristic.Factory
-                .newInstance( "af", "aaaf", null, "aaaff", "http://aaaff", "af", null ) ) );
+                .newInstance( "af", "aaaf", "", "aaaff", "http://aaaff", "af", null ) ) );
 
-        cl.sort( new OntologyServiceImpl.CharacteristicComparator() );
+        cl.sort( OntologyServiceImpl.getCharacteristicComparator( "kkqiwe1i23u198" ) );
 
-        assertEquals( "bbbbb", cl.get( 0 ).getValue() );
-
+        assertThat( cl )
+                .extracting( "valueUri", "value", "numTimesUsed" )
+                .containsExactly(
+                        tuple( "http://bbbb", "bbbbb", 5 ),
+                        tuple( "aaaa_", "", 0 ),
+                        tuple( "dddd_", "", 0 ),
+                        tuple( "aaaff", "", 0 ),
+                        tuple( null, "aused", 3 ),
+                        tuple( null, "gggg_", 0 ),
+                        tuple( null, "xused", 0 ) );
     }
 }

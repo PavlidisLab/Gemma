@@ -23,6 +23,7 @@ import ubic.gemma.model.common.AbstractDescribable;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.genome.Taxon;
 
+import javax.annotation.Nullable;
 import java.io.Serializable;
 import java.util.Set;
 
@@ -47,7 +48,9 @@ public class BioSequence extends AbstractDescribable implements Serializable {
     private String sequence;
     private Boolean isApproximateLength;
     private Boolean isCircular;
+    @Nullable
     private PolymerType polymerType;
+    @Nullable
     private SequenceType type;
     private Double fractionRepeats;
     private ubic.gemma.model.common.description.DatabaseEntry sequenceDatabaseEntry;
@@ -105,11 +108,12 @@ public class BioSequence extends AbstractDescribable implements Serializable {
         this.length = length;
     }
 
+    @Nullable
     public PolymerType getPolymerType() {
         return this.polymerType;
     }
 
-    public void setPolymerType( PolymerType polymerType ) {
+    public void setPolymerType( @Nullable PolymerType polymerType ) {
         this.polymerType = polymerType;
     }
 
@@ -140,11 +144,12 @@ public class BioSequence extends AbstractDescribable implements Serializable {
         this.taxon = taxon;
     }
 
+    @Nullable
     public SequenceType getType() {
         return this.type;
     }
 
-    public void setType( SequenceType type ) {
+    public void setType( @Nullable SequenceType type ) {
         this.type = type;
     }
 
@@ -203,6 +208,13 @@ public class BioSequence extends AbstractDescribable implements Serializable {
 
         public static BioSequence newInstance( Taxon taxon ) {
             final BioSequence entity = new BioSequence();
+            entity.setTaxon( taxon );
+            return entity;
+        }
+
+        public static BioSequence newInstance( String name, Taxon taxon ) {
+            final BioSequence entity = new BioSequence();
+            entity.setName( name );
             entity.setTaxon( taxon );
             return entity;
         }

@@ -52,4 +52,9 @@ public class FactorValueServiceImpl extends AbstractFilteringVoEnabledService<Fa
         return this.factorValueDao.findByValue( valuePrefix );
     }
 
+    @Override
+    @Transactional
+    public void remove( FactorValue entity ) {
+        super.remove( ensureInSession( entity ) );
+    }
 }

@@ -194,7 +194,7 @@ public class CompositeSequenceController extends BaseController {
             addMessage( request, "object.notfound", new Object[] { "composite sequence " + id } );
         }
 
-        compositeSequenceService.thaw( Collections.singletonList( cs ) );
+        cs = compositeSequenceService.thaw( cs );
 
         ModelAndView mav = new ModelAndView( "compositeSequence.detail" );
 

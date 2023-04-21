@@ -47,9 +47,5 @@ public interface AnnotationAssociationService extends BaseService<AnnotationAsso
 
     Collection<AnnotationAssociation> find( Gene gene );
 
-    void thaw( AnnotationAssociation annotationAssociation );
-
-    void thaw( Collection<AnnotationAssociation> anCollection );
-
     Collection<AnnotationValueObject> removeRootTerms( Collection<AnnotationValueObject> associations );
 }

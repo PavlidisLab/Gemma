@@ -68,7 +68,7 @@ public class AuditEventDaoImpl extends AbstractDao<AuditEvent> implements AuditE
         Long id = auditable.getAuditTrail().getId();
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession()
-                .createQuery( "select e from AuditTrailImpl t join t.events e where t.id = :id order by e.date,e.id " )
+                .createQuery( "select e from AuditTrail t join t.events e where t.id = :id order by e.date,e.id " )
                 .setParameter( "id", id ).list();
 
     }
@@ -97,7 +97,7 @@ public class AuditEventDaoImpl extends AbstractDao<AuditEvent> implements AuditE
         List<String> classes = this.getClassHierarchy( types );
 
         //language=HQL
-        final String queryString = "select et, trail, event from AuditTrailImpl trail "
+        final String queryString = "select et, trail, event from AuditTrail trail "
                 + "inner join trail.events event inner join event.eventType et inner join fetch event.performer where trail in (:trails) "
                 + "and et.class in (:classes) order by event.date desc, event.id desc ";
 
@@ -218,7 +218,7 @@ public class AuditEventDaoImpl extends AbstractDao<AuditEvent> implements AuditE
         List<String> classes = this.getClassHierarchy( type );
 
         //language=HQL
-        final String queryString = "select trail, ae from AuditTrailImpl trail "
+        final String queryString = "select trail, ae from AuditTrail trail "
                 + "inner join trail.events ae inner join ae.eventType et inner join fetch ae.performer where trail in (:trails) "
                 + "and et.class in (:classes) order by ae.date desc, ae.id desc ";
 
@@ -310,7 +310,7 @@ public class AuditEventDaoImpl extends AbstractDao<AuditEvent> implements AuditE
         }
 
         //language=HQL
-        final String queryString = "select event from AuditTrailImpl trail "
+        final String queryString = "select event from AuditTrail trail "
                 + "inner join trail.events event inner join event.eventType et inner join fetch event.performer "
                 + "fetch all properties where trail = :trail and et.class in (:classes) " + "order by event.date desc ";
 

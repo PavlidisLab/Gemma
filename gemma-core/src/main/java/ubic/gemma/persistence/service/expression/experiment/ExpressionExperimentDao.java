@@ -1,5 +1,6 @@
 package ubic.gemma.persistence.service.expression.experiment;
 
+import ubic.gemma.core.security.audit.IgnoreAudit;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.description.AnnotationValueObject;
 import ubic.gemma.model.common.description.DatabaseEntry;
@@ -7,7 +8,7 @@ import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
-import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
+import ubic.gemma.model.expression.bioAssayData.MeanVarianceRelation;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.model.genome.Gene;
@@ -72,7 +73,7 @@ public interface ExpressionExperimentDao
 
     Collection<ExpressionExperiment> findUpdatedAfter( Date date );
 
-    Map<Long, Integer> getAnnotationCounts( Collection<Long> ids );
+    Map<Long, Long> getAnnotationCounts( Collection<Long> ids );
 
     Collection<ArrayDesign> getArrayDesignsUsed( BioAssaySet bas );
 
@@ -80,13 +81,11 @@ public interface ExpressionExperimentDao
 
     Map<Long, Collection<AuditEvent>> getAuditEvents( Collection<Long> ids );
 
-    Integer getBioAssayCountById( long Id );
-
     Collection<BioAssayDimension> getBioAssayDimensions( ExpressionExperiment expressionExperiment );
 
-    Integer getBioMaterialCount( ExpressionExperiment expressionExperiment );
+    long getBioMaterialCount( ExpressionExperiment expressionExperiment );
 
-    Integer getDesignElementDataVectorCountById( long Id );
+    long getDesignElementDataVectorCount( ExpressionExperiment ee );
 
     Collection<ExpressionExperiment> getExperimentsWithOutliers();
 
@@ -96,26 +95,27 @@ public interface ExpressionExperimentDao
 
     Map<Taxon, Long> getPerTaxonCount();
 
-    Map<Long, Integer> getPopulatedFactorCounts( Collection<Long> ids );
+    Map<Long, Long> getPopulatedFactorCounts( Collection<Long> ids );
 
-    Map<Long, Integer> getPopulatedFactorCountsExcludeBatch( Collection<Long> ids );
+    Map<Long, Long> getPopulatedFactorCountsExcludeBatch( Collection<Long> ids );
 
-    Map<QuantitationType, Integer> getQuantitationTypeCountById( Long id );
+    Map<QuantitationType, Long> getQuantitationTypeCount( ExpressionExperiment ee );
 
     Collection<QuantitationType> getQuantitationTypes( ExpressionExperiment expressionExperiment );
 
-    Collection<QuantitationType> getQuantitationTypes( ExpressionExperiment expressionExperiment,
-            ArrayDesign arrayDesign );
+    Collection<QuantitationType> getQuantitationTypes( ExpressionExperiment ee, ArrayDesign oldAd );
 
     /**
-     * Obtain the preferred quantitation type for a given data vector type.
-     * <p>
-     * If more than one preferred QT exists, a warning is emitted and the latest one according to their {@link DesignElementDataVector#getId()}
-     * is returned.
-     *
-     * @return the data vector, or null if no preferred vector type can be found
+     * Obtain the preferred quantitation type, if available.
      */
-    QuantitationType getPreferredQuantitationTypeForDataVectorType( ExpressionExperiment ee, Class<? extends DesignElementDataVector> vectorType );
+    @Nullable
+    QuantitationType getPreferredQuantitationType( ExpressionExperiment ee );
+
+    /**
+     * Obtain the masked preferred quantitation type, if available.
+     */
+    @Nullable
+    QuantitationType getMaskedPreferredQuantitationType( ExpressionExperiment ee );
 
     Map<ExpressionExperiment, Collection<AuditEvent>> getSampleRemovalEvents(
             Collection<ExpressionExperiment> expressionExperiments );
@@ -155,17 +155,31 @@ public interface ExpressionExperimentDao
 
     List<ExpressionExperimentValueObject> loadValueObjectsByIds( Collection<Long> ids );
 
-    ExpressionExperiment thaw( ExpressionExperiment expressionExperiment );
+    void thaw( ExpressionExperiment expressionExperiment );
 
-    ExpressionExperiment thawBioAssays( ExpressionExperiment expressionExperiment );
+    void thawWithoutVectors( ExpressionExperiment expressionExperiment );
 
-    ExpressionExperiment thawForFrontEnd( ExpressionExperiment expressionExperiment );
+    void thawBioAssays( ExpressionExperiment expressionExperiment );
 
-    ExpressionExperiment thawWithoutVectors( ExpressionExperiment expressionExperiment );
+    void thawForFrontEnd( ExpressionExperiment expressionExperiment );
 
     Collection<? extends AnnotationValueObject> getAnnotationsByBioMaterials( Long eeId );
 
     Collection<? extends AnnotationValueObject> getAnnotationsByFactorvalues( Long eeId );
 
     Collection<ExpressionExperiment> getExperimentsLackingPublications();
+
+    /**
+     * Update the troubled status of all experiments using a given platform.
+     * @return the number of expression experiments marked or unmarked as troubled
+     */
+    @IgnoreAudit
+    int updateTroubledByArrayDesign( ArrayDesign arrayDesign, boolean troubled );
+
+    /**
+     * Count the number of distict platforms used that are troubled.
+     */
+    long countTroubledPlatforms( ExpressionExperiment ee );
+
+    MeanVarianceRelation updateMeanVarianceRelation( ExpressionExperiment ee, MeanVarianceRelation mvr );
 }

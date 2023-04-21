@@ -3,12 +3,15 @@ package ubic.gemma.persistence.service;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.transaction.annotation.Transactional;
+import ubic.gemma.core.util.ListUtils;
 import ubic.gemma.model.common.Identifiable;
 
+import javax.annotation.CheckReturnValue;
 import javax.annotation.Nonnull;
 import javax.annotation.OverridingMethodsMustInvokeSuper;
-import java.util.Collection;
-import java.util.Objects;
+import java.util.*;
+
+import static java.util.Objects.requireNonNull;
 
 /**
  * Base for all services handling DAO access.
@@ -36,7 +39,7 @@ public abstract class AbstractService<O extends Identifiable> implements BaseSer
     @Override
     @Transactional(readOnly = true)
     public O findOrFail( O entity ) {
-        return Objects.requireNonNull( mainDao.find( entity ),
+        return requireNonNull( mainDao.find( entity ),
                 String.format( "No %s matching %s could be found.", mainDao.getElementClass().getName(), entity ) );
     }
 
@@ -88,7 +91,7 @@ public abstract class AbstractService<O extends Identifiable> implements BaseSer
     @Override
     @Transactional(readOnly = true)
     public O loadOrFail( Long id ) {
-        return Objects.requireNonNull( mainDao.load( id ),
+        return requireNonNull( mainDao.load( id ),
                 String.format( "No %s with ID %d.", mainDao.getElementClass().getName(), id ) );
     }
 
@@ -125,8 +128,8 @@ public abstract class AbstractService<O extends Identifiable> implements BaseSer
 
     @Override
     @Transactional
-    public void removeAll() {
-        mainDao.removeAll();
+    public void removeAllInBatch() {
+        mainDao.removeAllInBatch();
     }
 
     @Override
@@ -142,4 +145,72 @@ public abstract class AbstractService<O extends Identifiable> implements BaseSer
         mainDao.update( entity );
     }
 
+    /**
+     * Ensure that a given entity is in the current session.
+     * <p>
+     * If not found in the current session, it will be retrieved from the DAO.
+     */
+    @CheckReturnValue
+    protected O ensureInSession( O entity ) {
+        Long id = entity.getId();
+        if ( id == null )
+            return entity; // transient
+        return requireNonNull( mainDao.load( id ),
+                String.format( "No %s with ID %d.", mainDao.getElementClass().getName(), id ) );
+    }
+
+    /**
+     * Ensure that a collection of entities are in the current session.
+     * <p>
+     * Implementation note: if all entities are already in the session - or are transient, this call is very fast and
+     * does not involve any database interaction, otherwise the persistent entities are fetched in bulk.
+     *
+     * @see #ensureInSession(Identifiable)
+     */
+    @CheckReturnValue
+    protected Collection<O> ensureInSession( Collection<O> entities ) {
+        List<O> result = new ArrayList<>();
+        Iterator<O> it = entities.iterator();
+        boolean allEntitiesAlreadyInSession = true;
+        while ( it.hasNext() ) {
+            O e = it.next();
+            O se = ensureInSession( e );
+            result.add( se );
+            if ( e != se ) {
+                allEntitiesAlreadyInSession = false;
+                break;
+            }
+        }
+
+        // no need to sort or fetch anything, just return the input
+        if ( allEntitiesAlreadyInSession )
+            return entities;
+
+        // bulk load the remaining persistent entities (if any)
+        Set<Long> ids = new HashSet<>( entities.size() );
+        it.forEachRemaining( f -> {
+            if ( f.getId() == null ) {
+                result.add( f ); // transient
+            } else {
+                ids.add( f.getId() );
+            }
+        } );
+        if ( !ids.isEmpty() ) {
+            result.addAll( mainDao.load( ids ) );
+        }
+
+        Map<O, Integer> ix;
+        try {
+            ix = ListUtils.indexOfElements( entities instanceof List ? ( List<O> ) entities : new ArrayList<>( entities ) );
+        } catch ( RuntimeException e ) {
+            log.warn( String.format( "Failed to create index of elements for a collection of %d %s; the resulting output will not be sorted.",
+                    entities.size(), mainDao.getElementClass().getName() ), e );
+            return result;
+        }
+
+        // sort entries according to the input collection order
+        result.sort( Comparator.comparingInt( ix::get ) );
+
+        return result;
+    }
 }

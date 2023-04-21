@@ -39,7 +39,6 @@ import ubic.basecode.ontology.model.OntologyIndividual;
 import ubic.basecode.ontology.model.OntologyResource;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.basecode.ontology.search.OntologySearchException;
-import ubic.basecode.util.BatchIterator;
 import ubic.gemma.core.annotation.reference.BibliographicReferenceService;
 import ubic.gemma.core.association.phenotype.PhenotypeAssociationManagerService;
 import ubic.gemma.core.genome.gene.service.GeneSearchService;
@@ -62,7 +61,6 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.gene.GeneSet;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
-import ubic.gemma.model.genome.gene.phenotype.valueObject.GeneEvidenceValueObject;
 import ubic.gemma.persistence.service.BaseVoEnabledService;
 import ubic.gemma.persistence.service.common.description.CharacteristicService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
@@ -1324,56 +1322,11 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
             }
         }
 
-        /*
-         * Possibly search for genes linked via a phenotype, but only if we don't have anything here.
-         *
-         */
-        if ( combinedGeneList.isEmpty() ) {
-            Collection<CharacteristicValueObject> phenotypeTermHits;
-            try {
-                // FIXME: add support for OR, but there's a bug in baseCode that prevents this https://github.com/PavlidisLab/baseCode/issues/22
-                String query = settings.getQuery().replaceAll( "\\s+OR\\s+", "" );
-                phenotypeTermHits = this.phenotypeAssociationManagerService
-                        .searchInDatabaseForPhenotype( query, settings.getMaxResults() );
-            } catch ( OntologySearchException e ) {
-                throw new BaseCodeOntologySearchException( e );
-            }
-
-            for ( CharacteristicValueObject phenotype : phenotypeTermHits ) {
-                Set<String> phenotypeUris = new HashSet<>();
-                phenotypeUris.add( phenotype.getValueUri() );
-
-                // DATABASE HIT!
-                Collection<GeneEvidenceValueObject> phenotypeGenes = phenotypeAssociationManagerService
-                        .findCandidateGenes( phenotypeUris, settings.getTaxon() );
-
-                if ( !phenotypeGenes.isEmpty() ) {
-                    SearchServiceImpl.log.info( String.format( "%d genes associated with %s via %s", phenotypeGenes.size(), phenotype, settings ) );
-
-                    for ( GeneEvidenceValueObject gvo : phenotypeGenes ) {
-                        Gene g = Gene.Factory.newInstance();
-                        g.setId( gvo.getId() );
-                        g.setTaxon( settings.getTaxon() );
-                        SearchResult<Gene> sr = SearchResult.from( Gene.class, g, 1.0, null, "PhenotypeAssociationManagerService.findCandidateGenes" );
-                        sr.setHighlightedText( phenotype.getValue() + " (" + phenotype.getValueUri() + ")" );
-
-                        // if ( gvo.getScore() != null ) {
-                        // TODO If we get evidence quality, use that in the score.
-                        // }
-                        sr.setScore( 1.0 ); // maybe lower, if we do this search when combinedGeneList is nonempty.
-                        combinedGeneList.add( sr );
-                    }
-                    if ( combinedGeneList.size() > 100 /* some limit */ ) {
-                        break;
-                    }
-                }
-            }
-        }
-
         if ( watch.getTime() > 1000 )
             SearchServiceImpl.log
                     .info( "Gene search for " + settings + " took " + watch.getTime() + " ms; " + combinedGeneList
                             .size() + " results." );
+
         return combinedGeneList;
     }
 

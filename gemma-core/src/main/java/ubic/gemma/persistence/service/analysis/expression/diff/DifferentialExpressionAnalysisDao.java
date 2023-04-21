@@ -71,12 +71,6 @@ public interface DifferentialExpressionAnalysisDao extends SingleExperimentAnaly
 
     Collection<Long> getExperimentsWithAnalysis( Taxon taxon );
 
-    void thaw( Collection<DifferentialExpressionAnalysis> expressionAnalyses );
-
-    void thaw( DifferentialExpressionAnalysis differentialExpressionAnalysis );
-
-    void thawResultSets( DifferentialExpressionAnalysis dea );
-
     Map<Long, List<DifferentialExpressionAnalysisValueObject>> getAnalysesByExperimentIds(
             Collection<Long> expressionExperimentIds, int offset, int limit );
 }

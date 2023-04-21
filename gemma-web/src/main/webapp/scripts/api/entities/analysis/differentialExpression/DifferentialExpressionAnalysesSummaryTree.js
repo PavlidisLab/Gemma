@@ -471,9 +471,9 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext
 
                 linkText += '</span>';
                 /* provide link for visualization. */
-                var tipText = "View top differentially expressed genes for: " + escape(factor) + " (FDR threshold=" + resultSet.threshold + ")";
+                var tipText = "View top differentially expressed genes for &quot;" + factor + "&quot;";
                 linkText += '<span class="link" onClick="visualizeDiffExpressionHandler(\'' + eeID + '\',\''
-                    + resultSet.resultSetId + '\',\'' + escape(factor)
+                    + resultSet.resultSetId + '\',\'' + factor
                     + '\')">&nbsp;'
                     + "<i class='orange fa fa-area-chart fa-fw fa-lg' ext:qtip='" + tipText + "'></i></span>";
 
@@ -756,7 +756,7 @@ function visualizeDiffExpressionHandler(eeid, diffResultId, factorDetails) {
     var visDiffWindow = new Gemma.VisualizationWithThumbsWindow({
         thumbnails: false,
         readMethod: DEDVController.getDEDVForDiffExVisualizationByThreshold,
-        title: "Top diff. ex. probes for " + factorDetails,
+        title: "Top diff. ex. probes for &quot;" + factorDetails + "&quot;",
         showLegend: false,
         downloadLink: String.format(ctxBasePath + "/dedv/downloadDEDV.html?ee={0}&rs={1}&thresh={2}&diffex=1", eeid,
             diffResultId, Gemma.DIFFEXVIS_QVALUE_THRESHOLD)

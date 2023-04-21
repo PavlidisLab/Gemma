@@ -17,16 +17,14 @@ package ubic.gemma.core.loader.expression.arrayDesign;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ubic.gemma.model.common.auditAndSecurity.AuditAction;
-import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignMergeEvent;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.persistence.persister.Persister;
+import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 
 import java.util.Collection;
-import java.util.Date;
 
 /**
  * @author Paul
@@ -38,6 +36,8 @@ public class ArrayDesignMergeHelperServiceImpl implements ArrayDesignMergeHelper
     private ArrayDesignService arrayDesignService;
     @Autowired
     private Persister arrayDesignPersiter;
+    @Autowired
+    private AuditTrailService auditTrailService;
 
     @Override
     @Transactional
@@ -84,9 +84,7 @@ public class ArrayDesignMergeHelperServiceImpl implements ArrayDesignMergeHelper
      * @param note        note
      */
     private void audit( ArrayDesign arrayDesign, String note ) {
-        AuditEvent auditEvent = AuditEvent.Factory
-                .newInstance( new Date(), AuditAction.UPDATE, note, null, null, new ArrayDesignMergeEvent() );
-        arrayDesign.getAuditTrail().addEvent( auditEvent );
+        auditTrailService.addUpdateEvent( arrayDesign, ArrayDesignMergeEvent.class, note );
     }
 
 }

@@ -21,6 +21,7 @@ package ubic.gemma.persistence.service.expression.experiment;
 import com.google.common.base.Strings;
 import gemma.gsec.SecurityService;
 import org.apache.commons.math3.exception.NotStrictlyPositiveException;
+import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -49,7 +50,7 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
-import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
+import ubic.gemma.model.expression.bioAssayData.MeanVarianceRelation;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.*;
@@ -81,7 +82,6 @@ import java.util.stream.Collectors;
  * @see ExpressionExperimentService
  */
 @Service
-@Transactional
 public class ExpressionExperimentServiceImpl
         extends AbstractFilteringVoEnabledService<ExpressionExperiment, ExpressionExperimentValueObject>
         implements ExpressionExperimentService {
@@ -233,6 +233,9 @@ public class ExpressionExperimentServiceImpl
     @Override
     @Transactional(readOnly = true)
     public boolean checkHasBatchInfo( ExpressionExperiment ee ) {
+        if ( ee.getExperimentalDesign() == null ) {
+            return false;
+        }
 
         for ( ExperimentalFactor ef : ee.getExperimentalDesign().getExperimentalFactors() ) {
             if ( BatchInfoPopulationServiceImpl.isBatchFactor( ef ) ) {
@@ -249,6 +252,8 @@ public class ExpressionExperimentServiceImpl
     @Override
     @Transactional(readOnly = true)
     public BatchInformationFetchingEvent checkBatchFetchStatus( ExpressionExperiment ee ) {
+        if ( ee.getExperimentalDesign() == null )
+            return null;
 
         for ( ExperimentalFactor ef : ee.getExperimentalDesign().getExperimentalFactors() ) {
             if ( BatchInfoPopulationServiceImpl.isBatchFactor( ef ) ) {
@@ -297,6 +302,16 @@ public class ExpressionExperimentServiceImpl
     @Transactional(readOnly = true)
     public Collection<Long> filterByTaxon( Collection<Long> ids, Taxon taxon ) {
         return this.expressionExperimentDao.filterByTaxon( ids, taxon );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public ExpressionExperiment loadWithMeanVarianceRelation( Long id ) {
+        ExpressionExperiment ee = load( id );
+        if ( ee != null ) {
+            Hibernate.initialize( ee.getMeanVarianceRelation() );
+        }
+        return ee;
     }
 
     /**
@@ -451,13 +466,13 @@ public class ExpressionExperimentServiceImpl
 
     @Override
     @Transactional(readOnly = true)
-    public Map<Long, Integer> getAnnotationCounts( final Collection<Long> ids ) {
+    public Map<Long, Long> getAnnotationCountsByIds( final Collection<Long> ids ) {
         return this.expressionExperimentDao.getAnnotationCounts( ids );
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Set<AnnotationValueObject> getAnnotations( Long eeId ) {
+    public Set<AnnotationValueObject> getAnnotationsById( Long eeId ) {
         ExpressionExperiment expressionExperiment = Objects.requireNonNull( this.load( eeId ) );
         Set<AnnotationValueObject> annotations = new HashSet<>();
 
@@ -658,14 +673,14 @@ public class ExpressionExperimentServiceImpl
 
     @Override
     @Transactional(readOnly = true)
-    public Integer getBioMaterialCount( final ExpressionExperiment expressionExperiment ) {
+    public long getBioMaterialCount( final ExpressionExperiment expressionExperiment ) {
         return this.expressionExperimentDao.getBioMaterialCount( expressionExperiment );
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Integer getDesignElementDataVectorCountById( final Long id ) {
-        return this.expressionExperimentDao.getDesignElementDataVectorCountById( id );
+    public long getDesignElementDataVectorCount( final ExpressionExperiment ee ) {
+        return this.expressionExperimentDao.getDesignElementDataVectorCount( ee );
     }
 
     @Override
@@ -712,41 +727,32 @@ public class ExpressionExperimentServiceImpl
 
     @Override
     @Transactional(readOnly = true)
-    public Map<Long, Integer> getPopulatedFactorCounts( final Collection<Long> ids ) {
+    public Map<Long, Long> getPopulatedFactorCounts( final Collection<Long> ids ) {
         return this.expressionExperimentDao.getPopulatedFactorCounts( ids );
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Map<Long, Integer> getPopulatedFactorCountsExcludeBatch( final Collection<Long> ids ) {
+    public Map<Long, Long> getPopulatedFactorCountsExcludeBatch( final Collection<Long> ids ) {
         return this.expressionExperimentDao.getPopulatedFactorCountsExcludeBatch( ids );
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Collection<QuantitationType> getPreferredQuantitationType( final ExpressionExperiment ee ) {
-        Collection<QuantitationType> preferredQuantitationTypes = new HashSet<>();
-
-        Collection<QuantitationType> quantitationTypes = this.getQuantitationTypes( ee );
-
-        for ( QuantitationType qt : quantitationTypes ) {
-            if ( qt.getIsPreferred() ) {
-                preferredQuantitationTypes.add( qt );
-            }
-        }
-        return preferredQuantitationTypes;
+    public QuantitationType getPreferredQuantitationType( final ExpressionExperiment ee ) {
+        return this.expressionExperimentDao.getPreferredQuantitationType( ee );
     }
 
     @Override
     @Transactional(readOnly = true)
-    public QuantitationType getPreferredQuantitationTypeForDataVectorType( ExpressionExperiment ee, Class<? extends DesignElementDataVector> vectorType ) {
-        return expressionExperimentDao.getPreferredQuantitationTypeForDataVectorType( ee, vectorType );
+    public QuantitationType getMaskedPreferredQuantitationType( ExpressionExperiment ee ) {
+        return expressionExperimentDao.getMaskedPreferredQuantitationType( ee );
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Map<QuantitationType, Integer> getQuantitationTypeCountById( final Long id ) {
-        return this.expressionExperimentDao.getQuantitationTypeCountById( id );
+    public Map<QuantitationType, Long> getQuantitationTypeCount( ExpressionExperiment ee ) {
+        return this.expressionExperimentDao.getQuantitationTypeCount( ee );
     }
 
     @Override
@@ -757,16 +763,15 @@ public class ExpressionExperimentServiceImpl
 
     @Override
     @Transactional(readOnly = true)
-    public Collection<QuantitationTypeValueObject> getQuantitationTypeValueObjects( ExpressionExperiment expressionExperiment ) {
-        Collection<QuantitationType> qts = this.expressionExperimentDao.getQuantitationTypes( expressionExperiment );
-        return quantitationTypeService.loadValueObjectsWithExpressionExperiment( qts, expressionExperiment );
+    public Collection<QuantitationType> getQuantitationTypes( ExpressionExperiment ee, ArrayDesign oldAd ) {
+        return this.expressionExperimentDao.getQuantitationTypes( ee, oldAd );
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Collection<QuantitationType> getQuantitationTypes( final ExpressionExperiment expressionExperiment,
-            final ArrayDesign arrayDesign ) {
-        return this.expressionExperimentDao.getQuantitationTypes( expressionExperiment, arrayDesign );
+    public Collection<QuantitationTypeValueObject> getQuantitationTypeValueObjects( ExpressionExperiment expressionExperiment ) {
+        expressionExperiment = ensureInSession( expressionExperiment );
+        return quantitationTypeService.loadValueObjectsWithExpressionExperiment( expressionExperiment.getQuantitationTypes(), expressionExperiment );
     }
 
     @Override
@@ -957,25 +962,33 @@ public class ExpressionExperimentServiceImpl
     @Override
     @Transactional(readOnly = true)
     public ExpressionExperiment thaw( final ExpressionExperiment expressionExperiment ) {
-        return this.expressionExperimentDao.thaw( expressionExperiment );
+        ExpressionExperiment result = ensureInSession( expressionExperiment );
+        this.expressionExperimentDao.thaw( result );
+        return result;
     }
 
     @Override
     @Transactional(readOnly = true)
     public ExpressionExperiment thawBioAssays( final ExpressionExperiment expressionExperiment ) {
-        return this.expressionExperimentDao.thawBioAssays( expressionExperiment );
+        ExpressionExperiment result = ensureInSession( expressionExperiment );
+        this.expressionExperimentDao.thawBioAssays( result );
+        return result;
     }
 
     @Override
     @Transactional(readOnly = true)
     public ExpressionExperiment thawLite( final ExpressionExperiment expressionExperiment ) {
-        return this.expressionExperimentDao.thawWithoutVectors( expressionExperiment );
+        ExpressionExperiment result = ensureInSession( expressionExperiment );
+        this.expressionExperimentDao.thawWithoutVectors( result );
+        return result;
     }
 
     @Override
     @Transactional(readOnly = true)
     public ExpressionExperiment thawLiter( final ExpressionExperiment expressionExperiment ) {
-        return this.expressionExperimentDao.thawForFrontEnd( expressionExperiment );
+        ExpressionExperiment result = ensureInSession( expressionExperiment );
+        this.expressionExperimentDao.thawForFrontEnd( result );
+        return result;
     }
 
     @Override
@@ -997,6 +1010,9 @@ public class ExpressionExperimentServiceImpl
                     "Error performing 'ExpressionExperimentService.remove(ExpressionExperiment expressionExperiment)' --> "
                             + " You do not have permission to edit this experiment." );
         }
+
+        // thaw everything
+        ee = thaw( ee );
 
         // Remove subsets
         Collection<ExpressionExperimentSubSet> subsets = this.getSubSets( ee );
@@ -1047,7 +1063,7 @@ public class ExpressionExperimentServiceImpl
 
     @Override
     @Transactional
-    public void removeAll() {
+    public void removeAllInBatch() {
         throw new UnsupportedOperationException( "That would be nut." );
     }
 
@@ -1061,7 +1077,7 @@ public class ExpressionExperimentServiceImpl
     }
 
     private boolean getHasBeenBatchCorrected( ExpressionExperiment ee ) {
-        for ( QuantitationType qt : this.expressionExperimentDao.getQuantitationTypes( ee ) ) {
+        for ( QuantitationType qt : ee.getQuantitationTypes() ) {
             if ( qt.getIsBatchCorrected() ) {
                 return true;
             }
@@ -1110,6 +1126,12 @@ public class ExpressionExperimentServiceImpl
     @Transactional(readOnly = true)
     public Collection<ExpressionExperiment> getExperimentsLackingPublications() {
         return this.expressionExperimentDao.getExperimentsLackingPublications();
+    }
+
+    @Override
+    @Transactional
+    public MeanVarianceRelation updateMeanVarianceRelation( ExpressionExperiment ee, MeanVarianceRelation mvr ) {
+        return expressionExperimentDao.updateMeanVarianceRelation( ee, mvr );
     }
 
     /**

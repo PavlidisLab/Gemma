@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2007 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -25,6 +25,7 @@ import org.springframework.stereotype.Component;
 import ubic.gemma.core.loader.expression.geo.model.GeoRecord;
 import ubic.gemma.core.loader.expression.geo.service.GeoBrowserService;
 
+import javax.servlet.ServletContext;
 import java.io.IOException;
 import java.text.ParseException;
 import java.util.Collection;
@@ -39,6 +40,9 @@ public class GeoRecordBrowserController {
 
     @Autowired
     private GeoBrowserService geoBrowserService;
+
+    @Autowired
+    private ServletContext servletContext;
 
     /**
      * AJAX
@@ -81,7 +85,7 @@ public class GeoRecordBrowserController {
 
     public String getDetails( String accession ) {
         try {
-            return geoBrowserService.getDetails( accession );
+            return geoBrowserService.getDetails( accession, servletContext.getContextPath() );
         } catch ( IOException e ) {
             return "No result";
         }

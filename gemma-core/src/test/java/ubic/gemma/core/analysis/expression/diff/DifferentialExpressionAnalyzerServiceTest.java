@@ -19,7 +19,6 @@
 package ubic.gemma.core.analysis.expression.diff;
 
 import org.junit.After;
-import org.junit.Assume;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,6 +31,7 @@ import ubic.gemma.core.loader.expression.geo.AbstractGeoServiceTest;
 import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 import ubic.gemma.core.loader.expression.geo.service.GeoService;
 import ubic.gemma.core.loader.expression.simple.ExperimentalDesignImporter;
+import ubic.gemma.core.loader.util.AlreadyExistsInSystemException;
 import ubic.gemma.core.security.authorization.acl.AclTestUtils;
 import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
@@ -39,6 +39,7 @@ import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisV
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
+import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -52,14 +53,15 @@ import ubic.gemma.persistence.service.expression.experiment.ExpressionExperiment
 
 import java.io.File;
 import java.io.InputStream;
-import java.net.URISyntaxException;
 import java.util.*;
 
 import static org.junit.Assert.*;
+import static org.junit.Assume.assumeNoException;
 
 /**
  * @author keshav, paul
  */
+@Category(SlowTest.class)
 public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServiceTest {
 
     @Autowired
@@ -109,7 +111,6 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
      * Test for bug 2026, not a subsetted analysis.
      */
     @Test
-    @Category(SlowTest.class)
     public void testAnalyzeAndDeleteSpecificAnalysis() throws Exception {
         prepareGSE1611();
 
@@ -135,7 +136,6 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
      * Tests running with a subset factor, then deleting.
      */
     @Test
-    @Category(SlowTest.class)
     public void testAnalyzeAndDeleteSpecificAnalysisWithSubset() throws Exception {
         prepareGSE1611();
 
@@ -158,7 +158,6 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
     }
 
     @Test
-    @Category(SlowTest.class)
     public void testAnalyzeAndDelete() throws Exception {
         prepareGSE1611();
 
@@ -180,9 +179,8 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
         aclTestUtils.checkLacksAces( analysis );
         aclTestUtils.checkHasAclParent( analysis, ee );
 
-        Integer numVectors = expressionExperimentService.getDesignElementDataVectorCountById( ee.getId() );
-        // FIXME: use an assertion here, see https://github.com/PavlidisLab/Gemma/issues/419
-        Assume.assumeTrue( "The number of vectors does not match what is expected, this is likely caused by a failed cleanup from another test.", numVectors == 100 );
+        long numVectors = expressionExperimentService.getDesignElementDataVectorCount( ee );
+        assertEquals( 100L, numVectors );
 
         for ( ExpressionAnalysisResultSet rs : analysis.getResultSets() ) {
             assertFalse( rs.getResults().isEmpty() );
@@ -224,11 +222,16 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
      * Test inspired by bug 2605
      */
     @Test
-    @Category(SlowTest.class)
     public void testAnalyzeWithSubsetWhenOneIsNotUsableAndWithInteractionInTheOther() throws Exception {
-        geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( this.getTestFileBasePath() ) );
-        Collection<?> results = geoService.fetchAndLoad( "GSE32136", false, true, false );
-        ee = ( ExpressionExperiment ) results.iterator().next();
+        try {
+            geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( this.getTestFileBasePath() ) );
+            Collection<?> results = geoService.fetchAndLoad( "GSE32136", false, true, false );
+            ee = ( ExpressionExperiment ) results.iterator().next();
+        } catch ( AlreadyExistsInSystemException e ) {
+            //noinspection unchecked
+            ee = ( ( Collection<ExpressionExperiment> ) e.getData() ).iterator().next();
+            assumeNoException( e );
+        }
         processedDataVectorService.createProcessedDataVectors( ee );
 
         ee = expressionExperimentService.thawLite( ee );
@@ -282,7 +285,7 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
         assertEquals( "Subsetting was not done correctly", subsetFactor,
                 analysis.getSubsetFactorValue().getExperimentalFactor() );
         // FIXME: use an assertion here, see https://github.com/PavlidisLab/Gemma/issues/419
-        Assume.assumeTrue( "Interaction was not retained in the analyzed subset", 3 == analysis.getResultSets().size() );
+        assertEquals( "Interaction was not retained in the analyzed subset", 3, analysis.getResultSets().size() );
 
         ExpressionExperimentSubSet eeset = ( ExpressionExperimentSubSet ) analysis.getExperimentAnalyzed();
 
@@ -312,7 +315,6 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
     }
 
     @Test
-    @Category(SlowTest.class)
     public void testWritePValuesHistogram() throws Exception {
         prepareGSE1611();
         DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
@@ -321,7 +323,7 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
         Collection<DifferentialExpressionAnalysis> analyses = differentialExpressionAnalyzerService
                 .runDifferentialExpressionAnalyses( ee, config );
         for ( DifferentialExpressionAnalysis analysis : analyses ) {
-            differentialExpressionAnalysisService.thaw( analysis );
+            analysis = differentialExpressionAnalysisService.thaw( analysis );
             for ( ExpressionAnalysisResultSet resultSet : analysis.getResultSets() ) {
                 Histogram hist = resultService.loadPvalueDistribution( resultSet.getId() );
                 assertNotNull( hist );
@@ -331,19 +333,23 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
     }
 
     private void prepareGSE1611() throws Exception {
-        ee = expressionExperimentService.findByShortName( "GSE1611" );
-        assertNull( ee );
-
-        geoService.setGeoDomainObjectGenerator(
-                new GeoDomainObjectGeneratorLocal( this.getTestFileBasePath( "gds994Short" ) ) );
-        Collection<?> results = geoService.fetchAndLoad( "GSE1611", false, true, false );
-        ee = ( ExpressionExperiment ) results.iterator().next();
+        try {
+            geoService.setGeoDomainObjectGenerator(
+                    new GeoDomainObjectGeneratorLocal( this.getTestFileBasePath( "gds994Short" ) ) );
+            Collection<?> results = geoService.fetchAndLoad( "GSE1611", false, true, false );
+            ee = ( ExpressionExperiment ) results.iterator().next();
+        } catch ( AlreadyExistsInSystemException e ) {
+            //noinspection unchecked
+            ee = ( ( Collection<ExpressionExperiment> ) e.getData() ).iterator().next();
+            throw e;
+        }
 
         assertEquals( 2, ee.getExperimentalDesign().getExperimentalFactors().size() );
 
-        processedDataVectorService.createProcessedDataVectors( ee );
-        ee = expressionExperimentService.findByShortName( "GSE1611" );
+        Set<ProcessedExpressionDataVector> vectors = processedDataVectorService.createProcessedDataVectors( ee );
+        assertEquals( 100, vectors.size() );
         ee = expressionExperimentService.thawLite( ee );
+        assertEquals( 100, ee.getNumberOfDataVectors().intValue() );
         differentialExpressionAnalyzerService.deleteAnalyses( ee );
 
         for ( BioAssay ba : ee.getBioAssays() ) {

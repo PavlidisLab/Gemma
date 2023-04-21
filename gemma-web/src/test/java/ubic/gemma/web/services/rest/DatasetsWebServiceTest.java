@@ -141,31 +141,30 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
     @Test
     public void testGetDatasetProcessedExpression() {
         QuantitationType qt = QuantitationType.Factory.newInstance();
-        when( expressionExperimentService.getPreferredQuantitationTypeForDataVectorType( ee, ProcessedExpressionDataVector.class ) )
+        when( expressionExperimentService.getMaskedPreferredQuantitationType( ee ) )
                 .thenReturn( qt );
         assertThat( target( "/datasets/1/data/processed" ).request().get() ).hasFieldOrPropertyWithValue( "status", 200 );
-        verify( expressionExperimentService ).getPreferredQuantitationTypeForDataVectorType( ee, ProcessedExpressionDataVector.class );
+        verify( expressionExperimentService ).getMaskedPreferredQuantitationType( ee );
     }
 
     @Test
     public void testGetDatasetProcessedExpressionByQuantitationType() throws IOException {
         when( expressionExperimentService.load( 1L ) ).thenReturn( ee );
         QuantitationType qt = QuantitationType.Factory.newInstance();
-        when( quantitationTypeService.findByIdAndDataVectorType( ee, 12L, ProcessedExpressionDataVector.class ) ).thenReturn( qt );
+        when( expressionExperimentService.getMaskedPreferredQuantitationType( ee ) ).thenReturn( qt );
         assertThat( target( "/datasets/1/data/processed" )
                 .queryParam( "quantitationType", "12" ).request().get() )
                 .hasFieldOrPropertyWithValue( "status", 200 );
-        verify( quantitationTypeService ).findByIdAndDataVectorType( ee, 12L, ProcessedExpressionDataVector.class );
         verify( expressionDataFileService ).writeProcessedExpressionData( eq( ee ), eq( qt ), any() );
     }
 
     @Test
     public void testGetDatasetRawExpression() throws IOException {
         QuantitationType qt = QuantitationType.Factory.newInstance();
-        when( expressionExperimentService.getPreferredQuantitationTypeForDataVectorType( ee, RawExpressionDataVector.class ) )
+        when( expressionExperimentService.getPreferredQuantitationType( ee ) )
                 .thenReturn( qt );
         assertThat( target( "/datasets/1/data/raw" ).request().get() ).hasFieldOrPropertyWithValue( "status", 200 );
-        verify( expressionExperimentService ).getPreferredQuantitationTypeForDataVectorType( ee, RawExpressionDataVector.class );
+        verify( expressionExperimentService ).getPreferredQuantitationType( ee );
         verifyNoInteractions( quantitationTypeService );
         verify( expressionDataFileService ).writeRawExpressionData( eq( ee ), eq( qt ), any() );
     }

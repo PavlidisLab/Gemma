@@ -78,21 +78,14 @@ public class GeneProduct extends ChromosomeFeature {
 
     @Override
     public String toString() {
-        StringBuilder buf = new StringBuilder();
-
-        buf.append( this.getClass().getSimpleName() );
-
-        if ( this.getId() != null ) {
-            buf.append( " Id=" ).append( this.getId() ).append( " " );
-        } else {
-            buf.append( " " );
+        StringBuilder buf = new StringBuilder( super.toString() );
+        if ( ncbiGi != null ) {
+            buf.append( " NCBI GI=" ).append( ncbiGi );
         }
-
-        buf.append( this.getName() ).append( this.getName() == null ? "" : " GI:" + this.getNcbiGi() );
-        buf.append( " [Gene = " ).append( this.getGene() ).append( "]" );
-
+        if ( gene != null ) {
+            buf.append( " Gene=" ).append( gene );
+        }
         return buf.toString();
-
     }
 
     public Set<DatabaseEntry> getAccessions() {

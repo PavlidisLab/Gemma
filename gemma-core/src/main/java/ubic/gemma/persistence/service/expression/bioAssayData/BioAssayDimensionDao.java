@@ -29,8 +29,8 @@ public interface BioAssayDimensionDao extends BaseVoEnabledDao<BioAssayDimension
 
     @SuppressWarnings("UnusedReturnValue")
         // Possible external use
-    BioAssayDimension thawLite( BioAssayDimension bioAssayDimension );
+    void thawLite( BioAssayDimension bioAssayDimension );
 
-    BioAssayDimension thaw( BioAssayDimension bioAssayDimension );
+    void thaw( BioAssayDimension bioAssayDimension );
 
 }

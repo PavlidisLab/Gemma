@@ -32,7 +32,7 @@ import ubic.gemma.model.common.quantitationtype.QuantitationTypeValueObject;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
-import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
+import ubic.gemma.model.expression.bioAssayData.MeanVarianceRelation;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.*;
@@ -45,6 +45,7 @@ import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.persistence.util.Sort;
 import ubic.gemma.persistence.util.monitor.Monitored;
 
+import javax.annotation.CheckReturnValue;
 import javax.annotation.Nullable;
 import java.util.*;
 
@@ -79,6 +80,7 @@ public interface ExpressionExperimentService
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     List<ExpressionExperiment> browse( int start, int limit );
 
+    @Nullable
     BatchInformationFetchingEvent checkBatchFetchStatus( ExpressionExperiment ee );
 
     boolean checkHasBatchInfo( ExpressionExperiment ee );
@@ -127,6 +129,9 @@ public interface ExpressionExperimentService
     @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     Collection<ExpressionExperiment> loadAll();
+
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ_QUIET" })
+    ExpressionExperiment loadWithMeanVarianceRelation( Long id );
 
     @Override
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
@@ -237,13 +242,13 @@ public interface ExpressionExperimentService
      * @param ids ids
      * @return the map of ids to number of terms associated with each expression experiment.
      */
-    Map<Long, Integer> getAnnotationCounts( Collection<Long> ids );
+    Map<Long, Long> getAnnotationCountsByIds( Collection<Long> ids );
 
     /**
      * @param eeId experiment id.
      * @return the terms associated this expression experiment.
      */
-    Set<AnnotationValueObject> getAnnotations( Long eeId );
+    Set<AnnotationValueObject> getAnnotationsById( Long eeId );
 
     /**
      * @param expressionExperiment experiment
@@ -290,9 +295,10 @@ public interface ExpressionExperimentService
      * @return the amount of biomaterials associated with the given expression experiment.
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    Integer getBioMaterialCount( ExpressionExperiment expressionExperiment );
+    long getBioMaterialCount( ExpressionExperiment expressionExperiment );
 
-    Integer getDesignElementDataVectorCountById( Long id );
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    long getDesignElementDataVectorCount( ExpressionExperiment ee );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     Collection<ExpressionExperiment> getExperimentsWithOutliers();
@@ -342,7 +348,7 @@ public interface ExpressionExperimentService
      * associated
      * with biomaterials.
      */
-    Map<Long, Integer> getPopulatedFactorCounts( Collection<Long> ids );
+    Map<Long, Long> getPopulatedFactorCounts( Collection<Long> ids );
 
     /**
      * @param ids ids
@@ -350,7 +356,7 @@ public interface ExpressionExperimentService
      * associated
      * with biomaterials and only factors that aren't batch
      */
-    Map<Long, Integer> getPopulatedFactorCountsExcludeBatch( Collection<Long> ids );
+    Map<Long, Long> getPopulatedFactorCountsExcludeBatch( Collection<Long> ids );
 
     /**
      * Iterates over the quantitation types for a given expression experiment and returns the preferred quantitation
@@ -359,20 +365,22 @@ public interface ExpressionExperimentService
      * @param ee experiment
      * @return quantitation types
      */
+    @Nullable
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    Collection<QuantitationType> getPreferredQuantitationType( ExpressionExperiment ee );
+    QuantitationType getPreferredQuantitationType( ExpressionExperiment ee );
 
     /**
-     * @see ExpressionExperimentDao#getPreferredQuantitationTypeForDataVectorType(ExpressionExperiment, Class)
+     * @see ExpressionExperimentDao#getMaskedPreferredQuantitationType(ExpressionExperiment)
      */
+    @Nullable
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    QuantitationType getPreferredQuantitationTypeForDataVectorType( ExpressionExperiment ee, Class<? extends DesignElementDataVector> vectorType );
+    QuantitationType getMaskedPreferredQuantitationType( ExpressionExperiment ee );
 
     /**
-     * @param id id
      * @return count of an expressionExperiment's design element data vectors, grouped by quantitation type
      */
-    Map<QuantitationType, Integer> getQuantitationTypeCountById( Long id );
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    Map<QuantitationType, Long> getQuantitationTypeCount( ExpressionExperiment ee );
 
     /**
      * @param expressionExperiment experiment
@@ -507,9 +515,11 @@ public interface ExpressionExperimentService
      */
     void saveExpressionExperimentStatements( Collection<Characteristic> vc, ExpressionExperiment ee );
 
+    @CheckReturnValue
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     ExpressionExperiment thaw( ExpressionExperiment expressionExperiment );
 
+    @CheckReturnValue
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     ExpressionExperiment thawBioAssays( ExpressionExperiment expressionExperiment );
 
@@ -519,9 +529,11 @@ public interface ExpressionExperimentService
      * @param expressionExperiment experiment
      * @return thawed experiment
      */
+    @CheckReturnValue
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     ExpressionExperiment thawLite( ExpressionExperiment expressionExperiment );
 
+    @CheckReturnValue
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     ExpressionExperiment thawLiter( ExpressionExperiment expressionExperiment );
 
@@ -539,4 +551,7 @@ public interface ExpressionExperimentService
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     Collection<ExpressionExperiment> getExperimentsLackingPublications();
+
+    @Secured({ "GROUP_USER" })
+    MeanVarianceRelation updateMeanVarianceRelation( ExpressionExperiment ee, MeanVarianceRelation mvr );
 }

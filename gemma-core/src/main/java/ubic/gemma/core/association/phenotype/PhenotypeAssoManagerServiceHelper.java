@@ -22,6 +22,7 @@ import ubic.gemma.model.genome.gene.phenotype.valueObject.EvidenceValueObject;
  *
  * @author nicolas
  */
+@Deprecated
 public interface PhenotypeAssoManagerServiceHelper {
 
     /**

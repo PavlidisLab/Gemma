@@ -74,7 +74,6 @@ import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialService;
 import ubic.gemma.persistence.service.expression.experiment.*;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.persistence.util.EntityUtils;
-import ubic.gemma.persistence.util.Settings;
 import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.persistence.util.Sort;
 import ubic.gemma.web.controller.ControllerUtils;
@@ -82,10 +81,12 @@ import ubic.gemma.web.persistence.SessionListManager;
 import ubic.gemma.web.remote.EntityDelegator;
 import ubic.gemma.web.remote.JsonReaderResponse;
 import ubic.gemma.web.remote.ListBatchCommand;
+import ubic.gemma.web.taglib.SimplePageContext;
 import ubic.gemma.web.taglib.expression.experiment.ExperimentQCTag;
 import ubic.gemma.web.util.EntityNotFoundException;
 import ubic.gemma.web.view.TextView;
 
+import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
@@ -155,6 +156,8 @@ public class ExpressionExperimentController {
     private CoexpressionAnalysisService coexpressionAnalysisService;
     @Autowired
     private GeeqService geeqService;
+    @Autowired
+    private ServletContext servletContext;
 
     /**
      * AJAX call for remote paging store security isn't incorporated in db query, so paging needs to occur at higher
@@ -327,7 +330,7 @@ public class ExpressionExperimentController {
     public Collection<AnnotationValueObject> getAnnotation( EntityDelegator e ) {
         if ( e == null || e.getId() == null )
             return null;
-        return expressionExperimentService.getAnnotations( e.getId() );
+        return expressionExperimentService.getAnnotationsById( e.getId() );
     }
 
     /**
@@ -363,7 +366,7 @@ public class ExpressionExperimentController {
         if ( efs.size() < 1 )
             return descriptive.append( "</br><b>(No Factors)</b>" ).toString();
 
-        String efUri = "&nbsp;<a target='_blank' href='" + Settings.getRootContext()
+        String efUri = "&nbsp;<a target='_blank' href='" + servletContext.getContextPath()
                 + "/experimentalDesign/showExperimentalDesign.html?eeid=" + ee.getId() + "'>(details)</a >";
         int MAX_TAGS_TO_SHOW = 15;
         Collection<Characteristic> tags = ee.getCharacteristics();
@@ -462,20 +465,23 @@ public class ExpressionExperimentController {
      */
     public String getQCTagHTML( ExpressionExperiment ee ) {
         ExperimentQCTag qc = new ExperimentQCTag();
+        // FIXME: replace this by some utility class reused by the tag
+        qc.setPageContext( new SimplePageContext( servletContext ) );
         qc.setEe( ee.getId() );
         qc.setEeManagerId( ee.getId() + "-eemanager" );
         qc.setHasCorrMat( sampleCoexpressionAnalysisService.hasAnalysis( ee ) );
         qc.setHasNodeDegreeDist( ExpressionExperimentQCUtils.hasNodeDegreeDistFile( ee ) );
         qc.setHasPCA( svdService.hasPca( ee.getId() ) );
         qc.setNumFactors( ExpressionExperimentQCUtils.numFactors( ee ) );
-        qc.setHasMeanVariance( meanVarianceService.hasMeanVariance( ee ) );
+        qc.setHasMeanVariance( ee.getMeanVarianceRelation() != null );
         qc.setHasCorrDist( this.coexpressionAnalysisService.hasCoexpCorrelationDistribution( ee ) );
         qc.setNumOutliersRemoved( this.numOutliersRemoved( ee ) );
         try {
             qc.setNumPossibleOutliers( this.numPossibleOutliers( ee ) );
         } catch ( java.lang.ArrayIndexOutOfBoundsException e ) {
-            ExpressionExperimentController.log.fatal( e );
-            e.printStackTrace();
+            ExpressionExperimentController.log.error( e );
+        } catch ( IllegalStateException e ) {
+            ExpressionExperimentController.log.error( e );
         }
         return qc.getQChtml();
     }
@@ -1033,7 +1039,7 @@ public class ExpressionExperimentController {
 
         for ( BioAssay ba : ee.getBioAssays() ) {
             BioMaterial bm = ba.getSampleUsed();
-            this.bioMaterialService.thaw( bm );
+            bm = this.bioMaterialService.thaw( bm );
             Collection<BioAssay> bioAssaysUsedIn = bm.getBioAssaysUsedIn();
             if ( bioAssaysUsedIn.size() > 1 ) {
                 needToProcess.add( bm );
@@ -1046,7 +1052,7 @@ public class ExpressionExperimentController {
             for ( BioAssay baU : bm.getBioAssaysUsedIn() ) {
                 if ( i > 0 ) {
                     BioMaterial newMaterial = bioMaterialService.copy( bm );
-                    this.bioMaterialService.thaw( newMaterial );
+                    newMaterial = this.bioMaterialService.thaw( newMaterial );
                     newMaterial.setName( "Modeled after " + bm.getName() );
                     newMaterial.getFactorValues().clear();
                     newMaterial.getBioAssaysUsedIn().add( baU );
@@ -1371,7 +1377,7 @@ public class ExpressionExperimentController {
         mav.addObject( "hasCorrMat", sampleCoexpressionAnalysisService.hasAnalysis( expressionExperiment ) );
         mav.addObject( "hasPvalueDist", ExpressionExperimentQCUtils.hasPvalueDistFiles( expressionExperiment ) );
         mav.addObject( "hasPCA", svdService.hasPca( expressionExperiment.getId() ) );
-        mav.addObject( "hasMeanVariance", meanVarianceService.hasMeanVariance( expressionExperiment ) );
+        mav.addObject( "hasMeanVariance", expressionExperiment.getMeanVarianceRelation() != null );
 
         // FIXME don't store in a file.
         mav.addObject( "hasNodeDegreeDist", ExpressionExperimentQCUtils.hasNodeDegreeDistFile( expressionExperiment ) );
@@ -1783,10 +1789,15 @@ public class ExpressionExperimentController {
             BibliographicReference publication = bibliographicReferenceService.findByExternalId( pubmedId );
 
             if ( publication != null ) {
-
-                ExpressionExperimentController.log.info( "Reference exists in system, associating..." );
-                expressionExperiment.setPrimaryPublication( publication );
-                expressionExperimentService.update( expressionExperiment );
+                // check if the publication is actually being modified
+                if ( expressionExperiment.getPrimaryPublication() == null ||
+                        !expressionExperiment.getPrimaryPublication().equals( publication ) ) {
+                    ExpressionExperimentController.log.info( "Reference exists in system, copying over the metadata and associating..." );
+                    publication.setId( null );
+                    publication = ( BibliographicReference ) persisterHelper.persist( publication );
+                    expressionExperiment.setPrimaryPublication( publication );
+                    expressionExperimentService.update( expressionExperiment );
+                }
             } else {
                 ExpressionExperimentController.log.info( "Searching pubmed on line .." );
 

@@ -98,13 +98,13 @@ public class ExpressionExperimentPlatformSwitchCli extends ExpressionExperimentM
                     throw new RuntimeException( "Unknown array design" );
                 }
                 ad = arrayDesignService.thaw( ad );
-                ee = serv.switchExperimentToArrayDesign( ee, ad );
+                serv.switchExperimentToArrayDesign( ee, ad );
 
                 ats.addUpdateEvent( ee, ExpressionExperimentPlatformSwitchEvent.class, "Switched to use " + ad );
 
             } else {
                 // Identify merged platform automatically; not really recommended as it might not make the optimal choice.
-                ee = serv.switchExperimentToMergedPlatform( ee );
+                serv.switchExperimentToMergedPlatform( ee );
                 ats.addUpdateEvent( ee, ExpressionExperimentPlatformSwitchEvent.class, "Switched to use merged array Design " );
             }
 

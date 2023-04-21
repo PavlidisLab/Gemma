@@ -43,7 +43,7 @@ public class ArrayDesignControllerTest extends BaseSpringWebTest {
 
     @Test
     public void testShowAllArrayDesigns() throws Exception {
-        request = this.newPost( Settings.getRootContext() + "/arrayDesign/showAllArrayDesigns.html" );
+        request = this.newPost( "/arrayDesign/showAllArrayDesigns.html" );
 
         ModelAndView mav = arrayDesignController.showAllArrayDesigns( request, ( HttpServletResponse ) null );
         Collection<Object> c = mav.getModel().values();

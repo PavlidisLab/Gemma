@@ -76,6 +76,7 @@ public class BioSequencePersistTest extends BaseSpringContextTest {
     public final void testPersistBioSequence() {
         bs = ( BioSequence ) persisterHelper.persist( bs );
         assertNotNull( bs.getId() );
+        assertNotNull( bs.getType() );
         assertEquals( "WHOLE_CHROMOSOME", bs.getType().name() );
     }
 

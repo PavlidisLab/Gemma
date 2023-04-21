@@ -25,6 +25,7 @@ import java.util.Set;
 /**
  * @author nicolas
  */
+@Deprecated
 public interface PhenotypeAssoOntologyHelper {
 
     /**

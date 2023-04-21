@@ -150,17 +150,24 @@ public class ExpressionDataMatrixColumnSort {
                                 break;
                         }
 
+                        if ( arbitraryBaselineFV == null ) {
+                            // If we get here, we had passed in the samples in consideration but none had a value assigned.
+                            throw new IllegalStateException(
+                                    "None of the samplesUsed have a value for factor:  " + factor + " (" + factor
+                                            .getFactorValues().size() + " factor values) - ensure samples are assigned this factor" );
+                        }
+
                     } else {
+                        // I'm not sure the use case of this line but it would only be used if we didn't pass in any samples to consider.
                         arbitraryBaselineFV = factor.getFactorValues().iterator().next();
                     }
 
-                    if ( arbitraryBaselineFV == null ) {
-                        throw new IllegalStateException(
-                                "No baseline could be identified for factor:  " + factor + " has " + factor
-                                        .getFactorValues().size() + " factor values" );
+                    // There's no need to log this for batch factors, they are inherently arbitrary and only used
+                    // during batch correction.
+                    if ( !ExperimentalDesignUtils.isBatch( factor ) ) {
+                        ExpressionDataMatrixColumnSort.log
+                                .info( "Falling back on choosing baseline arbitrarily: " + arbitraryBaselineFV );
                     }
-                    ExpressionDataMatrixColumnSort.log
-                            .info( "Falling back on choosing baseline arbitrarily: " + arbitraryBaselineFV );
                     result.put( factor, arbitraryBaselineFV );
                 }
             }
@@ -195,11 +202,9 @@ public class ExpressionDataMatrixColumnSort {
      */
     public static List<BioMaterial> orderByExperimentalDesign( ExpressionDataMatrix<?> mat ) {
         List<BioMaterial> start = ExpressionDataMatrixColumnSort.getBms( mat );
-        assert start != null;
 
         List<BioMaterial> ordered = ExpressionDataMatrixColumnSort.orderByExperimentalDesign( start, null );
 
-        assert ordered != null;
         assert ordered.size() == start.size() : "Expected " + start.size() + ", got " + ordered.size();
 
         return ordered;
@@ -234,7 +239,7 @@ public class ExpressionDataMatrixColumnSort {
             return start;
         }
 
-        // sort factors
+        // sort factors: which one do we want to sort by first
         List<ExperimentalFactor> sortedFactors = ExpressionDataMatrixColumnSort
                 .orderFactorsByExperimentalDesign( start, unsortedFactors );
         // sort biomaterials using sorted factors
@@ -554,8 +559,17 @@ public class ExpressionDataMatrixColumnSort {
     }
 
     /**
-     * Sort biomaterials according to a list of ordered factors
-     *
+     * <p>
+     * Sort biomaterials according to a list of ordered factors.
+     * </p>
+     * <p>
+     * If any factor is continuous, we sort by it and don't do any further sorting.
+     * </p><p>
+     * Otherwise, for categorical factors, we sort recursively (by levels of the first factor, then
+     * within that by levels of the second factor etc.)
+     * </p><p>
+     * Any batch factor is used last (we sort by batch only within the most granular factor's levels)
+     * </p>
      * @param start   biomaterials to sort
      * @param factors sorted list of factors to define sort order for biomaterials, cannot be null
      */
@@ -739,11 +753,6 @@ public class ExpressionDataMatrixColumnSort {
             }
         } );
 
-    }
-
-    @SuppressWarnings("unused") // FIXME temporary. See issue 4435
-    private static void sortByTimepoint( List<FactorValue> factorValues ) {
-        ExpressionDataMatrixColumnSort.sortByControl( factorValues );
     }
 
     /**

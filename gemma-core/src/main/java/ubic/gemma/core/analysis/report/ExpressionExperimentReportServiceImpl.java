@@ -21,6 +21,7 @@ package ubic.gemma.core.analysis.report;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.Cache;
@@ -83,6 +84,13 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
     private ExpressionExperimentService expressionExperimentService;
     @Autowired
     private ProcessedDataVectorCache processedDataVectorCache;
+    @Autowired
+    private BeanFactory beanFactory;
+
+    /**
+     * Needed for self-referencing so that we can call public method annotated with {@link Transactional}.
+     */
+    private ExpressionExperimentReportService self;
 
     /**
      * Cache to hold stats in memory. This is used to avoid hittinig the disk for reports too often.
@@ -91,6 +99,7 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
 
     @Override
     public void afterPropertiesSet() {
+        this.self = beanFactory.getBean( ExpressionExperimentReportService.class );
         this.statsCache = Objects.requireNonNull( cacheManager.getCache( ExpressionExperimentReportServiceImpl.EESTATS_CACHE_NAME ) );
     }
 
@@ -146,9 +155,9 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
             ids.add( id );
         }
 
-        Map<Long, Integer> annotationCounts = expressionExperimentService.getAnnotationCounts( ids );
+        Map<Long, Long> annotationCounts = expressionExperimentService.getAnnotationCountsByIds( ids );
 
-        Map<Long, Integer> factorCounts = expressionExperimentService.getPopulatedFactorCountsExcludeBatch( ids );
+        Map<Long, Long> factorCounts = expressionExperimentService.getPopulatedFactorCountsExcludeBatch( ids );
 
         for ( ExpressionExperimentDetailsValueObject eeVo : vos ) {
             Long id = eeVo.getId();
@@ -366,7 +375,7 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
                         continue;
                     }
                 }
-                recalculateExperimentBatchInfo( ee );
+                self.recalculateExperimentBatchInfo( ee );
             } catch ( Exception e ) {
                 log.warn( "Batch effect recalculation failed for experiment id " + ee.getId(), e );
                 failed.put( ee.getId(), e );

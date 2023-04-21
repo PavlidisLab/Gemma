@@ -25,6 +25,7 @@ import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
+import ubic.gemma.model.expression.experiment.ExperimentalDesign;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.expression.experiment.FactorValueValueObject;
@@ -81,17 +82,17 @@ public class FactorValueDaoImpl extends AbstractQueryFilteringVoEnabledDao<Facto
             }
         }
 
-        List<?> efs = this.getSessionFactory().getCurrentSession()
+        // detach from all associated experimental factors
+        //noinspection unchecked
+        List<ExperimentalFactor> efs = this.getSessionFactory().getCurrentSession()
                 .createQuery( "select ef from ExperimentalFactor ef join ef.factorValues fv where fv = :fv" )
                 .setParameter( "fv", factorValue )
                 .list();
-
-        ExperimentalFactor ef = ( ExperimentalFactor ) efs.iterator().next();
-        ef.getFactorValues().remove( factorValue );
-        this.getSessionFactory().getCurrentSession().update( ef );
-
-        // will get the dreaded 'already in session' error if we don't do this.
-        flushAndClear();
+        AbstractDao.log.info( "Disassociating " + factorValue + " from " + efs.size() + " experimental factors" );
+        for ( ExperimentalFactor ef : efs ) {
+            ef.getFactorValues().remove( factorValue );
+            this.getSessionFactory().getCurrentSession().update( ef );
+        }
 
         super.remove( factorValue );
     }

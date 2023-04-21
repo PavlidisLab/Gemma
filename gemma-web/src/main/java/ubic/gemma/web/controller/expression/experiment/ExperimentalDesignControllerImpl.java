@@ -29,7 +29,7 @@ import ubic.gemma.core.analysis.expression.diff.LinearModelAnalyzer;
 import ubic.gemma.core.analysis.report.ExpressionExperimentReportService;
 import ubic.gemma.core.expression.experiment.FactorValueDeletion;
 import ubic.gemma.core.loader.expression.simple.ExperimentalDesignImporter;
-import ubic.gemma.core.util.AnchorTagUtil;
+import ubic.gemma.web.util.AnchorTagUtil;
 import ubic.gemma.model.association.GOEvidenceCode;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ExperimentalDesignUpdatedEvent;
 import ubic.gemma.model.common.description.Characteristic;
@@ -112,7 +112,7 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
             throw new IllegalArgumentException( "Cannot read from file:" + f );
         }
 
-        try (InputStream is = new FileInputStream( f )) {
+        try ( InputStream is = new FileInputStream( f ) ) {
             // removed dry run code, validation and object creation is done before any commits to DB
             // So if validation fails no rollback needed. However, this call is wrapped in a transaction
             // as a fail safe.
@@ -202,9 +202,9 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
         if ( fv == null ) {
             throw new EntityNotFoundException( "No such factor value with id=" + e.getId() );
         }
-        
+
         if ( StringUtils.isBlank( c.getCategory() ) ) {
-            throw new IllegalArgumentException("The category cannot be blank for " + c);
+            throw new IllegalArgumentException( "The category cannot be blank for " + c );
         }
 
         if ( fv.getCharacteristics() == null ) {
@@ -541,7 +541,7 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
         mnv.addObject( "experimentalDesign", ee.getExperimentalDesign() );
         mnv.addObject( "expressionExperiment", ee );
         mnv.addObject( "currentUserCanEdit", securityService.isEditable( ee ) ? "true" : "" );
-        mnv.addObject( "expressionExperimentUrl", AnchorTagUtil.getExpressionExperimentUrl( ee.getId() ) );
+        mnv.addObject( "expressionExperimentUrl", AnchorTagUtil.getExpressionExperimentUrl( ee.getId(), request.getServletContext() ) );
 
         return mnv;
     }

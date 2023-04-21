@@ -62,7 +62,7 @@ public class TreeCharacteristicValueObject extends CharacteristicValueObject {
     public static TreeCharacteristicValueObject ontology2TreeCharacteristicValueObjects( OntologyTerm ontologyTerm,
             Map<String, TreeCharacteristicValueObject> phenotypeFoundInTree ) {
 
-        Collection<OntologyTerm> directChildTerms = ontologyTerm.getChildren( true );
+        Collection<OntologyTerm> directChildTerms = ontologyTerm.getChildren( true, false );
 
         TreeSet<TreeCharacteristicValueObject> children = new TreeSet<>();
 

@@ -18,6 +18,7 @@
  */
 package ubic.gemma.model.association.phenotype;
 
+@Deprecated
 public class LiteratureEvidence extends PhenotypeAssociation {
 
     private static final long serialVersionUID = -4106020347488355001L;

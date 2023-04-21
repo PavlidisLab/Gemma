@@ -155,7 +155,7 @@ public class GeoBrowserServiceParseTest {
         ExpressionExperimentService ees = mock( ExpressionExperimentService.class );
         serv.arrayDesignService = ads;
         serv.expressionExperimentService = ees;
-        serv.formatDetails( response );
+        serv.formatDetails( response, "" );
         verify( ads ).findByShortName( "GPL1708" );
         verify( ees ).findByShortName( "GSE4595" );
     }
@@ -180,7 +180,7 @@ public class GeoBrowserServiceParseTest {
             ExpressionExperimentService ees = mock( ExpressionExperimentService.class );
             serv.arrayDesignService = ads;
             serv.expressionExperimentService = ees;
-            serv.formatDetails( response );
+            serv.formatDetails( response, "" );
             verify( ads ).findByShortName( "GPL570" );
             verify( ees ).findByShortName( "GSE27128" );
         }
@@ -205,7 +205,7 @@ public class GeoBrowserServiceParseTest {
             ExpressionExperimentService ees = mock( ExpressionExperimentService.class );
             serv.arrayDesignService = ads;
             serv.expressionExperimentService = ees;
-            serv.formatDetails( response );
+            serv.formatDetails( response, "" );
             verify( ads ).findByShortName( "GPL3829" );
             verify( ees ).findByShortName( "GSE21230" );
         }

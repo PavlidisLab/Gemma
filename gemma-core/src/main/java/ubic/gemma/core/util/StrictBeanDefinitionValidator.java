@@ -24,7 +24,7 @@ class StrictBeanDefinitionValidator implements Validator {
      * These are mostly low-level standard Java class that cannot be made to comply with the JavaBeans specification.
      */
     private static final Class<?>[] IGNORED_PROPERTY_TYPES = { Collection.class, Iterator.class, Map.class,
-            URL.class, URI.class, Date.class, Boolean.class };
+            URL.class, URI.class, Date.class, Boolean.class, Enum.class };
 
     private final boolean allowImmutableProperties;
 

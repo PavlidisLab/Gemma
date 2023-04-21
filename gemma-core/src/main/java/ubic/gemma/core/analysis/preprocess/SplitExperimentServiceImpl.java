@@ -131,7 +131,7 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
                 }
 
                 Collection<RawExpressionDataVector> vectors = rawExpressionDataVectorService.find( qt );
-                rawExpressionDataVectorService.thaw( vectors );
+                vectors = rawExpressionDataVectorService.thaw( vectors );
                 if ( vectors.isEmpty() ) {
                     // this is okay if the data is processed, or if we have stray orphaned QTs
                     log.debug( "No raw vectors for " + qt + "; preferred=" + qt.getIsPreferred() );

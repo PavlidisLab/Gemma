@@ -3,7 +3,7 @@
 	<parent>
 		<artifactId>gemma</artifactId>
 		<groupId>gemma</groupId>
-		<version>1.29.9</version>
+		<version>1.29.10</version>
 	</parent>
 	<modelVersion>4.0.0</modelVersion>
 	<artifactId>gemma-web</artifactId>
@@ -206,7 +206,7 @@
 		<dependency>
 			<groupId>commons-fileupload</groupId>
 			<artifactId>commons-fileupload</artifactId>
-			<version>1.4</version>
+			<version>1.5</version>
 		</dependency>
 		<dependency>
 			<groupId>commons-validator</groupId>
@@ -238,7 +238,7 @@
 		<dependency>
 			<groupId>org.json</groupId>
 			<artifactId>json</artifactId>
-			<version>20220924</version>
+			<version>20230227</version>
 		</dependency>
 
 		<!-- AJAX -->
@@ -370,6 +370,14 @@
 			<groupId>org.apache.taglibs</groupId>
 			<artifactId>taglibs-standard-impl</artifactId>
 			<version>1.2.5</version>
+			<scope>runtime</scope>
+		</dependency>
+
+		<!-- needed for Java 9+ -->
+		<dependency>
+			<groupId>com.sun.xml.messaging.saaj</groupId>
+			<artifactId>saaj-impl</artifactId>
+			<version>1.4.0</version>
 			<scope>runtime</scope>
 		</dependency>
 

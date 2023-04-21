@@ -122,7 +122,7 @@ public class BioAssayController {
             throw new EntityNotFoundException( id + " not found" );
         }
 
-        bioAssayService.thaw( bioAssay );
+        bioAssay = bioAssayService.thaw( bioAssay );
 
         request.setAttribute( "id", id );
         return new ModelAndView( "bioAssay.detail" )
@@ -147,7 +147,7 @@ public class BioAssayController {
                 if ( bioAssay == null ) {
                     throw new EntityNotFoundException( id + " not found" );
                 }
-                bioAssayService.thaw( bioAssay );
+                bioAssay = bioAssayService.thaw( bioAssay );
                 bioAssays.add( bioAssay );
             }
         }

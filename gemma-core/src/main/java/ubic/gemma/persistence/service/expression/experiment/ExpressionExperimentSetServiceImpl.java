@@ -359,8 +359,10 @@ public class ExpressionExperimentSetServiceImpl
 
     @Override
     @Transactional(readOnly = true)
-    public void thaw( ExpressionExperimentSet expressionExperimentSet ) {
+    public ExpressionExperimentSet thaw( ExpressionExperimentSet expressionExperimentSet ) {
+        expressionExperimentSet = loadOrFail( expressionExperimentSet.getId() );
         this.expressionExperimentSetDao.thaw( expressionExperimentSet );
+        return expressionExperimentSet;
     }
 
     /**

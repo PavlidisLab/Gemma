@@ -8,7 +8,10 @@
  */
 package ubic.gemma.persistence.service.expression.bioAssayData;
 
+import ubic.gemma.model.common.quantitationtype.QuantitationType;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
+import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 import java.util.Collection;
@@ -18,4 +21,10 @@ import java.util.Collection;
  */
 public interface RawExpressionDataVectorDao extends DesignElementDataVectorDao<RawExpressionDataVector> {
 
+    Collection<RawExpressionDataVector> find( ArrayDesign arrayDesign, QuantitationType quantitationType );
+
+    Collection<RawExpressionDataVector> find( Collection<CompositeSequence> designElements,
+            QuantitationType quantitationType );
+
+    Collection<RawExpressionDataVector> findByExpressionExperiment( ExpressionExperiment ee, QuantitationType quantitationType );
 }

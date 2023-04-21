@@ -30,7 +30,7 @@ import ubic.gemma.core.loader.util.AlreadyExistsInSystemException;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
-import ubic.gemma.persistence.service.expression.bioAssayData.RawExpressionDataVectorService;
+import ubic.gemma.persistence.service.expression.bioAssayData.RawAndProcessedExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
@@ -56,7 +56,7 @@ public class DesignElementDataVectorServiceTest extends AbstractGeoServiceTest {
     @Autowired
     GeneService geneService;
     @Autowired
-    RawExpressionDataVectorService rawService;
+    RawAndProcessedExpressionDataVectorService rawAndProcessedService;
     private ExpressionExperiment newee = null;
 
     @After
@@ -104,7 +104,7 @@ public class DesignElementDataVectorServiceTest extends AbstractGeoServiceTest {
 
         assertNotNull( "QT is null", qt );
 
-        Collection<? extends DesignElementDataVector> preferredVectors = rawService.findRawAndProcessed( qt );
+        Collection<DesignElementDataVector> preferredVectors = rawAndProcessedService.find( qt );
 
         assertNotNull( preferredVectors );
         assertEquals( 40, preferredVectors.size() );

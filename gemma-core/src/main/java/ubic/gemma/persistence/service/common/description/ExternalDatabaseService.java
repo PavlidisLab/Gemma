@@ -79,7 +79,7 @@ public interface ExternalDatabaseService extends BaseService<ExternalDatabase> {
 
     @Override
     @Secured({ "GROUP_ADMIN" })
-    void removeAll();
+    void removeAllInBatch();
 
     List<ExternalDatabase> findAllByNameIn( List<String> names );
 }

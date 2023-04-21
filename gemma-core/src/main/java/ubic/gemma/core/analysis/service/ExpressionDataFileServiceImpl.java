@@ -51,12 +51,12 @@ import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpre
 import ubic.gemma.persistence.service.association.coexpression.CoexpressionService;
 import ubic.gemma.persistence.service.association.coexpression.CoexpressionValueObject;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
+import ubic.gemma.persistence.service.expression.bioAssayData.RawAndProcessedExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.bioAssayData.RawExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.util.DifferentialExpressionAnalysisResultComparator;
 import ubic.gemma.persistence.util.EntityUtils;
 
-import javax.annotation.Nullable;
 import java.io.*;
 import java.util.*;
 import java.util.Map.Entry;
@@ -103,6 +103,8 @@ public class ExpressionDataFileServiceImpl extends AbstractTsvFileService<Expres
 
     @Autowired
     private RawExpressionDataVectorService rawExpressionDataVectorService;
+    @Autowired
+    private RawAndProcessedExpressionDataVectorService rawAndProcessedExpressionDataVectorService;
 
     @Override
     public void analysisResultSetsToString( Collection<ExpressionAnalysisResultSet> results,
@@ -325,7 +327,7 @@ public class ExpressionDataFileServiceImpl extends AbstractTsvFileService<Expres
             zipOut.closeEntry();
 
             if ( analysis.getId() != null ) // might be transient if using -nodb from CLI
-                differentialExpressionAnalysisService.thaw( analysis );
+                analysis = differentialExpressionAnalysisService.thawFully( analysis );
 
             // Add a file for each result set with contrasts information.
             int i = 0;
@@ -429,7 +431,7 @@ public class ExpressionDataFileServiceImpl extends AbstractTsvFileService<Expres
             ExpressionDataFileServiceImpl.log
                     .info( "Creating new quantitation type expression data file: " + f.getName() );
 
-            Collection<DesignElementDataVector> vectors = rawExpressionDataVectorService.findRawAndProcessed( type );
+            Collection<DesignElementDataVector> vectors = rawAndProcessedExpressionDataVectorService.find( type );
             Collection<ArrayDesign> arrayDesigns = this.getArrayDesigns( vectors );
             Map<CompositeSequence, String[]> geneAnnotations = this.getGeneAnnotationsAsStringsByProbe( arrayDesigns );
 
@@ -512,7 +514,7 @@ public class ExpressionDataFileServiceImpl extends AbstractTsvFileService<Expres
 
             ExpressionDataFileServiceImpl.log.info( "Creating new quantitation type  JSON data file: " + f.getName() );
 
-            Collection<DesignElementDataVector> vectors = rawExpressionDataVectorService.findRawAndProcessed( type );
+            Collection<DesignElementDataVector> vectors = rawAndProcessedExpressionDataVectorService.find( type );
 
             if ( vectors.size() == 0 ) {
                 ExpressionDataFileServiceImpl.log.warn( "No vectors for " + type );
@@ -836,8 +838,8 @@ public class ExpressionDataFileServiceImpl extends AbstractTsvFileService<Expres
      */
     private Map<Long, String[]> getGeneAnnotationsAsStrings( Collection<ArrayDesign> ads ) {
         Map<Long, String[]> annotations = new HashMap<>();
+        ads = arrayDesignService.thaw( ads );
         for ( ArrayDesign arrayDesign : ads ) {
-            arrayDesign = arrayDesignService.thaw( arrayDesign );
             annotations.putAll( ArrayDesignAnnotationServiceImpl.readAnnotationFileAsString( arrayDesign ) );
         }
         return annotations;
@@ -845,9 +847,8 @@ public class ExpressionDataFileServiceImpl extends AbstractTsvFileService<Expres
 
     private Map<CompositeSequence, String[]> getGeneAnnotationsAsStringsByProbe( Collection<ArrayDesign> ads ) {
         Map<CompositeSequence, String[]> annotations = new HashMap<>();
+        ads = arrayDesignService.thaw( ads );
         for ( ArrayDesign arrayDesign : ads ) {
-            arrayDesign = arrayDesignService.thaw( arrayDesign );
-
             Map<Long, CompositeSequence> csIdMap = EntityUtils.getIdMap( arrayDesign.getCompositeSequences() );
 
             Map<Long, String[]> geneAnnotations = ArrayDesignAnnotationServiceImpl
@@ -908,7 +909,7 @@ public class ExpressionDataFileServiceImpl extends AbstractTsvFileService<Expres
             DifferentialExpressionAnalysisConfig config ) {
 
         if ( analysis.getId() != null ) // It might not be a persistent analysis: using -nodb
-            differentialExpressionAnalysisService.thaw( analysis );
+            analysis = differentialExpressionAnalysisService.thaw( analysis );
 
         StringBuilder buf = new StringBuilder();
 
@@ -1123,7 +1124,7 @@ public class ExpressionDataFileServiceImpl extends AbstractTsvFileService<Expres
     }
 
     private void writeJson( File file, Collection<DesignElementDataVector> vectors ) throws IOException {
-        this.rawExpressionDataVectorService.thawRawAndProcessed( vectors );
+        vectors = this.rawAndProcessedExpressionDataVectorService.thaw( vectors );
         ExpressionDataMatrix<?> expressionDataMatrix = ExpressionDataMatrixBuilder.getMatrix( vectors );
         try ( Writer writer = new OutputStreamWriter( new GZIPOutputStream( new FileOutputStream( file ) ) ) ) {
             MatrixWriter matrixWriter = new MatrixWriter();
@@ -1163,7 +1164,7 @@ public class ExpressionDataFileServiceImpl extends AbstractTsvFileService<Expres
 
     private void writeVectors( File file, Collection<DesignElementDataVector> vectors,
             Map<CompositeSequence, String[]> geneAnnotations ) throws IOException {
-        this.rawExpressionDataVectorService.thawRawAndProcessed( vectors );
+        vectors = this.rawAndProcessedExpressionDataVectorService.thaw( vectors );
 
         ExpressionDataMatrix<?> expressionDataMatrix = ExpressionDataMatrixBuilder.getMatrix( vectors );
 

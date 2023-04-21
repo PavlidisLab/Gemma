@@ -421,7 +421,7 @@ public class VectorMergingServiceImpl extends ExpressionExperimentVectorManipula
             throw new IllegalStateException( "No vectors" );
         }
 
-        rawExpressionDataVectorService.thaw( oldVectors );
+        oldVectors = rawExpressionDataVectorService.thaw( oldVectors );
         Map<QuantitationType, Collection<RawExpressionDataVector>> qt2Vec = new HashMap<>();
         Collection<QuantitationType> qtsToAdd = new HashSet<>();
         for ( RawExpressionDataVector v : oldVectors ) {

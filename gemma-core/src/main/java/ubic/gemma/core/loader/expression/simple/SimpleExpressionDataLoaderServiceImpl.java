@@ -214,7 +214,7 @@ public class SimpleExpressionDataLoaderServiceImpl implements SimpleExpressionDa
 
         assert experiment.getShortName() != null;
 
-        preprocessorService.process( experiment, true, true);
+        preprocessorService.process( experiment, true, true );
 
         return experiment;
     }
@@ -238,6 +238,7 @@ public class SimpleExpressionDataLoaderServiceImpl implements SimpleExpressionDa
             if ( existing != null ) {
                 SimpleExpressionDataLoaderServiceImpl.log.info( "Array Design exists" );
                 if ( arrayDesignService != null ) {
+                    // FIXME: use thaw for collection of platforms
                     existing = arrayDesignService.thaw( existing );
                 }
                 existingDesigns.add( existing );

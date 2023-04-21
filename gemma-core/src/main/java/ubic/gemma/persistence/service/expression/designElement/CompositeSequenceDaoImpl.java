@@ -245,8 +245,6 @@ public class CompositeSequenceDaoImpl extends AbstractQueryFilteringVoEnabledDao
             if ( csIdBatch.size() == BATCH_SIZE ) {
                 queryObject.setParameterList( "csids", csIdBatch );
                 csGene.addAll( queryObject.list() );
-                session.flush();
-                session.clear();
                 csIdBatch.clear();
             }
         }
@@ -254,8 +252,6 @@ public class CompositeSequenceDaoImpl extends AbstractQueryFilteringVoEnabledDao
         if ( csIdBatch.size() > 0 ) {
             queryObject.setParameterList( "csids", csIdBatch );
             csGene.addAll( queryObject.list() );
-            session.flush();
-            session.clear();
         }
 
         StopWatch watch = new StopWatch();
@@ -455,67 +451,50 @@ public class CompositeSequenceDaoImpl extends AbstractQueryFilteringVoEnabledDao
 
     @Override
     public void thaw( final Collection<CompositeSequence> compositeSequences ) {
-        Session session = getSessionFactory().getCurrentSession();
         int i = 0;
         int numToDo = compositeSequences.size();
         for ( CompositeSequence cs : compositeSequences ) {
-
-            reattach( cs.getArrayDesign() );
-            Hibernate.initialize( cs.getArrayDesign().getPrimaryTaxon() );
-
-            BioSequence bs = cs.getBiologicalCharacteristic();
-            if ( bs == null ) {
-                continue;
-            }
-
-            reattach( bs );
-            Hibernate.initialize( bs );
-            Hibernate.initialize( bs.getTaxon() );
-
-            DatabaseEntry dbEntry = bs.getSequenceDatabaseEntry();
-            if ( dbEntry != null ) {
-                Hibernate.initialize( dbEntry );
-                Hibernate.initialize( dbEntry.getExternalDatabase() );
-                session.evict( dbEntry );
-                session.evict( dbEntry.getExternalDatabase() );
-            }
-
-            if ( bs.getBioSequence2GeneProduct() == null ) {
-                continue;
-            }
-
-            for ( BioSequence2GeneProduct bs2gp : bs.getBioSequence2GeneProduct() ) {
-                if ( bs2gp == null ) {
-                    continue;
-                }
-                GeneProduct geneProduct = bs2gp.getGeneProduct();
-                if ( geneProduct != null && geneProduct.getGene() != null ) {
-                    Gene g = geneProduct.getGene();
-                    g.getAliases().size();
-                    session.evict( g );
-                    session.evict( geneProduct );
-                }
-
-            }
-
+            thaw( cs );
             if ( ++i % 2000 == 0 ) {
                 AbstractDao.log.info( "Progress: " + i + "/" + numToDo + "..." );
-                try {
-                    Thread.sleep( 10 );
-                } catch ( InterruptedException e ) {
-                    //
-                }
             }
-
-            session.evict( bs );
         }
-        session.clear();
     }
 
     @Override
-    public CompositeSequence thaw( final CompositeSequence compositeSequence ) {
-        this.thaw( Collections.singleton( compositeSequence ) );
-        return compositeSequence;
+    public void thaw( final CompositeSequence cs ) {
+
+        Hibernate.initialize( cs.getArrayDesign().getPrimaryTaxon() );
+
+        BioSequence bs = cs.getBiologicalCharacteristic();
+        if ( bs == null ) {
+            return;
+        }
+
+        Hibernate.initialize( bs );
+        Hibernate.initialize( bs.getTaxon() );
+
+        DatabaseEntry dbEntry = bs.getSequenceDatabaseEntry();
+        if ( dbEntry != null ) {
+            Hibernate.initialize( dbEntry );
+            Hibernate.initialize( dbEntry.getExternalDatabase() );
+        }
+
+        if ( bs.getBioSequence2GeneProduct() == null ) {
+            return;
+        }
+
+        for ( BioSequence2GeneProduct bs2gp : bs.getBioSequence2GeneProduct() ) {
+            if ( bs2gp == null ) {
+                continue;
+            }
+            GeneProduct geneProduct = bs2gp.getGeneProduct();
+            if ( geneProduct != null && geneProduct.getGene() != null ) {
+                Gene g = geneProduct.getGene();
+                Hibernate.initialize( g.getAliases() );
+            }
+
+        }
     }
 
     //    @Override

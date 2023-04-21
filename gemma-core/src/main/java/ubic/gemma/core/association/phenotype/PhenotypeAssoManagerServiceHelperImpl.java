@@ -45,6 +45,7 @@ import java.util.*;
  */
 @Component
 
+@Deprecated
 public class PhenotypeAssoManagerServiceHelperImpl implements PhenotypeAssoManagerServiceHelper {
 
     private final PubMedXMLFetcher pubMedXmlFetcher = new PubMedXMLFetcher();

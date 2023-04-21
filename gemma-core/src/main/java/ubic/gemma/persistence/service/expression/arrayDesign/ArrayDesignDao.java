@@ -14,6 +14,8 @@ import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.persistence.service.FilteringVoEnabledDao;
 import ubic.gemma.persistence.service.common.auditAndSecurity.curation.CuratableDao;
 
+import javax.annotation.CheckReturnValue;
+import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -121,10 +123,24 @@ public interface ArrayDesignDao extends CuratableDao<ArrayDesign, ArrayDesignVal
 
     void removeBiologicalCharacteristics( ArrayDesign arrayDesign );
 
+    /**
+     * Thaw the given platform as per {@link #thawLite(ArrayDesign)} with its probes and genes.
+     */
+    @Nullable
+    @CheckReturnValue
     ArrayDesign thaw( ArrayDesign arrayDesign );
 
+    /**
+     * Thaw the given platforms as per {@link #thawLite(Collection)} with its probes and genes.
+     */
+    @CheckReturnValue
+    Collection<ArrayDesign> thaw( Collection<ArrayDesign> aas );
+
+    @Nullable
+    @CheckReturnValue
     ArrayDesign thawLite( ArrayDesign arrayDesign );
 
+    @CheckReturnValue
     Collection<ArrayDesign> thawLite( Collection<ArrayDesign> arrayDesigns );
 
     Boolean updateSubsumingStatus( ArrayDesign candidateSubsumer, ArrayDesign candidateSubsumee );

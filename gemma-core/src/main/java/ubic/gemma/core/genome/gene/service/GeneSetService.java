@@ -336,15 +336,12 @@ public interface GeneSetService {
      * all the genes
      *
      * @param  geneSet gene set
-     * @return         the taxon or null if the gene set param was null
+     * @return the taxon or null if the gene set param was null
      */
     Taxon getTaxon( GeneSet geneSet );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
     Collection<DatabaseBackedGeneSetValueObject> getValueObjects( Collection<Long> id );
-
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
-    void thaw( GeneSet geneSet );
 
     @Secured({ "GROUP_ADMIN" })
     void removeAll();

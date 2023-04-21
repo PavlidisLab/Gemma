@@ -121,7 +121,7 @@ public class PreprocessorServiceImpl implements PreprocessorService {
 
         // Convert to vectors (persist QT)
         processedExpressionDataVectorService
-                .createProcessedDataVectors( ee, correctedData.toProcessedDataVectors() );
+                .replaceProcessedDataVectors( ee, correctedData.toProcessedDataVectors() );
 
         auditTrailService.addUpdateEvent( ee, BatchCorrectionEvent.class, note, "" );
 
@@ -199,8 +199,12 @@ public class PreprocessorServiceImpl implements PreprocessorService {
     /**
      * Create the scatter plot to evaluate heteroscedasticity.
      */
-    private void processForMeanVarianceRelation( ExpressionExperiment ee ) {
-        meanVarianceService.create( ee, true );
+    private void processForMeanVarianceRelation( ExpressionExperiment ee ) throws PreprocessingException {
+        try {
+            meanVarianceService.create( ee, true );
+        } catch ( Exception e ) {
+            throw new PreprocessingException( ee, e );
+        }
     }
 
     private void processForMissingValues( ExpressionExperiment ee ) {
@@ -290,10 +294,10 @@ public class PreprocessorServiceImpl implements PreprocessorService {
                 .getProcessedDataVectors( ee );
         if ( vecs.isEmpty() ) {
             log.info( String.format( "No processed vectors for %s, they will be computed from raw data...", ee ) );
-            return this.processedExpressionDataVectorService.computeProcessedExpressionData( ee );
+            this.processedExpressionDataVectorService.computeProcessedExpressionData( ee );
+            return this.processedExpressionDataVectorService.getProcessedDataVectors( ee );
         }
-        processedExpressionDataVectorService.thaw( vecs );
-        return vecs;
+        return processedExpressionDataVectorService.thaw( vecs );
     }
 
     @SuppressWarnings("unused")

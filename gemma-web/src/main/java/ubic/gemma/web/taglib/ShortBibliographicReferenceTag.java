@@ -48,6 +48,8 @@ public class ShortBibliographicReferenceTag extends TagSupport {
 
         ShortBibliographicReferenceTag.log.debug( "start tag" );
 
+        String contextPath = pageContext.getServletContext().getContextPath();
+
         StringBuilder buf = new StringBuilder();
         if ( this.citation == null ) {
             buf.append( "No accession" );
@@ -88,15 +90,15 @@ public class ShortBibliographicReferenceTag extends TagSupport {
                     String link = citationVO.getPubmedURL();
 
                     buf.append( "<a target='_blank' href='" ).append( link ).append( "' ><img src='" )
-                            .append( Settings.getRootContext() ).append( "/images/pubmed.gif' /> </a>&nbsp;" );
+                            .append( contextPath ).append( "/images/pubmed.gif' /> </a>&nbsp;" );
 
                     /*
                      * Add link to edit page within Gemma
                      */
 
-                    buf.append( "<a target='_blank' href='" ).append( Settings.getRootContext() )
+                    buf.append( "<a target='_blank' href='" ).append( contextPath )
                             .append( "/bibRef/bibRefView.html?accession=" ).append( pubMedId ).append( "'><img src='" )
-                            .append( Settings.getRootContext() ).append( "/images/magnifier.png' /></a>" );
+                            .append( contextPath ).append( "/images/magnifier.png' /></a>" );
 
                 }
             }

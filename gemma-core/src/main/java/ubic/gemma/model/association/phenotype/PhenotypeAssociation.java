@@ -35,6 +35,7 @@ import java.util.Set;
  *
  * @author Paul
  */
+@Deprecated
 public abstract class PhenotypeAssociation extends AbstractAuditable implements gemma.gsec.model.Securable {
 
     /**

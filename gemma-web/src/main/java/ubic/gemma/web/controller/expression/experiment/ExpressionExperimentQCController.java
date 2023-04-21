@@ -67,7 +67,6 @@ import ubic.gemma.core.analysis.preprocess.MeanVarianceService;
 import ubic.gemma.core.analysis.preprocess.OutlierDetails;
 import ubic.gemma.core.analysis.preprocess.OutlierDetectionService;
 import ubic.gemma.core.analysis.preprocess.filter.FilteringException;
-import ubic.gemma.core.analysis.preprocess.filter.NoRowsLeftAfterFilteringException;
 import ubic.gemma.core.analysis.preprocess.svd.SVDService;
 import ubic.gemma.core.analysis.preprocess.svd.SVDValueObject;
 import ubic.gemma.core.analysis.util.ExperimentalDesignUtils;
@@ -373,13 +372,13 @@ public class ExpressionExperimentQCController extends BaseController {
             return null;
         }
 
-        ExpressionExperiment ee = expressionExperimentService.load( id );
+        ExpressionExperiment ee = expressionExperimentService.loadWithMeanVarianceRelation( id );
         if ( ee == null ) {
             log.warn( "Could not load experiment with id " + id );
             return null;
         }
 
-        MeanVarianceRelation mvr = meanVarianceService.find( ee );
+        MeanVarianceRelation mvr = ee.getMeanVarianceRelation();
 
         if ( mvr == null ) {
             return null;

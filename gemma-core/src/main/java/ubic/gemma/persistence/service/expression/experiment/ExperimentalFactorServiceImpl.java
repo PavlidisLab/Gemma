@@ -49,6 +49,7 @@ public class ExperimentalFactorServiceImpl
     @Override
     @Transactional
     public void delete( ExperimentalFactor experimentalFactor ) {
+        experimentalFactor = ensureInSession( experimentalFactor );
         /*
          * First, check to see if there are any diff results that use this factor.
          */

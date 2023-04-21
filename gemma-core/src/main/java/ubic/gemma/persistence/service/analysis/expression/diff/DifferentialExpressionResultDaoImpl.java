@@ -536,7 +536,8 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
 
         // If too few probes meet threshold, redo and just get top results.
         if ( qResult.size() < minNumberOfResults ) {
-            AbstractDao.log.info( "No results met threshold, repeating to just get the top hits" );
+            // FIXME this is kind of dumb. If we always return the top minimum, why not just always get that?
+            AbstractDao.log.info( "Too few results met threshold, repeating to just get the top hits" );
             qs = DifferentialExpressionResultDaoImpl.fetchResultsBySingleResultSetQuery + " order by r.correctedPvalue";
             qResult = getSessionFactory().getCurrentSession().createQuery( qs )
                     .setParameter( "resultSet", resultSet )
@@ -735,22 +736,16 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
 
     @Override
     public void thaw( final Collection<DifferentialExpressionAnalysisResult> results ) {
-        Session session = this.getSessionFactory().getCurrentSession();
         for ( DifferentialExpressionAnalysisResult result : results ) {
-            reattach( result );
             Hibernate.initialize( result );
             CompositeSequence cs = result.getProbe();
             Hibernate.initialize( cs );
             Hibernate.initialize( result.getContrasts() );
         }
-
     }
 
     @Override
     public void thaw( final DifferentialExpressionAnalysisResult result ) {
-        Session session = this.getSessionFactory().getCurrentSession();
-
-        reattach( result );
         Hibernate.initialize( result );
 
         CompositeSequence cs = result.getProbe();
@@ -763,7 +758,6 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
             //noinspection ResultOfMethodCallIgnored
             f.getIsBaseline();
         }
-
     }
 
     @Override

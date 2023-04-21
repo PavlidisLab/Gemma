@@ -114,9 +114,9 @@ public class BioSequenceCleanupCli extends ArrayDesignSequenceManipulatingCli {
             ads = this.getArrayDesignService().loadAll();
         }
 
+        ads = getArrayDesignService().thaw( ads );
         for ( ArrayDesign design : ads ) {
             log.info( design );
-            design = this.getArrayDesignService().thaw( design );
 
             Collection<BioSequence> bioSequences = new HashSet<>();
 
@@ -326,7 +326,7 @@ public class BioSequenceCleanupCli extends ArrayDesignSequenceManipulatingCli {
         // all composite sequences for bs2 will be switched to bs1.
         Collection<CompositeSequence> usingDuplicatedSequence = css.findByBioSequence( toRemove );
 
-        css.thaw( usingDuplicatedSequence );
+        usingDuplicatedSequence = css.thaw( usingDuplicatedSequence );
 
         for ( CompositeSequence sequence : usingDuplicatedSequence ) {
 

@@ -265,7 +265,7 @@ public class ExpressionExperiment extends BioAssaySet implements SecuredNotChild
 
     @Override
     public String toString() {
-        return super.toString() + " (" + this.getShortName() + ")";
+        return super.toString() + ( shortName != null ? " Short Name=" + shortName : "" );
     }
 
 }
