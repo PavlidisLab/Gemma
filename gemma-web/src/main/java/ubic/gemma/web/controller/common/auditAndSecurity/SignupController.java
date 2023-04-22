@@ -37,6 +37,7 @@ import ubic.gemma.web.controller.BaseController;
 import ubic.gemma.web.controller.common.auditAndSecurity.recaptcha.ReCaptcha;
 import ubic.gemma.web.util.JsonUtil;
 
+import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.util.Date;
@@ -57,6 +58,9 @@ public class SignupController extends BaseController implements InitializingBean
 
     @Autowired
     private UserManager userManager;
+
+    @Autowired
+    private ServletContext servletContext;
 
     private ReCaptcha reCaptcha = new ReCaptcha( Settings.getString( "gemma.recaptcha.privateKey" ) );
 
@@ -223,7 +227,7 @@ public class SignupController extends BaseController implements InitializingBean
         String email = u.getEmail();
 
         Map<String, Object> model = new HashMap<>();
-        model.put( "siteurl", Settings.getBaseUrl() );
+        model.put( "siteurl", Settings.getHostUrl() + servletContext.getContextPath() + "/" );
 
         this.sendConfirmationEmail( request, u.getSignupToken(), u.getUsername(), email, model, "accountCreated.vm" );
 

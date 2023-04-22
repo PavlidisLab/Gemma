@@ -30,6 +30,7 @@ import ubic.basecode.ontology.search.OntologySearchException;
 import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.core.loader.entrez.pubmed.PubMedXMLFetcher;
 import ubic.gemma.core.ontology.OntologyService;
+import ubic.gemma.core.ontology.OntologyTestUtils;
 import ubic.gemma.core.tasks.maintenance.IndexerTask;
 import ubic.gemma.core.tasks.maintenance.IndexerTaskCommand;
 import ubic.gemma.core.util.test.BaseSpringContextTest;
@@ -84,10 +85,9 @@ public class SearchServiceIntegrationTest extends BaseSpringContextTest {
     public void setUp() throws Exception {
         try ( InputStream is = this.getClass().getResourceAsStream( "/data/loader/ontology/fma.test.owl" ) ) {
             assert is != null;
-
             // this abuses the service as our example is a legacy FMA test (not uberon), but it doesn't matter since we're loading from a file anyway.
             // this will fail if the loading of uberon is enabled - it will collide.
-            ontologyService.getUberonService().loadTermsInNameSpace( is, true );
+            OntologyTestUtils.initialize( ontologyService.getUberonService(), is );
         }
         ee = this.getTestPersistentBasicExpressionExperiment();
 

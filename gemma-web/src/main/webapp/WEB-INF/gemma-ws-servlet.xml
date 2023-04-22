@@ -217,7 +217,7 @@
 		<description>
 
 		</description>
-		<property name="expressionExperimentService" ref="expressionExperimentService" />		
+		<property name="expressionExperimentService" ref="expressionExperimentService" />
 		<property name="processedExpressionDataVectorService" ref="processedExpressionDataVectorService" />
 		<property name="manualAuthenticationService" ref="manualAuthenticationService" />
 	</bean>
@@ -234,12 +234,13 @@
 
 	<bean id="geneCoexpressionSearchEndpoint" class="ubic.gemma.web.services.GeneCoexpressionSearchEndpoint">
 		<description>
-			returns gene coexpression 
+			returns gene coexpression
 		</description>
 		<property name="geneService" ref="geneService" />
 		<property name="geneCoexpressionSearchService" ref="geneCoexpressionSearchService" />
 		<property name="manualAuthenticationService" ref="manualAuthenticationService" />
-		<property name="expressionExperimentSetService" ref="expressionExperimentSetService" />		
+		<property name="expressionExperimentSetService" ref="expressionExperimentSetService" />
+		<property name="servletContext" ref="servletContext" />
 	</bean>
 
 	<bean id="experimentAnnotationEndpoint" class="ubic.gemma.web.services.ExperimentAnnotationEndpoint">

@@ -14,7 +14,6 @@ import ubic.gemma.core.analysis.preprocess.svd.SVDService;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
 import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
-import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
@@ -240,7 +239,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
     }
 
     @Test
-    public void testGetDatasetProcessedExpression() {
+    public void testGetDatasetProcessedExpression() throws IOException {
         QuantitationType qt = QuantitationType.Factory.newInstance();
         when( expressionExperimentService.getMaskedPreferredQuantitationType( ee ) )
                 .thenReturn( qt );
@@ -249,19 +248,6 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
                 .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE )
                 .hasEncoding( "gzip" );
         verify( expressionExperimentService ).getMaskedPreferredQuantitationType( ee );
-    }
-
-    @Test
-    public void testGetDatasetProcessedExpressionByQuantitationType() throws IOException {
-        when( expressionExperimentService.load( 1L ) ).thenReturn( ee );
-        QuantitationType qt = QuantitationType.Factory.newInstance();
-        when( quantitationTypeService.findByIdAndDataVectorType( ee, 12L, ProcessedExpressionDataVector.class ) ).thenReturn( qt );
-        assertThat( target( "/datasets/1/data/processed" )
-                .queryParam( "quantitationType", "12" ).request().get() )
-                .hasStatus( Response.Status.OK )
-                .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE )
-                .hasEncoding( "gzip" );
-        verify( quantitationTypeService ).findByIdAndDataVectorType( ee, 12L, ProcessedExpressionDataVector.class );
         verify( expressionDataFileService ).writeProcessedExpressionData( eq( ee ), eq( qt ), any() );
     }
 
