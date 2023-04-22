@@ -3,12 +3,13 @@ package ubic.gemma.persistence.service.expression.arrayDesign;
 import org.hibernate.Hibernate;
 import org.hibernate.SessionFactory;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.ContextConfiguration;
 import ubic.gemma.core.util.test.BaseDatabaseTest;
-import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
+import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
@@ -48,6 +49,7 @@ public class ArrayDesignDaoTest extends BaseDatabaseTest {
     private ArrayDesignDao arrayDesignDao;
 
     @Test
+    @Category(SlowTest.class)
     public void testThaw() {
         Taxon taxon = Taxon.Factory.newInstance( "test" );
         sessionFactory.getCurrentSession().persist( taxon );
