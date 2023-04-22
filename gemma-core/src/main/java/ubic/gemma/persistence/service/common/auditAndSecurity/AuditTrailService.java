@@ -50,19 +50,19 @@ public interface AuditTrailService extends BaseService<AuditTrail> {
      * @return the newly created event, which will be somewhere in the auditable's {@link AuditTrail#getEvents()}
      * collection.
      */
-    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    @Secured({ "GROUP_AGENT", "ACL_SECURABLE_EDIT" })
     AuditEvent addUpdateEvent( Auditable auditable, String note );
 
     /**
      * @see #addUpdateEvent(Auditable, Class, String, String, Date)
      */
-    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    @Secured({ "GROUP_AGENT", "ACL_SECURABLE_EDIT" })
     AuditEvent addUpdateEvent( Auditable auditable, Class<? extends AuditEventType> type, String note );
 
     /**
      * @see #addUpdateEvent(Auditable, Class, String, String, Date)
      */
-    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    @Secured({ "GROUP_AGENT", "ACL_SECURABLE_EDIT" })
     AuditEvent addUpdateEvent( Auditable auditable, Class<? extends AuditEventType> type, @Nullable String note, String detail );
 
     /**
@@ -73,7 +73,7 @@ public interface AuditTrailService extends BaseService<AuditTrail> {
      *
      * @see #addUpdateEvent(Auditable, Class, String, String, Date)
      */
-    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    @Secured({ "GROUP_AGENT", "ACL_SECURABLE_EDIT" })
     AuditEvent addUpdateEvent( Auditable auditable, Class<? extends AuditEventType> type, @Nullable String note, Throwable throwable );
 
     /**
@@ -87,7 +87,7 @@ public interface AuditTrailService extends BaseService<AuditTrail> {
      * @return the newly created event, which will be somewhere in the auditable's {@link AuditTrail#getEvents()}
      * collection.
      */
-    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    @Secured({ "GROUP_AGENT", "ACL_SECURABLE_EDIT" })
     AuditEvent addUpdateEvent( Auditable auditable, Class<? extends AuditEventType> type, @Nullable String note, @Nullable String detail, Date performedDate );
 
     @Override
