@@ -621,11 +621,6 @@ public class ExpressionExperimentController {
         geeqService.calculateScore( ee, GeeqService.ScoreMode.valueOf( mode ) );
     }
 
-    public void setGeeqManualSettings( long id, GeeqAdminValueObject vo ) {
-        ExpressionExperiment ee = expressionExperimentService.loadOrFail( id );
-        geeqService.setManualOverrides( ee, vo );
-    }
-
     /**
      * AJAX - for display in tables. Don't retrieve too much detail.
      *

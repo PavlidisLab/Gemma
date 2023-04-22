@@ -487,38 +487,6 @@ Gemma.ExpressionExperimentTools = Ext.extend(Gemma.CurationTools, {
             cls: 'btn-refresh gq-subscore-refresh-btn'
         }));
 
-        bconfExtra.add(new Ext.form.Checkbox({
-            xtype: 'checkbox',
-            id: 'gq-bconf-override',
-            boxLabel: 'Override:',
-            hideLabel: false,
-            checked: ee.geeq.manualBatchConfoundActive,
-            handler: function (el, value) {
-                self.allowBconfRadios(value);
-                ee.geeq.manualBatchConfoundActive = value;
-                document.getElementById('bconf-notification').removeAttribute("hidden");
-                ExpressionExperimentController.setGeeqManualSettings(ee.id, ee.geeq, {
-                    callback: self.bconfNotifySaved
-                });
-            }
-        }));
-
-        bconfExtra.add(new Ext.form.Radio({
-            xtype: 'radio',
-            id: 'gq-bconf-override-value-true',
-            name: 'gq-bconf-override-value',
-            boxLabel: 'Confounded',
-            hideLabel: false,
-            checked: ee.geeq.manualHasBatchConfound,
-            handler: function (el, value) {
-                ee.geeq.manualHasBatchConfound = value;
-                document.getElementById('bconf-notification').removeAttribute("hidden");
-                ExpressionExperimentController.setGeeqManualSettings(ee.id, ee.geeq, {
-                    callback: self.bconfNotifySaved
-                });
-            }
-        }));
-
         bconfExtra.add(new Ext.form.Radio({
             xtype: 'radio',
             id: 'gq-bconf-override-value-false',
@@ -578,76 +546,6 @@ Gemma.ExpressionExperimentTools = Ext.extend(Gemma.CurationTools, {
             },
             scope: this,
             cls: 'btn-refresh gq-subscore-refresh-btn'
-        }));
-
-        beffExtra.add(new Ext.form.Checkbox({
-            xtype: 'checkbox',
-            id: 'gq-beff-override',
-            boxLabel: 'Override:',
-            hideLabel: false,
-            checked: ee.geeq.manualBatchEffectActive,
-            handler: function (el, value) {
-                self.allowBeffRadios(value);
-                self.experimentDetails.geeq.manualBatchEffectActive = value;
-                document.getElementById('beff-notification').removeAttribute("hidden");
-                ExpressionExperimentController.setGeeqManualSettings(self.experimentDetails.id, self.experimentDetails.geeq, {
-                    callback: self.beffNotifySaved
-                });
-            }
-        }));
-
-        beffExtra.add(new Ext.form.Radio({
-            xtype: 'radio',
-            id: 'gq-beff-override-value-strong',
-            name: 'gq-beff-override-value',
-            boxLabel: 'Strong',
-            hideLabel: false,
-            checked: ee.geeq.manualHasStrongBatchEffect,
-            handler: function (el, value) {
-                if (!value) return; // since we have 3 radios, we wil only process the one that was selected
-                ee.geeq.manualHasStrongBatchEffect = value;
-                ee.geeq.manualHasNoBatchEffect = !value;
-                document.getElementById('beff-notification').removeAttribute("hidden");
-                ExpressionExperimentController.setGeeqManualSettings(ee.id, ee.geeq, {
-                    callback: self.beffNotifySaved
-                });
-            }
-        }));
-
-        beffExtra.add(new Ext.form.Radio({
-            xtype: 'radio',
-            id: 'gq-beff-override-value-weak',
-            name: 'gq-beff-override-value',
-            boxLabel: 'Weak',
-            hideLabel: false,
-            checked: !ee.geeq.manualHasStrongBatchEffect && !ee.geeq.manualHasNoBatchEffect,
-            handler: function (el, value) {
-                if (!value) return; // since we have 3 radios, we wil only process the one that was selected
-                ee.geeq.manualHasStrongBatchEffect = !value;
-                ee.geeq.manualHasNoBatchEffect = !value;
-                document.getElementById('beff-notification').removeAttribute("hidden");
-                ExpressionExperimentController.setGeeqManualSettings(ee.id, ee.geeq, {
-                    callback: self.beffNotifySaved
-                });
-            }
-        }));
-
-        beffExtra.add(new Ext.form.Radio({
-            xtype: 'radio',
-            id: 'gq-beff-override-value-none',
-            name: 'gq-beff-override-value',
-            boxLabel: 'No batch effect',
-            hideLabel: false,
-            checked: ee.geeq.manualHasNoBatchEffect,
-            handler: function (el, value) {
-                if (!value) return; // since we have 3 radios, we wil only process the one that was selected
-                ee.geeq.manualHasStrongBatchEffect = !value;
-                ee.geeq.manualHasNoBatchEffect = value;
-                document.getElementById('beff-notification').removeAttribute("hidden");
-                ExpressionExperimentController.setGeeqManualSettings(ee.id, ee.geeq, {
-                    callback: self.beffNotifySaved
-                });
-            }
         }));
 
         beffExtra.add({cls: 'gq-notif hidden', html: '<span id="beff-notification" hidden>Saving</span>'});
@@ -753,20 +651,6 @@ Gemma.ExpressionExperimentTools = Ext.extend(Gemma.CurationTools, {
             }
         }));
 
-        var saveButton = new Ext.Button({
-            text: '<i class="fa-cloud-upload fa"></i> Save changes',
-            cls: 'gq-btn-save',
-            handler: function (el, value) {
-                ExpressionExperimentController.setGeeqManualSettings(ee.id, ee.geeq, {
-                    callback: function () {
-                        window.location.reload();
-                    }
-                });
-            },
-            scope: this
-        });
-        qualExtra.add(saveButton);
-
         return qualExtra;
     },
 
@@ -860,20 +744,6 @@ Gemma.ExpressionExperimentTools = Ext.extend(Gemma.CurationTools, {
                 }
             }
         }));
-
-        var saveButton = new Ext.Button({
-            text: '<i class="fa-cloud-upload fa"></i> Save changes',
-            cls: 'gq-btn-save',
-            handler: function () {
-                ExpressionExperimentController.setGeeqManualSettings(ee.id, ee.geeq, {
-                    callback: function () {
-                        window.location.reload();
-                    }
-                });
-            },
-            scope: this
-        });
-        suitExtra.add(saveButton);
 
         return suitExtra;
     },
