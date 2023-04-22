@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2008 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -35,6 +35,7 @@ import ubic.gemma.persistence.service.expression.experiment.ExpressionExperiment
 import ubic.gemma.persistence.util.EntityUtils;
 import ubic.gemma.persistence.util.Settings;
 
+import javax.servlet.ServletContext;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedList;
@@ -54,6 +55,7 @@ public class GeneCoexpressionSearchEndpoint extends AbstractGemmaEndpoint {
     private GeneService geneService;
     private GeneCoexpressionSearchService geneCoexpressionSearchService;
     private ExpressionExperimentSetService expressionExperimentSetService;
+    private ServletContext servletContext;
 
     public void setExpressionExperimentSetService( ExpressionExperimentSetService service ) {
         expressionExperimentSetService = service;
@@ -65,6 +67,10 @@ public class GeneCoexpressionSearchEndpoint extends AbstractGemmaEndpoint {
 
     public void setGeneService( GeneService geneService ) {
         this.geneService = geneService;
+    }
+
+    public void setServletContext( ServletContext servletContext ) {
+        this.servletContext = servletContext;
     }
 
     /**
@@ -152,7 +158,7 @@ public class GeneCoexpressionSearchEndpoint extends AbstractGemmaEndpoint {
 
                 Element gemmaURL = document.createElement( "gemma_details_url" );
                 gemmaURL.appendChild( document.createTextNode(
-                        Settings.getBaseUrl() + "searchCoexpression.html?g=" + queryGene.getId() + "," + cvo
+                        Settings.getHostUrl() + servletContext.getContextPath() + "/searchCoexpression.html?g=" + queryGene.getId() + "," + cvo
                                 .getFoundGene().getId() + "&s=" + stringency + "&t=2&q&a=5662&an=All%20mouse" ) );
                 item.appendChild( gemmaURL );
 

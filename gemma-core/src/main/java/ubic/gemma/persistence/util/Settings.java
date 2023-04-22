@@ -296,36 +296,6 @@ public class Settings {
         return host;
     }
 
-    /**
-     * @return root context e.g. /Gemma
-     */
-    @Deprecated
-    public static String getRootContext() {
-        String ctx = Settings.getString( "gemma.rootcontext", "" );
-        if ( ctx.isEmpty() || ctx.equals( "/" ) ) {
-            return "";
-        }
-        if ( !ctx.startsWith( "/" ) ) {
-            ctx = "/" + ctx;
-        }
-        if ( ctx.length() > 1 && ctx.endsWith( "/" ) ) {
-            return ctx.substring( 0, ctx.length() - 1 );
-        }
-        return ctx;
-    }
-
-    /**
-     * @return the configured base url (e.g., http://gemma.msl.ubc.ca/Gemma/). It will always end in a slash.
-     */
-    @Deprecated
-    public static String getBaseUrl() {
-        String url = Settings.getString( "gemma.baseurl", Settings.getHostUrl() + Settings.getRootContext() + "/" );
-        if ( !url.endsWith( "/" ) ) {
-            return url + "/";
-        }
-        return url;
-    }
-
     public static Configuration getInMemoryConfiguration() {
         return Settings.config.getInMemoryConfiguration();
     }

@@ -54,7 +54,7 @@ public class PhenotypeAssociationConstants {
 
     // path to the final files on production
     public final static String GEMMA_PHENOCARTA_HOST_URL =
-            Settings.getBaseUrl() + PhenotypeAssociationConstants.PHENOCARTA_NAME + File.separator
+            Settings.getHostUrl() + "/" + PhenotypeAssociationConstants.PHENOCARTA_NAME + File.separator
                     + PhenotypeAssociationConstants.LATEST_EVIDENCE_EXPORT + File.separator;
     // those are folders
     public final static String GEMMA_PHENOCARTA_HOST_URL_DATASETS =
