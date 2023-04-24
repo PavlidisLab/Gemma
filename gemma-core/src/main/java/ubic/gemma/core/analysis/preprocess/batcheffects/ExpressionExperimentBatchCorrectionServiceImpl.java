@@ -195,8 +195,12 @@ public class ExpressionExperimentBatchCorrectionServiceImpl implements Expressio
             for ( int j = 0; j < design.columns(); j++ ) {
                 designU.set( i, j, design.get( i, j ) );
                 if ( i == 0 ) {
-                    // WARNING we _can_ have duplicates.
-                    colNames.add( design.getColName( j ).getName() );
+                    // Address possibility of duplicate column names.
+                    String colname = design.getColName( j ).getName();
+                    if (colNames.contains( colname )) {  // yes inefficient but this is a small matrix
+                        colname = colname + "_" + j; // this is just to make sure we don't have duplicates so the addend doesn't matter
+                    }
+                    colNames.add( colname );
                 }
             }
         }
