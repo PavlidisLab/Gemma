@@ -69,8 +69,7 @@ public class ExperimentalDesignImportCli extends AbstractCLIContextCLI {
 
     @Override
     protected void doWork() throws Exception {
-        ExperimentalFactorOntologyService mos = this.getBean( OntologyService.class )
-                .getExperimentalFactorOntologyService();
+        ExperimentalFactorOntologyService mos = this.getBean( ExperimentalFactorOntologyService.class );
         mos.startInitializationThread( true, false ); // note will *not* re-index
         while ( !mos.isOntologyLoaded() ) {
             try {

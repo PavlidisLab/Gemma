@@ -4,6 +4,7 @@ import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.config.AbstractFactoryBean;
+import org.springframework.core.task.TaskExecutor;
 import ubic.basecode.ontology.providers.OntologyService;
 import ubic.basecode.util.Configuration;
 
@@ -29,6 +30,7 @@ public class OntologyServiceFactory<T extends OntologyService> extends AbstractF
     private boolean forceLoad = false;
     private boolean forceIndexing = false;
     private boolean loadInBackground = true;
+    private TaskExecutor ontologyTaskExecutor = null;
 
 
     /**
@@ -63,6 +65,13 @@ public class OntologyServiceFactory<T extends OntologyService> extends AbstractF
     }
 
     /**
+     * Set the task executor used for initializing ontology service in background.
+     */
+    public void setTaskExecutor( TaskExecutor taskExecutor ) {
+        this.ontologyTaskExecutor = taskExecutor;
+    }
+
+    /**
      * Check if the ontology returned by this factory will be loaded.
      * <p>
      * This happens if either the {@code load.ontologies} configuration key is set to true or the loading is forced via
@@ -87,7 +96,11 @@ public class OntologyServiceFactory<T extends OntologyService> extends AbstractF
         T service = BeanUtils.instantiate( ontologyServiceClass );
         if ( isAutoLoad || forceLoad ) {
             if ( loadInBackground ) {
-                service.startInitializationThread( forceLoad, forceIndexing );
+                if ( ontologyTaskExecutor != null ) {
+                    ontologyTaskExecutor.execute( () -> service.initialize( forceLoad, forceIndexing ) );
+                } else {
+                    service.startInitializationThread( forceLoad, forceIndexing );
+                }
             } else {
                 service.initialize( forceLoad, forceIndexing );
             }

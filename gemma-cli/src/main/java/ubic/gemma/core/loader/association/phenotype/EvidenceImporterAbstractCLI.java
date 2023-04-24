@@ -435,10 +435,8 @@ public abstract class EvidenceImporterAbstractCLI extends AbstractCLIContextCLI 
         this.geneService = this.getBean( GeneService.class );
         this.taxonService = this.getBean( TaxonService.class );
 
-        OntologyService ontologyService = this.getBean( OntologyService.class );
-
-        this.diseaseOntologyService = ontologyService.getDiseaseOntologyService();
-        this.humanPhenotypeOntologyService = ontologyService.getHumanPhenotypeOntologyService();
+        this.diseaseOntologyService = this.getBean( DiseaseOntologyService.class );
+        this.humanPhenotypeOntologyService = this.getBean( HumanPhenotypeOntologyService.class );
 
         // ensure load, but only reindex if needed
         this.diseaseOntologyService.startInitializationThread( true, false );
@@ -457,9 +455,9 @@ public abstract class EvidenceImporterAbstractCLI extends AbstractCLIContextCLI 
         // only need those services for experimental evidences
         if ( experimentalEvidenceServicesNeeded ) {
 
-            this.obiService = ontologyService.getObiService();
-            this.uberonOntologyService = ontologyService.getUberonService();
-            this.mammalianPhenotypeOntologyService = ontologyService.getMammalianPhenotypeOntologyService();
+            this.obiService = this.getBean( ObiService.class );
+            this.uberonOntologyService = this.getBean( UberonOntologyService.class );
+            this.mammalianPhenotypeOntologyService = this.getBean( MammalianPhenotypeOntologyService.class );
 
             this.uberonOntologyService.startInitializationThread( true, false );
             this.mammalianPhenotypeOntologyService.startInitializationThread( true, false );

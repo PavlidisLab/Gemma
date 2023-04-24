@@ -23,6 +23,7 @@ import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import ubic.basecode.ontology.model.OntologyTerm;
+import ubic.basecode.ontology.providers.DiseaseOntologyService;
 import ubic.basecode.ontology.search.OntologySearchException;
 import ubic.gemma.core.association.phenotype.PhenotypeAssociationManagerService;
 import ubic.gemma.core.genome.gene.service.GeneService;
@@ -70,6 +71,8 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
     private GeneService geneService;
     @Autowired
     private UserManager userManager;
+    @Autowired
+    private DiseaseOntologyService diseaseOntologyService;
 
     private Gene gene = null;
     private LiteratureEvidenceValueObject litEvidence = null;
@@ -80,7 +83,7 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
 
         if ( !PhenotypeAssociationTest.dosLoaded ) {
             // fails if you have DO loaded
-            OntologyTestUtils.initialize( os.getDiseaseOntologyService(),
+            OntologyTestUtils.initialize( diseaseOntologyService,
                     this.getClass().getResourceAsStream( "/data/loader/ontology/dotest.owl.xml" ) );
             PhenotypeAssociationTest.dosLoaded = true;
         }
@@ -255,7 +258,7 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
 
     @Test
     public void testFindGenesWithPhenotype() {
-        OntologyTerm term = os.getDiseaseOntologyService().getTerm( "http://purl.obolibrary.org/obo/DOID_2531" );
+        OntologyTerm term = diseaseOntologyService.getTerm( "http://purl.obolibrary.org/obo/DOID_2531" );
         assertNotNull( term );
 
         this.createLiteratureEvidence( this.geneNCBI, "http://purl.obolibrary.org/obo/DOID_2531" );

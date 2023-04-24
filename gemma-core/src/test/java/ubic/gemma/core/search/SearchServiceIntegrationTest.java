@@ -26,6 +26,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.basecode.ontology.model.OntologyTerm;
+import ubic.basecode.ontology.providers.FMAOntologyService;
 import ubic.basecode.ontology.search.OntologySearchException;
 import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.core.loader.entrez.pubmed.PubMedXMLFetcher;
@@ -45,7 +46,10 @@ import ubic.gemma.persistence.service.common.description.CharacteristicService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
 import java.io.InputStream;
-import java.util.*;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.*;
@@ -76,6 +80,9 @@ public class SearchServiceIntegrationTest extends BaseSpringContextTest {
     @Autowired
     private IndexerTask indexerTask;
 
+    @Autowired
+    private FMAOntologyService fmaOntologyService;
+
     /* fixtures */
     private ExpressionExperiment ee;
     private Gene gene;
@@ -87,7 +94,7 @@ public class SearchServiceIntegrationTest extends BaseSpringContextTest {
             assert is != null;
             // this abuses the service as our example is a legacy FMA test (not uberon), but it doesn't matter since we're loading from a file anyway.
             // this will fail if the loading of uberon is enabled - it will collide.
-            OntologyTestUtils.initialize( ontologyService.getUberonService(), is );
+            OntologyTestUtils.initialize( fmaOntologyService, is );
         }
         ee = this.getTestPersistentBasicExpressionExperiment();
 

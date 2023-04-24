@@ -20,7 +20,10 @@ package ubic.gemma.core.ontology;
 
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.core.task.TaskExecutor;
 import ubic.basecode.ontology.model.OntologyTerm;
+import ubic.basecode.ontology.providers.DiseaseOntologyService;
 import ubic.basecode.ontology.search.OntologySearchException;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.util.test.BaseSpringContextTest;
@@ -39,9 +42,12 @@ public class OntologyServiceTest extends BaseSpringContextTest {
     @Autowired
     private OntologyService os;
 
+    @Autowired
+    private DiseaseOntologyService diseaseOntologyService;
+
     @Test
     public void test() throws SearchException, OntologySearchException, InterruptedException {
-        OntologyTestUtils.initialize( os.getDiseaseOntologyService(),
+        OntologyTestUtils.initialize( diseaseOntologyService,
                 this.getClass().getResourceAsStream( "/data/loader/ontology/dotest.owl.xml" ) );
 
         Collection<CharacteristicValueObject> name = os.findTermsInexact( "diarrhea", null );

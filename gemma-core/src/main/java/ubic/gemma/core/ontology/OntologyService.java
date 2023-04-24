@@ -114,56 +114,11 @@ public interface OntologyService {
     Set<OntologyTerm> getChildren( Collection<OntologyTerm> matchingTerms, boolean direct, boolean includeAdditionalProperties );
 
     /**
-     * @return the cellLineOntologyService
-     */
-    CellLineOntologyService getCellLineOntologyService();
-
-    CellTypeOntologyService getCellTypeOntologyService();
-
-    /**
-     * @return the chebiOntologyService
-     */
-    ChebiOntologyService getChebiOntologyService();
-
-    /**
-     * @return the diseaseOntologyService
-     */
-    DiseaseOntologyService getDiseaseOntologyService();
-
-    /**
-     * @return the experimentalFactorOntologyService
-     */
-    ExperimentalFactorOntologyService getExperimentalFactorOntologyService();
-
-    GemmaOntologyService getGemmaOntologyService();
-
-    HumanDevelopmentOntologyService getHumanDevelopmentOntologyService();
-
-    /**
-     * @return the HumanPhenotypeOntologyService
-     */
-    HumanPhenotypeOntologyService getHumanPhenotypeOntologyService();
-
-    /**
-     * @return the MammalianPhenotypeOntologyService
-     */
-    MammalianPhenotypeOntologyService getMammalianPhenotypeOntologyService();
-
-    MouseDevelopmentOntologyService getMouseDevelopmentOntologyService();
-
-    /**
-     * @return the ObiService
-     */
-    ObiService getObiService();
-
-    /**
      * @param  uri uri
      * @return the OntologyResource
      */
     @Nullable
     OntologyResource getResource( String uri );
-
-    SequenceOntologyService getSequenceOntologyService();
 
     /**
      * @param  uri uri
@@ -171,11 +126,6 @@ public interface OntologyService {
      */
     @Nullable
     OntologyTerm getTerm( String uri );
-
-    /**
-     * @return UberonService
-     */
-    UberonOntologyService getUberonService();
 
     boolean isObsolete( String uri );
 

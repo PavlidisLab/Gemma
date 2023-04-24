@@ -69,13 +69,12 @@ public class ExperimentalDesignImporterImpl implements ExperimentalDesignImporte
     private ExperimentalDesignService experimentalDesignService;
     @Autowired
     private OntologyService ontologyService;
+    @Autowired
     private ExperimentalFactorOntologyService efoService;
 
     @Override
     @Transactional
     public void importDesign( ExpressionExperiment experiment, InputStream is ) throws IOException {
-        this.efoService = this.ontologyService.getExperimentalFactorOntologyService();
-
         ExperimentalDesignImporterImpl.log.debug( "Parsing input file" );
         boolean readHeader = false;
 

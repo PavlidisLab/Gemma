@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.springframework.org/schema/beans"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd"
+       profile="test">
+
+    <bean id="experimentalFactorOntologyService" class="ubic.gemma.core.ontology.providers.OntologyServiceFactory">
+        <constructor-arg value="ubic.basecode.ontology.providers.ExperimentalFactorOntologyService"/>
+    </bean>
+    <bean id="obiService" class="ubic.gemma.core.ontology.providers.OntologyServiceFactory">
+        <constructor-arg value="ubic.basecode.ontology.providers.ObiService"/>
+    </bean>
+    <bean id="diseaseOntologyService" class="ubic.gemma.core.ontology.providers.OntologyServiceFactory">
+        <constructor-arg value="ubic.basecode.ontology.providers.DiseaseOntologyService"/>
+    </bean>
+    <bean id="mammalianPhenotypeOntologyService" class="ubic.gemma.core.ontology.providers.OntologyServiceFactory">
+        <constructor-arg value="ubic.basecode.ontology.providers.MammalianPhenotypeOntologyService"/>
+    </bean>
+    <bean id="humanPhenotypeOntologyService" class="ubic.gemma.core.ontology.providers.OntologyServiceFactory">
+        <constructor-arg value="ubic.basecode.ontology.providers.HumanPhenotypeOntologyService"/>
+    </bean>
+    <bean id="nifstOntologyService" class="ubic.gemma.core.ontology.providers.OntologyServiceFactory">
+        <constructor-arg value="ubic.basecode.ontology.providers.NIFSTDOntologyService"/>
+    </bean>
+    <bean id="fmaOntologyService" class="ubic.gemma.core.ontology.providers.OntologyServiceFactory">
+        <constructor-arg value="ubic.basecode.ontology.providers.FMAOntologyService"/>
+    </bean>
+
+</beans>

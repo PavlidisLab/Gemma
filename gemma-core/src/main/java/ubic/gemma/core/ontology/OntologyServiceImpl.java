@@ -24,9 +24,11 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.core.task.AsyncTaskExecutor;
+import org.springframework.core.task.TaskExecutor;
 import org.springframework.stereotype.Service;
 import ubic.basecode.ontology.model.OntologyIndividual;
 import ubic.basecode.ontology.model.OntologyResource;
@@ -36,7 +38,6 @@ import ubic.basecode.ontology.providers.*;
 import ubic.basecode.ontology.search.OntologySearch;
 import ubic.basecode.ontology.search.OntologySearchException;
 import ubic.gemma.core.genome.gene.service.GeneService;
-import ubic.gemma.core.ontology.providers.GemmaOntologyService;
 import ubic.gemma.core.ontology.providers.GeneOntologyService;
 import ubic.gemma.core.ontology.providers.OntologyServiceFactory;
 import ubic.gemma.core.search.SearchException;
@@ -94,43 +95,25 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
     private AsyncTaskExecutor taskExecutor;
 
     @Autowired
-    private CellLineOntologyService cellLineOntologyService;
-    @Autowired
-    private CellTypeOntologyService cellTypeOntologyService;
-    @Autowired
-    private ChebiOntologyService chebiOntologyService;
-    @Autowired
-    private DiseaseOntologyService diseaseOntologyService;
-    @Autowired
     private ExperimentalFactorOntologyService experimentalFactorOntologyService;
     @Deprecated
     @Autowired
     private FMAOntologyService fmaOntologyService;
-    @Autowired
-    private GemmaOntologyService gemmaOntologyService;
-    @Autowired
-    private HumanDevelopmentOntologyService humanDevelopmentOntologyService;
-    @Autowired
-    private HumanPhenotypeOntologyService humanPhenotypeOntologyService;
-    @Autowired
-    private MammalianPhenotypeOntologyService mammalianPhenotypeOntologyService;
-    @Autowired
-    private MouseDevelopmentOntologyService mouseDevelopmentOntologyService;
     @Deprecated
     @Autowired
     private NIFSTDOntologyService nifstdOntologyService;
     @Autowired
     private ObiService obiService;
-    @Autowired
-    private SequenceOntologyService sequenceOntologyService;
-    @Autowired
-    private UberonOntologyService uberonOntologyService;
 
     @Autowired
     private List<OntologyServiceFactory<?>> ontologyServiceFactories;
 
     @Autowired
     private List<ubic.basecode.ontology.providers.OntologyService> ontologyServices;
+
+    @Autowired
+    @Qualifier("ontologyTaskExecutor")
+    private TaskExecutor ontologyTaskExecutor;
 
     private Set<OntologyTermSimple> categoryTerms = null;
 
@@ -437,73 +420,8 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
     }
 
     @Override
-    public CellLineOntologyService getCellLineOntologyService() {
-        return cellLineOntologyService;
-    }
-
-    @Override
-    public CellTypeOntologyService getCellTypeOntologyService() {
-        return cellTypeOntologyService;
-    }
-
-    @Override
-    public ChebiOntologyService getChebiOntologyService() {
-        return chebiOntologyService;
-    }
-
-    @Override
-    public GemmaOntologyService getGemmaOntologyService() {
-        return gemmaOntologyService;
-    }
-
-    @Override
-    public HumanDevelopmentOntologyService getHumanDevelopmentOntologyService() {
-        return humanDevelopmentOntologyService;
-    }
-
-    @Override
-    public MouseDevelopmentOntologyService getMouseDevelopmentOntologyService() {
-        return mouseDevelopmentOntologyService;
-    }
-
-    @Override
-    public DiseaseOntologyService getDiseaseOntologyService() {
-        return diseaseOntologyService;
-    }
-
-    @Override
-    public ExperimentalFactorOntologyService getExperimentalFactorOntologyService() {
-        return experimentalFactorOntologyService;
-    }
-
-    @Override
-    public HumanPhenotypeOntologyService getHumanPhenotypeOntologyService() {
-        return humanPhenotypeOntologyService;
-    }
-
-    @Override
-    public MammalianPhenotypeOntologyService getMammalianPhenotypeOntologyService() {
-        return mammalianPhenotypeOntologyService;
-    }
-
-    @Override
-    public ObiService getObiService() {
-        return obiService;
-    }
-
-    @Override
-    public UberonOntologyService getUberonService() {
-        return this.uberonOntologyService;
-    }
-
-    @Override
     public OntologyResource getResource( String uri ) {
         return findFirst( ontology -> ontology.getResource( uri ) );
-    }
-
-    @Override
-    public SequenceOntologyService getSequenceOntologyService() {
-        return this.sequenceOntologyService;
     }
 
     @Override
@@ -543,7 +461,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
     @Override
     public void reinitializeAllOntologies() {
         for ( ubic.basecode.ontology.providers.OntologyService serv : this.ontologyServices ) {
-            serv.startInitializationThread( true, true );
+            ontologyTaskExecutor.execute( () -> serv.initialize( true, true ) );
         }
     }
 
