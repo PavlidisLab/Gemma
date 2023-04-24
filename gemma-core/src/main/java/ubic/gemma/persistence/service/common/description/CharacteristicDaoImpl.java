@@ -34,6 +34,8 @@ import ubic.basecode.util.BatchIterator;
 import ubic.gemma.model.association.Gene2GOAssociation;
 import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
 import ubic.gemma.model.common.Identifiable;
+import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
+import ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.biomaterial.Treatment;
@@ -121,8 +123,12 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
             return Collections.emptyMap();
         }
 
-        String qs = "select T.LEVEL, T.VALUE_URI, {I.*} from EXPRESSION_EXPERIMENT2CHARACTERISTIC T "
+        String qs = "select T.LEVEL, T.VALUE_URI, {I.*}, {CD.*}, {TAE.*}, {AAE.*}, {NAE.*} from EXPRESSION_EXPERIMENT2CHARACTERISTIC T "
                 + "join INVESTIGATION {I} on {I}.ID = T.EXPRESSION_EXPERIMENT_FK "
+                + "left join CURATION_DETAILS {CD} on {CD}.ID = {I}.CURATION_DETAILS_FK "
+                + "left join AUDIT_EVENT {TAE} on {TAE}.ID = {CD}.TROUBLE_AUDIT_EVENT_FK "
+                + "left join AUDIT_EVENT {AAE} on {AAE}.ID = {CD}.ATTENTION_AUDIT_EVENT_FK "
+                + "left join AUDIT_EVENT {NAE} on {NAE}.ID = {CD}.NOTE_AUDIT_EVENT_FK "
                 + AclQueryUtils.formNativeAclJoinClause( "T.EXPRESSION_EXPERIMENT_FK" ) + " "
                 + "where T.VALUE_URI in :uris"
                 + ( taxon != null ? " and {I}.TAXON_FK = :taxonId" : "" )
@@ -132,7 +138,11 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
         Query query = getSessionFactory().getCurrentSession().createSQLQuery( qs )
                 .addScalar( "LEVEL", new ClassType() )
                 .addScalar( "VALUE_URI", new StringType() )
-                .addEntity( "I", ExpressionExperiment.class );
+                .addEntity( "I", ExpressionExperiment.class )
+                .addEntity( "CD", CurationDetails.class )
+                .addEntity( "TAE", AuditEvent.class )
+                .addEntity( "AAE", AuditEvent.class )
+                .addEntity( "NAE", AuditEvent.class );
 
         query.setParameter( "eeClass", ExpressionExperiment.class );
         query.setParameter( "edClass", ExperimentalDesign.class );
