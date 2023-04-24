@@ -154,9 +154,21 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
         // Create new analysis
         Collection<ProcessedExpressionDataVector> vectors = processedExpressionDataVectorService
                 .getProcessedDataVectors( thawedee );
+        SampleCoexpressionMatrix matrix = this.getMatrix( thawedee, false, vectors );
+        SampleCoexpressionMatrix regressedMatrix = this.getMatrix( thawedee, true, vectors );
+
+        if (matrix == null) {
+            // If we can't compute the "regular" one, we can't compute the regressed one either.
+            throw new IllegalStateException("No valid sample coexpression matrix was computed for experiment " + thawedee);
+        }
+
+        if (regressedMatrix == null) {
+            log.warn("Regressed matrix could not be computed, review experimental design? Experiment " + thawedee);
+        }
+
         SampleCoexpressionAnalysis analysis = new SampleCoexpressionAnalysis( thawedee, // Analyzed experiment
-                this.getMatrix( thawedee, false, vectors ), // Full
-                this.getMatrix( thawedee, true, vectors ) );// Regressed
+                matrix, // Full
+                regressedMatrix );// Regressed
 
         // Persist
         this.logCormatStatus( analysis, true );
@@ -230,6 +242,7 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
 
         ExpressionDataDoubleMatrix mat = this.loadDataMatrix( ee, regress, vectors );
         if ( mat == null ) {
+            log.warn( "Could not get data matrix for " + ee );
             return null;
         }
 
@@ -361,8 +374,17 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
         // set up design matrix
         Map<ExperimentalFactor, FactorValue> baselineConditions = ExperimentalDesignUtils
                 .getBaselineConditions( samplesUsed, factors );
-        ObjectMatrix<String, String, Object> designMatrix = ExperimentalDesignUtils
-                .buildDesignMatrix( factors, samplesUsed, baselineConditions );
+
+        ObjectMatrix<String, String, Object> designMatrix = null;
+        try {
+            /*
+             * A failure here can mean that the design matrix could not be built because of missing values; see #664
+             */
+            designMatrix = ExperimentalDesignUtils
+                    .buildDesignMatrix( factors, samplesUsed, baselineConditions );
+        } catch ( Exception e ) {
+            return null;
+        }
         DesignMatrix properDesignMatrix = new DesignMatrix( designMatrix, true );
 
         ExpressionDataDoubleMatrix dmatrix = new ExpressionDataDoubleMatrix( matrix, samplesUsed, bad );

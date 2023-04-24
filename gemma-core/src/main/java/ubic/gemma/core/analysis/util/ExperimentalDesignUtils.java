@@ -96,6 +96,11 @@ public class ExperimentalDesignUtils {
 
                 // if the value is null, we have to skip this factor, actually, but we do it later.
                 if ( value == null ) {
+                    /*
+                     * This error could be worked around when we are doing SampleCoexpression.
+                     * A legitimate reason is when we have a DEExclude factor and some samples lack any value for one of the other Factors.
+                     * We could detect this but it's kind of complicated, rare, and would only apply for that case.
+                     */
                     throw new IllegalStateException( "Missing values not tolerated in design matrix" );
                 }
 
