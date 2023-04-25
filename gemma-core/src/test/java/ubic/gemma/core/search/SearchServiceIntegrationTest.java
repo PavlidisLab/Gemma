@@ -42,6 +42,7 @@ import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
+import ubic.gemma.persistence.service.TableMaintenanceUtil;
 import ubic.gemma.persistence.service.common.description.CharacteristicService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
@@ -82,6 +83,9 @@ public class SearchServiceIntegrationTest extends BaseSpringContextTest {
 
     @Autowired
     private FMAOntologyService fmaOntologyService;
+
+    @Autowired
+    private TableMaintenanceUtil tableMaintenanceUtil;
 
     /* fixtures */
     private ExpressionExperiment ee;
@@ -132,6 +136,7 @@ public class SearchServiceIntegrationTest extends BaseSpringContextTest {
         gene.setNcbiGeneId( new Integer( geneNcbiId ) );
         geneService.update( gene );
 
+        tableMaintenanceUtil.updateExpressionExperiment2CharacteristicEntries();
     }
 
     @After
