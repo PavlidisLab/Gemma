@@ -35,6 +35,7 @@ import org.springframework.core.convert.support.GenericConversionService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.web.util.UriComponentsBuilder;
 import ubic.basecode.ontology.model.OntologyIndividual;
 import ubic.basecode.ontology.model.OntologyResource;
 import ubic.basecode.ontology.model.OntologyTerm;
@@ -75,6 +76,7 @@ import ubic.gemma.persistence.util.Settings;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.text.Collator;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -134,6 +136,13 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
     private static final int MINIMUM_EE_QUERY_LENGTH = 3;
 
     private static final String NCBI_GENE = "ncbi_gene";
+
+    private static final Collator CASE_INSENSITIVE_COLLATOR;
+
+    static {
+        CASE_INSENSITIVE_COLLATOR = Collator.getInstance();
+        CASE_INSENSITIVE_COLLATOR.setStrength( Collator.PRIMARY );
+    }
 
     private final Map<String, Taxon> nameToTaxonMap = new LinkedHashMap<>();
 
@@ -768,11 +777,29 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
             }
         }
 
+        // URIs are case-insensitive in the database, so should be the mapping to labels
         Collection<String> uris = new HashSet<>();
-        Map<String, String> uri2value = new HashMap<>();
+        Map<String, String> uri2value = new TreeMap<>( CASE_INSENSITIVE_COLLATOR );
+
+        if ( query.startsWith( "http://" ) ) {
+            uris.add( query );
+            List<String> segments = UriComponentsBuilder.fromHttpUrl( query ).build().getPathSegments();
+            String label;
+            if ( segments.size() > 1 ) {
+                label = segments.get( segments.size() - 1 ).replaceFirst( "_", ":" );
+            } else {
+                label = query;
+            }
+            // this will be replaced with a proper label if found in the ontology
+            uri2value.put( query, label );
+        }
+
         for ( OntologyResource individual : terms ) {
-            uris.add( individual.getUri() );
-            uri2value.put( individual.getUri(), individual.getLabel() );
+            String uri = individual.getUri();
+            uris.add( uri );
+            if ( individual.getLabel() != null ) {
+                uri2value.put( uri, individual.getLabel() );
+            }
         }
 
         timer.reset();
@@ -797,7 +824,7 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
             for ( String uri : hits.get( clazz ).keySet() ) {
                 for ( ExpressionExperiment ee : hits.get( clazz ).get( uri ) ) {
                     String matchedText = "Tagged term: <a href=\"" + Settings.getRootContext()
-                            + "/searcher.html?query=" + uri + "\">" + uri2value.get( uri ) + "</a> ";
+                            + "/searcher.html?query=" + uri + "&scope=E" + "\">" + uri2value.get( uri ) + "</a> ";
                     if ( !clazz.isAssignableFrom( ExpressionExperiment.class ) ) {
                         matchedText = matchedText + " via " + clazz.getSimpleName();
                     }

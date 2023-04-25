@@ -9,10 +9,14 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
 import ubic.basecode.ontology.search.OntologySearchException;
+import ubic.gemma.core.analysis.report.ExpressionExperimentReportService;
 import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.model.common.search.SearchSettings;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.persistence.service.common.description.CharacteristicService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.persistence.util.TestComponent;
 
@@ -49,6 +53,9 @@ public class SearchServiceTest extends AbstractJUnit4SpringContextTests {
     @Autowired
     private OntologyService ontologyService;
 
+    @Autowired
+    private CharacteristicService characteristicService;
+
     @After
     public void tearDown() {
         reset( databaseSearchSource, ontologyService );
@@ -72,5 +79,19 @@ public class SearchServiceTest extends AbstractJUnit4SpringContextTests {
         verify( ontologyService ).findTerms( "cancer" );
         verify( ontologyService ).findIndividuals( "liver" );
         verify( ontologyService ).findTerms( "liver" );
+    }
+
+    @Test
+    public void searchExpressionExperimentsByUri_whenQueryIsAUri_thenEnsureTheUriIsUsedDirectly() throws SearchException, OntologySearchException {
+        SearchSettings settings = SearchSettings.builder()
+                .query( "http://purl.obolibrary.org/obo/DOID_14602" )
+                .resultType( ExpressionExperiment.class )
+                .maxResults( 10 )
+                .build();
+        searchService.search( settings );
+        verify( ontologyService ).findIndividuals( "http://purl.obolibrary.org/obo/DOID_14602" );
+        verify( ontologyService ).findTerms( "http://purl.obolibrary.org/obo/DOID_14602" );
+        verifyNoMoreInteractions( ontologyService );
+        verify( characteristicService ).findExperimentsByUris( Collections.singleton( "http://purl.obolibrary.org/obo/DOID_14602" ), null, 10 );
     }
 }
