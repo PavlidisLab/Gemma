@@ -4,9 +4,8 @@ import org.springframework.security.access.annotation.Secured;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
-import ubic.gemma.persistence.service.BaseReadOnlyService.BaseReadOnlyService;
+import ubic.gemma.persistence.service.BaseReadOnlyService;
 
-import javax.annotation.CheckReturnValue;
 import java.util.Collection;
 
 interface DesignElementDataVectorService<T extends DesignElementDataVector> extends BaseReadOnlyService<T> {

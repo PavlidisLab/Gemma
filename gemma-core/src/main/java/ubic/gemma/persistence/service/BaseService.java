@@ -1,7 +1,6 @@
 package ubic.gemma.persistence.service;
 
 import ubic.gemma.model.common.Identifiable;
-import ubic.gemma.persistence.service.BaseReadOnlyService.BaseReadOnlyService;
 
 import javax.annotation.CheckReturnValue;
 import java.util.Collection;
