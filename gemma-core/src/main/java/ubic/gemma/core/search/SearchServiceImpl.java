@@ -35,6 +35,7 @@ import org.springframework.core.convert.support.GenericConversionService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.web.util.UriComponentsBuilder;
 import ubic.basecode.ontology.model.OntologyIndividual;
 import ubic.basecode.ontology.model.OntologyResource;
 import ubic.basecode.ontology.model.OntologyTerm;
@@ -79,6 +80,7 @@ import javax.annotation.Nullable;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.text.Collator;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -137,6 +139,13 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
     private static final double INDIRECT_HIT_PENALTY = 0.8;
 
     private static final String NCBI_GENE = "ncbi_gene";
+
+    private static final Collator CASE_INSENSITIVE_COLLATOR;
+
+    static {
+        CASE_INSENSITIVE_COLLATOR = Collator.getInstance();
+        CASE_INSENSITIVE_COLLATOR.setStrength( Collator.PRIMARY );
+    }
 
     private final Map<String, Taxon> nameToTaxonMap = new LinkedHashMap<>();
 
@@ -746,8 +755,24 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
     }
 
     private void findExperimentsByTerms( Collection<? extends OntologyResource> individuals, Set<SearchResult<ExpressionExperiment>> results, double score, SearchSettings settings ) {
-        Collection<String> uris = new HashSet<>( individuals.size() );
-        Map<String, String> uri2value = new HashMap<>( individuals.size() );
+        // URIs are case-insensitive in the database, so should be the mapping to labels
+        Collection<String> uris = new HashSet<>();
+        Map<String, String> uri2value = new TreeMap<>( CASE_INSENSITIVE_COLLATOR );
+
+        if ( settings.isTermQuery() ) {
+            String query = settings.getQuery();
+            uris.add( query );
+            List<String> segments = UriComponentsBuilder.fromHttpUrl( query ).build().getPathSegments();
+            String label;
+            if ( segments.size() > 1 ) {
+                label = segments.get( segments.size() - 1 ).replaceFirst( "_", ":" );
+            } else {
+                label = query;
+            }
+            // this will be replaced with a proper label if found in the ontology
+            uri2value.put( query, label );
+        }
+
         for ( OntologyResource individual : individuals ) {
             // bnodes can have null URIs, how annoying...
             if ( individual.getUri() != null ) {
@@ -755,6 +780,7 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
                 uri2value.put( individual.getUri(), individual.getLabel() );
             }
         }
+
         findExperimentsByUris( uris, results, score, uri2value, settings );
     }
 
