@@ -855,8 +855,7 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
         // we would have to first deal with the separate queries, and then apply the logic.
         Collection<SearchResult<ExpressionExperiment>> allResults = new SearchResultSet<>();
 
-        SearchServiceImpl.log
-                .info( "Starting characteristic search: '" + settings.getQuery() );
+        SearchServiceImpl.log.info( "Starting characteristic search for: " + settings );
         for ( String rawTerm : subparts ) {
             String trimmed = StringUtils.strip( rawTerm );
             if ( StringUtils.isBlank( trimmed ) ) {

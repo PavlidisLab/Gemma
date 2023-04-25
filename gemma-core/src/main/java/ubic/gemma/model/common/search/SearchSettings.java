@@ -32,6 +32,7 @@ import ubic.gemma.model.genome.Taxon;
 import javax.annotation.Nullable;
 import java.io.Serializable;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Configuration options for searching.
@@ -41,7 +42,6 @@ import java.util.Set;
 @Data
 @Builder
 @With
-@ToString(of = { "query", "taxon", "platformConstraint", "resultTypes" })
 public class SearchSettings implements Serializable {
 
     public static final char
@@ -271,5 +271,18 @@ public class SearchSettings implements Serializable {
      */
     public boolean hasResultType( Class<?> cls ) {
         return resultTypes.contains( cls );
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder s = new StringBuilder( "'" + query + "'" );
+        s.append( " in " ).append( resultTypes.stream().map( Class::getSimpleName ).sorted().collect( Collectors.joining( ", " ) ) );
+        if ( platformConstraint != null ) {
+            s.append( " " ).append( "[" ).append( platformConstraint ).append( "]" );
+        }
+        if ( taxon != null ) {
+            s.append( " " ).append( "[" ).append( taxon ).append( "]" );
+        }
+        return s.toString();
     }
 }
