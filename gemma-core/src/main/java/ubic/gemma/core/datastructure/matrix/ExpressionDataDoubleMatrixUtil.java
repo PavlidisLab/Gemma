@@ -591,7 +591,7 @@ public class ExpressionDataDoubleMatrixUtil {
                 results.add( new SuspiciousValuesForQuantitationException.SuspiciousValueResult( -1, null, j, columnNames[j], String.format( "minimum of %.2f is too small; lower bound is %.2f", minimum, lowerBound ) ) );
             }
             if ( maximum > upperBound ) {
-                results.add( new SuspiciousValuesForQuantitationException.SuspiciousValueResult( -1, null, j, columnNames[j], String.format( "maximum of %.2f is too small; upper bound is %.2f", maximum, upperBound ) ) );
+                results.add( new SuspiciousValuesForQuantitationException.SuspiciousValueResult( -1, null, j, columnNames[j], String.format( "maximum of %.2f is too high; upper bound is %.2f", maximum, upperBound ) ) );
             }
         }
     }
