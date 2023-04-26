@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2009 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,13 +18,20 @@
  */
 package ubic.gemma.web.controller.common.auditAndSecurity;
 
+import ubic.gemma.model.annotations.GemmaWebOnly;
 import ubic.gemma.model.common.auditAndSecurity.User;
+import ubic.gemma.model.common.auditAndSecurity.UserGroup;
+
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * @author keshav
  *
  */
 public class UserValueObject {
+
+    private Set<String> groups;
     private String currentGroup;
     private String email;
     private boolean enabled;
@@ -49,9 +56,32 @@ public class UserValueObject {
         email = user.getEmail();
         enabled = user.getEnabled();
         password = user.getPassword();
+        groups = user.getGroups().stream().map( UserGroup::getName ).collect( Collectors.toCollection( TreeSet::new ) );
+        // FIXME: select the current group more intelligently
+        currentGroup = groups.stream().findAny().orElse( null );
     }
 
+    public Set<String> getGroups() {
+        return groups;
+    }
+
+    public void setGroups( Set<String> groups ) {
+        this.groups = groups;
+    }
+
+    /**
+     * @deprecated use {@link #getGroups()} instead
+     */
+    @Deprecated
     public String getCurrentGroup() {
+        return currentGroup;
+    }
+
+    /**
+     * @deprecated use {@link #getGroups()} instead
+     */
+    @Deprecated
+    public String getRole() {
         return currentGroup;
     }
 

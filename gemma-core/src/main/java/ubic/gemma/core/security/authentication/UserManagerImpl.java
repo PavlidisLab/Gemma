@@ -26,10 +26,10 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
 import org.springframework.security.access.AccessDeniedException;
-import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -56,7 +56,6 @@ import java.util.stream.Collectors;
  * @author pavlidis
  */
 @SuppressWarnings("unused")
-@Transactional
 @Service
 public class UserManagerImpl implements UserManager {
 
@@ -75,7 +74,6 @@ public class UserManagerImpl implements UserManager {
     private UserService userService;
 
     @Override
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "RUN_AS_ADMIN" })
     @Transactional
     public String changePasswordForUser( String email, String username, String newPassword )
             throws AuthenticationException {
@@ -113,6 +111,7 @@ public class UserManagerImpl implements UserManager {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Collection<String> findAllUsers() {
         Collection<gemma.gsec.model.User> users = userService.loadAll();
 
@@ -124,29 +123,31 @@ public class UserManagerImpl implements UserManager {
     }
 
     @Override
-    @Secured({ "GROUP_USER", "RUN_AS_ADMIN" })
-    public User findbyEmail( String emailAddress ) {
-        return this.findByEmail( emailAddress );
-    }
-
-    @Override
-    @Secured({ "GROUP_USER", "RUN_AS_ADMIN" })
+    @Transactional(readOnly = true)
     public User findByEmail( String emailAddress ) {
         return userService.findByEmail( emailAddress );
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public gemma.gsec.model.User findbyEmail( String emailAddress ) {
+        return findByEmail( emailAddress );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public User findByUserName( String userName ) {
         return this.userService.findByUserName( userName );
     }
 
     @Override
+    @Transactional(readOnly = true)
     public UserGroup findGroupByName( String name ) {
         return this.userService.findGroupByName( name );
     }
 
     @Override
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "RUN_AS_USER" })
+    @Transactional(readOnly = true)
     public Collection<String> findGroupsForUser( String userName ) {
 
         Collection<String> result = new HashSet<>();
@@ -171,6 +172,7 @@ public class UserManagerImpl implements UserManager {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public User getCurrentUser() {
         return this.getUserForUserName( this.getCurrentUsername() );
     }
@@ -199,14 +201,17 @@ public class UserManagerImpl implements UserManager {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public boolean groupExists( String groupName ) {
         return userService.groupExists( groupName );
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Collection<User> loadAll() {
         return this.userService.loadAll().stream()
                 .map( u -> ( User ) u )
+                .peek( u -> Hibernate.initialize( u.getGroups() ) )
                 .collect( Collectors.toList() );
     }
 
@@ -223,13 +228,13 @@ public class UserManagerImpl implements UserManager {
     }
 
     @Override
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "RUN_AS_ADMIN" })
+    @Transactional(readOnly = true)
     public boolean userWithEmailExists( String emailAddress ) {
         return userService.findByEmail( emailAddress ) != null;
     }
 
     @Override
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "RUN_AS_ADMIN" })
+    @Transactional
     public boolean validateSignupToken( String username, String key ) {
 
         UserDetailsImpl u = ( UserDetailsImpl ) this.loadUserByUsername( username );
@@ -260,7 +265,6 @@ public class UserManagerImpl implements UserManager {
     }
 
     @Override
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "RUN_AS_ADMIN" })
     @Transactional
     public void createUser( UserDetails user ) {
 
@@ -303,7 +307,6 @@ public class UserManagerImpl implements UserManager {
     }
 
     @Override
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "RUN_AS_ADMIN" })
     @Transactional
     public void updateUser( UserDetails user ) {
         String username = user.getUsername();
@@ -319,7 +322,28 @@ public class UserManagerImpl implements UserManager {
 
         userService.update( u );
 
-        userCache.removeUserFromCache( user.getUsername() );
+         userCache.removeUserFromCache( user.getUsername() );
+    }
+
+    @Override
+    @Transactional
+    public void updateUserGroups( UserDetails userDetails, Collection<String> groups ) {
+        User u = userService.findByUserName( userDetails.getUsername() );
+        if ( u == null ) {
+            throw new IllegalArgumentException( String.format( "Unknown user with username %s.", userDetails.getUsername() ) );
+        }
+        Set<UserGroup> newGroups = new HashSet<>();
+        for ( String groupName : groups ) {
+            UserGroup group = userService.findGroupByName( groupName );
+            if ( group == null ) {
+                throw new IllegalArgumentException( String.format( "Unknown group with name %s.", groupName ) );
+            }
+            newGroups.add( group );
+        }
+        u.getGroups().clear();
+        u.getGroups().addAll( newGroups );
+        System.out.println( newGroups );
+        userService.update( u );
     }
 
     @Override
@@ -331,7 +355,6 @@ public class UserManagerImpl implements UserManager {
     }
 
     @Override
-    @Secured({ "GROUP_USER" })
     @Transactional
     public void changePassword( String oldPassword, String newPassword ) throws AuthenticationException {
         Authentication currentAuthentication = SecurityContextHolder.getContext().getAuthentication();
@@ -357,12 +380,13 @@ public class UserManagerImpl implements UserManager {
     }
 
     @Override
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "RUN_AS_ADMIN" })
+    @Transactional(readOnly = true)
     public boolean userExists( String username ) {
         return userService.findByUserName( username ) != null;
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<String> findAllGroups() {
         Collection<gemma.gsec.model.UserGroup> groups = userService.listAvailableGroups();
 
@@ -374,6 +398,7 @@ public class UserManagerImpl implements UserManager {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<String> findUsersInGroup( String groupName ) {
 
         UserGroup group = this.loadGroup( groupName );
@@ -389,6 +414,7 @@ public class UserManagerImpl implements UserManager {
     }
 
     @Override
+    @Transactional
     public void createGroup( String groupName, List<GrantedAuthority> authorities ) {
 
         UserGroup g = ubic.gemma.model.common.auditAndSecurity.UserGroup.Factory.newInstance();
@@ -402,12 +428,14 @@ public class UserManagerImpl implements UserManager {
     }
 
     @Override
+    @Transactional
     public void deleteGroup( String groupName ) {
         UserGroup group = this.loadGroup( groupName );
         userService.delete( group );
     }
 
     @Override
+    @Transactional
     public void renameGroup( String oldName, String newName ) {
 
         UserGroup group = userService.findGroupByName( oldName );
@@ -418,6 +446,7 @@ public class UserManagerImpl implements UserManager {
     }
 
     @Override
+    @Transactional
     public void addUserToGroup( String username, String groupName ) {
         User u = this.loadUser( username );
         UserGroup g = this.loadGroup( groupName );
@@ -425,6 +454,7 @@ public class UserManagerImpl implements UserManager {
     }
 
     @Override
+    @Transactional
     public void removeUserFromGroup( String username, String groupName ) {
 
         User user = userService.findByUserName( username );
@@ -438,6 +468,7 @@ public class UserManagerImpl implements UserManager {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<GrantedAuthority> findGroupAuthorities( String groupName ) {
 
         String groupToSearch = groupName;
@@ -456,6 +487,7 @@ public class UserManagerImpl implements UserManager {
     }
 
     @Override
+    @Transactional
     public void addGroupAuthority( String groupName, GrantedAuthority authority ) {
         UserGroup g = this.loadGroup( groupName );
 
@@ -475,6 +507,7 @@ public class UserManagerImpl implements UserManager {
     }
 
     @Override
+    @Transactional
     public void removeGroupAuthority( String groupName, GrantedAuthority authority ) {
 
         UserGroup group = this.loadGroup( groupName );
@@ -499,6 +532,7 @@ public class UserManagerImpl implements UserManager {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public UserDetails loadUserByUsername( String username ) throws UsernameNotFoundException, DataAccessException {
         User user = this.loadUser( username );
 

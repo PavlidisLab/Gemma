@@ -1,8 +1,8 @@
 /**
  * User management tool.
- * 
+ *
  * @author keshav
- * 
+ *
  */
 Ext.namespace( 'Gemma' );
 Ext.BLANK_IMAGE_URL = ctxBasePath + '/images/default/s.gif';
@@ -36,8 +36,8 @@ Ext.onReady( function() {
       name : "email",
       type : "string"
    }, {
-      name : "role",
-      type : "string"
+      name : "groups",
+      type : "array"
    }, {
       name : "enabled",
       type : "boolean"
@@ -68,24 +68,24 @@ Ext.onReady( function() {
       width : 55
    } );
 
-   var roleEdit = new Ext.form.ComboBox( {
+   var groupsEdit = new Ext.form.ComboBox( {
       typeAhead : true,
       lazyRender : true,
       triggerAction : 'all',
       mode : 'local',
       selectOnFocus : true,
-      displayField : 'role',
+      displayField : 'groups',
 
-      // the role (combo box) editor needs a store
+      // the groups (combo box) editor needs a store
       store : new Ext.data.Store( {
-         data : [ [ 1, "user" ], [ 2, "admin" ] ],
+         data : [ [ 1, "Administrators" ], [ 2, "Users" ] ],
 
          reader : new Ext.data.ArrayReader( {
             id : 'id'
-         }, [ 'id', 'role' ] )
+         }, [ 'id', 'groups' ] )
 
       } ),
-      valueField : 'role'
+      valueField : 'groups'
    } );
 
    var userGrid = new Ext.grid.EditorGridPanel( {
@@ -114,7 +114,7 @@ Ext.onReady( function() {
             userGrid.getStore().insert( 0, new record( {
                userName : 'New User',
                email : '',
-               role : 'Select Role',
+               groups: 'Select Groups',
                enabled : true
             } ) );
             userGrid.startEditing( 0, 0 );
@@ -164,7 +164,7 @@ Ext.onReady( function() {
                            userName : sel.data.userName,
                            email : sel.data.email,
                            enabled : sel.data.enabled,
-                           role : sel.data.role
+                           groups: [sel.data.groups]
                         }, {
                            callback : function() {
                               userGrid.getStore().reload();
@@ -189,9 +189,9 @@ Ext.onReady( function() {
          dataIndex : 'email',
          editor : emailEdit
       }, {
-         header : "Role",
-         dataIndex : 'role',
-         editor : roleEdit
+         header : "Groups",
+         dataIndex : 'groups',
+         editor : groupsEdit
       }, checkColumn ] ),
 
       viewConfig : {
