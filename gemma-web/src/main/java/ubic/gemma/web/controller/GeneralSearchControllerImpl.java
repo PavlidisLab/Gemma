@@ -18,9 +18,8 @@
  */
 package ubic.gemma.web.controller;
 
-import gemma.gsec.util.SecurityUtil;
-import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -31,39 +30,23 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
-import ubic.gemma.core.annotation.reference.BibliographicReferenceService;
-import ubic.gemma.core.genome.gene.service.GeneService;
-import ubic.gemma.core.genome.gene.service.GeneSetService;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.search.SearchResult;
 import ubic.gemma.core.search.SearchService;
-import ubic.gemma.core.security.audit.AuditableUtil;
-import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.common.search.SearchSettingsValueObject;
-import ubic.gemma.model.expression.BlacklistedEntity;
-import ubic.gemma.model.expression.BlacklistedValueObject;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
-import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.gene.GeneSet;
-import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
-import ubic.gemma.model.genome.sequenceAnalysis.BioSequenceValueObject;
-import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
-import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
-import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSetService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
-import ubic.gemma.persistence.util.EntityUtils;
 import ubic.gemma.web.propertyeditor.TaxonPropertyEditor;
 import ubic.gemma.web.remote.JsonReaderResponse;
 
@@ -71,7 +54,6 @@ import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.util.*;
-import java.util.stream.Collectors;
 
 /**
  * Note: do not use parametrized collections as parameters for ajax methods in this class! Type information is lost
@@ -86,23 +68,7 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
     @Autowired
     private SearchService searchService;
     @Autowired
-    private ExpressionExperimentService expressionExperimentService;
-    @Autowired
-    private ArrayDesignService arrayDesignService;
-    @Autowired
-    private GeneService geneService;
-    @Autowired
-    private BibliographicReferenceService bibliographicReferenceService;
-    @Autowired
     private TaxonService taxonService;
-    @Autowired
-    private AuditableUtil auditableUtil;
-    @Autowired
-    private GeneSetService geneSetService;
-    @Autowired
-    private ExpressionExperimentSetService experimentSetService;
-    @Autowired
-    private CompositeSequenceService compositeSequenceService;
     @Autowired
     private ServletContext servletContext;
 
@@ -138,24 +104,22 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
         // FIXME: sort by the number of hits per class, so the smallest number of hits is at the top.
         fillVosTimer.start();
         List<SearchResultValueObject<?>> finalResults = new ArrayList<>();
-        if ( searchResults != null ) {
-            for ( Class<? extends Identifiable> clazz : searchResults.keySet() ) {
-                List<SearchResult<?>> results = searchResults.get( ( Object ) clazz );
+        for ( Class<? extends Identifiable> clazz : searchResults.getResultTypes() ) {
+            List<SearchResult<?>> results = searchResults.getByResultType( clazz );
 
-                if ( results.size() == 0 )
-                    continue;
+            if ( results.size() == 0 )
+                continue;
 
-                BaseFormController.log
+            BaseFormController.log.info( String.format( "Search for: %s; result: %d %ss",
+                    searchSettings, results.size(), clazz.getSimpleName() ) );
 
-                        .info( "Search for: " + searchSettings + "; result: " + results.size() + " " + clazz.getSimpleName()
-                                + "s" );
-
-                /*
-                 * Now put the valueObjects inside the SearchResults in score order.
-                 */
-                results = results.stream().sorted().collect( Collectors.toList() );
-                finalResults.addAll( this.fillValueObjects( clazz, results, searchSettings ) );
-            }
+            /*
+             * Now put the valueObjects inside the SearchResults in score order.
+             */
+            searchService.loadValueObjects( results ).stream()
+                    .sorted()
+                    .map( SearchResultValueObject::new )
+                    .forEachOrdered( finalResults::add );
         }
 
         fillVosTimer.stop();
@@ -291,119 +255,6 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
         this.populateTaxonReferenceData( mapping );
 
         return mapping;
-    }
-
-    /**
-     * Populate the search results with the value objects - we generally only have the entity class and ID (or, in some
-     * cases, possibly the entity)
-     */
-    @SuppressWarnings("unchecked")
-    private List<SearchResultValueObject<?>> fillValueObjects( Class<?> entityClass, List<SearchResult<?>> results, SearchSettings settings ) {
-        StopWatch timer = StopWatch.createStarted();
-        Collection<? extends IdentifiableValueObject<?>> vos;
-
-        Collection<Long> ids = new ArrayList<>();
-        for ( SearchResult<?> r : results ) {
-            ids.add( r.getResultId() );
-        }
-
-        if ( ExpressionExperiment.class.isAssignableFrom( entityClass ) ) {
-            vos = expressionExperimentService.loadValueObjectsByIds( ids );
-            if ( !SecurityUtil.isUserAdmin() ) {
-                auditableUtil.removeTroubledEes( ( Collection<ExpressionExperimentValueObject> ) vos );
-            }
-
-        } else if ( ArrayDesign.class.isAssignableFrom( entityClass ) ) {
-            vos = this.filterAD( arrayDesignService.loadValueObjectsByIds( ids ), settings );
-
-            if ( !SecurityUtil.isUserAdmin() ) {
-                auditableUtil.removeTroubledArrayDesigns( ( Collection<ArrayDesignValueObject> ) vos );
-            }
-        } else if ( CompositeSequence.class.isAssignableFrom( entityClass ) ) {
-            Collection<CompositeSequence> compositeSequences = results.stream()
-                    .map( SearchResult::getResultObject )
-                    .filter( Objects::nonNull )
-                    .map( o -> ( CompositeSequence ) o )
-                    .collect( Collectors.toSet() );
-            vos = compositeSequenceService.loadValueObjects( compositeSequences );
-        } else if ( BibliographicReference.class.isAssignableFrom( entityClass ) ) {
-            Collection<BibliographicReference> bss = bibliographicReferenceService
-                    .load( ids );
-            vos = bibliographicReferenceService.loadValueObjects( bss );
-        } else if ( Gene.class.isAssignableFrom( entityClass ) ) {
-            Collection<Gene> genes = geneService.load( ids );
-            genes = geneService.thawLite( genes );
-            vos = geneService.loadValueObjects( genes );
-        } else if ( PhenotypeAssociation.class.isAssignableFrom( entityClass ) ) {
-            // This is used for phenotypes.
-            Collection<CharacteristicValueObject> cvos = new ArrayList<>();
-            for ( SearchResult<?> sr : results ) {
-                CharacteristicValueObject ch = ( CharacteristicValueObject ) sr.getResultObject();
-                if ( ch != null ) {
-                    cvos.add( ch );
-                }
-            }
-            vos = cvos;
-        } else if ( BioSequenceValueObject.class.isAssignableFrom( entityClass ) ) {
-            return results.stream()
-                    .map( s -> new SearchResultValueObject<>( ( SearchResult<BioSequenceValueObject> ) s ) )
-                    .collect( Collectors.toList() );
-        } else if ( GeneSet.class.isAssignableFrom( entityClass ) ) {
-            vos = geneSetService.loadValueObjectsByIds( ids );
-        } else if ( ExpressionExperimentSet.class.isAssignableFrom( entityClass ) ) {
-            vos = experimentSetService.loadValueObjects( experimentSetService.load( ids ) );
-        } else if ( BlacklistedEntity.class.isAssignableFrom( entityClass ) ) {
-            Collection<BlacklistedValueObject> bvos = new ArrayList<>();
-            for ( SearchResult<?> sr : results ) {
-                if ( sr.getResultObject() != null ) {
-                    bvos.add( BlacklistedValueObject.fromEntity( ( BlacklistedEntity ) sr.getResultObject() ) );
-                }
-            }
-            vos = bvos;
-        } else {
-            throw new UnsupportedOperationException( "Don't know how to make value objects for class=" + entityClass );
-        }
-
-        if ( vos == null || vos.isEmpty() ) {
-            // bug 3475: if there are search results but they are all removed because they are troubled, then results
-            // has ExpressionExperiments in
-            // it causing front end errors, if vos is empty make sure to get rid of all search results
-            return Collections.emptyList();
-        }
-
-        // retained objects...
-        Map<Long, ? extends IdentifiableValueObject<?>> idMap = EntityUtils.getIdMap( vos );
-
-        List<SearchResultValueObject<?>> convertResults = new ArrayList<>( results.size() );
-        for ( SearchResult<?> sr : results ) {
-            if ( idMap.containsKey( sr.getResultId() ) ) {
-                convertResults.add( new SearchResultValueObject<>( SearchResult.from( sr, idMap.get( sr.getResultId() ) ) ) );
-            }
-        }
-
-        timer.stop();
-
-        if ( timer.getTime() > 200 ) {
-            BaseFormController.log.info( "Value object conversion for " + ids.size() + " " + entityClass + " after search took " + timer.getTime() + " ms." );
-        }
-
-        return convertResults;
-    }
-
-    private Collection<ArrayDesignValueObject> filterAD( final Collection<ArrayDesignValueObject> toFilter,
-            SearchSettings settings ) {
-        // Note: if possible we should move filtering into the search service (as is done for EEs) (this is not a big deal)
-        Taxon tax = settings.getTaxon();
-        if ( tax == null )
-            return toFilter;
-        Collection<ArrayDesignValueObject> filtered = new HashSet<>();
-        for ( ArrayDesignValueObject aavo : toFilter ) {
-            if ( ( aavo.getTaxon() == null ) || ( aavo.getTaxon().equalsIgnoreCase( tax.getCommonName() ) ) ) {
-                filtered.add( aavo );
-            }
-        }
-
-        return filtered;
     }
 
     //    private Collection<ExpressionExperimentValueObject> filterEE(

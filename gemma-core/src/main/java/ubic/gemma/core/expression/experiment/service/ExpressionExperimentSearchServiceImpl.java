@@ -28,7 +28,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.core.search.*;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
-import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSetValueObject;
@@ -85,7 +84,7 @@ public class ExpressionExperimentSearchServiceImpl implements ExpressionExperime
     public Collection<ExpressionExperimentValueObject> searchExpressionExperiments( String query ) throws SearchException {
 
         SearchSettings settings = SearchSettings.expressionExperimentSearch( query );
-        List<SearchResult<ExpressionExperiment>> experimentSearchResults = searchService.search( settings, ExpressionExperiment.class );
+        List<SearchResult<ExpressionExperiment>> experimentSearchResults = searchService.search( settings ).getByResultObjectType( ExpressionExperiment.class );
 
         if ( experimentSearchResults == null || experimentSearchResults.isEmpty() ) {
             ExpressionExperimentSearchServiceImpl.log.info( "No experiments for search: " + query );
@@ -269,13 +268,15 @@ public class ExpressionExperimentSearchServiceImpl implements ExpressionExperime
                 return eeIds;
 
             // Initial list
-            List<SearchResult<ExpressionExperiment>> results = searchService.search( SearchSettings.expressionExperimentSearch( query, taxon ),
-                            false /* no fill */, false /*
-                             * speed
-                             * search,
-                             * irrelevant
-                             */ )
-                    .get( ExpressionExperiment.class );
+            SearchSettings settings = SearchSettings.expressionExperimentSearch( query, taxon );
+            /* no fill */
+            /*
+             * speed
+             * search,
+             * irrelevant
+             */
+            List<SearchResult<ExpressionExperiment>> results = searchService.search( settings.withFillResults( false ).withMode( SearchSettings.SearchMode.NORMAL ) )
+                    .getByResultObjectType( ExpressionExperiment.class );
             for ( SearchResult<ExpressionExperiment> result : results ) {
                 eeIds.add( result.getResultId() );
             }
@@ -288,7 +289,7 @@ public class ExpressionExperimentSearchServiceImpl implements ExpressionExperime
 
     private List<SearchResultDisplayObject> getExpressionExperimentResults( SearchService.SearchResultMap results ) {
         // get all expressionExperiment results and convert result object into a value object
-        List<SearchResult<ExpressionExperiment>> srEEs = results.get( ExpressionExperiment.class );
+        List<SearchResult<ExpressionExperiment>> srEEs = results.getByResultObjectType( ExpressionExperiment.class );
 
         List<Long> eeIds = new ArrayList<>();
         for ( SearchResult<ExpressionExperiment> sr : srEEs ) {
@@ -308,7 +309,7 @@ public class ExpressionExperimentSearchServiceImpl implements ExpressionExperime
         List<SearchResultDisplayObject> experimentSets = new ArrayList<>();
 
         List<Long> eeSetIds = new ArrayList<>();
-        for ( SearchResult<ExpressionExperimentSet> sr : results.get( ExpressionExperimentSet.class ) ) {
+        for ( SearchResult<ExpressionExperimentSet> sr : results.getByResultObjectType( ExpressionExperimentSet.class ) ) {
             eeSetIds.add( sr.getResultId() );
         }
 

@@ -297,7 +297,8 @@ public class AnnotationsWebService {
             SearchSettings settings = SearchSettings.builder()
                     .fillResults( false )
                     .build();
-            List<SearchResult<ExpressionExperiment>> eeResults = searchService.search( settings, ExpressionExperiment.class );
+            List<SearchResult<ExpressionExperiment>> eeResults = searchService.search( settings )
+                    .getByResultObjectType( ExpressionExperiment.class );
 
             // Working only with IDs
             for ( SearchResult<ExpressionExperiment> result : eeResults ) {

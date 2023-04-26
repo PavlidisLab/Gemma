@@ -3,6 +3,7 @@ package ubic.gemma.core.search;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.concurrent.ConcurrentMapCache;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Import;
 import ubic.gemma.core.annotation.reference.BibliographicReferenceService;
 import ubic.gemma.core.association.phenotype.PhenotypeAssociationManagerService;
 import ubic.gemma.core.genome.gene.service.GeneSearchService;
@@ -18,6 +19,7 @@ import ubic.gemma.persistence.service.expression.experiment.ExpressionExperiment
 import ubic.gemma.persistence.service.genome.biosequence.BioSequenceService;
 import ubic.gemma.persistence.service.genome.gene.GeneProductService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
+import ubic.gemma.persistence.util.ValueObjectConfig;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
@@ -26,6 +28,7 @@ import static org.mockito.Mockito.when;
 /**
  * Base class for mocking beans for
  */
+@Import(ValueObjectConfig.class)
 class SearchServiceTestContextConfiguration {
 
     @Bean

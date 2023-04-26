@@ -128,25 +128,27 @@ public class SearchWebService {
 
         List<SearchResult<?>> searchResults;
         try {
-            searchResults = searchService.search( searchSettings ).values().stream()
-                    .flatMap( List::stream )
-                    .collect( Collectors.toList() );
+            searchResults = searchService.search( searchSettings ).toList();
         } catch ( SearchException e ) {
             throw new BadRequestException( String.format( "Invalid search settings: %s.", ExceptionUtils.getRootCauseMessage( e ) ), e );
         }
 
-        List<SearchResult<? extends IdentifiableValueObject<? extends Identifiable>>> searchResultVos = searchResults.stream()
-                .map( searchService::loadValueObject )
-                .collect( Collectors.toList() );
+        List<SearchResult<? extends IdentifiableValueObject<?>>> searchResultVos;
 
         // Some result VOs are null for unknown reasons, see https://github.com/PavlidisLab/Gemma/issues/417
         if ( fillResults ) {
-            List<String> searchResultVosWithNullResultObject = searchResultVos.stream().filter( sr -> sr.getResultObject() == null )
+            searchResultVos = searchService.loadValueObjects( searchResults );
+            List<String> searchResultVosWithNullResultObject = searchResultVos.stream()
+                    .filter( sr -> sr.getResultObject() == null )
                     .map( SearchResult::toString )
                     .collect( Collectors.toList() );
             if ( !searchResultVosWithNullResultObject.isEmpty() ) {
                 log.warn( String.format( "The following search results have null result objects: %s.", String.join( ", ", searchResultVosWithNullResultObject ) ) );
             }
+        } else {
+            searchResultVos = searchResults.stream()
+                    .map( sr -> SearchResult.from( sr, ( IdentifiableValueObject<?> ) null ) )
+                    .collect( Collectors.toList() );
         }
 
         // convert the response to search results of VOs

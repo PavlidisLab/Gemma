@@ -124,7 +124,7 @@ public class CompassSearchSource implements SearchSource {
      *                                  for the genes are added to the final results.
      */
     @Override
-    public Collection<SearchResult<? extends Identifiable>> searchBioSequenceAndGene( SearchSettings settings,
+    public Collection<SearchResult<?>> searchBioSequenceAndGene( SearchSettings settings,
             @Nullable Collection<SearchResult<Gene>> previousGeneSearchResults ) throws SearchException {
         Collection<SearchResult<?>> results = new HashSet<>( this.compassSearch( compassBiosequence, settings, BioSequence.class ) );
 
@@ -161,7 +161,7 @@ public class CompassSearchSource implements SearchSource {
     }
 
     @Override
-    public Collection<SearchResult<? extends Identifiable>> searchCompositeSequenceAndGene( final SearchSettings settings ) throws SearchException {
+    public Collection<SearchResult<?>> searchCompositeSequenceAndGene( final SearchSettings settings ) throws SearchException {
         return new ArrayList<>( this.searchBioSequence( settings ) );
     }
 
@@ -289,7 +289,7 @@ public class CompassSearchSource implements SearchSource {
             }
 
             //noinspection unchecked
-            results.add( SearchResult.from( clazz, ( T ) resultObject, score * CompassSearchSource.COMPASS_HIT_SCORE_PENALTY_FACTOR, ht, source ) );
+            results.add( SearchResult.from( clazz, ( ( T ) resultObject ).getId(), score * CompassSearchSource.COMPASS_HIT_SCORE_PENALTY_FACTOR, ht, source ) );
         }
 
         watch.stop();
