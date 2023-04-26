@@ -46,7 +46,6 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
 import ubic.gemma.model.expression.bioAssayData.ExperimentExpressionLevelsValueObject;
-import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentDetailsValueObject;
@@ -190,7 +189,7 @@ public class DatasetsWebService {
         }
         Filters filters = datasetArgService.getFilters( filter );
         List<AnnotationWithUsageStatisticsValueObject> results = expressionExperimentService.getAnnotationsUsageFrequency( filters, limit, minFrequency != null ? minFrequency : 0 )
-                .stream().map( e -> new AnnotationWithUsageStatisticsValueObject( e.getCharacteristic(), e.getNumberOfExpressionExperiments(), getParentTerms( e.getTerm() ) ) )
+                .stream().map( e -> new AnnotationWithUsageStatisticsValueObject( e.getCharacteristic(), e.getNumberOfExpressionExperiments(), e.getTerm() != null ? getParentTerms( e.getTerm() ) : null ) )
                 .sorted( Comparator.comparing( UsageStatistics::getNumberOfExpressionExperiments, Comparator.reverseOrder() ) )
                 .collect( Collectors.toList() );
         return Responder.limit( results, filters, new String[] { "classUri", "className", "termUri", "termName" },
@@ -198,27 +197,23 @@ public class DatasetsWebService {
                 limit );
     }
 
-    @Nullable
-    private static Set<OntologyTermValueObject> getParentTerms( @Nullable OntologyTerm c ) {
-        if ( c != null ) {
-            return c.getParents( true ).stream()
-                    .map( t -> toTermVo( t, new HashSet<>() ) )
-                    .collect( Collectors.toSet() );
-        } else {
-            return null;
-        }
+    private static Set<OntologyTermValueObject> getParentTerms( OntologyTerm c ) {
+        Map<OntologyTerm, Set<OntologyTermValueObject>> visited = new HashMap<>();
+        return c.getParents( true ).stream()
+                .map( t -> toTermVo( t, visited ) )
+                .collect( Collectors.toSet() );
     }
 
-    private static OntologyTermValueObject toTermVo( OntologyTerm ontologyTerm, Set<OntologyTerm> visited ) {
+    private static OntologyTermValueObject toTermVo( OntologyTerm ontologyTerm, Map<OntologyTerm, Set<OntologyTermValueObject>> visited ) {
         Set<OntologyTermValueObject> parentVos;
-        if ( visited.contains( ontologyTerm ) ) {
-            // TODO: maybe add a note?
-            parentVos = null;
+        if ( visited.containsKey( ontologyTerm ) ) {
+            parentVos = visited.get( ontologyTerm );
         } else {
-            visited.add( ontologyTerm );
+            visited.put( ontologyTerm, Collections.emptySet() );
             parentVos = ontologyTerm.getParents( true ).stream()
-                    .map( t -> toTermVo( t, new HashSet<>( visited ) ) )
+                    .map( t -> toTermVo( t, visited ) )
                     .collect( Collectors.toSet() );
+            visited.put( ontologyTerm, parentVos );
         }
         return new OntologyTermValueObject( ontologyTerm, parentVos );
     }
@@ -237,7 +232,7 @@ public class DatasetsWebService {
 
         public OntologyTermValueObject( OntologyTerm ontologyTerm, Set<OntologyTermValueObject> parentTerms ) {
             this.uri = ontologyTerm.getUri();
-            this.name = ontologyTerm.getTerm();
+            this.name = ontologyTerm.getLabel();
             this.parentTerms = parentTerms;
         }
     }
