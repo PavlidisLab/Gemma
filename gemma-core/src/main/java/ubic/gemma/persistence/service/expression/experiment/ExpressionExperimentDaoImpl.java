@@ -723,9 +723,16 @@ public class ExpressionExperimentDaoImpl
 
     @Override
     public Map<ArrayDesign, Long> getArrayDesignsUsageFrequency() {
+        Query query = getSessionFactory().getCurrentSession()
+                .createQuery( "select a, count(distinct ee) from ExpressionExperiment ee "
+                        + "join ee.bioAssays ba "
+                        + "join ba.arrayDesignUsed a "
+                        + AclQueryUtils.formAclJoinClause( "ee.id" )
+                        + AclQueryUtils.formAclRestrictionClause() + " "
+                        + "group by a" );
+        AclQueryUtils.addAclParameters( query, ExpressionExperiment.class );
         //noinspection unchecked
-        List<Object[]> result = getSessionFactory().getCurrentSession()
-                .createQuery( "select a, count(distinct ee) from ExpressionExperiment ee join ee.bioAssays ba join ba.arrayDesignUsed a group by a" )
+        List<Object[]> result = query
                 .setCacheable( true )
                 .list();
         return result.stream().collect( groupingBy( row -> ( ArrayDesign ) row[0], summingLong( row -> ( Long ) row[1] ) ) );
@@ -746,9 +753,18 @@ public class ExpressionExperimentDaoImpl
 
     @Override
     public Map<ArrayDesign, Long> getOriginalPlatformsUsageFrequency() {
+        Query query = getSessionFactory().getCurrentSession()
+                .createQuery( "select a, count(distinct ee) from ExpressionExperiment ee "
+                        + "join ee.bioAssays ba "
+                        + "join ba.originalPlatform a "
+                        + "left join ba.arrayDesignUsed au "
+                        + AclQueryUtils.formAclJoinClause( "ee.id" ) + " "
+                        + "and a <> au "   // ignore noop switch
+                        + AclQueryUtils.formAclRestrictionClause() + " "
+                        + "group by a" );
+        AclQueryUtils.addAclParameters( query, ExpressionExperiment.class );
         //noinspection unchecked
-        List<Object[]> result = getSessionFactory().getCurrentSession()
-                .createQuery( "select a, count(distinct ee) from ExpressionExperiment ee join ee.bioAssays ba join ba.originalPlatform a group by a" )
+        List<Object[]> result = query
                 .setCacheable( true )
                 .list();
         return result.stream().collect( groupingBy( row -> ( ArrayDesign ) row[0], summingLong( row -> ( Long ) row[1] ) ) );
@@ -761,7 +777,13 @@ public class ExpressionExperimentDaoImpl
         }
         //noinspection unchecked
         List<Object[]> result = getSessionFactory().getCurrentSession()
-                .createQuery( "select a, count(distinct ee) from ExpressionExperiment ee join ee.bioAssays ba join ba.originalPlatform a where ee.id in (:ids) group by a" )
+                .createQuery( "select a, count(distinct ee) from ExpressionExperiment ee "
+                        + "join ee.bioAssays ba "
+                        + "join ba.originalPlatform a "
+                        + "left join ba.arrayDesignUsed au "
+                        + "where ee.id in (:ids) "
+                        + "and a <> au "   // ignore noop switch
+                        + "group by a" )
                 .setParameterList( "ids", eeIds )
                 .list();
         return result.stream().collect( groupingBy( row -> ( ArrayDesign ) row[0], summingLong( row -> ( Long ) row[1] ) ) );

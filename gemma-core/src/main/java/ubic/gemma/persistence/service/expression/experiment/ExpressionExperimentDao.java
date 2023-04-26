@@ -84,12 +84,35 @@ public interface ExpressionExperimentDao
 
     Map<ArrayDesign, Collection<Long>> getArrayDesignsUsed( Collection<Long> eeids );
 
+    /**
+     * Obtain dataset usage frequency by platform currently used.
+     * <p>
+     * Note that a dataset counts toward all the platforms mentioned through its {@link BioAssay}.
+     * <p>
+     * This method uses ACLs and only displays the counts of datasets the current user is entitled to see.
+     */
     Map<ArrayDesign, Long> getArrayDesignsUsageFrequency();
 
+    /**
+     * Obtain dataset usage frequency by platform currently for the given dataset IDs.
+     * Note: no ACL filtering is performed.
+     * @see #getArrayDesignsUsageFrequency()
+     */
     Map<ArrayDesign, Long> getArrayDesignsUsageFrequency( Collection<Long> eeIds );
 
-    Map<ArrayDesign, Long> getOriginalPlatformsUsageFrequency();
+    /**
+     * Obtain dataset usage frequency by original platforms.
+     * <p>
+     * Note that a dataset counts toward all the platforms mentioned through its {@link BioAssay}. Datasets whose
+     * platform hasn't been switched (i.e. the original is the same as the current one) are ignored.
+     */
+    Map<ArrayDesign, Long> getOriginalPlatformsUsageFrequency( );
 
+    /**
+     * Obtain dataset usage frequency by platform currently for the given dataset IDs.
+     * Note: no ACL filtering is performed.
+     * @see #getOriginalPlatformsUsageFrequency()
+     */
     Map<ArrayDesign, Long> getOriginalPlatformsUsageFrequency( Collection<Long> eeIds );
 
     Map<Long, Collection<AuditEvent>> getAuditEvents( Collection<Long> ids );
