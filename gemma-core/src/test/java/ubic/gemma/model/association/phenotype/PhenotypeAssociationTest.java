@@ -26,8 +26,6 @@ import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.basecode.ontology.providers.DiseaseOntologyService;
 import ubic.basecode.ontology.search.OntologySearchException;
 import ubic.gemma.core.association.phenotype.PhenotypeAssociationManagerService;
-import ubic.gemma.core.genome.gene.service.GeneService;
-import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.core.ontology.OntologyTestUtils;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.security.authentication.UserManager;
@@ -58,17 +56,12 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
 
     private static final String TEST_PHENOTYPE_URI = "http://purl.obolibrary.org/obo/DOID_162";
     private static final String TEST_EXTERNAL_DATABASE = "EXTERNAL_DATABASE_TEST_NAME";
-    private static boolean dosLoaded = false;
     private final Integer geneNCBI = new Integer( RandomStringUtils.randomNumeric( 6 ) );
 
-    @Autowired
-    private OntologyService os;
     @Autowired
     private PhenotypeAssociationManagerService phenotypeAssociationManagerService;
     @Autowired
     private PhenotypeAssociationService phenotypeAssociationService;
-    @Autowired
-    private GeneService geneService;
     @Autowired
     private UserManager userManager;
     @Autowired
@@ -80,13 +73,9 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
 
     @Before
     public void setUp() throws Exception {
-
-        if ( !PhenotypeAssociationTest.dosLoaded ) {
-            // fails if you have DO loaded
-            OntologyTestUtils.initialize( diseaseOntologyService,
-                    this.getClass().getResourceAsStream( "/data/loader/ontology/dotest.owl.xml" ) );
-            PhenotypeAssociationTest.dosLoaded = true;
-        }
+        // fails if you have DO loaded
+        OntologyTestUtils.initialize( diseaseOntologyService,
+                this.getClass().getResourceAsStream( "/data/loader/ontology/dotest.owl.xml" ) );
 
         // create what will be needed for tests
         this.createGene();
@@ -97,22 +86,7 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
     @After
     public void tearDown() {
         this.runAsAdmin();
-        Collection<PhenotypeAssociation> toRemove = new HashSet<>();
-        for ( Gene g : this.geneService.loadAll() ) {
-
-            g = geneService.thaw( g );
-            toRemove.addAll( g.getPhenotypeAssociations() );
-            g.getPhenotypeAssociations().clear();
-
-            this.geneService.update( g );
-        }
-
-        for ( PhenotypeAssociation pa : toRemove ) {
-            this.phenotypeAssociationService.remove( pa );
-        }
-
-        // this.externalDatabaseService.remove( this.externalDatabase );
-
+        phenotypeAssociationService.removeAllInBatch();
     }
 
     @Test
