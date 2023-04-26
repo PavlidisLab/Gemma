@@ -1617,10 +1617,18 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
             }
         }
 
-        //noinspection unchecked
-        List<T> entities = ( List<T> ) valueObjectConversionService.convert( ids,
-                TypeDescriptor.collection( Set.class, TypeDescriptor.valueOf( Long.class ) ),
-                TypeDescriptor.collection( List.class, TypeDescriptor.valueOf( resultType ) ) );
+        List<T> entities;
+        try {
+            //noinspection unchecked
+            entities = ( List<T> ) valueObjectConversionService.convert( ids,
+                    TypeDescriptor.collection( Set.class, TypeDescriptor.valueOf( Long.class ) ),
+                    TypeDescriptor.collection( List.class, TypeDescriptor.valueOf( supportedResultTypes.get( resultType ) ) ) );
+        } catch ( ConverterNotFoundException e ) {
+            // not all search result types support being loaded from ID
+            log.warn( String.format( "No converter from %s to %s found, the results will not be filled for %s.",
+                    supportedResultTypes.get( resultType ).getName(), resultType.getName() ), e );
+            return;
+        }
 
         Map<Long, T> entitiesById = EntityUtils.getIdMap( entities );
 
