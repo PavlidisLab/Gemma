@@ -55,6 +55,7 @@ import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.BibliographicReferenceValueObject;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.expression.BlacklistedEntity;
+import ubic.gemma.model.expression.BlacklistedValueObject;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
@@ -194,6 +195,7 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
     private TaxonService taxonService;
 
     @Autowired
+    @Qualifier("valueObjectConversionService")
     private ConversionService valueObjectConversionService;
 
     private final Map<Class<? extends Identifiable>, Class<? extends IdentifiableValueObject<?>>> supportedResultTypes = new HashMap<>();
@@ -224,12 +226,7 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
             results = this.generalSearch( settings );
         }
 
-        if ( settings.isFillResults() ) {
-            for ( Map.Entry<Class<? extends Identifiable>, List<SearchResult<?>>> e : results.entrySet() ) {
-                fillSearchResultsIfMissing( e.getKey(), e.getValue().stream().map( sr -> ( SearchResult<?> ) sr ).collect( Collectors.toList() ) );
-                e.getValue().removeIf( sr -> sr.getResultObject() == null );
-            }
-        } else {
+        if ( !settings.isFillResults() ) {
             results.forEach( ( k, v ) -> v.forEach( sr -> sr.setResultObject( null ) ) );
         }
 
@@ -266,13 +263,29 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
         supportedResultTypes.put( ExpressionExperimentSet.class, ExpressionExperimentSetValueObject.class );
         supportedResultTypes.put( Gene.class, GeneValueObject.class );
         supportedResultTypes.put( GeneSet.class, GeneSetValueObject.class );
+        supportedResultTypes.put( BlacklistedEntity.class, BlacklistedValueObject.class );
         for ( Map.Entry<Class<? extends Identifiable>, Class<? extends IdentifiableValueObject<?>>> e : supportedResultTypes.entrySet() ) {
-            Assert.isTrue( valueObjectConversionService.canConvert( Long.class, e.getValue() ),
-                    String.format( "Must be able to convert from %s to %s.", e.getKey().getName(), e.getValue().getName() ) );
-            Assert.isTrue( valueObjectConversionService.canConvert( e.getKey(), e.getValue() ),
-                    String.format( "Must be able to convert from %s to %s.", e.getKey().getName(), e.getValue().getName() ) );
+            canConvertFromEntity( e.getKey(), e.getValue() );
+            canConvertFromId( e.getValue() );
         }
+        // this is a special case because it's non-trivial to perform the conversion
         supportedResultTypes.put( PhenotypeAssociation.class, CharacteristicValueObject.class );
+    }
+
+    private void canConvertFromEntity( Class<? extends Identifiable> from, Class<? extends IdentifiableValueObject<?>> to ) {
+        Assert.isTrue( valueObjectConversionService.canConvert( from, to ),
+                String.format( "Must be able to convert from %s to %s.", from.getName(), to.getName() ) );
+        Assert.isTrue( valueObjectConversionService.canConvert( TypeDescriptor.collection( Collection.class, TypeDescriptor.valueOf( from ) ),
+                        TypeDescriptor.collection( List.class, TypeDescriptor.valueOf( to ) ) ),
+                String.format( "Must be able to convert from collection of %s to list of %s.", from.getName(), to.getName() ) );
+    }
+
+    public void canConvertFromId( Class<? extends IdentifiableValueObject<?>> to ) {
+        Assert.isTrue( valueObjectConversionService.canConvert( Long.class, to ),
+                String.format( "Must be able to convert from %s to %s.", Long.class.getName(), to.getName() ) );
+        Assert.isTrue( valueObjectConversionService.canConvert( TypeDescriptor.collection( Collection.class, TypeDescriptor.valueOf( Long.class ) ),
+                        TypeDescriptor.collection( List.class, TypeDescriptor.valueOf( to ) ) ),
+                String.format( "Must be able to convert from collection of %s to list of %s.", Long.class.getName(), to.getName() ) );
     }
 
     @Override
@@ -294,10 +307,11 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
     public List<SearchResult<? extends IdentifiableValueObject<?>>> loadValueObjects( Collection<SearchResult<?>> searchResults ) throws IllegalArgumentException {
         // regroup by type so that we can apply efficient array conversion
         Map<Class<? extends Identifiable>, List<SearchResult<?>>> searchResultsByType = searchResults.stream()
-                .collect( Collectors.groupingBy( SearchResult::getResultType, Collectors.toList() ) );
+                .collect( Collectors.groupingBy( SearchResult::getResultType,
+                        Collectors.toList() ) );
         // TODO: implement retain missing VOs
         return searchResultsByType.entrySet().stream()
-                .map( l -> this.loadValueObjectsOfSameType( l.getValue(), l.getKey() ) )
+                .map( l -> this.loadValueObjectsOfSameResultType( l.getValue(), l.getKey() ) )
                 .flatMap( List::stream )
                 .collect( Collectors.toList() );
     }
@@ -305,50 +319,50 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
     /**
      * Perform optimized VO conversion on collections of the same type.
      */
-    private List<SearchResult<? extends IdentifiableValueObject<?>>> loadValueObjectsOfSameType( List<SearchResult<?>> results, Class<? extends Identifiable> resultType ) {
-        List<? extends Identifiable> entities = results.stream()
-                .map( SearchResult::getResultObject )
-                .filter( Objects::nonNull )
-                .collect( Collectors.toList() );
-
-        List<Long> entitiesIds = results.stream()
-                .filter( sr -> sr.getResultObject() == null )
-                .map( SearchResult::getResultId )
-                .collect( Collectors.toList() );
+    private List<SearchResult<? extends IdentifiableValueObject<?>>> loadValueObjectsOfSameResultType( List<SearchResult<?>> results, Class<? extends Identifiable> resultType ) {
+        List<Identifiable> entities = new ArrayList<>();
+        List<Long> entitiesIds = new ArrayList<>();
+        List<IdentifiableValueObject<?>> entitiesVos = new ArrayList<>();
+        for ( SearchResult<?> result : results ) {
+            if ( PhenotypeAssociation.class.equals( resultType ) ) {
+                entitiesVos.add( ( CharacteristicValueObject ) result.getResultObject() );
+            } else if ( resultType.isInstance( result.getResultObject() ) ) {
+                entities.add( result.getResultObject() );
+            } else {
+                entitiesIds.add( result.getResultId() );
+            }
+        }
 
         // convert entities to VOs
-        List<IdentifiableValueObject<?>> entitiesVos = new ArrayList<>( entities.size() );
-        try {
+        if ( !entities.isEmpty() ) {
             //noinspection unchecked
             entitiesVos.addAll( ( List<IdentifiableValueObject<?>> )
                     valueObjectConversionService.convert( entities,
-                            TypeDescriptor.collection( Collection.class, TypeDescriptor.valueOf( entities.iterator().next().getClass() ) ),
+                            TypeDescriptor.collection( Collection.class, TypeDescriptor.valueOf( resultType ) ),
                             TypeDescriptor.collection( List.class, TypeDescriptor.valueOf( supportedResultTypes.get( resultType ) ) ) ) );
-            // FIXME: PhenotypeAssociation does not support conversion from IDs, but once it does or if it's removed,
-            //        then we don't need to check isEmpty()
-            if ( !entitiesIds.isEmpty() ) {
-                //noinspection unchecked
-                entitiesVos.addAll( ( List<IdentifiableValueObject<?>> )
-                        valueObjectConversionService.convert( entitiesIds,
-                                TypeDescriptor.collection( Collection.class, TypeDescriptor.valueOf( Long.class ) ),
-                                TypeDescriptor.collection( List.class, TypeDescriptor.valueOf( supportedResultTypes.get( resultType ) ) ) ) );
-            }
-        } catch ( ConverterNotFoundException e ) {
-            throw new IllegalArgumentException( "Conversion of collections of " + resultType.getName() + " to VOs is not supported.", e );
         }
 
-        // unfortunately, there's no guarantee that convert preserve the order of its input, nor all of its elements
-        // this is especially true with ACLs filtering
+        // FIXME: PhenotypeAssociation does not support conversion from IDs, but once it does or if it's removed,
+        //        then we don't need to check isEmpty()
+        if ( !entitiesIds.isEmpty() ) {
+            //noinspection unchecked
+            entitiesVos.addAll( ( List<IdentifiableValueObject<?>> )
+                    valueObjectConversionService.convert( entitiesIds,
+                            TypeDescriptor.collection( Collection.class, TypeDescriptor.valueOf( Long.class ) ),
+                            TypeDescriptor.collection( List.class, TypeDescriptor.valueOf( supportedResultTypes.get( resultType ) ) ) ) );
+        }
+
         Map<Long, IdentifiableValueObject<?>> entityVosById = EntityUtils.getIdMap( entitiesVos );
+
+        Set<SearchResult<?>> excludedResults = new HashSet<>();
 
         // reassemble everything
         List<SearchResult<? extends IdentifiableValueObject<?>>> resultsVo = new ArrayList<>( results.size() );
-
-        Set<SearchResult<?>> notRetained = new HashSet<>();
         for ( SearchResult<?> sr : results ) {
             if ( entityVosById.containsKey( sr.getResultId() ) ) {
                 resultsVo.add( SearchResult.from( sr, entityVosById.get( sr.getResultId() ) ) );
             } else if ( sr.getResultObject() == null ) {
+                // result was originally unfilled and nothing was found, so it's somewhat safe to restore it
                 if ( sr.getHighlightedText() != null ) {
                     resultsVo.add( SearchResult.from( sr.getResultType(), sr.getResultId(), sr.getScore(), sr.getHighlightedText(), sr.getSource() ) );
                 } else {
@@ -358,13 +372,13 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
                 // this happens if the VO was filtered out after VO conversion (i.e. via ACL) or uninitialized
                 // I think it's a bit risky to add it given the possibility that the result might be missing because of
                 // an ACL rule, but I think it's fine since we only expose the ID.
-                notRetained.add( sr );
+                excludedResults.add( sr );
             }
         }
 
-        if ( !notRetained.isEmpty() ) {
-            log.warn( String.format( "%d %s results were not retained while performing bulk VO conversion.",
-                    notRetained.size(), resultType.getSimpleName() ) );
+        if ( !excludedResults.isEmpty() ) {
+            log.warn( String.format( "%d %s results were excluded while performing bulk VO conversion.",
+                    excludedResults.size(), resultType.getSimpleName() ) );
         }
 
         return resultsVo;
@@ -391,8 +405,10 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
      */
     private void accreteResultsOthers( LinkedHashSet<SearchResult<?>> results, SearchSettings settings ) throws SearchException {
 
+        Collection<SearchResult<BlacklistedEntity>> blacklistedResults = new SearchResultSet<>();
+
         if ( settings.hasResultType( ExpressionExperiment.class ) ) {
-            results.addAll( this.expressionExperimentSearch( settings ) );
+            results.addAll( this.expressionExperimentSearch( settings, blacklistedResults ) );
         }
 
         Collection<SearchResult<CompositeSequence>> compositeSequences = null;
@@ -402,7 +418,7 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
         }
 
         if ( settings.hasResultType( ArrayDesign.class ) ) {
-            results.addAll( this.arrayDesignSearch( settings, compositeSequences ) );
+            results.addAll( this.arrayDesignSearch( settings, compositeSequences, blacklistedResults ) );
         }
 
         if ( settings.hasResultType( BioSequence.class ) ) {
@@ -413,14 +429,14 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
 
             //noinspection unchecked
             Collection<SearchResult<BioSequence>> bioSequences = bioSequencesAndGenes.stream()
-                    .filter( result -> BioSequence.class.isAssignableFrom( result.getResultType() ) )
+                    .filter( result -> BioSequence.class.equals( result.getResultType() ) )
                     .map( result -> ( SearchResult<BioSequence> ) result )
                     .collect( Collectors.toSet() );
             results.addAll( bioSequences );
 
             //noinspection unchecked
             Collection<SearchResult<Gene>> gen = bioSequencesAndGenes.stream()
-                    .filter( result -> Gene.class.isAssignableFrom( result.getResultType() ) )
+                    .filter( result -> Gene.class.equals( result.getResultType() ) )
                     .map( result -> ( SearchResult<Gene> ) result )
                     .collect( Collectors.toSet() );
             results.addAll( gen );
@@ -452,6 +468,8 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
         if ( settings.hasResultType( PhenotypeAssociation.class ) ) {
             results.addAll( searchPhenotype( settings ) );
         }
+
+        results.addAll( blacklistedResults );
     }
 
     /**
@@ -579,7 +597,7 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
      *                     results.
      */
     private Collection<SearchResult<ArrayDesign>> arrayDesignSearch( SearchSettings settings,
-            @Nullable Collection<SearchResult<CompositeSequence>> probeResults ) throws SearchException {
+            @Nullable Collection<SearchResult<CompositeSequence>> probeResults, Collection<SearchResult<BlacklistedEntity>> blacklistedResults ) throws SearchException {
 
         StopWatch watch = StopWatch.createStarted();
         String searchString = prepareDatabaseQuery( settings );
@@ -599,11 +617,12 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
             return results;
         }
 
-        BlacklistedEntity b = blacklistedEntityService.findByAccession( searchString );
-        if ( b != null ) {
-            // FIXME: I'm not sure the ID is a good thing to put here
-            results.add( SearchResult.from( ArrayDesign.class, b.getId(), DatabaseSearchSource.MATCH_BY_ACCESSION_SCORE, "Blacklisted accessions are not loaded into Gemma", "BlackListDao.findByAccession" ) );
-            return results;
+        if ( settings.hasResultType( BlacklistedEntity.class ) ) {
+            BlacklistedEntity b = blacklistedEntityService.findByAccession( searchString );
+            if ( b != null ) {
+                blacklistedResults.add( SearchResult.from( BlacklistedEntity.class, b, DatabaseSearchSource.MATCH_BY_ACCESSION_SCORE, "Blacklisted accessions are not loaded into Gemma", "BlacklistedEntityService.findByAccession" ) );
+                return results;
+            }
         }
 
         Collection<ArrayDesign> altNameResults = arrayDesignService.findByAlternateName( searchString );
@@ -625,7 +644,7 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
         if ( probeResults == null ) {
             probes = this.compassSearchSource.searchCompositeSequenceAndGene( settings ).stream()
                     // strip all the gene results
-                    .filter( result -> CompositeSequence.class.isAssignableFrom( result.getResultType() ) )
+                    .filter( result -> CompositeSequence.class.equals( result.getResultType() ) )
                     .map( result -> SearchResult.from( result, ( CompositeSequence ) result.getResultObject() ) )
                     .collect( Collectors.toCollection( SearchResultSet::new ) );
         } else {
@@ -860,7 +879,7 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
         } catch ( UnsupportedEncodingException e ) {
             throw new RuntimeException( e );
         }
-        if ( !clazz.isAssignableFrom( ExpressionExperiment.class ) ) {
+        if ( !ExpressionExperiment.class.equals( clazz ) ) {
             matchedText = matchedText + " via " + clazz.getSimpleName();
         }
         return matchedText;
@@ -958,7 +977,7 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
          */
         Collection<SearchResult<CompositeSequence>> finalResults = new SearchResultSet<>();
         for ( SearchResult<?> sr : compositeSequenceResults ) {
-            if ( CompositeSequence.class.isAssignableFrom( sr.getResultType() ) ) {
+            if ( CompositeSequence.class.equals( sr.getResultType() ) ) {
                 //noinspection unchecked
                 finalResults.add( ( SearchResult<CompositeSequence> ) sr );
             }
@@ -978,7 +997,7 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
     //        StopWatch t = this.startTiming();
     //        for ( SearchResult searchResult : searchResults ) {
     //            // this is a special case ... for some reason.
-    //            if ( BioSequence.class.isAssignableFrom( searchResult.getResultClass() ) ) {
+    //            if ( BioSequence.class.equals( searchResult.getResultClass() ) ) {
     //                SearchResult convertedSearchResult = new SearchResult( BioSequenceValueObject
     //                        .fromEntity( bioSequenceService.thaw( ( BioSequence ) searchResult.getResultObject() ) ),
     //                        searchResult.getScore(), searchResult.getHighlightedText() );
@@ -1092,21 +1111,21 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
      *                 SearchSettings.DEFAULT_MAX_RESULTS_PER_RESULT_TYPE
      * @return {@link Collection} of SearchResults
      */
-    private Collection<SearchResult<ExpressionExperiment>> expressionExperimentSearch( final SearchSettings settings ) throws SearchException {
+    private Collection<SearchResult<ExpressionExperiment>> expressionExperimentSearch( final SearchSettings settings, Collection<SearchResult<BlacklistedEntity>> blacklistedResults ) throws SearchException {
 
         StopWatch totalTime = StopWatch.createStarted();
         StopWatch watch = StopWatch.createStarted();
 
-        SearchServiceImpl.log.info( ">>>>> Starting search for '" + settings + "'" );
+        SearchServiceImpl.log.info( ">>>>> Starting search for " + settings );
 
-        Set<SearchResult<ExpressionExperiment>> results = new SearchResultSet<>();
+        Set<SearchResult<ExpressionExperiment>> results = new SearchResultSet<ExpressionExperiment>();
 
         // searches for GEO names, etc - "exact" matches.
         if ( settings.isUseDatabase() ) {
             results.addAll( this.databaseSearchSource.searchExpressionExperiment( settings ) );
             if ( watch.getTime() > 500 )
                 SearchServiceImpl.log
-                        .info( "Expression Experiment database search for '" + settings + "' took " + watch.getTime()
+                        .info( "Expression Experiment database search for " + settings + " took " + watch.getTime()
                                 + " ms, " + results.size() + " hits." );
 
             /*
@@ -1118,10 +1137,12 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
                 return results;
             }
 
-            BlacklistedEntity b = blacklistedEntityService.findByAccession( prepareDatabaseQuery( settings ) );
-            if ( b != null ) {
-                results.add( SearchResult.from( ExpressionExperiment.class, b.getId(), DatabaseSearchSource.MATCH_BY_ACCESSION_SCORE, "Blacklisted accessions are not loaded into Gemma", "BlackListDao.findByAccession" ) );
-                return results;
+            if ( settings.hasResultType( BlacklistedEntity.class ) ) {
+                BlacklistedEntity b = blacklistedEntityService.findByAccession( prepareDatabaseQuery( settings ) );
+                if ( b != null ) {
+                    blacklistedResults.add( SearchResult.from( BlacklistedEntity.class, b, DatabaseSearchSource.MATCH_BY_ACCESSION_SCORE, "Blacklisted accessions are not loaded into Gemma", "BlacklistedEntityService.findByAccession" ) );
+                    return results;
+                }
             }
 
             watch.reset();
@@ -1214,7 +1235,7 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
         if ( results.isEmpty() ) {
             watch.reset();
             watch.start();
-            Collection<SearchResult<ArrayDesign>> matchingPlatforms = this.arrayDesignSearch( settings, null );
+            Collection<SearchResult<ArrayDesign>> matchingPlatforms = this.arrayDesignSearch( settings, null, blacklistedResults );
             for ( SearchResult<ArrayDesign> adRes : matchingPlatforms ) {
                 ArrayDesign ad = adRes.getResultObject();
                 if ( ad != null ) {
@@ -1235,10 +1256,7 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
             }
         }
 
-        if ( settings.isFillResults() ) {
-            fillSearchResultsIfMissing( ExpressionExperiment.class, results );
-            results.removeIf( sr -> sr.getResultObject() == null );
-        } else {
+        if ( !settings.isFillResults() ) {
             results.forEach( sr -> sr.setResultObject( null ) );
         }
 
@@ -1351,7 +1369,7 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
         if ( combinedGeneList.isEmpty() ) {
             Collection<SearchResult<?>> geneCsList = this.databaseSearchSource.searchCompositeSequenceAndGene( settings );
             for ( SearchResult<?> res : geneCsList ) {
-                if ( Gene.class.isAssignableFrom( res.getResultType() ) )
+                if ( Gene.class.equals( res.getResultType() ) )
                     //noinspection unchecked
                     combinedGeneList.add( ( SearchResult<Gene> ) res );
             }
@@ -1607,35 +1625,5 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
             throw new IllegalArgumentException( "Search results are already fully filled, have to checked the collection with isFilled()?" );
         }
         return settings.getMaxResults() > 0 ? settings.getMaxResults() - results.size() : -1;
-    }
-
-    private <T extends Identifiable> void fillSearchResultsIfMissing( Class<?> resultType, Collection<SearchResult<T>> result ) {
-        Set<Long> ids = new HashSet<>( result.size() );
-        for ( SearchResult<T> sr : result ) {
-            if ( sr.getResultObject() == null ) {
-                ids.add( sr.getResultId() );
-            }
-        }
-
-        List<T> entities;
-        try {
-            //noinspection unchecked
-            entities = ( List<T> ) valueObjectConversionService.convert( ids,
-                    TypeDescriptor.collection( Set.class, TypeDescriptor.valueOf( Long.class ) ),
-                    TypeDescriptor.collection( List.class, TypeDescriptor.valueOf( supportedResultTypes.get( resultType ) ) ) );
-        } catch ( ConverterNotFoundException e ) {
-            // not all search result types support being loaded from ID
-            log.warn( String.format( "No converter from %s to %s found, the results will not be filled for %s.",
-                    supportedResultTypes.get( resultType ).getName(), resultType.getName() ), e );
-            return;
-        }
-
-        Map<Long, T> entitiesById = EntityUtils.getIdMap( entities );
-
-        for ( SearchResult<T> sr : result ) {
-            if ( entitiesById.containsKey( sr.getResultId() ) ) {
-                sr.setResultObject( entitiesById.get( sr.getResultId() ) );
-            }
-        }
     }
 }

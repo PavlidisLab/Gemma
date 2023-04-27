@@ -12,6 +12,8 @@ import org.compass.core.mapping.osem.ComponentMapping;
 import org.compass.core.spi.InternalCompassSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.core.convert.ConversionService;
+import org.springframework.core.convert.TypeDescriptor;
 import org.springframework.stereotype.Component;
 import ubic.gemma.core.search.*;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
@@ -26,6 +28,7 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.gene.GeneSet;
 import ubic.gemma.persistence.service.genome.biosequence.BioSequenceService;
+import ubic.gemma.persistence.util.EntityUtils;
 
 import javax.annotation.Nullable;
 import java.util.*;
@@ -90,6 +93,9 @@ public class CompassSearchSource implements SearchSource {
     private Compass compassProbe;
     @Autowired
     private BioSequenceService bioSequenceService;
+    @Autowired
+    @Qualifier("valueObjectConversionService")
+    private ConversionService valueObjectConversionService;
 
     /**
      * A Compass search on array designs.
@@ -292,6 +298,10 @@ public class CompassSearchSource implements SearchSource {
             results.add( SearchResult.from( clazz, ( ( T ) resultObject ).getId(), score * CompassSearchSource.COMPASS_HIT_SCORE_PENALTY_FACTOR, ht, source ) );
         }
 
+        if ( settings.isFillResults() ) {
+            fillSearchResults( results, clazz );
+        }
+
         watch.stop();
 
         String message = String.format( "Getting %d Lucene hits for %s (parsed as %s) from %s took %d ms",
@@ -335,6 +345,35 @@ public class CompassSearchSource implements SearchSource {
                     }
                 }
             }
+        }
+    }
+
+    private <T extends Identifiable> void fillSearchResults( Collection<SearchResult<T>> results, Class<T> clazz ) {
+        StopWatch timer = StopWatch.createStarted();
+
+        Set<Long> ids = results.stream()
+                .map( SearchResult::getResultId )
+                .collect( Collectors.toSet() );
+
+        //noinspection unchecked
+        List<T> entities = ( List<T> ) valueObjectConversionService.convert( ids,
+                TypeDescriptor.collection( Set.class, TypeDescriptor.valueOf( Long.class ) ),
+                TypeDescriptor.collection( List.class, TypeDescriptor.valueOf( clazz ) ) );
+
+        Map<Long, T> entitiesById = EntityUtils.getIdMap( entities );
+
+        Iterator<SearchResult<T>> it = results.iterator();
+        while ( it.hasNext() ) {
+            SearchResult<T> sr = it.next();
+            if ( entitiesById.containsKey( sr.getResultId() ) ) {
+                sr.setResultObject( sr.getResultObject() );
+            } else {
+                it.remove();
+            }
+        }
+
+        if ( timer.getTime() > 100 ) {
+            log.warn( String.format( "Filling %d %s results took %d ms", ids.size(), clazz.getSimpleName(), timer.getTime() ) );
         }
     }
 }

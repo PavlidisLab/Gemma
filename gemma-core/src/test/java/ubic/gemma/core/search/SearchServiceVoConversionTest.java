@@ -15,10 +15,14 @@ import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.BibliographicReferenceValueObject;
+import ubic.gemma.model.expression.BlacklistedEntity;
+import ubic.gemma.model.expression.BlacklistedValueObject;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
+import ubic.gemma.model.expression.arrayDesign.BlacklistedPlatform;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.CompositeSequenceValueObject;
+import ubic.gemma.model.expression.experiment.BlacklistedExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.Taxon;
@@ -27,15 +31,19 @@ import ubic.gemma.model.genome.gene.GeneSet;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
+import ubic.gemma.persistence.service.expression.experiment.BlacklistedEntityService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.util.ServiceBasedValueObjectConverter;
 import ubic.gemma.persistence.util.TestComponent;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.tuple;
 import static org.mockito.Mockito.*;
 
 /**
@@ -69,6 +77,8 @@ public class SearchServiceVoConversionTest extends AbstractJUnit4SpringContextTe
     private GeneSetService geneSetService;
     @Autowired
     private BibliographicReferenceService bibliographicReferenceService;
+    @Autowired
+    private BlacklistedEntityService blacklistedEntityService;
 
     /* fixtures */
     private ArrayDesign ad;
@@ -199,9 +209,35 @@ public class SearchServiceVoConversionTest extends AbstractJUnit4SpringContextTe
         searchService.loadValueObjects( Collections.singleton( SearchResult.from( ContrastResult.class, new ContrastResult(), 0.0f, "test object" ) ) );
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void testConvertAlreadyConvertedCollection() {
         searchService.loadValueObjects( Collections.singletonList(
                 SearchResult.from( ExpressionExperiment.class, eevo, 0.0f, "test value object" ) ) );
+        verify( expressionExperimentService ).loadValueObjectsByIds( Collections.singletonList( eevo.getId() ) );
+    }
+
+    @Test
+    public void testBlacklistedConversion() {
+        BlacklistedEntity bp = new BlacklistedPlatform();
+        bp.setId( 1L );
+        bp.setShortName( "GPL123012" );
+        BlacklistedEntity be = new BlacklistedExperiment();
+        be.setId( 2L );
+        be.setShortName( "GSE102930" );
+        ExpressionExperiment ee = new ExpressionExperiment();
+        ee.setId( 1L );
+        when( expressionExperimentService.loadValueObjects( any() ) ).thenReturn( Collections.singletonList( new ExpressionExperimentValueObject( ee ) ) );
+        when( blacklistedEntityService.loadValueObjects( any() ) ).thenReturn( Arrays.asList( BlacklistedValueObject.fromEntity( bp ), BlacklistedValueObject.fromEntity( be ) ) );
+        List<SearchResult<? extends IdentifiableValueObject<?>>> vos = searchService.loadValueObjects( Arrays.asList(
+                SearchResult.from( BlacklistedEntity.class, be, 0.0, "test blacklisted object" ),
+                SearchResult.from( BlacklistedEntity.class, bp, 0.0, "test blacklisted object" ),
+                SearchResult.from( ExpressionExperiment.class, ee, 1.0, "test object" ) ) );
+        verify( expressionExperimentService ).loadValueObjects( Collections.singletonList( ee ) );
+        assertThat( vos )
+                .extracting( "resultType", "resultId" )
+                .containsExactlyInAnyOrder(
+                        tuple( ExpressionExperiment.class, 1L ),
+                        tuple( BlacklistedEntity.class, 1L ),
+                        tuple( BlacklistedEntity.class, 2L ) );
     }
 }

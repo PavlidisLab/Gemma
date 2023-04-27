@@ -1,5 +1,6 @@
 package ubic.gemma.core.search.source;
 
+import org.apache.commons.lang3.Conversion;
 import org.apache.lucene.analysis.en.EnglishAnalyzer;
 import org.apache.lucene.queryParser.ParseException;
 import org.apache.lucene.queryParser.QueryParser;
@@ -14,6 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.convert.ConversionService;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
 import ubic.gemma.core.search.SearchException;
@@ -80,6 +82,11 @@ public class CompassSearchSourceTest extends AbstractJUnit4SpringContextTests {
         public BioSequenceService bioSequenceService() {
             return mock( BioSequenceService.class );
         }
+
+        @Bean
+        public ConversionService valueObjectConversionService() {
+            return mock( ConversionService.class );
+        }
     }
 
     @Autowired
@@ -89,6 +96,10 @@ public class CompassSearchSourceTest extends AbstractJUnit4SpringContextTests {
     @Autowired
     @Qualifier("compassGene")
     private Compass compassGene;
+
+    @Autowired
+    @Qualifier("valueObjectConversionService")
+    ConversionService conversionService;
 
     /* fixtures */
     CompassSettings mockedSettings;
@@ -120,7 +131,7 @@ public class CompassSearchSourceTest extends AbstractJUnit4SpringContextTests {
 
     @Test
     public void test() throws SearchException {
-        searchSource.searchGene( SearchSettings.geneSearch( "BRCA1", null ) );
+        searchSource.searchGene( SearchSettings.geneSearch( "BRCA1", null ).withFillResults( false ) );
         verify( compassGene ).openSession();
         verify( mockedSession ).beginTransaction();
         verify( mockedQueryBuilder ).queryString( "BRCA1" );
@@ -128,7 +139,7 @@ public class CompassSearchSourceTest extends AbstractJUnit4SpringContextTests {
 
     @Test
     public void test_quotedTerm() throws SearchException {
-        searchSource.searchGene( SearchSettings.geneSearch( "\"collections of materials\"", null ) );
+        searchSource.searchGene( SearchSettings.geneSearch( "\"collections of materials\"", null ).withFillResults( false ) );
         verify( compassGene ).openSession();
         verify( mockedSession ).beginTransaction();
         verify( mockedQueryBuilder ).queryString( "\"collections of materials\"" );
@@ -136,7 +147,7 @@ public class CompassSearchSourceTest extends AbstractJUnit4SpringContextTests {
 
     @Test
     public void test_multipleQuotedTerms() throws SearchException {
-        searchSource.searchGene( SearchSettings.geneSearch( "\"collections of materials\" \"lung cancer\"", null ) );
+        searchSource.searchGene( SearchSettings.geneSearch( "\"collections of materials\" \"lung cancer\"", null ).withFillResults( false ) );
         verify( compassGene ).openSession();
         verify( mockedSession ).beginTransaction();
         verify( mockedQueryBuilder ).queryString( "\"collections of materials\" \"lung cancer\"" );
@@ -144,7 +155,7 @@ public class CompassSearchSourceTest extends AbstractJUnit4SpringContextTests {
 
     @Test
     public void test_multipleQuotedTermsWithOr() throws SearchException {
-        searchSource.searchGene( SearchSettings.geneSearch( "\"collections of materials\" OR \"lung cancer\"", null ) );
+        searchSource.searchGene( SearchSettings.geneSearch( "\"collections of materials\" OR \"lung cancer\"", null ).withFillResults( false ) );
         verify( compassGene ).openSession();
         verify( mockedSession ).beginTransaction();
         verify( mockedQueryBuilder ).queryString( "\"collections of materials\" OR \"lung cancer\"" );

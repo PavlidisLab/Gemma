@@ -138,13 +138,6 @@ public class SearchWebService {
         // Some result VOs are null for unknown reasons, see https://github.com/PavlidisLab/Gemma/issues/417
         if ( fillResults ) {
             searchResultVos = searchService.loadValueObjects( searchResults );
-            List<String> searchResultVosWithNullResultObject = searchResultVos.stream()
-                    .filter( sr -> sr.getResultObject() == null )
-                    .map( SearchResult::toString )
-                    .collect( Collectors.toList() );
-            if ( !searchResultVosWithNullResultObject.isEmpty() ) {
-                log.warn( String.format( "The following search results have null result objects: %s.", String.join( ", ", searchResultVosWithNullResultObject ) ) );
-            }
         } else {
             searchResultVos = searchResults.stream()
                     .map( sr -> SearchResult.from( sr, ( IdentifiableValueObject<?> ) null ) )
@@ -153,7 +146,6 @@ public class SearchWebService {
 
         // convert the response to search results of VOs
         return new SearchResultsResponseDataObject( searchResultVos.stream()
-                .filter( sr -> !fillResults || sr.getResultObject() != null ) // exclude null cases, we warn about them above
                 .sorted() // SearchResults are sorted by descending score order
                 .limit( maxResults > 0 ? maxResults : Long.MAX_VALUE ) // results are limited by class, so there might be more results than expected when unraveling everything
                 .map( SearchResultValueObject::new )

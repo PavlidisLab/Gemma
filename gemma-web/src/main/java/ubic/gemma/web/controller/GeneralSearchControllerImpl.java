@@ -39,6 +39,7 @@ import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.common.search.SearchSettingsValueObject;
+import ubic.gemma.model.expression.BlacklistedEntity;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -288,6 +289,7 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
                 .taxon( settingsValueObject.getTaxon() )
                 .maxResults( settingsValueObject.getMaxResults() != null ? settingsValueObject.getMaxResults() : SearchSettings.DEFAULT_MAX_RESULTS_PER_RESULT_TYPE )
                 .resultTypes( resultTypesFromVo( settingsValueObject ) )
+                .resultType( BlacklistedEntity.class )
                 .useIndices( settingsValueObject.getUseIndices() )
                 .useDatabase( settingsValueObject.getUseDatabase() )
                 .useCharacteristics( settingsValueObject.getUseCharacteristics() )
