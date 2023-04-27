@@ -4,9 +4,12 @@ import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
+import java.io.File;
 import java.io.IOException;
+import java.util.Map;
 
 public interface DataUpdater {
     void addAffyDataFromAPTOutput( ExpressionExperiment ee, String pathToAptOutputFile ) throws IOException;
@@ -26,4 +29,6 @@ public interface DataUpdater {
 
     ExpressionExperiment replaceData( ExpressionExperiment ee, ArrayDesign targetPlatform,
             ExpressionDataDoubleMatrix data );
+
+    void addAdditionalMetadata( ExpressionExperiment ee, File[] additionalMetadata, Map<BioAssay, File[]> additionalMetadataPerBioAssay );
 }

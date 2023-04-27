@@ -29,8 +29,10 @@ import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
+import java.util.Collections;
 
 /**
  * Designed to add count and/or RPKM data to a data set that has only meta-data.
@@ -50,6 +52,7 @@ public class RNASeqDataAddCli extends ExpressionExperimentManipulatingCLI {
     private Integer readLength = null;
     private String rpkmFile = null;
     private boolean justbackfillLog2cpm = false;
+    private File[] additionalMetadata;
 
     @Override
     public CommandGroup getCommandGroup() {
@@ -70,6 +73,10 @@ public class RNASeqDataAddCli extends ExpressionExperimentManipulatingCLI {
 
         options.addOption( "log2cpm", "Just compute log2cpm from the existing stored count data (backfill); batchmode OK, no other options needed" );
 
+        options.addOption( Option.builder( "am" )
+                .longOpt( "additional-metadata" )
+                .type( File.class )
+                .build() );
     }
 
     @Override
@@ -191,6 +198,8 @@ public class RNASeqDataAddCli extends ExpressionExperimentManipulatingCLI {
 
             serv.addCountData( ee, targetArrayDesign, countMatrix, rpkmMatrix, readLength, isPairedReads,
                     allowMissingSamples );
+
+            serv.addAdditionalMetadata( ee, additionalMetadata, Collections.emptyMap() );
 
         } catch ( IOException e ) {
             throw new Exception( "Failed while processing " + ee, e );

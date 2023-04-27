@@ -7,6 +7,7 @@ import ubic.gemma.model.common.description.AnnotationValueObject;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
+import ubic.gemma.model.expression.AdditionalMetadata;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
@@ -18,11 +19,13 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.BrowsingDao;
 import ubic.gemma.persistence.service.FilteringVoEnabledDao;
 import ubic.gemma.persistence.service.common.auditAndSecurity.curation.CuratableDao;
+import ubic.gemma.persistence.service.expression.bioAssay.BioAssayDao;
 import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.persistence.util.Sort;
 
 import javax.annotation.Nullable;
+import java.io.InputStream;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
@@ -232,4 +235,17 @@ public interface ExpressionExperimentDao
     long countTroubledPlatforms( ExpressionExperiment ee );
 
     MeanVarianceRelation updateMeanVarianceRelation( ExpressionExperiment ee, MeanVarianceRelation mvr );
+
+    /**
+     * Add metadata on a given dataset.
+     */
+    AdditionalMetadata addAdditionalMetadata( ExpressionExperiment ee, MetadataType type, InputStream additionalMetadata, long length, String mediaType );
+
+    /**
+     * Add metadata on a specific bioassay.
+     * <p>
+     * FIXME: this should probably be relocated in {@link BioAssayDao}.
+     * @throws IllegalArgumentException if the bioassay does not belong to the expression experiment
+     */
+    AdditionalMetadata addAdditionalMetadata( ExpressionExperiment ee, BioAssay sample, MetadataType metadataType, InputStream stream, long length, String mediaType ) throws IllegalArgumentException;
 }

@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+    "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping>
+    <class name="ubic.gemma.model.expression.AdditionalMetadata"
+           table="ADDITIONAL_METADATA">
+        <id name="id" type="java.lang.Long">
+            <column name="ID" sql-type="BIGINT"/>
+            <generator class="native"/>
+        </id>
+        <property name="name" type="java.lang.String">
+            <column name="NAME" sql-type="VARCHAR(255)"/>
+        </property>
+        <property name="description" type="org.hibernate.type.MaterializedClobType">
+            <column name="DESCRIPTION" sql-type="TEXT"/>
+        </property>
+        <property name="type" not-null="true">
+            <column name="METADATA_TYPE" sql-type="VARCHAR(255)"/>
+            <type name="org.hibernate.type.EnumType">
+                <param name="enumClass">ubic.gemma.model.expression.experiment.MetadataType</param>
+                <param name="useNamed">true</param>
+            </type>
+        </property>
+        <property name="contents" not-null="true" type="java.sql.Blob">
+            <column name="CONTENTS" sql-type="MEDIUMBLOB"/>
+        </property>
+        <property name="mediaType" not-null="true" type="java.lang.String">
+            <column name="MEDIA_TYPE" sql-type="VARCHAR(255)"/>
+        </property>
+    </class>
+</hibernate-mapping>

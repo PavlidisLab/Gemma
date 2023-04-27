@@ -31,6 +31,7 @@ import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.QuantitationTypeValueObject;
+import ubic.gemma.model.expression.AdditionalMetadata;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
@@ -48,6 +49,7 @@ import ubic.gemma.persistence.util.Sort;
 
 import javax.annotation.CheckReturnValue;
 import javax.annotation.Nullable;
+import java.io.File;
 import java.util.*;
 
 /**
@@ -627,4 +629,10 @@ public interface ExpressionExperimentService
 
     @Secured({ "GROUP_USER" })
     MeanVarianceRelation updateMeanVarianceRelation( ExpressionExperiment ee, MeanVarianceRelation mvr );
+
+    @Secured({ "GROUP_USER" })
+    AdditionalMetadata addAdditionalMetadata( ExpressionExperiment ee, MetadataType type, File additionalMetadata, String mediaType );
+
+    @Secured({ "GROUP_USER" })
+    AdditionalMetadata addAdditionalMetadata( ExpressionExperiment ee, BioAssay sample, MetadataType metadataType, File additionalMetadata, String textPlainValue );
 }

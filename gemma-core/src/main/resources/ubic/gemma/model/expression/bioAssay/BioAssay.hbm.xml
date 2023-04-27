@@ -52,5 +52,11 @@
       <many-to-one name="sampleUsed" class="ubic.gemma.model.expression.biomaterial.BioMaterial"  lazy="false" fetch="join">
          <column name="SAMPLE_USED_FK" not-null="false" sql-type="BIGINT"/>
       </many-to-one>
+      <set name="additionalMetadata" cascade="all-delete-orphan">
+         <key foreign-key="BIO_ASSAY_FKC">
+            <column name="BIO_ASSAY_FK" sql-type="BIGINT"/>
+         </key>
+         <one-to-many class="ubic.gemma.model.expression.AdditionalMetadata"/>
+      </set>
    </class>
 </hibernate-mapping>

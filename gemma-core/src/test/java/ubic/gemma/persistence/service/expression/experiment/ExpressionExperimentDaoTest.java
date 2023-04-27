@@ -14,13 +14,19 @@ import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.experiment.ExperimentalDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.AdditionalMetadata;
+import ubic.gemma.model.expression.experiment.MetadataType;
 import ubic.gemma.persistence.service.common.auditAndSecurity.CurationDetailsDao;
 import ubic.gemma.persistence.util.TestComponent;
 
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.sql.SQLException;
 import java.util.Collections;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.*;
 import static org.mockito.Mockito.mock;
 
 @ContextConfiguration
@@ -92,6 +98,39 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest {
         assertFalse( Hibernate.isInitialized( ee.getExperimentalDesign() ) );
         expressionExperimentDao.thawWithoutVectors( ee );
         assertTrue( Hibernate.isInitialized( ee.getExperimentalDesign() ) );
+    }
+
+    @Test
+    public void testAdditionalMetadata() throws SQLException, IOException {
+        ExpressionExperiment ee = createExpressionExperiment();
+        AdditionalMetadata meta;
+        try ( InputStream stream = new ByteArrayInputStream( "Hello world!".getBytes() ) ) {
+            meta = expressionExperimentDao.addAdditionalMetadata( ee, MetadataType.PREPROCESSING, stream, 12L, "text/plain" );
+        }
+        assertNotNull( meta.getId() );
+        ee = reload( ee );
+        assertThat( ee.getAdditionalMetadata() )
+                .hasSize( 1 );
+        assertThat( ee.getAdditionalMetadata().iterator().next().getContents().getBinaryStream() )
+                .hasContent( "Hello world!" );
+    }
+
+    @Test
+    public void testAdditionalMetadataOnBioAssay() throws SQLException, IOException {
+        ExpressionExperiment ee = createExpressionExperiment();
+        BioAssay ba = new BioAssay();
+        sessionFactory.getCurrentSession().persist( ba );
+        ee.getBioAssays().add( ba );
+        AdditionalMetadata meta;
+        try ( InputStream stream = new ByteArrayInputStream( "Hello world!".getBytes() ) ) {
+            meta = expressionExperimentDao.addAdditionalMetadata( ee, ba, MetadataType.PREPROCESSING, stream, 12L, "text/plain" );
+        }
+        assertNotNull( meta.getId() );
+        ee = reload( ee );
+        assertThat( ee.getAdditionalMetadata() )
+                .hasSize( 1 );
+        assertThat( ee.getAdditionalMetadata().iterator().next().getContents().getBinaryStream() )
+                .hasContent( "Hello world!" );
     }
 
     private ExpressionExperiment reload( ExpressionExperiment e ) {

@@ -53,6 +53,7 @@ import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.QuantitationTypeValueObject;
 import ubic.gemma.model.common.search.SearchSettings;
+import ubic.gemma.model.expression.AdditionalMetadata;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -78,6 +79,7 @@ import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.persistence.util.Sort;
 
 import javax.annotation.Nullable;
+import java.io.*;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -591,6 +593,26 @@ public class ExpressionExperimentServiceImpl
             impliedTermsUrisBySubClause.clear();
         }
         return f2;
+    }
+
+    @Override
+    @Transactional
+    public AdditionalMetadata addAdditionalMetadata( ExpressionExperiment ee, MetadataType type, File additionalMetadata, String mediaType ) {
+        try ( InputStream stream = new FileInputStream( additionalMetadata ) ) {
+            return expressionExperimentDao.addAdditionalMetadata( ee, type, stream, additionalMetadata.length(), mediaType );
+        } catch ( IOException e ) {
+            throw new RuntimeException( e );
+        }
+    }
+
+    @Override
+    @Transactional
+    public AdditionalMetadata addAdditionalMetadata( ExpressionExperiment ee, BioAssay sample, MetadataType metadataType, File additionalMetadata, String mediaType ) {
+        try ( InputStream stream = new FileInputStream( additionalMetadata ) ) {
+            return expressionExperimentDao.addAdditionalMetadata( ee, sample, metadataType, stream, additionalMetadata.length(), mediaType );
+        } catch ( IOException e ) {
+            throw new RuntimeException( e );
+        }
     }
 
     @Override

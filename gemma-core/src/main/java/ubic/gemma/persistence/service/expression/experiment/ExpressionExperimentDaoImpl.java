@@ -41,6 +41,7 @@ import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
+import ubic.gemma.model.expression.AdditionalMetadata;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -60,8 +61,8 @@ import ubic.gemma.persistence.util.Filter;
 import ubic.gemma.persistence.util.*;
 
 import javax.annotation.Nullable;
+import java.io.InputStream;
 import java.util.*;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import static java.util.stream.Collectors.groupingBy;
@@ -430,7 +431,7 @@ public class ExpressionExperimentDaoImpl
         //language=HQL
         //        final String queryString =
         //                "select distinct ee from ExpressionExperiment as ee " + "inner join ee.bioAssays as ba "
-        //                        + "inner join ba.sampleUsed as sample where sample.sourceTaxon = :taxon ";
+        //                        + "inner join ba.sampleUsed as bioAssay where bioAssay.sourceTaxon = :taxon ";
         final String queryString = "select ee from ExpressionExperiment as ee where ee.taxon = (:taxon)";
 
         //noinspection unchecked
@@ -699,6 +700,32 @@ public class ExpressionExperimentDaoImpl
         ee.setMeanVarianceRelation( mvr );
         update( ee );
         return mvr;
+    }
+
+    @Override
+    public AdditionalMetadata addAdditionalMetadata( ExpressionExperiment ee, MetadataType type, InputStream stream, long length, String mediaType ) {
+        AdditionalMetadata am = createAdditionalMetadata( type, stream, length );
+        ee.getAdditionalMetadata().add( am );
+        return am;
+    }
+
+    @Override
+    public AdditionalMetadata addAdditionalMetadata( ExpressionExperiment ee, BioAssay bioAssay, MetadataType type, InputStream stream, long length, String mediaType ) throws IllegalArgumentException {
+        if ( ee.getBioAssays().contains( bioAssay ) ) {
+            throw new IllegalArgumentException( String.format( "%s is not part of %s", bioAssay, ee ) );
+        }
+        AdditionalMetadata am = createAdditionalMetadata( type, stream, length );
+        bioAssay.getAdditionalMetadata().add( am );
+        return am;
+    }
+
+    private AdditionalMetadata createAdditionalMetadata( MetadataType type, InputStream stream, long length ) {
+        AdditionalMetadata meta = new AdditionalMetadata();
+        meta.setType( type );
+        meta.setContents( getSessionFactory().getCurrentSession().getLobHelper().createBlob( stream, length ) );
+        meta.setMediaType( "text/plain" );
+        getSessionFactory().getCurrentSession().persist( meta );
+        return meta;
     }
 
     @Override
@@ -1701,6 +1728,7 @@ public class ExpressionExperimentDaoImpl
         configurer.unregisterProperty( "source" );
         configurer.unregisterProperty( "otherParts.size" );
         configurer.unregisterProperty( "otherRelevantPublications.size" );
+        configurer.unregisterProperty( "additionalMetadata.size" );
 
         configurer.unregisterProperties( p -> p.endsWith( "externalDatabases.size" ) );
 
