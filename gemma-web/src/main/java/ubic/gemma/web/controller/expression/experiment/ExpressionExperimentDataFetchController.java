@@ -34,6 +34,7 @@ import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 import ubic.gemma.core.analysis.preprocess.filter.FilteringException;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
+import ubic.gemma.core.expression.experiment.ExpressionExperimentMetaFileType;
 import ubic.gemma.core.job.TaskResult;
 import ubic.gemma.core.job.executor.webapp.TaskRunningService;
 import ubic.gemma.core.tasks.AbstractTask;
@@ -58,15 +59,6 @@ import java.util.*;
 @SuppressWarnings("unused") // Called from JS
 @Controller
 public class ExpressionExperimentDataFetchController {
-
-    private static final MetaFileType[] META_FILE_TYPES = {
-            new MetaFileType( 1, ".base.metadata", "Sequence analysis summary", ".seq.analysis.sum.txt", false, true ),
-            new MetaFileType( 2, ".alignment.metadata", "Alignment statistics", ".alignment.statistics.txt", false,
-                    true ),
-            new MetaFileType( 3, "MultiQCReports" + File.separatorChar + "multiqc_report.html", "Multi-QC Report",
-                    ".multiqc.report.html", false, false ),
-            new MetaFileType( 4, "configurations" + File.separatorChar, "Additional pipeline configuration settings",
-                    ".pipeline.config.txt", true, false ) };
 
     @Autowired
     private TaskRunningService taskRunningService;
@@ -109,23 +101,12 @@ public class ExpressionExperimentDataFetchController {
             }
 
             ExpressionExperiment ee = expressionExperimentService.loadOrFail( Long.parseLong( eeId ) );
-            MetaFileType type = this.getType( Integer.parseInt( typeId ) );
+            ExpressionExperimentMetaFileType type = this.getType( Integer.parseInt( typeId ) );
             if ( type == null ) {
                 throw e;
             }
 
-            String dir = ExpressionDataFileService.METADATA_DIR + this.getEEFolderName( ee ) + File.separatorChar + type
-                    .getFileName( ee );
-
-            File file = new File( dir );
-
-            // If this is a directory, check if we can read the most recent file.
-            if ( type.isDirectory() ) {
-                File fNew = this.getNewestFile( file );
-                if ( fNew != null ) {
-                    file = fNew;
-                }
-            }
+            File file = expressionDataFileService.getMetadataFile( ee, type );
 
             this.download( response, file, type.getDownloadName( ee ) );
 
@@ -147,23 +128,16 @@ public class ExpressionExperimentDataFetchController {
             throw new IllegalArgumentException( "Experiment with given ID does not exist." );
         }
 
-        MetaFile[] metaFiles = new MetaFile[ExpressionExperimentDataFetchController.META_FILE_TYPES.length];
+        MetaFile[] metaFiles = new MetaFile[ExpressionExperimentMetaFileType.values().length];
 
         int i = 0;
-        for ( MetaFileType type : ExpressionExperimentDataFetchController.META_FILE_TYPES ) {
+        for ( ExpressionExperimentMetaFileType type : ExpressionExperimentMetaFileType.values() ) {
 
             // Some files are prefixed with the experiments accession
-            File file = new File(
-                    ExpressionDataFileService.METADATA_DIR + this.getEEFolderName( ee ) + File.separatorChar + type
-                            .getFileName( ee ) );
+            File file = expressionDataFileService.getMetadataFile( ee, type );
 
             // Check if we can read the file
             if ( !file.canRead() ) {
-                continue;
-            }
-
-            // If this is a directory, check if we can read the most recent file.
-            if ( type.isDirectory() && this.getNewestFile( file ) == null ) {
                 continue;
             }
 
@@ -220,41 +194,6 @@ public class ExpressionExperimentDataFetchController {
     }
 
     /**
-     * Forms a folder name where the given experiments metadata will be located (within the {@link ExpressionDataFileService#METADATA_DIR} directory).
-     *
-     * @param ee the experiment to get the folder name for.
-     * @return folder name based on the given experiments properties. Usually this will be the experiments short name,
-     * without any splitting suffixes (e.g. for GSE123.1 the folder name would be GSE123). If the short name is empty for
-     * any reason, the experiments ID will be used.
-     */
-    private String getEEFolderName( ExpressionExperiment ee ) {
-        String sName = ee.getShortName();
-        if ( StringUtils.isBlank( sName ) ) {
-            return ee.getId().toString();
-        }
-        return sName.replaceAll( "\\.\\d+$", "" );
-    }
-
-    /**
-     * @param file a directory to scan
-     * @return the file in the directory that was last modified, or null, if such file doesn't exist or is not readable.
-     */
-    private File getNewestFile( File file ) {
-        File[] files = file.listFiles();
-        if ( files != null && files.length > 0 ) {
-            List<File> fList = Arrays.asList( files );
-
-            // Sort by last modified, we only want the newest file
-            fList.sort( Comparator.comparingLong( File::lastModified ) );
-
-            if ( fList.get( 0 ).canRead() ) {
-                return fList.get( 0 );
-            }
-        }
-        return null;
-    }
-
-    /**
      * @param response     the http response to download to.
      * @param f            the file to download from
      * @param downloadName this string will be used as a download name for the downloaded file. If null, the filesystem name
@@ -281,8 +220,8 @@ public class ExpressionExperimentDataFetchController {
         }
     }
 
-    private MetaFileType getType( int id ) {
-        for ( MetaFileType t : ExpressionExperimentDataFetchController.META_FILE_TYPES ) {
+    private ExpressionExperimentMetaFileType getType( int id ) {
+        for ( ExpressionExperimentMetaFileType t : ExpressionExperimentMetaFileType.values() ) {
             if ( t.getId() == id )
                 return t;
         }
@@ -512,54 +451,5 @@ public class ExpressionExperimentDataFetchController {
 
     }
 
-}
-
-class MetaFileType {
-
-    private int id;
-    private String fileName;
-    private String displayName;
-    private String downloadName;
-    private Boolean isDirectory;
-    private Boolean isNamePrefixed;
-
-    /**
-     * @param id             the identifier of the meta file type.
-     * @param fileName       the name of the file in the filesystem.
-     * @param downloadName   the string that will be used as the file name when the user downloads it. This name will always be
-     *                       prefixed with the accession (sort name) of the experiment.
-     * @param displayName    the string that will be displayed publicly to describe this file.
-     * @param isDirectory    whether this file represents a directory.
-     * @param isNamePrefixed whether the fileName has to be prefixed with the experiment accession name.
-     */
-    MetaFileType( int id, String fileName, String displayName, String downloadName, Boolean isDirectory,
-            Boolean isNamePrefixed ) {
-        this.id = id;
-        this.displayName = displayName;
-        this.fileName = fileName;
-        this.downloadName = downloadName;
-        this.isDirectory = isDirectory;
-        this.isNamePrefixed = isNamePrefixed;
-    }
-
-    public int getId() {
-        return id;
-    }
-
-    String getDisplayName() {
-        return displayName;
-    }
-
-    String getFileName( ExpressionExperiment ee ) {
-        return ( isNamePrefixed ? ee.getShortName() : "" ) + fileName;
-    }
-
-    Boolean isDirectory() {
-        return isDirectory;
-    }
-
-    String getDownloadName( ExpressionExperiment ee ) {
-        return ee.getShortName() + downloadName;
-    }
 }
 
