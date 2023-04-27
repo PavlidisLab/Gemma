@@ -14,7 +14,6 @@
  */
 package ubic.gemma.model.expression.experiment;
 
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -26,6 +25,7 @@ import ubic.gemma.model.common.auditAndSecurity.curation.Curatable;
 import ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
+import ubic.gemma.model.expression.AdditionalMetadata;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.MeanVarianceRelation;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
@@ -80,6 +80,11 @@ public class ExpressionExperiment extends BioAssaySet implements SecuredNotChild
     private String source;
 
     private Set<Characteristic> allCharacteristics;
+
+    /**
+     * A collection of additional metadata blobs.
+     */
+    private Set<AdditionalMetadata> additionalMetadata = new HashSet<>();
 
     @Override
     public ExpressionExperimentValueObject createValueObject() {
@@ -278,6 +283,14 @@ public class ExpressionExperiment extends BioAssaySet implements SecuredNotChild
 
     public void setTaxon( Taxon taxon ) {
         this.taxon = taxon;
+    }
+
+    public Set<AdditionalMetadata> getAdditionalMetadata() {
+        return additionalMetadata;
+    }
+
+    public void setAdditionalMetadata( Set<AdditionalMetadata> additionalMetadata ) {
+        this.additionalMetadata = additionalMetadata;
     }
 
     @Override

@@ -58,6 +58,7 @@
         <mapping resource="ubic/gemma/model/common/measurement/Unit.hbm.xml"/>
         <mapping resource="ubic/gemma/model/common/protocol/Protocol.hbm.xml"/>
         <mapping resource="ubic/gemma/model/common/quantitationtype/QuantitationType.hbm.xml"/>
+        <mapping resource="ubic/gemma/model/expression/AdditionalMetadata.hbm.xml"/>
         <mapping resource="ubic/gemma/model/expression/arrayDesign/AlternateName.hbm.xml"/>
         <mapping resource="ubic/gemma/model/expression/arrayDesign/ArrayDesign.hbm.xml"/>
         <mapping resource="ubic/gemma/model/expression/bioAssay/BioAssay.hbm.xml"/>

@@ -23,10 +23,13 @@ import ubic.gemma.model.common.AbstractDescribable;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
+import ubic.gemma.model.expression.AdditionalMetadata;
 
 import javax.persistence.Transient;
 import java.io.Serializable;
 import java.util.Date;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * Represents the bringing together of a biomaterial with an assay of some sort (typically an expression assay). We
@@ -59,6 +62,8 @@ public class BioAssay extends AbstractDescribable implements gemma.gsec.model.Se
      * this string will contain multiple newline-delimited headers.
      */
     private String fastqHeaders;
+
+    private Set<AdditionalMetadata> additionalMetadata = new HashSet<>();
 
     @Override
     public int hashCode() {
@@ -213,6 +218,14 @@ public class BioAssay extends AbstractDescribable implements gemma.gsec.model.Se
 
     public void setFastqHeaders( String fastqHeaders ) {
         this.fastqHeaders = fastqHeaders;
+    }
+
+    public Set<AdditionalMetadata> getAdditionalMetadata() {
+        return additionalMetadata;
+    }
+
+    public void setAdditionalMetadata( Set<AdditionalMetadata> additionalMetadata ) {
+        this.additionalMetadata = additionalMetadata;
     }
 
     public static final class Factory {

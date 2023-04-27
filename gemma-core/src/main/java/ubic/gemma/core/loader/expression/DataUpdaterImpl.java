@@ -21,6 +21,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -49,6 +50,7 @@ import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.MetadataType;
 import ubic.gemma.persistence.service.analysis.expression.pca.PrincipalComponentAnalysisService;
 import ubic.gemma.persistence.service.analysis.expression.sampleCoexpression.SampleCoexpressionAnalysisService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
@@ -61,6 +63,7 @@ import ubic.gemma.persistence.service.expression.bioAssayData.RawExpressionDataV
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.util.EntityUtils;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.*;
 
@@ -189,9 +192,10 @@ public class DataUpdaterImpl implements DataUpdater {
      *                            switched to use it.
      * @param countMatrix         Representing 'raw' counts (added after rpkm, if provided).
      * @param rpkmMatrix          Representing per-gene normalized data, optional (RPKM or FPKM)
-     * @param allowMissingSamples if true, samples that are missing data will be deleted from the experiment.
-     * @param isPairedReads       is paired reads
      * @param readLength          read length
+     * @param isPairedReads       is paired reads
+     * @param allowMissingSamples if true, samples that are missing data will be deleted from the experiment.
+     * @param additionalMetadata
      */
     @Override
     @Transactional(propagation = Propagation.NEVER)
@@ -280,7 +284,6 @@ public class DataUpdaterImpl implements DataUpdater {
 
             this.addData( ee, targetArrayDesign, rpkmEEMatrix );
         }
-
     }
 
     /**
@@ -545,11 +548,11 @@ public class DataUpdaterImpl implements DataUpdater {
      * selected experiment. Will do postprocessing if the data quantitationType is 'preferred', but if there is already
      * a preferred quantitation type, an error will be thrown.
      *
-     * @param  ee             ee
-     * @param  targetPlatform optional; if null, uses the platform already used (if there is just one; you can't use
-     *                        this
-     *                        for a multi-platform dataset)
-     * @param  data           to slot in
+     * @param ee             ee
+     * @param targetPlatform optional; if null, uses the platform already used (if there is just one; you can't use
+     *                       this
+     *                       for a multi-platform dataset)
+     * @param data           to slot in
      * @return ee
      */
     @Override
@@ -671,6 +674,19 @@ public class DataUpdaterImpl implements DataUpdater {
         assert ee.getNumberOfDataVectors() != null;
 
         return ee;
+    }
+
+    @Override
+    @Transactional(propagation = Propagation.NEVER)
+    public void addAdditionalMetadata( ExpressionExperiment ee, File[] additionalMetadata, Map<BioAssay, File[]> additionalMetadataPerBioAssay ) {
+        for ( File am : additionalMetadata ) {
+            experimentService.addAdditionalMetadata( ee, MetadataType.PREPROCESSING, am, MediaType.TEXT_PLAIN_VALUE );
+        }
+        for ( Map.Entry<BioAssay, File[]> e : additionalMetadataPerBioAssay.entrySet() ) {
+            for ( File am : e.getValue() ) {
+                experimentService.addAdditionalMetadata( ee, e.getKey(), MetadataType.PREPROCESSING, am, MediaType.TEXT_PLAIN_VALUE );
+            }
+        }
     }
 
     /**
