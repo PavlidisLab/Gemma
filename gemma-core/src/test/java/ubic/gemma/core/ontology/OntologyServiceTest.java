@@ -40,10 +40,9 @@ public class OntologyServiceTest extends BaseSpringContextTest {
     private OntologyService os;
 
     @Test
-    public void test() throws SearchException, OntologySearchException {
-
-        os.getDiseaseOntologyService()
-                .loadTermsInNameSpace( this.getClass().getResourceAsStream( "/data/loader/ontology/dotest.owl.xml" ), false );
+    public void test() throws SearchException, OntologySearchException, InterruptedException {
+        OntologyTestUtils.initialize( os.getDiseaseOntologyService(),
+                this.getClass().getResourceAsStream( "/data/loader/ontology/dotest.owl.xml" ) );
 
         Collection<CharacteristicValueObject> name = os.findTermsInexact( "diarrhea", null );
 

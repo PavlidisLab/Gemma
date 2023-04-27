@@ -16,7 +16,6 @@ package ubic.gemma.persistence.service.common.auditAndSecurity;
 
 import gemma.gsec.AuthorityConstants;
 import org.hibernate.FlushMode;
-import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.criterion.Restrictions;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,7 +27,6 @@ import ubic.gemma.persistence.service.AbstractDao;
 import ubic.gemma.persistence.util.BusinessKey;
 
 import java.util.Collection;
-import java.util.List;
 import java.util.Objects;
 
 /**
@@ -47,25 +45,12 @@ public class UserDaoImpl extends AbstractDao<User> implements UserDao {
 
     @Override
     public User findByEmail( final String email ) {
-        return this.handleFindByEmail( email );
+        return findOneByProperty( "email", email );
     }
 
     @Override
     public User findByUserName( final String userName ) {
-        Session session = this.getSessionFactory().getCurrentSession();
-
-        //noinspection unchecked
-        List<User> users = session.createCriteria( User.class ).setFlushMode( FlushMode.MANUAL )
-                .add( Restrictions.eq( "userName", userName ) ).list();
-
-        if ( users.isEmpty() ) {
-            return null;
-        } else if ( users.size() > 1 ) {
-            throw new IllegalStateException( "Multiple users with name=" + userName );
-        }
-        User u = users.get( 0 );
-        session.setReadOnly( u, true ); // TESTING
-        return u;
+        return findOneByProperty( "userName", userName );
     }
 
     @Override
@@ -100,12 +85,7 @@ public class UserDaoImpl extends AbstractDao<User> implements UserDao {
     }
 
     @Override
-    @SuppressWarnings("MethodDoesntCallSuperMethod")
     public void update( User user ) {
-        if ( user == null ) {
-            throw new IllegalArgumentException( "User.update - 'user' can not be null" );
-        }
-
         // check the original isn't 'administrator'. See init-acls.sql
         if ( Objects.equals( user.getId(), AuthorityConstants.REQUIRED_ADMINISTRATOR_ID )
                 && !AuthorityConstants.REQUIRED_ADMINISTRATOR_USER_NAME.equals( user.getName() ) ) {
@@ -113,19 +93,7 @@ public class UserDaoImpl extends AbstractDao<User> implements UserDao {
                     "Cannot modify name of user ID=" + AuthorityConstants.REQUIRED_ADMINISTRATOR_ID );
         }
 
-        // FIXME for reasons that remain obscure, I cannot get this to work using a regular session.update.
-        this.getSessionFactory().getCurrentSession().createSQLQuery( "UPDATE CONTACT SET PASSWORD=:a WHERE ID=:id" )
-                .setParameter( "id", user.getId() ).setParameter( "a", user.getPassword() ).executeUpdate();
-
-        this.getSessionFactory().getCurrentSession().createSQLQuery( "UPDATE CONTACT SET USER_NAME=:a WHERE ID=:id" )
-                .setParameter( "id", user.getId() ).setParameter( "a", user.getUserName() ).executeUpdate();
-
-        this.getSessionFactory().getCurrentSession().createSQLQuery( "UPDATE CONTACT SET EMAIL=:a WHERE ID=:id" )
-                .setParameter( "id", user.getId() ).setParameter( "a", user.getEmail() ).executeUpdate();
-
-        this.getSessionFactory().getCurrentSession().createSQLQuery( "UPDATE CONTACT SET ENABLED=:a WHERE ID=:id" )
-                .setParameter( "id", user.getId() ).setParameter( "a", user.getEnabled() ? 1 : 0 ).executeUpdate();
-
+        super.update( user );
     }
 
     @Override
@@ -133,12 +101,4 @@ public class UserDaoImpl extends AbstractDao<User> implements UserDao {
         BusinessKey.checkKey( user );
         return this.findByUserName( user.getUserName() );
     }
-
-    private User handleFindByEmail( final String email ) {
-        //noinspection unchecked
-        return ( User ) this.getSessionFactory().getCurrentSession()
-                .createQuery( "from User c where c.email = :email" ).setParameter( "email", email )
-                .uniqueResult();
-    }
-
 }

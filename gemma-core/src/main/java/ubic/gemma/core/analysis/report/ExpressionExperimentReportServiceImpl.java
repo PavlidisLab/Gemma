@@ -46,6 +46,7 @@ import ubic.gemma.persistence.service.expression.experiment.ExpressionExperiment
 import ubic.gemma.persistence.util.EntityUtils;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Handles creation, serialization and/or marshaling of reports about expression experiments. Reports are stored in
@@ -357,7 +358,8 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
     @Transactional(propagation = Propagation.NEVER)
     public void recalculateBatchInfo() {
         log.info( "Started batch info recalculation task." );
-        Map<Long, Exception> failed = new HashMap<>();
+        Exception lastException = null;
+        Set<ExpressionExperiment> failed = new HashSet<>();
 
         Calendar calendar = Calendar.getInstance();
         calendar.add( Calendar.HOUR_OF_DAY, -24 ); // All EEs updated in the last day
@@ -377,17 +379,26 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
                 }
                 self.recalculateExperimentBatchInfo( ee );
             } catch ( Exception e ) {
-                log.warn( "Batch effect recalculation failed for experiment id " + ee.getId(), e );
-                failed.put( ee.getId(), e );
+                log.warn( "Batch effect recalculation failed for " + ee, e );
+                failed.add( ee );
+                lastException = e;
+            }
+        }
+        if ( !failed.isEmpty() ) {
+            String eeIds = failed.stream()
+                    .map( ExpressionExperiment::getId ).sorted()
+                    .map( String::valueOf )
+                    .collect( Collectors.joining( ", " ) );
+            String message = String.format( "There were %d failures out of %d during the batch info recalculation: %s. Only the last exception stacktrace is appended.",
+                    failed.size(), ees.size(), eeIds );
+            // report as an error of at least 5% fails
+            if ( ( double ) failed.size() / ( double ) ees.size() > 0.05 ) {
+                log.error( message, lastException );
+            } else {
+                log.warn( message, lastException );
             }
         }
         log.info( "Finished batch info recalculation task." );
-        if ( !failed.isEmpty() ) {
-            log.warn( "! There were failures during the batch info recalculation: " );
-            for ( Long id : failed.keySet() ) {
-                log.warn( "EE ID " + id + " failed on: " + failed.get( id ) );
-            }
-        }
     }
 
     @Override

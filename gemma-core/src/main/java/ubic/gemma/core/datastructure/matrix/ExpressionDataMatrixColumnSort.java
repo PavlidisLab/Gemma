@@ -98,6 +98,10 @@ public class ExpressionDataMatrixColumnSort {
 
                 }
 
+                if ( sortedVals.isEmpty() ) {
+                    log.warn( "No values for continuous factor " + factor );
+                    continue;
+                }
                 result.put( factor, sortedVals.firstEntry().getValue() );
 
             } else {
