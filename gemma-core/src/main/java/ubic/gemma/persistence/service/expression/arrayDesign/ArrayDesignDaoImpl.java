@@ -400,6 +400,15 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     }
 
     @Override
+    public Collection<Long> getExpressionExperimentsIds( ArrayDesign ad ) {
+        //noinspection unchecked
+        return this.getSessionFactory().getCurrentSession()
+                .createQuery( "select distinct ee.id from ExpressionExperiment ee join ee.bioAssays bas join bas.arrayDesignUsed ad where ad = :ad" )
+                .setParameter( "ad", ad )
+                .list();
+    }
+
+    @Override
     public Map<Taxon, Long> getPerTaxonCount() {
         Map<Taxon, Long> result = new HashMap<>();
 

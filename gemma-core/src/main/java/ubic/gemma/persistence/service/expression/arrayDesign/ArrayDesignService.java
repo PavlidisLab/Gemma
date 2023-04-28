@@ -180,6 +180,9 @@ public interface ArrayDesignService extends FilteringVoEnabledService<ArrayDesig
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ", "AFTER_ACL_COLLECTION_READ" })
     Collection<ExpressionExperiment> getExpressionExperiments( ArrayDesign arrayDesign );
 
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    Collection<Long> getExpressionExperimentsIds( ArrayDesign ad );
+
     /**
      * Gets the AuditEvents of the latest gene mapping for the specified array design ids. This returns a map of id
      * -&gt;

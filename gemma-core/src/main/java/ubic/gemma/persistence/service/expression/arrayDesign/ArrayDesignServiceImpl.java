@@ -171,6 +171,12 @@ public class ArrayDesignServiceImpl extends AbstractFilteringVoEnabledService<Ar
 
     @Override
     @Transactional(readOnly = true)
+    public Collection<Long> getExpressionExperimentsIds( ArrayDesign ad ) {
+        return this.arrayDesignDao.getExpressionExperimentsIds( ad );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public Map<Long, AuditEvent> getLastGeneMapping( Collection<Long> ids ) {
         Map<Long, Collection<AuditEvent>> eventMap = this.arrayDesignDao.getAuditEvents( ids );
         Map<Long, AuditEvent> lastEventMap = new HashMap<>();

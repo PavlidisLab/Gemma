@@ -642,16 +642,20 @@ public class ExpressionExperimentController {
      */
     public Collection<ExpressionExperimentDetailsValueObject> loadExperimentsForPlatform( Long id ) {
         ArrayDesign ad = arrayDesignService.loadOrFail( id );
-        Collection<ExpressionExperimentDetailsValueObject> switchedExperiments = getFilteredExpressionExperimentValueObjects( null, arrayDesignService.getSwitchedExperimentIds( ad ), 0, true );
-        for ( ExpressionExperimentDetailsValueObject evo : switchedExperiments ) {
-            evo.setName( "[Switched to another platform] " + evo.getName() );
+
+        Collection<Long> eeIds = new HashSet<Long>();
+        eeIds.addAll( arrayDesignService.getExpressionExperimentsIds( ad ) );
+        Set<Long> switchedEEIds = new HashSet<>( arrayDesignService.getSwitchedExperimentIds( ad ) );
+        eeIds.addAll( switchedEEIds );
+
+        Collection<ExpressionExperimentDetailsValueObject> eeVos = this.getFilteredExpressionExperimentValueObjects( null, eeIds, 0, true );
+        for ( ExpressionExperimentDetailsValueObject evo : eeVos ) {
+            if ( switchedEEIds.contains( evo.getId() ) ) {
+                evo.setName( "[Switched to another platform] " + evo.getName() );
+            }
         }
 
-        Collection<ExpressionExperimentDetailsValueObject> experiments = this.getFilteredExpressionExperimentValueObjects( null, ( List<Long> ) EntityUtils.getIds( arrayDesignService.getExpressionExperiments( ad ) ), 0, true );
-
-        experiments.addAll( switchedExperiments );
-        return experiments;
-
+        return eeVos;
     }
 
     /**

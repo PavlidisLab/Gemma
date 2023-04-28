@@ -58,6 +58,8 @@ public interface ArrayDesignDao extends CuratableDao<ArrayDesign, ArrayDesignVal
 
     Collection<ExpressionExperiment> getExpressionExperiments( ArrayDesign arrayDesign );
 
+    Collection<Long> getExpressionExperimentsIds( ArrayDesign ad );
+
     Map<Taxon, Long> getPerTaxonCount();
 
     /**
