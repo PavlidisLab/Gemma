@@ -311,8 +311,10 @@
     <cache name="ubic.gemma.model.common.auditAndSecurity.StatusImpl" maxElementsInMemory="50000"
            timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false"/>
 
-    <!-- audit events are immutables, so the cache can be eternal -->
+    <!-- audit events and their types are immutables, so the cache can be eternal -->
     <cache name="ubic.gemma.model.common.auditAndSecurity.AuditEvent" maxElementsInMemory="10000"
+           eternal="true" overflowToDisk="false"/>
+    <cache name="ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType" maxElementsInMemory="10000"
            eternal="true" overflowToDisk="false"/>
 
     <cache name="ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails" maxElementsInMemory="10000"
