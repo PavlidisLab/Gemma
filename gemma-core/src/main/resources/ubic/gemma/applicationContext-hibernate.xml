@@ -59,16 +59,11 @@
 		<property name="hibernateProperties">
 			<props>
 				<prop key="hibernate.hbm2ddl.auto">${gemma.hibernate.hbm2ddl.auto}</prop>
-				<prop key="hibernate.dialect">org.hibernate.dialect.MySQL5InnoDBDialect</prop>
-				<prop key="hibernate.max_fetch_depth">3</prop>
-				<prop key="hibernate.default_batch_fetch_size">500</prop>
-				<prop key="hibernate.jdbc.batch_versioned_data">true</prop>
-				<prop key="hibernate.order_inserts">true</prop>
-				<prop key="hibernate.order_updates">true</prop>
+				<prop key="hibernate.dialect">${gemma.hibernate.dialect}</prop>
 				<!-- caching options -->
 				<prop key="hibernate.cache.region.factory_class">org.hibernate.cache.ehcache.SingletonEhCacheRegionFactory</prop>
-				<prop key="hibernate.cache.use_query_cache">${gemma.hibernate.use_query_cache}</prop>
-				<prop key="hibernate.cache.use_second_level_cache">${gemma.hibernate.use_second_level_cache}</prop>
+				<prop key="hibernate.cache.use_query_cache">true</prop>
+				<prop key="hibernate.cache.use_second_level_cache">true</prop>
 				<!-- used for micrometer -->
 				<prop key="hibernate.generate_statistics">true</prop>
 				<!-- debugging options -->

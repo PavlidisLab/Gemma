@@ -35,10 +35,11 @@ public abstract class BaseDatabaseTest extends AbstractTransactionalJUnit4Spring
             factory.setConfigLocations(
                     new ClassPathResource( "/hibernate.cfg.xml" ) );
             Properties props = new Properties();
-            Settings.getKeys( "gemma.hibernate" )
-                    .forEachRemaining( k -> props.setProperty( "hibernate." + k.replaceFirst( "^gemma\\.hibernate\\.", "" ), Settings.getString( k ) ) );
             props.setProperty( "hibernate.hbm2ddl.auto", "create" );
+            props.setProperty( "hibernate.dialect", org.hibernate.dialect.H2Dialect.class.getName() );
             props.setProperty( "hibernate.cache.use_second_level_cache", "false" );
+            props.setProperty( "hibernate.show_sql", Settings.getString( "gemma.hibernate.show_sql" ) );
+            props.setProperty( "hibernate.format_sql", Settings.getString( "gemma.hibernate.format_sql" ) );
             factory.setHibernateProperties( props );
             return factory;
         }

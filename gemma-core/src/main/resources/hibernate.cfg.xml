@@ -4,6 +4,11 @@
         "http://www.hibernate.org/dtd/hibernate-configuration-3.0.dtd">
 <hibernate-configuration>
     <session-factory>
+        <property name="hibernate.max_fetch_depth">3</property>
+        <property name="hibernate.default_batch_fetch_size">500</property>
+        <property name="hibernate.jdbc.batch_versioned_data">true</property>
+        <property name="hibernate.order_inserts">true</property>
+        <property name="hibernate.order_updates">true</property>
         <mapping resource="gemma/gsec/model/AclEntry.hbm.xml"/>
         <mapping resource="gemma/gsec/model/AclObjectIdentity.hbm.xml"/>
         <mapping resource="gemma/gsec/model/AclSid.hbm.xml"/>
