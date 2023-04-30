@@ -1262,7 +1262,7 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
 
         if ( totalTime.getTime() > 500 )
             SearchServiceImpl.log
-                    .info( ">>>>>>> Expression Experiment search for '" + settings + "' took " + watch.getTime()
+                    .info( ">>>>>>> Expression Experiment search for '" + settings + "' took " + totalTime.getTime()
                             + " ms, " + results.size() + " hits." );
 
         return results;
