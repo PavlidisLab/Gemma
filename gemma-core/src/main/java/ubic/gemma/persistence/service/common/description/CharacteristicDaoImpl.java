@@ -27,6 +27,7 @@ import org.hibernate.criterion.MatchMode;
 import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.type.ClassType;
+import org.hibernate.type.LongType;
 import org.hibernate.type.StringType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
@@ -123,12 +124,7 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
             return Collections.emptyMap();
         }
 
-        String qs = "select T.LEVEL, T.VALUE_URI, {I.*}, {CD.*}, {TAE.*}, {AAE.*}, {NAE.*} from EXPRESSION_EXPERIMENT2CHARACTERISTIC T "
-                + "join INVESTIGATION {I} on {I}.ID = T.EXPRESSION_EXPERIMENT_FK "
-                + "left join CURATION_DETAILS {CD} on {CD}.ID = {I}.CURATION_DETAILS_FK "
-                + "left join AUDIT_EVENT {TAE} on {TAE}.ID = {CD}.TROUBLE_AUDIT_EVENT_FK "
-                + "left join AUDIT_EVENT {AAE} on {AAE}.ID = {CD}.ATTENTION_AUDIT_EVENT_FK "
-                + "left join AUDIT_EVENT {NAE} on {NAE}.ID = {CD}.NOTE_AUDIT_EVENT_FK "
+        String qs = "select T.LEVEL, T.VALUE_URI, T.EXPRESSION_EXPERIMENT_FK from EXPRESSION_EXPERIMENT2CHARACTERISTIC T "
                 + AclQueryUtils.formNativeAclJoinClause( "T.EXPRESSION_EXPERIMENT_FK" ) + " "
                 + "where T.VALUE_URI in :uris"
                 + ( taxon != null ? " and {I}.TAXON_FK = :taxonId" : "" )
@@ -138,11 +134,7 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
         Query query = getSessionFactory().getCurrentSession().createSQLQuery( qs )
                 .addScalar( "LEVEL", new ClassType() )
                 .addScalar( "VALUE_URI", new StringType() )
-                .addEntity( "I", ExpressionExperiment.class )
-                .addEntity( "CD", CurationDetails.class )
-                .addEntity( "TAE", AuditEvent.class )
-                .addEntity( "AAE", AuditEvent.class )
-                .addEntity( "NAE", AuditEvent.class );
+                .addScalar( "EXPRESSION_EXPERIMENT_FK", new LongType() );
 
         query.setParameter( "eeClass", ExpressionExperiment.class );
         query.setParameter( "edClass", ExperimentalDesign.class );
@@ -161,9 +153,21 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
                 .setMaxResults( limit )
                 .list();
 
-        return result.stream().collect( Collectors.groupingBy( row -> ( Class<? extends Identifiable> ) row[0],
-                Collectors.groupingBy( row -> ( String ) row[1],
-                        Collectors.mapping( row -> ( ExpressionExperiment ) row[2], Collectors.toSet() ) ) ) );
+        Set<Long> ids = result.stream().map( row -> ( Long ) row[2] ).collect( Collectors.toSet() );
+        //noinspection unchecked
+        List<ExpressionExperiment> ees = getSessionFactory().getCurrentSession()
+                .createCriteria( ExpressionExperiment.class )
+                .add( Restrictions.in( "id", ids ) )
+                .list();
+        Map<Long, ExpressionExperiment> eeById = EntityUtils.getIdMap( ees );
+
+        return result.stream().collect( Collectors.groupingBy(
+                row -> ( Class<? extends Identifiable> ) row[0],
+                Collectors.groupingBy(
+                        row -> ( String ) row[1],
+                        Collectors.mapping(
+                                row -> Objects.requireNonNull( eeById.get( ( Long ) row[2] ), "No ExpressionExperiment with ID " + row[2] + "." ),
+                                Collectors.toSet() ) ) ) );
     }
 
     @Override
