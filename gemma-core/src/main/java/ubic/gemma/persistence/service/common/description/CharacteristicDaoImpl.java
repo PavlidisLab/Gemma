@@ -35,8 +35,6 @@ import ubic.basecode.util.BatchIterator;
 import ubic.gemma.model.association.Gene2GOAssociation;
 import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
 import ubic.gemma.model.common.Identifiable;
-import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
-import ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.biomaterial.Treatment;
@@ -119,11 +117,61 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
     }
 
     @Override
-    public Map<Class<? extends Identifiable>, Map<String, Set<ExpressionExperiment>>> findExperimentsByUris( Collection<String> uris, @Nullable Taxon taxon, int limit ) {
+    public Map<Class<? extends Identifiable>, Map<String, Collection<ExpressionExperiment>>> findExperimentsByUris( Collection<String> uris, @Nullable Taxon taxon, int limit ) {
         if ( uris.isEmpty() ) {
             return Collections.emptyMap();
         }
+        //noinspection unchecked
+        List<Object[]> result = prepareExperimentsByUrisQuery( uris, taxon, limit )
+                .setMaxResults( limit )
+                .list();
+        if ( result.isEmpty() ) {
+            return Collections.emptyMap();
+        }
+        Set<Long> ids = result.stream().map( row -> ( Long ) row[2] ).collect( Collectors.toSet() );
+        //noinspection unchecked
+        List<ExpressionExperiment> ees = getSessionFactory().getCurrentSession()
+                .createCriteria( ExpressionExperiment.class )
+                .add( Restrictions.in( "id", ids ) )
+                .list();
+        Map<Long, ExpressionExperiment> eeById = EntityUtils.getIdMap( ees );
+        //noinspection unchecked
+        return result.stream().collect( Collectors.groupingBy(
+                row -> ( Class<? extends Identifiable> ) row[0],
+                Collectors.groupingBy(
+                        row -> ( String ) row[1],
+                        Collectors.mapping(
+                                row -> Objects.requireNonNull( eeById.get( ( Long ) row[2] ), "No ExpressionExperiment with ID " + row[2] + "." ),
+                                Collectors.toCollection( HashSet::new ) ) ) ) );
+    }
 
+    @Override
+    public Map<Class<? extends Identifiable>, Map<String, Collection<ExpressionExperiment>>> findExperimentReferencesByUris( Collection<String> uris, @Nullable Taxon taxon, int limit ) {
+        if ( uris.isEmpty() ) {
+            return Collections.emptyMap();
+        }
+        //noinspection unchecked
+        List<Object[]> result = prepareExperimentsByUrisQuery( uris, taxon, limit )
+                .setMaxResults( limit )
+                .list();
+        //noinspection unchecked
+        return result.stream().collect( Collectors.groupingBy(
+                row -> ( Class<? extends Identifiable> ) row[0],
+                Collectors.groupingBy(
+                        row -> ( String ) row[1],
+                        Collectors.mapping(
+                                row -> ( Long ) row[2],
+                                Collectors.collectingAndThen( Collectors.toSet(), this::loadEEReference ) ) ) ) );
+    }
+
+    private Collection<ExpressionExperiment> loadEEReference( Collection<Long> ids ) {
+        return ids.stream()
+                .distinct()
+                .map( id -> ( ExpressionExperiment ) getSessionFactory().getCurrentSession().load( ExpressionExperiment.class, id ) )
+                .collect( Collectors.toList() );
+    }
+
+    private Query prepareExperimentsByUrisQuery( Collection<String> uris, @Nullable Taxon taxon, int limit ) {
         String qs = "select T.LEVEL, T.VALUE_URI, T.EXPRESSION_EXPERIMENT_FK from EXPRESSION_EXPERIMENT2CHARACTERISTIC T "
                 + AclQueryUtils.formNativeAclJoinClause( "T.EXPRESSION_EXPERIMENT_FK" ) + " "
                 + "where T.VALUE_URI in :uris"
@@ -148,26 +196,7 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
 
         AclQueryUtils.addAclParameters( query, ExpressionExperiment.class );
 
-        //noinspection unchecked
-        List<Object[]> result = query
-                .setMaxResults( limit )
-                .list();
-
-        Set<Long> ids = result.stream().map( row -> ( Long ) row[2] ).collect( Collectors.toSet() );
-        //noinspection unchecked
-        List<ExpressionExperiment> ees = getSessionFactory().getCurrentSession()
-                .createCriteria( ExpressionExperiment.class )
-                .add( Restrictions.in( "id", ids ) )
-                .list();
-        Map<Long, ExpressionExperiment> eeById = EntityUtils.getIdMap( ees );
-
-        return result.stream().collect( Collectors.groupingBy(
-                row -> ( Class<? extends Identifiable> ) row[0],
-                Collectors.groupingBy(
-                        row -> ( String ) row[1],
-                        Collectors.mapping(
-                                row -> Objects.requireNonNull( eeById.get( ( Long ) row[2] ), "No ExpressionExperiment with ID " + row[2] + "." ),
-                                Collectors.toSet() ) ) ) );
+        return query;
     }
 
     @Override

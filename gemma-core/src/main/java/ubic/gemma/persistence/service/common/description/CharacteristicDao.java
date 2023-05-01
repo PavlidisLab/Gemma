@@ -28,6 +28,7 @@ import ubic.gemma.persistence.service.BrowsingDao;
 import ubic.gemma.persistence.service.FilteringVoEnabledDao;
 
 import javax.annotation.Nullable;
+import java.io.Serializable;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -73,20 +74,32 @@ public interface CharacteristicDao
     Collection<Characteristic> findByUri( Collection<Class<?>> classes, @Nullable Collection<String> characteristicUris );
 
     /**
-     * This search looks at direct annotations, factor values and biomaterials in that order. Duplicate EEs are avoided
-     * (and will thus be associated via the first uri that resulted in a hit).
+     * This search looks at direct annotations, factor values and biomaterials in that order.
      * <p>
      * Resulting EEs are filtered by ACLs.
+     * <p>
+     * The returned collection of EEs is effectively a {@link Set}, but since we cannot use since this should be
+     * interchangable with {@link #findExperimentReferencesByUris(Collection, Taxon, int)}.
      *
      * @param  uris       collection of URIs used for matching characteristics (via {@link Characteristic#getValueUri()})
      * @param  taxon      taxon to restrict EEs to, or null to ignore
-     * @param  limit      approximate limit to how many results to return (just used to avoid extra queries; the limit
-     *                    may be exceeded). Set to 0 for no limit.
+     * @param  limit      limit how many results to return. Set to -1 for no limit.
      * @return map of classes ({@link ExpressionExperiment}, {@link ubic.gemma.model.expression.experiment.FactorValue},
-     * {@link ubic.gemma.model.expression.biomaterial.BioMaterial}) to the matching URI to IDs of experiments which have
-     * an associated characteristic using the given uriString. The class lets us track where the annotation was.
+     * {@link ubic.gemma.model.expression.biomaterial.BioMaterial}) to the matching URI to EEs which have an associated
+     * characteristic using the given URI. The class lets us track where the annotation was.
      */
-    Map<Class<? extends Identifiable>, Map<String, Set<ExpressionExperiment>>> findExperimentsByUris( Collection<String> uris, @Nullable Taxon taxon, int limit );
+    Map<Class<? extends Identifiable>, Map<String, Collection<ExpressionExperiment>>> findExperimentsByUris( Collection<String> uris, @Nullable Taxon taxon, int limit );
+
+    /**
+     * Similar to {@link #findExperimentsByUris(Collection, Taxon, int)}, but returns proxies with instead of
+     * initializing all the EEs in bulk.
+     * <p>
+     * Since proxies are returned, they cannot be collected in a {@link Set} which would otherwise cause their
+     * initialization by accessing {@link Object#hashCode()}. It is however effectively a set over the EE IDs.
+     *
+     * @see org.hibernate.Session#load(Object, Serializable)
+     */
+    Map<Class<? extends Identifiable>, Map<String, Collection<ExpressionExperiment>>> findExperimentReferencesByUris( Collection<String> uris, @Nullable Taxon taxon, int limit );
 
     Collection<Characteristic> findByUri( Collection<String> uris );
 

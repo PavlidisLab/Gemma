@@ -2,6 +2,7 @@ package ubic.gemma.core.search;
 
 import org.junit.After;
 import org.junit.Test;
+import org.mockito.internal.verification.VerificationModeFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
@@ -20,6 +21,7 @@ import ubic.gemma.persistence.util.TestComponent;
 
 import java.util.Collections;
 
+import static org.junit.Assert.assertNull;
 import static org.mockito.Mockito.*;
 
 @ContextConfiguration
@@ -90,6 +92,25 @@ public class SearchServiceTest extends AbstractJUnit4SpringContextTests {
         verify( ontologyService ).findIndividuals( "http://purl.obolibrary.org/obo/DOID_14602" );
         verify( ontologyService ).findTerms( "http://purl.obolibrary.org/obo/DOID_14602" );
         verifyNoMoreInteractions( ontologyService );
-        verify( characteristicService ).findExperimentsByUris( Collections.singleton( "http://purl.obolibrary.org/obo/DOID_14602" ), null, 10 );
+        verify( characteristicService ).findExperimentsByUris( Collections.singleton( "http://purl.obolibrary.org/obo/DOID_14602" ), null, 10, true );
+    }
+
+    @Test
+    public void searchExpressionExperiment() throws SearchException {
+        SearchSettings settings = SearchSettings.builder()
+                .query( "http://purl.obolibrary.org/obo/DOID_14602" )
+                .resultType( ExpressionExperiment.class )
+                .fillResults( false )
+                .build();
+        ExpressionExperiment ee = mock( ExpressionExperiment.class );
+        when( characteristicService.findExperimentsByUris( any(), any(), anyInt(), eq( false ) ) )
+                .thenReturn( Collections.singletonMap( ExpressionExperiment.class,
+                        Collections.singletonMap( "test", Collections.singleton( ee ) ) ) );
+        SearchService.SearchResultMap results = searchService.search( settings );
+        verify( characteristicService ).findExperimentsByUris( Collections.singleton( "http://purl.obolibrary.org/obo/DOID_14602" ), null, 5000, false );
+        assertNull( results.getByResultObjectType( ExpressionExperiment.class ).iterator().next().getResultObject() );
+        // since EE is a proxy, only its ID should be accessed
+        verify( ee, VerificationModeFactory.atLeastOnce() ).getId();
+        verifyNoMoreInteractions( ee );
     }
 }

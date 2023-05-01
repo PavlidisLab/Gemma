@@ -19,6 +19,7 @@
 package ubic.gemma.persistence.service.common.description;
 
 import org.springframework.security.access.annotation.Secured;
+import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -63,7 +64,7 @@ public interface CharacteristicService extends BaseVoEnabledService<Characterist
     /**
      * @see CharacteristicDao#findExperimentsByUris(Collection, Taxon, int)
      */
-    Map<Class<? extends Identifiable>, Map<String, Set<ExpressionExperiment>>> findExperimentsByUris( Collection<String> uris, @Nullable Taxon taxon, int limit );
+    Map<Class<? extends Identifiable>, Map<String, Collection<ExpressionExperiment>>> findExperimentsByUris( Collection<String> uris, @Nullable Taxon taxon, int limit, boolean loadEEs );
 
     /**
      * given a collection of strings that represent URI's will find all the characteristics that are used in the system

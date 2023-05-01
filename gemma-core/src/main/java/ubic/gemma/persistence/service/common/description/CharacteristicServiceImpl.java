@@ -18,7 +18,6 @@
  */
 package ubic.gemma.persistence.service.common.description;
 
-import gemma.gsec.model.Securable;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -36,7 +35,6 @@ import ubic.gemma.persistence.service.AbstractFilteringVoEnabledService;
 
 import javax.annotation.Nullable;
 import java.util.*;
-import java.util.stream.Collectors;
 
 /**
  * @author Luke
@@ -74,8 +72,12 @@ public class CharacteristicServiceImpl extends AbstractFilteringVoEnabledService
 
     @Override
     @Transactional(readOnly = true)
-    public Map<Class<? extends Identifiable>, Map<String, Set<ExpressionExperiment>>> findExperimentsByUris( Collection<String> uris, @Nullable Taxon taxon, int limit ) {
-        return this.characteristicDao.findExperimentsByUris( uris, taxon, limit );
+    public Map<Class<? extends Identifiable>, Map<String, Collection<ExpressionExperiment>>> findExperimentsByUris( Collection<String> uris, @Nullable Taxon taxon, int limit, boolean loadEEs ) {
+        if ( loadEEs ) {
+            return this.characteristicDao.findExperimentsByUris( uris, taxon, limit );
+        } else {
+            return this.characteristicDao.findExperimentReferencesByUris( uris, taxon, limit );
+        }
     }
 
     @Override

@@ -842,7 +842,7 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
         if ( isFilled( results, settings ) )
             return;
 
-        Map<Class<? extends Identifiable>, Map<String, Set<ExpressionExperiment>>> hits = characteristicService.findExperimentsByUris( uris, settings.getTaxon(), getLimit( results, settings ) );
+        Map<Class<? extends Identifiable>, Map<String, Collection<ExpressionExperiment>>> hits = characteristicService.findExperimentsByUris( uris, settings.getTaxon(), getLimit( results, settings ), settings.isFillResults() );
 
         // collect all direct tags
         addExperimentsByUrisHits( hits, results, ExpressionExperiment.class, score, uri2value, settings );
@@ -854,11 +854,11 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
         addExperimentsByUrisHits( hits, results, BioMaterial.class, 0.9 * score, uri2value, settings );
     }
 
-    private void addExperimentsByUrisHits( Map<Class<? extends Identifiable>, Map<String, Set<ExpressionExperiment>>> hits, Set<SearchResult<ExpressionExperiment>> results, Class<? extends Identifiable> clazz, double score, Map<String, String> uri2value, SearchSettings settings ) {
-        Map<String, Set<ExpressionExperiment>> specificHits = hits.get( clazz );
+    private void addExperimentsByUrisHits( Map<Class<? extends Identifiable>, Map<String, Collection<ExpressionExperiment>>> hits, Set<SearchResult<ExpressionExperiment>> results, Class<? extends Identifiable> clazz, double score, Map<String, String> uri2value, SearchSettings settings ) {
+        Map<String, Collection<ExpressionExperiment>> specificHits = hits.get( clazz );
         if ( specificHits == null )
             return;
-        for ( Map.Entry<String, Set<ExpressionExperiment>> entry : specificHits.entrySet() ) {
+        for ( Map.Entry<String, Collection<ExpressionExperiment>> entry : specificHits.entrySet() ) {
             String uri = entry.getKey();
             String value = uri2value.get( uri );
             for ( ExpressionExperiment ee : entry.getValue() ) {
