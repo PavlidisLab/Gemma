@@ -58,7 +58,7 @@
     </bean>
 
     <!-- micrometer, for metrics -->
-    <beans profile="!test">
+    <beans profile="production,dev">
         <bean id="meterRegistry" class="io.micrometer.jmx.JmxMeterRegistry">
             <constructor-arg value="DEFAULT"/>
             <constructor-arg value="SYSTEM"/>
