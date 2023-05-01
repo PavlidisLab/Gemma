@@ -19,15 +19,17 @@
 package ubic.gemma.core.externalDb;
 
 import lombok.Getter;
-import org.apache.commons.dbcp2.BasicDataSource;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.datasource.SimpleDriverDataSource;
 import ubic.gemma.model.common.description.DatabaseType;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.util.Settings;
+
+import java.sql.Driver;
 
 /**
  * Perform useful queries against GoldenPath (UCSC) databases.
@@ -65,7 +67,7 @@ public abstract class GoldenPath {
         user = Settings.getString( "gemma.goldenpath.db.user" );
         password = Settings.getString( "gemma.goldenpath.db.password" );
 
-        BasicDataSource dataSource = new BasicDataSource();
+        SimpleDriverDataSource dataSource = new SimpleDriverDataSource();
 
         String url = "jdbc:mysql://" + host + ":" + port + "/" + databaseName + "?relaxAutoCommit=true&useSSL=false";
         GoldenPath.log.info( "Connecting to " + databaseName );
@@ -76,7 +78,12 @@ public abstract class GoldenPath {
             driver = Settings.getString( "gemma.db.driver" );
             GoldenPath.log.warn( "No DB driver configured for GoldenPath, falling back on gemma.db.driver=" + driver );
         }
-        dataSource.setDriverClassName( driver );
+        try {
+            //noinspection unchecked
+            dataSource.setDriverClass( ( Class<? extends Driver> ) Class.forName( driver ) );
+        } catch ( ClassNotFoundException e ) {
+            throw new RuntimeException( e );
+        }
         dataSource.setUrl( url );
         dataSource.setUsername( user );
         dataSource.setPassword( password );
