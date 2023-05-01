@@ -121,9 +121,6 @@
 
     <cache name="ubic.gemma.model.genome.Chromosome" maxElementsInMemory="1200" eternal="true" overflowToDisk="false"/>
 
-    <cache name="ubic.gemma.model.genome.ExpressionQtlImpl" maxElementsInMemory="10000"
-           timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false"/>
-
     <cache name="ubic.gemma.model.genome.Taxon" maxElementsInMemory="100" eternal="true" overflowToDisk="false"/>
 
     <cache name="ubic.gemma.model.genome.Gene" maxElementsInMemory="50000" eternal="true" overflowToDisk="false"/>
@@ -147,9 +144,6 @@
            timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false"/>
 
     <cache name="ubic.gemma.model.common.description.LocalFile" maxElementsInMemory="10000"
-           timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false"/>
-
-    <cache name="ubic.gemma.model.common.description.FileFormatImpl" maxElementsInMemory="10000"
            timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false"/>
 
     <cache name="ubic.gemma.model.common.description.BibliographicReference" maxElementsInMemory="10000"
@@ -225,90 +219,6 @@
            timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false"/>
 
     <cache name="ubic.gemma.model.common.auditAndSecurity.JobInfo" maxElementsInMemory="10000"
-           timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false"/>
-
-    <cache name="ubic.gemma.model.common.auditAndSecurity.eventType.MissingValueAnalysisEvent"
-           maxElementsInMemory="10000" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false"/>
-
-    <cache name="ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignSequenceAnalysisEvent"
-           maxElementsInMemory="10000" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false"/>
-
-    <cache name="ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignAnalysisEvent"
-           maxElementsInMemory="10000" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false"/>
-
-    <cache name="ubic.gemma.model.common.auditAndSecurity.eventType.LinkAnalysisEvent" maxElementsInMemory="10000"
-           timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false"/>
-
-    <cache name="ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignGeneMappingEvent"
-           maxElementsInMemory="10000" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false"/>
-
-    <cache name="ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignSequenceUpdateEvent"
-           maxElementsInMemory="10000" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false"/>
-
-    <cache name="ubic.gemma.model.common.auditAndSecurity.eventType.ExpressionExperimentAnalysisEvent"
-           maxElementsInMemory="10000" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false"/>
-
-    <cache name="ubic.gemma.model.common.auditAndSecurity.eventType.ProcessedVectorComputationEvent"
-           maxElementsInMemory="10000" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false"/>
-
-    <cache name="ubic.gemma.model.common.auditAndSecurity.eventType.BioMaterialMappingUpdate"
-           maxElementsInMemory="10000" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false"/>
-
-    <cache name="ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignProbeRenamingEvent"
-           maxElementsInMemory="10000" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false"/>
-
-    <cache name="ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignMergeEvent" maxElementsInMemory="10000"
-           timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false"/>
-
-    <cache name="ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignSubsumeCheckEvent"
-           maxElementsInMemory="10000" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false"/>
-
-    <cache name="ubic.gemma.model.common.auditAndSecurity.eventType.ExpressionExperimentPlatformSwitchEvent"
-           maxElementsInMemory="10000" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false"/>
-
-    <cache name="ubic.gemma.model.common.auditAndSecurity.eventType.TooSmallDatasetLinkAnalysisEvent"
-           maxElementsInMemory="10000" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false"/>
-
-    <cache name="ubic.gemma.model.common.auditAndSecurity.eventType.FailedLinkAnalysisEvent" maxElementsInMemory="10000"
-           timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false"/>
-
-    <cache name="ubic.gemma.model.common.auditAndSecurity.eventType.FailedMissingValueAnalysisEvent"
-           maxElementsInMemory="10000" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false"/>
-
-    <cache name="ubic.gemma.model.common.auditAndSecurity.eventType.SampleRemovalEvent" maxElementsInMemory="10000"
-           timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false"/>
-
-    <cache name="ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignRepeatAnalysisEvent"
-           maxElementsInMemory="10000" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false"/>
-
-    <cache name="ubic.gemma.model.common.auditAndSecurity.eventType.CommentedEvent" maxElementsInMemory="10000"
-           timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false"/>
-
-    <cache name="ubic.gemma.model.common.auditAndSecurity.eventType.TroubledStatusFlagEvent" maxElementsInMemory="10000"
-           timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false"/>
-
-    <cache name="ubic.gemma.model.common.auditAndSecurity.eventType.NotTroubledStatusFlagEvent"
-           maxElementsInMemory="10000" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false"/>
-
-    <cache name="ubic.gemma.model.common.auditAndSecurity.eventType.DoesNotNeedAttentionEvent"
-           maxElementsInMemory="10000" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false"/>
-
-    <cache name="ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignSequenceRemoveEvent"
-           maxElementsInMemory="10000" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false"/>
-
-    <cache name="ubic.gemma.model.common.auditAndSecurity.eventType.DifferentialExpressionAnalysisEvent"
-           maxElementsInMemory="10000" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false"/>
-
-    <cache name="ubic.gemma.model.common.auditAndSecurity.eventType.ExpressionExperimentVectorMergeEvent"
-           maxElementsInMemory="10000" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false"/>
-
-    <cache name="ubic.gemma.model.common.auditAndSecurity.eventType.NeedsAttentionEvent" maxElementsInMemory="10000"
-           timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false"/>
-
-    <cache name="ubic.gemma.model.common.auditAndSecurity.eventType.RankComputationEvent" maxElementsInMemory="10000"
-           timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false"/>
-
-    <cache name="ubic.gemma.model.common.auditAndSecurity.StatusImpl" maxElementsInMemory="50000"
            timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false"/>
 
     <!-- audit events and their types are immutables, so the cache can be eternal -->
@@ -591,8 +501,6 @@
     <cache name="ubic.gemma.model.analysis.Analysis" maxElementsInMemory="10000" timeToIdleSeconds="10000"
            timeToLiveSeconds="10000" overflowToDisk="false"/>
 
-    <cache name="ubic.gemma.model.analysis.AnalysisResultImpl" maxElementsInMemory="100000" timeToIdleSeconds="10000"
-           timeToLiveSeconds="10000" overflowToDisk="false"/>
 
     <cache name="ubic.gemma.model.analysis.Investigation" maxElementsInMemory="10000" timeToIdleSeconds="1200"
            timeToLiveSeconds="1200" overflowToDisk="false"/>
@@ -618,9 +526,6 @@
     <cache name="ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis.resultSets"
            maxElementsInMemory="10000" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false"/>
 
-    <cache name="ubic.gemma.model.analysis.expression.ExpressionAnalysisImpl" maxElementsInMemory="10000"
-           timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false"/>
-
     <cache name="ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet" maxElementsInMemory="10000"
            timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false"/>
 
@@ -638,9 +543,6 @@
 
     <cache name="ubic.gemma.model.analysis.expression.diff.PvalueDistribution"
            maxElementsInMemory="10000" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false"/>
-
-    <cache name="ubic.gemma.model.analysis.expression.ProbeAnalysisResultImpl" maxElementsInMemory="50000"
-           timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false"/>
 
     <cache name="ubic.gemma.model.analysis.expression.ExpressionExperimentSet" maxElementsInMemory="1000"
            timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false"/>
@@ -691,9 +593,6 @@
            overflowToDisk="false"/>
 
     <cache name="ProcessedExpressionDataVectorCache" maxElementsInMemory="100000" overflowToDisk="true" eternal="true"/>
-
-    <cache name="Gene2CsCache" maxElementsInMemory="500000" timeToLiveSeconds="0" timeToIdleSeconds="0"
-           overflowToDisk="false"/>
 
     <!-- both caches are evicted when GO terms are updated -->
     <cache name="GeneOntologyService.goTerms" maxElementsInMemory="10000" eternal="true" overflowToDisk="false"/>
