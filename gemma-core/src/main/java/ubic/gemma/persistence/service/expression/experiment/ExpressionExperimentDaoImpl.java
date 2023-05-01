@@ -1609,14 +1609,15 @@ public class ExpressionExperimentDaoImpl
         return finishFilteringQuery( "select distinct ee, aoi, sid "
                 + "from ExpressionExperiment as ee "
                 + "left join fetch ee.accession acc "
-                + "left join fetch acc.externalDatabase as ED "
                 + "left join fetch ee.experimentalDesign as EDES "
                 + "left join fetch ee.curationDetails as s " /* needed for trouble status */
                 + "left join fetch s.lastNeedsAttentionEvent as eAttn "
+                + "left join fetch eAttn.eventType "
                 + "left join fetch s.lastNoteUpdateEvent as eNote "
+                + "left join fetch eNote.eventType "
                 + "left join fetch s.lastTroubledEvent as eTrbl "
-                + "left join fetch ee.geeq as geeq "
-                + "left join fetch ee.taxon as taxon", filters, sort );
+                + "left join fetch eTrbl.eventType "
+                + "left join fetch ee.geeq as geeq", filters, sort );
     }
 
     @Override
@@ -1625,14 +1626,12 @@ public class ExpressionExperimentDaoImpl
         return finishFilteringQuery( "select distinct ee.id "
                 + "from ExpressionExperiment as ee "
                 + "left join ee.accession acc "
-                + "left join acc.externalDatabase as ED "
                 + "left join ee.experimentalDesign as EDES "
                 + "left join ee.curationDetails as s " /* needed for trouble status */
                 + "left join s.lastNeedsAttentionEvent as eAttn "
                 + "left join s.lastNoteUpdateEvent as eNote "
                 + "left join s.lastTroubledEvent as eTrbl "
-                + "left join ee.geeq as geeq "
-                + "left join ee.taxon as taxon", filters, null );
+                + "left join ee.geeq as geeq", filters, null );
     }
 
     @Override
@@ -1640,14 +1639,12 @@ public class ExpressionExperimentDaoImpl
         //language=HQL
         return finishFilteringQuery( "select count(distinct ee) from ExpressionExperiment as ee "
                 + "left join ee.accession acc "
-                + "left join acc.externalDatabase as ED "
                 + "left join ee.experimentalDesign as EDES "
                 + "left join ee.curationDetails as s " /* needed for trouble status */
                 + "left join s.lastNeedsAttentionEvent as eAttn "
-                + "left join ee.geeq as geeq "
                 + "left join s.lastNoteUpdateEvent as eNote "
                 + "left join s.lastTroubledEvent as eTrbl "
-                + "left join ee.taxon as taxon", filters, null );
+                + "left join ee.geeq as geeq", filters, null );
     }
 
     private Query finishFilteringQuery( String queryString, @Nullable Filters filters, @Nullable Sort sort ) {
@@ -1661,6 +1658,15 @@ public class ExpressionExperimentDaoImpl
         addNonTroubledFilter( filters, OBJECT_ALIAS );
         if ( FiltersUtils.containsAnyAlias( filters, null, ArrayDesignDao.OBJECT_ALIAS ) ) {
             addNonTroubledFilter( filters, ArrayDesignDao.OBJECT_ALIAS );
+        }
+
+        // The following two associations are retrieved eagerly via select, which is far more efficient since they are
+        // commonly shared across EEs and may benefit from the second-level cache
+        if ( FiltersUtils.containsAnyAlias( filters, sort, "ED" ) ) {
+            queryString += " left join acc.externalDatabase as ED";  // this one will be fetched in a subsequent select clause since it's eagerly fetched from DatabaseEntry
+        }
+        if ( FiltersUtils.containsAnyAlias( filters, sort, "taxon" ) ) {
+            queryString += " left join ee.taxon as taxon";
         }
 
         // fetching characteristics, bioAssays and arrayDesignUsed is costly, so we reserve these operations only if it
