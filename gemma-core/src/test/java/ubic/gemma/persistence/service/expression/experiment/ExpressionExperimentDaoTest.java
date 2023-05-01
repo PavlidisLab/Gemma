@@ -17,6 +17,8 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.common.auditAndSecurity.CurationDetailsDao;
 import ubic.gemma.persistence.util.TestComponent;
 
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 
 import static org.junit.Assert.*;
@@ -91,6 +93,31 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest {
         assertFalse( Hibernate.isInitialized( ee.getExperimentalDesign() ) );
         expressionExperimentDao.thawWithoutVectors( ee );
         assertTrue( Hibernate.isInitialized( ee.getExperimentalDesign() ) );
+    }
+
+    @Test
+    public void testLoadReference() {
+        ExpressionExperiment ee = createExpressionExperiment();
+        assertSame( ee, expressionExperimentDao.loadReference( ee.getId() ) );
+        sessionFactory.getCurrentSession().flush();
+        sessionFactory.getCurrentSession().evict( ee );
+        ExpressionExperiment proxy = expressionExperimentDao.loadReference( ee.getId() );
+        assertFalse( Hibernate.isInitialized( proxy ) );
+        assertEquals( ee.getId(), proxy.getId() );
+        assertFalse( Hibernate.isInitialized( proxy ) );
+    }
+
+    @Test
+    public void testLoadMultipleReferences() {
+        ExpressionExperiment ee1 = createExpressionExperiment();
+        ExpressionExperiment ee2 = createExpressionExperiment();
+        sessionFactory.getCurrentSession().flush();
+        sessionFactory.getCurrentSession().evict( ee1 );
+        sessionFactory.getCurrentSession().evict( ee2 );
+        Collection<ExpressionExperiment> ees = expressionExperimentDao.loadReference( Arrays.asList( ee1.getId(), ee2.getId() ) );
+        for ( ExpressionExperiment ee : ees ) {
+            assertFalse( Hibernate.isInitialized( ee ) );
+        }
     }
 
     private ExpressionExperiment reload( ExpressionExperiment e ) {

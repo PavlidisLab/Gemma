@@ -18,7 +18,10 @@
  */
 package ubic.gemma.persistence.service;
 
+import ubic.gemma.model.common.Identifiable;
+
 import javax.annotation.*;
+import java.io.Serializable;
 import java.util.Collection;
 
 /**
@@ -100,6 +103,8 @@ public interface BaseDao<T> {
      *
      * @param id the id of entity to load.
      * @return the entity with given ID, or null if such entity does not exist or if the passed ID was null
+     *
+     * @see org.hibernate.Session#get(Class, Serializable)
      */
     @Nullable
     T load( Long id );
@@ -110,6 +115,26 @@ public interface BaseDao<T> {
      * @return a collection containing all instances that are currently accessible.
      */
     Collection<T> loadAll();
+
+    /**
+     * Load references for all the given IDs.
+     * <p>
+     * Entities already in the session will be returned directly.
+     */
+    Collection<T> loadReference( Collection<Long> ids );
+
+    /**
+     * Load reference for an entity.
+     * <p>
+     * If the entity is already in the session, it will be returned instead. Note that unlike {@link #load(Long)}, this
+     * method will not return null if the entity does not exist.
+     * <p>
+     * You may freely access the {@link Identifiable#getId()} field without triggering proxy initialization.
+     *
+     * @see org.hibernate.Session#load(Object, Serializable)
+     */
+    @Nonnull
+    T loadReference( Long id );
 
     /**
      * Counts all instances of specific class in the persitent storage.

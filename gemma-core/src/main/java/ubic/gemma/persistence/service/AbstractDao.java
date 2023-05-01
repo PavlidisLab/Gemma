@@ -28,10 +28,12 @@ import org.hibernate.metadata.ClassMetadata;
 import org.springframework.util.Assert;
 import ubic.gemma.model.common.Identifiable;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.OverridingMethodsMustInvokeSuper;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import static java.util.Objects.requireNonNull;
 
@@ -173,18 +175,42 @@ public abstract class AbstractDao<T extends Identifiable> implements BaseDao<T> 
 
     @Override
     public Collection<T> load( Collection<Long> ids ) {
-        StopWatch timer = StopWatch.createStarted();
         if ( ids.isEmpty() ) {
             AbstractDao.log.trace( String.format( "Loading %s with an empty collection of IDs, returning an empty collection.", elementClass.getSimpleName() ) );
             return Collections.emptyList();
         }
+        StopWatch timer = StopWatch.createStarted();
         String idPropertyName = classMetadata.getIdentifierPropertyName();
-        //noinspection unchecked
-        List<T> results = sessionFactory.getCurrentSession()
-                .createCriteria( elementClass )
-                .add( Restrictions.in( idPropertyName, new HashSet<>( ids ) ) )
-                .list();
+
+        List<T> results = new ArrayList<>( ids.size() );
+
+        boolean sortById = false;
+        Set<Long> unloadedIds = new HashSet<>();
+        for ( Long id : ids ) {
+            //noinspection unchecked
+            T entity = ( T ) sessionFactory.getCurrentSession().load( elementClass, id );
+            if ( Hibernate.isInitialized( entity ) ) {
+                results.add( entity );
+                sortById = true;
+            } else {
+                unloadedIds.add( id );
+            }
+        }
+
+        if ( !unloadedIds.isEmpty() ) {
+            //noinspection unchecked
+            results.addAll( sessionFactory.getCurrentSession()
+                    .createCriteria( elementClass )
+                    .add( Restrictions.in( idPropertyName, new HashSet<>( ids ) ) )
+                    .list() );
+        }
+
+        if ( sortById ) {
+            results.sort( Comparator.comparing( Identifiable::getId ) );
+        }
+
         AbstractDao.log.debug( String.format( "Loaded %d %s entities in %d ms.", results.size(), elementClass.getSimpleName(), timer.getTime( TimeUnit.MILLISECONDS ) ) );
+
         return results;
     }
 
@@ -204,6 +230,28 @@ public abstract class AbstractDao<T extends Identifiable> implements BaseDao<T> 
         Collection<T> results = sessionFactory.getCurrentSession().createCriteria( elementClass ).list();
         AbstractDao.log.debug( String.format( "Loaded all (%d) %s entities in %d ms.", results.size(), elementClass.getSimpleName(), timer.getTime( TimeUnit.MILLISECONDS ) ) );
         return results;
+    }
+
+    @Override
+    public Collection<T> loadReference( Collection<Long> ids ) {
+        StopWatch timer = StopWatch.createStarted();
+        //noinspection unchecked
+        Collection<T> results = ids.stream()
+                .distinct().sorted() // this will make the output appear similar to load(Collection)
+                .map( id -> ( T ) sessionFactory.getCurrentSession().load( elementClass, id ) )
+                .collect( Collectors.toList() ); // no HashSet here because otherwise proxies would get initialized
+        AbstractDao.log.debug( String.format( "Loaded %d %s entities in %d ms.", results.size(), elementClass.getSimpleName(),
+                timer.getTime( TimeUnit.MILLISECONDS ) ) );
+        return results;
+    }
+
+    @Nonnull
+    @Override
+    public T loadReference( Long id ) {
+        //noinspection unchecked
+        T entity = ( T ) sessionFactory.getCurrentSession().load( elementClass, id );
+        AbstractDao.log.debug( String.format( "Loaded reference to %s.", formatEntity( entity ) ) );
+        return entity;
     }
 
     @Override
