@@ -751,9 +751,15 @@ public class ExpressionExperimentDaoImpl
         if ( eeIds.isEmpty() ) {
             return Collections.emptyMap();
         }
+        // this is more efficient than the HQL query because we avoid the jointure on the INVESTIGATION table
         //noinspection unchecked
         List<Object[]> result = getSessionFactory().getCurrentSession()
-                .createQuery( "select a, count(distinct ee) from ExpressionExperiment ee join ee.bioAssays ba join ba.arrayDesignUsed a where ee.id in (:ids) group by a" )
+                .createSQLQuery( "select {AD.*}, count(distinct BA.EXPRESSION_EXPERIMENT_FK) as COUNT from BIO_ASSAY BA "
+                        + "join ARRAY_DESIGN {AD} on BA.ARRAY_DESIGN_USED_FK = {AD}.ID "
+                        + "where BA.EXPRESSION_EXPERIMENT_FK in :ids "
+                        + "group by {AD}.ID" )
+                .addEntity( "AD", ArrayDesign.class )
+                .addScalar( "COUNT", new LongType() )
                 .setParameterList( "ids", eeIds )
                 .list();
         return result.stream().collect( groupingBy( row -> ( ArrayDesign ) row[0], summingLong( row -> ( Long ) row[1] ) ) );
@@ -786,13 +792,14 @@ public class ExpressionExperimentDaoImpl
         }
         //noinspection unchecked
         List<Object[]> result = getSessionFactory().getCurrentSession()
-                .createQuery( "select a, count(distinct ee) from ExpressionExperiment ee "
-                        + "join ee.bioAssays ba "
-                        + "join ba.originalPlatform a "
-                        + "left join ba.arrayDesignUsed au "
-                        + "where ee.id in (:ids) "
-                        + "and a <> au "   // ignore noop switch
-                        + "group by a" )
+                .createSQLQuery( "select {AD.*}, count(distinct BA.EXPRESSION_EXPERIMENT_FK) as COUNT from BIO_ASSAY BA "
+                        + "join ARRAY_DESIGN {AD} on BA.ORIGINAL_PLATFORM_FK = {AD}.ID "
+                        + "join ARRAY_DESIGN AU on BA.ARRAY_DESIGN_USED_FK = AU.ID "
+                        + "where BA.EXPRESSION_EXPERIMENT_FK in :ids "
+                        + "and {AD}.ID <> AU.ID "
+                        + "group by {AD}.ID" )
+                .addEntity( "AD", ArrayDesign.class )
+                .addScalar( "COUNT", new LongType() )
                 .setParameterList( "ids", eeIds )
                 .list();
         return result.stream().collect( groupingBy( row -> ( ArrayDesign ) row[0], summingLong( row -> ( Long ) row[1] ) ) );
