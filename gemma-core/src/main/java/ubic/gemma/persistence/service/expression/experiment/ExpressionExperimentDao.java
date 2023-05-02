@@ -89,12 +89,14 @@ public interface ExpressionExperimentDao
      * <p>
      * Note that a dataset counts toward all the platforms mentioned through its {@link BioAssay}.
      * <p>
-     * This method uses ACLs and only displays the counts of datasets the current user is entitled to see.
+     * This method uses ACLs and the troubled status to only displays the counts of datasets the current user is
+     * entitled to see.
      */
     Map<ArrayDesign, Long> getArrayDesignsUsageFrequency();
 
     /**
      * Obtain dataset usage frequency by platform currently for the given dataset IDs.
+     * <p>
      * Note: no ACL filtering is performed.
      * @see #getArrayDesignsUsageFrequency()
      */
@@ -105,8 +107,11 @@ public interface ExpressionExperimentDao
      * <p>
      * Note that a dataset counts toward all the platforms mentioned through its {@link BioAssay}. Datasets whose
      * platform hasn't been switched (i.e. the original is the same as the current one) are ignored.
+     * <p>
+     * This method uses ACLs and the troubled status to only displays the counts of datasets the current user is
+     * entitled to see.
      */
-    Map<ArrayDesign, Long> getOriginalPlatformsUsageFrequency( );
+    Map<ArrayDesign, Long> getOriginalPlatformsUsageFrequency();
 
     /**
      * Obtain dataset usage frequency by platform currently for the given dataset IDs.

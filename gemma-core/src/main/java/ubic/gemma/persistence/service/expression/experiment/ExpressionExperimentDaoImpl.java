@@ -20,6 +20,7 @@ package ubic.gemma.persistence.service.expression.experiment;
 
 import gemma.gsec.acl.domain.AclObjectIdentity;
 import gemma.gsec.acl.domain.AclSid;
+import gemma.gsec.util.SecurityUtil;
 import lombok.NonNull;
 import lombok.Value;
 import org.apache.commons.lang3.NotImplementedException;
@@ -733,7 +734,8 @@ public class ExpressionExperimentDaoImpl
                 .createQuery( "select a, count(distinct ee) from ExpressionExperiment ee "
                         + "join ee.bioAssays ba "
                         + "join ba.arrayDesignUsed a "
-                        + AclQueryUtils.formAclJoinClause( "ee.id" )
+                        + AclQueryUtils.formAclJoinClause( "ee.id" ) + " "
+                        + ( SecurityUtil.isUserAdmin() ? "" : " and ee.curationDetails.troubled = false" )
                         + AclQueryUtils.formAclRestrictionClause() + " "
                         + "group by a" );
         AclQueryUtils.addAclParameters( query, ExpressionExperiment.class );
@@ -766,6 +768,7 @@ public class ExpressionExperimentDaoImpl
                         + "left join ba.arrayDesignUsed au "
                         + AclQueryUtils.formAclJoinClause( "ee.id" ) + " "
                         + "and a <> au "   // ignore noop switch
+                        + ( SecurityUtil.isUserAdmin() ? "" : " and ee.curationDetails.troubled = false" )
                         + AclQueryUtils.formAclRestrictionClause() + " "
                         + "group by a" );
         AclQueryUtils.addAclParameters( query, ExpressionExperiment.class );
