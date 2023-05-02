@@ -1,5 +1,11 @@
 -- Add some indices that are not included in the generated gemma-ddl.sql. Some of these are very important to performance
 
+ALTER TABLE ACLSID
+  ADD INDEX class (class);
+
+ALTER TABLE CURATION_DETAILS
+    ADD INDEX TROUBLED_IX (TROUBLED);
+
 ALTER TABLE BIO_SEQUENCE
   ADD INDEX name (NAME);
 ALTER TABLE ALTERNATE_NAME
