@@ -124,7 +124,7 @@ public class CompositeSequenceDaoImpl extends AbstractQueryFilteringVoEnabledDao
     @Override
     protected Query getFilteringCountQuery( @Nullable Filters filters ) {
         //language=HQL
-        String queryString = MessageFormat.format( "select count(distinct {0}) "
+        String queryString = MessageFormat.format( "select count({0}) "
                         + "from CompositeSequence as {0} "
                         + "left join {0}.arrayDesign as " + ArrayDesignDao.OBJECT_ALIAS + " "
                         + "where {0}.id is not null ", // needed to use formRestrictionCause()

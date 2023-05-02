@@ -992,7 +992,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     @Override
     protected Query getFilteringQuery( @Nullable Filters filters, @Nullable Sort sort ) {
         //language=HQL
-        return finishFilteringQuery( "select distinct ad from ArrayDesign as ad "
+        return finishFilteringQuery( "select " + distinctIfNecessary( filters, sort ) + "ad from ArrayDesign as ad "
                 + "left join fetch ad.curationDetails " + CURATION_DETAILS_ALIAS + " "
                 + "left join fetch ad.primaryTaxon " + PRIMARY_TAXON_ALIAS + " "
                 + "left join fetch ad.mergedInto m "
@@ -1006,7 +1006,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     protected Query getFilteringIdQuery( @Nullable Filters filters ) {
         //language=HQL
         return finishFilteringQuery(
-                "select distinct ad.id from ArrayDesign as ad "
+                "select " + distinctIfNecessary( filters, null ) + "ad.id from ArrayDesign as ad "
                         + "left join ad.curationDetails " + CURATION_DETAILS_ALIAS + " "
                         + "left join ad.primaryTaxon " + PRIMARY_TAXON_ALIAS + " "
                         + "left join ad.mergedInto m "
@@ -1016,10 +1016,18 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
                         + "left join ad.alternativeTo alt", filters, null );
     }
 
+    private String distinctIfNecessary( @Nullable Filters filters, @Nullable Sort sort ) {
+        if ( FiltersUtils.containsAnyAlias( filters, sort, EXTERNAL_REFERENCE_ALIAS ) ) {
+            return "distinct ";
+        } else {
+            return "";
+        }
+    }
+
     @Override
     protected Query getFilteringCountQuery( @Nullable Filters filters ) {
         //language=HQL
-        return finishFilteringQuery( "select count(distinct ad) from ArrayDesign as ad "
+        return finishFilteringQuery( "select count(" + distinctIfNecessary( filters, null ) + "ad) from ArrayDesign as ad "
                 + "left join ad.curationDetails " + CURATION_DETAILS_ALIAS + " "
                 + "left join ad.primaryTaxon " + PRIMARY_TAXON_ALIAS + " "
                 + "left join ad.mergedInto m "

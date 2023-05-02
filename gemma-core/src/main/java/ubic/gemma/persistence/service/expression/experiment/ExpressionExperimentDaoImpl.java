@@ -87,6 +87,12 @@ public class ExpressionExperimentDaoImpl
             TAXON_ALIAS = TaxonDao.OBJECT_ALIAS,
             ARRAY_DESIGN_ALIAS = ArrayDesignDao.OBJECT_ALIAS;
 
+    /**
+     * Aliases applicable for one-to-many relations.
+     */
+    private static final String[] ONE_TO_MANY_ALIASES = { CHARACTERISTIC_ALIAS, BIO_MATERIAL_CHARACTERISTIC_ALIAS,
+            FACTOR_VALUE_CHARACTERISTIC_ALIAS, ALL_CHARACTERISTIC_ALIAS, BIO_ASSAY_ALIAS, ARRAY_DESIGN_ALIAS };
+
     @Autowired
     public ExpressionExperimentDaoImpl( SessionFactory sessionFactory ) {
         super( ExpressionExperimentDao.OBJECT_ALIAS, ExpressionExperiment.class, sessionFactory );
@@ -1606,7 +1612,7 @@ public class ExpressionExperimentDaoImpl
     protected Query getFilteringQuery( @Nullable Filters filters, @Nullable Sort sort ) {
         // the constants for aliases are messing with the inspector
         //language=HQL
-        return finishFilteringQuery( "select distinct ee, aoi, sid "
+        return finishFilteringQuery( "select " + distinctIfNeeded( filters, sort ) + "ee, aoi, sid "
                 + "from ExpressionExperiment as ee "
                 + "left join fetch ee.accession acc "
                 + "left join fetch ee.experimentalDesign as EDES "
@@ -1623,7 +1629,7 @@ public class ExpressionExperimentDaoImpl
     @Override
     protected Query getFilteringIdQuery( @Nullable Filters filters ) {
         //language=HQL
-        return finishFilteringQuery( "select distinct ee.id "
+        return finishFilteringQuery( "select " + distinctIfNeeded( filters, null ) + "ee.id "
                 + "from ExpressionExperiment as ee "
                 + "left join ee.accession acc "
                 + "left join ee.experimentalDesign as EDES "
@@ -1637,7 +1643,8 @@ public class ExpressionExperimentDaoImpl
     @Override
     protected Query getFilteringCountQuery( @Nullable Filters filters ) {
         //language=HQL
-        return finishFilteringQuery( "select count(distinct ee) from ExpressionExperiment as ee "
+        return finishFilteringQuery( "select count(" + distinctIfNeeded( filters, null ) + "ee) "
+                + "from ExpressionExperiment as ee "
                 + "left join ee.accession acc "
                 + "left join ee.experimentalDesign as EDES "
                 + "left join ee.curationDetails as s " /* needed for trouble status */
@@ -1645,6 +1652,20 @@ public class ExpressionExperimentDaoImpl
                 + "left join s.lastNoteUpdateEvent as eNote "
                 + "left join s.lastTroubledEvent as eTrbl "
                 + "left join ee.geeq as geeq", filters, null );
+    }
+
+    /**
+     * If the filters or sort refer to one of the one-to-many relations, multiple rows will be returned per datasets, so
+     * the query has to use a "distinct" clause make pagination work properly.
+     * <p>
+     * Using "distinct" otherwise has a steep performance penalty with combined with "order by".
+     */
+    private String distinctIfNeeded( @Nullable Filters filters, @Nullable Sort sort ) {
+        if ( FiltersUtils.containsAnyAlias( filters, sort, ONE_TO_MANY_ALIASES ) ) {
+            return "distinct ";
+        } else {
+            return "";
+        }
     }
 
     private Query finishFilteringQuery( String queryString, @Nullable Filters filters, @Nullable Sort sort ) {
