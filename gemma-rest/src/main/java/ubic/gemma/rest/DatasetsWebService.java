@@ -199,7 +199,7 @@ public class DatasetsWebService {
 
     private static Set<OntologyTermValueObject> getParentTerms( OntologyTerm c ) {
         Map<OntologyTerm, Set<OntologyTermValueObject>> visited = new HashMap<>();
-        return c.getParents( true ).stream()
+        return c.getParents( true, false ).stream()
                 .map( t -> toTermVo( t, visited ) )
                 .collect( Collectors.toSet() );
     }
@@ -210,7 +210,7 @@ public class DatasetsWebService {
             parentVos = visited.get( ontologyTerm );
         } else {
             visited.put( ontologyTerm, Collections.emptySet() );
-            parentVos = ontologyTerm.getParents( true ).stream()
+            parentVos = ontologyTerm.getParents( true, false ).stream()
                     .map( t -> toTermVo( t, visited ) )
                     .collect( Collectors.toSet() );
             visited.put( ontologyTerm, parentVos );

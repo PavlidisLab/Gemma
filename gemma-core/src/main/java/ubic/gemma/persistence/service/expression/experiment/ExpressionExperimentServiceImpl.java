@@ -656,12 +656,12 @@ public class ExpressionExperimentServiceImpl
                     final Set<OntologyTerm> parentTerms = Collections.singleton( term );
                     term = new OntologyTermSimple( entry.getKey().getValueUri(), entry.getKey().getValue() ) {
                         @Override
-                        public Collection<OntologyTerm> getParents( boolean direct ) {
+                        public Collection<OntologyTerm> getParents( boolean direct, boolean includeAdditionalProperties, boolean keepObsoletes ) {
                             if ( direct ) {
                                 return parentTerms;
                             } else {
                                 // combine the direct parents + all the parents from the parents
-                                return Stream.concat( parentTerms.stream(), parentTerms.stream().flatMap( t -> getParents( false ).stream() ) )
+                                return Stream.concat( parentTerms.stream(), parentTerms.stream().flatMap( t -> getParents( false, includeAdditionalProperties, keepObsoletes ).stream() ) )
                                         .collect( Collectors.toSet() );
                             }
                         }
