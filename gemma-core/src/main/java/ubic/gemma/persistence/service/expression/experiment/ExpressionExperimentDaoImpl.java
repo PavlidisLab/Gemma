@@ -1654,7 +1654,8 @@ public class ExpressionExperimentDaoImpl
                 + "left join s.lastNeedsAttentionEvent as eAttn "
                 + "left join s.lastNoteUpdateEvent as eNote "
                 + "left join s.lastTroubledEvent as eTrbl "
-                + "left join ee.geeq as geeq", filters, null );
+                + "left join ee.geeq as geeq", filters, null )
+                .setCacheable( true );
     }
 
     /**
