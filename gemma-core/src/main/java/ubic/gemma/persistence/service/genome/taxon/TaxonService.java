@@ -21,6 +21,7 @@ package ubic.gemma.persistence.service.genome.taxon;
 import org.springframework.security.access.annotation.Secured;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonValueObject;
+import ubic.gemma.persistence.service.BaseService;
 import ubic.gemma.persistence.service.FilteringVoEnabledService;
 
 import java.util.Collection;
@@ -28,7 +29,7 @@ import java.util.Collection;
 /**
  * @author kelsey
  */
-public interface TaxonService extends FilteringVoEnabledService<Taxon, TaxonValueObject> {
+public interface TaxonService extends BaseService<Taxon>, FilteringVoEnabledService<Taxon, TaxonValueObject> {
 
     Taxon findByCommonName( String commonName );
 

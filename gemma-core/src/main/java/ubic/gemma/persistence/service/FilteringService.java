@@ -17,7 +17,12 @@ import java.util.Set;
  * Interface for filtering-capable services.
  * @see FilteringDao
  */
-public interface FilteringService<O extends Identifiable> extends BaseService<O> {
+public interface FilteringService<O extends Identifiable> extends BaseReadOnlyService<O> {
+
+    /**
+     * @see BaseDao#getIdentifierPropertyName()
+     */
+    String getIdentifierPropertyName();
 
     /**
      * @see FilteringDao#getFilterableProperties()

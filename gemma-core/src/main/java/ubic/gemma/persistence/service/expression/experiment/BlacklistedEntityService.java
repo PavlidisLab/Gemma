@@ -6,9 +6,10 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.BlacklistedPlatform;
 import ubic.gemma.model.expression.experiment.BlacklistedExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.persistence.service.BaseImmutableService;
 import ubic.gemma.persistence.service.BaseVoEnabledService;
 
-public interface BlacklistedEntityService extends BaseVoEnabledService<BlacklistedEntity, BlacklistedValueObject> {
+public interface BlacklistedEntityService extends BaseImmutableService<BlacklistedEntity>, BaseVoEnabledService<BlacklistedEntity, BlacklistedValueObject> {
 
     /**
      * @see BlacklistedEntityDao#isBlacklisted(String)

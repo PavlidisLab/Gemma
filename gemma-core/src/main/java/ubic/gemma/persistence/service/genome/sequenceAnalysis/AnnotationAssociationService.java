@@ -13,6 +13,7 @@ import ubic.gemma.model.common.description.AnnotationValueObject;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.sequenceAnalysis.AnnotationAssociation;
+import ubic.gemma.persistence.service.BaseImmutableService;
 import ubic.gemma.persistence.service.BaseService;
 
 import java.util.Collection;
@@ -21,7 +22,7 @@ import java.util.Collection;
  * @author paul
  */
 @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
-public interface AnnotationAssociationService extends BaseService<AnnotationAssociation> {
+public interface AnnotationAssociationService extends BaseImmutableService<AnnotationAssociation> {
 
     @Override
     @Secured({ "GROUP_USER" })
@@ -34,14 +35,6 @@ public interface AnnotationAssociationService extends BaseService<AnnotationAsso
     @Override
     @Secured({ "GROUP_USER" })
     void remove( AnnotationAssociation annotationAssociation );
-
-    @Override
-    @Secured({ "GROUP_USER" })
-    void update( Collection<AnnotationAssociation> anCollection );
-
-    @Override
-    @Secured({ "GROUP_USER" })
-    void update( AnnotationAssociation annotationAssociation );
 
     Collection<AnnotationAssociation> find( BioSequence bioSequence );
 

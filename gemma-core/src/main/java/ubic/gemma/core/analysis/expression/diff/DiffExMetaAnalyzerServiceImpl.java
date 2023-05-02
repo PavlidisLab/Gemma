@@ -106,7 +106,7 @@ public class DiffExMetaAnalyzerServiceImpl implements DiffExMetaAnalyzerService 
     @Override
     public GeneDifferentialExpressionMetaAnalysis persist( GeneDifferentialExpressionMetaAnalysis analysis ) {
         for ( ExpressionAnalysisResultSet r : analysis.getResultSetsIncluded() ) {
-            expressionAnalysisResultSetService.update( r );
+            expressionAnalysisResultSetService.create( r );
         }
 
         return analysisService.create( analysis );

@@ -27,6 +27,8 @@ import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.analysis.expression.diff.*;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.persistence.service.AbstractService;
+import ubic.gemma.persistence.service.BaseDao;
 
 import java.util.Collection;
 import java.util.HashSet;
@@ -36,15 +38,14 @@ import java.util.Map;
  * @author Paul
  */
 @Service
-public class GeneDiffExMetaAnalysisServiceImpl implements GeneDiffExMetaAnalysisService {
+public class GeneDiffExMetaAnalysisServiceImpl extends AbstractService<GeneDifferentialExpressionMetaAnalysis> implements GeneDiffExMetaAnalysisService {
+
+    private final GeneDiffExMetaAnalysisDao geneDiffExMetaAnalysisDao;
 
     @Autowired
-    private GeneDiffExMetaAnalysisDao geneDiffExMetaAnalysisDao;
-
-    @Override
-    @Transactional
-    public GeneDifferentialExpressionMetaAnalysis create( GeneDifferentialExpressionMetaAnalysis analysis ) {
-        return geneDiffExMetaAnalysisDao.create( analysis );
+    public GeneDiffExMetaAnalysisServiceImpl( GeneDiffExMetaAnalysisDao mainDao ) {
+        super( mainDao );
+        geneDiffExMetaAnalysisDao = mainDao;
     }
 
     @Override
@@ -102,18 +103,6 @@ public class GeneDiffExMetaAnalysisServiceImpl implements GeneDiffExMetaAnalysis
     }
 
     @Override
-    @Transactional
-    public void update( GeneDifferentialExpressionMetaAnalysis analysis ) {
-        geneDiffExMetaAnalysisDao.update( analysis );
-    }
-
-    @Override
-    @Transactional
-    public void remove( GeneDifferentialExpressionMetaAnalysis toDelete ) {
-        geneDiffExMetaAnalysisDao.remove( toDelete );
-    }
-
-    @Override
     @Transactional(readOnly = true)
     public Collection<GeneDifferentialExpressionMetaAnalysis> findByName( String name ) {
         return geneDiffExMetaAnalysisDao.findByName( name );
@@ -137,17 +126,4 @@ public class GeneDiffExMetaAnalysisServiceImpl implements GeneDiffExMetaAnalysis
         }
         return haveAnalysis;
     }
-
-    @Override
-    @Transactional(readOnly = true)
-    public GeneDifferentialExpressionMetaAnalysis load( Long id ) {
-        return geneDiffExMetaAnalysisDao.load( id );
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public Collection<GeneDifferentialExpressionMetaAnalysis> loadAll() {
-        return geneDiffExMetaAnalysisDao.loadAll();
-    }
-
 }

@@ -19,7 +19,6 @@
 package ubic.gemma.persistence.service.common.description;
 
 import org.springframework.security.access.annotation.Secured;
-import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.persistence.service.BaseService;
 

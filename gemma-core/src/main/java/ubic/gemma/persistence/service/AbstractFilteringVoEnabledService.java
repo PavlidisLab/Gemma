@@ -39,6 +39,11 @@ public abstract class AbstractFilteringVoEnabledService<O extends Identifiable, 
     }
 
     @Override
+    public String getIdentifierPropertyName() {
+        return voDao.getIdentifierPropertyName();
+    }
+
+    @Override
     @Transactional(readOnly = true)
     public List<Long> loadIds( @Nullable Filters filters, @Nullable Sort sort ) {
         return voDao.loadIds( filters, sort );

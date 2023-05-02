@@ -35,11 +35,6 @@ public abstract class AbstractService<O extends Identifiable> implements BaseSer
     }
 
     @Override
-    public String getIdentifierPropertyName() {
-        return mainDao.getIdentifierPropertyName();
-    }
-
-    @Override
     @Transactional(readOnly = true)
     public O find( O entity ) {
         return mainDao.find( entity );

@@ -19,12 +19,12 @@
 package ubic.gemma.persistence.service.common.description;
 
 import org.springframework.security.access.annotation.Secured;
-import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
+import ubic.gemma.persistence.service.BaseService;
 import ubic.gemma.persistence.service.BaseVoEnabledService;
 import ubic.gemma.persistence.service.FilteringVoEnabledDao;
 import ubic.gemma.persistence.util.Filter;
@@ -39,7 +39,7 @@ import java.util.Set;
 /**
  * @author paul
  */
-public interface CharacteristicService extends BaseVoEnabledService<Characteristic, CharacteristicValueObject>, ubic.gemma.persistence.service.BaseService<Characteristic> {
+public interface CharacteristicService extends BaseService<Characteristic>, BaseVoEnabledService<Characteristic, CharacteristicValueObject> {
 
     /**
      * Browse through the characteristics, excluding GO annotations.
@@ -136,10 +136,6 @@ public interface CharacteristicService extends BaseVoEnabledService<Characterist
     @Override
     @Secured({ "GROUP_USER" })
     void remove( Characteristic c );
-
-    @Override
-    @Secured({ "GROUP_USER" })
-    void update( Characteristic c );
 
     /**
      * Optimized version that only retrieves the IDs of the owning object. The caller has to keep track of the

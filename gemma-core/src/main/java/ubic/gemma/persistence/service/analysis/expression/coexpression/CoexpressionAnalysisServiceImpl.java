@@ -26,6 +26,8 @@ import ubic.gemma.model.analysis.expression.coexpression.CoexpressionAnalysis;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.persistence.service.AbstractService;
+import ubic.gemma.persistence.service.BaseDao;
 import ubic.gemma.persistence.service.association.coexpression.CoexpressionService;
 
 import java.util.Collection;
@@ -36,18 +38,17 @@ import java.util.Map;
  * @author paul
  */
 @Service
-public class CoexpressionAnalysisServiceImpl implements CoexpressionAnalysisService {
+public class CoexpressionAnalysisServiceImpl extends AbstractService<CoexpressionAnalysis> implements CoexpressionAnalysisService {
+
+    private final CoexpressionAnalysisDao coexpressionAnalysisDao;
+
+    private final CoexpressionService geneCoexpressionService;
 
     @Autowired
-    private CoexpressionAnalysisDao coexpressionAnalysisDao;
-
-    @Autowired
-    private CoexpressionService geneCoexpressionService;
-
-    @Override
-    @Transactional
-    public CoexpressionAnalysis create( CoexpressionAnalysis coexpressionAnalysis ) {
-        return this.coexpressionAnalysisDao.create( coexpressionAnalysis );
+    public CoexpressionAnalysisServiceImpl( CoexpressionAnalysisDao mainDao, CoexpressionService coexpressionService ) {
+        super( mainDao );
+        this.coexpressionAnalysisDao = mainDao;
+        this.geneCoexpressionService = coexpressionService;
     }
 
     @Override
@@ -71,12 +72,6 @@ public class CoexpressionAnalysisServiceImpl implements CoexpressionAnalysisServ
             haveCoexpressionAnalysis.add( a.getExperimentAnalyzed().getId() );
         }
         return haveCoexpressionAnalysis;
-    }
-
-    @Override
-    @Transactional
-    public void update( CoexpressionAnalysis o ) {
-        this.coexpressionAnalysisDao.update( o );
     }
 
     @Override
@@ -110,7 +105,7 @@ public class CoexpressionAnalysisServiceImpl implements CoexpressionAnalysisServ
     @Transactional
     public void remove( CoexpressionAnalysis toDelete ) {
         this.geneCoexpressionService.deleteLinks( toDelete.getExperimentAnalyzed() );
-        this.coexpressionAnalysisDao.remove( toDelete );
+        super.remove( toDelete );
     }
 
     @Override
@@ -131,19 +126,6 @@ public class CoexpressionAnalysisServiceImpl implements CoexpressionAnalysisServ
     @Transactional(readOnly = true)
     public Collection<CoexpressionAnalysis> findByName( String name ) {
         return this.coexpressionAnalysisDao.findByName( name );
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public CoexpressionAnalysis load( Long id ) {
-        return this.coexpressionAnalysisDao.load( id );
-    }
-
-    @SuppressWarnings("unchecked")
-    @Override
-    @Transactional(readOnly = true)
-    public Collection<CoexpressionAnalysis> loadAll() {
-        return this.coexpressionAnalysisDao.loadAll();
     }
 
     @Override

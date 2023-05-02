@@ -95,7 +95,7 @@ public class AnalysisResultSetsWebServiceTest extends BaseSpringContextTest {
         dear.setResultSet( dears );
         dear.setProbe( probe );
         dears.setResults( Collections.singleton( dear ) );
-        expressionAnalysisResultSetService.update( dears );
+        differentialExpressionAnalysisService.update( dears );
 
         ExternalDatabase geo = externalDatabaseService.findByName( "GEO" );
         assertNotNull( geo );

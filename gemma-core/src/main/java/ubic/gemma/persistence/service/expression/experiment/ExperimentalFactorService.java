@@ -21,6 +21,8 @@ package ubic.gemma.persistence.service.expression.experiment;
 import org.springframework.security.access.annotation.Secured;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExperimentalFactorValueObject;
+import ubic.gemma.persistence.service.BaseImmutableService;
+import ubic.gemma.persistence.service.BaseService;
 import ubic.gemma.persistence.service.BaseVoEnabledService;
 
 import javax.annotation.Nullable;
@@ -30,7 +32,7 @@ import java.util.Collection;
  * @author paul
  */
 public interface ExperimentalFactorService
-        extends BaseVoEnabledService<ExperimentalFactor, ExperimentalFactorValueObject> {
+        extends BaseService<ExperimentalFactor>, BaseVoEnabledService<ExperimentalFactor, ExperimentalFactorValueObject> {
 
     String BATCH_FACTOR_NAME_PREFIX = "Batch_";
 

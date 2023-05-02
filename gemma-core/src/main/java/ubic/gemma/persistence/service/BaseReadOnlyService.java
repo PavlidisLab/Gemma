@@ -18,11 +18,6 @@ public interface BaseReadOnlyService<O extends Identifiable> {
     Class<? extends O> getElementClass();
 
     /**
-     * @see BaseDao#getIdentifierPropertyName()
-     */
-    String getIdentifierPropertyName();
-
-    /**
      * Does a search for the entity in the persistent storage
      *
      * @param entity the entity to be searched for

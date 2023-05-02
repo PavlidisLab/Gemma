@@ -23,6 +23,8 @@ import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.biomaterial.BioMaterialValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
+import ubic.gemma.persistence.service.BaseImmutableService;
+import ubic.gemma.persistence.service.BaseService;
 import ubic.gemma.persistence.service.BaseVoEnabledService;
 
 import javax.annotation.CheckReturnValue;
@@ -33,7 +35,7 @@ import java.util.Map;
  * @author kelsey
  */
 @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
-public interface BioMaterialService extends BaseVoEnabledService<BioMaterial, BioMaterialValueObject> {
+public interface BioMaterialService extends BaseService<BioMaterial>, BaseVoEnabledService<BioMaterial, BioMaterialValueObject> {
 
     /**
      * Copies a bioMaterial.

@@ -29,6 +29,7 @@ import ubic.gemma.model.genome.gene.DatabaseBackedGeneSetValueObject;
 import ubic.gemma.model.genome.gene.GeneSet;
 import ubic.gemma.model.genome.gene.GeneSetValueObject;
 import ubic.gemma.model.genome.gene.GeneValueObject;
+import ubic.gemma.persistence.service.BaseService;
 import ubic.gemma.persistence.service.BaseVoEnabledService;
 import ubic.gemma.persistence.service.genome.gene.GeneSetDao;
 
@@ -43,7 +44,7 @@ import java.util.List;
  * @author kelsey, paul
  */
 @ParametersAreNonnullByDefault
-public interface GeneSetService extends BaseVoEnabledService<GeneSet, DatabaseBackedGeneSetValueObject> {
+public interface GeneSetService extends BaseService<GeneSet>, BaseVoEnabledService<GeneSet, DatabaseBackedGeneSetValueObject> {
 
     @Secured({ "GROUP_USER" })
     Collection<GeneSet> create( Collection<GeneSet> sets );

@@ -20,6 +20,7 @@ package ubic.gemma.persistence.service.genome;
 
 import ubic.gemma.model.genome.Chromosome;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.persistence.service.BaseReadOnlyService;
 import ubic.gemma.persistence.service.BaseService;
 
 import java.util.Collection;
@@ -27,7 +28,7 @@ import java.util.Collection;
 /**
  * @author kelsey
  */
-public interface ChromosomeService extends BaseService<Chromosome> {
+public interface ChromosomeService extends BaseReadOnlyService<Chromosome> {
 
     /**
      * Locate by name e.g. 'X'.
