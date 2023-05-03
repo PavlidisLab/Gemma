@@ -2,15 +2,22 @@ package ubic.gemma.core.util.test;
 
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.FactoryBean;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.DependsOn;
+import org.springframework.context.annotation.Primary;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.datasource.DataSourceUtils;
 import org.springframework.jdbc.datasource.SimpleDriverDataSource;
 import org.springframework.orm.hibernate4.HibernateTransactionManager;
 import org.springframework.orm.hibernate4.LocalSessionFactoryBean;
 import org.springframework.security.test.context.support.WithSecurityContextTestExecutionListener;
 import org.springframework.test.context.TestExecutionListeners;
 import org.springframework.test.context.junit4.AbstractTransactionalJUnit4SpringContextTests;
+import org.springframework.test.jdbc.JdbcTestUtils;
 import org.springframework.transaction.PlatformTransactionManager;
 import ubic.gemma.persistence.util.Settings;
 
@@ -48,6 +55,12 @@ public abstract class BaseDatabaseTest extends AbstractTransactionalJUnit4Spring
         }
 
         @Bean
+        @DependsOn("sessionFactory")
+        public DataSourceInitializer dataSourceInitializer( DataSource dataSource ) {
+            return new DataSourceInitializer( dataSource );
+        }
+
+        @Bean
         public PlatformTransactionManager platformTransactionManager( SessionFactory sessionFactory ) {
             return new HibernateTransactionManager( sessionFactory );
         }
@@ -55,4 +68,24 @@ public abstract class BaseDatabaseTest extends AbstractTransactionalJUnit4Spring
 
     @Autowired
     protected SessionFactory sessionFactory;
+
+    protected static class DataSourceInitializer implements InitializingBean {
+
+        private final DataSource dataSource;
+
+        @Autowired
+        private ApplicationContext applicationContext;
+
+        public DataSourceInitializer( DataSource dataSource ) {
+            this.dataSource = dataSource;
+        }
+
+        @Override
+        public void afterPropertiesSet() {
+            JdbcTemplate template = new JdbcTemplate( dataSource );
+            JdbcTestUtils.executeSqlScript( template, applicationContext.getResource( "/sql/init-acls.sql" ), false );
+            JdbcTestUtils.executeSqlScript( template, applicationContext.getResource( "/sql/init-entities.sql" ), false );
+            JdbcTestUtils.executeSqlScript( template, applicationContext.getResource( "/sql/init-indices.sql" ), false );
+        }
+    }
 }
