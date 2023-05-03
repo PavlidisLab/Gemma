@@ -28,7 +28,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.concurrent.DelegatingSecurityContextCallable;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import ubic.gemma.core.security.authentication.UserManager;
 import ubic.gemma.model.common.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.curation.Curatable;

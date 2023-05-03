@@ -8,6 +8,8 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.jdbc.datasource.SimpleDriverDataSource;
 import org.springframework.orm.hibernate4.HibernateTransactionManager;
 import org.springframework.orm.hibernate4.LocalSessionFactoryBean;
+import org.springframework.security.test.context.support.WithSecurityContextTestExecutionListener;
+import org.springframework.test.context.TestExecutionListeners;
 import org.springframework.test.context.junit4.AbstractTransactionalJUnit4SpringContextTests;
 import org.springframework.transaction.PlatformTransactionManager;
 import ubic.gemma.persistence.util.Settings;
@@ -20,6 +22,7 @@ import java.util.Properties;
  *
  * @author poirigui
  */
+@TestExecutionListeners(WithSecurityContextTestExecutionListener.class)
 public abstract class BaseDatabaseTest extends AbstractTransactionalJUnit4SpringContextTests {
 
     protected abstract static class BaseDatabaseTestContextConfiguration {

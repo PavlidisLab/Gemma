@@ -5,6 +5,7 @@ import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ContextConfiguration;
 import ubic.gemma.core.analysis.report.ArrayDesignReportService;
 import ubic.gemma.core.loader.expression.arrayDesign.ArrayDesignMergeService;
@@ -64,6 +65,7 @@ public class ArrayDesignMergeCliTest extends BaseCliTest {
     }
 
     @Test
+    @WithMockUser
     public void test() {
         ArrayDesign a = ArrayDesign.Factory.newInstance();
         ArrayDesign b = ArrayDesign.Factory.newInstance();
