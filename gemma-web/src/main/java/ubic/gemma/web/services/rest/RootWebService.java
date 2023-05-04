@@ -97,7 +97,7 @@ public class RootWebService {
     @GET
     @Path("/users/{username}")
     @Produces(MediaType.APPLICATION_JSON)
-    @PreAuthorize("(isAuthenticated() && principal.username == #username) || hasRole('GROUP_ADMIN')")
+    @PreAuthorize("(isAuthenticated() && principal.username == #username) || hasAuthority('GROUP_ADMIN')")
     @Operation(summary = "Retrieve the user information associated to the authenticated session", hidden = true)
     public ResponseDataObject<UserValueObject> getUser( // Params:
             @PathParam("username") String username // Required

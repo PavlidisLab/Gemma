@@ -61,7 +61,7 @@
                 <c:out value="${fn:escapeXml(param.exception.message)}"/>
             </p>
 
-            <security:authorize access="hasRole('GROUP_ADMIN')">
+            <security:authorize access="hasAuthority('GROUP_ADMIN')">
                 <Gemma:exception exception="${exception}"/>
             </security:authorize>
         </c:when>
@@ -72,7 +72,7 @@
                 <c:out value="${fn:escapeXml(requestScope['javax.servlet.error.exception'].message)}"/>
             </p>
 
-            <security:authorize access="hasRole('GROUP_ADMIN')">
+            <security:authorize access="hasAuthority('GROUP_ADMIN')">
                 <%-- this is causing stackoverflow errors ... no idea why, since upgrading to spring 3.2 from 3.0.7 --%>
                 <Gemma:exception exception="${requestScope['javax.servlet.error.exception']}"/>
             </security:authorize>
@@ -83,7 +83,7 @@
                 <c:out value="${fn:escapeXml(requestScope['exception'].message)}"/>
             </p>
 
-            <security:authorize access="hasRole('GROUP_ADMIN')">
+            <security:authorize access="hasAuthority('GROUP_ADMIN')">
                 <Gemma:exception exception="${requestScope['exception']}"/>
             </security:authorize>
         </c:when>

@@ -2,7 +2,7 @@
 
 <head>
 	<title><fmt:message key="characteristicBrowser.title" /></title>
-	<security:authorize access="hasRole('GROUP_ADMIN')">
+	<security:authorize access="hasAuthority('GROUP_ADMIN')">
 		<jwr:script src='/scripts/api/ext/data/DwrProxy.js' />
 		<jwr:script src='/scripts/app/CharacteristicBrowser.js' />
 	</security:authorize>

@@ -20,7 +20,7 @@
 	<h2>
 		<fmt:message key="activeUsers.heading" />
 	</h2>
-	<security:authorize access="hasRole('GROUP_ADMIN')">
+	<security:authorize access="hasAuthority('GROUP_ADMIN')">
 		<span class="right"><fmt:message key="mainMenu.activeUsers" />
 			:&nbsp;<c:out value="${applicationScope.activeUsers}" />
 			<br> Signed in:&nbsp;<span id="auth-user-count">?</span></span>
@@ -38,7 +38,7 @@
 	<p>FIXME table of authenticated users should go here.</p>
 
 	<h2>System Stats</h2>
-	<security:authorize access="hasRole('GROUP_ADMIN')">
+	<security:authorize access="hasAuthority('GROUP_ADMIN')">
 		Gemma version ${appConfig['version']}&nbsp;<br>
 		<script type="text/javascript">
          document.writeln( "Page Loaded: " + document.lastModified );

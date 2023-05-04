@@ -12,7 +12,7 @@
 <h2>Bibliographic Reference record</h2>
 
 <c:if test="${byAccession}">
-	<security:authorize access="hasRole('GROUP_ADMIN')">
+	<security:authorize access="hasAuthority('GROUP_ADMIN')">
 		<c:if test="${!requestScope.existsInSystem}">
 			<p>
 				This reference was obtained from PubMed; it is not in the Gemma

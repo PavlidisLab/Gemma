@@ -2,22 +2,22 @@
 
 
 <%-- Security fields used in Java script calls to hide or display information on pages, used to be in footer --%>
-<security:authorize access="hasRole('GROUP_ADMIN')">
+<security:authorize access="hasAuthority('GROUP_ADMIN')">
 	<input type="hidden" name="hasAdmin" id="hasAdmin" value="true" />
 </security:authorize>
-<security:authorize access="!hasRole('GROUP_ADMIN')">
+<security:authorize access="!hasAuthority('GROUP_ADMIN')">
 	<input type="hidden" name="hasAdmin" id="hasAdmin" value="" />
 </security:authorize>
-<security:authorize access="hasRole('GROUP_USER')">
+<security:authorize access="hasAuthority('GROUP_USER')">
 	<input type="hidden" name="hasUser" id="hasUser" value="true" />
 </security:authorize>
-<security:authorize access="!hasRole('GROUP_USER')">
+<security:authorize access="!hasAuthority('GROUP_USER')">
 	<input type="hidden" name="hasUser" id="hasUser" value="" />
 </security:authorize>
-<security:authorize ifAnyGranted="GROUP_USER,GROUP_ADMIN">
+<security:authorize access="isAuthenticated()">
 	<input type="hidden" name="loggedIn" id="loggedIn" value="true" />
 </security:authorize>
-<security:authorize ifNotGranted="GROUP_USER,GROUP_ADMIN">
+<security:authorize access="isAnonymous()">
 	<input type="hidden" name="loggedIn" id="loggedIn" value="" />
 </security:authorize>
 
