@@ -18,7 +18,7 @@ input[type=button] {
 
 </head>
 <body>
-	<security:authorize access="hasRole('GROUP_ADMIN')">
+	<security:authorize access="hasAuthority('GROUP_ADMIN')">
 		<div class="padded">
 
 			<h2>Hibernate statistics</h2>

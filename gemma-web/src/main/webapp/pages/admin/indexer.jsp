@@ -11,7 +11,7 @@
 
 <body>
 
-	<security:authorize access="hasRole('GROUP_ADMIN')">
+	<security:authorize access="hasAuthority('GROUP_ADMIN')">
 
 		<p>
 			Choose the indexing options that are appropriate and then click

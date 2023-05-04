@@ -12,7 +12,7 @@
 <body>
 <div style="padding-left:20px">
 
-	<security:authorize access="hasRole('GROUP_ADMIN')">
+	<security:authorize access="hasAuthority('GROUP_ADMIN')">
 		<p>
 			Click below to reinitialize Gemma's Jena database and all its ontology indicies.
 		</p>
