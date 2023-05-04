@@ -114,11 +114,10 @@ public class CoexpressionAnalysisServiceImpl extends AbstractService<Coexpressio
         return this.coexpressionAnalysisDao.findByExperiment( investigation );
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     @Transactional(readOnly = true)
     public Map<BioAssaySet, Collection<CoexpressionAnalysis>> findByExperiments(
-            Collection<? extends BioAssaySet> investigations ) {
+            Collection<BioAssaySet> investigations ) {
         return this.coexpressionAnalysisDao.findByExperiments( investigations );
     }
 

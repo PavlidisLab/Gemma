@@ -18,9 +18,11 @@
  */
 package ubic.gemma.persistence.service.analysis.expression;
 
-import org.springframework.security.access.annotation.Secured;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
-import ubic.gemma.model.expression.experiment.*;
+import ubic.gemma.model.expression.experiment.BioAssaySet;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentDetailsValueObject;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentSetValueObject;
 import ubic.gemma.persistence.service.BaseVoEnabledDao;
 
 import javax.annotation.Nullable;
@@ -37,10 +39,8 @@ public interface ExpressionExperimentSetDao
      * @param bioAssaySet bio assay set
      * @return expressionExperimentSets that contain the given bioAssaySet.
      */
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     Collection<ExpressionExperimentSet> find( BioAssaySet bioAssaySet );
 
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     Collection<ExpressionExperimentSet> findByName( String name );
 
     /**
@@ -48,16 +48,13 @@ public interface ExpressionExperimentSetDao
      * @return the security-filtered list of experiments in a set. It is possible for the return to be empty even if the set
      * is not (due to security filters). Use this instead of expressionExperimentSet.getExperiments.
      */
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     Collection<ExpressionExperiment> getExperimentsInSet( Long id );
 
     /**
      * @return ExpressionExperimentSets that have more than 1 experiment in them &amp; have a taxon value.
      */
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     Collection<ExpressionExperimentSet> loadAllExperimentSetsWithTaxon();
 
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     void thaw( ExpressionExperimentSet expressionExperimentSet );
 
     /**
@@ -66,7 +63,6 @@ public interface ExpressionExperimentSetDao
      *                  EESets this might want to be avoided.
      * @return ee vos
      */
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
     Collection<ExpressionExperimentSetValueObject> loadAllValueObjects( boolean loadEEIds );
 
     /**
@@ -76,10 +72,8 @@ public interface ExpressionExperimentSetDao
      *                  EESets this might want to be avoided.
      * @return ee vos
      */
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
     List<ExpressionExperimentSetValueObject> loadValueObjects( Collection<Long> eeSetIds, boolean loadEEIds );
 
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
     Collection<ExpressionExperimentDetailsValueObject> getExperimentValueObjectsInSet( Long id );
 
     /**
@@ -90,7 +84,5 @@ public interface ExpressionExperimentSetDao
      * @return ee vos
      */
     @Nullable
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_READ" })
     ExpressionExperimentSetValueObject loadValueObject( Long id, boolean loadEEIds );
-
 }

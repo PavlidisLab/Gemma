@@ -3,6 +3,7 @@ package ubic.gemma.persistence.service.analysis;
 import org.springframework.security.access.annotation.Secured;
 import ubic.gemma.model.analysis.SingleExperimentAnalysis;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
 
 import java.util.Collection;
@@ -35,7 +36,7 @@ public interface SingleExperimentAnalysisService<T extends SingleExperimentAnaly
      * one of the investigations for that analysis was in the given collection started with
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_COLLECTION_READ", "AFTER_ACL_MAP_READ" })
-    Map<BioAssaySet, Collection<T>> findByExperiments( Collection<? extends BioAssaySet> investigations );
+    Map<BioAssaySet, Collection<T>> findByExperiments( Collection<BioAssaySet> investigations );
 
     /**
      * Not secured: for internal use only

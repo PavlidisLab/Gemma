@@ -69,7 +69,7 @@ public interface QuantitationTypeService extends BaseService<QuantitationType>, 
     void remove( Collection<QuantitationType> entities );
 
     @Override
-    @Secured({ "GROUP_USER" })
+    @Secured({ "GROUP_ADMIN" })
     void remove( Long id );
 
     @Override

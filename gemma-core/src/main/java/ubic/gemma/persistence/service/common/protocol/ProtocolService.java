@@ -48,7 +48,7 @@ public interface ProtocolService extends BaseImmutableService<Protocol> {
     Collection<Protocol> loadAll();
 
     @Override
-    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    @Secured({ "GROUP_ADMIN" })
     void remove( Long id );
 
     @Override

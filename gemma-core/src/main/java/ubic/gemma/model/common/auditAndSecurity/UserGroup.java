@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006-2012 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -23,7 +23,6 @@ import gemma.gsec.model.GroupAuthority;
 import gemma.gsec.model.User;
 import ubic.gemma.model.common.AbstractAuditable;
 
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -54,9 +53,8 @@ public class UserGroup extends AbstractAuditable implements gemma.gsec.model.Use
     }
 
     @SuppressWarnings("unchecked")
-    @Override
-    public <T extends GroupAuthority> void setAuthorities( Collection<T> authorities ) {
-        this.authorities = ( Set<GroupAuthority> ) authorities;
+    public void setAuthorities( Set<GroupAuthority> authorities ) {
+        this.authorities = authorities;
     }
 
     @SuppressWarnings({ "unchecked", "JpaAttributeMemberSignatureInspection" })
@@ -66,9 +64,8 @@ public class UserGroup extends AbstractAuditable implements gemma.gsec.model.Use
     }
 
     @SuppressWarnings("unchecked")
-    @Override
-    public <T extends User> void setGroupMembers( Collection<T> groupMembers ) {
-        this.groupMembers = ( Set<User> ) groupMembers;
+    public void setGroupMembers( Set<User> groupMembers ) {
+        this.groupMembers = groupMembers;
     }
 
     public static final class Factory {

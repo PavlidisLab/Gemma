@@ -26,7 +26,6 @@ import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-
 import ubic.gemma.core.security.authentication.UserManager;
 import ubic.gemma.core.util.test.BaseSpringContextTest;
 import ubic.gemma.model.analysis.expression.coexpression.CoexpressionAnalysis;
@@ -34,10 +33,7 @@ import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.analysis.expression.coexpression.CoexpressionAnalysisService;
 
-import java.util.Collection;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.Map;
+import java.util.*;
 
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -99,6 +95,5 @@ public class AclCollectionBeforeTest extends BaseSpringContextTest {
         Map<BioAssaySet, Collection<CoexpressionAnalysis>> r = coexpressionAnalysisService
                 .findByExperiments( ees );
         assertNotNull( r );
-
     }
 }

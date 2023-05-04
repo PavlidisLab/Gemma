@@ -17,7 +17,6 @@ package ubic.gemma.persistence.service.common.auditAndSecurity;
 import org.springframework.security.access.annotation.Secured;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.curation.Curatable;
-import ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails;
 import ubic.gemma.model.common.auditAndSecurity.eventType.CurationDetailsEvent;
 
 /**
@@ -41,6 +40,6 @@ public interface CurationDetailsService {
      * @param auditEvent the event containing information about the update. Method only accepts audit events whose type
      *                   is one of {@link CurationDetailsEvent} extensions.
      */
-    @Secured({ "GROUP_AGENT", "ACL_SECURABLE_EDIT" })
+    @Secured({ "GROUP_AGENT" })
     void updateCurationDetailsFromAuditEvent( Curatable curatable, AuditEvent auditEvent );
 }

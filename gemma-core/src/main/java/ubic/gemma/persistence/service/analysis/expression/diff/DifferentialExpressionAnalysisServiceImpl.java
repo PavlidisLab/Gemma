@@ -37,7 +37,6 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentDetailsValueOb
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.AbstractService;
-import ubic.gemma.persistence.service.BaseDao;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentDao;
 import ubic.gemma.persistence.util.EntityUtils;
 
@@ -260,7 +259,7 @@ public class DifferentialExpressionAnalysisServiceImpl extends AbstractService<D
     @Override
     @Transactional(readOnly = true)
     public Map<BioAssaySet, Collection<DifferentialExpressionAnalysis>> findByExperiments(
-            Collection<? extends BioAssaySet> experiments ) {
+            Collection<BioAssaySet> experiments ) {
         return this.differentialExpressionAnalysisDao
                 .findByExperiments( experiments );
     }

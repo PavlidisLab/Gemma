@@ -51,7 +51,7 @@ public interface DifferentialExpressionResultService extends BaseImmutableServic
      * @param limit               limit
      * @return map to diff ex VOs
      */
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_MAP_READ" })
     Map<ExpressionExperimentValueObject, List<DifferentialExpressionValueObject>> find(
             Collection<Long> experimentsAnalyzed, double threshold, int limit );
 
@@ -62,7 +62,7 @@ public interface DifferentialExpressionResultService extends BaseImmutableServic
      * @param gene gene
      * @return map to diff ex VOs
      */
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_MAP_READ" })
     Map<ExpressionExperimentValueObject, List<DifferentialExpressionValueObject>> find( Gene gene );
 
     /**
@@ -73,7 +73,7 @@ public interface DifferentialExpressionResultService extends BaseImmutableServic
      * @param gene                gene
      * @return map to diff ex VOs
      */
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_MAP_READ" })
     Map<ExpressionExperimentValueObject, List<DifferentialExpressionValueObject>> find( Gene gene,
             Collection<Long> experimentsAnalyzed );
 
@@ -87,7 +87,7 @@ public interface DifferentialExpressionResultService extends BaseImmutableServic
      * @param gene                gene
      * @return map to diff ex VOs
      */
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_MAP_READ" })
     Map<ExpressionExperimentValueObject, List<DifferentialExpressionValueObject>> find( Gene gene,
             Collection<Long> experimentsAnalyzed, double threshold, int limit );
 
@@ -99,7 +99,7 @@ public interface DifferentialExpressionResultService extends BaseImmutableServic
      * @param limit     limit
      * @return map to diff ex VOs
      */
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_MAP_READ" })
     Map<ExpressionExperimentValueObject, List<DifferentialExpressionValueObject>> find( Gene gene, double threshold,
             int limit );
 

@@ -130,7 +130,7 @@ public interface CharacteristicService extends BaseService<Characteristic>, Base
     Characteristic create( Characteristic c );
 
     @Override
-    @Secured({ "GROUP_USER" })
+    @Secured({ "GROUP_ADMIN" })
     void remove( Long id );
 
     @Override

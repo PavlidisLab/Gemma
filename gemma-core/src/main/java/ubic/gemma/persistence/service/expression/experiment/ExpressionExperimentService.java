@@ -138,7 +138,7 @@ public interface ExpressionExperimentService
     ExpressionExperiment loadWithMeanVarianceRelation( Long id );
 
     @Override
-    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    @Secured({ "GROUP_ADMIN" })
     void remove( Long id );
 
     /**

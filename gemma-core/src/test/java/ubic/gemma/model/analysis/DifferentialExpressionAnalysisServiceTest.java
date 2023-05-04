@@ -143,7 +143,7 @@ public class DifferentialExpressionAnalysisServiceTest extends BaseSpringContext
 
     @Test
     public void testFindByInvestigations() {
-        Collection<ExpressionExperiment> investigations = new ArrayList<>();
+        Collection<BioAssaySet> investigations = new ArrayList<>();
         investigations.add( e1 );
         investigations.add( e3 );
 

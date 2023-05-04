@@ -18,7 +18,6 @@
  */
 package ubic.gemma.model.common.auditAndSecurity;
 
-import java.util.Collection;
 import java.util.Set;
 
 /**
@@ -40,7 +39,6 @@ public class User extends Person implements gemma.gsec.model.User {
         return this.enabled;
     }
 
-    @Override
     public void setEnabled( Boolean enabled ) {
         this.enabled = enabled;
     }
@@ -58,7 +56,6 @@ public class User extends Person implements gemma.gsec.model.User {
         return this.password;
     }
 
-    @Override
     public void setPassword( String password ) {
         this.password = password;
     }
@@ -68,7 +65,6 @@ public class User extends Person implements gemma.gsec.model.User {
         return this.passwordHint;
     }
 
-    @Override
     public void setPasswordHint( String passwordHint ) {
         this.passwordHint = passwordHint;
     }
@@ -78,7 +74,6 @@ public class User extends Person implements gemma.gsec.model.User {
         return this.signupToken;
     }
 
-    @Override
     public void setSignupToken( String signupToken ) {
         this.signupToken = signupToken;
     }
@@ -88,7 +83,6 @@ public class User extends Person implements gemma.gsec.model.User {
         return this.signupTokenDatestamp;
     }
 
-    @Override
     public void setSignupTokenDatestamp( java.util.Date signupTokenDatestamp ) {
         this.signupTokenDatestamp = signupTokenDatestamp;
     }
@@ -98,7 +92,6 @@ public class User extends Person implements gemma.gsec.model.User {
         return this.userName;
     }
 
-    @Override
     public void setUserName( String userName ) {
         this.userName = userName;
     }

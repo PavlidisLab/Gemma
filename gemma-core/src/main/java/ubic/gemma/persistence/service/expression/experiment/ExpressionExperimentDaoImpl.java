@@ -702,7 +702,6 @@ public class ExpressionExperimentDaoImpl
         if ( mvr.getId() == null ) {
             getSessionFactory().getCurrentSession().persist( mvr );
         }
-        mvr.setSecurityOwner( ee );
         ee.setMeanVarianceRelation( mvr );
         update( ee );
         return mvr;

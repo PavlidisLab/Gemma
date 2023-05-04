@@ -73,26 +73,6 @@ public class GeneSetDaoImpl extends AbstractDao<GeneSet> implements GeneSetDao {
     }
 
     @Override
-    public Collection<GeneSet> loadMyGeneSets() {
-        return this.loadAll();
-    }
-
-    @Override
-    public Collection<GeneSet> loadMyGeneSets( Taxon tax ) {
-        return this.loadAll( tax );
-    }
-
-    @Override
-    public Collection<GeneSet> loadMySharedGeneSets() {
-        return this.loadAll();
-    }
-
-    @Override
-    public Collection<GeneSet> loadMySharedGeneSets( Taxon tax ) {
-        return this.loadAll( tax );
-    }
-
-    @Override
     public DatabaseBackedGeneSetValueObject loadValueObject( GeneSet geneSet ) {
         return loadValueObjectById( geneSet.getId() );
     }
@@ -227,6 +207,26 @@ public class GeneSetDaoImpl extends AbstractDao<GeneSet> implements GeneSetDao {
         for ( GeneSetMember gsm : geneSet.getMembers() ) {
             Hibernate.initialize( gsm.getGene() );
         }
+    }
+
+    @Override
+    public final void update( Collection<GeneSet> entities ) {
+        super.update( entities );
+    }
+
+    @Override
+    public final void update( GeneSet entity ) {
+        super.update( entity );
+    }
+
+    @Override
+    public final void remove( Collection<GeneSet> entities ) {
+        super.remove( entities );
+    }
+
+    @Override
+    public final void remove( GeneSet entity ) {
+        super.remove( entity );
     }
 
     private List<DatabaseBackedGeneSetValueObject> fillValueObjects( List<Object[]> result ) {

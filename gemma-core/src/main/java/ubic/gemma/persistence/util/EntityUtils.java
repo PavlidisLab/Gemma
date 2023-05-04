@@ -37,10 +37,7 @@ import ubic.gemma.model.common.Identifiable;
 
 import java.io.File;
 import java.io.IOException;
-import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
 import java.math.BigInteger;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -359,7 +356,7 @@ public class EntityUtils {
             } else if ( SecurityUtil.isUserAnonymous() ) {
                 canWrite = false;
             } else {
-                if ( ace.getMask() == BasePermission.WRITE.getMask() || ace.getMask() == BasePermission.ADMINISTRATION
+                if ( ace.getPermission().getMask() == BasePermission.WRITE.getMask() || ace.getPermission().getMask() == BasePermission.ADMINISTRATION
                         .getMask() ) {
                     Sid sid = ace.getSid();
                     if ( sid instanceof AclGrantedAuthoritySid ) {

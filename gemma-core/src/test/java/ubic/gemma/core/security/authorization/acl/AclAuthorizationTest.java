@@ -19,7 +19,6 @@
 package ubic.gemma.core.security.authorization.acl;
 
 import gemma.gsec.SecurityService;
-import gemma.gsec.acl.ValueObjectAwareIdentityRetrievalStrategyImpl;
 import gemma.gsec.authentication.UserDetailsImpl;
 import gemma.gsec.model.Securable;
 import org.apache.commons.lang3.RandomStringUtils;
@@ -30,7 +29,6 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.acls.model.*;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-
 import ubic.gemma.core.security.authentication.UserManager;
 import ubic.gemma.core.util.test.BaseSpringContextTest;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -58,8 +56,7 @@ public class AclAuthorizationTest extends BaseSpringContextTest {
             "Design Element_" + RandomStringUtils.randomAlphabetic( 10 );
     private final String compositeSequenceName2 =
             "Design Element_" + RandomStringUtils.randomAlphabetic( 10 );
-    private final ObjectIdentityRetrievalStrategy objectIdentityRetrievalStrategy = new ValueObjectAwareIdentityRetrievalStrategyImpl();
-    private ArrayDesign arrayDesign;
+
     @Autowired
     private ArrayDesignService arrayDesignService;
     @Autowired
@@ -70,6 +67,11 @@ public class AclAuthorizationTest extends BaseSpringContextTest {
     private MutableAclService aclService;
     @Autowired
     private CompositeSequenceService compositeSequenceService;
+    @Autowired
+    private ObjectIdentityRetrievalStrategy objectIdentityRetrievalStrategy;
+
+    /* fixtures */
+    private ArrayDesign arrayDesign;
 
     @Before
     public void setUp() throws Exception {

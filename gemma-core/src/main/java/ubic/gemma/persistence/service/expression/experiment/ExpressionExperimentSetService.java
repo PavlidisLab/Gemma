@@ -84,7 +84,8 @@ public interface ExpressionExperimentSetService
      * @param name name
      * @return collection of ee sets
      */
-    Collection<ExpressionExperimentSet> findByName( java.lang.String name );
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    Collection<ExpressionExperimentSet> findByName( String name );
 
     /**
      * security at DAO level
@@ -122,6 +123,7 @@ public interface ExpressionExperimentSetService
      *
      * @return ExpressionExperimentSets that have more than 1 experiment in them &amp; have a taxon value.
      */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     Collection<ExpressionExperimentSet> loadAllExperimentSetsWithTaxon();
 
     /**
@@ -198,5 +200,6 @@ public interface ExpressionExperimentSetService
     List<ExpressionExperimentSetValueObject> loadValueObjectsByIds( Collection<Long> eeSetIds );
 
     @CheckReturnValue
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     ExpressionExperimentSet thaw( ExpressionExperimentSet set );
 }

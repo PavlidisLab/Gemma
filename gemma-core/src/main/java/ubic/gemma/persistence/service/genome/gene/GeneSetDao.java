@@ -18,8 +18,6 @@
  */
 package ubic.gemma.persistence.service.genome.gene;
 
-import org.springframework.security.access.annotation.Secured;
-import org.springframework.security.core.userdetails.User;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.DatabaseBackedGeneSetValueObject;
@@ -56,81 +54,20 @@ public interface GeneSetDao extends BaseVoEnabledDao<GeneSet, DatabaseBackedGene
      */
     Taxon getTaxon( Long id );
 
-    /**
-     * Returns the {@link GeneSet}s for the currently logged in {@link User} - i.e, ones for which the current user has
-     * specific read permissions on (as opposed to data sets which are public). Important: This method will return all
-     * gene sets if security is not enabled.
-     * Implementation note: Via a methodInvocationFilter. See AclAfterFilterCollectionForMyData for
-     * processConfigAttribute.
-     *
-     * @return gene sets
-     */
-    @Secured({ "GROUP_USER", "AFTER_ACL_FILTER_MY_DATA" })
-    Collection<GeneSet> loadMyGeneSets();
-
-    @Secured({ "GROUP_USER", "AFTER_ACL_FILTER_MY_DATA" })
-    Collection<GeneSet> loadMyGeneSets( Taxon tax );
-
-    @Secured({ "GROUP_USER", "AFTER_ACL_FILTER_MY_PRIVATE_DATA" })
-    Collection<GeneSet> loadMySharedGeneSets();
-
-    @Secured({ "GROUP_USER", "AFTER_ACL_FILTER_MY_PRIVATE_DATA" })
-    Collection<GeneSet> loadMySharedGeneSets( Taxon tax );
-
     DatabaseBackedGeneSetValueObject loadValueObjectByIdLite( Long id );
 
     List<DatabaseBackedGeneSetValueObject> loadValueObjectsByIdsLite( Collection<Long> geneSetIds );
 
-    @Override
-    @Secured({ "GROUP_USER" })
-    Collection<GeneSet> create( final Collection<GeneSet> entities );
-
-    @Secured({ "GROUP_USER" })
-    @Override
-    GeneSet create( GeneSet geneset );
-
-    @Override
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    Collection<GeneSet> load( Collection<Long> ids );
-
-    @Override
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
-    GeneSet load( Long id );
-
-    @Override
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    Collection<GeneSet> loadAll();
-
-    @Override
-    @Secured({ "GROUP_USER", "ACL_SECURABLE_COLLECTION_EDIT" })
-    void remove( Collection<GeneSet> entities );
-
-    @Override
-    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    void remove( GeneSet entity );
-
-    @Override
-    @Secured({ "GROUP_USER", "ACL_SECURABLE_COLLECTION_EDIT" })
-    void update( final Collection<GeneSet> entities );
-
-    @Override
-    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    void update( GeneSet entity );
-
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     Collection<GeneSet> findByGene( Gene gene );
 
     /**
      * @param name uses the given name to do a name* search in the db
      * @return a collection of geneSets that match the given search term.
      */
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     Collection<GeneSet> findByName( String name );
 
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     Collection<GeneSet> findByName( String name, @Nullable Taxon taxon );
 
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     Collection<GeneSet> loadAll( @Nullable Taxon tax );
 
     /**

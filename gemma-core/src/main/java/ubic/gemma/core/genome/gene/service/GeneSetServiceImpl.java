@@ -128,25 +128,19 @@ public class GeneSetServiceImpl extends AbstractVoEnabledService<GeneSet, Databa
     @Override
     @Transactional(readOnly = true)
     public Collection<GeneSet> loadMyGeneSets() {
-        return this.geneSetDao.loadMyGeneSets();
+        return this.geneSetDao.loadAll();
     }
 
     @Override
     @Transactional(readOnly = true)
     public Collection<GeneSet> loadMyGeneSets( Taxon tax ) {
-        return this.geneSetDao.loadMyGeneSets( tax );
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public Collection<GeneSet> loadMySharedGeneSets() {
-        return this.geneSetDao.loadMySharedGeneSets();
+        return this.geneSetDao.loadAll( tax );
     }
 
     @Override
     @Transactional(readOnly = true)
     public Collection<GeneSet> loadMySharedGeneSets( Taxon tax ) {
-        return this.geneSetDao.loadMySharedGeneSets( tax );
+        return this.geneSetDao.loadAll( tax );
     }
 
 //    @Override
