@@ -92,7 +92,7 @@ public class SearchServiceTest extends AbstractJUnit4SpringContextTests {
         verify( ontologyService ).findIndividuals( "http://purl.obolibrary.org/obo/DOID_14602" );
         verify( ontologyService ).findTerms( "http://purl.obolibrary.org/obo/DOID_14602" );
         verifyNoMoreInteractions( ontologyService );
-        verify( characteristicService ).findExperimentsByUris( Collections.singleton( "http://purl.obolibrary.org/obo/DOID_14602" ), null, 10, true );
+        verify( characteristicService ).findExperimentsByUris( Collections.singleton( "http://purl.obolibrary.org/obo/DOID_14602" ), null, 10, true, false );
     }
 
     @Test
@@ -103,11 +103,11 @@ public class SearchServiceTest extends AbstractJUnit4SpringContextTests {
                 .fillResults( false )
                 .build();
         ExpressionExperiment ee = mock( ExpressionExperiment.class );
-        when( characteristicService.findExperimentsByUris( any(), any(), anyInt(), eq( false ) ) )
+        when( characteristicService.findExperimentsByUris( any(), any(), anyInt(), eq( false ), anyBoolean() ) )
                 .thenReturn( Collections.singletonMap( ExpressionExperiment.class,
                         Collections.singletonMap( "test", Collections.singleton( ee ) ) ) );
         SearchService.SearchResultMap results = searchService.search( settings );
-        verify( characteristicService ).findExperimentsByUris( Collections.singleton( "http://purl.obolibrary.org/obo/DOID_14602" ), null, 5000, false );
+        verify( characteristicService ).findExperimentsByUris( Collections.singleton( "http://purl.obolibrary.org/obo/DOID_14602" ), null, 5000, false, false );
         assertNull( results.getByResultObjectType( ExpressionExperiment.class ).iterator().next().getResultObject() );
         // since EE is a proxy, only its ID should be accessed
         verify( ee, VerificationModeFactory.atLeastOnce() ).getId();

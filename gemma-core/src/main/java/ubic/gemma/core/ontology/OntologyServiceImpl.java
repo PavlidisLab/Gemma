@@ -849,7 +849,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
                 .taxon( taxon )
                 .resultType( Gene.class )
                 .build();
-        SearchService.SearchResultMap geneResults = this.searchService.search( ss.withFillResults( true ).withMode( SearchSettings.SearchMode.NORMAL ) );
+        SearchService.SearchResultMap geneResults = this.searchService.search( ss.withFillResults( true ).withMode( SearchSettings.SearchMode.BALANCED ) );
 
         for ( SearchResult<Gene> sr : geneResults.getByResultObjectType( Gene.class ) ) {
             if ( sr.getResultObject() == null ) {

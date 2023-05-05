@@ -79,19 +79,23 @@ public interface CharacteristicDao
      * Resulting EEs are filtered by ACLs.
      * <p>
      * The returned collection of EEs is effectively a {@link Set}, but since we cannot use since this should be
-     * interchangable with {@link #findExperimentReferencesByUris(Collection, Taxon, int)}.
+     * interchangable with {@link #findExperimentReferencesByUris(Collection, Taxon, int, boolean)}.
+     * <p>
+     * Ranking results by level guarantees correctness if a limit is used as datasets matched by direct annotation will
+     * be considered before those matched by factor values or biomaterials. It is however expensive.
      *
-     * @param  uris       collection of URIs used for matching characteristics (via {@link Characteristic#getValueUri()})
-     * @param  taxon      taxon to restrict EEs to, or null to ignore
-     * @param  limit      limit how many results to return. Set to -1 for no limit.
+     * @param uris       collection of URIs used for matching characteristics (via {@link Characteristic#getValueUri()})
+     * @param taxon      taxon to restrict EEs to, or null to ignore
+     * @param limit      limit how many results to return. Set to -1 for no limit.
+     * @param rankByLevel rank results by level before limiting, has no effect if limit is -1
      * @return map of classes ({@link ExpressionExperiment}, {@link ubic.gemma.model.expression.experiment.FactorValue},
      * {@link ubic.gemma.model.expression.biomaterial.BioMaterial}) to the matching URI to EEs which have an associated
      * characteristic using the given URI. The class lets us track where the annotation was.
      */
-    Map<Class<? extends Identifiable>, Map<String, Collection<ExpressionExperiment>>> findExperimentsByUris( Collection<String> uris, @Nullable Taxon taxon, int limit );
+    Map<Class<? extends Identifiable>, Map<String, Collection<ExpressionExperiment>>> findExperimentsByUris( Collection<String> uris, @Nullable Taxon taxon, int limit, boolean rankByLevel );
 
     /**
-     * Similar to {@link #findExperimentsByUris(Collection, Taxon, int)}, but returns proxies with instead of
+     * Similar to {@link #findExperimentsByUris(Collection, Taxon, int, boolean)}, but returns proxies with instead of
      * initializing all the EEs in bulk.
      * <p>
      * Since proxies are returned, they cannot be collected in a {@link Set} which would otherwise cause their
@@ -99,7 +103,7 @@ public interface CharacteristicDao
      *
      * @see org.hibernate.Session#load(Object, Serializable)
      */
-    Map<Class<? extends Identifiable>, Map<String, Collection<ExpressionExperiment>>> findExperimentReferencesByUris( Collection<String> uris, @Nullable Taxon taxon, int limit );
+    Map<Class<? extends Identifiable>, Map<String, Collection<ExpressionExperiment>>> findExperimentReferencesByUris( Collection<String> uris, @Nullable Taxon taxon, int limit, boolean rankByLevel );
 
     Collection<Characteristic> findByUri( Collection<String> uris );
 

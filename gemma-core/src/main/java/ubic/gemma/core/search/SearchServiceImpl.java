@@ -842,7 +842,10 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
         if ( isFilled( results, settings ) )
             return;
 
-        Map<Class<? extends Identifiable>, Map<String, Collection<ExpressionExperiment>>> hits = characteristicService.findExperimentsByUris( uris, settings.getTaxon(), getLimit( results, settings ), settings.isFillResults() );
+        // ranking results by level is costly
+        boolean rankByLevel = settings.getMode().equals( SearchSettings.SearchMode.ACCURATE );
+
+        Map<Class<? extends Identifiable>, Map<String, Collection<ExpressionExperiment>>> hits = characteristicService.findExperimentsByUris( uris, settings.getTaxon(), getLimit( results, settings ), settings.isFillResults(), rankByLevel );
 
         // collect all direct tags
         addExperimentsByUrisHits( hits, results, ExpressionExperiment.class, score, uri2value, settings );

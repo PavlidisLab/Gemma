@@ -275,7 +275,7 @@ public class ExpressionExperimentSearchServiceImpl implements ExpressionExperime
              * search,
              * irrelevant
              */
-            List<SearchResult<ExpressionExperiment>> results = searchService.search( settings.withFillResults( false ).withMode( SearchSettings.SearchMode.NORMAL ) )
+            List<SearchResult<ExpressionExperiment>> results = searchService.search( settings.withFillResults( false ).withMode( SearchSettings.SearchMode.BALANCED ) )
                     .getByResultObjectType( ExpressionExperiment.class );
             for ( SearchResult<ExpressionExperiment> result : results ) {
                 eeIds.add( result.getResultId() );

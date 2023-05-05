@@ -50,9 +50,13 @@ public class SearchSettings implements Serializable {
 
     public enum SearchMode {
         /**
+         * Prefer correctness over speed.
+         */
+        ACCURATE,
+        /**
          * Normal search mode with trade-offs to make it usable.
          */
-        NORMAL,
+        BALANCED,
         /**
          * Fast search mode, designed for autocompletion.
          */
@@ -197,7 +201,7 @@ public class SearchSettings implements Serializable {
      * Fast mode, return quickly.
      */
     @Builder.Default
-    private SearchMode mode = SearchMode.NORMAL;
+    private SearchMode mode = SearchMode.BALANCED;
 
     /**
      * A context path for highlighted text containing URLs.

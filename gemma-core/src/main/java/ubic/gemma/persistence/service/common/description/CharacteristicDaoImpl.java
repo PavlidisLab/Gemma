@@ -117,12 +117,12 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
     }
 
     @Override
-    public Map<Class<? extends Identifiable>, Map<String, Collection<ExpressionExperiment>>> findExperimentsByUris( Collection<String> uris, @Nullable Taxon taxon, int limit ) {
+    public Map<Class<? extends Identifiable>, Map<String, Collection<ExpressionExperiment>>> findExperimentsByUris( Collection<String> uris, @Nullable Taxon taxon, int limit, boolean rankByLevel ) {
         if ( uris.isEmpty() ) {
             return Collections.emptyMap();
         }
         //noinspection unchecked
-        List<Object[]> result = prepareExperimentsByUrisQuery( uris, taxon, limit )
+        List<Object[]> result = prepareExperimentsByUrisQuery( uris, taxon, limit > 0 && rankByLevel )
                 .setMaxResults( limit )
                 .list();
         if ( result.isEmpty() ) {
@@ -146,12 +146,12 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
     }
 
     @Override
-    public Map<Class<? extends Identifiable>, Map<String, Collection<ExpressionExperiment>>> findExperimentReferencesByUris( Collection<String> uris, @Nullable Taxon taxon, int limit ) {
+    public Map<Class<? extends Identifiable>, Map<String, Collection<ExpressionExperiment>>> findExperimentReferencesByUris( Collection<String> uris, @Nullable Taxon taxon, int limit, boolean rankByLevel ) {
         if ( uris.isEmpty() ) {
             return Collections.emptyMap();
         }
         //noinspection unchecked
-        List<Object[]> result = prepareExperimentsByUrisQuery( uris, taxon, limit )
+        List<Object[]> result = prepareExperimentsByUrisQuery( uris, taxon, limit > 0 && rankByLevel )
                 .setMaxResults( limit )
                 .list();
         //noinspection unchecked
@@ -171,22 +171,25 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
                 .collect( Collectors.toList() );
     }
 
-    private Query prepareExperimentsByUrisQuery( Collection<String> uris, @Nullable Taxon taxon, int limit ) {
-        String qs = "select T.LEVEL, T.VALUE_URI, T.EXPRESSION_EXPERIMENT_FK from EXPRESSION_EXPERIMENT2CHARACTERISTIC T "
+    private Query prepareExperimentsByUrisQuery( Collection<String> uris, @Nullable Taxon taxon, boolean rankByLevel ) {
+        String qs = "select T.`LEVEL`, T.VALUE_URI, T.EXPRESSION_EXPERIMENT_FK from EXPRESSION_EXPERIMENT2CHARACTERISTIC T"
+                + ( taxon != null ? " join INVESTIGATION I on T.EXPRESSION_EXPERIMENT_FK = I.ID " : "" )
                 + AclQueryUtils.formNativeAclJoinClause( "T.EXPRESSION_EXPERIMENT_FK" ) + " "
                 + "where T.VALUE_URI in :uris"
-                + ( taxon != null ? " and {I}.TAXON_FK = :taxonId" : "" )
-                + AclQueryUtils.formNativeAclRestrictionClause() + " "
-                + "order by FIELD(T.LEVEL, :eeClass, :edClass, :bmClass)";
+                + ( taxon != null ? " and I.TAXON_FK = :taxonId" : "" )
+                + AclQueryUtils.formNativeAclRestrictionClause()
+                + ( rankByLevel ? " order by FIELD(T.LEVEL, :eeClass, :edClass, :bmClass)" : "" );
 
         Query query = getSessionFactory().getCurrentSession().createSQLQuery( qs )
                 .addScalar( "LEVEL", new ClassType() )
                 .addScalar( "VALUE_URI", new StringType() )
                 .addScalar( "EXPRESSION_EXPERIMENT_FK", new LongType() );
 
-        query.setParameter( "eeClass", ExpressionExperiment.class );
-        query.setParameter( "edClass", ExperimentalDesign.class );
-        query.setParameter( "bmClass", BioMaterial.class );
+        if ( rankByLevel ) {
+            query.setParameter( "eeClass", ExpressionExperiment.class );
+            query.setParameter( "edClass", ExperimentalDesign.class );
+            query.setParameter( "bmClass", BioMaterial.class );
+        }
 
         query.setParameterList( "uris", uris );
 
