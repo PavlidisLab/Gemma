@@ -23,7 +23,6 @@ import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.hibernate.*;
-import org.hibernate.collection.spi.PersistentCollection;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
@@ -992,52 +991,64 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     @Override
     protected Query getFilteringQuery( @Nullable Filters filters, @Nullable Sort sort ) {
         //language=HQL
-        return finishFilteringQuery( "select " + distinctIfNecessary( filters, sort ) + "ad from ArrayDesign as ad "
+        return finishFilteringQuery( "select ad "
+                + "from ArrayDesign as ad "
                 + "left join fetch ad.curationDetails " + CURATION_DETAILS_ALIAS + " "
                 + "left join fetch ad.primaryTaxon " + PRIMARY_TAXON_ALIAS + " "
                 + "left join fetch ad.mergedInto m "
                 + "left join fetch s.lastNeedsAttentionEvent as eAttn "
                 + "left join fetch s.lastNoteUpdateEvent as eNote "
                 + "left join fetch s.lastTroubledEvent as eTrbl "
-                + "left join fetch ad.alternativeTo alt", filters, sort );
+                + "left join fetch ad.alternativeTo alt", filters, sort, groupByIfNecessary( filters, sort ) );
     }
 
     @Override
     protected Query getFilteringIdQuery( @Nullable Filters filters ) {
         //language=HQL
         return finishFilteringQuery(
-                "select " + distinctIfNecessary( filters, null ) + "ad.id from ArrayDesign as ad "
+                "select " + distinctIfNecessary( filters ) + "ad.id "
+                        + "from ArrayDesign as ad "
                         + "left join ad.curationDetails " + CURATION_DETAILS_ALIAS + " "
                         + "left join ad.primaryTaxon " + PRIMARY_TAXON_ALIAS + " "
                         + "left join ad.mergedInto m "
                         + "left join s.lastNeedsAttentionEvent as eAttn "
                         + "left join s.lastNoteUpdateEvent as eNote "
                         + "left join s.lastTroubledEvent as eTrbl "
-                        + "left join ad.alternativeTo alt", filters, null );
-    }
-
-    private String distinctIfNecessary( @Nullable Filters filters, @Nullable Sort sort ) {
-        if ( FiltersUtils.containsAnyAlias( filters, sort, EXTERNAL_REFERENCE_ALIAS ) ) {
-            return "distinct ";
-        } else {
-            return "";
-        }
+                        + "left join ad.alternativeTo alt", filters, null, null );
     }
 
     @Override
     protected Query getFilteringCountQuery( @Nullable Filters filters ) {
         //language=HQL
-        return finishFilteringQuery( "select count(" + distinctIfNecessary( filters, null ) + "ad) from ArrayDesign as ad "
+        return finishFilteringQuery( "select count(" + distinctIfNecessary( filters ) + "ad) "
+                + "from ArrayDesign as ad "
                 + "left join ad.curationDetails " + CURATION_DETAILS_ALIAS + " "
                 + "left join ad.primaryTaxon " + PRIMARY_TAXON_ALIAS + " "
                 + "left join ad.mergedInto m "
                 + "left join s.lastNeedsAttentionEvent as eAttn "
                 + "left join s.lastNoteUpdateEvent as eNote "
                 + "left join s.lastTroubledEvent as eTrbl "
-                + "left join ad.alternativeTo alt", filters, null );
+                + "left join ad.alternativeTo alt", filters, null, null );
     }
 
-    private Query finishFilteringQuery( String queryString, @Nullable Filters filters, @Nullable Sort sort ) {
+    private String distinctIfNecessary( @Nullable Filters filters ) {
+        if ( FiltersUtils.containsAnyAlias( filters, null, EXTERNAL_REFERENCE_ALIAS ) ) {
+            return "distinct ";
+        } else {
+            return "";
+        }
+    }
+
+    @Nullable
+    private String groupByIfNecessary( @Nullable Filters filters, @Nullable Sort sort ) {
+        if ( FiltersUtils.containsAnyAlias( filters, sort, EXTERNAL_REFERENCE_ALIAS ) ) {
+            return "ad";
+        } else {
+            return null;
+        }
+    }
+
+    private Query finishFilteringQuery( String queryString, @Nullable Filters filters, @Nullable Sort sort, @Nullable String groupBy ) {
         if ( filters == null ) {
             filters = Filters.empty();
         } else {
@@ -1054,6 +1065,9 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
         queryString += AclQueryUtils.formAclJoinClause( OBJECT_ALIAS + ".id" );
         queryString += AclQueryUtils.formAclRestrictionClause();
         queryString += FilterQueryUtils.formRestrictionClause( filters );
+        if ( groupBy != null ) {
+            queryString += " group by " + groupBy;
+        }
         queryString += FilterQueryUtils.formOrderByClause( sort );
 
         Query query = this.getSessionFactory().getCurrentSession().createQuery( queryString );

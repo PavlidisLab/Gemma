@@ -62,7 +62,6 @@ import ubic.gemma.persistence.util.*;
 
 import javax.annotation.Nullable;
 import java.util.*;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import static java.util.stream.Collectors.groupingBy;
@@ -86,7 +85,8 @@ public class ExpressionExperimentDaoImpl
             ALL_CHARACTERISTIC_ALIAS = "ac",
             BIO_ASSAY_ALIAS = BioAssayDao.OBJECT_ALIAS,
             TAXON_ALIAS = TaxonDao.OBJECT_ALIAS,
-            ARRAY_DESIGN_ALIAS = ArrayDesignDao.OBJECT_ALIAS;
+            ARRAY_DESIGN_ALIAS = ArrayDesignDao.OBJECT_ALIAS,
+            EXTERNAL_DATABASE_ALIAS = "ED";
 
     /**
      * Aliases applicable for one-to-many relations.
@@ -1622,7 +1622,7 @@ public class ExpressionExperimentDaoImpl
     protected Query getFilteringQuery( @Nullable Filters filters, @Nullable Sort sort ) {
         // the constants for aliases are messing with the inspector
         //language=HQL
-        return finishFilteringQuery( "select " + distinctIfNeeded( filters, sort ) + "ee, aoi, sid "
+        return finishFilteringQuery( "select ee, " + AclQueryUtils.AOI_ALIAS + ", " + AclQueryUtils.SID_ALIAS + " "
                 + "from ExpressionExperiment as ee "
                 + "left join fetch ee.accession acc "
                 + "left join fetch ee.experimentalDesign as EDES "
@@ -1633,13 +1633,13 @@ public class ExpressionExperimentDaoImpl
                 + "left join fetch eNote.eventType "
                 + "left join fetch s.lastTroubledEvent as eTrbl "
                 + "left join fetch eTrbl.eventType "
-                + "left join fetch ee.geeq as geeq", filters, sort );
+                + "left join fetch ee.geeq as geeq", filters, sort, groupByIfNecessary( filters, sort ) );
     }
 
     @Override
     protected Query getFilteringIdQuery( @Nullable Filters filters ) {
         //language=HQL
-        return finishFilteringQuery( "select " + distinctIfNeeded( filters, null ) + "ee.id "
+        return finishFilteringQuery( "select ee.id "
                 + "from ExpressionExperiment as ee "
                 + "left join ee.accession acc "
                 + "left join ee.experimentalDesign as EDES "
@@ -1647,13 +1647,13 @@ public class ExpressionExperimentDaoImpl
                 + "left join s.lastNeedsAttentionEvent as eAttn "
                 + "left join s.lastNoteUpdateEvent as eNote "
                 + "left join s.lastTroubledEvent as eTrbl "
-                + "left join ee.geeq as geeq", filters, null );
+                + "left join ee.geeq as geeq", filters, null, groupByIfNecessary( filters, null ) );
     }
 
     @Override
     protected Query getFilteringCountQuery( @Nullable Filters filters ) {
         //language=HQL
-        return finishFilteringQuery( "select count(" + distinctIfNeeded( filters, null ) + "ee) "
+        return finishFilteringQuery( "select count(" + distinctIfNecessary( filters ) + "ee) "
                 + "from ExpressionExperiment as ee "
                 + "left join ee.accession acc "
                 + "left join ee.experimentalDesign as EDES "
@@ -1661,7 +1661,7 @@ public class ExpressionExperimentDaoImpl
                 + "left join s.lastNeedsAttentionEvent as eAttn "
                 + "left join s.lastNoteUpdateEvent as eNote "
                 + "left join s.lastTroubledEvent as eTrbl "
-                + "left join ee.geeq as geeq", filters, null )
+                + "left join ee.geeq as geeq", filters, null, null )
                 .setCacheable( true );
     }
 
@@ -1671,15 +1671,28 @@ public class ExpressionExperimentDaoImpl
      * <p>
      * Using "distinct" otherwise has a steep performance penalty with combined with "order by".
      */
-    private String distinctIfNeeded( @Nullable Filters filters, @Nullable Sort sort ) {
-        if ( FiltersUtils.containsAnyAlias( filters, sort, ONE_TO_MANY_ALIASES ) ) {
+    private String distinctIfNecessary( @Nullable Filters filters ) {
+        if ( FiltersUtils.containsAnyAlias( filters, null, ONE_TO_MANY_ALIASES ) ) {
             return "distinct ";
         } else {
             return "";
         }
     }
 
-    private Query finishFilteringQuery( String queryString, @Nullable Filters filters, @Nullable Sort sort ) {
+    /**
+     * Similar logic to {@link #distinctIfNecessary(Filters)}, but using a group by since it's more efficient. It does
+     * not work for the counting query, however.
+     */
+    @Nullable
+    private String groupByIfNecessary( @Nullable Filters filters, @Nullable Sort sort ) {
+        if ( FiltersUtils.containsAnyAlias( filters, sort, ONE_TO_MANY_ALIASES ) ) {
+            return "ee";
+        } else {
+            return null;
+        }
+    }
+
+    private Query finishFilteringQuery( String queryString, @Nullable Filters filters, @Nullable Sort sort, @Nullable String groupBy ) {
         if ( filters == null ) {
             filters = Filters.empty();
         } else {
@@ -1688,32 +1701,29 @@ public class ExpressionExperimentDaoImpl
 
         // Restrict to non-troubled EEs for non-administrators
         addNonTroubledFilter( filters, OBJECT_ALIAS );
-        if ( FiltersUtils.containsAnyAlias( filters, null, ArrayDesignDao.OBJECT_ALIAS ) ) {
-            addNonTroubledFilter( filters, ArrayDesignDao.OBJECT_ALIAS );
+        if ( FiltersUtils.containsAnyAlias( filters, null, ARRAY_DESIGN_ALIAS ) ) {
+            addNonTroubledFilter( filters, ARRAY_DESIGN_ALIAS );
         }
 
         // The following two associations are retrieved eagerly via select, which is far more efficient since they are
         // commonly shared across EEs and may benefit from the second-level cache
-        if ( FiltersUtils.containsAnyAlias( filters, sort, "ED" ) ) {
-            queryString += " left join acc.externalDatabase as ED";  // this one will be fetched in a subsequent select clause since it's eagerly fetched from DatabaseEntry
+        if ( FiltersUtils.containsAnyAlias( filters, sort, EXTERNAL_DATABASE_ALIAS ) ) {
+            queryString += " left join acc.externalDatabase as " + EXTERNAL_DATABASE_ALIAS;  // this one will be fetched in a subsequent select clause since it's eagerly fetched from DatabaseEntry
         }
-        if ( FiltersUtils.containsAnyAlias( filters, sort, "taxon" ) ) {
-            queryString += " left join ee.taxon as taxon";
+        if ( FiltersUtils.containsAnyAlias( filters, sort, TAXON_ALIAS ) ) {
+            queryString += " left join ee.taxon as " + TAXON_ALIAS;
         }
 
         // fetching characteristics, bioAssays and arrayDesignUsed is costly, so we reserve these operations only if it
         // is mentioned in the filters
 
         if ( FiltersUtils.containsAnyAlias( filters, sort, CHARACTERISTIC_ALIAS ) ) {
-            queryString += " left join ee.characteristics as " + CharacteristicDao.OBJECT_ALIAS;
+            queryString += " left join ee.characteristics as " + CHARACTERISTIC_ALIAS;
         }
 
         if ( FiltersUtils.containsAnyAlias( filters, sort, FACTOR_VALUE_CHARACTERISTIC_ALIAS ) ) {
             queryString += " left join ee.experimentalDesign.experimentalFactors as ef";
-        }
-
-        if ( FiltersUtils.containsAnyAlias( filters, sort, FACTOR_VALUE_CHARACTERISTIC_ALIAS ) ) {
-            queryString += " left join ef.factorValues as fv ";
+            queryString += " left join ef.factorValues as fv";
             queryString += " left join fv.characteristics as " + FACTOR_VALUE_CHARACTERISTIC_ALIAS;
         }
 
@@ -1739,6 +1749,11 @@ public class ExpressionExperimentDaoImpl
 
         queryString += AclQueryUtils.formAclRestrictionClause();
         queryString += FilterQueryUtils.formRestrictionClause( filters );
+
+        if ( groupBy != null ) {
+            queryString += " group by " + groupBy;
+        }
+
         queryString += FilterQueryUtils.formOrderByClause( sort );
 
         Query query = this.getSessionFactory().getCurrentSession().createQuery( queryString );
