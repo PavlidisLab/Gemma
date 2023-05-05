@@ -105,8 +105,7 @@ public class TableMaintenanceUtilTest extends AbstractJUnit4SpringContextTests {
         tableMaintenanceUtil.updateGene2CsEntries();
         // verify write to disk
         assertThat( gene2csInfoPath ).exists();
-        verify( session ).createSQLQuery( "DELETE FROM GENE2CS" );
-        verify( session ).createSQLQuery( startsWith( "INSERT INTO GENE2CS" ) );
+        verify( session ).createSQLQuery( startsWith( "REPLACE INTO GENE2CS" ) );
         verify( externalDatabaseService ).findByNameWithAuditTrail( "gene2cs" );
         verify( externalDatabaseService ).updateReleaseLastUpdated( eq( gene2csDatabaseEntry ), eq( "" ), any() );
         verify( mailEngine ).send( any() );

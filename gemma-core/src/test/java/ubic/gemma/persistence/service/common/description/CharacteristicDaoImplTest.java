@@ -1,6 +1,6 @@
 package ubic.gemma.persistence.service.common.description;
 
-import org.apache.commons.lang3.StringUtils;
+import gemma.gsec.util.SecurityUtil;
 import org.hibernate.SessionFactory;
 import org.junit.After;
 import org.junit.Before;
@@ -8,17 +8,28 @@ import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ContextConfiguration;
 import ubic.gemma.core.util.test.BaseDatabaseTest;
+import ubic.gemma.model.common.Identifiable;
+import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
 import ubic.gemma.model.common.description.Characteristic;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.persistence.service.TableMaintenanceUtil;
+import ubic.gemma.persistence.service.TableMaintenanceUtilImpl;
+import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
+import ubic.gemma.persistence.util.MailEngine;
 import ubic.gemma.persistence.util.TestComponent;
 
 import javax.annotation.Nullable;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
 
 @ContextConfiguration
 public class CharacteristicDaoImplTest extends BaseDatabaseTest {
@@ -31,10 +42,33 @@ public class CharacteristicDaoImplTest extends BaseDatabaseTest {
         public CharacteristicDao characteristicDao( SessionFactory sessionFactory ) {
             return new CharacteristicDaoImpl( sessionFactory );
         }
+
+        @Bean
+        public TableMaintenanceUtil tableMaintenanceUtil() {
+            return new TableMaintenanceUtilImpl();
+        }
+
+        @Bean
+        public AuditEventService auditEventService() {
+            return mock( AuditEventService.class );
+        }
+
+        @Bean
+        public MailEngine mailEngine() {
+            return mock( MailEngine.class );
+        }
+
+        @Bean
+        public ExternalDatabaseService externalDatabaseService() {
+            return mock( ExternalDatabaseService.class );
+        }
     }
 
     @Autowired
     private CharacteristicDao characteristicDao;
+
+    @Autowired
+    private TableMaintenanceUtil tableMaintenanceUtil;
 
     /* fixtures */
     private Collection<Characteristic> characteristics;
@@ -80,6 +114,27 @@ public class CharacteristicDaoImplTest extends BaseDatabaseTest {
                 .isEqualTo( "" );
         assertThat( characteristicDao.normalizeByValue( createCharacteristic( "https://EXAMPLE.COM", "test" ) ) )
                 .isEqualTo( "https://example.com" );
+    }
+
+    @Test
+    @WithMockUser(authorities = "GROUP_ADMIN")
+    public void testFindExperimentsByUris() {
+        assertThat( SecurityUtil.isUserAdmin() ).isTrue();
+        Taxon taxon = new Taxon();
+        sessionFactory.getCurrentSession().persist( taxon );
+        ExpressionExperiment ee = new ExpressionExperiment();
+        ee.setAuditTrail( new AuditTrail() );
+        Characteristic c = createCharacteristic( "http://example.com", "example" );
+        ee.setTaxon( taxon );
+        ee.getCharacteristics().add( c );
+        sessionFactory.getCurrentSession().persist( ee );
+        sessionFactory.getCurrentSession().flush();
+        int updated = tableMaintenanceUtil.updateExpressionExperiment2CharacteristicEntries();
+        assertThat( updated ).isEqualTo( 1 );
+        sessionFactory.getCurrentSession().flush();
+        // ranking by level uses the order by field() which is not supported
+        Map<Class<? extends Identifiable>, Map<String, Collection<ExpressionExperiment>>> results = characteristicDao.findExperimentsByUris( Collections.singleton( "http://example.com" ), taxon, 100, false );
+        assertThat( results ).containsKey( ExpressionExperiment.class );
     }
 
     private Characteristic createCharacteristic( @Nullable String valueUri, String value ) {
