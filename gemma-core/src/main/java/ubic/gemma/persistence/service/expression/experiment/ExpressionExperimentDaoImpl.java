@@ -693,7 +693,7 @@ public class ExpressionExperimentDaoImpl
     @Override
     public long countTroubledPlatforms( ExpressionExperiment ee ) {
         return ( Long ) getSessionFactory().getCurrentSession()
-                .createQuery( "select count(distinct ad) from ExpressionExperiment ee join ee.bioAssays ba join ba.arrayDesignUsed ad where ad.curationDetails.troubled" )
+                .createQuery( "select count(distinct ad) from ExpressionExperiment ee join ee.bioAssays ba join ba.arrayDesignUsed ad where ad.curationDetails.troubled = true" )
                 .uniqueResult();
     }
 
