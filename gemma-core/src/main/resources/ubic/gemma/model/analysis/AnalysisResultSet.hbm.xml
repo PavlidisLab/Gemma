@@ -61,7 +61,7 @@
                     <key foreign-key="HIT_LIST_SIZE_RESULT_SET_FKC">
                         <column name="RESULT_SET_FK" sql-type="BIGINT"/>
                     </key>
-                    <one-to-many class="ubic.gemma.model.analysis.expression.diff.HitListSizeImpl"/>
+                    <one-to-many class="ubic.gemma.model.analysis.expression.diff.HitListSize"/>
                 </set>
             </subclass>
         </subclass>

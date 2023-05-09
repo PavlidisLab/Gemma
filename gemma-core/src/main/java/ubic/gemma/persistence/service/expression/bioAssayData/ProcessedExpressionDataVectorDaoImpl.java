@@ -31,7 +31,6 @@ import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrixUtil;
 import ubic.gemma.core.datastructure.matrix.QuantitationMismatchException;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
-import ubic.gemma.model.common.quantitationtype.QuantitationTypeImpl;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -484,7 +483,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends AbstractDesignElementD
             qtsToRemove.forEach( expressionExperiment.getQuantitationTypes()::remove );
             this.getSessionFactory().getCurrentSession().update( expressionExperiment );
             this.getSessionFactory().getCurrentSession()
-                    .createQuery( "delete from QuantitationTypeImpl where id in (:ids)" )
+                    .createQuery( "delete from QuantitationType where id in (:ids)" )
                     .setParameterList( "ids", EntityUtils.getIds( qtsToRemove ) );
         }
     }
@@ -883,7 +882,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends AbstractDesignElementD
 
         if ( present.getId() == null ) {
             Long id = ( Long ) this.getSessionFactory().getCurrentSession().save( present );
-            return ( QuantitationType ) this.getSessionFactory().getCurrentSession().load( QuantitationTypeImpl.class, id );
+            return ( QuantitationType ) this.getSessionFactory().getCurrentSession().load( QuantitationType.class, id );
         }
         return present;
 

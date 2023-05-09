@@ -47,7 +47,7 @@ public class ExpressionDataDoubleMatrixUtilTest {
         CompositeSequence cs = CompositeSequence.Factory.newInstance( "test", ad );
         ev.setDesignElement( cs );
         ev.setData( byteArrayConverter.doubleArrayToBytes( new Double[] { 4.0 } ) );
-        qt = new QuantitationTypeImpl();
+        qt = new QuantitationType();
         qt.setGeneralType( GeneralType.QUANTITATIVE );
         qt.setType( StandardQuantitationType.AMOUNT );
         qt.setRepresentation( PrimitiveType.DOUBLE );
@@ -280,7 +280,7 @@ public class ExpressionDataDoubleMatrixUtilTest {
     @Test
     public void testRandomSuspiciousLog2Matrix() {
         ExpressionExperiment ee = getTestExpressionExperiment( TechnologyType.ONECOLOR );
-        QuantitationType qt = new QuantitationTypeImpl();
+        QuantitationType qt = new QuantitationType();
         qt.setGeneralType( GeneralType.QUANTITATIVE );
         qt.setType( StandardQuantitationType.AMOUNT );
         qt.setScale( ScaleType.LOG2 );
@@ -338,7 +338,7 @@ public class ExpressionDataDoubleMatrixUtilTest {
             ExpressionExperiment ee = new ExpressionExperiment();
             ee.setShortName( shortName );
             ee.setBioAssays( bas );
-            QuantitationType qt = new QuantitationTypeImpl();
+            QuantitationType qt = new QuantitationType();
             return new ExpressionDataDoubleMatrix( ee, qt, matrix );
         } catch ( IOException e ) {
             throw new RuntimeException( e );

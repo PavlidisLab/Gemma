@@ -4,7 +4,7 @@
         "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
 
 <hibernate-mapping>
-    <class name="ubic.gemma.model.common.measurement.MeasurementImpl" table="MEASUREMENT">
+    <class name="ubic.gemma.model.common.measurement.Measurement" table="MEASUREMENT">
         <cache usage="read-write"/>
         <id name="id" type="java.lang.Long" unsaved-value="null">
             <column name="ID" sql-type="BIGINT"/>
@@ -39,7 +39,7 @@
             </type>
         </property>
         <!-- absolutely necessary for this entity, so always fetched -->
-        <many-to-one name="unit" class="ubic.gemma.model.common.measurement.UnitImpl" lazy="false" fetch="join">
+        <many-to-one name="unit" class="ubic.gemma.model.common.measurement.Unit" lazy="false" fetch="join">
             <column name="UNIT_FK" not-null="false" sql-type="BIGINT"/>
         </many-to-one>
     </class>

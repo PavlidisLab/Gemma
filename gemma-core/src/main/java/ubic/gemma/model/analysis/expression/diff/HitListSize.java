@@ -18,13 +18,14 @@
  */
 package ubic.gemma.model.analysis.expression.diff;
 
+import java.io.Serializable;
+
 /**
  * <p>
  * The number of probes meeting a given q-value threshold in the result set.
  * </p>
  */
-@SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
-public abstract class HitListSize implements java.io.Serializable {
+public class HitListSize implements Serializable {
 
     /**
      * The serial version UID of this class. Needed for serialization.
@@ -118,12 +119,12 @@ public abstract class HitListSize implements java.io.Serializable {
     public static final class Factory {
 
         public static HitListSize newInstance() {
-            return new HitListSizeImpl();
+            return new HitListSize();
         }
 
-        public static ubic.gemma.model.analysis.expression.diff.HitListSize newInstance( Double thresholdQvalue,
+        public static HitListSize newInstance( Double thresholdQvalue,
                 Integer numberOfProbes, Direction direction, Integer numberOfGenes ) {
-            final ubic.gemma.model.analysis.expression.diff.HitListSize entity = new ubic.gemma.model.analysis.expression.diff.HitListSizeImpl();
+            final HitListSize entity = new HitListSize();
             entity.setThresholdQvalue( thresholdQvalue );
             entity.setNumberOfProbes( numberOfProbes );
             entity.setDirection( direction );

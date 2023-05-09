@@ -58,7 +58,8 @@
                 <column name="SOURCE_FK" not-null="false" sql-type="BIGINT"/>
             </many-to-one>
         </subclass>
-        <subclass name="ubic.gemma.model.association.ReferenceAssociationImpl"
+        <!-- for historical reason, the discriminator uses the Impl suffix -->
+        <subclass name="ubic.gemma.model.association.ReferenceAssociation"
                   discriminator-value="ReferenceAssociationImpl"
                   abstract="false">
             <many-to-one name="referencedDatabaseEntry" class="ubic.gemma.model.common.description.DatabaseEntry"

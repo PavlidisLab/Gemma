@@ -167,7 +167,7 @@ public class ProcessedExpressionDataVectorDaoTest extends BaseDatabaseTest {
         ad.setAuditTrail( new AuditTrail() );
         sessionFactory.getCurrentSession().persist( ad );
 
-        QuantitationType qt = new QuantitationTypeImpl();
+        QuantitationType qt = new QuantitationType();
         qt.setRepresentation( PrimitiveType.DOUBLE );
         qt.setScale( scaleType );
         qt.setGeneralType( GeneralType.QUANTITATIVE );

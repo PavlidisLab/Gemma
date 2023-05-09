@@ -4,7 +4,7 @@
     "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
 
 <hibernate-mapping>
-   <class name="ubic.gemma.model.common.quantitationtype.QuantitationTypeImpl" table="QUANTITATION_TYPE">
+   <class name="ubic.gemma.model.common.quantitationtype.QuantitationType" table="QUANTITATION_TYPE">
       <cache usage="nonstrict-read-write" />
       <id name="id" type="java.lang.Long" unsaved-value="null">
          <column name="ID" sql-type="BIGINT"/>
