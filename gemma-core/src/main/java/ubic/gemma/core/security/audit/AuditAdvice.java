@@ -24,7 +24,8 @@ import org.aspectj.lang.Signature;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Before;
 import org.aspectj.lang.reflect.MethodSignature;
-import org.hibernate.*;
+import org.hibernate.Hibernate;
+import org.hibernate.SessionFactory;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.CascadingAction;
 import org.hibernate.persister.entity.EntityPersister;
@@ -32,6 +33,7 @@ import org.hibernate.type.Type;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import ubic.gemma.core.security.authentication.UserManager;
 import ubic.gemma.core.util.Pointcuts;
@@ -82,6 +84,7 @@ public class AuditAdvice {
      * @see ubic.gemma.persistence.service.BaseDao#create(Object)
      * @see ubic.gemma.persistence.service.BaseDao#create(Collection)
      */
+    @Order(4)
     @Before("ubic.gemma.core.util.Pointcuts.creator()")
     public void doCreateAdvice( JoinPoint pjp ) {
         doAuditAdvice( pjp, OperationType.CREATE );
@@ -96,6 +99,7 @@ public class AuditAdvice {
      * @see ubic.gemma.persistence.service.BaseDao#update(Object)
      * @see ubic.gemma.persistence.service.BaseDao#update(Collection)
      */
+    @Order(4)
     @Before("ubic.gemma.core.util.Pointcuts.updater()")
     public void doUpdateAdvice( JoinPoint pjp ) {
         doAuditAdvice( pjp, OperationType.UPDATE );
@@ -111,6 +115,7 @@ public class AuditAdvice {
      * @see ubic.gemma.persistence.service.BaseDao#save(Object)
      * @see ubic.gemma.persistence.service.BaseDao#save(Collection)
      */
+    @Order(4)
     @Before("ubic.gemma.core.util.Pointcuts.saver()")
     public void doSaveAdvice( JoinPoint pjp ) {
         doAuditAdvice( pjp, OperationType.SAVE );
@@ -125,6 +130,7 @@ public class AuditAdvice {
      * @see ubic.gemma.persistence.service.BaseDao#remove(Object)
      * @see ubic.gemma.persistence.service.BaseDao#remove(Collection)
      */
+    @Order(4)
     @Before("ubic.gemma.core.util.Pointcuts.deleter()")
     public void doDeleteAdvice( JoinPoint pjp ) {
         doAuditAdvice( pjp, OperationType.DELETE );
