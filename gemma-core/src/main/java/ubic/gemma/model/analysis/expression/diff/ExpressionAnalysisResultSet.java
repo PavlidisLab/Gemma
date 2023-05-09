@@ -140,7 +140,6 @@ public class ExpressionAnalysisResultSet extends FactorAssociatedAnalysisResultS
         this.pvalueDistribution = pvalueDistribution;
     }
 
-    @Override
     public Set<DifferentialExpressionAnalysisResult> getResults() {
         return this.results;
     }

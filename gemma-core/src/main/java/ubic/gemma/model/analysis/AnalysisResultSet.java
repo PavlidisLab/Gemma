@@ -21,9 +21,7 @@ package ubic.gemma.model.analysis;
 
 import ubic.gemma.model.common.Identifiable;
 
-import javax.persistence.Transient;
 import java.io.Serializable;
-import java.util.Collection;
 
 /**
  * An abstract class representing a related set of generic analysis results, part of an analysis.
@@ -80,9 +78,4 @@ public abstract class AnalysisResultSet<R extends AnalysisResult> implements Ide
     public void setId( Long id ) {
         this.id = id;
     }
-
-    @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
-    @Transient
-    public abstract Collection<R> getResults();
-
 }
