@@ -1,13 +1,27 @@
 package ubic.gemma.persistence.service.common.description;
 
+import gemma.gsec.AuthorityConstants;
+import gemma.gsec.acl.AclAuthorizationStrategyImpl;
+import gemma.gsec.acl.AclSidRetrievalStrategyImpl;
+import gemma.gsec.acl.domain.*;
 import gemma.gsec.util.SecurityUtil;
 import org.hibernate.SessionFactory;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.concurrent.ConcurrentMapCache;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.access.hierarchicalroles.NullRoleHierarchy;
+import org.springframework.security.acls.domain.*;
+import org.springframework.security.acls.model.MutableAcl;
+import org.springframework.security.acls.model.MutableAclService;
+import org.springframework.security.authentication.TestingAuthenticationToken;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ContextConfiguration;
 import ubic.gemma.core.util.test.BaseDatabaseTest;
@@ -62,6 +76,23 @@ public class CharacteristicDaoImplTest extends BaseDatabaseTest {
         public ExternalDatabaseService externalDatabaseService() {
             return mock( ExternalDatabaseService.class );
         }
+
+        @Bean
+        public AclDao aclDao( SessionFactory sessionFactory ) {
+            AclAuthorizationStrategy aclAuthorizationStrategy = new AclAuthorizationStrategyImpl(
+                    new GrantedAuthority[] { new SimpleGrantedAuthority( "ADMIN" ), new SimpleGrantedAuthority( "ADMIN" ), new SimpleGrantedAuthority( "ADMIN" ) },
+                    new AclSidRetrievalStrategyImpl( new NullRoleHierarchy() ) );
+            return new AclDaoImpl( sessionFactory,
+                    aclAuthorizationStrategy,
+                    new SpringCacheBasedAclCache( new ConcurrentMapCache( "acl" ),
+                            new DefaultPermissionGrantingStrategy( new ConsoleAuditLogger() ),
+                            aclAuthorizationStrategy ) );
+        }
+
+        @Bean
+        public MutableAclService aclService( AclDao aclDao ) {
+            return new AclServiceImpl( aclDao );
+        }
     }
 
     @Autowired
@@ -69,6 +100,9 @@ public class CharacteristicDaoImplTest extends BaseDatabaseTest {
 
     @Autowired
     private TableMaintenanceUtil tableMaintenanceUtil;
+
+    @Autowired
+    private MutableAclService aclService;
 
     /* fixtures */
     private Collection<Characteristic> characteristics;
@@ -117,8 +151,76 @@ public class CharacteristicDaoImplTest extends BaseDatabaseTest {
     }
 
     @Test
-    @WithMockUser(authorities = "GROUP_ADMIN")
+    @WithMockUser(username = "bob")
     public void testFindExperimentsByUris() {
+        assertThat( SecurityUtil.isUserAdmin() ).isFalse();
+        assertThat( SecurityUtil.isUserLoggedIn() ).isTrue();
+        Taxon taxon = new Taxon();
+        sessionFactory.getCurrentSession().persist( taxon );
+        ExpressionExperiment ee = new ExpressionExperiment();
+        ee.setAuditTrail( new AuditTrail() );
+        Characteristic c = createCharacteristic( "http://example.com", "example" );
+        ee.setTaxon( taxon );
+        ee.getCharacteristics().add( c );
+        sessionFactory.getCurrentSession().persist( ee );
+        sessionFactory.getCurrentSession().flush();
+
+        // add ACLs and read permission to bob
+        MutableAcl acl = aclService.createAcl( new AclObjectIdentity( ee ) );
+        acl.insertAce( 0, BasePermission.READ, new AclPrincipalSid( "bob" ), false );
+        aclService.updateAcl( acl );
+
+        int updated = tableMaintenanceUtil.updateExpressionExperiment2CharacteristicEntries();
+        assertThat( updated ).isEqualTo( 1 );
+        sessionFactory.getCurrentSession().flush();
+        // ranking by level uses the order by field() which is not supported
+        Map<Class<? extends Identifiable>, Map<String, Collection<ExpressionExperiment>>> results = characteristicDao.findExperimentsByUris( Collections.singleton( "http://example.com" ), taxon, 100, false );
+        assertThat( results ).containsKey( ExpressionExperiment.class );
+    }
+
+    @Test
+    @WithMockUser("bob")
+    public void testFindExperimentsByUrisAsAnonymous() {
+        assertThat( SecurityUtil.isUserAdmin() ).isFalse();
+        assertThat( SecurityUtil.isUserLoggedIn() ).isTrue();
+        Taxon taxon = new Taxon();
+        sessionFactory.getCurrentSession().persist( taxon );
+        ExpressionExperiment ee = new ExpressionExperiment();
+        ee.setAuditTrail( new AuditTrail() );
+        Characteristic c = createCharacteristic( "http://example.com", "example" );
+        ee.setTaxon( taxon );
+        ee.getCharacteristics().add( c );
+        sessionFactory.getCurrentSession().persist( ee );
+        sessionFactory.getCurrentSession().flush();
+
+        // add ACLs and read permission to everyone
+        MutableAcl acl = aclService.createAcl( new AclObjectIdentity( ee ) );
+        acl.insertAce( 0, BasePermission.READ, new AclGrantedAuthoritySid(
+                new SimpleGrantedAuthority( AuthorityConstants.IS_AUTHENTICATED_ANONYMOUSLY ) ), false );
+        aclService.updateAcl( acl );
+
+        int updated = tableMaintenanceUtil.updateExpressionExperiment2CharacteristicEntries();
+        assertThat( updated ).isEqualTo( 1 );
+        sessionFactory.getCurrentSession().flush();
+
+        // run as anonymous
+        SecurityContext context = SecurityContextHolder.createEmptyContext();
+        TestingAuthenticationToken token = new TestingAuthenticationToken( AuthorityConstants.ANONYMOUS_USER_NAME, null,
+                Arrays.asList( new GrantedAuthority[] {
+                        new SimpleGrantedAuthority( AuthorityConstants.ANONYMOUS_GROUP_AUTHORITY ) } ) );
+        context.setAuthentication( token );
+        SecurityContextHolder.setContext( context );
+        assertThat( SecurityUtil.isUserAdmin() ).isFalse();
+        assertThat( SecurityUtil.isUserAnonymous() ).isTrue();
+
+        // ranking by level uses the order by field() which is not supported
+        Map<Class<? extends Identifiable>, Map<String, Collection<ExpressionExperiment>>> results = characteristicDao.findExperimentsByUris( Collections.singleton( "http://example.com" ), taxon, 100, false );
+        assertThat( results ).containsKey( ExpressionExperiment.class );
+    }
+
+    @Test
+    @WithMockUser(authorities = "GROUP_ADMIN")
+    public void testFindExperimentsByUrisAsAdmin() {
         assertThat( SecurityUtil.isUserAdmin() ).isTrue();
         Taxon taxon = new Taxon();
         sessionFactory.getCurrentSession().persist( taxon );
