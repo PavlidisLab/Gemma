@@ -266,6 +266,10 @@ public class AuditAdvice {
                 Object propertyValue = propertyValues[j];
                 Type propertyType = propertyTypes[j];
 
+                if ( propertyValue == null ) {
+                    continue;
+                }
+
                 // ensure that the operation performed on the original object cascades as per JPA definition
                 // events don't cascade through uninitialized properties
                 if ( !cs.doCascade( cascadingAction ) || !Hibernate.isInitialized( propertyValue ) ) {
