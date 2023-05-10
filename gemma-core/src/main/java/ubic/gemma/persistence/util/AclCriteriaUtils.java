@@ -7,10 +7,15 @@ import org.apache.commons.lang3.StringUtils;
 import org.hibernate.Criteria;
 import org.hibernate.HibernateException;
 import org.hibernate.criterion.*;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.engine.spi.TypedValue;
+import org.hibernate.type.IntegerType;
 import org.hibernate.type.StringType;
 import org.hibernate.type.Type;
 import org.springframework.security.acls.domain.BasePermission;
 import org.springframework.security.core.context.SecurityContextHolder;
+
+import java.util.Arrays;
 
 /**
  * Utilities for integrating ACLs with Hibernate {@link Criteria} API.
@@ -48,7 +53,7 @@ public class AclCriteriaUtils {
             dc.add( Restrictions.conjunction()
                     // FIXME: ace2_ is generated, but sqlRestriction can only replace the root alias
                     .add( new SQLCriterionWithAceSidAliasSubstitution( "{aceSid}.SID_FK in (" + AclQueryUtils.ANONYMOUS_SID_SQL + ")", new Object[0], new Type[0] ) )
-                    .add( Restrictions.eq( "ace.mask", readMask ) ) );
+                    .add( new BitwiseAnd( "ace.mask", readMask ) ) );
         } else if ( !SecurityUtil.isUserAdmin() ) {
             String userName = SecurityUtil.getCurrentUsername();
             dc.add( Restrictions.disjunction()
@@ -57,14 +62,40 @@ public class AclCriteriaUtils {
                     // user has specific rights to the object
                     .add( Restrictions.conjunction()
                             .add( new SQLCriterionWithAceSidAliasSubstitution( "{aceSid}.SID_FK in (" + AclQueryUtils.CURRENT_USER_SIDS_SQL.replace( ":" + AclQueryUtils.USER_NAME_PARAM, "?" ) + ")", new Object[] { userName }, new Type[] { StringType.INSTANCE } ) )
-                            .add( Restrictions.in( "ace.mask", new Object[] { readMask, writeMask } ) ) )
+                            .add( new BitwiseAnd( "ace.mask", readMask | writeMask ) ) )
                     // the object is public
                     .add( Restrictions.conjunction()
                             .add( new SQLCriterionWithAceSidAliasSubstitution( "{aceSid}.SID_FK in (" + AclQueryUtils.ANONYMOUS_SID_SQL + ")", new Object[0], new Type[0] ) )
-                            .add( Restrictions.eq( "ace.mask", readMask ) ) ) );
+                            .add( new BitwiseAnd( "ace.mask", readMask ) ) ) );
         }
 
         return Subqueries.propertyIn( aoiIdColumn, dc );
+    }
+
+    private static class BitwiseAnd implements Criterion {
+
+        private final String prop;
+        private final Object value;
+
+        public BitwiseAnd( String prop, Object value ) {
+            this.prop = prop;
+            this.value = value;
+        }
+
+        @Override
+        public String toSqlString( Criteria criteria, CriteriaQuery criteriaQuery ) throws HibernateException {
+            SessionFactoryImplementor sessionFactoryImplementor = criteriaQuery.getFactory();
+            return criteriaQuery.getFactory().getSqlFunctionRegistry()
+                    .findSQLFunction( "bitwise_and" )
+                    .render( new IntegerType(),
+                            Arrays.asList( criteriaQuery.getColumn( criteria, prop ), criteriaQuery.getTypedValue( criteria, prop, value ) ),
+                            sessionFactoryImplementor );
+        }
+
+        @Override
+        public TypedValue[] getTypedValues( Criteria criteria, CriteriaQuery criteriaQuery ) throws HibernateException {
+            return new TypedValue[0];
+        }
     }
 
     /**

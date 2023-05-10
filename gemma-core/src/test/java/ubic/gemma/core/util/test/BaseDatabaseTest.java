@@ -19,6 +19,7 @@ import org.springframework.test.context.TestExecutionListeners;
 import org.springframework.test.context.junit4.AbstractTransactionalJUnit4SpringContextTests;
 import org.springframework.test.jdbc.JdbcTestUtils;
 import org.springframework.transaction.PlatformTransactionManager;
+import ubic.gemma.persistence.hibernate.H2Dialect;
 import ubic.gemma.persistence.util.Settings;
 
 import javax.sql.DataSource;
@@ -46,7 +47,7 @@ public abstract class BaseDatabaseTest extends AbstractTransactionalJUnit4Spring
                     new ClassPathResource( "/hibernate.cfg.xml" ) );
             Properties props = new Properties();
             props.setProperty( "hibernate.hbm2ddl.auto", "create" );
-            props.setProperty( "hibernate.dialect", org.hibernate.dialect.H2Dialect.class.getName() );
+            props.setProperty( "hibernate.dialect", H2Dialect.class.getName() );
             props.setProperty( "hibernate.cache.use_second_level_cache", "false" );
             props.setProperty( "hibernate.show_sql", Settings.getString( "gemma.hibernate.show_sql" ) );
             props.setProperty( "hibernate.format_sql", Settings.getString( "gemma.hibernate.format_sql" ) );

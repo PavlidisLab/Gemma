@@ -5,7 +5,12 @@ import gemma.gsec.util.SecurityUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.hibernate.Query;
 import org.hibernate.QueryParameterException;
+import org.hibernate.dialect.function.SQLFunction;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.type.IntegerType;
 import org.springframework.security.acls.domain.BasePermission;
+
+import java.util.Arrays;
 
 /**
  * Utilities for integrating ACL into {@link Query}.
@@ -37,8 +42,6 @@ public class AclQueryUtils {
     private static final String PARAM_PREFIX = "aclQueryUtils_";
     private static final String
             AOI_TYPE_PARAM = PARAM_PREFIX + "aoiType";
-    private static final String READ_MASK_PARAM = PARAM_PREFIX + "readMask";
-    private static final String WRITE_MASK_PARAM = PARAM_PREFIX + "writeMask";
     static final String USER_NAME_PARAM = PARAM_PREFIX + "userName";
 
     /**
@@ -129,7 +132,7 @@ public class AclQueryUtils {
         if ( SecurityUtil.isUserAnonymous() ) {
             // For anonymous users, only pick publicly readable data
             //language=HQL
-            return " and (" + ACE_ALIAS + ".mask = :" + READ_MASK_PARAM + " and " + ACE_ALIAS + ".sid in (" + ANONYMOUS_SID_HQL + "))";
+            return " and (bitwise_and(" + ACE_ALIAS + ".mask, " + BasePermission.READ.getMask() + ") <> 0 and " + ACE_ALIAS + ".sid in (" + ANONYMOUS_SID_HQL + "))";
         } else if ( !SecurityUtil.isUserAdmin() ) {
             // For non-admin users, pick non-troubled, publicly readable data and data that are readable by them or a group they belong to
             //language=HQL
@@ -137,9 +140,9 @@ public class AclQueryUtils {
                     // user own the object
                     + SID_ALIAS + ".principal = :" + USER_NAME_PARAM + " "
                     // specific rights to the object
-                    + "or (" + ACE_ALIAS + ".sid in (" + CURRENT_USER_SIDS_HQL + ") and (" + ACE_ALIAS + ".mask = :" + READ_MASK_PARAM + " or " + ACE_ALIAS + ".mask = :" + WRITE_MASK_PARAM + ")) "
+                    + "or (" + ACE_ALIAS + ".sid in (" + CURRENT_USER_SIDS_HQL + ") and bitwise_and(" + ACE_ALIAS + ".mask, " + ( BasePermission.READ.getMask() | BasePermission.WRITE.getMask() ) + ") <> 0) "
                     // publicly available
-                    + "or (" + ACE_ALIAS + ".sid in (" + ANONYMOUS_SID_HQL + ") and " + ACE_ALIAS + ".mask = :" + READ_MASK_PARAM + ")"
+                    + "or (" + ACE_ALIAS + ".sid in (" + ANONYMOUS_SID_HQL + ") and bitwise_and(" + ACE_ALIAS + ".mask, " + BasePermission.READ.getMask() + ") <> 0)"
                     + ")";
         } else {
             // For administrators, no filtering is needed, so the ACE is completely skipped from the where clause.
@@ -151,15 +154,18 @@ public class AclQueryUtils {
      * Native flavour of the ACL restriction clause.
      * @see #formAclRestrictionClause()
      */
-    public static String formNativeAclRestrictionClause() {
+    public static String formNativeAclRestrictionClause( SessionFactoryImplementor sessionFactoryImplementor ) {
+        SQLFunction bitwiseAnd = sessionFactoryImplementor.getSqlFunctionRegistry().findSQLFunction( "bitwise_and" );
+        String read = bitwiseAnd.render( new IntegerType(), Arrays.asList( ACE_ALIAS + ".MASK", BasePermission.READ.getMask() ), sessionFactoryImplementor );
+        String readOrWrite = bitwiseAnd.render( new IntegerType(), Arrays.asList( ACE_ALIAS + ".MASK", BasePermission.READ.getMask() | BasePermission.WRITE.getMask() ), sessionFactoryImplementor );
         //language=SQL
         if ( SecurityUtil.isUserAnonymous() ) {
-            return " and (" + ACE_ALIAS + ".MASK = :" + READ_MASK_PARAM + " and " + ACE_ALIAS + ".SID_FK in (" + ANONYMOUS_SID_SQL + "))";
+            return " and (" + read + " <> 0 and " + ACE_ALIAS + ".SID_FK in (" + ANONYMOUS_SID_SQL + "))";
         } else if ( !SecurityUtil.isUserAdmin() ) {
             return " and ("
                     + SID_ALIAS + ".PRINCIPAL = :" + USER_NAME_PARAM + " "
-                    + "or (" + ACE_ALIAS + ".SID_FK in (" + CURRENT_USER_SIDS_SQL + ") and (" + ACE_ALIAS + ".MASK = :" + READ_MASK_PARAM + " or " + ACE_ALIAS + ".MASK = :" + WRITE_MASK_PARAM + ")) "
-                    + "or (" + ACE_ALIAS + ".SID_FK in (" + ANONYMOUS_SID_SQL + ") and " + ACE_ALIAS + ".MASK = :" + READ_MASK_PARAM + ")"
+                    + "or (" + ACE_ALIAS + ".SID_FK in (" + CURRENT_USER_SIDS_SQL + ") and " + readOrWrite + " <> 0) "
+                    + "or (" + ACE_ALIAS + ".SID_FK in (" + ANONYMOUS_SID_SQL + ") and " + read + " <> 0)"
                     + ")";
         } else {
             // For administrators, no filtering is needed, so the ACE is completely skipped from the where clause.
@@ -172,7 +178,7 @@ public class AclQueryUtils {
      * restriction parameters defined in {@link #formAclRestrictionClause()}.
      * <p>
      * This method also work for native queries formed with {@link #formNativeAclJoinClause(String)} and
-     * {@link #formNativeAclRestrictionClause()}.
+     * {@link #formNativeAclRestrictionClause(SessionFactoryImplementor)}.
      *
      * @param query   a {@link Query} object that contains the join and restriction clauses
      * @param aoiType the AOI type to be bound in the query
@@ -183,11 +189,8 @@ public class AclQueryUtils {
         query.setParameter( AOI_TYPE_PARAM, aoiType.getCanonicalName() );
         if ( SecurityUtil.isUserAnonymous() ) {
             // sid 4 = IS_AUTHENTICATED_ANONYMOUSLY
-            query.setParameter( READ_MASK_PARAM, BasePermission.READ.getMask() );
         } else if ( !SecurityUtil.isUserAdmin() ) {
             query.setParameter( USER_NAME_PARAM, SecurityUtil.getCurrentUsername() );
-            query.setParameter( READ_MASK_PARAM, BasePermission.READ.getMask() );
-            query.setParameter( WRITE_MASK_PARAM, BasePermission.WRITE.getMask() );
         }
         // For administrators, no filtering is needed, so the ACE is completely skipped from the where clause.
     }

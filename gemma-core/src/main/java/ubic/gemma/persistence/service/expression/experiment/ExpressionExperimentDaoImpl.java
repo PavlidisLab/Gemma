@@ -28,6 +28,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.hibernate.*;
 import org.hibernate.criterion.Restrictions;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.type.ClassType;
 import org.hibernate.type.LongType;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -648,7 +649,7 @@ public class ExpressionExperimentDaoImpl
                                 + "where {T}.ID is not null " // this is necessary for the clause building since there might be no clause
                                 + ( eeIds != null ? " and T.EXPRESSION_EXPERIMENT_FK in :eeIds " : "" )
                                 + ( level != null ? " and T.LEVEL = :level " : "" )
-                                + AclQueryUtils.formNativeAclRestrictionClause() + " "
+                                + AclQueryUtils.formNativeAclRestrictionClause( ( SessionFactoryImplementor ) getSessionFactory() ) + " "
                                 + "group by COALESCE({T}.CATEGORY_URI, {T}.CATEGORY), COALESCE({T}.VALUE_URI, {T}.VALUE_URI) "
                                 + "having EE_COUNT >= :minFrequency "
                                 + "order by EE_COUNT desc" )

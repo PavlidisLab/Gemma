@@ -26,6 +26,7 @@ import org.hibernate.SessionFactory;
 import org.hibernate.criterion.MatchMode;
 import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Restrictions;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.type.ClassType;
 import org.hibernate.type.LongType;
 import org.hibernate.type.StringType;
@@ -177,7 +178,7 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
                 + AclQueryUtils.formNativeAclJoinClause( "T.EXPRESSION_EXPERIMENT_FK" ) + " "
                 + "where T.VALUE_URI in :uris"
                 + ( taxon != null ? " and I.TAXON_FK = :taxonId" : "" )
-                + AclQueryUtils.formNativeAclRestrictionClause()
+                + AclQueryUtils.formNativeAclRestrictionClause( ( SessionFactoryImplementor ) getSessionFactory() )
                 + ( rankByLevel ? " order by FIELD(T.LEVEL, :eeClass, :edClass, :bmClass)" : "" );
 
         Query query = getSessionFactory().getCurrentSession().createSQLQuery( qs )

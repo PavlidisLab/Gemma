@@ -12,6 +12,7 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
 import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.common.Identifiable;
+import ubic.gemma.persistence.hibernate.MySQL57InnoDBDialect;
 import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.persistence.util.Sort;
@@ -34,7 +35,7 @@ public class AbstractFilteringVoEnabledDaoTest extends AbstractJUnit4SpringConte
         @Bean
         public FactoryBean<SessionFactory> sessionFactory() {
             LocalSessionFactoryBean factoryBean = new LocalSessionFactoryBean();
-            factoryBean.getHibernateProperties().setProperty( "hibernate.dialect", org.hibernate.dialect.MySQL5InnoDBDialect.class.getName() );
+            factoryBean.getHibernateProperties().setProperty( "hibernate.dialect", MySQL57InnoDBDialect.class.getName() );
             factoryBean.setAnnotatedClasses(
                     FakeModel.class, FakeEnum.class, FakeRelatedModel.class
             );
