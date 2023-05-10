@@ -75,6 +75,7 @@ public class AuditEventDaoTest extends BaseDatabaseTest {
         auditable.getAuditTrail().getEvents().add( AuditEvent.Factory.newInstance( new Date(), AuditAction.U, null, null, null, new BatchInformationFetchingEvent() ) );
         sessionFactory.getCurrentSession().persist( auditable );
         ExpressionExperiment auditable2 = new ExpressionExperiment();
+        auditable2.setCurationDetails( new CurationDetails() );
         auditable2.setAuditTrail( new AuditTrail() );
         auditable2.getAuditTrail().getEvents().add( AuditEvent.Factory.newInstance( new Date(), AuditAction.U, null, null, null, new DataReplacedEvent() ) );
         sessionFactory.getCurrentSession().persist( auditable2 );

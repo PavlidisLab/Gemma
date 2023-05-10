@@ -1,20 +1,18 @@
 package ubic.gemma.persistence.service.common.description;
 
 import gemma.gsec.AuthorityConstants;
-import gemma.gsec.acl.AclAuthorizationStrategyImpl;
-import gemma.gsec.acl.AclSidRetrievalStrategyImpl;
-import gemma.gsec.acl.domain.*;
+import gemma.gsec.acl.domain.AclGrantedAuthoritySid;
+import gemma.gsec.acl.domain.AclObjectIdentity;
+import gemma.gsec.acl.domain.AclPrincipalSid;
 import gemma.gsec.util.SecurityUtil;
 import org.hibernate.SessionFactory;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cache.concurrent.ConcurrentMapCache;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.access.hierarchicalroles.NullRoleHierarchy;
-import org.springframework.security.acls.domain.*;
+import org.springframework.security.acls.domain.BasePermission;
 import org.springframework.security.acls.model.MutableAcl;
 import org.springframework.security.acls.model.MutableAclService;
 import org.springframework.security.authentication.TestingAuthenticationToken;
@@ -75,23 +73,6 @@ public class CharacteristicDaoImplTest extends BaseDatabaseTest {
         @Bean
         public ExternalDatabaseService externalDatabaseService() {
             return mock( ExternalDatabaseService.class );
-        }
-
-        @Bean
-        public AclDao aclDao( SessionFactory sessionFactory ) {
-            AclAuthorizationStrategy aclAuthorizationStrategy = new AclAuthorizationStrategyImpl(
-                    new GrantedAuthority[] { new SimpleGrantedAuthority( "ADMIN" ), new SimpleGrantedAuthority( "ADMIN" ), new SimpleGrantedAuthority( "ADMIN" ) },
-                    new AclSidRetrievalStrategyImpl( new NullRoleHierarchy() ) );
-            return new AclDaoImpl( sessionFactory,
-                    aclAuthorizationStrategy,
-                    new SpringCacheBasedAclCache( new ConcurrentMapCache( "acl" ),
-                            new DefaultPermissionGrantingStrategy( new ConsoleAuditLogger() ),
-                            aclAuthorizationStrategy ) );
-        }
-
-        @Bean
-        public MutableAclService aclService( AclDao aclDao ) {
-            return new AclServiceImpl( aclDao );
         }
     }
 

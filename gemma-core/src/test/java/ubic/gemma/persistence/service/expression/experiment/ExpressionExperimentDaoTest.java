@@ -6,20 +6,24 @@ import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ContextConfiguration;
 import ubic.gemma.core.util.test.BaseDatabaseTest;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
+import ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.experiment.ExperimentalDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.common.auditAndSecurity.CurationDetailsDao;
 import ubic.gemma.persistence.util.TestComponent;
 
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Map;
 
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.mock;
@@ -118,6 +122,36 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest {
         for ( ExpressionExperiment ee : ees ) {
             assertFalse( Hibernate.isInitialized( ee ) );
         }
+    }
+
+    @Test
+    @WithMockUser("bob")
+    public void testGetPerTaxonCount() {
+        ExpressionExperiment ee1 = createExpressionExperiment();
+        ee1.setCurationDetails( new CurationDetails() );
+        ExpressionExperiment ee2 = createExpressionExperiment();
+
+        Taxon taxon = new Taxon();
+        sessionFactory.getCurrentSession().persist( taxon );
+        ee1.setTaxon( taxon );
+
+        Taxon taxon2 = new Taxon();
+        sessionFactory.getCurrentSession().persist( taxon2 );
+        ee2.setTaxon( taxon2 );
+
+        Map<Taxon, Long> counts = expressionExperimentDao.getPerTaxonCount();
+        assertTrue( counts.isEmpty() );
+
+        // FIXME
+        // allow bob to see the dataset
+        // MutableAcl acl = aclService.createAcl( new AclObjectIdentity( ee1 ) );
+        // Sid bobSid = new AclPrincipalSid( "bob" );
+        // assertEquals( bobSid, acl.getOwner() );
+        // aclService.updateAcl( acl );
+
+        // counts = expressionExperimentDao.getPerTaxonCount();
+        // assertTrue( counts.containsKey( taxon ) );
+        // assertEquals( 1L, counts.get( taxon ).longValue() );
     }
 
     private ExpressionExperiment reload( ExpressionExperiment e ) {

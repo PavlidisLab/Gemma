@@ -2,17 +2,16 @@ package ubic.gemma.persistence.service.common.auditAndSecurity.curation;
 
 import gemma.gsec.util.SecurityUtil;
 import org.hibernate.SessionFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.curation.AbstractCuratableValueObject;
 import ubic.gemma.model.common.auditAndSecurity.curation.Curatable;
 import ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails;
 import ubic.gemma.persistence.service.AbstractQueryFilteringVoEnabledDao;
-import ubic.gemma.persistence.service.common.auditAndSecurity.CurationDetailsDao;
+import ubic.gemma.persistence.util.AclQueryUtils;
 import ubic.gemma.persistence.util.Filter;
+import ubic.gemma.persistence.util.FilterQueryUtils;
 import ubic.gemma.persistence.util.Filters;
 
-import javax.annotation.Nullable;
 import javax.annotation.OverridingMethodsMustInvokeSuper;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -33,9 +32,6 @@ public abstract class AbstractCuratableDao<C extends Curatable, VO extends Abstr
      * HQL alias for {@link Curatable#getCurationDetails()}.
      */
     protected static final String CURATION_DETAILS_ALIAS = "s";
-
-    @Autowired
-    private CurationDetailsDao curationDetailsDao;
 
     protected AbstractCuratableDao( String objectAlias, Class<C> elementClass, SessionFactory sessionFactory ) {
         super( objectAlias, elementClass, sessionFactory );
@@ -88,10 +84,22 @@ public abstract class AbstractCuratableDao<C extends Curatable, VO extends Abstr
     /**
      * Restrict results to non-troubled curatable entities for non-administrators
      */
-    protected void addNonTroubledFilter( Filters filters, @Nullable String objectAlias ) {
+    protected void addNonTroubledFilter( Filters filters, String objectAlias ) {
         if ( !SecurityUtil.isUserAdmin() ) {
             filters.and( objectAlias, "curationDetails.troubled", Boolean.class, Filter.Operator.eq, false );
         }
+    }
+
+    /**
+     * Format a non-troubled filter for an HQL query.
+     * <p>
+     * For filtering queries, use {@link #addNonTroubledFilter(Filters, String)} instead.
+     *
+     * @param objectAlias an alias for a {@link Curatable} entity
+     */
+    protected String formNonTroubledClause( String objectAlias ) {
+        //language=HQL
+        return SecurityUtil.isUserAdmin() ? "" : " and " + objectAlias + ".curationDetails.troubled = false";
     }
 
     @Override

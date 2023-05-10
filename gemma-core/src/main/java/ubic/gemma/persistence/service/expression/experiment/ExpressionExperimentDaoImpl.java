@@ -920,15 +920,19 @@ public class ExpressionExperimentDaoImpl
 
     @Override
     public Map<Taxon, Long> getPerTaxonCount() {
-        String queryString = "select t, count(distinct ee) from ExpressionExperiment ee "
-                + "join ee.bioAssays as ba "
-                + "join ba.sampleUsed su "
-                + "join su.sourceTaxon t "
-                + "group by t";
+        String queryString = "select ee.taxon, count(distinct ee) from ExpressionExperiment ee "
+                + AclQueryUtils.formAclJoinClause( "ee.id" )
+                + AclQueryUtils.formAclRestrictionClause() + " "
+                + formNonTroubledClause( "ee" ) + " "
+                + "group by ee.taxon";
+
+        Query query = this.getSessionFactory().getCurrentSession().createQuery( queryString );
+
+        AclQueryUtils.addAclParameters( query, ExpressionExperiment.class );
 
         // it is important to cache this, as it gets called on the home page. Though it's actually fast.
         //noinspection unchecked
-        List<Object[]> list = this.getSessionFactory().getCurrentSession().createQuery( queryString )
+        List<Object[]> list = query
                 .setCacheable( true )
                 .list();
 
@@ -943,12 +947,9 @@ public class ExpressionExperimentDaoImpl
         }
         //noinspection unchecked
         List<Object[]> list = this.getSessionFactory().getCurrentSession().createQuery(
-                        "select t, count(distinct ee) from ExpressionExperiment ee "
-                                + "join ee.bioAssays as ba "
-                                + "join ba.sampleUsed su "
-                                + "join su.sourceTaxon t "
+                        "select ee.taxon, count(distinct ee) from ExpressionExperiment ee "
                                 + "where ee.id in :eeIds "
-                                + "group by t" )
+                                + "group by ee.taxon" )
                 .setParameterList( "eeIds", ids )
                 .list();
         return list.stream()

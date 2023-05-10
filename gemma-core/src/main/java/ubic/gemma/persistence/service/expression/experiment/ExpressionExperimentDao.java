@@ -134,10 +134,17 @@ public interface ExpressionExperimentDao
 
     Date getLastArrayDesignUpdate( ExpressionExperiment ee );
 
+    /**
+     * Obtain the count of distinct experiments per taxon.
+     * <p>
+     * Experiments are filtered by ACLs and troubled experiments are only visible to administrators.
+     */
     Map<Taxon, Long> getPerTaxonCount();
 
     /**
      * Obtain the count of distinct experiments per taxon for experiments with the given IDs.
+     * <p>
+     * Experiments <b>are not</b> filtered by ACLs and toubled experiments are only visible to administrators.
      */
     Map<Taxon, Long> getPerTaxonCount( List<Long> ids );
 
