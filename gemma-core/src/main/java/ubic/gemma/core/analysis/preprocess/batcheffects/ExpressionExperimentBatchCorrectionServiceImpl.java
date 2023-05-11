@@ -27,6 +27,7 @@ import ubic.basecode.math.MatrixStats;
 import ubic.basecode.util.FileTools;
 import ubic.gemma.core.analysis.util.ExperimentalDesignUtils;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
+import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -40,6 +41,7 @@ import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressio
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Methods for correcting batch effects.
@@ -51,6 +53,9 @@ public class ExpressionExperimentBatchCorrectionServiceImpl implements Expressio
 
     private static final String QT_DESCRIPTION_SUFFIX_FOR_BATCH_CORRECTED = "(batch-corrected)";
     private static final Log log = LogFactory.getLog( ExpressionExperimentBatchCorrectionServiceImpl.class );
+    public static final String COLLECTION_OF_MATERIAL_URI = "http://www.ebi.ac.uk/efo/EFO_0005066";
+    public static final String DE_EXCLUDE_URI = "http://gemma.msl.ubc.ca/ont/TGEMO_00014";
+    public static final String DE_INCLUDE_URI = "http://gemma.msl.ubc.ca/ont/TGEMO_00013";
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
 
@@ -197,7 +202,7 @@ public class ExpressionExperimentBatchCorrectionServiceImpl implements Expressio
                 if ( i == 0 ) {
                     // Address possibility of duplicate column names.
                     String colname = design.getColName( j ).getName();
-                    if (colNames.contains( colname )) {  // yes inefficient but this is a small matrix
+                    if ( colNames.contains( colname ) ) {  // yes inefficient but this is a small matrix
                         colname = colname + "_" + j; // this is just to make sure we don't have duplicates so the addend doesn't matter
                     }
                     colNames.add( colname );
@@ -265,19 +270,45 @@ public class ExpressionExperimentBatchCorrectionServiceImpl implements Expressio
     }
 
     /**
-     * Extract sample information, format into something ComBat can use. Which covariates should we use??
+     * Extract sample information, format into something ComBat can use.
+     *
+     * Certain factors are removed at this stage, notably "DE_Exclude/Include" factors.
+     *
+     * @param ee
+     * @param mat
+     * @return design matrix
      */
     private ObjectMatrix<BioMaterial, ExperimentalFactor, Object> getDesign( ExpressionExperiment ee,
             ExpressionDataDoubleMatrix mat ) {
 
         Collection<ExperimentalFactor> experimentalFactors = ee.getExperimentalDesign().getExperimentalFactors();
 
-        List<ExperimentalFactor> factors = new ArrayList<>( experimentalFactors );
+        /* remove experimental factors that are for DE_Exclude */
+        List<ExperimentalFactor> retainedFactors = experimentalFactors.stream().filter( ef -> retainForBatchCorrection( ef ) ).collect( Collectors.toList() );
 
-        List<BioMaterial> orderedSamples = ExperimentalDesignUtils.getOrderedSamples( mat, factors );
+        List<BioMaterial> orderedSamples = ExperimentalDesignUtils.getOrderedSamples( mat, retainedFactors );
 
-        return ExperimentalDesignUtils.sampleInfoMatrix( factors, orderedSamples,
-                ExperimentalDesignUtils.getBaselineConditions( orderedSamples, factors ) );
+        return ExperimentalDesignUtils.sampleInfoMatrix( retainedFactors, orderedSamples,
+                ExperimentalDesignUtils.getBaselineConditions( orderedSamples, retainedFactors ) );
+    }
+
+    /**
+     * Test whether the experimental factor should be used for batch correction. If the factor is for DE_Exclude/Include, then it should not be used.
+     * @param ef experimental factor
+     * @return true if the factor should be used in the model for batch correction
+     */
+    private boolean retainForBatchCorrection( ExperimentalFactor ef ) {
+        if ( ef.getCategory().getCategoryUri().equals( COLLECTION_OF_MATERIAL_URI ) ) {
+            for ( FactorValue fv : ef.getFactorValues() ) {
+                for ( Characteristic c : fv.getCharacteristics() ) {
+                    if ( c.getValueUri().equals( DE_EXCLUDE_URI ) || c.getValueUri().equals( DE_INCLUDE_URI ) ) {
+                        log.info("Dropping factor " + ef.getName() + " from batch correction model because it is for DE_Exclude/Include");
+                        return false;
+                    }
+                }
+            }
+        }
+        return true;
     }
 
     private QuantitationType makeNewQuantitationType( QuantitationType oldQt ) {
