@@ -174,7 +174,8 @@ public class GeeqServiceImpl extends AbstractVoEnabledService<Geeq, GeeqValueObj
                 "Issues noted: \n" + gq
                         .getOtherIssues() );
 
-        log.info( GeeqServiceImpl.LOG_PREFIX + " finished for " + ee.getShortName() + " (" + stopwatch.getTime() + " ms)" );
+        if ( stopwatch.getTime() > 1000 )
+            log.info( GeeqServiceImpl.LOG_PREFIX + " finished for " + ee.getShortName() + " (" + stopwatch.getTime() + " ms)" );
 
         return gq;
     }
