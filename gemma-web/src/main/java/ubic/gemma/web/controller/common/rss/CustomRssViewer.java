@@ -69,10 +69,7 @@ public class CustomRssViewer extends AbstractRssFeedView {
             item.setContent( content );
             item.setTitle( title );
             item.setLink( link );
-
-            if ( e.getCurationDetails() != null ) {
-                item.setPubDate( e.getCurationDetails().getLastUpdated() );
-            }
+            item.setPubDate( e.getCurationDetails().getLastUpdated() );
             items.add( item );
         }
         return items;

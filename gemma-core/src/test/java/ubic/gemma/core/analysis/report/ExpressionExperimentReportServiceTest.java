@@ -35,6 +35,10 @@ public class ExpressionExperimentReportServiceTest extends BaseSpringContextTest
         ee = getTestPersistentBasicExpressionExperiment();
         assertNull( ee.getBatchEffect() );
         assertNull( ee.getBatchConfound() );
+        assertNull( ee.getCurationDetails().getLastUpdated() );
+        expressionExperimentService.update( ee );
+        ee = expressionExperimentService.thawLite( ee );
+        assertNotNull( ee.getCurationDetails().getLastUpdated() );
         SecurityContext previousContext = SecurityContextHolder.getContext();
         try {
             runAsAgent();

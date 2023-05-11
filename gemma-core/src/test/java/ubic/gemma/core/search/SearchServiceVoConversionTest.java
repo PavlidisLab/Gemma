@@ -5,7 +5,10 @@ import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.security.test.context.support.WithSecurityContextTestExecutionListener;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.TestExecutionListeners;
 import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
 import ubic.gemma.core.annotation.reference.BibliographicReferenceService;
 import ubic.gemma.core.genome.gene.service.GeneSetService;
@@ -56,6 +59,7 @@ import static org.mockito.Mockito.*;
  * @author poirigui
  */
 @ContextConfiguration
+@TestExecutionListeners(WithSecurityContextTestExecutionListener.class)
 public class SearchServiceVoConversionTest extends AbstractJUnit4SpringContextTests {
 
     @Configuration
@@ -123,12 +127,14 @@ public class SearchServiceVoConversionTest extends AbstractJUnit4SpringContextTe
     }
 
     @Test
+    @WithMockUser
     public void testConvertArrayDesign() {
         searchService.loadValueObject( SearchResult.from( ArrayDesign.class, ad, 1.0, "test object" ) );
         verify( arrayDesignService ).loadValueObject( ad );
     }
 
     @Test
+    @WithMockUser
     public void testConvertArrayDesignCollection() {
         searchService.loadValueObjects( Collections.singleton( SearchResult.from( ArrayDesign.class, ad, 1.0, "test object" ) ) );
         verify( arrayDesignService ).loadValueObjects( Collections.singletonList( ad ) );
@@ -145,12 +151,14 @@ public class SearchServiceVoConversionTest extends AbstractJUnit4SpringContextTe
     }
 
     @Test
+    @WithMockUser
     public void testConvertCompositeSequence() {
         searchService.loadValueObject( SearchResult.from( CompositeSequence.class, cs, 1.0, "test object" ) );
         verify( compositeSequenceService ).loadValueObject( cs );
     }
 
     @Test
+    @WithMockUser
     public void testConvertCompositeSequenceCollection() {
         when( compositeSequenceService.loadValueObjects( any() ) ).thenReturn( Collections.singletonList( new CompositeSequenceValueObject( cs ) ) );
         // this is a special case because of how it's implemented
@@ -159,6 +167,7 @@ public class SearchServiceVoConversionTest extends AbstractJUnit4SpringContextTe
     }
 
     @Test
+    @WithMockUser
     public void testConvertExpressionExperiment() {
         searchService.loadValueObject( SearchResult.from( ExpressionExperiment.class, ee, 1.0, "test object" ) );
         verify( expressionExperimentService ).loadValueObject( ee );
@@ -217,6 +226,7 @@ public class SearchServiceVoConversionTest extends AbstractJUnit4SpringContextTe
     }
 
     @Test
+    @WithMockUser
     public void testBlacklistedConversion() {
         BlacklistedEntity bp = new BlacklistedPlatform();
         bp.setId( 1L );

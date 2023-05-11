@@ -20,7 +20,6 @@
 package ubic.gemma.model.expression.arrayDesign;
 
 import ubic.gemma.model.common.AbstractAuditable;
-
 import ubic.gemma.model.common.auditAndSecurity.Contact;
 import ubic.gemma.model.common.auditAndSecurity.curation.Curatable;
 import ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails;
@@ -28,8 +27,8 @@ import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.genome.Taxon;
 
-import java.util.Set;
 import java.util.HashSet;
+import java.util.Set;
 
 /**
  * Represents an assembly of design elements that are assayed all at once.
@@ -60,7 +59,7 @@ public class ArrayDesign extends AbstractAuditable implements gemma.gsec.model.S
     private Set<AlternateName> alternateNames = new HashSet<>();
     private ArrayDesign alternativeTo; // for affymetrix
     private Set<CompositeSequence> compositeSequences = new HashSet<>();
-    private CurationDetails curationDetails;
+    private CurationDetails curationDetails = new CurationDetails();
     private Contact designProvider;
     private Set<DatabaseEntry> externalReferences = new HashSet<>();
     private ArrayDesign mergedInto;

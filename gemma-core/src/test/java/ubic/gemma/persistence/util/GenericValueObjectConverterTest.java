@@ -6,10 +6,10 @@ import org.springframework.core.convert.ConverterNotFoundException;
 import org.springframework.core.convert.support.ConfigurableConversionService;
 import org.springframework.core.convert.support.GenericConversionService;
 import ubic.gemma.model.IdentifiableValueObject;
+import ubic.gemma.model.common.description.DatabaseEntry;
+import ubic.gemma.model.common.description.DatabaseEntryValueObject;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -23,40 +23,40 @@ public class GenericValueObjectConverterTest {
 
     @Before
     public void setUp() {
-        converter.addConverter( new GenericValueObjectConverter<>( ExpressionExperimentValueObject::new, ExpressionExperiment.class, ExpressionExperimentValueObject.class ) );
+        converter.addConverter( new GenericValueObjectConverter<>( DatabaseEntryValueObject::new, DatabaseEntry.class, DatabaseEntryValueObject.class ) );
     }
 
     @Test
     public void test() {
-        Object converted = converter.convert( new ExpressionExperiment(), ExpressionExperimentValueObject.class );
-        assertThat( converted ).isInstanceOf( ExpressionExperimentValueObject.class );
+        Object converted = converter.convert( new DatabaseEntry(), DatabaseEntryValueObject.class );
+        assertThat( converted ).isInstanceOf( DatabaseEntryValueObject.class );
     }
 
     @Test
     public void testConvertToSuperClass() {
-        Object converted = converter.convert( new ExpressionExperiment(), IdentifiableValueObject.class );
-        assertThat( converted ).isInstanceOf( ExpressionExperimentValueObject.class );
+        Object converted = converter.convert( new DatabaseEntry(), IdentifiableValueObject.class );
+        assertThat( converted ).isInstanceOf( DatabaseEntryValueObject.class );
     }
 
     @Test
     public void testConvertFromSubClass() {
-        Object converted = converter.convert( new SpecificExpressionExperiment(), ExpressionExperimentValueObject.class );
-        assertThat( converted ).isInstanceOf( ExpressionExperimentValueObject.class );
+        Object converted = converter.convert( new SpecificDatabaseEntry(), DatabaseEntryValueObject.class );
+        assertThat( converted ).isInstanceOf( DatabaseEntryValueObject.class );
     }
 
-    private static class SpecificExpressionExperiment extends ExpressionExperiment {
+    private static class SpecificDatabaseEntry extends DatabaseEntry {
 
     }
 
     @Test
     public void testConvertCollection() {
-        Object converted = converter.convert( Collections.singleton( new ExpressionExperiment() ), List.class );
+        Object converted = converter.convert( Collections.singleton( new DatabaseEntry() ), List.class );
         assertThat( converted ).isInstanceOf( List.class );
     }
 
     @Test
     public void testConvertCollectionToListSuperType() {
-        Object converted = converter.convert( Collections.singleton( new ExpressionExperiment() ), Collection.class );
+        Object converted = converter.convert( Collections.singleton( new DatabaseEntry() ), Collection.class );
         assertThat( converted ).isInstanceOf( List.class );
     }
 
@@ -67,6 +67,6 @@ public class GenericValueObjectConverterTest {
 
     @Test
     public void testConvertNull() {
-        assertThat( converter.convert( null, ExpressionExperimentValueObject.class ) ).isNull();
+        assertThat( converter.convert( null, DatabaseEntryValueObject.class ) ).isNull();
     }
 }

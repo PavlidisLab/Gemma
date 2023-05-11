@@ -128,7 +128,6 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest {
     @WithMockUser("bob")
     public void testGetPerTaxonCount() {
         ExpressionExperiment ee1 = createExpressionExperiment();
-        ee1.setCurationDetails( new CurationDetails() );
         ExpressionExperiment ee2 = createExpressionExperiment();
 
         Taxon taxon = new Taxon();
@@ -162,7 +161,6 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest {
 
     private ExpressionExperiment createExpressionExperiment() {
         ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
-        ee.setAuditTrail( new AuditTrail() );
         ee.setExperimentalDesign( new ExperimentalDesign() );
         return expressionExperimentDao.create( ee );
     }

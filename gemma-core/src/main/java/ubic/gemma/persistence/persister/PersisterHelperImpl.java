@@ -37,9 +37,6 @@ public class PersisterHelperImpl extends RelationshipPersister implements Persis
     protected Object doPersist( Object entity, Caches caches ) {
         if ( entity instanceof Auditable ) {
             Auditable auditable = ( Auditable ) entity;
-            if ( auditable.getAuditTrail() == null ) {
-                auditable.setAuditTrail( AuditTrail.Factory.newInstance() );
-            }
             if ( auditable.getAuditTrail().getId() == null ) {
                 auditable.setAuditTrail( persistAuditTrail( auditable.getAuditTrail() ) );
             }

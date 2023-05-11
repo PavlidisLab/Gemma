@@ -10,6 +10,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.ContextConfiguration;
 import ubic.gemma.core.util.test.BaseDatabaseTest;
 import ubic.gemma.model.common.Auditable;
+import ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.common.auditAndSecurity.eventType.BatchInformationFetchingEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.DataReplacedEvent;
@@ -55,7 +56,6 @@ public class AuditEventDaoTest extends BaseDatabaseTest {
     @Test
     public void testGetLastEvent() {
         ExpressionExperiment auditable = new ExpressionExperiment();
-        auditable.setAuditTrail( new AuditTrail() );
         sessionFactory.getCurrentSession().persist( auditable );
         assertNull( auditEventDao.getLastEvent( auditable, BatchInformationFetchingEvent.class ) );
         auditable.getAuditTrail().getEvents().add( AuditEvent.Factory.newInstance( new Date(), AuditAction.U, null, null, null, new BatchInformationFetchingEvent() ) );
@@ -71,12 +71,9 @@ public class AuditEventDaoTest extends BaseDatabaseTest {
     @Test
     public void testGetLastEvents() {
         ExpressionExperiment auditable = new ExpressionExperiment();
-        auditable.setAuditTrail( new AuditTrail() );
         auditable.getAuditTrail().getEvents().add( AuditEvent.Factory.newInstance( new Date(), AuditAction.U, null, null, null, new BatchInformationFetchingEvent() ) );
         sessionFactory.getCurrentSession().persist( auditable );
         ExpressionExperiment auditable2 = new ExpressionExperiment();
-        auditable2.setCurationDetails( new CurationDetails() );
-        auditable2.setAuditTrail( new AuditTrail() );
         auditable2.getAuditTrail().getEvents().add( AuditEvent.Factory.newInstance( new Date(), AuditAction.U, null, null, null, new DataReplacedEvent() ) );
         sessionFactory.getCurrentSession().persist( auditable2 );
         sessionFactory.getCurrentSession().flush();

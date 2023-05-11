@@ -22,6 +22,7 @@ import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
+import javax.annotation.Nullable;
 import java.io.Serializable;
 import java.util.Date;
 
@@ -37,26 +38,20 @@ public class CurationDetails implements Identifiable, Serializable {
     private static final long serialVersionUID = -3418540112052921387L;
 
     private Long id;
+    @Nullable
     private Date lastUpdated;
+    @Nullable
     private AuditEvent lastNeedsAttentionEvent;
-    private Boolean needsAttention;
+    private boolean needsAttention;
+    @Nullable
     private AuditEvent lastTroubledEvent;
-    private Boolean troubled;
+    private boolean troubled;
+    @Nullable
     private AuditEvent lastNoteUpdateEvent;
+    @Nullable
     private String curationNote;
 
     public CurationDetails() {
-    }
-
-    public CurationDetails( Date lastUpdated, AuditEvent lastNeedsAttentionEvent, Boolean needsAttention,
-            AuditEvent lastTroubledEvent, Boolean troubled, AuditEvent lastNoteUpdateEvent, String curationNote ) {
-        this.lastUpdated = lastUpdated;
-        this.lastNeedsAttentionEvent = lastNeedsAttentionEvent;
-        this.needsAttention = needsAttention;
-        this.lastTroubledEvent = lastTroubledEvent;
-        this.troubled = troubled;
-        this.lastNoteUpdateEvent = lastNoteUpdateEvent;
-        this.curationNote = curationNote;
     }
 
     @Override
@@ -94,35 +89,38 @@ public class CurationDetails implements Identifiable, Serializable {
         this.id = id;
     }
 
+    @Nullable
     public Date getLastUpdated() {
         return lastUpdated;
     }
 
-    public void setLastUpdated( Date lastUpdated ) {
+    public void setLastUpdated( @Nullable Date lastUpdated ) {
         this.lastUpdated = lastUpdated;
     }
 
+    @Nullable
     public AuditEvent getLastNeedsAttentionEvent() {
         return lastNeedsAttentionEvent;
     }
 
-    public void setLastNeedsAttentionEvent( AuditEvent lastNeedsAttentionEvent ) {
+    public void setLastNeedsAttentionEvent( @Nullable AuditEvent lastNeedsAttentionEvent ) {
         this.lastNeedsAttentionEvent = lastNeedsAttentionEvent;
     }
 
-    public Boolean getNeedsAttention() {
+    public boolean getNeedsAttention() {
         return needsAttention;
     }
 
-    public void setNeedsAttention( Boolean needsAttention ) {
+    public void setNeedsAttention( boolean needsAttention ) {
         this.needsAttention = needsAttention;
     }
 
+    @Nullable
     public AuditEvent getLastTroubledEvent() {
         return lastTroubledEvent;
     }
 
-    public void setLastTroubledEvent( AuditEvent lastTroubledEvent ) {
+    public void setLastTroubledEvent( @Nullable AuditEvent lastTroubledEvent ) {
         this.lastTroubledEvent = lastTroubledEvent;
     }
 
@@ -133,27 +131,29 @@ public class CurationDetails implements Identifiable, Serializable {
      *
      * @return true only if these curation details trouble flag is set to true.
      */
-    public Boolean getTroubled() {
+    public boolean getTroubled() {
         return troubled;
     }
 
-    public void setTroubled( Boolean troubled ) {
+    public void setTroubled( boolean troubled ) {
         this.troubled = troubled;
     }
 
+    @Nullable
     public AuditEvent getLastNoteUpdateEvent() {
         return lastNoteUpdateEvent;
     }
 
-    public void setLastNoteUpdateEvent( AuditEvent lastNoteUpdateEvent ) {
+    public void setLastNoteUpdateEvent( @Nullable AuditEvent lastNoteUpdateEvent ) {
         this.lastNoteUpdateEvent = lastNoteUpdateEvent;
     }
 
+    @Nullable
     public String getCurationNote() {
         return curationNote;
     }
 
-    public void setCurationNote( String curationNote ) {
+    public void setCurationNote( @Nullable String curationNote ) {
         this.curationNote = curationNote;
     }
 }

@@ -7,15 +7,12 @@ import ubic.gemma.model.common.auditAndSecurity.curation.AbstractCuratableValueO
 import ubic.gemma.model.common.auditAndSecurity.curation.Curatable;
 import ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails;
 import ubic.gemma.persistence.service.AbstractQueryFilteringVoEnabledDao;
-import ubic.gemma.persistence.util.AclQueryUtils;
 import ubic.gemma.persistence.util.Filter;
-import ubic.gemma.persistence.util.FilterQueryUtils;
 import ubic.gemma.persistence.util.Filters;
 
 import javax.annotation.OverridingMethodsMustInvokeSuper;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Date;
 import java.util.Map;
 import java.util.regex.Pattern;
 
@@ -35,16 +32,6 @@ public abstract class AbstractCuratableDao<C extends Curatable, VO extends Abstr
 
     protected AbstractCuratableDao( String objectAlias, Class<C> elementClass, SessionFactory sessionFactory ) {
         super( objectAlias, elementClass, sessionFactory );
-    }
-
-    @Override
-    public C create( C entity ) {
-        if ( entity.getCurationDetails() == null ) {
-            CurationDetails cd = new CurationDetails( new Date(), null, true, null, false, null, null );
-            getSessionFactory().getCurrentSession().persist( cd );
-            entity.setCurationDetails( cd );
-        }
-        return super.create( entity );
     }
 
     /**

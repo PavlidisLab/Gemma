@@ -55,7 +55,6 @@ public class ArrayDesignDaoTest extends BaseDatabaseTest {
         sessionFactory.getCurrentSession().persist( taxon );
         ArrayDesign ad = new ArrayDesign();
         ad.setPrimaryTaxon( taxon );
-        ad.setAuditTrail( new AuditTrail() );
         ad = arrayDesignDao.create( ad );
 
         Set<CompositeSequence> probes = new HashSet<>();

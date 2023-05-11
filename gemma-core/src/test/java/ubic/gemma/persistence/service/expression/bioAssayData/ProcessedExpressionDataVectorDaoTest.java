@@ -10,12 +10,16 @@ import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.security.test.context.support.WithSecurityContextTestExecutionListener;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.TestExecutionListeners;
 import ubic.basecode.io.ByteArrayConverter;
 import ubic.gemma.core.datastructure.matrix.QuantitationMismatchException;
 import ubic.gemma.core.util.test.BaseDatabaseTest;
 import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
+import ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails;
 import ubic.gemma.model.common.quantitationtype.*;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -35,6 +39,7 @@ import static org.mockito.Mockito.mock;
 import static ubic.gemma.persistence.service.expression.bioAssayData.RandomExpressionDataMatrixUtils.randomExpressionMatrix;
 
 @ContextConfiguration
+@TestExecutionListeners(WithSecurityContextTestExecutionListener.class)
 public class ProcessedExpressionDataVectorDaoTest extends BaseDatabaseTest {
 
     @Configuration
@@ -63,6 +68,7 @@ public class ProcessedExpressionDataVectorDaoTest extends BaseDatabaseTest {
     }
 
     @Test
+    @WithMockUser
     public void testCreateProcessedDataVectors() throws QuantitationMismatchException {
         double[][] matrix = randomExpressionMatrix( 100, 4, new LogNormalDistribution( 10, 1 ) );
         ExpressionExperiment ee = getTestExpressionExperimentForRawExpressionMatrix( matrix, ScaleType.LINEAR, false );
@@ -78,6 +84,7 @@ public class ProcessedExpressionDataVectorDaoTest extends BaseDatabaseTest {
     }
 
     @Test
+    @WithMockUser
     public void testCreateProcessedDataVectorsFromLog2Data() throws QuantitationMismatchException {
         double[][] matrix = randomExpressionMatrix( 100, 4, new NormalDistribution( 15, 1 ) );
         ExpressionExperiment ee = getTestExpressionExperimentForRawExpressionMatrix( matrix, ScaleType.LOG2, false );
@@ -88,6 +95,7 @@ public class ProcessedExpressionDataVectorDaoTest extends BaseDatabaseTest {
     }
 
     @Test
+    @WithMockUser
     public void testCreateProcessedDataVectorsFromLog2RatiometricData() throws QuantitationMismatchException {
         double[][] matrix = randomExpressionMatrix( 100, 4, new NormalDistribution( 0, 1 ) );
         ExpressionExperiment ee = getTestExpressionExperimentForRawExpressionMatrix( matrix, ScaleType.LOG2, true );
@@ -99,6 +107,7 @@ public class ProcessedExpressionDataVectorDaoTest extends BaseDatabaseTest {
 
     @Test
     @Category(SlowTest.class)
+    @WithMockUser
     public void testThaw() throws QuantitationMismatchException {
         double[][] matrix = randomExpressionMatrix( 20000, 8, new NormalDistribution( 0, 1 ) );
         ExpressionExperiment ee = getTestExpressionExperimentForRawExpressionMatrix( matrix, ScaleType.LOG2, true );
@@ -164,7 +173,6 @@ public class ProcessedExpressionDataVectorDaoTest extends BaseDatabaseTest {
 
         ArrayDesign ad = new ArrayDesign();
         ad.setPrimaryTaxon( taxon );
-        ad.setAuditTrail( new AuditTrail() );
         sessionFactory.getCurrentSession().persist( ad );
 
         QuantitationType qt = new QuantitationType();
@@ -206,7 +214,6 @@ public class ProcessedExpressionDataVectorDaoTest extends BaseDatabaseTest {
         }
 
         ee.setRawExpressionDataVectors( vectors );
-        ee.setAuditTrail( new AuditTrail() );
         sessionFactory.getCurrentSession().persist( ee );
         return ee;
     }

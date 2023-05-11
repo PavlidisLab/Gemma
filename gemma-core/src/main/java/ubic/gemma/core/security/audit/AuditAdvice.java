@@ -297,10 +297,7 @@ public class AuditAdvice {
     private void addAuditEvent( Signature method, Auditable auditable, AuditAction auditAction, String
             cascadedNote, User user, Date date ) {
         String note = String.format( "%s event on entity %s:%d [%s] by %s via %s on %s%s", auditAction, auditable.getClass().getName(), auditable.getId(), auditable, user.getUserName(), method, date, cascadedNote );
-        if ( auditable.getAuditTrail() == null ) {
-            // transient
-            auditable.setAuditTrail( AuditTrail.Factory.newInstance() );
-        } else if ( auditable.getAuditTrail().getId() != null ) {
+         if ( auditable.getAuditTrail().getId() != null ) {
             // persistent, but let's make sure it is part of this session
             auditable.setAuditTrail( ( AuditTrail ) sessionFactory.getCurrentSession().merge( auditable.getAuditTrail() ) );
         }

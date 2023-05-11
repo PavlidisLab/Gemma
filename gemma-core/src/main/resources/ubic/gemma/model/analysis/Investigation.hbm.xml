@@ -116,6 +116,7 @@
 				<many-to-one name="curationDetails"
 							 class="ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails" cascade="all"
 							 lazy="false" fetch="join">
+					<!-- cannot be non-null because subsets and generic experiments don't have curation details -->
 					<column name="CURATION_DETAILS_FK" not-null="false" sql-type="BIGINT" unique="true"/>
 				</many-to-one>
 				<set name="rawExpressionDataVectors" lazy="true" fetch="select" inverse="true"

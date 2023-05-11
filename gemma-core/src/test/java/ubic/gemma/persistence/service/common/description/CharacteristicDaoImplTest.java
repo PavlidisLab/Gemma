@@ -25,6 +25,7 @@ import org.springframework.test.context.ContextConfiguration;
 import ubic.gemma.core.util.test.BaseDatabaseTest;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
+import ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
@@ -139,7 +140,6 @@ public class CharacteristicDaoImplTest extends BaseDatabaseTest {
         Taxon taxon = new Taxon();
         sessionFactory.getCurrentSession().persist( taxon );
         ExpressionExperiment ee = new ExpressionExperiment();
-        ee.setAuditTrail( new AuditTrail() );
         Characteristic c = createCharacteristic( "http://example.com", "example" );
         ee.setTaxon( taxon );
         ee.getCharacteristics().add( c );
@@ -167,7 +167,6 @@ public class CharacteristicDaoImplTest extends BaseDatabaseTest {
         Taxon taxon = new Taxon();
         sessionFactory.getCurrentSession().persist( taxon );
         ExpressionExperiment ee = new ExpressionExperiment();
-        ee.setAuditTrail( new AuditTrail() );
         Characteristic c = createCharacteristic( "http://example.com", "example" );
         ee.setTaxon( taxon );
         ee.getCharacteristics().add( c );
@@ -206,7 +205,6 @@ public class CharacteristicDaoImplTest extends BaseDatabaseTest {
         Taxon taxon = new Taxon();
         sessionFactory.getCurrentSession().persist( taxon );
         ExpressionExperiment ee = new ExpressionExperiment();
-        ee.setAuditTrail( new AuditTrail() );
         Characteristic c = createCharacteristic( "http://example.com", "example" );
         ee.setTaxon( taxon );
         ee.getCharacteristics().add( c );

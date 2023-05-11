@@ -46,7 +46,7 @@ public class ExpressionExperiment extends BioAssaySet implements SecuredNotChild
     private static final long serialVersionUID = -1342753625018841735L;
     private String batchConfound;
     private String batchEffect;
-    private CurationDetails curationDetails;
+    private CurationDetails curationDetails = new CurationDetails();
     private ExperimentalDesign experimentalDesign;
     private Geeq geeq;
     private MeanVarianceRelation meanVarianceRelation;

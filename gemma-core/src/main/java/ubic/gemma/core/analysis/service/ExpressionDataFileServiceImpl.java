@@ -59,7 +59,6 @@ import ubic.gemma.persistence.util.EntityUtils;
 import ubic.gemma.persistence.util.Settings;
 
 import java.io.*;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 import java.util.Map.Entry;
@@ -505,7 +504,7 @@ public class ExpressionDataFileServiceImpl extends AbstractTsvFileService<Expres
             File f = this.getOutputFile( this.getDesignFileName( ee ) );
             Date check = ee.getCurationDetails().getLastUpdated();
 
-            if ( this.checkFileOkToReturn( forceWrite, f, check ) ) {
+            if ( check != null && this.checkFileOkToReturn( forceWrite, f, check ) ) {
                 return f;
             }
 

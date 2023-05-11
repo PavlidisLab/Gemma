@@ -19,18 +19,17 @@
 
 package ubic.gemma.web.controller.expression.experiment;
 
-import static org.junit.Assert.assertEquals;
+import org.junit.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentDetailsValueObject;
+import ubic.gemma.web.util.BaseSpringWebTest;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-import org.junit.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentDetailsValueObject;
-import ubic.gemma.web.util.BaseSpringWebTest;
+import static org.junit.Assert.assertEquals;
 
 /**
  * @author ptan
@@ -50,8 +49,8 @@ public class ExpressionExperimentControllerTest extends BaseSpringWebTest {
         for ( int i = 0; i < 2; i++ ) {
             ExpressionExperiment ee = this.getTestPersistentCompleteExpressionExperiment( false );
 
-            if ( lastUpdated == null || lastUpdated.getCurationDetails().getLastUpdated()
-                    .before( ee.getCurationDetails().getLastUpdated() ) ) {
+            if ( lastUpdated == null || ( lastUpdated.getCurationDetails().getLastUpdated() != null && lastUpdated.getCurationDetails().getLastUpdated()
+                    .before( ee.getCurationDetails().getLastUpdated() ) ) ) {
                 lastUpdated = ee;
             }
 

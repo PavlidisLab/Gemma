@@ -45,7 +45,6 @@ public class AbstractServiceTest extends BaseDatabaseTest {
     @Test
     public void testEnsureInSession() {
         ExternalDatabase ed = ExternalDatabase.Factory.newInstance( "test", DatabaseType.OTHER );
-        ed.setAuditTrail( new AuditTrail() );
 
         // a transient instance
         assertThat( myService.ensureInSession( ed ) ).isSameAs( ed );
@@ -109,9 +108,7 @@ public class AbstractServiceTest extends BaseDatabaseTest {
     }
 
     private ExternalDatabase createFixture() {
-        ExternalDatabase ed = ExternalDatabase.Factory.newInstance( "test" + ( ++i ), DatabaseType.OTHER );
-        ed.setAuditTrail( new AuditTrail() );
-        return myService.create( ed );
+        return myService.create( ExternalDatabase.Factory.newInstance( "test" + ( ++i ), DatabaseType.OTHER ) );
     }
 
     private static class MyService extends AbstractService<ExternalDatabase> {

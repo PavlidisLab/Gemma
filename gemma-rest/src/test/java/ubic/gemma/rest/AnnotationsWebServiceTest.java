@@ -6,7 +6,10 @@ import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.security.test.context.support.WithSecurityContextTestExecutionListener;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.TestExecutionListeners;
 import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
 import org.springframework.test.context.web.WebAppConfiguration;
 import ubic.gemma.core.ontology.OntologyService;
@@ -22,8 +25,6 @@ import ubic.gemma.persistence.service.expression.experiment.ExpressionExperiment
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.persistence.util.*;
 import ubic.gemma.rest.util.FilteringAndPaginatedResponseDataObject;
-import ubic.gemma.rest.util.args.DatasetArgService;
-import ubic.gemma.rest.util.PaginatedResponseDataObject;
 import ubic.gemma.rest.util.SortValueObject;
 import ubic.gemma.rest.util.args.*;
 
@@ -37,6 +38,7 @@ import static org.mockito.Mockito.*;
  */
 @WebAppConfiguration
 @ContextConfiguration
+@TestExecutionListeners(WithSecurityContextTestExecutionListener.class)
 public class AnnotationsWebServiceTest extends AbstractJUnit4SpringContextTests {
 
     @Configuration
@@ -111,6 +113,7 @@ public class AnnotationsWebServiceTest extends AbstractJUnit4SpringContextTests 
     }
 
     @Test
+    @WithMockUser
     public void testSearchTaxonDatasets() throws SearchException {
         ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
         ee.setId( 1L );

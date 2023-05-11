@@ -40,16 +40,14 @@ public abstract class AbstractCuratableValueObject<C extends Curatable> extends 
 
     protected AbstractCuratableValueObject( C curatable ) {
         super( curatable );
-        if ( curatable.getCurationDetails() != null ) {
-            this.lastUpdated = curatable.getCurationDetails().getLastUpdated();
-            this.troubled = curatable.getCurationDetails().getTroubled();
-            this.lastTroubledEvent = curatable.getCurationDetails().getLastTroubledEvent() != null ? new AuditEventValueObject( curatable.getCurationDetails().getLastTroubledEvent() ) : null;
-            this.needsAttention = curatable.getCurationDetails().getNeedsAttention();
-            this.lastNeedsAttentionEvent = curatable.getCurationDetails().getLastNeedsAttentionEvent() != null ? new AuditEventValueObject( curatable.getCurationDetails().getLastNeedsAttentionEvent() ) : null;
-            if ( SecurityUtil.isUserAdmin() ) {
-                this.curationNote = curatable.getCurationDetails().getCurationNote();
-                this.lastNoteUpdateEvent = curatable.getCurationDetails().getLastNoteUpdateEvent() != null ? new AuditEventValueObject( curatable.getCurationDetails().getLastNoteUpdateEvent() ) : null;
-            }
+        this.lastUpdated = curatable.getCurationDetails().getLastUpdated();
+        this.troubled = curatable.getCurationDetails().getTroubled();
+        this.lastTroubledEvent = curatable.getCurationDetails().getLastTroubledEvent() != null ? new AuditEventValueObject( curatable.getCurationDetails().getLastTroubledEvent() ) : null;
+        this.needsAttention = curatable.getCurationDetails().getNeedsAttention();
+        this.lastNeedsAttentionEvent = curatable.getCurationDetails().getLastNeedsAttentionEvent() != null ? new AuditEventValueObject( curatable.getCurationDetails().getLastNeedsAttentionEvent() ) : null;
+        if ( SecurityUtil.isUserAdmin() ) {
+            this.curationNote = curatable.getCurationDetails().getCurationNote();
+            this.lastNoteUpdateEvent = curatable.getCurationDetails().getLastNoteUpdateEvent() != null ? new AuditEventValueObject( curatable.getCurationDetails().getLastNoteUpdateEvent() ) : null;
         }
     }
 

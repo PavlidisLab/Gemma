@@ -45,10 +45,6 @@ public class CurationDetailsServiceImpl implements CurationDetailsService {
             throw new IllegalArgumentException( "Cannot update curation details for a transient entity." );
         }
 
-        if ( curatable.getCurationDetails() == null ) {
-            curatable.setCurationDetails( new CurationDetails() );
-        }
-
         CurationDetails curationDetails = curatable.getCurationDetails();
 
         // Update the lastUpdated property to match the event date

@@ -175,8 +175,7 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
             split.setDescription( "This experiment was created by Gemma splitting another: \n" + toSplit + toSplit.getDescription() );
 
             split.setCharacteristics( this.cloneCharacteristics( toSplit.getCharacteristics() ) );
-            split.setCurationDetails( new CurationDetails( new Date(), null, true, null, false, null, null ) ); // not sure anything we want to copy
-            split.setMetadata( toSplit.getMetadata() ); // 
+            split.setMetadata( toSplit.getMetadata() ); //
             split.setPrimaryPublication( toSplit.getPrimaryPublication() );
             split.getOtherRelevantPublications().addAll( toSplit.getOtherRelevantPublications() );
             split.setAccession( this.cloneAccession( toSplit.getAccession() ) ); // accession is currently unique, so have to clone

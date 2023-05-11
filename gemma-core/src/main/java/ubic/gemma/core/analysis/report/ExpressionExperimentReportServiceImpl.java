@@ -478,7 +478,6 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
 
         Date timestamp = new Date( System.currentTimeMillis() );
         eeVo.setDateCached( timestamp );
-        assert eeVo.getLastUpdated() != null;
 
         // update cached detailed VOs
         this.evictFromCache( eeVo.getId() );

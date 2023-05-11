@@ -10,7 +10,10 @@ import org.springframework.core.convert.ConverterNotFoundException;
 import org.springframework.core.convert.TypeDescriptor;
 import org.springframework.core.convert.support.ConfigurableConversionService;
 import org.springframework.core.convert.support.GenericConversionService;
+import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.security.test.context.support.WithSecurityContextTestExecutionListener;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.TestExecutionListeners;
 import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
 import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -30,6 +33,7 @@ import static org.mockito.ArgumentMatchers.anyCollection;
 import static org.mockito.Mockito.*;
 
 @ContextConfiguration
+@TestExecutionListeners(WithSecurityContextTestExecutionListener.class)
 public class ServiceBasedValueObjectConverterTest extends AbstractJUnit4SpringContextTests {
 
     @Configuration
@@ -94,6 +98,7 @@ public class ServiceBasedValueObjectConverterTest extends AbstractJUnit4SpringCo
     }
 
     @Test
+    @WithMockUser
     public void testConvertSingleEntity() {
         Object converted = conversionService.convert( ee, ExpressionExperimentValueObject.class );
         assertThat( converted )
@@ -112,6 +117,7 @@ public class ServiceBasedValueObjectConverterTest extends AbstractJUnit4SpringCo
     }
 
     @Test
+    @WithMockUser
     public void testConvertSingleEntityToSuperType() {
         Object converted = conversionService.convert( ee, IdentifiableValueObject.class );
         assertThat( converted )
@@ -121,6 +127,7 @@ public class ServiceBasedValueObjectConverterTest extends AbstractJUnit4SpringCo
     }
 
     @Test
+    @WithMockUser
     public void testConvertSingleEntityFromSubType() {
         SpecificExpressionExperiment see = new SpecificExpressionExperiment();
         Object converted = conversionService.convert( see, IdentifiableValueObject.class );
@@ -134,6 +141,7 @@ public class ServiceBasedValueObjectConverterTest extends AbstractJUnit4SpringCo
     }
 
     @Test
+    @WithMockUser
     public void testConvertCollection() {
         Collection<ExpressionExperiment> ees = Collections.singleton( ee );
         Object converted = conversionService.convert( ees,
@@ -144,6 +152,7 @@ public class ServiceBasedValueObjectConverterTest extends AbstractJUnit4SpringCo
     }
 
     @Test
+    @WithMockUser
     public void testConvertCollectionToListSuperType() {
         Collection<ExpressionExperiment> ees = Collections.singleton( ee );
         Object converted = conversionService.convert( ees, Collection.class );
@@ -162,6 +171,7 @@ public class ServiceBasedValueObjectConverterTest extends AbstractJUnit4SpringCo
     }
 
     @Test
+    @WithMockUser
     public void testConvertCollectionToSuperType() {
         Collection<ExpressionExperiment> ees = Collections.singleton( ee );
         Object converted = conversionService.convert( ees,
