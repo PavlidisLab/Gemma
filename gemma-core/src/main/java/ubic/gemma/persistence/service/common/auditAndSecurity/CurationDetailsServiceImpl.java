@@ -18,6 +18,7 @@ import lombok.extern.apachecommons.CommonsLog;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ubic.gemma.model.common.auditAndSecurity.AuditAction;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.curation.Curatable;
 import ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails;
@@ -43,6 +44,10 @@ public class CurationDetailsServiceImpl implements CurationDetailsService {
     public void updateCurationDetailsFromAuditEvent( Curatable curatable, AuditEvent auditEvent ) {
         if ( curatable.getId() == null ) {
             throw new IllegalArgumentException( "Cannot update curation details for a transient entity." );
+        }
+
+        if ( auditEvent.getAction() != AuditAction.UPDATE ) {
+            throw new IllegalArgumentException( "Only update audit action can be used to update curation details." );
         }
 
         CurationDetails curationDetails = curatable.getCurationDetails();
@@ -101,10 +106,10 @@ public class CurationDetailsServiceImpl implements CurationDetailsService {
     }
 
     private static boolean isTroubledEvent( AuditEvent auditEvent ) {
-        return TroubledStatusFlagEvent.class.isAssignableFrom( auditEvent.getEventType().getClass() );
+        return auditEvent.getEventType() instanceof TroubledStatusFlagEvent;
     }
 
     private static boolean isNotTroubledEvent( AuditEvent auditEvent ) {
-        return NotTroubledStatusFlagEvent.class.isAssignableFrom( auditEvent.getEventType().getClass() );
+        return auditEvent.getEventType() instanceof NotTroubledStatusFlagEvent;
     }
 }

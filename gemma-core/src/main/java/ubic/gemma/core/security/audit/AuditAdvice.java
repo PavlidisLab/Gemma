@@ -41,6 +41,8 @@ import ubic.gemma.model.common.auditAndSecurity.AuditAction;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
 import ubic.gemma.model.common.auditAndSecurity.User;
+import ubic.gemma.model.common.auditAndSecurity.curation.Curatable;
+import ubic.gemma.persistence.service.common.auditAndSecurity.CurationDetailsService;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.*;
@@ -69,6 +71,9 @@ public class AuditAdvice {
 
     @Autowired
     private UserManager userManager;
+
+    @Autowired
+    private CurationDetailsService curationDetailsService;
 
     @Autowired
     private SessionFactory sessionFactory;
@@ -297,7 +302,7 @@ public class AuditAdvice {
     private void addAuditEvent( Signature method, Auditable auditable, AuditAction auditAction, String
             cascadedNote, User user, Date date ) {
         String note = String.format( "%s event on entity %s:%d [%s] by %s via %s on %s%s", auditAction, auditable.getClass().getName(), auditable.getId(), auditable, user.getUserName(), method, date, cascadedNote );
-         if ( auditable.getAuditTrail().getId() != null ) {
+        if ( auditable.getAuditTrail().getId() != null ) {
             // persistent, but let's make sure it is part of this session
             auditable.setAuditTrail( ( AuditTrail ) sessionFactory.getCurrentSession().merge( auditable.getAuditTrail() ) );
         }
@@ -306,7 +311,11 @@ public class AuditAdvice {
                     AuditAction.CREATE, auditable ) );
             return;
         }
-        auditable.getAuditTrail().getEvents().add( AuditEvent.Factory.newInstance( date, auditAction, note, null, user, null ) );
+        AuditEvent auditEvent = AuditEvent.Factory.newInstance( date, auditAction, note, null, user, null );
+        auditable.getAuditTrail().getEvents().add( auditEvent );
+        if ( auditable instanceof Curatable && auditAction == AuditAction.UPDATE ) {
+            curationDetailsService.updateCurationDetailsFromAuditEvent( ( Curatable ) auditable, auditEvent );
+        }
         if ( AuditAdvice.log.isTraceEnabled() ) {
             AuditAdvice.log.trace( String.format( "Audited event: %s on %s:%d by %s",
                     note.length() > 0 ? note : "[no note]", auditable.getClass().getSimpleName(), auditable.getId(), user.getUserName() ) );
