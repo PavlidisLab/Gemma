@@ -27,6 +27,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.description.DatabaseEntry;
+import ubic.gemma.model.common.description.DatabaseEntryValueObject;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -201,14 +202,6 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
 
     @Override
     public Slice<ArrayDesignValueObject> loadBlacklistedValueObjects( @Nullable Filters filters, @Nullable Sort sort, int offset, int limit ) {
-        //noinspection unchecked
-        List<Object[]> result = ( List<Object[]> ) getSessionFactory().getCurrentSession()
-                .createQuery( "select bp.shortName, ea.accession from BlacklistedPlatform bp left join bp.externalAccession ea" )
-                .setCacheable( true )
-                .list();
-        if ( result.isEmpty() ) {
-            return new Slice<>( Collections.emptyList(), sort, offset, limit, 0L );
-        }
         if ( filters == null ) {
             filters = Filters.empty();
         } else {
@@ -216,15 +209,12 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
             filters = Filters.by( filters );
         }
         // either by shortname
-        Set<String> blacklistedShortNames = result.stream()
-                .map( row -> ( String ) row[0] )
-                .filter( Objects::nonNull )
-                .collect( Collectors.toSet() );
+        Set<String> blacklistedShortNames = getBlacklistedShortNames();
         // or by accession
-        Set<String> blacklistedAccessions = result.stream()
-                .map( row -> ( String ) row[1] )
-                .filter( Objects::nonNull )
-                .collect( Collectors.toSet() );
+        Set<String> blacklistedAccessions = getBlacklistedAccessions();
+        if ( blacklistedShortNames.isEmpty() && blacklistedAccessions.isEmpty() ) {
+            return new Slice<>( Collections.emptyList(), sort, offset, limit, 0L );
+        }
         Filters.FiltersClauseBuilder clauseBuilder = filters.and();
         if ( !blacklistedShortNames.isEmpty() ) {
             clauseBuilder = clauseBuilder.or( OBJECT_ALIAS, "shortName", String.class, Filter.Operator.in, blacklistedShortNames );
@@ -578,6 +568,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
         populateBlacklisted( results );
         populateExpressionExperimentCount( results );
         populateSwitchedExpressionExperimentCount( results );
+        populateExternalReferences( results );
         if ( timer.getTime( TimeUnit.MILLISECONDS ) > 100 ) {
             log.warn( String.format( "Populating %d ArrayDesign VOs took %d ms.", results.size(), timer.getTime( TimeUnit.MILLISECONDS ) ) );
         }
@@ -1107,6 +1098,24 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
         return super.getFilterablePropertyMeta( propertyName );
     }
 
+    private void populateExternalReferences( Collection<ArrayDesignValueObject> results ) {
+        if ( results.isEmpty() ) {
+            return;
+        }
+        //noinspection unchecked
+        List<Object[]> r = getSessionFactory().getCurrentSession()
+                .createQuery( "select ad.id, e from ArrayDesign ad join ad.externalReferences e where ad.id in :ids" )
+                .setParameterList( "ids", EntityUtils.getIds( results ) )
+                .list();
+        Map<Long, Set<DatabaseEntry>> dbi = r.stream()
+                .collect( Collectors.groupingBy(
+                        row -> ( Long ) row[0],
+                        Collectors.mapping( row -> ( DatabaseEntry ) row[1], Collectors.toSet() ) ) );
+        for ( ArrayDesignValueObject r2 : results ) {
+            r2.setExternalReferences( dbi.getOrDefault( r2.getId(), Collections.emptySet() ).stream().map( DatabaseEntryValueObject::new ).collect( Collectors.toSet() ) );
+        }
+    }
+
     private void populateIsMerged( Collection<ArrayDesignValueObject> results ) {
         Map<Long, Boolean> isMergedByArrayDesignId = isMerged( EntityUtils.getIds( results ) );
         for ( ArrayDesignValueObject advo : results ) {
@@ -1115,21 +1124,14 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     }
 
     private void populateBlacklisted( Collection<ArrayDesignValueObject> vos ) {
-
-        if ( vos.isEmpty() ) return;
-
-        Set<String> shortNames = vos.stream()
-                .map( ArrayDesignValueObject::getShortName )
-                .collect( Collectors.toSet() );
-
-        //noinspection unchecked
-        Set<String> blacklistedShortnames = new HashSet<>( this.getSessionFactory().getCurrentSession()
-                .createQuery( "select b.shortName from BlacklistedPlatform b where b.shortName in :n" )
-                .setParameterList( "n", shortNames )
-                .list() );
-
+        Set<String> blacklistedShortnames = getBlacklistedShortNames();
+        Set<String> blacklistedAccessions = getBlacklistedAccessions();
         for ( ArrayDesignValueObject vo : vos ) {
-            vo.setBlackListed( blacklistedShortnames.contains( vo.getShortName() ) );
+            boolean usesBlacklistedShortName = blacklistedShortnames.contains( vo.getShortName() );
+            boolean usesBlacklistedAccession = vo.getExternalReferences() != null && vo.getExternalReferences().stream()
+                    .map( DatabaseEntryValueObject::getAccession )
+                    .anyMatch( blacklistedAccessions::contains );
+            vo.setBlackListed( usesBlacklistedShortName || usesBlacklistedAccession );
         }
     }
 
@@ -1164,5 +1166,22 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
             // missing implies no switched EEs, so zero is a valid default
             vo.setSwitchedExpressionExperimentCount( switchedCountById.getOrDefault( vo.getId(), 0L ) );
         }
+    }
+
+    private Set<String> getBlacklistedShortNames() {
+        return getBlacklistedShortNamesAndAccessions().stream().map( row -> ( String ) row[0] ).collect( Collectors.toSet() );
+    }
+
+    private Set<String> getBlacklistedAccessions() {
+        return getBlacklistedShortNamesAndAccessions().stream()
+                .map( row -> ( String ) row[1] ).collect( Collectors.toSet() );
+    }
+
+    private List<Object[]> getBlacklistedShortNamesAndAccessions() {
+        //noinspection unchecked
+        return ( List<Object[]> ) getSessionFactory().getCurrentSession()
+                .createQuery( "select bp.shortName, ea.accession from BlacklistedPlatform bp left join bp.externalAccession ea" )
+                .setCacheable( true )
+                .list();
     }
 }

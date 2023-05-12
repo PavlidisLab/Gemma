@@ -9,8 +9,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ContextConfiguration;
 import ubic.gemma.core.util.test.BaseDatabaseTest;
-import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
-import ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
@@ -122,6 +120,20 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest {
         for ( ExpressionExperiment ee : ees ) {
             assertFalse( Hibernate.isInitialized( ee ) );
         }
+    }
+
+    @Test
+    @WithMockUser
+    public void testGetArrayDesignUsageFrequency() {
+        expressionExperimentDao.getArrayDesignsUsageFrequency( -1 );
+        expressionExperimentDao.getArrayDesignsUsageFrequency( Collections.singleton( 1L ), -1 );
+    }
+
+    @Test
+    @WithMockUser
+    public void testGetOriginalPlatformUsageFrequency() {
+        expressionExperimentDao.getOriginalPlatformsUsageFrequency( -1 );
+        expressionExperimentDao.getOriginalPlatformsUsageFrequency( Collections.singleton( 1L ), -1 );
     }
 
     @Test

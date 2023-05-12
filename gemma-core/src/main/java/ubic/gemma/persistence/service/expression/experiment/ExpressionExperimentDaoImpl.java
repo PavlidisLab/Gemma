@@ -120,7 +120,8 @@ public class ExpressionExperimentDaoImpl
         return ( ( Long ) this.getSessionFactory().getCurrentSession().createQuery(
                         "select count( distinct ee ) from ExpressionExperiment as ee left join "
                                 + " ee.bioAssays as ba left join ba.arrayDesignUsed as ad"
-                                + " where ee.curationDetails.troubled = false and ad.curationDetails.troubled = false" )
+                                + formNonTroubledClause( "ee" )
+                                + formNonTroubledClause( "ad" ) )
                 .uniqueResult() );
     }
 
@@ -729,44 +730,51 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
-    public Map<ArrayDesign, Long> getArrayDesignsUsageFrequency() {
+    public Map<ArrayDesign, Long> getArrayDesignsUsageFrequency( int maxResults ) {
         Query query = getSessionFactory().getCurrentSession()
                 .createQuery( "select a, count(distinct ee) from ExpressionExperiment ee "
                         + "join ee.bioAssays ba "
                         + "join ba.arrayDesignUsed a "
                         + AclQueryUtils.formAclJoinClause( "ee.id" ) + " "
-                        + ( SecurityUtil.isUserAdmin() ? "" : " and ee.curationDetails.troubled = false" )
+                        + formNonTroubledClause( "ee" )
+                        + formNonTroubledClause( "a" )
                         + AclQueryUtils.formAclRestrictionClause() + " "
-                        + "group by a" );
+                        + "group by a"
+                        + ( maxResults > 0 ? " order by count(distinct ee) desc" : "" ) );
         AclQueryUtils.addAclParameters( query, ExpressionExperiment.class );
         //noinspection unchecked
         List<Object[]> result = query
                 .setCacheable( true )
+                .setMaxResults( maxResults )
                 .list();
         return result.stream().collect( groupingBy( row -> ( ArrayDesign ) row[0], summingLong( row -> ( Long ) row[1] ) ) );
     }
 
     @Override
-    public Map<ArrayDesign, Long> getArrayDesignsUsageFrequency( Collection<Long> eeIds ) {
+    public Map<ArrayDesign, Long> getArrayDesignsUsageFrequency( Collection<Long> eeIds, int maxResults ) {
         if ( eeIds.isEmpty() ) {
             return Collections.emptyMap();
         }
         // this is more efficient than the HQL query because we avoid the jointure on the INVESTIGATION table
         //noinspection unchecked
         List<Object[]> result = getSessionFactory().getCurrentSession()
-                .createSQLQuery( "select {AD.*}, count(distinct BA.EXPRESSION_EXPERIMENT_FK) as COUNT from BIO_ASSAY BA "
+                .createSQLQuery( "select {AD.*}, count(distinct BA.EXPRESSION_EXPERIMENT_FK) as EE_COUNT from BIO_ASSAY BA "
                         + "join ARRAY_DESIGN {AD} on BA.ARRAY_DESIGN_USED_FK = {AD}.ID "
+                        + "join CURATION_DETAILS CD on {AD}.CURATION_DETAILS_FK = CD.ID "
                         + "where BA.EXPRESSION_EXPERIMENT_FK in :ids "
-                        + "group by {AD}.ID" )
+                        + ( SecurityUtil.isUserAdmin() ? "" : "and not CD.TROUBLED " )
+                        + "group by {AD}.ID"
+                        + ( maxResults > 0 ? " order by EE_COUNT desc" : "" ) )
                 .addEntity( "AD", ArrayDesign.class )
-                .addScalar( "COUNT", new LongType() )
+                .addScalar( "EE_COUNT", new LongType() )
                 .setParameterList( "ids", eeIds )
+                .setMaxResults( maxResults )
                 .list();
         return result.stream().collect( groupingBy( row -> ( ArrayDesign ) row[0], summingLong( row -> ( Long ) row[1] ) ) );
     }
 
     @Override
-    public Map<ArrayDesign, Long> getOriginalPlatformsUsageFrequency() {
+    public Map<ArrayDesign, Long> getOriginalPlatformsUsageFrequency( int maxResults ) {
         Query query = getSessionFactory().getCurrentSession()
                 .createQuery( "select a, count(distinct ee) from ExpressionExperiment ee "
                         + "join ee.bioAssays ba "
@@ -774,32 +782,38 @@ public class ExpressionExperimentDaoImpl
                         + "left join ba.arrayDesignUsed au "
                         + AclQueryUtils.formAclJoinClause( "ee.id" ) + " "
                         + "and a <> au "   // ignore noop switch
-                        + ( SecurityUtil.isUserAdmin() ? "" : " and ee.curationDetails.troubled = false" )
+                        + formNonTroubledClause( "ee" )
+                        + formNonTroubledClause( "a" )
                         + AclQueryUtils.formAclRestrictionClause() + " "
-                        + "group by a" );
+                        + "group by a"
+                        + ( maxResults > 0 ? " order by count(distinct ee) desc" : "" ) );
         AclQueryUtils.addAclParameters( query, ExpressionExperiment.class );
         //noinspection unchecked
         List<Object[]> result = query
                 .setCacheable( true )
+                .setMaxResults( maxResults )
                 .list();
         return result.stream().collect( groupingBy( row -> ( ArrayDesign ) row[0], summingLong( row -> ( Long ) row[1] ) ) );
     }
 
     @Override
-    public Map<ArrayDesign, Long> getOriginalPlatformsUsageFrequency( Collection<Long> eeIds ) {
+    public Map<ArrayDesign, Long> getOriginalPlatformsUsageFrequency( Collection<Long> eeIds, int maxResults ) {
         if ( eeIds.isEmpty() ) {
             return Collections.emptyMap();
         }
         //noinspection unchecked
         List<Object[]> result = getSessionFactory().getCurrentSession()
-                .createSQLQuery( "select {AD.*}, count(distinct BA.EXPRESSION_EXPERIMENT_FK) as COUNT from BIO_ASSAY BA "
+                .createSQLQuery( "select {AD.*}, count(distinct BA.EXPRESSION_EXPERIMENT_FK) as EE_COUNT from BIO_ASSAY BA "
                         + "join ARRAY_DESIGN {AD} on BA.ORIGINAL_PLATFORM_FK = {AD}.ID "
+                        + "join CURATION_DETAILS CD on {AD}.CURATION_DETAILS_FK = CD.ID "
                         + "join ARRAY_DESIGN AU on BA.ARRAY_DESIGN_USED_FK = AU.ID "
                         + "where BA.EXPRESSION_EXPERIMENT_FK in :ids "
+                        + ( SecurityUtil.isUserAdmin() ? "" : "and not CD.TROUBLED " )
                         + "and {AD}.ID <> AU.ID "
-                        + "group by {AD}.ID" )
+                        + "group by {AD}.ID"
+                        + ( maxResults > 0 ? " order by EE_COUNT desc" : "" ) )
                 .addEntity( "AD", ArrayDesign.class )
-                .addScalar( "COUNT", new LongType() )
+                .addScalar( "EE_COUNT", new LongType() )
                 .setParameterList( "ids", eeIds )
                 .list();
         return result.stream().collect( groupingBy( row -> ( ArrayDesign ) row[0], summingLong( row -> ( Long ) row[1] ) ) );
@@ -1702,7 +1716,10 @@ public class ExpressionExperimentDaoImpl
 
         // Restrict to non-troubled EEs for non-administrators
         addNonTroubledFilter( filters, OBJECT_ALIAS );
-        if ( FiltersUtils.containsAnyAlias( filters, null, ARRAY_DESIGN_ALIAS ) ) {
+        // Filtering by AD is costly because we need two jointures, so the results might in some rare cases return EEs
+        // from troubled platforms that have not been mark themselves as troubled. Thus, we do it only if it is present
+        // in the query
+        if ( FiltersUtils.containsAnyAlias( filters, sort, ARRAY_DESIGN_ALIAS ) ) {
             addNonTroubledFilter( filters, ARRAY_DESIGN_ALIAS );
         }
 

@@ -153,11 +153,14 @@ public class DatasetsWebService {
     public LimitedResponseDataObject<ArrayDesignWithUsageStatisticsValueObject> getDatasetsPlatformsUsageStatistics( @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filter, @QueryParam("limit") @DefaultValue("50") LimitArg limit ) {
         Filters filters = datasetArgService.getFilters( filter );
         Integer l = limit.getValue( 50 );
-        List<ArrayDesignWithUsageStatisticsValueObject> results = expressionExperimentService.getArrayDesignUsedOrOriginalPlatformUsageFrequency( filters, true, limit.getValue( 50 ) )
-                .entrySet()
-                .stream().map( e -> new ArrayDesignWithUsageStatisticsValueObject( e.getKey(), e.getValue() ) )
-                .sorted( Comparator.comparing( UsageStatistics::getNumberOfExpressionExperiments, Comparator.reverseOrder() ) )
-                .collect( Collectors.toList() );
+        Map<ArrayDesign, Long> ads = expressionExperimentService.getArrayDesignUsedOrOriginalPlatformUsageFrequency( filters, true, limit.getValue( 50 ) );
+        List<ArrayDesignValueObject> adsVos = arrayDesignService.loadValueObjects( ads.keySet() );
+        Map<Long, Long> countsById = ads.entrySet().stream().collect( Collectors.toMap( e -> e.getKey().getId(), Map.Entry::getValue ) );
+        List<ArrayDesignWithUsageStatisticsValueObject> results =
+                adsVos.stream()
+                        .map( e -> new ArrayDesignWithUsageStatisticsValueObject( e, countsById.get( e.getId() ) ) )
+                        .sorted( Comparator.comparing( UsageStatistics::getNumberOfExpressionExperiments, Comparator.reverseOrder() ) )
+                        .collect( Collectors.toList() );
         return Responder.limit( results, filters, new String[] { "id" }, Sort.by( null, "numberOfExpressionExperiments", Sort.Direction.DESC, "numberOfExpressionExperiments" ), l );
     }
 
@@ -166,7 +169,7 @@ public class DatasetsWebService {
     @JsonIgnoreProperties({ "expressionExperimentCount", "numberOfSwitchedExpressionExperiments" })
     public static class ArrayDesignWithUsageStatisticsValueObject extends ArrayDesignValueObject implements UsageStatistics {
 
-        public ArrayDesignWithUsageStatisticsValueObject( ArrayDesign arrayDesign, Long numberOfExpressionExperiments ) {
+        public ArrayDesignWithUsageStatisticsValueObject( ArrayDesignValueObject arrayDesign, Long numberOfExpressionExperiments ) {
             super( arrayDesign );
             setExpressionExperimentCount( numberOfExpressionExperiments );
         }

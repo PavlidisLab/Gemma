@@ -90,17 +90,17 @@ public interface ExpressionExperimentDao
      * Note that a dataset counts toward all the platforms mentioned through its {@link BioAssay}.
      * <p>
      * This method uses ACLs and the troubled status to only displays the counts of datasets the current user is
-     * entitled to see.
+     * entitled to see. Only administrator can see troubled platforms.
      */
-    Map<ArrayDesign, Long> getArrayDesignsUsageFrequency();
+    Map<ArrayDesign, Long> getArrayDesignsUsageFrequency( int maxResults );
 
     /**
      * Obtain dataset usage frequency by platform currently for the given dataset IDs.
      * <p>
-     * Note: no ACL filtering is performed.
-     * @see #getArrayDesignsUsageFrequency()
+     * Note: no ACL filtering is performed. Only administrator can see troubled platforms.
+     * @see #getArrayDesignsUsageFrequency(int)
      */
-    Map<ArrayDesign, Long> getArrayDesignsUsageFrequency( Collection<Long> eeIds );
+    Map<ArrayDesign, Long> getArrayDesignsUsageFrequency( Collection<Long> eeIds, int maxResults );
 
     /**
      * Obtain dataset usage frequency by original platforms.
@@ -109,16 +109,16 @@ public interface ExpressionExperimentDao
      * platform hasn't been switched (i.e. the original is the same as the current one) are ignored.
      * <p>
      * This method uses ACLs and the troubled status to only displays the counts of datasets the current user is
-     * entitled to see.
+     * entitled to see. Only administrators can see troubled platforms.
      */
-    Map<ArrayDesign, Long> getOriginalPlatformsUsageFrequency();
+    Map<ArrayDesign, Long> getOriginalPlatformsUsageFrequency( int maxResults );
 
     /**
      * Obtain dataset usage frequency by platform currently for the given dataset IDs.
-     * Note: no ACL filtering is performed.
-     * @see #getOriginalPlatformsUsageFrequency()
+     * Note: no ACL filtering is performed. Only administrators can see troubled platforms.
+     * @see #getOriginalPlatformsUsageFrequency(int)
      */
-    Map<ArrayDesign, Long> getOriginalPlatformsUsageFrequency( Collection<Long> eeIds );
+    Map<ArrayDesign, Long> getOriginalPlatformsUsageFrequency( Collection<Long> eeIds, int maxResults );
 
     Map<Long, Collection<AuditEvent>> getAuditEvents( Collection<Long> ids );
 
