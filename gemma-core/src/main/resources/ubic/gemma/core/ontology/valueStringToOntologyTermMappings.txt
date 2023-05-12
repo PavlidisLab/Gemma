@@ -133,7 +133,7 @@ Central Nucleus of Amygdala	central amygdaloid nucleus	http://purl.obolibrary.or
 cerebellar cortex	cerebellar cortex	http://purl.obolibrary.org/obo/UBERON_0002129	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
 cerebellum	cerebellum	http://purl.obolibrary.org/obo/UBERON_0002037	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
 Cervix	uterine cervix	http://purl.obolibrary.org/obo/UBERON_0000002	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
-Chinese	Chinese	http://www.ebi.ac.uk/efo/EFO_0003157	population	http://purl.obolibrary.org/obo/OBI_0000181
+Chinese	Chinese	http://purl.obolibrary.org/obo/HANCESTRO_0021	population	http://purl.obolibrary.org/obo/OBI_0000181
 Chloroprene	chloroprene	http://purl.obolibrary.org/obo/CHEBI_39481	treatment	http://www.ebi.ac.uk/efo/EFO_0000727
 cholangiocarcinoma	cholangiocarcinoma	http://purl.obolibrary.org/obo/DOID_4947	disease	http://www.ebi.ac.uk/efo/EFO_0000408
 Choroid Plexus	choroid plexus	http://purl.obolibrary.org/obo/UBERON_0001886	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
