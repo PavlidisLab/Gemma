@@ -1,0 +1,19 @@
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+            http://www.springframework.org/schema/beans/spring-beans.xsd"
+       profile="web">
+    <bean class="ubic.gemma.rest.analytics.ga4.GoogleAnalytics4Provider">
+        <constructor-arg value="${ga.tracker}"/>
+        <constructor-arg value="${ga.secretKey}"/>
+        <property name="clientIdRetrievalStrategy">
+            <bean class="ubic.gemma.rest.analytics.ga4.RequestHeaderBasedClientIdRetrievalStrategy"/>
+        </property>
+        <property name="userIdRetrievalStrategy">
+            <bean class="ubic.gemma.rest.analytics.ga4.AuthenticationBasedUserIdRetrievalStrategy">
+                <constructor-arg ref="authenticationTrustResolver"/>
+            </bean>
+        </property>
+        <property name="debug" value="${ga.debug}"/>
+    </bean>
+</beans>
