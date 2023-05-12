@@ -91,8 +91,9 @@ public class AclQueryUtils {
         //language=HQL
         String q = ", AclObjectIdentity as " + AOI_ALIAS + " join " + AOI_ALIAS + ".ownerSid " + SID_ALIAS;
         // for non-admin, we have to include aoi.entries
+        // if aoi.entries is empty, the user might still be the owner, so we use a left join
         if ( !SecurityUtil.isUserAdmin() ) {
-            q += " join " + AOI_ALIAS + ".entries " + ACE_ALIAS;
+            q += " left join " + AOI_ALIAS + ".entries " + ACE_ALIAS;
         }
         //language=HQL
         q += " where (" + AOI_ALIAS + ".identifier = " + aoiIdColumn + " and " + AOI_ALIAS + ".type = :" + AOI_TYPE_PARAM + ")";
@@ -115,8 +116,9 @@ public class AclQueryUtils {
                 + "left join ACLSID " + SID_ALIAS + " on (" + SID_ALIAS + ".ID = " + AOI_ALIAS + ".OWNER_SID_FK)";
 
         // for non-admin, we have to include aoi.entries
+        // if aoi.entries is empty, the user might still be the owner, so we use a left join
         if ( !SecurityUtil.isUserAdmin() ) {
-            q += " join ACLENTRY " + ACE_ALIAS + " on (" + AOI_ALIAS + ".ID = " + ACE_ALIAS + ".OBJECTIDENTITY_FK)";
+            q += " left join ACLENTRY " + ACE_ALIAS + " on (" + AOI_ALIAS + ".ID = " + ACE_ALIAS + ".OBJECTIDENTITY_FK)";
         }
         return q;
     }
@@ -146,7 +148,7 @@ public class AclQueryUtils {
                     + ")";
         } else {
             // For administrators, no filtering is needed, so the ACE is completely skipped from the where clause.
-            return " ";
+            return "";
         }
     }
 
