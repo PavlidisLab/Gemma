@@ -14,7 +14,7 @@ import java.util.List;
  * Perform conversion to value object by entity, ID and collections of entities and IDs and also to entity by ID and
  * collection of IDs.
  * <p>
- * The converter recognize two cases: converting {@link O} -> {@link VO} and converting {@link Collection} of {@link O}
+ * The converter recognize two cases: converting {@link O} → {@link VO} and converting {@link Collection} of {@link O}
  * to {@link List} of {@link VO} by calling respectively {@link BaseVoEnabledService#loadValueObject(Identifiable)} and
  * {@link BaseVoEnabledService#loadValueObjects(Collection)}.
  * <p>

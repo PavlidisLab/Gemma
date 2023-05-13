@@ -12,7 +12,7 @@ import java.util.*;
 /**
  * Performs conversion by identifier and collection of identifier for a {@link BaseReadOnlyService}.
  * <p>
- * The converter recognize two cases: {@link Long} -> {@link O} and {@link Collection} of {@link Long} to {@link List}
+ * The converter recognize two cases: {@link Long} → {@link O} and {@link Collection} of {@link Long} to {@link List}
  * of {@link O} using {@link BaseReadOnlyService#load(Long)} and {@link BaseReadOnlyService#load(Collection)} respectively.
  * <p>
  * The conversion also works with supertypes of {@link O} up to {@link Identifiable}.
