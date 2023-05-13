@@ -2,7 +2,6 @@ package ubic.gemma.core.analysis.service;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.file.PathUtils;
-import org.assertj.core.api.Assertions;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -82,20 +81,20 @@ public class ExpressionDataFileServiceTest extends AbstractJUnit4SpringContextTe
     public void setUp() throws IOException {
         tmpDir = Files.createTempDirectory( "gemmaData" );
         prevGemmaDataDir = Settings.getProperty( "gemma.data.dir" );
-        Settings.setProperty( "gemma.data.dir", tmpDir.toAbsolutePath().toString() );
+        Settings.setProperty( "gemma.appdata.home", tmpDir.toAbsolutePath().toString() );
     }
 
     @After
     public void tearDown() throws IOException {
         PathUtils.deleteDirectory( tmpDir );
-        Settings.setProperty( "gemma.data.dir", prevGemmaDataDir );
+        Settings.setProperty( "gemma.appdata.home", prevGemmaDataDir );
     }
 
     @Test
     public void testGetMetadata() throws IOException {
         ExpressionExperiment ee = new ExpressionExperiment();
         ee.setShortName( "test" );
-        File reportFile = tmpDir.resolve( "appdata/metadata/test/MultiQCReports/multiqc_report.html" ).toFile();
+        File reportFile = tmpDir.resolve( "metadata/test/MultiQCReports/multiqc_report.html" ).toFile();
         FileUtils.forceMkdirParent( reportFile );
         FileUtils.touch( reportFile );
         assertThat( reportFile ).exists();
@@ -113,6 +112,6 @@ public class ExpressionDataFileServiceTest extends AbstractJUnit4SpringContextTe
         ee.setShortName( "test.1.2" );
         f = expressionDataFileService.getMetadataFile( ee, ExpressionExperimentMetaFileType.MUTLQC_REPORT );
         assertThat( f )
-                .isEqualTo( tmpDir.resolve( "appdata/metadata/test.1/MultiQCReports/multiqc_report.html" ).toFile() );
+                .isEqualTo( tmpDir.resolve( "metadata/test.1/MultiQCReports/multiqc_report.html" ).toFile() );
     }
 }
