@@ -25,15 +25,16 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import ubic.gemma.core.loader.expression.geo.model.GeoRecord;
 import ubic.gemma.core.loader.expression.geo.service.GeoBrowser;
+import ubic.gemma.core.loader.expression.geo.service.LikelyNonPublicGeoRecordException;
 import ubic.gemma.core.util.test.category.GeoTest;
 import ubic.gemma.core.util.test.category.SlowTest;
 
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
 
-import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assume.assumeNoException;
 import static ubic.gemma.core.util.test.Assumptions.assumeThatResourceIsAvailable;
 
 
@@ -61,7 +62,13 @@ public class GeoBrowserTest {
     public void testGetGeoRecordsBySearchTerm() throws Exception {
         GeoBrowser b = new GeoBrowser();
 
-        Collection<GeoRecord> res = b.getGeoRecordsBySearchTerm( "Homo+sapiens[orgn]", 10, 10, false, null, null );
+        Collection<GeoRecord> res;
+        try {
+            res = b.getGeoRecordsBySearchTerm( "Homo+sapiens[orgn]", 10, 10, false, null, null );
+        } catch ( LikelyNonPublicGeoRecordException e ) {
+            assumeNoException( e );
+            return;
+        }
         // Check that the search has returned at least one record
         assertTrue( res.size() > 0 );
 
@@ -76,6 +83,7 @@ public class GeoBrowserTest {
         }
     }
 
+
     /**
      * Exercises getting details
      *
@@ -84,8 +92,13 @@ public class GeoBrowserTest {
     @Category(SlowTest.class)
     public void testGetGeoRecords() throws Exception {
         GeoBrowser b = new GeoBrowser();
-
-        Collection<GeoRecord> res = b.getGeoRecordsBySearchTerm( null, 10, 10, true, null, null );
+        Collection<GeoRecord> res;
+        try {
+            res = b.getGeoRecordsBySearchTerm( null, 10, 10, true, null, null );
+        } catch ( LikelyNonPublicGeoRecordException e ) {
+            assumeNoException( e );
+            return;
+        }
         // Check that the search has returned at least one record
         assertTrue( res.size() > 0 );
 
@@ -111,7 +124,13 @@ public class GeoBrowserTest {
     public void testGetGeoRecordGSE93825() throws Exception {
         GeoBrowser b = new GeoBrowser();
 
-        Collection<GeoRecord> res = b.getGeoRecordsBySearchTerm( "GSE93825[acc]", 0, 10, false, null, null );
+        Collection<GeoRecord> res;
+        try {
+            res = b.getGeoRecordsBySearchTerm( "GSE93825[acc]", 0, 10, false, null, null );
+        } catch ( LikelyNonPublicGeoRecordException e ) {
+            assumeNoException( e );
+            return;
+        }
         // Check that the search has returned at least one record
         assertTrue( res.size() > 0 );
 

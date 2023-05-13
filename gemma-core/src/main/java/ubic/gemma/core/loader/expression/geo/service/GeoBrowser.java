@@ -27,6 +27,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.w3c.dom.*;
 import org.xml.sax.SAXException;
+import org.xml.sax.SAXParseException;
 import ubic.basecode.util.DateUtil;
 import ubic.basecode.util.StringUtil;
 import ubic.gemma.core.loader.entrez.pubmed.PubMedXMLFetcher;
@@ -792,9 +793,22 @@ public class GeoBrowser {
         try ( InputStream isd = openUrlWithMaxSize( sampleMINIMLURL, MAX_MINIML_RECORD_SIZE ) ) {
             parseSampleMiNIML( record, isd );
         } catch ( XPathExpressionException | ParserConfigurationException | SAXException e ) {
-            throw new RuntimeException( "Failed to parse MINiML", e );
+            if ( isLikelyCausedByAPrivateGeoRecord( e ) ) {
+                throw new LikelyNonPublicGeoRecordException( record.getGeoAccession(), e );
+            } else {
+                throw new RuntimeException( String.format( "Failed to parse MINiML from URL %s", sampleMINIMLURL ), e );
+            }
         }
     }
+
+    /**
+     * GEO delivers an HTML document for non-public datasets
+     * it's possible for this specific case because we're not querying a dataset in particular
+     */
+    private boolean isLikelyCausedByAPrivateGeoRecord( Exception e ) {
+        return e instanceof SAXParseException && e.getMessage().contains( "White spaces are required between publicId and systemId" );
+    }
+
 
     /**
      * Extracts taxon names from input string; returns a collection of taxon names
