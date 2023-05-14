@@ -28,6 +28,7 @@ import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.basecode.ontology.providers.ExperimentalFactorOntologyService;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataWriterUtils;
 import ubic.gemma.core.ontology.OntologyService;
+import ubic.gemma.core.ontology.OntologyUtils;
 import ubic.gemma.model.association.GOEvidenceCode;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.measurement.Measurement;
@@ -150,21 +151,12 @@ public class ExperimentalDesignImporterImpl implements ExperimentalDesignImporte
     private void addExperimentalFactorsToExperimentalDesign( ExperimentalDesign experimentalDesign,
             List<String> experimentalFactorFileLines, String[] headerFields, List<String> factorValueLines ) {
 
-        int maxWait = 0;
-
-        if ( efoService.isEnabled() ) {
-            while ( !efoService.isOntologyLoaded() ) {
-                try {
-                    Thread.sleep( 10000 );
-                    if ( maxWait++ > 10 ) {
-                        ExperimentalDesignImporterImpl.log.error( "EFO is not loaded and gave up waiting" );
-                        break;
-                        // this is okay, we can get by using OntologyTermSimple.
-                    }
-                } catch ( InterruptedException e ) {
-                    e.printStackTrace();
-                }
-            }
+        // make sure that EFO is initialized
+        try {
+            OntologyUtils.ensureInitialized( efoService );
+        } catch ( InterruptedException e ) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException( e );
         }
 
         Collection<OntologyTerm> terms = ontologyService.getCategoryTerms();

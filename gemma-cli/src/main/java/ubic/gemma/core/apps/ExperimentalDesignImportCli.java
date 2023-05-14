@@ -24,8 +24,7 @@ import org.apache.commons.cli.Options;
 import ubic.basecode.ontology.providers.ExperimentalFactorOntologyService;
 import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.core.loader.expression.simple.ExperimentalDesignImporter;
-import ubic.gemma.core.ontology.OntologyService;
-import ubic.gemma.core.util.AbstractCLI;
+import ubic.gemma.core.ontology.OntologyUtils;
 import ubic.gemma.core.util.AbstractCLIContextCLI;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
@@ -70,16 +69,7 @@ public class ExperimentalDesignImportCli extends AbstractCLIContextCLI {
     @Override
     protected void doWork() throws Exception {
         ExperimentalFactorOntologyService mos = this.getBean( ExperimentalFactorOntologyService.class );
-        mos.startInitializationThread( true, false ); // note will *not* re-index
-        while ( !mos.isOntologyLoaded() ) {
-            try {
-                Thread.sleep( 5000 );
-            } catch ( InterruptedException e1 ) {
-                //
-            }
-            AbstractCLI.log.info( "Waiting for EFO to load" );
-        }
-
+        OntologyUtils.ensureInitialized( mos );
         ExperimentalDesignImporter edImp = this.getBean( ExperimentalDesignImporter.class );
         ExpressionExperimentService ees = this.getBean( ExpressionExperimentService.class );
         expressionExperiment = ees.thawBioAssays( expressionExperiment );

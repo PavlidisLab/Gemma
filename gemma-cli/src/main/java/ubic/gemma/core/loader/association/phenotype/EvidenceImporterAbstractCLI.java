@@ -23,6 +23,7 @@ import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.core.association.phenotype.PhenotypeAssociationManagerService;
 import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.core.ontology.OntologyService;
+import ubic.gemma.core.ontology.OntologyUtils;
 import ubic.gemma.core.util.AbstractCLI;
 import ubic.gemma.core.util.AbstractCLIContextCLI;
 import ubic.gemma.model.common.description.ExternalDatabaseValueObject;
