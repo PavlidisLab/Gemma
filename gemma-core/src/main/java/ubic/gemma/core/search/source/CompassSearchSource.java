@@ -366,7 +366,7 @@ public class CompassSearchSource implements SearchSource {
         while ( it.hasNext() ) {
             SearchResult<T> sr = it.next();
             if ( entitiesById.containsKey( sr.getResultId() ) ) {
-                sr.setResultObject( sr.getResultObject() );
+                sr.setResultObject( entitiesById.get( sr.getResultId() ) );
             } else {
                 it.remove();
             }
