@@ -36,7 +36,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 import org.springframework.util.LinkedMultiValueMap;
-import org.springframework.web.util.UriComponentsBuilder;
 import ubic.basecode.ontology.model.OntologyIndividual;
 import ubic.basecode.ontology.model.OntologyResource;
 import ubic.basecode.ontology.model.OntologyTerm;
@@ -46,6 +45,7 @@ import ubic.gemma.core.genome.gene.service.GeneSearchService;
 import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.core.search.source.CompositeSearchSource;
+import ubic.gemma.core.ontology.OntologyUtils;
 import ubic.gemma.core.search.source.DatabaseSearchSource;
 import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
@@ -816,15 +816,8 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
         if ( settings.isTermQuery() ) {
             String query = settings.getQuery();
             uris.add( query );
-            List<String> segments = UriComponentsBuilder.fromHttpUrl( query ).build().getPathSegments();
-            String label;
-            if ( segments.size() > 1 ) {
-                label = segments.get( segments.size() - 1 ).replaceFirst( "_", ":" );
-            } else {
-                label = query;
-            }
             // this will be replaced with a proper label if found in the ontology
-            uri2value.put( query, label );
+            uri2value.put( query, OntologyUtils.getLabelFromTermUri( query ) );
         }
 
         for ( OntologyResource individual : individuals ) {
