@@ -29,10 +29,6 @@ public class OntologyUtils {
         return components.toUriString();
     }
 
-    private static String pickSegment( List<String> segments ) {
-        return segments.get( segments.size() - 1 );
-    }
-
     private static String partToTerm( String part ) {
         return part.replaceFirst( "_", ":" ).toUpperCase();
     }
