@@ -323,6 +323,7 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
         supportedResultTypes.add( Gene.class );
         supportedResultTypes.add( GeneSet.class );
         supportedResultTypes.add( PhenotypeAssociation.class );
+        supportedResultTypes.add( BlacklistedEntity.class );
     }
 
     private void initializeResultObjectConversionService() {
@@ -375,8 +376,10 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
     private void accreteResultsOthers( LinkedHashSet<SearchResult<?>> results, SearchSettings settings,
             boolean webSpeedSearch ) throws SearchException {
 
+        Collection<SearchResult<BlacklistedEntity>> blacklistedResults = new ArrayList<>();
+
         if ( settings.hasResultType( ExpressionExperiment.class ) ) {
-            results.addAll( this.expressionExperimentSearch( settings ) );
+            results.addAll( this.expressionExperimentSearch( settings, blacklistedResults ) );
         }
 
         Collection<SearchResult<CompositeSequence>> compositeSequences = null;
@@ -386,7 +389,7 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
         }
 
         if ( settings.hasResultType( ArrayDesign.class ) ) {
-            results.addAll( this.arrayDesignSearch( settings, compositeSequences ) );
+            results.addAll( this.arrayDesignSearch( settings, compositeSequences, blacklistedResults ) );
         }
 
         if ( settings.hasResultType( BioSequence.class ) ) {
@@ -435,6 +438,10 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
 
         if ( settings.hasResultType( PhenotypeAssociation.class ) ) {
             results.addAll( searchPhenotype( settings ) );
+        }
+
+        if ( settings.hasResultType( BlacklistedEntity.class ) ) {
+            results.addAll( blacklistedResults );
         }
     }
 
@@ -566,7 +573,8 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
      *                     results.
      */
     private Collection<SearchResult<ArrayDesign>> arrayDesignSearch( SearchSettings settings,
-            @Nullable Collection<SearchResult<CompositeSequence>> probeResults ) throws SearchException {
+            @Nullable Collection<SearchResult<CompositeSequence>> probeResults,
+            Collection<SearchResult<BlacklistedEntity>> blacklistedResults ) throws SearchException {
 
         StopWatch watch = StopWatch.createStarted();
         String searchString = prepareDatabaseQuery( settings );
@@ -589,10 +597,7 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
         BlacklistedEntity b = blacklistedEntityService.findByAccession( searchString );
         if ( b != null ) {
             // FIXME: I'm not sure the ID is a good thing to put here
-            SearchResult<ArrayDesign> sr = new SearchResult<>( ArrayDesign.class, b.getId(), "BlackListDao.findByAccession" );
-            sr.setScore( DatabaseSearchSource.MATCH_BY_ACCESSION_SCORE );
-            sr.setHighlightedText( "Blacklisted accessions are not loaded into Gemma" );
-            results.add( sr );
+            blacklistedResults.add( SearchResult.from( BlacklistedEntity.class, b, DatabaseSearchSource.MATCH_BY_ACCESSION_SCORE, null, "BlackListDao.findByAccession" ) );
             return results;
         }
 
@@ -1064,7 +1069,7 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
      *                  SearchSettings.DEFAULT_MAX_RESULTS_PER_RESULT_TYPE
      * @return          {@link Collection} of SearchResults
      */
-    private Collection<SearchResult<ExpressionExperiment>> expressionExperimentSearch( final SearchSettings settings ) throws SearchException {
+    private Collection<SearchResult<ExpressionExperiment>> expressionExperimentSearch( final SearchSettings settings, Collection<SearchResult<BlacklistedEntity>> blacklistedResults ) throws SearchException {
 
         StopWatch totalTime = StopWatch.createStarted();
         StopWatch watch = StopWatch.createStarted();
@@ -1092,10 +1097,7 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
 
             BlacklistedEntity b = blacklistedEntityService.findByAccession( prepareDatabaseQuery( settings ) );
             if ( b != null ) {
-                SearchResult<ExpressionExperiment> sr = new SearchResult<>( ExpressionExperiment.class, b.getId(), "BlackListDao.findByAccession" );
-                sr.setScore( DatabaseSearchSource.MATCH_BY_ACCESSION_SCORE );
-                sr.setHighlightedText( "Blacklisted accessions are not loaded into Gemma" );
-                results.add( sr );
+                blacklistedResults.add( SearchResult.from( BlacklistedEntity.class, b, DatabaseSearchSource.MATCH_BY_ACCESSION_SCORE, null, "BlackListDao.findByAccession" ) );
                 return results;
             }
 
@@ -1189,7 +1191,7 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
         if ( results.size() == 0 ) {
             watch.reset();
             watch.start();
-            Collection<SearchResult<ArrayDesign>> matchingPlatforms = this.arrayDesignSearch( settings, null );
+            Collection<SearchResult<ArrayDesign>> matchingPlatforms = this.arrayDesignSearch( settings, null, blacklistedResults );
             for ( SearchResult<ArrayDesign> adRes : matchingPlatforms ) {
                 ArrayDesign ad = adRes.getResultObject();
                 if ( ad != null ) {

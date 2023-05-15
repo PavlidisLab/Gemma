@@ -19,8 +19,8 @@
 package ubic.gemma.web.controller;
 
 import gemma.gsec.util.SecurityUtil;
-import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -440,6 +440,7 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
                 .taxon( settingsValueObject.getTaxon() )
                 .maxResults( settingsValueObject.getMaxResults() != null ? settingsValueObject.getMaxResults() : SearchSettings.DEFAULT_MAX_RESULTS_PER_RESULT_TYPE )
                 .resultTypes( resultTypesFromVo( settingsValueObject ) )
+                .resultType( BlacklistedEntity.class )
                 .useIndices( settingsValueObject.getUseIndices() )
                 .useDatabase( settingsValueObject.getUseDatabase() )
                 .useCharacteristics( settingsValueObject.getUseCharacteristics() )

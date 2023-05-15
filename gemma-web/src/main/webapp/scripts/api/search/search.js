@@ -11,7 +11,7 @@ Gemma.Search.SEARCH_RESULT_CLASS_METAS = {
    "ArrayDesign" : {title : "Platform", sortBy : "shortName"},
    "BibliographicReference" : {title : "Annotated Paper", sortBy : "citation"},
    "BioSequence" : {title : "Sequence", sortBy : "name"},
-   "BlacklistedValueObject" : {title : "Blacklisted accession"},
+   "BlacklistedEntity" : {title : "Blacklisted accession"},
    "CompositeSequence" : {title : "Probe", sortBy : "name"},
    "ExpressionExperiment" : {title : "Expression dataset"},
    "ExpressionExperimentSet" : {title : "Experiment group", sortBy : "name"},
@@ -847,7 +847,7 @@ Gemma.SearchGrid = Ext.extend( Ext.grid.GridPanel, {
       } else if ( clazz === "PhenotypeAssociation" ) {
          return "<a href=\"" + Gemma.LinkRoots.phenotypePage + data.urlId + "\">" + data.value
             + "</a><span style='color:grey'> " + data.valueUri + '</span>';
-      } else if ( clazz === 'BlacklistedValueObject' ) {
+      } else if ( clazz === 'BlacklistedEntity' ) {
          return data.shortName + '&nbsp;Blacklisted:&nbsp;' + data.name + '<br/>Reason: ' + data.reason;
       } else {
          return data[0];
