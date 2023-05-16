@@ -79,8 +79,7 @@ import java.util.Set;
  */
 @Category(SpringContextTest.class)
 @SuppressWarnings({ "WeakerAccess", "SameParameterValue", "unused" }) // Better left as is for future convenience
-@ContextConfiguration(locations = { "classpath*:ubic/gemma/applicationContext-*.xml",
-        "classpath*:gemma/gsec/applicationContext-*.xml", "classpath:ubic/gemma/testDataSource.xml" })
+@ContextConfiguration(locations = { "classpath*:ubic/gemma/applicationContext-*.xml", "classpath:ubic/gemma/testDataSource.xml" })
 public abstract class BaseSpringContextTest extends AbstractJUnit4SpringContextTests implements InitializingBean {
 
     /* shared fixtures */
