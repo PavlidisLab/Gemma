@@ -1169,12 +1169,16 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     }
 
     private Set<String> getBlacklistedShortNames() {
-        return getBlacklistedShortNamesAndAccessions().stream().map( row -> ( String ) row[0] ).collect( Collectors.toSet() );
+        return getBlacklistedShortNamesAndAccessions().stream().map( row -> ( String ) row[0] )
+                .filter( Objects::nonNull )
+                .collect( Collectors.toSet() );
     }
 
     private Set<String> getBlacklistedAccessions() {
         return getBlacklistedShortNamesAndAccessions().stream()
-                .map( row -> ( String ) row[1] ).collect( Collectors.toSet() );
+                .map( row -> ( String ) row[1] )
+                .filter( Objects::nonNull )
+                .collect( Collectors.toSet() );
     }
 
     private List<Object[]> getBlacklistedShortNamesAndAccessions() {
