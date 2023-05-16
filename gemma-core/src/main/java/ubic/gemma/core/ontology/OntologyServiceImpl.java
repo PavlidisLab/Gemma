@@ -34,7 +34,10 @@ import ubic.basecode.ontology.model.OntologyIndividual;
 import ubic.basecode.ontology.model.OntologyResource;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.basecode.ontology.model.OntologyTermSimple;
-import ubic.basecode.ontology.providers.*;
+import ubic.basecode.ontology.providers.ExperimentalFactorOntologyService;
+import ubic.basecode.ontology.providers.FMAOntologyService;
+import ubic.basecode.ontology.providers.NIFSTDOntologyService;
+import ubic.basecode.ontology.providers.ObiService;
 import ubic.basecode.ontology.search.OntologySearch;
 import ubic.basecode.ontology.search.OntologySearchException;
 import ubic.gemma.core.genome.gene.service.GeneService;
@@ -899,21 +902,17 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
     @Nullable
     private <T> T findFirst( Function<ubic.basecode.ontology.providers.OntologyService, T> function ) {
         BlockingQueue<Future<T>> futures = new ArrayBlockingQueue<>( ontologyServices.size() );
+        ExecutorCompletionService<T> completionService = new ExecutorCompletionService<>( taskExecutor, futures );
         for ( ubic.basecode.ontology.providers.OntologyService service : ontologyServices ) {
             if ( service.isOntologyLoaded() ) {
-                futures.add( taskExecutor.submit( () -> function.apply( service ) ) );
+                completionService.submit( () -> function.apply( service ) );
             }
         }
-        // find the first completing future
-        CompletionService<T> completionService = new ExecutorCompletionService<>( taskExecutor, futures );
         try {
-            while ( !futures.isEmpty() ) {
-                T result = completionService.take().get();
-                if ( result != null ) {
-                    return result;
-                }
-            }
+            return completionService.take().get();
         } catch ( InterruptedException e ) {
+            log.warn( "Current thread was interrupted while waiting, will return null.", e );
+            Thread.currentThread().interrupt();
             return null;
         } catch ( ExecutionException e ) {
             if ( e.getCause() instanceof RuntimeException ) {
@@ -927,7 +926,6 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
                 future.cancel( true );
             }
         }
-        return null;
     }
 
     /**
@@ -936,10 +934,11 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
      * The functions are evaluated using Gemma's short-lived task executor.
      */
     private <T> Set<T> combineInThreads( Function<ubic.basecode.ontology.providers.OntologyService, Collection<T>> work, List<ubic.basecode.ontology.providers.OntologyService> ontologyServices ) {
-        List<Future<Collection<T>>> futures = new ArrayList<>( ontologyServices.size() );
+        BlockingQueue<Future<Collection<T>>> futures = new ArrayBlockingQueue<>( ontologyServices.size() );
+        ExecutorCompletionService<Collection<T>> completionService = new ExecutorCompletionService<>( taskExecutor, futures );
         for ( ubic.basecode.ontology.providers.OntologyService os : ontologyServices ) {
             if ( os.isOntologyLoaded() ) {
-                futures.add( taskExecutor.submit( () -> {
+                futures.add( completionService.submit( () -> {
                     StopWatch timer = StopWatch.createStarted();
                     try {
                         return work.apply( os );
@@ -952,14 +951,19 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
             }
         }
         Set<T> children = new HashSet<>();
-        for ( Future<Collection<T>> f : futures ) {
+        while ( !futures.isEmpty() ) {
             try {
-                children.addAll( f.get() );
+                children.addAll( completionService.take().get() );
             } catch ( InterruptedException e ) {
                 log.warn( "Current thread was interrupted while waiting, will only return results collected so far.", e );
                 Thread.currentThread().interrupt();
                 return children;
             } catch ( ExecutionException e ) {
+                // cancel all the remaining futures, this way if an exception occur, we don't needlessly occupy threads
+                // in the pool
+                for ( Future<Collection<T>> future : futures ) {
+                    future.cancel( true );
+                }
                 if ( e.getCause() instanceof RuntimeException ) {
                     throw ( RuntimeException ) e.getCause();
                 } else {
