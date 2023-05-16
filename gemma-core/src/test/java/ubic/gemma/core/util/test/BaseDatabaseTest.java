@@ -4,6 +4,7 @@ import gemma.gsec.acl.AclAuthorizationStrategyImpl;
 import gemma.gsec.acl.AclSidRetrievalStrategyImpl;
 import gemma.gsec.acl.domain.AclDao;
 import gemma.gsec.acl.domain.AclDaoImpl;
+import gemma.gsec.acl.domain.AclService;
 import gemma.gsec.acl.domain.AclServiceImpl;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.FactoryBean;
@@ -13,10 +14,8 @@ import org.springframework.cache.concurrent.ConcurrentMapCache;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.DependsOn;
-import org.springframework.context.annotation.Primary;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.datasource.DataSourceUtils;
 import org.springframework.jdbc.datasource.SimpleDriverDataSource;
 import org.springframework.orm.hibernate4.HibernateTransactionManager;
 import org.springframework.orm.hibernate4.LocalSessionFactoryBean;
@@ -25,7 +24,6 @@ import org.springframework.security.acls.domain.AclAuthorizationStrategy;
 import org.springframework.security.acls.domain.ConsoleAuditLogger;
 import org.springframework.security.acls.domain.DefaultPermissionGrantingStrategy;
 import org.springframework.security.acls.domain.SpringCacheBasedAclCache;
-import org.springframework.security.acls.model.MutableAclService;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.test.context.support.WithSecurityContextTestExecutionListener;
@@ -50,7 +48,9 @@ public abstract class BaseDatabaseTest extends AbstractTransactionalJUnit4Spring
     protected abstract static class BaseDatabaseTestContextConfiguration {
         @Bean
         public DataSource dataSource() {
-            return new SimpleDriverDataSource( new org.h2.Driver(), "jdbc:h2:mem:gemdtest;MODE=MYSQL;DB_CLOSE_DELAY=-1" );
+            DataSource ds = new SimpleDriverDataSource( new org.h2.Driver(), "jdbc:h2:mem:gemdtest;MODE=MYSQL;DB_CLOSE_DELAY=-1" );
+            new JdbcTemplate( ds ).execute( "drop all objects" );
+            return ds;
         }
 
         @Bean
@@ -93,7 +93,7 @@ public abstract class BaseDatabaseTest extends AbstractTransactionalJUnit4Spring
         }
 
         @Bean
-        public MutableAclService aclService( AclDao aclDao ) {
+        public AclService aclService( AclDao aclDao ) {
             return new AclServiceImpl( aclDao );
         }
     }
@@ -103,18 +103,17 @@ public abstract class BaseDatabaseTest extends AbstractTransactionalJUnit4Spring
 
     protected static class DataSourceInitializer implements InitializingBean {
 
-        private final DataSource dataSource;
+        private final JdbcTemplate template;
 
         @Autowired
         private ApplicationContext applicationContext;
 
         public DataSourceInitializer( DataSource dataSource ) {
-            this.dataSource = dataSource;
+            this.template = new JdbcTemplate( dataSource );
         }
 
         @Override
         public void afterPropertiesSet() {
-            JdbcTemplate template = new JdbcTemplate( dataSource );
             JdbcTestUtils.executeSqlScript( template, applicationContext.getResource( "/sql/init-acls.sql" ), false );
             JdbcTestUtils.executeSqlScript( template, applicationContext.getResource( "/sql/init-entities.sql" ), false );
             JdbcTestUtils.executeSqlScript( template, applicationContext.getResource( "/sql/init-indices.sql" ), false );

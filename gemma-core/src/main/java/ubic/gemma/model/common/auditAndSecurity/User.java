@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006-2012 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,6 +18,7 @@
  */
 package ubic.gemma.model.common.auditAndSecurity;
 
+import java.util.HashSet;
 import java.util.Set;
 
 /**
@@ -33,6 +34,7 @@ public class User extends Person implements gemma.gsec.model.User {
     private String signupToken;
     private java.util.Date signupTokenDatestamp;
     private Set<JobInfo> jobs = new java.util.HashSet<>();
+    private Set<UserGroup> groups = new HashSet<>();
 
     @Override
     public Boolean getEnabled() {
@@ -49,6 +51,14 @@ public class User extends Person implements gemma.gsec.model.User {
 
     public void setJobs( Set<JobInfo> jobs ) {
         this.jobs = jobs;
+    }
+
+    public Set<UserGroup> getGroups() {
+        return groups;
+    }
+
+    public void setGroups( Set<UserGroup> groups ) {
+        this.groups = groups;
     }
 
     @Override
