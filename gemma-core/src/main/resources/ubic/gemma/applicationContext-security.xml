@@ -15,6 +15,9 @@
             http://www.springframework.org/schema/aop
             http://www.springframework.org/schema/aop/spring-aop.xsd">
 
+    <!-- works with the HttpSessionEventPublisher configured in web.xml -->
+    <bean id="sessionRegistry" class="org.springframework.security.core.session.SessionRegistryImpl"/>
+
     <bean id="authenticationLoggerListener" class="org.springframework.security.authentication.event.LoggerListener"/>
 
     <s:authentication-manager alias="authenticationManager">

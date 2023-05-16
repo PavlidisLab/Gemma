@@ -6,9 +6,6 @@
             http://www.springframework.org/schema/security
             http://www.springframework.org/schema/security/spring-security.xsd">
 
-	<!-- works with the HttpSessionEventPublisher configured in web.xml -->
-	<bean id="sessionRegistry" class="org.springframework.security.core.session.SessionRegistryImpl"/>
-
 	<bean id="httpAccessDecisionManager" class="org.springframework.security.access.vote.AffirmativeBased">
 		<property name="allowIfAllAbstainDecisions" value="true"/>
 		<constructor-arg>
