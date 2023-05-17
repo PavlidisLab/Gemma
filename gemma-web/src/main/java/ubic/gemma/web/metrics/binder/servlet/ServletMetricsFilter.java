@@ -6,7 +6,6 @@ import io.micrometer.core.instrument.Tags;
 import io.micrometer.core.instrument.Timer;
 import io.micrometer.core.instrument.binder.http.DefaultHttpServletRequestTagsProvider;
 import io.micrometer.core.instrument.binder.http.HttpServletRequestTagsProvider;
-import org.compass.core.util.Assert;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.context.support.WebApplicationContextUtils;
@@ -31,11 +30,15 @@ public class ServletMetricsFilter extends OncePerRequestFilter {
 
     private String metricName;
 
-    @Override
-    protected void initFilterBean() throws ServletException {
-        super.initFilterBean();
-        metricName = getFilterConfig().getInitParameter( "metricName" );
-        Assert.notNull( metricName, "The 'metricName' init parameter is not set." );
+    public ServletMetricsFilter() {
+        addRequiredProperty( "metricName" );
+    }
+
+    /**
+     * Set the name under which servlet metrics are reported.
+     */
+    public void setMetricName( String metricName ) {
+        this.metricName = metricName;
     }
 
     @Override
