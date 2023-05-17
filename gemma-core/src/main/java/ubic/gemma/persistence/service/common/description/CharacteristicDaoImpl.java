@@ -118,7 +118,7 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
     }
 
     @Override
-    public Map<Class<? extends Identifiable>, Map<String, Collection<ExpressionExperiment>>> findExperimentsByUris( Collection<String> uris, @Nullable Taxon taxon, int limit, boolean rankByLevel ) {
+    public Map<Class<? extends Identifiable>, Map<String, Set<ExpressionExperiment>>> findExperimentsByUris( Collection<String> uris, @Nullable Taxon taxon, int limit, boolean rankByLevel ) {
         if ( uris.isEmpty() ) {
             return Collections.emptyMap();
         }
@@ -146,8 +146,12 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
                                 Collectors.toCollection( HashSet::new ) ) ) ) );
     }
 
+    /**
+     * Since proxies are returned, they cannot be collected in a {@link HashSet} which would otherwise cause their
+     * initialization by accessing {@link Object#hashCode()}. Thus we need to create a {@link TreeSet} over the EE IDs.
+     */
     @Override
-    public Map<Class<? extends Identifiable>, Map<String, Collection<ExpressionExperiment>>> findExperimentReferencesByUris( Collection<String> uris, @Nullable Taxon taxon, int limit, boolean rankByLevel ) {
+    public Map<Class<? extends Identifiable>, Map<String, Set<ExpressionExperiment>>> findExperimentReferencesByUris( Collection<String> uris, @Nullable Taxon taxon, int limit, boolean rankByLevel ) {
         if ( uris.isEmpty() ) {
             return Collections.emptyMap();
         }
@@ -161,15 +165,8 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
                 Collectors.groupingBy(
                         row -> ( String ) row[1],
                         Collectors.mapping(
-                                row -> ( Long ) row[2],
-                                Collectors.collectingAndThen( Collectors.toSet(), this::loadEEReference ) ) ) ) );
-    }
-
-    private Collection<ExpressionExperiment> loadEEReference( Collection<Long> ids ) {
-        return ids.stream()
-                .distinct()
-                .map( id -> ( ExpressionExperiment ) getSessionFactory().getCurrentSession().load( ExpressionExperiment.class, id ) )
-                .collect( Collectors.toList() );
+                                row -> ( ExpressionExperiment ) getSessionFactory().getCurrentSession().load( ExpressionExperiment.class, ( Long ) row[2] ),
+                                Collectors.toCollection( () -> new TreeSet<>( Comparator.comparing( ExpressionExperiment::getId ) ) ) ) ) ) );
     }
 
     private Query prepareExperimentsByUrisQuery( Collection<String> uris, @Nullable Taxon taxon, boolean rankByLevel ) {

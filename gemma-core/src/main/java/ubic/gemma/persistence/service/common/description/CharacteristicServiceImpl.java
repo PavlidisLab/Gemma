@@ -72,7 +72,7 @@ public class CharacteristicServiceImpl extends AbstractFilteringVoEnabledService
 
     @Override
     @Transactional(readOnly = true)
-    public Map<Class<? extends Identifiable>, Map<String, Collection<ExpressionExperiment>>> findExperimentsByUris( Collection<String> uris, @Nullable Taxon taxon, int limit, boolean loadEEs, boolean rankByLevel ) {
+    public Map<Class<? extends Identifiable>, Map<String, Set<ExpressionExperiment>>> findExperimentsByUris( Collection<String> uris, @Nullable Taxon taxon, int limit, boolean loadEEs, boolean rankByLevel ) {
         if ( loadEEs ) {
             return this.characteristicDao.findExperimentsByUris( uris, taxon, limit, rankByLevel );
         } else {

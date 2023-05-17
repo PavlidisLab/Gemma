@@ -64,7 +64,7 @@ public interface CharacteristicService extends BaseService<Characteristic>, Base
     /**
      * @see CharacteristicDao#findExperimentsByUris(Collection, Taxon, int, boolean)
      */
-    Map<Class<? extends Identifiable>, Map<String, Collection<ExpressionExperiment>>> findExperimentsByUris( Collection<String> uris, @Nullable Taxon taxon, int limit, boolean loadEEs, boolean rankByLevel );
+    Map<Class<? extends Identifiable>, Map<String, Set<ExpressionExperiment>>> findExperimentsByUris( Collection<String> uris, @Nullable Taxon taxon, int limit, boolean loadEEs, boolean rankByLevel );
 
     /**
      * given a collection of strings that represent URI's will find all the characteristics that are used in the system

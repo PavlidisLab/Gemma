@@ -92,18 +92,15 @@ public interface CharacteristicDao
      * {@link ubic.gemma.model.expression.biomaterial.BioMaterial}) to the matching URI to EEs which have an associated
      * characteristic using the given URI. The class lets us track where the annotation was.
      */
-    Map<Class<? extends Identifiable>, Map<String, Collection<ExpressionExperiment>>> findExperimentsByUris( Collection<String> uris, @Nullable Taxon taxon, int limit, boolean rankByLevel );
+    Map<Class<? extends Identifiable>, Map<String, Set<ExpressionExperiment>>> findExperimentsByUris( Collection<String> uris, @Nullable Taxon taxon, int limit, boolean rankByLevel );
 
     /**
      * Similar to {@link #findExperimentsByUris(Collection, Taxon, int, boolean)}, but returns proxies with instead of
      * initializing all the EEs in bulk.
-     * <p>
-     * Since proxies are returned, they cannot be collected in a {@link Set} which would otherwise cause their
-     * initialization by accessing {@link Object#hashCode()}. It is however effectively a set over the EE IDs.
      *
      * @see org.hibernate.Session#load(Object, Serializable)
      */
-    Map<Class<? extends Identifiable>, Map<String, Collection<ExpressionExperiment>>> findExperimentReferencesByUris( Collection<String> uris, @Nullable Taxon taxon, int limit, boolean rankByLevel );
+    Map<Class<? extends Identifiable>, Map<String, Set<ExpressionExperiment>>> findExperimentReferencesByUris( Collection<String> uris, @Nullable Taxon taxon, int limit, boolean rankByLevel );
 
     Collection<Characteristic> findByUri( Collection<String> uris );
 

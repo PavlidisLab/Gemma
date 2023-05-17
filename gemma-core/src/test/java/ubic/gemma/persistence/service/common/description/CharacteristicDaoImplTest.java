@@ -36,10 +36,7 @@ import ubic.gemma.persistence.util.MailEngine;
 import ubic.gemma.persistence.util.TestComponent;
 
 import javax.annotation.Nullable;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Map;
+import java.util.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
@@ -155,7 +152,7 @@ public class CharacteristicDaoImplTest extends BaseDatabaseTest {
         assertThat( updated ).isEqualTo( 1 );
         sessionFactory.getCurrentSession().flush();
         // ranking by level uses the order by field() which is not supported
-        Map<Class<? extends Identifiable>, Map<String, Collection<ExpressionExperiment>>> results = characteristicDao.findExperimentsByUris( Collections.singleton( "http://example.com" ), taxon, 100, false );
+        Map<Class<? extends Identifiable>, Map<String, Set<ExpressionExperiment>>> results = characteristicDao.findExperimentsByUris( Collections.singleton( "http://example.com" ), taxon, 100, false );
         assertThat( results ).containsKey( ExpressionExperiment.class );
     }
 
@@ -194,7 +191,7 @@ public class CharacteristicDaoImplTest extends BaseDatabaseTest {
         assertThat( SecurityUtil.isUserAnonymous() ).isTrue();
 
         // ranking by level uses the order by field() which is not supported
-        Map<Class<? extends Identifiable>, Map<String, Collection<ExpressionExperiment>>> results = characteristicDao.findExperimentsByUris( Collections.singleton( "http://example.com" ), taxon, 100, false );
+        Map<Class<? extends Identifiable>, Map<String, Set<ExpressionExperiment>>> results = characteristicDao.findExperimentsByUris( Collections.singleton( "http://example.com" ), taxon, 100, false );
         assertThat( results ).containsKey( ExpressionExperiment.class );
     }
 
@@ -214,7 +211,7 @@ public class CharacteristicDaoImplTest extends BaseDatabaseTest {
         assertThat( updated ).isEqualTo( 1 );
         sessionFactory.getCurrentSession().flush();
         // ranking by level uses the order by field() which is not supported
-        Map<Class<? extends Identifiable>, Map<String, Collection<ExpressionExperiment>>> results = characteristicDao.findExperimentsByUris( Collections.singleton( "http://example.com" ), taxon, 100, false );
+        Map<Class<? extends Identifiable>, Map<String, Set<ExpressionExperiment>>> results = characteristicDao.findExperimentsByUris( Collections.singleton( "http://example.com" ), taxon, 100, false );
         assertThat( results ).containsKey( ExpressionExperiment.class );
     }
 
