@@ -53,7 +53,7 @@ public class CorsFilterTest {
         FilterChain filterChain = new MockFilterChain();
         corsFilter.doFilter( req, res, filterChain );
         assertEquals( HttpStatus.NO_CONTENT.value(), res.getStatus() );
-        assertEquals( "Authorization,Content-Type", res.getHeader( "Access-Control-Allow-Headers" ) );
+        assertEquals( "Authorization,Content-Type,X-Gemma-Client-ID", res.getHeader( "Access-Control-Allow-Headers" ) );
     }
 
 }

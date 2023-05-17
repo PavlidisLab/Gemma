@@ -38,7 +38,7 @@ public class CorsFilter extends OncePerRequestFilter {
             res.addHeader( "Access-Control-Allow-Origin", "*" );
         }
         if ( isPreflight( req ) ) {
-            res.addHeader( "Access-Control-Allow-Headers", "Authorization,Content-Type" );
+            res.addHeader( "Access-Control-Allow-Headers", "Authorization,Content-Type,X-Gemma-Client-ID" );
             res.setStatus( HttpStatus.NO_CONTENT.value() );
             return;
         }
