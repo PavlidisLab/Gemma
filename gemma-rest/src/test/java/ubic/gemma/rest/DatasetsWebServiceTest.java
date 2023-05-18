@@ -13,6 +13,7 @@ import ubic.gemma.core.analysis.preprocess.OutlierDetectionService;
 import ubic.gemma.core.analysis.preprocess.svd.SVDService;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
 import ubic.gemma.core.genome.gene.service.GeneService;
+import ubic.gemma.core.search.SearchService;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -109,6 +110,11 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
         @Bean
         public GeneArgService geneArgService( GeneService geneService ) {
             return new GeneArgService( geneService );
+        }
+
+        @Bean
+        public SearchService searchService() {
+            return mock( SearchService.class );
         }
     }
 

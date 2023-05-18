@@ -118,7 +118,7 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
         public <T extends Identifiable> List<SearchResult<T>> getByResultObjectType( Class<T> clazz ) {
             //noinspection unchecked
             return values().stream().flatMap( List::stream )
-                    .filter( e -> e.getResultObject() == null || clazz.isInstance( e.getResultObject() ) )
+                    .filter( e -> ( clazz.isAssignableFrom( e.getResultType() ) && e.getResultObject() == null ) || clazz.isInstance( e.getResultObject() ) )
                     .map( e -> ( SearchResult<T> ) e )
                     .collect( Collectors.toList() );
         }

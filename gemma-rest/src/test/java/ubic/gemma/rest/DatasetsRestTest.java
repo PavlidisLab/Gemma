@@ -13,7 +13,6 @@ import ubic.gemma.persistence.service.expression.experiment.ExpressionExperiment
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.rest.util.FilteringAndPaginatedResponseDataObject;
 import ubic.gemma.rest.util.MalformedArgException;
-import ubic.gemma.rest.util.PaginatedResponseDataObject;
 import ubic.gemma.rest.util.ResponseDataObject;
 import ubic.gemma.rest.util.args.*;
 
@@ -44,7 +43,7 @@ public class DatasetsRestTest extends BaseSpringContextTest {
     private ExpressionExperimentService expressionExperimentService;
 
     /* fixtures */
-    private ArrayList<ExpressionExperiment> ees = new ArrayList<>( 10 );
+    private final ArrayList<ExpressionExperiment> ees = new ArrayList<>( 10 );
 
     @Before
     public void setUp() throws Exception {
@@ -60,8 +59,8 @@ public class DatasetsRestTest extends BaseSpringContextTest {
 
     @Test
     public void testAll() {
-        FilteringAndPaginatedResponseDataObject<ExpressionExperimentValueObject> response = datasetsWebService
-                .getDatasets( FilterArg.valueOf( "" ), OffsetArg.valueOf( "5" ), LimitArg.valueOf( "5" ),
+        FilteringAndPaginatedResponseDataObject<DatasetsWebService.ExpressionExperimentWithSearchResultValueObject> response = datasetsWebService
+                .getDatasets( null, FilterArg.valueOf( "" ), OffsetArg.valueOf( "5" ), LimitArg.valueOf( "5" ),
                         SortArg.valueOf( "+id" ) );
         assertThat( response )
                 .hasFieldOrPropertyWithValue( "offset", 5 )
@@ -114,7 +113,8 @@ public class DatasetsRestTest extends BaseSpringContextTest {
     @Test
     @Category(SlowTest.class)
     public void testAllFilterById() {
-        ResponseDataObject<List<ExpressionExperimentValueObject>> response = datasetsWebService.getDatasets(
+        FilteringAndPaginatedResponseDataObject<DatasetsWebService.ExpressionExperimentWithSearchResultValueObject> response = datasetsWebService.getDatasets(
+                null,
                 FilterArg.valueOf( "id = " + ees.get( 0 ).getId() ),
                 OffsetArg.valueOf( "0" ),
                 LimitArg.valueOf( "10" ),
@@ -130,14 +130,15 @@ public class DatasetsRestTest extends BaseSpringContextTest {
     @Test
     @Category(SlowTest.class)
     public void testAllFilterByIdIn() {
-        FilterArg filterArg = FilterArg.valueOf( "id in (" + ees.get( 0 ).getId() + ")" );
+        FilterArg<ExpressionExperiment> filterArg = FilterArg.valueOf( "id in (" + ees.get( 0 ).getId() + ")" );
         assertThat( datasetArgService.getFilters( filterArg ) )
                 .extracting( of -> of.get( 0 ) )
                 .first()
                 .hasFieldOrPropertyWithValue( "objectAlias", ExpressionExperimentDao.OBJECT_ALIAS )
                 .hasFieldOrPropertyWithValue( "propertyName", "id" )
                 .hasFieldOrPropertyWithValue( "requiredValue", Collections.singletonList( ees.get( 0 ).getId() ) );
-        ResponseDataObject<List<ExpressionExperimentValueObject>> response = datasetsWebService.getDatasets(
+        ResponseDataObject<List<DatasetsWebService.ExpressionExperimentWithSearchResultValueObject>> response = datasetsWebService.getDatasets(
+                null,
                 filterArg,
                 OffsetArg.valueOf( "0" ),
                 LimitArg.valueOf( "10" ),
@@ -154,14 +155,15 @@ public class DatasetsRestTest extends BaseSpringContextTest {
     @Test
     @Category(SlowTest.class)
     public void testAllFilterByShortName() {
-        FilterArg filterArg = FilterArg.valueOf( "shortName = " + ees.get( 0 ).getShortName() );
+        FilterArg<ExpressionExperiment> filterArg = FilterArg.valueOf( "shortName = " + ees.get( 0 ).getShortName() );
         assertThat( datasetArgService.getFilters( filterArg ) )
                 .extracting( of -> of.get( 0 ) )
                 .first()
                 .hasFieldOrPropertyWithValue( "objectAlias", ExpressionExperimentDao.OBJECT_ALIAS )
                 .hasFieldOrPropertyWithValue( "propertyName", "shortName" )
                 .hasFieldOrPropertyWithValue( "requiredValue", ees.get( 0 ).getShortName() );
-        ResponseDataObject<List<ExpressionExperimentValueObject>> response = datasetsWebService.getDatasets(
+        FilteringAndPaginatedResponseDataObject<DatasetsWebService.ExpressionExperimentWithSearchResultValueObject> response = datasetsWebService.getDatasets(
+                null,
                 filterArg,
                 OffsetArg.valueOf( "0" ),
                 LimitArg.valueOf( "10" ),
@@ -178,14 +180,15 @@ public class DatasetsRestTest extends BaseSpringContextTest {
     @Test
     @Category(SlowTest.class)
     public void testAllFilterByShortNameIn() {
-        FilterArg filterArg = FilterArg.valueOf( "shortName in (" + ees.get( 0 ).getShortName() + ")" );
+        FilterArg<ExpressionExperiment> filterArg = FilterArg.valueOf( "shortName in (" + ees.get( 0 ).getShortName() + ")" );
         assertThat( datasetArgService.getFilters( filterArg ) )
                 .extracting( of -> of.get( 0 ) )
                 .first()
                 .hasFieldOrPropertyWithValue( "objectAlias", ExpressionExperimentDao.OBJECT_ALIAS )
                 .hasFieldOrPropertyWithValue( "propertyName", "shortName" )
                 .hasFieldOrPropertyWithValue( "requiredValue", Collections.singletonList( ees.get( 0 ).getShortName() ) );
-        ResponseDataObject<List<ExpressionExperimentValueObject>> response = datasetsWebService.getDatasets(
+        FilteringAndPaginatedResponseDataObject<DatasetsWebService.ExpressionExperimentWithSearchResultValueObject> response = datasetsWebService.getDatasets(
+                null,
                 filterArg,
                 OffsetArg.valueOf( "0" ),
                 LimitArg.valueOf( "10" ),
@@ -202,7 +205,7 @@ public class DatasetsRestTest extends BaseSpringContextTest {
     @Test
     @Category(SlowTest.class)
     public void testAllFilterByIdInOrShortNameIn() {
-        FilterArg filterArg = FilterArg.valueOf( "id in (" + ees.get( 0 ).getId() + ") or shortName in (" + ees.get( 1 ).getShortName() + ")" );
+        FilterArg<ExpressionExperiment> filterArg = FilterArg.valueOf( "id in (" + ees.get( 0 ).getId() + ") or shortName in (" + ees.get( 1 ).getShortName() + ")" );
         assertThat( datasetArgService.getFilters( filterArg ) )
                 .hasSize( 1 );
         /*
@@ -217,7 +220,8 @@ public class DatasetsRestTest extends BaseSpringContextTest {
                 .hasFieldOrPropertyWithValue( "propertyName", "shortName" )
                 .hasFieldOrPropertyWithValue( "requiredValue", Collections.singletonList( ees.get( 1 ).getShortName() ) );
          */
-        ResponseDataObject<List<ExpressionExperimentValueObject>> response = datasetsWebService.getDatasets(
+        FilteringAndPaginatedResponseDataObject<DatasetsWebService.ExpressionExperimentWithSearchResultValueObject> response = datasetsWebService.getDatasets(
+                null,
                 filterArg,
                 OffsetArg.valueOf( "0" ),
                 LimitArg.valueOf( "10" ),
@@ -234,7 +238,9 @@ public class DatasetsRestTest extends BaseSpringContextTest {
     @Test
     public void testAllWithTooLargeLimit() {
         assertThatThrownBy( () -> {
-            datasetsWebService.getDatasets( FilterArg.valueOf( "" ),
+            datasetsWebService.getDatasets(
+                    null,
+                    FilterArg.valueOf( "" ),
                     OffsetArg.valueOf( "0" ),
                     LimitArg.valueOf( "101" ),
                     SortArg.valueOf( "+id" )
@@ -245,7 +251,9 @@ public class DatasetsRestTest extends BaseSpringContextTest {
     @Test
     @Category(SlowTest.class)
     public void testFilterByGeeqQualityScore() {
-        datasetsWebService.getDatasets( FilterArg.valueOf( "geeq.publicQualityScore <= 1.0" ),
+        datasetsWebService.getDatasets(
+                null,
+                FilterArg.valueOf( "geeq.publicQualityScore <= 1.0" ),
                 OffsetArg.valueOf( "0" ),
                 LimitArg.valueOf( "10" ),
                 SortArg.valueOf( "+id" )
