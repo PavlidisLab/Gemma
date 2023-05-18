@@ -908,6 +908,9 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
                 completionService.submit( () -> function.apply( service ) );
             }
         }
+        if ( futures.isEmpty() ) {
+            return null;
+        }
         try {
             return completionService.take().get();
         } catch ( InterruptedException e ) {
