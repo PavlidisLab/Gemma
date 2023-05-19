@@ -651,7 +651,7 @@ public class ExpressionExperimentDaoImpl
                                 + ( eeIds != null ? " and T.EXPRESSION_EXPERIMENT_FK in :eeIds " : "" )
                                 + ( level != null ? " and T.LEVEL = :level " : "" )
                                 + AclQueryUtils.formNativeAclRestrictionClause( ( SessionFactoryImplementor ) getSessionFactory() ) + " "
-                                + "group by COALESCE({T}.CATEGORY_URI, {T}.CATEGORY), COALESCE({T}.VALUE_URI, {T}.VALUE_URI) "
+                                + "group by COALESCE({T}.CATEGORY_URI, {T}.CATEGORY), COALESCE({T}.VALUE_URI, {T}.VALUE) "
                                 + "having EE_COUNT >= :minFrequency "
                                 + "order by EE_COUNT desc" )
                 .addEntity( "T", Characteristic.class )
