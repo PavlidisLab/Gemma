@@ -6,6 +6,11 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 
 import javax.annotation.Nullable;
 
+/**
+ * Strategy that retrieves the user agent from the current request header.
+ * @see RequestContextHolder#currentRequestAttributes()
+ * @author poirigui
+ */
 public class RequestBasedUserAgentRetrievalStrategy implements UserAgentRetrievalStrategy {
 
     @Nullable

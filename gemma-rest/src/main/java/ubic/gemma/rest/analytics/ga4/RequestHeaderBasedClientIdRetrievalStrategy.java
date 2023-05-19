@@ -7,7 +7,10 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 import javax.servlet.http.HttpServletRequest;
 
 /**
- * If this is used in conjunction with CORS, you will have to whitelist the request header using {@code }
+ * Strategy that retrieves the client ID in a request header.
+ * <p>
+ * If this is used in conjunction with CORS, you will have to include the header in {@code Access-Control-Allow-Headers}.
+ * @author poirigui
  */
 public class RequestHeaderBasedClientIdRetrievalStrategy implements ClientIdRetrievalStrategy {
 

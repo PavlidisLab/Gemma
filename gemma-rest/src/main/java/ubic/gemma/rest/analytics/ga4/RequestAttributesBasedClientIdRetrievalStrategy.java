@@ -9,6 +9,11 @@ import javax.annotation.Nullable;
 
 import static ubic.gemma.rest.analytics.ga4.GoogleAnalytics4Provider.isValidClientId;
 
+/**
+ * Strategy that retrieves and store client IDs in the {@link RequestAttributes}.
+ * @see RequestContextHolder#currentRequestAttributes()
+ * @author poirigui
+ */
 @CommonsLog
 public class RequestAttributesBasedClientIdRetrievalStrategy implements ClientIdRetrievalStrategy {
 
@@ -40,10 +45,19 @@ public class RequestAttributesBasedClientIdRetrievalStrategy implements ClientId
         }
     }
 
+    /**
+     * Set the attribute to retrieve to obtain the client ID.
+     */
     public void setAttribute( String attribute ) {
         this.attribute = attribute;
     }
 
+    /**
+     * Set the scope to use for retrieving and storing the client ID.
+     *
+     * @see RequestAttributes#SCOPE_REQUEST
+     * @see RequestAttributes#SCOPE_SESSION
+     */
     public void setScope( int scope ) {
         this.scope = scope;
     }
