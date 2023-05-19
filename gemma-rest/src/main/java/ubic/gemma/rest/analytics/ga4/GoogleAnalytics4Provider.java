@@ -92,6 +92,7 @@ public class GoogleAnalytics4Provider implements AnalyticsProvider, Initializing
         this( new RestTemplate(), new ScheduledThreadPoolExecutor( 1 ), measurementId, apiSecret );
     }
 
+
     @Override
     public void afterPropertiesSet() {
         taskExecutor.scheduleWithFixedDelay( this::flushPendingEvents, pollingIntervalMillis, pollingIntervalMillis, TimeUnit.MILLISECONDS );
@@ -239,6 +240,12 @@ public class GoogleAnalytics4Provider implements AnalyticsProvider, Initializing
         @Override
         public void validate( Object target, Errors errors ) {
             _Event e = ( _Event ) target;
+            if ( !isValidClientId( e.clientId ) ) {
+                errors.rejectValue( "clientId", "invalid", "Invalid GA4 client ID" );
+            }
+            if ( e.userId != null && e.userId.length() > 255 ) {
+                errors.rejectValue( "userId", "size", new Object[] { 255 }, "User ID must not contain more than 255 characters." );
+            }
             if ( e.name.length() > 40 ) {
                 errors.rejectValue( "name", "size", new Object[] { 40 }, "Event name must not contain more than 40 characters." );
             }
@@ -268,6 +275,13 @@ public class GoogleAnalytics4Provider implements AnalyticsProvider, Initializing
                 errors.popNestedPath();
             }
         }
+    }
+
+    /**
+     * There is no explicit requirements for this, but this is the format UA and GA4 use.
+     */
+    static boolean isValidClientId( String clientId ) {
+        return clientId.matches( "^[0-9]{10}\\.[0-9]{10}$" );
     }
 
     @Value

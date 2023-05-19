@@ -4,7 +4,6 @@ import org.springframework.web.context.request.RequestAttributes;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
-import javax.annotation.Nullable;
 import javax.servlet.http.HttpServletRequest;
 
 /**
@@ -26,7 +25,7 @@ public class RequestHeaderBasedClientIdRetrievalStrategy implements ClientIdRetr
             throw new UnsupportedOperationException( String.format( "Unsupported ServletRequestAttributes: %s.", RequestContextHolder.currentRequestAttributes() ) );
         }
         String clientId = request.getHeader( requestHeader );
-        if ( isValidClientId( clientId ) ) {
+        if ( clientId != null && GoogleAnalytics4Provider.isValidClientId( clientId ) ) {
             return clientId;
         } else {
             return null;
@@ -38,9 +37,5 @@ public class RequestHeaderBasedClientIdRetrievalStrategy implements ClientIdRetr
      */
     public void setRequestHeader( String requestHeader ) {
         this.requestHeader = requestHeader;
-    }
-
-    private boolean isValidClientId( @Nullable String clientId ) {
-        return clientId != null && clientId.matches( "^[0-9]{10}\\.[0-9]{10}$" );
     }
 }
