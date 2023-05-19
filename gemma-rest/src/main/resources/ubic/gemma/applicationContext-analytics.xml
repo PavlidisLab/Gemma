@@ -32,6 +32,9 @@
                 <constructor-arg ref="authenticationTrustResolver"/>
             </bean>
         </property>
+        <property name="userAgentRetrievalStrategy">
+            <bean class="ubic.gemma.rest.analytics.ga4.RequestBasedUserAgentRetrievalStrategy"/>
+        </property>
         <property name="debug" value="${ga.debug}"/>
     </bean>
 </beans>
