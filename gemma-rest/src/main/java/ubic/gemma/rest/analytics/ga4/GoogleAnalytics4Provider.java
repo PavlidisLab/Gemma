@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
 import lombok.Data;
 import lombok.Value;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -20,9 +21,14 @@ import org.springframework.web.client.RestTemplate;
 import ubic.gemma.rest.analytics.AnalyticsProvider;
 
 import javax.annotation.Nullable;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.stream.Collectors;
+
+import static java.util.Objects.requireNonNull;
 
 /**
  * Implementation of the {@link AnalyticsProvider} interface for Google Analytics 4 collect API.
@@ -207,6 +213,24 @@ public class GoogleAnalytics4Provider implements AnalyticsProvider, Initializing
      */
     private static class EventValidator implements Validator {
 
+        private static final Set<String> RESERVED_EVENT_NAMES;
+        private static final Set<String> RESERVED_PARAMETER_NAMES;
+        private static final Set<String> RESERVED_PARAMETER_NAME_PREFIXES;
+
+        static {
+            RESERVED_EVENT_NAMES = readLinesFromResource( "/ubic/gemma/rest/analytics/ga4/reserved-event-names" );
+            RESERVED_PARAMETER_NAMES = readLinesFromResource( "/ubic/gemma/rest/analytics/ga4/reserved-parameter-names" );
+            RESERVED_PARAMETER_NAME_PREFIXES = readLinesFromResource( "/ubic/gemma/rest/analytics/ga4/reserved-parameter-name-prefixes" );
+        }
+
+        private static Set<String> readLinesFromResource( String f ) {
+            try ( InputStream is = EventValidator.class.getResourceAsStream( f ) ) {
+                return new HashSet<>( IOUtils.readLines( requireNonNull( is ), StandardCharsets.UTF_8 ) );
+            } catch ( IOException e ) {
+                throw new RuntimeException( e );
+            }
+        }
+
         @Override
         public boolean supports( Class<?> clazz ) {
             return _Event.class.isAssignableFrom( clazz );
@@ -221,6 +245,9 @@ public class GoogleAnalytics4Provider implements AnalyticsProvider, Initializing
             if ( !e.name.matches( "[a-zA-Z][a-zA-Z0-9_]*" ) ) {
                 errors.rejectValue( "name", "onlyAlpha", "Event name can only contain alpha-numeric characters or underscores." );
             }
+            if ( RESERVED_EVENT_NAMES.contains( e.name ) ) {
+                errors.rejectValue( "name", "reservedEventName", "Event name is reserved." );
+            }
             if ( e.params.size() > 10 ) {
                 errors.rejectValue( "params", "size", new Object[] { 10 }, "Events can have at most 10 parameters." );
             }
@@ -228,6 +255,12 @@ public class GoogleAnalytics4Provider implements AnalyticsProvider, Initializing
                 errors.pushNestedPath( "params" );
                 if ( entry.getKey().length() > 40 ) {
                     errors.rejectValue( null, "sizeOfKey", new Object[] { entry.getKey(), 40 }, String.format( "Parameter name for %s must not contain more than 40 characters.", entry.getKey() ) );
+                }
+                if ( RESERVED_PARAMETER_NAMES.contains( entry.getKey() ) ) {
+                    errors.rejectValue( null, "reservedParameterName", new Object[] { entry.getKey() }, String.format( "Parameter name for %s is reserved.", entry.getKey() ) );
+                }
+                if ( RESERVED_PARAMETER_NAME_PREFIXES.stream().anyMatch( p -> entry.getKey().startsWith( p ) ) ) {
+                    errors.rejectValue( null, "reservedParameterNamePrefix", new Object[] { entry.getKey() }, String.format( "Parameter name for %s starts with a reserved prefix.", entry.getKey() ) );
                 }
                 if ( entry.getValue().length() > 100 ) {
                     errors.rejectValue( null, "sizeOfValue", new Object[] { entry.getKey(), 100 }, String.format( "Parameter value for %s must not contain more than 100 characters.", entry.getKey() ) );

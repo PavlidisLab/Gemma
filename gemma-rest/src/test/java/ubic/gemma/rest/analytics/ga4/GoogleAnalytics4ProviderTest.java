@@ -67,5 +67,8 @@ public class GoogleAnalytics4ProviderTest {
             provider.sendEvent( RandomStringUtils.randomAlphabetic( 30 ),
                     "test", RandomStringUtils.randomAlphabetic( 101 ) );
         } ).isInstanceOf( IllegalArgumentException.class );
+        assertThatThrownBy( () -> {
+            provider.sendEvent( "first_open" );
+        } ).isInstanceOf( IllegalArgumentException.class );
     }
 }
