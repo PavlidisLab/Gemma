@@ -302,7 +302,7 @@ public class DatabaseSearchSource implements SearchSource {
 
         watch.stop();
         if ( watch.getTime() > 1000 )
-            DatabaseSearchSource.log.info( "DB Expression Experiment search for " + settings + " took " + watch.getTime()
+            DatabaseSearchSource.log.warn( "DB Expression Experiment search for " + settings + " took " + watch.getTime()
                     + " ms and found " + results.size() + " EEs" );
 
         return results;

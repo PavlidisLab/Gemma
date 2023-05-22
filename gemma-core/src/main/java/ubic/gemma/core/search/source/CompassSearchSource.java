@@ -137,10 +137,10 @@ public class CompassSearchSource implements SearchSource {
         // FIXME: incorporate the genes in the biosequence results (breaks generics)
         Collection<SearchResult<Gene>> geneResults;
         if ( previousGeneSearchResults == null ) {
-            CompassSearchSource.log.info( "Biosequence Search:  running gene search with " + settings.getQuery() );
+            CompassSearchSource.log.debug( "Biosequence Search:  running gene search with " + settings.getQuery() );
             geneResults = this.searchGene( settings );
         } else {
-            CompassSearchSource.log.info( "Biosequence Search:  using previous results" );
+            CompassSearchSource.log.debug( "Biosequence Search:  using previous results" );
             geneResults = previousGeneSearchResults;
         }
 
@@ -192,7 +192,7 @@ public class CompassSearchSource implements SearchSource {
             }
         }
         if ( filteredResults.size() < unfilteredResults.size() ) {
-            log.info( "Filtered for taxon = " + t.getCommonName() + ", removed " + ( unfilteredResults.size()
+            log.debug( "Filtered for taxon = " + t.getCommonName() + ", removed " + ( unfilteredResults.size()
                     - filteredResults.size() ) + " results" );
         }
         return filteredResults;
@@ -308,8 +308,6 @@ public class CompassSearchSource implements SearchSource {
                 hits.getLength(), enhancedQuery, compassQuery, session.getSettings().getSetting( "compass.name" ), watch.getTime() );
         if ( watch.getTime() > 5000 ) {
             CompassSearchSource.log.warn( "***** Slow Lucene Index Search!  " + message );
-        } else if ( watch.getTime() > 1 ) {
-            CompassSearchSource.log.info( message );
         } else {
             CompassSearchSource.log.debug( message );
         }

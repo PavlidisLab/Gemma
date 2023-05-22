@@ -44,8 +44,8 @@ import ubic.gemma.core.association.phenotype.PhenotypeAssociationManagerService;
 import ubic.gemma.core.genome.gene.service.GeneSearchService;
 import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.core.ontology.OntologyService;
-import ubic.gemma.core.search.source.CompositeSearchSource;
 import ubic.gemma.core.ontology.OntologyUtils;
+import ubic.gemma.core.search.source.CompositeSearchSource;
 import ubic.gemma.core.search.source.DatabaseSearchSource;
 import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
@@ -231,7 +231,7 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
         }
 
         if ( !results.isEmpty() ) {
-            log.info( String.format( "Search for %s yielded %d results in %d ms.", settings, results.size(), timer.getTime( TimeUnit.MILLISECONDS ) ) );
+            log.debug( String.format( "Search for %s yielded %d results in %d ms.", settings, results.size(), timer.getTime( TimeUnit.MILLISECONDS ) ) );
         }
 
         return results;
@@ -664,7 +664,7 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
 
         watch.stop();
         if ( watch.getTime() > 1000 )
-            SearchServiceImpl.log.info( "Array Design search for '" + settings + "' took " + watch.getTime() + " ms" );
+            SearchServiceImpl.log.warn( "Array Design search for " + settings + " took " + watch.getTime() + " ms" );
 
         return results;
     }
@@ -682,7 +682,7 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
         watch.stop();
         if ( watch.getTime() > 1000 )
             SearchServiceImpl.log
-                    .info( "Biosequence search for '" + settings + "' took " + watch.getTime() + " ms " + searchResults
+                    .warn( "Biosequence search for " + settings + " took " + watch.getTime() + " ms " + searchResults
                             .size() + " results." );
 
         return searchResults;
@@ -702,7 +702,7 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
 
         StopWatch watch = StopWatch.createStarted();
 
-        log.info( "Starting EE search for " + settings );
+        log.debug( "Starting EE search for " + settings );
         String[] subclauses = prepareDatabaseQuery( settings ).split( "\\s+OR\\s+" );
         for ( String subclause : subclauses ) {
             /*
@@ -712,14 +712,13 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
             Collection<SearchResult<ExpressionExperiment>> classResults = this
                     .characteristicEESearchWithChildren( settings.withQuery( subclause ) );
             if ( classResults.size() > 0 ) {
-                log.info( "... Found " + classResults.size() + " EEs matching " + subclause );
+                log.debug( "... Found " + classResults.size() + " EEs matching " + subclause );
             }
             results.addAll( classResults );
         }
 
-        SearchServiceImpl.log
-                .info( "ExpressionExperiment search: " + settings + " -> " + results.size() + " characteristic-based hits "
-                        + watch.getTime() + " ms" );
+        SearchServiceImpl.log.debug( String.format( "ExpressionExperiment search: %s -> %d characteristic-based hits %d ms",
+                settings, results.size(), watch.getTime() ) );
 
         return results;
 
@@ -753,7 +752,7 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
             timer.stop();
         }
 
-        if ( watch.getTime() > 500 ) {
+        if ( timer.getTime() > 100 ) {
             SearchServiceImpl.log.warn( String.format( "Found %d terms (individual) matching '%s' in %d ms",
                     individuals.size(), settings.getQuery(), timer.getTime() ) );
         }
@@ -765,13 +764,12 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
         try {
             matchingTerms = ontologyService.findTerms( settings.getQuery() );
             terms.addAll( matchingTerms );
+            timer.stop();
         } catch ( OntologySearchException e ) {
             throw new BaseCodeOntologySearchException( "Failed to find terms via ontology search.", e );
-        } finally {
-            timer.stop();
         }
 
-        if ( watch.getTime() > 500 ) {
+        if ( timer.getTime() > 100 ) {
             SearchServiceImpl.log
                     .warn( String.format( "Found %d ontology classes matching '%s' in %d ms",
                             matchingTerms.size(), settings.getQuery(), timer.getTime() ) );
@@ -787,10 +785,10 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
             terms.addAll( ontologyService.getChildren( matchingTerms, false, true ) );
             timer.stop();
 
-            if ( watch.getTime() > 500 ) {
+            if ( timer.getTime() > 500 ) {
                 SearchServiceImpl.log.warn(
-                        String.format( "Found %d ontology subclasses or related terms matching '%s' in %d ms",
-                                terms.size() - matchingTerms.size(), settings.getQuery(), timer.getTime() ) );
+                        String.format( "Found %d ontology subclasses or related terms for %d terms matching '%s' in %d ms",
+                                terms.size() - matchingTerms.size(), matchingTerms.size(), settings.getQuery(), timer.getTime() ) );
             }
         }
 
@@ -799,10 +797,18 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
         findExperimentsByTerms( terms, results, 0.9, settings );
         timer.stop();
 
-        if ( watch.getTime() > 500 ) {
+        if ( timer.getTime() > 100 ) {
             SearchServiceImpl.log
-                    .warn( String.format( "Retrieved %d datasets via characteristics for '%s' in %d ms",
-                            results.size(), settings.getQuery(), timer.getTime() ) );
+                    .warn( String.format( "Retrieved %d datasets via %d characteristics in %d ms",
+                            results.size(), terms.size(), timer.getTime() ) );
+        }
+
+        String message = String.format( "Found %d datasets by %d characteristic URIs for '%s' in %d ms",
+                results.size(), terms.size(), settings.getQuery(), watch.getTime() );
+        if ( watch.getTime() > 500 ) {
+            SearchServiceImpl.log.warn( message );
+        } else {
+            SearchServiceImpl.log.debug( message );
         }
 
         return results;
@@ -905,7 +911,7 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
         // we would have to first deal with the separate queries, and then apply the logic.
         Collection<SearchResult<ExpressionExperiment>> allResults = new SearchResultSet<>();
 
-        SearchServiceImpl.log.info( "Starting characteristic search for: " + settings );
+        SearchServiceImpl.log.debug( "Starting characteristic search for: " + settings );
         for ( String rawTerm : subparts ) {
             String trimmed = StringUtils.strip( rawTerm );
             if ( StringUtils.isBlank( trimmed ) ) {
@@ -938,7 +944,7 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
             }
 
             if ( watch.getTime() > 1000 ) {
-                SearchServiceImpl.log.info( "Characteristic EE search for '" + rawTerm + "': " + allResults.size()
+                SearchServiceImpl.log.warn( "Characteristic EE search for '" + rawTerm + "': " + allResults.size()
                         + " hits retained so far; " + watch.getTime() + "ms" );
                 watch.reset();
                 watch.start();
@@ -982,7 +988,7 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
         watch.stop();
         if ( watch.getTime() > 1000 )
             SearchServiceImpl.log
-                    .info( "Composite sequence search for '" + settings + "' took " + watch.getTime() + " ms, "
+                    .warn( "Composite sequence search for " + settings + " took " + watch.getTime() + " ms, "
                             + finalResults.size() + " results." );
         return finalResults;
     }
@@ -1079,7 +1085,7 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
             results.add( SearchResult.from( entityClass, e, score, matchText, source ) );
         }
         if ( watch.getTime() > 1000 ) {
-            log.info( "Unpack " + results.size() + " search resultsS: " + watch.getTime() + "ms" );
+            log.warn( "Unpack " + results.size() + " search resultsS: " + watch.getTime() + "ms" );
         }
         return results;
     }
@@ -1112,7 +1118,7 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
         StopWatch totalTime = StopWatch.createStarted();
         StopWatch watch = StopWatch.createStarted();
 
-        SearchServiceImpl.log.info( ">>>>> Starting search for " + settings );
+        SearchServiceImpl.log.debug( ">>>>> Starting search for " + settings );
 
         Set<SearchResult<ExpressionExperiment>> results = new SearchResultSet<ExpressionExperiment>();
 
@@ -1170,8 +1176,8 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
             results.addAll( this.characteristicEESearch( settings ) );
             if ( watch.getTime() > 500 )
                 SearchServiceImpl.log
-                        .info( "Expression Experiment search via characteristics for '" + settings + "' took " + watch.getTime()
-                                + " ms, " + results.size() + " hits." );
+                        .warn( String.format( "Expression Experiment search via characteristics for %s took %d ms, %d hits.",
+                                settings, watch.getTime(), results.size() ) );
             watch.reset();
             watch.start();
         }
@@ -1182,7 +1188,7 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
             results.addAll( this.compassSearchSource.searchExpressionExperiment( settings ) );
             if ( watch.getTime() > 500 )
                 SearchServiceImpl.log
-                        .info( "Expression Experiment index search for '" + settings + "' took " + watch.getTime()
+                        .warn( "Expression Experiment index search for " + settings + " took " + watch.getTime()
                                 + " ms, " + results.size() + " hits." );
             watch.reset();
             watch.start();
@@ -1243,9 +1249,8 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
                 }
             }
             if ( watch.getTime() > 500 )
-                SearchServiceImpl.log
-                        .info( "Expression Experiment platform search for '" + settings + "' took " + watch.getTime()
-                                + " ms, " + results.size() + " hits." );
+                SearchServiceImpl.log.warn( String.format( "Expression Experiment platform search for %s took %d ms, %d hits.",
+                        settings, watch.getTime(), results.size() ) );
 
             if ( !results.isEmpty() ) {
                 return results;
@@ -1256,10 +1261,12 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
             results.forEach( sr -> sr.setResultObject( null ) );
         }
 
-        if ( totalTime.getTime() > 500 )
-            SearchServiceImpl.log
-                    .info( ">>>>>>> Expression Experiment search for '" + settings + "' took " + totalTime.getTime()
-                            + " ms, " + results.size() + " hits." );
+        String message = String.format( ">>>>>>> Expression Experiment search for %s took %d ms, %d hits.", settings, totalTime.getTime(), results.size() );
+        if ( totalTime.getTime() > 500 ) {
+            SearchServiceImpl.log.warn( message );
+        } else {
+            SearchServiceImpl.log.debug( message );
+        }
 
         return results;
 
@@ -1373,7 +1380,7 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
 
         if ( watch.getTime() > 1000 )
             SearchServiceImpl.log
-                    .info( "Gene search for " + settings + " took " + watch.getTime() + " ms; " + combinedGeneList
+                    .warn( "Gene search for " + settings + " took " + watch.getTime() + " ms; " + combinedGeneList
                             .size() + " results." );
 
         return combinedGeneList;

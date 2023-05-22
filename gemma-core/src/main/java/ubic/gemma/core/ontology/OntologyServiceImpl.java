@@ -946,7 +946,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
                     try {
                         return work.apply( os );
                     } finally {
-                        if ( timer.getTime() > 200 ) {
+                        if ( timer.getTime() > 500 ) {
                             log.warn( String.format( "Gathering results from %s took %d ms.", os, timer.getTime() ) );
                         }
                     }

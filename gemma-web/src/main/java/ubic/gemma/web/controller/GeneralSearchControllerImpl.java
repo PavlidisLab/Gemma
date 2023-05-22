@@ -111,7 +111,7 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
             if ( results.size() == 0 )
                 continue;
 
-            BaseFormController.log.info( String.format( "Search for: %s; result: %d %ss",
+            BaseFormController.log.debug( String.format( "Search for: %s; result: %d %ss",
                     searchSettings, results.size(), clazz.getSimpleName() ) );
 
             /*
@@ -129,7 +129,7 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
 
         if ( timer.getTime() > 500 ) {
             BaseFormController.log
-                    .info( "Searching for query: " + searchSettings + " took " + timer.getTime() + " ms ("
+                    .warn( "Searching for query: " + searchSettings + " took " + timer.getTime() + " ms ("
                             + "searching: " + searchTimer.getTime() + " ms, "
                             + "filling VOs: " + fillVosTimer.getTime() + " ms)." );
         }
