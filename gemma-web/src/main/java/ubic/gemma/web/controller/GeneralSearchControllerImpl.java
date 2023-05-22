@@ -51,10 +51,16 @@ import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.web.propertyeditor.TaxonPropertyEditor;
 import ubic.gemma.web.remote.JsonReaderResponse;
 
+import javax.annotation.Nullable;
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
+
+import static org.apache.commons.text.StringEscapeUtils.escapeHtml4;
 
 /**
  * Note: do not use parametrized collections as parameters for ajax methods in this class! Type information is lost
@@ -91,7 +97,7 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
 
         SearchSettings searchSettings = searchSettingsFromVo( settingsValueObject )
                 .withDoHighlighting( true )
-                .withContextPath( servletContext.getContextPath() );
+                .withHighlighter( highlighter );
 
         searchTimer.start();
         SearchService.SearchResultMap searchResults;
@@ -135,6 +141,31 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
         }
 
         return new JsonReaderResponse<>( finalResults );
+    }
+
+    private final ubic.gemma.model.common.search.Highlighter highlighter = new Highlighter();
+
+    private class Highlighter implements ubic.gemma.model.common.search.Highlighter {
+
+        @Override
+        public String highlightTerm( String uri, String value, Class<? extends Identifiable> clazz ) {
+            String matchedText;
+            try {
+                matchedText = "Tagged term: <a href=\"" + servletContext.getContextPath() + "/searcher.html?query=" + URLEncoder.encode( uri, StandardCharsets.UTF_8.name() ) + "\">" + escapeHtml4( value ) + "</a> ";
+            } catch ( UnsupportedEncodingException e ) {
+                throw new RuntimeException( e );
+            }
+            if ( !ExpressionExperiment.class.equals( clazz ) ) {
+                matchedText = matchedText + " via " + clazz.getSimpleName();
+            }
+            return matchedText;
+        }
+
+        @Nullable
+        @Override
+        public String highlightProperties( Map<String, String> fragments ) {
+            return fragments.values().iterator().next();
+        }
     }
 
     @Override
@@ -186,7 +217,7 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
         String taxon = request.getParameter( "taxon" );
         if ( taxon != null )
             csc.taxon( taxonService.findByScientificName( taxon ) );
-        csc.contextPath( servletContext.getContextPath() );
+        csc.highlighter( highlighter );
         String scope = request.getParameter( "scope" );
         if ( StringUtils.isNotBlank( scope ) ) {
             char[] scopes = scope.toCharArray();

@@ -38,11 +38,13 @@ import ubic.gemma.core.analysis.preprocess.svd.SVDValueObject;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
 import ubic.gemma.core.search.SearchResult;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisValueObject;
+import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.auditAndSecurity.eventType.BatchInformationFetchingEvent;
 import ubic.gemma.model.common.description.AnnotationValueObject;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.QuantitationTypeValueObject;
+import ubic.gemma.model.common.search.Highlighter;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
@@ -118,6 +120,36 @@ public class DatasetsWebService {
     private DatasetArgService datasetArgService;
     @Autowired
     private GeneArgService geneArgService;
+    @Autowired
+    private HttpServletRequest request;
+
+    private final Highlighter highlighter = new Highlighter() {
+        @Nullable
+        @Override
+        public String highlightTerm( String termUri, String termLabel, Class<? extends Identifiable> clazz ) {
+            String reconstructedUri = ServletUriComponentsBuilder.fromRequest( request )
+                    .scheme( null )
+                    .host( null )
+                    .port( -1 )
+                    // replace the query with the term URI and only retain the filter
+                    .replaceQueryParam( "query", termUri )
+                    .replaceQueryParam( "offset" )
+                    .replaceQueryParam( "limit" )
+                    .replaceQueryParam( "sort" )
+                    .build()
+                    .toUriString();
+            return String.format( "Tagged term: **[%s](%s)** via *%s*", termLabel, reconstructedUri, clazz.getSimpleName() );
+        }
+
+        @Nullable
+        @Override
+        public String highlightProperties( Map<String, String> fragments ) {
+            return fragments.entrySet().stream()
+                    .map( e -> String.format( "Tagged %s: %s", e.getKey(), e.getValue() ) )
+                    .collect( Collectors.joining( "<br/>" ) );
+        }
+    };
+
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
@@ -133,7 +165,7 @@ public class DatasetsWebService {
         Map<Long, SearchResult<ExpressionExperiment>> resultById = new HashMap<>();
         if ( query != null ) {
             List<SearchResult<ExpressionExperiment>> results = new ArrayList<>();
-            filters.and( datasetArgService.getFilterForSearchQuery( query, results ) );
+            filters.and( datasetArgService.getFilterForSearchQuery( query, highlighter, results ) );
             results.forEach( e -> resultById.put( e.getResultId(), e ) );
         }
         return Responder.paginate( ( filter, sort, offset, limit1 ) -> expressionExperimentService.loadValueObjects( filter, sort, offset, limit1 )

@@ -6,6 +6,7 @@ import org.compass.core.*;
 import org.compass.core.engine.SearchEngineException;
 import org.compass.core.engine.SearchEngineHits;
 import org.compass.core.engine.SearchEngineQueryParseException;
+import org.compass.core.impl.DefaultCompassHighlightedText;
 import org.compass.core.mapping.CompassMapping;
 import org.compass.core.mapping.Mapping;
 import org.compass.core.mapping.ResourceMapping;
@@ -294,7 +295,9 @@ public class CompassSearchSource implements SearchSource {
             double score = Double.isNaN( hits.score( i ) ) ? 1.0 : hits.score( i );
             String ht = null;
             if ( settings.isDoHighlighting() && hits.highlightedText( i ) != null ) {
-                ht = hits.highlightedText( i ).getHighlightedText();
+                DefaultCompassHighlightedText h = ( DefaultCompassHighlightedText ) hits.highlightedText( i );
+                //noinspection unchecked
+                ht = settings.highlightProperties( h );
             }
 
             //noinspection unchecked

@@ -12,13 +12,13 @@ import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
-import org.springframework.web.context.request.RequestContextHolder;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.search.SearchResult;
 import ubic.gemma.core.search.SearchService;
 import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.description.BibliographicReferenceValueObject;
+import ubic.gemma.model.common.search.Highlighter;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 import ubic.gemma.model.expression.designElement.CompositeSequenceValueObject;
@@ -38,7 +38,11 @@ import ubic.gemma.rest.util.ResponseDataObject;
 import ubic.gemma.rest.util.args.*;
 
 import javax.annotation.Nullable;
+import javax.servlet.ServletContext;
 import javax.ws.rs.*;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -75,6 +79,33 @@ public class SearchWebService {
     private TaxonArgService taxonArgService;
     @Autowired
     private PlatformArgService platformArgService;
+
+    @Autowired
+    private ServletContext servletContext;
+
+    /**
+     * Highlights search result.
+     */
+    private final Highlighter highlighter = new Highlighter() {
+
+        @Override
+        public String highlightTerm( String uri, String label, Class<? extends Identifiable> aClass ) {
+            try {
+                return String.format( "Tagged term: **[%s](%s)** via *%s*", label,
+                        servletContext.getContextPath() + "/rest/v2/search?query=" + URLEncoder.encode( uri, StandardCharsets.UTF_8.name() ),
+                        aClass.getSimpleName() );
+            } catch ( UnsupportedEncodingException e ) {
+                throw new RuntimeException( e );
+            }
+        }
+
+        @Override
+        public String highlightProperties( Map<String, String> fragments ) {
+            return fragments.entrySet().stream()
+                    .map( e -> String.format( "Tagged %s: %s", e.getKey(), e.getValue() ) )
+                    .collect( Collectors.joining( "<br/>" ) );
+        }
+    };
 
     /**
      * Search everything subject to taxon and platform constraints.
@@ -125,6 +156,8 @@ public class SearchWebService {
                 .resultTypes( resultTypesCls )
                 .maxResults( maxResults )
                 .fillResults( fillResults )
+                .doHighlighting( true )
+                .highlighter( highlighter )
                 .build();
 
         List<SearchResult<?>> searchResults;
@@ -220,6 +253,8 @@ public class SearchWebService {
 
         double score;
 
+        String highlight;
+
         @Schema(hidden = true)
         String source;
 
@@ -242,6 +277,7 @@ public class SearchWebService {
             this.resultType = searchResult.getResultType().getName();
             this.resultObject = searchResult.getResultObject();
             this.score = searchResult.getScore();
+            this.highlight = searchResult.getHighlightedText();
             this.source = searchResult.getSource().toString();
         }
     }

@@ -5,12 +5,14 @@ import org.springframework.stereotype.Service;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.search.SearchResult;
 import ubic.gemma.core.search.SearchService;
+import ubic.gemma.model.common.search.Highlighter;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.util.Filter;
 import ubic.gemma.persistence.util.Filters;
 
+import javax.annotation.Nullable;
 import javax.ws.rs.BadRequestException;
 import java.util.List;
 import java.util.Set;
@@ -40,11 +42,16 @@ public class DatasetArgService extends AbstractEntityArgService<ExpressionExperi
      * @param query    query
      * @param _results destination for the search results
      */
-    public Filter getFilterForSearchQuery( String query, List<SearchResult<ExpressionExperiment>> _results ) {
+    public Filter getFilterForSearchQuery( String query, @Nullable Highlighter highlighter, @Nullable List<SearchResult<ExpressionExperiment>> _results ) {
         try {
-            List<SearchResult<ExpressionExperiment>> results = searchService.search( SearchSettings.expressionExperimentSearch( query )
-                            .withCacheResults( true )
-                            .withFillResults( false ) )
+            SearchSettings settings = SearchSettings.builder()
+                    .query( query )
+                    .resultType( ExpressionExperiment.class )
+                    .doHighlighting( true )
+                    .highlighter( highlighter )
+                    .fillResults( false )
+                    .build();
+            List<SearchResult<ExpressionExperiment>> results = searchService.search( settings )
                     .getByResultObjectType( ExpressionExperiment.class );
             if ( _results != null ) {
                 _results.addAll( results );
@@ -64,9 +71,9 @@ public class DatasetArgService extends AbstractEntityArgService<ExpressionExperi
     }
 
     /**
-     * @see #getFilterForSearchQuery(String, List)
+     * @see #getFilterForSearchQuery(String, Highlighter, List)
      */
     public Filter getFilterForSearchQuery( String query ) {
-        return getFilterForSearchQuery( query, null );
+        return getFilterForSearchQuery( query, null, null );
     }
 }

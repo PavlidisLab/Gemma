@@ -18,7 +18,10 @@
  */
 package ubic.gemma.model.common.search;
 
-import lombok.*;
+import lombok.Builder;
+import lombok.Data;
+import lombok.Singular;
+import lombok.With;
 import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.core.search.SearchResult;
 import ubic.gemma.model.common.Identifiable;
@@ -31,6 +34,7 @@ import ubic.gemma.model.genome.Taxon;
 
 import javax.annotation.Nullable;
 import java.io.Serializable;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -204,12 +208,10 @@ public class SearchSettings implements Serializable {
     private SearchMode mode = SearchMode.BALANCED;
 
     /**
-     * A context path for highlighted text containing URLs.
-     * @deprecated Never use this, always generate URLs in Gemma Web or Gemma REST
+     * A custom highlighter.
      */
     @Nullable
-    @Deprecated
-    private String contextPath;
+    private transient Highlighter highlighter;
 
     /**
      * Get this query, trimmed.
@@ -275,6 +277,27 @@ public class SearchSettings implements Serializable {
      */
     public boolean hasResultType( Class<?> cls ) {
         return resultTypes.contains( cls );
+    }
+
+    /**
+     * Highlight a given ontology term.
+     * <p>
+     * This is a shorthand for {@link #getHighlighter()} and {@link Highlighter#highlightTerm(String, String, Class)}
+     * that deals with {@link #isDoHighlighting()} and potentially null highlighter.
+     * @see #setHighlighter(Highlighter)
+     * @return a highlight, or null if no provider is set or the provider returns null
+     */
+    @Nullable
+    public String highlightTerm( String termUri, String termLabel, Class<? extends Identifiable> clazz ) {
+        return doHighlighting && highlighter != null ? highlighter.highlightTerm( termUri, termLabel, clazz ) : null;
+    }
+
+    /**
+     * Highlight a given set of properties-associated fragments.
+     */
+    @Nullable
+    public String highlightProperties( Map<String, String> fragments ) {
+        return doHighlighting && highlighter != null ? highlighter.highlightProperties( fragments ) : null;
     }
 
     @Override

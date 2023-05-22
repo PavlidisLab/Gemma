@@ -80,15 +80,11 @@ import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.persistence.util.EntityUtils;
 
 import javax.annotation.Nullable;
-import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.text.Collator;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-import static org.apache.commons.text.StringEscapeUtils.escapeHtml4;
 import static ubic.gemma.core.search.source.DatabaseSearchSourceUtils.prepareDatabaseQuery;
 
 /**
@@ -865,26 +861,10 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
             String value = uri2value.get( uri );
             for ( ExpressionExperiment ee : entry.getValue() ) {
                 results.add( SearchResult.from( ExpressionExperiment.class, ee, score,
-                        getHighlightTextForTerm( uri, value, clazz, settings.getContextPath() ),
+                        settings.highlightTerm( uri, value, clazz ),
                         String.format( "CharacteristicService.findExperimentsByUris with term [%s](%s)", value, uri ) ) );
             }
         }
-    }
-
-    /**
-     * FIXME: move this code in Gemma Web
-     */
-    private static String getHighlightTextForTerm( String uri, String value, Class<? extends Identifiable> clazz, @Nullable String contextPath ) {
-        String matchedText;
-        try {
-            matchedText = "Tagged term: <a href=\"" + ( contextPath != null ? contextPath : "" ) + "/searcher.html?query=" + URLEncoder.encode( uri, StandardCharsets.UTF_8.name() ) + "\">" + escapeHtml4( value ) + "</a> ";
-        } catch ( UnsupportedEncodingException e ) {
-            throw new RuntimeException( e );
-        }
-        if ( !ExpressionExperiment.class.equals( clazz ) ) {
-            matchedText = matchedText + " via " + clazz.getSimpleName();
-        }
-        return matchedText;
     }
 
     /**
