@@ -14,6 +14,7 @@ import ubic.gemma.persistence.util.Filters;
 
 import javax.annotation.Nullable;
 import javax.ws.rs.BadRequestException;
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -30,8 +31,12 @@ public class DatasetArgService extends AbstractEntityArgService<ExpressionExperi
     }
 
     @Override
-    public Filters getFilters( FilterArg<ExpressionExperiment> filterArg ) {
-        return service.getFiltersWithInferredAnnotations( super.getFilters( filterArg ) );
+    public Filters getFilters( FilterArg<ExpressionExperiment> filterArg ) throws BadRequestException {
+        return getFilters( filterArg, null );
+    }
+
+    public Filters getFilters( FilterArg<ExpressionExperiment> filterArg, @Nullable Collection<String> impliedTermUris ) {
+        return service.getFiltersWithInferredAnnotations( super.getFilters( filterArg ), impliedTermUris );
     }
 
     /**

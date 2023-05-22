@@ -19,7 +19,6 @@
 package ubic.gemma.model.expression.experiment;
 
 import org.apache.commons.lang3.RandomStringUtils;
-import org.hibernate.SessionFactory;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -428,7 +427,7 @@ public class ExpressionExperimentServiceIntegrationTest extends BaseSpringContex
         };
 
         tableMaintenanceUtil.updateExpressionExperiment2CharacteristicEntries();
-        assertThat( expressionExperimentService.getAnnotationsUsageFrequency( null, 0, 0 ) )
+        assertThat( expressionExperimentService.getAnnotationsUsageFrequency( null, 0, 0, null ) )
                 .noneSatisfy( consumer );
 
         // add the term to the dataset and update the pivot table
@@ -437,12 +436,12 @@ public class ExpressionExperimentServiceIntegrationTest extends BaseSpringContex
         assertThat( c.getId() ).isNotNull();
 
         // the table is out-of-date
-        assertThat( expressionExperimentService.getAnnotationsUsageFrequency( null, 0, 0 ) )
+        assertThat( expressionExperimentService.getAnnotationsUsageFrequency( null, 0, 0, null ) )
                 .noneSatisfy( consumer );
 
         // update the pivot table
         tableMaintenanceUtil.updateExpressionExperiment2CharacteristicEntries();
-        assertThat( expressionExperimentService.getAnnotationsUsageFrequency( null, 0, 0 ) )
+        assertThat( expressionExperimentService.getAnnotationsUsageFrequency( null, 0, 0, null ) )
                 .satisfiesOnlyOnce( consumer );
 
         // remove the term, which must evict the query cache
@@ -455,7 +454,7 @@ public class ExpressionExperimentServiceIntegrationTest extends BaseSpringContex
                 } );
 
         // since deletions are cascaded, the change will be reflected immediatly
-        assertThat( expressionExperimentService.getAnnotationsUsageFrequency( null, 0, 0 ) )
+        assertThat( expressionExperimentService.getAnnotationsUsageFrequency( null, 0, 0, null ) )
                 .noneSatisfy( consumer );
     }
 }

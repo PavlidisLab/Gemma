@@ -640,7 +640,7 @@ public class ExpressionExperimentDaoImpl
      * the same characteristic at multiple levels to make counting more efficient.
      */
     @Override
-    public Map<Characteristic, Long> getAnnotationsUsageFrequency( @Nullable Collection<Long> eeIds, @Nullable Class<? extends Identifiable> level, int maxResults, int minFrequency ) {
+    public Map<Characteristic, Long> getAnnotationsUsageFrequency( @Nullable Collection<Long> eeIds, @Nullable Class<? extends Identifiable> level, int maxResults, int minFrequency, @Nullable Collection<String> retainedTermUris ) {
         if ( eeIds != null && eeIds.isEmpty() ) {
             return Collections.emptyMap();
         }
@@ -653,6 +653,7 @@ public class ExpressionExperimentDaoImpl
                                 + AclQueryUtils.formNativeAclRestrictionClause( ( SessionFactoryImplementor ) getSessionFactory() ) + " "
                                 + "group by COALESCE({T}.CATEGORY_URI, {T}.CATEGORY), COALESCE({T}.VALUE_URI, {T}.VALUE) "
                                 + "having EE_COUNT >= :minFrequency "
+                                + ( retainedTermUris != null && !retainedTermUris.isEmpty() ? "or {T}.VALUE_URI in :retainedTermUris " : "" )
                                 + "order by EE_COUNT desc" )
                 .addEntity( "T", Characteristic.class )
                 .addScalar( "EE_COUNT", new LongType() )
@@ -660,6 +661,9 @@ public class ExpressionExperimentDaoImpl
                 .setMaxResults( maxResults );
         if ( eeIds != null ) {
             q.setParameterList( "eeIds", new HashSet<>( eeIds ) );
+        }
+        if ( retainedTermUris != null && !retainedTermUris.isEmpty() ) {
+            q.setParameterList( "retainedTermUris", retainedTermUris );
         }
         if ( level != null ) {
             q.setParameter( "level", level );

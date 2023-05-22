@@ -259,11 +259,13 @@ public class DatasetsWebService {
         if ( minFrequency != null && minFrequency < 0 ) {
             throw new BadRequestException( "Minimum frequency must be positive." );
         }
-        Filters filters = datasetArgService.getFilters( filter );
+        // ensure that implied terms are retained in the usage frequency
+        Collection<String> impliedTermUris = new HashSet<>();
+        Filters filters = datasetArgService.getFilters( filter, impliedTermUris );
         if ( query != null ) {
             filters.and( datasetArgService.getFilterForSearchQuery( query ) );
         }
-        List<AnnotationWithUsageStatisticsValueObject> results = expressionExperimentService.getAnnotationsUsageFrequency( filters, limit, minFrequency != null ? minFrequency : 0 )
+        List<AnnotationWithUsageStatisticsValueObject> results = expressionExperimentService.getAnnotationsUsageFrequency( filters, limit, minFrequency != null ? minFrequency : 0, impliedTermUris )
                 .stream().map( e -> new AnnotationWithUsageStatisticsValueObject( e.getCharacteristic(), e.getNumberOfExpressionExperiments(), e.getTerm() != null ? getParentTerms( e.getTerm() ) : null ) )
                 .sorted( Comparator.comparing( UsageStatistics::getNumberOfExpressionExperiments, Comparator.reverseOrder() ) )
                 .collect( Collectors.toList() );

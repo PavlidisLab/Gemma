@@ -554,7 +554,7 @@ public class ExpressionExperimentServiceImpl
      * For example, {@code characteristics.termUri = a or characteristics.termUri = b} will be transformed into {@code characteristics.termUri in (a, b, children of a and b...)}.
      */
     @Override
-    public Filters getFiltersWithInferredAnnotations( Filters f ) {
+    public Filters getFiltersWithInferredAnnotations( Filters f, @Nullable Collection<String> impliedTermUris ) {
         Filters f2 = Filters.empty();
         // apply inference to terms
         // collect clauses mentioning terms
@@ -582,9 +582,15 @@ public class ExpressionExperimentServiceImpl
                     clauseBuilder = clauseBuilder.or( subClause );
                 }
             }
+            // recreate a clause
             for ( Map.Entry<SubClauseKey, Set<String>> e : impliedTermsUrisBySubClause.entrySet() ) {
-                if ( !e.getValue().isEmpty() ) {
+                if ( e.getValue().size() == 1 ) {
+                    clauseBuilder = clauseBuilder.or( Filter.by( e.getKey().getObjectAlias(), e.getKey().getPropertyName(), String.class, Filter.Operator.eq, e.getValue().iterator().next(), e.getKey().getOriginalProperty() ) );
+                } else if ( e.getValue().size() > 1 ) {
                     clauseBuilder = clauseBuilder.or( Filter.by( e.getKey().getObjectAlias(), e.getKey().getPropertyName(), String.class, Filter.Operator.in, e.getValue(), e.getKey().getOriginalProperty() ) );
+                }
+                if ( impliedTermUris != null ) {
+                    impliedTermUris.addAll( e.getValue() );
                 }
             }
             f2 = clauseBuilder.build();
@@ -630,13 +636,13 @@ public class ExpressionExperimentServiceImpl
      */
     @Override
     @Transactional(readOnly = true)
-    public List<CharacteristicWithUsageStatisticsAndOntologyTerm> getAnnotationsUsageFrequency( @Nullable Filters filters, int maxResults, int minFrequency ) {
+    public List<CharacteristicWithUsageStatisticsAndOntologyTerm> getAnnotationsUsageFrequency( @Nullable Filters filters, int maxResults, int minFrequency, @Nullable Collection<String> retainedTermUris ) {
         Map<Characteristic, Long> result;
         if ( filters == null || filters.isEmpty() ) {
-            result = expressionExperimentDao.getAnnotationsUsageFrequency( null, null, maxResults, minFrequency );
+            result = expressionExperimentDao.getAnnotationsUsageFrequency( null, null, maxResults, minFrequency, retainedTermUris );
         } else {
             List<Long> eeIds = expressionExperimentDao.loadIds( filters, null );
-            result = expressionExperimentDao.getAnnotationsUsageFrequency( eeIds, null, maxResults, minFrequency );
+            result = expressionExperimentDao.getAnnotationsUsageFrequency( eeIds, null, maxResults, minFrequency, retainedTermUris );
         }
 
         List<CharacteristicWithUsageStatisticsAndOntologyTerm> resultWithParents = new ArrayList<>( result.size() );

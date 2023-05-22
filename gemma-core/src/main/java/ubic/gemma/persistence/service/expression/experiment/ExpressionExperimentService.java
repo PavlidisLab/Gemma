@@ -256,8 +256,9 @@ public interface ExpressionExperimentService
 
     /**
      * Apply ontological inference to augment a filter with additional terms.
+     * @param impliedTermUris if non-null, all the implied terms are added to the collection
      */
-    Filters getFiltersWithInferredAnnotations( Filters f );
+    Filters getFiltersWithInferredAnnotations( Filters f, @Nullable Collection<String> impliedTermUris );
 
     @Value
     class CharacteristicWithUsageStatisticsAndOntologyTerm {
@@ -287,12 +288,13 @@ public interface ExpressionExperimentService
      * The implementation uses a denormalized table for associating EEs to characteristics which is not always in sync
      * if new terms are attached.
      *
-     * @param filters    filters restricting the terms to a given set of datasets
-     * @param maxResults maximum number of results to return, not including the parent terms if inference is applied
+     * @param filters          filters restricting the terms to a given set of datasets
+     * @param maxResults       maximum number of results to return, not including the parent terms if inference is applied
+     * @param retainedTermUris ensure that the given terms are retained
      * @return mapping annotations grouped by category and term (URI or value if null) to their number of occurrences in
      * the matched datasets
      */
-    List<CharacteristicWithUsageStatisticsAndOntologyTerm> getAnnotationsUsageFrequency( @Nullable Filters filters, int maxResults, int minFrequency );
+    List<CharacteristicWithUsageStatisticsAndOntologyTerm> getAnnotationsUsageFrequency( @Nullable Filters filters, int maxResults, int minFrequency, @Nullable Collection<String> retainedTermUris );
 
     /**
      * @param expressionExperiment experiment

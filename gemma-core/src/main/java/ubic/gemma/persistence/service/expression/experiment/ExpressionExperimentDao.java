@@ -1,7 +1,7 @@
 package ubic.gemma.persistence.service.expression.experiment;
 
-import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.core.security.audit.IgnoreAudit;
+import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.description.AnnotationValueObject;
 import ubic.gemma.model.common.description.Characteristic;
@@ -240,7 +240,7 @@ public interface ExpressionExperimentDao
     /**
      * Obtain annotations usage frequency for a set of given {@link ExpressionExperiment} IDs.
      * <p>
-     * This is meant as a counterpart to {@link ubic.gemma.persistence.service.common.description.CharacteristicService#findExperimentsByUris(Collection, Taxon, int)}
+     * This is meant as a counterpart to {@link ubic.gemma.persistence.service.common.description.CharacteristicService#findExperimentsByUris(Collection, Taxon, int, boolean, boolean)}
      * to answer the reverse question: which annotations can be used to filter a given set of datasets?
      *
      * @param expressionExperimentIds IDs of {@link ExpressionExperiment} to use for restricting annotations, or null to
@@ -249,8 +249,9 @@ public interface ExpressionExperimentDao
      *                                or {@link BioMaterial}
      * @param maxResults              maximum number of annotations to return
      * @param minFrequency            minimum usage frequency to be reported (0 effectively allows everything)
+     * @param retainedTermUris        a collection of term to retain even if they don't meet the minimum frequency criteria
      */
-    Map<Characteristic, Long> getAnnotationsUsageFrequency( @Nullable Collection<Long> expressionExperimentIds, @Nullable Class<? extends Identifiable> level, int maxResults, int minFrequency );
+    Map<Characteristic, Long> getAnnotationsUsageFrequency( @Nullable Collection<Long> expressionExperimentIds, @Nullable Class<? extends Identifiable> level, int maxResults, int minFrequency, @Nullable Collection<String> retainedTermUris );
 
     Collection<ExpressionExperiment> getExperimentsLackingPublications();
 
