@@ -85,15 +85,6 @@
         <filter-class>ubic.gemma.rest.servlet.RestapidocsIndexRewriteFilter</filter-class>
     </filter>
 
-    <filter>
-        <filter-name>analytics</filter-name>
-        <filter-class>ubic.gemma.rest.analytics.servlet.AnalyticsFilter</filter-class>
-        <init-param>
-            <param-name>eventName</param-name>
-            <param-value>gemma_rest_api_access</param-value>
-        </init-param>
-    </filter>
-
     <filter-mapping>
         <filter-name>gemmaWebMetricsFilter</filter-name>
         <servlet-name>gemma</servlet-name>
@@ -120,11 +111,6 @@
 
     <filter-mapping>
         <filter-name>cors</filter-name>
-        <servlet-name>gemma-rest</servlet-name>
-    </filter-mapping>
-
-    <filter-mapping>
-        <filter-name>analytics</filter-name>
         <servlet-name>gemma-rest</servlet-name>
     </filter-mapping>
 
