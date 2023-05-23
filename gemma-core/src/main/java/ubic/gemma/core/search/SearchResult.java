@@ -26,6 +26,7 @@ import ubic.gemma.model.common.Identifiable;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.Comparator;
+import java.util.Map;
 import java.util.Objects;
 
 /**
@@ -53,11 +54,11 @@ public class SearchResult<T extends Identifiable> implements Comparable<SearchRe
      * {@link ubic.gemma.model.association.phenotype.PhenotypeAssociation} use a {@link ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject}
      * for the result object.
      */
-    public static <T extends Identifiable> SearchResult<T> from( Class<? extends Identifiable> resultType, T entity, double score, @Nullable String highlightedText, Object source ) {
+    public static <T extends Identifiable> SearchResult<T> from( Class<? extends Identifiable> resultType, T entity, double score, @Nullable Map<String, String> highlights, Object source ) {
         if ( entity.getId() == null ) {
             throw new IllegalArgumentException( "Entity ID cannot be null." );
         }
-        SearchResult<T> sr = new SearchResult<>( resultType, entity.getId(), score, highlightedText, source );
+        SearchResult<T> sr = new SearchResult<>( resultType, entity.getId(), score, highlights, source );
         sr.setResultObject( entity );
         return sr;
     }
@@ -78,8 +79,8 @@ public class SearchResult<T extends Identifiable> implements Comparable<SearchRe
     /**
      * Create a new provisional search result with a result type and ID.
      */
-    public static <T extends Identifiable> SearchResult<T> from( Class<? extends Identifiable> resultType, long entityId, double score, String highlightedText, Object source ) {
-        return new SearchResult<>( resultType, entityId, score, highlightedText, source );
+    public static <T extends Identifiable> SearchResult<T> from( Class<? extends Identifiable> resultType, long entityId, double score, Map<String, String> highlights, Object source ) {
+        return new SearchResult<>( resultType, entityId, score, highlights, source );
     }
 
     public static <T extends Identifiable> SearchResult<T> from( Class<? extends Identifiable> resultType, long entityId, double score, Object source ) {
@@ -93,7 +94,7 @@ public class SearchResult<T extends Identifiable> implements Comparable<SearchRe
      * highlighted text, etc.).
      */
     public static <T extends Identifiable> SearchResult<T> from( SearchResult<?> original, @Nullable T newResultObject ) {
-        SearchResult<T> sr = new SearchResult<>( original.resultType, original.resultId, original.score, original.highlightedText, original.source );
+        SearchResult<T> sr = new SearchResult<>( original.resultType, original.resultId, original.score, original.highlights, original.source );
         sr.setResultObject( newResultObject );
         return sr;
     }
@@ -125,6 +126,14 @@ public class SearchResult<T extends Identifiable> implements Comparable<SearchRe
     private String highlightedText;
 
     /**
+     * Highlights for this result.
+     * <p>
+     * Keys are fields of {@link T} and values are substrings that matched.
+     */
+    @Nullable
+    private Map<String, String> highlights;
+
+    /**
      * Score for ranking this result among other results.
      */
     private final double score;
@@ -142,11 +151,11 @@ public class SearchResult<T extends Identifiable> implements Comparable<SearchRe
      * This is used when the class and ID is known beforehand, but the result hasn't been retrieve yet from persistent
      * storage.
      */
-    private SearchResult( Class<? extends Identifiable> entityClass, long entityId, double score, @Nullable String highlightedText, Object source ) {
+    private SearchResult( Class<? extends Identifiable> entityClass, long entityId, double score, @Nullable Map<String, String> highlights, Object source ) {
         this.resultType = entityClass;
         this.resultId = entityId;
         this.score = score;
-        this.highlightedText = highlightedText;
+        this.highlights = highlights;
         this.source = source;
     }
 

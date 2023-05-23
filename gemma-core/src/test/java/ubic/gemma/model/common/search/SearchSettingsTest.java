@@ -4,7 +4,6 @@ import org.junit.Test;
 import ubic.gemma.model.common.Identifiable;
 
 import javax.annotation.Nullable;
-import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -62,37 +61,14 @@ public class SearchSettingsTest {
     }
 
     @Test
-    public void testSettingsWithDifferentHighlighterAreEquals() {
+    public void testSettingsWithDifferentHighlighterAreDifferent() {
         assertThat( SearchSettings.builder().query( "test" ).highlighter( new Highlighter1() ).build() )
-                .isEqualTo( SearchSettings.builder().query( "test" ).highlighter( new Highlighter2() ).build() );
+                .isNotEqualTo( SearchSettings.builder().query( "test" ).highlighter( new Highlighter2() ).build() );
     }
 
     private static class Highlighter1 implements Highlighter {
-        @Nullable
-        @Override
-        public String highlightTerm( String termUri, String termLabel, Class<? extends Identifiable> clazz ) {
-            return null;
-        }
-
-        @Nullable
-        @Override
-        public String highlightProperties( Map<String, String> fragments ) {
-            return null;
-        }
     }
 
     private static class Highlighter2 implements Highlighter {
-
-        @Nullable
-        @Override
-        public String highlightTerm( String termUri, String termLabel, Class<? extends Identifiable> clazz ) {
-            return null;
-        }
-
-        @Nullable
-        @Override
-        public String highlightProperties( Map<String, String> fragments ) {
-            return null;
-        }
     }
 }

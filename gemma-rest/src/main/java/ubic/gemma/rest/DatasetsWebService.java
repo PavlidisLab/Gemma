@@ -138,16 +138,9 @@ public class DatasetsWebService {
                     .replaceQueryParam( "sort" )
                     .build()
                     .toUriString();
-            return String.format( "Tagged term: **[%s](%s)** via *%s*", termLabel, reconstructedUri, clazz.getSimpleName() );
+            return String.format( "**[%s](%s)** via *%s*", termLabel, reconstructedUri, clazz.getSimpleName() );
         }
 
-        @Nullable
-        @Override
-        public String highlightProperties( Map<String, String> fragments ) {
-            return fragments.entrySet().stream()
-                    .map( e -> String.format( "Tagged %s: %s", e.getKey(), e.getValue() ) )
-                    .collect( Collectors.joining( "<br/>" ) );
-        }
     };
 
 

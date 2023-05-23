@@ -158,7 +158,7 @@ public class CompassSearchSource implements SearchSource {
             results.addAll( seqsFromDb.get( gene ).stream()
                     .filter( Objects::nonNull )
                     .filter( entity -> entity.getId() != null )
-                    .map( entity -> SearchResult.from( BioSequence.class, entity, compassHitDerivedFrom.getScore() * CompassSearchSource.INDIRECT_DB_HIT_PENALTY, compassHitDerivedFrom.getHighlightedText(), compassHitDerivedFrom.getSource() ) )
+                    .map( entity -> SearchResult.from( BioSequence.class, entity, compassHitDerivedFrom.getScore() * CompassSearchSource.INDIRECT_DB_HIT_PENALTY, compassHitDerivedFrom.getHighlights(), compassHitDerivedFrom.getSource() ) )
                     .collect( Collectors.toList() ) );
         }
 
@@ -254,7 +254,7 @@ public class CompassSearchSource implements SearchSource {
         }
 
         // highlighting, if desired & supported by Compass (always!)
-        if ( settings.isDoHighlighting() ) {
+        if ( settings.getHighlighter() != null ) {
             if ( session instanceof InternalCompassSession ) {
                 // always ...
                 CompassMapping mapping = ( ( InternalCompassSession ) session ).getMapping();
@@ -278,11 +278,9 @@ public class CompassSearchSource implements SearchSource {
             }
 
             double score = Double.isNaN( hits.score( i ) ) ? 1.0 : hits.score( i );
-            String ht = null;
-            if ( settings.isDoHighlighting() && hits.highlightedText( i ) != null ) {
-                DefaultCompassHighlightedText h = ( DefaultCompassHighlightedText ) hits.highlightedText( i );
-                //noinspection unchecked
-                ht = settings.highlightProperties( h );
+            Map<String, String> ht = null;
+            if ( settings.getHighlighter() != null && hits.highlightedText( i ) != null ) {
+                ht = settings.getHighlighter().highlightCompassHits( ( DefaultCompassHighlightedText ) hits.highlightedText( i ) );
             }
 
             //noinspection unchecked

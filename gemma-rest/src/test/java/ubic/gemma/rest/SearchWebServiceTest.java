@@ -147,7 +147,7 @@ public class SearchWebServiceTest extends AbstractJUnit4SpringContextTests {
             //noinspection unchecked
             SearchResult<Gene> searchResult = args.getArgument( 0, SearchResult.class );
             SearchResult<GeneValueObject> sr = SearchResult.from( searchResult.getResultType(), searchResult.getResultId(), searchResult.getScore(), "test object" );
-            searchResult.setHighlightedText( searchResult.getHighlightedText() );
+            searchResult.setHighlights( searchResult.getHighlights() );
             if ( searchResult.getResultObject() != null ) {
                 sr.setResultObject( new GeneValueObject( searchResult.getResultObject() ) );
             }
@@ -166,7 +166,7 @@ public class SearchWebServiceTest extends AbstractJUnit4SpringContextTests {
             //noinspection unchecked
             SearchResult<Gene> searchResult = args.getArgument( 0, SearchResult.class );
             SearchResult<GeneValueObject> sr = SearchResult.from( searchResult.getResultType(), searchResult.getResultId(), searchResult.getScore(), "test object" );
-            sr.setHighlightedText( searchResult.getHighlightedText() );
+            sr.setHighlights( searchResult.getHighlights() );
             if ( searchResult.getResultObject() != null ) {
                 sr.setResultObject( new GeneValueObject( searchResult.getResultObject() ) );
             }

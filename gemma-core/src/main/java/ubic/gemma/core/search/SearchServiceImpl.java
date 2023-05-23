@@ -343,8 +343,8 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
                 resultsVo.add( SearchResult.from( sr, entityVosById.get( sr.getResultId() ) ) );
             } else if ( sr.getResultObject() == null ) {
                 // result was originally unfilled and nothing was found, so it's somewhat safe to restore it
-                if ( sr.getHighlightedText() != null ) {
-                    resultsVo.add( SearchResult.from( sr.getResultType(), sr.getResultId(), sr.getScore(), sr.getHighlightedText(), sr.getSource() ) );
+                if ( sr.getHighlights() != null ) {
+                    resultsVo.add( SearchResult.from( sr.getResultType(), sr.getResultId(), sr.getScore(), sr.getHighlights(), sr.getSource() ) );
                 } else {
                     resultsVo.add( SearchResult.from( sr.getResultType(), sr.getResultId(), sr.getScore(), sr.getSource() ) );
                 }
@@ -427,7 +427,7 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
                 // FIXME: add support for OR, but there's a bug in baseCode that prevents this https://github.com/PavlidisLab/baseCode/issues/22
                 String query = settings.getQuery().replaceAll( "\\s+OR\\s+", "" );
                 results.addAll( this.dbHitsToSearchResult(
-                        Gene.class, geneSearchService.getGOGroupGenes( query, settings.getTaxon() ), 0.8, "From GO group", "GeneSearchService.getGOGroupGenes" ) );
+                        Gene.class, geneSearchService.getGOGroupGenes( query, settings.getTaxon() ), 0.8, Collections.singletonMap( "GO Group", "From GO group" ), "GeneSearchService.getGOGroupGenes" ) );
             } catch ( OntologySearchException e ) {
                 throw new BaseCodeOntologySearchException( e );
             }
@@ -600,7 +600,7 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
         if ( settings.hasResultType( BlacklistedEntity.class ) ) {
             BlacklistedEntity b = blacklistedEntityService.findByAccession( searchString );
             if ( b != null ) {
-                blacklistedResults.add( SearchResult.from( BlacklistedEntity.class, b, DatabaseSearchSource.MATCH_BY_ACCESSION_SCORE, "Blacklisted accessions are not loaded into Gemma", "BlacklistedEntityService.findByAccession" ) );
+                blacklistedResults.add( SearchResult.from( BlacklistedEntity.class, b, DatabaseSearchSource.MATCH_BY_ACCESSION_SCORE, null, "BlacklistedEntityService.findByAccession" ) );
                 return results;
             }
         }
@@ -745,17 +745,22 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
                 // aggregate the highlighted text.
                 Map<SearchResult<ExpressionExperiment>, String> highlights = new HashMap<>();
                 for ( SearchResult<ExpressionExperiment> sqr : subqueryResults ) {
-                    highlights.put( sqr, sqr.getHighlightedText() );
+                    if ( sqr.getHighlights() != null && sqr.getHighlights().containsKey( "term" ) ) {
+                        highlights.put( sqr, sqr.getHighlights().get( "term" ) );
+                    }
                 }
 
                 for ( SearchResult<ExpressionExperiment> ar : allResults ) {
                     String k = highlights.get( ar );
                     if ( StringUtils.isNotBlank( k ) ) {
-                        String highlightedText = ar.getHighlightedText();
-                        if ( StringUtils.isBlank( highlightedText ) ) {
-                            ar.setHighlightedText( k );
+                        if ( ar.getHighlights() != null ) {
+                            if ( StringUtils.isBlank( ar.getHighlights().get( "term" ) ) ) {
+                                ar.getHighlights().put( "term", k );
+                            } else {
+                                ar.getHighlights().compute( "term", ( z, t ) -> t + "<br/>" + k );
+                            }
                         } else {
-                            ar.setHighlightedText( highlightedText + "," + k );
+                            ar.setHighlights( Collections.singletonMap( "term", k ) );
                         }
                     }
                 }
@@ -888,7 +893,7 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
     /**
      * Convert hits from database searches into SearchResults.
      */
-    private <T extends Identifiable> Collection<SearchResult<T>> dbHitsToSearchResult( Class<T> entityClass, Collection<T> entities, double score, String matchText, String source ) {
+    private <T extends Identifiable> Collection<SearchResult<T>> dbHitsToSearchResult( Class<T> entityClass, Collection<T> entities, double score, Map<String, String> highlights, String source ) {
         StopWatch watch = StopWatch.createStarted();
         List<SearchResult<T>> results = new ArrayList<>( entities.size() );
         for ( T e : entities ) {
@@ -900,7 +905,7 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
             if ( e.getId() == null ) {
                 log.warn( "Search result object with null ID." );
             }
-            results.add( SearchResult.from( entityClass, e, score, matchText, source ) );
+            results.add( SearchResult.from( entityClass, e, score, highlights, source ) );
         }
         if ( watch.getTime() > 1000 ) {
             log.warn( "Unpack " + results.size() + " search resultsS: " + watch.getTime() + "ms" );
@@ -960,7 +965,7 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
             if ( settings.hasResultType( BlacklistedEntity.class ) ) {
                 BlacklistedEntity b = blacklistedEntityService.findByAccession( prepareDatabaseQuery( settings ) );
                 if ( b != null ) {
-                    blacklistedResults.add( SearchResult.from( BlacklistedEntity.class, b, DatabaseSearchSource.MATCH_BY_ACCESSION_SCORE, "Blacklisted accessions are not loaded into Gemma", "BlacklistedEntityService.findByAccession" ) );
+                    blacklistedResults.add( SearchResult.from( BlacklistedEntity.class, b, DatabaseSearchSource.MATCH_BY_ACCESSION_SCORE, null, "BlacklistedEntityService.findByAccession" ) );
                     return results;
                 }
             }
@@ -1063,7 +1068,7 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
                             .getExpressionExperiments( ad );
                     if ( expressionExperiments.size() > 0 )
                         results.addAll( this.dbHitsToSearchResult( ExpressionExperiment.class, expressionExperiments,
-                                0.8, ad.getShortName() + " - " + ad.getName(), String.format( "ArrayDesignService.getExpressionExperiments(%s)", ad ) ) );
+                                0.8, Collections.singletonMap( "arrayDesign", ad.getShortName() + " - " + ad.getName() ), String.format( "ArrayDesignService.getExpressionExperiments(%s)", ad ) ) );
                 }
             }
             if ( watch.getTime() > 500 )

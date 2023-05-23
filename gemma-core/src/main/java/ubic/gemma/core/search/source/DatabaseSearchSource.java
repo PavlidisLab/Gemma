@@ -32,7 +32,8 @@ import javax.annotation.Nullable;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static ubic.gemma.core.search.source.DatabaseSearchSourceUtils.*;
+import static ubic.gemma.core.search.source.DatabaseSearchSourceUtils.prepareDatabaseQuery;
+import static ubic.gemma.core.search.source.DatabaseSearchSourceUtils.prepareDatabaseQueryForInexactMatch;
 
 /**
  * Search source for direct database results.
@@ -263,21 +264,21 @@ public class DatabaseSearchSource implements SearchSource {
 
         Collection<ExpressionExperiment> ees = expressionExperimentService.findByName( query );
         for ( ExpressionExperiment ee : ees ) {
-            results.add( SearchResult.from( ExpressionExperiment.class, ee, MATCH_BY_NAME_SCORE, ee.getName(), "ExpressionExperimentService.findByName" ) );
+            results.add( SearchResult.from( ExpressionExperiment.class, ee, MATCH_BY_NAME_SCORE, Collections.singletonMap( "name", ee.getName() ), "ExpressionExperimentService.findByName" ) );
         }
 
         // in response to https://github.com/PavlidisLab/Gemma/issues/140, always keep going if admin.
         if ( results.isEmpty() || SecurityUtil.isUserAdmin() ) {
             ExpressionExperiment ee = expressionExperimentService.findByShortName( query );
             if ( ee != null ) {
-                results.add( SearchResult.from( ExpressionExperiment.class, ee, MATCH_BY_SHORT_NAME_SCORE, ee.getShortName(), "ExpressionExperimentService.findByShortName" ) );
+                results.add( SearchResult.from( ExpressionExperiment.class, ee, MATCH_BY_SHORT_NAME_SCORE, Collections.singletonMap( "shortName", ee.getShortName() ), "ExpressionExperimentService.findByShortName" ) );
             }
         }
 
         if ( results.isEmpty() || SecurityUtil.isUserAdmin() ) {
             ees = expressionExperimentService.findByAccession( query ); // this will find split parts
             for ( ExpressionExperiment e : ees ) {
-                results.add( SearchResult.from( ExpressionExperiment.class, e, MATCH_BY_ACCESSION_SCORE, e.getId().toString(), "ExpressionExperimentService.findByAccession" ) );
+                results.add( SearchResult.from( ExpressionExperiment.class, e, MATCH_BY_ACCESSION_SCORE, Collections.singletonMap( "id", e.getId().toString() ), "ExpressionExperimentService.findByAccession" ) );
             }
         }
 
@@ -286,7 +287,7 @@ public class DatabaseSearchSource implements SearchSource {
                 // maybe user put in a primary key value.
                 ExpressionExperiment ee = expressionExperimentService.load( Long.parseLong( query ) );
                 if ( ee != null ) {
-                    results.add( SearchResult.from( ExpressionExperiment.class, ee, MATCH_BY_ID_SCORE, ee.getId().toString(), "ExpressionExperimentService.load" ) );
+                    results.add( SearchResult.from( ExpressionExperiment.class, ee, MATCH_BY_ID_SCORE, Collections.singletonMap( "id", ee.getId().toString() ), "ExpressionExperimentService.load" ) );
                 }
             } catch ( NumberFormatException e ) {
                 // no-op - it's not an ID.

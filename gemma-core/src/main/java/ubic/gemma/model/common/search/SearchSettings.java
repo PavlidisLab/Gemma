@@ -23,7 +23,6 @@ import lombok.Data;
 import lombok.Singular;
 import lombok.With;
 import org.apache.commons.lang3.StringUtils;
-import ubic.gemma.core.search.SearchResult;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -180,13 +179,6 @@ public class SearchSettings implements Serializable {
     private boolean useIndices = true;
 
     /**
-     * Highlight part of the search result as per {@link SearchResult#getHighlightedText()}.
-     * <p>
-     * Overhead can be reduced by disabling highlighting if not needed.
-     */
-    private boolean doHighlighting;
-
-    /**
      * Limit for the number of results per result type in {@link ubic.gemma.core.search.SearchService.SearchResultMap}.
      * <p>
      * The default is relatively large and given by {@link #DEFAULT_MAX_RESULTS_PER_RESULT_TYPE}. Any value less than
@@ -211,7 +203,7 @@ public class SearchSettings implements Serializable {
      * A custom highlighter.
      */
     @Nullable
-    private transient Highlighter highlighter;
+    private Highlighter highlighter;
 
     /**
      * Get this query, trimmed.
@@ -283,21 +275,13 @@ public class SearchSettings implements Serializable {
      * Highlight a given ontology term.
      * <p>
      * This is a shorthand for {@link #getHighlighter()} and {@link Highlighter#highlightTerm(String, String, Class)}
-     * that deals with {@link #isDoHighlighting()} and potentially null highlighter.
+     * that deals with a potentially null highlighter.
      * @see #setHighlighter(Highlighter)
      * @return a highlight, or null if no provider is set or the provider returns null
      */
     @Nullable
     public String highlightTerm( String termUri, String termLabel, Class<? extends Identifiable> clazz ) {
-        return doHighlighting && highlighter != null ? highlighter.highlightTerm( termUri, termLabel, clazz ) : null;
-    }
-
-    /**
-     * Highlight a given set of properties-associated fragments.
-     */
-    @Nullable
-    public String highlightProperties( Map<String, String> fragments ) {
-        return doHighlighting && highlighter != null ? highlighter.highlightProperties( fragments ) : null;
+        return highlighter != null ? highlighter.highlightTerm( termUri, termLabel, clazz ) : null;
     }
 
     @Override

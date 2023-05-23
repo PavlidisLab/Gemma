@@ -184,7 +184,7 @@ public class OntologySearchSourceImpl implements OntologySearchSource {
             String value = uri2value.get( uri );
             for ( ExpressionExperiment ee : entry.getValue() ) {
                 results.add( SearchResult.from( ExpressionExperiment.class, ee, score,
-                        settings.highlightTerm( uri, value, clazz ),
+                        Collections.singletonMap( "term", settings.highlightTerm( uri, value, clazz ) ),
                         String.format( "CharacteristicService.findExperimentsByUris with term [%s](%s)", value, uri ) ) );
             }
         }

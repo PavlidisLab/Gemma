@@ -91,7 +91,7 @@ public class SearchWebService {
         @Override
         public String highlightTerm( String uri, String label, Class<? extends Identifiable> aClass ) {
             try {
-                return String.format( "Tagged term: **[%s](%s)** via *%s*", label,
+                return String.format( "**[%s](%s)** via *%s*", label,
                         servletContext.getContextPath() + "/rest/v2/search?query=" + URLEncoder.encode( uri, StandardCharsets.UTF_8.name() ),
                         aClass.getSimpleName() );
             } catch ( UnsupportedEncodingException e ) {
@@ -99,12 +99,6 @@ public class SearchWebService {
             }
         }
 
-        @Override
-        public String highlightProperties( Map<String, String> fragments ) {
-            return fragments.entrySet().stream()
-                    .map( e -> String.format( "Tagged %s: %s", e.getKey(), e.getValue() ) )
-                    .collect( Collectors.joining( "<br/>" ) );
-        }
     };
 
     /**
@@ -156,7 +150,6 @@ public class SearchWebService {
                 .resultTypes( resultTypesCls )
                 .maxResults( maxResults )
                 .fillResults( fillResults )
-                .doHighlighting( true )
                 .highlighter( highlighter )
                 .build();
 
@@ -253,7 +246,7 @@ public class SearchWebService {
 
         double score;
 
-        String highlight;
+        Map<String, String> highlights;
 
         @Schema(hidden = true)
         String source;
@@ -277,7 +270,7 @@ public class SearchWebService {
             this.resultType = searchResult.getResultType().getName();
             this.resultObject = searchResult.getResultObject();
             this.score = searchResult.getScore();
-            this.highlight = searchResult.getHighlightedText();
+            this.highlights = searchResult.getHighlights();
             this.source = searchResult.getSource().toString();
         }
     }

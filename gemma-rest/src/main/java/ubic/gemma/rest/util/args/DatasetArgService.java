@@ -52,7 +52,6 @@ public class DatasetArgService extends AbstractEntityArgService<ExpressionExperi
             SearchSettings settings = SearchSettings.builder()
                     .query( query )
                     .resultType( ExpressionExperiment.class )
-                    .doHighlighting( true )
                     .highlighter( highlighter )
                     .fillResults( false )
                     .build();
