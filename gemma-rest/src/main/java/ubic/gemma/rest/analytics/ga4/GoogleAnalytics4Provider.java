@@ -21,6 +21,8 @@ import org.springframework.validation.Validator;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.context.request.RequestAttributes;
+import org.springframework.web.context.request.RequestContextHolder;
 import ubic.gemma.rest.analytics.AnalyticsProvider;
 
 import javax.annotation.Nullable;
@@ -64,6 +66,8 @@ public class GoogleAnalytics4Provider implements AnalyticsProvider, Initializing
     private static final String
             endpoint = "https://www.google-analytics.com/mp/collect?api_secret={apiSecret}&measurement_id={measurementId}",
             debugEndpoint = "https://www.google-analytics.com/debug/mp/collect?api_secret={apiSecret}&measurement_id={measurementId}";
+
+    private static final String CLIENT_ATTRIBUTES_KEY = "GA4_CLIENT_ATTRIBUTES";
 
     private final RestTemplate restTemplate;
     private final ScheduledExecutorService taskExecutor;
@@ -192,15 +196,31 @@ public class GoogleAnalytics4Provider implements AnalyticsProvider, Initializing
         }
     }
 
+    @Value
+    private static class ClientAttributes {
+        @Nullable
+        String clientId;
+        @Nullable
+        String userId;
+        @Nullable
+        String userAgent;
+    }
+
     @Override
     public void sendEvent( String eventName, Date date, Map<String, String> params ) {
-        String clientId = clientIdRetrievalStrategy.get();
-        if ( clientId == null ) {
+        RequestAttributes requestAttributes = RequestContextHolder.currentRequestAttributes();
+        ClientAttributes clientAttributes = ( ClientAttributes ) requestAttributes.getAttribute( CLIENT_ATTRIBUTES_KEY, RequestAttributes.SCOPE_REQUEST );
+        if ( clientAttributes == null ) {
+            // set and memorize client attributes for the request lifetime, this way we do not need to invoke the
+            // strategies needlessly
+            clientAttributes = new ClientAttributes( clientIdRetrievalStrategy.get(), userIdRetrievalStrategy.get(), userAgentRetrievalStrategy.get() );
+            requestAttributes.setAttribute( CLIENT_ATTRIBUTES_KEY, clientAttributes, RequestAttributes.SCOPE_SESSION );
+        }
+        if ( clientAttributes.clientId == null ) {
             log.trace( String.format( "No client ID is could be retrieved; the %s event will be ignored.", eventName ) );
             return;
         }
-        _Event e = new _Event( clientIdRetrievalStrategy.get(), userIdRetrievalStrategy.get(), eventName, date, params,
-                userAgentRetrievalStrategy.get() );
+        _Event e = new _Event( clientAttributes.clientId, clientAttributes.userId, eventName, date, params, clientAttributes.userAgent );
         Errors errors = validateEvent( e );
         if ( errors.hasErrors() ) {
             if ( debug ) {
