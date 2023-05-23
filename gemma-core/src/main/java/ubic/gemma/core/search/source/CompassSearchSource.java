@@ -16,6 +16,7 @@ import org.compass.core.spi.InternalCompassHits;
 import org.compass.core.spi.InternalCompassSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.core.convert.TypeDescriptor;
 import org.springframework.stereotype.Component;
@@ -28,7 +29,6 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
-import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.gene.GeneSet;
 import ubic.gemma.persistence.service.genome.biosequence.BioSequenceService;
@@ -182,24 +182,9 @@ public class CompassSearchSource implements SearchSource {
      * @return {@link Collection}
      */
     @Override
+    @Cacheable("CompassSearchSource.searchExpressionExperiment")
     public Collection<SearchResult<ExpressionExperiment>> searchExpressionExperiment( SearchSettings settings ) throws SearchException {
-        Collection<SearchResult<ExpressionExperiment>> unfilteredResults = this.compassSearch( compassExpression, settings, ExpressionExperiment.class );
-        Taxon t = settings.getTaxon();
-        if ( t == null || unfilteredResults.isEmpty() )
-            return unfilteredResults;
-
-        Collection<SearchResult<ExpressionExperiment>> filteredResults = new SearchResultSet<>();
-        Collection<Long> eeIds = unfilteredResults.stream().map( SearchResult::getResultId ).collect( Collectors.toSet() );
-        for ( SearchResult<ExpressionExperiment> sr : unfilteredResults ) {
-            if ( eeIds.contains( sr.getResultId() ) ) {
-                filteredResults.add( sr );
-            }
-        }
-        if ( filteredResults.size() < unfilteredResults.size() ) {
-            log.debug( "Filtered for taxon = " + t.getCommonName() + ", removed " + ( unfilteredResults.size()
-                    - filteredResults.size() ) + " results" );
-        }
-        return filteredResults;
+        return compassSearch( compassExpression, settings, ExpressionExperiment.class );
     }
 
     @Override

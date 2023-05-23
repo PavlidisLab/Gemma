@@ -36,17 +36,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 import org.springframework.util.LinkedMultiValueMap;
-import ubic.basecode.ontology.model.OntologyIndividual;
-import ubic.basecode.ontology.model.OntologyResource;
-import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.basecode.ontology.search.OntologySearchException;
 import ubic.gemma.core.association.phenotype.PhenotypeAssociationManagerService;
 import ubic.gemma.core.genome.gene.service.GeneSearchService;
 import ubic.gemma.core.genome.gene.service.GeneService;
-import ubic.gemma.core.ontology.OntologyService;
-import ubic.gemma.core.ontology.OntologyUtils;
 import ubic.gemma.core.search.source.CompositeSearchSource;
 import ubic.gemma.core.search.source.DatabaseSearchSource;
+import ubic.gemma.core.search.source.OntologySearchSource;
 import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
@@ -58,10 +54,8 @@ import ubic.gemma.model.expression.BlacklistedEntity;
 import ubic.gemma.model.expression.BlacklistedValueObject;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
-import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.CompositeSequenceValueObject;
-import ubic.gemma.model.expression.experiment.ExperimentalDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSetValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
@@ -73,7 +67,6 @@ import ubic.gemma.model.genome.gene.GeneSetValueObject;
 import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 import ubic.gemma.model.genome.sequenceAnalysis.BioSequenceValueObject;
-import ubic.gemma.persistence.service.common.description.CharacteristicService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.experiment.BlacklistedEntityService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
@@ -161,18 +154,17 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
     @Autowired
     @Qualifier("databaseSearchSource")
     private SearchSource databaseSearchSource;
+    @Autowired
+    @Qualifier("ontologySearchSource")
+    private OntologySearchSource ontologySearchSource;
 
     // TODO: move all this under DatabaseSearchSource
     @Autowired
     private ArrayDesignService arrayDesignService;
     @Autowired
-    private CharacteristicService characteristicService;
-    @Autowired
     private GeneSearchService geneSearchService;
     @Autowired
     private GeneService geneService;
-    @Autowired
-    private OntologyService ontologyService;
     @Autowired
     private PhenotypeAssociationManagerService phenotypeAssociationManagerService;
 
@@ -712,152 +704,6 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
 
     }
 
-    /**
-     * Perform a Experiment search based on annotations (anchored in ontology terms) - it does not have to be one word,
-     * it could be "parkinson's disease"; it can also be a URI.
-     *
-     * @return collection of SearchResults (Experiments)
-     */
-    private Collection<SearchResult<ExpressionExperiment>> characteristicEESearchTerm( SearchSettings settings ) throws SearchException {
-        // overall timer
-        StopWatch watch = StopWatch.createStarted();
-        // per-step timer
-        StopWatch timer = StopWatch.create();
-
-        Set<SearchResult<ExpressionExperiment>> results = new SearchResultSet<>();
-
-        Collection<OntologyResource> terms = new HashSet<>();
-
-        // Phase 1: We first search for individuals.
-        Collection<OntologyIndividual> individuals;
-        try {
-            timer.start();
-            individuals = ontologyService.findIndividuals( settings.getQuery() );
-            terms.addAll( individuals );
-        } catch ( OntologySearchException e ) {
-            throw new BaseCodeOntologySearchException( e );
-        } finally {
-            timer.stop();
-        }
-
-        if ( timer.getTime() > 100 ) {
-            SearchServiceImpl.log.warn( String.format( "Found %d terms (individual) matching '%s' in %d ms",
-                    individuals.size(), settings.getQuery(), timer.getTime() ) );
-        }
-
-        // Phase 2: Search ontology classes matches to the query
-        timer.reset();
-        timer.start();
-        Collection<OntologyTerm> matchingTerms;
-        try {
-            matchingTerms = ontologyService.findTerms( settings.getQuery() );
-            terms.addAll( matchingTerms );
-            timer.stop();
-        } catch ( OntologySearchException e ) {
-            throw new BaseCodeOntologySearchException( "Failed to find terms via ontology search.", e );
-        }
-
-        if ( timer.getTime() > 100 ) {
-            SearchServiceImpl.log
-                    .warn( String.format( "Found %d ontology classes matching '%s' in %d ms",
-                            matchingTerms.size(), settings.getQuery(), timer.getTime() ) );
-        }
-
-        /*
-         * Search for child terms.
-         */
-        if ( !matchingTerms.isEmpty() ) {
-            // TODO: move this logic in baseCode, this can be done far more efficiently with Jena API
-            timer.reset();
-            timer.start();
-            terms.addAll( ontologyService.getChildren( matchingTerms, false, true ) );
-            timer.stop();
-
-            if ( timer.getTime() > 500 ) {
-                SearchServiceImpl.log.warn(
-                        String.format( "Found %d ontology subclasses or related terms for %d terms matching '%s' in %d ms",
-                                terms.size() - matchingTerms.size(), matchingTerms.size(), settings.getQuery(), timer.getTime() ) );
-            }
-        }
-
-        timer.reset();
-        timer.start();
-        findExperimentsByTerms( terms, results, 0.9, settings );
-        timer.stop();
-
-        if ( timer.getTime() > 100 ) {
-            SearchServiceImpl.log
-                    .warn( String.format( "Retrieved %d datasets via %d characteristics in %d ms",
-                            results.size(), terms.size(), timer.getTime() ) );
-        }
-
-        String message = String.format( "Found %d datasets by %d characteristic URIs for '%s' in %d ms",
-                results.size(), terms.size(), settings.getQuery(), watch.getTime() );
-        if ( watch.getTime() > 500 ) {
-            SearchServiceImpl.log.warn( message );
-        } else {
-            SearchServiceImpl.log.debug( message );
-        }
-
-        return results;
-    }
-
-    private void findExperimentsByTerms( Collection<? extends OntologyResource> individuals, Set<SearchResult<ExpressionExperiment>> results, double score, SearchSettings settings ) {
-        // URIs are case-insensitive in the database, so should be the mapping to labels
-        Collection<String> uris = new HashSet<>();
-        Map<String, String> uri2value = new TreeMap<>( String.CASE_INSENSITIVE_ORDER );
-
-        if ( settings.isTermQuery() ) {
-            String query = settings.getQuery();
-            uris.add( query );
-            // this will be replaced with a proper label if found in the ontology
-            uri2value.put( query, OntologyUtils.getLabelFromTermUri( query ) );
-        }
-
-        for ( OntologyResource individual : individuals ) {
-            // bnodes can have null URIs, how annoying...
-            if ( individual.getUri() != null ) {
-                uris.add( individual.getUri() );
-                uri2value.put( individual.getUri(), individual.getLabel() );
-            }
-        }
-
-        findExperimentsByUris( uris, results, score, uri2value, settings );
-    }
-
-    private void findExperimentsByUris( Collection<String> uris, Set<SearchResult<ExpressionExperiment>> results, double score, Map<String, String> uri2value, SearchSettings settings ) {
-        if ( isFilled( results, settings ) )
-            return;
-
-        // ranking results by level is costly
-        boolean rankByLevel = settings.getMode().equals( SearchSettings.SearchMode.ACCURATE );
-
-        Map<Class<? extends Identifiable>, Map<String, Set<ExpressionExperiment>>> hits = characteristicService.findExperimentsByUris( uris, settings.getTaxon(), getLimit( results, settings ), settings.isFillResults(), rankByLevel );
-
-        // collect all direct tags
-        addExperimentsByUrisHits( hits, results, ExpressionExperiment.class, score, uri2value, settings );
-
-        // collect experimental design-related terms
-        addExperimentsByUrisHits( hits, results, ExperimentalDesign.class, 0.9 * score, uri2value, settings );
-
-        // collect samples-related terms
-        addExperimentsByUrisHits( hits, results, BioMaterial.class, 0.9 * score, uri2value, settings );
-    }
-
-    private void addExperimentsByUrisHits( Map<Class<? extends Identifiable>, Map<String, Set<ExpressionExperiment>>> hits, Set<SearchResult<ExpressionExperiment>> results, Class<? extends Identifiable> clazz, double score, Map<String, String> uri2value, SearchSettings settings ) {
-        Map<String, Set<ExpressionExperiment>> specificHits = hits.get( clazz );
-        if ( specificHits == null )
-            return;
-        for ( Map.Entry<String, Set<ExpressionExperiment>> entry : specificHits.entrySet() ) {
-            String uri = entry.getKey();
-            String value = uri2value.get( uri );
-            for ( ExpressionExperiment ee : entry.getValue() ) {
-                results.add( SearchResult.from( ExpressionExperiment.class, ee, score,
-                        settings.highlightTerm( uri, value, clazz ),
-                        String.format( "CharacteristicService.findExperimentsByUris with term [%s](%s)", value, uri ) ) );
-            }
-        }
-    }
 
     /**
      * Search for the Experiment query in ontologies, including items that are associated with children of matching
@@ -889,7 +735,7 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
             if ( StringUtils.isBlank( trimmed ) ) {
                 continue;
             }
-            Collection<SearchResult<ExpressionExperiment>> subqueryResults = this.characteristicEESearchTerm( settings.withQuery( trimmed ) );
+            Collection<SearchResult<ExpressionExperiment>> subqueryResults = ontologySearchSource.searchExpressionExperiment( settings.withQuery( trimmed ) );
             if ( allResults.isEmpty() ) {
                 allResults.addAll( subqueryResults );
             } else {
@@ -1487,7 +1333,7 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
                     Set<SearchResult<ExpressionExperiment>> eeHits = new SearchResultSet<>();
                     Map<String, String> uri2value = new HashMap<>();
                     uri2value.put( termUri, g.getOfficialSymbol() );
-                    this.findExperimentsByUris( Collections.singleton( termUri ), eeHits, 1.0, uri2value, settings );
+                    eeHits.addAll( ontologySearchSource.searchExpressionExperimentByUris( settings, Collections.singleton( termUri ), uri2value ) );
 
                     if ( !eeHits.isEmpty() ) {
                         results.addAll( eeHits );
@@ -1507,7 +1353,7 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
          * Not searching for a gene. Only other option is a direct URI search for experiments.
          */
         if ( settings.hasResultType( ExpressionExperiment.class ) ) {
-            results.addAll( this.characteristicEESearchTerm( settings.withQuery( uriString ) ) );
+            results.addAll( ontologySearchSource.searchExpressionExperiment( settings.withQuery( uriString ) ) );
         }
 
         return results;
@@ -1586,19 +1432,5 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
      */
     private static <T extends Identifiable> boolean isFilled( Collection<SearchResult<T>> results, SearchSettings settings ) {
         return settings.getMaxResults() > 0 && results.size() >= settings.getMaxResults();
-    }
-
-    /**
-     * Obtain a limit suitable for the given search results and settings.
-     *
-     * @return the difference between the maximum results and the collection size or -1 if the settings are for
-     * unlimited results
-     * @throws IllegalArgumentException if the search results are already fully filled as per {@link #isFilled(Collection, SearchSettings)}
-     */
-    private static <T extends Identifiable> int getLimit( Collection<SearchResult<T>> results, SearchSettings settings ) {
-        if ( isFilled( results, settings ) ) {
-            throw new IllegalArgumentException( "Search results are already fully filled, have to checked the collection with isFilled()?" );
-        }
-        return settings.getMaxResults() > 0 ? settings.getMaxResults() - results.size() : -1;
     }
 }

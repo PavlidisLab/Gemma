@@ -10,6 +10,7 @@ import ubic.gemma.core.genome.gene.service.GeneSearchService;
 import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.core.genome.gene.service.GeneSetService;
 import ubic.gemma.core.ontology.OntologyService;
+import ubic.gemma.core.search.source.OntologySearchSource;
 import ubic.gemma.persistence.service.common.description.CharacteristicService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
@@ -51,6 +52,11 @@ class SearchServiceTestContextConfiguration {
     @Bean
     public SearchSource databaseSearchSource() {
         return mock( SearchSource.class );
+    }
+
+    @Bean
+    public OntologySearchSource ontologySearchSource() {
+        return mock( OntologySearchSource.class );
     }
 
     @Bean
