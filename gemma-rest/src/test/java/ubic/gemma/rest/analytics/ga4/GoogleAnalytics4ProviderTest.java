@@ -2,6 +2,7 @@ package ubic.gemma.rest.analytics.ga4;
 
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.lang3.RandomStringUtils;
+import org.assertj.core.api.InstanceOfAssertFactories;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -10,15 +11,13 @@ import org.springframework.web.client.RestTemplate;
 import ubic.gemma.core.util.test.category.SlowTest;
 
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Date;
-import java.util.UUID;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.junit.Assert.assertTrue;
+import static ubic.gemma.rest.util.Assertions.assertThat;
 
 @CommonsLog
 public class GoogleAnalytics4ProviderTest {
@@ -35,7 +34,7 @@ public class GoogleAnalytics4ProviderTest {
         provider = new GoogleAnalytics4Provider( restTemplate, new ScheduledThreadPoolExecutor( 1 ), "test", "test" );
         provider.afterPropertiesSet();
         provider.setDebug( true );
-        ThreadLocal<String> clientId = ThreadLocal.withInitial( () -> UUID.randomUUID().toString() );
+        ThreadLocal<String> clientId = ThreadLocal.withInitial( () -> RandomStringUtils.randomNumeric( 10 ) + "." + RandomStringUtils.randomNumeric( 10 ) );
         provider.setClientIdRetrievalStrategy( clientId::get );
         provider.setPollingIntervalMillis( 1000 );
     }
@@ -49,26 +48,56 @@ public class GoogleAnalytics4ProviderTest {
     @Category(SlowTest.class)
     public void test() throws Exception {
         ExecutorService executor = Executors.newFixedThreadPool( 16 );
+        Collection<Future<?>> futures = new ArrayList<>();
         for ( int i = 0; i < 500; i++ ) {
-            executor.submit( () -> {
+            futures.add( executor.submit( () -> {
                 provider.sendEvent( "page_view", new Date(), "Key", "Value" );
-            } );
+            } ) );
         }
-        executor.shutdown();
-        assertTrue( executor.awaitTermination( Integer.MAX_VALUE, TimeUnit.SECONDS ) );
+        long maxWait = 15 * 1000 * 1000;
+        long initialTime = System.nanoTime();
+        assertThat( futures ).allSatisfy( f -> {
+            long elapsed = System.nanoTime() - initialTime;
+            assertThat( f ).succeedsWithin( Math.max( 0, maxWait - elapsed ), TimeUnit.NANOSECONDS );
+        } );
     }
 
     @Test
     public void testInvalidEvent() {
-        assertThatThrownBy( () -> {
-            provider.sendEvent( RandomStringUtils.randomAlphabetic( 41 ) );
-        } ).isInstanceOf( IllegalArgumentException.class );
-        assertThatThrownBy( () -> {
-            provider.sendEvent( RandomStringUtils.randomAlphabetic( 30 ),
-                    "test", RandomStringUtils.randomAlphabetic( 101 ) );
-        } ).isInstanceOf( IllegalArgumentException.class );
-        assertThatThrownBy( () -> {
-            provider.sendEvent( "first_open" );
-        } ).isInstanceOf( IllegalArgumentException.class );
+        assertThatThrownBy( () -> provider.sendEvent( RandomStringUtils.randomAlphabetic( 41 ) ) )
+                .asInstanceOf( InstanceOfAssertFactories.throwable( InvalidEventException.class ) )
+                .extracting( InvalidEventException::getErrors )
+                .satisfies( errors -> {
+                    assertThat( errors ).hasFieldError( "event", "name", "size" );
+                } );
+
+        assertThatThrownBy( () -> provider.sendEvent( RandomStringUtils.randomAlphabetic( 30 ),
+                "test", RandomStringUtils.randomAlphabetic( 101 ) ) )
+                .asInstanceOf( InstanceOfAssertFactories.throwable( InvalidEventException.class ) )
+                .extracting( InvalidEventException::getErrors )
+                .satisfies( errors -> {
+                    assertThat( errors ).hasFieldError( "event", "params", "sizeOfValue" );
+                } );
+    }
+
+    @Test
+    public void testReservedEventName() {
+        assertThatThrownBy( () -> provider.sendEvent( "first_open" ) )
+                .asInstanceOf( InstanceOfAssertFactories.throwable( InvalidEventException.class ) )
+                .extracting( InvalidEventException::getErrors )
+                .satisfies( errors -> {
+                    assertThat( errors ).hasFieldError( "event", "name", "reservedEventName", "first_open" );
+                } );
+    }
+
+    @Test
+    public void testFutureEvent() {
+        assertThatThrownBy( () -> provider.sendEvent( RandomStringUtils.randomAlphabetic( 30 ), new Date( System.currentTimeMillis() + 10000 ) ) )
+                .isInstanceOf( InvalidEventException.class )
+                .asInstanceOf( InstanceOfAssertFactories.throwable( InvalidEventException.class ) )
+                .extracting( InvalidEventException::getErrors )
+                .satisfies( errors -> {
+                    assertThat( errors ).hasFieldError( "event", "date", "dateMustBeInPast" );
+                } );
     }
 }

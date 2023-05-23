@@ -154,6 +154,7 @@ public class GoogleAnalytics4Provider implements AnalyticsProvider, Initializing
      * Setting this to zero effectively disable batching of events unless they occur at exactly the same time. This can
      * be achieved by reusing the {@link Date} object when sending multiple events.
      */
+    @SuppressWarnings("unused")
     public void setResolutionMillis( long resolutionMillis ) {
         this.resolutionMillis = resolutionMillis;
     }
@@ -203,7 +204,7 @@ public class GoogleAnalytics4Provider implements AnalyticsProvider, Initializing
         Errors errors = validateEvent( e );
         if ( errors.hasErrors() ) {
             if ( debug ) {
-                throw new IllegalArgumentException( "Invalid event: " + errors );
+                throw new InvalidEventException( errors );
             } else {
                 log.error( "Invalid event: " + errors );
             }
@@ -267,6 +268,9 @@ public class GoogleAnalytics4Provider implements AnalyticsProvider, Initializing
             }
             if ( RESERVED_EVENT_NAMES.contains( e.name ) ) {
                 errors.rejectValue( "name", "reservedEventName", "Event name is reserved." );
+            }
+            if ( e.date.after( new Date() ) ) {
+                errors.rejectValue( "date", "dateMustBeInPast", "Event date must be in the past." );
             }
             if ( e.params.size() > 10 ) {
                 errors.rejectValue( "params", "size", new Object[] { 10 }, "Events can have at most 10 parameters." );
@@ -356,7 +360,7 @@ public class GoogleAnalytics4Provider implements AnalyticsProvider, Initializing
         log.debug( String.format( "Flushing at least %d pending events...", size ) );
         int flushed = 0;
         while ( !events.isEmpty() && flushed < size ) {
-            flush();
+            flushed += flush();
         }
         log.debug( String.format( String.format( "Flushed %d events in total.", flushed ) ) );
     }
@@ -406,7 +410,7 @@ public class GoogleAnalytics4Provider implements AnalyticsProvider, Initializing
             if ( debug ) {
                 ValidationResult v = restTemplate.postForObject( debugEndpoint, finalPayload, ValidationResult.class, apiSecret, measurementId );
                 if ( !v.validationMessages.isEmpty() ) {
-                    throw new IllegalArgumentException( String.format( "Invalid payload: %s", v ) );
+                    throw new IllegalArgumentException( v.toString() );
                 }
             } else {
                 restTemplate.postForLocation( endpoint, finalPayload, apiSecret, measurementId );
@@ -440,6 +444,17 @@ public class GoogleAnalytics4Provider implements AnalyticsProvider, Initializing
             String fieldPath;
             String description;
             String validationCode;
+        }
+
+        @Override
+        public String toString() {
+            if ( validationMessages.isEmpty() ) {
+                return "Payload is valid.";
+            } else {
+                return "Payload is invalid:\n" + validationMessages.stream()
+                        .map( v -> String.format( String.format( "%s: %s [%s]", v.fieldPath, v.description, v.validationCode ) ) )
+                        .collect( Collectors.joining( "\n- " ) );
+            }
         }
     }
 }
