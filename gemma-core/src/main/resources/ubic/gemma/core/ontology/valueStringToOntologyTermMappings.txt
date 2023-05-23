@@ -475,7 +475,7 @@ PBMCs from peripheral blood	peripheral blood mononuclear cell	http://purl.obolib
 PDAC	pancreatic ductal adenocarcinoma	http://purl.obolibrary.org/obo/DOID_3498	disease	http://www.ebi.ac.uk/efo/EFO_0000408
 pediatric acute leukemia	childhood acute lymphocytic leukemia	http://purl.obolibrary.org/obo/DOID_0080144	disease	http://www.ebi.ac.uk/efo/EFO_0000408
 pediatric acute lymphoblastic leukemia	childhood acute lymphocytic leukemia	http://purl.obolibrary.org/obo/DOID_0080144	disease	http://www.ebi.ac.uk/efo/EFO_0000408
-pediatric T-ALL cells	childhood T-cell acute lymphoblastic leukemia	http://purl.obolibrary.org/obo/DOID:0080145	disease	http://www.ebi.ac.uk/efo/EFO_0000408
+pediatric T-ALL cells	childhood T-cell acute lymphoblastic leukemia	http://purl.obolibrary.org/obo/DOID_0080145	disease	http://www.ebi.ac.uk/efo/EFO_0000408
 Periferal blood mononuclear cells	peripheral blood mononuclear cell	http://purl.obolibrary.org/obo/CL_2000001	cell type	http://www.ebi.ac.uk/efo/EFO_0000324
 peripheral blood	blood	http://purl.obolibrary.org/obo/UBERON_0000178	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
 peripheral blood cell	blood cell	http://purl.obolibrary.org/obo/CL_0000081	cell type	http://www.ebi.ac.uk/efo/EFO_0000324
