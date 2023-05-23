@@ -17,6 +17,7 @@ package ubic.gemma.rest.servlet;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.filter.OncePerRequestFilter;
+import ubic.gemma.rest.analytics.ga4.RequestHeaderBasedClientIdRetrievalStrategy;
 
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
@@ -38,7 +39,7 @@ public class CorsFilter extends OncePerRequestFilter {
             res.addHeader( "Access-Control-Allow-Origin", "*" );
         }
         if ( isPreflight( req ) ) {
-            res.addHeader( "Access-Control-Allow-Headers", "Authorization,Content-Type,X-Gemma-Client-ID" );
+            res.addHeader( "Access-Control-Allow-Headers", "Authorization,Content-Type," + RequestHeaderBasedClientIdRetrievalStrategy.DEFAULT_REQUEST_HEADER );
             res.setStatus( HttpStatus.NO_CONTENT.value() );
             return;
         }

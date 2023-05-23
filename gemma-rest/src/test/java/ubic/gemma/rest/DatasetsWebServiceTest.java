@@ -25,6 +25,7 @@ import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.util.*;
+import ubic.gemma.rest.analytics.AnalyticsProvider;
 import ubic.gemma.rest.util.BaseJerseyTest;
 import ubic.gemma.rest.util.JacksonConfig;
 import ubic.gemma.rest.util.args.DatasetArgService;
@@ -34,6 +35,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.util.Collections;
+import java.util.Date;
 import java.util.Set;
 
 import static org.mockito.Mockito.*;
@@ -116,6 +118,11 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
         public SearchService searchService() {
             return mock( SearchService.class );
         }
+
+        @Bean
+        public AnalyticsProvider analyticsProvider() {
+            return mock( AnalyticsProvider.class );
+        }
     }
 
     @Autowired
@@ -126,6 +133,9 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
 
     @Autowired
     private ExpressionDataFileService expressionDataFileService;
+
+    @Autowired
+    private AnalyticsProvider analyticsProvider;
 
     private ExpressionExperiment ee;
 
@@ -157,6 +167,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
                 .hasFieldOrPropertyWithValue( "offset", 0 )
                 .hasFieldOrPropertyWithValue( "limit", 20 )
                 .hasFieldOrPropertyWithValue( "totalElements", 0 );
+        verify( analyticsProvider ).sendEvent( eq( "gemma_rest_api_access" ), any( Date.class ), eq( "method" ), eq( "GET" ), eq( "endpoint" ), eq( "/datasets" ) );
     }
 
     @Test
