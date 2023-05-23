@@ -302,7 +302,7 @@ Immortalized human bronchial epithelial cells	immortal human epithelial cell lin
 immune cells	leukocyte	http://purl.obolibrary.org/obo/CL_0000738	cell type	http://www.ebi.ac.uk/efo/EFO_0000324
 IMR90	IMR-90 cell	http://purl.obolibrary.org/obo/CLO_0006951	cell line	http://purl.obolibrary.org/obo/CLO_0000031
 induced pluripotent stem cells	induced pluripotent stem cell	http://www.ebi.ac.uk/efo/EFO_0004905	cell type	http://www.ebi.ac.uk/efo/EFO_0000324
-infection code: mock	control	ttp://www.ebi.ac.uk/efo/EFO_0001461	treatment	http://www.ebi.ac.uk/efo/EFO_0000727
+infection code: mock	control	http://www.ebi.ac.uk/efo/EFO_0001461	treatment	http://www.ebi.ac.uk/efo/EFO_0000727
 Infiltrating Ductal Carcinoma (IDC)	invasive ductal carcinoma	http://purl.obolibrary.org/obo/DOID_3008	disease	http://www.ebi.ac.uk/efo/EFO_0000408
 Inguinal adipose tissue	inguinal fat pad	http://purl.obolibrary.org/obo/UBERON_0010410	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
 invasive breast carcinomas	breast carcinoma	http://purl.obolibrary.org/obo/DOID_3459	disease	http://www.ebi.ac.uk/efo/EFO_0000408
@@ -402,7 +402,7 @@ microglia	microglial cell	http://purl.obolibrary.org/obo/CL_0000129	cell type	ht
 midbrain	midbrain	http://purl.obolibrary.org/obo/UBERON_0001891	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
 middle ear	middle ear	http://purl.obolibrary.org/obo/UBERON_0001756	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
 MKN45	RCB1001 cell	http://purl.obolibrary.org/obo/CLO_0050797	cell line	http://www.ebi.ac.uk/efo/EFO_0000322
-mock infected	control	ttp://www.ebi.ac.uk/efo/EFO_0001461	treatment	http://www.ebi.ac.uk/efo/EFO_0000727
+mock infected	control	http://www.ebi.ac.uk/efo/EFO_0001461	treatment	http://www.ebi.ac.uk/efo/EFO_0000727
 Mock Infected	control	http://www.ebi.ac.uk/efo/EFO_0001461	treatment	http://www.ebi.ac.uk/efo/EFO_0000727
 moderate-to-severe psoriasis	psoriasis	http://purl.obolibrary.org/obo/DOID_8893	disease	http://www.ebi.ac.uk/efo/EFO_0000408
 molecule subtype: total RNA	total RNA	http://www.ebi.ac.uk/efo/EFO_0004964	collection of material	http://www.ebi.ac.uk/efo/EFO_0005066
@@ -641,7 +641,7 @@ uterus	uterus	http://purl.obolibrary.org/obo/UBERON_0000995	organism part	http:/
 vastus lateralis	vastus lateralis	http://purl.obolibrary.org/obo/UBERON_0001379	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
 vastus lateralis (quadriceps femoris)	vastus lateralis	http://purl.obolibrary.org/obo/UBERON_0001379	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
 vastus lateralis muscle	vastus lateralis muscle	http://purl.obolibrary.org/obo/UBERON_0001379	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
-vehicle control	control	ttp://www.ebi.ac.uk/efo/EFO_0001461	treatment	http://www.ebi.ac.uk/efo/EFO_0000727
+vehicle control	control	http://www.ebi.ac.uk/efo/EFO_0001461	treatment	http://www.ebi.ac.uk/efo/EFO_0000727
 ventral midbrain	midbrain	http://purl.obolibrary.org/obo/UBERON_0001891	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
 Ventricles	cardiac ventricle	http://purl.obolibrary.org/obo/UBERON_0002082	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
 VHL Clear Cell Renal Cell Carcinoma	clear cell renal cell carcinoma	http://purl.obolibrary.org/obo/DOID_4467	disease	http://www.ebi.ac.uk/efo/EFO_0000408
