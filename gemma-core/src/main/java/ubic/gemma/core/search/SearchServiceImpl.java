@@ -80,7 +80,6 @@ import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.persistence.util.EntityUtils;
 
 import javax.annotation.Nullable;
-import java.text.Collator;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -152,13 +151,6 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
     private static final double INDIRECT_HIT_PENALTY = 0.8;
 
     private static final String NCBI_GENE = "ncbi_gene";
-
-    private static final Collator CASE_INSENSITIVE_COLLATOR;
-
-    static {
-        CASE_INSENSITIVE_COLLATOR = Collator.getInstance();
-        CASE_INSENSITIVE_COLLATOR.setStrength( Collator.PRIMARY );
-    }
 
     private final Map<String, Taxon> nameToTaxonMap = new LinkedHashMap<>();
 
@@ -813,7 +805,7 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
     private void findExperimentsByTerms( Collection<? extends OntologyResource> individuals, Set<SearchResult<ExpressionExperiment>> results, double score, SearchSettings settings ) {
         // URIs are case-insensitive in the database, so should be the mapping to labels
         Collection<String> uris = new HashSet<>();
-        Map<String, String> uri2value = new TreeMap<>( CASE_INSENSITIVE_COLLATOR );
+        Map<String, String> uri2value = new TreeMap<>( String.CASE_INSENSITIVE_ORDER );
 
         if ( settings.isTermQuery() ) {
             String query = settings.getQuery();
