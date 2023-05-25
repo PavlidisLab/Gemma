@@ -63,6 +63,7 @@ import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.util.Filters;
+import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.persistence.util.Sort;
 import ubic.gemma.rest.annotations.GZIP;
 import ubic.gemma.rest.util.*;
@@ -149,20 +150,46 @@ public class DatasetsWebService {
     @Operation(summary = "Retrieve all datasets")
     public FilteringAndPaginatedResponseDataObject<ExpressionExperimentWithSearchResultValueObject> getDatasets( // Params:
             @QueryParam("query") String query,
+            @QueryParam("minScore") @DefaultValue("0.0") Double minScoreArg,
             @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filterArg, // Optional, default null
             @QueryParam("offset") @DefaultValue("0") OffsetArg offsetArg, // Optional, default 0
-            @QueryParam("limit") @DefaultValue("20") LimitArg limit, // Optional, default 20
+            @QueryParam("limit") @DefaultValue("20") LimitArg limitArg, // Optional, default 20
             @QueryParam("sort") @DefaultValue("+id") SortArg<ExpressionExperiment> sortArg // Optional, default +id
     ) {
         Filters filters = datasetArgService.getFilters( filterArg );
+        Sort sort = datasetArgService.getSort( sortArg );
+        int offset = offsetArg.getValue();
+        int limit = limitArg.getValue();
+        double minScore = minScoreArg;
+        if ( minScore < 0 || minScore > 1 ) {
+            throw new IllegalArgumentException( "Score threshold must be between 0 and 1." );
+        }
         Map<Long, SearchResult<ExpressionExperiment>> resultById = new HashMap<>();
         if ( query != null ) {
             List<SearchResult<ExpressionExperiment>> results = new ArrayList<>();
-            filters.and( datasetArgService.getFilterForSearchQuery( query, highlighter, results ) );
+            Filters filtersWithSearchResultIds = Filters.by( filters )
+                    .and( datasetArgService.getFilterForSearchQuery( query, minScore, highlighter, results ) );
             results.forEach( e -> resultById.put( e.getResultId(), e ) );
+            if ( "id".equals( sort.getPropertyName() ) && Sort.Direction.ASC.equals( sort.getDirection() ) ) {
+                List<Long> ids = expressionExperimentService.loadIds( filtersWithSearchResultIds, null );
+                // sort IDs by score, descending
+                ids.sort( Comparator.comparingDouble( i -> -resultById.get( i ).getScore() ) );
+                // slice the ranked IDs
+                List<Long> idsSlice;
+                try {
+                    idsSlice = ids.subList( offset, Math.min( offset + limit, ids.size() ) );
+                } catch ( IndexOutOfBoundsException e ) {
+                    idsSlice = Collections.emptyList();
+                }
+                List<ExpressionExperimentValueObject> vos = expressionExperimentService.loadValueObjectsByIds( idsSlice, true );
+                return Responder.paginate(
+                        new Slice<>( vos, Sort.by( null, "searchResult.score", Sort.Direction.DESC ), offset, limit, ( long ) ids.size() )
+                                .map( vo -> new ExpressionExperimentWithSearchResultValueObject( vo, resultById.get( vo.getId() ) ) ),
+                        filters, new String[] { "id" } );
+            }
         }
-        return Responder.paginate( ( filter, sort, offset, limit1 ) -> expressionExperimentService.loadValueObjects( filter, sort, offset, limit1 )
-                .map( vo -> new ExpressionExperimentWithSearchResultValueObject( vo, resultById.get( vo.getId() ) ) ), filters, new String[] { "id" }, datasetArgService.getSort( sortArg ), offsetArg.getValue(), limit.getValue() );
+        return Responder.paginate( ( filter, sort1, offset1, limit1 ) -> expressionExperimentService.loadValueObjects( filter, sort1, offset1, limit1 )
+                .map( vo -> new ExpressionExperimentWithSearchResultValueObject( vo, resultById.get( vo.getId() ) ) ), filters, new String[] { "id" }, sort, offset, limit );
     }
 
     @Value

@@ -4,6 +4,7 @@ import org.assertj.core.api.InstanceOfAssertFactories;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -13,8 +14,11 @@ import ubic.gemma.core.analysis.preprocess.OutlierDetectionService;
 import ubic.gemma.core.analysis.preprocess.svd.SVDService;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
 import ubic.gemma.core.genome.gene.service.GeneService;
+import ubic.gemma.core.search.SearchException;
+import ubic.gemma.core.search.SearchResult;
 import ubic.gemma.core.search.SearchService;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
+import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
@@ -34,9 +38,8 @@ import ubic.gemma.rest.util.args.GeneArgService;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
-import java.util.Collections;
-import java.util.Date;
-import java.util.Set;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import static org.mockito.Mockito.*;
 import static ubic.gemma.rest.util.Assertions.assertThat;
@@ -169,6 +172,41 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
                 .hasFieldOrPropertyWithValue( "limit", 20 )
                 .hasFieldOrPropertyWithValue( "totalElements", 0 );
         verify( analyticsProvider ).sendEvent( eq( "gemma_rest_api_access" ), any( Date.class ), eq( "method" ), eq( "GET" ), eq( "endpoint" ), eq( "/datasets" ) );
+    }
+
+    @Autowired
+    private SearchService searchService;
+
+    @Test
+    public void testGetDatasetsWithQuery() throws SearchException {
+        List<Long> ids = Arrays.asList( 1L, 3L, 5L );
+        List<SearchResult<ExpressionExperiment>> results = ids.stream()
+                .map( this::createMockSearchResult )
+                .collect( Collectors.toList() );
+        SearchService.SearchResultMap map = mock( SearchService.SearchResultMap.class );
+        when( map.getByResultObjectType( ExpressionExperiment.class ) )
+                .thenReturn( results );
+        when( searchService.search( any() ) ).thenReturn( map );
+        when( expressionExperimentService.loadIds( any(), any() ) ).thenReturn( ids );
+        when( expressionExperimentService.getFilter( "id", Long.class, Filter.Operator.in, new HashSet<>( ids ) ) )
+                .thenReturn( Filter.by( "ee", "id", Long.class, Filter.Operator.in, new HashSet<>( ids ) ) );
+        when( expressionExperimentService.getSort( "id", Sort.Direction.ASC ) )
+                .thenReturn( Sort.by( "ee", "id", Sort.Direction.ASC ) );
+        assertThat( target( "/datasets" ).queryParam( "query", "cerebellum" ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE );
+        ArgumentCaptor<SearchSettings> captor = ArgumentCaptor.forClass( SearchSettings.class );
+        verify( searchService ).search( captor.capture() );
+        assertThat( captor.getValue() )
+                .hasFieldOrPropertyWithValue( "query", "cerebellum" )
+                .hasFieldOrPropertyWithValue( "fillResults", false );
+        verify( expressionExperimentService ).getFilter( "id", Long.class, Filter.Operator.in, new HashSet<>( ids ) );
+        verify( expressionExperimentService ).loadIds( Filters.by( "ee", "id", Long.class, Filter.Operator.in, new HashSet<>( ids ) ), null );
+        verify( expressionExperimentService ).loadValueObjectsByIds( ids, true );
+    }
+
+    private SearchResult<ExpressionExperiment> createMockSearchResult( Long id ) {
+        return SearchResult.from( ExpressionExperiment.class, id, 0, "test result object" );
     }
 
     @Test

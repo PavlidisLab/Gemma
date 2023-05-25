@@ -60,7 +60,7 @@ public class DatasetsRestTest extends BaseSpringContextTest {
     @Test
     public void testAll() {
         FilteringAndPaginatedResponseDataObject<DatasetsWebService.ExpressionExperimentWithSearchResultValueObject> response = datasetsWebService
-                .getDatasets( null, FilterArg.valueOf( "" ), OffsetArg.valueOf( "5" ), LimitArg.valueOf( "5" ),
+                .getDatasets( null, 0.0, FilterArg.valueOf( "" ), OffsetArg.valueOf( "5" ), LimitArg.valueOf( "5" ),
                         SortArg.valueOf( "+id" ) );
         assertThat( response )
                 .hasFieldOrPropertyWithValue( "offset", 5 )
@@ -115,6 +115,7 @@ public class DatasetsRestTest extends BaseSpringContextTest {
     public void testAllFilterById() {
         FilteringAndPaginatedResponseDataObject<DatasetsWebService.ExpressionExperimentWithSearchResultValueObject> response = datasetsWebService.getDatasets(
                 null,
+                0.0,
                 FilterArg.valueOf( "id = " + ees.get( 0 ).getId() ),
                 OffsetArg.valueOf( "0" ),
                 LimitArg.valueOf( "10" ),
@@ -139,6 +140,7 @@ public class DatasetsRestTest extends BaseSpringContextTest {
                 .hasFieldOrPropertyWithValue( "requiredValue", Collections.singletonList( ees.get( 0 ).getId() ) );
         ResponseDataObject<List<DatasetsWebService.ExpressionExperimentWithSearchResultValueObject>> response = datasetsWebService.getDatasets(
                 null,
+                0.0,
                 filterArg,
                 OffsetArg.valueOf( "0" ),
                 LimitArg.valueOf( "10" ),
@@ -164,6 +166,7 @@ public class DatasetsRestTest extends BaseSpringContextTest {
                 .hasFieldOrPropertyWithValue( "requiredValue", ees.get( 0 ).getShortName() );
         FilteringAndPaginatedResponseDataObject<DatasetsWebService.ExpressionExperimentWithSearchResultValueObject> response = datasetsWebService.getDatasets(
                 null,
+                0.0,
                 filterArg,
                 OffsetArg.valueOf( "0" ),
                 LimitArg.valueOf( "10" ),
@@ -189,6 +192,7 @@ public class DatasetsRestTest extends BaseSpringContextTest {
                 .hasFieldOrPropertyWithValue( "requiredValue", Collections.singletonList( ees.get( 0 ).getShortName() ) );
         FilteringAndPaginatedResponseDataObject<DatasetsWebService.ExpressionExperimentWithSearchResultValueObject> response = datasetsWebService.getDatasets(
                 null,
+                0.0,
                 filterArg,
                 OffsetArg.valueOf( "0" ),
                 LimitArg.valueOf( "10" ),
@@ -222,6 +226,7 @@ public class DatasetsRestTest extends BaseSpringContextTest {
          */
         FilteringAndPaginatedResponseDataObject<DatasetsWebService.ExpressionExperimentWithSearchResultValueObject> response = datasetsWebService.getDatasets(
                 null,
+                0.0,
                 filterArg,
                 OffsetArg.valueOf( "0" ),
                 LimitArg.valueOf( "10" ),
@@ -240,6 +245,7 @@ public class DatasetsRestTest extends BaseSpringContextTest {
         assertThatThrownBy( () -> {
             datasetsWebService.getDatasets(
                     null,
+                    0.0,
                     FilterArg.valueOf( "" ),
                     OffsetArg.valueOf( "0" ),
                     LimitArg.valueOf( "101" ),
@@ -253,6 +259,7 @@ public class DatasetsRestTest extends BaseSpringContextTest {
     public void testFilterByGeeqQualityScore() {
         datasetsWebService.getDatasets(
                 null,
+                0.0,
                 FilterArg.valueOf( "geeq.publicQualityScore <= 1.0" ),
                 OffsetArg.valueOf( "0" ),
                 LimitArg.valueOf( "10" ),
