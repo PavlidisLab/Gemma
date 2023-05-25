@@ -1,5 +1,6 @@
 package ubic.gemma.core.loader.genome.gene.ncbi.homology;
 
+import lombok.extern.apachecommons.CommonsLog;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Component;
@@ -13,6 +14,7 @@ import ubic.gemma.persistence.util.Settings;
  * Factory for {@link HomologeneService}.
  */
 @Component
+@CommonsLog
 public class HomologeneServiceFactory extends AbstractAsyncFactoryBean<HomologeneService> {
 
     private static final String HOMOLOGENE_FILE_CONFIG = "ncbi.homologene.fileName";
@@ -48,6 +50,9 @@ public class HomologeneServiceFactory extends AbstractAsyncFactoryBean<Homologen
         HomologeneService homologeneService = new HomologeneServiceImpl( geneService, taxonService, homologeneFile );
         if ( loadHomologene ) {
             homologeneService.refresh();
+        } else {
+            log.warn( String.format( "Homologene is not enabled, set %s=true in Gemma.properties to load it on startup.",
+                    LOAD_HOMOLOGENE_CONFIG ) );
         }
         return homologeneService;
     }
