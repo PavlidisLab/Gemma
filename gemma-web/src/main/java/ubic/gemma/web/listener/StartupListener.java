@@ -175,19 +175,8 @@ public class StartupListener extends ContextLoaderListener {
         String gaTrackerKey = Settings.getAnalyticsKey();
         if ( StringUtils.isNotBlank( gaTrackerKey ) ) {
             config.put( "ga.tracker", gaTrackerKey );
-
-            String gaTrackerDomain = Settings.getAnalyticsDomain();
-            if ( StringUtils.isNotBlank( gaTrackerDomain ) ) {
-                StartupListener.log.debug( "Tracker domain is " + gaTrackerDomain );
-                config.put( "ga.domain", gaTrackerDomain );
-                StartupListener.log.info( "Enabled Google analytics tracking with key " + gaTrackerKey + ", domain="
-                        + gaTrackerDomain );
-
-            } else {
-                StartupListener.log.warn( "Google analytics will not work unless you also define the domain." );
-            }
+            StartupListener.log.info( "Enabled Google analytics tracking with key " + gaTrackerKey );
         }
-
     }
 
     private void loadVersionInformation( Map<String, Object> config ) {

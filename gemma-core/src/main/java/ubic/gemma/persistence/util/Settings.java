@@ -55,8 +55,6 @@ public class Settings {
      */
     private static final String ANALYTICS_TRACKER_PROPERTY = "ga.tracker";
 
-    private static final String ANALYTICS_TRACKER_DOMAIN_PROPERTY = "ga.domain";
-
     /**
      * Name of the resource that is used to configure Gemma internally.
      */
@@ -164,10 +162,6 @@ public class Settings {
         if ( val.endsWith( File.separator ) )
             return val;
         return val + File.separator;
-    }
-
-    public static String getAnalyticsDomain() {
-        return Settings.getString( Settings.ANALYTICS_TRACKER_DOMAIN_PROPERTY );
     }
 
     public static String getAnalyticsKey() {
