@@ -18,17 +18,11 @@ public class TaxonIdArg extends TaxonArg<Long> {
      * @param l intentionally primitive type, so the value property can never be null.
      */
     TaxonIdArg( long l ) {
-        super( l );
+        super( "id", Long.class, l );
     }
 
     @Override
-    protected String getPropertyName( TaxonService service ) {
-        return service.getIdentifierPropertyName();
-    }
-
-    @Nonnull
-    @Override
-    public Taxon getEntity( TaxonService service ) {
-        return checkEntity( service, service.load( this.getValue() ) );
+    Taxon getEntity( TaxonService service ) {
+        return service.load( this.getValue() );
     }
 }

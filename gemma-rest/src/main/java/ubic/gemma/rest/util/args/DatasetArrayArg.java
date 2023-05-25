@@ -11,7 +11,7 @@ import java.util.List;
 
 @ArraySchema(schema = @Schema(implementation = DatasetArg.class))
 public class DatasetArrayArg
-        extends AbstractEntityArrayArg<String, ExpressionExperiment, ExpressionExperimentService> {
+        extends AbstractEntityArrayArg<ExpressionExperiment, ExpressionExperimentService> {
     private static final String ERROR_MSG_DETAIL = "Provide a string that contains at least one ID or short name, or multiple, separated by (',') character. All identifiers must be same type, i.e. do not combine IDs and short names.";
     private static final String ERROR_MSG = AbstractArrayArg.ERROR_MSG + " Dataset identifiers";
 

@@ -15,17 +15,11 @@ import javax.annotation.Nonnull;
 public class FactorValueIdArg extends FactorValueArg<Long> {
 
     public FactorValueIdArg( long value ) {
-        super( value );
-    }
-
-    @Nonnull
-    @Override
-    public FactorValue getEntity( FactorValueService service ) {
-        return checkEntity( service, service.load( this.getValue() ) );
+        super( "id", Long.class, value );
     }
 
     @Override
-    public String getPropertyName( FactorValueService service ) {
-        return "factorValueId";
+    FactorValue getEntity( FactorValueService service ) {
+        return service.load( this.getValue() );
     }
 }

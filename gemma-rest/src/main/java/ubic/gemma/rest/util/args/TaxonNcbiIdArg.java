@@ -34,17 +34,11 @@ public class TaxonNcbiIdArg extends TaxonArg<Integer> {
      * @param l intentionally primitive type, so the value property can never be null.
      */
     TaxonNcbiIdArg( int l ) {
-        super( l );
-    }
-
-    @Nonnull
-    @Override
-    public Taxon getEntity( TaxonService service ) {
-        return checkEntity( service, service.findByNcbiId( this.getValue() ) );
+        super( "ncbiId", Integer.class, l );
     }
 
     @Override
-    public String getPropertyName( TaxonService service ) {
-        return "ncbiId";
+    Taxon getEntity( TaxonService service ) {
+        return service.findByNcbiId( this.getValue() );
     }
 }

@@ -10,7 +10,7 @@ import ubic.gemma.rest.util.MalformedArgException;
 import java.util.List;
 
 @ArraySchema(schema = @Schema(implementation = GeneArg.class))
-public class GeneArrayArg extends AbstractEntityArrayArg<String, Gene, GeneService> {
+public class GeneArrayArg extends AbstractEntityArrayArg<Gene, GeneService> {
     private static final String ERROR_MSG_DETAIL = "Provide a string that contains at least one Ncbi ID, Ensembl ID or official symbol, or multiple, separated by (',') character. All identifiers must be same type, i.e. do not combine Ensembl and Ncbi IDs.";
     private static final String ERROR_MSG = AbstractArrayArg.ERROR_MSG + " Gene identifiers";
 

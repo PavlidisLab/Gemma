@@ -14,8 +14,8 @@ import ubic.gemma.rest.util.MalformedArgException;
 @Schema(oneOf = { FactorValueIdArg.class, FactorValueValueArg.class })
 public abstract class FactorValueArg<A> extends AbstractEntityArg<A, FactorValue, FactorValueService> {
 
-    protected FactorValueArg( A value ) {
-        super( FactorValue.class, value );
+    protected FactorValueArg( String propertyName, Class<A> propertyType, A value ) {
+        super( propertyName, propertyType, value );
     }
 
     public static FactorValueArg<?> valueOf( String value ) {

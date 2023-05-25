@@ -122,7 +122,7 @@ public class TaxaWebService {
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve taxa by their identifiers")
     public ResponseDataObject<List<TaxonValueObject>> getTaxaByIds( @PathParam("taxa") TaxonArrayArg taxaArg ) {
-        Filters filters = taxaArg.getFilters( taxonService );
+        Filters filters = taxonArgService.getFilters( taxaArg );
         Sort sort = taxonService.getSort( "id", null );
         return Responder.respond( taxonService.loadValueObjects( filters, sort ) );
     }

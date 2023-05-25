@@ -9,26 +9,20 @@ import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeSe
 import javax.annotation.Nonnull;
 import javax.ws.rs.BadRequestException;
 
-@Schema(type = "string", description = "A quantitation type numerical identifier.")
+@Schema(type = "string", description = "A quantitation type name.")
 public class QuantitationTypeByNameArg extends QuantitationTypeArg<String> {
 
     QuantitationTypeByNameArg( String s ) {
-        super( s );
+        super( "name", String.class, s );
     }
 
     @Override
-    protected String getPropertyName( QuantitationTypeService service ) {
-        return service.getIdentifierPropertyName();
-    }
-
-    @Nonnull
-    @Override
-    public QuantitationType getEntity( QuantitationTypeService service ) throws BadRequestException {
+    QuantitationType getEntity( QuantitationTypeService service ) throws BadRequestException {
         throw new UnsupportedOperationException( "A name is insufficient to retrieve a unique quantitation type." );
     }
 
     @Override
     public QuantitationType getEntityForExpressionExperimentAndDataVectorType( ExpressionExperiment ee, Class<? extends DesignElementDataVector> dataVectorType, QuantitationTypeService service ) {
-        return checkEntity( service, service.findByNameAndDataVectorType( ee, getValue(), dataVectorType ) );
+        return service.findByNameAndDataVectorType( ee, getValue(), dataVectorType );
     }
 }

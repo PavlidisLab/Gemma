@@ -30,8 +30,8 @@ public abstract class CompositeSequenceArg<T>
     @JsonIgnore
     protected ArrayDesign platform;
 
-    protected CompositeSequenceArg( T arg ) {
-        super( CompositeSequence.class, arg );
+    protected CompositeSequenceArg( String propertyName, Class<T> propertyType, T arg ) {
+        super( propertyName, propertyType, arg );
     }
 
     /**

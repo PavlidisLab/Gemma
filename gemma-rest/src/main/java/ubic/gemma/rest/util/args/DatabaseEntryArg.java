@@ -15,8 +15,8 @@ import ubic.gemma.rest.util.MalformedArgException;
 public abstract class DatabaseEntryArg<T>
         extends AbstractEntityArg<T, DatabaseEntry, DatabaseEntryService> {
 
-    protected DatabaseEntryArg( T value ) {
-        super( DatabaseEntry.class, value );
+    protected DatabaseEntryArg( String propertyName, Class<T> propertyType, T value ) {
+        super( propertyName, propertyType, value );
     }
 
     /**

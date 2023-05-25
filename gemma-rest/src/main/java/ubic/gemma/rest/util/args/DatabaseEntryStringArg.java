@@ -4,8 +4,6 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.persistence.service.common.description.DatabaseEntryService;
 
-import javax.annotation.Nonnull;
-
 /**
  * String argument type for DatabaseEntry API, Can also be null.
  *
@@ -15,18 +13,11 @@ import javax.annotation.Nonnull;
 public class DatabaseEntryStringArg extends DatabaseEntryArg<String> {
 
     DatabaseEntryStringArg( String s ) {
-        super( s );
-    }
-
-    @Nonnull
-    @Override
-    public DatabaseEntry getEntity( DatabaseEntryService service ) {
-        String value = getValue();
-        return checkEntity( service, value == null ? null : service.findLatestByAccession( value ) );
+        super( "accession", String.class, s );
     }
 
     @Override
-    public String getPropertyName( DatabaseEntryService service ) {
-        return "accession";
+    DatabaseEntry getEntity( DatabaseEntryService service ) {
+        return service.findLatestByAccession( getValue() );
     }
 }

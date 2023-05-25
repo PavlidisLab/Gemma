@@ -36,8 +36,8 @@ public abstract class GeneArg<T> extends AbstractEntityArg<T, Gene, GeneService>
             + "ENSEEU|ENSTTR|ENSOGA|ENSMLU|ENSSTO|ENSCIN|MGP_WSBEiJ_|ENSMEU|ENSPVA|ENSPMA|ENSPTR|ENSFCA|"
             + "ENSPPY|ENSMGA|ENSOAR|ENSCJA|ENSETE|ENSTGU|MGP_AKRJ_|ENSONI|ENSGAL).*";
 
-    protected GeneArg( T value ) {
-        super( Gene.class, value );
+    protected GeneArg( String propertyName, Class<T> propertyType, T value ) {
+        super( propertyName, propertyType, value );
     }
 
     /**

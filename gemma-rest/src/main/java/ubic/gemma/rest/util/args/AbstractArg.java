@@ -4,6 +4,8 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.NonNull;
 import ubic.gemma.rest.util.MalformedArgException;
 
+import javax.annotation.Nonnull;
+
 /**
  * Base class for non Object-specific functionality argument types, that can be malformed on input (E.g an argument
  * representing a number was a non-numeric string in the request).
@@ -35,6 +37,7 @@ public abstract class AbstractArg<T> implements Arg<T> {
      * @return the value represented by this argument, which can never be null
      * @throws MalformedArgException if this arg is malformed
      */
+    @Nonnull
     @Override
     public T getValue() {
         return this.value;

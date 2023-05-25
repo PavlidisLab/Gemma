@@ -59,11 +59,11 @@ public interface EntityArgService<T extends Identifiable, S extends FilteringSer
     @Nonnull
     T getEntity( AbstractEntityArg<?, T, S> entityArg ) throws NotFoundException, BadRequestException;
 
-    List<T> getEntities( AbstractEntityArrayArg<?, T, S> entitiesArg ) throws NotFoundException, BadRequestException;
+    List<T> getEntities( AbstractEntityArrayArg<T, S> entitiesArg ) throws NotFoundException, BadRequestException;
 
-    Filters getFilters( AbstractEntityArg<?, T, S> entityArg ) throws BadRequestException;
+    <A> Filters getFilters( AbstractEntityArg<A, T, S> entityArg ) throws BadRequestException;
 
-    Filters getFilters( AbstractEntityArrayArg<?, T, S> entitiesArg ) throws BadRequestException;
+    Filters getFilters( AbstractEntityArrayArg<T, S> entitiesArg ) throws BadRequestException;
 
     Filters getFilters( FilterArg<T> filterArg ) throws BadRequestException;
 

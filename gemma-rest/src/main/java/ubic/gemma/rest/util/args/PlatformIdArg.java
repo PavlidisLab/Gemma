@@ -18,18 +18,11 @@ public class PlatformIdArg extends PlatformArg<Long> {
      * @param l intentionally primitive type, so the value property can never be null.
      */
     PlatformIdArg( long l ) {
-        super( l );
+        super( "id", Long.class, l );
     }
 
     @Override
-    protected String getPropertyName( ArrayDesignService service ) {
-        return service.getIdentifierPropertyName();
+    ArrayDesign getEntity( ArrayDesignService service ) {
+        return service.load( this.getValue() );
     }
-
-    @Nonnull
-    @Override
-    public ArrayDesign getEntity( ArrayDesignService service ) {
-        return checkEntity( service, service.load( this.getValue() ) );
-    }
-
 }

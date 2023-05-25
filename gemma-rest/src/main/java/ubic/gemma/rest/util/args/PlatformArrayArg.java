@@ -10,7 +10,7 @@ import ubic.gemma.rest.util.MalformedArgException;
 import java.util.List;
 
 @ArraySchema(schema = @Schema(implementation = PlatformArg.class))
-public class PlatformArrayArg extends AbstractEntityArrayArg<String, ArrayDesign, ArrayDesignService> {
+public class PlatformArrayArg extends AbstractEntityArrayArg<ArrayDesign, ArrayDesignService> {
     private static final String ERROR_MSG_DETAIL = "Provide a string that contains at least one ID or short name, or multiple, separated by (',') character. All identifiers must be same type, i.e. do not combine IDs and short names.";
     private static final String ERROR_MSG = AbstractArrayArg.ERROR_MSG + " Platform identifiers";
 

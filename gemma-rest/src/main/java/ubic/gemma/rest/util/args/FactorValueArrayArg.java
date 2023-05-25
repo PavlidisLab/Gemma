@@ -8,7 +8,7 @@ import ubic.gemma.persistence.service.expression.experiment.FactorValueService;
 import java.util.List;
 
 @ArraySchema(schema = @Schema(implementation = FactorValueArg.class))
-public class FactorValueArrayArg extends AbstractEntityArrayArg<String, FactorValue, FactorValueService> {
+public class FactorValueArrayArg extends AbstractEntityArrayArg<FactorValue, FactorValueService> {
 
     public FactorValueArrayArg( List<String> values ) {
         super( FactorValueArg.class, values );

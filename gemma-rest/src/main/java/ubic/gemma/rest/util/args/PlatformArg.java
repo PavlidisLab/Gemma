@@ -8,8 +8,8 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Filter;
+import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.rest.util.MalformedArgException;
 
@@ -21,8 +21,8 @@ import ubic.gemma.rest.util.MalformedArgException;
 @Schema(oneOf = { PlatformIdArg.class, PlatformStringArg.class })
 public abstract class PlatformArg<T> extends AbstractEntityArg<T, ArrayDesign, ArrayDesignService> {
 
-    protected PlatformArg( T value ) {
-        super( ArrayDesign.class, value );
+    protected PlatformArg( String propertyName, Class<T> propertyType, T value ) {
+        super( propertyName, propertyType, value );
     }
 
     /**
@@ -53,7 +53,7 @@ public abstract class PlatformArg<T> extends AbstractEntityArg<T, ArrayDesign, A
     public Slice<ExpressionExperimentValueObject> getExperiments( ArrayDesignService service,
             ExpressionExperimentService eeService, int limit, int offset ) {
         ArrayDesign ad = this.getEntity( service );
-        Filters filters = Filters.by( service.getFilter( "id", Filter.Operator.eq, ad.getId().toString() ) );
+        Filters filters = Filters.by( service.getFilter( "id", Long.class, Filter.Operator.eq, ad.getId() ) );
         return eeService.loadValueObjects( filters, service.getSort( "id", null ), offset, limit );
     }
 
@@ -66,7 +66,7 @@ public abstract class PlatformArg<T> extends AbstractEntityArg<T, ArrayDesign, A
     public Slice<CompositeSequenceValueObject> getElements( ArrayDesignService service,
             CompositeSequenceService csService, int limit, int offset ) {
         final ArrayDesign ad = this.getEntity( service );
-        Filters filters = Filters.by( service.getFilter( "id", Filter.Operator.eq, ad.getId().toString() ) );
+        Filters filters = Filters.by( service.getFilter( "id", Long.class, Filter.Operator.eq, ad.getId() ) );
         return csService.loadValueObjects( filters, null, offset, limit );
 
     }

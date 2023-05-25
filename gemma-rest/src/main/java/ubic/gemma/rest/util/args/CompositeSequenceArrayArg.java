@@ -14,7 +14,7 @@ import java.util.List;
 
 @ArraySchema(schema = @Schema(implementation = CompositeSequenceArg.class))
 public class CompositeSequenceArrayArg
-        extends AbstractEntityArrayArg<String, CompositeSequence, CompositeSequenceService> {
+        extends AbstractEntityArrayArg<CompositeSequence, CompositeSequenceService> {
     private static final String ERROR_MSG_DETAIL = "Provide a string that contains at least one "
             + "element ID or name, or multiple, separated by (',') character. "
             + "All identifiers must be same type, i.e. do not combine IDs and names in one query.";

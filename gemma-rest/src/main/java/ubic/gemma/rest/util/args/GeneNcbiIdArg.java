@@ -20,18 +20,12 @@ public class GeneNcbiIdArg extends GeneAnyIdArg<Integer> {
      * @param l intentionally primitive type, so the value property can never be null.
      */
     GeneNcbiIdArg( int l ) {
-        super( l );
+        super( "ncbiGeneId", Integer.class, l );
     }
 
     @Nonnull
     @Override
-    public Gene getEntity( GeneService service ) {
-        return checkEntity( service, service.findByNCBIId( this.getValue() ) );
+    Gene getEntity( GeneService service ) {
+        return service.findByNCBIId( this.getValue() );
     }
-
-    @Override
-    public String getPropertyName( GeneService service ) {
-        return "ncbiGeneId";
-    }
-
 }

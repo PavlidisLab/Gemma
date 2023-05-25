@@ -28,8 +28,8 @@ public abstract class TaxonArg<T> extends AbstractEntityArg<T, Taxon, TaxonServi
      */
     private static final Long MIN_NCBI_ID = 999L;
 
-    protected TaxonArg( T arg ) {
-        super( Taxon.class, arg );
+    protected TaxonArg( String propertyName, Class<T> propertyType, T arg ) {
+        super( propertyName, propertyType, arg );
     }
 
     /**

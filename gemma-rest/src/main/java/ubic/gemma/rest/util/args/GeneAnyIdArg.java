@@ -18,8 +18,8 @@ import java.util.List;
  */
 public abstract class GeneAnyIdArg<T> extends GeneArg<T> {
 
-    GeneAnyIdArg( T value ) {
-        super( value );
+    protected GeneAnyIdArg( String propertyName, Class<T> propertyType, T value ) {
+        super( propertyName, propertyType, value );
     }
 
     @Override

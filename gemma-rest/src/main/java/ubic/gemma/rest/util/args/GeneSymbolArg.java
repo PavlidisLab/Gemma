@@ -25,33 +25,26 @@ import java.util.List;
 public class GeneSymbolArg extends GeneArg<String> {
 
     GeneSymbolArg( String s ) {
-        super( s );
+        super( "officialSymbol", String.class, s );
     }
 
-    @Nonnull
     @Override
-    public Gene getEntity( GeneService service ) {
+    Gene getEntity( GeneService service ) {
         String value = getValue();
         Gene gene;
-        Collection<Gene> genes =
-                value == null || value.isEmpty() ? null : service.findByOfficialSymbol( value );
+        Collection<Gene> genes = value.isEmpty() ? null : service.findByOfficialSymbol( value );
         if ( genes == null || genes.isEmpty() ) {
             gene = null;
         } else {
             gene = genes.iterator().next();
         }
-        return checkEntity( service, gene );
-    }
-
-    @Override
-    public String getPropertyName( GeneService service ) {
-        return "officialSymbol";
+        return gene;
     }
 
     @Override
     public List<GeneValueObject> getValueObjects( GeneService service ) {
         Collection<Gene> genes = service.findByOfficialSymbol( this.getValue() );
-        checkEntity( service, genes.iterator().next() );
+        genes.iterator().next();
         return service.loadValueObjects( genes );
     }
 

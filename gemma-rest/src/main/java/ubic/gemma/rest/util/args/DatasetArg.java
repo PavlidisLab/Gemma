@@ -33,8 +33,8 @@ import java.util.stream.Collectors;
 public abstract class DatasetArg<T>
         extends AbstractEntityArg<T, ExpressionExperiment, ExpressionExperimentService> {
 
-    protected DatasetArg( T value ) {
-        super( ExpressionExperiment.class, value );
+    protected DatasetArg( String propertyName, Class<T> propertyType, T value ) {
+        super( propertyName, propertyType, value );
     }
 
     /**

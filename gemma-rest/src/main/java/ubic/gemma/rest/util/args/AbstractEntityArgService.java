@@ -1,20 +1,28 @@
 package ubic.gemma.rest.util.args;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.context.MessageSourceResolvable;
 import org.springframework.security.access.ConfigAttribute;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.persistence.service.FilteringService;
+import ubic.gemma.persistence.util.Filter;
 import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Sort;
+import ubic.gemma.rest.util.EntityNotFoundException;
+import ubic.gemma.rest.util.MalformedArgException;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.NotFoundException;
-import java.util.Collection;
-import java.util.List;
-import java.util.Set;
+import java.lang.reflect.InvocationTargetException;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public abstract class AbstractEntityArgService<T extends Identifiable, S extends FilteringService<T>> implements EntityArgService<T, S> {
+
+    private static final String ERROR_FORMAT_ENTITY_NOT_FOUND = "The identifier was recognised to be '%1$s', but entity of type '%2$s' with '%1$s' equal to '%3$s' does not exist or is not accessible.";
+    private static final String ERROR_MSG_ENTITY_NOT_FOUND = "Entity with the given identifier does not exist or is not accessible.";
 
     protected final S service;
 
@@ -61,22 +69,55 @@ public abstract class AbstractEntityArgService<T extends Identifiable, S extends
     @Override
     @Nonnull
     public T getEntity( AbstractEntityArg<?, T, S> entityArg ) throws NotFoundException, BadRequestException {
-        return entityArg.getEntity( service );
+        return checkEntity( entityArg, service, entityArg.getEntity( service ) );
     }
 
     @Override
-    public List<T> getEntities( AbstractEntityArrayArg<?, T, S> entitiesArg ) throws NotFoundException, BadRequestException {
-        return entitiesArg.getEntities( service );
+    public List<T> getEntities( AbstractEntityArrayArg<T, S> entitiesArg ) throws NotFoundException, BadRequestException {
+        List<T> objects = new ArrayList<>( entitiesArg.getValue().size() );
+        for ( String s : entitiesArg.getValue() ) {
+            AbstractEntityArg<?, T, S> arg = entityArgValueOf( entitiesArg.getEntityArgClass(), s );
+            objects.add( checkEntity( arg, service, arg.getEntity( service ) ) );
+        }
+        return objects;
     }
 
     @Override
-    public Filters getFilters( AbstractEntityArg<?, T, S> entityArg ) throws BadRequestException {
-        return entityArg.getFilters( service );
+    public <A> Filters getFilters( AbstractEntityArg<A, T, S> entityArg ) throws BadRequestException {
+        try {
+            return Filters.by( service.getFilter( entityArg.getPropertyName(), entityArg.getPropertyType(), Filter.Operator.eq, entityArg.getValue() ) );
+        } catch ( IllegalArgumentException e ) {
+            throw new MalformedArgException( e );
+        }
     }
 
     @Override
-    public Filters getFilters( AbstractEntityArrayArg<?, T, S> entitiesArg ) throws BadRequestException {
-        return entitiesArg.getFilters( service );
+    public Filters getFilters( AbstractEntityArrayArg<T, S> entitiesArg ) throws BadRequestException {
+        try {
+            Filters.FiltersClauseBuilder clause = Filters.empty()
+                    .and();
+            for ( Map.Entry<String, List<String>> e : getArgsByPropertyName( entitiesArg ).entrySet() ) {
+                if ( e.getValue().size() == 1 ) {
+                    clause = clause.or( service.getFilter( e.getKey(), Filter.Operator.eq, e.getValue().iterator().next() ) );
+                } else if ( e.getValue().size() > 1 ) {
+                    clause = clause.or( service.getFilter( e.getKey(), Filter.Operator.in, e.getValue() ) );
+                }
+            }
+            return clause.build();
+        } catch ( IllegalArgumentException e ) {
+            throw new MalformedArgException( e );
+        }
+    }
+
+    /**
+     * Given a {@link AbstractEntityArrayArg}, construct a mapping of properties it refers to values those properties
+     * are allowed to take in a filter.
+     */
+    protected Map<String, List<String>> getArgsByPropertyName( AbstractEntityArrayArg<T, S> entitiesArg ) {
+        return entitiesArg.getValue().stream()
+                .map( v -> Pair.of( v, entityArgValueOf( entitiesArg.getEntityArgClass(), v ) ) )
+                .collect( Collectors.groupingBy( a -> a.getRight().getPropertyName(), Collectors.mapping( Pair::getLeft, Collectors.toList() ) ) );
+
     }
 
     @Override
@@ -87,5 +128,48 @@ public abstract class AbstractEntityArgService<T extends Identifiable, S extends
     @Override
     public Sort getSort( SortArg<T> sortArg ) throws BadRequestException {
         return sortArg.getSort( service );
+    }
+
+    /**
+     * Checks whether the given object is null, and throws an appropriate exception if necessary.
+     *
+     * @param entity  the object that should be checked for being null.
+     * @return the same object as given.
+     * @throws NotFoundException if the given entity is null.
+     */
+    private <O extends Identifiable, S extends FilteringService<O>> O checkEntity( AbstractEntityArg<?, O, S> entityArg, S service, @Nullable O entity ) throws NotFoundException {
+        if ( entity == null ) {
+            EntityNotFoundException cause = new EntityNotFoundException( String.format( ERROR_FORMAT_ENTITY_NOT_FOUND, entityArg.getPropertyName(), service.getElementClass(), entityArg.getValue() ) );
+            throw new NotFoundException( ERROR_MSG_ENTITY_NOT_FOUND, cause );
+        }
+        return entity;
+    }
+
+    /**
+     * Invoke either a static {@code valueOf} method or a suitable constructor to instantiate the argument.
+     */
+    protected AbstractEntityArg<?, T, S> entityArgValueOf( Class<? extends AbstractEntityArg<?, T, S>> entityArgClass, String s ) throws NotFoundException, BadRequestException {
+        try {
+            return _entityArgValueOf( entityArgClass, s );
+        } catch ( InvocationTargetException e ) {
+            if ( e.getCause() instanceof BadRequestException ) {
+                throw ( BadRequestException ) e.getCause();
+            } else if ( e.getCause() instanceof RuntimeException ) {
+                throw ( RuntimeException ) e.getCause();
+            } else {
+                throw new RuntimeException( e.getCause() );
+            }
+        } catch ( InstantiationException | IllegalAccessException | NoSuchMethodException e ) {
+            throw new RuntimeException( String.format( "Could not call 'valueOf' nor a suitable constructor for %s", entityArgClass.getName() ), e );
+        }
+    }
+
+    private AbstractEntityArg<?, T, S> _entityArgValueOf( Class<? extends AbstractEntityArg<?, T, S>> entityArgClass, String s ) throws NoSuchMethodException, InvocationTargetException, IllegalAccessException, InstantiationException {
+        try {
+            //noinspection unchecked
+            return ( AbstractEntityArg<?, T, S> ) entityArgClass.getMethod( "valueOf", String.class ).invoke( null, s );
+        } catch ( NoSuchMethodException ignored ) {
+            return entityArgClass.getConstructor( String.class ).newInstance( s );
+        }
     }
 }

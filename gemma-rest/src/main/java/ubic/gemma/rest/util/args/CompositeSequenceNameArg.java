@@ -4,7 +4,6 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
 
-import javax.annotation.Nonnull;
 import javax.ws.rs.BadRequestException;
 
 /**
@@ -17,20 +16,13 @@ import javax.ws.rs.BadRequestException;
 public class CompositeSequenceNameArg extends CompositeSequenceArg<String> {
 
     CompositeSequenceNameArg( String s ) {
-        super( s );
+        super( "name", String.class, s );
     }
 
-    @Nonnull
     @Override
-    public CompositeSequence getEntity( CompositeSequenceService service ) {
+    CompositeSequence getEntity( CompositeSequenceService service ) {
         if ( platform == null )
             throw new BadRequestException( "Platform not set for composite sequence retrieval" );
-        return checkEntity( service, this.getValue() == null ? null : service.findByName( platform, this.getValue() ) );
+        return service.findByName( platform, this.getValue() );
     }
-
-    @Override
-    public String getPropertyName( CompositeSequenceService service ) {
-        return "name";
-    }
-
 }

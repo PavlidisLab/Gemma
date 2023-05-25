@@ -60,14 +60,13 @@ public class DatasetArgService extends AbstractEntityArgService<ExpressionExperi
             if ( _results != null ) {
                 _results.addAll( results );
             }
-            Set<String> ids = results.stream()
+            Set<Long> ids = results.stream()
                     .map( SearchResult::getResultId )
-                    .map( String::valueOf )
                     .collect( Collectors.toSet() );
             if ( ids.isEmpty() ) {
-                return service.getFilter( "id", Filter.Operator.eq, "-1" );
+                return service.getFilter( "id", Long.class, Filter.Operator.eq, -1L );
             } else {
-                return service.getFilter( "id", Filter.Operator.in, ids );
+                return service.getFilter( "id", Long.class, Filter.Operator.in, ids );
             }
         } catch ( SearchException e ) {
             throw new BadRequestException( e );

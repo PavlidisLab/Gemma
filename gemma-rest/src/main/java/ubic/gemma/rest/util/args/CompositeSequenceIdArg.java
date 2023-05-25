@@ -15,23 +15,17 @@ import java.util.Objects;
 public class CompositeSequenceIdArg extends CompositeSequenceArg<Long> {
 
     CompositeSequenceIdArg( long s ) {
-        super( s );
+        super( "id", Long.class, s );
     }
 
     @Override
-    protected String getPropertyName( CompositeSequenceService service ) {
-        return service.getIdentifierPropertyName();
-    }
-
-    @Nonnull
-    @Override
-    public CompositeSequence getEntity( CompositeSequenceService service ) {
+    CompositeSequence getEntity( CompositeSequenceService service ) {
         if ( platform == null )
             throw new BadRequestException( "Platform not set for composite sequence retrieval" );
         CompositeSequence cs = service.load( this.getValue() );
         if ( cs != null && !Objects.equals( cs.getArrayDesign().getId(), this.platform.getId() ) ) {
             throw new BadRequestException( "Platform does not match the sequence's platform." );
         }
-        return checkEntity( service, cs );
+        return cs;
     }
 }
