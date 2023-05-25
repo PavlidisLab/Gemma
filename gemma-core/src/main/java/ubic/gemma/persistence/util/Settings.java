@@ -65,7 +65,6 @@ public class Settings {
      * Name of the resource containing defaults that the user can override (classpath)
      */
     private static final String DEFAULT_CONFIGURATION = "default.properties";
-    private static final String QUARTZ_ENABLED_PROPERTY = "quartzOn";
     /**
      * The name of the file users can use to configure Gemma.
      */
@@ -411,13 +410,6 @@ public class Settings {
             Settings.log.info( key + " is not configured, returning default value of null" );
             return null;
         }
-    }
-
-    /**
-     * @return true if the scheduler (e.g. Quartz for cron-style tasks) is enabled by the user's configuration
-     */
-    public static boolean isSchedulerEnabled() {
-        return Settings.getBoolean( Settings.QUARTZ_ENABLED_PROPERTY, false );
     }
 
     /**

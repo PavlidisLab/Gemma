@@ -22,7 +22,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.quartz.Scheduler;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -31,7 +30,6 @@ import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.context.support.WebApplicationContextUtils;
 import ubic.gemma.persistence.util.Settings;
 import ubic.gemma.persistence.util.SpringProfiles;
-import ubic.gemma.web.scheduler.SchedulerUtils;
 import ubic.gemma.web.util.Constants;
 
 import javax.servlet.ServletContext;
@@ -113,8 +111,6 @@ public class StartupListener extends ContextLoaderListener {
 
         this.configureJawr( ctx );
 
-        this.configureScheduler( ctx );
-
         sw.stop();
 
         StartupListener.log.info( String.format( "Initialization of Gemma Web context took %d s. The following profiles are active: %s.",
@@ -134,16 +130,6 @@ public class StartupListener extends ContextLoaderListener {
             log.info( String.format( "Enabling debug mode for JAWR by setting %s=true.", JAWR_DEBUG_ON_SYSTEM_PROPERTY ) );
             System.setProperty( JAWR_DEBUG_ON_SYSTEM_PROPERTY, "true" );
         }
-    }
-
-    private void configureScheduler( ApplicationContext ctx ) {
-        if ( !Settings.isSchedulerEnabled() ) {
-            SchedulerUtils.disableScheduler( ctx.getBean( "schedulerFactoryBean", Scheduler.class ) );
-            StartupListener.log.info( "Quartz scheduling disabled.  Set quartzOn=true in Gemma.properties to enable" );
-        } else {
-            StartupListener.log.info( "Quartz scheduling enabled.  Set quartzOn=false in Gemma.properties to disable" );
-        }
-
     }
 
     private Map<String, Object> initializeConfiguration( ServletContext context ) {

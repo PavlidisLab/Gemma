@@ -30,6 +30,7 @@
                 <!--<ref local="monitorSpaceTrigger" /> -->
             </list>
         </property>
+        <property name="autoStartup" value="${quartzOn}"/>
     </bean>
 
     <!-- Triggers -->
