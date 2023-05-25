@@ -9,7 +9,10 @@ import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.persistence.util.Sort;
 
 import javax.annotation.Nullable;
-import java.util.*;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Set;
 
 /**
  * Base class to use to pretend to offer filtering, but actually supporting no filterable properties.
@@ -55,6 +58,16 @@ public abstract class AbstractNoopFilteringVoEnabledDao<O extends Identifiable, 
 
     @Override
     public final Filter getFilter( String property, Filter.Operator operator, Collection<String> values ) throws IllegalArgumentException {
+        throw new UnsupportedOperationException( message );
+    }
+
+    @Override
+    public final <T> Filter getFilter( String property, Class<T> propertyType, Filter.Operator operator, T value ) {
+        throw new UnsupportedOperationException( message );
+    }
+
+    @Override
+    public final <T> Filter getFilter( String property, Class<T> propertyType, Filter.Operator operator, Collection<T> values ) {
         throw new UnsupportedOperationException( message );
     }
 

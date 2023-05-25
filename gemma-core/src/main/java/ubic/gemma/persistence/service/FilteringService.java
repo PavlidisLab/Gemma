@@ -75,6 +75,16 @@ public interface FilteringService<O extends Identifiable> extends BaseReadOnlySe
     Filter getFilter( String property, Filter.Operator operator, Collection<String> values ) throws IllegalArgumentException;
 
     /**
+     * @see FilteringDao#getFilter(String, Class, Filter.Operator, Object)
+     */
+    <T> Filter getFilter( String property, Class<T> propertyType, Filter.Operator operator, T value );
+
+    /**
+     * @see FilteringDao#getFilter(String, Class, Filter.Operator, Collection)
+     */
+    <T> Filter getFilter( String property, Class<T> propertyType, Filter.Operator operator, Collection<T> parsedValues );
+
+    /**
      * @see FilteringDao#getSort(String, Sort.Direction)
      */
     Sort getSort( String property, @Nullable Sort.Direction direction ) throws IllegalArgumentException;

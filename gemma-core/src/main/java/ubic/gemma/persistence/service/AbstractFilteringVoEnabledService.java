@@ -5,7 +5,6 @@ import org.springframework.context.MessageSourceResolvable;
 import org.springframework.context.support.DefaultMessageSourceResolvable;
 import org.springframework.security.access.AccessDecisionManager;
 import org.springframework.security.access.ConfigAttribute;
-import org.springframework.security.access.SecurityConfig;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.IdentifiableValueObject;
@@ -17,7 +16,6 @@ import ubic.gemma.persistence.util.Sort;
 
 import javax.annotation.Nullable;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -156,6 +154,18 @@ public abstract class AbstractFilteringVoEnabledService<O extends Identifiable, 
     public Filter getFilter( String property, Filter.Operator operator, Collection<String> values ) throws IllegalArgumentException {
         checkIfPropertyIsAccessible( property );
         return voDao.getFilter( property, operator, values );
+    }
+
+    @Override
+    public <T> Filter getFilter( String property, Class<T> propertyType, Filter.Operator operator, T value ) {
+        checkIfPropertyIsAccessible( property );
+        return voDao.getFilter( property, propertyType, operator, value );
+    }
+
+    @Override
+    public <T> Filter getFilter( String property, Class<T> propertyType, Filter.Operator operator, Collection<T> values ) {
+        checkIfPropertyIsAccessible( property );
+        return voDao.getFilter( property, propertyType, operator, values );
     }
 
     public Sort getSort( String property, @Nullable Sort.Direction direction ) throws IllegalArgumentException {

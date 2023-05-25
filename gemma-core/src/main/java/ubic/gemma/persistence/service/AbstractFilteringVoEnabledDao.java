@@ -367,6 +367,18 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
     }
 
     @Override
+    public final <T> Filter getFilter( String property, Class<T> propertyType, Filter.Operator operator, T value ) {
+        FilterablePropertyMeta propertyMeta = getFilterablePropertyMeta( property );
+        return Filter.by( propertyMeta.objectAlias, propertyMeta.propertyName, propertyType, operator, value, property );
+    }
+
+    @Override
+    public final <T> Filter getFilter( String property, Class<T> propertyType, Filter.Operator operator, Collection<T> values ) {
+        FilterablePropertyMeta propertyMeta = getFilterablePropertyMeta( property );
+        return Filter.by( propertyMeta.objectAlias, propertyMeta.propertyName, propertyType, operator, values, property );
+    }
+
+    @Override
     public final Sort getSort( String property, @Nullable Sort.Direction direction ) {
         FilterablePropertyMeta propertyMeta = getFilterablePropertyMeta( property );
         return Sort.by( propertyMeta.objectAlias, propertyMeta.propertyName, direction, property );

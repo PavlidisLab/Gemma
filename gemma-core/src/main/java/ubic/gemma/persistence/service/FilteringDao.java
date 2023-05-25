@@ -79,6 +79,18 @@ public interface FilteringDao<O extends Identifiable> extends BaseDao<O> {
     Filter getFilter( String property, Filter.Operator operator, Collection<String> values ) throws IllegalArgumentException;
 
     /**
+     * Obtain a {@link Filter} with an already parsed value.
+     * @see #getFilter(String, Filter.Operator, String)
+     */
+    <T> Filter getFilter( String property, Class<T> propertyType, Filter.Operator operator, T value );
+
+    /**
+     * Obtain a {@link Filter} with an already parsed collection of values.
+     * @see #getFilter(String, Filter.Operator, Collection)
+     */
+    <T> Filter getFilter( String property, Class<T> propertyType, Filter.Operator operator, Collection<T> values );
+
+    /**
      * Obtain a {@link Sort} object for a property of the {@link O}.
      *
      * @param property a property of {@link O} to sort by
