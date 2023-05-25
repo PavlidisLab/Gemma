@@ -12,13 +12,13 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.http.HttpEntity;
+import org.springframework.http.client.ClientHttpRequestExecution;
 import org.springframework.util.Assert;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.validation.DirectFieldBindingResult;
 import org.springframework.validation.Errors;
 import org.springframework.validation.Validator;
-import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 import ubic.gemma.rest.analytics.AnalyticsProvider;
@@ -432,18 +432,15 @@ public class GoogleAnalytics4Provider implements AnalyticsProvider, Initializing
         } catch ( RestClientException e ) {
             if ( debug ) {
                 throw e;
+            } else if ( e instanceof ClientHttpRequestExecution ) {
+                log.error( String.format( "Failed to publish %d analytics events due to a client-side exception; the events will be discarded.", batch.size() ), e );
+                // we have to lie here because events will not be resent
+                return batch.size();
             } else {
-                if ( e instanceof HttpServerErrorException ) {
-                    // for server errors, requeue the events and resend them later
-                    log.warn( "Failed to publish %d analytics events due to a server error, will attempt to resend them later.", e );
-                    events.addAll( batch );
-                    return 0;
-                } else {
-                    // we have to lie here because events will not be resent
-                    log.error( String.format( "Failed to publish the following analytics events:%s\nThe events will not be discarded.",
-                            batch.stream().map( Object::toString ).collect( Collectors.joining( "\n - " ) ) ), e );
-                    return batch.size();
-                }
+                // for server and I/O errors, requeue the events and resend them later
+                log.warn( String.format( "Failed to publish %d analytics events due to a server-side or I/O error; the events will be resent later.", batch.size() ), e );
+                events.addAll( batch );
+                return 0;
             }
         }
     }
