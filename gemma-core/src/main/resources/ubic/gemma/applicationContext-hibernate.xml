@@ -59,7 +59,7 @@
 		<property name="hibernateProperties">
 			<props>
 				<prop key="hibernate.hbm2ddl.auto">${gemma.hibernate.hbm2ddl.auto}</prop>
-				<prop key="hibernate.dialect">${gemma.hibernate.dialect}</prop>
+				<prop key="hibernate.dialect">ubic.gemma.persistence.hibernate.MySQL57InnoDBDialect</prop>
 				<!-- caching options -->
 				<prop key="hibernate.cache.region.factory_class">org.hibernate.cache.ehcache.SingletonEhCacheRegionFactory</prop>
 				<prop key="hibernate.cache.use_query_cache">true</prop>
