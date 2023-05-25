@@ -209,8 +209,8 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
                 .hasFieldOrPropertyWithValue( "sort.direction", "-" )
                 .extracting( "groupBy", InstanceOfAssertFactories.list( String.class ) )
                 .containsExactly( "classUri", "className", "termUri", "termName" );
-        verify( expressionExperimentService ).getFiltersWithInferredAnnotations( Filters.empty(), null );
-        verify( expressionExperimentService ).getAnnotationsUsageFrequency( Filters.empty(), 100, 0, null );
+        verify( expressionExperimentService ).getFiltersWithInferredAnnotations( Filters.empty(), Collections.emptySet() );
+        verify( expressionExperimentService ).getAnnotationsUsageFrequency( Filters.empty(), 100, 0, Collections.emptySet() );
     }
 
     @Test
@@ -228,8 +228,8 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
                 .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE )
                 .entity()
                 .hasFieldOrPropertyWithValue( "limit", 2000 );
-        verify( expressionExperimentService ).getFiltersWithInferredAnnotations( Filters.empty(), null );
-        verify( expressionExperimentService ).getAnnotationsUsageFrequency( Filters.empty(), 2000, 10, null );
+        verify( expressionExperimentService ).getFiltersWithInferredAnnotations( Filters.empty(), Collections.emptySet() );
+        verify( expressionExperimentService ).getAnnotationsUsageFrequency( Filters.empty(), 2000, 10, Collections.emptySet() );
     }
 
     @Test
@@ -241,7 +241,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
                 .hasFieldOrPropertyWithValue( "limit", 50 )
                 .extracting( "groupBy", InstanceOfAssertFactories.list( String.class ) )
                 .containsExactly( "classUri", "className", "termUri", "termName" );
-        verify( expressionExperimentService ).getAnnotationsUsageFrequency( Filters.empty(), 50, 0, null );
+        verify( expressionExperimentService ).getAnnotationsUsageFrequency( Filters.empty(), 50, 0, Collections.emptySet() );
     }
 
     @Test

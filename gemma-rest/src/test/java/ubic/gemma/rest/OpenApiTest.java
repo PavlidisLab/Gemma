@@ -25,6 +25,7 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.util.TestComponent;
+import ubic.gemma.rest.analytics.AnalyticsProvider;
 import ubic.gemma.rest.swagger.resolver.CustomModelResolver;
 import ubic.gemma.rest.util.BaseJerseyTest;
 import ubic.gemma.rest.util.JacksonConfig;
@@ -70,6 +71,16 @@ public class OpenApiTest extends BaseJerseyTest {
         @Bean
         public TaxonArgService taxonService() {
             return mockFilteringService( TaxonArgService.class, Taxon.class );
+        }
+
+        @Bean
+        public SearchService searchService() {
+            return mock( SearchService.class );
+        }
+
+        @Bean
+        public AnalyticsProvider analyticsProvider() {
+            return mock( AnalyticsProvider.class );
         }
 
         private static <S extends Identifiable, T extends EntityArgService<S, ?>> T mockFilteringService( Class<T> clazz, Class<S> elementClass ) {
