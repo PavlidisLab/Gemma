@@ -1338,7 +1338,9 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
                     Set<SearchResult<ExpressionExperiment>> eeHits = new SearchResultSet<>();
                     Map<String, String> uri2value = new HashMap<>();
                     uri2value.put( termUri, g.getOfficialSymbol() );
-                    eeHits.addAll( ontologySearchSource.searchExpressionExperimentByUris( settings, Collections.singleton( termUri ), uri2value ) );
+                    Map<String, Double> uri2score = new HashMap<>();
+                    uri2score.put( termUri, 1.0 );
+                    eeHits.addAll( ontologySearchSource.searchExpressionExperimentByUris( settings, Collections.singleton( termUri ), uri2value, uri2score ) );
 
                     if ( !eeHits.isEmpty() ) {
                         results.addAll( eeHits );

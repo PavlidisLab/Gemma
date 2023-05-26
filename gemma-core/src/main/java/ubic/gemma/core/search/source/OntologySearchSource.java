@@ -16,5 +16,5 @@ public interface OntologySearchSource extends SearchSource {
      * @param uris      collection of URIs to use for searching
      * @param uri2value labels for mapping URIs to text
      */
-    Collection<SearchResult<ExpressionExperiment>> searchExpressionExperimentByUris( SearchSettings settings, Collection<String> uris, Map<String, String> uri2value );
+    Collection<SearchResult<ExpressionExperiment>> searchExpressionExperimentByUris( SearchSettings settings, Collection<String> uris, Map<String, String> uri2value, Map<String, Double> uri2score );
 }

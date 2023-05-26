@@ -127,9 +127,9 @@ public class OntologySearchSourceImpl implements OntologySearchSource {
     }
 
     @Override
-    public Collection<SearchResult<ExpressionExperiment>> searchExpressionExperimentByUris( SearchSettings settings, Collection<String> uris, Map<String, String> uri2value ) {
+    public Collection<SearchResult<ExpressionExperiment>> searchExpressionExperimentByUris( SearchSettings settings, Collection<String> uris, Map<String, String> uri2value, Map<String, Double> uri2score ) {
         Set<SearchResult<ExpressionExperiment>> results = new HashSet<>();
-        findExpressionExperimentsByUris( uris, results, 1.0, uri2value, settings );
+        findExpressionExperimentsByUris( uris, results, 1.0, uri2value, uri2score, settings );
         return results;
     }
 
@@ -137,26 +137,36 @@ public class OntologySearchSourceImpl implements OntologySearchSource {
         // URIs are case-insensitive in the database, so should be the mapping to labels
         Collection<String> uris = new HashSet<>();
         Map<String, String> uri2value = new TreeMap<>( String.CASE_INSENSITIVE_ORDER );
+        Map<String, Double> uri2score = new TreeMap<>( String.CASE_INSENSITIVE_ORDER );
 
         if ( settings.isTermQuery() ) {
             String query = settings.getQuery();
             uris.add( query );
             // this will be replaced with a proper label if found in the ontology
             uri2value.put( query, OntologyUtils.getLabelFromTermUri( query ) );
+            uri2score.put( query, 1.0 );
         }
+
+        // renormalize the scores in a [0, 1] range
+        DoubleSummaryStatistics summaryStatistics = individuals.stream()
+                .map( OntologyResource::getScore )
+                .filter( Objects::nonNull )
+                .mapToDouble( s -> s )
+                .summaryStatistics();
 
         for ( OntologyResource individual : individuals ) {
             // bnodes can have null URIs, how annoying...
             if ( individual.getUri() != null ) {
                 uris.add( individual.getUri() );
                 uri2value.put( individual.getUri(), individual.getLabel() );
+                uri2score.put( individual.getUri(), individual.getScore() != null ? individual.getScore() / summaryStatistics.getMax() : summaryStatistics.getAverage() / summaryStatistics.getMax() );
             }
         }
 
-        findExpressionExperimentsByUris( uris, results, 0.9, uri2value, settings );
+        findExpressionExperimentsByUris( uris, results, 0.9, uri2value, uri2score, settings );
     }
 
-    private void findExpressionExperimentsByUris( Collection<String> uris, Set<SearchResult<ExpressionExperiment>> results, double score, Map<String, String> uri2value, SearchSettings settings ) {
+    private void findExpressionExperimentsByUris( Collection<String> uris, Set<SearchResult<ExpressionExperiment>> results, double score, Map<String, String> uri2value, Map<String, Double> uri2score, SearchSettings settings ) {
         if ( isFilled( results, settings ) )
             return;
 
@@ -166,16 +176,16 @@ public class OntologySearchSourceImpl implements OntologySearchSource {
         Map<Class<? extends Identifiable>, Map<String, Set<ExpressionExperiment>>> hits = characteristicService.findExperimentsByUris( uris, settings.getTaxon(), getLimit( results, settings ), settings.isFillResults(), rankByLevel );
 
         // collect all direct tags
-        addExperimentsByUrisHits( hits, results, ExpressionExperiment.class, score, uri2value, settings );
+        addExperimentsByUrisHits( hits, results, ExpressionExperiment.class, score, uri2value, uri2score, settings );
 
         // collect experimental design-related terms
-        addExperimentsByUrisHits( hits, results, ExperimentalDesign.class, 0.9 * score, uri2value, settings );
+        addExperimentsByUrisHits( hits, results, ExperimentalDesign.class, 0.9 * score, uri2value, uri2score, settings );
 
         // collect samples-related terms
-        addExperimentsByUrisHits( hits, results, BioMaterial.class, 0.9 * score, uri2value, settings );
+        addExperimentsByUrisHits( hits, results, BioMaterial.class, 0.9 * score, uri2value, uri2score, settings );
     }
 
-    private void addExperimentsByUrisHits( Map<Class<? extends Identifiable>, Map<String, Set<ExpressionExperiment>>> hits, Set<SearchResult<ExpressionExperiment>> results, Class<? extends Identifiable> clazz, double score, Map<String, String> uri2value, SearchSettings settings ) {
+    private void addExperimentsByUrisHits( Map<Class<? extends Identifiable>, Map<String, Set<ExpressionExperiment>>> hits, Set<SearchResult<ExpressionExperiment>> results, Class<? extends Identifiable> clazz, double score, Map<String, String> uri2value, Map<String, Double> uri2score, SearchSettings settings ) {
         Map<String, Set<ExpressionExperiment>> specificHits = hits.get( clazz );
         if ( specificHits == null )
             return;
@@ -183,7 +193,7 @@ public class OntologySearchSourceImpl implements OntologySearchSource {
             String uri = entry.getKey();
             String value = uri2value.get( uri );
             for ( ExpressionExperiment ee : entry.getValue() ) {
-                results.add( SearchResult.from( ExpressionExperiment.class, ee, score,
+                results.add( SearchResult.from( ExpressionExperiment.class, ee, score * uri2score.getOrDefault( uri, 0.0 ),
                         Collections.singletonMap( "term", settings.highlightTerm( uri, value, clazz ) ),
                         String.format( "CharacteristicService.findExperimentsByUris with term [%s](%s)", value, uri ) ) );
             }
