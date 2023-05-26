@@ -4,6 +4,7 @@ import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.lang3.time.StopWatch;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.context.support.DefaultMessageSourceResolvable;
 import org.springframework.stereotype.Component;
 import ubic.basecode.ontology.model.OntologyIndividual;
 import ubic.basecode.ontology.model.OntologyResource;
@@ -194,7 +195,7 @@ public class OntologySearchSourceImpl implements OntologySearchSource {
             String value = uri2value.get( uri );
             for ( ExpressionExperiment ee : entry.getValue() ) {
                 results.add( SearchResult.from( ExpressionExperiment.class, ee, score * uri2score.getOrDefault( uri, 0.0 ),
-                        Collections.singletonMap( "term", settings.highlightTerm( uri, value, clazz ) ),
+                        Collections.singletonMap( "term", settings.highlightTerm( uri, value, new DefaultMessageSourceResolvable( new String[] { clazz.getName(), clazz.getSimpleName() }, clazz.getSimpleName() ) ) ),
                         String.format( "CharacteristicService.findExperimentsByUris with term [%s](%s)", value, uri ) ) );
             }
         }

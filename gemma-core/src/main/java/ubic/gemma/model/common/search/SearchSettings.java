@@ -23,6 +23,7 @@ import lombok.Data;
 import lombok.Singular;
 import lombok.With;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.context.MessageSourceResolvable;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -33,7 +34,6 @@ import ubic.gemma.model.genome.Taxon;
 
 import javax.annotation.Nullable;
 import java.io.Serializable;
-import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -280,8 +280,8 @@ public class SearchSettings implements Serializable {
      * @return a highlight, or null if no provider is set or the provider returns null
      */
     @Nullable
-    public String highlightTerm( String termUri, String termLabel, Class<? extends Identifiable> clazz ) {
-        return highlighter != null ? highlighter.highlightTerm( termUri, termLabel, clazz ) : null;
+    public String highlightTerm( String termUri, String termLabel, MessageSourceResolvable className ) {
+        return highlighter != null ? highlighter.highlightTerm( termUri, termLabel, className ) : null;
     }
 
     @Override

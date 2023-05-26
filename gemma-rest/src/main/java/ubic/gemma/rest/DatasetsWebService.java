@@ -26,6 +26,8 @@ import lombok.Value;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.io.FilenameUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.MessageSource;
+import org.springframework.context.MessageSourceResolvable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -38,13 +40,11 @@ import ubic.gemma.core.analysis.preprocess.svd.SVDValueObject;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
 import ubic.gemma.core.search.SearchResult;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisValueObject;
-import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.auditAndSecurity.eventType.BatchInformationFetchingEvent;
 import ubic.gemma.model.common.description.AnnotationValueObject;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.QuantitationTypeValueObject;
-import ubic.gemma.model.common.search.Highlighter;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
@@ -122,12 +122,23 @@ public class DatasetsWebService {
     @Autowired
     private GeneArgService geneArgService;
     @Autowired
+    private MessageSource messageSource;
+
+    @Autowired
     private HttpServletRequest request;
 
-    private final Highlighter highlighter = new Highlighter() {
+    @EqualsAndHashCode
+    private class Highlighter implements ubic.gemma.model.common.search.Highlighter {
+
+        private final Locale locale;
+
+        private Highlighter( Locale locale ) {
+            this.locale = locale;
+        }
+
         @Nullable
         @Override
-        public String highlightTerm( String termUri, String termLabel, Class<? extends Identifiable> clazz ) {
+        public String highlightTerm( String termUri, String termLabel, MessageSourceResolvable clazz ) {
             String reconstructedUri = ServletUriComponentsBuilder.fromRequest( request )
                     .scheme( null )
                     .host( null )
@@ -139,10 +150,10 @@ public class DatasetsWebService {
                     .replaceQueryParam( "sort" )
                     .build()
                     .toUriString();
-            return String.format( "**[%s](%s)** via *%s*", termLabel, reconstructedUri, clazz.getSimpleName() );
+            return String.format( "**[%s](%s)** via *%s*", termLabel, reconstructedUri, messageSource.getMessage( clazz, locale ) );
         }
 
-    };
+    }
 
 
     @GET
@@ -168,7 +179,7 @@ public class DatasetsWebService {
         if ( query != null ) {
             List<SearchResult<ExpressionExperiment>> results = new ArrayList<>();
             Filters filtersWithSearchResultIds = Filters.by( filters )
-                    .and( datasetArgService.getFilterForSearchQuery( query, minScore, highlighter, results ) );
+                    .and( datasetArgService.getFilterForSearchQuery( query, minScore, new Highlighter( request.getLocale() ), results ) );
             results.forEach( e -> resultById.put( e.getResultId(), e ) );
             if ( "id".equals( sort.getPropertyName() ) && Sort.Direction.ASC.equals( sort.getDirection() ) ) {
                 List<Long> ids = expressionExperimentService.loadIds( filtersWithSearchResultIds, null );

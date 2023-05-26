@@ -5,11 +5,14 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.EqualsAndHashCode;
 import lombok.Value;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.MessageSource;
+import org.springframework.context.MessageSourceResolvable;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import ubic.gemma.core.search.SearchException;
@@ -18,7 +21,6 @@ import ubic.gemma.core.search.SearchService;
 import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.description.BibliographicReferenceValueObject;
-import ubic.gemma.model.common.search.Highlighter;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 import ubic.gemma.model.expression.designElement.CompositeSequenceValueObject;
@@ -39,6 +41,7 @@ import ubic.gemma.rest.util.args.*;
 
 import javax.annotation.Nullable;
 import javax.servlet.ServletContext;
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.*;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
@@ -79,27 +82,37 @@ public class SearchWebService {
     private TaxonArgService taxonArgService;
     @Autowired
     private PlatformArgService platformArgService;
+    @Autowired
+    private MessageSource messageSource;
 
     @Autowired
     private ServletContext servletContext;
+    @Autowired
+    private HttpServletRequest request;
 
     /**
      * Highlights search result.
      */
-    private final Highlighter highlighter = new Highlighter() {
+    @EqualsAndHashCode
+    private class Highlighter implements ubic.gemma.model.common.search.Highlighter {
+
+        private final Locale locale;
+
+        private Highlighter( Locale locale ) {
+            this.locale = locale;
+        }
 
         @Override
-        public String highlightTerm( String uri, String label, Class<? extends Identifiable> aClass ) {
+        public String highlightTerm( String uri, String label, MessageSourceResolvable className ) {
             try {
                 return String.format( "**[%s](%s)** via *%s*", label,
                         servletContext.getContextPath() + "/rest/v2/search?query=" + URLEncoder.encode( uri, StandardCharsets.UTF_8.name() ),
-                        aClass.getSimpleName() );
+                        messageSource.getMessage( className, locale ) );
             } catch ( UnsupportedEncodingException e ) {
                 throw new RuntimeException( e );
             }
         }
-
-    };
+    }
 
     /**
      * Search everything subject to taxon and platform constraints.
@@ -150,7 +163,7 @@ public class SearchWebService {
                 .resultTypes( resultTypesCls )
                 .maxResults( maxResults )
                 .fillResults( fillResults )
-                .highlighter( highlighter )
+                .highlighter( new Highlighter( request.getLocale() ) )
                 .build();
 
         List<SearchResult<?>> searchResults;

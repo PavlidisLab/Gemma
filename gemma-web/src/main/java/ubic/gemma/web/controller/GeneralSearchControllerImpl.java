@@ -18,10 +18,14 @@
  */
 package ubic.gemma.web.controller;
 
+import lombok.EqualsAndHashCode;
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.MessageSource;
+import org.springframework.context.MessageSourceResolvable;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.BindException;
 import org.springframework.web.bind.WebDataBinder;
@@ -76,7 +80,11 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
     @Autowired
     private TaxonService taxonService;
     @Autowired
+    private MessageSource messageSource;
+    @Autowired
     private ServletContext servletContext;
+    @Autowired
+    private HttpServletRequest request;
 
     @Override
     public JsonReaderResponse<SearchResultValueObject<?>> ajaxSearch( SearchSettingsValueObject settingsValueObject ) {
@@ -95,7 +103,7 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
         timer.start();
 
         SearchSettings searchSettings = searchSettingsFromVo( settingsValueObject )
-                .withHighlighter( highlighter );
+                .withHighlighter( new Highlighter( request.getLocale() ) );
 
         searchTimer.start();
         SearchService.SearchResultMap searchResults;
@@ -141,20 +149,25 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
         return new JsonReaderResponse<>( finalResults );
     }
 
-    private final ubic.gemma.model.common.search.Highlighter highlighter = new Highlighter();
-
+    @EqualsAndHashCode
     private class Highlighter implements ubic.gemma.model.common.search.Highlighter {
 
+        private final Locale locale;
+
+        private Highlighter( Locale locale ) {
+            this.locale = locale;
+        }
+
         @Override
-        public String highlightTerm( String uri, String value, Class<? extends Identifiable> clazz ) {
+        public String highlightTerm( String uri, String value, MessageSourceResolvable className ) {
             String matchedText;
             try {
                 matchedText = "<a href=\"" + servletContext.getContextPath() + "/searcher.html?query=" + URLEncoder.encode( uri, StandardCharsets.UTF_8.name() ) + "\">" + escapeHtml4( value ) + "</a> ";
             } catch ( UnsupportedEncodingException e ) {
                 throw new RuntimeException( e );
             }
-            if ( !ExpressionExperiment.class.equals( clazz ) ) {
-                matchedText = matchedText + " via " + clazz.getSimpleName();
+            if ( !ArrayUtils.contains( className.getCodes(), ExpressionExperiment.class.getName() ) ) {
+                matchedText = matchedText + " via " + messageSource.getMessage( className, locale );
             }
             return matchedText;
         }
@@ -210,7 +223,7 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
         String taxon = request.getParameter( "taxon" );
         if ( taxon != null )
             csc.taxon( taxonService.findByScientificName( taxon ) );
-        csc.highlighter( highlighter );
+        csc.highlighter( new Highlighter( request.getLocale() ) );
         String scope = request.getParameter( "scope" );
         if ( StringUtils.isNotBlank( scope ) ) {
             char[] scopes = scope.toCharArray();

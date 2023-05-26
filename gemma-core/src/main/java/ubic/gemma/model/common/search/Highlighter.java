@@ -1,7 +1,7 @@
 package ubic.gemma.model.common.search;
 
 import org.compass.core.impl.DefaultCompassHighlightedText;
-import ubic.gemma.model.common.Identifiable;
+import org.springframework.context.MessageSourceResolvable;
 
 import javax.annotation.Nullable;
 import java.io.Serializable;
@@ -34,7 +34,7 @@ public interface Highlighter extends Serializable {
      * @return a suitable highlight, or null if none is found
      */
     @Nullable
-    default String highlightTerm( String termUri, String termLabel, Class<? extends Identifiable> clazz ) {
+    default String highlightTerm( String termUri, String termLabel, MessageSourceResolvable className ) {
         return null;
     }
 }
