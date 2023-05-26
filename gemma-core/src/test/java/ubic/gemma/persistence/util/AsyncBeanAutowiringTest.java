@@ -1,6 +1,5 @@
 package ubic.gemma.persistence.util;
 
-import org.assertj.core.api.Assertions;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.springframework.beans.factory.BeanFactory;
@@ -93,14 +92,21 @@ public class AsyncBeanAutowiringTest extends AbstractJUnit4SpringContextTests {
 
     @Test
     public void testAutowiredBean() {
-        assertThat( myService ).succeedsWithin( 1, TimeUnit.SECONDS );
-        assertThat( myService2 ).succeedsWithin( 1, TimeUnit.SECONDS );
+        assertThat( myService ).succeedsWithin( 1, TimeUnit.SECONDS )
+                .isInstanceOf( MyService.class );
+        assertThat( myService2 ).succeedsWithin( 1, TimeUnit.SECONDS )
+                .isInstanceOf( MyService2.class );
     }
 
     @Test
-    @Ignore("Injecting parametrized bean is not supported by Spring 3 (see issue https://github.com/PavlidisLab/Gemma/issues/612)")
-    public void testAutowiredMapAndList() {
+    @Ignore("Injecting a list of parametrized beans is not supported by Spring 3 (see issue https://github.com/PavlidisLab/Gemma/issues/612)")
+    public void testAutowiredList() {
         assertThat( myServiceList ).containsExactly( myService );
+    }
+
+    @Test
+    @Ignore("Injecting a map of parametrized beans is not supported by Spring 3 (see issue https://github.com/PavlidisLab/Gemma/issues/612)")
+    public void testAutowiredMap() {
         assertThat( myServiceByName ).containsExactlyEntriesOf( Collections.singletonMap( "myService", myService ) );
     }
 
