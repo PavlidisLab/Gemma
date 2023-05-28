@@ -57,8 +57,8 @@ public abstract class AbstractEntityArgService<T extends Identifiable, S extends
     }
 
     @Override
-    public List<MessageSourceResolvable> getFilterablePropertyResolvableAvailableValuesLabels( String p ) {
-        return service.getFilterablePropertyResolvableAvailableValuesLabels( p );
+    public List<MessageSourceResolvable> getFilterablePropertyResolvableAllowedValuesLabels( String p ) {
+        return service.getFilterablePropertyResolvableAllowedValuesLabels( p );
     }
 
     @Override

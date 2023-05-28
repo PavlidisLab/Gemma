@@ -128,16 +128,39 @@ public abstract class AbstractFilteringVoEnabledService<O extends Identifiable, 
 
     @Nullable
     @Override
-    public List<MessageSourceResolvable> getFilterablePropertyResolvableAvailableValuesLabels( String p ) {
-        Class<?> elementClass = voDao.getElementClass();
+    public List<MessageSourceResolvable> getFilterablePropertyResolvableAllowedValuesLabels( String p ) {
         List<Object> filterable = getFilterablePropertyAllowedValues( p );
         if ( filterable != null ) {
             return filterable.stream()
-                    .map( f -> new DefaultMessageSourceResolvable( new String[] { elementClass.getSimpleName() + "." + p + "." + f.toString() + ".label" }, null, f.toString() ) )
+                    .map( f -> this.getCodesForAllowedValue( p, f ) )
                     .collect( Collectors.toList() );
         } else {
             return null;
         }
+    }
+
+    /**
+     * Create a {@link MessageSourceResolvable} for an allowed value of a filter.
+     * <p>
+     * If the value is an enumeration, a code for the enum class +
+     */
+    private MessageSourceResolvable getCodesForAllowedValue( String propertyName, Object allowedValue ) {
+        String[] codes;
+        String key = allowedValue.toString();
+        if ( allowedValue instanceof Enum ) {
+            codes = new String[] {
+                    voDao.getElementClass().getName() + "." + propertyName + "." + key + ".label",
+                    voDao.getElementClass().getSimpleName() + "." + "." + propertyName + "." + key + ".label",
+                    allowedValue.getClass().getName() + "." + key + ".label",
+                    allowedValue.getClass().getSimpleName() + "." + key + ".label"
+            };
+        } else {
+            codes = new String[] {
+                    voDao.getElementClass().getName() + "." + propertyName + "." + key + ".label",
+                    voDao.getElementClass().getSimpleName() + "." + propertyName + "." + key + ".label"
+            };
+        }
+        return new DefaultMessageSourceResolvable( codes, key );
     }
 
     @Nullable

@@ -52,10 +52,10 @@ public interface FilteringService<O extends Identifiable> extends BaseReadOnlySe
      * Nullity and the number of elements is guaranteed to match {@link #getFilterablePropertyAllowedValues(String)} (String)},
      * so the two methods can be used jointly.
      *
-     * @see #getFilterablePropertyResolvableAvailableValuesLabels(String)
+     * @see #getFilterablePropertyResolvableAllowedValuesLabels(String)
      */
     @Nullable
-    List<MessageSourceResolvable> getFilterablePropertyResolvableAvailableValuesLabels( String property );
+    List<MessageSourceResolvable> getFilterablePropertyResolvableAllowedValuesLabels( String property );
 
     /**
      * Obtain the Spring Security config attributes for a given property.

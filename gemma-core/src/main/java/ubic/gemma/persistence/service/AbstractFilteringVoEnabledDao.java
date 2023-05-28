@@ -306,7 +306,7 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
     @Nullable
     @Override
     public List<Object> getFilterablePropertyAllowedValues( String propertyName ) throws IllegalArgumentException {
-        return getFilterablePropertyMeta( propertyName ).availableValues;
+        return getFilterablePropertyMeta( propertyName ).allowedValues;
     }
 
     @Override
@@ -405,7 +405,7 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
          * A short list of allowed values if that can be determined, or null.
          */
         @Nullable
-        List<Object> availableValues;
+        List<Object> allowedValues;
     }
 
     @Value
@@ -453,7 +453,7 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
                 throw new IllegalArgumentException( String.format( "Could not resolve property %s on %s.", propertyName, clazz.getName() ), e );
             }
         } );
-        return new FilterablePropertyMeta( objectAlias, propertyName, partialMeta.propertyType, null, partialMeta.availableValues );
+        return new FilterablePropertyMeta( objectAlias, propertyName, partialMeta.propertyType, null, partialMeta.allowedValues );
     }
 
     /**
@@ -466,7 +466,7 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
     private static class PartialFilterablePropertyMeta {
         Class<?> propertyType;
         @Nullable
-        List<Object> availableValues;
+        List<Object> allowedValues;
     }
 
     /**
@@ -513,17 +513,17 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
         Class<?> actualType = ( Class<?> ) propertyType.getReturnedClass();
 
         // available values, only for enumerated types
-        List<Object> availableValues;
+        List<Object> allowedValues;
         if ( isEnumType( propertyType ) ) {
             EnumType et = ( EnumType ) ( ( CustomType ) propertyType ).getUserType();
             //noinspection unchecked,rawtypes
-            availableValues = new ArrayList<>( EnumSet.allOf( et.returnedClass() ) );
+            allowedValues = new ArrayList<>( EnumSet.allOf( et.returnedClass() ) );
         } else {
-            availableValues = null;
+            allowedValues = null;
         }
 
         if ( Filter.getConversionService().canConvert( String.class, actualType ) ) {
-            return new PartialFilterablePropertyMeta( actualType, availableValues );
+            return new PartialFilterablePropertyMeta( actualType, allowedValues );
         } else {
             throw new NoSuchFieldException( String.format( "%s is not of a supported type or a collection of supported types %s.", property, cls.getName() ) );
         }

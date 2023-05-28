@@ -52,9 +52,9 @@ public interface EntityArgService<T extends Identifiable, S extends FilteringSer
     Collection<ConfigAttribute> getFilterablePropertyConfigAttributes( String roles );
 
     /**
-     * @see FilteringVoEnabledService#getFilterablePropertyResolvableAvailableValuesLabels(String)
+     * @see FilteringVoEnabledService#getFilterablePropertyResolvableAllowedValuesLabels(String)
      */
-    List<MessageSourceResolvable> getFilterablePropertyResolvableAvailableValuesLabels( String p ) throws BadRequestException;
+    List<MessageSourceResolvable> getFilterablePropertyResolvableAllowedValuesLabels( String p ) throws BadRequestException;
 
     @Nonnull
     T getEntity( AbstractEntityArg<?, T, S> entityArg ) throws NotFoundException, BadRequestException;

@@ -173,7 +173,7 @@ public class CustomModelResolver extends ModelResolver {
 
     private List<FilterablePropMetaAllowedValue> resolveAllowedValues( EntityArgService<?, ?> filteringService, String p, Locale locale ) {
         List<Object> allowedValues = filteringService.getFilterablePropertyAllowedValues( p );
-        List<MessageSourceResolvable> allowedValuesLabels = filteringService.getFilterablePropertyResolvableAvailableValuesLabels( p );
+        List<MessageSourceResolvable> allowedValuesLabels = filteringService.getFilterablePropertyResolvableAllowedValuesLabels( p );
         if ( allowedValues != null && allowedValuesLabels != null ) {
             assert allowedValues.size() == allowedValuesLabels.size();
             int numValues = allowedValues.size();
