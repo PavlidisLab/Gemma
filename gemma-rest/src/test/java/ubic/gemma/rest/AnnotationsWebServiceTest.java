@@ -122,12 +122,12 @@ public class AnnotationsWebServiceTest extends AbstractJUnit4SpringContextTests 
                 .thenReturn( Collections.singletonList( SearchResult.from( ExpressionExperiment.class, ee, 1.0, "test object" ) ) );
         when( searchService.search( any( SearchSettings.class ) ) )
                 .thenReturn( mockedSrMap );
-        when( taxonService.getFilter( eq( "commonName" ), eq( String.class ), eq( Filter.Operator.eq ), any( String.class ) ) )
-                .thenAnswer( a -> Filter.by( "t", "commonName", String.class, Filter.Operator.eq, a.getArgument( 3, String.class ), a.getArgument( 0 ) ) );
-        when( taxonService.getFilter( eq( "scientificName" ), eq( String.class ), eq( Filter.Operator.eq ), any( String.class ) ) )
-                .thenAnswer( a -> Filter.by( "t", "scientificName", String.class, Filter.Operator.eq, a.getArgument( 3, String.class ), a.getArgument( 0 ) ) );
+        when( taxonService.getFilter( eq( "commonName" ), eq( Filter.Operator.eq ), any( String.class ) ) )
+                .thenAnswer( a -> Filter.by( "t", "commonName", String.class, Filter.Operator.eq, a.getArgument( 2, String.class ), a.getArgument( 0 ) ) );
+        when( taxonService.getFilter( eq( "scientificName" ), eq( Filter.Operator.eq ), any( String.class ) ) )
+                .thenAnswer( a -> Filter.by( "t", "scientificName", String.class, Filter.Operator.eq, a.getArgument( 2, String.class ), a.getArgument( 0 ) ) );
         when( expressionExperimentService.getIdentifierPropertyName() ).thenReturn( "id" );
-        when( expressionExperimentService.getFilter( "id", Filter.Operator.eq, "1" ) ).thenReturn( Filter.by( "ee", "id", Long.class, Filter.Operator.in, Collections.singleton( 1L ), "id" ) );
+        when( expressionExperimentService.getFilter( "id", Filter.Operator.in, Collections.singletonList( "1" ) ) ).thenReturn( Filter.by( "ee", "id", Long.class, Filter.Operator.in, Collections.singleton( 1L ), "id" ) );
         when( expressionExperimentService.getSort( "id", Sort.Direction.ASC ) ).thenReturn( Sort.by( "ee", "id", Sort.Direction.ASC, "id" ) );
         when( expressionExperimentService.loadValueObjects( any( Filters.class ), eq( Sort.by( "ee", "id", Sort.Direction.ASC, "id" ) ), eq( 0 ), eq( 20 ) ) )
                 .thenAnswer( a -> new Slice<>( Collections.singletonList( new ExpressionExperimentValueObject( ee ) ), a.getArgument( 1 ), a.getArgument( 2, Integer.class ), a.getArgument( 3, Integer.class ), 10000L ) );
@@ -146,9 +146,9 @@ public class AnnotationsWebServiceTest extends AbstractJUnit4SpringContextTests 
                 .hasFieldOrPropertyWithValue( "limit", 20 )
                 .hasFieldOrPropertyWithValue( "totalElements", 10000L );
         verify( searchService ).search( any( SearchSettings.class ) );
-        verify( taxonService ).getFilter( "commonName", String.class, Filter.Operator.eq, "human" );
-        verify( taxonService ).getFilter( "scientificName", String.class, Filter.Operator.eq, "human" );
-        verify( expressionExperimentService ).getFilter( "id", Filter.Operator.eq, "1" );
+        verify( taxonService ).getFilter( "commonName", Filter.Operator.eq, "human" );
+        verify( taxonService ).getFilter( "scientificName", Filter.Operator.eq, "human" );
+        verify( expressionExperimentService ).getFilter( "id", Filter.Operator.in, Collections.singletonList( "1" ) );
         verify( expressionExperimentService ).getSort( "id", Sort.Direction.ASC );
         verify( expressionExperimentService ).loadValueObjects( any( Filters.class ), eq( Sort.by( "ee", "id", Sort.Direction.ASC, "id" ) ), eq( 0 ), eq( 20 ) );
     }
