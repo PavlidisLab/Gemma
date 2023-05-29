@@ -901,18 +901,21 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
      */
     @Nullable
     private <T> T findFirst( Function<ubic.basecode.ontology.providers.OntologyService, T> function ) {
-        BlockingQueue<Future<T>> futures = new ArrayBlockingQueue<>( ontologyServices.size() );
-        ExecutorCompletionService<T> completionService = new ExecutorCompletionService<>( taskExecutor, futures );
+        List<Future<T>> futures = new ArrayList<>( ontologyServices.size() );
+        ExecutorCompletionService<T> completionService = new ExecutorCompletionService<>( taskExecutor );
         for ( ubic.basecode.ontology.providers.OntologyService service : ontologyServices ) {
             if ( service.isOntologyLoaded() ) {
-                completionService.submit( () -> function.apply( service ) );
+                futures.add( completionService.submit( () -> function.apply( service ) ) );
             }
         }
-        if ( futures.isEmpty() ) {
-            return null;
-        }
         try {
-            return completionService.take().get();
+            for ( int i = 0; i < futures.size(); i++ ) {
+                T result = completionService.take().get();
+                if ( result != null ) {
+                    return result;
+                }
+            }
+            return null;
         } catch ( InterruptedException e ) {
             log.warn( "Current thread was interrupted while waiting, will return null.", e );
             Thread.currentThread().interrupt();
@@ -938,7 +941,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
      */
     private <T> Set<T> combineInThreads( Function<ubic.basecode.ontology.providers.OntologyService, Collection<T>> work, List<ubic.basecode.ontology.providers.OntologyService> ontologyServices ) {
         BlockingQueue<Future<Collection<T>>> futures = new ArrayBlockingQueue<>( ontologyServices.size() );
-        ExecutorCompletionService<Collection<T>> completionService = new ExecutorCompletionService<>( taskExecutor, futures );
+        ExecutorCompletionService<Collection<T>> completionService = new ExecutorCompletionService<>( taskExecutor );
         for ( ubic.basecode.ontology.providers.OntologyService os : ontologyServices ) {
             if ( os.isOntologyLoaded() ) {
                 futures.add( completionService.submit( () -> {
@@ -954,24 +957,25 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
             }
         }
         Set<T> children = new HashSet<>();
-        while ( !futures.isEmpty() ) {
-            try {
+        try {
+            for ( int i = 0; i < futures.size(); i++ ) {
                 children.addAll( completionService.take().get() );
-            } catch ( InterruptedException e ) {
-                log.warn( "Current thread was interrupted while waiting, will only return results collected so far.", e );
-                Thread.currentThread().interrupt();
-                return children;
-            } catch ( ExecutionException e ) {
-                // cancel all the remaining futures, this way if an exception occur, we don't needlessly occupy threads
-                // in the pool
-                for ( Future<Collection<T>> future : futures ) {
-                    future.cancel( true );
-                }
-                if ( e.getCause() instanceof RuntimeException ) {
-                    throw ( RuntimeException ) e.getCause();
-                } else {
-                    throw new RuntimeException( e.getCause() );
-                }
+            }
+        } catch ( InterruptedException e ) {
+            log.warn( "Current thread was interrupted while waiting, will only return results collected so far.", e );
+            Thread.currentThread().interrupt();
+            return children;
+        } catch ( ExecutionException e ) {
+            if ( e.getCause() instanceof RuntimeException ) {
+                throw ( RuntimeException ) e.getCause();
+            } else {
+                throw new RuntimeException( e.getCause() );
+            }
+        } finally {
+            // cancel all the remaining futures, this way if an exception occur, we don't needlessly occupy threads
+            // in the pool
+            for ( Future<Collection<T>> future : futures ) {
+                future.cancel( true );
             }
         }
         return children;
