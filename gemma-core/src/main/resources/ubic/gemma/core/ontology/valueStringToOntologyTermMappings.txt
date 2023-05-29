@@ -1,6 +1,5 @@
 # Plain text terms we recognize when loading GEO data, and we map them immediately to an Ontology term
 # the fields are 1. string to be matched; 2. The value 3. ValueUri 4. Category 5. CategoryUri
-# We maintain this data in a spreadsheet: https://docs.google.com/spreadsheets/d/1Oz-2nSMc0J15zLLDY1ZTgIF9oZvW1C0ppGucBpx6M-U
 # Case of the string value is ignored; the category is checked against the type of variable imported, so if it doesn't match what we have here,
 # it won't be mapped.
 # String value	value	valueUri	category	categoryUri
