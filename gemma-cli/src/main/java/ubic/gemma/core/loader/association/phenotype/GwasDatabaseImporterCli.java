@@ -23,6 +23,7 @@ import ubic.gemma.model.genome.Taxon;
 import java.io.BufferedReader;
 import java.io.FileReader;
 
+@Deprecated
 public class GwasDatabaseImporterCli extends ExternalDatabaseEvidenceImporterAbstractCLI {
 
     // name of the external database

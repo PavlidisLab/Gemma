@@ -49,6 +49,7 @@ import java.util.*;
  * @author paul (code originally from Nicolas)
  */
 @CommonsLog
+@Deprecated
 class PhenotypeProcessingUtil {
     // this is where the results and files downloaded are put
     static final String WRITE_FOLDER = Settings.getString( "gemma.appdata.home" ) + File.separator + "Phenocarta";

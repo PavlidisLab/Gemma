@@ -19,13 +19,13 @@ import ubic.basecode.ontology.providers.HumanPhenotypeOntologyService;
 import ubic.basecode.ontology.providers.MedicOntologyService;
 import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.core.genome.gene.service.GeneService;
-import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.core.util.AbstractCLIContextCLI;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 
 /**
  * @author nicolas
  */
+@Deprecated
 public abstract class ExternalDatabaseEvidenceImporterAbstractCLI extends AbstractCLIContextCLI {
 
     protected String writeFolder = null;
