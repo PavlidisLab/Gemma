@@ -6,6 +6,24 @@
             http://www.springframework.org/schema/security
             http://www.springframework.org/schema/security/spring-security.xsd">
 
+	<bean id="httpAccessDecisionManager" class="org.springframework.security.access.vote.AffirmativeBased">
+		<property name="allowIfAllAbstainDecisions" value="true"/>
+		<constructor-arg>
+			<list>
+				<bean class="org.springframework.security.web.access.expression.WebExpressionVoter"/>
+				<ref bean="roleHierarchyVoter"/>
+				<bean class="org.springframework.security.access.vote.AuthenticatedVoter"/> <!-- so we can use 'IS_AUTHENTICATED_ANONYMOUSLY in security (as opposed to ROLE_ANONYMOUS) -->
+			</list>
+		</constructor-arg>
+	</bean>
+
+	<!-- For use with access tags -->
+	<bean id="defaultWebSecurityExpressionHandler"
+		  class="org.springframework.security.web.access.expression.DefaultWebSecurityExpressionHandler">
+		<property name="permissionEvaluator" ref="permissionEvaluator"/>
+		<property name="roleHierarchy" ref="roleHierarchy"/>
+	</bean>
+
 	<bean id="ajaxAuthenticationSuccessHandler" class="gemma.gsec.authentication.AjaxAuthenticationSuccessHandler">
 		<property name="alwaysUseDefaultTargetUrl" value="false"/>
 	</bean>
@@ -14,7 +32,9 @@
 		<property name="defaultFailureUrl" value="/login.jsp"/>
 	</bean>
 
-	<bean id="restAuthEntryPoint" class="ubic.gemma.web.services.rest.security.RestAuthEntryPoint"/>
+	<bean id="restAuthEntryPoint" class="ubic.gemma.web.services.rest.security.RestAuthEntryPoint">
+		<constructor-arg ref="objectMapper"/>
+	</bean>
 
 	<s:http access-decision-manager-ref="httpAccessDecisionManager" pattern="/rest/v2/**"
 			entry-point-ref="restAuthEntryPoint" realm="Gemma RESTful API">

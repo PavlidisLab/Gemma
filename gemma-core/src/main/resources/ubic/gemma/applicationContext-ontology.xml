@@ -52,4 +52,7 @@
     <bean id="patoOntologyService" class="ubic.gemma.core.ontology.providers.OntologyServiceFactory">
         <constructor-arg value="ubic.gemma.core.ontology.providers.PatoOntologyService"/>
     </bean>
+    <bean id="mondoOntologyService" class="ubic.gemma.core.ontology.providers.OntologyServiceFactory">
+        <constructor-arg value="ubic.gemma.core.ontology.providers.MondoOntologyService"/>
+    </bean>
 </beans>

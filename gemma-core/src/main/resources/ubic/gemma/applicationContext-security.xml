@@ -15,26 +15,13 @@
             http://www.springframework.org/schema/aop
             http://www.springframework.org/schema/aop/spring-aop.xsd">
 
-    <bean id="authenticationLoggerListener" class="org.springframework.security.authentication.event.LoggerListener"/>
-
-    <!-- For use with access tags -->
-    <bean id="defaultWebSecurityExpressionHandler"
-          class="org.springframework.security.web.access.expression.DefaultWebSecurityExpressionHandler"/>
+    <!-- import gsec definitions -->
+    <import resource="classpath:gemma/gsec/applicationContext-*.xml"/>
 
     <!-- works with the HttpSessionEventPublisher configured in web.xml -->
     <bean id="sessionRegistry" class="org.springframework.security.core.session.SessionRegistryImpl"/>
 
-
-    <bean id="httpAccessDecisionManager" class="org.springframework.security.access.vote.AffirmativeBased">
-        <property name="allowIfAllAbstainDecisions" value="true"/>
-        <constructor-arg>
-            <list>
-                <bean class="org.springframework.security.web.access.expression.WebExpressionVoter"/>
-                <ref bean="roleHierarchyVoter"/>
-                <bean class="org.springframework.security.access.vote.AuthenticatedVoter"/> <!-- so we can use 'IS_AUTHENTICATED_ANONYMOUSLY in security (as opposed to ROLE_ANONYMOUS) -->
-            </list>
-        </constructor-arg>
-    </bean>
+    <bean id="authenticationLoggerListener" class="org.springframework.security.authentication.event.LoggerListener"/>
 
     <s:authentication-manager alias="authenticationManager">
         <s:authentication-provider user-service-ref="userManager">

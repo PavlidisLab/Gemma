@@ -3,12 +3,15 @@ package ubic.gemma.core.search.source;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.lang3.time.StopWatch;
 import org.compass.core.*;
+import org.compass.core.engine.SearchEngineException;
+import org.compass.core.engine.SearchEngineHits;
 import org.compass.core.engine.SearchEngineQueryParseException;
 import org.compass.core.mapping.CompassMapping;
 import org.compass.core.mapping.Mapping;
 import org.compass.core.mapping.ResourceMapping;
 import org.compass.core.mapping.osem.ClassMapping;
 import org.compass.core.mapping.osem.ComponentMapping;
+import org.compass.core.spi.InternalCompassHits;
 import org.compass.core.spi.InternalCompassSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -327,12 +330,19 @@ public class CompassSearchSource implements SearchSource {
                 } else { // should be a ClassPropertyMapping
                     String name = m.getName();
                     for ( int i = 0; i < maxHits; i++ ) {
+                        SearchEngineHits seh = ( ( InternalCompassHits ) hits ).getSearchEngineHits();
+                        String frag;
                         try {
-                            String frag = hits.highlighter( i ).fragment( name );
+                            frag = seh.getHighlighter().fragment( seh.getResource( i ), name );
+                        } catch ( SearchEngineException e ) {
+                            continue;
+                        }
+                        if ( frag != null ) {
+                            ( ( InternalCompassHits ) hits ).setHighlightedText( i, name, frag );
                             if ( log.isDebugEnabled() )
                                 log.debug( "Highlighted fragment: " + frag + " for " + hits.hit( i ) );
-                        } catch ( Exception e ) {
-                            break; // skip this property entirely for all hits ...
+                        } else {
+                            log.debug( "Fragment for %s is null." );
                         }
                     }
                 }

@@ -4,15 +4,15 @@
 # Case of the string value is ignored; the category is checked against the type of variable imported, so if it doesn't match what we have here,
 # it won't be mapped.
 # String value	value	valueUri	category	categoryUri
-126S6/SvEvTac	129S6/SvEvTac	http://purl.obolibrary.org/obo/TGEMO_00048	strain	http://www.ebi.ac.uk/efo/EFO_0005135
-129	129	http://purl.obolibrary.org/obo/TGEMO_00034	strain	http://www.ebi.ac.uk/efo/EFO_0005135
-129/Sv	129S/SvEv	http://purl.obolibrary.org/obo/TGEMO_00036	strain	http://www.ebi.ac.uk/efo/EFO_0005135
-129SV	129/Sv	http://purl.obolibrary.org/obo/TGEMO_00035	strain	http://www.ebi.ac.uk/efo/EFO_0005135
+126S6/SvEvTac	129S6/SvEvTac	http://gemma.msl.ubc.ca/ont/TGEMO_00048	strain	http://www.ebi.ac.uk/efo/EFO_0005135
+129	129	http://gemma.msl.ubc.ca/ont/TGEMO_00034	strain	http://www.ebi.ac.uk/efo/EFO_0005135
+129/Sv	129S/SvEv	http://gemma.msl.ubc.ca/ont/TGEMO_00036	strain	http://www.ebi.ac.uk/efo/EFO_0005135
+129SV	129/Sv	http://gemma.msl.ubc.ca/ont/TGEMO_00035	strain	http://www.ebi.ac.uk/efo/EFO_0005135
 17beta-estradiol	17beta-estradiol	http://purl.obolibrary.org/obo/CHEBI_16469	treatment	http://www.ebi.ac.uk/efo/EFO_0000727
-A/J	A/J	http://purl.obolibrary.org/obo/TGEMO_00093	strain	http://www.ebi.ac.uk/efo/EFO_0005135
+A/J	A/J	http://gemma.msl.ubc.ca/ont/TGEMO_00093	strain	http://www.ebi.ac.uk/efo/EFO_0005135
 A549	A549 cell	http://purl.obolibrary.org/obo/CLO_0001601	cell line	http://purl.obolibrary.org/obo/CLO_0000031
-A549 cells	A549 cell	http://purl.obolibrary.org/obo/CLO_0001601	cell line	http://www.ebi.ac.uk/efo/EFO_0000322
-A549 epithelial cells	A549 cell	http://purl.obolibrary.org/obo/CLO_0001601	cell line	http://www.ebi.ac.uk/efo/EFO_0000322
+A549 cells	A549 cell	http://purl.obolibrary.org/obo/CLO_0001601	cell line	http://purl.obolibrary.org/obo/CLO_0000031
+A549 epithelial cells	A549 cell	http://purl.obolibrary.org/obo/CLO_0001601	cell line	http://purl.obolibrary.org/obo/CLO_0000031
 abdominal subcutaneous adipose tissue	abdominal subcutaneous adipose tissue	http://purl.obolibrary.org/obo/UBERON_0014455	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
 ActD	actinomycin D	http://purl.obolibrary.org/obo/CHEBI_27666	treatment	http://www.ebi.ac.uk/efo/EFO_0000408
 active tuberculosis	tuberculosis	http://purl.obolibrary.org/obo/DOID_399	disease	http://www.ebi.ac.uk/efo/EFO_0000408
@@ -30,14 +30,14 @@ Adrenal Gland	adrenal gland	http://purl.obolibrary.org/obo/UBERON_0002369	organi
 Adrenocortical Carcinoma	adrenocortical carcinoma	http://purl.obolibrary.org/obo/DOID_3948	disease	http://www.ebi.ac.uk/efo/EFO_0000408
 adult	adult	http://www.ebi.ac.uk/efo/EFO_0001272	developmental stage	http://www.ebi.ac.uk/efo/EFO_0000399
 Adult Head	head	http://purl.obolibrary.org/obo/UBERON_0000033	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
-African American	African American	http://www.ebi.ac.uk/efo/EFO_0003150	population	http://purl.obolibrary.org/obo/OBI_0000181
-AKR/J	AKR/J	http://purl.obolibrary.org/obo/TGEMO_00024	strain	http://www.ebi.ac.uk/efo/EFO_0005135
+African American	African American	http://purl.obolibrary.org/obo/HANCESTRO_0568	population	http://purl.obolibrary.org/obo/OBI_0000181
+AKR/J	AKR/J	http://gemma.msl.ubc.ca/ont/TGEMO_00024	strain	http://www.ebi.ac.uk/efo/EFO_0005135
 Amygdala	amygdala	http://purl.obolibrary.org/obo/UBERON_0001876	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
 anterior cingulate	anterior cingulate gyrus	http://purl.obolibrary.org/obo/UBERON_0002756	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
 Aorta	aorta	http://purl.obolibrary.org/obo/UBERON_0000947	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
 arcuate nucleus	arcuate nucleus of hypothalamus	http://purl.obolibrary.org/obo/UBERON_0001932	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
 articular cartilage	articular cartilage of joint	http://purl.obolibrary.org/obo/UBERON_0010996	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
-Asain	Asian	http://www.ebi.ac.uk/efo/EFO_0003152	population	http://purl.obolibrary.org/obo/OBI_0000181
+Asain	Asian	http://purl.obolibrary.org/obo/HANCESTRO_0008	population	http://purl.obolibrary.org/obo/OBI_0000181
 Asthma	asthma	http://purl.obolibrary.org/obo/DOID_2841	disease	http://www.ebi.ac.uk/efo/EFO_0000408
 astrocyte	astrocyte	http://purl.obolibrary.org/obo/CL_0000127	cell type	http://www.ebi.ac.uk/efo/EFO_0000324
 astrocytes	astrocyte	http://purl.obolibrary.org/obo/CL_0000127	cell type	http://www.ebi.ac.uk/efo/EFO_0000324
@@ -46,12 +46,12 @@ Autism	autistic disorder	http://purl.obolibrary.org/obo/DOID_12849	disease	http:
 B cell	B cell	http://purl.obolibrary.org/obo/CL_0000236	cell type	http://www.ebi.ac.uk/efo/EFO_0000324
 B cells	B cell	http://purl.obolibrary.org/obo/CL_0000236	cell type	http://www.ebi.ac.uk/efo/EFO_0000324
 B-cell lymphoma	B-cell lymphoma	http://purl.obolibrary.org/obo/DOID_707	disease	http://www.ebi.ac.uk/efo/EFO_0000408
-B6	C57BL/6	http://purl.obolibrary.org/obo/TGEMO_00016	strain	http://www.ebi.ac.uk/efo/EFO_0005135
+B6	C57BL/6	http://gemma.msl.ubc.ca/ont/TGEMO_00016	strain	http://www.ebi.ac.uk/efo/EFO_0005135
 B6C3F1	B6C3F1	http://www.ebi.ac.uk/efo/EFO_0001340	strain	http://www.ebi.ac.uk/efo/EFO_0005135
-BALB	BALB/c	http://purl.obolibrary.org/obo/TGEMO_00026	strain	http://www.ebi.ac.uk/efo/EFO_0005135
-BALB/c	BALB/c	http://purl.obolibrary.org/obo/TGEMO_00026	strain	http://www.ebi.ac.uk/efo/EFO_0005138
-BALB/cJ	BALB/cJ	http://purl.obolibrary.org/obo/TGEMO_00028	strain	http://www.ebi.ac.uk/efo/EFO_0005135
-BEAS-2B	BEAS-2B cell	http://purl.obolibrary.org/obo/CLO_0001925	cell line	http://www.ebi.ac.uk/efo/EFO_0000322
+BALB	BALB/c	http://gemma.msl.ubc.ca/ont/TGEMO_00026	strain	http://www.ebi.ac.uk/efo/EFO_0005135
+BALB/c	BALB/c	http://gemma.msl.ubc.ca/ont/TGEMO_00026	strain	http://www.ebi.ac.uk/efo/EFO_0005138
+BALB/cJ	BALB/cJ	http://gemma.msl.ubc.ca/ont/TGEMO_00028	strain	http://www.ebi.ac.uk/efo/EFO_0005135
+BEAS-2B	BEAS-2B cell	http://purl.obolibrary.org/obo/CLO_0001925	cell line	http://purl.obolibrary.org/obo/CLO_0000031
 Biceps	biceps brachii	http://purl.obolibrary.org/obo/UBERON_0001507	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
 bipolar	bipolar disorder	http://purl.obolibrary.org/obo/DOID_3312	disease	http://www.ebi.ac.uk/efo/EFO_0000408
 bipolar disorder	bipolar disorder	http://purl.obolibrary.org/obo/DOID_3312	disease	http://www.ebi.ac.uk/efo/EFO_0000408
@@ -89,23 +89,23 @@ Bronchial Epithelium	epithelium of bronchus	http://purl.obolibrary.org/obo/UBERO
 Brown Adipose Tissue	brown adipose tissue	http://purl.obolibrary.org/obo/UBERON_0001348	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
 Brown Norway	Brown Norway	http://www.ebi.ac.uk/efo/EFO_0005290	strain	http://www.ebi.ac.uk/efo/EFO_0005135
 buccal mucosa	buccal mucosa	http://purl.obolibrary.org/obo/UBERON_0006956	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
-C	Caucasian	http://www.ebi.ac.uk/efo/EFO_0003156	population	http://purl.obolibrary.org/obo/OBI_0000181
+C	Caucasian	http://purl.obolibrary.org/obo/HANCESTRO_0005	population	http://purl.obolibrary.org/obo/OBI_0000181
 C2C12	RCB0987 cell	http://purl.obolibrary.org/obo/CLO_0050871	cell line	http://purl.obolibrary.org/obo/CLO_0000031
-C3H	Sprague Dawley	http://purl.obolibrary.org/obo/TGEMO_00053	strain	http://www.ebi.ac.uk/efo/EFO_0005135
-C3H/HeJ	C3H/HeJ	http://purl.obolibrary.org/obo/TGEMO_00055	strain	http://www.ebi.ac.uk/efo/EFO_0005135
-C56BL/6J	C57BL/6J	http://purl.obolibrary.org/obo/TGEMO_00037	strain	http://www.ebi.ac.uk/efo/EFO_0005135
-C57/B6	C57BL/6	http://purl.obolibrary.org/obo/TGEMO_00016	strain	http://www.ebi.ac.uk/efo/EFO_0005135
-C57/BL6	C57BL/6	http://purl.obolibrary.org/obo/TGEMO_00016	strain	http://www.ebi.ac.uk/efo/EFO_0005138
-C57B6	C57BL/6	http://purl.obolibrary.org/obo/TGEMO_00016	strain	http://www.ebi.ac.uk/efo/EFO_0005135
-C57BL	C57BL/6	http://purl.obolibrary.org/obo/TGEMO_00016	strain	http://www.ebi.ac.uk/efo/EFO_0005135
-c57bl/6	C57BL/6	http://purl.obolibrary.org/obo/TGEMO_00016	strain	http://www.ebi.ac.uk/efo/EFO_0005138
-C57BL/6	C57BL/6	http://purl.obolibrary.org/obo/TGEMO_00016	strain	http://www.ebi.ac.uk/efo/EFO_0005135
-C57BL/6J	C57BL/6J	http://purl.obolibrary.org/obo/TGEMO_00037	strain	http://www.ebi.ac.uk/efo/EFO_0005138
-C57BL/6J mouse	C57BL/6J	http://purl.obolibrary.org/obo/TGEMO_00037	strain	http://www.ebi.ac.uk/efo/EFO_0005135
-C57BL/6N	C57BL/6	http://purl.obolibrary.org/obo/TGEMO_00016	strain	http://www.ebi.ac.uk/efo/EFO_0005135
-C57BL6	C57BL/6	http://purl.obolibrary.org/obo/TGEMO_00016	strain	http://www.ebi.ac.uk/efo/EFO_0005135
-C57BL6/J	C57BL/6J	http://purl.obolibrary.org/obo/TGEMO_00037	strain	http://www.ebi.ac.uk/efo/EFO_0005135
-C57BL6J	C57BL/6J	http://purl.obolibrary.org/obo/TGEMO_00037	strain	http://www.ebi.ac.uk/efo/EFO_0005135
+C3H	Sprague Dawley	http://gemma.msl.ubc.ca/ont/TGEMO_00053	strain	http://www.ebi.ac.uk/efo/EFO_0005135
+C3H/HeJ	C3H/HeJ	http://gemma.msl.ubc.ca/ont/TGEMO_00055	strain	http://www.ebi.ac.uk/efo/EFO_0005135
+C56BL/6J	C57BL/6J	http://gemma.msl.ubc.ca/ont/TGEMO_00037	strain	http://www.ebi.ac.uk/efo/EFO_0005135
+C57/B6	C57BL/6	http://gemma.msl.ubc.ca/ont/TGEMO_00016	strain	http://www.ebi.ac.uk/efo/EFO_0005135
+C57/BL6	C57BL/6	http://gemma.msl.ubc.ca/ont/TGEMO_00016	strain	http://www.ebi.ac.uk/efo/EFO_0005138
+C57B6	C57BL/6	http://gemma.msl.ubc.ca/ont/TGEMO_00016	strain	http://www.ebi.ac.uk/efo/EFO_0005135
+C57BL	C57BL/6	http://gemma.msl.ubc.ca/ont/TGEMO_00016	strain	http://www.ebi.ac.uk/efo/EFO_0005135
+c57bl/6	C57BL/6	http://gemma.msl.ubc.ca/ont/TGEMO_00016	strain	http://www.ebi.ac.uk/efo/EFO_0005138
+C57BL/6	C57BL/6	http://gemma.msl.ubc.ca/ont/TGEMO_00016	strain	http://www.ebi.ac.uk/efo/EFO_0005135
+C57BL/6J	C57BL/6J	http://gemma.msl.ubc.ca/ont/TGEMO_00037	strain	http://www.ebi.ac.uk/efo/EFO_0005138
+C57BL/6J mouse	C57BL/6J	http://gemma.msl.ubc.ca/ont/TGEMO_00037	strain	http://www.ebi.ac.uk/efo/EFO_0005135
+C57BL/6N	C57BL/6	http://gemma.msl.ubc.ca/ont/TGEMO_00016	strain	http://www.ebi.ac.uk/efo/EFO_0005135
+C57BL6	C57BL/6	http://gemma.msl.ubc.ca/ont/TGEMO_00016	strain	http://www.ebi.ac.uk/efo/EFO_0005135
+C57BL6/J	C57BL/6J	http://gemma.msl.ubc.ca/ont/TGEMO_00037	strain	http://www.ebi.ac.uk/efo/EFO_0005135
+C57BL6J	C57BL/6J	http://gemma.msl.ubc.ca/ont/TGEMO_00037	strain	http://www.ebi.ac.uk/efo/EFO_0005135
 CA1 hippocampal subregion	CA1 field of hippocampus	http://purl.obolibrary.org/obo/UBERON_0003881	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
 CA1 hippocampus	CA1 field of hippocampus	http://purl.obolibrary.org/obo/UBERON_0003881	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
 Caffeine	caffeine	http://purl.obolibrary.org/obo/CHEBI_27732	treatment	http://www.ebi.ac.uk/efo/EFO_0000727
@@ -113,13 +113,13 @@ Calu-3	Calu-3 cell	http://purl.obolibrary.org/obo/CLO_0002192	cell line	http://p
 cancer	cancer	http://purl.obolibrary.org/obo/DOID_162	disease	http://www.ebi.ac.uk/efo/EFO_0000408
 cancer tumor	cancer	http://purl.obolibrary.org/obo/DOID_162	disease	http://www.ebi.ac.uk/efo/EFO_0000408
 Canton S	Canton S	http://www.ebi.ac.uk/efo/EFO_0001325	strain	http://www.ebi.ac.uk/efo/EFO_0005135
-CAU	Caucasian	http://www.ebi.ac.uk/efo/EFO_0003156	population	http://purl.obolibrary.org/obo/OBI_0000181
-caucasian	Caucasian	http://www.ebi.ac.uk/efo/EFO_0003156	population	http://purl.obolibrary.org/obo/OBI_0000181
-Caucasian origin	Caucasian	http://www.ebi.ac.uk/efo/EFO_0003156	population	http://purl.obolibrary.org/obo/OBI_0000181
+CAU	European	http://purl.obolibrary.org/obo/HANCESTRO_0005	population	http://purl.obolibrary.org/obo/OBI_0000181
+caucasian	European	http://purl.obolibrary.org/obo/HANCESTRO_0005	population	http://purl.obolibrary.org/obo/OBI_0000181
+Caucasian origin	European	http://purl.obolibrary.org/obo/HANCESTRO_0005	population	http://purl.obolibrary.org/obo/OBI_0000181
 CBA/CaJ	CBA/CaJ	http://www.ebi.ac.uk/efo/EFO_0001336	strain	http://www.ebi.ac.uk/efo/EFO_0005135
 CBA/J	CBA/J	http://www.ebi.ac.uk/efo/EFO_0007735	strain	http://www.ebi.ac.uk/efo/EFO_0005135
-CD-1	Crl:CD1(ICR)	http://purl.obolibrary.org/obo/TGEMO_00025	strain	http://www.ebi.ac.uk/efo/EFO_0005135
-CD1	Crl:CD1(ICR)	http://purl.obolibrary.org/obo/TGEMO_00025	strain	http://www.ebi.ac.uk/efo/EFO_0005135
+CD-1	Crl:CD1(ICR)	http://gemma.msl.ubc.ca/ont/TGEMO_00025	strain	http://www.ebi.ac.uk/efo/EFO_0005135
+CD1	Crl:CD1(ICR)	http://gemma.msl.ubc.ca/ont/TGEMO_00025	strain	http://www.ebi.ac.uk/efo/EFO_0005135
 CD34+ mononuclear	mononuclear cell	http://purl.obolibrary.org/obo/CL_0000842	cell type	http://www.ebi.ac.uk/efo/EFO_0000324
 CD4+ lymphocyte	CD4-positive, alpha-beta T cell	http://purl.obolibrary.org/obo/CL_0000624	cell type	http://www.ebi.ac.uk/efo/EFO_0000324
 CD4+ T cell	CD4-positive, alpha-beta T cell	http://purl.obolibrary.org/obo/CL_0000624	cell type	http://www.ebi.ac.uk/efo/EFO_0000324
@@ -163,12 +163,12 @@ control	reference substance role	http://purl.obolibrary.org/obo/OBI_0000025	diet
 copd	chronic obstructive pulmonary disease	http://purl.obolibrary.org/obo/DOID_3083	disease	http://www.ebi.ac.uk/efo/EFO_0000408
 Cord blood	umbilical cord blood	http://purl.obolibrary.org/obo/UBERON_0012168	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
 Cortex	cerebral cortex	http://purl.obolibrary.org/obo/UBERON_0000956	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
-Cortical neuron	neuron of cerebral cortex	http://purl.obolibrary.org/obo/CL_0002609	cell type	http://www.ebi.ac.uk/efo/EFO_0000324
-Cortical neurons	neuron of cerebral cortex	http://purl.obolibrary.org/obo/CL_0002609	cell type	http://www.ebi.ac.uk/efo/EFO_0000324
-Cultured cortical neurons	neuron of cerebral cortex	http://purl.obolibrary.org/obo/CL_0002609	cell type	http://www.ebi.ac.uk/efo/EFO_0000324
+Cortical neuron	cerebral cortex neuron	http://purl.obolibrary.org/obo/CL_0010012	cell type	http://www.ebi.ac.uk/efo/EFO_0000324
+Cortical neurons	cerebral cortex neuron	http://purl.obolibrary.org/obo/CL_0010012	cell type	http://www.ebi.ac.uk/efo/EFO_0000324
+Cultured cortical neurons	cerebral cortex neuron	http://purl.obolibrary.org/obo/CL_0010012	cell type	http://www.ebi.ac.uk/efo/EFO_0000324
 Cultured organotypic cerebellar slices	cerebellum	http://purl.obolibrary.org/obo/UBERON_0002037	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
 Cultured postnatal astrocytes from cerebral cortex	astrocyte of the cerebral cortex	http://purl.obolibrary.org/obo/CL_0002605	cell type	http://www.ebi.ac.uk/efo/EFO_0000324
-DBA	DBA	http://purl.obolibrary.org/obo/TGEMO_00019	strain	http://www.ebi.ac.uk/efo/EFO_0005135
+DBA	DBA	http://gemma.msl.ubc.ca/ont/TGEMO_00019	strain	http://www.ebi.ac.uk/efo/EFO_0005135
 Dead	death stage	http://purl.obolibrary.org/obo/UBERON_0000071	environmental history	http://www.ebi.ac.uk/efo/EFO_0004444
 Dechorionated embryo	embryo	http://purl.obolibrary.org/obo/UBERON_0000922	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
 deltoid	deltoid	http://purl.obolibrary.org/obo/UBERON_0001476	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
@@ -197,7 +197,7 @@ doxycycline	doxycycline	http://purl.obolibrary.org/obo/CHEBI_50845	treatment	htt
 DRG	dorsal root ganglion	http://purl.obolibrary.org/obo/UBERON_0000044	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
 EBV-transformed B lymphocytes	lymphoblastoid cell line	http://www.ebi.ac.uk/efo/EFO_0005292	cell line	http://purl.obolibrary.org/obo/CLO_0000031
 EBV-transformed lymphoblastoid cells	lymphoblastoid cell line	http://www.ebi.ac.uk/efo/EFO_0005292	cell line	http://purl.obolibrary.org/obo/CLO_0000031
-ECC-1	ECC-1 cell	http://purl.obolibrary.org/obo/CLO_0037231	cell line	http://www.ebi.ac.uk/efo/EFO_0000322
+ECC-1	ECC-1 cell	http://purl.obolibrary.org/obo/CLO_0037231	cell line	http://purl.obolibrary.org/obo/CLO_0000031
 embryo	embryo stage	http://purl.obolibrary.org/obo/UBERON_0000068	developmental stage	http://www.ebi.ac.uk/efo/EFO_0000399
 embryonic fibroblast	embryonic fibroblast	http://purl.obolibrary.org/obo/CL_2000042	cell type	http://www.ebi.ac.uk/efo/EFO_0000324
 embryonic fibroblasts	embryonic fibroblast	http://purl.obolibrary.org/obo/CL_2000042	cell type	http://www.ebi.ac.uk/efo/EFO_0000324
@@ -222,7 +222,7 @@ esophageal squamous cell carcinoma	esophagus squamous cell carcinoma	http://purl
 Esophagus	esophagus	http://purl.obolibrary.org/obo/UBERON_0001043	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
 esphageal squamous cell carcinoma	espohagus squamous cell carcinoma	http://purl.obolibrary.org/obo/DOID_3748	disease	http://www.ebi.ac.uk/efo/EFO_0000408
 ethanol	ethanol	http://purl.obolibrary.org/obo/CHEBI_16236	treatment	http://www.ebi.ac.uk/efo/EFO_0000727
-European	Caucasian	http://www.ebi.ac.uk/efo/EFO_0003156	population	http://purl.obolibrary.org/obo/OBI_0000181
+European	European	http://purl.obolibrary.org/obo/HANCESTRO_0005	population	http://purl.obolibrary.org/obo/OBI_0000181
 F	female	http://purl.obolibrary.org/obo/PATO_0000383	biological sex	http://purl.obolibrary.org/obo/PATO_0000047
 F344	Fischer 344	http://www.ebi.ac.uk/efo/EFO_0000176	strain	http://www.ebi.ac.uk/efo/EFO_0005135
 FEM	female	http://purl.obolibrary.org/obo/PATO_0000383	biological sex	http://purl.obolibrary.org/obo/PATO_0000047
@@ -244,10 +244,10 @@ frozen breast tissue	breast	http://purl.obolibrary.org/obo/UBERON_0000310	organi
 frozen tissue of ovarian tumors	ovarian cancer	http://purl.obolibrary.org/obo/DOID_2394	disease	http://www.ebi.ac.uk/efo/EFO_0000408
 frozen tissue of primary breast tumors	breast cancer	http://purl.obolibrary.org/obo/DOID_1612	disease	http://www.ebi.ac.uk/efo/EFO_0000408
 full-thickness colon	colon	http://purl.obolibrary.org/obo/UBERON_0001155	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
-fvb	FVB	http://purl.obolibrary.org/obo/TGEMO_00041	strain	http://www.ebi.ac.uk/efo/EFO_0005135
-FVB	FVB	http://purl.obolibrary.org/obo/TGEMO_00041	strain	http://www.ebi.ac.uk/efo/EFO_0005135
-fvb/n	FVB/N	http://purl.obolibrary.org/obo/TGEMO_00042	strain	http://www.ebi.ac.uk/efo/EFO_0005137
-fvb/nj	FVB/NJ	http://purl.obolibrary.org/obo/TGEMO_00043	strain	http://www.ebi.ac.uk/efo/EFO_0005136
+fvb	FVB	http://gemma.msl.ubc.ca/ont/TGEMO_00041	strain	http://www.ebi.ac.uk/efo/EFO_0005135
+FVB	FVB	http://gemma.msl.ubc.ca/ont/TGEMO_00041	strain	http://www.ebi.ac.uk/efo/EFO_0005135
+fvb/n	FVB/N	http://gemma.msl.ubc.ca/ont/TGEMO_00042	strain	http://www.ebi.ac.uk/efo/EFO_0005137
+fvb/nj	FVB/NJ	http://gemma.msl.ubc.ca/ont/TGEMO_00043	strain	http://www.ebi.ac.uk/efo/EFO_0005136
 gactrocnemius muscle	gastrocnemius	http://purl.obolibrary.org/obo/UBERON_0001388	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
 gastric adenocarcinoma	gastric adenocarcinoma	http://purl.obolibrary.org/obo/DOID_3717	disease	http://www.ebi.ac.uk/efo/EFO_0000408
 gastric cancer	stomach cancer	http://purl.obolibrary.org/obo/DOID_10534	disease	http://www.ebi.ac.uk/efo/EFO_0000408
@@ -257,7 +257,7 @@ genistein	genistein	http://purl.obolibrary.org/obo/CHEBI_28088	treatment	http://
 GIST Tumor	gastrointestinal stromal tumor	http://purl.obolibrary.org/obo/DOID_9253	disease	http://www.ebi.ac.uk/efo/EFO_0000408
 Glioblastoma	glioblastoma	http://purl.obolibrary.org/obo/DOID_3068	disease	http://www.ebi.ac.uk/efo/EFO_0000408
 Glioblastoma multiforme	glioblastoma multiforme	http://purl.obolibrary.org/obo/DOID_3068	disease	http://www.ebi.ac.uk/efo/EFO_0000408
-glioma	malignant glioma	http://purl.obolibrary.org/obo/DOID_3070	disease	http://www.ebi.ac.uk/efo/EFO_0000408
+glioma	high grade glioma	http://purl.obolibrary.org/obo/DOID_3070	disease	http://www.ebi.ac.uk/efo/EFO_0000408
 granule cell	granule cell	http://purl.obolibrary.org/obo/CL_0000120	cell type	http://www.ebi.ac.uk/efo/EFO_0000324
 H9	H9 ES cell	http://purl.obolibrary.org/obo/CLO_0037313	cell line	http://purl.obolibrary.org/obo/CLO_0000031
 HCT116	HCT 116 cell	http://purl.obolibrary.org/obo/CLO_0003665	cell line	http://purl.obolibrary.org/obo/CLO_0000031
@@ -269,13 +269,13 @@ healthy volunteers	reference subject role	http://purl.obolibrary.org/obo/OBI_000
 Heart	heart	http://purl.obolibrary.org/obo/UBERON_0000948	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
 heart left ventricle	cardiac ventricle	http://purl.obolibrary.org/obo/UBERON_0002082	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
 HEK293T	RCB2202 cell	http://purl.obolibrary.org/obo/CLO_0050894	cell line	http://purl.obolibrary.org/obo/CLO_0000031
-HeLa	HeLa	http://purl.obolibrary.org/obo/CLO_0050910	cell line	http://www.ebi.ac.uk/efo/EFO_0000322
+HeLa	HeLa	http://purl.obolibrary.org/obo/CLO_0050910	cell line	http://purl.obolibrary.org/obo/CLO_0000031
 hepatocellular carcinoma	hepatocellular carcinoma	http://purl.obolibrary.org/obo/DOID_684	disease	http://www.ebi.ac.uk/efo/EFO_0000408
 hepatocellular carcinoma (HCC)	hepatocellular carcinoma	http://purl.obolibrary.org/obo/DOID_684	disease	http://www.ebi.ac.uk/efo/EFO_0000408
 hepatocyte	hepatocyte	http://purl.obolibrary.org/obo/CL_0000182	cell type	http://www.ebi.ac.uk/efo/EFO_0000324
 hepatocytes	hepatocyte	http://purl.obolibrary.org/obo/CL_0000182	cell type	http://www.ebi.ac.uk/efo/EFO_0000324
 HepG2	Hep G2 cell	http://purl.obolibrary.org/obo/CLO_0003704	cell line	http://purl.obolibrary.org/obo/CLO_0000031
-HepG2 cells	Hep G2 cell	http://purl.obolibrary.org/obo/CLO_0003704	cell line	http://www.ebi.ac.uk/efo/EFO_0000322
+HepG2 cells	Hep G2 cell	http://purl.obolibrary.org/obo/CLO_0003704	cell line	http://purl.obolibrary.org/obo/CLO_0000031
 hermaphrodite	hermaphrodite	http://purl.obolibrary.org/obo/PATO_0001340	biological sex	http://purl.obolibrary.org/obo/PATO_0000047
 high fat	high fat diet	http://www.ebi.ac.uk/efo/EFO_0002757	diet	http://www.ebi.ac.uk/efo/EFO_0002755
 hindbrain	hindbrain	http://purl.obolibrary.org/obo/UBERON_0002028	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
@@ -284,7 +284,7 @@ hippocampal neurons	hippocampal neuron	http://purl.obolibrary.org/obo/CL_0002608
 hippocampal tissue	Ammon's horn	http://purl.obolibrary.org/obo/UBERON_0001954	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
 Hippocampus	Ammon's horn	http://purl.obolibrary.org/obo/UBERON_0001954	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
 hippocampus (CA1 region)	CA1 field of hippocampus	http://purl.obolibrary.org/obo/UBERON_0003881	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
-hispanic	Hispanic	http://www.ebi.ac.uk/efo/EFO_0003169	population	http://purl.obolibrary.org/obo/OBI_0000181
+hispanic	Hispanic or Latin American	http://purl.obolibrary.org/obo/HANCESTRO_0014	population	http://purl.obolibrary.org/obo/OBI_0000181
 HIV positive	human immunodeficiency virus infectious disease	http://purl.obolibrary.org/obo/DOID_526	disease	http://www.ebi.ac.uk/efo/EFO_0000408
 Huh7	Huh7 cell	http://purl.obolibrary.org/obo/CLO_0009989	cell line	http://purl.obolibrary.org/obo/CLO_0000031
 human adipose tissue	adipose tissue	http://purl.obolibrary.org/obo/UBERON_0001013	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
@@ -294,15 +294,15 @@ Human Brain (BA10)	brain	http://purl.obolibrary.org/obo/UBERON_0000955	organism 
 HUVEC	HUV-EC-C cell	http://purl.obolibrary.org/obo/CLO_0004307	cell line	http://purl.obolibrary.org/obo/CLO_0000031
 hypothalamic arcuate nucleus	arcuate nucleus of hypothalamus	http://purl.obolibrary.org/obo/UBERON_0001932	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
 hypothalamus	hypothalamus	http://purl.obolibrary.org/obo/UBERON_0001898	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
-ICR	Crl:CD1(ICR)	http://purl.obolibrary.org/obo/TGEMO_00025	strain	http://www.ebi.ac.uk/efo/EFO_0005135
-IL10-/-	Homozygous negative	http://purl.obolibrary.org/obo/TGEMO_00001	genotype	http://www.ebi.ac.uk/efo/EFO_0000513
+ICR	Crl:CD1(ICR)	http://gemma.msl.ubc.ca/ont/TGEMO_00025	strain	http://www.ebi.ac.uk/efo/EFO_0005135
+IL10-/-	Homozygous negative	http://gemma.msl.ubc.ca/ont/TGEMO_00001	genotype	http://www.ebi.ac.uk/efo/EFO_0000513
 Ileal biopsy	ileum	http://purl.obolibrary.org/obo/UBERON_0002116	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
 Ileum	ileum	http://purl.obolibrary.org/obo/UBERON_0002116	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
 Immortalized human bronchial epithelial cells	immortal human epithelial cell line cell	http://purl.obolibrary.org/obo/CLO_0000563	cell line	http://purl.obolibrary.org/obo/CLO_0000031
 immune cells	leukocyte	http://purl.obolibrary.org/obo/CL_0000738	cell type	http://www.ebi.ac.uk/efo/EFO_0000324
 IMR90	IMR-90 cell	http://purl.obolibrary.org/obo/CLO_0006951	cell line	http://purl.obolibrary.org/obo/CLO_0000031
 induced pluripotent stem cells	induced pluripotent stem cell	http://www.ebi.ac.uk/efo/EFO_0004905	cell type	http://www.ebi.ac.uk/efo/EFO_0000324
-infection code: mock	control	ttp://www.ebi.ac.uk/efo/EFO_0001461	treatment	http://www.ebi.ac.uk/efo/EFO_0000727
+infection code: mock	control	http://www.ebi.ac.uk/efo/EFO_0001461	treatment	http://www.ebi.ac.uk/efo/EFO_0000727
 Infiltrating Ductal Carcinoma (IDC)	invasive ductal carcinoma	http://purl.obolibrary.org/obo/DOID_3008	disease	http://www.ebi.ac.uk/efo/EFO_0000408
 Inguinal adipose tissue	inguinal fat pad	http://purl.obolibrary.org/obo/UBERON_0010410	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
 invasive breast carcinomas	breast carcinoma	http://purl.obolibrary.org/obo/DOID_3459	disease	http://www.ebi.ac.uk/efo/EFO_0000408
@@ -319,7 +319,7 @@ K-ras Status: Wt	wild type genotype	http://www.ebi.ac.uk/efo/EFO_0005168	genotyp
 KCl	potassium chloride	http://purl.obolibrary.org/obo/CHEBI_32588	treatment	http://www.ebi.ac.uk/efo/EFO_0000727
 kidney	kidney	http://purl.obolibrary.org/obo/UBERON_0002113	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
 kidney tissue	kidney	http://purl.obolibrary.org/obo/UBERON_0002113	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
-knockdown	Knockdown	http://purl.obolibrary.org/obo/TGEMO_00007	genotype	http://www.ebi.ac.uk/efo/EFO_0000513
+knockdown	Knockdown	http://gemma.msl.ubc.ca/ont/TGEMO_00007	genotype	http://www.ebi.ac.uk/efo/EFO_0000513
 left liver lobe	left lobe of liver	http://purl.obolibrary.org/obo/UBERON_0001115	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
 Left ventricle	heart left ventricle	http://purl.obolibrary.org/obo/UBERON_0002084	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
 Left ventricle of heart	heart left ventricle	http://purl.obolibrary.org/obo/UBERON_0002084	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
@@ -338,8 +338,8 @@ liver tissue	liver	http://purl.obolibrary.org/obo/UBERON_0002107	organism part	h
 liver tumor	liver cancer	http://purl.obolibrary.org/obo/DOID_3571	disease	http://www.ebi.ac.uk/efo/EFO_0000408
 LNCaP	LNCaP cell	http://purl.obolibrary.org/obo/CLO_0037116	cell line	http://purl.obolibrary.org/obo/CLO_0000031
 Location: posterior fossa	posterior cranial fossa	http://purl.obolibrary.org/obo/UBERON_0008788	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
-Long Evans	Long Evans	http://purl.obolibrary.org/obo/TGEMO_00097	strain	http://www.ebi.ac.uk/efo/EFO_0005135
-Long-Evans	Long Evans	http://purl.obolibrary.org/obo/TGEMO_00097	strain	http://www.ebi.ac.uk/efo/EFO_0005135
+Long Evans	Long Evans	http://gemma.msl.ubc.ca/ont/TGEMO_00097	strain	http://www.ebi.ac.uk/efo/EFO_0005135
+Long-Evans	Long Evans	http://gemma.msl.ubc.ca/ont/TGEMO_00097	strain	http://www.ebi.ac.uk/efo/EFO_0005135
 LPS	lipopolysaccharide	http://purl.obolibrary.org/obo/CHEBI_16412	treatment	http://www.ebi.ac.uk/efo/EFO_0000727
 lumbar dorsal root ganglion	lumbar dorsal root ganglion	http://purl.obolibrary.org/obo/UBERON_0002836	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
 lumbar spinal cord	lumbar spinal cord	http://purl.obolibrary.org/obo/UBERON_0002792	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
@@ -354,7 +354,7 @@ lymph node	lymph node	http://purl.obolibrary.org/obo/UBERON_0000029	organism par
 lymph nodes	lymph node	http://purl.obolibrary.org/obo/UBERON_0000029	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
 lymphoblastoid cell line	lymphoblastoid cell line	http://www.ebi.ac.uk/efo/EFO_0005292	cell type	http://www.ebi.ac.uk/efo/EFO_0000324
 Lymphoblastoid cell line (LCL)	immortal lymphocyte cell line cell	http://purl.obolibrary.org/obo/CLO_0000108	cell line	http://purl.obolibrary.org/obo/CLO_0000031
-Lymphoblastoid Cells	lymphoblastoid cell line	http://www.ebi.ac.uk/efo/EFO_0005292	cell line	http://www.ebi.ac.uk/efo/EFO_0000322
+Lymphoblastoid Cells	lymphoblastoid cell line	http://www.ebi.ac.uk/efo/EFO_0005292	cell line	http://purl.obolibrary.org/obo/CLO_0000031
 Lymphocyte TCD4	lymphocyte	http://purl.obolibrary.org/obo/CL_0000542	cell type	http://www.ebi.ac.uk/efo/EFO_0000324
 lymphocytes	lymphocyte	http://purl.obolibrary.org/obo/CL_0000542	cell type	http://www.ebi.ac.uk/efo/EFO_0000324
 lymphoma	lymphoma	http://purl.obolibrary.org/obo/DOID_0060058	disease	http://www.ebi.ac.uk/efo/EFO_0000408
@@ -365,7 +365,7 @@ Major Depression	major depressive disorder	http://purl.obolibrary.org/obo/DOID_1
 Major Depressive Disorder	major depressive disorder	http://purl.obolibrary.org/obo/DOID_1470	disease	http://www.ebi.ac.uk/efo/EFO_0000408
 major depressive disorder (MDD)	major depressive disorder	http://purl.obolibrary.org/obo/DOID_1470	disease	http://www.ebi.ac.uk/efo/EFO_0000408
 male	male	http://purl.obolibrary.org/obo/PATO_0000384	biological sex	http://purl.obolibrary.org/obo/PATO_0000047
-Male C57BL/6J	C57BL/6J	http://purl.obolibrary.org/obo/TGEMO_00037	strain	http://www.ebi.ac.uk/efo/EFO_0005135
+Male C57BL/6J	C57BL/6J	http://gemma.msl.ubc.ca/ont/TGEMO_00037	strain	http://www.ebi.ac.uk/efo/EFO_0005135
 Males	male	http://purl.obolibrary.org/obo/PATO_0000384	biological sex	http://purl.obolibrary.org/obo/PATO_0000047
 malignant	malignant	http://www.ebi.ac.uk/efo/EFO_0006851	disease	http://www.ebi.ac.uk/efo/EFO_0000408
 Malignant ovarian	ovarian cancer	http://purl.obolibrary.org/obo/DOID_2394	disease	http://www.ebi.ac.uk/efo/EFO_0000408
@@ -373,11 +373,11 @@ Mammary fat pad	mammary fat pad	http://purl.obolibrary.org/obo/UBERON_0012282	or
 mammary gland	mammary gland	http://purl.obolibrary.org/obo/UBERON_0001911	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
 mammay fat pads	mammary fat pad	http://purl.obolibrary.org/obo/UBERON_0012282	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
 Mantle cell lymphoma	mantle cell lymphoma	http://purl.obolibrary.org/obo/DOID_0050746	disease	http://www.ebi.ac.uk/efo/EFO_0000408
-MCF-7	MCF7 cell	http://purl.obolibrary.org/obo/CLO_0007606	cell line	http://www.ebi.ac.uk/efo/EFO_0000322
+MCF-7	MCF7 cell	http://purl.obolibrary.org/obo/CLO_0007606	cell line	http://purl.obolibrary.org/obo/CLO_0000031
 MCF-7 Cells	MCF7 cell	http://purl.obolibrary.org/obo/CLO_0007606	cell line	http://purl.obolibrary.org/obo/CLO_0000031
 MCF10A	MCF 10A cell	http://purl.obolibrary.org/obo/CLO_0007599	cell line	http://purl.obolibrary.org/obo/CLO_0000031
-MCF7	MCF7 cell	http://purl.obolibrary.org/obo/CLO_0007606	cell line	http://www.ebi.ac.uk/efo/EFO_0000322
-MCF7 cells after transfection	MCF7 cell	http://purl.obolibrary.org/obo/CLO_0007606	cell line	http://www.ebi.ac.uk/efo/EFO_0000322
+MCF7	MCF7 cell	http://purl.obolibrary.org/obo/CLO_0007606	cell line	http://purl.obolibrary.org/obo/CLO_0000031
+MCF7 cells after transfection	MCF7 cell	http://purl.obolibrary.org/obo/CLO_0007606	cell line	http://purl.obolibrary.org/obo/CLO_0000031
 MDA-MB-231	MDA-MB-231 cell	http://purl.obolibrary.org/obo/CLO_0007634	cell line	http://purl.obolibrary.org/obo/CLO_0000031
 MDD sample, brain anterior cingulate cortex	anterior cingulate cortex	http://purl.obolibrary.org/obo/UBERON_0009835	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
 medial ganglionic eminence	medial ganglionic eminence	http://purl.obolibrary.org/obo/UBERON_0004024	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
@@ -385,7 +385,7 @@ medial prefrontal cortex	prefrontal cortex	http://purl.obolibrary.org/obo/UBERON
 Mediobasal hypothalamus	hypothalamus	http://purl.obolibrary.org/obo/UBERON_0001898	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
 medulla	medulla oblongata	http://purl.obolibrary.org/obo/UBERON_0001896	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
 medullary thymic epithelial cell	medullary thymic epithelial cell	http://purl.obolibrary.org/obo/CL_0002365	cell type	http://www.ebi.ac.uk/efo/EFO_0000324
-medulloblastoma	medulloblastoma	http://purl.obolibrary.org/obo/DOID_3858	disease	http://www.ebi.ac.uk/efo/EFO_0000408
+medulloblastoma	medulloblastoma	http://purl.obolibrary.org/obo/DOID_0050902	disease	http://www.ebi.ac.uk/efo/EFO_0000408
 MEF	embryonic fibroblast	http://purl.obolibrary.org/obo/CL_2000042	cell type	http://www.ebi.ac.uk/efo/EFO_0000324
 Melanoma	melanoma	http://purl.obolibrary.org/obo/DOID_1909	disease	http://www.ebi.ac.uk/efo/EFO_0000408
 Melanoma Cell Line	melanoma	http://purl.obolibrary.org/obo/DOID_1909	disease	http://www.ebi.ac.uk/efo/EFO_0000408
@@ -401,8 +401,8 @@ Microdissected renal tubule segment	renal tubule	http://purl.obolibrary.org/obo/
 microglia	microglial cell	http://purl.obolibrary.org/obo/CL_0000129	cell type	http://www.ebi.ac.uk/efo/EFO_0000324
 midbrain	midbrain	http://purl.obolibrary.org/obo/UBERON_0001891	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
 middle ear	middle ear	http://purl.obolibrary.org/obo/UBERON_0001756	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
-MKN45	RCB1001 cell	http://purl.obolibrary.org/obo/CLO_0050797	cell line	http://www.ebi.ac.uk/efo/EFO_0000322
-mock infected	control	ttp://www.ebi.ac.uk/efo/EFO_0001461	treatment	http://www.ebi.ac.uk/efo/EFO_0000727
+MKN45	RCB1001 cell	http://purl.obolibrary.org/obo/CLO_0050797	cell line	http://purl.obolibrary.org/obo/CLO_0000031
+mock infected	control	http://www.ebi.ac.uk/efo/EFO_0001461	treatment	http://www.ebi.ac.uk/efo/EFO_0000727
 Mock Infected	control	http://www.ebi.ac.uk/efo/EFO_0001461	treatment	http://www.ebi.ac.uk/efo/EFO_0000727
 moderate-to-severe psoriasis	psoriasis	http://purl.obolibrary.org/obo/DOID_8893	disease	http://www.ebi.ac.uk/efo/EFO_0000408
 molecule subtype: total RNA	total RNA	http://www.ebi.ac.uk/efo/EFO_0004964	collection of material	http://www.ebi.ac.uk/efo/EFO_0005066
@@ -475,7 +475,7 @@ PBMCs from peripheral blood	peripheral blood mononuclear cell	http://purl.obolib
 PDAC	pancreatic ductal adenocarcinoma	http://purl.obolibrary.org/obo/DOID_3498	disease	http://www.ebi.ac.uk/efo/EFO_0000408
 pediatric acute leukemia	childhood acute lymphocytic leukemia	http://purl.obolibrary.org/obo/DOID_0080144	disease	http://www.ebi.ac.uk/efo/EFO_0000408
 pediatric acute lymphoblastic leukemia	childhood acute lymphocytic leukemia	http://purl.obolibrary.org/obo/DOID_0080144	disease	http://www.ebi.ac.uk/efo/EFO_0000408
-pediatric T-ALL cells	acute T cell leukemia	http://purl.obolibrary.org/obo/DOID_5603	disease	http://www.ebi.ac.uk/efo/EFO_0000408
+pediatric T-ALL cells	childhood T-cell acute lymphoblastic leukemia	http://purl.obolibrary.org/obo/DOID_0080145	disease	http://www.ebi.ac.uk/efo/EFO_0000408
 Periferal blood mononuclear cells	peripheral blood mononuclear cell	http://purl.obolibrary.org/obo/CL_2000001	cell type	http://www.ebi.ac.uk/efo/EFO_0000324
 peripheral blood	blood	http://purl.obolibrary.org/obo/UBERON_0000178	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
 peripheral blood cell	blood cell	http://purl.obolibrary.org/obo/CL_0000081	cell type	http://www.ebi.ac.uk/efo/EFO_0000324
@@ -512,7 +512,7 @@ primary breast cancer, ER negative	estrogen-receptor negative breast cancer	http
 primary breast cancer, ER positive	estrogen-receptor positive breast cancer	http://purl.obolibrary.org/obo/DOID_0060075	disease	http://www.ebi.ac.uk/efo/EFO_0000408
 primary cancer cell	cancer	http://purl.obolibrary.org/obo/DOID_162	disease	http://www.ebi.ac.uk/efo/EFO_0000408
 primary colon adenocarcinoma	colon adenocarcinoma	http://purl.obolibrary.org/obo/DOID_234	disease	http://www.ebi.ac.uk/efo/EFO_0000408
-Primary cortical neurons	neuron of cerebral cortex	http://purl.obolibrary.org/obo/CL_0002609	cell type	http://www.ebi.ac.uk/efo/EFO_0000324
+Primary cortical neurons	cerebral cortex neuron	http://purl.obolibrary.org/obo/CL_0010012	cell type	http://www.ebi.ac.uk/efo/EFO_0000324
 Primary fibroblasts	fibroblast	http://purl.obolibrary.org/obo/CL_0000057	cell type	http://www.ebi.ac.uk/efo/EFO_0000324
 Primary gastric cancer	stomach cancer	http://purl.obolibrary.org/obo/DOID_10534	disease	http://www.ebi.ac.uk/efo/EFO_0000408
 primary liposarcoma	liposarcoma	http://purl.obolibrary.org/obo/DOID_3382	disease	http://www.ebi.ac.uk/efo/EFO_0000408
@@ -561,7 +561,7 @@ Sarin	sarin	http://purl.obolibrary.org/obo/CHEBI_75701	treatment	http://www.ebi.
 schizophrenia	schizophrenia	http://purl.obolibrary.org/obo/DOID_5419	disease	http://www.ebi.ac.uk/efo/EFO_0000408
 schizophrenia (SCZ)	schizophrenia	http://purl.obolibrary.org/obo/DOID_5419	disease	http://www.ebi.ac.uk/efo/EFO_0000408
 sciatic nerve	sciatic nerve	http://purl.obolibrary.org/obo/UBERON_0001322	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
-SD	Sprague Dawley	http://purl.obolibrary.org/obo/TGEMO_00099	strain	http://www.ebi.ac.uk/efo/EFO_0005135
+SD	Sprague Dawley	http://gemma.msl.ubc.ca/ont/TGEMO_00099	strain	http://www.ebi.ac.uk/efo/EFO_0005135
 sentinel lymph node	lymph node	http://purl.obolibrary.org/obo/UBERON_0000029	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
 Sepsis	bacterial sepsis	http://purl.obolibrary.org/obo/DOID_0040085	disease	http://www.ebi.ac.uk/efo/EFO_0000408
 Septum	septum	http://purl.obolibrary.org/obo/UBERON_0003037	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
@@ -584,11 +584,11 @@ spinal cord	spinal cord	http://purl.obolibrary.org/obo/UBERON_0002240	organism p
 spiny projection neurons	pyramidal neuron	http://purl.obolibrary.org/obo/CL_0000598	cell type	http://www.ebi.ac.uk/efo/EFO_0000324
 spleen	spleen	http://purl.obolibrary.org/obo/UBERON_0002106	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
 Spleen Cell Cultures	spleen	http://purl.obolibrary.org/obo/UBERON_0002106	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
-sprague dawley	Sprague Dawley	http://purl.obolibrary.org/obo/TGEMO_00099	strain	http://www.ebi.ac.uk/efo/EFO_0005138
-Sprague-Dawley	Sprague Dawley	http://purl.obolibrary.org/obo/TGEMO_00099	strain	http://www.ebi.ac.uk/efo/EFO_0005135
-Sprague-Dawley (SD)	Sprague Dawley	http://purl.obolibrary.org/obo/TGEMO_00099	strain	http://www.ebi.ac.uk/efo/EFO_0005135
-Sprague-Dawley rat	Sprague Dawley	http://purl.obolibrary.org/obo/TGEMO_00099	strain	http://www.ebi.ac.uk/efo/EFO_0005135
-Sprague-Dawley rats	Sprague Dawley	 http://purl.obolibrary.org/obo/TGEMO_00099	strain	http://www.ebi.ac.uk/efo/EFO_0005135
+sprague dawley	Sprague Dawley	http://gemma.msl.ubc.ca/ont/TGEMO_00099	strain	http://www.ebi.ac.uk/efo/EFO_0005138
+Sprague-Dawley	Sprague Dawley	http://gemma.msl.ubc.ca/ont/TGEMO_00099	strain	http://www.ebi.ac.uk/efo/EFO_0005135
+Sprague-Dawley (SD)	Sprague Dawley	http://gemma.msl.ubc.ca/ont/TGEMO_00099	strain	http://www.ebi.ac.uk/efo/EFO_0005135
+Sprague-Dawley rat	Sprague Dawley	http://gemma.msl.ubc.ca/ont/TGEMO_00099	strain	http://www.ebi.ac.uk/efo/EFO_0005135
+Sprague-Dawley rats	Sprague Dawley	 http://gemma.msl.ubc.ca/ont/TGEMO_00099	strain	http://www.ebi.ac.uk/efo/EFO_0005135
 sputum	sputum	http://purl.obolibrary.org/obo/UBERON_0007311	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
 Squamous cell carcinoma	squamous cell carcinoma	http://purl.obolibrary.org/obo/DOID_1749	disease	http://www.ebi.ac.uk/efo/EFO_0000408
 sscortex	secondary somatosensory cortex	http://purl.obolibrary.org/obo/UBERON_0008934	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
@@ -602,16 +602,16 @@ Substantia nigra	substantia nigra	http://purl.obolibrary.org/obo/UBERON_0002038	
 superior cervical ganglia (SCG)	superior cervical ganglion	http://purl.obolibrary.org/obo/UBERON_0001989	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
 superior frontal gyrus	superior frontal gyrus	http://purl.obolibrary.org/obo/UBERON_0002661	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
 suprachiasmatic nucleus	suprachiasmatic nucleus	http://purl.obolibrary.org/obo/UBERON_0002034	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
-SW620	SW620 cell	http://purl.obolibrary.org/obo/CLO_0009221	cell line	http://www.ebi.ac.uk/efo/EFO_0000322
-Swiss	CFW	http://purl.obolibrary.org/obo/TGEMO_00085	strain	http://www.ebi.ac.uk/efo/EFO_0005135
-Swiss Webster	CFW	http://purl.obolibrary.org/obo/TGEMO_00085	strain	http://www.ebi.ac.uk/efo/EFO_0005135
+SW620	SW620 cell	http://purl.obolibrary.org/obo/CLO_0009221	cell line	http://purl.obolibrary.org/obo/CLO_0000031
+Swiss	CFW	http://gemma.msl.ubc.ca/ont/TGEMO_00085	strain	http://www.ebi.ac.uk/efo/EFO_0005135
+Swiss Webster	CFW	http://gemma.msl.ubc.ca/ont/TGEMO_00085	strain	http://www.ebi.ac.uk/efo/EFO_0005135
 Synovial fibroblasts culture	fibroblast	http://purl.obolibrary.org/obo/CL_0000057	cell type	http://www.ebi.ac.uk/efo/EFO_0000324
 synovial membrane	synovial membrane of synovial joint	http://purl.obolibrary.org/obo/UBERON_0002018	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
 Synovial sarcoma tumor tissue	synovial sarcoma	http://purl.obolibrary.org/obo/DOID_5485	disease	http://www.ebi.ac.uk/efo/EFO_0000408
 systolic heart failure due to ischemic cardiomyopathy	systolic heart failure	http://purl.obolibrary.org/obo/DOID_9651	disease	http://www.ebi.ac.uk/efo/EFO_0000408
 T cells	T cell	http://purl.obolibrary.org/obo/CL_0000084	cell type	http://www.ebi.ac.uk/efo/EFO_0000324
 T-ALL diagnostic sample	actue T cell leukemia	http://purl.obolibrary.org/obo/DOID_5603	disease	http://www.ebi.ac.uk/efo/EFO_0000408
-T47D	T-47D cell	http://purl.obolibrary.org/obo/CLO_0009251	cell line	http://www.ebi.ac.uk/efo/EFO_0000322
+T47D	T-47D cell	http://purl.obolibrary.org/obo/CLO_0009251	cell line	http://purl.obolibrary.org/obo/CLO_0000031
 tamoxifen	tamoxifen	http://purl.obolibrary.org/obo/CHEBI_41774	treatment	http://www.ebi.ac.uk/efo/EFO_0000727
 temporal cortex	temporal cortex	http://purl.obolibrary.org/obo/UBERON_0016538	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
 temporal lobe	temporal lobe	http://purl.obolibrary.org/obo/UBERON_0001871	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
@@ -628,7 +628,7 @@ trachea	trachea	http://purl.obolibrary.org/obo/UBERON_0003126	organism part	http
 triple-negative breast cancer	triple-receptor negative breast cancer	http://purl.obolibrary.org/obo/DOID_0060081	disease	http://www.ebi.ac.uk/efo/EFO_0000408
 Tuberculosis	tuberculosis	http://purl.obolibrary.org/obo/DOID_399	disease	http://www.ebi.ac.uk/efo/EFO_0000408
 U2OS	U-2 OS cell	http://purl.obolibrary.org/obo/CLO_0009454	cell line	http://purl.obolibrary.org/obo/CLO_0000031
-U937	U937(CD59+) cell	http://purl.obolibrary.org/obo/CLO_0009466	cell line	http://www.ebi.ac.uk/efo/EFO_0000322
+U937	U937(CD59+) cell	http://purl.obolibrary.org/obo/CLO_0009466	cell line	http://purl.obolibrary.org/obo/CLO_0000031
 umbilical cord blood	umbilical cord blood	http://purl.obolibrary.org/obo/UBERON_0012168	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
 unaffected	reference subject role	http://purl.obolibrary.org/obo/OBI_0000220	disease	http://www.ebi.ac.uk/efo/EFO_0000408
 Unaffected Comparison subject	reference subject role	http://purl.obolibrary.org/obo/OBI_0000220	disease	http://www.ebi.ac.uk/efo/EFO_0000408
@@ -641,15 +641,15 @@ uterus	uterus	http://purl.obolibrary.org/obo/UBERON_0000995	organism part	http:/
 vastus lateralis	vastus lateralis	http://purl.obolibrary.org/obo/UBERON_0001379	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
 vastus lateralis (quadriceps femoris)	vastus lateralis	http://purl.obolibrary.org/obo/UBERON_0001379	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
 vastus lateralis muscle	vastus lateralis muscle	http://purl.obolibrary.org/obo/UBERON_0001379	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
-vehicle control	control	ttp://www.ebi.ac.uk/efo/EFO_0001461	treatment	http://www.ebi.ac.uk/efo/EFO_0000727
+vehicle control	control	http://www.ebi.ac.uk/efo/EFO_0001461	treatment	http://www.ebi.ac.uk/efo/EFO_0000727
 ventral midbrain	midbrain	http://purl.obolibrary.org/obo/UBERON_0001891	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
 Ventricles	cardiac ventricle	http://purl.obolibrary.org/obo/UBERON_0002082	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
 VHL Clear Cell Renal Cell Carcinoma	clear cell renal cell carcinoma	http://purl.obolibrary.org/obo/DOID_4467	disease	http://www.ebi.ac.uk/efo/EFO_0000408
 visceral adipose tissue	visceral abdominal adipose tissue	http://purl.obolibrary.org/obo/UBERON_0014454	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
 visual cortex	visual cortex	http://purl.obolibrary.org/obo/UBERON_0000411	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
-w	Caucasian	http://www.ebi.ac.uk/efo/EFO_0003156	population	http://purl.obolibrary.org/obo/OBI_0000181
+w	European	http://purl.obolibrary.org/obo/HANCESTRO_0005	population	http://purl.obolibrary.org/obo/OBI_0000181
 WBC	leukocyte	http://purl.obolibrary.org/obo/CL_0000738	cell type	http://www.ebi.ac.uk/efo/EFO_0000324
-White	Caucasian	http://www.ebi.ac.uk/efo/EFO_0003156	population	http://purl.obolibrary.org/obo/OBI_0000181
+White	European	http://purl.obolibrary.org/obo/HANCESTRO_0005	population	http://purl.obolibrary.org/obo/OBI_0000181
 White Adipose Tissue	white adipose tissue	http://purl.obolibrary.org/obo/UBERON_0001347	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
 white blood cells	white blood cell	http://purl.obolibrary.org/obo/CL_0000738	cell type	http://www.ebi.ac.uk/efo/EFO_0000324
 white matter	white matter	http://purl.obolibrary.org/obo/UBERON_0002316	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
@@ -674,7 +674,7 @@ Whole visceral adipose tissue	visceral abdominal adipose tissue	http://purl.obol
 whole-blood	blood	http://purl.obolibrary.org/obo/UBERON_0000178	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
 wild type	wild type genotype	http://www.ebi.ac.uk/efo/EFO_0005168	genotype	http://www.ebi.ac.uk/efo/EFO_0000513
 wildtype	wild type genotype	http://www.ebi.ac.uk/efo/EFO_0005168	genotype	http://www.ebi.ac.uk/efo/EFO_0000513
-wistar	Wistar	http://purl.obolibrary.org/obo/TGEMO_00096	strain	http://www.ebi.ac.uk/efo/EFO_0005139
-Wistar rat	Wistar	http://purl.obolibrary.org/obo/TGEMO_00096	strain	http://www.ebi.ac.uk/efo/EFO_0005135
+wistar	Wistar	http://gemma.msl.ubc.ca/ont/TGEMO_00096	strain	http://www.ebi.ac.uk/efo/EFO_0005139
+Wistar rat	Wistar	http://gemma.msl.ubc.ca/ont/TGEMO_00096	strain	http://www.ebi.ac.uk/efo/EFO_0005135
 wt	wild type genotype	http://www.ebi.ac.uk/efo/EFO_0005168	genotype	http://www.ebi.ac.uk/efo/EFO_0000513
 zebularine	zebularine	http://purl.obolibrary.org/obo/CHEBI_46938	treatment	http://www.ebi.ac.uk/efo/EFO_0000727

@@ -42,6 +42,7 @@ import ubic.basecode.math.DescriptiveWithMissing;
 import ubic.basecode.math.distribution.Histogram;
 import ubic.basecode.math.linearmodels.DesignMatrix;
 import ubic.basecode.math.linearmodels.LeastSquaresFit;
+import ubic.gemma.model.expression.experiment.FactorValueBasicValueObject;
 
 import java.awt.*;
 import java.io.File;
@@ -159,7 +160,7 @@ public class ComBat<R, C> {
             throw new RuntimeException( e );
         }
 
-        try (OutputStream os = new FileOutputStream( tmpfile )) {
+        try ( OutputStream os = new FileOutputStream( tmpfile ) ) {
             this.writePlot( os, ghplot, ghtheory );
 
             /*
@@ -181,7 +182,7 @@ public class ComBat<R, C> {
             tmpfile = File.createTempFile( filePrefix + ".deltahat.histogram.", ".png" );
             ComBat.log.info( tmpfile );
 
-            try (OutputStream os2 = new FileOutputStream( tmpfile )) {
+            try ( OutputStream os2 = new FileOutputStream( tmpfile ) ) {
                 this.writePlot( os2, dhplot, dhtheory );
             }
         } catch ( IOException e ) {
@@ -580,6 +581,7 @@ public class ComBat<R, C> {
         ObjectMatrix<String, String, Object> sampleInfoWithoutBatchFactor = new ObjectMatrixImpl<>( sampleInfo.rows(),
                 sampleInfo.columns() - 1 );
 
+        boolean warned = false;
         int r = 0;
         for ( int i = 0; i < sampleInfo.rows(); i++ ) {
             int c = 0;
@@ -589,7 +591,15 @@ public class ComBat<R, C> {
                 if ( i == 0 ) {
                     sampleInfoWithoutBatchFactor.addColumnName( sampleInfo.getColName( j ) );
                 }
-                sampleInfoWithoutBatchFactor.set( r, c++, sampleInfo.get( i, j ) );
+                Object v = sampleInfo.get( i, j );
+                if ( v == null ) {
+                    if ( !warned ) {
+                        log.warn( "Missing factorvalue in sample info for " + sampleInfo.getColName( j ) + " at row " + i + ", replacing with dummy value" );
+                        warned = true;
+                    }
+                    v = "Unknown value";
+                }
+                sampleInfoWithoutBatchFactor.set( r, c++, v );
             }
             r++;
         }
