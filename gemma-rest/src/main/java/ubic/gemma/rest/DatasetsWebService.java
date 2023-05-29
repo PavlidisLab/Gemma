@@ -156,6 +156,7 @@ public class DatasetsWebService {
     }
 
 
+    @GZIP
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve all datasets")
@@ -238,6 +239,7 @@ public class DatasetsWebService {
         Long getNumberOfExpressionExperiments();
     }
 
+    @GZIP
     @GET
     @Path("/platforms")
     @Produces(MediaType.APPLICATION_JSON)

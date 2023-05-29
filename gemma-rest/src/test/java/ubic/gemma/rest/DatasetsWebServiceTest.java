@@ -166,6 +166,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
         assertThat( target( "/datasets" ).request().get() )
                 .hasStatus( Response.Status.OK )
                 .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE )
+                .hasEncoding( "gzip" )
                 .entity()
                 .hasFieldOrPropertyWithValue( "sort", null )
                 .hasFieldOrPropertyWithValue( "offset", 0 )
@@ -230,7 +231,8 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
                 .thenReturn( f );
         assertThat( target( "/datasets/platforms" ).queryParam( "filter", "id < 10" ).request().get() )
                 .hasStatus( Response.Status.OK )
-                .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE );
+                .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE )
+                .hasEncoding( "gzip" );
         verify( expressionExperimentService ).getFilter( "id", Filter.Operator.lessThan, "10" );
         verify( expressionExperimentService ).getFiltersWithInferredAnnotations( Filters.by( f ), null );
         verify( expressionExperimentService ).getArrayDesignUsedOrOriginalPlatformUsageFrequency( Filters.by( f ), true, 50 );
