@@ -26,7 +26,10 @@ public class GzipHeaderDecorator implements WriterInterceptor {
         boolean hasGZipAnnotation = Arrays.stream( writerInterceptorContext.getAnnotations() )
                 .map( Annotation::annotationType )
                 .anyMatch( GZIP.class::equals );
-        if ( hasGZipAnnotation ) {
+        // this is a hack, but we don't control the endpoint from Swagger's jax-rs integration
+        boolean isOpenApiSpec = writerInterceptorContext.getEntity() instanceof String
+                && ( ( String ) writerInterceptorContext.getEntity() ).startsWith( "{\"openapi\"" );
+        if ( hasGZipAnnotation || isOpenApiSpec ) {
             writerInterceptorContext.getHeaders().putSingle( "Content-Encoding", "gzip" );
         }
         writerInterceptorContext.proceed();

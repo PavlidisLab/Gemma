@@ -106,7 +106,8 @@ public class OpenApiTest extends BaseJerseyTest {
         ModelConverters.getInstance().addConverter( customModelResolver );
         Response response = target( "/openapi.json" ).request().get();
         assertThat( response )
-                .hasStatus( Response.Status.OK );
+                .hasStatus( Response.Status.OK )
+                .hasEncoding( "gzip" );
         spec = objectMapper.readValue( response.readEntity( InputStream.class ), OpenAPI.class );
     }
 
