@@ -19,9 +19,9 @@
 
 package ubic.gemma.core.search;
 
-import com.google.common.collect.Sets;
 import gemma.gsec.util.SecurityUtil;
 import lombok.extern.apachecommons.CommonsLog;
+import org.apache.commons.collections4.SetUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.text.StringEscapeUtils;
@@ -190,7 +190,7 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
     @Transactional(readOnly = true)
     public SearchResultMap search( SearchSettings settings ) throws SearchException {
         if ( !supportedResultTypes.keySet().containsAll( settings.getResultTypes() ) ) {
-            throw new IllegalArgumentException( "The search settings contains unsupported result types:" + Sets.difference( settings.getResultTypes(), supportedResultTypes.keySet() ) + "." );
+            throw new IllegalArgumentException( "The search settings contains unsupported result types:" + SetUtils.difference( settings.getResultTypes(), supportedResultTypes.keySet() ) + "." );
         }
 
         StopWatch timer = StopWatch.createStarted();

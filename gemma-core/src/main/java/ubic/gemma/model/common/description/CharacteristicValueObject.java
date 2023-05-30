@@ -14,8 +14,6 @@
  */
 package ubic.gemma.model.common.description;
 
-import com.google.common.collect.ComparisonChain;
-import com.google.common.collect.Ordering;
 import lombok.Data;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
@@ -23,10 +21,7 @@ import org.apache.commons.logging.LogFactory;
 import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.annotations.GemmaWebOnly;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
+import java.util.*;
 
 /**
  * ValueObject wrapper for a Characteristic
@@ -41,6 +36,13 @@ public class CharacteristicValueObject extends IdentifiableValueObject<Character
         implements Comparable<CharacteristicValueObject> {
 
     private static final Log log = LogFactory.getLog( CharacteristicValueObject.class );
+
+    private static final Comparator<CharacteristicValueObject> COMPARATOR = Comparator
+            .comparing( CharacteristicValueObject::getCategory, Comparator.nullsLast( String.CASE_INSENSITIVE_ORDER ) )
+            .thenComparing( CharacteristicValueObject::getTaxon, Comparator.nullsLast( String.CASE_INSENSITIVE_ORDER ) )
+            .thenComparing( CharacteristicValueObject::getValue, Comparator.nullsLast( String.CASE_INSENSITIVE_ORDER ) )
+            .thenComparing( CharacteristicValueObject::getValueUri, Comparator.nullsLast( String.CASE_INSENSITIVE_ORDER ) );
+
     /**
      * id used by url on the client side
      */
@@ -183,11 +185,7 @@ public class CharacteristicValueObject extends IdentifiableValueObject<Character
 
     @Override
     public int compareTo( CharacteristicValueObject o ) {
-        return ComparisonChain.start()
-                .compare( category, o.category, Ordering.from( String.CASE_INSENSITIVE_ORDER ).nullsLast() )
-                .compare( taxon, o.taxon, Ordering.from( String.CASE_INSENSITIVE_ORDER ).nullsLast() )
-                .compare( value, o.value, Ordering.from( String.CASE_INSENSITIVE_ORDER ).nullsLast() )
-                .compare( valueUri, o.valueUri, Ordering.from( String.CASE_INSENSITIVE_ORDER ).nullsLast() ).result();
+        return COMPARATOR.compare( this, o );
     }
 
     @Override

@@ -18,9 +18,6 @@
  */
 package ubic.gemma.core.job.executor.common;
 
-import com.google.common.util.concurrent.FutureCallback;
-import com.google.common.util.concurrent.Futures;
-import com.google.common.util.concurrent.ListenableFuture;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,6 +26,7 @@ import ubic.gemma.core.job.EmailNotificationContext;
 import ubic.gemma.core.job.TaskResult;
 import ubic.gemma.core.util.MailUtils;
 
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 
 /**
@@ -42,29 +40,13 @@ public class TaskPostProcessingImpl implements TaskPostProcessing {
     private MailUtils mailUtils;
 
     @Override
-    public void addEmailNotification( ListenableFuture<TaskResult> future, EmailNotificationContext context, Executor executor ) {
-        FutureCallback<TaskResult> emailNotificationCallback = this.createEmailNotificationFutureCallback( context );
-        // This will be called when future with our running task is done.
-        Futures.addCallback( future, emailNotificationCallback, executor );
+    public void addEmailNotification( CompletableFuture<? extends TaskResult> future, EmailNotificationContext context, Executor executor ) {
+        future.thenAcceptAsync( taskResult -> {
+            // This will be called when future with our running task is done.
+            mailUtils.sendTaskCompletedNotificationEmail( context, taskResult );
+        }, executor ).exceptionally( throwable -> {
+            TaskPostProcessingImpl.log.error( "Shouldn't happen since we take care of exceptions inside ExecutingTask. ", throwable );
+            return null;
+        } );
     }
-
-    private FutureCallback<TaskResult> createEmailNotificationFutureCallback( final EmailNotificationContext context ) {
-
-        return new FutureCallback<TaskResult>() {
-            private final EmailNotificationContext emailNotificationContext = context;
-
-            @Override
-            public void onSuccess( TaskResult taskResult ) {
-                mailUtils.sendTaskCompletedNotificationEmail( emailNotificationContext, taskResult );
-            }
-
-            @Override
-            public void onFailure( Throwable throwable ) {
-                TaskPostProcessingImpl.log
-                        .error( "Shouldn't happen since we take care of exceptions inside ExecutingTask. " + throwable
-                                .getMessage() );
-            }
-        };
-    }
-
 }
