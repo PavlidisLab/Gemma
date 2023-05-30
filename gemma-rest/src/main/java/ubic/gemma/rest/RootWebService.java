@@ -5,7 +5,6 @@ import io.swagger.v3.oas.annotations.enums.SecuritySchemeIn;
 import io.swagger.v3.oas.annotations.enums.SecuritySchemeType;
 import io.swagger.v3.oas.annotations.security.SecurityScheme;
 import io.swagger.v3.oas.models.OpenAPI;
-import lombok.Data;
 import lombok.Value;
 import lombok.extern.apachecommons.CommonsLog;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,17 +20,14 @@ import ubic.gemma.rest.util.OpenApiUtils;
 import ubic.gemma.rest.util.Responder;
 import ubic.gemma.rest.util.ResponseDataObject;
 
+import javax.annotation.Nullable;
 import javax.servlet.ServletConfig;
 import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
+import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import java.net.URI;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -90,6 +86,18 @@ public class RootWebService {
     }
 
     /**
+     * Retrieve user information for the current user.
+     */
+    @GET
+    @Path("/users/me")
+    @Produces(MediaType.APPLICATION_JSON)
+    @PreAuthorize("isAuthenticated()")
+    @Operation(summary = "Retrieve the user information associated to the authenticated session", hidden = true)
+    public ResponseDataObject<UserValueObject> getMyself() {
+        return Responder.respond( getUserVo( userManager.getCurrentUser() ) );
+    }
+
+    /**
      * Retrieve user information.
      * <p>
      * This method only works for authenticated users (via basic HTTP auth or their JSESSIONID cookie as specified by
@@ -102,23 +110,21 @@ public class RootWebService {
     @Path("/users/{username}")
     @Produces(MediaType.APPLICATION_JSON)
     @PreAuthorize("(isAuthenticated() && principal.username == #username) || hasAuthority('GROUP_ADMIN')")
-    @Operation(summary = "Retrieve the user information associated to the authenticated session", hidden = true)
+    @Operation(summary = "Retrieve the user information associated to the given username", hidden = true)
     public ResponseDataObject<UserValueObject> getUser( // Params:
             @PathParam("username") String username // Required
     ) {
         User user = userManager.findByUserName( username );
-
-        // Convert to a VO and check for admin
-        UserValueObject uvo = new UserValueObject( user );
-        Collection<String> groups = userManager.findGroupsForUser( user.getUserName() );
-        for ( String g : groups ) {
-            if ( g.equals( "Administrators" ) ) {
-                uvo.setCurrentGroup( g );
-                uvo.setInGroup( true );
-            }
+        if ( user == null ) {
+            throw new NotFoundException( String.format( "No user with username %s.", username ) );
         }
+        return Responder.respond( getUserVo( user ) );
+    }
 
-        return Responder.respond( uvo );
+    private UserValueObject getUserVo( User user ) {
+        // Convert to a VO and check for admin
+        String group = userManager.findGroupsForUser( user.getUserName() ).iterator().next();
+        return new UserValueObject( user, group );
     }
 
     @Value
@@ -144,28 +150,19 @@ public class RootWebService {
      * @author keshav
      *
      */
-    @Data
+    @Value
     public static class UserValueObject {
-        private String currentGroup;
-        private final String email;
-        private final boolean enabled;
-        private boolean inGroup;
+        String userName;
+        String email;
+        boolean enabled;
+        @Nullable
+        String group;
 
-        /*
-         * Should the client be allowed to edit the user (e.g., group membership or enabledness - used to protect 'special'
-         * users like the admin.
-         */
-        private boolean allowModification;
-
-        private final String password;
-
-        private final String userName;
-
-        public UserValueObject( User user ) {
+        public UserValueObject( User user, @Nullable String group ) {
             userName = user.getUserName();
             email = user.getEmail();
             enabled = user.getEnabled();
-            password = user.getPassword();
+            this.group = group;
         }
     }
 }
