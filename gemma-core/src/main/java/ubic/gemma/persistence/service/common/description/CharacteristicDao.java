@@ -107,6 +107,11 @@ public interface CharacteristicDao
     Collection<Characteristic> findByUri( String searchString );
 
     /**
+     * Return the characteristic with the most frequently used non-null value by URI.
+     */
+    Characteristic findBestByUri( String uri );
+
+    /**
      * Represents a set of characteristics grouped by {@link Characteristic#getValueUri()} or {@link Characteristic#getValue()}.
      */
     @Value

@@ -92,6 +92,13 @@ public class CharacteristicServiceImpl extends AbstractFilteringVoEnabledService
         return this.characteristicDao.findByUri( searchString );
     }
 
+    @Nullable
+    @Override
+    @Transactional(readOnly = true)
+    public Characteristic findBestByUri( String uri ) {
+        return this.characteristicDao.findBestByUri( uri );
+    }
+
     @Override
     @Transactional(readOnly = true)
     public Collection<Characteristic> findByValue( java.lang.String search ) {

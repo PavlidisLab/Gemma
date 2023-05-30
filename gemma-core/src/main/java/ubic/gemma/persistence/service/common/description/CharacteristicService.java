@@ -84,6 +84,12 @@ public interface CharacteristicService extends BaseService<Characteristic>, Base
     Collection<Characteristic> findByUri( String searchString );
 
     /**
+     * Find the best possible characteristic for a given URI.
+     */
+    @Nullable
+    Characteristic findBestByUri( String uri );
+
+    /**
      * Returns a collection of characteristics that have a Value that match the given search string. The value is
      * usually a human readable form of the termURI
      *

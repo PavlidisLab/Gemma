@@ -6,17 +6,20 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.context.support.DefaultMessageSourceResolvable;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
+import org.springframework.web.util.UriComponents;
+import org.springframework.web.util.UriComponentsBuilder;
 import ubic.basecode.ontology.model.OntologyIndividual;
 import ubic.basecode.ontology.model.OntologyResource;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.basecode.ontology.search.OntologySearchException;
 import ubic.gemma.core.ontology.OntologyService;
-import ubic.gemma.core.ontology.OntologyUtils;
 import ubic.gemma.core.search.BaseCodeOntologySearchException;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.search.SearchResult;
 import ubic.gemma.core.search.SearchResultSet;
 import ubic.gemma.model.common.Identifiable;
+import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExperimentalDesign;
@@ -53,6 +56,26 @@ public class OntologySearchSourceImpl implements OntologySearchSource {
 
         Collection<OntologyResource> terms = new HashSet<>();
 
+        // Phase 0: If the query is a term, find it
+        if ( settings.isTermQuery() ) {
+            String termUri = settings.getQuery();
+            OntologyResource resource;
+            OntologyResource r2 = ontologyService.getResource( termUri );
+            if ( r2 != null ) {
+                resource = new SimpleOntologyResourceWithScore( r2, 1.0 );
+            } else {
+                // attempt to guess a label from othe database
+                Characteristic c = characteristicService.findBestByUri( settings.getQuery() );
+                if ( c != null ) {
+                    assert c.getValueUri() != null;
+                    resource = new SimpleOntologyResourceWithScore( c.getValueUri(), c.getValue(), 1.0 );
+                } else {
+                    resource = new SimpleOntologyResourceWithScore( termUri, getLabelFromTermUri( termUri ), 1.0 );
+                }
+            }
+            terms.add( resource );
+        }
+
         // Phase 1: We first search for individuals.
         Collection<OntologyIndividual> individuals;
         try {
@@ -83,9 +106,8 @@ public class OntologySearchSourceImpl implements OntologySearchSource {
         }
 
         if ( timer.getTime() > 100 ) {
-            log
-                    .warn( String.format( "Found %d ontology classes matching '%s' in %d ms",
-                            matchingTerms.size(), settings.getQuery(), timer.getTime() ) );
+            log.warn( String.format( "Found %d ontology classes matching '%s' in %d ms",
+                    matchingTerms.size(), settings.getQuery(), timer.getTime() ) );
         }
 
         /*
@@ -99,9 +121,8 @@ public class OntologySearchSourceImpl implements OntologySearchSource {
             timer.stop();
 
             if ( timer.getTime() > 200 ) {
-                log.warn(
-                        String.format( "Found %d ontology subclasses or related terms for %d terms matching '%s' in %d ms",
-                                terms.size() - matchingTerms.size(), matchingTerms.size(), settings.getQuery(), timer.getTime() ) );
+                log.warn( String.format( "Found %d ontology subclasses or related terms for %d terms matching '%s' in %d ms",
+                        terms.size() - matchingTerms.size(), matchingTerms.size(), settings.getQuery(), timer.getTime() ) );
             }
         }
 
@@ -111,9 +132,8 @@ public class OntologySearchSourceImpl implements OntologySearchSource {
         timer.stop();
 
         if ( timer.getTime() > 100 ) {
-            log
-                    .warn( String.format( "Retrieved %d datasets via %d characteristics in %d ms",
-                            results.size(), terms.size(), timer.getTime() ) );
+            log.warn( String.format( "Retrieved %d datasets via %d characteristics in %d ms",
+                    results.size(), terms.size(), timer.getTime() ) );
         }
 
         String message = String.format( "Found %d datasets by %d characteristic URIs for '%s' in %d ms",
@@ -139,14 +159,6 @@ public class OntologySearchSourceImpl implements OntologySearchSource {
         Collection<String> uris = new HashSet<>();
         Map<String, String> uri2value = new TreeMap<>( String.CASE_INSENSITIVE_ORDER );
         Map<String, Double> uri2score = new TreeMap<>( String.CASE_INSENSITIVE_ORDER );
-
-        if ( settings.isTermQuery() ) {
-            String query = settings.getQuery();
-            uris.add( query );
-            // this will be replaced with a proper label if found in the ontology
-            uri2value.put( query, OntologyUtils.getLabelFromTermUri( query ) );
-            uri2score.put( query, 1.0 );
-        }
 
         // renormalize the scores in a [0, 1] range
         DoubleSummaryStatistics summaryStatistics = individuals.stream()
@@ -222,5 +234,80 @@ public class OntologySearchSourceImpl implements OntologySearchSource {
             throw new IllegalArgumentException( "Search results are already fully filled, have to checked the collection with isFilled()?" );
         }
         return settings.getMaxResults() > 0 ? settings.getMaxResults() - results.size() : -1;
+    }
+
+    /**
+     * Extract a label for a term URI as per {@link OntologyTerm#getLabel()}.
+     */
+    static String getLabelFromTermUri( String termUri ) {
+        UriComponents components = UriComponentsBuilder.fromUriString( termUri ).build();
+        List<String> segments = components.getPathSegments();
+        // use the fragment
+        if ( !StringUtils.isEmpty( components.getFragment() ) ) {
+            return partToTerm( components.getFragment() );
+        }
+        // pick the last non-empty segment
+        for ( int i = segments.size() - 1; i >= 0; i-- ) {
+            if ( !StringUtils.isEmpty( segments.get( i ) ) ) {
+                return partToTerm( segments.get( i ) );
+            }
+        }
+        // as a last resort, return the parsed URI (this will remove excessive trailing slashes)
+        return components.toUriString();
+    }
+
+    private static String partToTerm( String part ) {
+        return part.replaceFirst( "_", ":" ).toUpperCase();
+    }
+
+    /**
+     * Simple ontology resource with a score.
+     */
+    private static class SimpleOntologyResourceWithScore implements OntologyResource {
+
+        private static final Comparator<OntologyResource> COMPARATOR = Comparator
+                .comparing( OntologyResource::getScore, Comparator.nullsLast( Comparator.reverseOrder() ) )
+                .thenComparing( OntologyResource::getUri, Comparator.nullsLast( Comparator.naturalOrder() ) );
+
+        private final String uri;
+        private final String label;
+        private final double score;
+
+        private SimpleOntologyResourceWithScore( String uri, String label, double score ) {
+            this.uri = uri;
+            this.label = label;
+            this.score = score;
+        }
+
+        public SimpleOntologyResourceWithScore( OntologyResource resource, double score ) {
+            this.uri = resource.getUri();
+            this.label = resource.getLabel();
+            this.score = score;
+        }
+
+        @Override
+        public String getUri() {
+            return uri;
+        }
+
+        @Override
+        public String getLabel() {
+            return label;
+        }
+
+        @Override
+        public boolean isObsolete() {
+            return false;
+        }
+
+        @Override
+        public Double getScore() {
+            return score;
+        }
+
+        @Override
+        public int compareTo( OntologyResource ontologyResource ) {
+            return Objects.compare( this, ontologyResource, COMPARATOR );
+        }
     }
 }

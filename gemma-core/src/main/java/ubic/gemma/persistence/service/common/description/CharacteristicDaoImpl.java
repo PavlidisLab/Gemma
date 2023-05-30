@@ -236,6 +236,19 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
     }
 
     @Override
+    public Characteristic findBestByUri( String uri ) {
+        return ( Characteristic ) getSessionFactory().getCurrentSession()
+                .createQuery( "select c from Characteristic c "
+                        + "where valueUri = :uri "
+                        + "group by c.value "
+                        + "having c.value <> null "
+                        + "order by count(*) desc" )
+                .setParameter( "uri", uri )
+                .setMaxResults( 1 )
+                .uniqueResult();
+    }
+
+    @Override
     public Map<String, Long> countCharacteristicsByValueUriGroupedByNormalizedValue( Collection<String> uris ) {
         List<String> uniqueUris = uris.stream().distinct().sorted().collect( Collectors.toList() );
         if ( uniqueUris.isEmpty() )
