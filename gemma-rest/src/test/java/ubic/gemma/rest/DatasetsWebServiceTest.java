@@ -142,11 +142,12 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
     @Before
     public void setUpMocks() {
         ee = ExpressionExperiment.Factory.newInstance();
+        //noinspection unchecked
         Set<String> universe = mock( Set.class );
         when( universe.contains( any( String.class ) ) ).thenReturn( true );
         when( expressionExperimentService.getFilterableProperties() ).thenReturn( universe );
         when( expressionExperimentService.load( 1L ) ).thenReturn( ee );
-        when( expressionExperimentService.getFiltersWithInferredAnnotations( any(), null ) ).thenAnswer( a -> a.getArgument( 0 ) );
+        when( expressionExperimentService.getFiltersWithInferredAnnotations( any(), any() ) ).thenAnswer( a -> a.getArgument( 0 ) );
     }
 
     @After
