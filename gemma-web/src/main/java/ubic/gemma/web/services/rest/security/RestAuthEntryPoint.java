@@ -31,6 +31,7 @@ import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 
 /**
  * Implementation of {@link AuthenticationEntryPoint} for the RESTful API to handle authentication.
@@ -61,7 +62,10 @@ public class RestAuthEntryPoint implements AuthenticationEntryPoint, ServletConf
         response.setContentType( MediaType.APPLICATION_JSON );
         // using 'xBasic' instead of 'basic' to prevent default browser login popup
         response.addHeader( "WWW-Authenticate", "xBasic realm=" + realm );
-        response.sendError( HttpServletResponse.SC_UNAUTHORIZED, objectMapper.writeValueAsString( errorObject ) );
+        response.setStatus( HttpServletResponse.SC_UNAUTHORIZED );
+        response.setCharacterEncoding( StandardCharsets.UTF_8.name() );
+        objectMapper.writeValue( response.getWriter(), errorObject );
+        response.flushBuffer();
     }
 
     @Override
