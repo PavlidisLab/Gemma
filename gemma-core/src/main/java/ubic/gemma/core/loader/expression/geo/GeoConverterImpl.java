@@ -232,8 +232,8 @@ public class GeoConverterImpl implements GeoConverter {
         Characteristic term = Characteristic.Factory.newInstance();
         this.convertVariableType( term, geoSubSet.getType() );
         term.setDescription( "Converted from GEO subset " + geoSubSet.getGeoAccession() );
-        term.setValue( term.getCategory() );// is this right?
-        term.setValueUri( term.getCategoryUri() ); // is this right?
+        term.setValue( term.getCategory() );// for experimentalfactor.category we just copy the characteristic category
+        term.setValueUri( term.getCategoryUri() );  // for experimentalfactor.categoryUri we just copy the characteristic categoryUri
         experimentalFactor.setCategory( term );
 
         experimentalFactor.setType( FactorType.CATEGORICAL );

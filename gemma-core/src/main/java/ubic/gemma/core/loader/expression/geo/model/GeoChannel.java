@@ -183,7 +183,7 @@ public class GeoChannel {
                 result.setValueUri( "http://purl.obolibrary.org/obo/OBI_0000876" );
                 break;
             case polyARNA:
-                result.setValue( "polyA RNA" );
+                result.setValue( "polyA RNA extract" );
                 result.setValueUri( "http://purl.obolibrary.org/obo/OBI_0000869" );
                 break;
             case genomicDNA:
