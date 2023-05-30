@@ -7,7 +7,7 @@ import org.springframework.security.core.AuthenticationException;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.io.Writer;
+import java.nio.charset.StandardCharsets;
 
 /**
  * Utilities for writing JSON payloads to {@link HttpServletResponse}.
@@ -18,24 +18,22 @@ public final class JsonUtil {
         JSONObject json = new JSONObject();
         json.put( "success", false );
         json.put( "message", ExceptionUtils.getRootCauseMessage( e ) );
-        response.setContentType( MediaType.APPLICATION_JSON_VALUE );
-        response.sendError( HttpServletResponse.SC_UNAUTHORIZED, json.toString() );
+        response.setStatus( HttpServletResponse.SC_UNAUTHORIZED );
+        writeToResponse( json, response );
     }
 
     public static void writeErrorToResponse( Exception e, HttpServletResponse response ) throws IOException {
         JSONObject json = new JSONObject();
         json.put( "success", false );
         json.put( "message", ExceptionUtils.getRootCauseMessage( e ) );
-        response.setContentType( MediaType.APPLICATION_JSON_VALUE );
-        response.sendError( HttpServletResponse.SC_INTERNAL_SERVER_ERROR, json.toString() );
+        response.setStatus( HttpServletResponse.SC_INTERNAL_SERVER_ERROR );
+        writeToResponse( json, response );
     }
 
     public static void writeToResponse( JSONObject json, HttpServletResponse response ) throws IOException {
-        String jsonText = json.toString();
         response.setContentType( MediaType.APPLICATION_JSON_VALUE );
-        response.setContentLength( jsonText.length() );
-        try ( Writer out = response.getWriter() ) {
-            out.write( jsonText );
-        }
+        response.setCharacterEncoding( StandardCharsets.UTF_8.name() );
+        json.write( response.getWriter() );
+        response.flushBuffer();
     }
 }
