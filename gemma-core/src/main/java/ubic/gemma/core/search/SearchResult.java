@@ -34,7 +34,7 @@ import java.util.Objects;
  */
 @Data
 @EqualsAndHashCode(of = { "resultType", "resultId" })
-@ToString(of = { "resultType", "resultId", "resultType", "highlightedText", "score", "source" })
+@ToString(of = { "resultType", "resultId", "resultType", "highlights", "score", "source" })
 public class SearchResult<T extends Identifiable> implements Comparable<SearchResult<?>> {
 
     /**
@@ -118,12 +118,6 @@ public class SearchResult<T extends Identifiable> implements Comparable<SearchRe
      */
     @Nullable
     private T resultObject;
-
-    /**
-     * Highlighted text for this result.
-     */
-    @Nullable
-    private String highlightedText;
 
     /**
      * Highlights for this result.

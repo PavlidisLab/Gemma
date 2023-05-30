@@ -202,7 +202,7 @@ public class SearchServiceVoConversionTest extends AbstractJUnit4SpringContextTe
                 .hasFieldOrPropertyWithValue( "resultId", 13L )
                 .hasFieldOrPropertyWithValue( "resultObject", gsvo )
                 .hasFieldOrPropertyWithValue( "score", 1.0 )
-                .hasFieldOrPropertyWithValue( "highlightedText", null );
+                .hasFieldOrPropertyWithValue( "highlights", null );
         verify( geneSetService ).loadValueObjectById( 13L );
     }
 
