@@ -10,11 +10,4 @@ import java.util.Map;
 
 public interface OntologySearchSource extends SearchSource {
 
-    /**
-     * Flavour of {@link #searchExpressionExperiment(SearchSettings)} that searches directly with URIs.
-     * @param settings  search settings
-     * @param uris      collection of URIs to use for searching
-     * @param uri2value labels for mapping URIs to text
-     */
-    Collection<SearchResult<ExpressionExperiment>> searchExpressionExperimentByUris( SearchSettings settings, Collection<String> uris, Map<String, String> uri2value, Map<String, Double> uri2score );
 }

@@ -1335,16 +1335,18 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
 
                 // 1st get objects tagged with the given gene identifier
                 if ( settings.hasResultType( ExpressionExperiment.class ) ) { // FIXME maybe we always want this?
-                    Set<SearchResult<ExpressionExperiment>> eeHits = new SearchResultSet<>();
-                    Map<String, String> uri2value = new HashMap<>();
-                    uri2value.put( termUri, g.getOfficialSymbol() );
-                    Map<String, Double> uri2score = new HashMap<>();
-                    uri2score.put( termUri, 1.0 );
-                    eeHits.addAll( ontologySearchSource.searchExpressionExperimentByUris( settings, Collections.singleton( termUri ), uri2value, uri2score ) );
-
-                    if ( !eeHits.isEmpty() ) {
-                        results.addAll( eeHits );
+                    Collection<SearchResult<ExpressionExperiment>> eeHits = ontologySearchSource.searchExpressionExperiment( settings.withQuery( termUri ) );
+                    for ( SearchResult<ExpressionExperiment> sr : eeHits ) {
+                        Map<String, String> highlights;
+                        if ( sr.getHighlights() != null ) {
+                            highlights = new HashMap<>( sr.getHighlights() );
+                        } else {
+                            highlights = new HashMap<>();
+                        }
+                        highlights.put( "term", g.getOfficialSymbol() );
+                        sr.setHighlights( highlights );
                     }
+                    results.addAll( eeHits );
                 }
 
                 ////

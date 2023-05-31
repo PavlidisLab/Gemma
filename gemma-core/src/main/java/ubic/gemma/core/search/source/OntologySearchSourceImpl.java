@@ -147,13 +147,6 @@ public class OntologySearchSourceImpl implements OntologySearchSource {
         return results;
     }
 
-    @Override
-    public Collection<SearchResult<ExpressionExperiment>> searchExpressionExperimentByUris( SearchSettings settings, Collection<String> uris, Map<String, String> uri2value, Map<String, Double> uri2score ) {
-        Set<SearchResult<ExpressionExperiment>> results = new HashSet<>();
-        findExpressionExperimentsByUris( uris, results, 1.0, uri2value, uri2score, settings );
-        return results;
-    }
-
     private void findExperimentsByTerms( Collection<? extends OntologyResource> individuals, Set<SearchResult<ExpressionExperiment>> results, SearchSettings settings ) {
         // URIs are case-insensitive in the database, so should be the mapping to labels
         Collection<String> uris = new HashSet<>();

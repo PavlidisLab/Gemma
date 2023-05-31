@@ -18,6 +18,12 @@
         <context:exclude-filter type="annotation" expression="ubic.gemma.persistence.util.TestComponent"/>
     </context:component-scan>
 
+    <bean class="org.springframework.context.support.PropertySourcesPlaceholderConfigurer">
+        <property name="environment">
+            <bean class="org.springframework.web.context.support.StandardServletEnvironment"/>
+        </property>
+    </bean>
+
     <!-- Mapping URLS to controllers -->
 
 
