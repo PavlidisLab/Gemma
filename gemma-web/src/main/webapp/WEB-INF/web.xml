@@ -79,7 +79,7 @@
         <filter-class>ubic.gemma.rest.servlet.CorsFilter</filter-class>
         <init-param>
             <param-name>allowedOrigins</param-name>
-            <param-value>https://dev.gemma.msl.ubc.ca,http://localhost:8081</param-value>
+            <param-value>${cors.allowedOrigins}</param-value>
         </init-param>
         <init-param>
             <param-name>allowedHeaders</param-name>

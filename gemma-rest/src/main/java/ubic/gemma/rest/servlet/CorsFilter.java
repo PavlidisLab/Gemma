@@ -14,10 +14,15 @@
  */
 package ubic.gemma.rest.servlet;
 
+import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.util.Assert;
+import org.springframework.web.context.ConfigurableWebApplicationContext;
+import org.springframework.web.context.WebApplicationContext;
+import org.springframework.web.context.support.WebApplicationContextUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import javax.annotation.Nullable;
@@ -32,6 +37,7 @@ import java.io.IOException;
  * <p>
  * This is mounted on the gemma-rest servlet in the web.xml configuration file.
  */
+@CommonsLog
 public class CorsFilter extends OncePerRequestFilter {
 
     private static final String WILDCARD = "*";
@@ -42,6 +48,12 @@ public class CorsFilter extends OncePerRequestFilter {
     @Nullable
     private String allowedHeaders;
     private boolean allowCredentials = false;
+
+    @Override
+    protected void initFilterBean() {
+        log.info( String.format( "CORS is configured to allow requests from %s",
+                String.join( ", ", allowedOrigins.split( "," ) ) ) );
+    }
 
     @Override
     public void doFilterInternal( HttpServletRequest req, HttpServletResponse res, FilterChain chain )
@@ -75,7 +87,7 @@ public class CorsFilter extends OncePerRequestFilter {
         }
         if ( isPreflight( req ) ) {
             if ( StringUtils.isNotBlank( allowedMethods ) ) {
-                res.addHeader( "Access-Contrl-Allow-Methods", allowedMethods );
+                res.addHeader( "Access-Control-Allow-Methods", allowedMethods );
             }
             if ( StringUtils.isNotBlank( allowedHeaders ) ) {
                 res.addHeader( "Access-Control-Allow-Headers", allowedHeaders );
@@ -96,7 +108,15 @@ public class CorsFilter extends OncePerRequestFilter {
      * Use a wildcard "*" to allow all.
      */
     public void setAllowedOrigins( String allowedOrigins ) {
-        this.allowedOrigins = allowedOrigins;
+        // FIXME: for some reason, Spring does not substitute placeholders in filters and we need that to make the allowed origins configurable.
+        WebApplicationContext context = WebApplicationContextUtils.getRequiredWebApplicationContext( getServletContext() );
+        if ( context instanceof ConfigurableApplicationContext ) {
+            this.allowedOrigins = ( ( ConfigurableWebApplicationContext ) context ).getBeanFactory()
+                    .resolveEmbeddedValue( allowedOrigins );
+        } else {
+            this.allowedOrigins = allowedOrigins;
+            log.warn( "The context does not implement the ConfigurableApplicationContext interface, no placeholder substitution will be performed." );
+        }
     }
 
     /**
