@@ -1,12 +1,12 @@
 package ubic.gemma.rest.servlet;
 
+import org.junit.Before;
 import org.junit.Test;
 import org.springframework.http.HttpStatus;
 import org.springframework.mock.web.MockFilterChain;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 
-import javax.servlet.Filter;
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletResponse;
@@ -17,10 +17,17 @@ import static org.junit.Assert.assertNull;
 
 public class CorsFilterTest {
 
-    Filter corsFilter = new CorsFilter();
+    private CorsFilter corsFilter;
+
+    @Before
+    public void setUp() {
+        corsFilter = new CorsFilter();
+    }
 
     @Test
     public void testRequestWithOrigin() throws ServletException, IOException {
+        corsFilter.setAllowedOrigins( "*" );
+        corsFilter.setAllowedHeaders( "Authorization,Content-Type,X-Gemma-Client-ID" );
         MockHttpServletRequest req = new MockHttpServletRequest();
         req.setMethod( "GET" );
         req.addHeader( "Origin", "localhost" );
@@ -32,8 +39,11 @@ public class CorsFilterTest {
         assertNull( res.getHeader( "Access-Control-Allow-Headers" ) );
     }
 
+
     @Test
     public void testRequestWithoutOrigin() throws ServletException, IOException {
+        corsFilter.setAllowedOrigins( "*" );
+        corsFilter.setAllowedHeaders( "Authorization,Content-Type,X-Gemma-Client-ID" );
         MockHttpServletRequest req = new MockHttpServletRequest();
         req.setMethod( "GET" );
         HttpServletResponse res = new MockHttpServletResponse();
@@ -45,7 +55,25 @@ public class CorsFilterTest {
     }
 
     @Test
+    public void testRequestWithCredentials() throws ServletException, IOException {
+        corsFilter.setAllowedOrigins( "http://localhost" );
+        corsFilter.setAllowCredentials( true );
+        MockHttpServletRequest req = new MockHttpServletRequest();
+        req.setMethod( "GET" );
+        req.addHeader( "Origin", "http://localhost" );
+        HttpServletResponse res = new MockHttpServletResponse();
+        FilterChain filterChain = new MockFilterChain();
+        corsFilter.doFilter( req, res, filterChain );
+        assertEquals( HttpStatus.OK.value(), res.getStatus() );
+        assertEquals( "http://localhost", res.getHeader( "Access-Control-Allow-Origin" ) );
+        assertEquals( "true", res.getHeader( "Access-Control-Allow-Credentials" ) );
+        assertEquals( "Origin", res.getHeader( "Vary" ) );
+    }
+
+    @Test
     public void testPreflightRequest() throws ServletException, IOException {
+        corsFilter.setAllowedOrigins( "*" );
+        corsFilter.setAllowedHeaders( "Authorization,Content-Type,X-Gemma-Client-ID" );
         MockHttpServletRequest req = new MockHttpServletRequest();
         req.setMethod( "OPTIONS" );
         req.addHeader( "Origin", "localhost" );
@@ -56,4 +84,36 @@ public class CorsFilterTest {
         assertEquals( "Authorization,Content-Type,X-Gemma-Client-ID", res.getHeader( "Access-Control-Allow-Headers" ) );
     }
 
+    @Test
+    public void testPreflightRequestWithCredentials() throws ServletException, IOException {
+        corsFilter.setAllowedOrigins( "https://localhost" );
+        corsFilter.setAllowedHeaders( "Authorization" );
+        corsFilter.setAllowCredentials( true );
+        MockHttpServletRequest req = new MockHttpServletRequest();
+        req.setMethod( "OPTIONS" );
+        req.addHeader( "Origin", "https://localhost" );
+        HttpServletResponse res = new MockHttpServletResponse();
+        FilterChain filterChain = new MockFilterChain();
+        corsFilter.doFilter( req, res, filterChain );
+        assertEquals( HttpStatus.NO_CONTENT.value(), res.getStatus() );
+        assertEquals( "https://localhost", res.getHeader( "Access-Control-Allow-Origin" ) );
+        assertEquals( "Authorization", res.getHeader( "Access-Control-Allow-Headers" ) );
+        assertEquals( "true", res.getHeader( "Access-Control-Allow-Credentials" ) );
+    }
+
+    @Test
+    public void testPreflightRequestWithCredentialsAndInvalidOrigin() throws ServletException, IOException {
+        corsFilter.setAllowedOrigins( "https://localhost" );
+        corsFilter.setAllowedHeaders( "Authorization" );
+        MockHttpServletRequest req = new MockHttpServletRequest();
+        req.setMethod( "OPTIONS" );
+        req.addHeader( "Origin", "http://localhost2" );
+        HttpServletResponse res = new MockHttpServletResponse();
+        FilterChain filterChain = new MockFilterChain();
+        corsFilter.doFilter( req, res, filterChain );
+        assertEquals( HttpStatus.FORBIDDEN.value(), res.getStatus() );
+        assertNull( res.getHeader( "Access-Control-Allow-Origin" ) );
+        assertNull( res.getHeader( "Access-Control-Allow-Headers" ) );
+        assertNull( res.getHeader( "Access-Control-Allow-Credentials" ) );
+    }
 }
