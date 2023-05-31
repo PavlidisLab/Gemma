@@ -42,8 +42,10 @@ import java.util.*;
  *
  * @author pavlidis
  * @see org.apache.commons.configuration2.CompositeConfiguration
+ * @deprecated use {@link org.springframework.beans.factory.annotation.Value} to inject configurations
  */
 @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
+@Deprecated
 public class Settings {
 
     /**

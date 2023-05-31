@@ -3,9 +3,10 @@
 <beans xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
        xmlns="http://www.springframework.org/schema/beans"
        xmlns:aop="http://www.springframework.org/schema/aop"
+       xmlns:context="http://www.springframework.org/schema/context"
        xsi:schemaLocation="http://www.springframework.org/schema/beans
             http://www.springframework.org/schema/beans/spring-beans.xsd
-       http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop.xsd">
+       http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop.xsd http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd">
 
     <!-- Local tasks executor -->
     <bean id="taskExecutor" class="org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor">
@@ -24,33 +25,10 @@
         <property name="fallbackToSystemLocale" value="false"/>
     </bean>
 
-    <!-- configurationPropertyConfigurer allows you to use variables like ${mail.host} in the spring bean definitions. Variables
-        are listed in a resource. If the resource is in your classpath, list in in 'locations'. Other config files can be added by
-        defining PropertiesConfiguration instances -->
-    <bean id="userPropertiesFileHandler" class="org.apache.commons.configuration2.io.FileHandler" init-method="load">
-        <constructor-arg index="0">
-            <ref local="userProperties"/>
-        </constructor-arg>
-        <property name="fileName" value="Gemma.properties"/>
-    </bean>
-
-    <bean id="userProperties" class="org.apache.commons.configuration2.PropertiesConfiguration"/>
-
-    <bean id="configurationPropertyConfigurer"
-          class="ubic.gemma.persistence.util.CommonsConfigurationPropertyPlaceholderConfigurer"
-          depends-on="userPropertiesFileHandler">
-        <property name="configuration">
-            <ref local="userProperties"/>
-        </property>
-        <property name="locations">
-            <list>
-                <value>classpath:default.properties</value>
-            </list>
-        </property>
-        <property name="ignoreUnresolvablePlaceholders" value="false"/>
-        <property name="ignoreResourceNotFound" value="false"/>
-    </bean>
-
+    <context:property-placeholder location="file:${user.home}/Gemma.properties" ignore-unresolvable="true"/>
+    <context:property-placeholder location="classpath:default.properties" ignore-unresolvable="true"/>
+    <context:property-placeholder location="classpath:project.properties" ignore-unresolvable="true"/>
+    <context:property-placeholder location="classpath:ubic/gemma/version.properties" ignore-resource-not-found="true"/>
 
     <!-- Configure Velocity for sending e-mail -->
     <bean id="velocityEngine" class="org.apache.velocity.app.VelocityEngine">
