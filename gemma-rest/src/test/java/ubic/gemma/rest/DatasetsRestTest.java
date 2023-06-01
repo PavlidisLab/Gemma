@@ -33,6 +33,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 /**
  * @author tesarst
  */
+@Category(SlowTest.class)
 @ActiveProfiles("web")
 @WebAppConfiguration
 public class DatasetsRestTest extends BaseSpringContextTest {
@@ -94,7 +95,6 @@ public class DatasetsRestTest extends BaseSpringContextTest {
     }
 
     @Test
-    @Category(SlowTest.class)
     public void testSomeById() {
         ResponseDataObject<List<ExpressionExperimentValueObject>> response = datasetsWebService.getDatasetsByIds( DatasetArrayArg.valueOf(
                         ees.get( 0 ).getId() + ", 12310, " + ees.get( 2 )
@@ -115,7 +115,6 @@ public class DatasetsRestTest extends BaseSpringContextTest {
     }
 
     @Test
-    @Category(SlowTest.class)
     public void testAllFilterById() {
         FilteringAndPaginatedResponseDataObject<DatasetsWebService.ExpressionExperimentWithSearchResultValueObject> response = datasetsWebService.getDatasets(
                 null,
@@ -133,7 +132,6 @@ public class DatasetsRestTest extends BaseSpringContextTest {
     }
 
     @Test
-    @Category(SlowTest.class)
     public void testAllFilterByIdIn() {
         FilterArg<ExpressionExperiment> filterArg = FilterArg.valueOf( "id in (" + ees.get( 0 ).getId() + ")" );
         assertThat( datasetArgService.getFilters( filterArg ) )
@@ -159,7 +157,6 @@ public class DatasetsRestTest extends BaseSpringContextTest {
     }
 
     @Test
-    @Category(SlowTest.class)
     public void testAllFilterByShortName() {
         FilterArg<ExpressionExperiment> filterArg = FilterArg.valueOf( "shortName = " + ees.get( 0 ).getShortName() );
         assertThat( datasetArgService.getFilters( filterArg ) )
@@ -185,7 +182,6 @@ public class DatasetsRestTest extends BaseSpringContextTest {
     }
 
     @Test
-    @Category(SlowTest.class)
     public void testAllFilterByShortNameIn() {
         FilterArg<ExpressionExperiment> filterArg = FilterArg.valueOf( "shortName in (" + ees.get( 0 ).getShortName() + ")" );
         assertThat( datasetArgService.getFilters( filterArg ) )
@@ -211,7 +207,6 @@ public class DatasetsRestTest extends BaseSpringContextTest {
     }
 
     @Test
-    @Category(SlowTest.class)
     public void testAllFilterByIdInOrShortNameIn() {
         FilterArg<ExpressionExperiment> filterArg = FilterArg.valueOf( "id in (" + ees.get( 0 ).getId() + ") or shortName in (" + ees.get( 1 ).getShortName() + ")" );
         assertThat( datasetArgService.getFilters( filterArg ) )
@@ -259,7 +254,6 @@ public class DatasetsRestTest extends BaseSpringContextTest {
     }
 
     @Test
-    @Category(SlowTest.class)
     public void testFilterByGeeqQualityScore() {
         datasetsWebService.getDatasets(
                 null,

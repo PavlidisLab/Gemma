@@ -27,7 +27,6 @@ import static org.assertj.core.api.Assertions.assertThat;
  *
  * @author poirigui
  */
-@Category(SlowTest.class)
 @CommonsLog
 public class AnalysisResultSetsJerseyTest extends BaseJerseyIntegrationTest {
 

@@ -4,6 +4,7 @@ import org.assertj.core.api.InstanceOfAssertFactories;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -17,6 +18,7 @@ import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.search.SearchResult;
 import ubic.gemma.core.search.SearchService;
+import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
@@ -324,6 +326,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
     }
 
     @Test
+    @Category(SlowTest.class)
     public void testGetDatasetRawExpressionByQuantitationType() throws IOException {
         QuantitationType qt = QuantitationType.Factory.newInstance();
         when( quantitationTypeService.findByIdAndDataVectorType( ee, 12L, RawExpressionDataVector.class ) ).thenReturn( qt );
