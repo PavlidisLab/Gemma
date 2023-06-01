@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -23,8 +23,8 @@ import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.analysis.report.WhatsNewService;
-import ubic.gemma.core.util.test.BaseSpringContextTest;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.web.util.BaseSpringWebTest;
 
 import java.lang.reflect.InvocationTargetException;
 
@@ -33,7 +33,7 @@ import java.lang.reflect.InvocationTargetException;
  *
  * @author keshav
  */
-public class SchedulerSecurityTest extends BaseSpringContextTest {
+public class SchedulerSecurityTest extends BaseSpringWebTest {
 
     @Autowired
     private ExpressionExperimentService expressionExperimentService;

@@ -4,6 +4,8 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.web.WebAppConfiguration;
 import ubic.gemma.core.util.test.BaseSpringContextTest;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
@@ -20,6 +22,8 @@ import ubic.gemma.rest.util.args.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+@ActiveProfiles("web")
+@WebAppConfiguration
 public class PlatformsWebServiceTest extends BaseSpringContextTest {
 
     @Autowired

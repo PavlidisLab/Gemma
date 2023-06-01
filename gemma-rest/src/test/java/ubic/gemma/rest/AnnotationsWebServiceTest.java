@@ -8,6 +8,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.security.test.context.support.WithSecurityContextTestExecutionListener;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestExecutionListeners;
 import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
@@ -36,6 +37,7 @@ import static org.mockito.Mockito.*;
 /**
  * @author poirigui
  */
+@ActiveProfiles("web")
 @WebAppConfiguration
 @ContextConfiguration
 @TestExecutionListeners(WithSecurityContextTestExecutionListener.class)

@@ -10,14 +10,12 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import ubic.gemma.core.util.test.TestAuthenticationUtils;
 import ubic.gemma.core.util.test.category.SpringContextTest;
-import ubic.gemma.persistence.util.SpringProfiles;
 
 /**
  * Base class for Jersey-based integration tests.
  *
  * @author poirigui
  */
-@ActiveProfiles({ "web", SpringProfiles.TEST })
 @Category(SpringContextTest.class)
 @ContextConfiguration(locations = { "classpath*:ubic/gemma/applicationContext-*.xml" })
 public abstract class BaseJerseyIntegrationTest extends BaseJerseyTest {

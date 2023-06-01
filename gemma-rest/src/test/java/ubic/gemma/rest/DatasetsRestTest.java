@@ -5,6 +5,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.web.WebAppConfiguration;
 import ubic.gemma.core.util.test.BaseSpringContextTest;
 import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -31,6 +33,8 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 /**
  * @author tesarst
  */
+@ActiveProfiles("web")
+@WebAppConfiguration
 public class DatasetsRestTest extends BaseSpringContextTest {
 
     @Autowired
