@@ -82,16 +82,25 @@ public class GoogleAnalytics4Provider implements AnalyticsProvider, Initializing
     private final Queue<_Event> events = new PriorityBlockingQueue<>();
     private Future<Integer> lastManualFlush = null;
 
+    /**
+     * Create a new Google Analytics 4 provider.
+     *
+     * @param restTemplate  a REST template for performing requests with the collect API
+     * @param taskExecutor  a task executor for running scheduled flush tasks
+     * @param measurementId a measurement ID which may be empty
+     * @param apiSecret     an API secret, must be non-empty if measurementId is supplied
+     */
     public GoogleAnalytics4Provider( RestTemplate restTemplate, ScheduledExecutorService taskExecutor, String measurementId, String apiSecret ) {
-        Assert.isTrue( !StringUtils.isBlank( measurementId ) );
-        Assert.isTrue( !StringUtils.isBlank( apiSecret ) );
+        Assert.isTrue( StringUtils.isBlank( measurementId ) || !StringUtils.isBlank( apiSecret ) );
         this.restTemplate = restTemplate;
         this.taskExecutor = taskExecutor;
         this.measurementId = measurementId;
         this.apiSecret = apiSecret;
     }
 
-    @SuppressWarnings("unused")
+    /**
+     * @see #GoogleAnalytics4Provider(RestTemplate, ScheduledExecutorService, String, String)
+     */
     public GoogleAnalytics4Provider( String measurementId, String apiSecret ) {
         this( new RestTemplate(), new ScheduledThreadPoolExecutor( 1 ), measurementId, apiSecret );
     }
@@ -194,6 +203,10 @@ public class GoogleAnalytics4Provider implements AnalyticsProvider, Initializing
 
     @Override
     public void sendEvent( String eventName, Date date, Map<String, String> params ) {
+        if ( StringUtils.isBlank( measurementId ) ) {
+            log.trace( String.format( "No measurement ID is configured; the %s event will be ignored.", eventName ) );
+            return;
+        }
         String clientId = clientIdRetrievalStrategy.get();
         if ( clientId == null ) {
             log.trace( String.format( "No client ID is could be retrieved; the %s event will be ignored.", eventName ) );

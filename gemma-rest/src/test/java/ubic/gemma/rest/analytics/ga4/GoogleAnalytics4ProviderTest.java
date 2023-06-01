@@ -9,6 +9,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.springframework.web.client.RestTemplate;
 import ubic.gemma.core.util.test.category.SlowTest;
+import ubic.gemma.rest.analytics.AnalyticsProvider;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -42,6 +43,14 @@ public class GoogleAnalytics4ProviderTest {
     @After
     public void tearDown() throws Exception {
         provider.destroy();
+    }
+
+    @Test
+    public void testBlankMeasurementId() {
+        AnalyticsProvider provider = new GoogleAnalytics4Provider( "", "" );
+        provider.sendEvent( "page_view" );
+        assertThatThrownBy( () -> new GoogleAnalytics4Provider( "test", "" ) )
+                .isInstanceOf( IllegalArgumentException.class );
     }
 
     @Test
