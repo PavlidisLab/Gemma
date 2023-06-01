@@ -3,13 +3,16 @@ package ubic.gemma.core.util.test;
 import org.hibernate.cfg.Settings;
 import org.hibernate.internal.SessionFactoryImpl;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.ContextConfiguration;
+import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.persistence.util.TestComponent;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+@Category(SlowTest.class)
 @ContextConfiguration
 public class HibernateConfigTest extends BaseDatabaseTest {
 
