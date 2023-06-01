@@ -1,11 +1,18 @@
 package ubic.gemma.rest.servlet;
 
-import org.junit.Before;
 import org.junit.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpStatus;
 import org.springframework.mock.web.MockFilterChain;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
+import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
+import org.springframework.test.context.web.WebAppConfiguration;
+import ubic.gemma.persistence.util.TestComponent;
 
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
@@ -15,14 +22,23 @@ import java.io.IOException;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
-public class CorsFilterTest {
+@WebAppConfiguration
+@ContextConfiguration
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
+public class CorsFilterTest extends AbstractJUnit4SpringContextTests {
 
-    private CorsFilter corsFilter;
+    @Configuration
+    @TestComponent
+    static class CorsFilterTestContextConfiguration {
 
-    @Before
-    public void setUp() {
-        corsFilter = new CorsFilter();
+        @Bean
+        public CorsFilter corsFilter() {
+            return new CorsFilter();
+        }
     }
+
+    @Autowired
+    private CorsFilter corsFilter;
 
     @Test
     public void testRequestWithOrigin() throws ServletException, IOException {
