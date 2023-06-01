@@ -1,14 +1,12 @@
 package ubic.gemma.rest.providers;
 
+import org.apache.commons.lang3.StringUtils;
 import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.monitoring.RequestEvent;
 import org.glassfish.jersey.server.monitoring.RequestEventListener;
 import ubic.gemma.rest.analytics.AnalyticsProvider;
 
-import java.util.Collections;
-import java.util.Date;
-import java.util.IdentityHashMap;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Request event listener that publishes an event when a request is finished.
@@ -36,14 +34,23 @@ public class AnalyticsRequestEventListener implements RequestEventListener {
                 eventDates.put( request, new Date() );
                 break;
             case RESOURCE_METHOD_FINISHED:
+                Map<String, String> params = new HashMap<>();
+                params.put( "method", request.getMethod() );
+                params.put( "endpoint", limitParamValue( request.getAbsolutePath().getPath() ) );
+                String userAgent = request.getHeaderString( "User-Agent" );
+                if ( StringUtils.isNotBlank( userAgent ) ) {
+                    params.put( "user_agent", limitParamValue( userAgent.trim() ) );
+                }
                 // the analytics need to be collected here because the RequestAttributes will be cleared in REQUEST_FILTERED
-                analyticsProvider.sendEvent( eventName, date,
-                        "method", request.getMethod(),
-                        "endpoint", request.getAbsolutePath().getPath() );
+                analyticsProvider.sendEvent( eventName, date, params );
                 break;
             case FINISHED:
                 eventDates.remove( request );
                 break;
         }
+    }
+
+    private String limitParamValue( String v ) {
+        return v.substring( 0, Math.min( v.length(), 100 ) );
     }
 }

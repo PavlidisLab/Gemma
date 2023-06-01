@@ -11,11 +11,8 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.InitializingBean;
-import org.springframework.http.HttpEntity;
 import org.springframework.http.client.ClientHttpRequestExecution;
 import org.springframework.util.Assert;
-import org.springframework.util.LinkedMultiValueMap;
-import org.springframework.util.MultiValueMap;
 import org.springframework.validation.DirectFieldBindingResult;
 import org.springframework.validation.Errors;
 import org.springframework.validation.Validator;
@@ -75,7 +72,6 @@ public class GoogleAnalytics4Provider implements AnalyticsProvider, Initializing
 
     private ClientIdRetrievalStrategy clientIdRetrievalStrategy = () -> null;
     private UserIdRetrievalStrategy userIdRetrievalStrategy = () -> null;
-    private UserAgentRetrievalStrategy userAgentRetrievalStrategy = () -> null;
 
 
     /* internal state */
@@ -135,13 +131,6 @@ public class GoogleAnalytics4Provider implements AnalyticsProvider, Initializing
     }
 
     /**
-     * Set the strategy used to resolve the {@code User-Agent}.
-     */
-    public void setUserAgentRetrievalStrategy( UserAgentRetrievalStrategy userAgentRetrievalStrategy ) {
-        this.userAgentRetrievalStrategy = userAgentRetrievalStrategy;
-    }
-
-    /**
      * Enable the debug mode.
      * <p>
      * When debug mode is enabled, a testing GA4 endpoint will be used and {@link #sendEvent(String, Date, Map)} may
@@ -184,7 +173,6 @@ public class GoogleAnalytics4Provider implements AnalyticsProvider, Initializing
         String name;
         Date date;
         Map<String, String> params;
-        String userAgent;
 
         @Override
         public int compareTo( _Event event ) {
@@ -212,8 +200,7 @@ public class GoogleAnalytics4Provider implements AnalyticsProvider, Initializing
             log.trace( String.format( "No client ID is could be retrieved; the %s event will be ignored.", eventName ) );
             return;
         }
-        _Event e = new _Event( clientIdRetrievalStrategy.get(), userIdRetrievalStrategy.get(), eventName, date, params,
-                userAgentRetrievalStrategy.get() );
+        _Event e = new _Event( clientIdRetrievalStrategy.get(), userIdRetrievalStrategy.get(), eventName, date, params );
         Errors errors = validateEvent( e );
         if ( errors.hasErrors() ) {
             if ( debug ) {
@@ -402,31 +389,19 @@ public class GoogleAnalytics4Provider implements AnalyticsProvider, Initializing
         }
         if ( batch.isEmpty() )
             return 0;
-        String userAgent = null;
         Payload payload = new Payload( firstEvent.clientId, firstEvent.userId, firstEvent.date.getTime() * 1000L );
         for ( _Event e : batch ) {
             payload.events.add( new Event( e.name, e.params ) );
-            if ( e.userAgent != null ) {
-                userAgent = e.userAgent;
-            }
-        }
-        Object finalPayload;
-        if ( userAgent != null ) {
-            MultiValueMap<String, String> headers = new LinkedMultiValueMap<>();
-            headers.add( "User-Agent", userAgent );
-            finalPayload = new HttpEntity<>( payload, headers );
-        } else {
-            finalPayload = payload;
         }
         try {
             log.trace( String.format( "Flushing a batch of %d events, %d events pending...", batch.size(), events.size() ) );
             if ( debug ) {
-                ValidationResult v = restTemplate.postForObject( debugEndpoint, finalPayload, ValidationResult.class, apiSecret, measurementId );
+                ValidationResult v = restTemplate.postForObject( debugEndpoint, payload, ValidationResult.class, apiSecret, measurementId );
                 if ( !v.validationMessages.isEmpty() ) {
                     throw new IllegalArgumentException( v.toString() );
                 }
             } else {
-                restTemplate.postForLocation( endpoint, finalPayload, apiSecret, measurementId );
+                restTemplate.postForLocation( endpoint, payload, apiSecret, measurementId );
             }
             return batch.size();
         } catch ( RestClientException e ) {
