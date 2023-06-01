@@ -41,8 +41,6 @@
 			entry-point-ref="restAuthEntryPoint" realm="Gemma RESTful API">
 		<s:anonymous granted-authority="IS_AUTHENTICATED_ANONYMOUSLY"/>
 		<s:http-basic/>
-		<!-- allow anonymous CORS request with OPTIONS -->
-		<s:intercept-url method="OPTIONS" pattern="/rest/v2/users/**" access="IS_AUTHENTICATED_ANONYMOUSLY"/>
 		<!-- accessing user details requires at the very least a user role -->
 		<s:intercept-url pattern="/rest/v2/users/**" access="GROUP_USER"/>
 	</s:http>

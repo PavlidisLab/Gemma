@@ -102,6 +102,14 @@
         <servlet-name>gemma</servlet-name>
     </filter-mapping>
 
+    <!-- CORS -->
+    <!-- ideally we'd be using <servlet-name>gemma-rest</servlet-name>, but doing so prevents the filter from running
+         before springSecurityFilterChain and adding any necessary Access-Control-Allow-Origin headers -->
+    <filter-mapping>
+        <filter-name>cors</filter-name>
+        <url-pattern>/rest/v2/*</url-pattern>
+    </filter-mapping>
+
     <!-- Spring Security -->
     <filter-mapping>
         <filter-name>springSecurityFilterChain</filter-name>
@@ -119,11 +127,6 @@
     <filter-mapping>
         <filter-name>sitemesh</filter-name>
         <servlet-name>gemma</servlet-name>
-    </filter-mapping>
-
-    <filter-mapping>
-        <filter-name>cors</filter-name>
-        <servlet-name>gemma-rest</servlet-name>
     </filter-mapping>
 
     <!-- rewrites /resources/restapidocs/ -> /resources/restapidocs/index.html -->
