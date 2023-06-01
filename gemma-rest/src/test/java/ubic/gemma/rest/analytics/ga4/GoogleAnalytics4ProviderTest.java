@@ -63,7 +63,7 @@ public class GoogleAnalytics4ProviderTest {
                 provider.sendEvent( "page_view", new Date(), "Key", "Value" );
             } ) );
         }
-        long maxWait = 15 * 1000 * 1000;
+        long maxWait = 15L * 1000L * 1000L * 1000L;
         long initialTime = System.nanoTime();
         assertThat( futures ).allSatisfy( f -> {
             long elapsed = System.nanoTime() - initialTime;
