@@ -40,7 +40,7 @@ public class BatchInfoPopulationServiceTest {
         cal.set( 2004, Calendar.APRIL, 10, 10, 1, 1 );
         Date d = cal.getTime();
 
-        Collection<Date> dates = new HashSet<>();
+        List<Date> dates = new ArrayList<>();
 
         dates.add( d );
         dates.add( DateUtils.addHours( d, 1 ) ); // first batch
@@ -51,7 +51,7 @@ public class BatchInfoPopulationServiceTest {
         dates.add( DateUtils.addHours( d, 26 ) );// second batch
         dates.add( DateUtils.addHours( d, 27 ) );// second batch
 
-        Map<String, Collection<Date>> actual = ser.convertDatesToBatches( dates );
+        Map<String, Collection<Date>> actual = ser.convertDatesToBatches( dates, null );
 
         /*
          * How many unique values?
@@ -67,7 +67,7 @@ public class BatchInfoPopulationServiceTest {
         cal.set( 2004, Calendar.APRIL, 10 );
         Date d = cal.getTime();
 
-        Collection<Date> dates = new HashSet<>();
+        List<Date> dates = new ArrayList<>();
 
         dates.add( d );
 
@@ -80,7 +80,9 @@ public class BatchInfoPopulationServiceTest {
         dates.add( DateUtils.addHours( d, 11125 ) );// third batch, but gets merged in with second.
         dates.add( DateUtils.addHours( d, 11189 ) ); // fourth batch, but gets merged in with second.
 
-        Map<String, Collection<Date>> actual = ser.convertDatesToBatches( dates );
+        dates.sort( Date::compareTo );
+
+        Map<String, Collection<Date>> actual = ser.convertDatesToBatches( dates, null );
 
         /*
          * How many unique values?
@@ -98,7 +100,7 @@ public class BatchInfoPopulationServiceTest {
         cal.set( 2004, Calendar.APRIL, 10, 10, 1, 1 );
         Date d = cal.getTime();
 
-        Collection<Date> dates = new HashSet<>();
+        List<Date> dates = new ArrayList<>();
 
         dates.add( d );
         dates.add( DateUtils.addHours( d, 2 ) ); // should be merged back.
@@ -109,7 +111,7 @@ public class BatchInfoPopulationServiceTest {
         dates.add( DateUtils.addHours( d, 7 ) ); // merged back.
         dates.add( DateUtils.addHours( d, 8 ) ); // merged back.
 
-        Map<String, Collection<Date>> actual = ser.convertDatesToBatches( dates );
+        Map<String, Collection<Date>> actual = ser.convertDatesToBatches( dates, null );
         this.debug( actual );
         Set<String> s = new HashSet<>( actual.keySet() );
         assertEquals( 1, s.size() );
@@ -123,7 +125,7 @@ public class BatchInfoPopulationServiceTest {
         cal.set( 2004, Calendar.APRIL, 10, 10, 1, 1 );
         Date d = cal.getTime();
 
-        Collection<Date> dates = new HashSet<>();
+        List<Date> dates = new ArrayList<>();
 
         dates.add( d );
         dates.add( DateUtils.addHours( d, 200 ) ); // merged back, even though gap is big.
@@ -134,10 +136,40 @@ public class BatchInfoPopulationServiceTest {
         dates.add( DateUtils.addHours( d, 302 ) ); // merge back
         dates.add( DateUtils.addHours( d, 402 ) ); // singleton merged.
 
-        Map<String, Collection<Date>> actual = ser.convertDatesToBatches( dates );
+        Map<String, Collection<Date>> actual = ser.convertDatesToBatches( dates, null );
         this.debug( actual );
         Set<String> s = new HashSet<>( actual.keySet() );
         assertEquals( 2, s.size() );
+
+    }
+
+    @Test
+    public void testDatesToBatchE() {
+        BatchInfoPopulationHelperServiceImpl ser = new BatchInfoPopulationHelperServiceImpl();
+        Calendar cal = Calendar.getInstance();
+        cal.set( 2004, Calendar.APRIL, 10, 10, 1, 1 );
+        Date d = cal.getTime();
+
+        List<Date> dates = new ArrayList<>();
+
+        dates.add( d );
+        dates.add( DateUtils.addHours( d, 200 ) ); // merged back, even though gap is big.
+        dates.add( DateUtils.addHours( d, 201 ) ); // merge back
+        dates.add( DateUtils.addHours( d, 202 ) ); // merge back
+        dates.add( DateUtils.addHours( d, 203 ) ); // merge back
+        dates.add( DateUtils.addHours( d, 301 ) ); // new batch -- but outlier, so last sample will be merged
+        dates.add( DateUtils.addHours( d, 302 ) ); // merge back
+
+        List<Boolean> usable = new ArrayList<>();
+        for ( int i = 0; i < dates.size(); i++ ) {
+            usable.add( true );
+        }
+        usable.set(5, false);
+
+        Map<String, Collection<Date>> actual = ser.convertDatesToBatches( dates, usable );
+        this.debug( actual );
+        Set<String> s = new HashSet<>( actual.keySet() );
+        assertEquals( 1, s.size() );
 
     }
 
