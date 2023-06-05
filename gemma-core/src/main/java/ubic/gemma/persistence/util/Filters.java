@@ -110,6 +110,14 @@ public class Filters implements Iterable<List<Filter>> {
         return empty().and( objectAlias, propertyName, propertyType, operator, requiredValue, originalProperty );
     }
 
+    public static <T> Filters by( @Nullable String objectAlias, String propertyName, Class<T> propertyType, Filter.Operator operator, Subquery requiredValue ) {
+        return empty().and( objectAlias, propertyName, propertyType, operator, requiredValue );
+    }
+
+    public static <T> Filters by( @Nullable String objectAlias, String propertyName, Class<T> propertyType, Filter.Operator operator, Subquery requiredValue, String originalProperty ) {
+        return empty().and( objectAlias, propertyName, propertyType, operator, requiredValue, originalProperty );
+    }
+
     /**
      * Copy constructor.
      */
@@ -157,6 +165,14 @@ public class Filters implements Iterable<List<Filter>> {
     }
 
     public <T> Filters and( @Nullable String objectAlias, String propertyName, Class<T> propertyType, Filter.Operator operator, Collection<T> requiredValues, String originalProperty ) {
+        return and( Filter.by( objectAlias, propertyName, propertyType, operator, requiredValues, originalProperty ) );
+    }
+
+    public <T> Filters and( @Nullable String objectAlias, String propertyName, Class<T> propertyType, Filter.Operator operator, Subquery requiredValues ) {
+        return and( Filter.by( objectAlias, propertyName, propertyType, operator, requiredValues ) );
+    }
+
+    public <T> Filters and( @Nullable String objectAlias, String propertyName, Class<T> propertyType, Filter.Operator operator, Subquery requiredValues, String originalProperty ) {
         return and( Filter.by( objectAlias, propertyName, propertyType, operator, requiredValues, originalProperty ) );
     }
 

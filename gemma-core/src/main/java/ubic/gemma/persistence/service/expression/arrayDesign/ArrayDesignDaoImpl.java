@@ -1084,7 +1084,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
         // see https://github.com/PavlidisLab/Gemma/issues/546
         String recursiveProperty = String.join( "|", new String[] { "subsumingArrayDesign", "mergedInto", "alternativeTo" } );
         configurer.unregisterProperties( Pattern.compile( "^(" + recursiveProperty + ")\\.(" + recursiveProperty + ")\\..+$" ).asPredicate() );
-        configurer.registerAlias( "externalReferences.", EXTERNAL_REFERENCE_ALIAS, DatabaseEntry.class, null, 2 );
+        configurer.registerAlias( "externalReferences.", EXTERNAL_REFERENCE_ALIAS, DatabaseEntry.class, null, 2, true );
         configurer.registerAlias( "taxon.", PRIMARY_TAXON_ALIAS, Taxon.class, "primaryTaxon", 2 );
     }
 

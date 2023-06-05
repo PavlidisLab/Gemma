@@ -12,6 +12,7 @@ import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.persistence.util.Filter;
 import ubic.gemma.persistence.util.Sort;
+import ubic.gemma.persistence.util.Subquery;
 
 import javax.annotation.Nullable;
 import javax.annotation.OverridingMethodsMustInvokeSuper;
@@ -54,6 +55,11 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
     private final Set<String> filterableProperties = new HashSet<>();
 
     /**
+     * Subset of {@link #filterableProperties} that should use a subquery for filtering.
+     */
+    private final Set<String> filterablePropertiesViaSubquery = new HashSet<>();
+
+    /**
      * Aliases for filterable properties.
      */
     private final Set<FilterablePropertyAlias> filterablePropertyAliases = new HashSet<>();
@@ -89,15 +95,22 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
 
         private final Map<String, Class<?>> entityByPrefix = new HashMap<>();
 
+        public void registerProperty( String propertyName ) {
+            registerProperty( propertyName, false );
+        }
+
         /**
          * Register a given property.
          * @throws IllegalArgumentException if the property is already registered
          */
-        public void registerProperty( String propertyName ) {
+        public void registerProperty( String propertyName, boolean useSubquery ) {
             if ( getFilterablePropertyMeta( propertyName ) == null ) {
                 throw new IllegalArgumentException( "Property %s does not have any associated meta information." );
             }
             if ( filterableProperties.add( propertyName ) ) {
+                if ( useSubquery ) {
+                    filterablePropertiesViaSubquery.add( propertyName );
+                }
                 log.debug( String.format( "Registered property %s.", propertyName ) );
             } else {
                 throw new IllegalArgumentException( String.format( "Filterable property %s is already registered.",
@@ -150,6 +163,10 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
             }
         }
 
+        public void registerEntity( String prefix, Class<?> entityClass, int maxDepth ) throws IllegalArgumentException {
+            registerEntity( prefix, entityClass, maxDepth, false );
+        }
+
         /**
          * Register an entity available at a given prefix.
          * <p>
@@ -159,10 +176,11 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
          * @param maxDepth    maximum depth for visiting properties. For example, zero would expose no property but the
          *                    entity itself, 1 would expose the properties of the alias, 2 would expose the properties
          *                    of any entity directly related to the given entity, etc.
+         * @param useSubquery whether to use a subquery when filtering by this entity (and its descendant)
          * @throws IllegalArgumentException if no entity of the given type is registered under the given prefix or if
          * the prefix is invalid
          */
-        public void registerEntity( String prefix, Class<?> entityClass, int maxDepth ) throws IllegalArgumentException {
+        public void registerEntity( String prefix, Class<?> entityClass, int maxDepth, boolean useSubquery ) throws IllegalArgumentException {
             if ( !prefix.isEmpty() && !prefix.endsWith( "." ) ) {
                 throw new IllegalArgumentException( "A non-empty prefix must end with a '.' character." );
             }
@@ -190,7 +208,7 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
                 Type propertyType = propertyTypes[i];
                 if ( propertyType.isEntityType() ) {
                     if ( maxDepth > 1 ) {
-                        registerEntity( prefix + propertyName + ".", propertyType.getReturnedClass(), maxDepth - 1 );
+                        registerEntity( prefix + propertyName + ".", propertyType.getReturnedClass(), maxDepth - 1, useSubquery );
                     } else {
                         log.debug( String.format( "Max depth reached, will not recurse into %s", propertyName ) );
                     }
@@ -201,7 +219,7 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
                     log.debug( String.format( "Property %s%s of type %s was excluded in %s: BLOBs and CLOBs are not exposed by default.",
                             prefix, propertyName, propertyType.getName(), entityClass.getName() ) );
                 } else if ( Filter.getConversionService().canConvert( String.class, propertyType.getReturnedClass() ) ) {
-                    registerProperty( prefix + propertyName );
+                    registerProperty( prefix + propertyName, useSubquery );
                 } else {
                     log.warn( String.format( "Property %s%s of type %s in %s is not supported and will be skipped.",
                             prefix, propertyName, propertyType.getReturnedClass().getName(), entityClass.getName() ) );
@@ -240,15 +258,22 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
         }
 
         /**
+         * @see #registerAlias(String, String, Class, String, int, boolean)
+         */
+        public void registerAlias( String prefix, @Nullable String objectAlias, Class<?> propertyType, @Nullable String aliasFor, int maxDepth ) {
+            registerAlias( prefix, objectAlias, propertyType, aliasFor, maxDepth, false );
+        }
+
+        /**
          * Register an alias for a property.
          * <p>
          * This also registers a property under the given prefix as per {@link #registerEntity(String, Class, int)}.
          * @param objectAlias internal alias used to refer to the entity as per {@link Filter#getObjectAlias()}.
          * @see #registerEntity(String, Class, int)
          */
-        public void registerAlias( String prefix, @Nullable String objectAlias, Class<?> propertyType, @Nullable String aliasFor, int maxDepth ) {
+        public void registerAlias( String prefix, @Nullable String objectAlias, Class<?> propertyType, @Nullable String aliasFor, int maxDepth, boolean useSubquery ) {
             filterablePropertyAliases.add( new FilterablePropertyAlias( prefix, objectAlias, propertyType, aliasFor ) );
-            registerEntity( prefix, propertyType, maxDepth );
+            registerEntity( prefix, propertyType, maxDepth, useSubquery );
             log.debug( String.format( "Registered alias for %s (%s) %s.", objectAlias, propertyType.getName(), summarizePrefix( prefix ) ) );
         }
 
@@ -285,13 +310,42 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
     @Override
     public final Filter getFilter( String property, Filter.Operator operator, String value ) {
         FilterablePropertyMeta propertyMeta = getFilterablePropertyMeta( property );
-        return Filter.parse( propertyMeta.objectAlias, propertyMeta.propertyName, propertyMeta.propertyType, operator, value, property );
+        return nestIfSubquery( Filter.parse( propertyMeta.objectAlias, propertyMeta.propertyName, propertyMeta.propertyType, operator, value, property ),
+                ( property ) );
     }
 
     @Override
     public final Filter getFilter( String property, Filter.Operator operator, Collection<String> values ) {
         FilterablePropertyMeta propertyMeta = getFilterablePropertyMeta( property );
-        return Filter.parse( propertyMeta.objectAlias, propertyMeta.propertyName, propertyMeta.propertyType, operator, values, property );
+        return nestIfSubquery( Filter.parse( propertyMeta.objectAlias, propertyMeta.propertyName, propertyMeta.propertyType, operator, values, property ),
+                property );
+    }
+
+    private Filter nestIfSubquery( Filter f, String propertyName ) {
+        if ( filterablePropertiesViaSubquery.contains( propertyName ) ) {
+            String entityName = getSessionFactory().getClassMetadata( elementClass ).getEntityName();
+            List<Subquery.Alias> aliases;
+            if ( f.getObjectAlias() != null ) {
+                aliases = null;
+                for ( FilterablePropertyAlias fpa : filterablePropertyAliases ) {
+                    if ( f.getObjectAlias().equals( fpa.getObjectAlias() ) ) {
+                        // FIXME: the prefix is not always a valid path
+                        aliases = Collections.singletonList( new Subquery.Alias( fpa.prefix.substring( 0, fpa.prefix.length() - 1 ), fpa.getObjectAlias() ) );
+                        break;
+                    }
+                }
+                if ( aliases == null ) {
+                    throw new IllegalArgumentException();
+                }
+            } else {
+                // the property refers to the root entity, no need for aliases
+                aliases = Collections.emptyList();
+            }
+            return Filter.by( objectAlias, getIdentifierPropertyName(), Long.class, Filter.Operator.inSubquery,
+                    new Subquery( entityName, getIdentifierPropertyName(), aliases, f ) );
+        } else {
+            return f;
+        }
     }
 
     @Override
