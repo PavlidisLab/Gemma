@@ -21,6 +21,7 @@ package ubic.gemma.persistence.util;
 import com.fasterxml.jackson.databind.util.StdDateFormat;
 import lombok.EqualsAndHashCode;
 import lombok.Value;
+import lombok.With;
 import org.apache.commons.lang3.ClassUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.core.convert.ConversionException;
@@ -133,6 +134,10 @@ public class Filter implements PropertyMapping {
         return new Filter( objectAlias, propertyName, propertyType, operator, requiredValues, originalProperty );
     }
 
+    public static <T> Filter by( @Nullable String objectAlias, String propertyName, Class<T> propertyType, Operator operator, Subquery requiredValues, String originalProperty ) {
+        return new Filter( objectAlias, propertyName, propertyType, operator, requiredValues, originalProperty );
+    }
+
     /**
      * Create a new filter without an original property.
      * @see #by(String, String, Class, Operator, Object, String)
@@ -146,6 +151,10 @@ public class Filter implements PropertyMapping {
      * @see #by(String, String, Class, Operator, Object, String)
      */
     public static <T> Filter by( @Nullable String objectAlias, String propertyName, Class<T> propertyType, Operator operator, Collection<T> requiredValues ) {
+        return new Filter( objectAlias, propertyName, propertyType, operator, requiredValues, null );
+    }
+
+    public static <T> Filter by( @Nullable String objectAlias, String propertyName, Class<T> propertyType, Operator operator, Subquery requiredValues ) {
         return new Filter( objectAlias, propertyName, propertyType, operator, requiredValues, null );
     }
 
@@ -194,7 +203,8 @@ public class Filter implements PropertyMapping {
         greaterThan( ">", true, null ),
         lessOrEq( "<=", true, null ),
         greaterOrEq( ">=", true, null ),
-        in( "in", true, Collection.class );
+        in( "in", true, Collection.class ),
+        inSubquery( "in", true, Subquery.class );
 
         /**
          * Token used when parsing filter input.
@@ -219,6 +229,7 @@ public class Filter implements PropertyMapping {
         }
     }
 
+    @With
     @Nullable
     String objectAlias;
     String propertyName;
@@ -254,7 +265,9 @@ public class Filter implements PropertyMapping {
 
     private String toString( boolean withOriginalProperties ) {
         String requiredValueString;
-        if ( requiredValue instanceof Collection ) {
+        if ( requiredValue instanceof Subquery ) {
+            return ( ( Subquery ) requiredValue ).getFilter().toString( withOriginalProperties );
+        } else if ( requiredValue instanceof Collection ) {
             requiredValueString = "(" + ( ( Collection<?> ) requiredValue ).stream()
                     .map( e -> conversionService.convert( e, String.class ) )
                     .map( Filter::quoteIfNecessary )

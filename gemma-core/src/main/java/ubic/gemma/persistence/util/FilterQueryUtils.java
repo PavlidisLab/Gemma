@@ -6,8 +6,9 @@ import org.hibernate.Query;
 import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.List;
-import java.util.Objects;
 import java.util.stream.Collectors;
+
+import static java.util.Objects.requireNonNull;
 
 /**
  * Utilities for integrating {@link Filter} into {@link org.hibernate.Query}.
@@ -71,60 +72,7 @@ public class FilterQueryUtils {
                     continue;
                 if ( !first )
                     disjunction.append( " or " );
-
-                if ( subClause.getPropertyName().endsWith( ".size" ) ) {
-                    disjunction.append( "size(" ).append( subClause.getProperty().replaceFirst( "\\.size$", "" ) ).append( ')' ).append( ' ' );
-                } else {
-                    disjunction.append( subClause.getProperty() ).append( ' ' );
-                }
-                String paramName = formParamName( subClause, ++i );
-
-                // we need to handle two special cases when comparing to NULL which cannot use == or != operators.
-                if ( subClause.getOperator().equals( Filter.Operator.eq ) && subClause.getRequiredValue() == null ) {
-                    disjunction.append( "is" );
-                } else if ( subClause.getOperator().equals( Filter.Operator.notEq ) && subClause.getRequiredValue() == null ) {
-                    disjunction.append( "is not" );
-                } else {
-                    String token;
-                    switch ( subClause.getOperator() ) {
-                        case eq:
-                            token = "=";
-                            break;
-                        case notEq:
-                            token = "!=";
-                            break;
-                        case like:
-                            token = "like";
-                            break;
-                        case lessThan:
-                            token = "<";
-                            break;
-                        case greaterThan:
-                            token = ">";
-                            break;
-                        case lessOrEq:
-                            token = "<=";
-                            break;
-                        case greaterOrEq:
-                            token = ">=";
-                            break;
-                        case in:
-                            token = "in";
-                            break;
-                        default:
-                            throw new IllegalArgumentException( String.format( "Unsupported operator %s.", subClause.getOperator() ) );
-                    }
-                    disjunction.append( token );
-                }
-
-                disjunction.append( ' ' );
-                if ( subClause.getRequiredValue() instanceof Collection<?> ) {
-                    disjunction
-                            .append( "(" ).append( ":" ).append( paramName ).append( ")" );
-                } else {
-                    disjunction
-                            .append( ":" ).append( paramName );
-                }
+                disjunction.append( formSubClause( subClause, ++i ) );
                 first = false;
             }
             String disjunctionString = disjunction.toString();
@@ -134,6 +82,84 @@ public class FilterQueryUtils {
         }
 
         return conjunction.toString();
+    }
+
+    private static String formSubClause( Filter filter, int i ) {
+        StringBuilder disjunction = new StringBuilder();
+        if ( filter.getPropertyName().endsWith( ".size" ) ) {
+            disjunction.append( "size(" ).append( filter.getProperty().replaceFirst( "\\.size$", "" ) ).append( ')' ).append( ' ' );
+        } else {
+            disjunction.append( filter.getProperty() ).append( ' ' );
+        }
+        String paramName = formParamName( filter, i );
+
+        // we need to handle two special cases when comparing to NULL which cannot use == or != operators.
+        if ( filter.getOperator().equals( Filter.Operator.eq ) && filter.getRequiredValue() == null ) {
+            disjunction.append( "is" );
+        } else if ( filter.getOperator().equals( Filter.Operator.notEq ) && filter.getRequiredValue() == null ) {
+            disjunction.append( "is not" );
+        } else {
+            String token;
+            switch ( filter.getOperator() ) {
+                case eq:
+                    token = "=";
+                    break;
+                case notEq:
+                    token = "!=";
+                    break;
+                case like:
+                    token = "like";
+                    break;
+                case lessThan:
+                    token = "<";
+                    break;
+                case greaterThan:
+                    token = ">";
+                    break;
+                case lessOrEq:
+                    token = "<=";
+                    break;
+                case greaterOrEq:
+                    token = ">=";
+                    break;
+                case in:
+                case inSubquery:
+                    token = "in";
+                    break;
+                default:
+                    throw new IllegalArgumentException( String.format( "Unsupported operator %s.", filter.getOperator() ) );
+            }
+            disjunction.append( token );
+        }
+
+        disjunction.append( ' ' );
+        if ( filter.getRequiredValue() instanceof Subquery ) {
+            Subquery s = ( Subquery ) filter.getRequiredValue();
+            disjunction
+                    .append( "(" );
+            disjunction
+                    .append( "select e." ).append( s.getIdentifierPropertyName() )
+                    .append( " from " )
+                    .append( s.getEntityName() )
+                    .append( " " )
+                    .append( "e" );
+            for ( Subquery.Alias a : s.getAliases() ) {
+                disjunction.append( " join " ).append( "e." ).append( a.getPropertyName() ).append( " " ).append( a.getAlias() );
+            }
+            disjunction.append( " where " );
+            if ( s.getFilter().getObjectAlias() == null ) {
+                disjunction.append( "e." );
+            }
+            disjunction.append( formSubClause( s.getFilter(), i ) );
+            disjunction.append( ")" );
+        } else if ( filter.getRequiredValue() instanceof Collection ) {
+            disjunction
+                    .append( "(" ).append( ":" ).append( paramName ).append( ")" );
+        } else {
+            disjunction
+                    .append( ":" ).append( paramName );
+        }
+        return disjunction.toString();
     }
 
     /**
@@ -150,9 +176,12 @@ public class FilterQueryUtils {
      * @param filters filters that provide the parameter values.
      */
     public static void addRestrictionParameters( Query query, @Nullable Filters filters ) {
+        addRestrictionParameters( query, filters, 0 );
+    }
+
+    private static void addRestrictionParameters( Query query, @Nullable Filters filters, int i ) {
         if ( filters == null )
             return;
-        int i = 0;
         for ( List<Filter> clause : filters ) {
             if ( clause == null )
                 continue;
@@ -160,12 +189,15 @@ public class FilterQueryUtils {
                 if ( subClause == null )
                     continue;
                 String paramName = formParamName( subClause, ++i );
-                if ( subClause.getOperator().equals( Filter.Operator.in ) ) {
+                if ( subClause.getOperator().equals( Filter.Operator.inSubquery ) ) {
+                    Subquery s = ( Subquery ) requireNonNull( subClause.getRequiredValue() );
+                    addRestrictionParameters( query, Filters.by( s.getFilter() ), i - 1 );
+                } else if ( subClause.getOperator().equals( Filter.Operator.in ) ) {
                     // order is unimportant for this operation, so we can ensure that it is consistent and therefore cacheable
-                    query.setParameterList( paramName, Objects.requireNonNull( ( Collection<?> ) subClause.getRequiredValue(), "Required value cannot be null for the 'in' operator." )
+                    query.setParameterList( paramName, requireNonNull( ( Collection<?> ) subClause.getRequiredValue(), "Required value cannot be null for the 'in' operator." )
                             .stream().sorted().distinct().collect( Collectors.toList() ) );
                 } else if ( subClause.getOperator().equals( Filter.Operator.like ) ) {
-                    query.setParameter( paramName, escapeLike( ( String ) Objects.requireNonNull( subClause.getRequiredValue(), "Required value cannot be null for the 'like' operator." ) ) + "%" );
+                    query.setParameter( paramName, escapeLike( ( String ) requireNonNull( subClause.getRequiredValue(), "Required value cannot be null for the 'like' operator." ) ) + "%" );
                 } else {
                     query.setParameter( paramName, subClause.getRequiredValue() );
                 }
