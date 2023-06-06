@@ -7,8 +7,9 @@ import java.util.List;
 
 /**
  * Represents a subquery right-hand side of a {@link Filter}.
- * <p>
  * @author poirgui
+ * @see Filter#by(String, String, Class, Filter.Operator, Subquery)
+ * @see Filter#by(String, String, Class, Filter.Operator, Subquery, String)
  */
 @Value
 public class Subquery {

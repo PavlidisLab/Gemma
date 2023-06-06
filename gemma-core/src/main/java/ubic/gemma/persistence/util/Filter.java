@@ -21,7 +21,6 @@ package ubic.gemma.persistence.util;
 import com.fasterxml.jackson.databind.util.StdDateFormat;
 import lombok.EqualsAndHashCode;
 import lombok.Value;
-import lombok.With;
 import org.apache.commons.lang3.ClassUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.core.convert.ConversionException;
@@ -231,7 +230,6 @@ public class Filter implements PropertyMapping {
         }
     }
 
-    @With
     @Nullable
     String objectAlias;
     String propertyName;
