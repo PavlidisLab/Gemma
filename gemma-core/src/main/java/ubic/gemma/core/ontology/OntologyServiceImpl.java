@@ -430,7 +430,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
         OntologyTerm ot = this.getTerm( uri );
         if ( ot != null ) {
             for ( AnnotationProperty ann : ot.getAnnotations() ) {
-                // FIXME: not clear this will work with all ontologies. UBERON does it this way.
+                // FIXME: not clear this will work with all ontologies. UBERON, HP, MP, MONDO does it this way.
                 if ( ann.getUri().equals( "http://purl.obolibrary.org/obo/IAO_0000115" ) ) {
                     return ann.getContents();
                 }
