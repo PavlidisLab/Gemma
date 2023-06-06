@@ -9,7 +9,10 @@ import ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails;
 import ubic.gemma.persistence.service.AbstractQueryFilteringVoEnabledDao;
 import ubic.gemma.persistence.util.Filter;
 import ubic.gemma.persistence.util.Filters;
+import ubic.gemma.persistence.util.FiltersUtils;
+import ubic.gemma.persistence.util.Sort;
 
+import javax.annotation.Nullable;
 import javax.annotation.OverridingMethodsMustInvokeSuper;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -30,8 +33,11 @@ public abstract class AbstractCuratableDao<C extends Curatable, VO extends Abstr
      */
     protected static final String CURATION_DETAILS_ALIAS = "s";
 
+    private final String objectAlias;
+
     protected AbstractCuratableDao( String objectAlias, Class<C> elementClass, SessionFactory sessionFactory ) {
         super( objectAlias, elementClass, sessionFactory );
+        this.objectAlias = objectAlias;
     }
 
     /**
@@ -74,6 +80,35 @@ public abstract class AbstractCuratableDao<C extends Curatable, VO extends Abstr
     protected void addNonTroubledFilter( Filters filters, String objectAlias ) {
         if ( !SecurityUtil.isUserAdmin() ) {
             filters.and( objectAlias, "curationDetails.troubled", Boolean.class, Filter.Operator.eq, false );
+        }
+    }
+
+    /**
+     * If the filters or sort refer to one of the one-to-many relations, multiple rows will be returned per datasets, so
+     * the query has to use a "distinct" clause make pagination work properly.
+     * <p>
+     * Using "distinct" otherwise has a steep performance penalty when combined with "order by".
+     * <p>
+     * Note that non-admin users always need a group by because of the jointure on ACL entries.
+     */
+    protected String distinctIfNecessary( @Nullable Filters filters, String... oneToManyAliases ) {
+        if ( FiltersUtils.containsAnyAlias( filters, null, oneToManyAliases ) || !SecurityUtil.isUserAdmin() ) {
+            return "distinct ";
+        } else {
+            return "";
+        }
+    }
+
+    /**
+     * Similar logic to {@link #distinctIfNecessary(Filters, String...)}, but using a group by since it's more efficient. It does
+     * not work for the counting queries, however.
+     */
+    @Nullable
+    protected String groupByIfNecessary( @Nullable Filters filters, @Nullable Sort sort, String... oneToManyAliases ) {
+        if ( FiltersUtils.containsAnyAlias( filters, sort, oneToManyAliases ) || !SecurityUtil.isUserAdmin() ) {
+            return objectAlias;
+        } else {
+            return null;
         }
     }
 

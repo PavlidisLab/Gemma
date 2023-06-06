@@ -990,14 +990,14 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
                 + "left join fetch s.lastNeedsAttentionEvent as eAttn "
                 + "left join fetch s.lastNoteUpdateEvent as eNote "
                 + "left join fetch s.lastTroubledEvent as eTrbl "
-                + "left join fetch ad.alternativeTo alt", filters, sort, groupByIfNecessary( filters, sort ) );
+                + "left join fetch ad.alternativeTo alt", filters, sort, groupByIfNecessary( filters, sort, EXTERNAL_REFERENCE_ALIAS ) );
     }
 
     @Override
     protected Query getFilteringIdQuery( @Nullable Filters filters ) {
         //language=HQL
         return finishFilteringQuery(
-                "select " + distinctIfNecessary( filters ) + "ad.id "
+                "select ad.id "
                         + "from ArrayDesign as ad "
                         + "left join ad.curationDetails " + CURATION_DETAILS_ALIAS + " "
                         + "left join ad.primaryTaxon " + PRIMARY_TAXON_ALIAS + " "
@@ -1005,13 +1005,13 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
                         + "left join s.lastNeedsAttentionEvent as eAttn "
                         + "left join s.lastNoteUpdateEvent as eNote "
                         + "left join s.lastTroubledEvent as eTrbl "
-                        + "left join ad.alternativeTo alt", filters, null, null );
+                        + "left join ad.alternativeTo alt", filters, null, groupByIfNecessary( filters, null, EXTERNAL_REFERENCE_ALIAS ) );
     }
 
     @Override
     protected Query getFilteringCountQuery( @Nullable Filters filters ) {
         //language=HQL
-        return finishFilteringQuery( "select count(" + distinctIfNecessary( filters ) + "ad) "
+        return finishFilteringQuery( "select count(" + distinctIfNecessary( filters, EXTERNAL_REFERENCE_ALIAS ) + "ad) "
                 + "from ArrayDesign as ad "
                 + "left join ad.curationDetails " + CURATION_DETAILS_ALIAS + " "
                 + "left join ad.primaryTaxon " + PRIMARY_TAXON_ALIAS + " "
@@ -1020,23 +1020,6 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
                 + "left join s.lastNoteUpdateEvent as eNote "
                 + "left join s.lastTroubledEvent as eTrbl "
                 + "left join ad.alternativeTo alt", filters, null, null );
-    }
-
-    private String distinctIfNecessary( @Nullable Filters filters ) {
-        if ( FiltersUtils.containsAnyAlias( filters, null, EXTERNAL_REFERENCE_ALIAS ) ) {
-            return "distinct ";
-        } else {
-            return "";
-        }
-    }
-
-    @Nullable
-    private String groupByIfNecessary( @Nullable Filters filters, @Nullable Sort sort ) {
-        if ( FiltersUtils.containsAnyAlias( filters, sort, EXTERNAL_REFERENCE_ALIAS ) ) {
-            return "ad";
-        } else {
-            return null;
-        }
     }
 
     private Query finishFilteringQuery( String queryString, @Nullable Filters filters, @Nullable Sort sort, @Nullable String groupBy ) {

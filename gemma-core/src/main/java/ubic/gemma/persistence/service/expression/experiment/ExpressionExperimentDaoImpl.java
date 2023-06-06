@@ -1652,7 +1652,7 @@ public class ExpressionExperimentDaoImpl
                 + "left join fetch eNote.eventType "
                 + "left join fetch s.lastTroubledEvent as eTrbl "
                 + "left join fetch eTrbl.eventType "
-                + "left join fetch ee.geeq as geeq", filters, sort, groupByIfNecessary( filters, sort ) );
+                + "left join fetch ee.geeq as geeq", filters, sort, groupByIfNecessary( filters, sort, ONE_TO_MANY_ALIASES ) );
     }
 
     @Override
@@ -1666,13 +1666,13 @@ public class ExpressionExperimentDaoImpl
                 + "left join s.lastNeedsAttentionEvent as eAttn "
                 + "left join s.lastNoteUpdateEvent as eNote "
                 + "left join s.lastTroubledEvent as eTrbl "
-                + "left join ee.geeq as geeq", filters, null, groupByIfNecessary( filters, null ) );
+                + "left join ee.geeq as geeq", filters, null, groupByIfNecessary( filters, null, ONE_TO_MANY_ALIASES ) );
     }
 
     @Override
     protected Query getFilteringCountQuery( @Nullable Filters filters ) {
         //language=HQL
-        return finishFilteringQuery( "select count(" + distinctIfNecessary( filters ) + "ee) "
+        return finishFilteringQuery( "select count(" + distinctIfNecessary( filters, ONE_TO_MANY_ALIASES ) + "ee) "
                 + "from ExpressionExperiment as ee "
                 + "left join ee.accession acc "
                 + "left join ee.experimentalDesign as EDES "
@@ -1682,33 +1682,6 @@ public class ExpressionExperimentDaoImpl
                 + "left join s.lastTroubledEvent as eTrbl "
                 + "left join ee.geeq as geeq", filters, null, null )
                 .setCacheable( true );
-    }
-
-    /**
-     * If the filters or sort refer to one of the one-to-many relations, multiple rows will be returned per datasets, so
-     * the query has to use a "distinct" clause make pagination work properly.
-     * <p>
-     * Using "distinct" otherwise has a steep performance penalty with combined with "order by".
-     */
-    private String distinctIfNecessary( @Nullable Filters filters ) {
-        if ( FiltersUtils.containsAnyAlias( filters, null, ONE_TO_MANY_ALIASES ) ) {
-            return "distinct ";
-        } else {
-            return "";
-        }
-    }
-
-    /**
-     * Similar logic to {@link #distinctIfNecessary(Filters)}, but using a group by since it's more efficient. It does
-     * not work for the counting query, however.
-     */
-    @Nullable
-    private String groupByIfNecessary( @Nullable Filters filters, @Nullable Sort sort ) {
-        if ( FiltersUtils.containsAnyAlias( filters, sort, ONE_TO_MANY_ALIASES ) ) {
-            return "ee";
-        } else {
-            return null;
-        }
     }
 
     private Query finishFilteringQuery( String queryString, @Nullable Filters filters, @Nullable Sort sort, @Nullable String groupBy ) {
