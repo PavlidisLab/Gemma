@@ -76,10 +76,19 @@ public class CharacteristicValueObject extends IdentifiableValueObject<Character
      */
     @GemmaWebOnly
     private boolean root = false;
+
     @GemmaWebOnly
     private String taxon = "";
+
     private String value = "";
     private String valueUri = null;
+
+    /**
+     * The definition of the value, if it is an ontology term, as supplied by the ontology. If the value is
+     * free text, this will be empty
+     */
+    @GemmaWebOnly
+    private String valueDefinition = "";
 
     /**
      * Required when using the class as a spring bean.

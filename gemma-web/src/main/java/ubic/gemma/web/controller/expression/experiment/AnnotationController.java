@@ -106,6 +106,7 @@ public class AnnotationController {
     /**
      * AJAX. Find terms for tagging, etc.
      *
+     * @param givenQueryString the query string
      * @param taxonId only used for genes, but generally this restriction is problematic for factorValues, which is an
      *                important use case.
      */

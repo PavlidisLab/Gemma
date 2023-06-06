@@ -30,10 +30,7 @@ import org.springframework.core.io.Resource;
 import org.springframework.core.task.AsyncTaskExecutor;
 import org.springframework.core.task.TaskExecutor;
 import org.springframework.stereotype.Service;
-import ubic.basecode.ontology.model.OntologyIndividual;
-import ubic.basecode.ontology.model.OntologyResource;
-import ubic.basecode.ontology.model.OntologyTerm;
-import ubic.basecode.ontology.model.OntologyTermSimple;
+import ubic.basecode.ontology.model.*;
 import ubic.basecode.ontology.providers.ExperimentalFactorOntologyService;
 import ubic.basecode.ontology.providers.FMAOntologyService;
 import ubic.basecode.ontology.providers.NIFSTDOntologyService;
@@ -382,6 +379,29 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
         Collection<CharacteristicValueObject> sortedResults = results.values().stream()
                 .sorted( getCharacteristicComparator( queryString ) )
                 .collect( Collectors.toList() );
+
+
+        /*
+         * Populate the definition for the top hits.
+         */
+        int numfilled = 0;
+        int maxfilled = 25; // presuming we don't need to look too far down the list ... just as a start.
+        for ( CharacteristicValueObject cvo : sortedResults ) {
+            // FIXME: the definition should be retreivable directly from the OntologyTerm; this is temporary.
+            OntologyTerm ot = this.getTerm( cvo.getValueUri() );
+            if ( ot != null ) {
+                for ( AnnotationProperty ann : ot.getAnnotations() ) {
+                    // FIXME: not clear this will work with all ontologies. UBERON does it this way.
+                    if ( ann.getUri().equals( "http://purl.obolibrary.org/obo/IAO_0000115" ) ) {
+                        cvo.setValueDefinition( ann.getContents() );
+                        break;
+                    }
+                }
+            }
+            if ( ++numfilled > maxfilled ) {
+                break;
+            }
+        }
 
         watch.stop();
 
