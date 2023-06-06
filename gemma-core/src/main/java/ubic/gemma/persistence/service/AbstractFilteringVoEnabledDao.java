@@ -1,6 +1,8 @@
 package ubic.gemma.persistence.service;
 
-import lombok.*;
+import lombok.EqualsAndHashCode;
+import lombok.Value;
+import lombok.With;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.time.StopWatch;
@@ -330,7 +332,17 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
                 for ( FilterablePropertyAlias fpa : filterablePropertyAliases ) {
                     if ( f.getObjectAlias().equals( fpa.getObjectAlias() ) ) {
                         // FIXME: the prefix is not always a valid path
-                        aliases = Collections.singletonList( new Subquery.Alias( fpa.prefix.substring( 0, fpa.prefix.length() - 1 ), fpa.getObjectAlias() ) );
+                        String[] parts = fpa.prefix.split( "\\." );
+                        aliases = new ArrayList<>();
+                        for ( int i = 0; i < parts.length - 1; i++ ) {
+                            String part = parts[i];
+                            aliases.add( new Subquery.Alias( i > 0 ? "alias" + i : null, part, "alias" + ( i + 1 ) ) );
+                        }
+                        if ( parts.length > 1 ) {
+                            aliases.add( new Subquery.Alias( "alias" + ( parts.length - 1 ), parts[parts.length - 1], fpa.getObjectAlias() ) );
+                        } else {
+                            aliases.add( new Subquery.Alias( null, parts[0], fpa.getObjectAlias() ) );
+                        }
                         break;
                     }
                 }

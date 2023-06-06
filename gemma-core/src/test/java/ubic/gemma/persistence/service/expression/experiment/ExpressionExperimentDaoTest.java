@@ -180,7 +180,7 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest {
                             .hasFieldOrPropertyWithValue( "entityName", "ubic.gemma.model.expression.experiment.ExpressionExperiment" )
                             .hasFieldOrPropertyWithValue( "identifierPropertyName", "id" );
                     Assertions.assertThat( s.getAliases() )
-                            .contains( new Subquery.Alias( "allCharacteristics", "ac" ) );
+                            .contains( new Subquery.Alias( null, "allCharacteristics", "ac" ) );
                     Assertions.assertThat( s.getFilter() )
                             .hasFieldOrPropertyWithValue( "objectAlias", "ac" )
                             .hasFieldOrPropertyWithValue( "propertyName", "valueUri" )
@@ -189,6 +189,33 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest {
                 } );
         assertEquals( " and (ee.id in (select e.id from ubic.gemma.model.expression.experiment.ExpressionExperiment e join e.allCharacteristics ac where ac.valueUri in (:ac_valueUri1)))",
                 FilterQueryUtils.formRestrictionClause( Filters.by( f ) ) );
+    }
+
+    @Test
+    public void testSubqueryWithMultipleJointures() {
+        Filter f = expressionExperimentDao.getFilter( "experimentalDesign.experimentalFactors.factorValues.characteristics.valueUri", Filter.Operator.in, Collections.singleton( "http://example.com" ) );
+        Assertions.assertThat( f.getOperator() )
+                .isEqualTo( Filter.Operator.inSubquery );
+        Assertions.assertThat( f.getRequiredValue() )
+                .isNotNull()
+                .asInstanceOf( InstanceOfAssertFactories.type( Subquery.class ) )
+                .satisfies( s -> {
+                    Assertions.assertThat( s )
+                            .hasFieldOrPropertyWithValue( "entityName", "ubic.gemma.model.expression.experiment.ExpressionExperiment" )
+                            .hasFieldOrPropertyWithValue( "identifierPropertyName", "id" );
+                    Assertions.assertThat( s.getAliases() )
+                            .containsExactly( new Subquery.Alias( null, "experimentalDesign", "alias1" ),
+                                    new Subquery.Alias( "alias1", "experimentalFactors", "alias2" ),
+                                    new Subquery.Alias( "alias2", "factorValues", "alias3" ),
+                                    new Subquery.Alias( "alias3", "characteristics", "fvc" ) );
+                    Assertions.assertThat( s.getFilter() )
+                            .hasFieldOrPropertyWithValue( "objectAlias", "fvc" )
+                            .hasFieldOrPropertyWithValue( "propertyName", "valueUri" )
+                            .hasFieldOrPropertyWithValue( "operator", Filter.Operator.in )
+                            .hasFieldOrPropertyWithValue( "requiredValue", Collections.singletonList( "http://example.com" ) );
+                } );
+        // assertEquals( "and (ee.id in (select e.id from ubic.gemma.model.expression.experiment.ExpressionExperiment e join e.allCharacteristics ac where ac.valueUri in (:ac_valueUri1)))",
+        //         FilterQueryUtils.formRestrictionClause( Filters.by( f ) ) );
     }
 
     private ExpressionExperiment reload( ExpressionExperiment e ) {
