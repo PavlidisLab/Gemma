@@ -4,6 +4,7 @@ import org.hibernate.Query;
 import org.junit.Test;
 
 import java.util.Arrays;
+import java.util.Collections;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
@@ -102,5 +103,25 @@ public class FilterQueryUtilsTest {
     public void testSortByCollectionSize() {
         assertThat( formOrderByClause( Sort.by( "ee", "bioAssays.size", null ) ) )
                 .isEqualTo( " order by size(ee.bioAssays)" );
+    }
+
+    @Test
+    public void testSubquery() {
+        assertThat( formRestrictionClause( Filters.by( "ee", "id", Integer.class, Filter.Operator.inSubquery,
+                new Subquery( "ExpressionExperiment", "id", Collections.emptyList(),
+                        Filter.by( null, "id", Long.class, Filter.Operator.eq, 1L ) ) ) ) )
+                .isEqualTo( " and (ee.id in (select e.id from ExpressionExperiment e where e.id = :id1))" );
+    }
+
+    @Test
+    public void testNestedSubquery() {
+        assertThat( formRestrictionClause( Filters.by( "ee", "id", Long.class, Filter.Operator.inSubquery,
+                new Subquery( "ExpressionExperiment", "id", Collections.emptyList(),
+                        Filter.by( null, "id", Long.class, Filter.Operator.inSubquery,
+                                new Subquery( "ExpressionExperiment", "id", Collections.emptyList(),
+                                        Filter.by( null, "id", Long.class, Filter.Operator.in,
+                                                Arrays.asList( 1L, 2L, 3L ) ) ),
+                                "id" ) ) ) ) )
+                .isEqualTo( " and (ee.id in (select e.id from ExpressionExperiment e where e.id in (select e.id from ExpressionExperiment e where e.id in (:id1))))" );
     }
 }

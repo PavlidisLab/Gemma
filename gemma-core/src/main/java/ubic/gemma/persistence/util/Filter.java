@@ -21,6 +21,7 @@ package ubic.gemma.persistence.util;
 import com.fasterxml.jackson.databind.util.StdDateFormat;
 import lombok.EqualsAndHashCode;
 import lombok.Value;
+import lombok.With;
 import org.apache.commons.lang3.ClassUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.core.convert.ConversionException;
@@ -31,6 +32,7 @@ import org.springframework.core.convert.converter.Converter;
 import org.springframework.core.convert.converter.ConverterFactory;
 import org.springframework.core.convert.support.ConfigurableConversionService;
 import org.springframework.core.convert.support.GenericConversionService;
+import org.springframework.util.Assert;
 
 import javax.annotation.Nullable;
 import java.net.MalformedURLException;
@@ -39,6 +41,7 @@ import java.text.DateFormat;
 import java.text.ParseException;
 import java.util.Collection;
 import java.util.Date;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -133,6 +136,10 @@ public class Filter implements PropertyMapping {
         return new Filter( objectAlias, propertyName, propertyType, operator, requiredValues, originalProperty );
     }
 
+    public static <T> Filter by( @Nullable String objectAlias, String propertyName, Class<T> propertyType, Operator operator, Subquery requiredValues, String originalProperty ) {
+        return new Filter( objectAlias, propertyName, propertyType, operator, requiredValues, originalProperty );
+    }
+
     /**
      * Create a new filter without an original property.
      * @see #by(String, String, Class, Operator, Object, String)
@@ -146,6 +153,10 @@ public class Filter implements PropertyMapping {
      * @see #by(String, String, Class, Operator, Object, String)
      */
     public static <T> Filter by( @Nullable String objectAlias, String propertyName, Class<T> propertyType, Operator operator, Collection<T> requiredValues ) {
+        return new Filter( objectAlias, propertyName, propertyType, operator, requiredValues, null );
+    }
+
+    public static <T> Filter by( @Nullable String objectAlias, String propertyName, Class<T> propertyType, Operator operator, Subquery requiredValues ) {
         return new Filter( objectAlias, propertyName, propertyType, operator, requiredValues, null );
     }
 
@@ -194,7 +205,8 @@ public class Filter implements PropertyMapping {
         greaterThan( ">", true, null ),
         lessOrEq( "<=", true, null ),
         greaterOrEq( ">=", true, null ),
-        in( "in", true, Collection.class );
+        in( "in", true, Collection.class ),
+        inSubquery( "in", true, Subquery.class );
 
         /**
          * Token used when parsing filter input.
@@ -219,6 +231,7 @@ public class Filter implements PropertyMapping {
         }
     }
 
+    @With
     @Nullable
     String objectAlias;
     String propertyName;
@@ -254,7 +267,9 @@ public class Filter implements PropertyMapping {
 
     private String toString( boolean withOriginalProperties ) {
         String requiredValueString;
-        if ( requiredValue instanceof Collection ) {
+        if ( requiredValue instanceof Subquery ) {
+            return ( ( Subquery ) requiredValue ).getFilter().toString( withOriginalProperties );
+        } else if ( requiredValue instanceof Collection ) {
             requiredValueString = "(" + ( ( Collection<?> ) requiredValue ).stream()
                     .map( e -> conversionService.convert( e, String.class ) )
                     .map( Filter::quoteIfNecessary )
@@ -305,6 +320,19 @@ public class Filter implements PropertyMapping {
             if ( !requiredCollection.stream().allMatch( rv -> rv != null && propertyType.isAssignableFrom( rv.getClass() ) ) ) {
                 throw new IllegalArgumentException( String.format( "All elements in requiredValue %s must be assignable from %s.", requiredType, propertyType.getName() ) );
             }
+        }
+
+        if ( requiredValue instanceof Subquery ) {
+            Subquery s = ( Subquery ) requiredValue;
+            Set<String> declaredAliases = s.getAliases().stream()
+                    .map( Subquery.Alias::getAlias )
+                    .collect( Collectors.toSet() );
+            for ( Subquery.Alias a : s.getAliases() ) {
+                Assert.isTrue( a.getObjectAlias() == null || declaredAliases.contains( a.getObjectAlias() ),
+                        String.format( "The object alias %s is not resolvable in the subquery.", a.getObjectAlias() ) );
+            }
+            Assert.isTrue( s.getFilter().objectAlias == null || declaredAliases.contains( s.getFilter().objectAlias ),
+                    String.format( "The object alias %s is not resolvable in the subquery.", s.getFilter().objectAlias ) );
         }
     }
 

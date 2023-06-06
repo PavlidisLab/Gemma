@@ -194,4 +194,22 @@ public class FilterTest {
         assertThat( Filter.by( "ee", "id", Number.class, Filter.Operator.in, Arrays.asList( 1L, 2, 3.0 ) ).toOriginalString() )
                 .isEqualTo( "ee.id in (1, 2, 3.0)" );
     }
+
+    @Test
+    public void testSubquery() {
+        assertThat( Filter.by( "ee", "id", Long.class, Filter.Operator.inSubquery, new Subquery( "ExpressionExperiment", "id", Collections.emptyList(), Filter.by( null, "id", Long.class, Filter.Operator.in, Arrays.asList( 1L, 2L, 3L ), "id" ) ) ) )
+                .hasToString( "id in (1, 2, 3)" );
+    }
+
+    @Test
+    public void testNestedSubquery() {
+        assertThat( Filter.by( "ee", "id", Long.class, Filter.Operator.inSubquery, new Subquery( "ExpressionExperiment", "id", Collections.emptyList(), Filter.by( null, "id", Long.class, Filter.Operator.inSubquery,
+                new Subquery( "ExpressionExperiment", "id", Collections.emptyList(),
+                        Filter.by( null, "id", Long.class, Filter.Operator.inSubquery,
+                                new Subquery( "ExpressionExperiment", "id", Collections.emptyList(),
+                                        Filter.by( null, "id", Long.class, Filter.Operator.in, Arrays.asList( 1L, 2L, 3L ),
+                                                "id" ) ) ) ),
+                "id" ) ) ) )
+                .hasToString( "ee.id in (1, 2, 3)" );
+    }
 }
