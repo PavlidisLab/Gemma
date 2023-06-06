@@ -2,6 +2,7 @@ package ubic.gemma.persistence.util;
 
 import lombok.Value;
 
+import javax.annotation.Nullable;
 import java.util.List;
 
 /**
@@ -14,6 +15,8 @@ public class Subquery {
 
     @Value
     public static class Alias {
+        @Nullable
+        String objectAlias;
         String propertyName;
         String alias;
     }

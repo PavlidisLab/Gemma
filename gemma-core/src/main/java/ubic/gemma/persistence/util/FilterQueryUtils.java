@@ -144,7 +144,13 @@ public class FilterQueryUtils {
                     .append( " " )
                     .append( "e" );
             for ( Subquery.Alias a : s.getAliases() ) {
-                disjunction.append( " join " ).append( "e." ).append( a.getPropertyName() ).append( " " ).append( a.getAlias() );
+                disjunction.append( " join " );
+                if ( a.getObjectAlias() == null ) {
+                    disjunction.append( "e." );
+                } else {
+                    disjunction.append( a.getObjectAlias() ).append( "." );
+                }
+                disjunction.append( a.getPropertyName() ).append( " " ).append( a.getAlias() );
             }
             disjunction.append( " where " );
             if ( s.getFilter().getObjectAlias() == null ) {
