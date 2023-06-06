@@ -19,6 +19,8 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
+import static ubic.gemma.persistence.util.PropertyMappingUtils.formProperty;
+
 /**
  * Partial implementation of {@link FilteringVoEnabledDao} based on the Hibernate {@link Criteria} API.
  *
@@ -302,7 +304,7 @@ public abstract class AbstractCriteriaFilteringVoEnabledDao<O extends Identifiab
     }
 
     private static void addOrder( Criteria query, Sort sort ) {
-        String property = sort.getProperty();
+        String property = formProperty( sort );
         // handle .size ordering
         if ( property.endsWith( ".size" ) ) {
             // FIXME: find a workaround for sorting by collection size (see https://github.com/PavlidisLab/Gemma/issues/520)

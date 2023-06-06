@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import static java.util.Objects.requireNonNull;
+import static ubic.gemma.persistence.util.PropertyMappingUtils.formProperty;
 
 /**
  * Utilities for integrating {@link Filter} into {@link org.hibernate.Query}.
@@ -30,9 +31,9 @@ public class FilterQueryUtils {
 
         if ( sort.getPropertyName().endsWith( ".size" ) ) {
             // This will crate an order by count clause, stripping the object alias and size suffix
-            ret.append( "size(" ).append( sort.getProperty().replaceFirst( "\\.size$", "" ) ).append( ')' );
+            ret.append( "size(" ).append( formProperty( sort ).replaceFirst( "\\.size$", "" ) ).append( ')' );
         } else {
-            ret.append( sort.getProperty() );
+            ret.append( formProperty( sort ) );
         }
 
         //noinspection StatementWithEmptyBody
@@ -87,9 +88,9 @@ public class FilterQueryUtils {
     static String formSubClause( Filter filter, int i ) {
         StringBuilder disjunction = new StringBuilder();
         if ( filter.getPropertyName().endsWith( ".size" ) ) {
-            disjunction.append( "size(" ).append( filter.getProperty().replaceFirst( "\\.size$", "" ) ).append( ')' ).append( ' ' );
+            disjunction.append( "size(" ).append( formProperty( filter ).replaceFirst( "\\.size$", "" ) ).append( ')' ).append( ' ' );
         } else {
-            disjunction.append( filter.getProperty() ).append( ' ' );
+            disjunction.append( formProperty( filter ) ).append( ' ' );
         }
         String paramName = formParamName( filter, i );
 
@@ -212,7 +213,7 @@ public class FilterQueryUtils {
     }
 
     private static String formParamName( PropertyMapping mapping, int i ) {
-        return mapping.getProperty().replaceAll( "\\W", "_" ) + i;
+        return formProperty( mapping ).replaceAll( "\\W", "_" ) + i;
     }
 
     private static String escapeLike( String s ) {

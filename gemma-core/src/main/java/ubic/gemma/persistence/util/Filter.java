@@ -43,6 +43,8 @@ import java.util.Date;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import static ubic.gemma.persistence.util.PropertyMappingUtils.formProperty;
+
 /**
  * Holds the necessary information to filter an entity with a property, operator and right-hand side value.
  *
@@ -277,7 +279,7 @@ public class Filter implements PropertyMapping {
             requiredValueString = quoteIfNecessary( requiredValueString );
         }
         return String.format( "%s %s %s",
-                withOriginalProperties && originalProperty != null ? originalProperty : getProperty(),
+                withOriginalProperties && originalProperty != null ? originalProperty : formProperty( this ),
                 operator.token,
                 requiredValueString );
     }
