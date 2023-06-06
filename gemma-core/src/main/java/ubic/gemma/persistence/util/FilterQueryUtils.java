@@ -136,18 +136,23 @@ public class FilterQueryUtils {
         disjunction.append( ' ' );
         if ( filter.getRequiredValue() instanceof Subquery ) {
             Subquery s = ( Subquery ) filter.getRequiredValue();
+            // check if the root alias is declared, otherwise use 'e' as default
+            String rootAlias = s.getRootAlias();
             disjunction
                     .append( "(" );
             disjunction
-                    .append( "select e." ).append( s.getPropertyName() )
+                    .append( "select " ).append( rootAlias ).append( "." ).append( s.getPropertyName() )
                     .append( " from " )
                     .append( s.getEntityName() )
                     .append( " " )
-                    .append( "e" );
+                    .append( rootAlias );
             for ( Subquery.Alias a : s.getAliases() ) {
+                if ( a.getPropertyName().isEmpty() ) {
+                    continue;
+                }
                 disjunction.append( " join " );
                 if ( a.getObjectAlias() == null ) {
-                    disjunction.append( "e." );
+                    disjunction.append( rootAlias ).append( "." );
                 } else {
                     disjunction.append( a.getObjectAlias() ).append( "." );
                 }
@@ -155,7 +160,7 @@ public class FilterQueryUtils {
             }
             disjunction.append( " where " );
             if ( s.getFilter().getObjectAlias() == null ) {
-                disjunction.append( "e." );
+                disjunction.append( rootAlias ).append( "." );
             }
             disjunction.append( formSubClause( s.getFilter(), i ) );
             disjunction.append( ")" );

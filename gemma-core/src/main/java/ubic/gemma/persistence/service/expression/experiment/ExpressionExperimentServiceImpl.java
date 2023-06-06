@@ -72,15 +72,14 @@ import ubic.gemma.persistence.service.analysis.expression.sampleCoexpression.Sam
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeService;
 import ubic.gemma.persistence.service.expression.bioAssayData.BioAssayDimensionService;
-import ubic.gemma.persistence.util.Filter;
-import ubic.gemma.persistence.util.Filters;
-import ubic.gemma.persistence.util.Slice;
-import ubic.gemma.persistence.util.Sort;
+import ubic.gemma.persistence.util.*;
 
 import javax.annotation.Nullable;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import static ubic.gemma.persistence.service.SubqueryUtils.guessAliases;
 
 /**
  * @author pavlidis
@@ -563,6 +562,10 @@ public class ExpressionExperimentServiceImpl
             Filters.FiltersClauseBuilder clauseBuilder = f2.and();
             for ( Filter subClause : clause ) {
                 if ( ArrayUtils.contains( PROPERTIES_USED_FOR_ANNOTATIONS, subClause.getOriginalProperty() ) ) {
+                    // handle nested subqueries
+                    while ( subClause.getRequiredValue() instanceof Subquery ) {
+                        subClause = ( ( Subquery ) subClause.getRequiredValue() ).getFilter();
+                    }
                     Set<String> it = impliedTermsUrisBySubClause.computeIfAbsent( SubClauseKey.from( subClause.getObjectAlias(), subClause.getPropertyName(), subClause.getOriginalProperty() ), k -> new HashSet<>() );
                     // rewrite the clause to contain all the inferred terms
                     if ( subClause.getRequiredValue() instanceof Collection ) {
@@ -576,6 +579,8 @@ public class ExpressionExperimentServiceImpl
                     } else if ( subClause.getRequiredValue() instanceof String ) {
                         it.add( ( String ) subClause.getRequiredValue() );
                         it.addAll( inferTermUris( ( String ) subClause.getRequiredValue() ) );
+                    } else {
+                        clauseBuilder = clauseBuilder.or( subClause );
                     }
                 } else {
                     // clause is irrelevant, so we add it as it is
@@ -584,11 +589,22 @@ public class ExpressionExperimentServiceImpl
             }
             // recreate a clause
             for ( Map.Entry<SubClauseKey, Set<String>> e : impliedTermsUrisBySubClause.entrySet() ) {
+                Filter g;
                 if ( e.getValue().size() == 1 ) {
-                    clauseBuilder = clauseBuilder.or( Filter.by( e.getKey().getObjectAlias(), e.getKey().getPropertyName(), String.class, Filter.Operator.eq, e.getValue().iterator().next(), e.getKey().getOriginalProperty() ) );
+                    g = Filter.by( e.getKey().getObjectAlias(), e.getKey().getPropertyName(), String.class, Filter.Operator.eq, e.getValue().iterator().next(), e.getKey().getOriginalProperty() );
                 } else if ( e.getValue().size() > 1 ) {
-                    clauseBuilder = clauseBuilder.or( Filter.by( e.getKey().getObjectAlias(), e.getKey().getPropertyName(), String.class, Filter.Operator.in, e.getValue(), e.getKey().getOriginalProperty() ) );
+                    g = Filter.by( e.getKey().getObjectAlias(), e.getKey().getPropertyName(), String.class, Filter.Operator.in, e.getValue(), e.getKey().getOriginalProperty() );
+                } else {
+                    continue; // empty clause, is that even possible?
                 }
+                // this is the case for all the properties declared in PROPERTY_USED_FOR_ANNOTATIONS
+                assert g.getOriginalProperty() != null;
+                assert g.getObjectAlias() != null;
+                // nest the filter in a subquery, all the applicable properties are one-to-many
+                String prefix = g.getOriginalProperty().substring( 0, g.getOriginalProperty().lastIndexOf( '.' ) + 1 );
+                String objectAlias = g.getObjectAlias();
+                clauseBuilder = clauseBuilder.or( Filter.by( "ee", "id", Long.class,
+                        Filter.Operator.inSubquery, new Subquery( "ExpressionExperiment", "id", guessAliases( prefix, objectAlias ), g ) ) );
                 if ( impliedTermUris != null ) {
                     impliedTermUris.addAll( e.getValue() );
                 }
@@ -623,10 +639,8 @@ public class ExpressionExperimentServiceImpl
      */
     @Value(staticConstructor = "from")
     private static class SubClauseKey {
-        @Nullable
         String objectAlias;
         String propertyName;
-        @Nullable
         String originalProperty;
     }
 

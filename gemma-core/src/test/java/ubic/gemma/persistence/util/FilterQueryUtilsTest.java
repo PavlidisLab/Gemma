@@ -124,4 +124,12 @@ public class FilterQueryUtilsTest {
                                 "id" ) ) ) ) )
                 .isEqualTo( " and (ee.id in (select e.id from ExpressionExperiment e where e.id in (select e.id from ExpressionExperiment e where e.id in (:id1))))" );
     }
+
+    @Test
+    public void testSubqueryWithEmptyPrefix() {
+        assertThat( formRestrictionClause( Filters.by( "ee", "id", Integer.class, Filter.Operator.inSubquery,
+                new Subquery( "ExpressionExperiment", "id", Collections.singletonList( new Subquery.Alias( null, "", "ee" ) ),
+                        Filter.by( "ee", "id", Long.class, Filter.Operator.eq, 1L ) ) ) ) )
+                .isEqualTo( " and (ee.id in (select ee.id from ExpressionExperiment ee where ee.id = :ee_id1))" );
+    }
 }

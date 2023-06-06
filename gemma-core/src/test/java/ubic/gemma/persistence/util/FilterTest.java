@@ -210,6 +210,6 @@ public class FilterTest {
                                         Filter.by( null, "id", Long.class, Filter.Operator.in, Arrays.asList( 1L, 2L, 3L ),
                                                 "id" ) ) ) ),
                 "id" ) ) ) )
-                .hasToString( "ee.id in (1, 2, 3)" );
+                .hasToString( "id in (1, 2, 3)" );
     }
 }

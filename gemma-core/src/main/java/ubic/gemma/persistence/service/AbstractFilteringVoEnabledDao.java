@@ -331,36 +331,20 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
                 aliases = null;
                 for ( FilterablePropertyAlias fpa : filterablePropertyAliases ) {
                     if ( f.getObjectAlias().equals( fpa.getObjectAlias() ) ) {
-                        // if the prefix is something like: 'experimentalDesign.experimentalFactors.factorValues.' with
-                        // the 'fv' alias, it is converted into:
-                        // experimentalDesign as alias1
-                        // alias1.experimentalFactors as alias2
-                        // alias2.factorValues as fv
-                        // which will allow the query builder to produce all the necessary jointures
-                        // FIXME: the prefix is not always a valid path
-                        String[] parts = fpa.prefix.split( "\\." );
-                        aliases = new ArrayList<>();
-                        for ( int i = 0; i < parts.length - 1; i++ ) {
-                            String part = parts[i];
-                            aliases.add( new Subquery.Alias( i > 0 ? "alias" + i : null, part, "alias" + ( i + 1 ) ) );
-                        }
-                        if ( parts.length > 1 ) {
-                            aliases.add( new Subquery.Alias( "alias" + ( parts.length - 1 ), parts[parts.length - 1], fpa.getObjectAlias() ) );
-                        } else {
-                            aliases.add( new Subquery.Alias( null, parts[0], fpa.getObjectAlias() ) );
-                        }
+                        aliases = SubqueryUtils.guessAliases( fpa.prefix, fpa.getObjectAlias() );
                         break;
                     }
                 }
                 if ( aliases == null ) {
-                    throw new IllegalArgumentException();
+                    throw new IllegalArgumentException( String.format( "Could not find a filterable property alias for %s.", f.getObjectAlias() ) );
                 }
             } else {
                 // the property refers to the root entity, no need for aliases
                 aliases = Collections.emptyList();
             }
             return Filter.by( objectAlias, getIdentifierPropertyName(), Long.class, Filter.Operator.inSubquery,
-                    new Subquery( entityName, getIdentifierPropertyName(), aliases, f ) );
+                    new Subquery( entityName, getIdentifierPropertyName(), aliases, f ),
+                    propertyName );
         } else {
             return f;
         }

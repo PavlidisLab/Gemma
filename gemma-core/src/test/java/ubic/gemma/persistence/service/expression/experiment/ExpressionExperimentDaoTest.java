@@ -178,7 +178,7 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest {
                 .satisfies( s -> {
                     Assertions.assertThat( s )
                             .hasFieldOrPropertyWithValue( "entityName", "ubic.gemma.model.expression.experiment.ExpressionExperiment" )
-                            .hasFieldOrPropertyWithValue( "identifierPropertyName", "id" );
+                            .hasFieldOrPropertyWithValue( "propertyName", "id" );
                     Assertions.assertThat( s.getAliases() )
                             .contains( new Subquery.Alias( null, "allCharacteristics", "ac" ) );
                     Assertions.assertThat( s.getFilter() )
@@ -202,7 +202,7 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest {
                 .satisfies( s -> {
                     Assertions.assertThat( s )
                             .hasFieldOrPropertyWithValue( "entityName", "ubic.gemma.model.expression.experiment.ExpressionExperiment" )
-                            .hasFieldOrPropertyWithValue( "identifierPropertyName", "id" );
+                            .hasFieldOrPropertyWithValue( "propertyName", "id" );
                     Assertions.assertThat( s.getAliases() )
                             .containsExactly( new Subquery.Alias( null, "experimentalDesign", "alias1" ),
                                     new Subquery.Alias( "alias1", "experimentalFactors", "alias2" ),

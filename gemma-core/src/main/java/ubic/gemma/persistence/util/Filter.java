@@ -31,7 +31,6 @@ import org.springframework.core.convert.converter.Converter;
 import org.springframework.core.convert.converter.ConverterFactory;
 import org.springframework.core.convert.support.ConfigurableConversionService;
 import org.springframework.core.convert.support.GenericConversionService;
-import org.springframework.util.Assert;
 
 import javax.annotation.Nullable;
 import java.net.MalformedURLException;
@@ -40,7 +39,6 @@ import java.text.DateFormat;
 import java.text.ParseException;
 import java.util.Collection;
 import java.util.Date;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import static ubic.gemma.persistence.util.PropertyMappingUtils.formProperty;
@@ -320,19 +318,6 @@ public class Filter implements PropertyMapping {
             if ( !requiredCollection.stream().allMatch( rv -> rv != null && propertyType.isAssignableFrom( rv.getClass() ) ) ) {
                 throw new IllegalArgumentException( String.format( "All elements in requiredValue %s must be assignable from %s.", requiredType, propertyType.getName() ) );
             }
-        }
-
-        if ( requiredValue instanceof Subquery ) {
-            Subquery s = ( Subquery ) requiredValue;
-            Set<String> declaredAliases = s.getAliases().stream()
-                    .map( Subquery.Alias::getAlias )
-                    .collect( Collectors.toSet() );
-            for ( Subquery.Alias a : s.getAliases() ) {
-                Assert.isTrue( a.getObjectAlias() == null || declaredAliases.contains( a.getObjectAlias() ),
-                        String.format( "The object alias %s is not resolvable in the subquery.", a.getObjectAlias() ) );
-            }
-            Assert.isTrue( s.getFilter().objectAlias == null || declaredAliases.contains( s.getFilter().objectAlias ),
-                    String.format( "The object alias %s is not resolvable in the subquery.", s.getFilter().objectAlias ) );
         }
     }
 
