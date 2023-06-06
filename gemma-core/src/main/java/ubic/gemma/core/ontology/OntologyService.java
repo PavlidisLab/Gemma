@@ -122,6 +122,12 @@ public interface OntologyService {
 
     /**
      * @param  uri uri
+     * @return the definition of the associated OntologyTerm. This requires that the ontology be loaded.
+     */
+    String getDefinition(String uri);
+
+    /**
+     * @param  uri uri
      * @return the OntologyTerm for the specified URI.
      */
     @Nullable

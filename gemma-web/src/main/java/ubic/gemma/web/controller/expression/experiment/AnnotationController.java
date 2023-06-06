@@ -24,6 +24,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
+import ubic.basecode.ontology.model.AnnotationProperty;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.basecode.ontology.search.OntologySearchException;
 import ubic.gemma.core.job.executor.webapp.TaskRunningService;
@@ -119,7 +120,20 @@ public class AnnotationController {
             taxon = taxonService.load( taxonId );
         }
         try {
-            return ontologyService.findTermsInexact( givenQueryString, taxon );
+            Collection<CharacteristicValueObject> sortedResults = ontologyService.findTermsInexact( givenQueryString, taxon );
+            /*
+             * Populate the definition for the top hits.
+             */
+            int numfilled = 0;
+            int maxfilled = 25; // presuming we don't need to look too far down the list ... just as a start.
+            for ( CharacteristicValueObject cvo : sortedResults ) {
+                cvo.setValueDefinition( ontologyService.getDefinition( cvo.getValueUri() ) );
+                if ( ++numfilled > maxfilled ) {
+                    break;
+                }
+            }
+
+            return sortedResults;
         } catch ( OntologySearchException | SearchException e ) {
             throw new IllegalArgumentException( "Invalid search query.", e );
         }

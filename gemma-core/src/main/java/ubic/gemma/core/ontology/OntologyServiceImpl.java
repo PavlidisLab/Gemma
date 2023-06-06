@@ -380,29 +380,6 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
                 .sorted( getCharacteristicComparator( queryString ) )
                 .collect( Collectors.toList() );
 
-
-        /*
-         * Populate the definition for the top hits.
-         */
-        int numfilled = 0;
-        int maxfilled = 25; // presuming we don't need to look too far down the list ... just as a start.
-        for ( CharacteristicValueObject cvo : sortedResults ) {
-            // FIXME: the definition should be retreivable directly from the OntologyTerm; this is temporary.
-            OntologyTerm ot = this.getTerm( cvo.getValueUri() );
-            if ( ot != null ) {
-                for ( AnnotationProperty ann : ot.getAnnotations() ) {
-                    // FIXME: not clear this will work with all ontologies. UBERON does it this way.
-                    if ( ann.getUri().equals( "http://purl.obolibrary.org/obo/IAO_0000115" ) ) {
-                        cvo.setValueDefinition( ann.getContents() );
-                        break;
-                    }
-                }
-            }
-            if ( ++numfilled > maxfilled ) {
-                break;
-            }
-        }
-
         watch.stop();
 
         if ( watch.getTime() > 1000 ) {
@@ -445,6 +422,21 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
     @Override
     public OntologyResource getResource( String uri ) {
         return findFirst( ontology -> ontology.getResource( uri ) );
+    }
+
+    @Override
+    public String getDefinition( String uri ) {
+        if (uri == null) return null;
+        OntologyTerm ot = this.getTerm( uri );
+        if ( ot != null ) {
+            for ( AnnotationProperty ann : ot.getAnnotations() ) {
+                // FIXME: not clear this will work with all ontologies. UBERON does it this way.
+                if ( ann.getUri().equals( "http://purl.obolibrary.org/obo/IAO_0000115" ) ) {
+                    return ann.getContents();
+                }
+            }
+        }
+        return null;
     }
 
     @Override
