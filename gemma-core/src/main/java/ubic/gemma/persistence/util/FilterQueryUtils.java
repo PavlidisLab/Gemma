@@ -84,7 +84,7 @@ public class FilterQueryUtils {
         return conjunction.toString();
     }
 
-    private static String formSubClause( Filter filter, int i ) {
+    static String formSubClause( Filter filter, int i ) {
         StringBuilder disjunction = new StringBuilder();
         if ( filter.getPropertyName().endsWith( ".size" ) ) {
             disjunction.append( "size(" ).append( filter.getProperty().replaceFirst( "\\.size$", "" ) ).append( ')' ).append( ' ' );
@@ -138,7 +138,7 @@ public class FilterQueryUtils {
             disjunction
                     .append( "(" );
             disjunction
-                    .append( "select e." ).append( s.getIdentifierPropertyName() )
+                    .append( "select e." ).append( s.getPropertyName() )
                     .append( " from " )
                     .append( s.getEntityName() )
                     .append( " " )

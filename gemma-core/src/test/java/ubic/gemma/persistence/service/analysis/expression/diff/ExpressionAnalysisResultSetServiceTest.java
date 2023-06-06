@@ -89,7 +89,7 @@ public class ExpressionAnalysisResultSetServiceTest extends BaseSpringContextTes
                 .asInstanceOf( InstanceOfAssertFactories.type( Subquery.class ) )
                 .satisfies( s -> {
                     assertThat( s.getEntityName() ).isEqualTo( "ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet" );
-                    assertThat( s.getIdentifierPropertyName() ).isEqualTo( "id" );
+                    assertThat( s.getPropertyName() ).isEqualTo( "id" );
                 } );
         expressionAnalysisResultSetService.load( Filters.by( filter ), null );
     }

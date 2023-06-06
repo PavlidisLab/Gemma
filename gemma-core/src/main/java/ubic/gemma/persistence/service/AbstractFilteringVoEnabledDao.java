@@ -331,6 +331,12 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
                 aliases = null;
                 for ( FilterablePropertyAlias fpa : filterablePropertyAliases ) {
                     if ( f.getObjectAlias().equals( fpa.getObjectAlias() ) ) {
+                        // if the prefix is something like: 'experimentalDesign.experimentalFactors.factorValues.' with
+                        // the 'fv' alias, it is converted into:
+                        // experimentalDesign as alias1
+                        // alias1.experimentalFactors as alias2
+                        // alias2.factorValues as fv
+                        // which will allow the query builder to produce all the necessary jointures
                         // FIXME: the prefix is not always a valid path
                         String[] parts = fpa.prefix.split( "\\." );
                         aliases = new ArrayList<>();

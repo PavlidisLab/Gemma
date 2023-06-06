@@ -21,8 +21,20 @@ public class Subquery {
         String alias;
     }
 
+    /**
+     * The entity name being queried.
+     */
     String entityName;
-    String identifierPropertyName;
+    /**
+     * The property name being queried.
+     */
+    String propertyName;
+    /**
+     * List of aliases for resolving the object alias defined in {@link #filter}.
+     */
     List<Alias> aliases;
+    /**
+     * A filter being nested in the subquery.
+     */
     Filter filter;
 }
