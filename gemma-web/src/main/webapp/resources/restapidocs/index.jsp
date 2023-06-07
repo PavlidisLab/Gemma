@@ -3,7 +3,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8"/>
-    <title>Gemma RESTful API documentation</title>
+    <title>RESTful API documentation | Gemma</title>
     <link rel="stylesheet" type="text/css" href="swagger-ui.css"/>
 </head>
 <body>
