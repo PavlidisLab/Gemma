@@ -139,6 +139,11 @@ public abstract class AbstractFilteringVoEnabledService<O extends Identifiable, 
         }
     }
 
+    @Override
+    public boolean getFilterablePropertyIsUsingSubquery( String property ) {
+        return voDao.getFilterablePropertyIsUsingSubquery( property );
+    }
+
     /**
      * Create a {@link MessageSourceResolvable} for an allowed value of a filter.
      * <p>

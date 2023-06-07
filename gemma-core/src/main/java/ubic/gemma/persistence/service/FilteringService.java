@@ -58,6 +58,11 @@ public interface FilteringService<O extends Identifiable> extends BaseReadOnlySe
     List<MessageSourceResolvable> getFilterablePropertyResolvableAllowedValuesLabels( String property );
 
     /**
+     * @see FilteringDao#getFilterablePropertyIsUsingSubquery(String)
+     */
+    boolean getFilterablePropertyIsUsingSubquery( String property );
+
+    /**
      * Obtain the Spring Security config attributes for a given property.
      * @return the config attributes, or null if no security check should be performed
      */

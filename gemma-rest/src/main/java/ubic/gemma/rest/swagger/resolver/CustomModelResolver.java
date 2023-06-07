@@ -153,7 +153,8 @@ public class CustomModelResolver extends ModelResolver {
                 .filter( p -> !SortArg.class.isAssignableFrom( a.getRawType() ) || !isCriteriaBased( filteringService ) || !p.endsWith( ".size" ) )
                 .sorted()
                 .map( p -> new FilterablePropMeta( p,
-                        resolveType( SimpleType.constructUnsafe( filteringService.getFilterablePropertyType( p ) ) ),
+                        resolveType( SimpleType.constructUnsafe( filteringService.getFilterablePropertyType( p ) ) )
+                                + ( filteringService.getFilterablePropertyIsUsingSubquery( p ) ? "[]" : "" ),
                         filteringService.getFilterablePropertyDescription( p ),
                         resolveAllowedValues( filteringService, p, locale ),
                         securityRequirementFromConfigAttributes( filteringService.getFilterablePropertyConfigAttributes( p ) ) ) )

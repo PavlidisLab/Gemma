@@ -49,6 +49,10 @@ openAPI:
           label: Sequencing
       ```
 
+      Types that use the `[]` suffix are using sub-queries under the hood. It implies that the entity will be matched if
+      at least one related entity matches the supplied filter. For example, the `characteristics.valueUri = http://purl.obolibrary.org/obo/UBERON_0002107`
+      filter will match datasets with at least one UBERON:0002107 tag.
+
       New endpoints for browsing blacklisted platforms and datasets.
  
       Filtered endpoints (including paginated and limited ones) now expose a `groupBy` array that enumerates all the

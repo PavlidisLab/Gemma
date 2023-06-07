@@ -310,6 +310,14 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
     }
 
     @Override
+    public boolean getFilterablePropertyIsUsingSubquery( String property ) throws IllegalArgumentException {
+        if ( !filterableProperties.contains( property ) ) {
+            throw new IllegalArgumentException( String.format( "Unknown filterable property %s.", property ) );
+        }
+        return filterablePropertiesViaSubquery.contains( property );
+    }
+
+    @Override
     public final Filter getFilter( String property, Filter.Operator operator, String value ) {
         FilterablePropertyMeta propertyMeta = getFilterablePropertyMeta( property );
         return nestIfSubquery( Filter.parse( propertyMeta.objectAlias, propertyMeta.propertyName, propertyMeta.propertyType, operator, value, property ),
