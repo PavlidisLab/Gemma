@@ -22,7 +22,12 @@ Gemma.CategoryCombo = Ext.extend(Ext.form.ComboBox, {
         name: "term"
     }, {
         name: "comment"
-    }]),
+    }, {
+        name: "label"
+    },{
+        name: "obsolete" // boolean
+    }
+    ]),
 
     getTerm: function () {
         return this.selectedTerm;

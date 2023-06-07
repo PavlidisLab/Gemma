@@ -30,10 +30,7 @@ import org.springframework.core.io.Resource;
 import org.springframework.core.task.AsyncTaskExecutor;
 import org.springframework.core.task.TaskExecutor;
 import org.springframework.stereotype.Service;
-import ubic.basecode.ontology.model.OntologyIndividual;
-import ubic.basecode.ontology.model.OntologyResource;
-import ubic.basecode.ontology.model.OntologyTerm;
-import ubic.basecode.ontology.model.OntologyTermSimple;
+import ubic.basecode.ontology.model.*;
 import ubic.basecode.ontology.providers.ExperimentalFactorOntologyService;
 import ubic.basecode.ontology.providers.FMAOntologyService;
 import ubic.basecode.ontology.providers.NIFSTDOntologyService;
@@ -425,6 +422,21 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
     @Override
     public OntologyResource getResource( String uri ) {
         return findFirst( ontology -> ontology.getResource( uri ) );
+    }
+
+    @Override
+    public String getDefinition( String uri ) {
+        if (uri == null) return null;
+        OntologyTerm ot = this.getTerm( uri );
+        if ( ot != null ) {
+            for ( AnnotationProperty ann : ot.getAnnotations() ) {
+                // FIXME: not clear this will work with all ontologies. UBERON, HP, MP, MONDO does it this way.
+                if ( ann.getUri().equals( "http://purl.obolibrary.org/obo/IAO_0000115" ) ) {
+                    return ann.getContents();
+                }
+            }
+        }
+        return null;
     }
 
     @Override
