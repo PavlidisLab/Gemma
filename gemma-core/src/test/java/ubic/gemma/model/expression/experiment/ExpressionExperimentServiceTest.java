@@ -1,6 +1,7 @@
 package ubic.gemma.model.expression.experiment;
 
 import gemma.gsec.SecurityService;
+import org.junit.After;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -8,6 +9,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.access.AccessDecisionManager;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
+import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.gemma.core.analysis.preprocess.svd.SVDService;
 import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.core.search.SearchService;
@@ -148,11 +150,19 @@ public class ExpressionExperimentServiceTest extends AbstractJUnit4SpringContext
     @Autowired
     private OntologyService ontologyService;
 
+    @After
+    public void tearDown() {
+        reset( ontologyService );
+    }
+
     @Test
     public void testGetFiltersWithInferredAnnotations() {
+        OntologyTerm term = mock( OntologyTerm.class );
+        when( ontologyService.getTerm( "http://example.com/T00001" ) ).thenReturn( term );
         Filters f = Filters.by( "c", "valueUri", String.class, Filter.Operator.eq, "http://example.com/T00001", "characteristics.valueUri" );
         expressionExperimentService.getFiltersWithInferredAnnotations( f, null );
         verify( ontologyService ).getTerm( "http://example.com/T00001" );
+        verify( ontologyService ).getChildren( Collections.singleton( term ), false, true );
     }
 
     @Test

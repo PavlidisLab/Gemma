@@ -567,7 +567,7 @@ public class ExpressionExperimentServiceImpl
         Filters f2 = Filters.empty();
         // apply inference to terms
         // collect clauses mentioning terms
-        final Map<SubClauseKey, Set<String>> impliedTermsUrisBySubClause = new HashMap<>();
+        final Map<SubClauseKey, Set<String>> termUrisBySubClause = new HashMap<>();
         for ( List<Filter> clause : f ) {
             Filters.FiltersClauseBuilder clauseBuilder = f2.and();
             for ( Filter subClause : clause ) {
@@ -576,19 +576,13 @@ public class ExpressionExperimentServiceImpl
                     while ( subClause.getRequiredValue() instanceof Subquery ) {
                         subClause = ( ( Subquery ) subClause.getRequiredValue() ).getFilter();
                     }
-                    Set<String> it = impliedTermsUrisBySubClause.computeIfAbsent( SubClauseKey.from( subClause.getObjectAlias(), subClause.getPropertyName(), subClause.getOriginalProperty() ), k -> new HashSet<>() );
+                    Set<String> it = termUrisBySubClause.computeIfAbsent( SubClauseKey.from( subClause.getObjectAlias(), subClause.getPropertyName(), subClause.getOriginalProperty() ), k -> new HashSet<>() );
                     // rewrite the clause to contain all the inferred terms
                     if ( subClause.getRequiredValue() instanceof Collection ) {
                         //noinspection unchecked
                         it.addAll( ( Collection<String> ) subClause.getRequiredValue() );
-                        //noinspection unchecked
-                        it.addAll( ( ( Collection<String> ) subClause.getRequiredValue() ).stream()
-                                .map( this::inferTermUris )
-                                .flatMap( List::stream )
-                                .collect( Collectors.toList() ) );
                     } else if ( subClause.getRequiredValue() instanceof String ) {
                         it.add( ( String ) subClause.getRequiredValue() );
-                        it.addAll( inferTermUris( ( String ) subClause.getRequiredValue() ) );
                     } else {
                         clauseBuilder = clauseBuilder.or( subClause );
                     }
@@ -597,13 +591,25 @@ public class ExpressionExperimentServiceImpl
                     clauseBuilder = clauseBuilder.or( subClause );
                 }
             }
-            // recreate a clause
-            for ( Map.Entry<SubClauseKey, Set<String>> e : impliedTermsUrisBySubClause.entrySet() ) {
+            // recreate a clause with inferred terms
+            for ( Map.Entry<SubClauseKey, Set<String>> e : termUrisBySubClause.entrySet() ) {
+                Collection<String> termAndChildrenUris = new HashSet<>( e.getValue() );
+                Set<OntologyTerm> terms = e.getValue().stream()
+                        .distinct()
+                        .map( ontologyService::getTerm )
+                        .filter( Objects::nonNull )
+                        .collect( Collectors.toSet() );
+                termAndChildrenUris.addAll( ontologyService.getChildren( terms, false, true ).stream()
+                        .map( OntologyTerm::getUri )
+                        .collect( Collectors.toList() ) );
+                if ( impliedTermUris != null ) {
+                    impliedTermUris.addAll( termAndChildrenUris );
+                }
                 Filter g;
-                if ( e.getValue().size() == 1 ) {
-                    g = Filter.by( e.getKey().getObjectAlias(), e.getKey().getPropertyName(), String.class, Filter.Operator.eq, e.getValue().iterator().next(), e.getKey().getOriginalProperty() );
-                } else if ( e.getValue().size() > 1 ) {
-                    g = Filter.by( e.getKey().getObjectAlias(), e.getKey().getPropertyName(), String.class, Filter.Operator.in, e.getValue(), e.getKey().getOriginalProperty() );
+                if ( termAndChildrenUris.size() == 1 ) {
+                    g = Filter.by( e.getKey().getObjectAlias(), e.getKey().getPropertyName(), String.class, Filter.Operator.eq, termAndChildrenUris.iterator().next(), e.getKey().getOriginalProperty() );
+                } else if ( termAndChildrenUris.size() > 1 ) {
+                    g = Filter.by( e.getKey().getObjectAlias(), e.getKey().getPropertyName(), String.class, Filter.Operator.in, termAndChildrenUris, e.getKey().getOriginalProperty() );
                 } else {
                     continue; // empty clause, is that even possible?
                 }
@@ -615,12 +621,9 @@ public class ExpressionExperimentServiceImpl
                 String objectAlias = g.getObjectAlias();
                 clauseBuilder = clauseBuilder.or( Filter.by( "ee", "id", Long.class,
                         Filter.Operator.inSubquery, new Subquery( "ExpressionExperiment", "id", guessAliases( prefix, objectAlias ), g ) ) );
-                if ( impliedTermUris != null ) {
-                    impliedTermUris.addAll( e.getValue() );
-                }
             }
             f2 = clauseBuilder.build();
-            impliedTermsUrisBySubClause.clear();
+            termUrisBySubClause.clear();
         }
         return f2;
     }
@@ -633,15 +636,6 @@ public class ExpressionExperimentServiceImpl
             Hibernate.initialize( ee.getCharacteristics() );
         }
         return ee;
-    }
-
-    private List<String> inferTermUris( String uri ) {
-        OntologyTerm term = ontologyService.getTerm( uri );
-        if ( term != null ) {
-            return term.getChildren( false ).stream().map( OntologyTerm::getUri ).collect( Collectors.toList() );
-        } else {
-            return Collections.emptyList();
-        }
     }
 
     /**
