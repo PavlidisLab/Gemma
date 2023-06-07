@@ -1694,7 +1694,7 @@ public class ExpressionExperimentController {
         @Override
         public TaskResult call() {
             Long eeId = taskCommand.getEntityId();
-            ExpressionExperiment expressionExperiment = expressionExperimentService.load( eeId );
+            ExpressionExperiment expressionExperiment = expressionExperimentService.loadWithPrimaryPublication( eeId );
             if ( expressionExperiment == null )
                 throw new IllegalArgumentException( "Cannot access experiment with id=" + eeId );
 

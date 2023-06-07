@@ -57,7 +57,7 @@ public class GeneOntologyServiceImpl extends AbstractOntologyMemoryBackedService
         BIOLOGICAL_PROCESS, CELLULAR_COMPONENT, MOLECULAR_FUNCTION
     }
 
-    private final static String GO_URL = "http://purl.obolibrary.org/obo/go.owl";
+    private final static String GO_URL = Settings.getString( "url.geneOntology" );
     private static final Log log = LogFactory.getLog( GeneOntologyServiceImpl.class.getName() );
 
     /**

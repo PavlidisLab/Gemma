@@ -42,7 +42,6 @@ import ubic.gemma.core.genome.gene.service.GeneSearchService;
 import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.core.search.source.CompositeSearchSource;
 import ubic.gemma.core.search.source.DatabaseSearchSource;
-import ubic.gemma.core.search.source.OntologySearchSource;
 import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
@@ -156,7 +155,7 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
     private SearchSource databaseSearchSource;
     @Autowired
     @Qualifier("ontologySearchSource")
-    private OntologySearchSource ontologySearchSource;
+    private SearchSource ontologySearchSource;
 
     // TODO: move all this under DatabaseSearchSource
     @Autowired
@@ -449,7 +448,9 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
             results.addAll( searchPhenotype( settings ) );
         }
 
-        results.addAll( blacklistedResults );
+        if ( settings.hasResultType( BlacklistedEntity.class ) ) {
+            results.addAll( blacklistedResults );
+        }
     }
 
     /**
@@ -703,7 +704,6 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
         return results;
 
     }
-
 
     /**
      * Search for the Experiment query in ontologies, including items that are associated with children of matching

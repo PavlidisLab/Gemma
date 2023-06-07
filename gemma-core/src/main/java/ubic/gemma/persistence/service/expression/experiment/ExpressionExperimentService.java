@@ -135,6 +135,9 @@ public interface ExpressionExperimentService
     Collection<ExpressionExperiment> loadAll();
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ_QUIET" })
+    ExpressionExperiment loadWithPrimaryPublication(Long id);
+
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ_QUIET" })
     ExpressionExperiment loadWithMeanVarianceRelation( Long id );
 
     @Override

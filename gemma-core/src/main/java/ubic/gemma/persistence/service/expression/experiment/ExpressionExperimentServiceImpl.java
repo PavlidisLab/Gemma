@@ -318,6 +318,16 @@ public class ExpressionExperimentServiceImpl
 
     @Override
     @Transactional(readOnly = true)
+    public ExpressionExperiment loadWithPrimaryPublication( Long id ) {
+        ExpressionExperiment ee = load( id );
+        if ( ee != null ) {
+            Hibernate.initialize( ee.getPrimaryPublication() );
+        }
+        return ee;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public ExpressionExperiment loadWithMeanVarianceRelation( Long id ) {
         ExpressionExperiment ee = load( id );
         if ( ee != null ) {

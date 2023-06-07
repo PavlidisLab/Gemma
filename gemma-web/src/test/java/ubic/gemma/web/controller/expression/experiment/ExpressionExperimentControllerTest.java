@@ -19,15 +19,19 @@
 
 package ubic.gemma.web.controller.expression.experiment;
 
+import org.junit.After;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import ubic.gemma.core.job.executor.webapp.TaskRunningService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentDetailsValueObject;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.web.util.BaseSpringWebTest;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 
 import static org.junit.Assert.assertEquals;
 
@@ -38,6 +42,20 @@ public class ExpressionExperimentControllerTest extends BaseSpringWebTest {
 
     @Autowired
     private ExpressionExperimentController eeController;
+
+    @Autowired
+    private ExpressionExperimentService expressionExperimentService;
+
+    @Autowired
+    private TaskRunningService taskRunningService;
+
+    private Collection<ExpressionExperiment> ees = new ArrayList<>();
+
+    @After
+    public void tearDown() {
+        expressionExperimentService.remove( ees );
+        ees.clear();
+    }
 
     @Test
     public void testLoadStatusSummariesLimit() {
@@ -55,6 +73,7 @@ public class ExpressionExperimentControllerTest extends BaseSpringWebTest {
             }
 
             ids.add( ee.getId() );
+            ees.add( ee );
         }
         limit = 1;
         Collection<ExpressionExperimentDetailsValueObject> ret = eeController
@@ -66,4 +85,19 @@ public class ExpressionExperimentControllerTest extends BaseSpringWebTest {
 
     }
 
+    @Test
+    public void testUpdatePubMed() throws ExecutionException, InterruptedException {
+        ExpressionExperiment ee = getTestPersistentExpressionExperiment();
+        ees.add( ee );
+
+        String taskId = eeController.updatePubMed( ee.getId(), "1" );
+        taskRunningService.getSubmittedTask( taskId ).getResult();
+        ee = expressionExperimentService.thaw( ee );
+        assertEquals( "Biochem Med", ee.getPrimaryPublication().getPublication() );
+
+        taskId = eeController.updatePubMed( ee.getId(), "2" );
+        taskRunningService.getSubmittedTask( taskId ).getResult();
+        ee = expressionExperimentService.thaw( ee );
+        assertEquals( "Biochem Biophys Res Commun", ee.getPrimaryPublication().getPublication() );
+    }
 }

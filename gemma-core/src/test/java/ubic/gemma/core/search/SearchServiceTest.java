@@ -12,7 +12,6 @@ import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
 import ubic.basecode.ontology.search.OntologySearchException;
 import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.core.search.source.OntologySearchSource;
-import ubic.gemma.core.search.source.OntologySearchSourceImpl;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
@@ -37,8 +36,8 @@ public class SearchServiceTest extends AbstractJUnit4SpringContextTests {
 
         @Bean
         @Override
-        public OntologySearchSource ontologySearchSource() {
-            return new OntologySearchSourceImpl();
+        public SearchSource ontologySearchSource() {
+            return new OntologySearchSource();
         }
 
         @Bean

@@ -55,7 +55,7 @@ class SearchServiceTestContextConfiguration {
     }
 
     @Bean
-    public OntologySearchSource ontologySearchSource() {
+    public SearchSource ontologySearchSource() {
         return mock( OntologySearchSource.class );
     }
 

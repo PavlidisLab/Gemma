@@ -14,6 +14,7 @@ import ubic.basecode.ontology.search.OntologySearchException;
 import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.search.SearchResult;
+import ubic.gemma.core.search.SearchSource;
 import ubic.gemma.model.common.search.Highlighter;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -27,7 +28,7 @@ import java.util.Collections;
 import static junit.framework.TestCase.assertEquals;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
-import static ubic.gemma.core.search.source.OntologySearchSourceImpl.getLabelFromTermUri;
+import static ubic.gemma.core.search.source.OntologySearchSource.getLabelFromTermUri;
 
 @ContextConfiguration
 public class OntologySearchSourceTest extends AbstractJUnit4SpringContextTests {
@@ -38,7 +39,7 @@ public class OntologySearchSourceTest extends AbstractJUnit4SpringContextTests {
 
         @Bean
         public OntologySearchSource ontologySearchSource() {
-            return new OntologySearchSourceImpl();
+            return new OntologySearchSource();
         }
 
         @Bean
@@ -53,7 +54,7 @@ public class OntologySearchSourceTest extends AbstractJUnit4SpringContextTests {
     }
 
     @Autowired
-    private OntologySearchSource ontologySearchSource;
+    private SearchSource ontologySearchSource;
 
 
     @Autowired
