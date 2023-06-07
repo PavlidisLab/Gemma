@@ -37,6 +37,13 @@ public class AnalyticsRequestEventListener implements RequestEventListener {
                 Map<String, String> params = new HashMap<>();
                 params.put( "method", request.getMethod() );
                 params.put( "endpoint", limitParamValue( request.getAbsolutePath().getPath() ) );
+                String forwardedFor = request.getHeaderString( "X-Forwarded-For" );
+                if ( StringUtils.isNotBlank( forwardedFor ) ) {
+                    params.put( "ip", forwardedFor );
+                }
+                if ( !request.getAcceptableLanguages().isEmpty() ) {
+                    params.put( "language", request.getAcceptableLanguages().iterator().next().toLanguageTag().toLowerCase() );
+                }
                 String userAgent = request.getHeaderString( "User-Agent" );
                 if ( StringUtils.isNotBlank( userAgent ) ) {
                     params.put( "user_agent", limitParamValue( userAgent.trim() ) );

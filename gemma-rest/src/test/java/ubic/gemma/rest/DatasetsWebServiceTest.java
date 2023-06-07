@@ -158,14 +158,14 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
     @After
     public void tearDown() throws Exception {
         super.tearDown();
-        reset( expressionExperimentService, quantitationTypeService );
+        reset( expressionExperimentService, quantitationTypeService, analyticsProvider );
     }
 
     @Test
     public void testGetDatasets() {
         when( expressionExperimentService.loadValueObjects( any(), any(), anyInt(), anyInt() ) )
                 .thenAnswer( a -> new Slice<>( Collections.emptyList(), a.getArgument( 1 ), a.getArgument( 2 ), a.getArgument( 3 ), 0L ) );
-        assertThat( target( "/datasets" ).request().get() )
+        assertThat( target( "/datasets" ).request().acceptLanguage( Locale.CANADA_FRENCH ).get() )
                 .hasStatus( Response.Status.OK )
                 .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE )
                 .hasEncoding( "gzip" )
@@ -174,7 +174,14 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
                 .hasFieldOrPropertyWithValue( "offset", 0 )
                 .hasFieldOrPropertyWithValue( "limit", 20 )
                 .hasFieldOrPropertyWithValue( "totalElements", 0 );
-        verify( analyticsProvider ).sendEvent( eq( "gemma_rest_api_access" ), any( Date.class ), eq( "method" ), eq( "GET" ), eq( "endpoint" ), eq( "/datasets" ) );
+        //noinspection unchecked
+        ArgumentCaptor<Map<String, String>> params = ArgumentCaptor.forClass( Map.class );
+        verify( analyticsProvider ).sendEvent( eq( "gemma_rest_api_access" ), any( Date.class ), params.capture() );
+        assertThat( params.getValue() )
+                .containsOnlyKeys( "method", "endpoint", "user_agent", "language" )
+                .containsEntry( "method", "GET" )
+                .containsEntry( "endpoint", "/datasets" )
+                .containsEntry( "language", "fr-ca" );
     }
 
     @Autowired
