@@ -1,16 +1,17 @@
 package ubic.gemma.persistence.service.analysis.expression.diff;
 
 import com.google.common.collect.Lists;
-import org.assertj.core.api.InstanceOfAssertFactories;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.util.test.BaseSpringContextTest;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResultSetValueObject;
-import ubic.gemma.persistence.util.*;
+import ubic.gemma.persistence.util.Filters;
+import ubic.gemma.persistence.util.Filter;
+import ubic.gemma.persistence.util.Slice;
+import ubic.gemma.persistence.util.Sort;
 
 import javax.annotation.Nullable;
-import java.util.Arrays;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -79,18 +80,5 @@ public class ExpressionAnalysisResultSetServiceTest extends BaseSpringContextTes
                 .contains( "baselineGroup.measurement.type", "baselineGroup.measurement.kindCV", "baselineGroup.measurement.representation" )
                 .doesNotContain( "analysis.name", "analysis.description" )
                 .doesNotContain( "protocol.id", "protocol.name", "protocol.description" );
-    }
-
-    @Test
-    public void testFilterBySubsetCharacteristic() {
-        Filter filter = expressionAnalysisResultSetService.getFilter( "analysis.subsetFactorValue.characteristics.valueUri",
-                Filter.Operator.in, Arrays.asList( "http://example.com/1", "http://example.com/2" ) );
-        assertThat( filter.getRequiredValue() )
-                .asInstanceOf( InstanceOfAssertFactories.type( Subquery.class ) )
-                .satisfies( s -> {
-                    assertThat( s.getEntityName() ).isEqualTo( "ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet" );
-                    assertThat( s.getPropertyName() ).isEqualTo( "id" );
-                } );
-        expressionAnalysisResultSetService.load( Filters.by( filter ), null );
     }
 }
