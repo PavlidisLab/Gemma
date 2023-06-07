@@ -16,7 +16,16 @@ Gemma.CharacteristicCombo = Ext.extend( Ext.form.ComboBox, {
    name : 'characteristicCombo',
    lazyInit : false,
    tpl : new Ext.XTemplate(
-      '<tpl for="."><div ext:qtip="{description}" style="font-size:11px" class="x-combo-list-item {style}">{value}</div></tpl>' ),
+      '<tpl for="."><div ext:qtip="{description}" style="font-size:11px" class="x-combo-list-item {style}">{value}{[this.trimUri(values.valueUri)]}</div></tpl>',
+      {
+         trimUri : function( uri ) {
+            if ( uri != null && uri != "" ) {
+                return ' - (' + uri.replace( /.+\//g, "" ) + ')';
+            }
+            return '';
+         }
+      } ),
+
 
    /**
     * @Override
