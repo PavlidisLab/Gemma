@@ -802,6 +802,7 @@
 
         <dwr:convert type="bean" class="ubic.gemma.model.expression.experiment.ExperimentalFactorValueObject"/>
         <dwr:convert type="bean" class="ubic.gemma.model.expression.experiment.FactorValueValueObject"/>
+        <dwr:convert type="bean" class="ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicBasicValueObject"/>
 
         <dwr:convert type="bean" class="ubic.gemma.model.expression.experiment.ExpressionExperimentDetailsValueObject"/>
         <dwr:convert type="bean" class="ubic.gemma.model.common.quantitationtype.QuantitationTypeValueObject"/>
