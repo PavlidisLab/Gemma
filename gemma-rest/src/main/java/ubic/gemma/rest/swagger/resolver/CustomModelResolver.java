@@ -53,8 +53,19 @@ public class CustomModelResolver extends ModelResolver {
     @Override
     public Schema resolve( AnnotatedType type, ModelConverterContext context, Iterator<ModelConverter> chain ) {
         JavaType t = objectMapper().constructType( type.getType() );
-        if ( t.isTypeOrSubTypeOf( FilterArg.class ) || t.isTypeOrSubTypeOf( SortArg.class ) ) {
-            return super.resolve( type, context, chain );
+        if ( t.isTypeOrSubTypeOf( FilterArg.Filter.class ) || t.isTypeOrSubTypeOf( SortArg.Sort.class ) ) {
+            return null; // ignore those...
+        } else if ( t.isTypeOrSubTypeOf( FilterArg.class ) || t.isTypeOrSubTypeOf( SortArg.class ) ) {
+            Schema resolved = super.resolve( type, context, chain );
+            String ref = resolved.get$ref();
+            // FilterArg and SortArg schemas in parameters are refs to globally-defined schemas and those are
+            // unfortunately not holding the right type, so we need to override them
+            // see https://github.com/PavlidisLab/Gemma/issues/524 for details
+            context.getDefinedModels()
+                    .get( ref.replaceFirst( "^#/components/schemas/", "" ) )
+                    .type( "string" )
+                    .properties( null );
+            return resolved;
         } else if ( t.isTypeOrSubTypeOf( Arg.class ) ) {
             // I'm suspecting there's a bug in Swagger that causes request parameters annotations to shadow the
             // definitions in the class's Schema annotation

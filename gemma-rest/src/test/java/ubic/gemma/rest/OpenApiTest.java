@@ -9,7 +9,6 @@ import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.media.Schema;
 import lombok.Data;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -130,21 +129,20 @@ public class OpenApiTest extends BaseJerseyTest {
         private OpenAPI openAPI;
     }
 
-
     @Test
-    @Ignore("This is broken due to some quirk in Swagger (see https://github.com/PavlidisLab/Gemma/issues/524)")
     public void testFilterArgSchemas() {
         assertThat( spec.getComponents().getSchemas() )
                 .doesNotContainKey( "Filter" )
                 .containsKeys( "FilterArgExpressionExperiment", "FilterArgArrayDesign", "FilterArgExpressionAnalysisResultSet" );
-        Schema<?> schema = spec.getComponents().getSchemas().get( "FilterArgExpressionExperiment" );
+        Schema<?> schema = spec.getComponents().getSchemas().get( "FilterArgExpressionAnalysisResultSet" );
         assertThat( schema.getType() )
                 .isEqualTo( "string" );
+        assertThat( schema.getProperties() )
+                .isNull();
         assertThat( schema.getDescription() ).contains( "Available properties:" );
     }
 
     @Test
-    @Ignore("This is broken due to some quirk in Swagger (see https://github.com/PavlidisLab/Gemma/issues/524)")
     public void testSortArgSchemas() {
         assertThat( spec.getComponents().getSchemas() )
                 .doesNotContainKey( "Sort" )
