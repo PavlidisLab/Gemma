@@ -3,12 +3,15 @@ package ubic.gemma.persistence.service.expression.experiment;
 import org.junit.After;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.test.context.support.WithMockUser;
 import ubic.gemma.core.util.test.BaseSpringContextTest;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.experiment.BlacklistedExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.Assert.*;
 
 public class BlacklistedEntityServiceTest extends BaseSpringContextTest {
@@ -51,5 +54,14 @@ public class BlacklistedEntityServiceTest extends BaseSpringContextTest {
         assertEquals( ee.getAccession().getAccession(), be.getExternalAccession().getAccession() );
         assertNull( be.getExternalAccession().getAccessionVersion() );
         assertTrue( blacklistedEntityService.isBlacklisted( ee ) );
+    }
+
+    @Test
+    @WithMockUser
+    public void testBlacklistedExperimentAsNonAdmin() {
+        ee = getTestPersistentBasicExpressionExperiment();
+        runAsUser( "bob" );
+        assertThatThrownBy( () -> blacklistedEntityService.blacklistExpressionExperiment( ee, "Don't feel bad, you'll get another chance." ) )
+                .isInstanceOf( AccessDeniedException.class );
     }
 }

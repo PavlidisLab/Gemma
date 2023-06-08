@@ -1,5 +1,6 @@
 package ubic.gemma.persistence.service.expression.experiment;
 
+import org.springframework.security.access.annotation.Secured;
 import ubic.gemma.model.expression.BlacklistedEntity;
 import ubic.gemma.model.expression.BlacklistedValueObject;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -36,6 +37,7 @@ public interface BlacklistedEntityService extends BaseImmutableService<Blacklist
      * @param dataset the dataset to blacklist
      * @param reason a reason, which must be non-empty
      */
+    @Secured({ "GROUP_ADMIN", "ACL_SECURABLE_EDIT" })
     BlacklistedExperiment blacklistExpressionExperiment( ExpressionExperiment dataset, String reason );
 
     /**
@@ -46,5 +48,6 @@ public interface BlacklistedEntityService extends BaseImmutableService<Blacklist
      * @param platform the platform to blacklist
      * @param reason a reason, which must be non-empty
      */
+    @Secured({ "GROUP_ADMIN", "ACL_SECURABLE_EDIT" })
     BlacklistedPlatform blacklistPlatform( ArrayDesign platform, String reason );
 }

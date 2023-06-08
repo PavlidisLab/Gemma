@@ -419,5 +419,6 @@ public interface ArrayDesignService extends BaseService<ArrayDesign>, FilteringV
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     void deleteGeneProductAlignmentAssociations( ArrayDesign arrayDesign );
 
+    @Secured({"GROUP_ADMIN", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ"})
     Slice<ArrayDesignValueObject> loadBlacklistedValueObjects( @Nullable Filters filters, @Nullable Sort sort, int offset, int limit );
 }

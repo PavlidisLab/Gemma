@@ -4,6 +4,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.web.WebAppConfiguration;
 import ubic.gemma.core.util.test.BaseSpringContextTest;
@@ -21,6 +22,7 @@ import ubic.gemma.rest.util.PaginatedResponseDataObject;
 import ubic.gemma.rest.util.args.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @ActiveProfiles("web")
 @WebAppConfiguration
@@ -101,5 +103,15 @@ public class PlatformsWebServiceTest extends BaseSpringContextTest {
                 .hasSize( 1 )
                 .first()
                 .hasFieldOrPropertyWithValue( "shortName", arrayDesign.getShortName() );
+    }
+
+    @Test
+    public void testGetBlacklistedPlatformsAsNonAdmin() {
+        BlacklistedPlatform bp = blacklistedEntityService.blacklistPlatform( arrayDesign, "This is just a test, don't feel bad about it." );
+        assertThat( blacklistedEntityService.isBlacklisted( arrayDesign ) ).isTrue();
+        assertThat( bp.getShortName() ).isEqualTo( arrayDesign.getShortName() );
+        runAsUser( "bob" );
+        assertThatThrownBy( () -> platformsWebService.getBlacklistedPlatforms( FilterArg.valueOf( "" ), SortArg.valueOf( "+id" ), OffsetArg.valueOf( "0" ), LimitArg.valueOf( "20" ) ) )
+                .isInstanceOf( AccessDeniedException.class );
     }
 }

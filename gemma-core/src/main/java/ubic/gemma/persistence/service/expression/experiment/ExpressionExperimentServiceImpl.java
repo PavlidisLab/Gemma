@@ -1088,6 +1088,7 @@ public class ExpressionExperimentServiceImpl
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Slice<ExpressionExperimentValueObject> loadBlacklistedValueObjects( @Nullable Filters filters, @Nullable Sort sort, int offset, int limit ) {
         return expressionExperimentDao.loadBlacklistedValueObjects( filters, sort, offset, limit );
     }

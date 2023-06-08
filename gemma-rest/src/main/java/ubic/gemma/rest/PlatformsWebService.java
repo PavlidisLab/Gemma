@@ -19,9 +19,8 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import org.apache.commons.io.FilenameUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.annotation.Secured;
 import org.springframework.stereotype.Service;
 import ubic.gemma.core.analysis.service.ArrayDesignAnnotationService;
 import ubic.gemma.core.genome.gene.service.GeneService;
@@ -143,7 +142,8 @@ public class PlatformsWebService {
     @GET
     @Path("/blacklisted")
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Retrieve all blacklisted platforms")
+    @Secured("GROUP_ADMIN")
+    @Operation(summary = "Retrieve all blacklisted platforms", hidden = true)
     public FilteringAndPaginatedResponseDataObject<ArrayDesignValueObject> getBlacklistedPlatforms(
             @QueryParam("filter") @DefaultValue("") FilterArg<ArrayDesign> filter,
             @QueryParam("sort") @DefaultValue("+id") SortArg<ArrayDesign> sort,
