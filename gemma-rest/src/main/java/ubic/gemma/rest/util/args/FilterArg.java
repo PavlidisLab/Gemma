@@ -30,6 +30,8 @@ import java.util.List;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import static ubic.gemma.persistence.util.FiltersUtils.unnestSubquery;
+
 /**
  * Represent a filter argument designed to generate a {@link Filters} from user input.
  * <p>
@@ -162,9 +164,12 @@ public class FilterArg<O extends Identifiable> extends AbstractArg<FilterArg.Fil
                         operator = collectionOperatorToOperator( subClause.collectionOperator() );
                         List<String> requiredValue = subClause.collection().scalar().stream().map( FilterArg::scalarToString ).collect( Collectors.toList() );
                         ubic.gemma.persistence.util.Filter f = service.getFilter( property, operator, requiredValue );
-                        if ( f.getRequiredValue() == null || ( ( Collection<?> ) f.getRequiredValue() ).isEmpty() ) {
+                        // the rhs might be a subquery, unnest it
+                        ubic.gemma.persistence.util.Filter filterToValidate = unnestSubquery( f );
+                        if ( filterToValidate.getRequiredValue() == null || ( ( Collection<?> ) filterToValidate.getRequiredValue() ).isEmpty() ) {
                             // collections must be non-empty
-                            throw new MalformedArgException( String.format( "The right hand side collection in '%s' must be non-empty.", f ) );
+                            throw new MalformedArgException( String.format( "The right hand side collection in '%s' must be non-empty.",
+                                    filterToValidate ) );
                         }
                         disjunction = disjunction.or( f );
                     }

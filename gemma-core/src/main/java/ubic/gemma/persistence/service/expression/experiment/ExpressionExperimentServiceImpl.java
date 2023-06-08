@@ -573,9 +573,7 @@ public class ExpressionExperimentServiceImpl
             for ( Filter subClause : clause ) {
                 if ( ArrayUtils.contains( PROPERTIES_USED_FOR_ANNOTATIONS, subClause.getOriginalProperty() ) ) {
                     // handle nested subqueries
-                    while ( subClause.getRequiredValue() instanceof Subquery ) {
-                        subClause = ( ( Subquery ) subClause.getRequiredValue() ).getFilter();
-                    }
+                    subClause = FiltersUtils.unnestSubquery( subClause );
                     Set<String> it = termUrisBySubClause.computeIfAbsent( SubClauseKey.from( subClause.getObjectAlias(), subClause.getPropertyName(), subClause.getOriginalProperty() ), k -> new HashSet<>() );
                     // rewrite the clause to contain all the inferred terms
                     if ( subClause.getRequiredValue() instanceof Collection ) {

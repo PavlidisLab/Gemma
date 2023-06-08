@@ -11,6 +11,7 @@ import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.persistence.service.FilteringService;
 import ubic.gemma.persistence.util.Filter;
 import ubic.gemma.persistence.util.Filters;
+import ubic.gemma.persistence.util.Subquery;
 import ubic.gemma.rest.util.MalformedArgException;
 
 import java.time.LocalDateTime;
@@ -258,14 +259,30 @@ public class FilterArgTest {
 
     @Test
     public void testParseEmptyCollectionRaisesMalformedArgException() {
+        setUpMockVoService();
         //noinspection unchecked
         when( mockVoService.getFilter( any(), any(), anyCollection() ) )
                 .thenAnswer( a -> Filter.parse( "alias", a.getArgument( 0 ), String.class,
                         a.getArgument( 1 ), a.getArgument( 2, Collection.class ) ) );
         assertThatThrownBy( () -> checkValidCollection( Collections.emptyList(), "()" ) )
-                .isInstanceOf( MalformedArgException.class );
+                .isInstanceOf( MalformedArgException.class )
+                .hasMessageContaining( "'alias.foo in ()' must be non-empty" );
         assertThatThrownBy( () -> checkValidCollection( Collections.emptyList(), "( )" ) )
-                .isInstanceOf( MalformedArgException.class );
+                .isInstanceOf( MalformedArgException.class )
+                .hasMessageContaining( "'alias.foo in ()' must be non-empty" );
+    }
+
+    @Test
+    public void testParseSubqueryWithEmptyCollectionRaisesMalformedArgException() {
+        setUpMockVoService();
+        //noinspection unchecked
+        when( mockVoService.getFilter( any(), any(), anyCollection() ) )
+                .thenAnswer( a -> Filter.by( "alias", "id", Long.class, Filter.Operator.inSubquery,
+                        new Subquery( "ExpressionExperiment", "id", Collections.emptyList(),
+                                Filter.parse( null, a.getArgument( 0 ), String.class, a.getArgument( 1 ), ( Collection<String> ) a.getArgument( 2, Collection.class ) ) ) ) );
+        assertThatThrownBy( () -> checkValidCollection( Collections.emptyList(), "()" ) )
+                .isInstanceOf( MalformedArgException.class )
+                .hasMessageContaining( "'foo in ()' must be non-empty" );
     }
 
     private void checkValidCollection( Collection<String> expected, String input ) {
