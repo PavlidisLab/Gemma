@@ -23,7 +23,6 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ubic.gemma.core.association.phenotype.PhenotypeAssociationManagerService;
-import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
@@ -34,7 +33,6 @@ import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.model.genome.gene.phenotype.EvidenceFilter;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.GeneEvidenceValueObject;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.persistence.service.genome.ChromosomeService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Sort;
@@ -63,12 +61,11 @@ public class TaxaWebService {
 
     protected static final Log log = LogFactory.getLog( TaxaWebService.class.getName() );
     private TaxonService taxonService;
-    private GeneService geneService;
     private ExpressionExperimentService expressionExperimentService;
     private PhenotypeAssociationManagerService phenotypeAssociationManagerService;
-    private ChromosomeService chromosomeService;
     private TaxonArgService taxonArgService;
     private DatasetArgService datasetArgService;
+    private GeneArgService geneArgService;
 
     /**
      * Required by spring
@@ -80,18 +77,15 @@ public class TaxaWebService {
      * Constructor for service autowiring
      */
     @Autowired
-    public TaxaWebService( TaxonService taxonService, GeneService geneService,
-            ExpressionExperimentService expressionExperimentService,
-            PhenotypeAssociationManagerService phenotypeAssociationManagerService,
-            ChromosomeService chromosomeService, TaxonArgService taxonArgService,
-            DatasetArgService datasetArgService ) {
+    public TaxaWebService( TaxonService taxonService, ExpressionExperimentService expressionExperimentService,
+            PhenotypeAssociationManagerService phenotypeAssociationManagerService, TaxonArgService taxonArgService,
+            DatasetArgService datasetArgService, GeneArgService geneArgService ) {
         this.taxonService = taxonService;
-        this.geneService = geneService;
         this.expressionExperimentService = expressionExperimentService;
         this.phenotypeAssociationManagerService = phenotypeAssociationManagerService;
-        this.chromosomeService = chromosomeService;
         this.taxonArgService = taxonArgService;
         this.datasetArgService = datasetArgService;
+        this.geneArgService = geneArgService;
     }
 
     /**
@@ -155,9 +149,7 @@ public class TaxaWebService {
         if ( size == null ) {
             throw new BadRequestException( "The 'size' query parameter must be supplied." );
         }
-        return Responder.respond(
-                taxonArg.getGenesOnChromosome( taxonService, chromosomeService, geneService, chromosomeName,
-                        start, size ) );
+        return Responder.respond( taxonArgService.getGenesOnChromosome( taxonArg, chromosomeName, start, size ) );
     }
 
     /**
@@ -176,7 +168,7 @@ public class TaxaWebService {
             @PathParam("taxon") TaxonArg<?> taxonArg, // Required
             @PathParam("gene") GeneArg<?> geneArg // Required
     ) {
-        return Responder.respond( geneArg.getGenesOnTaxon( geneService, taxonService, taxonArg ) );
+        return Responder.respond( geneArgService.getGenesOnTaxon( geneArg, taxonArgService.getEntity( taxonArg ) ) );
     }
 
     /**
@@ -191,14 +183,14 @@ public class TaxaWebService {
     @Path("/{taxon}/genes/{gene}/evidence")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve evidences for a given gene and taxon", hidden = true)
+    @Deprecated
     public ResponseDataObject<List<GeneEvidenceValueObject>> getGenesEvidenceInTaxon( // Params:
             @PathParam("taxon") TaxonArg<?> taxonArg, // Required
             @PathParam("gene") GeneArg<?> geneArg // Required
     ) {
         Taxon taxon = taxonArgService.getEntity( taxonArg );
         try {
-            return Responder
-                    .respond( geneArg.getGeneEvidence( geneService, phenotypeAssociationManagerService, taxon ) );
+            return Responder.respond( geneArgService.getGeneEvidence( geneArg, taxon ) );
         } catch ( SearchException e ) {
             throw new BadRequestException( "Invalid search settings.", e );
         }
@@ -221,11 +213,11 @@ public class TaxaWebService {
             @PathParam("gene") GeneArg<?> geneArg // Required
     ) {
         Taxon taxon = taxonArgService.getEntity( taxonArg );
-        return Responder.respond( geneArg.getGeneLocation( geneService, taxon ) );
+        return Responder.respond( geneArgService.getGeneLocation( geneArg, taxon ) );
     }
 
     /**
-     * Retrieves datasets for the given taxon. Filtering allowed exactly like in {@link DatasetsWebService#getDatasets(FilterArg, OffsetArg, LimitArg, SortArg)}.
+     * Retrieves datasets for the given taxon. Filtering allowed exactly like in {@link DatasetsWebService#getDatasets(String, Double, FilterArg, OffsetArg, LimitArg, SortArg)}.
      *
      * @param taxonArg can either be Taxon ID, Taxon NCBI ID, or one of its string identifiers:
      *                 scientific name, common name. It is recommended to use the ID for efficiency.
@@ -294,6 +286,7 @@ public class TaxaWebService {
     @Path("/{taxon}/phenotypes/candidates")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve the candidate gens for a given set of phenotypes and taxon", hidden = true)
+    @Deprecated
     public ResponseDataObject<Set<GeneEvidenceValueObject>> findCandidateGenesInTaxon( // Params:
             @PathParam("taxon") TaxonArg<?> taxonArg, // Required
             @Parameter(schema = @Schema(implementation = StringArrayArg.class), explode = Explode.FALSE) @QueryParam("phenotypes") StringArrayArg phenotypes, // Required

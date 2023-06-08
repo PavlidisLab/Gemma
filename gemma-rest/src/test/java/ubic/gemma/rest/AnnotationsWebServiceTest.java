@@ -13,6 +13,8 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestExecutionListeners;
 import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
 import org.springframework.test.context.web.WebAppConfiguration;
+import ubic.gemma.core.analysis.preprocess.OutlierDetectionService;
+import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.search.SearchResult;
@@ -22,7 +24,10 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.common.description.CharacteristicService;
+import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
+import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.persistence.service.genome.ChromosomeService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.persistence.util.*;
 import ubic.gemma.rest.util.FilteringAndPaginatedResponseDataObject;
@@ -73,13 +78,13 @@ public class AnnotationsWebServiceTest extends AbstractJUnit4SpringContextTests 
         }
 
         @Bean
-        public DatasetArgService datasetRestService( ExpressionExperimentService service ) {
-            return new DatasetArgService( service );
+        public DatasetArgService datasetRestService( ExpressionExperimentService service, SearchService searchService ) {
+            return new DatasetArgService( service, searchService, mock( ArrayDesignService.class ), mock( BioAssayService.class ), mock( OutlierDetectionService.class ) );
         }
 
         @Bean
         public TaxonArgService taxonArgService( TaxonService taxonService ) {
-            return new TaxonArgService( taxonService );
+            return new TaxonArgService( taxonService, mock( ChromosomeService.class ), mock( GeneService.class ) );
         }
 
         @Bean

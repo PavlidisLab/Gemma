@@ -296,6 +296,7 @@ public class AnnotationsWebService {
 
             SearchSettings settings = SearchSettings.builder()
                     .fillResults( false )
+                    .query( value )
                     .build();
             List<SearchResult<ExpressionExperiment>> eeResults = searchService.search( settings )
                     .getByResultObjectType( ExpressionExperiment.class );

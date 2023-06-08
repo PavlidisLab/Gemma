@@ -2,22 +2,12 @@ package ubic.gemma.rest.util.args;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import org.apache.commons.lang3.StringUtils;
-import ubic.gemma.core.association.phenotype.PhenotypeAssociationManagerService;
 import ubic.gemma.core.genome.gene.service.GeneService;
-import ubic.gemma.core.ontology.providers.GeneOntologyService;
-import ubic.gemma.core.search.SearchException;
 import ubic.gemma.model.genome.Gene;
-import ubic.gemma.model.genome.GeneOntologyTermValueObject;
-import ubic.gemma.model.genome.PhysicalLocationValueObject;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.model.genome.gene.GeneValueObject;
-import ubic.gemma.model.genome.gene.phenotype.valueObject.GeneEvidenceValueObject;
-import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.rest.util.MalformedArgException;
 
-import java.util.List;
-import java.util.Objects;
-import java.util.stream.Collectors;
+import javax.annotation.Nullable;
 
 /**
  * Mutable argument type base class for Gene API.
@@ -41,6 +31,12 @@ public abstract class GeneArg<T> extends AbstractEntityArg<T, Gene, GeneService>
     }
 
     /**
+     * Retrieve a gene entity from the given service for the given taxon.
+     */
+    @Nullable
+    abstract Gene getEntityWithTaxon( GeneService geneService, Taxon taxon );
+
+    /**
      * Used by RS to parse value of request parameters.
      *
      * @param s the request Gene argument
@@ -60,79 +56,5 @@ public abstract class GeneArg<T> extends AbstractEntityArg<T, Gene, GeneService>
                 return new GeneSymbolArg( s );
             }
         }
-    }
-
-    /**
-     * @param geneService service that will be used to retrieve the persistent Gene object.
-     * @return a collection of Gene value objects..
-     */
-    public List<GeneValueObject> getGenesOnTaxon( GeneService geneService, TaxonService taxonService,
-            TaxonArg<?> taxonArg ) {
-        Taxon taxon = taxonArg.getEntity( taxonService );
-        return this.getValueObjects( geneService, taxon );
-    }
-
-    /**
-     * Searches for gene evidence of the gene that this GeneArg represents, on the given taxon.
-     *
-     * @param geneService                        service that will be used to retrieve the persistent Gene object.
-     * @param phenotypeAssociationManagerService service used to execute the search.
-     * @param taxon                              the taxon to limit the search to. Can be null.
-     * @return collection of gene evidence VOs matching the criteria, or an error response, if there is an error.
-     */
-    public List<GeneEvidenceValueObject> getGeneEvidence( GeneService geneService,
-            PhenotypeAssociationManagerService phenotypeAssociationManagerService, Taxon taxon ) throws SearchException {
-        Gene gene = this.getEntity( geneService );
-        return phenotypeAssociationManagerService
-                .findGenesWithEvidence( gene.getOfficialSymbol(), taxon == null ? null : taxon.getId() );
-    }
-
-    /**
-     * @param service the service used to load the Gene value objects.
-     * @return all genes that match the value of the GeneArg.
-     */
-    public abstract List<GeneValueObject> getValueObjects( GeneService service );
-
-    /**
-     * Returns all known locations of the gene(s) that this GeneArg represents.
-     *
-     * @param geneService service that will be used to retrieve the persistent Gene object.
-     * @return collection of physical location objects.
-     */
-    public abstract List<PhysicalLocationValueObject> getGeneLocation( GeneService geneService );
-
-    /**
-     * Returns all known locations of the gene that this GeneArg represents.
-     *
-     * @param geneService service that will be used to retrieve the persistent Gene object.
-     * @param taxon       the taxon to limit the search to. Can be null.
-     * @return collection of physical location objects.
-     */
-    public abstract List<PhysicalLocationValueObject> getGeneLocation( GeneService geneService, Taxon taxon );
-
-    /**
-     * Returns GO terms for the gene that this GeneArg represents.
-     *
-     * @param geneService service that will be used to retrieve the persistent Gene object.
-     * @return collection of physical location objects.
-     */
-    public List<GeneOntologyTermValueObject> getGoTerms( GeneService geneService,
-            GeneOntologyService geneOntologyService ) {
-        Gene gene = this.getEntity( geneService );
-        return geneOntologyService.getValueObjects( gene );
-    }
-
-    /**
-     * Lists Gene Value Objects of all genes that this GeneArg represents, discarding any genes that are not on the
-     * given taxon.
-     *
-     * @param service the service to use to retrieve the Gene Value Objects.
-     * @param taxon   the taxon to limit the genes search to.
-     * @return collection of Gene Value Objects.
-     */
-    private List<GeneValueObject> getValueObjects( GeneService service, Taxon taxon ) {
-        return this.getValueObjects( service ).stream()
-                .filter( vo -> Objects.equals( vo.getTaxonId(), taxon.getId() ) )
-                .collect( Collectors.toList() );
     }
 }

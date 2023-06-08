@@ -19,9 +19,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ubic.gemma.core.analysis.expression.coexpression.CoexpressionValueObjectExt;
 import ubic.gemma.core.analysis.expression.coexpression.GeneCoexpressionSearchService;
-import ubic.gemma.core.association.phenotype.PhenotypeAssociationManagerService;
 import ubic.gemma.core.genome.gene.service.GeneService;
-import ubic.gemma.core.ontology.providers.GeneOntologyService;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.model.expression.designElement.CompositeSequenceValueObject;
 import ubic.gemma.model.genome.Gene;
@@ -31,7 +29,10 @@ import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.GeneEvidenceValueObject;
 import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
 import ubic.gemma.persistence.util.Filters;
-import ubic.gemma.rest.util.*;
+import ubic.gemma.rest.util.ArgUtils;
+import ubic.gemma.rest.util.FilteringAndPaginatedResponseDataObject;
+import ubic.gemma.rest.util.Responder;
+import ubic.gemma.rest.util.ResponseDataObject;
 import ubic.gemma.rest.util.args.*;
 
 import javax.ws.rs.*;
@@ -52,9 +53,7 @@ import java.util.List;
 public class GeneWebService {
 
     private GeneService geneService;
-    private GeneOntologyService geneOntologyService;
     private CompositeSequenceService compositeSequenceService;
-    private PhenotypeAssociationManagerService phenotypeAssociationManagerService;
     private GeneCoexpressionSearchService geneCoexpressionSearchService;
     private GeneArgService geneArgService;
 
@@ -68,15 +67,10 @@ public class GeneWebService {
      * Constructor for service autowiring
      */
     @Autowired
-    public GeneWebService( GeneService geneService, GeneOntologyService geneOntologyService,
-            CompositeSequenceService compositeSequenceService,
-            PhenotypeAssociationManagerService phenotypeAssociationManagerService,
-            GeneCoexpressionSearchService geneCoexpressionSearchService,
-            GeneArgService geneArgService ) {
+    public GeneWebService( GeneService geneService, CompositeSequenceService compositeSequenceService,
+            GeneCoexpressionSearchService geneCoexpressionSearchService, GeneArgService geneArgService ) {
         this.geneService = geneService;
-        this.geneOntologyService = geneOntologyService;
         this.compositeSequenceService = compositeSequenceService;
-        this.phenotypeAssociationManagerService = phenotypeAssociationManagerService;
         this.geneCoexpressionSearchService = geneCoexpressionSearchService;
         this.geneArgService = geneArgService;
     }
@@ -114,12 +108,12 @@ public class GeneWebService {
     @Path("/{gene}/evidence")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve the evidence for a given gene", hidden = true)
+    @Deprecated
     public ResponseDataObject<List<GeneEvidenceValueObject>> getGeneEvidence( // Params:
             @PathParam("gene") GeneArg<?> geneArg // Required
     ) {
         try {
-            return Responder
-                    .respond( geneArg.getGeneEvidence( geneService, phenotypeAssociationManagerService, null ) );
+            return Responder.respond( geneArgService.getGeneEvidence( geneArg, null ) );
         } catch ( SearchException e ) {
             throw new BadRequestException( "Invalid search settings.", e );
         }
@@ -138,7 +132,7 @@ public class GeneWebService {
     public ResponseDataObject<List<PhysicalLocationValueObject>> getGeneLocations( // Params:
             @PathParam("gene") GeneArg<?> geneArg // Required
     ) {
-        return Responder.respond( geneArg.getGeneLocation( geneService ) );
+        return Responder.respond( geneArgService.getGeneLocation( geneArg ) );
     }
 
     /**
@@ -174,7 +168,7 @@ public class GeneWebService {
     public ResponseDataObject<List<GeneOntologyTermValueObject>> getGeneGoTerms( // Params:
             @PathParam("gene") GeneArg<?> geneArg // Required
     ) {
-        return Responder.respond( geneArg.getGoTerms( geneService, geneOntologyService ) );
+        return Responder.respond( geneArgService.getGoTerms( geneArg ) );
     }
 
     /**

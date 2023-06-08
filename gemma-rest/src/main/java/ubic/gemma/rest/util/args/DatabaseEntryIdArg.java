@@ -4,8 +4,6 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.persistence.service.common.description.DatabaseEntryService;
 
-import javax.annotation.Nonnull;
-
 /**
  * Long argument type for DatabaseEntry API, referencing the Taxon ID.
  *

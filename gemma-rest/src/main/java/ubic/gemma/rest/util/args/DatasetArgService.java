@@ -2,12 +2,23 @@ package ubic.gemma.rest.util.args;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import ubic.gemma.core.analysis.preprocess.OutlierDetails;
+import ubic.gemma.core.analysis.preprocess.OutlierDetectionService;
+import ubic.gemma.core.analysis.preprocess.filter.FilteringException;
+import ubic.gemma.core.analysis.preprocess.filter.NoRowsLeftAfterFilteringException;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.search.SearchResult;
 import ubic.gemma.core.search.SearchService;
+import ubic.gemma.model.common.description.AnnotationValueObject;
+import ubic.gemma.model.common.quantitationtype.QuantitationTypeValueObject;
 import ubic.gemma.model.common.search.Highlighter;
 import ubic.gemma.model.common.search.SearchSettings;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
+import ubic.gemma.model.expression.bioAssay.BioAssay;
+import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
+import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.util.Filter;
 import ubic.gemma.persistence.util.Filters;
@@ -15,6 +26,7 @@ import ubic.gemma.persistence.util.Filters;
 import javax.annotation.Nullable;
 import javax.ws.rs.BadRequestException;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -22,12 +34,18 @@ import java.util.stream.Collectors;
 @Service
 public class DatasetArgService extends AbstractEntityArgService<ExpressionExperiment, ExpressionExperimentService> {
 
-    @Autowired
-    private SearchService searchService;
+    private final SearchService searchService;
+    private final ArrayDesignService adService;
+    private final BioAssayService baService;
+    private final OutlierDetectionService outlierDetectionService;
 
     @Autowired
-    public DatasetArgService( ExpressionExperimentService service ) {
+    public DatasetArgService( ExpressionExperimentService service, SearchService searchService, ArrayDesignService adService, BioAssayService baService, OutlierDetectionService outlierDetectionService ) {
         super( service );
+        this.searchService = searchService;
+        this.adService = adService;
+        this.baService = baService;
+        this.outlierDetectionService = outlierDetectionService;
     }
 
     @Override
@@ -82,5 +100,52 @@ public class DatasetArgService extends AbstractEntityArgService<ExpressionExperi
      */
     public Filter getFilterForSearchQuery( String query ) {
         return getFilterForSearchQuery( query, 0.0, null, null );
+    }
+
+    /**
+     * Retrieve a dataset with quantitation type initialized.
+     */
+    public Set<QuantitationTypeValueObject> getQuantitationTypes( DatasetArg<?> arg ) {
+        return new HashSet<>( service.getQuantitationTypeValueObjects( getEntity( arg ) ) );
+    }
+
+    /**
+     * Retrieves the Platforms of the Dataset that this argument represents.
+     *
+     * @return a collection of Platforms that the dataset represented by this argument is in.
+     */
+    public List<ArrayDesignValueObject> getPlatforms( DatasetArg<?> arg ) {
+        ExpressionExperiment ee = this.getEntity( arg );
+        return adService.loadValueObjectsForEE( ee.getId() );
+    }
+
+    /**
+     * @return a collection of BioAssays that represent the experiments samples.
+     */
+    public List<BioAssayValueObject> getSamples( DatasetArg<?> arg ) {
+        ExpressionExperiment ee = service.thawBioAssays( this.getEntity( arg ) );
+        List<BioAssayValueObject> bioAssayValueObjects = baService.loadValueObjects( ee.getBioAssays(), true );
+        try {
+            Set<Long> predictedOutlierBioAssayIds = outlierDetectionService.identifyOutliersByMedianCorrelation( ee ).stream()
+                    .map( OutlierDetails::getBioAssay )
+                    .map( BioAssay::getId )
+                    .collect( Collectors.toSet() );
+            for ( BioAssayValueObject vo : bioAssayValueObjects ) {
+                vo.setPredictedOutlier( predictedOutlierBioAssayIds.contains( vo.getId() ) );
+            }
+        } catch ( NoRowsLeftAfterFilteringException e ) {
+            // there are no rows left in the data matrix, thus no outliers ;o
+        } catch ( FilteringException e ) {
+            throw new RuntimeException( e );
+        }
+        return bioAssayValueObjects;
+    }
+
+    /**
+     * @return a collection of Annotations value objects that represent the experiments annotations.
+     */
+    public Set<AnnotationValueObject> getAnnotations( DatasetArg<?> arg ) {
+        ExpressionExperiment ee = this.getEntity( arg );
+        return service.getAnnotationsById( ee.getId() );
     }
 }

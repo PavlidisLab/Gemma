@@ -14,7 +14,6 @@ import org.springframework.test.context.ContextConfiguration;
 import ubic.gemma.core.analysis.preprocess.OutlierDetectionService;
 import ubic.gemma.core.analysis.preprocess.svd.SVDService;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
-import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.search.SearchResult;
 import ubic.gemma.core.search.SearchService;
@@ -70,18 +69,8 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
         }
 
         @Bean
-        public BioAssayService bioAssayService() {
-            return mock( BioAssayService.class );
-        }
-
-        @Bean
         public ProcessedExpressionDataVectorService processedExpressionDataVectorService() {
             return mock( ProcessedExpressionDataVectorService.class );
-        }
-
-        @Bean
-        public GeneService geneService() {
-            return mock( GeneService.class );
         }
 
         @Bean
@@ -100,28 +89,23 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
         }
 
         @Bean
-        public OutlierDetectionService outlierDetectionService() {
-            return mock( OutlierDetectionService.class );
-        }
-
-        @Bean
         public QuantitationTypeService quantitationTypeService() {
             return mock( QuantitationTypeService.class );
         }
 
         @Bean
-        public DatasetArgService datasetArgService( ExpressionExperimentService expressionExperimentService ) {
-            return new DatasetArgService( expressionExperimentService );
-        }
-
-        @Bean
-        public GeneArgService geneArgService( GeneService geneService ) {
-            return new GeneArgService( geneService );
-        }
-
-        @Bean
         public SearchService searchService() {
             return mock( SearchService.class );
+        }
+
+        @Bean
+        public DatasetArgService datasetArgService( ExpressionExperimentService expressionExperimentService, SearchService searchService ) {
+            return new DatasetArgService( expressionExperimentService, searchService, mock( ArrayDesignService.class ), mock( BioAssayService.class ), mock( OutlierDetectionService.class ) );
+        }
+
+        @Bean
+        public GeneArgService geneArgService() {
+            return mock( GeneArgService.class );
         }
 
         @Bean
@@ -141,6 +125,9 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
 
     @Autowired
     private AnalyticsProvider analyticsProvider;
+
+    @Autowired
+    private SearchService searchService;
 
     private ExpressionExperiment ee;
 
@@ -183,9 +170,6 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
                 .containsEntry( "endpoint", "/datasets" )
                 .containsEntry( "language", "fr-ca" );
     }
-
-    @Autowired
-    private SearchService searchService;
 
     @Test
     public void testGetDatasetsWithQuery() throws SearchException {

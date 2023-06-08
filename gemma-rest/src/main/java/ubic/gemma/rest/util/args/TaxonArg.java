@@ -7,6 +7,7 @@ import ubic.gemma.model.genome.Chromosome;
 import ubic.gemma.model.genome.PhysicalLocation;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneValueObject;
+import ubic.gemma.persistence.service.FilteringService;
 import ubic.gemma.persistence.service.genome.ChromosomeService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.rest.util.MalformedArgException;
@@ -49,45 +50,5 @@ public abstract class TaxonArg<T> extends AbstractEntityArg<T, Taxon, TaxonServi
         } catch ( NumberFormatException e ) {
             return new TaxonNameArg( s );
         }
-    }
-
-    /**
-     * Lists Genes overlapping a location on a specific chromosome on a taxon that this TaxonArg represents.
-     *
-     * @param taxonService      the service that will be used to retrieve the persistent Taxon object.
-     * @param chromosomeService the service that will be used to find the Chromosome object.
-     * @param geneService       the service that will be used to retrieve the Gene VOs
-     * @param chromosomeName    name of the chromosome to look on
-     * @param start             the start nucleotide denoting the location to look for genes at.
-     * @param size              the size (in nucleotides) of the location from the 'start' nucleotide.
-     * @return collection of Gene VOs overlapping the location defined by the 'start' and 'size' parameters.
-     * @throws NotFoundException if the taxon cannot retrieved as per {@link #getEntity(TaxonService)}
-     */
-    public List<GeneValueObject> getGenesOnChromosome( TaxonService taxonService,
-            ChromosomeService chromosomeService, GeneService geneService, String chromosomeName, long start,
-            int size ) throws NotFoundException {
-        // Taxon argument
-        Taxon taxon = this.getEntity( taxonService );
-
-        //Chromosome argument
-        Collection<Chromosome> chromosomes = chromosomeService.find( chromosomeName, taxon );
-        if ( chromosomes.isEmpty() ) {
-            throw new NotFoundException( "Chromosome " + chromosomeName + " not found for taxon " + taxon.getScientificName() );
-        }
-        Chromosome chromosome = chromosomes.iterator().next();
-
-        // Setup chromosome location
-        PhysicalLocation region = PhysicalLocation.Factory.newInstance( chromosome );
-        region.setNucleotide( start );
-        region.setNucleotideLength( size );
-        // region.setStrand( strand );
-
-        List<GeneValueObject> GVOs = geneService.loadValueObjects( geneService.find( region ) );
-        if ( GVOs == null ) {
-            throw new NotFoundException(
-                    "No genes found on chromosome " + chromosomeName + " between positions " + start + " and " + start
-                            + size + "." );
-        }
-        return GVOs;
     }
 }

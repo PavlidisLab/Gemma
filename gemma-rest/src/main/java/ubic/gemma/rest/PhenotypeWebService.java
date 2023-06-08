@@ -37,6 +37,7 @@ import java.util.Set;
  *
  * @author tesarst
  */
+@Deprecated
 @Service
 @Path("/phenotypes")
 public class PhenotypeWebService {

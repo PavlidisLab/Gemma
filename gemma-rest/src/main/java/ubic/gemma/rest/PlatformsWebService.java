@@ -57,7 +57,6 @@ public class PlatformsWebService {
 
     private GeneService geneService;
     private ArrayDesignService arrayDesignService;
-    private ExpressionExperimentService expressionExperimentService;
     private CompositeSequenceService compositeSequenceService;
     private ArrayDesignAnnotationService annotationFileService;
     private PlatformArgService arrayDesignArgService;
@@ -74,12 +73,10 @@ public class PlatformsWebService {
      */
     @Autowired
     public PlatformsWebService( GeneService geneService, ArrayDesignService arrayDesignService,
-            ExpressionExperimentService expressionExperimentService,
             CompositeSequenceService compositeSequenceService, ArrayDesignAnnotationService annotationFileService,
             PlatformArgService arrayDesignArgService, CompositeSequenceArgService probeArgService ) {
         this.geneService = geneService;
         this.arrayDesignService = arrayDesignService;
-        this.expressionExperimentService = expressionExperimentService;
         this.compositeSequenceService = compositeSequenceService;
         this.annotationFileService = annotationFileService;
         this.arrayDesignArgService = arrayDesignArgService;
@@ -172,7 +169,7 @@ public class PlatformsWebService {
             @QueryParam("offset") @DefaultValue("0") OffsetArg offset, // Optional, default 0
             @QueryParam("limit") @DefaultValue("20") LimitArg limit // Optional, default 20
     ) {
-        return Responder.paginate( platformArg.getExperiments( arrayDesignService, expressionExperimentService, limit.getValue(), offset.getValue() ), new String[] { "id" } );
+        return Responder.paginate( arrayDesignArgService.getExperiments( platformArg, limit.getValue(), offset.getValue() ), new String[] { "id" } );
     }
 
     /**
@@ -193,7 +190,7 @@ public class PlatformsWebService {
             @QueryParam("offset") @DefaultValue("0") OffsetArg offset, // Optional, default 0
             @QueryParam("limit") @DefaultValue("20") LimitArg limit // Optional, default 20
     ) {
-        return Responder.paginate( platformArg.getElements( arrayDesignService, compositeSequenceService, limit.getValue(), offset.getValue() ), new String[] { "id" } );
+        return Responder.paginate( arrayDesignArgService.getElements( platformArg, limit.getValue(), offset.getValue() ), new String[] { "id" } );
     }
 
     /**

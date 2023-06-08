@@ -4,8 +4,6 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 
-import javax.annotation.Nonnull;
-
 /**
  * Long argument type for taxon API, referencing the Taxon ID.
  *

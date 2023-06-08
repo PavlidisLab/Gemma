@@ -33,7 +33,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import org.springframework.web.util.UriComponentsBuilder;
 import ubic.basecode.ontology.model.OntologyTerm;
-import ubic.gemma.core.analysis.preprocess.OutlierDetectionService;
 import ubic.gemma.core.analysis.preprocess.filter.FilteringException;
 import ubic.gemma.core.analysis.preprocess.filter.NoRowsLeftAfterFilteringException;
 import ubic.gemma.core.analysis.preprocess.svd.SVDService;
@@ -60,7 +59,6 @@ import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpre
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
-import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.util.Filters;
@@ -105,8 +103,6 @@ public class DatasetsWebService {
     @Autowired
     private ArrayDesignService arrayDesignService;
     @Autowired
-    private BioAssayService bioAssayService;
-    @Autowired
     private ProcessedExpressionDataVectorService processedExpressionDataVectorService;
     @Autowired
     private SVDService svdService;
@@ -114,8 +110,6 @@ public class DatasetsWebService {
     private DifferentialExpressionAnalysisService differentialExpressionAnalysisService;
     @Autowired
     private AuditEventService auditEventService;
-    @Autowired
-    private OutlierDetectionService outlierDetectionService;
     @Autowired
     private QuantitationTypeService quantitationTypeService;
     @Autowired
@@ -465,7 +459,7 @@ public class DatasetsWebService {
     public ResponseDataObject<List<ArrayDesignValueObject>> getDatasetPlatforms( // Params:
             @PathParam("dataset") DatasetArg<?> datasetArg // Required
     ) {
-        return Responder.respond( datasetArg.getPlatforms( expressionExperimentService, arrayDesignService ) );
+        return Responder.respond( datasetArgService.getPlatforms( datasetArg ) );
     }
 
     /**
@@ -484,7 +478,7 @@ public class DatasetsWebService {
     public ResponseDataObject<List<BioAssayValueObject>> getDatasetSamples( // Params:
             @PathParam("dataset") DatasetArg<?> datasetArg // Required
     ) {
-        return Responder.respond( datasetArg.getSamples( expressionExperimentService, bioAssayService, outlierDetectionService ) );
+        return Responder.respond( datasetArgService.getSamples( datasetArg ) );
     }
 
     /**
@@ -561,7 +555,7 @@ public class DatasetsWebService {
     public ResponseDataObject<Set<AnnotationValueObject>> getDatasetAnnotations( // Params:
             @PathParam("dataset") DatasetArg<?> datasetArg // Required
     ) {
-        return Responder.respond( datasetArg.getAnnotations( expressionExperimentService ) );
+        return Responder.respond( datasetArgService.getAnnotations( datasetArg ) );
     }
 
     /**
@@ -572,7 +566,7 @@ public class DatasetsWebService {
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve quantitation types of a dataset")
     public ResponseDataObject<Set<QuantitationTypeValueObject>> getDatasetQuantitationTypes( @PathParam("dataset") DatasetArg<?> datasetArg ) {
-        return Responder.respond( datasetArg.getQuantitationTypes( expressionExperimentService ) );
+        return Responder.respond( datasetArgService.getQuantitationTypes( datasetArg ) );
     }
 
     /**
