@@ -4,7 +4,6 @@ import org.junit.After;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
-import org.springframework.security.test.context.support.WithMockUser;
 import ubic.gemma.core.util.test.BaseSpringContextTest;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.experiment.BlacklistedExperiment;
@@ -57,11 +56,14 @@ public class BlacklistedEntityServiceTest extends BaseSpringContextTest {
     }
 
     @Test
-    @WithMockUser
     public void testBlacklistedExperimentAsNonAdmin() {
         ee = getTestPersistentBasicExpressionExperiment();
-        runAsUser( "bob" );
-        assertThatThrownBy( () -> blacklistedEntityService.blacklistExpressionExperiment( ee, "Don't feel bad, you'll get another chance." ) )
-                .isInstanceOf( AccessDeniedException.class );
+        try {
+            runAsUser( "bob" );
+            assertThatThrownBy( () -> blacklistedEntityService.blacklistExpressionExperiment( ee, "Don't feel bad, you'll get another chance." ) )
+                    .isInstanceOf( AccessDeniedException.class );
+        } finally {
+            runAsAdmin();
+        }
     }
 }
