@@ -54,6 +54,7 @@ public class PlatformsWebServiceTest extends BaseSpringContextTest {
     public void tearDown() {
         eeService.remove( expressionExperiment );
         arrayDesignService.remove( arrayDesign );
+        blacklistedEntityService.removeAllInBatch();
     }
 
     @Test
@@ -110,8 +111,12 @@ public class PlatformsWebServiceTest extends BaseSpringContextTest {
         BlacklistedPlatform bp = blacklistedEntityService.blacklistPlatform( arrayDesign, "This is just a test, don't feel bad about it." );
         assertThat( blacklistedEntityService.isBlacklisted( arrayDesign ) ).isTrue();
         assertThat( bp.getShortName() ).isEqualTo( arrayDesign.getShortName() );
-        runAsUser( "bob" );
-        assertThatThrownBy( () -> platformsWebService.getBlacklistedPlatforms( FilterArg.valueOf( "" ), SortArg.valueOf( "+id" ), OffsetArg.valueOf( "0" ), LimitArg.valueOf( "20" ) ) )
-                .isInstanceOf( AccessDeniedException.class );
+        try {
+            runAsUser( "bob" );
+            assertThatThrownBy( () -> platformsWebService.getBlacklistedPlatforms( FilterArg.valueOf( "" ), SortArg.valueOf( "+id" ), OffsetArg.valueOf( "0" ), LimitArg.valueOf( "20" ) ) )
+                    .isInstanceOf( AccessDeniedException.class );
+        } finally {
+            runAsAdmin();
+        }
     }
 }

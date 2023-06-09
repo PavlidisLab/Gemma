@@ -5,6 +5,7 @@ import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
 import ubic.gemma.core.util.test.BaseSpringContextTest;
+import ubic.gemma.model.expression.BlacklistedEntity;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.experiment.BlacklistedExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -33,6 +34,7 @@ public class BlacklistedEntityServiceTest extends BaseSpringContextTest {
             expressionExperimentService.remove( ee );
         if ( ad != null )
             arrayDesignService.remove( ad );
+        blacklistedEntityService.removeAllInBatch();
     }
 
     @Test
