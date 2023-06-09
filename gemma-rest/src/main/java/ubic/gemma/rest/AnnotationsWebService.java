@@ -294,10 +294,8 @@ public class AnnotationsWebService {
         for ( String value : values ) {
             Set<Long> valueIds = new HashSet<>();
 
-            SearchSettings settings = SearchSettings.builder()
-                    .fillResults( false )
-                    .query( value )
-                    .build();
+            SearchSettings settings = SearchSettings.expressionExperimentSearch( value )
+                    .withFillResults( false );
             List<SearchResult<ExpressionExperiment>> eeResults = searchService.search( settings )
                     .getByResultObjectType( ExpressionExperiment.class );
 
