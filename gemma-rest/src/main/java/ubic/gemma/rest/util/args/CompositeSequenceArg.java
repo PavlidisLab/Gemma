@@ -1,6 +1,5 @@
 package ubic.gemma.rest.util.args;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.Setter;
@@ -9,8 +8,6 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
 import ubic.gemma.rest.util.MalformedArgException;
-
-import javax.annotation.Nullable;
 
 /**
  * Mutable argument type base class for Composite Sequence arguments.
@@ -23,16 +20,11 @@ import javax.annotation.Nullable;
 public abstract class CompositeSequenceArg<T>
         extends AbstractEntityArg<T, CompositeSequence, CompositeSequenceService> {
 
-    /**
-     * Platform this is filtering for, or null.
-     */
-    @Nullable
-    @JsonIgnore
-    protected ArrayDesign platform;
-
     protected CompositeSequenceArg( String propertyName, Class<T> propertyType, T arg ) {
         super( propertyName, propertyType, arg );
     }
+
+    abstract CompositeSequence getEntityWithPlatform( CompositeSequenceService service, ArrayDesign platform);
 
     /**
      * Used by RS to parse value of request parameters.

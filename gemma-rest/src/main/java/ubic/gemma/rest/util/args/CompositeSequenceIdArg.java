@@ -1,6 +1,7 @@
 package ubic.gemma.rest.util.args;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
 
@@ -19,10 +20,13 @@ public class CompositeSequenceIdArg extends CompositeSequenceArg<Long> {
 
     @Override
     CompositeSequence getEntity( CompositeSequenceService service ) {
-        if ( platform == null )
-            throw new BadRequestException( "Platform not set for composite sequence retrieval" );
-        CompositeSequence cs = service.load( this.getValue() );
-        if ( cs != null && !Objects.equals( cs.getArrayDesign().getId(), this.platform.getId() ) ) {
+        return service.load( this.getValue() );
+    }
+
+    @Override
+    CompositeSequence getEntityWithPlatform( CompositeSequenceService service, ArrayDesign platform ) {
+        CompositeSequence cs = getEntity( service );
+        if ( cs != null && !Objects.equals( cs.getArrayDesign().getId(), platform.getId() ) ) {
             throw new BadRequestException( "Platform does not match the sequence's platform." );
         }
         return cs;

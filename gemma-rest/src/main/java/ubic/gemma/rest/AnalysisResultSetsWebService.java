@@ -154,9 +154,6 @@ public class AnalysisResultSetsWebService {
             @Parameter(hidden = true) @QueryParam("excludeResults") @DefaultValue("false") Boolean excludeResults ) {
         if ( excludeResults ) {
             ExpressionAnalysisResultSet ears = expressionAnalysisResultSetArgService.getEntity( analysisResultSet );
-            if ( ears == null ) {
-                throw new NotFoundException( "Could not find ExpressionAnalysisResultSet for " + analysisResultSet + "." );
-            }
             return Responder.respond( expressionAnalysisResultSetService.loadValueObject( ears ) );
         } else {
             ExpressionAnalysisResultSet ears = analysisResultSet.getEntityWithContrastsAndResults( expressionAnalysisResultSetService );

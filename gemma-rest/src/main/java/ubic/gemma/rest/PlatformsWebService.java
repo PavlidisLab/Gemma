@@ -31,7 +31,6 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
-import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Sort;
 import ubic.gemma.rest.util.*;
@@ -247,10 +246,9 @@ public class PlatformsWebService {
             @QueryParam("offset") @DefaultValue("0") OffsetArg offset, // Optional, default 0
             @QueryParam("limit") @DefaultValue("20") LimitArg limit // Optional, default 20
     ) {
-        probeArg.setPlatform( arrayDesignArgService.getEntity( platformArg ) );
         // FIXME: deal with potential null return value of loadValueObject
         return Responder.paginate( compositeSequenceService
-                .getGenes( probeArgService.getEntity( probeArg ), offset.getValue(),
+                .getGenes( probeArgService.getEntityWithPlatform( probeArg, arrayDesignArgService.getEntity( platformArg ) ), offset.getValue(),
                         limit.getValue() )
                 .map( geneService::loadValueObject ), probeArgService.getFilters( probeArg ), new String[] { "id" } );
     }
