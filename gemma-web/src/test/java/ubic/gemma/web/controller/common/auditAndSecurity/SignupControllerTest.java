@@ -15,6 +15,7 @@
 package ubic.gemma.web.controller.common.auditAndSecurity;
 
 import org.apache.commons.lang3.RandomStringUtils;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -33,10 +34,14 @@ import javax.servlet.http.HttpServletRequest;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Random;
-import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static org.junit.Assert.fail;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
@@ -54,16 +59,25 @@ public class SignupControllerTest extends BaseSpringWebTest {
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
 
+    /* fixtures */
+    private Collection<Future<?>> futures;
+
     @Before
-    public void setUp() throws Exception {
-
+    public void setUp() {
         ReCaptcha mockReCaptcha = Mockito.mock( ReCaptcha.class );
-
         when( mockReCaptcha.validateRequest( any( HttpServletRequest.class ) ) )
                 .thenReturn( new ReCaptchaResponse( true, "" ) );
-
         suc.setRecaptchaTester( mockReCaptcha );
+        futures = new HashSet<>();
     }
+
+    @After
+    public void tearDown() {
+        for ( Future<?> future : futures ) {
+            future.cancel( true );
+        }
+    }
+
 
     @SuppressWarnings("Duplicates") // Not in this project
     @Test
@@ -71,87 +85,61 @@ public class SignupControllerTest extends BaseSpringWebTest {
     public void testSignup() throws Exception {
         int numThreads = 10; // too high and we run out of connections, which is not what we're testing.
         final int numsignupsperthread = 20;
+        int expectedEventCount = numThreads * numsignupsperthread;
         final Random random = new Random();
         final AtomicInteger c = new AtomicInteger( 0 );
-        final AtomicBoolean failed = new AtomicBoolean( false );
-        Collection<Thread> threads = new HashSet<>();
-        for ( int i = 0; i < numThreads; i++ ) {
-
-            Thread k = new Thread( new Runnable() {
-                @Override
-                public void run() {
-                    try {
-                        for ( int j = 0; j < numsignupsperthread; j++ ) {
-                            MockHttpServletRequest req;
-                            Thread.sleep( random.nextInt( 50 ) );
-                            req = new MockHttpServletRequest( "POST", "/signup.html" );
-                            String uname = RandomStringUtils.randomAlphabetic( 10 );
-                            // log.info( "Signingup: " + uname + " (" + c.get() + ")" );
-
-                            String password = RandomStringUtils.randomAlphabetic( 40 );
-                            req.addParameter( "password", password );
-
-                            req.addParameter( "passwordConfirm", password );
-                            req.addParameter( "username", uname );
-                            String email = "foo@" + RandomStringUtils.randomAlphabetic( 10 ) + ".edu";
-                            req.addParameter( "email", email );
-
-                            req.addParameter( "emailConfirm", email );
-                            suc.signup( password, password, uname, email, email, req, new MockHttpServletResponse() );
-
-                            /*
-                             * Extra torture.
-                             */
-                            ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
-                            ee.setDescription( "From test" );
-                            ee.setName( RandomStringUtils.randomAlphabetic( 20 ) );
-                            ee.setShortName( RandomStringUtils.randomAlphabetic( 20 ) );
-                            // log.info( "Making experiment" + ee.getName() );
-                            expressionExperimentService.create( ee );
-
-                            c.incrementAndGet();
-
-                        }
-                    } catch ( Exception e ) {
-                        failed.set( true );
-                        log.error( "!!!!!!!!!!!!!!!!!!!!!! FAILED: " + e.getMessage() );
-                        log.debug( e, e );
-                        throw new RuntimeException( e );
-                    }
-                    log.debug( "Thread done." );
+        ExecutorService executor = Executors.newFixedThreadPool( numThreads );
+        for ( int i = 0; i < expectedEventCount; i++ ) {
+            futures.add( executor.submit( () -> {
+                MockHttpServletRequest req;
+                try {
+                    Thread.sleep( random.nextInt( 50 ) );
+                } catch ( InterruptedException e ) {
+                    throw new RuntimeException( e );
                 }
-            } );
-            threads.add( k );
+                req = new MockHttpServletRequest( "POST", "/signup.html" );
+                String uname = RandomStringUtils.randomAlphabetic( 10 );
+                // log.info( "Signingup: " + uname + " (" + c.get() + ")" );
 
-            k.start();
-        }
+                String password = RandomStringUtils.randomAlphabetic( 40 );
+                req.addParameter( "password", password );
 
-        int waits = 0;
-        int maxWaits = 20;
-        int expectedEventCount = numThreads * numsignupsperthread;
-        while ( c.get() < expectedEventCount && !failed.get() ) {
-            Thread.sleep( 3000 );
-            log.info( "Waiting ... C=" + +c.get() );
-            if ( ++waits > maxWaits ) {
-                for ( Thread t : threads ) {
-                    if ( t.isAlive() )
-                        t.interrupt();
+                req.addParameter( "passwordConfirm", password );
+                req.addParameter( "username", uname );
+                String email = "foo@" + RandomStringUtils.randomAlphabetic( 10 ) + ".edu";
+                req.addParameter( "email", email );
+
+                req.addParameter( "emailConfirm", email );
+                try {
+                    suc.signup( password, password, uname, email, email, req, new MockHttpServletResponse() );
+                } catch ( Exception e ) {
+                    throw new RuntimeException( e );
                 }
-                fail( "Multithreaded failure: timed out." );
-            }
+
+                /*
+                 * Extra torture.
+                 */
+                ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
+                ee.setDescription( "From test" );
+                ee.setName( RandomStringUtils.randomAlphabetic( 20 ) );
+                ee.setShortName( RandomStringUtils.randomAlphabetic( 20 ) );
+                // log.info( "Making experiment" + ee.getName() );
+                expressionExperimentService.create( ee );
+
+                c.incrementAndGet();
+                log.debug( "Thread done." );
+            } ) );
         }
 
-        log.debug( " &&&&& DONE &&&&&" );
-
-        for ( Thread thread : threads ) {
-            if ( thread.isAlive() )
-                thread.interrupt();
+        // 20 seconds
+        long maxWaitNano = 20L * 1000L * 1000L * 1000L;
+        long startTimeNano = System.nanoTime();
+        for ( Future<?> f : futures ) {
+            assertThat( f ).succeedsWithin( Math.max( maxWaitNano - ( System.nanoTime() - startTimeNano ), 0 ), TimeUnit.NANOSECONDS );
         }
 
-        if ( failed.get() || c.get() != expectedEventCount ) {
-            fail( "Multithreaded loading failure: check logs for failure to recover from deadlock?" );
-        } else {
-            log.info( "TORTURE TEST PASSED!" );
-        }
+        log.info( String.format( "Signup torture test took %d seconds", ( System.nanoTime() - startTimeNano ) / 1000 / 1000 / 1000 ) );
+
+        assertEquals( expectedEventCount, c.get() );
     }
 }
