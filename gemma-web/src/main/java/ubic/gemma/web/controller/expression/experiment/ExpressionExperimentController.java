@@ -1705,7 +1705,7 @@ public class ExpressionExperimentController {
      *
      * @param id id
      */
-    private void updateCorrelationMatrixFile( Long id ) throws FilteringException {
+    private void updateCorrelationMatrixFile( Long id ) {
         ExpressionExperiment ee;
         ee = expressionExperimentService.load( id );
         ee = expressionExperimentService.thawLiter( ee );

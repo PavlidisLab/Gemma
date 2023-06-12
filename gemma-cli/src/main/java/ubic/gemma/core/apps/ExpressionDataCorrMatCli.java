@@ -71,7 +71,7 @@ public class ExpressionDataCorrMatCli extends ExpressionExperimentManipulatingCL
         addSuccessObject( ee );
     }
 
-    private void processExperiment( ExpressionExperiment ee ) throws FilteringException {
+    private void processExperiment( ExpressionExperiment ee ) {
         if ( !force && this.noNeedToRun( ee, null ) ) {
             return;
         }
