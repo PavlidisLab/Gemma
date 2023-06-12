@@ -19,7 +19,8 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.mockito.Mockito;
+import org.mockito.Mock;
+import org.mockito.internal.verification.VerificationModeFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
@@ -43,6 +44,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 /**
@@ -59,12 +61,15 @@ public class SignupControllerTest extends BaseSpringWebTest {
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
 
+    @Mock
+    private ReCaptcha mockReCaptcha;
+
     /* fixtures */
     private Collection<Future<?>> futures;
 
     @Before
     public void setUp() {
-        ReCaptcha mockReCaptcha = Mockito.mock( ReCaptcha.class );
+        when( mockReCaptcha.isPrivateKeySet() ).thenReturn( true );
         when( mockReCaptcha.validateRequest( any( HttpServletRequest.class ) ) )
                 .thenReturn( new ReCaptchaResponse( true, "" ) );
         suc.setRecaptchaTester( mockReCaptcha );
@@ -141,5 +146,9 @@ public class SignupControllerTest extends BaseSpringWebTest {
         log.info( String.format( "Signup torture test took %d seconds", ( System.nanoTime() - startTimeNano ) / 1000 / 1000 / 1000 ) );
 
         assertEquals( expectedEventCount, c.get() );
+        verify( this.mockReCaptcha, VerificationModeFactory.times( expectedEventCount ) )
+                .isPrivateKeySet();
+        verify( this.mockReCaptcha, VerificationModeFactory.times( expectedEventCount ) )
+                .validateRequest( any() );
     }
 }
