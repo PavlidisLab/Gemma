@@ -1146,14 +1146,13 @@ public class ExpressionExperimentController {
             return 0;
         }
 
-        Collection<OutlierDetails> outliers = null;
-        try {
-            outliers = outlierDetectionService.identifyOutliersByMedianCorrelation( ee );
-        } catch ( NoRowsLeftAfterFilteringException e ) {
-            outliers = Collections.emptySet();
-        } catch ( FilteringException e ) {
-            throw new RuntimeException( e );
+        Collection<OutlierDetails> outliers = outlierDetectionService.getOutlierDetails( ee );
+
+        if ( outliers == null ) {
+            log.warn( String.format( "%s does not have analysis performed, will return zero.", ee ) );
+            return 0;
         }
+
         count = outliers.size();
 
         if ( count > 0 ) ExpressionExperimentController.log.info( count + " possible outliers detected." );

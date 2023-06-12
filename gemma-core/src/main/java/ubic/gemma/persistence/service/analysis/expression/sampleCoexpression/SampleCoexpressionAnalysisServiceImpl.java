@@ -92,50 +92,39 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
     private ExpressionExperimentService expressionExperimentService;
 
     @Override
-    @Transactional(isolation = Isolation.SERIALIZABLE)
+    @Transactional(readOnly = true)
     public DoubleMatrix<BioAssay, BioAssay> loadFullMatrix( ExpressionExperiment ee ) {
-        SampleCoexpressionMatrix matrix = this.load( ee ).getFullCoexpressionMatrix();
-        return matrix != null ? this.toDoubleMatrix( matrix ) : null;
-    }
-
-    @Override
-    @Transactional(isolation = Isolation.SERIALIZABLE)
-    public DoubleMatrix<BioAssay, BioAssay> loadTryRegressedThenFull( ExpressionExperiment ee ) {
-        SampleCoexpressionAnalysis analysis = this.load( ee );
-        SampleCoexpressionMatrix matrix = analysis.getRegressedCoexpressionMatrix();
-        if ( matrix == null ) {
-            SampleCoexpressionAnalysisServiceImpl.log.warn( String
-                    .format( SampleCoexpressionAnalysisServiceImpl.MSG_WARN_NO_REGRESSED_MATRIX, ee.getId() ) );
-            matrix = analysis.getFullCoexpressionMatrix();
-        }
-        if ( matrix == null ) {
-            return null;
-        }
-        return this.toDoubleMatrix( matrix );
-    }
-
-    @Override
-    @Transactional(isolation = Isolation.SERIALIZABLE)
-    public SampleCoexpressionAnalysis load( ExpressionExperiment ee ) {
-
-        ExpressionExperiment thawedee = this.expressionExperimentService.thawLite( ee );
-
-        SampleCoexpressionAnalysis analysis = sampleCoexpressionAnalysisDao.load( thawedee );
-
-        if ( analysis == null || analysis.getFullCoexpressionMatrix() == null || this
-                .shouldComputeRegressed( thawedee, analysis ) ) {
-            SampleCoexpressionAnalysisServiceImpl.log
-                    .info( String.format( SampleCoexpressionAnalysisServiceImpl.MSG_INFO_RUNNING_SCM, thawedee.getId() ) );
-            return this.compute( thawedee );
-        }
-        this.logCormatStatus( analysis, false );
-        return analysis;
+        SampleCoexpressionAnalysis analysis = sampleCoexpressionAnalysisDao.load( ee );
+        return analysis != null ? toDoubleMatrix( analysis.getFullCoexpressionMatrix() ) : null;
     }
 
     @Override
     @Transactional(readOnly = true)
-    public boolean hasAnalysis( ExpressionExperiment ee ) {
-        return sampleCoexpressionAnalysisDao.load( ee ) != null;
+    public DoubleMatrix<BioAssay, BioAssay> loadRegressedMatrix( ExpressionExperiment ee ) {
+        SampleCoexpressionAnalysis analysis = sampleCoexpressionAnalysisDao.load( ee );
+        return analysis != null && analysis.getRegressedCoexpressionMatrix() != null ? toDoubleMatrix( analysis.getRegressedCoexpressionMatrix() ) : null;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public DoubleMatrix<BioAssay, BioAssay> loadBestMatrix( ExpressionExperiment ee ) {
+        SampleCoexpressionAnalysis analysis = sampleCoexpressionAnalysisDao.load( ee );
+        return analysis != null ? toDoubleMatrix( analysis.getBestCoexpressionMatrix() ) : null;
+    }
+
+    @Override
+    @Transactional(isolation = Isolation.SERIALIZABLE)
+    public DoubleMatrix<BioAssay, BioAssay> computeIfNecessary( ExpressionExperiment ee ) {
+        ExpressionExperiment thawedee = this.expressionExperimentService.thawLite( ee );
+        SampleCoexpressionAnalysis analysis = sampleCoexpressionAnalysisDao.load( thawedee );
+        if ( analysis == null || analysis.getFullCoexpressionMatrix() == null || this.shouldComputeRegressed( thawedee, analysis ) ) {
+            SampleCoexpressionAnalysisServiceImpl.log
+                    .info( String.format( SampleCoexpressionAnalysisServiceImpl.MSG_INFO_RUNNING_SCM, thawedee.getId() ) );
+            return this.compute( thawedee );
+        } else {
+            this.logCormatStatus( analysis, false );
+            return toDoubleMatrix( analysis.getBestCoexpressionMatrix() );
+        }
     }
 
     /**
@@ -146,7 +135,7 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
      */
     @Override
     @Transactional(isolation = Isolation.SERIALIZABLE)
-    public SampleCoexpressionAnalysis compute( ExpressionExperiment ee ) {
+    public DoubleMatrix<BioAssay, BioAssay> compute( ExpressionExperiment ee ) {
 
         ExpressionExperiment thawedee = this.expressionExperimentService.thawLite( ee );
 
@@ -160,12 +149,12 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
         SampleCoexpressionMatrix regressedMatrix = this.getMatrix( thawedee, true, vectors );
 
         if ( matrix == null ) {
-            // If we can't compute the "regular" one, we can't compute the regressed one either.
-            log.warn( "No valid sample coexpression matrix was computed for experiment " + thawedee );
+            throw new RuntimeException( "Full coexpression matrix could not be computed." );
         }
 
+        // this one is optional
         if ( regressedMatrix == null ) {
-            log.warn( "Regressed matrix could not be computed, review experimental design? Experiment " + thawedee );
+            log.warn( "Regressed coexpression matrix could not be computed, review experimental design? Experiment " + thawedee );
         }
 
         SampleCoexpressionAnalysis analysis = new SampleCoexpressionAnalysis( thawedee, // Analyzed experiment
@@ -174,7 +163,15 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
 
         // Persist
         this.logCormatStatus( analysis, true );
-        return sampleCoexpressionAnalysisDao.create( analysis );
+        sampleCoexpressionAnalysisDao.create( analysis );
+
+        return toDoubleMatrix( analysis.getBestCoexpressionMatrix() );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public boolean hasAnalysis( ExpressionExperiment ee ) {
+        return sampleCoexpressionAnalysisDao.existsByExperiment( ee );
     }
 
     @Override

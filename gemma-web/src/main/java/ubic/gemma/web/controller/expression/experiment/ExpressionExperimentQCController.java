@@ -304,7 +304,7 @@ public class ExpressionExperimentQCController extends BaseController {
         }
 
         ee = expressionExperimentService.thawLiter( ee );
-        DoubleMatrix<BioAssay, BioAssay> omatrix = ( reg != null && reg ) ? sampleCoexpressionAnalysisService.loadTryRegressedThenFull( ee )
+        DoubleMatrix<BioAssay, BioAssay> omatrix = ( reg != null && reg ) ? sampleCoexpressionAnalysisService.loadBestMatrix( ee )
                 : sampleCoexpressionAnalysisService.loadFullMatrix( ee );
         if ( omatrix == null ) {
             log.warn( "No correlation matrix for ee " + id );

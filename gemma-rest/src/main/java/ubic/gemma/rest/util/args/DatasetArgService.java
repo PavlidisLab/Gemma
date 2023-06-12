@@ -4,8 +4,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ubic.gemma.core.analysis.preprocess.OutlierDetails;
 import ubic.gemma.core.analysis.preprocess.OutlierDetectionService;
-import ubic.gemma.core.analysis.preprocess.filter.FilteringException;
-import ubic.gemma.core.analysis.preprocess.filter.NoRowsLeftAfterFilteringException;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.search.SearchResult;
 import ubic.gemma.core.search.SearchService;
@@ -125,18 +123,15 @@ public class DatasetArgService extends AbstractEntityArgService<ExpressionExperi
     public List<BioAssayValueObject> getSamples( DatasetArg<?> arg ) {
         ExpressionExperiment ee = service.thawBioAssays( this.getEntity( arg ) );
         List<BioAssayValueObject> bioAssayValueObjects = baService.loadValueObjects( ee.getBioAssays(), true );
-        try {
-            Set<Long> predictedOutlierBioAssayIds = outlierDetectionService.identifyOutliersByMedianCorrelation( ee ).stream()
+        Collection<OutlierDetails> outliers = outlierDetectionService.getOutlierDetails( ee );
+        if ( outliers != null ) {
+            Set<Long> predictedOutlierBioAssayIds = outliers.stream()
                     .map( OutlierDetails::getBioAssay )
                     .map( BioAssay::getId )
                     .collect( Collectors.toSet() );
             for ( BioAssayValueObject vo : bioAssayValueObjects ) {
                 vo.setPredictedOutlier( predictedOutlierBioAssayIds.contains( vo.getId() ) );
             }
-        } catch ( NoRowsLeftAfterFilteringException e ) {
-            // there are no rows left in the data matrix, thus no outliers ;o
-        } catch ( FilteringException e ) {
-            throw new RuntimeException( e );
         }
         return bioAssayValueObjects;
     }

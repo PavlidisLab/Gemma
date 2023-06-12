@@ -17,7 +17,6 @@ package ubic.gemma.core.analysis.preprocess;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
-import ubic.gemma.core.analysis.preprocess.filter.FilteringException;
 import ubic.gemma.core.util.test.BaseSpringContextTest;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -39,11 +38,16 @@ public class SampleCoexpressionAnalysisServiceTest extends BaseSpringContextTest
     @Test
     public void test() {
         ExpressionExperiment ee = super.getTestPersistentCompleteExpressionExperiment( false );
+        assertFalse( sampleCoexpressionAnalysisService.hasAnalysis( ee ) );
+        assertNull( sampleCoexpressionAnalysisService.loadFullMatrix( ee ) );
+        assertNull( sampleCoexpressionAnalysisService.loadRegressedMatrix( ee ) );
+        assertNull( sampleCoexpressionAnalysisService.loadBestMatrix( ee ) );
 
         processedExpressionDataVectorService.computeProcessedExpressionData( ee );
         sampleCoexpressionAnalysisService.compute( ee );
         DoubleMatrix<BioAssay, BioAssay> matrix = sampleCoexpressionAnalysisService.loadFullMatrix( ee );
         assertNotNull( matrix );
+        assertTrue( sampleCoexpressionAnalysisService.hasAnalysis( ee ) );
 
         this.check( matrix );
 
@@ -51,10 +55,15 @@ public class SampleCoexpressionAnalysisServiceTest extends BaseSpringContextTest
         sampleCoexpressionAnalysisService.compute( ee );
         matrix = sampleCoexpressionAnalysisService.loadFullMatrix( ee );
         assertNotNull( matrix );
+        assertTrue( sampleCoexpressionAnalysisService.hasAnalysis( ee ) );
 
         this.check( matrix );
 
-        matrix = sampleCoexpressionAnalysisService.loadTryRegressedThenFull( ee );
+        matrix = sampleCoexpressionAnalysisService.loadRegressedMatrix( ee );
+        assertNotNull( matrix );
+        this.check( matrix );
+
+        matrix = sampleCoexpressionAnalysisService.loadBestMatrix( ee );
         assertNotNull( matrix );
 
         this.check( matrix );
