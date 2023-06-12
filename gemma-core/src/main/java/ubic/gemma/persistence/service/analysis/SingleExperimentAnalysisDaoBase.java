@@ -19,13 +19,17 @@
 package ubic.gemma.persistence.service.analysis;
 
 import org.hibernate.SessionFactory;
+import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
 import ubic.gemma.model.analysis.SingleExperimentAnalysis;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.AbstractDao;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -76,5 +80,13 @@ public abstract class SingleExperimentAnalysisDaoBase<T extends SingleExperiment
     @Override
     public Collection<T> findByName( String name ) {
         return this.findByProperty( "name", name );
+    }
+
+    @Override
+    public boolean existsByExperiment( BioAssaySet ee ) {
+        return ( Long ) getSessionFactory().getCurrentSession().createCriteria( this.analysisClass )
+                .setProjection( Projections.rowCount() )
+                .add( Restrictions.eq( "experimentAnalyzed", ee ) )
+                .uniqueResult() > 0L;
     }
 }

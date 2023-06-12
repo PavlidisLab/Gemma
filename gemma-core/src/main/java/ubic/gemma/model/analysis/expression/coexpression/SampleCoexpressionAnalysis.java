@@ -22,6 +22,7 @@ import ubic.gemma.model.analysis.SingleExperimentAnalysis;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 
 import javax.annotation.Nullable;
+import javax.persistence.Transient;
 
 /**
  * The 'analysis' in the name is a bit of a stretch here, as this object servers purely as an aggregator
@@ -31,7 +32,6 @@ public class SampleCoexpressionAnalysis extends SingleExperimentAnalysis {
 
     private static final long serialVersionUID = 5006465967597402551L;
 
-    @Nullable
     private SampleCoexpressionMatrix fullCoexpressionMatrix;
     @Nullable
     private SampleCoexpressionMatrix regressedCoexpressionMatrix;
@@ -39,7 +39,7 @@ public class SampleCoexpressionAnalysis extends SingleExperimentAnalysis {
     protected SampleCoexpressionAnalysis() {
     }
 
-    public SampleCoexpressionAnalysis( BioAssaySet experimentAnalyzed, @Nullable SampleCoexpressionMatrix fullCoexpressionMatrix,
+    public SampleCoexpressionAnalysis( BioAssaySet experimentAnalyzed, SampleCoexpressionMatrix fullCoexpressionMatrix,
             @Nullable SampleCoexpressionMatrix regressedCoexpressionMatrix ) {
         super( experimentAnalyzed );
         this.fullCoexpressionMatrix = fullCoexpressionMatrix;
@@ -52,12 +52,11 @@ public class SampleCoexpressionAnalysis extends SingleExperimentAnalysis {
      *
      * @return a coexpression matrix with all factors (none regressed out), and including outliers.
      */
-    @Nullable
     public SampleCoexpressionMatrix getFullCoexpressionMatrix() {
         return fullCoexpressionMatrix;
     }
 
-    public void setFullCoexpressionMatrix( @Nullable SampleCoexpressionMatrix rawFullCoexpressionMatrix ) {
+    public void setFullCoexpressionMatrix( SampleCoexpressionMatrix rawFullCoexpressionMatrix ) {
         this.fullCoexpressionMatrix = rawFullCoexpressionMatrix;
     }
 
@@ -76,4 +75,8 @@ public class SampleCoexpressionAnalysis extends SingleExperimentAnalysis {
         this.regressedCoexpressionMatrix = regressedCoexpressionMatrix;
     }
 
+    @Transient
+    public SampleCoexpressionMatrix getBestCoexpressionMatrix() {
+        return regressedCoexpressionMatrix != null ? regressedCoexpressionMatrix : fullCoexpressionMatrix;
+    }
 }
