@@ -67,6 +67,7 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilterin
                         "select r from ExpressionAnalysisResultSet r "
                                 + "left join fetch r.results res "
                                 + "left join fetch res.probe p "
+                                + "left join fetch p.biologicalCharacteristic "
                                 + "left join fetch res.contrasts c "
                                 + "left join fetch c.factorValue "
                                 + "left join fetch c.secondFactorValue "
