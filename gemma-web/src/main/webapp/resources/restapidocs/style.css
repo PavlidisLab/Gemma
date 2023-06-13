@@ -1,0 +1,21 @@
+body {
+    margin: 0;
+}
+
+.header {
+    border-bottom: 1px solid rgb(169, 191, 211);
+    height: 59px;
+    overflow-y: hidden;
+}
+
+.header .logo {
+    float: left;
+    padding-top: 2px;
+    padding-left: 12px;
+}
+
+.header .right-logo {
+    float: right;
+    padding-top: 15px;
+    padding-right: 12px;
+}
