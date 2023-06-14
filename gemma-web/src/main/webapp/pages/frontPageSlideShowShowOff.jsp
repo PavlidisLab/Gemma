@@ -7,7 +7,7 @@
 
 <div id="frontPageSlideShow" align="center">
 	<div id="features" style="overflow: hidden;">
-		<div title="1" id="dataChart">
+		<div id="dataChart">
 			<table>
 				<tr>
 					<td class="slideImageTD">
