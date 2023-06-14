@@ -25,7 +25,6 @@
             <column name="CORRECTED_P_VALUE_BIN" not-null="false" unique="false" sql-type="INTEGER"/>
         </property>
         <set name="contrasts" lazy="true" fetch="select" cascade="all" mutable="false">
-            <cache usage="read-write"/>
             <key foreign-key="CONTRAST_RESULT_DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT_FKC">
                 <column name="DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT_FK" sql-type="BIGINT"/>
             </key>

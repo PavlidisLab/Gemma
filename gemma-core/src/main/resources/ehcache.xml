@@ -500,12 +500,6 @@
     <cache name="ubic.gemma.model.analysis.expression.coexpression.CoexpressionAnalysis"
            maxElementsInMemory="10000" eternal="true" overflowToDisk="false"/>
 
-    <cache name="ubic.gemma.model.analysis.expression.diff.ContrastResult"
-           maxElementsInMemory="500000" eternal="true" overflowToDisk="false"/>
-
-    <cache name="ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult.contrasts"
-           maxElementsInMemory="500000" eternal="true" overflowToDisk="false"/>
-
     <cache name="ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult"
            maxElementsInMemory="500000" eternal="true" overflowToDisk="false"/>
 
