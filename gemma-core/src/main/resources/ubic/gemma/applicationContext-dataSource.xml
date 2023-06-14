@@ -17,6 +17,7 @@
                     <prop key="sessionVariables">sql_mode='${gemma.db.sqlMode}'</prop>
                 </props>
             </property>
+            <property name="maximumPoolSize" value="${gemma.db.maximumPoolSize}"/>
         </bean>
     </beans>
 
