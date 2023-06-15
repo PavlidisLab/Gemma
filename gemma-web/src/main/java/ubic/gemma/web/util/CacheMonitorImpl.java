@@ -254,20 +254,23 @@ public class CacheMonitorImpl implements CacheMonitor, InitializingBean {
     }
 
     @lombok.Value(staticConstructor = "from")
-    private static class Key {
-        String cacheName;
+    private static class Entry {
         long memoryStoreSize;
+        long inMemorySize;
     }
 
     private long getInMemorySize( Ehcache ehcache ) {
-        Key key = Key.from( ehcache.getName(), ehcache.getMemoryStoreSize() );
+        String key = ehcache.getName();
         Cache.ValueWrapper value = inMemoryCacheSizeCache.get( key );
         long inMemorySize;
         if ( value != null ) {
-            inMemorySize = ( long ) value.get();
+            Entry entry = ( Entry ) value.get();
+            // when the number of items in-memory changes, we adjust it proportionally
+            // TTL is short and TTI is zero, so we don't need to worry about stale data
+            inMemorySize = entry.inMemorySize * ehcache.getMemoryStoreSize() / entry.memoryStoreSize;
         } else {
             inMemorySize = ehcache.calculateInMemorySize();
-            inMemoryCacheSizeCache.put( key, inMemorySize );
+            inMemoryCacheSizeCache.put( key, Entry.from( ehcache.getMemoryStoreSize(), inMemorySize ) );
         }
         return inMemorySize;
     }

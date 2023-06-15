@@ -591,7 +591,8 @@
            timeToIdleSeconds="120"/>
 
     <!-- calculating the size of caches is expensive, so we cache it! -->
-    <cache name="CacheMonitor.inMemoryCacheSizeCache" maxElementsInMemory="1000" timeToLiveSeconds="1200"
-           timeToIdleSeconds="1200" overflowToDisk="false"/>
+    <!-- we use a TTI of zero because stale data should not be extrapolated -->
+    <cache name="CacheMonitor.inMemoryCacheSizeCache" maxElementsInMemory="100" timeToLiveSeconds="60"
+           timeToIdleSeconds="0" overflowToDisk="false"/>
 
 </ehcache>
