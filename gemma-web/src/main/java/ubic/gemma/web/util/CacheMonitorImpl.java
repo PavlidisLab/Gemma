@@ -18,20 +18,23 @@
  */
 package ubic.gemma.web.util;
 
-import lombok.SneakyThrows;
 import net.sf.ehcache.Ehcache;
 import net.sf.ehcache.Statistics;
 import net.sf.ehcache.config.CacheConfiguration;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.stereotype.Component;
+import ubic.gemma.persistence.util.Settings;
 
 import javax.servlet.ServletContext;
-import java.io.IOException;
+import java.text.NumberFormat;
 import java.util.List;
+import java.util.Locale;
 import java.util.stream.Collectors;
 
 import static org.apache.commons.text.StringEscapeUtils.escapeHtml4;
@@ -42,20 +45,38 @@ import static org.apache.commons.text.StringEscapeUtils.escapeHtml4;
  * @author paul
  */
 @Component
-public class CacheMonitorImpl implements CacheMonitor {
+public class CacheMonitorImpl implements CacheMonitor, InitializingBean {
 
     private static final Log log = LogFactory.getLog( CacheMonitorImpl.class );
 
     /**
      * Header used when displaying cache statistics.
      */
-    private static final String CACHE_STATS_HEADER = "<th>Name</th><th>HitRate</th><th>Hits</th><th>Misses</th><th>Count</th><th>MemHits</th><th>MemMiss</th><th>DiskHits</th><th>Evicted</th><th>Eternal?</th><th>UseDisk?</th><th>MaxInMem</th><th>LifeTime</th><th>IdleTime</th>";
+    private static final String[] CACHE_STATS_HEADER = {
+            "Name", "Hit Rate", "Hits", "Misses", "Evictions", "Average Get Time", "Count", "Capacity", "Usage",
+            "Memory Usage", "Memory Usage per Element", "Memory Hits", "Memory Miss", "Disk Hits", "Use Disk?",
+            "Life Time", "Idle Time" };
 
     @Autowired
     private CacheManager cacheManager;
 
     @Autowired
     private ServletContext servletContext;
+
+    private static final boolean enableStatisticsOnStartup = Settings.getBoolean( "gemma.cacheMonitor.enableStatistics" );
+
+    /**
+     * Cache for caching the result of {@link Ehcache#calculateInMemorySize()}.
+     */
+    private Cache inMemoryCacheSizeCache;
+
+    @Override
+    public void afterPropertiesSet() {
+        inMemoryCacheSizeCache = cacheManager.getCache( "CacheMonitor.inMemoryCacheSizeCache" );
+        if ( enableStatisticsOnStartup ) {
+            enableStatistics();
+        }
+    }
 
     @Override
     public void clearAllCaches() {
@@ -78,18 +99,18 @@ public class CacheMonitorImpl implements CacheMonitor {
 
     @Override
     public void disableStatistics() {
-        CacheMonitorImpl.log.info( "Disabling statistics" );
+        CacheMonitorImpl.log.info( "Disabling statistics for all caches..." );
         this.setStatisticsEnabled( false );
     }
 
     @Override
     public void enableStatistics() {
-        CacheMonitorImpl.log.info( "Enabling statistics" );
+        CacheMonitorImpl.log.info( "Enabling statistics for all caches..." );
         this.setStatisticsEnabled( true );
     }
 
     @Override
-    public String getStats() {
+    public String getStats( Locale locale ) {
         StringBuilder buf = new StringBuilder();
         List<String> cacheNames = cacheManager.getCacheNames().stream()
                 .sorted()
@@ -117,18 +138,15 @@ public class CacheMonitorImpl implements CacheMonitor {
                 .append( "onClick=\"disableStatistics()\" alt=\"Disable stats\" title=\"Disable stats\"/>" )
                 .append( "</p>" );
 
-        buf.append( "<table>" );
-        buf.append( "<tr>" )
-                .append( CACHE_STATS_HEADER )
-                .append( "</tr>" );
-        int count = 0;
+        buf.append( "<table style=\"width: 100%;\">" );
+        int rowCount = 0;
         for ( String rawCacheName : cacheNames ) {
-            Cache cache = cacheManager.getCache( rawCacheName );
-            if ( cache.getNativeCache() instanceof Ehcache ) {
-                addEhcacheRow( rawCacheName, ( Ehcache ) cache.getNativeCache(), buf );
+            if ( rowCount % 25 == 0 ) {
+                addHeaderRow( buf );
+                rowCount += 1;
             }
-            if ( ++count % 25 == 0 ) {
-                buf.append( "<tr>" ).append( CACHE_STATS_HEADER ).append( "</tr>" );
+            if ( addCacheRow( rawCacheName, cacheManager.getCache( rawCacheName ), buf, locale ) ) {
+                rowCount += 1;
             }
         }
         buf.append( "</table>" );
@@ -136,71 +154,129 @@ public class CacheMonitorImpl implements CacheMonitor {
 
     }
 
-    @SneakyThrows(IOException.class)
-    private void addEhcacheRow( String rawCacheName, Ehcache cache, Appendable buf ) {
+    private void addHeaderRow( StringBuilder buf ) {
+        buf.append( "<tr>" );
+        for ( String header : CACHE_STATS_HEADER ) {
+            String align;
+            if ( header.equals( "Name" ) ) {
+                align = "left";
+            } else if ( header.endsWith( "?" ) ) {
+                align = "center";
+            } else {
+                align = "right";
+            }
+            buf.append( "<th style=\"text-align: " ).append( align ).append( ";\">" ).append( header ).append( "</th>" );
+        }
+        buf.append( "</tr>" );
+    }
+
+    private boolean addCacheRow( String rawCacheName, Cache cache, StringBuilder buf, Locale locale ) {
+        if ( cache.getNativeCache() instanceof Ehcache ) {
+            return addEhcacheRow( rawCacheName, ( Ehcache ) cache.getNativeCache(), buf, locale );
+        } else {
+            return false;
+        }
+    }
+
+    private boolean addEhcacheRow( String rawCacheName, Ehcache cache, StringBuilder buf, Locale locale ) {
         Statistics statistics = cache.getStatistics();
 
         long objectCount = statistics.getObjectCount();
 
         if ( objectCount == 0 ) {
-            return;
+            return false;
         }
 
         // a little shorter...
-        String cacheName = rawCacheName.replaceFirst( "ubic\\.gemma\\.model\\.", "u.g.m." );
+        String cacheName = rawCacheName
+                .replaceFirst( "^gemma\\.gsec\\.acl\\.domain\\.", "g.g.a.d." )
+                .replaceFirst( "^ubic\\.gemma\\.model\\.", "u.g.m." );
 
         String anticlockwiseIconUrl = servletContext.getContextPath() + "/images/icons/arrow_rotate_anticlockwise.png";
-        buf.append( "<tr><td>" )
+        buf.append( "<tr>" )
+                .append( "<td>" )
                 .append( "<img src=\"" ).append( anticlockwiseIconUrl ).append( "\" onClick=\"clearCache('" ).append( escapeHtml4( rawCacheName ) ).append( "')\" alt=\"Clear cache\" title=\"Clear cache\"/> " )
                 .append( escapeHtml4( cacheName ) )
                 .append( "</td>" );
+
         long hits = statistics.getCacheHits();
         long misses = statistics.getCacheMisses();
+        long maxSize = cache.getCacheConfiguration().getMaxElementsInMemory();
+        long inMemorySize = getInMemorySize( cache );
         long inMemoryHits = statistics.getInMemoryHits();
         long inMemoryMisses = statistics.getInMemoryMisses();
 
         long onDiskHits = statistics.getOnDiskHits();
         long evictions = statistics.getEvictionCount();
 
-        buf.append( this.makeTableCellForStat( ( double ) hits / ( hits + misses ) ) );
-        buf.append( this.makeTableCellForStat( hits ) );
-        buf.append( this.makeTableCellForStat( misses ) );
-        buf.append( this.makeTableCellForStat( objectCount ) );
-        buf.append( this.makeTableCellForStat( inMemoryHits ) );
-        buf.append( this.makeTableCellForStat( inMemoryMisses ) );
-        buf.append( this.makeTableCellForStat( onDiskHits ) );
-        buf.append( this.makeTableCellForStat( evictions ) );
-
         CacheConfiguration cacheConfiguration = cache.getCacheConfiguration();
+        boolean usesDisk = cacheConfiguration.isOverflowToDisk();
         boolean eternal = cacheConfiguration.isEternal();
-        buf.append( "<td>" ).append( eternal ? "&bull;" : "" ).append( "</td>" );
 
-        buf.append( "<td>" ).append( String.format( "%d", cacheConfiguration.getMaxElementsInMemory() ) ).append( "</td>" );
+        if ( usesDisk ) {
+            maxSize += cache.getCacheConfiguration().getMaxElementsOnDisk();
+        }
+
+        NumberFormat percentFormat = NumberFormat.getPercentInstance( locale );
+        NumberFormat numberFormat = NumberFormat.getNumberInstance( locale );
+
+        buf.append( "<td style=\"text-align: right;\">" ).append( hits > 0 ? percentFormat.format( ( double ) hits / ( hits + misses ) ) : "" ).append( "</td>" );
+        buf.append( "<td style=\"text-align: right;\">" ).append( hits > 0 ? numberFormat.format( hits ) : "" ).append( "</td>" );
+        buf.append( "<td style=\"text-align: right;\">" ).append( misses > 0 ? numberFormat.format( misses ) : "" ).append( "</td>" );
+        buf.append( "<td style=\"text-align: right;\">" ).append( evictions > 0 ? numberFormat.format( evictions ) : "" ).append( "</td>" );
+        buf.append( "<td style=\"text-align: right;\">" ).append( hits > 0 ? numberFormat.format( statistics.getAverageGetTime() ) + " ms" : "" ).append( "</td>" );
+        buf.append( "<td style=\"text-align: right;\">" ).append( numberFormat.format( objectCount ) ).append( "</td>" );
+        buf.append( "<td style=\"text-align: right;\">" ).append( numberFormat.format( maxSize ) ).append( "</td>" );
+        buf.append( "<td style=\"text-align: right;\">" ).append( percentFormat.format( ( double ) objectCount / ( double ) maxSize ) ).append( "</td>" );
+        buf.append( "<td style=\"text-align: right;\">" ).append( cache.getMemoryStoreSize() > 0 ? FileUtils.byteCountToDisplaySize( inMemorySize ) : "" ).append( "</td>" );
+        buf.append( "<td style=\"text-align: right;\">" ).append( cache.getMemoryStoreSize() > 0 ? FileUtils.byteCountToDisplaySize( inMemorySize / cache.getMemoryStoreSize() ) : "" ).append( "</td>" );
+        if ( usesDisk ) {
+            buf.append( "<td style=\"text-align: right;\">" ).append( numberFormat.format( inMemoryHits ) ).append( "</td>" );
+            buf.append( "<td style=\"text-align: right;\">" ).append( numberFormat.format( inMemoryMisses ) ).append( "</td>" );
+            buf.append( "<td style=\"text-align: right;\">" ).append( numberFormat.format( onDiskHits ) ).append( "</td>" );
+        } else {
+            buf.append( "<td colspan=\"3\"></td>" );
+        }
+        buf.append( "<td style=\"text-align: center;\">" ).append( usesDisk ? "&check;" : "&cross;" ).append( "</td>" );
 
         if ( eternal ) {
             // timeouts are irrelevant.
-            buf.append( "<td>-</td>" );
-            buf.append( "<td>-</td>" );
+            buf.append( "<td style=\"text-align: center;\">&infin;</td>" );
+            buf.append( "<td style=\"text-align: center;\">&infin;</td>" );
         } else {
-            buf.append( "<td>" ).append( String.format( "%d", cacheConfiguration.getTimeToIdleSeconds() ) ).append( "</td>" );
-            buf.append( "<td>" ).append( String.format( "%d", cacheConfiguration.getTimeToLiveSeconds() ) ).append( "</td>" );
+            buf.append( "<td style=\"text-align: right;\">" ).append( numberFormat.format( cacheConfiguration.getTimeToLiveSeconds() ) ).append( " s" ).append( "</td>" );
+            buf.append( "<td style=\"text-align: right;\">" ).append( numberFormat.format( cacheConfiguration.getTimeToIdleSeconds() ) ).append( " s" ).append( "</td>" );
         }
+
         buf.append( "</tr>" );
+
+        return true;
     }
 
-    private String makeTableCellForStat( long hits ) {
-        return "<td>" + ( hits > 0 ? String.format( "%d", hits ) : "" ) + "</td>";
+    @lombok.Value(staticConstructor = "from")
+    private static class Key {
+        String cacheName;
+        long memoryStoreSize;
     }
 
-    private String makeTableCellForStat( double hits ) {
-        return "<td>" + ( hits > 0 ? String.format( "%.2f", hits ) : "" ) + "</td>";
+    private long getInMemorySize( Ehcache ehcache ) {
+        Key key = Key.from( ehcache.getName(), ehcache.getMemoryStoreSize() );
+        Cache.ValueWrapper value = inMemoryCacheSizeCache.get( key );
+        long inMemorySize;
+        if ( value != null ) {
+            inMemorySize = ( long ) value.get();
+        } else {
+            inMemorySize = ehcache.calculateInMemorySize();
+            inMemoryCacheSizeCache.put( key, inMemorySize );
+        }
+        return inMemorySize;
     }
 
     private void setStatisticsEnabled( boolean b ) {
         for ( String rawCacheName : cacheManager.getCacheNames() ) {
             Cache cache = cacheManager.getCache( rawCacheName );
             if ( cache.getNativeCache() instanceof Ehcache ) {
-                ( ( Ehcache ) cache.getNativeCache() ).setSampledStatisticsEnabled( b );
+                ( ( Ehcache ) cache.getNativeCache() ).setStatisticsEnabled( b );
             }
         }
     }

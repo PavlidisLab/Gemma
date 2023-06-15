@@ -19,15 +19,17 @@
 package ubic.gemma.web.controller.monitoring;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
-import ubic.gemma.web.util.HibernateMonitor;
 import ubic.gemma.web.util.CacheMonitor;
+import ubic.gemma.web.util.HibernateMonitor;
 
 import javax.servlet.ServletContext;
 import java.lang.management.ManagementFactory;
 import java.lang.management.OperatingSystemMXBean;
+import java.util.Locale;
 
 /**
  * Provide statistics about the system: hibernate, caches etc.
@@ -78,7 +80,8 @@ public class SystemMonitorController {
     }
 
     public String getCacheStatus() {
-        return cacheMonitor.getStats();
+        Locale locale = LocaleContextHolder.getLocale();
+        return cacheMonitor.getStats( locale );
     }
 
     public String getHibernateStatus() {
