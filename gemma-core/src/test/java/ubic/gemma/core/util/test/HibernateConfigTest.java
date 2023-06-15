@@ -26,7 +26,7 @@ public class HibernateConfigTest extends BaseDatabaseTest {
     public void test() {
         Settings settings = ( ( SessionFactoryImpl ) sessionFactory ).getSettings();
         assertEquals( 3, settings.getMaximumFetchDepth().intValue() );
-        assertEquals( 500, settings.getDefaultBatchFetchSize() );
+        assertEquals( 100, settings.getDefaultBatchFetchSize() );
         assertTrue( settings.isJdbcBatchVersionedData() );
         assertTrue( settings.isOrderInsertsEnabled() );
         assertTrue( settings.isOrderUpdatesEnabled() );
