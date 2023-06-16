@@ -159,7 +159,7 @@ public class CacheMonitorImpl implements CacheMonitor, InitializingBean {
             String align;
             if ( header.equals( "Name" ) ) {
                 align = "left";
-            } else if ( header.endsWith( "?" ) || header.endsWith( "Time" ) ) {
+            } else if ( header.endsWith( "?" ) || header.equals( "Life Time" ) || header.equals( "Idle Time" ) ) {
                 align = "center";
             } else {
                 align = "right";
