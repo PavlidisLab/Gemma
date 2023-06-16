@@ -50,11 +50,11 @@ public class DifferentialExpressionAnalysisResultSetValueObject extends Analysis
      *
      * Note: this constructor assumes that {@link ExpressionAnalysisResultSet#getResults()} has already been initialized.
      */
-    public DifferentialExpressionAnalysisResultSetValueObject( ExpressionAnalysisResultSet analysisResultSet, Map<DifferentialExpressionAnalysisResult, List<Gene>> result2Genes ) {
+    public DifferentialExpressionAnalysisResultSetValueObject( ExpressionAnalysisResultSet analysisResultSet, Map<Long, List<Gene>> result2Genes ) {
         this( analysisResultSet );
         this.results = analysisResultSet.getResults()
                 .stream()
-                .map( result -> new DifferentialExpressionAnalysisResultValueObject( result, result2Genes.getOrDefault( result, Collections.emptyList() ) ) )
+                .map( result -> new DifferentialExpressionAnalysisResultValueObject( result, result2Genes.getOrDefault( result.getId(), Collections.emptyList() ) ) )
                 .collect( Collectors.toList() );
     }
 

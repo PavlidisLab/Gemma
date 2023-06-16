@@ -24,6 +24,7 @@ import org.hibernate.*;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.sql.JoinType;
+import org.hibernate.type.StandardBasicTypes;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import ubic.gemma.model.analysis.expression.diff.*;
@@ -257,13 +258,13 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilterin
     }
 
     @Override
-    public Map<DifferentialExpressionAnalysisResult, List<Gene>> loadResultToGenesMap( ExpressionAnalysisResultSet resultSet ) {
+    public Map<Long, List<Gene>> loadResultToGenesMap( ExpressionAnalysisResultSet resultSet ) {
         Query query = getSessionFactory().getCurrentSession()
-                .createSQLQuery( "select {result.*}, {gene.*} from DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT {result} "
-                        + "join GENE2CS on GENE2CS.CS = {result}.PROBE_FK "
+                .createSQLQuery( "select result.ID as RESULT_ID, {gene.*} from DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT result "
+                        + "join GENE2CS on GENE2CS.CS = result.PROBE_FK "
                         + "join CHROMOSOME_FEATURE as {gene} on {gene}.ID = GENE2CS.GENE "
-                        + "where {result}.RESULT_SET_FK = :rsid" )
-                .addEntity( "result", DifferentialExpressionAnalysisResult.class )
+                        + "where result.RESULT_SET_FK = :rsid" )
+                .addScalar( "RESULT_ID", StandardBasicTypes.LONG )
                 .addEntity( "gene", Gene.class )
                 .setParameter( "rsid", resultSet.getId() )
                 .setCacheable( true );
@@ -274,7 +275,7 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilterin
         // YAY! my brain was almost fried writing that collector
         return list.stream()
                 .collect( Collectors.groupingBy(
-                        l -> ( DifferentialExpressionAnalysisResult ) l[0],
+                        l -> ( Long ) l[0],
                         Collectors.collectingAndThen( Collectors.toList(),
                                 elem -> elem.stream()
                                         .map( l -> ( Gene ) l[1] )

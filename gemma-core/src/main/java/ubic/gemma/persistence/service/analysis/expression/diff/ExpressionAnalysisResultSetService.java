@@ -29,7 +29,7 @@ public interface ExpressionAnalysisResultSetService extends AnalysisResultSetSer
 
     DifferentialExpressionAnalysisResultSetValueObject loadValueObjectWithResults( ExpressionAnalysisResultSet ears );
 
-    Map<DifferentialExpressionAnalysisResult, List<Gene>> loadResultToGenesMap( ExpressionAnalysisResultSet ears );
+    Map<Long, List<Gene>> loadResultIdToGenesMap( ExpressionAnalysisResultSet ears );
 
     Slice<DifferentialExpressionAnalysisResultSetValueObject> findByBioAssaySetInAndDatabaseEntryInLimit( @Nullable Collection<BioAssaySet> bioAssaySets, @Nullable Collection<DatabaseEntry> externalIds, @Nullable Filters filters, int offset, int limit, @Nullable Sort sort );
 }
