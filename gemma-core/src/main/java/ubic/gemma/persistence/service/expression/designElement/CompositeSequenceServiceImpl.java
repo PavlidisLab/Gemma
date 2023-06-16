@@ -22,6 +22,7 @@ import ubic.gemma.core.analysis.sequence.GeneMappingSummary;
 import ubic.gemma.core.analysis.sequence.ProbeMapUtils;
 import ubic.gemma.model.association.BioSequence2GeneProduct;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.CompositeSequenceValueObject;
 import ubic.gemma.model.genome.Gene;
@@ -34,6 +35,7 @@ import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResultValueObject;
 import ubic.gemma.persistence.service.AbstractFilteringVoEnabledService;
 import ubic.gemma.persistence.service.AbstractService;
+import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.genome.biosequence.BioSequenceService;
 import ubic.gemma.persistence.service.genome.gene.GeneProductService;
 import ubic.gemma.persistence.service.genome.sequenceAnalysis.BlatResultService;
@@ -41,6 +43,7 @@ import ubic.gemma.persistence.util.Slice;
 
 import javax.annotation.Nullable;
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
@@ -56,17 +59,20 @@ public class CompositeSequenceServiceImpl
     private final BioSequenceService bioSequenceService;
     private final GeneProductService geneProductService;
     private final BlatResultService blatResultService;
+    private final ArrayDesignService arrayDesignService;
     private final CompositeSequenceDao compositeSequenceDao;
+
 
     @Autowired
     public CompositeSequenceServiceImpl( CompositeSequenceDao compositeSequenceDao,
             BioSequenceService bioSequenceService, GeneProductService geneProductService,
-            BlatResultService blatResultService ) {
+            BlatResultService blatResultService, ArrayDesignService arrayDesignService ) {
         super( compositeSequenceDao );
         this.compositeSequenceDao = compositeSequenceDao;
         this.bioSequenceService = bioSequenceService;
         this.geneProductService = geneProductService;
         this.blatResultService = blatResultService;
+        this.arrayDesignService = arrayDesignService;
     }
 
     @Override
@@ -102,8 +108,18 @@ public class CompositeSequenceServiceImpl
     @Override
     @Transactional(readOnly = true)
     public Slice<CompositeSequenceValueObject> loadValueObjectsForGene( Gene gene, int start, int limit ) {
+        Slice<CompositeSequence> probes = this.compositeSequenceDao.findByGene( gene, start, limit );
+        Set<ArrayDesign> platforms = probes.stream().map( CompositeSequence::getArrayDesign ).collect( Collectors.toSet() );
+        Map<Long, ArrayDesignValueObject> platformVos = arrayDesignService.loadValueObjects( platforms ).stream()
+                .collect( Collectors.toMap( ArrayDesignValueObject::getId, Function.identity() ) );
         // FIXME: deal with potential null return values of loadValueObject
-        return this.compositeSequenceDao.findByGene( gene, start, limit ).map( this::loadValueObject );
+        return probes.map( probe -> {
+            CompositeSequenceValueObject probeVo = loadValueObject( probe );
+            if ( probeVo != null ) {
+                probeVo.setArrayDesign( platformVos.get( probe.getArrayDesign().getId() ) );
+            }
+            return probeVo;
+        } );
     }
 
     @Override
