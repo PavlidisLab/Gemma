@@ -54,8 +54,7 @@ public class CacheMonitorImpl implements CacheMonitor, InitializingBean {
      */
     private static final String[] CACHE_STATS_HEADER = {
             "Name", "Hit Rate", "Hits", "Misses", "Evictions", "Average Get Time", "Count", "Capacity", "Usage",
-            "Memory Usage", "Memory Usage per Element", "Memory Hits", "Memory Miss", "Disk Hits", "Use Disk?",
-            "Life Time", "Idle Time" };
+            "Memory Usage", "Memory Usage per Element", "Use Disk?", "Life Time", "Idle Time" };
 
     @Autowired
     private CacheManager cacheManager;
@@ -160,7 +159,7 @@ public class CacheMonitorImpl implements CacheMonitor, InitializingBean {
             String align;
             if ( header.equals( "Name" ) ) {
                 align = "left";
-            } else if ( header.endsWith( "?" ) ) {
+            } else if ( header.endsWith( "?" ) || header.endsWith( "Time" ) ) {
                 align = "center";
             } else {
                 align = "right";
@@ -203,10 +202,7 @@ public class CacheMonitorImpl implements CacheMonitor, InitializingBean {
         long misses = statistics.getCacheMisses();
         long maxSize = cache.getCacheConfiguration().getMaxElementsInMemory();
         long inMemorySize = getInMemorySize( cache );
-        long inMemoryHits = statistics.getInMemoryHits();
-        long inMemoryMisses = statistics.getInMemoryMisses();
 
-        long onDiskHits = statistics.getOnDiskHits();
         long evictions = statistics.getEvictionCount();
 
         CacheConfiguration cacheConfiguration = cache.getCacheConfiguration();
@@ -230,13 +226,6 @@ public class CacheMonitorImpl implements CacheMonitor, InitializingBean {
         buf.append( "<td style=\"text-align: right;\">" ).append( percentFormat.format( ( double ) objectCount / ( double ) maxSize ) ).append( "</td>" );
         buf.append( "<td style=\"text-align: right;\">" ).append( cache.getMemoryStoreSize() > 0 ? FileUtils.byteCountToDisplaySize( inMemorySize ) : "" ).append( "</td>" );
         buf.append( "<td style=\"text-align: right;\">" ).append( cache.getMemoryStoreSize() > 0 ? FileUtils.byteCountToDisplaySize( inMemorySize / cache.getMemoryStoreSize() ) : "" ).append( "</td>" );
-        if ( usesDisk ) {
-            buf.append( "<td style=\"text-align: right;\">" ).append( numberFormat.format( inMemoryHits ) ).append( "</td>" );
-            buf.append( "<td style=\"text-align: right;\">" ).append( numberFormat.format( inMemoryMisses ) ).append( "</td>" );
-            buf.append( "<td style=\"text-align: right;\">" ).append( numberFormat.format( onDiskHits ) ).append( "</td>" );
-        } else {
-            buf.append( "<td colspan=\"3\"></td>" );
-        }
         buf.append( "<td style=\"text-align: center;\">" ).append( usesDisk ? "&check;" : "&cross;" ).append( "</td>" );
 
         if ( eternal ) {
@@ -244,8 +233,8 @@ public class CacheMonitorImpl implements CacheMonitor, InitializingBean {
             buf.append( "<td style=\"text-align: center;\">&infin;</td>" );
             buf.append( "<td style=\"text-align: center;\">&infin;</td>" );
         } else {
-            buf.append( "<td style=\"text-align: right;\">" ).append( numberFormat.format( cacheConfiguration.getTimeToLiveSeconds() ) ).append( " s" ).append( "</td>" );
-            buf.append( "<td style=\"text-align: right;\">" ).append( numberFormat.format( cacheConfiguration.getTimeToIdleSeconds() ) ).append( " s" ).append( "</td>" );
+            buf.append( "<td style=\"text-align: right;\">" ).append( cacheConfiguration.getTimeToLiveSeconds() > 0 ? numberFormat.format( cacheConfiguration.getTimeToLiveSeconds() ) + " s" : "" ).append( "</td>" );
+            buf.append( "<td style=\"text-align: right;\">" ).append( cacheConfiguration.getTimeToIdleSeconds() > 0 ? numberFormat.format( cacheConfiguration.getTimeToIdleSeconds() ) + " s" : "" ).append( "</td>" );
         }
 
         buf.append( "</tr>" );
