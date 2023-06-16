@@ -21,14 +21,13 @@ package ubic.gemma.persistence.service.analysis.expression.diff;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.hibernate.*;
-import org.hibernate.type.DoubleType;
+import org.hibernate.type.StandardBasicTypes;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import ubic.basecode.io.ByteArrayConverter;
 import ubic.basecode.math.distribution.Histogram;
 import ubic.basecode.util.BatchIterator;
 import ubic.basecode.util.SQLUtils;
-import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.analysis.expression.diff.*;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.*;
@@ -486,7 +485,7 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
 
         queryObject.setMaxResults( limit );
 
-        queryObject.addScalar( "CORRECTED_PVALUE", new DoubleType() );
+        queryObject.addScalar( "CORRECTED_PVALUE", StandardBasicTypes.DOUBLE );
         //noinspection unchecked
         results = queryObject.list();
 

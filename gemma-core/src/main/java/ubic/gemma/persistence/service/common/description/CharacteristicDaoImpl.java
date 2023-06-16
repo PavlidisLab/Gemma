@@ -27,9 +27,7 @@ import org.hibernate.criterion.MatchMode;
 import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.type.ClassType;
-import org.hibernate.type.LongType;
-import org.hibernate.type.StringType;
+import org.hibernate.type.StandardBasicTypes;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import ubic.basecode.util.BatchIterator;
@@ -181,9 +179,9 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
                 + ( rankByLevel ? " order by FIELD(T.LEVEL, :eeClass, :edClass, :bmClass)" : "" );
 
         Query query = getSessionFactory().getCurrentSession().createSQLQuery( qs )
-                .addScalar( "LEVEL", new ClassType() )
-                .addScalar( "VALUE_URI", new StringType() )
-                .addScalar( "EXPRESSION_EXPERIMENT_FK", new LongType() );
+                .addScalar( "LEVEL", StandardBasicTypes.CLASS )
+                .addScalar( "VALUE_URI", StandardBasicTypes.STRING )
+                .addScalar( "EXPRESSION_EXPERIMENT_FK", StandardBasicTypes.LONG );
 
         if ( rankByLevel ) {
             query.setParameter( "eeClass", ExpressionExperiment.class );

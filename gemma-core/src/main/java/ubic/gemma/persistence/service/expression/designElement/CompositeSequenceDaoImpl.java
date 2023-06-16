@@ -22,7 +22,6 @@ package ubic.gemma.persistence.service.expression.designElement;
 import org.apache.commons.lang3.time.StopWatch;
 import org.hibernate.*;
 import org.hibernate.criterion.Restrictions;
-import org.hibernate.type.LongType;
 import org.hibernate.type.StandardBasicTypes;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
@@ -41,8 +40,8 @@ import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.persistence.service.AbstractDao;
 import ubic.gemma.persistence.service.AbstractQueryFilteringVoEnabledDao;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignDao;
-import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.FilterQueryUtils;
+import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.persistence.util.Sort;
 
@@ -230,8 +229,8 @@ public class CompositeSequenceDaoImpl extends AbstractQueryFilteringVoEnabledDao
         List<Object> csGene = new ArrayList<>();
         Session session = this.getSessionFactory().getCurrentSession();
         org.hibernate.SQLQuery queryObject = session.createSQLQuery( nativeQuery );
-        queryObject.addScalar( "cs", new LongType() );
-        queryObject.addScalar( "gene", new LongType() );
+        queryObject.addScalar( "cs", StandardBasicTypes.LONG );
+        queryObject.addScalar( "gene", StandardBasicTypes.LONG );
 
         Collection<Long> csIdBatch = new HashSet<>();
         for ( CompositeSequence cs : compositeSequences ) {

@@ -29,8 +29,7 @@ import org.apache.commons.lang3.time.StopWatch;
 import org.hibernate.*;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.type.ClassType;
-import org.hibernate.type.LongType;
+import org.hibernate.type.StandardBasicTypes;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import ubic.gemma.core.analysis.expression.diff.BaselineSelection;
@@ -297,7 +296,7 @@ public class ExpressionExperimentDaoImpl
         org.hibernate.SQLQuery queryObject = session.createSQLQuery( queryString );
         queryObject.setLong( "geneID", gene.getId() );
         queryObject.setDouble( "rank", rank );
-        queryObject.addScalar( "eeID", new LongType() );
+        queryObject.addScalar( "eeID", StandardBasicTypes.LONG );
         //noinspection unchecked
         List<Long> results = queryObject.list();
 
@@ -407,7 +406,7 @@ public class ExpressionExperimentDaoImpl
         Session session = this.getSessionFactory().getCurrentSession();
         org.hibernate.SQLQuery queryObject = session.createSQLQuery( queryString );
         queryObject.setLong( "geneID", gene.getId() );
-        queryObject.addScalar( "eeID", new LongType() );
+        queryObject.addScalar( "eeID", StandardBasicTypes.LONG );
         //noinspection unchecked
         List<Long> results = queryObject.list();
 
@@ -605,7 +604,7 @@ public class ExpressionExperimentDaoImpl
                         "select {T.*}, {T}.LEVEL as LEVEL from gemd.EXPRESSION_EXPERIMENT2CHARACTERISTIC {T} "
                                 + "where T.EXPRESSION_EXPERIMENT_FK = :eeId" )
                 .addEntity( "T", Characteristic.class )
-                .addScalar( "LEVEL", new ClassType() )
+                .addScalar( "LEVEL", StandardBasicTypes.CLASS )
                 .setParameter( "eeId", expressionExperiment.getId() )
                 .list() );
         //noinspection unchecked
@@ -656,7 +655,7 @@ public class ExpressionExperimentDaoImpl
                                 + ( retainedTermUris != null && !retainedTermUris.isEmpty() ? "or {T}.VALUE_URI in :retainedTermUris " : "" )
                                 + "order by EE_COUNT desc" )
                 .addEntity( "T", Characteristic.class )
-                .addScalar( "EE_COUNT", new LongType() )
+                .addScalar( "EE_COUNT", StandardBasicTypes.LONG )
                 .setCacheable( true )
                 .setMaxResults( maxResults );
         if ( eeIds != null ) {
@@ -770,7 +769,7 @@ public class ExpressionExperimentDaoImpl
                         + "group by {AD}.ID"
                         + ( maxResults > 0 ? " order by EE_COUNT desc" : "" ) )
                 .addEntity( "AD", ArrayDesign.class )
-                .addScalar( "EE_COUNT", new LongType() )
+                .addScalar( "EE_COUNT", StandardBasicTypes.LONG )
                 .setParameterList( "ids", eeIds )
                 .setMaxResults( maxResults )
                 .list();
@@ -817,7 +816,7 @@ public class ExpressionExperimentDaoImpl
                         + "group by {AD}.ID"
                         + ( maxResults > 0 ? " order by EE_COUNT desc" : "" ) )
                 .addEntity( "AD", ArrayDesign.class )
-                .addScalar( "EE_COUNT", new LongType() )
+                .addScalar( "EE_COUNT", StandardBasicTypes.LONG )
                 .setParameterList( "ids", eeIds )
                 .list();
         return result.stream().collect( groupingBy( row -> ( ArrayDesign ) row[0], summingLong( row -> ( Long ) row[1] ) ) );
