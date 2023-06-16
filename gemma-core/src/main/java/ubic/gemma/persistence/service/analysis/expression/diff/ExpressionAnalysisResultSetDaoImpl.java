@@ -69,7 +69,7 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilterin
         StopWatch resultTimer = StopWatch.createStarted();
         //noinspection unchecked
         List<DifferentialExpressionAnalysisResult> results = getSessionFactory().getCurrentSession()
-                .createQuery( "select res from DifferentialExpressionAnalysisResult res left join fetch res.contrasts c left join fetch c.factorValue left join fetch c.secondFactorValue where res.resultSet = :rs" )
+                .createQuery( "select res from DifferentialExpressionAnalysisResult res left join fetch res.contrasts c where res.resultSet = :rs" )
                 .setParameter( "rs", ears )
                 .list();
         ears.setResults( new HashSet<>( results ) );
