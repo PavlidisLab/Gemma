@@ -140,11 +140,9 @@ public class CompositeSequenceDaoImpl extends AbstractQueryFilteringVoEnabledDao
 
     @Override
     public Collection<CompositeSequence> findByBioSequence( BioSequence bioSequence ) {
-        //language=HQL
-        final String queryString = "select distinct cs from CompositeSequence cs where cs.biologicalCharacteristic = :id";
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession()
-                .createQuery( queryString )
+                .createQuery( "select cs from CompositeSequence cs where cs.biologicalCharacteristic = :id" )
                 .setParameter( "id", bioSequence )
                 .list();
     }
@@ -152,8 +150,10 @@ public class CompositeSequenceDaoImpl extends AbstractQueryFilteringVoEnabledDao
     @Override
     public Collection<CompositeSequence> findByBioSequenceName( String name ) {
         //language=HQL
-        final String queryString = "select distinct cs from CompositeSequence"
-                + " cs inner join cs.biologicalCharacteristic b where b.name = :name";
+        final String queryString = "select cs from CompositeSequence cs "
+                + "join cs.biologicalCharacteristic b "
+                + "where b.name = :name "
+                + "group by cs";
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession()
                 .createQuery( queryString )
@@ -161,42 +161,57 @@ public class CompositeSequenceDaoImpl extends AbstractQueryFilteringVoEnabledDao
                 .list();
     }
 
+    //language=HQL
+    private static final String CS_BY_GENE_QUERY = "from CompositeSequence cs, BioSequence bs, BioSequence2GeneProduct ba, GeneProduct gp, Gene gene "
+            + "where gp.gene=gene and cs.biologicalCharacteristic=bs and ba.geneProduct=gp and ba.bioSequence=bs and gene = :gene";
+
     @Override
     public Collection<CompositeSequence> findByGene( Gene gene ) {
-        //language=HQL
-        final String queryString = "select distinct cs from CompositeSequence cs, BioSequence bs, BioSequence2GeneProduct ba, GeneProduct gp, Gene gene  "
-                + "where gp.gene=gene and cs.biologicalCharacteristic=bs and ba.geneProduct=gp and ba.bioSequence=bs and gene = :gene";
         //noinspection unchecked
-        return this.getSessionFactory().getCurrentSession().createQuery( queryString ).setParameter( "gene", gene )
+        return this.getSessionFactory().getCurrentSession()
+                .createQuery( "select cs "
+                        + CS_BY_GENE_QUERY + " "
+                        + "group by cs" )
+                .setParameter( "gene", gene )
                 .list();
     }
 
     @Override
     public Slice<CompositeSequence> findByGene( Gene gene, int start, int limit ) {
-        //language=HQL
-        final String queryString = "select distinct cs from CompositeSequence cs, BioSequence bs, BioSequence2GeneProduct ba, GeneProduct gp, Gene gene  "
-                + "where gp.gene=gene and cs.biologicalCharacteristic=bs and ba.geneProduct=gp  and ba.bioSequence=bs and gene = :gene";
         //noinspection unchecked
-        List<CompositeSequence> list = this.getSessionFactory().getCurrentSession().createQuery( queryString ).setFirstResult( start )
-                .setMaxResults( limit ).setParameter( "gene", gene ).list();
-        return new Slice<>( list, null, start, limit, null );
+        List<CompositeSequence> list = this.getSessionFactory().getCurrentSession()
+                .createQuery( "select cs "
+                        + CS_BY_GENE_QUERY + " "
+                        + "group by cs" )
+                .setFirstResult( start )
+                .setMaxResults( limit )
+                .setParameter( "gene", gene )
+                .list();
+        Long totalElements = ( Long ) getSessionFactory().getCurrentSession()
+                .createQuery( "select count(distinct cs) " + CS_BY_GENE_QUERY )
+                .setParameter( "gene", gene )
+                .uniqueResult();
+        return new Slice<>( list, null, start, limit, totalElements );
     }
 
     @Override
     public Collection<CompositeSequence> findByGene( Gene gene, ArrayDesign arrayDesign ) {
-        //language=HQL
-        final String queryString = "select distinct cs from CompositeSequence cs, BioSequence bs, BioSequence2GeneProduct ba, GeneProduct gp, Gene gene  "
-                + "where gp.gene=gene and cs.biologicalCharacteristic=bs and ba.bioSequence=bs and ba.geneProduct=gp  and gene = :gene and cs.arrayDesign=:arrayDesign ";
         //noinspection unchecked
-        return this.getSessionFactory().getCurrentSession().createQuery( queryString ).setParameter( "gene", gene )
-                .setParameter( "arrayDesign", arrayDesign ).list();
+        return this.getSessionFactory().getCurrentSession()
+                .createQuery( "select cs "
+                        + CS_BY_GENE_QUERY + " "
+                        + "and cs.arrayDesign=:arrayDesign "
+                        + "group by cs" )
+                .setParameter( "gene", gene )
+                .setParameter( "arrayDesign", arrayDesign )
+                .list();
     }
 
     @Override
     public Collection<CompositeSequence> findByName( final String name ) {
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession()
-                .createQuery( "select distinct cs from CompositeSequence" + " cs where cs.name = :name" )
+                .createQuery( "select cs from CompositeSequence cs where cs.name = :name" )
                 .setParameter( "name", name ).list();
     }
 
@@ -334,18 +349,30 @@ public class CompositeSequenceDaoImpl extends AbstractQueryFilteringVoEnabledDao
         return returnVal;
     }
 
+    //language=HQL
+    private static final String GENE_BY_CS_QUERY = "from CompositeSequence cs, BioSequence bs, BioSequence2GeneProduct ba, "
+            + "GeneProduct gp, Gene gene  "
+            + "where gp.gene=gene and cs.biologicalCharacteristic=bs "
+            + "and ba.bioSequence=bs and ba.geneProduct=gp and cs = :cs";
+
     @Override
     public Slice<Gene> getGenes( CompositeSequence compositeSequence, int offset, int limit ) {
         // gets all kinds of associations, not just blat.
         //language=HQL
-        final String queryString = "select distinct gene from CompositeSequence cs, BioSequence bs, BioSequence2GeneProduct ba, "
-                + "GeneProduct gp, Gene gene  " + "where gp.gene=gene and cs.biologicalCharacteristic=bs "
-                + "and ba.bioSequence=bs and ba.geneProduct=gp and cs = :cs";
+        final String queryString = "select gene "
+                + GENE_BY_CS_QUERY + " "
+                + "group by gene";
         //noinspection unchecked
         List<Gene> list = this.getSessionFactory().getCurrentSession().createQuery( queryString )
-                .setParameter( "cs", compositeSequence ).setFirstResult( offset )
-                .setMaxResults( limit ).list();
-        return new Slice<>( list, null, offset, limit, null );
+                .setParameter( "cs", compositeSequence )
+                .setFirstResult( offset )
+                .setMaxResults( limit )
+                .list();
+        Long totalElements = ( Long ) getSessionFactory().getCurrentSession()
+                .createQuery( "select count(distinct gene) " + GENE_BY_CS_QUERY )
+                .setParameter( "cs", compositeSequence )
+                .uniqueResult();
+        return new Slice<>( list, null, offset, limit, totalElements );
 
     }
 
