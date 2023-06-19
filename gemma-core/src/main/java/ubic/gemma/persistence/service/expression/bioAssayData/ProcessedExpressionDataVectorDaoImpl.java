@@ -274,6 +274,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends AbstractDesignElementD
         //noinspection unchecked
         List<ProcessedExpressionDataVector> result = this.getSessionFactory().getCurrentSession().createQuery(
                         "select dedv from ProcessedExpressionDataVector dedv "
+                                + "join fetch dedv.designElement "
                                 + "where dedv.expressionExperiment = :ee" )
                 .setParameter( "ee", ee )
                 .list();
