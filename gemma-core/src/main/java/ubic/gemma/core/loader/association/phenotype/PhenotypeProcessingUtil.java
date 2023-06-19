@@ -28,12 +28,12 @@ import org.xml.sax.SAXException;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.basecode.ontology.ncbo.AnnotatorClient;
 import ubic.basecode.ontology.ncbo.AnnotatorResponse;
-import ubic.basecode.ontology.providers.DiseaseOntologyService;
 import ubic.basecode.ontology.providers.HumanPhenotypeOntologyService;
 import ubic.basecode.ontology.providers.MedicOntologyService;
 import ubic.basecode.util.Configuration;
 import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.core.ontology.OntologyService;
+import ubic.gemma.core.ontology.providers.MondoOntologyService;
 import ubic.gemma.model.association.phenotype.PhenotypeMappingType;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.persistence.util.Settings;
@@ -91,7 +91,7 @@ class PhenotypeProcessingUtil {
     // the 3 possible out files
     BufferedWriter outFinalResults = null;
     private OntologyService ontologyService;
-    private DiseaseOntologyService diseaseOntologyService = null;
+    private MondoOntologyService diseaseOntologyService = null;
     private HumanPhenotypeOntologyService humanPhenotypeOntologyService = null;
     // to avoid repeatedly checking....
     private Set<String> unmappableIds = new HashSet<>();
