@@ -23,6 +23,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.basecode.ontology.providers.DiseaseOntologyService;
 import ubic.basecode.ontology.search.OntologySearchException;
+import ubic.gemma.core.ontology.providers.MondoOntologyService;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.util.test.BaseSpringContextTest;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
@@ -41,7 +42,7 @@ public class OntologyServiceTest extends BaseSpringContextTest {
     private OntologyService os;
 
     @Autowired
-    private DiseaseOntologyService diseaseOntologyService;
+    private MondoOntologyService diseaseOntologyService;
 
     @Test
     public void test() throws SearchException, OntologySearchException, InterruptedException {

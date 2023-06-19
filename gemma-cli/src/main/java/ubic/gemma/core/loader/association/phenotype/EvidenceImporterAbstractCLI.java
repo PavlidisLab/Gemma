@@ -22,6 +22,7 @@ import ubic.basecode.ontology.providers.*;
 import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.core.association.phenotype.PhenotypeAssociationManagerService;
 import ubic.gemma.core.genome.gene.service.GeneService;
+import ubic.gemma.core.ontology.providers.MondoOntologyService;
 import ubic.gemma.core.util.AbstractCLI;
 import ubic.gemma.core.util.AbstractCLIContextCLI;
 import ubic.gemma.model.common.description.ExternalDatabaseValueObject;
@@ -70,7 +71,7 @@ public abstract class EvidenceImporterAbstractCLI extends AbstractCLIContextCLI 
     final Map<String, Integer> mapColumns = new HashMap<>();
     BufferedReader br = null;
     boolean createInDatabase = false;
-    DiseaseOntologyService diseaseOntologyService = null;
+    MondoOntologyService diseaseOntologyService = null;
     GeneService geneService = null;
     HumanPhenotypeOntologyService humanPhenotypeOntologyService = null;
     UberonOntologyService uberonOntologyService = null;
@@ -435,7 +436,7 @@ public abstract class EvidenceImporterAbstractCLI extends AbstractCLIContextCLI 
         this.geneService = this.getBean( GeneService.class );
         this.taxonService = this.getBean( TaxonService.class );
 
-        this.diseaseOntologyService = this.getBean( DiseaseOntologyService.class );
+        this.diseaseOntologyService = this.getBean( MondoOntologyService.class );
         this.humanPhenotypeOntologyService = this.getBean( HumanPhenotypeOntologyService.class );
 
         // ensure load, but only reindex if needed

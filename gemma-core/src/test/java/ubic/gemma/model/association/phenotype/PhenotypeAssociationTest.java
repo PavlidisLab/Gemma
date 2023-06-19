@@ -23,10 +23,10 @@ import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import ubic.basecode.ontology.model.OntologyTerm;
-import ubic.basecode.ontology.providers.DiseaseOntologyService;
 import ubic.basecode.ontology.search.OntologySearchException;
 import ubic.gemma.core.association.phenotype.PhenotypeAssociationManagerService;
 import ubic.gemma.core.ontology.OntologyTestUtils;
+import ubic.gemma.core.ontology.providers.MondoOntologyService;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.security.authentication.UserManager;
 import ubic.gemma.core.util.test.BaseSpringContextTest;
@@ -65,7 +65,7 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
     @Autowired
     private UserManager userManager;
     @Autowired
-    private DiseaseOntologyService diseaseOntologyService;
+    private MondoOntologyService diseaseOntologyService;
 
     private Gene gene = null;
     private LiteratureEvidenceValueObject litEvidence = null;

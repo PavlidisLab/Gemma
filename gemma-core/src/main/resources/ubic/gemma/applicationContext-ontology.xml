@@ -31,10 +31,6 @@
             <constructor-arg value="ubic.basecode.ontology.providers.FMAOntologyService"/>
             <property name="taskExecutor" ref="ontologyTaskExecutor"/>
         </bean>
-        <bean id="diseaseOntologyService" class="ubic.gemma.core.ontology.providers.OntologyServiceFactory">
-            <constructor-arg value="ubic.basecode.ontology.providers.DiseaseOntologyService"/>
-            <property name="taskExecutor" ref="ontologyTaskExecutor"/>
-        </bean>
         <bean id="cellTypeOntologyService" class="ubic.gemma.core.ontology.providers.OntologyServiceFactory">
             <constructor-arg value="ubic.basecode.ontology.providers.CellTypeOntologyService"/>
             <property name="taskExecutor" ref="ontologyTaskExecutor"/>

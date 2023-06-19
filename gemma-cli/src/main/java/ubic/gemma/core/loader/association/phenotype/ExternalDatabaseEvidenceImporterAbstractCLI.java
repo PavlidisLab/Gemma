@@ -19,6 +19,7 @@ import ubic.basecode.ontology.providers.HumanPhenotypeOntologyService;
 import ubic.basecode.ontology.providers.MedicOntologyService;
 import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.core.genome.gene.service.GeneService;
+import ubic.gemma.core.ontology.providers.MondoOntologyService;
 import ubic.gemma.core.util.AbstractCLIContextCLI;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 
@@ -52,7 +53,7 @@ public abstract class ExternalDatabaseEvidenceImporterAbstractCLI extends Abstra
         this.geneService = this.getBean( GeneService.class );
         this.taxonService = getBean( TaxonService.class );
         this.ppUtil = new PhenotypeProcessingUtil( geneService, getBean( MedicOntologyService.class ),
-                getBean( DiseaseOntologyService.class ), getBean( HumanPhenotypeOntologyService.class ) );
+                getBean( MondoOntologyService.class ), getBean( HumanPhenotypeOntologyService.class ) );
     }
 
 }

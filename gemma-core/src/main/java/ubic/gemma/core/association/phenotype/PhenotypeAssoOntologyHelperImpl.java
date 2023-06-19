@@ -20,11 +20,11 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import ubic.basecode.ontology.model.OntologyTerm;
-import ubic.basecode.ontology.providers.DiseaseOntologyService;
 import ubic.basecode.ontology.providers.HumanPhenotypeOntologyService;
 import ubic.basecode.ontology.providers.MammalianPhenotypeOntologyService;
 import ubic.basecode.ontology.search.OntologySearchException;
 import ubic.gemma.core.ontology.OntologyService;
+import ubic.gemma.core.ontology.providers.MondoOntologyService;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 
@@ -44,12 +44,12 @@ public class PhenotypeAssoOntologyHelperImpl implements PhenotypeAssoOntologyHel
     private final List<ubic.basecode.ontology.providers.OntologyService> ontologies;
 
     @Autowired
-    public PhenotypeAssoOntologyHelperImpl( OntologyService ontologyService, DiseaseOntologyService diseaseOntologyService, MammalianPhenotypeOntologyService mammalianPhenotypeOntologyService, HumanPhenotypeOntologyService humanPhenotypeOntologyService ) {
+    public PhenotypeAssoOntologyHelperImpl( OntologyService ontologyService, MondoOntologyService diseaseOntologyService, MammalianPhenotypeOntologyService mammalianPhenotypeOntologyService, HumanPhenotypeOntologyService humanPhenotypeOntologyService ) {
         this.ontologyService = ontologyService;
         //  We add them even when they aren't available so we can use unit tests that mock or fake the ontologies.
         this.ontologies = Arrays.asList( diseaseOntologyService, mammalianPhenotypeOntologyService, humanPhenotypeOntologyService );
         if ( !diseaseOntologyService.isEnabled() ) {
-            log.debug( "DO is not enabled, phenotype tools will not work correctly" );
+            log.debug( "MONDO is not enabled, phenotype tools will not work correctly" );
         }
         if ( !mammalianPhenotypeOntologyService.isEnabled() ) {
             log.debug( "MPO is not enabled, phenotype tools will not work correctly" );

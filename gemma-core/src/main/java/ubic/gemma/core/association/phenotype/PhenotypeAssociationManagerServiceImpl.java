@@ -1308,7 +1308,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         TreeCharacteristicValueObject[] customOntologyTrees = new TreeCharacteristicValueObject[3];
 
         for ( TreeCharacteristicValueObject tree : ontologyTrees ) {
-            if ( tree.getValueUri().contains( "DOID" ) ) {
+            if ( tree.getValueUri().contains( "MONDO" ) ) {
                 tree.setValue( "Disease Ontology" );
                 customOntologyTrees[0] = tree;
             } else if ( tree.getValueUri().contains( "HP" ) ) {
