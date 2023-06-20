@@ -24,7 +24,7 @@ public class AnchorTagUtil {
     }
 
     public static String getBioMaterialLink( Long bmId, String link, ServletContext servletContext ) {
-        return AnchorTagUtil.getBioMaterialLink( bmId, link, null );
+        return AnchorTagUtil.getBioMaterialLink( bmId, link, null,null );
     }
 
     public static String getBioMaterialLink( Long bmId, String link, String hover, ServletContext servletContext ) {
