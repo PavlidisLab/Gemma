@@ -62,7 +62,7 @@ public class RestAuthEntryPoint implements AuthenticationEntryPoint, ServletConf
         response.setContentType( MediaType.APPLICATION_JSON );
         // using 'xBasic' instead of 'basic' to prevent default browser login popup
         response.addHeader( "WWW-Authenticate", "xBasic realm=" + realm );
-        response.setStatus( HttpServletResponse.SC_UNAUTHORIZED );
+        response.setStatus( isXmlHttpRequest( request ) ? HttpServletResponse.SC_OK : HttpServletResponse.SC_UNAUTHORIZED );
         response.setCharacterEncoding( StandardCharsets.UTF_8.name() );
         objectMapper.writeValue( response.getWriter(), errorObject );
         response.flushBuffer();
@@ -71,5 +71,9 @@ public class RestAuthEntryPoint implements AuthenticationEntryPoint, ServletConf
     @Override
     public void setServletConfig( ServletConfig servletConfig ) {
         this.servletConfig = servletConfig;
+    }
+
+    private boolean isXmlHttpRequest( HttpServletRequest request ) {
+        return "XMLHttpRequest".equalsIgnoreCase( request.getHeader( "X-Requested-With" ) );
     }
 }
