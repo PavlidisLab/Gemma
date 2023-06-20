@@ -47,8 +47,8 @@ B cells	B cell	http://purl.obolibrary.org/obo/CL_0000236	cell type	http://www.eb
 B-cell lymphoma	B-cell neoplasm	http://purl.obolibrary.org/obo/MONDO_0004095	disease	http://www.ebi.ac.uk/efo/EFO_0000408
 B6	C57BL/6	http://gemma.msl.ubc.ca/ont/TGEMO_00016	strain	http://www.ebi.ac.uk/efo/EFO_0005135
 B6C3F1	B6C3F1	http://www.ebi.ac.uk/efo/EFO_0001340	strain	http://www.ebi.ac.uk/efo/EFO_0005135
-BALB	BALB/c	http://gemma.msl.ubc.ca/ont/TGEMO_00026	strain	http://www.ebi.ac.uk/efo/EFO_0005135
-BALB/c	BALB/c	http://gemma.msl.ubc.ca/ont/TGEMO_00026	strain	http://www.ebi.ac.uk/efo/EFO_0005138
+BALB	BALB/c	http://www.ebi.ac.uk/efo/EFO_0000602	strain	http://www.ebi.ac.uk/efo/EFO_0005135
+BALB/c	BALB/c	http://www.ebi.ac.uk/efo/EFO_0000602	strain	http://www.ebi.ac.uk/efo/EFO_0005138
 BALB/cJ	BALB/cJ	http://gemma.msl.ubc.ca/ont/TGEMO_00028	strain	http://www.ebi.ac.uk/efo/EFO_0005135
 BEAS-2B	BEAS-2B cell	http://purl.obolibrary.org/obo/CLO_0001925	cell line	http://purl.obolibrary.org/obo/CLO_0000031
 Biceps	biceps brachii	http://purl.obolibrary.org/obo/UBERON_0001507	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
@@ -99,12 +99,12 @@ C57B6	C57BL/6	http://gemma.msl.ubc.ca/ont/TGEMO_00016	strain	http://www.ebi.ac.u
 C57BL	C57BL/6	http://gemma.msl.ubc.ca/ont/TGEMO_00016	strain	http://www.ebi.ac.uk/efo/EFO_0005135
 c57bl/6	C57BL/6	http://gemma.msl.ubc.ca/ont/TGEMO_00016	strain	http://www.ebi.ac.uk/efo/EFO_0005138
 C57BL/6	C57BL/6	http://gemma.msl.ubc.ca/ont/TGEMO_00016	strain	http://www.ebi.ac.uk/efo/EFO_0005135
-C57BL/6J	C57BL/6J	http://gemma.msl.ubc.ca/ont/TGEMO_00037	strain	http://www.ebi.ac.uk/efo/EFO_0005138
-C57BL/6J mouse	C57BL/6J	http://gemma.msl.ubc.ca/ont/TGEMO_00037	strain	http://www.ebi.ac.uk/efo/EFO_0005135
+C57BL/6J	C57BL/6J	http://www.ebi.ac.uk/efo/EFO_0005138	strain	http://www.ebi.ac.uk/efo/EFO_0005138
+C57BL/6J mouse	C57BL/6J	http://www.ebi.ac.uk/efo/EFO_0005138	strain	http://www.ebi.ac.uk/efo/EFO_0005135
 C57BL/6N	C57BL/6	http://gemma.msl.ubc.ca/ont/TGEMO_00016	strain	http://www.ebi.ac.uk/efo/EFO_0005135
 C57BL6	C57BL/6	http://gemma.msl.ubc.ca/ont/TGEMO_00016	strain	http://www.ebi.ac.uk/efo/EFO_0005135
-C57BL6/J	C57BL/6J	http://gemma.msl.ubc.ca/ont/TGEMO_00037	strain	http://www.ebi.ac.uk/efo/EFO_0005135
-C57BL6J	C57BL/6J	http://gemma.msl.ubc.ca/ont/TGEMO_00037	strain	http://www.ebi.ac.uk/efo/EFO_0005135
+C57BL6/J	C57BL/6J	http://www.ebi.ac.uk/efo/EFO_0005138	strain	http://www.ebi.ac.uk/efo/EFO_0005135
+C57BL6J	C57BL/6J	http://www.ebi.ac.uk/efo/EFO_0005138	strain	http://www.ebi.ac.uk/efo/EFO_0005135
 CA1 hippocampal subregion	CA1 field of hippocampus	http://purl.obolibrary.org/obo/UBERON_0003881	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
 CA1 hippocampus	CA1 field of hippocampus	http://purl.obolibrary.org/obo/UBERON_0003881	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
 Caffeine	caffeine	http://purl.obolibrary.org/obo/CHEBI_27732	treatment	http://www.ebi.ac.uk/efo/EFO_0000727
@@ -364,9 +364,9 @@ Major Depression	major depressive disorder	http://purl.obolibrary.org/obo/MONDO_
 Major Depressive Disorder	major depressive disorder	http://purl.obolibrary.org/obo/MONDO_0002009	disease	http://www.ebi.ac.uk/efo/EFO_0000408
 major depressive disorder (MDD)	major depressive disorder	http://purl.obolibrary.org/obo/MONDO_0002009	disease	http://www.ebi.ac.uk/efo/EFO_0000408
 male	male	http://purl.obolibrary.org/obo/PATO_0000384	biological sex	http://purl.obolibrary.org/obo/PATO_0000047
-Male C57BL/6J	C57BL/6J	http://gemma.msl.ubc.ca/ont/TGEMO_00037	strain	http://www.ebi.ac.uk/efo/EFO_0005135
+Male C57BL/6J	C57BL/6J	http://www.ebi.ac.uk/efo/EFO_0005138	strain	http://www.ebi.ac.uk/efo/EFO_0005135
 Males	male	http://purl.obolibrary.org/obo/PATO_0000384	biological sex	http://purl.obolibrary.org/obo/PATO_0000047
-malignant	malignant	http://www.ebi.ac.uk/efo/EFO_0006851	disease	http://www.ebi.ac.uk/efo/EFO_0000408
+malignant	malignant	http://purl.obolibrary.org/obo/PATO_0002097	disease	http://www.ebi.ac.uk/efo/EFO_0000408
 Malignant ovarian	ovarian cancer	http://purl.obolibrary.org/obo/MONDO_0008170	disease	http://www.ebi.ac.uk/efo/EFO_0000408
 Mammary fat pad	mammary fat pad	http://purl.obolibrary.org/obo/UBERON_0012282	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
 mammary gland	mammary gland	http://purl.obolibrary.org/obo/UBERON_0001911	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
