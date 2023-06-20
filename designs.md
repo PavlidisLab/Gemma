@@ -22,7 +22,7 @@ Factors can also be continuous. In this case they take numeric values and often 
 Currently Gemma does not directly handle continuous values in statistical analyses. We suggest using categorical values until we add analytical procedures to handle continuous ones. In addition Gemma can currently only use up to two factors in analysis, so defining ten won’t buy you much (for now).
 The samples in the experiment (called Biomaterials in Gemma) each have values for each factor (the value can be ‘missing’, which you shouldn’t define as a separate value). Thus in our example we might have two samples which have the values “B6” “stomach” and some that are “B6” “esophagus”.
 
-Because experimental designs are curated manually (either by us or by the original source, such as GEO), it is certainly possible for errors to exist. If you spot a problem, please let us know (see the Contacts & Credits section on the main page.
+Because experimental designs are curated manually by our team, it is certainly possible for errors to exist. If you spot a problem, please let us know (see the Contacts & Credits section on the main page).
 
 ## Browsing the design
 To find the experimental design page, select your dataset of interest from the dataset browser. Then click on the Experimental Design tab at the top of the page. From here, you can click the Show Details icon which will take you to the Experimental Design Details page. The two tabs on this page are Design Setup, which provides the experimental factors and factor values used (For definitions, see the Glossary section on the main page) and Sample Details, which provides a complete list of the samples in the study and the parameters that apply to each sample.
