@@ -6,7 +6,7 @@
 126S6/SvEvTac	129S6/SvEvTac	http://gemma.msl.ubc.ca/ont/TGEMO_00048	strain	http://www.ebi.ac.uk/efo/EFO_0005135
 129	129	http://gemma.msl.ubc.ca/ont/TGEMO_00034	strain	http://www.ebi.ac.uk/efo/EFO_0005135
 129/Sv	129S/SvEv	http://gemma.msl.ubc.ca/ont/TGEMO_00036	strain	http://www.ebi.ac.uk/efo/EFO_0005135
-129SV	129/Sv	http://gemma.msl.ubc.ca/ont/TGEMO_00035	strain	http://www.ebi.ac.uk/efo/EFO_0005135
+129SV	129/Sv	http://www.ebi.ac.uk/efo/EFO_0000599	strain	http://www.ebi.ac.uk/efo/EFO_0005135
 17beta-estradiol	17beta-estradiol	http://purl.obolibrary.org/obo/CHEBI_16469	treatment	http://www.ebi.ac.uk/efo/EFO_0000727
 A/J	A/J	http://gemma.msl.ubc.ca/ont/TGEMO_00093	strain	http://www.ebi.ac.uk/efo/EFO_0005135
 A549	A549 cell	http://purl.obolibrary.org/obo/CLO_0001601	cell line	http://purl.obolibrary.org/obo/CLO_0000031
@@ -92,7 +92,7 @@ C	Caucasian	http://purl.obolibrary.org/obo/HANCESTRO_0005	population	http://purl
 C2C12	RCB0987 cell	http://purl.obolibrary.org/obo/CLO_0050871	cell line	http://purl.obolibrary.org/obo/CLO_0000031
 C3H	Sprague Dawley	http://gemma.msl.ubc.ca/ont/TGEMO_00053	strain	http://www.ebi.ac.uk/efo/EFO_0005135
 C3H/HeJ	C3H/HeJ	http://gemma.msl.ubc.ca/ont/TGEMO_00055	strain	http://www.ebi.ac.uk/efo/EFO_0005135
-C56BL/6J	C57BL/6J	http://gemma.msl.ubc.ca/ont/TGEMO_00037	strain	http://www.ebi.ac.uk/efo/EFO_0005135
+C56BL/6J	C57BL/6J	http://www.ebi.ac.uk/efo/EFO_0000606	strain	http://www.ebi.ac.uk/efo/EFO_0005135
 C57/B6	C57BL/6	http://gemma.msl.ubc.ca/ont/TGEMO_00016	strain	http://www.ebi.ac.uk/efo/EFO_0005135
 C57/BL6	C57BL/6	http://gemma.msl.ubc.ca/ont/TGEMO_00016	strain	http://www.ebi.ac.uk/efo/EFO_0005138
 C57B6	C57BL/6	http://gemma.msl.ubc.ca/ont/TGEMO_00016	strain	http://www.ebi.ac.uk/efo/EFO_0005135
@@ -560,7 +560,7 @@ Sarin	sarin	http://purl.obolibrary.org/obo/CHEBI_75701	treatment	http://www.ebi.
 schizophrenia	schizophrenia	http://purl.obolibrary.org/obo/MONDO_0005090	disease	http://www.ebi.ac.uk/efo/EFO_0000408
 schizophrenia (SCZ)	schizophrenia	http://purl.obolibrary.org/obo/MONDO_0005090	disease	http://www.ebi.ac.uk/efo/EFO_0000408
 sciatic nerve	sciatic nerve	http://purl.obolibrary.org/obo/UBERON_0001322	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
-SD	Sprague Dawley	http://gemma.msl.ubc.ca/ont/TGEMO_00099	strain	http://www.ebi.ac.uk/efo/EFO_0005135
+SD	Sprague Dawley	http://www.ebi.ac.uk/efo/EFO_0001352	strain	http://www.ebi.ac.uk/efo/EFO_0005135
 sentinel lymph node	lymph node	http://purl.obolibrary.org/obo/UBERON_0000029	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
 Sepsis	sepsis	http://purl.obolibrary.org/obo/MP_0005044	disease	http://www.ebi.ac.uk/efo/EFO_0000408
 Septum	septum	http://purl.obolibrary.org/obo/UBERON_0003037	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
@@ -583,11 +583,11 @@ spinal cord	spinal cord	http://purl.obolibrary.org/obo/UBERON_0002240	organism p
 spiny projection neurons	pyramidal neuron	http://purl.obolibrary.org/obo/CL_0000598	cell type	http://www.ebi.ac.uk/efo/EFO_0000324
 spleen	spleen	http://purl.obolibrary.org/obo/UBERON_0002106	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
 Spleen Cell Cultures	spleen	http://purl.obolibrary.org/obo/UBERON_0002106	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
-sprague dawley	Sprague Dawley	http://gemma.msl.ubc.ca/ont/TGEMO_00099	strain	http://www.ebi.ac.uk/efo/EFO_0005138
-Sprague-Dawley	Sprague Dawley	http://gemma.msl.ubc.ca/ont/TGEMO_00099	strain	http://www.ebi.ac.uk/efo/EFO_0005135
-Sprague-Dawley (SD)	Sprague Dawley	http://gemma.msl.ubc.ca/ont/TGEMO_00099	strain	http://www.ebi.ac.uk/efo/EFO_0005135
-Sprague-Dawley rat	Sprague Dawley	http://gemma.msl.ubc.ca/ont/TGEMO_00099	strain	http://www.ebi.ac.uk/efo/EFO_0005135
-Sprague-Dawley rats	Sprague Dawley	 http://gemma.msl.ubc.ca/ont/TGEMO_00099	strain	http://www.ebi.ac.uk/efo/EFO_0005135
+sprague dawley	Sprague Dawley	http://www.ebi.ac.uk/efo/EFO_0001352	strain	http://www.ebi.ac.uk/efo/EFO_0005138
+Sprague-Dawley	Sprague Dawley	http://www.ebi.ac.uk/efo/EFO_0001352	strain	http://www.ebi.ac.uk/efo/EFO_0005135
+Sprague-Dawley (SD)	Sprague Dawley	http://www.ebi.ac.uk/efo/EFO_0001352	strain	http://www.ebi.ac.uk/efo/EFO_0005135
+Sprague-Dawley rat	Sprague Dawley	http://www.ebi.ac.uk/efo/EFO_0001352	strain	http://www.ebi.ac.uk/efo/EFO_0005135
+Sprague-Dawley rats	Sprague Dawley	 http://www.ebi.ac.uk/efo/EFO_0001352	strain	http://www.ebi.ac.uk/efo/EFO_0005135
 sputum	sputum	http://purl.obolibrary.org/obo/UBERON_0007311	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
 Squamous cell carcinoma	squamous cell carcinoma	http://purl.obolibrary.org/obo/MONDO_0005096	disease	http://www.ebi.ac.uk/efo/EFO_0000408
 sscortex	secondary somatosensory cortex	http://purl.obolibrary.org/obo/UBERON_0008934	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
@@ -674,7 +674,7 @@ Whole visceral adipose tissue	visceral abdominal adipose tissue	http://purl.obol
 whole-blood	blood	http://purl.obolibrary.org/obo/UBERON_0000178	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
 wild type	wild type genotype	http://www.ebi.ac.uk/efo/EFO_0005168	genotype	http://www.ebi.ac.uk/efo/EFO_0000513
 wildtype	wild type genotype	http://www.ebi.ac.uk/efo/EFO_0005168	genotype	http://www.ebi.ac.uk/efo/EFO_0000513
-wistar	Wistar	http://gemma.msl.ubc.ca/ont/TGEMO_00096	strain	http://www.ebi.ac.uk/efo/EFO_0005139
-Wistar rat	Wistar	http://gemma.msl.ubc.ca/ont/TGEMO_00096	strain	http://www.ebi.ac.uk/efo/EFO_0005135
+wistar	Wistar	http://www.ebi.ac.uk/efo/EFO_0001342	strain	http://www.ebi.ac.uk/efo/EFO_0005139
+Wistar rat	Wistar	http://www.ebi.ac.uk/efo/EFO_0001342	strain	http://www.ebi.ac.uk/efo/EFO_0005135
 wt	wild type genotype	http://www.ebi.ac.uk/efo/EFO_0005168	genotype	http://www.ebi.ac.uk/efo/EFO_0000513
 zebularine	zebularine	http://purl.obolibrary.org/obo/CHEBI_46938	treatment	http://www.ebi.ac.uk/efo/EFO_0000727
