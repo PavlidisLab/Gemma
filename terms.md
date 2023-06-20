@@ -12,55 +12,39 @@ All content provided in respect of the UBC Services and UBC Software is owned or
 ## 4. Your Consent.
 You acknowledge and agree that we may update, amend or revise these UBC Terms of Use and impose further terms and conditions from time to time. You agree to review these UBC Terms of Use and any other applicable rules or policies each time you use the Gemma Website, to be aware of any such revisions or modifications. The revised UBC Terms of Use will be effective as of the date of their posting on the Gemma Website. You acknowledge and agree that we may, without limiting the generality of the foregoing, change or withdraw all or part of the UBC Services provided at any time. You acknowledge and agree that if you do not agree to any such revision or modification, you may terminate these terms after which you will not be entitled to use the UBC Services. By continuing to use the UBC Services after any revision to these UBC Terms of Use you agree to abide by and be bound by any such revisions or changes. You agree that no modification of these UBC Terms of Use will be binding, unless in writing and accepted by UBC. No agent of UBC is authorized to modify these UBC Terms of Use.
 
-## 5. Uploading Data to the Gemma Website.
-  1. For the purposes of this Agreement, “Data” refers to gene expression profiling data which is uploaded to and stored in the Gemma Website, including without limitation microarray data. “Public Data” is data which can be accessed, analyzed and/or viewed in Gemma by any user of the Gemma Website. When you upload Data to the Gemma Website, you indicate that it is Public Data by selecting the ‘make public’ box. “Private Data” is data which can only be accessed by a limited subset of users, which may include you, another user(s), and/or UBC. When you upload Data to the Gemma Website, you indicate that it is Private Data by selecting which limited subset of users can access the Data.
-  2. You must be a registered user of the Gemma Website to upload Data to the Gemma Website. When you upload Data, you shall classify it as Private Data or Public Data.
-  3. You must not upload Data to the Gemma Website which contains any “personal information” as such term is defined under the Personal Information Protection and Electronic Documents Act or provincial privacy legislation. This includes without limitation, any Data which would contains information about any identifiable individuals such as the names of human subjects. We may, at our option, reject and return any Data to you that is in breach of this clause, and/or terminate your access to the UBC Services if you breach this clause.
-  4. You acknowledge and agree that the Gemma Website is not designed, nor intended for, uploading and storage of any Data of a highly sensitive nature. We encourage you to contact us if you wish to discuss and consider a private installation of the UBC Software.
-  5. If you use any results, Data or information that you have obtained from the Gemma Website for any purposes other than your own personal use, including without limitation in a publication or scientific presentation, you must cite the Gemma Website as the source of such results, Data or information.
-  6. If you have any concerns about your Data on the Gemma Website, we will delete your Data from the Gemma Website upon your reasonable request.
-
-## 6. Use by UBC of the Data.
-You hereby agree that UBC may use the Data that you upload to the Gemma Website as follows:
-  1. UBC may use Public Data for research purposes and to perform the UBC Services, including the purposes of reviewing, aggregating and analysing Data and storing the results of such analyses;
-  2. UBC shall provide access to Public Data to any users (whether registered or unregistered) or visitors to the Gemma Website;
-  3. UBC will not use Private Data in any data analysis not explicitly authorized by you, nor will we transmit your Private Data to any third party;
-  4. UBC may delete Data at any time or store Data in the Gemma Website indefinitely, unless you send us a written request to remove such Data from the Gemma Website;
-  5. If UBC discovers that you have uploaded Published Data and have not classified this as Public Data, we may make the data public without notifying you. “Published Data” means any Data that has previously been released into the public domain, including without limitation dissemination of a description of the expression study in a peer-reviewed publication, even if the Data was not originally part of the dissemination or supplementary materials; or description of the collection of the Data and presentation of a “hit list”.
-
-## 7. WARNING! 
+## 5. WARNING! 
 THE UBC SERVICES ARE PROVIDED “AS IS”. YOU AGREE TO ASSUME ALL RISKS IN YOUR USE OF THE UBC SERVICES. We do not warrant any particular results or the reliability, accuracy or completeness of any information provided in connection with the UBC Services. We strive for accuracy in all our information, but the information provided in connection with the UBC Services could include technical inaccuracies or typographical errors.
 
-## 8. DISCLAIMER OF WARRANTY.
+## 6. DISCLAIMER OF WARRANTY.
 UBC MAKES NO REPRESENTATIONS AND EXTENDS NO WARRANTIES OR CONDITIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED. IN PARTICULAR, TO THE EXTENT PERMITTED BY LAW, UBC EXCLUDES ALL EXPRESS AND IMPLIED WARRANTIES OF TITLE, MERCHANTABILITY OR FITNESS OF THE UBC SERVICES FOR A PARTICULAR PURPOSE, OR THAT THE USE OF THE UBC SERVICES WILL PRODUCE A DESIRED RESULT OR THAT THE USE OF THE UBC SERVICES WILL NOT INFRINGE ANY PATENT, COPYRIGHT, TRADEMARK OR OTHER RIGHTS, OR ANY OTHER EXPRESS OR IMPLIED WARRANTIES.
 
-## 9. LIMITATION OF LIABILITY. 
+## 7. LIMITATION OF LIABILITY. 
 UBC WILL NOT BE LIABLE TO YOU, OR ANY OTHER PERSON OR ENTITY FOR ANY LIABILITY, LOSS OR DAMAGES CAUSED OR ALLEGED TO HAVE BEEN CAUSED, EITHER DIRECTLY OR INDIRECTLY, BY YOUR USE OF OR INABILITY TO USE THE UBC SERVICES, OR FOR ANY USE OF YOUR DATA BY THIRD PARTIES. WITHOUT LIMITING THE FOREGOING, IN NO EVENT WILL UBC BE LIABLE FOR ANY LOST REVENUE, PROFIT, BUSINESS INTERRUPTION OR DATA, OR FOR SPECIAL, INDIRECT, CONSEQUENTIAL, INCIDENTAL OR PUNITIVE DAMAGES, HOWEVER CAUSED AND REGARDLESS OF THE THEORY OF LIABILITY, ARISING OUT OF OR RELATED TO THE USE OF OR INABILITY TO USE THE GEMMA WEBSITE, EVEN IF UBC HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGES. UBC’s TOTAL LIABILITY WILL BE LIMITED TO THE AMOUNT OF CDN $100.
 
-## 10. INDEMNITY.
+## 8. INDEMNITY.
 YOU WILL INDEMNIFY, DEFEND AND HOLD HARMLESS UBC, ITS BOARD OF GOVERNORS, FACULTY, STAFF, STUDENTS AND AGENTS FROM AND AGAINST ANY AND ALL LIABILITY, LOSS, DAMAGE, ACTION, CLAIM OR EXPENSE (INCLUDING ATTORNEY’S FEES AND COSTS AT TRIAL AND APPELLATE LEVELS) IN CONNECTION WITH ANY CLAIM, SUIT, ACTION, DEMAND OR JUDGEMENT ARISING OUT OF CONNECTED WITH, RESULTING FROM, OR SUSTAINED AS A RESULT OF YOUR USE OF THE GEMMA WEBSITE.
 
-## 11. Information.
+## 9. Information.
 We may collect corporate information, including the name, title or business address of an employee of (i) a company, (ii) a sole proprietorship or (iii) another organisation, from users who create an account on the Gemma Website. We take all reasonable precautions to ensure the security of such information, including any credit card information that may be submitted to us as part of an e-commerce transaction. You agree to provide to us current, complete and accurate information about you as required by the user identification process. You represent and warrant that you have provided notice to, and obtained consent from, any third parties whose personal data or information you supply to us. You also agree to maintain and update this information as needed to keep it current, complete and accurate. You will not provide us with false information. We rely on this information for our records and to send you important information and notices regarding your account and the UBC Services.
 
-## 12. Right of Refusal.
+## 10. Right of Refusal.
 We, in our sole discretion, reserve the right to refuse to provide you with the UBC Services. You agree that we will not be liable to you for loss or damages that may result from the refusal by us to provide you with UBC Services. Without limiting the foregoing, you agree that we may terminate your use of the UBC Services at any time without notice:(i) if you breach or fail to abide by any provision of this Agreement;(ii) if you fail to respond for within fifteen (15) calendar days to any inquiries from us; and/or(iii) if you use the UBC Services for any improper purpose, as determined by us in our sole discretion.
 
-## 13. Trademarks.
+## 11. Trademarks.
 Trademarks (including unregistered trade marks) and names mentioned on the Gemma Website are the trademarks of their respective owners. You are prohibited from doing anything to infringe or prejudice rights of trademark owners. No right, title or interest in or to any official mark, prohibited mark, trademark, service mark, logo, or trade name of UBC is granted to you under these UBC Terms of Use.
 
-## 14. Links & Endorsement.
+## 12. Links & Endorsement.
 The Gemma Website may contain links to other websites. Those websites are not under our control and we do not endorse and are not responsible for anything on those websites, including text, images, graphics, email, alerts, notifications, executable applications, software, underlying HTML, or other content, services and other policies including privacy policies, if any, offered through those websites by the providers of those websites. Please review the terms and conditions and policies, if any, of those websites.
 
-## 15. All Disputes To Be Resolved in Vancouver, B.C.
+## 13. All Disputes To Be Resolved in Vancouver, B.C.
 The Gemma Website is a British Columbia website, and these UBC Terms of Use, (and all disputes arising out of or relating to these UBC Terms of Use) will be governed and interpreted according to the laws of British Columbia, Canada without regard to its conflicts of laws rules. You agree that by using the Gemma Website and the UBC Services and accepting these UBC Terms of Use you submit to the exclusive jurisdiction of the Courts of competent authority in the City of Vancouver, Province of British Columbia, Canada. Any acceptance of your application for UBC Services takes place in Vancouver, British Columbia, Canada.
-## 16. General Provisions.
+
+## 14. General Provisions.
   1. USE OF THE UBC SERVICES IS PROHIBITED IN ANY JURISDICTION WHICH DOES NOT GIVE EFFECT TO THE TERMS AND CONDITIONS OF THESE UBC TERMS OF USE.
   2. You agree that no joint venture, partnership, employment, consulting or agency relationship exists between you and UBC as a result of these terms or your use of the UBC Services.
   3. These terms represent the entire agreement between you and UBC relating to this subject matter. You will not contest the validity of these terms merely because they are in electronic form.
   4. The provisions of these terms are severable in that if any provision is determined to be invalid or unenforceable under any controlling body of law, that will not affect the validity or enforceability of the remaining provisions of these terms.
   5. No condoning, excusing or overlooking by UBC of any failure by UBC to comply with any part of these terms shall operate as a waiver by UBC of its rights under these terms, and no waiver shall be inferred from or implied by anything done or omitted by UBC.
-  6. Unless specified otherwise, any prices listed on the Gemma Website are in Canadian dollars and prices are subject to change without notice. UBC will not be liable for any typographical errors, including errors resulting in improperly quoted prices in connection with the UBC Services.
-  7. You should print out or download a copy of these UBC Terms of Use and retain it for your records.
-  8. You consent to the use of the English language in these UBC Terms of Use and all documents or notices relating to these terms. Les parties aux presentes ont exige que le present contrat et tous autres contrats, documents ou avis afferents aux presentes soient rediges en langue anglaise.
-  9. You may not assign these UBC Terms of Use. UBC, acting in its sole discretion, may assign these UBC Terms of Use without notice to you.
+  6. You should print out or download a copy of these UBC Terms of Use and retain it for your records.
+  7. You consent to the use of the English language in these UBC Terms of Use and all documents or notices relating to these terms. Les parties aux presentes ont exige que le present contrat et tous autres contrats, documents ou avis afferents aux presentes soient rediges en langue anglaise.
+  8. You may not assign these UBC Terms of Use. UBC, acting in its sole discretion, may assign these UBC Terms of Use without notice to you.
