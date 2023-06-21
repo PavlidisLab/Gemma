@@ -48,7 +48,7 @@ import java.util.*;
 public class GeoGrabberCli extends AbstractCLIContextCLI {
 
     private static final int NCBI_CHUNK_SIZE = 100;
-    private static final int MAX_RETRIES = 3; // on failures
+    private static final int MAX_RETRIES = 5; // on failures
     private static final int MAX_EMPTY_CHUNKS_IN_A_ROW = 20; // stop condition when we stop seeing useful records
     private Date dateLimit;
     private String gseLimit;
@@ -253,7 +253,7 @@ public class GeoGrabberCli extends AbstractCLIContextCLI {
                     retries++;
                     if ( retries <= MAX_RETRIES ) {
                         log.warn( "Failure while fetching records, retrying " + e.getMessage() );
-                        Thread.sleep( 500 );
+                        Thread.sleep( 500 * retries );
                         continue;
                     }
                     throw new IOException( "Too many failures: " + e.getMessage() );
