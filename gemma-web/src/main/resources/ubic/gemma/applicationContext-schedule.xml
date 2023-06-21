@@ -24,6 +24,7 @@
                 <ref local="whatsNewTrigger"/>
                 <ref local="gene2CsUpdateTrigger"/>
                 <ref local="batchInfoTrigger"/>
+                <ref local="ee2cUpdateTrigger"/>
                 <!-- <ref local="viewTrigger" /> -->
                 <!--<ref local="monitorSpaceTrigger" /> -->
             </list>
