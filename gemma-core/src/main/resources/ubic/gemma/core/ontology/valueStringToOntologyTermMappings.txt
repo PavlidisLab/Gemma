@@ -145,6 +145,7 @@ Circulating mononuclear cells	peripheral blood mononuclear cell	http://purl.obol
 clear cell renal cell carcinoma	clear cell renal carcinoma	http://purl.obolibrary.org/obo/MONDO_0005005	disease	http://www.ebi.ac.uk/efo/EFO_0000408
 Clear-cell renal cell carcinoma	clear cell renal carcinoma	http://purl.obolibrary.org/obo/MONDO_0005005	disease	http://www.ebi.ac.uk/efo/EFO_0000408
 Clinical Breast Cancer Specimen	breast cancer	http://purl.obolibrary.org/obo/MONDO_0007254	disease	http://www.ebi.ac.uk/efo/EFO_0000408
+colitis	colitis	http://purl.obolibrary.org/obo/MONDO_0005292	disease	http://www.ebi.ac.uk/efo/EFO_0000408
 Colon	colon	http://purl.obolibrary.org/obo/UBERON_0001155	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
 colon adenocarcinoma cells	colon adenocarcinoma	http://purl.obolibrary.org/obo/MONDO_0002271	disease	http://www.ebi.ac.uk/efo/EFO_0000408
 colon cancer	malignant colon neoplasm	http://purl.obolibrary.org/obo/MONDO_0021063	disease	http://www.ebi.ac.uk/efo/EFO_0000408
@@ -177,6 +178,7 @@ dermal fibroblasts	fibroblast	http://purl.obolibrary.org/obo/CL_0000057	cell typ
 dexamethasone	dexamethasone	http://purl.obolibrary.org/obo/CHEBI_41879	treatment	http://www.ebi.ac.uk/efo/EFO_0000727
 diabetic	diabetes mellitus	http://purl.obolibrary.org/obo/MONDO_0005015	disease	http://www.ebi.ac.uk/efo/EFO_0000408
 differentiated adipocytes	fat cell	http://purl.obolibrary.org/obo/CL_0000136	cell type	http://www.ebi.ac.uk/efo/EFO_0000324
+diffuse intrinsic pontine glioma	diffuse intrinsic pontine glioma	http://purl.obolibrary.org/obo/MONDO_0006033	disease	http://www.ebi.ac.uk/efo/EFO_0000408
 Distal colon	left colon	http://purl.obolibrary.org/obo/UBERON_0008971	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
 distal lung epithelium	lung epithelium	http://purl.obolibrary.org/obo/UBERON_0000115	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
 DLBCL	diffuse large B-cell lymphoma	http://purl.obolibrary.org/obo/MONDO_0018905	disease	http://www.ebi.ac.uk/efo/EFO_0000408
@@ -594,6 +596,7 @@ sscortex	secondary somatosensory cortex	http://purl.obolibrary.org/obo/UBERON_00
 stem cells	stem cell	http://purl.obolibrary.org/obo/CL_0000034	cell type	http://www.ebi.ac.uk/efo/EFO_0000324
 stress	environmental stress	http://www.ebi.ac.uk/efo/EFO_0000470	environmental history	http://www.ebi.ac.uk/efo/EFO_0004444
 striatum	striatum	http://purl.obolibrary.org/obo/UBERON_0002435	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
+stroke	stroke	http://purl.obolibrary.org/obo/MONDO_0005098	disease	http://www.ebi.ac.uk/efo/EFO_0000408
 subcortical white matter	white matter	http://purl.obolibrary.org/obo/UBERON_0002316	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
 subcutaneous adipose	subcutaneous adipose	http://purl.obolibrary.org/obo/UBERON_0002190	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
 Subcutaneous Fat	subcutaneous adipose tissue	http://purl.obolibrary.org/obo/UBERON_0002190	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
