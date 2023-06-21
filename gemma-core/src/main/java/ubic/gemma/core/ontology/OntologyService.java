@@ -17,9 +17,7 @@ package ubic.gemma.core.ontology;
 import ubic.basecode.ontology.model.OntologyIndividual;
 import ubic.basecode.ontology.model.OntologyResource;
 import ubic.basecode.ontology.model.OntologyTerm;
-import ubic.basecode.ontology.providers.*;
 import ubic.basecode.ontology.search.OntologySearchException;
-import ubic.gemma.core.ontology.providers.GemmaOntologyService;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
@@ -29,7 +27,6 @@ import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObj
 
 import javax.annotation.Nullable;
 import java.util.Collection;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -132,6 +129,11 @@ public interface OntologyService {
      */
     @Nullable
     OntologyTerm getTerm( String uri );
+
+    /**
+     * Return all the terms matching the given URIs.
+     */
+    Set<OntologyTerm> getTerms( Collection<String> uris );
 
     boolean isObsolete( String uri );
 

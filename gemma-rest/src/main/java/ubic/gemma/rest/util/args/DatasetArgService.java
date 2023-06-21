@@ -20,6 +20,7 @@ import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.util.Filter;
 import ubic.gemma.persistence.util.Filters;
+import ubic.gemma.rest.DatasetsWebService;
 
 import javax.annotation.Nullable;
 import javax.ws.rs.BadRequestException;

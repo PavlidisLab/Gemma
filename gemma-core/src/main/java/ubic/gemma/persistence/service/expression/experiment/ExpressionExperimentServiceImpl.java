@@ -592,11 +592,7 @@ public class ExpressionExperimentServiceImpl
             // recreate a clause with inferred terms
             for ( Map.Entry<SubClauseKey, Set<String>> e : termUrisBySubClause.entrySet() ) {
                 Collection<String> termAndChildrenUris = new HashSet<>( e.getValue() );
-                Set<OntologyTerm> terms = e.getValue().stream()
-                        .distinct()
-                        .map( ontologyService::getTerm )
-                        .filter( Objects::nonNull )
-                        .collect( Collectors.toSet() );
+                Set<OntologyTerm> terms = ontologyService.getTerms( e.getValue() );
                 termAndChildrenUris.addAll( ontologyService.getChildren( terms, false, true ).stream()
                         .map( OntologyTerm::getUri )
                         .collect( Collectors.toList() ) );
@@ -652,54 +648,89 @@ public class ExpressionExperimentServiceImpl
      */
     @Override
     @Transactional(readOnly = true)
-    public List<CharacteristicWithUsageStatisticsAndOntologyTerm> getAnnotationsUsageFrequency( @Nullable Filters filters, int maxResults, int minFrequency, @Nullable Collection<String> retainedTermUris ) {
+    public List<CharacteristicWithUsageStatisticsAndOntologyTerm> getAnnotationsUsageFrequency( @Nullable Filters filters, int maxResults, int minFrequency, @Nullable Collection<String> excludedTermUris, @Nullable Collection<String> retainedTermUris ) {
+        if ( excludedTermUris != null ) {
+            excludedTermUris = new HashSet<>( excludedTermUris );
+            // never exclude terms that are explicitly retained
+            if ( retainedTermUris != null ) {
+                excludedTermUris.removeAll( retainedTermUris );
+            }
+            // expand exclusions with implied terms via subclass relation
+            Set<OntologyTerm> excludedTerms = ontologyService.getTerms( excludedTermUris );
+            // exclude terms using the subClass relation
+            Set<OntologyTerm> impliedTerms = ontologyService.getChildren( excludedTerms, false, false );
+            for ( OntologyTerm t : impliedTerms ) {
+                excludedTermUris.add( t.getUri() );
+            }
+        }
+
         Map<Characteristic, Long> result;
         if ( filters == null || filters.isEmpty() ) {
-            result = expressionExperimentDao.getAnnotationsUsageFrequency( null, null, maxResults, minFrequency, retainedTermUris );
+            result = expressionExperimentDao.getAnnotationsUsageFrequency( null, null, maxResults, minFrequency, excludedTermUris, retainedTermUris );
         } else {
             List<Long> eeIds = expressionExperimentDao.loadIds( filters, null );
-            result = expressionExperimentDao.getAnnotationsUsageFrequency( eeIds, null, maxResults, minFrequency, retainedTermUris );
+            result = expressionExperimentDao.getAnnotationsUsageFrequency( eeIds, null, maxResults, minFrequency, excludedTermUris, retainedTermUris );
         }
 
         List<CharacteristicWithUsageStatisticsAndOntologyTerm> resultWithParents = new ArrayList<>( result.size() );
 
+        // gather all the values and categories
+        Set<String> uris = result.keySet().stream()
+                .flatMap( c -> Stream.of( c.getValueUri(), c.getCategoryUri() ) )
+                .filter( Objects::nonNull )
+                .collect( Collectors.toSet() );
+        // TODO: handle more than one term per URI
+        Map<String, Set<OntologyTerm>> termByUri = ontologyService.getTerms( uris ).stream()
+                .collect( Collectors.groupingBy( OntologyTerm::getUri, Collectors.toSet() ) );
+
         for ( Map.Entry<Characteristic, Long> entry : result.entrySet() ) {
-            OntologyTerm term = null;
-
-            if ( entry.getKey().getValueUri() != null ) {
-                term = ontologyService.getTerm( entry.getKey().getValueUri() );
+            Characteristic c = entry.getKey();
+            OntologyTerm term;
+            if ( c.getValueUri() != null && termByUri.containsKey( c.getValueUri() ) ) {
+                term = termByUri.get( c.getValueUri() ).iterator().next();
+            } else if ( c.getCategoryUri() != null && termByUri.containsKey( c.getCategoryUri() ) ) {
+                term = new OntologyTermSimpleWithCategory( c.getValueUri(), c.getValue(), termByUri.get( c.getCategoryUri() ).iterator().next() );
+            } else {
+                // create an uncategorized term
+                term = new OntologyTermSimpleWithCategory( c.getValueUri(), c.getValue(), null );
             }
-
-            // create a fake term with its category as parent
-            if ( term == null && entry.getKey().getCategoryUri() != null ) {
-                term = ontologyService.getTerm( entry.getKey().getCategoryUri() );
-                if ( term != null ) {
-                    // create a fake term with its category as parent
-                    final Set<OntologyTerm> parentTerms = Collections.singleton( term );
-                    term = new OntologyTermSimple( entry.getKey().getValueUri(), entry.getKey().getValue() ) {
-                        @Override
-                        public Collection<OntologyTerm> getParents( boolean direct, boolean includeAdditionalProperties, boolean keepObsoletes ) {
-                            if ( direct ) {
-                                return parentTerms;
-                            } else {
-                                // combine the direct parents + all the parents from the parents
-                                return Stream.concat( parentTerms.stream(), parentTerms.stream().flatMap( t -> getParents( false, includeAdditionalProperties, keepObsoletes ).stream() ) )
-                                        .collect( Collectors.toSet() );
-                            }
-                        }
-
-                        @Override
-                        public boolean isRoot() {
-                            return false;
-                        }
-                    };
-                }
-            }
-
             resultWithParents.add( new CharacteristicWithUsageStatisticsAndOntologyTerm( entry.getKey(), entry.getValue(), term ) );
         }
 
         return resultWithParents;
+    }
+
+    /**
+     * Extension of {@link OntologyTermSimple} that adds a category term as unique parent.
+     */
+    private static class OntologyTermSimpleWithCategory extends OntologyTermSimple {
+
+        @Nullable
+        private final OntologyTerm categoryTerm;
+
+        public OntologyTermSimpleWithCategory( String uri, String term, @Nullable OntologyTerm categoryTerm ) {
+            super( uri, term );
+            this.categoryTerm = categoryTerm;
+        }
+
+        @Override
+        public Collection<OntologyTerm> getParents( boolean direct, boolean includeAdditionalProperties, boolean keepObsoletes ) {
+            if ( categoryTerm == null ) {
+                return Collections.emptySet();
+            }
+            if ( direct ) {
+                return Collections.singleton( categoryTerm );
+            } else {
+                // combine the direct parents + all the parents from the parents
+                return Stream.concat( Stream.of( categoryTerm ), Stream.of( categoryTerm ).flatMap( t -> getParents( false, includeAdditionalProperties, keepObsoletes ).stream() ) )
+                        .collect( Collectors.toSet() );
+            }
+        }
+
+        @Override
+        public boolean isRoot() {
+            return categoryTerm == null;
+        }
     }
 
     @Override

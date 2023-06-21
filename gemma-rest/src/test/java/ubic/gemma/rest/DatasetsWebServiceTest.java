@@ -244,12 +244,12 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
                 .extracting( "groupBy", InstanceOfAssertFactories.list( String.class ) )
                 .containsExactly( "classUri", "className", "termUri", "termName" );
         verify( expressionExperimentService ).getFiltersWithInferredAnnotations( Filters.empty(), Collections.emptySet() );
-        verify( expressionExperimentService ).getAnnotationsUsageFrequency( Filters.empty(), 100, 0, Collections.emptySet() );
+        verify( expressionExperimentService ).getAnnotationsUsageFrequency( Filters.empty(), 100, 0, Collections.emptyList(), Collections.emptySet() );
     }
 
     @Test
     public void testGetDatasetsAnnotationWhenLimitExceedHardCap() {
-        assertThat( target( "/datasets/annotations" ).queryParam( "limit", 3000 ).request().get() )
+        assertThat( target( "/datasets/annotations" ).queryParam( "limit", 10000 ).request().get() )
                 .hasStatus( Response.Status.BAD_REQUEST )
                 .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE );
         verifyNoInteractions( expressionExperimentService );
@@ -261,9 +261,9 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
                 .hasStatus( Response.Status.OK )
                 .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE )
                 .entity()
-                .hasFieldOrPropertyWithValue( "limit", 2000 );
+                .hasFieldOrPropertyWithValue( "limit", 5000 );
         verify( expressionExperimentService ).getFiltersWithInferredAnnotations( Filters.empty(), Collections.emptySet() );
-        verify( expressionExperimentService ).getAnnotationsUsageFrequency( Filters.empty(), 2000, 10, Collections.emptySet() );
+        verify( expressionExperimentService ).getAnnotationsUsageFrequency( Filters.empty(), 5000, 10, Collections.emptyList(), Collections.emptySet() );
     }
 
     @Test
@@ -275,7 +275,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
                 .hasFieldOrPropertyWithValue( "limit", 50 )
                 .extracting( "groupBy", InstanceOfAssertFactories.list( String.class ) )
                 .containsExactly( "classUri", "className", "termUri", "termName" );
-        verify( expressionExperimentService ).getAnnotationsUsageFrequency( Filters.empty(), 50, 0, Collections.emptySet() );
+        verify( expressionExperimentService ).getAnnotationsUsageFrequency( Filters.empty(), 50, 0, Collections.emptyList(), Collections.emptySet() );
     }
 
     @Test

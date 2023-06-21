@@ -52,7 +52,12 @@ public class CustomModelResolver extends ModelResolver {
 
     @Override
     public Schema resolve( AnnotatedType type, ModelConverterContext context, Iterator<ModelConverter> chain ) {
-        JavaType t = objectMapper().constructType( type.getType() );
+        JavaType t;
+        if ( type.getType() instanceof JavaType ) {
+            t = ( JavaType ) type.getType();
+        } else {
+            t = objectMapper().constructType( type.getType() );
+        }
         if ( t.isTypeOrSubTypeOf( FilterArg.Filter.class ) || t.isTypeOrSubTypeOf( SortArg.Sort.class ) ) {
             return null; // ignore those...
         } else if ( t.isTypeOrSubTypeOf( FilterArg.class ) || t.isTypeOrSubTypeOf( SortArg.class ) ) {
@@ -66,7 +71,7 @@ public class CustomModelResolver extends ModelResolver {
                     .type( "string" )
                     .properties( null );
             return resolved;
-        } else if ( t.isTypeOrSubTypeOf( Arg.class ) ) {
+        } else if ( t.isTypeOrSubTypeOf( Arg.class ) && t.getRawClass() != null ) {
             // I'm suspecting there's a bug in Swagger that causes request parameters annotations to shadow the
             // definitions in the class's Schema annotation
             Schema resolvedSchema = super.resolve( new AnnotatedType( t.getRawClass() ), context, chain );
@@ -83,7 +88,7 @@ public class CustomModelResolver extends ModelResolver {
     }
 
     /**
-     * Resolves allowed values for the {@link ubic.gemma.rest.SearchWebService#search(String, TaxonArg, PlatformArg, List, LimitArg, StringArrayArg)}
+     * Resolves allowed values for the {@link ubic.gemma.rest.SearchWebService#search(String, TaxonArg, PlatformArg, List, LimitArg, ExcludeArg)}
      * resultTypes argument.
      * <p>
      * This ensures that the OpenAPI specification exposes all supported search result types in the {@link SearchService} as
@@ -102,7 +107,7 @@ public class CustomModelResolver extends ModelResolver {
         String description = super.resolveDescription( a, annotations, schema );
 
         // append available properties to the description
-        if ( FilterArg.class.isAssignableFrom( a.getRawType() ) || SortArg.class.isAssignableFrom( a.getRawType() ) ) {
+        if ( a != null && ( FilterArg.class.isAssignableFrom( a.getRawType() ) || SortArg.class.isAssignableFrom( a.getRawType() ) ) ) {
             String availableProperties = resolveAvailablePropertiesAsString( a );
             return description == null ? availableProperties : description + "\n\n" + availableProperties;
         }
@@ -113,7 +118,7 @@ public class CustomModelResolver extends ModelResolver {
     @Override
     protected Map<String, Object> resolveExtensions( Annotated a, Annotation[] annotations, io.swagger.v3.oas.annotations.media.Schema schema ) {
         Map<String, Object> extensions = super.resolveExtensions( a, annotations, schema );
-        if ( FilterArg.class.isAssignableFrom( a.getRawType() ) || SortArg.class.isAssignableFrom( a.getRawType() ) ) {
+        if ( a != null && ( FilterArg.class.isAssignableFrom( a.getRawType() ) || SortArg.class.isAssignableFrom( a.getRawType() ) ) ) {
             extensions = extensions != null ? new HashMap<>( extensions ) : new HashMap<>();
             extensions.put( "x-gemma-filterable-properties", resolveAvailableProperties( a ) );
             extensions = Collections.unmodifiableMap( extensions );

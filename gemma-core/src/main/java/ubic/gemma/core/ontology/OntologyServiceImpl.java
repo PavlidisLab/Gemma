@@ -444,6 +444,11 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
         return findFirst( ontology -> ontology.getTerm( uri ) );
     }
 
+    @Override
+    public Set<OntologyTerm> getTerms( Collection<String> uris ) {
+        return combineInThreads( os -> uris.stream().map( os::getTerm ).filter( Objects::nonNull ).collect( Collectors.toSet() ) );
+    }
+
     /**
      * @return true if the Uri is an ObsoleteClass. This will only work if the ontology in question is loaded.
      */

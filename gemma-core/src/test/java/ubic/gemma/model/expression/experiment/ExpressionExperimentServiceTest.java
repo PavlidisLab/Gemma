@@ -26,6 +26,7 @@ import ubic.gemma.persistence.util.Filter;
 import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.TestComponent;
 
+import java.util.Arrays;
 import java.util.Collections;
 
 import static org.mockito.Mockito.*;
@@ -158,26 +159,26 @@ public class ExpressionExperimentServiceTest extends AbstractJUnit4SpringContext
     @Test
     public void testGetFiltersWithInferredAnnotations() {
         OntologyTerm term = mock( OntologyTerm.class );
-        when( ontologyService.getTerm( "http://example.com/T00001" ) ).thenReturn( term );
+        when( ontologyService.getTerms( Collections.singleton( "http://example.com/T00001" ) ) ).thenReturn( Collections.singleton( term ) );
         Filters f = Filters.by( "c", "valueUri", String.class, Filter.Operator.eq, "http://example.com/T00001", "characteristics.valueUri" );
         expressionExperimentService.getFiltersWithInferredAnnotations( f, null );
-        verify( ontologyService ).getTerm( "http://example.com/T00001" );
+        verify( ontologyService ).getTerms( Collections.singleton( "http://example.com/T00001" ) );
         verify( ontologyService ).getChildren( Collections.singleton( term ), false, true );
     }
 
     @Test
     public void testGetAnnotationsUsageFrequency() {
-        expressionExperimentService.getAnnotationsUsageFrequency( Filters.empty(), -1, 0, null );
-        verify( expressionExperimentDao ).getAnnotationsUsageFrequency( null, null, -1, 0, null );
+        expressionExperimentService.getAnnotationsUsageFrequency( Filters.empty(), -1, 0, null, null );
+        verify( expressionExperimentDao ).getAnnotationsUsageFrequency( null, null, -1, 0, null, null );
         verifyNoMoreInteractions( expressionExperimentDao );
     }
 
     @Test
     public void testGetAnnotationsUsageFrequencyWithFilters() {
         Filters f = Filters.by( "c", "valueUri", String.class, Filter.Operator.eq, "http://example.com/T00001", "characteristics.valueUri" );
-        expressionExperimentService.getAnnotationsUsageFrequency( f, -1, 0, null );
+        expressionExperimentService.getAnnotationsUsageFrequency( f, -1, 0, null, null );
         verify( expressionExperimentDao ).loadIds( f, null );
-        verify( expressionExperimentDao ).getAnnotationsUsageFrequency( Collections.emptyList(), null, -1, 0, null );
+        verify( expressionExperimentDao ).getAnnotationsUsageFrequency( Collections.emptyList(), null, -1, 0, null, null );
         verifyNoMoreInteractions( expressionExperimentDao );
     }
 }

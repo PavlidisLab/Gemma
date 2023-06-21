@@ -135,7 +135,7 @@ public interface ExpressionExperimentService
     Collection<ExpressionExperiment> loadAll();
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ_QUIET" })
-    ExpressionExperiment loadWithPrimaryPublication(Long id);
+    ExpressionExperiment loadWithPrimaryPublication( Long id );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ_QUIET" })
     ExpressionExperiment loadWithMeanVarianceRelation( Long id );
@@ -292,12 +292,14 @@ public interface ExpressionExperimentService
      * if new terms are attached.
      *
      * @param filters          filters restricting the terms to a given set of datasets
-     * @param maxResults       maximum number of results to return, not including the parent terms if inference is applied
-     * @param retainedTermUris ensure that the given terms are retained
+     * @param maxResults       maximum number of results to return
+     * @param excludedTermUris ensure that the given terms and their sub-terms (as per {@code subClassOf} relation) are
+     *                         excluded; this requires relevant ontologies to be loaded in {@link ubic.gemma.core.ontology.OntologyService}.
+     * @param retainedTermUris ensure that the given terms are retained (overrides any exclusion)
      * @return mapping annotations grouped by category and term (URI or value if null) to their number of occurrences in
      * the matched datasets
      */
-    List<CharacteristicWithUsageStatisticsAndOntologyTerm> getAnnotationsUsageFrequency( @Nullable Filters filters, int maxResults, int minFrequency, @Nullable Collection<String> retainedTermUris );
+    List<CharacteristicWithUsageStatisticsAndOntologyTerm> getAnnotationsUsageFrequency( @Nullable Filters filters, int maxResults, int minFrequency, @Nullable Collection<String> excludedTermUris, @Nullable Collection<String> retainedTermUris );
 
     /**
      * @param expressionExperiment experiment

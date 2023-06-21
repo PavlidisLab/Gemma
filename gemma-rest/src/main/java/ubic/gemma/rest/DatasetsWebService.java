@@ -94,7 +94,7 @@ public class DatasetsWebService {
     private static final String ERROR_DATA_FILE_NOT_AVAILABLE = "Data file for experiment %s can not be created.";
     private static final String ERROR_DESIGN_FILE_NOT_AVAILABLE = "Design file for experiment %s can not be created.";
 
-    private static final int MAX_DATASETS_ANNOTATIONS = 2000;
+    private static final int MAX_DATASETS_ANNOTATIONS = 5000;
 
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
@@ -271,6 +271,8 @@ public class DatasetsWebService {
         }
     }
 
+    private static final Set<String> ALLOWED_FIELDS = Collections.singleton( "parentTerms" );
+
     @GET
     @GZIP
     @Path("/annotations")
@@ -280,8 +282,11 @@ public class DatasetsWebService {
     public LimitedResponseDataObject<AnnotationWithUsageStatisticsValueObject> getDatasetsAnnotationsUsageStatistics(
             @QueryParam("query") String query,
             @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filter,
+            @Parameter(description = "") @QueryParam("exclude") ExcludeArg<AnnotationWithUsageStatisticsValueObject> exclude,
             @Parameter(description = "Maximum number of annotations to returned; capped at " + MAX_DATASETS_ANNOTATIONS + ".") @QueryParam("limit") LimitArg limitArg,
-            @Parameter(description = "Minimum number of associated datasets to report an annotation.") @QueryParam("minFrequency") Integer minFrequency ) {
+            @Parameter(description = "Minimum number of associated datasets to report an annotation.") @QueryParam("minFrequency") Integer minFrequency,
+            @Parameter(description = "Excluded term category and value URIs") @QueryParam("excludedTerms") List<String> excludedTermUris ) {
+        boolean excludeParentTerms = getExcludedFields( exclude ).contains( "parentTerms" );
         // if a minFrequency is requested, use the hard cap, otherwise use 100 as a reasonable default
         int limit = limitArg != null ? limitArg.getValue( MAX_DATASETS_ANNOTATIONS ) : minFrequency != null ? MAX_DATASETS_ANNOTATIONS : 100;
         if ( minFrequency != null && minFrequency < 0 ) {
@@ -293,8 +298,12 @@ public class DatasetsWebService {
         if ( query != null ) {
             filters.and( datasetArgService.getFilterForSearchQuery( query ) );
         }
-        List<AnnotationWithUsageStatisticsValueObject> results = expressionExperimentService.getAnnotationsUsageFrequency( filters, limit, minFrequency != null ? minFrequency : 0, impliedTermUris )
-                .stream().map( e -> new AnnotationWithUsageStatisticsValueObject( e.getCharacteristic(), e.getNumberOfExpressionExperiments(), e.getTerm() != null ? getParentTerms( e.getTerm() ) : null ) )
+        // cache for visited parents (if two term share the same parent, we can save significant time generating the ancestors)
+        Map<OntologyTerm, Set<OntologyTermValueObject>> visited = new HashMap<>();
+        List<ExpressionExperimentService.CharacteristicWithUsageStatisticsAndOntologyTerm> initialResults = expressionExperimentService.getAnnotationsUsageFrequency( filters, limit, minFrequency != null ? minFrequency : 0, excludedTermUris, impliedTermUris );
+        List<AnnotationWithUsageStatisticsValueObject> results = initialResults
+                .stream()
+                .map( e -> new AnnotationWithUsageStatisticsValueObject( e.getCharacteristic(), e.getNumberOfExpressionExperiments(), !excludeParentTerms && e.getTerm() != null ? getParentTerms( e.getTerm(), visited ) : null ) )
                 .sorted( Comparator.comparing( UsageStatistics::getNumberOfExpressionExperiments, Comparator.reverseOrder() ) )
                 .collect( Collectors.toList() );
         return Responder.limit( results, filters, new String[] { "classUri", "className", "termUri", "termName" },
@@ -302,8 +311,19 @@ public class DatasetsWebService {
                 limit );
     }
 
-    private static Set<OntologyTermValueObject> getParentTerms( OntologyTerm c ) {
-        Map<OntologyTerm, Set<OntologyTermValueObject>> visited = new HashMap<>();
+    private Set<String> getExcludedFields( @Nullable ExcludeArg<AnnotationWithUsageStatisticsValueObject> exclude ) {
+        if ( exclude == null ) {
+            return Collections.emptySet();
+        }
+        if ( !ALLOWED_FIELDS.containsAll( exclude.getValue() ) ) {
+            throw new BadRequestException( String.format( "Only the following fields can be excluded: %s.",
+                    String.join( ", ", ALLOWED_FIELDS ) ) );
+        }
+        return new HashSet<>( exclude.getValue() );
+    }
+
+
+    private static Set<OntologyTermValueObject> getParentTerms( OntologyTerm c, Map<OntologyTerm, Set<OntologyTermValueObject>> visited ) {
         return c.getParents( true, false ).stream()
                 .map( t -> toTermVo( t, visited ) )
                 .collect( Collectors.toSet() );
@@ -329,10 +349,7 @@ public class DatasetsWebService {
 
         String uri;
         String name;
-        /**
-         * Empty i
-         */
-        @JsonInclude(JsonInclude.Include.NON_EMPTY)
+        @JsonInclude(JsonInclude.Include.NON_NULL)
         Set<OntologyTermValueObject> parentTerms;
 
         public OntologyTermValueObject( OntologyTerm ontologyTerm, Set<OntologyTermValueObject> parentTerms ) {
