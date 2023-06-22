@@ -6,7 +6,7 @@ Gemma is an "open source" and "open science" project intended to add value to pu
 
 * The gene expression data (expression level) data is available under the [Creative Commons CC-BY license](https://creativecommons.org/licenses/by/4.0/), including data we have reprocessed.
 
-* The data annotations (e.g. dataset descriptive tags), sample annotations (e.g. experimental design annotations), and analysis results (differential expression, coexpression, data set diagnostics and the like) we create are made available under the [Creative Commons CC-BY-NC license](https://creativecommons.org/licenses/by-nc/4.0/). Parties interested in licensing these components of Gemma for commercial use should contact us.
+* The data annotations (e.g. dataset descriptive tags), sample annotations (e.g. experimental design annotations), and analysis results (differential expression, coexpression, data set diagnostics and the like) we create are made available under the [Creative Commons CC-BY-NC license](https://creativecommons.org/licenses/by-nc/4.0/). Parties interested in licensing these components of Gemma for inclusion in commercial products use should contact us.
 
 * Under all use scenarios, we ask that you cite/credit the web site and one of our relevant publications ([here](https://pubmed.ncbi.nlm.nih.gov/33599246/) or [here](https://pubmed.ncbi.nlm.nih.gov/22782548/)).
 
