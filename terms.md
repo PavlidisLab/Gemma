@@ -4,7 +4,7 @@ Gemma is an "open source" and "open science" project intended to add value to pu
 
 * The [source code of Gemma](https://github.com/PavlidisLab/Gemma) is available under the [Apache 2.0 license](http://www.apache.org/licenses/LICENSE-2.0).
 
-* The gene expression data (expression level) data is available under the [Creative Commons CC-BY license](https://creativecommons.org/licenses/by/4.0/), including data we have reprocessed.
+* The gene expression data (expression levels) in Gemma is available under the [Creative Commons CC-BY license](https://creativecommons.org/licenses/by/4.0/), including data we have reprocessed from raw data files.
 
 * The data annotations (e.g. dataset descriptive tags), sample annotations (e.g. experimental design annotations), and analysis results (differential expression, coexpression, data set diagnostics and the like) we create are made available under the [Creative Commons CC-BY-NC license](https://creativecommons.org/licenses/by-nc/4.0/). Parties interested in licensing these components of Gemma for inclusion in commercial products use should contact us.
 
