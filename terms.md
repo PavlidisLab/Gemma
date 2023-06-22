@@ -12,7 +12,7 @@ Gemma is an "open source" and "open science" project intended to add value to pu
 
 * Use of the Gemma web site, APIs and data come with no warranty or promise of suitability for any purpose. Use at your own risk.
 
-# Additional terms And conditions
+# Additional terms and conditions
 
 ## 1. WARNING! 
 THE UBC SERVICES ARE PROVIDED “AS IS”. YOU AGREE TO ASSUME ALL RISKS IN YOUR USE OF THE UBC SERVICES. We do not warrant any particular results or the reliability, accuracy or completeness of any information provided in connection with the UBC Services. We strive for accuracy in all our information, but the information provided in connection with the UBC Services could include technical inaccuracies or other errors.
