@@ -1,6 +1,8 @@
 # Summary of our terms and conditions
 
-Gemma is an "open source" and "open science" project intended to add value to publicly-available genomics data through curation, re-analyze these datasets, and make the data, annotations and analysis results available to the scientific community.
+Gemma is an "open source" and "open science" project intended to add value to publicly-available genomics data through curation and re-analysis. We make the data, annotations and analysis results available to the scientific community through the [Gemma web site](https://github.com/PavlidisLab/Gemma) as well as an [API](https://gemma.msl.ubc.ca/resources/restapidocs/) and software packages for [R](https://doi.org/doi:10.18129/B9.bioc.gemma.R) and [Python](https://pypi.org/project/gemmapy/). 
+
+The use of Gemma is covered by certain licenses and terms, summarized here.
 
 * The [source code of Gemma](https://github.com/PavlidisLab/Gemma) is available under the [Apache 2.0 license](http://www.apache.org/licenses/LICENSE-2.0).
 
@@ -8,11 +10,11 @@ Gemma is an "open source" and "open science" project intended to add value to pu
 
 * The data annotations (e.g. dataset descriptive tags), sample annotations (e.g. experimental design annotations), and analysis results (differential expression, coexpression, data set diagnostics and the like) we create are made available under the [Creative Commons CC-BY-NC license](https://creativecommons.org/licenses/by-nc/4.0/). Parties interested in licensing these components of Gemma for inclusion in commercial products use should contact us.
 
-* Under all use scenarios, we ask that you cite/credit the web site and one of our relevant publications ([here](https://pubmed.ncbi.nlm.nih.gov/33599246/) or [here](https://pubmed.ncbi.nlm.nih.gov/22782548/)).
+* Under all use scenarios, we ask that you cite one of our relevant publications (e.g. [here](https://pubmed.ncbi.nlm.nih.gov/33599246/) or [here](https://pubmed.ncbi.nlm.nih.gov/22782548/)).
 
 * Use of the Gemma web site, APIs and data come with no warranty or promise of suitability for any purpose. Use at your own risk.
 
-# Additional terms and conditions
+# Additional details
 
 ## 1. WARNING! 
 THE UBC SERVICES ARE PROVIDED “AS IS”. YOU AGREE TO ASSUME ALL RISKS IN YOUR USE OF THE UBC SERVICES. We do not warrant any particular results or the reliability, accuracy or completeness of any information provided in connection with the UBC Services. We strive for accuracy in all our information, but the information provided in connection with the UBC Services could include technical inaccuracies or other errors.
