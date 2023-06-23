@@ -1,7 +1,6 @@
 package ubic.gemma.web.util;
 
 import org.apache.commons.lang3.StringUtils;
-import ubic.gemma.persistence.util.Settings;
 
 import javax.servlet.ServletContext;
 
@@ -24,7 +23,7 @@ public class AnchorTagUtil {
     }
 
     public static String getBioMaterialLink( Long bmId, String link, ServletContext servletContext ) {
-        return AnchorTagUtil.getBioMaterialLink( bmId, link, null );
+        return AnchorTagUtil.getBioMaterialLink( bmId, link, null, servletContext );
     }
 
     public static String getBioMaterialLink( Long bmId, String link, String hover, ServletContext servletContext ) {

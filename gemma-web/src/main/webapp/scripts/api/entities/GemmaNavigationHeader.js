@@ -582,7 +582,7 @@ Gemma.GemmaNavigationHeader = Ext
                          xtype : 'box',
                          autoEl : {
                             tag : 'a',
-                            href : 'http://www.ubc.ca/',
+                            href : 'https://www.ubc.ca/',
                             cn : '<img src="' + ctxBasePath + '/images/logo/ubcgrey_logo_40.png"/>',
                             style : 'padding-left:15px; padding-right:10px'
                          }

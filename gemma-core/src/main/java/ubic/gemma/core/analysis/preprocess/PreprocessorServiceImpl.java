@@ -14,13 +14,9 @@
  */
 package ubic.gemma.core.analysis.preprocess;
 
-import java.util.Collection;
-import java.util.LinkedList;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -46,6 +42,9 @@ import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.expression.experiment.GeeqService;
+
+import java.util.Collection;
+import java.util.LinkedList;
 
 @Service
 public class PreprocessorServiceImpl implements PreprocessorService {
@@ -238,8 +237,12 @@ public class PreprocessorServiceImpl implements PreprocessorService {
     /**
      * Create the heatmaps used to judge similarity among samples.
      */
-    private void processForSampleCorrelation( ExpressionExperiment ee ) {
-        sampleCoexpressionAnalysisService.compute( ee );
+    private void processForSampleCorrelation( ExpressionExperiment ee ) throws SampleCoexpressionRelatedPreprocessingException {
+        try {
+            sampleCoexpressionAnalysisService.compute( ee );
+        } catch ( RuntimeException e ) {
+            throw new SampleCoexpressionRelatedPreprocessingException( ee, e );
+        }
     }
 
     private void removeInvalidatedData( ExpressionExperiment expExp ) {

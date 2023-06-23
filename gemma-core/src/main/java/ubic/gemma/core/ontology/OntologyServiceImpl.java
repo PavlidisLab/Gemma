@@ -38,6 +38,7 @@ import ubic.basecode.ontology.search.OntologySearchException;
 import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.core.ontology.providers.GemmaOntologyService;
 import ubic.gemma.core.ontology.providers.GeneOntologyService;
+import ubic.gemma.core.ontology.providers.MondoOntologyService;
 import ubic.gemma.core.ontology.providers.OntologyServiceFactory;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.search.SearchResult;
@@ -100,7 +101,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
     @Autowired
     private ChebiOntologyService chebiOntologyService;
     @Autowired
-    private DiseaseOntologyService diseaseOntologyService;
+    private MondoOntologyService diseaseOntologyService;
     @Autowired
     private ExperimentalFactorOntologyService experimentalFactorOntologyService;
     @Deprecated
@@ -467,7 +468,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
     }
 
     @Override
-    public DiseaseOntologyService getDiseaseOntologyService() {
+    public MondoOntologyService getDiseaseOntologyService() {
         return diseaseOntologyService;
     }
 

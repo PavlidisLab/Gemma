@@ -697,7 +697,7 @@ public class GeeqServiceImpl extends AbstractVoEnabledService<Geeq, GeeqValueObj
     private DoubleMatrix<BioAssay, BioAssay> getCormat( ExpressionExperiment ee, Geeq gq ) {
         DoubleMatrix<BioAssay, BioAssay> cormat = null;
         try {
-            cormat = sampleCoexpressionAnalysisService.loadTryRegressedThenFull( ee );
+            cormat = sampleCoexpressionAnalysisService.loadBestMatrix( ee );
         } catch ( IllegalStateException e ) {
             log.warn(
                     GeeqServiceImpl.LOG_PREFIX + GeeqServiceImpl.ERR_MSG_CORMAT_MISSING_VALS + ee.getId() );

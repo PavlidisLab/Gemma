@@ -86,6 +86,16 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     private static final int MAX_PHENOTYPES_FROM_ONTOLOGY = 100;
     private static final String ERROR_MSG_ONTOLOGIES_NOT_LOADED = "Ontologies are not fully loaded yet, try again soon";
     private static final Log log = LogFactory.getLog( PhenotypeAssociationManagerServiceImpl.class );
+
+    /**
+     * Ontology roots or terms we do not want to propagate the parents of.
+     */
+    private static final String[] ROOTS = {
+            "http://purl.obolibrary.org/obo/MONDO_0000001",
+            "http://purl.obolibrary.org/obo/HP_0000001",
+            "http://purl.obolibrary.org/obo/MP_0000001"
+    };
+
     @Autowired
     private PhenotypeAssociationService phenoAssocService;
 
@@ -1847,7 +1857,13 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
         OntologyTerm ontologyTerm = this.ontologyHelper.findOntologyTermByUri( tc.getValueUri() );
 
-        Collection<OntologyTerm> ontologyParents = ontologyTerm.getParents( true );
+        // MONDO has BFO as parent, but it's not loaded
+        Collection<OntologyTerm> ontologyParents;
+        if ( StringUtils.containsAnyIgnoreCase( ontologyTerm.getUri(), ROOTS ) ) {
+            ontologyParents = Collections.emptySet();
+        } else {
+            ontologyParents = ontologyTerm.getParents( true );
+        }
 
         if ( !ontologyParents.isEmpty() ) {
 

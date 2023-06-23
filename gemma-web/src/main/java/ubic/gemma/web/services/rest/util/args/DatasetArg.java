@@ -5,8 +5,6 @@ import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.core.analysis.preprocess.OutlierDetails;
 import ubic.gemma.core.analysis.preprocess.OutlierDetectionService;
-import ubic.gemma.core.analysis.preprocess.filter.FilteringException;
-import ubic.gemma.core.analysis.preprocess.filter.NoRowsLeftAfterFilteringException;
 import ubic.gemma.model.common.description.AnnotationValueObject;
 import ubic.gemma.model.common.quantitationtype.QuantitationTypeValueObject;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
@@ -18,6 +16,7 @@ import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.web.services.rest.util.MalformedArgException;
 
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -86,18 +85,15 @@ public abstract class DatasetArg<T>
             BioAssayService baService, OutlierDetectionService outlierDetectionService ) {
         ExpressionExperiment ee = service.thawBioAssays( this.getEntity( service ) );
         List<BioAssayValueObject> bioAssayValueObjects = baService.loadValueObjects( ee.getBioAssays(), true );
-        try {
-            Set<Long> predictedOutlierBioAssayIds = outlierDetectionService.identifyOutliersByMedianCorrelation( ee ).stream()
+        Collection<OutlierDetails> outlierDetails = outlierDetectionService.getOutlierDetails( ee );
+        if ( outlierDetails != null ) {
+            Set<Long> predictedOutlierBioAssayIds = outlierDetails.stream()
                     .map( OutlierDetails::getBioAssay )
                     .map( BioAssay::getId )
                     .collect( Collectors.toSet() );
             for ( BioAssayValueObject vo : bioAssayValueObjects ) {
                 vo.setPredictedOutlier( predictedOutlierBioAssayIds.contains( vo.getId() ) );
             }
-        } catch ( NoRowsLeftAfterFilteringException e ) {
-            // there are no rows left in the data matrix, thus no outliers ;o
-        } catch ( FilteringException e ) {
-            throw new RuntimeException( e );
         }
         return bioAssayValueObjects;
     }

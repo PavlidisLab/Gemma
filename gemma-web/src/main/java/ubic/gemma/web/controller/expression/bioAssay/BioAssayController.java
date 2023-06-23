@@ -74,18 +74,13 @@ public class BioAssayController {
 
         ee = this.eeService.thawLite( ee );
         Collection<BioAssayValueObject> result = new HashSet<>();
-        Collection<OutlierDetails> outliers = null;
-        try {
-            outliers = outlierDetectionService.identifyOutliersByMedianCorrelation( ee );
-        } catch ( NoRowsLeftAfterFilteringException e ) {
-            outliers = Collections.emptySet();
-        } catch ( FilteringException e ) {
-            throw new RuntimeException( e );
-        }
-        Map<Long, OutlierDetails> outlierMap = EntityUtils.getNestedPropertyMap( outliers, "bioAssay", "id" );
+        Collection<OutlierDetails> outliers = outlierDetectionService.getOutlierDetails( ee );
 
-        for ( BioAssay assay : ee.getBioAssays() ) {
-            result.add( new BioAssayValueObject( assay, false, outlierMap.containsKey( assay.getId() ) ) );
+        if ( outliers != null ) {
+            Map<Long, OutlierDetails> outlierMap = EntityUtils.getNestedPropertyMap( outliers, "bioAssay", "id" );
+            for ( BioAssay assay : ee.getBioAssays() ) {
+                result.add( new BioAssayValueObject( assay, false, outlierMap.containsKey( assay.getId() ) ) );
+            }
         }
 
         BioAssayController.log.debug( "Loaded " + result.size() + " bioassays for experiment ID=" + eeId );
