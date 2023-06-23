@@ -8,6 +8,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.ContextConfiguration;
 import ubic.gemma.core.util.test.BaseDatabaseTest;
+import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.genome.Gene;
@@ -42,6 +43,7 @@ public class CompositeSequenceDaoTest extends BaseDatabaseTest {
         Taxon taxon = new Taxon();
         sessionFactory.getCurrentSession().persist( taxon );
         platform = new ArrayDesign();
+        platform.setAuditTrail( new AuditTrail() );
         platform.setPrimaryTaxon( taxon );
         sessionFactory.getCurrentSession().persist( platform );
         cs = new CompositeSequence();
