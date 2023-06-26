@@ -585,9 +585,9 @@ public class ExpressionExperimentDaoImpl
 
             if ( StringUtils.isNotBlank( c.getValueUri() ) ) {
                 // DE_include/exclude
-                if ( c.getValueUri().equals( "http://purl.obolibrary.org/obo/TGEMO_00013" ) )
+                if ( c.getValueUri().equals( "http://gemma.msl.ubc.ca/ont/TGEMO_00013" ) )
                     continue;
-                if ( c.getValueUri().equals( "http://purl.obolibrary.org/obo/TGEMO_00014" ) )
+                if ( c.getValueUri().equals( "http://gemma.msl.ubc.ca/ont/TGEMO_00014" ) )
                     continue;
             }
 
