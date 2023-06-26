@@ -35,6 +35,7 @@ import org.springframework.stereotype.Repository;
 import ubic.gemma.core.analysis.expression.diff.BaselineSelection;
 import ubic.gemma.core.analysis.util.ExperimentalDesignUtils;
 import ubic.gemma.core.util.StopWatchUtils;
+import ubic.gemma.model.association.GOEvidenceCode;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.description.AnnotationValueObject;
@@ -644,18 +645,23 @@ public class ExpressionExperimentDaoImpl
             return Collections.emptyMap();
         }
         Query q = getSessionFactory().getCurrentSession().createSQLQuery(
-                        "select {T.*}, count(distinct {T}.EXPRESSION_EXPERIMENT_FK) as EE_COUNT from EXPRESSION_EXPERIMENT2CHARACTERISTIC {T} "
-                                + AclQueryUtils.formNativeAclJoinClause( "{T}.EXPRESSION_EXPERIMENT_FK" ) + " "
-                                + "where {T}.ID is not null " // this is necessary for the clause building since there might be no clause
-                                + ( eeIds != null ? " and {T}.EXPRESSION_EXPERIMENT_FK in :eeIds " : "" )
-                                + ( level != null ? " and {T}.LEVEL = :level " : "" )
-                                + ( excludedTermUris != null && !excludedTermUris.isEmpty() ? " and {T}.VALUE_URI not in :excludedTermUris and {T}.CATEGORY_URI not in :excludedTermUris" : "" )
+                        "select T.`VALUE`, T.VALUE_URI, T.CATEGORY, T.CATEGORY_URI, T.EVIDENCE_CODE, count(distinct T.EXPRESSION_EXPERIMENT_FK) as EE_COUNT from EXPRESSION_EXPERIMENT2CHARACTERISTIC T "
+                                + AclQueryUtils.formNativeAclJoinClause( "T.EXPRESSION_EXPERIMENT_FK" ) + " "
+                                + "where T.ID is not null " // this is necessary for the clause building since there might be no clause
+                                + ( eeIds != null ? " and T.EXPRESSION_EXPERIMENT_FK in :eeIds " : "" )
+                                + ( level != null ? " and T.LEVEL = :level " : "" )
+                                + ( excludedTermUris != null && !excludedTermUris.isEmpty() ? " and T.VALUE_URI not in :excludedTermUris and T.CATEGORY_URI not in :excludedTermUris" : "" )
                                 + AclQueryUtils.formNativeAclRestrictionClause( ( SessionFactoryImplementor ) getSessionFactory() ) + " "
-                                + "group by COALESCE({T}.CATEGORY_URI, {T}.CATEGORY), COALESCE({T}.VALUE_URI, {T}.VALUE) "
+                                + "group by COALESCE(T.CATEGORY_URI, T.CATEGORY), COALESCE(T.VALUE_URI, T.`VALUE`) "
                                 + "having EE_COUNT >= :minFrequency "
-                                + ( retainedTermUris != null && !retainedTermUris.isEmpty() ? "or {T}.VALUE_URI in :retainedTermUris " : "" )
+                                + ( retainedTermUris != null && !retainedTermUris.isEmpty() ? "or T.VALUE_URI in :retainedTermUris " : "" )
                                 + "order by EE_COUNT desc" )
-                .addEntity( "T", Characteristic.class )
+                .addScalar( "T.CATEGORY_URI", StandardBasicTypes.STRING )
+                .addScalar( "T.CATEGORY", StandardBasicTypes.STRING )
+                .addScalar( "T.VALUE_URI", StandardBasicTypes.STRING )
+                .addScalar( "T.VALUE", StandardBasicTypes.STRING )
+                // FIXME: use an EnumType for converting
+                .addScalar( "T.EVIDENCE_CODE", StandardBasicTypes.STRING )
                 .addScalar( "EE_COUNT", StandardBasicTypes.LONG )
                 .setCacheable( true )
                 .setMaxResults( maxResults );
@@ -675,9 +681,18 @@ public class ExpressionExperimentDaoImpl
         AclQueryUtils.addAclParameters( q, ExpressionExperiment.class );
         //noinspection unchecked
         List<Object[]> result = q.list();
-        return result.stream()
-                .limit( maxResults > 0 ? maxResults : Long.MAX_VALUE )
-                .collect( Collectors.toMap( row -> ( Characteristic ) row[0], row -> ( Long ) row[1] ) );
+        TreeMap<Characteristic, Long> byC = new TreeMap<>( Characteristic.getByCategoryAndValueComparator() );
+        for ( Object[] row : result ) {
+            GOEvidenceCode evidenceCode;
+            try {
+                evidenceCode = row[4] != null ? GOEvidenceCode.valueOf( ( String ) row[4] ) : null;
+            } catch ( IllegalArgumentException e ) {
+                evidenceCode = null;
+            }
+            Characteristic c = Characteristic.Factory.newInstance( null, null, ( String ) row[0], ( String ) row[1], ( String ) row[2], ( String ) row[3], evidenceCode );
+            byC.put( c, ( Long ) row[5] );
+        }
+        return byC;
     }
 
     @Override
