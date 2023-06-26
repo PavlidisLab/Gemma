@@ -159,7 +159,7 @@ public class CacheMonitorImpl implements CacheMonitor, InitializingBean {
             String align;
             if ( header.equals( "Name" ) ) {
                 align = "left";
-            } else if ( header.endsWith( "?" ) || header.equals( "Life Time" ) || header.equals( "Idle Time" ) ) {
+            } else if ( header.endsWith( "?" ) ) {
                 align = "center";
             } else {
                 align = "right";
@@ -230,8 +230,7 @@ public class CacheMonitorImpl implements CacheMonitor, InitializingBean {
 
         if ( eternal ) {
             // timeouts are irrelevant.
-            buf.append( "<td style=\"text-align: center;\">&infin;</td>" );
-            buf.append( "<td style=\"text-align: center;\">&infin;</td>" );
+            buf.append( "<td style=\"text-align: center;\" colspan=\"2\">&infin;</td>" );
         } else {
             buf.append( "<td style=\"text-align: right;\">" ).append( cacheConfiguration.getTimeToLiveSeconds() > 0 ? numberFormat.format( cacheConfiguration.getTimeToLiveSeconds() ) + " s" : "" ).append( "</td>" );
             buf.append( "<td style=\"text-align: right;\">" ).append( cacheConfiguration.getTimeToIdleSeconds() > 0 ? numberFormat.format( cacheConfiguration.getTimeToIdleSeconds() ) + " s" : "" ).append( "</td>" );
