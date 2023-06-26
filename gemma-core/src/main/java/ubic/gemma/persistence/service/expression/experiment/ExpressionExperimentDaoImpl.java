@@ -656,10 +656,10 @@ public class ExpressionExperimentDaoImpl
                                 + "having EE_COUNT >= :minFrequency "
                                 + ( retainedTermUris != null && !retainedTermUris.isEmpty() ? "or T.VALUE_URI in :retainedTermUris " : "" )
                                 + "order by EE_COUNT desc" )
-                .addScalar( "T.CATEGORY_URI", StandardBasicTypes.STRING )
-                .addScalar( "T.CATEGORY", StandardBasicTypes.STRING )
-                .addScalar( "T.VALUE_URI", StandardBasicTypes.STRING )
                 .addScalar( "T.VALUE", StandardBasicTypes.STRING )
+                .addScalar( "T.VALUE_URI", StandardBasicTypes.STRING )
+                .addScalar( "T.CATEGORY", StandardBasicTypes.STRING )
+                .addScalar( "T.CATEGORY_URI", StandardBasicTypes.STRING )
                 // FIXME: use an EnumType for converting
                 .addScalar( "T.EVIDENCE_CODE", StandardBasicTypes.STRING )
                 .addScalar( "EE_COUNT", StandardBasicTypes.LONG )
