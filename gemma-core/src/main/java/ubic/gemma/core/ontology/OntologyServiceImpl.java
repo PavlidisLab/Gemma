@@ -30,7 +30,9 @@ import org.springframework.core.io.Resource;
 import org.springframework.core.task.AsyncTaskExecutor;
 import org.springframework.core.task.TaskExecutor;
 import org.springframework.stereotype.Service;
-import ubic.basecode.ontology.model.*;
+import ubic.basecode.ontology.model.AnnotationProperty;
+import ubic.basecode.ontology.model.OntologyTerm;
+import ubic.basecode.ontology.model.OntologyTermSimple;
 import ubic.basecode.ontology.providers.ExperimentalFactorOntologyService;
 import ubic.basecode.ontology.providers.FMAOntologyService;
 import ubic.basecode.ontology.providers.NIFSTDOntologyService;
@@ -248,22 +250,6 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
     }
 
     @Override
-    public Set<OntologyIndividual> findIndividuals( String givenSearch ) throws OntologySearchException {
-        String query = OntologySearch.stripInvalidCharacters( givenSearch );
-        return searchInThreads( ontology -> {
-            StopWatch timer = StopWatch.createStarted();
-            try {
-                return ontology.findIndividuals( query );
-            } finally {
-                if ( timer.getTime( TimeUnit.MILLISECONDS ) > 100 ) {
-                    log.warn( String.format( "Finding individuals for ontology %s for input query '%s' took %d ms",
-                            ontology, givenSearch, timer.getTime( TimeUnit.MILLISECONDS ) ) );
-                }
-            }
-        } );
-    }
-
-    @Override
     public Collection<Characteristic> findTermAsCharacteristic( String search ) throws OntologySearchException {
         return convert( new HashSet<>( findTerms( search ) ) );
     }
@@ -337,8 +323,8 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
         // get ontology terms
         Set<CharacteristicValueObject> ontologySearchResults = new HashSet<>();
         ontologySearchResults.addAll( searchInThreads( service -> {
-            Collection<OntologyResource> results2;
-            results2 = service.findResources( queryString );
+            Collection<OntologyTerm> results2;
+            results2 = service.findTerm( queryString );
             if ( results2.isEmpty() )
                 return Collections.emptySet();
             return CharacteristicValueObject.characteristic2CharacteristicVO( this.termsToCharacteristics( results2 ) );
@@ -420,13 +406,8 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
     }
 
     @Override
-    public OntologyResource getResource( String uri ) {
-        return findFirst( ontology -> ontology.getResource( uri ) );
-    }
-
-    @Override
     public String getDefinition( String uri ) {
-        if (uri == null) return null;
+        if ( uri == null ) return null;
         OntologyTerm ot = this.getTerm( uri );
         if ( ot != null ) {
             for ( AnnotationProperty ann : ot.getAnnotations() ) {
@@ -553,14 +534,14 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
      * Convert raw ontology resources into Characteristics.
      */
     @Override
-    public Collection<Characteristic> termsToCharacteristics( final Collection<? extends OntologyResource> terms ) {
+    public Collection<Characteristic> termsToCharacteristics( final Collection<OntologyTerm> terms ) {
 
         Collection<Characteristic> results = new HashSet<>();
 
         if ( ( terms == null ) || ( terms.isEmpty() ) )
             return results;
 
-        for ( OntologyResource term : terms ) {
+        for ( OntologyTerm term : terms ) {
 
             if ( term == null )
                 continue;
@@ -633,7 +614,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
         return vos;
     }
 
-    private Characteristic termToCharacteristic( OntologyResource res ) {
+    private Characteristic termToCharacteristic( OntologyTerm res ) {
         if ( res.isObsolete() ) {
             OntologyServiceImpl.log.warn( "Skipping an obsolete term: " + res.getLabel() + " / " + res.getUri() );
             return null;
@@ -642,16 +623,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
         Characteristic vc = Characteristic.Factory.newInstance();
         vc.setValue( res.getLabel() );
         vc.setValueUri( res.getUri() );
-
-        if ( res instanceof OntologyTerm ) {
-            OntologyTerm term = ( OntologyTerm ) res;
-            vc.setDescription( term.getComment() );
-        } else if ( res instanceof OntologyIndividual ) {
-            vc.setDescription( "Individual" );
-        } else {
-            OntologyServiceImpl.log.warn( "This is neither an OntologyTerm or an OntologyIndividual: " + res );
-            return null;
-        }
+        vc.setDescription( res.getComment() );
 
         if ( vc.getValue() == null ) {
             OntologyServiceImpl.log
@@ -665,14 +637,14 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
     /**
      * Given a collection of ontology terms converts them to a collection of Characteristics
      */
-    private Collection<Characteristic> convert( final Collection<OntologyResource> resources ) {
+    private Collection<Characteristic> convert( final Collection<OntologyTerm> resources ) {
 
         Collection<Characteristic> converted = new HashSet<>();
 
         if ( ( resources == null ) || ( resources.isEmpty() ) )
             return converted;
 
-        for ( OntologyResource res : resources ) {
+        for ( OntologyTerm res : resources ) {
             Characteristic vc = Characteristic.Factory.newInstance();
 
             // If there is no URI we don't want to send it back (ie useless)
@@ -681,14 +653,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
 
             vc.setValue( res.getLabel() );
             vc.setValueUri( res.getUri() );
-
-            if ( res instanceof OntologyTerm ) {
-                OntologyTerm term = ( OntologyTerm ) res;
-                vc.setDescription( term.getComment() );
-            }
-            if ( res instanceof OntologyIndividual ) {
-                vc.setDescription( "Individual" );
-            }
+            vc.setDescription( res.getComment() );
 
             converted.add( vc );
         }

@@ -14,8 +14,6 @@
  */
 package ubic.gemma.core.ontology;
 
-import ubic.basecode.ontology.model.OntologyIndividual;
-import ubic.basecode.ontology.model.OntologyResource;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.basecode.ontology.search.OntologySearchException;
 import ubic.gemma.core.search.SearchException;
@@ -58,8 +56,6 @@ public interface OntologyService {
     Collection<CharacteristicValueObject> findExperimentsCharacteristicTags( String searchQuery,
             boolean useNeuroCartaOntology ) throws OntologySearchException;
 
-    Collection<OntologyIndividual> findIndividuals( String givenSearch ) throws OntologySearchException;
-
     /**
      * Given a search string will look through the Mged, birnlex, obo Disease Ontology and FMA Ontology for terms that
      * match the search term. this a lucene backed search, is inexact and for general terms can return a lot of results.
@@ -82,8 +78,7 @@ public interface OntologyService {
     /**
      * Given a search string will first look through the characteristic database for any entries that have a match. If a
      * ontologyTermURI is given it will add all the individuals from that URI that match the search term criteria to the
-     * returned list also. Then will search the loaded ontologies for OntologyResources (Terms and Individuals) that
-     * match the search term exactly
+     * returned list also.
      *
      * @param  taxon            Only used if we're going to search for genes or taxon is otherwise relevant; if null,
      *                          restriction is
@@ -112,16 +107,9 @@ public interface OntologyService {
 
     /**
      * @param  uri uri
-     * @return the OntologyResource
-     */
-    @Nullable
-    OntologyResource getResource( String uri );
-
-    /**
-     * @param  uri uri
      * @return the definition of the associated OntologyTerm. This requires that the ontology be loaded.
      */
-    String getDefinition(String uri);
+    String getDefinition( String uri );
 
     /**
      * @param  uri uri
@@ -158,5 +146,5 @@ public interface OntologyService {
      */
     void saveBioMaterialStatement( Characteristic vc, BioMaterial bm );
 
-    Collection<Characteristic> termsToCharacteristics( Collection<? extends OntologyResource> terms );
+    Collection<Characteristic> termsToCharacteristics( Collection<OntologyTerm> terms );
 }

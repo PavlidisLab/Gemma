@@ -82,9 +82,7 @@ public class SearchServiceTest extends AbstractJUnit4SpringContextTests {
     public void searchExpressionExperiment_whenQueryHasMultipleClauses_thenParseAccordingly() throws SearchException, OntologySearchException {
         SearchSettings settings = SearchSettings.expressionExperimentSearch( "cancer AND liver" );
         searchService.search( settings );
-        verify( ontologyService ).findIndividuals( "cancer" );
         verify( ontologyService ).findTerms( "cancer" );
-        verify( ontologyService ).findIndividuals( "liver" );
         verify( ontologyService ).findTerms( "liver" );
     }
 
@@ -96,8 +94,7 @@ public class SearchServiceTest extends AbstractJUnit4SpringContextTests {
                 .maxResults( 10 )
                 .build();
         searchService.search( settings );
-        verify( ontologyService ).getResource( "http://purl.obolibrary.org/obo/DOID_14602" );
-        verify( ontologyService ).findIndividuals( "http://purl.obolibrary.org/obo/DOID_14602" );
+        verify( ontologyService ).getTerm( "http://purl.obolibrary.org/obo/DOID_14602" );
         verify( ontologyService ).findTerms( "http://purl.obolibrary.org/obo/DOID_14602" );
         verifyNoMoreInteractions( ontologyService );
         verify( characteristicService ).findExperimentsByUris( Collections.singleton( "http://purl.obolibrary.org/obo/DOID_14602" ), null, 10, true, false );

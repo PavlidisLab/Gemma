@@ -73,7 +73,7 @@ public class OntologySearchSourceTest extends AbstractJUnit4SpringContextTests {
         OntologyTerm term = new OntologyTermSimple( "http://purl.obolibrary.org/obo/CL_0000129", "microglial cell" );
         ExpressionExperiment ee = new ExpressionExperiment();
         ee.setId( 1L );
-        when( ontologyService.getResource( "http://purl.obolibrary.org/obo/CL_0000129" ) )
+        when( ontologyService.getTerm( "http://purl.obolibrary.org/obo/CL_0000129" ) )
                 .thenReturn( term );
         when( characteristicService.findExperimentsByUris( Collections.singleton( "http://purl.obolibrary.org/obo/CL_0000129" ), null, 5000, true, false ) )
                 .thenReturn( Collections.singletonMap( ExpressionExperiment.class,
@@ -86,7 +86,6 @@ public class OntologySearchSourceTest extends AbstractJUnit4SpringContextTests {
                         return String.format( "[%s](%s)", termLabel, termUri );
                     }
                 } ) );
-        verify( ontologyService ).findIndividuals( "http://purl.obolibrary.org/obo/CL_0000129" );
         verify( ontologyService ).findTerms( "http://purl.obolibrary.org/obo/CL_0000129" );
         verify( characteristicService ).findExperimentsByUris( Collections.singleton( "http://purl.obolibrary.org/obo/CL_0000129" ), null, 5000, true, false );
         assertThat( results ).anySatisfy( result -> {
@@ -113,7 +112,6 @@ public class OntologySearchSourceTest extends AbstractJUnit4SpringContextTests {
                         return String.format( "[%s](%s)", termLabel, termUri );
                     }
                 } ) );
-        verify( ontologyService ).findIndividuals( "http://purl.obolibrary.org/obo/CL_0000129" );
         verify( ontologyService ).findTerms( "http://purl.obolibrary.org/obo/CL_0000129" );
         verify( characteristicService ).findBestByUri( "http://purl.obolibrary.org/obo/CL_0000129" );
         verify( characteristicService ).findExperimentsByUris( Collections.singleton( "http://purl.obolibrary.org/obo/CL_0000129" ), null, 5000, true, false );

@@ -9,9 +9,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
-import ubic.basecode.ontology.model.OntologyIndividual;
-import ubic.basecode.ontology.model.OntologyResource;
-import ubic.basecode.ontology.model.OntologyTerm;
+import ubic.basecode.ontology.model.*;
 import ubic.basecode.ontology.search.OntologySearchException;
 import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.core.search.*;
@@ -51,46 +49,29 @@ public class OntologySearchSource implements SearchSource {
 
         Set<SearchResult<ExpressionExperiment>> results = new SearchResultSet<>();
 
-        Collection<OntologyResource> terms = new HashSet<>();
+        Collection<OntologyTerm> terms = new HashSet<>();
 
-        // Phase 0: If the query is a term, find it
+        // f the query is a term, find it
         if ( settings.isTermQuery() ) {
             String termUri = settings.getQuery();
-            OntologyResource resource;
-            OntologyResource r2 = ontologyService.getResource( termUri );
+            OntologyTerm resource;
+            OntologyTerm r2 = ontologyService.getTerm( termUri );
             if ( r2 != null ) {
-                resource = new SimpleOntologyResourceWithScore( r2, 1.0 );
+                resource = new SimpleOntologyTermWithScore( r2, 1.0 );
             } else {
                 // attempt to guess a label from othe database
                 Characteristic c = characteristicService.findBestByUri( settings.getQuery() );
                 if ( c != null ) {
                     assert c.getValueUri() != null;
-                    resource = new SimpleOntologyResourceWithScore( c.getValueUri(), c.getValue(), 1.0 );
+                    resource = new SimpleOntologyTermWithScore( c.getValueUri(), c.getValue(), 1.0 );
                 } else {
-                    resource = new SimpleOntologyResourceWithScore( termUri, getLabelFromTermUri( termUri ), 1.0 );
+                    resource = new SimpleOntologyTermWithScore( termUri, getLabelFromTermUri( termUri ), 1.0 );
                 }
             }
             terms.add( resource );
         }
 
-        // Phase 1: We first search for individuals.
-        Collection<OntologyIndividual> individuals;
-        try {
-            timer.start();
-            individuals = ontologyService.findIndividuals( settings.getQuery() );
-            terms.addAll( individuals );
-        } catch ( OntologySearchException e ) {
-            throw new BaseCodeOntologySearchException( e );
-        } finally {
-            timer.stop();
-        }
-
-        if ( timer.getTime() > 100 ) {
-            log.warn( String.format( "Found %d terms (individual) matching '%s' in %d ms",
-                    individuals.size(), settings.getQuery(), timer.getTime() ) );
-        }
-
-        // Phase 2: Search ontology classes matches to the query
+        // Search ontology classes matches to the query
         timer.reset();
         timer.start();
         Collection<OntologyTerm> matchingTerms;
@@ -107,9 +88,7 @@ public class OntologySearchSource implements SearchSource {
                     matchingTerms.size(), settings.getQuery(), timer.getTime() ) );
         }
 
-        /*
-         * Search for child terms.
-         */
+        // Search for child terms.
         if ( !matchingTerms.isEmpty() ) {
             // TODO: move this logic in baseCode, this can be done far more efficiently with Jena API
             timer.reset();
@@ -144,25 +123,25 @@ public class OntologySearchSource implements SearchSource {
         return results;
     }
 
-    private void findExperimentsByTerms( Collection<? extends OntologyResource> individuals, Set<SearchResult<ExpressionExperiment>> results, SearchSettings settings ) {
+    private void findExperimentsByTerms( Collection<OntologyTerm> terms, Set<SearchResult<ExpressionExperiment>> results, SearchSettings settings ) {
         // URIs are case-insensitive in the database, so should be the mapping to labels
         Collection<String> uris = new HashSet<>();
         Map<String, String> uri2value = new TreeMap<>( String.CASE_INSENSITIVE_ORDER );
         Map<String, Double> uri2score = new TreeMap<>( String.CASE_INSENSITIVE_ORDER );
 
         // renormalize the scores in a [0, 1] range
-        DoubleSummaryStatistics summaryStatistics = individuals.stream()
-                .map( OntologyResource::getScore )
+        DoubleSummaryStatistics summaryStatistics = terms.stream()
+                .map( OntologyTerm::getScore )
                 .filter( Objects::nonNull )
                 .mapToDouble( s -> s )
                 .summaryStatistics();
 
-        for ( OntologyResource individual : individuals ) {
+        for ( OntologyTerm term : terms ) {
             // bnodes can have null URIs, how annoying...
-            if ( individual.getUri() != null ) {
-                uris.add( individual.getUri() );
-                uri2value.put( individual.getUri(), individual.getLabel() );
-                uri2score.put( individual.getUri(), individual.getScore() != null ? individual.getScore() / summaryStatistics.getMax() : summaryStatistics.getAverage() / summaryStatistics.getMax() );
+            if ( term.getUri() != null ) {
+                uris.add( term.getUri() );
+                uri2value.put( term.getUri(), term.getLabel() );
+                uri2score.put( term.getUri(), term.getScore() != null ? term.getScore() / summaryStatistics.getMax() : summaryStatistics.getAverage() / summaryStatistics.getMax() );
             }
         }
 
@@ -253,7 +232,7 @@ public class OntologySearchSource implements SearchSource {
     /**
      * Simple ontology resource with a score.
      */
-    private static class SimpleOntologyResourceWithScore implements OntologyResource {
+    private static class SimpleOntologyTermWithScore implements OntologyTerm {
 
         private static final Comparator<OntologyResource> COMPARATOR = Comparator
                 .comparing( OntologyResource::getScore, Comparator.nullsLast( Comparator.reverseOrder() ) )
@@ -263,13 +242,13 @@ public class OntologySearchSource implements SearchSource {
         private final String label;
         private final double score;
 
-        private SimpleOntologyResourceWithScore( String uri, String label, double score ) {
+        private SimpleOntologyTermWithScore( String uri, String label, double score ) {
             this.uri = uri;
             this.label = label;
             this.score = score;
         }
 
-        public SimpleOntologyResourceWithScore( OntologyResource resource, double score ) {
+        public SimpleOntologyTermWithScore( OntologyTerm resource, double score ) {
             this.uri = resource.getUri();
             this.label = resource.getLabel();
             this.score = score;
@@ -298,6 +277,66 @@ public class OntologySearchSource implements SearchSource {
         @Override
         public int compareTo( OntologyResource ontologyResource ) {
             return Objects.compare( this, ontologyResource, COMPARATOR );
+        }
+
+        @Override
+        public Collection<String> getAlternativeIds() {
+            return null;
+        }
+
+        @Override
+        public Collection<AnnotationProperty> getAnnotations() {
+            return null;
+        }
+
+        @Override
+        public Collection<OntologyTerm> getChildren( boolean direct, boolean includeAdditionalProperties, boolean keepObsoletes ) {
+            return null;
+        }
+
+        @Override
+        public String getComment() {
+            return null;
+        }
+
+        @Override
+        public Collection<OntologyIndividual> getIndividuals( boolean direct ) {
+            return null;
+        }
+
+        @Override
+        public String getLocalName() {
+            return null;
+        }
+
+        @Override
+        public Object getModel() {
+            return null;
+        }
+
+        @Override
+        public Collection<OntologyTerm> getParents( boolean direct, boolean includeAdditionalProperties, boolean keepObsoletes ) {
+            return null;
+        }
+
+        @Override
+        public Collection<OntologyRestriction> getRestrictions() {
+            return null;
+        }
+
+        @Override
+        public String getTerm() {
+            return null;
+        }
+
+        @Override
+        public boolean isRoot() {
+            return false;
+        }
+
+        @Override
+        public boolean isTermObsolete() {
+            return false;
         }
     }
 }
