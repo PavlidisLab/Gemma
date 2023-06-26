@@ -348,7 +348,6 @@ public class DatasetsWebService {
 
         String uri;
         String name;
-        @JsonInclude(JsonInclude.Include.NON_NULL)
         Set<OntologyTermValueObject> parentTerms;
 
         public OntologyTermValueObject( OntologyTerm ontologyTerm, Set<OntologyTermValueObject> parentTerms ) {
@@ -375,6 +374,7 @@ public class DatasetsWebService {
          * URIs of parent terms.
          */
         @Nullable
+        @JsonInclude(JsonInclude.Include.NON_NULL)
         Set<OntologyTermValueObject> parentTerms;
 
         public AnnotationWithUsageStatisticsValueObject( Characteristic c, Long numberOfExpressionExperiments, @Nullable Set<OntologyTermValueObject> parentTerms ) {
