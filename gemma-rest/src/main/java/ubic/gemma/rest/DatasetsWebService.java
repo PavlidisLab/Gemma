@@ -177,26 +177,25 @@ public class DatasetsWebService {
             Filters filtersWithSearchResultIds = Filters.by( filters )
                     .and( datasetArgService.getFilterForSearchQuery( query, minScore, new Highlighter( request.getLocale() ), results ) );
             results.forEach( e -> resultById.put( e.getResultId(), e ) );
-            if ( "id".equals( sort.getPropertyName() ) && Sort.Direction.ASC.equals( sort.getDirection() ) ) {
-                List<Long> ids = expressionExperimentService.loadIds( filtersWithSearchResultIds, null );
-                // sort IDs by score, descending
-                ids.sort( Comparator.comparingDouble( i -> -resultById.get( i ).getScore() ) );
-                // slice the ranked IDs
-                List<Long> idsSlice;
-                try {
-                    idsSlice = ids.subList( offset, Math.min( offset + limit, ids.size() ) );
-                } catch ( IndexOutOfBoundsException e ) {
-                    idsSlice = Collections.emptyList();
-                }
-                List<ExpressionExperimentValueObject> vos = expressionExperimentService.loadValueObjectsByIds( idsSlice, true );
-                return Responder.paginate(
-                        new Slice<>( vos, Sort.by( null, "searchResult.score", Sort.Direction.DESC ), offset, limit, ( long ) ids.size() )
-                                .map( vo -> new ExpressionExperimentWithSearchResultValueObject( vo, resultById.get( vo.getId() ) ) ),
-                        filters, new String[] { "id" } );
+            List<Long> ids = expressionExperimentService.loadIds( filtersWithSearchResultIds, null );
+            // sort IDs by score, descending
+            ids.sort( Comparator.comparingDouble( i -> -resultById.get( i ).getScore() ) );
+            // slice the ranked IDs
+            List<Long> idsSlice;
+            if ( offset < ids.size() ) {
+                idsSlice = ids.subList( offset, Math.min( offset + limit, ids.size() ) );
+            } else {
+                idsSlice = Collections.emptyList();
             }
+            List<ExpressionExperimentValueObject> vos = expressionExperimentService.loadValueObjectsByIds( idsSlice, true );
+            return Responder.paginate(
+                    new Slice<>( vos, Sort.by( null, "searchResult.score", Sort.Direction.DESC ), offset, limit, ( long ) ids.size() )
+                            .map( vo -> new ExpressionExperimentWithSearchResultValueObject( vo, resultById.get( vo.getId() ) ) ),
+                    filters, new String[] { "id" } );
+        } else {
+            return Responder.paginate( ( filter, sort1, offset1, limit1 ) -> expressionExperimentService.loadValueObjects( filter, sort1, offset1, limit1 )
+                    .map( vo -> new ExpressionExperimentWithSearchResultValueObject( vo, resultById.get( vo.getId() ) ) ), filters, new String[] { "id" }, sort, offset, limit );
         }
-        return Responder.paginate( ( filter, sort1, offset1, limit1 ) -> expressionExperimentService.loadValueObjects( filter, sort1, offset1, limit1 )
-                .map( vo -> new ExpressionExperimentWithSearchResultValueObject( vo, resultById.get( vo.getId() ) ) ), filters, new String[] { "id" }, sort, offset, limit );
     }
 
     @Value
