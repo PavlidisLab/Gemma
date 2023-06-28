@@ -15,10 +15,12 @@
 package ubic.gemma.core.association.phenotype;
 
 import ubic.basecode.ontology.model.OntologyTerm;
+import ubic.basecode.ontology.providers.OntologyService;
 import ubic.basecode.ontology.search.OntologySearchException;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 
+import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.Set;
 
@@ -29,15 +31,15 @@ import java.util.Set;
 public interface PhenotypeAssoOntologyHelper {
 
     /**
-     * @return Gemma might be ready but the ontology thread not finish loading
+     * Returns the ontology services this helper is using.
      */
-    boolean areOntologiesAllLoaded();
+    Collection<OntologyService> getOntologyServices();
 
     /**
      * CharacteristicValueObject to Characteristic with no valueUri given
      *
      * @param  characteristicValueObject characteristic VO
-     * @return                           vocab characteristic
+     * @return vocab characteristic
      */
     Characteristic characteristicValueObject2Characteristic( CharacteristicValueObject characteristicValueObject );
 
@@ -45,15 +47,16 @@ public interface PhenotypeAssoOntologyHelper {
      * For a valueUri return the OntologyTerm found
      *
      * @param  valueUri value uri
-     * @return          ontology term
+     * @return ontology term
      */
-    OntologyTerm findOntologyTermByUri( String valueUri ) throws EntityNotFoundException;
+    @Nullable
+    OntologyTerm findOntologyTermByUri( String valueUri );
 
     /**
      * search the disease,hp and mp ontology for a searchQuery and return an ordered set of CharacteristicVO
      *
      * @param  searchQuery query
-     * @return             characteristic VOs
+     * @return characteristic VOs
      */
     Set<CharacteristicValueObject> findPhenotypesInOntology( String searchQuery ) throws OntologySearchException;
 
@@ -61,7 +64,7 @@ public interface PhenotypeAssoOntologyHelper {
      * search the disease, hp and mp ontology for OntologyTerm
      *
      * @param  searchQuery free text query?
-     * @return             terms
+     * @return terms
      */
     Collection<OntologyTerm> findValueUriInOntology( String searchQuery ) throws OntologySearchException;
 
@@ -69,8 +72,9 @@ public interface PhenotypeAssoOntologyHelper {
      * Helper method. For a valueUri return the Characteristic (represents a phenotype)
      *
      * @param  valueUri value uri
-     * @return          Characteristic
+     * @return Characteristic
      */
+    @Nullable
     Characteristic valueUri2Characteristic( String valueUri );
 
 }

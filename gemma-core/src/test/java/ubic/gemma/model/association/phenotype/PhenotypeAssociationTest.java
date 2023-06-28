@@ -16,6 +16,7 @@ package ubic.gemma.model.association.phenotype;
 
 import gemma.gsec.authentication.UserDetailsImpl;
 import org.apache.commons.lang3.RandomStringUtils;
+import org.assertj.core.api.Assertions;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -23,9 +24,12 @@ import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import ubic.basecode.ontology.model.OntologyTerm;
+import ubic.basecode.ontology.providers.HumanPhenotypeOntologyService;
+import ubic.basecode.ontology.providers.MammalianPhenotypeOntologyService;
 import ubic.basecode.ontology.search.OntologySearchException;
 import ubic.gemma.core.association.phenotype.PhenotypeAssociationManagerService;
 import ubic.gemma.core.ontology.OntologyTestUtils;
+import ubic.gemma.core.ontology.OntologyUtils;
 import ubic.gemma.core.ontology.providers.MondoOntologyService;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.security.authentication.UserManager;
@@ -66,6 +70,10 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
     private UserManager userManager;
     @Autowired
     private MondoOntologyService diseaseOntologyService;
+    @Autowired
+    private HumanPhenotypeOntologyService humanPhenotypeOntologyService;
+    @Autowired
+    private MammalianPhenotypeOntologyService mammalianPhenotypeOntologyService;
 
     private Gene gene = null;
     private LiteratureEvidenceValueObject litEvidence = null;
@@ -73,9 +81,10 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
 
     @Before
     public void setUp() throws Exception {
-        // fails if you have DO loaded
         OntologyTestUtils.initialize( diseaseOntologyService,
                 this.getClass().getResourceAsStream( "/data/loader/ontology/dotest.owl.xml" ) );
+        OntologyUtils.ensureInitialized( humanPhenotypeOntologyService );
+        OntologyUtils.ensureInitialized( mammalianPhenotypeOntologyService );
 
         // create what will be needed for tests
         this.createGene();
@@ -248,7 +257,13 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
     public void testLoadTree() {
         Collection<SimpleTreeValueObject> tree = this.phenotypeAssociationManagerService
                 .loadAllPhenotypesByTree( new EvidenceFilter() );
-        assertTrue( tree != null && tree.size() != 0 );
+        Assertions.assertThat( tree )
+                .hasSize( 3 )
+                .extracting( "valueUri" )
+                .containsExactlyInAnyOrder(
+                        "http://purl.obolibrary.org/obo/DOID_162",
+                        "http://purl.obolibrary.org/obo/DOID_14566",
+                        "http://purl.obolibrary.org/obo/DOID_4" );
     }
 
     @Test

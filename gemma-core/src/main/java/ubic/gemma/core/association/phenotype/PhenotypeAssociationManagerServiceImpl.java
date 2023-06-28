@@ -21,6 +21,7 @@ package ubic.gemma.core.association.phenotype;
 import gemma.gsec.SecurityService;
 import gemma.gsec.acl.domain.AclPrincipalSid;
 import gemma.gsec.util.SecurityUtil;
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
@@ -75,12 +76,14 @@ import java.util.Map.Entry;
 import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 
+import static java.util.Objects.requireNonNull;
+import static org.apache.commons.io.FileUtils.forceMkdir;
+
 /**
  * High Level Service used to add Candidate Gene Management System capabilities
  *
  * @author nicolas
  */
-@SuppressWarnings("SpringAutowiredFieldsWarningInspection")
 @Service
 @Deprecated
 public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociationManagerService, InitializingBean {
@@ -145,6 +148,13 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     @Override
     public void afterPropertiesSet() {
         this.pubMedXmlFetcher = new PubMedXMLFetcher();
+        Set<ubic.basecode.ontology.providers.OntologyService> disabledOntologies = ontologyHelper.getOntologyServices().stream()
+                .filter( os -> !os.isEnabled() )
+                .collect( Collectors.toSet() );
+        if ( !disabledOntologies.isEmpty() ) {
+            log.warn( String.format( "The following ontologies are required by Phenocarta are not enabled: %s.",
+                    disabledOntologies.stream().map( Object::toString ).collect( Collectors.joining( ", " ) ) ) );
+        }
     }
 
     @Override
@@ -198,6 +208,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     @Transactional(readOnly = true)
     public Collection<GeneEvidenceValueObject> findCandidateGenes( Collection<String> phenotypeValueUris,
             Taxon taxon ) {
+        checkIfAllOntologiesAreLoaded();
 
         if ( phenotypeValueUris == null || phenotypeValueUris.isEmpty() ) {
             throw new IllegalArgumentException( "No phenotypes values uri provided" );
@@ -252,6 +263,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Map<String, Collection<? extends GeneValueObject>> findCandidateGenesForEach( Set<String> phenotypeUris,
             Taxon taxon ) {
         if ( phenotypeUris == null || phenotypeUris.isEmpty() ) {
@@ -364,21 +376,25 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Collection<String> findEvidenceOwners() {
         return this.phenoAssocService.findEvidenceOwners();
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Collection<CharacteristicValueObject> findExperimentCategory() {
         return this.phenoAssocService.findEvidenceCategoryTerms();
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Collection<CharacteristicValueObject> findExperimentOntologyValue( String givenQueryString ) throws OntologySearchException {
         return this.ontologyService.findExperimentsCharacteristicTags( givenQueryString, true );
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Collection<ExternalDatabaseValueObject> findExternalDatabasesWithEvidence() {
 
         Collection<ExternalDatabaseValueObject> exDatabases = ExternalDatabaseValueObject
@@ -408,6 +424,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Map<GeneValueObject, OntologyTerm> findGenesForPhenotype( String phenotype, Long taxonId,
             boolean includeIEA ) {
 
@@ -486,11 +503,13 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Collection<PhenotypeValueObject> loadAllNeurocartaPhenotypes() {
         return this.phenoAssocService.loadAllNeurocartaPhenotypes();
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Collection<SimpleTreeValueObject> loadAllPhenotypesByTree( EvidenceFilter evidenceFilter ) {
         this.addDefaultExcludedDatabases( evidenceFilter );
 
@@ -510,6 +529,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Collection<TreeCharacteristicValueObject> loadAllPhenotypesAsTree( EvidenceFilter evidenceFilter ) {
         Collection<TreeCharacteristicValueObject> phenotypes = this
                 .findAllPhenotypesByTree( evidenceFilter, SecurityUtil.isUserAdmin(), false );
@@ -518,6 +538,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Set<DumpsValueObject> helpFindAllDumps() {
 
         Set<DumpsValueObject> dumpsValueObjects = new HashSet<>();
@@ -550,6 +571,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     }
 
     @Override
+    @Transactional(readOnly = true)
     public DiffExpressionEvidenceValueObject loadEvidenceWithGeneDifferentialExpressionMetaAnalysis(
             Long geneDifferentialExpressionMetaAnalysisId ) {
 
@@ -574,6 +596,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Collection<ExternalDatabaseStatisticsValueObject> loadNeurocartaStatistics() {
 
         // find statistics the external databases sources, each file download path depends on its name
@@ -596,8 +619,8 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
             Long geneDifferentialExpressionMetaAnalysisId, SortedSet<CharacteristicValueObject> phenotypes,
             Double selectionThreshold ) {
 
-        GeneDifferentialExpressionMetaAnalysis geneDifferentialExpressionMetaAnalysis = this.geneDiffExMetaAnalysisService
-                .load( geneDifferentialExpressionMetaAnalysisId );
+        GeneDifferentialExpressionMetaAnalysis geneDifferentialExpressionMetaAnalysis = requireNonNull( this.geneDiffExMetaAnalysisService
+                .load( geneDifferentialExpressionMetaAnalysisId ) );
 
         // check that no evidence already exists with that metaAnalysis
         Collection<DifferentialExpressionEvidence> differentialExpressionEvidence = this.phenoAssocService
@@ -680,7 +703,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         gene.getPhenotypeAssociations().add( phenotypeAssociation );
 
         if ( sw.getTime() > 100 )
-            log.info( "The create method took : " + sw + "  " + evidence.getGeneNCBI() );
+            log.warn( "The create method took : " + sw + "  " + evidence.getGeneNCBI() );
 
         return null;
     }
@@ -704,6 +727,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     }
 
     @Override
+    @Transactional
     public ValidateEvidenceValueObject removeAllEvidenceFromMetaAnalysis(
             Long geneDifferentialExpressionMetaAnalysisId ) {
 
@@ -744,6 +768,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Collection<CharacteristicValueObject> searchOntologyForPhenotypes( String searchQuery, Long geneId ) throws OntologySearchException {
         StopWatch timer = new StopWatch();
         timer.start();
@@ -870,13 +895,13 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         // limit the size of the returned phenotypes to 100 terms
         if ( orderedPhenotypesFromOntology.size() > PhenotypeAssociationManagerServiceImpl.MAX_PHENOTYPES_FROM_ONTOLOGY ) {
             if ( timer.getTime() > 1000 ) {
-                PhenotypeAssociationManagerServiceImpl.log.info( "Phenotype search: " + timer.getTime() + "ms" );
+                PhenotypeAssociationManagerServiceImpl.log.warn( "Phenotype search: " + timer.getTime() + "ms" );
             }
             return orderedPhenotypesFromOntology
                     .subList( 0, PhenotypeAssociationManagerServiceImpl.MAX_PHENOTYPES_FROM_ONTOLOGY );
         }
         if ( timer.getTime() > 1000 ) {
-            PhenotypeAssociationManagerServiceImpl.log.info( "Phenotype search: " + timer.getTime() + "ms" );
+            PhenotypeAssociationManagerServiceImpl.log.warn( "Phenotype search: " + timer.getTime() + "ms" );
         }
         return orderedPhenotypesFromOntology;
     }
@@ -973,7 +998,6 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         return validateEvidenceValueObject;
     }
 
-    @SuppressWarnings("ResultOfMethodCallIgnored") // Will know if mkdirs failed from failures of later methods
     @Override
     @Transactional(readOnly = true)
     public void writeAllEvidenceToFile() throws IOException {
@@ -1000,15 +1024,15 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
         // creates the folders if they dont exist
         File phenocartaHomeFolder = new File( PhenotypeAssociationConstants.PHENOCARTA_HOME_FOLDER_PATH );
-        phenocartaHomeFolder.mkdir();
+        forceMkdir( phenocartaHomeFolder );
         File mainFolder = new File( mainFolderPath );
-        mainFolder.mkdir();
+        forceMkdir( mainFolder );
         File datasetsFolder = new File( datasetsFolderPath );
-        datasetsFolder.mkdir();
+        forceMkdir( datasetsFolder );
         File ermineJFolder = new File( ermineJFolderPath );
-        ermineJFolder.mkdir();
+        forceMkdir( ermineJFolder );
         File ermineJWithOmimFolder = new File( ermineJWithOmimFolderPath );
-        ermineJWithOmimFolder.mkdir();
+        forceMkdir( ermineJWithOmimFolder );
 
         // this writer is the dump of all evidence
         try ( BufferedWriter fileWriterAllEvidence = new BufferedWriter(
@@ -1553,6 +1577,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
      */
     private Collection<TreeCharacteristicValueObject> findAllPhenotypesByTree( EvidenceFilter evidenceFilter,
             boolean isAdmin, boolean noElectronicAnnotation ) {
+        checkIfAllOntologiesAreLoaded();
 
         StopWatch sw = new StopWatch();
         sw.start();
@@ -1575,8 +1600,6 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         String userName;
         Collection<String> groups;
 
-        PhenotypeAssociationManagerServiceImpl.log
-                .info( "Starting loading phenotype tree" ); // note we can't cache this because varies per user.
         if ( isUserLoggedIn ) {
             userName = this.userManager.getCurrentUsername();
             // groups the user belong to
@@ -1628,6 +1651,8 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         // TreeSet? Can't we just sort at the end?]
         TreeSet<TreeCharacteristicValueObject> treesPhenotypes = new TreeSet<>();
 
+        Set<OntologyTerm> obsoleteTerms = new HashSet<>();
+
         // creates the tree structure
         for ( String valueUri : allPhenotypesGenesAssociations ) {
 
@@ -1637,46 +1662,45 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
                 // use this]
                 phenotypeFoundInTree.get( valueUri ).setDbPhenotype( true );
             } else {
-                try {
-                    // find the ontology term using the valueURI
-                    OntologyTerm ontologyTerm = this.ontologyHelper.findOntologyTermByUri( valueUri );
+                // find the ontology term using the valueURI
+                OntologyTerm ontologyTerm = this.ontologyHelper.findOntologyTermByUri( valueUri );
 
-                    // we don't show obsolete terms
-                    if ( ontologyTerm.isObsolete() ) {
-                        PhenotypeAssociationManagerServiceImpl.log
-                                .warn( "A valueUri found in the database is obsolete: " + valueUri );
-                    } else {
-
-                        // transform an OntologyTerm and his children to a TreeCharacteristicValueObject
-                        TreeCharacteristicValueObject treeCharacteristicValueObject = TreeCharacteristicValueObject
-                                .ontology2TreeCharacteristicValueObjects( ontologyTerm, phenotypeFoundInTree );
-
-                        // set flag that this node represents a phenotype used in the database
-                        treeCharacteristicValueObject.setDbPhenotype( true );
-
-                        // add tree to the phenotypes found in ontology
-                        phenotypeFoundInTree.put( ontologyTerm.getUri(), treeCharacteristicValueObject );
-
-                        if ( !treesPhenotypes.add( treeCharacteristicValueObject ) ) {
-                            throw new IllegalStateException( "Add failed for " + ontologyTerm );
-                        }
-                        if ( PhenotypeAssociationManagerServiceImpl.log.isDebugEnabled() )
-                            PhenotypeAssociationManagerServiceImpl.log.debug( "Added: " + ontologyTerm );
-
-                    }
-
-                } catch ( EntityNotFoundException entityNotFoundException ) {
-                    if ( this.ontologyHelper.areOntologiesAllLoaded() ) {
-                        if ( PhenotypeAssociationManagerServiceImpl.log.isDebugEnabled() )
-                            PhenotypeAssociationManagerServiceImpl.log.debug(
-                                    // this ends up being pretty verbose.
-                                    "A valueUri in the database was not found in the ontology; DB out of date?; valueUri: "
-                                            + valueUri, entityNotFoundException );
-                    } else {
-                        throw new RuntimeException( PhenotypeAssociationManagerServiceImpl.ERROR_MSG_ONTOLOGIES_NOT_LOADED, entityNotFoundException );
-                    }
+                if ( ontologyTerm == null ) {
+                    if ( PhenotypeAssociationManagerServiceImpl.log.isDebugEnabled() )
+                        PhenotypeAssociationManagerServiceImpl.log.debug( String.format(
+                                "A valueUri in the database was not found in the ontology; DB out of date?; valueUri: %s", valueUri ) );
+                    continue;
                 }
+
+                // we don't show obsolete terms
+                if ( ontologyTerm.isObsolete() ) {
+                    obsoleteTerms.add( ontologyTerm );
+                } else {
+
+                    // transform an OntologyTerm and his children to a TreeCharacteristicValueObject
+                    TreeCharacteristicValueObject treeCharacteristicValueObject = ontology2TreeCharacteristicValueObjects( ontologyTerm, phenotypeFoundInTree );
+
+                    // set flag that this node represents a phenotype used in the database
+                    treeCharacteristicValueObject.setDbPhenotype( true );
+
+                    // add tree to the phenotypes found in ontology
+                    phenotypeFoundInTree.put( ontologyTerm.getUri(), treeCharacteristicValueObject );
+
+                    if ( !treesPhenotypes.add( treeCharacteristicValueObject ) ) {
+                        throw new IllegalStateException( "Add failed for " + ontologyTerm );
+                    }
+                    if ( PhenotypeAssociationManagerServiceImpl.log.isDebugEnabled() )
+                        PhenotypeAssociationManagerServiceImpl.log.debug( "Added: " + ontologyTerm );
+
+                }
+
             }
+        }
+
+        if ( !obsoleteTerms.isEmpty() ) {
+            PhenotypeAssociationManagerServiceImpl.log
+                    .warn( String.format( "The following terms found in the database are obsolete: %s. They will not be shown in the tree.",
+                            obsoleteTerms.stream().map( Object::toString ).collect( Collectors.joining( ", " ) ) ) );
         }
 
         TreeSet<TreeCharacteristicValueObject> finalTreesWithRoots = new TreeSet<>();
@@ -1684,18 +1708,126 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         for ( TreeCharacteristicValueObject tc : treesPhenotypes ) {
             this.findParentRoot( tc, finalTreesWithRoots, phenotypeFoundInTree );
         }
-        treesPhenotypes = finalTreesWithRoots;
 
         // set the public count
-        for ( TreeCharacteristicValueObject tc : treesPhenotypes ) {
-            tc.countPublicGeneForEachNode( publicPhenotypesGenesAssociations );
-            tc.countPrivateGeneForEachNode( privatePhenotypesGenesAssociations );
-            tc.removeUnusedPhenotypes();
-
+        for ( TreeCharacteristicValueObject tc : finalTreesWithRoots ) {
+            countPublicGeneForEachNode( tc, publicPhenotypesGenesAssociations, new HashSet<>() );
+            countPrivateGeneForEachNode( tc, privatePhenotypesGenesAssociations, new HashSet<>() );
+            removeUnusedPhenotypes( tc, new HashSet<>() );
         }
 
-        PhenotypeAssociationManagerServiceImpl.log.info( "Done total time=" + sw.getTime() + "ms" );
-        return treesPhenotypes;
+        if ( sw.getTime() > 1000 ) {
+            PhenotypeAssociationManagerServiceImpl.log.warn( "Done total time=" + sw.getTime() + "ms" );
+        }
+
+        return finalTreesWithRoots;
+    }
+
+    private TreeCharacteristicValueObject ontology2TreeCharacteristicValueObjects( OntologyTerm ontologyTerm,
+            Map<String, TreeCharacteristicValueObject> phenotypeFoundInTree ) {
+
+        Collection<OntologyTerm> directChildTerms = ontologyTerm.getChildren( true, false );
+
+        TreeSet<TreeCharacteristicValueObject> children = new TreeSet<>();
+
+        for ( OntologyTerm ot : directChildTerms ) {
+            if ( phenotypeFoundInTree.containsKey( ot.getUri() ) ) {
+                TreeCharacteristicValueObject child = phenotypeFoundInTree.get( ot.getUri() );
+                children.add( child );
+
+                // See bug 4102. Removing wreaks havoc and I cannot see why it would be necessary.
+                // treesPhenotypes.remove( child );
+            } else {
+                TreeCharacteristicValueObject tree = ontology2TreeCharacteristicValueObjects( ot,
+                        phenotypeFoundInTree );
+                phenotypeFoundInTree.put( tree.getValueUri(), tree );
+                children.add( tree );
+            }
+        }
+
+        return new TreeCharacteristicValueObject( -1L, ontologyTerm.getLabel(), ontologyTerm.getUri(), children );
+    }
+
+    private void countPrivateGeneForEachNode( TreeCharacteristicValueObject tc, Map<String, Set<Integer>> phenotypesGenesAssociations, Set<String> visited ) {
+        visited.add( tc.get_id() );
+
+        Set<Integer> allGenes = new HashSet<>();
+
+        for ( TreeCharacteristicValueObject child : tc.getChildren() ) {
+            if ( visited.contains( child.get_id() ) ) {
+                continue;
+            }
+
+            countPrivateGeneForEachNode( child, phenotypesGenesAssociations, visited );
+
+            if ( phenotypesGenesAssociations.get( child.getValueUri() ) != null ) {
+                allGenes.addAll( phenotypesGenesAssociations.get( child.getValueUri() ) );
+
+                if ( phenotypesGenesAssociations.get( tc.getValueUri() ) != null ) {
+                    phenotypesGenesAssociations.get( tc.getValueUri() )
+                            .addAll( phenotypesGenesAssociations.get( child.getValueUri() ) );
+                } else {
+                    HashSet<Integer> genesNBCI = new HashSet<>( phenotypesGenesAssociations.get( child.getValueUri() ) );
+                    phenotypesGenesAssociations.put( tc.getValueUri(), genesNBCI );
+                }
+            }
+        }
+
+        if ( phenotypesGenesAssociations.get( tc.getValueUri() ) != null ) {
+            allGenes.addAll( phenotypesGenesAssociations.get( tc.getValueUri() ) );
+        }
+        tc.setPrivateGeneCount( allGenes.size() );
+    }
+
+    private void countPublicGeneForEachNode( TreeCharacteristicValueObject tc, Map<String, Set<Integer>> phenotypesGenesAssociations, Set<String> visited ) {
+        visited.add( tc.get_id() );
+
+        for ( TreeCharacteristicValueObject child : tc.getChildren() ) {
+            if ( visited.contains( child.get_id() ) ) {
+                continue;
+            }
+
+            countPublicGeneForEachNode( child, phenotypesGenesAssociations, visited );
+
+            if ( phenotypesGenesAssociations.get( child.getValueUri() ) != null ) {
+                tc.getPublicGenesNBCI().addAll( phenotypesGenesAssociations.get( child.getValueUri() ) );
+
+                if ( phenotypesGenesAssociations.get( tc.getValueUri() ) != null ) {
+                    phenotypesGenesAssociations.get( tc.getValueUri() )
+                            .addAll( phenotypesGenesAssociations.get( child.getValueUri() ) );
+                } else {
+                    Set<Integer> genesNBCI = new HashSet<>( phenotypesGenesAssociations.get( child.getValueUri() ) );
+                    phenotypesGenesAssociations.put( tc.getValueUri(), genesNBCI );
+                }
+            }
+        }
+
+        if ( phenotypesGenesAssociations.get( tc.getValueUri() ) != null ) {
+            tc.getPublicGenesNBCI().addAll( phenotypesGenesAssociations.get( tc.getValueUri() ) );
+        }
+
+        tc.setPublicGeneCount( tc.getPublicGenesNBCI().size() );
+    }
+
+
+    private void removeUnusedPhenotypes( TreeCharacteristicValueObject tc, Set<String> visited ) {
+        visited.add( tc.get_id() );
+
+        Iterator<TreeCharacteristicValueObject> iterator = tc.getChildren().iterator();
+        while ( iterator.hasNext() ) {
+            TreeCharacteristicValueObject child = iterator.next();
+            long count = child.getPrivateGeneCount() + child.getPublicGeneCount();
+            if ( count == 0 ) {
+                iterator.remove();
+            }
+        }
+
+        for ( TreeCharacteristicValueObject child : tc.getChildren() ) {
+            if ( visited.contains( child.get_id() ) ) {
+                continue;
+            }
+            removeUnusedPhenotypes( child, visited );
+        }
     }
 
     private Taxon checkAndGetTaxon( EvidenceFilter evidenceFilter ) {
@@ -1734,6 +1866,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
      */
     private Map<String, Set<String>> findChildrenForEachPhenotype( Collection<String> phenotypesValuesUris,
             Collection<String> usedPhenotypes ) {
+        checkIfAllOntologiesAreLoaded();
 
         // root corresponds to one value found in phenotypesValuesUri
         // root ---> root+children phenotypes
@@ -1745,17 +1878,9 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
             if ( phenoRoot.isEmpty() ) {
                 continue;
             }
-            OntologyTerm ontologyTermFound;
-            try {
-                ontologyTermFound = this.ontologyHelper.findOntologyTermByUri( phenoRoot );
-                if ( ontologyTermFound == null )
-                    continue;
-            } catch ( EntityNotFoundException e ) {
-                if ( !ontologyHelper.areOntologiesAllLoaded() ) {
-                    log.warn( PhenotypeAssociationManagerServiceImpl.ERROR_MSG_ONTOLOGIES_NOT_LOADED, e );
-                }
-                return Collections.emptyMap();
-            }
+            OntologyTerm ontologyTermFound = this.ontologyHelper.findOntologyTermByUri( phenoRoot );
+            if ( ontologyTermFound == null )
+                continue;
             Collection<OntologyTerm> ontologyChildrenFound = ontologyTermFound.getChildren( false );
 
             Set<String> parentChildren = new HashSet<>();
@@ -1770,6 +1895,18 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
             parentPheno.put( phenoRoot, parentChildren );
         }
         return parentPheno;
+    }
+
+    /**
+     * Check if all the necessary ontologies are loaded or else raise an exception.
+     */
+    private void checkIfAllOntologiesAreLoaded() throws RuntimeException {
+        // if these ontologies are not configured, we will never be ready. Check for valid configuration.
+        for ( ubic.basecode.ontology.providers.OntologyService ontology : ontologyHelper.getOntologyServices() ) {
+            if ( !ontology.isOntologyLoaded() ) {
+                throw new RuntimeException( PhenotypeAssociationManagerServiceImpl.ERROR_MSG_ONTOLOGIES_NOT_LOADED );
+            }
+        }
     }
 
     private void findEvidencePermissions( PhenotypeAssociation p, EvidenceValueObject<?> evidenceValueObject ) {
@@ -1855,9 +1992,13 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
         OntologyTerm ontologyTerm = this.ontologyHelper.findOntologyTermByUri( tc.getValueUri() );
 
+        if ( ontologyTerm == null ) {
+            return;
+        }
+
         // MONDO has BFO as parent, but it's not loaded
         Collection<OntologyTerm> ontologyParents;
-        if ( StringUtils.containsAnyIgnoreCase( ontologyTerm.getUri(), ROOTS ) ) {
+        if ( ArrayUtils.contains( ROOTS, ontologyTerm.getUri() ) || ontologyTerm.isRoot() ) {
             ontologyParents = Collections.emptySet();
         } else {
             ontologyParents = ontologyTerm.getParents( true );
@@ -1891,52 +2032,6 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
                 finalTreesWithRoots.add( tc );
             }
         }
-    }
-
-    /**
-     * @param  taxon                      taxon
-     * @param  ontologyTermsFound         ontology terms found
-     * @param  phenotypesFoundAndChildren phenotypes found and their children
-     * @return For a given Ontology Term, count the occurence of the term + children in the
-     *                                    database
-     */
-    private Collection<CharacteristicValueObject> findPhenotypeCount( Collection<OntologyTerm> ontologyTermsFound,
-            Taxon taxon, Set<String> phenotypesFoundAndChildren ) {
-
-        Collection<CharacteristicValueObject> phenotypesFound = new HashSet<>();
-
-        // Phenotype ---> Genes
-        Map<String, Set<Integer>> publicPhenotypesGenesAssociations = this.phenoAssocService
-                .findPublicPhenotypesGenesAssociations( taxon, phenotypesFoundAndChildren, null, null, false, null,
-                        false );
-
-        // for each Ontoly Term find in the search
-        for ( OntologyTerm ontologyTerm : ontologyTermsFound ) {
-
-            Set<Integer> geneFoundForOntologyTerm = new HashSet<>();
-
-            if ( publicPhenotypesGenesAssociations.get( ontologyTerm.getUri() ) != null ) {
-                geneFoundForOntologyTerm.addAll( publicPhenotypesGenesAssociations.get( ontologyTerm.getUri() ) );
-            }
-
-            // for all his children
-            for ( OntologyTerm ontologyTermChildren : ontologyTerm.getChildren( false ) ) {
-
-                if ( publicPhenotypesGenesAssociations.get( ontologyTermChildren.getUri() ) != null ) {
-                    geneFoundForOntologyTerm
-                            .addAll( publicPhenotypesGenesAssociations.get( ontologyTermChildren.getUri() ) );
-                }
-            }
-            // count the number of distinct gene linked to this ontologyTerm ( or children) in the database
-            if ( !geneFoundForOntologyTerm.isEmpty() ) {
-                CharacteristicValueObject characteristicValueObject = new CharacteristicValueObject( -1L,
-                        ontologyTerm.getLabel().toLowerCase(), ontologyTerm.getUri() );
-                characteristicValueObject.setPublicGeneCount( geneFoundForOntologyTerm.size() );
-                characteristicValueObject.setTaxon( taxon.getCommonName() );
-                phenotypesFound.add( characteristicValueObject );
-            }
-        }
-        return phenotypesFound;
     }
 
     /**
