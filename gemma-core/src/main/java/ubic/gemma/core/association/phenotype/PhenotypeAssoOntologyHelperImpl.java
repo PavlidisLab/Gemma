@@ -46,23 +46,12 @@ public class PhenotypeAssoOntologyHelperImpl implements PhenotypeAssoOntologyHel
     @Autowired
     public PhenotypeAssoOntologyHelperImpl( OntologyService ontologyService, MondoOntologyService diseaseOntologyService, MammalianPhenotypeOntologyService mammalianPhenotypeOntologyService, HumanPhenotypeOntologyService humanPhenotypeOntologyService ) {
         this.ontologyService = ontologyService;
-        //  We add them even when they aren't available so we can use unit tests that mock or fake the ontologies.
-        this.ontologies = Arrays.asList( diseaseOntologyService, mammalianPhenotypeOntologyService, humanPhenotypeOntologyService );
-        if ( !diseaseOntologyService.isEnabled() ) {
-            log.debug( "DO is not enabled, phenotype tools will not work correctly" );
-        }
-        if ( !mammalianPhenotypeOntologyService.isEnabled() ) {
-            log.debug( "MPO is not enabled, phenotype tools will not work correctly" );
-        }
-        if ( !humanPhenotypeOntologyService.isEnabled() ) {
-            log.debug( "HPO is not enabled, phenotype tools will not work correctly" );
-        }
+        this.ontologies = Collections.unmodifiableList( Arrays.asList( diseaseOntologyService, mammalianPhenotypeOntologyService, humanPhenotypeOntologyService ) );
     }
 
     @Override
-    public boolean areOntologiesAllLoaded() {
-        // if these ontologies are not configured, we will never be ready. Check for valid configuration.
-        return ontologies.stream().allMatch( ubic.basecode.ontology.providers.OntologyService::isOntologyLoaded );
+    public Collection<ubic.basecode.ontology.providers.OntologyService> getOntologyServices() {
+        return ontologies;
     }
 
     @Override
@@ -81,7 +70,7 @@ public class PhenotypeAssoOntologyHelperImpl implements PhenotypeAssoOntologyHel
             // format the query for lucene to look for ontology terms with an exact match for the value
             String value = "\"" + StringUtils.join( characteristicValueObject.getValue().trim().split( " " ), " AND " ) + "\"";
 
-            Collection<OntologyTerm> ontologyTerms = null;
+            Collection<OntologyTerm> ontologyTerms;
             try {
                 ontologyTerms = this.ontologyService.findTerms( value );
                 for ( OntologyTerm ontologyTerm : ontologyTerms ) {
@@ -99,7 +88,7 @@ public class PhenotypeAssoOntologyHelperImpl implements PhenotypeAssoOntologyHel
     }
 
     @Override
-    public OntologyTerm findOntologyTermByUri( String valueUri ) throws EntityNotFoundException {
+    public OntologyTerm findOntologyTermByUri( String valueUri ) {
 
         if ( valueUri == null || valueUri.isEmpty() ) {
             throw new IllegalArgumentException( "URI to load was blank." );
@@ -112,7 +101,7 @@ public class PhenotypeAssoOntologyHelperImpl implements PhenotypeAssoOntologyHel
                 return ontologyTerm;
         }
 
-        throw new EntityNotFoundException( valueUri + " - term not found" );
+        return null;
     }
 
     @Override
@@ -149,22 +138,15 @@ public class PhenotypeAssoOntologyHelperImpl implements PhenotypeAssoOntologyHel
 
     @Override
     public Characteristic valueUri2Characteristic( String valueUri ) {
-
-        try {
-            OntologyTerm o = findOntologyTermByUri( valueUri );
-            if ( o == null )
-                return null;
-            Characteristic myPhenotype = Characteristic.Factory.newInstance();
-            myPhenotype.setValueUri( o.getUri() );
-            myPhenotype.setValue( o.getLabel() );
-            myPhenotype.setCategory( PhenotypeAssociationConstants.PHENOTYPE );
-            myPhenotype.setCategoryUri( PhenotypeAssociationConstants.PHENOTYPE_CATEGORY_URI );
-            return myPhenotype;
-        } catch ( EntityNotFoundException e ) {
-            e.printStackTrace();
+        OntologyTerm o = findOntologyTermByUri( valueUri );
+        if ( o == null )
             return null;
-        }
-
+        Characteristic myPhenotype = Characteristic.Factory.newInstance();
+        myPhenotype.setValueUri( o.getUri() );
+        myPhenotype.setValue( o.getLabel() );
+        myPhenotype.setCategory( PhenotypeAssociationConstants.PHENOTYPE );
+        myPhenotype.setCategoryUri( PhenotypeAssociationConstants.PHENOTYPE_CATEGORY_URI );
+        return myPhenotype;
     }
 
     /**

@@ -34,7 +34,6 @@ import java.util.Set;
 /**
  * @author nicolas
  */
-@SuppressWarnings({ "UnusedReturnValue", "unused" }) // Possible external use
 public interface PhenotypeAssociationService extends BaseService<PhenotypeAssociation> {
 
     /**
@@ -71,15 +70,6 @@ public interface PhenotypeAssociationService extends BaseService<PhenotypeAssoci
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
     PhenotypeAssociation load( Long id );
-
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
-    ExperimentalEvidence loadExperimentalEvidence( Long id );
-
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
-    GenericEvidence loadGenericEvidence( Long id );
-
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
-    LiteratureEvidence loadLiteratureEvidence( Long id );
 
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     void update( PhenotypeAssociation evidence );
@@ -155,7 +145,4 @@ public interface PhenotypeAssociationService extends BaseService<PhenotypeAssoci
     ExternalDatabaseStatisticsValueObject loadStatisticsOnAllEvidence( String downloadFile );
 
     void removePhenotypePublication( PhenotypeAssociationPublication phenotypeAssociationPublicationId );
-
-    Collection<String> loadAllDescription();
-
 }

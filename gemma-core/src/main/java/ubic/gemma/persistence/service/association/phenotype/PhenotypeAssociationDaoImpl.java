@@ -563,14 +563,6 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
 
     }
 
-    @Override
-    public Collection<String> loadAllDescription() {
-        //noinspection unchecked
-        return this.getSessionFactory().getCurrentSession()
-                .createQuery( "select distinct p.description from PhenotypeAssociation as p" )
-                .list();
-    }
-
     /**
      * find all phenotypes in Neurocarta, this was requested by AspireBD
      */

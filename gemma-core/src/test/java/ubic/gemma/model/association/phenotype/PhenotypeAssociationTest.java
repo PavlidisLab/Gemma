@@ -16,6 +16,7 @@ package ubic.gemma.model.association.phenotype;
 
 import gemma.gsec.authentication.UserDetailsImpl;
 import org.apache.commons.lang3.RandomStringUtils;
+import org.assertj.core.api.Assertions;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -46,6 +47,7 @@ import ubic.gemma.persistence.service.association.phenotype.service.PhenotypeAss
 import java.util.*;
 
 import static org.junit.Assert.*;
+import static org.junit.Assume.assumeTrue;
 
 /**
  * This test will likely fail if the full disease ontology is configured to load; instead we want to load a small 'fake'
@@ -57,7 +59,6 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
 
     private static final String TEST_PHENOTYPE_URI = "http://purl.obolibrary.org/obo/DOID_162";
     private static final String TEST_EXTERNAL_DATABASE = "EXTERNAL_DATABASE_TEST_NAME";
-    private static boolean dosLoaded = false;
     private final Integer geneNCBI = new Integer( RandomStringUtils.randomNumeric( 6 ) );
 
     @Autowired
@@ -77,13 +78,14 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
 
     @Before
     public void setUp() throws Exception {
+        assumeTrue( os.getHumanPhenotypeOntologyService().isEnabled() );
+        assumeTrue( os.getMammalianPhenotypeOntologyService().isEnabled() );
+        OntologyTestUtils.initialize( os.getDiseaseOntologyService(),
+                this.getClass().getResourceAsStream( "/data/loader/ontology/dotest.owl.xml" ) );
 
-        if ( !PhenotypeAssociationTest.dosLoaded ) {
-            // fails if you have DO loaded
-            OntologyTestUtils.initialize( os.getDiseaseOntologyService(),
-                    this.getClass().getResourceAsStream( "/data/loader/ontology/dotest.owl.xml" ) );
-            PhenotypeAssociationTest.dosLoaded = true;
-        }
+        // wait for mammalian and human phenotype ontologies to load
+        os.getHumanPhenotypeOntologyService().waitForInitializationThread();
+        os.getMammalianPhenotypeOntologyService().waitForInitializationThread();
 
         // create what will be needed for tests
         this.createGene();
@@ -271,7 +273,13 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
     public void testLoadTree() {
         Collection<SimpleTreeValueObject> tree = this.phenotypeAssociationManagerService
                 .loadAllPhenotypesByTree( new EvidenceFilter() );
-        assertTrue( tree != null && tree.size() != 0 );
+        Assertions.assertThat( tree )
+                .hasSize( 3 )
+                .extracting( "valueUri" )
+                .containsExactlyInAnyOrder(
+                        "http://purl.obolibrary.org/obo/DOID_162",
+                        "http://purl.obolibrary.org/obo/DOID_14566",
+                        "http://purl.obolibrary.org/obo/DOID_4" );
     }
 
     @Test
