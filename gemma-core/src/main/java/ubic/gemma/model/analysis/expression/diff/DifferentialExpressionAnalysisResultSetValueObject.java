@@ -3,6 +3,7 @@ package ubic.gemma.model.analysis.expression.diff;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import ubic.gemma.model.analysis.AnalysisResultSetValueObject;
 import ubic.gemma.model.expression.experiment.ExperimentalFactorValueObject;
+import ubic.gemma.model.expression.experiment.FactorValueBasicValueObject;
 import ubic.gemma.model.genome.Gene;
 
 import java.util.Collection;
@@ -18,6 +19,7 @@ public class DifferentialExpressionAnalysisResultSetValueObject extends Analysis
 
     private DifferentialExpressionAnalysisValueObject analysis;
     private Collection<ExperimentalFactorValueObject> experimentalFactors;
+    private FactorValueBasicValueObject baselineGroup;
 
     /**
      * Related analysis results.
@@ -43,6 +45,7 @@ public class DifferentialExpressionAnalysisResultSetValueObject extends Analysis
         this.experimentalFactors = analysisResultSet.getExperimentalFactors().stream()
                 .map( ExperimentalFactorValueObject::new )
                 .collect( Collectors.toList() );
+        this.baselineGroup = new FactorValueBasicValueObject( analysisResultSet.getBaselineGroup() );
     }
 
     /**
@@ -72,6 +75,14 @@ public class DifferentialExpressionAnalysisResultSetValueObject extends Analysis
 
     public void setExperimentalFactors( Collection<ExperimentalFactorValueObject> experimentalFactors ) {
         this.experimentalFactors = experimentalFactors;
+    }
+
+    public FactorValueBasicValueObject getBaselineGroup() {
+        return baselineGroup;
+    }
+
+    public void setBaselineGroup( FactorValueBasicValueObject baselineGroup ) {
+        this.baselineGroup = baselineGroup;
     }
 
     @Override
