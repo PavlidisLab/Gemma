@@ -35,8 +35,6 @@ public class FactorValueBasicValueObject extends IdentifiableValueObject<FactorV
 
     private static final long serialVersionUID = 3378801249808036785L;
 
-    @JsonProperty("isBaseline")
-    private boolean isBaseline;
     private Collection<CharacteristicBasicValueObject> characteristics;
     private CharacteristicBasicValueObject experimentalFactorCategory;
     private MeasurementValueObject measurement;
@@ -59,7 +57,6 @@ public class FactorValueBasicValueObject extends IdentifiableValueObject<FactorV
         super( fv );
         this.summary = getSummaryString( fv );
         this.experimentalFactorId = fv.getExperimentalFactor().getId();
-        this.isBaseline = fv.getIsBaseline() != null ? fv.getIsBaseline() : false;
 
         if ( fv.getMeasurement() != null ) {
             this.measurement = new MeasurementValueObject( fv.getMeasurement() );

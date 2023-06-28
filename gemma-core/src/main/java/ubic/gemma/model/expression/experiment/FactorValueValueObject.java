@@ -47,8 +47,6 @@ public class FactorValueValueObject extends IdentifiableValueObject<FactorValue>
      */
     private Long charId;
     private Long factorId;
-    @JsonProperty("isBaseline")
-    private boolean baseline = false;
     @JsonProperty("isMeasurement")
     private boolean measurement = false;
     private Collection<CharacteristicBasicValueObject> characteristics;
@@ -76,7 +74,6 @@ public class FactorValueValueObject extends IdentifiableValueObject<FactorValue>
         super( value );
         this.factorValue = FactorValueBasicValueObject.getSummaryString( value );
         this.factorId = value.getExperimentalFactor().getId();
-        this.baseline = value.getIsBaseline() != null ? value.getIsBaseline() : this.baseline;
 
         if ( value.getMeasurement() != null ) {
             this.setMeasurement( true );
