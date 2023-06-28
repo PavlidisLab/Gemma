@@ -116,8 +116,9 @@ gemma-core/src/main/uml/*.bak
 
 # IntelliJ
 /out/
-.idea/
+.idea/*
 !.idea/codeStyles/
+!.idea/runConfigurations/
 *.iml
 
 # Eclipse
