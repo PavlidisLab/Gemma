@@ -20,6 +20,7 @@ package ubic.gemma.core.ontology;
 
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.annotation.DirtiesContext;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.basecode.ontology.providers.DiseaseOntologyService;
 import ubic.basecode.ontology.search.OntologySearchException;
@@ -36,6 +37,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author paul
  */
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 public class OntologyServiceTest extends BaseSpringContextTest {
 
     @Autowired

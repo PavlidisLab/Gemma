@@ -23,6 +23,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.test.annotation.DirtiesContext;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.basecode.ontology.providers.HumanPhenotypeOntologyService;
 import ubic.basecode.ontology.providers.MammalianPhenotypeOntologyService;
@@ -56,6 +57,7 @@ import static org.junit.Assert.*;
  *
  * @author nicolas
  */
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 public class PhenotypeAssociationTest extends BaseSpringContextTest {
 
     private static final String TEST_PHENOTYPE_URI = "http://purl.obolibrary.org/obo/DOID_162";

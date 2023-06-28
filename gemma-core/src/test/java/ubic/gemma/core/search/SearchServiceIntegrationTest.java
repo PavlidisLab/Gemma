@@ -25,6 +25,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.annotation.DirtiesContext;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.basecode.ontology.providers.FMAOntologyService;
 import ubic.basecode.ontology.search.OntologySearchException;
@@ -57,6 +58,7 @@ import static org.junit.Assert.*;
 /**
  * @author kelsey
  */
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 public class SearchServiceIntegrationTest extends BaseSpringContextTest {
     private static final String GENE_URI = "http://purl.org/commons/record/ncbi_gene/";
     private static final String SPINAL_CORD = "http://purl.obolibrary.org/obo/FMA_7647";
