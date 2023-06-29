@@ -44,7 +44,6 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 /**
@@ -63,25 +62,25 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilterin
     @Override
     public ExpressionAnalysisResultSet loadWithResultsAndContrasts( Long id ) {
         StopWatch stopWatch = StopWatch.createStarted();
-        ExpressionAnalysisResultSet ears = load( id );
+        StopWatch resultTimer = StopWatch.createStarted();
+        ExpressionAnalysisResultSet ears = ( ExpressionAnalysisResultSet ) getSessionFactory().getCurrentSession()
+                .createQuery( "select ears from ExpressionAnalysisResultSet ears "
+                        + "left join fetch ears.results res "
+                        + "left join fetch res.contrasts "
+                        + "where ears.id = :rsId" )
+                .setParameter( "rsId", id )
+                .uniqueResult();
+        resultTimer.stop();
         if ( ears == null ) {
             return null;
         }
-        StopWatch resultTimer = StopWatch.createStarted();
-        //noinspection unchecked
-        List<DifferentialExpressionAnalysisResult> results = getSessionFactory().getCurrentSession()
-                .createQuery( "select res from DifferentialExpressionAnalysisResult res left join fetch res.contrasts c where res.resultSet = :rs" )
-                .setParameter( "rs", ears )
-                .list();
-        ears.setResults( new HashSet<>( results ) );
-        resultTimer.stop();
         StopWatch probeTimer = StopWatch.createStarted();
-        // probes and genes are almost certainly cached
+        // probes and genes are almost certainly cached, if not they will be loaded in batch
         for ( DifferentialExpressionAnalysisResult r : ears.getResults() ) {
             Hibernate.initialize( r.getProbe() );
         }
         probeTimer.stop();
-        if ( stopWatch.getTime( TimeUnit.SECONDS ) > 1 ) {
+        if ( stopWatch.getTime() > 1000 ) {
             log.info( String.format( "Loaded [%s id=%d] with results and contrasts in %d ms (results and contrasts: %d ms, probes: %d ms).",
                     elementClass.getName(), id, stopWatch.getTime(), resultTimer.getTime(), probeTimer.getTime() ) );
         }
