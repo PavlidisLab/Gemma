@@ -38,6 +38,7 @@
         <bean id="chebiOntologyService" class="ubic.gemma.core.ontology.providers.OntologyServiceFactory">
             <constructor-arg value="ubic.basecode.ontology.providers.ChebiOntologyService"/>
             <property name="taskExecutor" ref="ontologyTaskExecutor"/>
+            <property name="enableInference" value="false"/>
         </bean>
         <bean id="mammalianPhenotypeOntologyService" class="ubic.gemma.core.ontology.providers.OntologyServiceFactory">
             <constructor-arg value="ubic.basecode.ontology.providers.MammalianPhenotypeOntologyService"/>
