@@ -28,6 +28,9 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentDao;
 
+import java.util.Collection;
+import java.util.stream.Collectors;
+
 @Service
 @CommonsLog
 public class CurationDetailsServiceImpl implements CurationDetailsService {
@@ -95,20 +98,26 @@ public class CurationDetailsServiceImpl implements CurationDetailsService {
     }
 
     /**
-     * If we're marking an experiment as non-troubled, but it still uses a troubled platform, restore the troubled
-     * status.
+     * @throws IllegalArgumentException if attempting to mark an experiment as non-troubled if it still has troubled
+     * platforms
      */
     private void updateExpressionExperiment( ExpressionExperiment ee, AuditEvent auditEvent ) {
-        if ( isNotTroubledEvent( auditEvent ) && expressionExperimentDao.countTroubledPlatforms( ee ) > 0 ) {
-            ee.getCurationDetails().setTroubled( true );
+        if ( isNotTroubledEvent( auditEvent ) ) {
+            Collection<ArrayDesign> troubledPlatforms = expressionExperimentDao.getTroubledPlatforms( ee );
+            // this is not allowed, the platforms must be first switched to non-troubled or detached from the EE
+            if ( !troubledPlatforms.isEmpty() ) {
+                throw new IllegalArgumentException(
+                        String.format( "%s has the following troubled platforms: %s, it cannot be switched to not-troubled. Either detach the platforms from the dataset or mark the platforms as non-troubled first.",
+                                ee, troubledPlatforms.stream().map( ArrayDesign::getShortName ).collect( Collectors.joining( ", " ) ) ) );
+            }
         }
     }
 
-    private static boolean isTroubledEvent( AuditEvent auditEvent ) {
-        return TroubledStatusFlagEvent.class.isAssignableFrom( auditEvent.getEventType().getClass() );
+    private boolean isTroubledEvent( AuditEvent auditEvent ) {
+        return auditEvent.getEventType() instanceof TroubledStatusFlagEvent;
     }
 
-    private static boolean isNotTroubledEvent( AuditEvent auditEvent ) {
-        return NotTroubledStatusFlagEvent.class.isAssignableFrom( auditEvent.getEventType().getClass() );
+    private boolean isNotTroubledEvent( AuditEvent auditEvent ) {
+        return auditEvent.getEventType() instanceof NotTroubledStatusFlagEvent;
     }
 }
