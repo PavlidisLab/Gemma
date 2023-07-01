@@ -35,6 +35,9 @@ public class TroubledStatusFlagEvent extends CurationDetailsEvent {
 
     @Override
     public final void updateCurationDetails( CurationDetails curatable, AuditEvent auditEvent ) {
+        if ( curatable.getTroubled() ) {
+            throw new IllegalArgumentException( "Cannot mark an already troubled curatable as troubled." );
+        }
         curatable.setTroubled( true );
         curatable.setLastTroubledEvent( auditEvent );
     }
