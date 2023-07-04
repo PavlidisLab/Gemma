@@ -13,7 +13,6 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
-import ubic.gemma.persistence.service.common.auditAndSecurity.CurationDetailsDao;
 import ubic.gemma.persistence.util.TestComponent;
 
 import java.util.HashSet;
@@ -32,11 +31,6 @@ public class ArrayDesignDaoTest extends BaseDatabaseTest {
         @Bean
         public ArrayDesignDao arrayDesignDao( SessionFactory sessionFactory ) {
             return new ArrayDesignDaoImpl( sessionFactory );
-        }
-
-        @Bean
-        public CurationDetailsDao curationDetailsDao() {
-            return mock( CurationDetailsDao.class );
         }
     }
 

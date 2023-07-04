@@ -92,15 +92,6 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
-    public long countNotTroubled() {
-        return ( ( Long ) this.getSessionFactory().getCurrentSession().createQuery(
-                        "select count( distinct ee ) from ExpressionExperiment as ee left join "
-                                + " ee.bioAssays as ba left join ba.arrayDesignUsed as ad"
-                                + " where ee.curationDetails.troubled = false and ad.curationDetails.troubled = false" )
-                .uniqueResult() );
-    }
-
-    @Override
     public Collection<Long> filterByTaxon( @Nullable Collection<Long> ids, Taxon taxon ) {
 
         if ( ids == null || ids.isEmpty() )
@@ -577,25 +568,6 @@ public class ExpressionExperimentDaoImpl
     public Collection<ExpressionExperiment> getExperimentsLackingPublications() {
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession().createQuery( "select e from ExpressionExperiment e where e.primaryPublication = null and e.shortName like 'GSE%'" ).list();
-    }
-
-    @Override
-    public int updateTroubledByArrayDesign( ArrayDesign arrayDesign, boolean troubled ) {
-        return getSessionFactory().getCurrentSession()
-                .createQuery(
-                        "update CurationDetails cd set cd.troubled = :troubled "
-                                + "where cd in (select ee.curationDetails from ExpressionExperiment ee join ee.bioAssays ba where ba.arrayDesignUsed = :ad) "
-                                + "and cd.troubled <> :troubled" )
-                .setParameter( "ad", arrayDesign )
-                .setParameter( "troubled", troubled )
-                .executeUpdate();
-    }
-
-    @Override
-    public long countTroubledPlatforms( ExpressionExperiment ee ) {
-        return ( Long ) getSessionFactory().getCurrentSession()
-                .createQuery( "select count(distinct ad) from ExpressionExperiment ee join ee.bioAssays ba join ba.arrayDesignUsed ad where ad.curationDetails.troubled = true" )
-                .uniqueResult();
     }
 
     @Override

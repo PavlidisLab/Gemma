@@ -26,7 +26,6 @@ import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.model.common.auditAndSecurity.AuditAction;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
-import ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails;
 import ubic.gemma.model.common.auditAndSecurity.eventType.TroubledStatusFlagEvent;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
@@ -37,7 +36,6 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentDetailsValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.persistence.service.common.auditAndSecurity.CurationDetailsService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.web.util.BaseSpringWebTest;
@@ -60,9 +58,6 @@ public class CuratableValueObjectTest extends BaseSpringWebTest {
 
     @Autowired
     private ArrayDesignService arrayDesignService;
-
-    @Autowired
-    private CurationDetailsService curationDetailsService;
 
     @Before
     public void setUp() throws Exception {
@@ -144,7 +139,7 @@ public class CuratableValueObjectTest extends BaseSpringWebTest {
         assertFalse( eeDVO.getPlatformTroubled() );
 
         // Make array design troubled
-        this.curationDetailsService.updateCurationDetailsFromAuditEvent( this.arrayDesign, AuditEvent.Factory
+        this.arrayDesignService.updateCurationDetailsFromAuditEvent( this.arrayDesign, AuditEvent.Factory
                 .newInstance( new Date(), AuditAction.UPDATE, "testing trouble update on platform",
                         "trouble update details", null, new TroubledStatusFlagEvent() ) );
 
@@ -161,7 +156,7 @@ public class CuratableValueObjectTest extends BaseSpringWebTest {
         assertTrue( eeDVO.getPlatformTroubled() );
 
         // Make expression experiment troubled
-        this.curationDetailsService.updateCurationDetailsFromAuditEvent( this.expressionExperiment, AuditEvent.Factory
+        this.expressionExperimentService.updateCurationDetailsFromAuditEvent( this.expressionExperiment, AuditEvent.Factory
                 .newInstance( new Date(), AuditAction.UPDATE, "testing trouble update on expression experiment",
                         "trouble update details", null, new TroubledStatusFlagEvent() ) );
 

@@ -1,6 +1,5 @@
 package ubic.gemma.persistence.service.expression.experiment;
 
-import ubic.gemma.core.security.audit.IgnoreAudit;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.description.AnnotationValueObject;
 import ubic.gemma.model.common.description.DatabaseEntry;
@@ -21,7 +20,10 @@ import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.persistence.util.Sort;
 
 import javax.annotation.Nullable;
-import java.util.*;
+import java.util.Collection;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Created by tesarst on 13/03/17.
@@ -30,7 +32,7 @@ import java.util.*;
  */
 @SuppressWarnings("unused") // Possible external use
 public interface ExpressionExperimentDao
-        extends CuratableDao<ExpressionExperiment, ExpressionExperimentValueObject>,
+        extends CuratableDao<ExpressionExperiment>,
         FilteringVoEnabledDao<ExpressionExperiment, ExpressionExperimentValueObject>, BrowsingDao<ExpressionExperiment> {
 
     String OBJECT_ALIAS = "ee";
@@ -168,18 +170,6 @@ public interface ExpressionExperimentDao
     Collection<? extends AnnotationValueObject> getAnnotationsByFactorvalues( Long eeId );
 
     Collection<ExpressionExperiment> getExperimentsLackingPublications();
-
-    /**
-     * Update the troubled status of all experiments using a given platform.
-     * @return the number of expression experiments marked or unmarked as troubled
-     */
-    @IgnoreAudit
-    int updateTroubledByArrayDesign( ArrayDesign arrayDesign, boolean troubled );
-
-    /**
-     * Count the number of distict platforms used that are troubled.
-     */
-    long countTroubledPlatforms( ExpressionExperiment ee );
 
     MeanVarianceRelation updateMeanVarianceRelation( ExpressionExperiment ee, MeanVarianceRelation mvr );
 }

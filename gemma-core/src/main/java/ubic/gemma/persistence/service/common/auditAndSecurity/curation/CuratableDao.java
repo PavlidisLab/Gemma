@@ -1,9 +1,8 @@
 package ubic.gemma.persistence.service.common.auditAndSecurity.curation;
 
-import ubic.gemma.model.common.auditAndSecurity.curation.AbstractCuratableValueObject;
+import ubic.gemma.core.security.audit.IgnoreAudit;
+import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.curation.Curatable;
-import ubic.gemma.persistence.service.BaseVoEnabledDao;
-import ubic.gemma.persistence.service.FilteringVoEnabledDao;
 
 import java.util.Collection;
 
@@ -11,10 +10,16 @@ import java.util.Collection;
  * Created by tesarst on 13/03/17.
  * DAO wrapper for all curatable DAOs.
  */
-public interface CuratableDao<C extends Curatable, VO extends AbstractCuratableValueObject<C>>
-        extends FilteringVoEnabledDao<C, VO> {
+public interface CuratableDao<C extends Curatable> {
 
     Collection<C> findByName( String name );
 
     C findByShortName( String name );
+
+    /**
+     * This is marked as ignored for audit purposes since we don't want to audit the curation details update when it
+     * originated from an audit event.
+     */
+    @IgnoreAudit
+    void updateCurationDetailsFromAuditEvent( C curatable, AuditEvent auditEvent );
 }
