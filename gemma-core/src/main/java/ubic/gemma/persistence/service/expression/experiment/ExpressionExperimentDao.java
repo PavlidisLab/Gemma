@@ -263,11 +263,9 @@ public interface ExpressionExperimentDao
     int updateTroubledByArrayDesign( ArrayDesign arrayDesign, boolean troubled );
 
     /**
-     * Obtain the troubled platforms used by a datasets.
-     * <p>
-     * Original platforms are ignored.
+     * Count the number of distict platforms used that are troubled.
      */
-    List<ArrayDesign> getTroubledPlatforms( ExpressionExperiment ee );
+    long countTroubledPlatforms( ExpressionExperiment ee );
 
     MeanVarianceRelation updateMeanVarianceRelation( ExpressionExperiment ee, MeanVarianceRelation mvr );
 }
