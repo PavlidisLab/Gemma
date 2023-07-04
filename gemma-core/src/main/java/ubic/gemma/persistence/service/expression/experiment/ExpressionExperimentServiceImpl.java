@@ -1412,10 +1412,4 @@ public class ExpressionExperimentServiceImpl
             return null;
         }
     }
-
-    @Override
-    @Transactional
-    public void updateCurationDetailsFromAuditEvent( ExpressionExperiment curatable, AuditEvent auditEvent ) {
-        expressionExperimentDao.updateCurationDetailsFromAuditEvent( ensureInSession( curatable ), auditEvent );
-    }
 }

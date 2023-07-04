@@ -41,6 +41,10 @@ public interface ExpressionExperimentDao
 
     Collection<Long> filterByTaxon( Collection<Long> ids, Taxon taxon );
 
+    ExpressionExperiment findByShortName( String shortName );
+
+    Collection<ExpressionExperiment> findByName( String name );
+
     Collection<ExpressionExperiment> findByAccession( DatabaseEntry accession );
 
     Collection<ExpressionExperiment> findByAccession( String accession );

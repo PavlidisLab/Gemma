@@ -131,6 +131,16 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
+    public ExpressionExperiment findByShortName( String shortName ) {
+        return findOneByProperty( "shortName", shortName );
+    }
+
+    @Override
+    public Collection<ExpressionExperiment> findByName( String name ) {
+        return findByProperty( "name", name );
+    }
+
+    @Override
     public ExpressionExperiment find( ExpressionExperiment entity ) {
 
         Criteria criteria = this.getSessionFactory().getCurrentSession().createCriteria( ExpressionExperiment.class );

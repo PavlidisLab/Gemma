@@ -41,10 +41,8 @@ import ubic.gemma.model.common.auditAndSecurity.AuditAction;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
 import ubic.gemma.model.common.auditAndSecurity.User;
-import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
-import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.model.common.auditAndSecurity.curation.Curatable;
+import ubic.gemma.persistence.service.common.auditAndSecurity.curation.GenericCuratableDao;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.*;
@@ -75,10 +73,7 @@ public class AuditAdvice {
     private UserManager userManager;
 
     @Autowired
-    private ArrayDesignService arrayDesignService;
-
-    @Autowired
-    private ExpressionExperimentService expressionExperimentService;
+    private GenericCuratableDao curatableDao;
 
     @Autowired
     private SessionFactory sessionFactory;
@@ -318,14 +313,8 @@ public class AuditAdvice {
         }
         AuditEvent auditEvent = AuditEvent.Factory.newInstance( date, auditAction, note, null, user, null );
         auditable.getAuditTrail().getEvents().add( auditEvent );
-        if ( auditAction == AuditAction.UPDATE ) {
-            if ( auditable instanceof ArrayDesign ) {
-                arrayDesignService.updateCurationDetailsFromAuditEvent( ( ArrayDesign ) auditable, auditEvent );
-            } else if ( auditable instanceof ExpressionExperiment ) {
-                expressionExperimentService.updateCurationDetailsFromAuditEvent( ( ExpressionExperiment ) auditable, auditEvent );
-            } else {
-
-            }
+        if ( auditable instanceof Curatable && auditAction == AuditAction.UPDATE ) {
+            curatableDao.updateCurationDetailsFromAuditEvent( ( Curatable ) auditable, auditEvent );
         }
         if ( AuditAdvice.log.isTraceEnabled() ) {
             AuditAdvice.log.trace( String.format( "Audited event: %s on %s:%d by %s",

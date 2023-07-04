@@ -30,7 +30,6 @@ import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.persistence.service.BaseService;
 import ubic.gemma.persistence.service.FilteringVoEnabledService;
-import ubic.gemma.persistence.service.common.auditAndSecurity.curation.CuratableService;
 import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.persistence.util.Sort;
@@ -42,7 +41,7 @@ import java.util.List;
 import java.util.Map;
 
 @SuppressWarnings("unused") // Possible external use
-public interface ArrayDesignService extends BaseService<ArrayDesign>, FilteringVoEnabledService<ArrayDesign, ArrayDesignValueObject>, CuratableService<ArrayDesign> {
+public interface ArrayDesignService extends BaseService<ArrayDesign>, FilteringVoEnabledService<ArrayDesign, ArrayDesignValueObject> {
 
     @Secured({ "GROUP_ADMIN" })
     void addProbes( ArrayDesign arrayDesign, Collection<CompositeSequence> newProbes );

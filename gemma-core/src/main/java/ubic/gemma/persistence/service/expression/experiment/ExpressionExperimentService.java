@@ -43,7 +43,6 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.BaseService;
 import ubic.gemma.persistence.service.FilteringVoEnabledDao;
 import ubic.gemma.persistence.service.FilteringVoEnabledService;
-import ubic.gemma.persistence.service.common.auditAndSecurity.curation.CuratableService;
 import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.persistence.util.Sort;
@@ -57,7 +56,7 @@ import java.util.*;
  */
 @SuppressWarnings("unused") // Possible external use
 public interface ExpressionExperimentService
-        extends BaseService<ExpressionExperiment>, FilteringVoEnabledService<ExpressionExperiment, ExpressionExperimentValueObject>, CuratableService<ExpressionExperiment> {
+        extends BaseService<ExpressionExperiment>, FilteringVoEnabledService<ExpressionExperiment, ExpressionExperimentValueObject> {
 
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     ExperimentalFactor addFactor( ExpressionExperiment ee, ExperimentalFactor factor );

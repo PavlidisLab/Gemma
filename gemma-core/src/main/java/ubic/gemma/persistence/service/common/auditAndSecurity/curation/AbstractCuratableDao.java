@@ -40,29 +40,7 @@ public abstract class AbstractCuratableDao<C extends Curatable, VO extends Abstr
         super( objectAlias, elementClass, sessionFactory );
         this.objectAlias = objectAlias;
     }
-
-    /**
-     * Finds an entity by given name.
-     *
-     * @param name name of the entity to be found.
-     * @return entity with given name, or null if such entity does not exist.
-     */
-    @Override
-    public Collection<C> findByName( String name ) {
-        return this.findByProperty( "name", name );
-    }
-
-    /**
-     * Finds an entity by given short name.
-     *
-     * @param name short name of the entity to be found.
-     * @return entity with given short name, or null if such entity does not exist.
-     */
-    @Override
-    public C findByShortName( String name ) {
-        return this.findOneByProperty( "shortName", name );
-    }
-
+   
     @Override
     public void updateCurationDetailsFromAuditEvent( Curatable curatable, AuditEvent auditEvent ) {
         if ( curatable.getId() == null ) {

@@ -270,6 +270,16 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     }
 
     @Override
+    public ArrayDesign findByShortName( String shortName ) {
+        return findOneByProperty( "shortName", shortName );
+    }
+
+    @Override
+    public Collection<ArrayDesign> findByName( String name ) {
+        return findByProperty( "name", name );
+    }
+
+    @Override
     public ArrayDesign find( ArrayDesign entity ) {
         BusinessKey.checkValidKey( entity );
         Criteria query = super.getSessionFactory().getCurrentSession().createCriteria( ArrayDesign.class );

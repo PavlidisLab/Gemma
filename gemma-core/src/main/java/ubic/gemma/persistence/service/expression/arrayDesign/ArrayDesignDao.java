@@ -44,6 +44,10 @@ public interface ArrayDesignDao extends CuratableDao<ArrayDesign>,
 
     void deleteGeneProductAssociations( ArrayDesign arrayDesign );
 
+    ArrayDesign findByShortName( String shortName );
+
+    Collection<ArrayDesign> findByName( String name );
+
     Collection<ArrayDesign> findByAlternateName( String queryString );
 
     Collection<ArrayDesign> findByManufacturer( String queryString );
