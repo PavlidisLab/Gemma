@@ -15,11 +15,11 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.persistence.util.TestComponent;
 
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
 import static org.junit.Assert.*;
-import static org.mockito.Mockito.mock;
 
 @ContextConfiguration
 public class ArrayDesignDaoTest extends BaseDatabaseTest {
@@ -74,5 +74,10 @@ public class ArrayDesignDaoTest extends BaseDatabaseTest {
 
         sessionFactory.getCurrentSession().update( ad );
         sessionFactory.getCurrentSession().flush();
+    }
+
+    @Test
+    public void testRetainNonTroubledIds() {
+        arrayDesignDao.retainNonTroubledIds( Collections.singleton( 1L ) );
     }
 }

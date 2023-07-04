@@ -1333,6 +1333,19 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
+    public List<Long> retainNonTroubledIds( Collection<Long> ids ) {
+        //noinspection unchecked
+        return getSessionFactory().getCurrentSession().createQuery(
+                        "select ee.id from ExpressionExperiment ee "
+                                + "left join ee.bioAssays ba "
+                                + "left join ba.arrayDesignUsed ad "
+                                + "where ee.id in :eeIds and ee.curationDetails.troubled = false and ad.curationDetails.troubled = false "
+                                + "group by ee")
+                .setParameterList( "eeIds", ids )
+                .list();
+    }
+
+    @Override
     protected Query getLoadValueObjectsQuery( @Nullable Filters filters, @Nullable Sort sort, EnumSet<QueryHint> hints ) {
         if ( filters == null ) {
             filters = new Filters();

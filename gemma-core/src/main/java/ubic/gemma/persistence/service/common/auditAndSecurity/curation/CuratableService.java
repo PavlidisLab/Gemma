@@ -6,7 +6,15 @@ import ubic.gemma.model.common.auditAndSecurity.curation.Curatable;
 import ubic.gemma.model.common.auditAndSecurity.eventType.CurationDetailsEvent;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 
+import java.util.Collection;
+import java.util.List;
+
 public interface CuratableService<C extends Curatable> {
+
+    /**
+     * Retain non-troubled IDs.
+     */
+    List<Long> retainNonTroubledIds( Collection<Long> ids );
 
     /**
      * Update the curation details of a given curatable entity.

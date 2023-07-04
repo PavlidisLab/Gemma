@@ -37,7 +37,6 @@ import ubic.gemma.core.genome.gene.service.GeneSetService;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.search.SearchResult;
 import ubic.gemma.core.search.SearchService;
-import ubic.gemma.core.security.audit.AuditableUtil;
 import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
@@ -51,7 +50,6 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
@@ -94,8 +92,6 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
     private BibliographicReferenceService bibliographicReferenceService;
     @Autowired
     private TaxonService taxonService;
-    @Autowired
-    private AuditableUtil auditableUtil;
     @Autowired
     private GeneSetService geneSetService;
     @Autowired
@@ -305,17 +301,15 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
         }
 
         if ( ExpressionExperiment.class.isAssignableFrom( entityClass ) ) {
+            if ( !SecurityUtil.isUserAdmin() ) {
+                ids = expressionExperimentService.retainNonTroubledIds( ids );
+            }
             vos = expressionExperimentService.loadValueObjectsByIds( ids );
-            if ( !SecurityUtil.isUserAdmin() ) {
-                auditableUtil.removeTroubledEes( ( Collection<ExpressionExperimentValueObject> ) vos );
-            }
-
         } else if ( ArrayDesign.class.isAssignableFrom( entityClass ) ) {
-            vos = this.filterAD( arrayDesignService.loadValueObjectsByIds( ids ), settings );
-
             if ( !SecurityUtil.isUserAdmin() ) {
-                auditableUtil.removeTroubledArrayDesigns( ( Collection<ArrayDesignValueObject> ) vos );
+                ids = arrayDesignService.retainNonTroubledIds( ids );
             }
+            vos = this.filterAD( arrayDesignService.loadValueObjectsByIds( ids ), settings );
         } else if ( CompositeSequence.class.isAssignableFrom( entityClass ) ) {
             Collection<CompositeSequence> compositeSequences = results.stream()
                     .map( SearchResult::getResultObject )

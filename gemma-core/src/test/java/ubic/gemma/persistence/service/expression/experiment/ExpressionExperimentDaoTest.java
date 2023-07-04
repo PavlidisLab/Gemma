@@ -87,6 +87,11 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest {
         assertTrue( Hibernate.isInitialized( ee.getExperimentalDesign() ) );
     }
 
+    @Test
+    public void testRetainNonTroubledIds() {
+        expressionExperimentDao.retainNonTroubledIds( Collections.singleton( 1L ) );
+    }
+
     private ExpressionExperiment reload( ExpressionExperiment e ) {
         sessionFactory.getCurrentSession().flush();
         sessionFactory.getCurrentSession().evict( e );

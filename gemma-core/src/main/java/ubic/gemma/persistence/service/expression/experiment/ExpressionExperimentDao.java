@@ -37,8 +37,6 @@ public interface ExpressionExperimentDao
 
     String OBJECT_ALIAS = "ee";
 
-    long countNotTroubled();
-
     Collection<Long> filterByTaxon( Collection<Long> ids, Taxon taxon );
 
     Collection<ExpressionExperiment> findByAccession( DatabaseEntry accession );
