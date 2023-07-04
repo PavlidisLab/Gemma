@@ -592,10 +592,10 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
-    public List<ArrayDesign> getTroubledPlatforms( ExpressionExperiment ee ) {
-        return getSessionFactory().getCurrentSession()
-                .createQuery( "select distinct ad from ExpressionExperiment ee join ee.bioAssays ba join ba.arrayDesignUsed ad where ad.curationDetails.troubled = true" )
-                .list();
+    public long countTroubledPlatforms( ExpressionExperiment ee ) {
+        return ( Long ) getSessionFactory().getCurrentSession()
+                .createQuery( "select count(distinct ad) from ExpressionExperiment ee join ee.bioAssays ba join ba.arrayDesignUsed ad where ad.curationDetails.troubled = true" )
+                .uniqueResult();
     }
 
     @Override
