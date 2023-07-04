@@ -27,7 +27,7 @@ import java.util.Map;
  * ArrayDesignDao interface
  */
 @Repository
-public interface ArrayDesignDao extends CuratableDao<ArrayDesign, ArrayDesignValueObject>,
+public interface ArrayDesignDao extends CuratableDao<ArrayDesign>,
         FilteringVoEnabledDao<ArrayDesign, ArrayDesignValueObject> {
 
     String OBJECT_ALIAS = "ad";

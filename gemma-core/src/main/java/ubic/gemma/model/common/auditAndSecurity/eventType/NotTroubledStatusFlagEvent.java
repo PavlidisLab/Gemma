@@ -41,7 +41,7 @@ public class NotTroubledStatusFlagEvent extends CurationDetailsEvent {
 
     @Override
     public void updateCurationDetails( CurationDetails curatable, AuditEvent auditEvent ) {
-        if ( curatable.getTroubled() ) {
+        if ( !curatable.getTroubled() ) {
             throw new IllegalArgumentException( "Cannot mark an already non-troubled curatable as non-troubled." );
         }
         curatable.setTroubled( false );

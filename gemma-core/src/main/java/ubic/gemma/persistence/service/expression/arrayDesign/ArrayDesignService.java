@@ -18,7 +18,6 @@
  */
 package ubic.gemma.persistence.service.expression.arrayDesign;
 
-import org.hibernate.annotations.Check;
 import org.springframework.security.access.annotation.Secured;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -31,6 +30,7 @@ import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.persistence.service.BaseService;
 import ubic.gemma.persistence.service.FilteringVoEnabledService;
+import ubic.gemma.persistence.service.common.auditAndSecurity.curation.CuratableService;
 import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.persistence.util.Sort;
@@ -42,7 +42,7 @@ import java.util.List;
 import java.util.Map;
 
 @SuppressWarnings("unused") // Possible external use
-public interface ArrayDesignService extends BaseService<ArrayDesign>, FilteringVoEnabledService<ArrayDesign, ArrayDesignValueObject> {
+public interface ArrayDesignService extends BaseService<ArrayDesign>, FilteringVoEnabledService<ArrayDesign, ArrayDesignValueObject>, CuratableService<ArrayDesign> {
 
     @Secured({ "GROUP_ADMIN" })
     void addProbes( ArrayDesign arrayDesign, Collection<CompositeSequence> newProbes );
@@ -419,6 +419,6 @@ public interface ArrayDesignService extends BaseService<ArrayDesign>, FilteringV
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     void deleteGeneProductAlignmentAssociations( ArrayDesign arrayDesign );
 
-    @Secured({"GROUP_ADMIN", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ"})
+    @Secured({ "GROUP_ADMIN", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
     Slice<ArrayDesignValueObject> loadBlacklistedValueObjects( @Nullable Filters filters, @Nullable Sort sort, int offset, int limit );
 }

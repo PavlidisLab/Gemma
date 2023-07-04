@@ -15,7 +15,6 @@ import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
-import ubic.gemma.persistence.service.common.auditAndSecurity.CurationDetailsDao;
 import ubic.gemma.persistence.util.Filter;
 import ubic.gemma.persistence.util.TestComponent;
 
@@ -25,7 +24,6 @@ import java.util.Set;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.Assert.*;
-import static org.mockito.Mockito.mock;
 
 @ContextConfiguration
 public class ArrayDesignDaoTest extends BaseDatabaseTest {
@@ -37,11 +35,6 @@ public class ArrayDesignDaoTest extends BaseDatabaseTest {
         @Bean
         public ArrayDesignDao arrayDesignDao( SessionFactory sessionFactory ) {
             return new ArrayDesignDaoImpl( sessionFactory );
-        }
-
-        @Bean
-        public CurationDetailsDao curationDetailsDao() {
-            return mock( CurationDetailsDao.class );
         }
     }
 

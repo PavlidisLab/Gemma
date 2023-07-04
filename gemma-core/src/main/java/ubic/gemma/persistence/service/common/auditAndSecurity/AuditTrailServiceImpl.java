@@ -33,7 +33,11 @@ import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
 import ubic.gemma.model.common.auditAndSecurity.curation.Curatable;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.AbstractService;
+import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignDao;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentDao;
 
 import javax.annotation.Nullable;
 import java.util.Date;
@@ -50,7 +54,9 @@ public class AuditTrailServiceImpl extends AbstractService<AuditTrail> implement
 
     private final AuditEventDao auditEventDao;
 
-    private final CurationDetailsService curationDetailsService;
+    private final ArrayDesignDao arrayDesignDao;
+
+    private final ExpressionExperimentDao expressionExperimentDao;
 
     private final UserManager userManager;
 
@@ -58,11 +64,12 @@ public class AuditTrailServiceImpl extends AbstractService<AuditTrail> implement
 
     @Autowired
     public AuditTrailServiceImpl( AuditTrailDao auditTrailDao, AuditEventDao auditEventDao,
-            CurationDetailsService curationDetailsService, UserManager userManager, SessionFactory sessionFactory ) {
+            ArrayDesignDao arrayDesignDao, ExpressionExperimentDao expressionExperimentDao, UserManager userManager, SessionFactory sessionFactory ) {
         super( auditTrailDao );
         this.auditTrailDao = auditTrailDao;
         this.auditEventDao = auditEventDao;
-        this.curationDetailsService = curationDetailsService;
+        this.arrayDesignDao = arrayDesignDao;
+        this.expressionExperimentDao = expressionExperimentDao;
         this.userManager = userManager;
         this.sessionFactory = sessionFactory;
     }
@@ -119,8 +126,15 @@ public class AuditTrailServiceImpl extends AbstractService<AuditTrail> implement
         //Create new audit event
         AuditEvent auditEvent = AuditEvent.Factory.newInstance( performedDate, AuditAction.UPDATE, note, detail, userManager.getCurrentUser(), auditEventType );
         //If object is curatable, update curation details
-        if ( auditable instanceof Curatable && auditEvent.getEventType() != null ) {
-            curationDetailsService.updateCurationDetailsFromAuditEvent( ( Curatable ) auditable, auditEvent );
+        if ( auditEventType != null ) {
+            if ( auditable instanceof ArrayDesign ) {
+                arrayDesignDao.updateCurationDetailsFromAuditEvent( ( ArrayDesign ) auditable, auditEvent );
+            } else if ( auditable instanceof ExpressionExperiment ) {
+                expressionExperimentDao.updateCurationDetailsFromAuditEvent( ( ExpressionExperiment ) auditable, auditEvent );
+            } else if ( auditable instanceof Curatable ) {
+                throw new UnsupportedOperationException( String.format( "Updating curation details of %s is not supported.",
+                        auditable.getClass().getName() ) );
+            }
         }
         return this.addEvent( auditable, auditEvent );
     }

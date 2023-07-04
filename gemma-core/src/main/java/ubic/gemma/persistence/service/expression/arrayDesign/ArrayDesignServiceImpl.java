@@ -479,4 +479,10 @@ public class ArrayDesignServiceImpl extends AbstractFilteringVoEnabledService<Ar
 
         }
     }
+
+    @Override
+    @Transactional
+    public void updateCurationDetailsFromAuditEvent( ArrayDesign ad, AuditEvent auditEvent ) {
+        arrayDesignDao.updateCurationDetailsFromAuditEvent( ensureInSession( ad ), auditEvent );
+    }
 }

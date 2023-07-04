@@ -279,12 +279,6 @@ public class ExpressionExperimentServiceImpl
 
     }
 
-    @Override
-    @Transactional(readOnly = true)
-    public long countNotTroubled() {
-        return this.expressionExperimentDao.countNotTroubled();
-    }
-
     /**
      * returns ids of search results
      *
@@ -1417,5 +1411,11 @@ public class ExpressionExperimentServiceImpl
         } else {
             return null;
         }
+    }
+
+    @Override
+    @Transactional
+    public void updateCurationDetailsFromAuditEvent( ExpressionExperiment curatable, AuditEvent auditEvent ) {
+        expressionExperimentDao.updateCurationDetailsFromAuditEvent( ensureInSession( curatable ), auditEvent );
     }
 }

@@ -17,8 +17,8 @@ import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.experiment.ExperimentalDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.persistence.service.common.auditAndSecurity.CurationDetailsDao;
 import ubic.gemma.persistence.util.*;
+import ubic.gemma.persistence.util.TestComponent;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -26,7 +26,6 @@ import java.util.Collections;
 import java.util.Map;
 
 import static org.junit.Assert.*;
-import static org.mockito.Mockito.mock;
 
 @ContextConfiguration
 public class ExpressionExperimentDaoTest extends BaseDatabaseTest {
@@ -38,11 +37,6 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest {
         @Bean
         public ExpressionExperimentDao expressionExperimentDao( SessionFactory sessionFactory ) {
             return new ExpressionExperimentDaoImpl( sessionFactory );
-        }
-
-        @Bean
-        public CurationDetailsDao curationDetailsDao() {
-            return mock( CurationDetailsDao.class );
         }
     }
 
