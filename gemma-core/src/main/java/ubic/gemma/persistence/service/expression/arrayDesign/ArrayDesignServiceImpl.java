@@ -486,10 +486,4 @@ public class ArrayDesignServiceImpl extends AbstractFilteringVoEnabledService<Ar
     public List<Long> retainNonTroubledIds( Collection<Long> ids ) {
         return arrayDesignDao.retainNonTroubledIds( ids );
     }
-
-    @Override
-    @Transactional
-    public void updateCurationDetailsFromAuditEvent( ArrayDesign ad, AuditEvent auditEvent ) {
-        arrayDesignDao.updateCurationDetailsFromAuditEvent( ensureInSession( ad ), auditEvent );
-    }
 }

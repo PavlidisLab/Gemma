@@ -1182,10 +1182,4 @@ public class ExpressionExperimentServiceImpl
     public List<Long> retainNonTroubledIds( Collection<Long> ids ) {
         return expressionExperimentDao.retainNonTroubledIds( ids );
     }
-
-    @Override
-    @Transactional
-    public void updateCurationDetailsFromAuditEvent( ExpressionExperiment curatable, AuditEvent auditEvent ) {
-        expressionExperimentDao.updateCurationDetailsFromAuditEvent( ensureInSession( curatable ), auditEvent );
-    }
 }
