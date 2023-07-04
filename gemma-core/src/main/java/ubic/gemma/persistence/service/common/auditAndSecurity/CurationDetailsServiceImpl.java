@@ -80,15 +80,17 @@ public class CurationDetailsServiceImpl implements CurationDetailsService {
     }
 
     /**
-     * If we're updating an ArrayDesign, and this is a trouble event, mark the associated experiments as troubled.
-     * <p>
-     * Note that if a platform is marked as non-troubled, we cannot safely assume that the experiments should be marked
-     * as non-troubled  as well.
+     * If we're updating an ArrayDesign, and this is a trouble event, update the associated experiments.
      */
     private void updateArrayDesign( ArrayDesign curatable, AuditEvent auditEvent ) {
         if ( isTroubledEvent( auditEvent ) ) {
-            int updated = expressionExperimentDao.updateTroubledByArrayDesign( curatable, true );
-            log.info( String.format( "Marked %d datasets as troubled by platform %s.", updated, curatable ) );
+            expressionExperimentDao.updateTroubledByArrayDesign( curatable, true );
+        } else if ( isNotTroubledEvent( auditEvent ) ) {
+            /*
+             * unset the trouble status for all the experiments; be careful not to do this if
+             * the experiment is troubled independently of the array design.
+             */
+            expressionExperimentDao.updateTroubledByArrayDesign( curatable, false );
         }
     }
 
