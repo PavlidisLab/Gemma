@@ -171,8 +171,8 @@ public class ArrayDesignServiceImpl extends AbstractFilteringVoEnabledService<Ar
 
     @Override
     @Transactional(readOnly = true)
-    public Collection<Long> getExpressionExperimentsIds( ArrayDesign ad ) {
-        return this.arrayDesignDao.getExpressionExperimentsIds( ad );
+    public long getExpressionExperimentsCount( ArrayDesign arrayDesign ) {
+        return arrayDesignDao.getExpressionExperimentsCount( arrayDesign );
     }
 
     @Override
@@ -230,8 +230,14 @@ public class ArrayDesignServiceImpl extends AbstractFilteringVoEnabledService<Ar
 
     @Override
     @Transactional(readOnly = true)
-    public Collection<Long> getSwitchedExperimentIds( ArrayDesign arrayDesign ) {
-        return this.arrayDesignDao.getSwitchedExpressionExperimentIds( arrayDesign );
+    public Collection<ExpressionExperiment> getSwitchedExperiments( ArrayDesign arrayDesign ) {
+        return this.arrayDesignDao.getSwitchedExpressionExperiments( arrayDesign );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public long getSwitchedExpressionExperimentCount( ArrayDesign id ) {
+        return this.arrayDesignDao.getSwitchedExpressionExperimentsCount( id );
     }
 
     @Override

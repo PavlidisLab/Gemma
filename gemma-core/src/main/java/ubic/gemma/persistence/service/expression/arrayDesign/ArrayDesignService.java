@@ -181,7 +181,7 @@ public interface ArrayDesignService extends BaseService<ArrayDesign>, FilteringV
     Collection<ExpressionExperiment> getExpressionExperiments( ArrayDesign arrayDesign );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    Collection<Long> getExpressionExperimentsIds( ArrayDesign ad );
+    long getExpressionExperimentsCount( ArrayDesign arrayDesign );
 
     /**
      * Gets the AuditEvents of the latest gene mapping for the specified array design ids. This returns a map of id
@@ -220,7 +220,11 @@ public interface ArrayDesignService extends BaseService<ArrayDesign>, FilteringV
      * @param id id of the platform
      * @return collection of EE ids
      */
-    Collection<Long> getSwitchedExperimentIds( ArrayDesign id );
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ", "AFTER_ACL_COLLECTION_READ" })
+    Collection<ExpressionExperiment> getSwitchedExperiments( ArrayDesign id );
+
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    long getSwitchedExpressionExperimentCount( ArrayDesign id );
 
     /**
      * @return a map of taxon -&gt; count of how many array designs there are for that taxon. Taxa with no arrays are

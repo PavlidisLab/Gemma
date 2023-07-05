@@ -368,7 +368,7 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
         this.setAlternateNames( result, arrayDesign );
         this.setExtRefsAndCounts( result, arrayDesign );
         this.setSummaryInfo( result, id );
-        result.setSwitchedExpressionExperimentCount( ( long ) arrayDesignService.getSwitchedExperimentIds( arrayDesign ).size() );
+        result.setSwitchedExpressionExperimentCount( arrayDesignService.getSwitchedExpressionExperimentCount( arrayDesign ) );
 
         populateMergeStatus( arrayDesign, result ); // SLOW if we follow down to mergees of mergees etc.
 

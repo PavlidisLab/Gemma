@@ -399,12 +399,11 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     }
 
     @Override
-    public Collection<Long> getExpressionExperimentsIds( ArrayDesign ad ) {
-        //noinspection unchecked
-        return this.getSessionFactory().getCurrentSession()
-                .createQuery( "select distinct ee.id from ExpressionExperiment ee join ee.bioAssays bas join bas.arrayDesignUsed ad where ad = :ad" )
-                .setParameter( "ad", ad )
-                .list();
+    public long getExpressionExperimentsCount( ArrayDesign arrayDesign ) {
+        return (Long) this.getSessionFactory().getCurrentSession()
+                .createQuery( "select count(distinct ee) from ExpressionExperiment ee inner join ee.bioAssays bas inner join bas.arrayDesignUsed ad where ad = :ad" )
+                .setParameter( "ad", arrayDesign )
+                .uniqueResult();
     }
 
     @Override
@@ -439,13 +438,12 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
      * @return collection of experiment IDs.
      */
     @Override
-    public Collection<Long> getSwitchedExpressionExperimentIds( ArrayDesign arrayDesign ) {
-
-        //language=HQL
-        final String queryString = "select distinct e.id from ExpressionExperiment e inner join e.bioAssays b where b.originalPlatform = :arrayDesign";
-
+    public Collection<ExpressionExperiment> getSwitchedExpressionExperiments( ArrayDesign arrayDesign ) {
         //noinspection unchecked
-        return this.getSessionFactory().getCurrentSession().createQuery( queryString )
+        return this.getSessionFactory().getCurrentSession()
+                .createQuery( "select distinct e from ExpressionExperiment e "
+                        + "join e.bioAssays b "
+                        + "where b.originalPlatform = :arrayDesign" )
                 .setParameter( "arrayDesign", arrayDesign )
                 .list();
     }
