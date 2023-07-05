@@ -285,6 +285,30 @@ public class FilterArgTest {
                 .hasMessageContaining( "'foo in ()' must be non-empty" );
     }
 
+    @Test
+    public void testBase64EncodedFilter() {
+        setUpMockVoService();
+        FilterArg<Identifiable> arg = FilterArg.valueOf( "H4sIAAAAAAAAA8tMUbBVMAQA2dNQugYAAAA=" );
+        Filters f = arg.getFilters( mockVoService );
+        Filter subClause = f.iterator().next().get( 0 );
+        assertThat( subClause )
+                .hasFieldOrPropertyWithValue( "objectAlias", "alias" )
+                .hasFieldOrPropertyWithValue( "propertyName", "id" )
+                .hasFieldOrPropertyWithValue( "requiredValue", "1" );
+    }
+
+    @Test
+    public void testPropertyStartingWithGzipMagicNumber() {
+        setUpMockVoService();
+        FilterArg<Identifiable> arg = FilterArg.valueOf( "H4s = 1" );
+        Filters f = arg.getFilters( mockVoService );
+        Filter subClause = f.iterator().next().get( 0 );
+        assertThat( subClause )
+                .hasFieldOrPropertyWithValue( "objectAlias", "alias" )
+                .hasFieldOrPropertyWithValue( "propertyName", "H4s" )
+                .hasFieldOrPropertyWithValue( "requiredValue", "1" );
+    }
+
     private void checkValidCollection( Collection<String> expected, String input ) {
         FilterArg<Identifiable> fa = FilterArg.valueOf( "foo in " + input );
         Filters f = fa.getFilters( mockVoService );
