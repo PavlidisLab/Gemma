@@ -168,6 +168,12 @@ public class ArrayDesignServiceImpl extends AbstractFilteringVoEnabledService<Ar
 
     @Override
     @Transactional(readOnly = true)
+    public long getExpressionExperimentsCount( ArrayDesign arrayDesign ) {
+        return arrayDesignDao.getExpressionExperimentsCount( arrayDesign );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public Map<Long, AuditEvent> getLastGeneMapping( Collection<Long> ids ) {
         Map<Long, Collection<AuditEvent>> eventMap = this.arrayDesignDao.getAuditEvents( ids );
         Map<Long, AuditEvent> lastEventMap = new HashMap<>();
@@ -221,8 +227,14 @@ public class ArrayDesignServiceImpl extends AbstractFilteringVoEnabledService<Ar
 
     @Override
     @Transactional(readOnly = true)
-    public Collection<Long> getSwitchedExperimentIds( ArrayDesign arrayDesign ) {
-        return this.arrayDesignDao.getSwitchedExpressionExperimentIds( arrayDesign );
+    public Collection<ExpressionExperiment> getSwitchedExperiments( ArrayDesign arrayDesign ) {
+        return this.arrayDesignDao.getSwitchedExpressionExperiments( arrayDesign );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public long getSwitchedExpressionExperimentCount( ArrayDesign id ) {
+        return this.arrayDesignDao.getSwitchedExpressionExperimentsCount( id );
     }
 
     @Override
@@ -479,5 +491,11 @@ public class ArrayDesignServiceImpl extends AbstractFilteringVoEnabledService<Ar
             }
 
         }
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<Long> retainNonTroubledIds( Collection<Long> ids ) {
+        return arrayDesignDao.retainNonTroubledIds( ids );
     }
 }

@@ -23,7 +23,6 @@ import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.hibernate.*;
-import org.hibernate.collection.spi.PersistentCollection;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
@@ -231,6 +230,16 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     }
 
     @Override
+    public ArrayDesign findByShortName( String shortName ) {
+        return findOneByProperty( "shortName", shortName );
+    }
+
+    @Override
+    public Collection<ArrayDesign> findByName( String name ) {
+        return findByProperty( "name", name );
+    }
+
+    @Override
     public ArrayDesign find( ArrayDesign entity ) {
         BusinessKey.checkValidKey( entity );
         Criteria query = super.getSessionFactory().getCurrentSession().createCriteria( ArrayDesign.class );
@@ -350,6 +359,14 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     }
 
     @Override
+    public long getExpressionExperimentsCount( ArrayDesign arrayDesign ) {
+        return (Long) this.getSessionFactory().getCurrentSession()
+                .createQuery( "select count(distinct ee) from ExpressionExperiment ee inner join ee.bioAssays bas inner join bas.arrayDesignUsed ad where ad = :ad" )
+                .setParameter( "ad", arrayDesign )
+                .uniqueResult();
+    }
+
+    @Override
     public Map<Taxon, Long> getPerTaxonCount() {
         Map<Taxon, Long> result = new HashMap<>();
 
@@ -381,13 +398,12 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
      * @return collection of experiment IDs.
      */
     @Override
-    public Collection<Long> getSwitchedExpressionExperimentIds( ArrayDesign arrayDesign ) {
-
-        //language=HQL
-        final String queryString = "select distinct e.id from ExpressionExperiment e inner join e.bioAssays b where b.originalPlatform = :arrayDesign";
-
+    public Collection<ExpressionExperiment> getSwitchedExpressionExperiments( ArrayDesign arrayDesign ) {
         //noinspection unchecked
-        return this.getSessionFactory().getCurrentSession().createQuery( queryString )
+        return this.getSessionFactory().getCurrentSession()
+                .createQuery( "select distinct e from ExpressionExperiment e "
+                        + "join e.bioAssays b "
+                        + "where b.originalPlatform = :arrayDesign" )
                 .setParameter( "arrayDesign", arrayDesign )
                 .list();
     }
@@ -941,6 +957,14 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
         flush();
 
         return true;
+    }
+
+    @Override
+    public List<Long> retainNonTroubledIds( Collection<Long> ids ) {
+        return getSessionFactory().getCurrentSession()
+                .createQuery( "select ad.id from ArrayDesign ad where ad.id in :ids and ad.curationDetails.troubled = false" )
+                .setParameterList( "ids", ids )
+                .list();
     }
 
     @Override

@@ -21,13 +21,10 @@ package ubic.gemma.model.common.auditAndSecurity.eventType;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.curation.Curatable;
 import ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails;
-import ubic.gemma.persistence.service.common.auditAndSecurity.CurationDetailsDao;
+import ubic.gemma.persistence.service.common.auditAndSecurity.curation.CuratableService;
 
 /**
- * Event types that can change CurationDetails of Curatable objects.
- * Anytime a new extension of this event type is implemented, add a new handler to the
- * {@link CurationDetailsDao#update(Curatable, AuditEvent)}
- * method.
+ * Event types that can change {@link CurationDetails} of {@link Curatable} objects.
  *
  * @author tesarst
  */

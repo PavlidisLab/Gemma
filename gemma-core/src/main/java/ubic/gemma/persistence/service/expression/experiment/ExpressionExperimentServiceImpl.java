@@ -267,12 +267,6 @@ public class ExpressionExperimentServiceImpl
 
     }
 
-    @Override
-    @Transactional(readOnly = true)
-    public long countNotTroubled() {
-        return this.expressionExperimentDao.countNotTroubled();
-    }
-
     /**
      * returns ids of search results
      *
@@ -1181,5 +1175,11 @@ public class ExpressionExperimentServiceImpl
         }
 
         return super.getObjectFilterPropertyMeta( propertyName );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<Long> retainNonTroubledIds( Collection<Long> ids ) {
+        return expressionExperimentDao.retainNonTroubledIds( ids );
     }
 }

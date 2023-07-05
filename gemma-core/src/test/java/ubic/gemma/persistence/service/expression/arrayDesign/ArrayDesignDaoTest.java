@@ -13,14 +13,13 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
-import ubic.gemma.persistence.service.common.auditAndSecurity.CurationDetailsDao;
 import ubic.gemma.persistence.util.TestComponent;
 
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
 import static org.junit.Assert.*;
-import static org.mockito.Mockito.mock;
 
 @ContextConfiguration
 public class ArrayDesignDaoTest extends BaseDatabaseTest {
@@ -32,11 +31,6 @@ public class ArrayDesignDaoTest extends BaseDatabaseTest {
         @Bean
         public ArrayDesignDao arrayDesignDao( SessionFactory sessionFactory ) {
             return new ArrayDesignDaoImpl( sessionFactory );
-        }
-
-        @Bean
-        public CurationDetailsDao curationDetailsDao() {
-            return mock( CurationDetailsDao.class );
         }
     }
 
@@ -80,5 +74,10 @@ public class ArrayDesignDaoTest extends BaseDatabaseTest {
 
         sessionFactory.getCurrentSession().update( ad );
         sessionFactory.getCurrentSession().flush();
+    }
+
+    @Test
+    public void testRetainNonTroubledIds() {
+        arrayDesignDao.retainNonTroubledIds( Collections.singleton( 1L ) );
     }
 }

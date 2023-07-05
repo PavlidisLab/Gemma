@@ -18,7 +18,6 @@
  */
 package ubic.gemma.persistence.service.expression.arrayDesign;
 
-import org.hibernate.annotations.Check;
 import org.springframework.security.access.annotation.Secured;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -30,15 +29,15 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.persistence.service.FilteringVoEnabledService;
+import ubic.gemma.persistence.service.common.auditAndSecurity.curation.CuratableService;
 
 import javax.annotation.CheckReturnValue;
-import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
 @SuppressWarnings("unused") // Possible external use
-public interface ArrayDesignService extends FilteringVoEnabledService<ArrayDesign, ArrayDesignValueObject> {
+public interface ArrayDesignService extends FilteringVoEnabledService<ArrayDesign, ArrayDesignValueObject>, CuratableService<ArrayDesign> {
 
     @Secured({ "GROUP_ADMIN" })
     void addProbes( ArrayDesign arrayDesign, Collection<CompositeSequence> newProbes );
@@ -177,6 +176,9 @@ public interface ArrayDesignService extends FilteringVoEnabledService<ArrayDesig
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ", "AFTER_ACL_COLLECTION_READ" })
     Collection<ExpressionExperiment> getExpressionExperiments( ArrayDesign arrayDesign );
 
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    long getExpressionExperimentsCount( ArrayDesign arrayDesign );
+
     /**
      * Gets the AuditEvents of the latest gene mapping for the specified array design ids. This returns a map of id
      * -&gt;
@@ -214,7 +216,11 @@ public interface ArrayDesignService extends FilteringVoEnabledService<ArrayDesig
      * @param id id of the platform
      * @return collection of EE ids
      */
-    Collection<Long> getSwitchedExperimentIds( ArrayDesign id );
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ", "AFTER_ACL_COLLECTION_READ" })
+    Collection<ExpressionExperiment> getSwitchedExperiments( ArrayDesign id );
+
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    long getSwitchedExpressionExperimentCount( ArrayDesign id );
 
     /**
      * @return a map of taxon -&gt; count of how many array designs there are for that taxon. Taxa with no arrays are

@@ -19,19 +19,14 @@
 package ubic.gemma.web.controller.expression.arrayDesign;
 
 import gemma.gsec.util.SecurityUtil;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.FileSystemResource;
-import org.springframework.core.io.InputStreamResource;
-import org.springframework.core.io.Resource;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -48,7 +43,6 @@ import ubic.gemma.core.job.executor.webapp.TaskRunningService;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.search.SearchResult;
 import ubic.gemma.core.search.SearchService;
-import ubic.gemma.core.security.audit.AuditableUtil;
 import ubic.gemma.core.tasks.AbstractTask;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.DatabaseEntryValueObject;
@@ -70,7 +64,6 @@ import ubic.gemma.web.util.EntityNotFoundException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.*;
-import java.nio.file.Files;
 import java.util.*;
 
 /**
@@ -99,8 +92,6 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
     private ArrayDesignReportService arrayDesignReportService;
     @Autowired
     private ArrayDesignService arrayDesignService;
-    @Autowired
-    private AuditableUtil auditableUtil;
     @Autowired
     private CompositeSequenceService compositeSequenceService;
     @Autowired
@@ -134,11 +125,10 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
     @Override
     public JsonReaderResponse<ArrayDesignValueObject> browse( ListBatchCommand batch, Long[] ids, boolean showMerged,
             boolean showOrphans ) {
-
         Collection<ArrayDesignValueObject> valueObjects = getArrayDesigns( ids, showMerged, showOrphans );
 
         if ( !SecurityUtil.isUserAdmin() ) {
-            auditableUtil.removeTroubledArrayDesigns( valueObjects );
+            CollectionUtils.filter( valueObjects, vo -> !vo.getTroubled() );
         }
         int count = valueObjects.size();
 
@@ -374,7 +364,7 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
         result = this.setAlternateNames( result, arrayDesign );
         result = this.setExtRefsAndCounts( result, arrayDesign );
         result = this.setSummaryInfo( result, id );
-        result.setSwitchedExpressionExperimentCount( ( long ) arrayDesignService.getSwitchedExperimentIds( arrayDesign ).size() );
+        result.setSwitchedExpressionExperimentCount( arrayDesignService.getSwitchedExpressionExperimentCount( arrayDesign ) );
 
         populateMergeStatus( arrayDesign, result ); // SLOW if we follow down to mergees of mergees etc.
 
@@ -494,7 +484,7 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
         if ( SecurityUtil.isUserAdmin() ) {
             arrayDesignReportService.fillEventInformation( valueObjects );
         } else {
-            auditableUtil.removeTroubledArrayDesigns( valueObjects );
+            CollectionUtils.filter( valueObjects, vo -> !vo.getTroubled() );
         }
 
         arrayDesignReportService.fillInSubsumptionInfo( valueObjects );

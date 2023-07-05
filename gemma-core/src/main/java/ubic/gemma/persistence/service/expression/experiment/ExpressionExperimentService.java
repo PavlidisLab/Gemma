@@ -40,6 +40,7 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.FilteringVoEnabledDao;
 import ubic.gemma.persistence.service.FilteringVoEnabledService;
+import ubic.gemma.persistence.service.common.auditAndSecurity.curation.CuratableService;
 import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.persistence.util.Sort;
@@ -54,7 +55,7 @@ import java.util.*;
  */
 @SuppressWarnings("unused") // Possible external use
 public interface ExpressionExperimentService
-        extends FilteringVoEnabledService<ExpressionExperiment, ExpressionExperimentValueObject> {
+        extends FilteringVoEnabledService<ExpressionExperiment, ExpressionExperimentValueObject>, CuratableService<ExpressionExperiment> {
 
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     ExperimentalFactor addFactor( ExpressionExperiment ee, ExperimentalFactor factor );
@@ -84,9 +85,6 @@ public interface ExpressionExperimentService
     BatchInformationFetchingEvent checkBatchFetchStatus( ExpressionExperiment ee );
 
     boolean checkHasBatchInfo( ExpressionExperiment ee );
-
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
-    long countNotTroubled();
 
     /**
      * returns ids of search results.
@@ -131,7 +129,7 @@ public interface ExpressionExperimentService
     Collection<ExpressionExperiment> loadAll();
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ_QUIET" })
-    ExpressionExperiment loadWithPrimaryPublication(Long id);
+    ExpressionExperiment loadWithPrimaryPublication( Long id );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ_QUIET" })
     ExpressionExperiment loadWithMeanVarianceRelation( Long id );
@@ -439,6 +437,9 @@ public interface ExpressionExperimentService
      */
     boolean isRNASeq( ExpressionExperiment expressionExperiment );
 
+    /**
+     * Check if the dataset is either troubled or uses a troubled platform.
+     */
     boolean isTroubled( ExpressionExperiment expressionExperiment );
 
     @Override
@@ -467,7 +468,7 @@ public interface ExpressionExperimentService
      * @see ExpressionExperimentDao#loadDetailsValueObjectsByIds(Collection, Taxon, Sort, int, int)
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
-    Slice<ExpressionExperimentDetailsValueObject> loadDetailsValueObjects( Collection<Long> ids, Taxon taxon, @Nullable Sort sort, int offset, int limit );
+    Slice<ExpressionExperimentDetailsValueObject> loadDetailsValueObjects( Collection<Long> ids, @Nullable Taxon taxon, @Nullable Sort sort, int offset, int limit );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
     List<ExpressionExperimentDetailsValueObject> loadDetailsValueObjects( Collection<Long> ids );

@@ -159,8 +159,6 @@ public interface PhenotypeAssociationDao extends BaseDao<PhenotypeAssociation> {
     Map<String, Set<Integer>> findPublicPhenotypesGenesAssociations( @Nullable Taxon taxon, @Nullable Set<String> valuesUri,
             boolean showOnlyEditable, @Nullable Collection<Long> externalDatabaseIds, boolean noElectronicAnnotation );
 
-    Collection<String> loadAllDescription();
-
     /**
      * @return all phenotypes in Neurocarta
      */

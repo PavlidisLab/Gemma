@@ -25,6 +25,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.test.annotation.DirtiesContext;
 import ubic.gemma.core.genome.gene.service.GeneSetService;
 import ubic.gemma.core.ontology.providers.GeneOntologyService;
 import ubic.gemma.core.ontology.OntologyTestUtils;
@@ -45,6 +46,7 @@ import static org.junit.Assert.*;
 /**
  * @author klc
  */
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 public class GeneSetServiceTest extends BaseSpringContextTest {
 
     static private final String GOTERM_INDB = "GO_0000310";
