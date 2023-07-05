@@ -14,18 +14,17 @@
  */
 package ubic.gemma.core.apps;
 
-import java.util.Arrays;
-import java.util.List;
-
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.lang3.StringUtils;
-
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
+
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * Delete one or more experiments from the system.
@@ -83,13 +82,13 @@ public class DeleteExperimentsCli extends ExpressionExperimentManipulatingCLI {
                     continue;
                 }
 
-                if ( !ads.getExpressionExperiments( a ).isEmpty() ) {
+                if ( ads.getExpressionExperimentsCount( a ) > 0 ) {
                     log.info( "Platform still has experiments that must be deleted first: " + p );
                     addErrorObject( p, "Experiments still exist for platform" );
                     continue;
                 }
 
-                if ( !ads.getSwitchedExperimentIds( a ).isEmpty() ) {
+                if ( ads.getSwitchedExpressionExperimentCount( a ) > 0 ) {
                     log.info( "Platform still has experiments (switched to anther platform) that must be deleted first: " + p );
                     addErrorObject( p, "Experiments  (switched to anther platform) still exist for platform" );
                     continue;

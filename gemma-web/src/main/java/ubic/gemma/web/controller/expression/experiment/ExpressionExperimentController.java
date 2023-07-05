@@ -33,8 +33,6 @@ import org.springframework.web.servlet.view.RedirectView;
 import ubic.gemma.core.analysis.preprocess.MeanVarianceService;
 import ubic.gemma.core.analysis.preprocess.OutlierDetails;
 import ubic.gemma.core.analysis.preprocess.OutlierDetectionService;
-import ubic.gemma.core.analysis.preprocess.filter.FilteringException;
-import ubic.gemma.core.analysis.preprocess.filter.NoRowsLeftAfterFilteringException;
 import ubic.gemma.core.analysis.preprocess.svd.SVDService;
 import ubic.gemma.core.analysis.report.ExpressionExperimentReportService;
 import ubic.gemma.core.analysis.report.WhatsNew;
@@ -681,21 +679,23 @@ public class ExpressionExperimentController {
      * @return collection of experiments that use this platform -- including those that were switched
      */
     public Collection<ExpressionExperimentDetailsValueObject> loadExperimentsForPlatform( Long id ) {
-        ArrayDesign ad = arrayDesignService.load( id );
+        ArrayDesign ad = arrayDesignService.loadOrFail( id );
+
         Collection<ExpressionExperimentDetailsValueObject> switchedExperiments = getFilteredExpressionExperimentValueObjects( null,
-                arrayDesignService.getSwitchedExperimentIds( ad ), 0, true );
+                EntityUtils.getIds( arrayDesignService.getSwitchedExperiments( ad ) ), 0, true );
         for ( ExpressionExperimentDetailsValueObject evo : switchedExperiments ) {
             evo.setName( "[Switched to another platform] " + evo.getName() );
         }
 
         Collection<ExpressionExperimentDetailsValueObject> experiments = this.getFilteredExpressionExperimentValueObjects( null,
-                ( List<Long> ) EntityUtils
-                        .getIds( arrayDesignService.getExpressionExperiments( ad ) ),
+                EntityUtils.getIds( arrayDesignService.getExpressionExperiments( ad ) ),
                 0, true );
 
-        experiments.addAll( switchedExperiments );
-        return experiments;
+        // combine original and switched EES
+        Collection<ExpressionExperimentDetailsValueObject> vos = new ArrayList<>( experiments );
+        vos.addAll( switchedExperiments );
 
+        return vos;
     }
 
     /**
@@ -1615,13 +1615,15 @@ public class ExpressionExperimentController {
             Collection<Long> eeIds, int limit, boolean showPublic ) {
 
         Sort.Direction direction = limit < 0 ? Sort.Direction.ASC : Sort.Direction.DESC;
-        Slice<ExpressionExperimentDetailsValueObject> vos = expressionExperimentService
+        Collection<ExpressionExperimentDetailsValueObject> vos = expressionExperimentService
                 .loadDetailsValueObjects( eeIds, taxon,
                         expressionExperimentService.getSort( "curationDetails.lastUpdated", direction ),
                         0, Math.abs( limit ) );
+
         // Hide public data sets if desired.
         if ( !vos.isEmpty() && !showPublic ) {
             Collection<ExpressionExperimentDetailsValueObject> publicEEs = securityService.choosePublic( vos );
+            vos = new ArrayList<>( vos );
             vos.removeAll( publicEEs );
         }
 

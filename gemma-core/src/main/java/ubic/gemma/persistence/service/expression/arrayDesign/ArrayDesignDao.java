@@ -1,6 +1,5 @@
 package ubic.gemma.persistence.service.expression.arrayDesign;
 
-import org.springframework.beans.factory.InitializingBean;
 import org.springframework.stereotype.Repository;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -60,6 +59,13 @@ public interface ArrayDesignDao extends CuratableDao<ArrayDesign>,
 
     Collection<ExpressionExperiment> getExpressionExperiments( ArrayDesign arrayDesign );
 
+    /**
+     * Obtain the number of associated expression experiments.
+     * <p>
+     * This is much faster than looking up the size of {@link #getExpressionExperiments(ArrayDesign)}.
+     */
+    long getExpressionExperimentsCount( ArrayDesign arrayDesign );
+
     Map<Taxon, Long> getPerTaxonCount();
 
     /**
@@ -68,7 +74,7 @@ public interface ArrayDesignDao extends CuratableDao<ArrayDesign>,
      * If you only need to count them, consider using the more performant {@link #getSwitchedExpressionExperimentsCount(ArrayDesign)}
      * instead.
      */
-    Collection<Long> getSwitchedExpressionExperimentIds( ArrayDesign arrayDesign );
+    Collection<ExpressionExperiment> getSwitchedExpressionExperiments( ArrayDesign arrayDesign );
 
     /**
      * Count the number of switched {@link ExpressionExperiment} from a given platform.
