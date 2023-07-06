@@ -108,6 +108,9 @@
     <filter-mapping>
         <filter-name>cors</filter-name>
         <url-pattern>/rest/v2/*</url-pattern>
+        <!-- specifically for GemBrow to allow preflights on the logout action -->
+        <url-pattern>/j_spring_security_logout</url-pattern>
+        <url-pattern>/login.jsp</url-pattern>
     </filter-mapping>
 
     <!-- Spring Security -->
