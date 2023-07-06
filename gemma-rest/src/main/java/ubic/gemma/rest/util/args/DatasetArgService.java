@@ -2,6 +2,7 @@ package ubic.gemma.rest.util.args;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.gemma.core.analysis.preprocess.OutlierDetails;
 import ubic.gemma.core.analysis.preprocess.OutlierDetectionService;
 import ubic.gemma.core.search.SearchException;
@@ -20,7 +21,6 @@ import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.util.Filter;
 import ubic.gemma.persistence.util.Filters;
-import ubic.gemma.rest.DatasetsWebService;
 
 import javax.annotation.Nullable;
 import javax.ws.rs.BadRequestException;
@@ -52,8 +52,8 @@ public class DatasetArgService extends AbstractEntityArgService<ExpressionExperi
         return getFilters( filterArg, null );
     }
 
-    public Filters getFilters( FilterArg<ExpressionExperiment> filterArg, @Nullable Collection<String> impliedTermUris ) {
-        return service.getFiltersWithInferredAnnotations( super.getFilters( filterArg ), impliedTermUris );
+    public Filters getFilters( FilterArg<ExpressionExperiment> filterArg, @Nullable Collection<OntologyTerm> mentionedTerm ) {
+        return service.getFiltersWithInferredAnnotations( super.getFilters( filterArg ), mentionedTerm );
     }
 
     /**

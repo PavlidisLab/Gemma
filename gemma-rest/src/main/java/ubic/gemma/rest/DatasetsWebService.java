@@ -292,14 +292,15 @@ public class DatasetsWebService {
             throw new BadRequestException( "Minimum frequency must be positive." );
         }
         // ensure that implied terms are retained in the usage frequency
-        Collection<String> impliedTermUris = new HashSet<>();
-        Filters filters = datasetArgService.getFilters( filter, impliedTermUris );
+        Collection<OntologyTerm> mentionedTerms = new HashSet<>();
+        Filters filters = datasetArgService.getFilters( filter, mentionedTerms );
+        Collection<String> mentionedTermUris = mentionedTerms.stream().map( OntologyTerm::getUri ).collect( Collectors.toSet() );
         if ( query != null ) {
             filters.and( datasetArgService.getFilterForSearchQuery( query ) );
         }
         // cache for visited parents (if two term share the same parent, we can save significant time generating the ancestors)
         Map<OntologyTerm, Set<OntologyTermValueObject>> visited = new HashMap<>();
-        List<ExpressionExperimentService.CharacteristicWithUsageStatisticsAndOntologyTerm> initialResults = expressionExperimentService.getAnnotationsUsageFrequency( filters, limit, minFrequency != null ? minFrequency : 0, excludedTermUris, impliedTermUris );
+        List<ExpressionExperimentService.CharacteristicWithUsageStatisticsAndOntologyTerm> initialResults = expressionExperimentService.getAnnotationsUsageFrequency( filters, limit, minFrequency != null ? minFrequency : 0, excludedTermUris, mentionedTermUris );
         List<AnnotationWithUsageStatisticsValueObject> results = initialResults
                 .stream()
                 .map( e -> new AnnotationWithUsageStatisticsValueObject( e.getCharacteristic(), e.getNumberOfExpressionExperiments(), !excludeParentTerms && e.getTerm() != null ? getParentTerms( e.getTerm(), visited ) : null ) )

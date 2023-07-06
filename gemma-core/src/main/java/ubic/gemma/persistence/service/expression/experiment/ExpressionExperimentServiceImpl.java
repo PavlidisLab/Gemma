@@ -557,7 +557,7 @@ public class ExpressionExperimentServiceImpl
      * For example, {@code characteristics.termUri = a or characteristics.termUri = b} will be transformed into {@code characteristics.termUri in (a, b, children of a and b...)}.
      */
     @Override
-    public Filters getFiltersWithInferredAnnotations( Filters f, @Nullable Collection<String> impliedTermUris ) {
+    public Filters getFiltersWithInferredAnnotations( Filters f, @Nullable Collection<OntologyTerm> mentionedTerms ) {
         Filters f2 = Filters.empty();
         // apply inference to terms
         // collect clauses mentioning terms
@@ -590,8 +590,8 @@ public class ExpressionExperimentServiceImpl
                 termAndChildrenUris.addAll( ontologyService.getChildren( terms, false, true ).stream()
                         .map( OntologyTerm::getUri )
                         .collect( Collectors.toList() ) );
-                if ( impliedTermUris != null ) {
-                    impliedTermUris.addAll( termAndChildrenUris );
+                if ( mentionedTerms != null ) {
+                    mentionedTerms.addAll( terms );
                 }
                 Filter g;
                 if ( termAndChildrenUris.size() == 1 ) {

@@ -256,9 +256,10 @@ public interface ExpressionExperimentService
 
     /**
      * Apply ontological inference to augment a filter with additional terms.
-     * @param impliedTermUris if non-null, all the implied terms are added to the collection
+     * @param mentionedTermUris if non-null, all the terms explicitly mentioned in the filters are added to the
+     *                          collection. The returned filter might contain terms that have been inferred.
      */
-    Filters getFiltersWithInferredAnnotations( Filters f, @Nullable Collection<String> impliedTermUris );
+    Filters getFiltersWithInferredAnnotations( Filters f, @Nullable Collection<OntologyTerm> mentionedTerms );
 
     @Value
     class CharacteristicWithUsageStatisticsAndOntologyTerm {
