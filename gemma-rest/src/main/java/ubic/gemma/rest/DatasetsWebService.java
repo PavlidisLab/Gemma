@@ -178,8 +178,8 @@ public class DatasetsWebService {
                     .and( datasetArgService.getFilterForSearchQuery( query, minScore, new Highlighter( request.getLocale() ), results ) );
             results.forEach( e -> resultById.put( e.getResultId(), e ) );
             List<Long> ids = expressionExperimentService.loadIds( filtersWithSearchResultIds, null );
-            // sort IDs by score, descending
-            ids.sort( Comparator.comparingDouble( i -> -resultById.get( i ).getScore() ) );
+            // sort IDs by score, descending then ID for equal scores
+            ids.sort( Comparator.<Long>comparingDouble( i -> -resultById.get( i ).getScore() ).thenComparing( id -> id ) );
             // slice the ranked IDs
             List<Long> idsSlice;
             if ( offset < ids.size() ) {
