@@ -19,22 +19,16 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.extern.apachecommons.CommonsLog;
 import org.antlr.v4.runtime.*;
 import org.antlr.v4.runtime.misc.ParseCancellationException;
-import org.apache.commons.io.IOUtils;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.persistence.service.FilteringService;
 import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Sort;
 import ubic.gemma.rest.util.MalformedArgException;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.util.Base64;
 import java.util.Collection;
 import java.util.List;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-import java.util.zip.GZIPInputStream;
 
 import static ubic.gemma.persistence.util.FiltersUtils.unnestSubquery;
 
@@ -240,11 +234,6 @@ public class FilterArg<O extends Identifiable> extends AbstractArg<FilterArg.Fil
     }
 
     /**
-     * A base64-encoded gzip header to detect compressed filters.
-     */
-    private static final String BASE64_ENCODED_GZIP_MAGIC = "H4s";
-
-    /**
      * Used by RS to parse value of request parameters.
      * <p>
      * The filter string may be compressed and base64-encoded.
@@ -254,17 +243,9 @@ public class FilterArg<O extends Identifiable> extends AbstractArg<FilterArg.Fil
      */
     @SuppressWarnings("unused")
     public static <O extends Identifiable> FilterArg<O> valueOf( String s ) {
-        if ( s.startsWith( BASE64_ENCODED_GZIP_MAGIC ) && isValidBase64( s ) ) {
-            try {
-                s = IOUtils.toString( new GZIPInputStream( new ByteArrayInputStream( Base64.getDecoder().decode( s ) ) ), StandardCharsets.UTF_8 );
-            } catch ( IOException e ) {
-                throw new MalformedArgException( "Invalid base64-encoded filter, make sure that your filter is first gzipped and then base64-encoded.", e );
-            }
-        }
-
         LoggingErrorListener lel = new LoggingErrorListener();
 
-        FilterArgLexer lexer = new FilterArgLexer( CharStreams.fromString( s ) ) {
+        FilterArgLexer lexer = new FilterArgLexer( CharStreams.fromString( decodeCompressedArg( s ) ) ) {
             @Override
             public void recover( RecognitionException re ) {
                 throw new ParseCancellationException( re );
@@ -289,16 +270,6 @@ public class FilterArg<O extends Identifiable> extends AbstractArg<FilterArg.Fil
         } catch ( ParseCancellationException e ) {
             throw new MalformedArgException( String.format( "The filter query '%s' is not correctly formed.", s ),
                     e.getCause() );
-        }
-    }
-
-    private static boolean isValidBase64( String s ) {
-        try {
-            Base64.getDecoder().decode( s );
-            return true;
-        } catch ( IllegalArgumentException e ) {
-            // invalid base-64 encoded buffer, this might be a regular string
-            return false;
         }
     }
 

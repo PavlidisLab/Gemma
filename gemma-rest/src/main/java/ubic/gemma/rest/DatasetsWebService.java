@@ -284,7 +284,7 @@ public class DatasetsWebService {
             @Parameter(description = "") @QueryParam("exclude") ExcludeArg<AnnotationWithUsageStatisticsValueObject> exclude,
             @Parameter(description = "Maximum number of annotations to returned; capped at " + MAX_DATASETS_ANNOTATIONS + ".") @QueryParam("limit") LimitArg limitArg,
             @Parameter(description = "Minimum number of associated datasets to report an annotation.") @QueryParam("minFrequency") Integer minFrequency,
-            @Parameter(description = "Excluded term category and value URIs") @QueryParam("excludedTerms") List<String> excludedTermUris ) {
+            @Parameter(description = "Excluded term category and value URIs", hidden = true) @QueryParam("excludedTerms") StringArrayArg excludedTermUris ) {
         boolean excludeParentTerms = getExcludedFields( exclude ).contains( "parentTerms" );
         // if a minFrequency is requested, use the hard cap, otherwise use 100 as a reasonable default
         int limit = limitArg != null ? limitArg.getValue( MAX_DATASETS_ANNOTATIONS ) : minFrequency != null ? MAX_DATASETS_ANNOTATIONS : 100;
@@ -300,7 +300,7 @@ public class DatasetsWebService {
         }
         // cache for visited parents (if two term share the same parent, we can save significant time generating the ancestors)
         Map<OntologyTerm, Set<OntologyTermValueObject>> visited = new HashMap<>();
-        List<ExpressionExperimentService.CharacteristicWithUsageStatisticsAndOntologyTerm> initialResults = expressionExperimentService.getAnnotationsUsageFrequency( filters, limit, minFrequency != null ? minFrequency : 0, excludedTermUris, mentionedTermUris );
+        List<ExpressionExperimentService.CharacteristicWithUsageStatisticsAndOntologyTerm> initialResults = expressionExperimentService.getAnnotationsUsageFrequency( filters, limit, minFrequency != null ? minFrequency : 0, excludedTermUris != null ? excludedTermUris.getValue() : null, mentionedTermUris );
         List<AnnotationWithUsageStatisticsValueObject> results = initialResults
                 .stream()
                 .map( e -> new AnnotationWithUsageStatisticsValueObject( e.getCharacteristic(), e.getNumberOfExpressionExperiments(), !excludeParentTerms && e.getTerm() != null ? getParentTerms( e.getTerm(), visited ) : null ) )

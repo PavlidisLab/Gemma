@@ -17,6 +17,24 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class StringArrayArgTest {
 
     @Test
+    public void testBase64EncodedFilter() {
+        StringArrayArg arg = StringArrayArg.valueOf( "H4sIAAAAAAAAA0vUUVBI0knWUUgBAJsnMwkKAAAA" );
+        assertThat( arg.getValue() ).containsExactly( "a", "b", "c", "d" );
+    }
+
+    @Test
+    public void testEmptyBase64EncodedArray() {
+        StringArrayArg arg = StringArrayArg.valueOf( "H4sIAAAAAAAAAwMAAAAAAAAAAAA=" );
+        assertThat( arg.getValue() ).isEmpty();
+    }
+
+    @Test
+    public void testEmptyArray() {
+        StringArrayArg arg = StringArrayArg.valueOf( "" );
+        assertThat( arg.getValue() ).isEmpty();
+    }
+
+    @Test
     public void testParametersAnnotatedWithExplode() {
         Reader reader = new Reader( new OpenAPI() );
         OpenAPI spec = reader.read( Api.class );
