@@ -21,6 +21,7 @@ import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.util.Filter;
 import ubic.gemma.persistence.util.Filters;
+import ubic.gemma.rest.util.MalformedArgException;
 
 import javax.annotation.Nullable;
 import javax.ws.rs.BadRequestException;
@@ -90,7 +91,7 @@ public class DatasetArgService extends AbstractEntityArgService<ExpressionExperi
                 return service.getFilter( "id", Long.class, Filter.Operator.in, ids );
             }
         } catch ( SearchException e ) {
-            throw new BadRequestException( e );
+            throw new MalformedArgException( "Invalid search query.", e );
         }
     }
 
