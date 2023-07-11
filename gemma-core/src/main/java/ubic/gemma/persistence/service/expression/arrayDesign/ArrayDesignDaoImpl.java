@@ -400,7 +400,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
 
     @Override
     public long getExpressionExperimentsCount( ArrayDesign arrayDesign ) {
-        return (Long) this.getSessionFactory().getCurrentSession()
+        return ( Long ) this.getSessionFactory().getCurrentSession()
                 .createQuery( "select count(distinct ee) from ExpressionExperiment ee inner join ee.bioAssays bas inner join bas.arrayDesignUsed ad where ad = :ad" )
                 .setParameter( "ad", arrayDesign )
                 .uniqueResult();
@@ -1002,7 +1002,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     }
 
     @Override
-    protected Query getFilteringIdQuery( @Nullable Filters filters ) {
+    protected Query getFilteringIdQuery( @Nullable Filters filters, @Nullable Sort sort ) {
         //language=HQL
         return finishFilteringQuery(
                 "select ad.id "
@@ -1013,7 +1013,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
                         + "left join s.lastNeedsAttentionEvent as eAttn "
                         + "left join s.lastNoteUpdateEvent as eNote "
                         + "left join s.lastTroubledEvent as eTrbl "
-                        + "left join ad.alternativeTo alt", filters, null, groupByIfNecessary( filters, null, EXTERNAL_REFERENCE_ALIAS ) );
+                        + "left join ad.alternativeTo alt", filters, sort, groupByIfNecessary( filters, sort, EXTERNAL_REFERENCE_ALIAS ) );
     }
 
     @Override

@@ -1654,7 +1654,7 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
-    protected Query getFilteringIdQuery( @Nullable Filters filters ) {
+    protected Query getFilteringIdQuery( @Nullable Filters filters, @Nullable Sort sort ) {
         //language=HQL
         return finishFilteringQuery( "select ee.id "
                 + "from ExpressionExperiment as ee "
@@ -1664,7 +1664,7 @@ public class ExpressionExperimentDaoImpl
                 + "left join s.lastNeedsAttentionEvent as eAttn "
                 + "left join s.lastNoteUpdateEvent as eNote "
                 + "left join s.lastTroubledEvent as eTrbl "
-                + "left join ee.geeq as geeq", filters, null, groupByIfNecessary( filters, null, ONE_TO_MANY_ALIASES ) );
+                + "left join ee.geeq as geeq", filters, sort, groupByIfNecessary( filters, sort, ONE_TO_MANY_ALIASES ) );
     }
 
     @Override

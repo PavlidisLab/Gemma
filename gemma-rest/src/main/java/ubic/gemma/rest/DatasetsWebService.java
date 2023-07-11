@@ -177,9 +177,9 @@ public class DatasetsWebService {
             Filters filtersWithSearchResultIds = Filters.by( filters )
                     .and( datasetArgService.getFilterForSearchQuery( query, minScore, new Highlighter( request.getLocale() ), results ) );
             results.forEach( e -> resultById.put( e.getResultId(), e ) );
-            List<Long> ids = expressionExperimentService.loadIds( filtersWithSearchResultIds, null );
-            // sort IDs by score, descending then ID for equal scores
-            ids.sort( Comparator.<Long>comparingDouble( i -> -resultById.get( i ).getScore() ).thenComparing( id -> id ) );
+            List<Long> ids = expressionExperimentService.loadIds( filtersWithSearchResultIds, sort );
+            // sort is stable, so the order of IDs with the same score is preserved
+            ids.sort( Comparator.<Long>comparingDouble( i -> -resultById.get( i ).getScore() ) );
             // slice the ranked IDs
             List<Long> idsSlice;
             if ( offset < ids.size() ) {

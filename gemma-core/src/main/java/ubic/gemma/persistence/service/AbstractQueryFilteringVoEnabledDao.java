@@ -44,7 +44,7 @@ public abstract class AbstractQueryFilteringVoEnabledDao<O extends Identifiable,
     /**
      * Produce a query that will be used to retrieve IDs of {@link #getFilteringQuery(Filters, Sort)}.
      */
-    protected Query getFilteringIdQuery( @Nullable Filters filters ) {
+    protected Query getFilteringIdQuery( @Nullable Filters filters, @Nullable Sort sort ) {
         throw new NotImplementedException( "Retrieving IDs for " + elementClass + " is not supported." );
     }
 
@@ -120,7 +120,7 @@ public abstract class AbstractQueryFilteringVoEnabledDao<O extends Identifiable,
     public List<Long> loadIds( @Nullable Filters filters, @Nullable Sort sort ) {
         StopWatch timer = StopWatch.createStarted();
         //noinspection unchecked
-        List<Long> result = getFilteringIdQuery( filters ).list();
+        List<Long> result = getFilteringIdQuery( filters, sort ).list();
         timer.stop();
         if ( timer.getTime( TimeUnit.MILLISECONDS ) > REPORT_SLOW_QUERY_AFTER_MS ) {
             log.warn( String.format( "Loading %d IDs for %s took %s ms.", result.size(), elementClass.getName(),
