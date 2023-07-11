@@ -48,8 +48,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import static ubic.gemma.rest.util.ArgUtils.requiredArg;
-
 /**
  * RESTful interface for taxa.
  *
@@ -292,7 +290,6 @@ public class TaxaWebService {
             @Parameter(schema = @Schema(implementation = StringArrayArg.class), explode = Explode.FALSE) @QueryParam("phenotypes") StringArrayArg phenotypes, // Required
             @QueryParam("editableOnly") @DefaultValue("false") Boolean editableOnly // Optional, default false
     ) {
-        requiredArg( phenotypes, "phenotypes" );
         Set<GeneEvidenceValueObject> response;
         response = this.phenotypeAssociationManagerService.findCandidateGenes(
                 new EvidenceFilter( taxonArgService.getEntity( taxonArg ).getId(), editableOnly ),

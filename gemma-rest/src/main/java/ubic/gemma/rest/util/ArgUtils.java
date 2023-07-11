@@ -15,9 +15,16 @@
 package ubic.gemma.rest.util;
 
 import lombok.NonNull;
+import org.apache.commons.io.IOUtils;
 import ubic.gemma.rest.util.args.Arg;
 
+import javax.annotation.Nullable;
 import javax.ws.rs.BadRequestException;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
+import java.util.zip.GZIPInputStream;
 
 /**
  * Utilities for working with {@link Arg}.
@@ -26,16 +33,34 @@ import javax.ws.rs.BadRequestException;
 public class ArgUtils {
 
     /**
-     * Check if the argument exists and raise a {@link BadRequestException} if it is null or has an empty representation.
-     * @param arg an argument
-     * @param name a name to use, since the passed argument can be null
-     * @return the argument if it exists
+     * A base64-encoded gzip header to detect compressed filters.
      */
-    public static <T extends Arg<?>> T requiredArg( T arg, @NonNull String name ) throws BadRequestException {
-        if ( arg == null || arg.toString().isEmpty() ) {
-            throw new BadRequestException( String.format( "Value for required parameter '%s' not found.", name ) );
+    private static final String BASE64_ENCODED_GZIP_MAGIC = "H4s";
+
+    /**
+     * Decode a base64-encoded gzip-compressed argument.
+     * <p>
+     * This intended to be used in the {@code valueOf} methods of subclasses.
+     */
+    public static String decodeCompressedArg( @Nullable String s ) {
+        if ( s != null && s.startsWith( BASE64_ENCODED_GZIP_MAGIC ) && isValidBase64( s ) ) {
+            try {
+                return IOUtils.toString( new GZIPInputStream( new ByteArrayInputStream( Base64.getDecoder().decode( s ) ) ), StandardCharsets.UTF_8 );
+            } catch ( IOException e ) {
+                throw new MalformedArgException( "Invalid base64-encoded filter, make sure that your filter is first gzipped and then base64-encoded.", e );
+            }
         } else {
-            return arg;
+            return s;
+        }
+    }
+
+    private static boolean isValidBase64( String s ) {
+        try {
+            Base64.getDecoder().decode( s );
+            return true;
+        } catch ( IllegalArgumentException e ) {
+            // invalid base-64 encoded buffer, this might be a regular string
+            return false;
         }
     }
 }

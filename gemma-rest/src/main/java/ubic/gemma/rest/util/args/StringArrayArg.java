@@ -7,6 +7,8 @@ import ubic.gemma.rest.util.MalformedArgException;
 
 import java.util.List;
 
+import static ubic.gemma.rest.util.ArgUtils.decodeCompressedArg;
+
 /**
  * Class representing an API argument that should be an array of Strings.
  *

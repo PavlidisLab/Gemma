@@ -31,6 +31,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import static ubic.gemma.persistence.util.FiltersUtils.unnestSubquery;
+import static ubic.gemma.rest.util.ArgUtils.decodeCompressedArg;
 
 /**
  * Represent a filter argument designed to generate a {@link Filters} from user input.

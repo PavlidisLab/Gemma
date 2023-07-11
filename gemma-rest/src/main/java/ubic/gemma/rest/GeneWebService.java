@@ -189,7 +189,6 @@ public class GeneWebService {
             @QueryParam("limit") @DefaultValue("100") LimitArg limit, // Optional, default 100
             @QueryParam("stringency") @DefaultValue("1") Integer stringency // Optional, default 1
     ) {
-        ArgUtils.requiredArg( with, "with" );
         return Responder
                 .respond( geneCoexpressionSearchService.coexpressionSearchQuick( null, new ArrayList<Long>( 2 ) {{
                     this.add( geneArgService.getEntity( geneArg ).getId() );
