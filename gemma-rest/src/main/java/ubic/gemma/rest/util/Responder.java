@@ -18,7 +18,6 @@ import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.persistence.util.Sort;
-import ubic.gemma.rest.DatasetsWebService;
 
 import javax.annotation.Nullable;
 import javax.ws.rs.NotFoundException;
@@ -89,5 +88,9 @@ public class Responder {
      */
     public static <T extends IdentifiableValueObject<?>> FilteringAndPaginatedResponseDataObject<T> paginate( FilterMethod<T> filterMethod, @Nullable Filters filters, String[] groupBy, @Nullable Sort sort, int offset, int limit ) throws NotFoundException {
         return paginate( filterMethod.load( filters, sort, offset, limit ), filters, groupBy );
+    }
+
+    public static <T extends IdentifiableValueObject<?>> QueriedAndPaginatedResponseDataObject<T> queryAndPaginate( Slice<T> payload, String query, @Nullable Filters filters, String[] groupBy ) {
+        return new QueriedAndPaginatedResponseDataObject<>( payload, query, filters, groupBy );
     }
 }

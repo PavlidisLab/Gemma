@@ -155,7 +155,7 @@ public class DatasetsWebService {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve all datasets")
-    public FilteringAndPaginatedResponseDataObject<ExpressionExperimentWithSearchResultValueObject> getDatasets( // Params:
+    public QueriedAndPaginatedResponseDataObject<ExpressionExperimentWithSearchResultValueObject> getDatasets( // Params:
             @QueryParam("query") String query,
             @QueryParam("minScore") @DefaultValue("0.0") Double minScoreArg,
             @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filterArg, // Optional, default null
@@ -188,13 +188,14 @@ public class DatasetsWebService {
                 idsSlice = Collections.emptyList();
             }
             List<ExpressionExperimentValueObject> vos = expressionExperimentService.loadValueObjectsByIds( idsSlice, true );
-            return Responder.paginate(
+            return Responder.queryAndPaginate(
                     new Slice<>( vos, Sort.by( null, "searchResult.score", Sort.Direction.DESC ), offset, limit, ( long ) ids.size() )
                             .map( vo -> new ExpressionExperimentWithSearchResultValueObject( vo, resultById.get( vo.getId() ) ) ),
-                    filters, new String[] { "id" } );
+                    query, filters, new String[] { "id" } );
         } else {
-            return Responder.paginate( ( filter, sort1, offset1, limit1 ) -> expressionExperimentService.loadValueObjects( filter, sort1, offset1, limit1 )
-                    .map( vo -> new ExpressionExperimentWithSearchResultValueObject( vo, resultById.get( vo.getId() ) ) ), filters, new String[] { "id" }, sort, offset, limit );
+            return Responder.queryAndPaginate(
+                    expressionExperimentService.loadValueObjects( filters, sort, offset, limit ).map( vo -> new ExpressionExperimentWithSearchResultValueObject( vo, resultById.get( vo.getId() ) ) ),
+                    null, filters, new String[] { "id" } );
         }
     }
 
