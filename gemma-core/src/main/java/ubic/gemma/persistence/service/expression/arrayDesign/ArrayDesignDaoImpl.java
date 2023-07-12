@@ -211,7 +211,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
         flush();
 
         final String annotationAssociationQueryString = "select ba from CompositeSequence cs "
-                + " inner join cs.biologicalCharacteristic bs, Annott add -ationAssociation ba "
+                + " inner join cs.biologicalCharacteristic bs, AnnotationAssociation ba "
                 + " where ba.bioSequence = bs and cs.arrayDesign=:arrayDesign";
 
         //noinspection unchecked
@@ -813,12 +813,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
         timer.start();
 
         // Thaw the composite sequences
-        //noinspection unchecked
-        List<CompositeSequence> probes = this.getSessionFactory().getCurrentSession().createQuery(
-                        "select cs from CompositeSequence cs left join fetch cs.biologicalCharacteristic where cs.arrayDesign = :ad" )
-                .setParameter( "ad", arrayDesign )
-                .list();
-        result.setCompositeSequences( new HashSet<>( probes ) );
+        Hibernate.initialize( result.getCompositeSequences() );
 
         if ( timer.getTime() > 1000 ) {
             AbstractDao.log.warn( "Thaw array design stage 2: " + timer.getTime() + "ms" );
