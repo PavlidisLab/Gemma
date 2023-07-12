@@ -67,7 +67,7 @@ import static org.junit.Assume.assumeNoException;
  *
  * @author pavlidis
  */
-@Category(GeoTest.class)
+@Category({ GeoTest.class, SlowTest.class })
 public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
 
     @Autowired
