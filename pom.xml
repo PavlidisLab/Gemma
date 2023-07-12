@@ -507,8 +507,6 @@
 					<argLine>-Dlog4j1.compatibility=true -Djava.util.logging.manager=org.apache.logging.log4j.jul.LogManager</argLine>
 					<redirectTestOutputToFile>true</redirectTestOutputToFile>
 					<excludes>
-						<exclude>**/*Abstract*</exclude>
-						<exclude>**/*IntegrationTest.java</exclude>
 						<exclude>**/*Tests.java</exclude>
 					</excludes>
 					<excludedGroups>ubic.gemma.core.util.test.category.SpringContextTest,${excludedGroups}</excludedGroups>
@@ -526,10 +524,6 @@
 					<includes>
 						<include>**/*Test.java</include>
 					</includes>
-					<excludes>
-						<exclude>**/*Abstract*</exclude>
-						<exclude>**/*IntegrationTest.java</exclude>
-					</excludes>
 					<groups>ubic.gemma.core.util.test.category.SpringContextTest</groups>
 					<!--suppress MavenModelInspection -->
 					<skip>${skipIntegrationTests}</skip>
