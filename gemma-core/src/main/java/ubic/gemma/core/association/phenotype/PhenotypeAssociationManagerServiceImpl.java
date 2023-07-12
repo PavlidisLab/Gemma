@@ -97,6 +97,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
      */
     private static final String[] ROOTS = {
             "http://purl.obolibrary.org/obo/MONDO_0000001",
+            "http://purl.obolibrary.org/obo/DOID_4",
             "http://purl.obolibrary.org/obo/HP_0000001",
             "http://purl.obolibrary.org/obo/MP_0000001"
     };
@@ -1342,7 +1343,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         TreeCharacteristicValueObject[] customOntologyTrees = new TreeCharacteristicValueObject[3];
 
         for ( TreeCharacteristicValueObject tree : ontologyTrees ) {
-            if ( tree.getValueUri().contains( "MONDO" ) ) {
+            if ( tree.getValueUri().contains( "MONDO" ) || tree.getValueUri().contains( "DOID" ) ) {
                 tree.setValue( "Disease Ontology" );
                 customOntologyTrees[0] = tree;
             } else if ( tree.getValueUri().contains( "HP" ) ) {
