@@ -195,7 +195,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
                 .hasFieldOrPropertyWithValue( "query", "cerebellum" )
                 .hasFieldOrPropertyWithValue( "fillResults", false );
         verify( expressionExperimentService ).getFilter( "id", Long.class, Filter.Operator.in, new HashSet<>( ids ) );
-        verify( expressionExperimentService ).loadIds( Filters.by( "ee", "id", Long.class, Filter.Operator.in, new HashSet<>( ids ) ), null );
+        verify( expressionExperimentService ).loadIds( Filters.by( "ee", "id", Long.class, Filter.Operator.in, new HashSet<>( ids ) ), Sort.by( "ee", "id", Sort.Direction.ASC ) );
         verify( expressionExperimentService ).loadValueObjectsByIds( ids, true );
     }
 
@@ -244,7 +244,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
                 .extracting( "groupBy", InstanceOfAssertFactories.list( String.class ) )
                 .containsExactly( "classUri", "className", "termUri", "termName" );
         verify( expressionExperimentService ).getFiltersWithInferredAnnotations( Filters.empty(), Collections.emptySet() );
-        verify( expressionExperimentService ).getAnnotationsUsageFrequency( Filters.empty(), 100, 0, Collections.emptyList(), Collections.emptySet() );
+        verify( expressionExperimentService ).getAnnotationsUsageFrequency( Filters.empty(), 100, 0, null, Collections.emptySet() );
     }
 
     @Test
@@ -263,7 +263,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
                 .entity()
                 .hasFieldOrPropertyWithValue( "limit", 5000 );
         verify( expressionExperimentService ).getFiltersWithInferredAnnotations( Filters.empty(), Collections.emptySet() );
-        verify( expressionExperimentService ).getAnnotationsUsageFrequency( Filters.empty(), 5000, 10, Collections.emptyList(), Collections.emptySet() );
+        verify( expressionExperimentService ).getAnnotationsUsageFrequency( Filters.empty(), 5000, 10, null, Collections.emptySet() );
     }
 
     @Test
@@ -275,7 +275,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
                 .hasFieldOrPropertyWithValue( "limit", 50 )
                 .extracting( "groupBy", InstanceOfAssertFactories.list( String.class ) )
                 .containsExactly( "classUri", "className", "termUri", "termName" );
-        verify( expressionExperimentService ).getAnnotationsUsageFrequency( Filters.empty(), 50, 0, Collections.emptyList(), Collections.emptySet() );
+        verify( expressionExperimentService ).getAnnotationsUsageFrequency( Filters.empty(), 50, 0, null, Collections.emptySet() );
     }
 
     @Test

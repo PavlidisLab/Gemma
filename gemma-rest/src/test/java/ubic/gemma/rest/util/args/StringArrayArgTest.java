@@ -7,12 +7,14 @@ import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.models.OpenAPI;
 import org.junit.Test;
+import ubic.gemma.rest.util.MalformedArgException;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.QueryParam;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 public class StringArrayArgTest {
 
@@ -24,14 +26,14 @@ public class StringArrayArgTest {
 
     @Test
     public void testEmptyBase64EncodedArray() {
-        StringArrayArg arg = StringArrayArg.valueOf( "H4sIAAAAAAAAAwMAAAAAAAAAAAA=" );
-        assertThat( arg.getValue() ).isEmpty();
+        assertThatThrownBy( () -> StringArrayArg.valueOf( "H4sIAAAAAAAAAwMAAAAAAAAAAAA=" ) )
+                .isInstanceOf( MalformedArgException.class );
     }
 
     @Test
     public void testEmptyArray() {
-        StringArrayArg arg = StringArrayArg.valueOf( "" );
-        assertThat( arg.getValue() ).isEmpty();
+        assertThatThrownBy( () -> StringArrayArg.valueOf( "" ) )
+                .isInstanceOf( MalformedArgException.class );
     }
 
     @Test

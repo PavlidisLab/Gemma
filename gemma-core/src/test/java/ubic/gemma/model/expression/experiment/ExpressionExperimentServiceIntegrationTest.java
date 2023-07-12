@@ -31,7 +31,6 @@ import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
-import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
@@ -304,10 +303,9 @@ public class ExpressionExperimentServiceIntegrationTest extends BaseSpringContex
                 .hasFieldOrPropertyWithValue( "requiredValue", false );
 
         assertThat( expressionExperimentService.getFilter( "bioAssays.arrayDesignUsed.technologyType", Filter.Operator.eq, "SEQUENCING" ) )
-                .hasFieldOrPropertyWithValue( "objectAlias", "ba" )
-                .hasFieldOrPropertyWithValue( "propertyName", "arrayDesignUsed.technologyType" )
-                .hasFieldOrPropertyWithValue( "operator", Filter.Operator.eq )
-                .hasFieldOrPropertyWithValue( "requiredValue", TechnologyType.SEQUENCING );
+                .hasFieldOrPropertyWithValue( "objectAlias", "ee" )
+                .hasFieldOrPropertyWithValue( "propertyName", "id" )
+                .hasFieldOrPropertyWithValue( "operator", Filter.Operator.inSubquery );
     }
 
     @Test
@@ -382,8 +380,9 @@ public class ExpressionExperimentServiceIntegrationTest extends BaseSpringContex
     public void testFilterByAllCharacteristics() {
         Filter f = expressionExperimentService.getFilter( "allCharacteristics.valueUri", Filter.Operator.eq, "http://www.ebi.ac.uk/efo/EFO_000516" );
         assertThat( f )
-                .hasFieldOrPropertyWithValue( "objectAlias", "ac" )
-                .hasFieldOrPropertyWithValue( "propertyName", "valueUri" );
+                .hasFieldOrPropertyWithValue( "objectAlias", "ee" )
+                .hasFieldOrPropertyWithValue( "propertyName", "id" )
+                .hasFieldOrPropertyWithValue( "operator", Filter.Operator.inSubquery );
         assertThat( expressionExperimentService.load( Filters.by( f ), null ) )
                 .isEmpty();
     }
