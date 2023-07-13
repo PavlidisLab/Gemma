@@ -26,9 +26,9 @@ import ubic.gemma.persistence.util.Filter;
 import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.TestComponent;
 
-import java.util.Arrays;
 import java.util.Collections;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
 
 /**
@@ -161,9 +161,18 @@ public class ExpressionExperimentServiceTest extends AbstractJUnit4SpringContext
         OntologyTerm term = mock( OntologyTerm.class );
         when( ontologyService.getTerms( Collections.singleton( "http://example.com/T00001" ) ) ).thenReturn( Collections.singleton( term ) );
         Filters f = Filters.by( "c", "valueUri", String.class, Filter.Operator.eq, "http://example.com/T00001", "characteristics.valueUri" );
-        expressionExperimentService.getFiltersWithInferredAnnotations( f, null );
+        Filters inferredFilters = expressionExperimentService.getFiltersWithInferredAnnotations( f, null );
         verify( ontologyService ).getTerms( Collections.singleton( "http://example.com/T00001" ) );
         verify( ontologyService ).getChildren( Collections.singleton( term ), false, true );
+    }
+
+    @Test
+    public void testGetFiltersWithCategories() {
+        OntologyTerm term = mock( OntologyTerm.class );
+        when( ontologyService.getTerms( Collections.singleton( "http://example.com/T00001" ) ) ).thenReturn( Collections.singleton( term ) );
+        Filters f = Filters.by( "c", "categoryUri", String.class, Filter.Operator.eq, "http://example.com/T00001", "characteristics.categoryUri" );
+        expressionExperimentService.getFiltersWithInferredAnnotations( f, null );
+        verifyNoInteractions( ontologyService );
     }
 
     @Test

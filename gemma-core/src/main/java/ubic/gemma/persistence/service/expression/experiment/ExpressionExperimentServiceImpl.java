@@ -528,15 +528,13 @@ public class ExpressionExperimentServiceImpl
 
     /**
      * Only the mention of these properties will result in inferred term expansion.
+     * <p>
+     * Note: we do not apply inference to category URIs as they are (a) too broad and (b) their sub-terms are never used.
      */
     private static final String[] PROPERTIES_USED_FOR_ANNOTATIONS = {
-            "allCharacteristics.categoryUri",
             "allCharacteristics.valueUri",
-            "characteristics.categoryUri",
             "characteristics.valueUri",
-            "bioAssays.sampleUsed.characteristics.categoryUri",
             "bioAssays.sampleUsed.characteristics.valueUri",
-            "experimentalDesign.experimentalFactors.factorValues.characteristics.categoryUri",
             "experimentalDesign.experimentalFactors.factorValues.characteristics.valueUri"
     };
 
