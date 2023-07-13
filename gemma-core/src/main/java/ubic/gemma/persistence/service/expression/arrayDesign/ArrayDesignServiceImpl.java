@@ -417,25 +417,33 @@ public class ArrayDesignServiceImpl extends AbstractFilteringVoEnabledService<Ar
     @Override
     @Transactional(readOnly = true)
     public ArrayDesign thaw( ArrayDesign arrayDesign ) {
-        return Objects.requireNonNull( this.arrayDesignDao.thaw( arrayDesign ) );
+        arrayDesign = ensureInSession( arrayDesign );
+        arrayDesignDao.thaw( arrayDesign );
+        return arrayDesign;
     }
 
     @Override
     @Transactional(readOnly = true)
     public Collection<ArrayDesign> thaw( Collection<ArrayDesign> aas ) {
-        return arrayDesignDao.thaw( aas );
+        aas = ensureInSession( aas );
+        aas.forEach( arrayDesignDao::thaw );
+        return aas;
     }
 
     @Override
     @Transactional(readOnly = true)
     public ArrayDesign thawLite( ArrayDesign arrayDesign ) {
-        return Objects.requireNonNull( this.arrayDesignDao.thawLite( arrayDesign ) );
+        arrayDesign = ensureInSession( arrayDesign );
+        arrayDesignDao.thaw( arrayDesign );
+        return arrayDesign;
     }
 
     @Override
     @Transactional(readOnly = true)
     public Collection<ArrayDesign> thawLite( Collection<ArrayDesign> arrayDesigns ) {
-        return this.arrayDesignDao.thawLite( arrayDesigns );
+        arrayDesigns = ensureInSession( arrayDesigns );
+        arrayDesigns.forEach( arrayDesignDao::thawLite );
+        return arrayDesigns;
     }
 
     @Override

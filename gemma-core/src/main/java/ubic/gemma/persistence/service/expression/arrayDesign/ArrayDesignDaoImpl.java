@@ -816,7 +816,20 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     }
 
     @Override
-    public ArrayDesign thaw( final ArrayDesign arrayDesign ) {
+    public void thawLite( @NonNull ArrayDesign arrayDesign ) {
+        Hibernate.initialize( arrayDesign.getSubsumedArrayDesigns() );
+        Hibernate.initialize( arrayDesign.getMergees() );
+        Hibernate.initialize( arrayDesign.getDesignProvider() );
+        Hibernate.initialize( arrayDesign.getAuditTrail() );
+        Hibernate.initialize( arrayDesign.getAuditTrail().getEvents() );
+        Hibernate.initialize( arrayDesign.getExternalReferences() );
+        Hibernate.initialize( arrayDesign.getSubsumingArrayDesign() );
+        Hibernate.initialize( arrayDesign.getMergedInto() );
+        Hibernate.initialize( arrayDesign.getAlternativeTo() );
+    }
+
+    @Override
+    public void thaw( final ArrayDesign arrayDesign ) {
         if ( arrayDesign.getId() == null ) {
             throw new IllegalArgumentException( "Cannot thaw a non-persistent array design" );
         }
@@ -827,81 +840,22 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
         StopWatch timer = new StopWatch();
         timer.start();
 
-        ArrayDesign result = this.thawLite( arrayDesign );
+        this.thawLite( arrayDesign );
 
         if ( timer.getTime() > 1000 ) {
             AbstractDao.log.warn( "Thaw array design stage 1: " + timer.getTime() + "ms" );
         }
-
-        if ( result == null )
-            return null;
 
         timer.stop();
         timer.reset();
         timer.start();
 
         // Thaw the composite sequences
-        Hibernate.initialize( result.getCompositeSequences() );
+        Hibernate.initialize( arrayDesign.getCompositeSequences() );
 
         if ( timer.getTime() > 1000 ) {
             AbstractDao.log.warn( "Thaw array design stage 2: " + timer.getTime() + "ms" );
         }
-
-        return result;
-    }
-
-    @Override
-    public Collection<ArrayDesign> thaw( Collection<ArrayDesign> aas ) {
-        aas = thawLite( aas );
-
-        // Thaw the composite sequences
-        //noinspection unchecked
-        Map<ArrayDesign, Set<CompositeSequence>> probes = ( ( List<Object[]> ) this.getSessionFactory().getCurrentSession()
-                .createQuery( "select cs.arrayDesign, cs from CompositeSequence cs left join fetch cs.biologicalCharacteristic where cs.arrayDesign in :ads" )
-                .setParameterList( "ads", aas )
-                .list() )
-                .stream()
-                .collect( Collectors.groupingBy( row -> ( ArrayDesign ) row[0],
-                        Collectors.mapping( row -> ( CompositeSequence ) row[1], Collectors.toSet() ) ) );
-
-        for ( ArrayDesign ad : aas ) {
-            ad.setCompositeSequences( probes.getOrDefault( ad, Collections.emptySet() ) );
-        }
-
-        return aas;
-    }
-
-    //language=HQL
-    private static final String THAW_QUERY =
-            "select distinct a from ArrayDesign a "
-                    + "left join fetch a.subsumedArrayDesigns "
-                    + "left join fetch a.mergees "
-                    + "left join fetch a.designProvider "
-                    + "left join fetch a.primaryTaxon "
-                    + "left join fetch a.auditTrail trail "
-                    + "left join fetch trail.events "
-                    + "left join fetch a.curationDetails "
-                    + "left join fetch a.externalReferences "
-                    + "left join fetch a.subsumingArrayDesign "
-                    + "left join fetch a.mergedInto "
-                    + "left join fetch a.alternativeTo";
-
-    @Override
-    public ArrayDesign thawLite( @NonNull ArrayDesign arrayDesign ) {
-        return ( ArrayDesign ) this.getSessionFactory().getCurrentSession()
-                .createQuery( THAW_QUERY + " where a = :ad " )
-                .setParameter( "ad", arrayDesign )
-                .uniqueResult();
-    }
-
-    @Override
-    public Collection<ArrayDesign> thawLite( Collection<ArrayDesign> arrayDesigns ) {
-        if ( arrayDesigns.isEmpty() )
-            return arrayDesigns;
-        //noinspection unchecked
-        return this.getSessionFactory().getCurrentSession()
-                .createQuery( THAW_QUERY + " where a in :ads " )
-                .setParameterList( "ads", arrayDesigns ).list();
     }
 
     @Override

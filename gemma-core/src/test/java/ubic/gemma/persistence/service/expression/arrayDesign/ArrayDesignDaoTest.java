@@ -61,8 +61,7 @@ public class ArrayDesignDaoTest extends BaseDatabaseTest {
         ad.setCompositeSequences( probes );
         arrayDesignDao.update( ad );
 
-        ArrayDesign thawedAd = arrayDesignDao.thaw( ad );
-        assertSame( ad, thawedAd );
+        arrayDesignDao.thaw( ad );
 
         sessionFactory.getCurrentSession().flush();
         sessionFactory.getCurrentSession().clear();
@@ -70,8 +69,7 @@ public class ArrayDesignDaoTest extends BaseDatabaseTest {
         ad = arrayDesignDao.load( ad.getId() );
         assertNotNull( ad );
         assertFalse( Hibernate.isInitialized( ad.getCompositeSequences() ) );
-        ad = arrayDesignDao.thaw( ad );
-        assertNotNull( ad );
+        arrayDesignDao.thaw( ad );
         assertTrue( Hibernate.isInitialized( ad.getCompositeSequences() ) );
         assertTrue( Hibernate.isInitialized( ad.getCompositeSequences().iterator().next().getBiologicalCharacteristic() ) );
         assertEquals( 20000, ad.getCompositeSequences().size() );
