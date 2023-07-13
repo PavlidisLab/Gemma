@@ -860,7 +860,11 @@ public class ExpressionExperimentDaoImpl
     @Override
     public QuantitationType getPreferredQuantitationType( ExpressionExperiment ee ) {
         return ( QuantitationType ) getSessionFactory().getCurrentSession()
-                .createQuery( "select qt from ExpressionExperiment ee join ee.quantitationTypes qt where qt.isPreferred = true and ee = :ee" )
+                .createQuery( "select qt from ExpressionExperiment ee "
+                        + "join ee.rawExpressionDataVectors rv "
+                        + "join rv.quantitationType qt "
+                        + "where qt.isPreferred = true and ee = :ee "
+                        + "group by qt")
                 .setParameter( "ee", ee )
                 .uniqueResult();
     }
@@ -868,7 +872,11 @@ public class ExpressionExperimentDaoImpl
     @Override
     public QuantitationType getMaskedPreferredQuantitationType( ExpressionExperiment ee ) {
         return ( QuantitationType ) getSessionFactory().getCurrentSession()
-                .createQuery( "select qt from ExpressionExperiment ee join ee.quantitationTypes qt where qt.isMaskedPreferred = true and ee = :ee" )
+                .createQuery( "select qt from ExpressionExperiment ee "
+                        + "join ee.processedExpressionDataVectors pv "
+                        + "join pv.quantitationType qt "
+                        + "where qt.isMaskedPreferred = true and ee = :ee "
+                +"group by qt")
                 .setParameter( "ee", ee )
                 .uniqueResult();
     }
