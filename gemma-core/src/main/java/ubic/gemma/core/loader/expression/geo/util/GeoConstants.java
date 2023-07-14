@@ -63,6 +63,7 @@ public class GeoConstants {
 
         sequenceColumnNames = new HashSet<>();
         GeoConstants.sequenceColumnNames.add( "SEQUENCE" ); // agilent.
+        GeoConstants.sequenceColumnNames.add( "PROBE_SEQUENCE" ); // e.g. GPL7182
 
         //LMD 24/07/09 Bug 1647
         probeOrganismColumnNames = new HashSet<>();
