@@ -222,7 +222,7 @@ public class DataUpdaterImpl implements DataUpdater {
         }
         ExpressionDataDoubleMatrix countEEMatrix = new ExpressionDataDoubleMatrix( ee, countqt, properCountMatrix );
         ee = this.addData( ee, targetArrayDesign, countEEMatrix );
-        this.addTotalCountInformation( ee, countEEMatrix, readLength, isPairedReads );
+        this.addTotalCountInformation( ee, countEEMatrix, readLength, isPairedReads, skipLog2cpm );
 
 
         /* add rpkm/fpkm data if available */
@@ -672,9 +672,12 @@ public class DataUpdaterImpl implements DataUpdater {
      * @param countEEMatrix count ee matrix; used to compute library sizes
      * @param readLength    read length (optional)
      * @param isPairedReads is paired reads (optional)
+     * @param requireExistingLibrarySizesMatch   whether to care if existing information about librarysizes can conflict with the one stored.
+     *                                           This should be true when simply backfilling counts, as a check.
+     *                                           It should be false if we are actually trying to replace existing counts.
      */
     private void addTotalCountInformation( ExpressionExperiment ee, ExpressionDataDoubleMatrix countEEMatrix,
-            Integer readLength, Boolean isPairedReads ) {
+            Integer readLength, Boolean isPairedReads, boolean requireExistingLibrarySizesMatch ) {
         for ( BioAssay ba : ee.getBioAssays() ) {
             Double[] col = countEEMatrix.getColumn( ba );
             int librarySize = ( int ) Math.floor( DescriptiveWithMissing.sum( new DoubleArrayList( ArrayUtils.toPrimitive( col ) ) ) );
@@ -693,7 +696,7 @@ public class DataUpdaterImpl implements DataUpdater {
                 ba.setSequencePairedReads( isPairedReads );
             }
 
-            if ( ba.getSequenceReadCount() != null && ba.getSequenceReadCount() != librarySize ) {
+            if ( ba.getSequenceReadCount() != null && ba.getSequenceReadCount() != librarySize && requireExistingLibrarySizesMatch ) {
                 throw new IllegalStateException( "Read count was already set for " + ba + " and is not the same (existing=" + ba.getSequenceReadCount() + " vs updated=" + librarySize + ")" );
             }
             ba.setSequenceReadCount( librarySize );
