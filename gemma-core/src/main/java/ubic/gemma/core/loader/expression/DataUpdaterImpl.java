@@ -178,26 +178,11 @@ public class DataUpdaterImpl implements DataUpdater {
 
     }
 
-    /**
-     * RNA-seq: Replaces data. Starting with the count data, we compute the log2cpm, which is the preferred quantitation
-     * type we use internally. Counts and FPKM (if provided) are stored in addition.
-     *
-     * Rows (genes) that have all zero counts are ignored entirely.
-     *
-     * @param ee                  ee
-     * @param targetArrayDesign   - this should be one of the "Generic" gene-based platforms. The data set will be
-     *                            switched to use it.
-     * @param countMatrix         Representing 'raw' counts (added after rpkm, if provided).
-     * @param rpkmMatrix          Representing per-gene normalized data, optional (RPKM or FPKM)
-     * @param allowMissingSamples if true, samples that are missing data will be deleted from the experiment.
-     * @param isPairedReads       is paired reads
-     * @param readLength          read length
-     */
     @Override
     @Transactional(propagation = Propagation.NEVER)
     public void addCountData( ExpressionExperiment ee, ArrayDesign targetArrayDesign,
             DoubleMatrix<String, String> countMatrix, DoubleMatrix<String, String> rpkmMatrix, Integer readLength,
-            Boolean isPairedReads, boolean allowMissingSamples ) {
+            Boolean isPairedReads, boolean allowMissingSamples, boolean skipLog2cpm ) {
 
         if ( countMatrix == null )
             throw new IllegalArgumentException( "You must provide count matrix (rpkm is optional)" );
@@ -215,6 +200,7 @@ public class DataUpdaterImpl implements DataUpdater {
         }
 
         ee = experimentService.thawLite( ee );
+        Collection<QuantitationType> oldQts = ee.getQuantitationTypes();
 
         ee = this.dealWithMissingSamples( ee, countMatrix, allowMissingSamples );
 
@@ -225,26 +211,7 @@ public class DataUpdaterImpl implements DataUpdater {
         assert !properCountMatrix.getColNames().isEmpty();
         assert !properCountMatrix.getRowNames().isEmpty();
 
-        Collection<QuantitationType> oldQts = ee.getQuantitationTypes();
-
         //    countEEMatrix = this.removeNoDataRows( countEEMatrix );
-
-        QuantitationType log2cpmQt = this.makelog2cpmQt();
-        for ( QuantitationType oldqt : oldQts ) { // use old QT if possible
-            if ( oldqt.getName().equals( log2cpmQt.getName() ) ) {
-                log2cpmQt = oldqt;
-                break;
-            }
-        }
-
-        DoubleMatrix1D librarySize = MatrixStats.colSums( countMatrix );
-        DoubleMatrix<CompositeSequence, BioMaterial> log2cpmMatrix = MatrixStats
-                .convertToLog2Cpm( properCountMatrix, librarySize );
-
-        ExpressionDataDoubleMatrix log2cpmEEMatrix = new ExpressionDataDoubleMatrix( ee, log2cpmQt, log2cpmMatrix );
-
-        // important: replaceData takes care of the platform switch if necessary; call first. It also deletes old QTs, so from here we have to remake them.
-        ee = this.replaceData( ee, targetArrayDesign, log2cpmEEMatrix );
 
         QuantitationType countqt = this.makeCountQt();
         for ( QuantitationType oldqt : oldQts ) { // use old QT if possible
@@ -254,11 +221,11 @@ public class DataUpdaterImpl implements DataUpdater {
             }
         }
         ExpressionDataDoubleMatrix countEEMatrix = new ExpressionDataDoubleMatrix( ee, countqt, properCountMatrix );
-
         ee = this.addData( ee, targetArrayDesign, countEEMatrix );
-
         this.addTotalCountInformation( ee, countEEMatrix, readLength, isPairedReads );
 
+
+        /* add rpkm/fpkm data if available */
         if ( rpkmMatrix != null ) {
 
             DoubleMatrix<CompositeSequence, BioMaterial> properRPKMMatrix = this
@@ -280,6 +247,31 @@ public class DataUpdaterImpl implements DataUpdater {
 
             this.addData( ee, targetArrayDesign, rpkmEEMatrix );
         }
+
+        // offered only to allow us to backfill the count and rpkm data without updating log2cpm and triggering postprocessing
+        if ( skipLog2cpm ) {
+            log.info( "Done adding count data, skipping the rest as per selected options" );
+            return;
+        }
+
+        /* Add the log2cpm data.*/
+        QuantitationType log2cpmQt = this.makelog2cpmQt();
+        for ( QuantitationType oldqt : oldQts ) { // use old QT if possible
+            if ( oldqt.getName().equals( log2cpmQt.getName() ) ) {
+                log2cpmQt = oldqt;
+                break;
+            }
+        }
+
+        DoubleMatrix1D librarySize = MatrixStats.colSums( countMatrix );
+        DoubleMatrix<CompositeSequence, BioMaterial> log2cpmMatrix = MatrixStats
+                .convertToLog2Cpm( properCountMatrix, librarySize );
+
+        ExpressionDataDoubleMatrix log2cpmEEMatrix = new ExpressionDataDoubleMatrix( ee, log2cpmQt, log2cpmMatrix );
+
+        // important: replaceData takes care of the platform switch if necessary; call first. It also deletes old QTs, so from here we have to remake them.
+        ee = this.replaceData( ee, targetArrayDesign, log2cpmEEMatrix );
+
 
     }
 
@@ -677,9 +669,9 @@ public class DataUpdaterImpl implements DataUpdater {
      * RNA-seq
      *
      * @param ee            experiment
-     * @param countEEMatrix count ee matrix
-     * @param readLength    read length
-     * @param isPairedReads is paired reads
+     * @param countEEMatrix count ee matrix; used to compute library sizes
+     * @param readLength    read length (optional)
+     * @param isPairedReads is paired reads (optional)
      */
     private void addTotalCountInformation( ExpressionExperiment ee, ExpressionDataDoubleMatrix countEEMatrix,
             Integer readLength, Boolean isPairedReads ) {
@@ -693,8 +685,14 @@ public class DataUpdaterImpl implements DataUpdater {
             }
             DataUpdaterImpl.log.info( ba + " total library size=" + librarySize );
 
-            ba.setSequenceReadLength( readLength );
-            ba.setSequencePairedReads( isPairedReads );
+            if ( readLength != null ) {
+                ba.setSequenceReadLength( readLength );
+            }
+
+            if ( isPairedReads != null ) {
+                ba.setSequencePairedReads( isPairedReads );
+            }
+
             ba.setSequenceReadCount( librarySize );
 
             bioAssayService.update( ba );

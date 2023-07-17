@@ -146,7 +146,7 @@ public class DiffExTest extends AbstractGeoServiceTest {
 
             // the experiment has 8 samples but the data has 4 columns so allow missing samples
             // GSM718707 GSM718708 GSM718709 GSM718710
-            dataUpdater.addCountData( ee, targetArrayDesign, countMatrix, null, 36, true, true );
+            dataUpdater.addCountData( ee, targetArrayDesign, countMatrix, null, 36, true, true, false );
         }
 
         // make sure to do a thawRawAndProcessed() to get the addCountData() updates
