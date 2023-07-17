@@ -693,6 +693,9 @@ public class DataUpdaterImpl implements DataUpdater {
                 ba.setSequencePairedReads( isPairedReads );
             }
 
+            if ( ba.getSequenceReadCount() != null && ba.getSequenceReadCount() != librarySize ) {
+                throw new IllegalStateException( "Read count was already set for " + ba + " and is not the same (existing=" + ba.getSequenceReadCount() + " vs updated=" + librarySize + ")" );
+            }
             ba.setSequenceReadCount( librarySize );
 
             bioAssayService.update( ba );
