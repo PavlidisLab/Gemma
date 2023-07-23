@@ -6,7 +6,8 @@ import org.hibernate.criterion.*;
 import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.List;
-import java.util.Objects;
+
+import static java.util.Objects.requireNonNull;
 
 import static ubic.gemma.persistence.util.PropertyMappingUtils.formProperty;
 
@@ -77,7 +78,8 @@ public class FilterCriteriaUtils {
                     return Restrictions.ne( property, filter.getRequiredValue() );
                 }
             case like:
-                return Restrictions.like( property, escapeLike( ( String ) Objects.requireNonNull( filter.getRequiredValue(), "Required value cannot be null for the like operator." ) ), MatchMode.START );
+                return Restrictions.like( property, escapeLike( ( String ) requireNonNull( filter.getRequiredValue(),
+                        "Required value cannot be null for the like operator." ) ), MatchMode.START );
             case lessThan:
                 return Restrictions.lt( property, filter.getRequiredValue() );
             case greaterThan:
@@ -87,8 +89,18 @@ public class FilterCriteriaUtils {
             case greaterOrEq:
                 return Restrictions.ge( property, filter.getRequiredValue() );
             case in:
-                return Restrictions.in( property, ( Collection<?> ) Objects.requireNonNull( filter.getRequiredValue(),
+                return Restrictions.in( property, ( Collection<?> ) requireNonNull( filter.getRequiredValue(),
                         "Required value cannot be null for a collection." ) );
+            case inSubquery:
+                Subquery subquery = ( Subquery ) requireNonNull( filter.getRequiredValue(),
+                        "Required value cannot be null for a subquery." );
+                DetachedCriteria dc = DetachedCriteria.forEntityName( subquery.getEntityName() )
+                        .setProjection( Projections.id() );
+                for ( Subquery.Alias a : subquery.getAliases() ) {
+                    dc.createAlias( a.getPropertyName(), a.getAlias() );
+                }
+                dc.add( formRestrictionClause( subquery.getFilter() ) );
+                return Subqueries.propertyIn( "id", dc );
             default:
                 throw new IllegalStateException( "Unexpected operator for filter: " + filter.getOperator() );
         }

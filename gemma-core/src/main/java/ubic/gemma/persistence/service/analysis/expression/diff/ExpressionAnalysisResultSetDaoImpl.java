@@ -26,11 +26,9 @@ import org.hibernate.criterion.Restrictions;
 import org.hibernate.sql.JoinType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
-import org.springframework.transaction.PlatformTransactionManager;
 import ubic.gemma.model.analysis.expression.diff.*;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.DatabaseEntry;
-import ubic.gemma.model.common.measurement.Measurement;
 import ubic.gemma.model.common.protocol.Protocol;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -41,7 +39,10 @@ import ubic.gemma.persistence.service.AbstractDao;
 import ubic.gemma.persistence.util.*;
 
 import javax.annotation.Nullable;
-import java.util.*;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -221,13 +222,13 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilterin
         configurer.unregisterEntity( "analysis.protocol.", Protocol.class );
 
         // use the characteristics instead
-        configurer.registerAlias( "analysis.subsetFactorValue.characteristics.", "sfvc", Characteristic.class, null, 1 );
+        configurer.registerAlias( "analysis.subsetFactorValue.characteristics.", "sfvc", Characteristic.class, null, 1, true );
         configurer.unregisterProperty( "analysis.subsetFactorValue.characteristics.originalValue" );
         configurer.unregisterProperty( "analysis.subsetFactorValue.value" );
 
         // baseline is always baseline
         configurer.unregisterProperty( "baselineGroup.isBaseline" );
-        configurer.registerAlias( "baselineGroup.characteristics.", "bc", Characteristic.class, null, 1 );
+        configurer.registerAlias( "baselineGroup.characteristics.", "bc", Characteristic.class, null, 1, true );
         configurer.unregisterProperty( "baselineGroup.characteristics.originalValue" );
         configurer.unregisterProperty( "baselineGroup.value" );
 
