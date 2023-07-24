@@ -6,6 +6,7 @@ import org.springframework.cache.CacheManager;
 
 import java.util.Objects;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 
 /**
  * Created by tesarst on 04/04/17.
@@ -35,6 +36,32 @@ public class CacheUtils {
             }
         } else {
             cache.clear();
+        }
+    }
+
+    /**
+     * Compute a cache entry only if it is missing, otherwise return the existing value.
+     * <p>
+     * If supported, a write lock is used such that the function is invoked only once for a given key.
+     */
+    public static <T> T computeIfMissing( Cache cache, Object key, Supplier<T> supplier ) {
+        try {
+            if ( cache.getNativeCache() instanceof Ehcache ) {
+                ( ( Ehcache ) cache.getNativeCache() ).acquireWriteLockOnKey( key );
+            }
+            Cache.ValueWrapper value = cache.get( key );
+            if ( value != null ) {
+                //noinspection unchecked
+                return ( T ) value.get();
+            } else {
+                T newVal = supplier.get();
+                cache.put( key, newVal );
+                return newVal;
+            }
+        } finally {
+            if ( cache.getNativeCache() instanceof Ehcache ) {
+                ( ( Ehcache ) cache.getNativeCache() ).releaseWriteLockOnKey( key );
+            }
         }
     }
 }

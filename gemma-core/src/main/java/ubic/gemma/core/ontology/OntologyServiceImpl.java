@@ -25,6 +25,7 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.cache.CacheManager;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.core.task.AsyncTaskExecutor;
@@ -83,6 +84,10 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
     private static final int MAX_TERMS_TO_FETCH = 200;
     private static final Log log = LogFactory.getLog( OntologyServiceImpl.class.getName() );
 
+    private static final String
+            PARENTS_CACHE_NAME = "OntologyService.parents",
+            CHILDREN_CACHE_NAME = "OntologyService.children";
+
     @Autowired
     private BioMaterialService bioMaterialService;
     @Autowired
@@ -117,10 +122,15 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
     @Qualifier("ontologyTaskExecutor")
     private TaskExecutor ontologyTaskExecutor;
 
+    @Autowired
+    private CacheManager cacheManager;
+
+    private OntologyCache ontologyCache;
     private Set<OntologyTermSimple> categoryTerms = null;
 
     @Override
     public void afterPropertiesSet() throws Exception {
+        ontologyCache = new OntologyCache( cacheManager.getCache( PARENTS_CACHE_NAME ), cacheManager.getCache( CHILDREN_CACHE_NAME ) );
         List<ubic.basecode.ontology.providers.OntologyService> enabledOntologyServices = ontologyServiceFactories.stream()
                 .filter( OntologyServiceFactory::isAutoLoaded )
                 .map( factory -> {
@@ -382,12 +392,12 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
 
     @Override
     public Set<OntologyTerm> getParents( Collection<OntologyTerm> terms, boolean direct, boolean includeAdditionalProperties ) {
-        return combineInThreads( os -> os.getParents( terms, direct, includeAdditionalProperties ) );
+        return combineInThreads( os -> ontologyCache.getParents( os, terms, direct, includeAdditionalProperties ) );
     }
 
     @Override
     public Set<OntologyTerm> getChildren( Collection<OntologyTerm> terms, boolean direct, boolean includeAdditionalProperties ) {
-        return combineInThreads( os -> os.getChildren( terms, direct, includeAdditionalProperties ) );
+        return combineInThreads( os -> ontologyCache.getChildren( os, terms, direct, includeAdditionalProperties ) );
     }
 
     @Override
@@ -427,7 +437,8 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
 
     @Override
     public Set<OntologyTerm> getTerms( Collection<String> uris ) {
-        return combineInThreads( os -> uris.stream().map( os::getTerm ).filter( Objects::nonNull ).collect( Collectors.toSet() ) );
+        Set<String> distinctUris = uris instanceof Set ? ( Set<String> ) uris : new HashSet<>( uris );
+        return combineInThreads( os -> distinctUris.stream().map( os::getTerm ).filter( Objects::nonNull ).collect( Collectors.toSet() ) );
     }
 
     /**
@@ -462,7 +473,10 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
     @Override
     public void reinitializeAllOntologies() {
         for ( ubic.basecode.ontology.providers.OntologyService serv : this.ontologyServices ) {
-            ontologyTaskExecutor.execute( () -> serv.initialize( true, true ) );
+            ontologyTaskExecutor.execute( () -> {
+                serv.initialize( true, true );
+                ontologyCache.clearByOntology( serv );
+            } );
         }
     }
 
