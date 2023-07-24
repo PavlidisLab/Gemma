@@ -52,7 +52,7 @@ public class RNASeqDataAddCli extends ExpressionExperimentManipulatingCLI {
     private static final String MULTIQC_METADATA_FILE_OPT = "multiqc";
     private boolean allowMissingSamples = false;
     private String countFile = null;
-    private boolean isPairedReads = false;
+    private Boolean isPairedReads = null;
     private String platformName = null;
     private Integer readLength = null;
     private String rpkmFile = null;
