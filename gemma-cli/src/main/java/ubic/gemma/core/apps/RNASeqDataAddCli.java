@@ -75,7 +75,7 @@ public class RNASeqDataAddCli extends ExpressionExperimentManipulatingCLI {
         options.addOption( RNASeqDataAddCli.ALLOW_MISSING, "Set this if your data files don't have information for all samples." );
         options.addOption( Option.builder( "a" ).longOpt( null ).desc( "Target platform (must already exist in the system)" ).argName( "platform short name" ).hasArg().build() );
 
-        options.addOption( Option.builder( RNASeqDataAddCli.METADATAOPT ).longOpt( null ).desc( "Information on read length given as a string like '100:paired', '36 (assumed unpaired)', or '36:unpaired' " ).argName( "length" ).hasArg().build() );
+        options.addOption( Option.builder( RNASeqDataAddCli.METADATAOPT ).longOpt( null ).desc( "Information on read length given as a string like '100:paired', '36' (no pairedness assumed), or '36:unpaired' " ).argName( "length" ).hasArg().build() );
 
         options.addOption( "log2cpm", "Just compute log2cpm from the existing stored count data (backfill); batchmode OK, no other options needed" );
 
@@ -126,6 +126,8 @@ public class RNASeqDataAddCli extends ExpressionExperimentManipulatingCLI {
                 } else {
                     throw new IllegalArgumentException( "Value must be either 'paired' or 'unpaired' or left blank" );
                 }
+            } else {
+                this.isPairedReads = null;
             }
 
         }
@@ -142,10 +144,10 @@ public class RNASeqDataAddCli extends ExpressionExperimentManipulatingCLI {
 
         this.platformName = commandLine.getOptionValue( "a" );
 
-        if (commandLine.hasOption( "noLog2cpm")) {
+        if ( commandLine.hasOption( "noLog2cpm" ) ) {
             this.justbackfillCountsAndRPKM = true;
-            if (this.justbackfillLog2cpm) {
-                throw new IllegalArgumentException("Can't use both noLog2cpm and log2cpm options");
+            if ( this.justbackfillLog2cpm ) {
+                throw new IllegalArgumentException( "Can't use both noLog2cpm and log2cpm options" );
             }
         }
 
