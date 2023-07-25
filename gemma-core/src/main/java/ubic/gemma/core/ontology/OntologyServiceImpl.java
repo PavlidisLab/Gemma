@@ -64,7 +64,9 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.*;
-import java.util.concurrent.*;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorCompletionService;
+import java.util.concurrent.Future;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -397,7 +399,27 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
 
     @Override
     public Set<OntologyTerm> getChildren( Collection<OntologyTerm> terms, boolean direct, boolean includeAdditionalProperties ) {
-        return combineInThreads( os -> ontologyCache.getChildren( os, terms, direct, includeAdditionalProperties ) );
+        StopWatch timer = StopWatch.createStarted();
+        try {
+            return combineInThreads( os -> {
+                StopWatch timer2 = StopWatch.createStarted();
+                try {
+                    return ontologyCache.getChildren( os, terms, direct, includeAdditionalProperties );
+                } finally {
+                    if ( timer2.getTime() > 500 ) {
+                        log.warn( String.format( "Gathering children of %d terms from %s took %d ms", terms.size(), os, timer2.getTime() ) );
+                    } else {
+                        log.trace( String.format( "Gathering children of %d terms from %s took %d ms", terms.size(), os, timer2.getTime() ) );
+                    }
+                }
+            } );
+        } finally {
+            if ( timer.getTime() > 500 ) {
+                log.warn( String.format( "Gathering children of %d terms took %d ms", terms.size(), timer.getTime() ) );
+            } else {
+                log.debug( String.format( "Gathering children of %d terms took %d ms", terms.size(), timer.getTime() ) );
+            }
+        }
     }
 
     @Override
@@ -936,20 +958,11 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
      * The functions are evaluated using Gemma's short-lived task executor.
      */
     private <T> Set<T> combineInThreads( Function<ubic.basecode.ontology.providers.OntologyService, Collection<T>> work, List<ubic.basecode.ontology.providers.OntologyService> ontologyServices ) {
-        BlockingQueue<Future<Collection<T>>> futures = new ArrayBlockingQueue<>( ontologyServices.size() );
+        List<Future<Collection<T>>> futures = new ArrayList<>( ontologyServices.size() );
         ExecutorCompletionService<Collection<T>> completionService = new ExecutorCompletionService<>( taskExecutor );
         for ( ubic.basecode.ontology.providers.OntologyService os : ontologyServices ) {
             if ( os.isOntologyLoaded() ) {
-                futures.add( completionService.submit( () -> {
-                    StopWatch timer = StopWatch.createStarted();
-                    try {
-                        return work.apply( os );
-                    } finally {
-                        if ( timer.getTime() > 500 ) {
-                            log.warn( String.format( "Gathering results from %s took %d ms.", os, timer.getTime() ) );
-                        }
-                    }
-                } ) );
+                futures.add( completionService.submit( () -> work.apply( os ) ) );
             }
         }
         Set<T> children = new HashSet<>();

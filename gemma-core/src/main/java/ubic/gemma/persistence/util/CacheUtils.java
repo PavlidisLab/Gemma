@@ -1,12 +1,15 @@
 package ubic.gemma.persistence.util;
 
+import lombok.Value;
 import net.sf.ehcache.Ehcache;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Map;
 import java.util.Objects;
 import java.util.function.Predicate;
-import java.util.function.Supplier;
 
 /**
  * Created by tesarst on 04/04/17.
@@ -20,6 +23,19 @@ public class CacheUtils {
      */
     public static Cache getCache( CacheManager cacheManager, String cacheName ) throws RuntimeException {
         return Objects.requireNonNull( cacheManager.getCache( cacheName ), String.format( "Cache with name %s does not exist.", cacheName ) );
+    }
+
+    /**
+     * Obtain the keys of all elements of a cache.
+     */
+    public static Collection<?> getKeys( Cache cache ) {
+        if ( cache.getNativeCache() instanceof Ehcache ) {
+            return ( ( Ehcache ) cache.getNativeCache() ).getKeys();
+        } else if ( cache.getNativeCache() instanceof Map ) {
+            return ( ( Map<?, ?> ) cache.getNativeCache() ).keySet();
+        } else {
+            return Collections.emptySet();
+        }
     }
 
     /**
@@ -40,28 +56,55 @@ public class CacheUtils {
     }
 
     /**
-     * Compute a cache entry only if it is missing, otherwise return the existing value.
+     * Acquire an exclusive write lock on the given key in the cache.
      * <p>
-     * If supported, a write lock is used such that the function is invoked only once for a given key.
+     * This can be used for preventing other threads from performing the same expensive operations.
      */
-    public static <T> T computeIfMissing( Cache cache, Object key, Supplier<T> supplier ) {
-        try {
-            if ( cache.getNativeCache() instanceof Ehcache ) {
-                ( ( Ehcache ) cache.getNativeCache() ).acquireWriteLockOnKey( key );
-            }
-            Cache.ValueWrapper value = cache.get( key );
-            if ( value != null ) {
-                //noinspection unchecked
-                return ( T ) value.get();
-            } else {
-                T newVal = supplier.get();
-                cache.put( key, newVal );
-                return newVal;
-            }
-        } finally {
-            if ( cache.getNativeCache() instanceof Ehcache ) {
-                ( ( Ehcache ) cache.getNativeCache() ).releaseWriteLockOnKey( key );
-            }
+    public static Lock acquireWriteLock( Cache cache, Object key ) {
+        if ( cache.getNativeCache() instanceof Ehcache ) {
+            return new EhcacheWriteLock( ( Ehcache ) cache.getNativeCache(), key );
+        } else {
+            return new NoopWriteLock();
+        }
+    }
+
+    public interface Lock extends AutoCloseable {
+
+        @Override
+        void close();
+    }
+
+    @Value
+    private static class EhcacheWriteLock implements Lock {
+
+        Ehcache cache;
+        Object key;
+
+        public EhcacheWriteLock( Ehcache cache, Object key ) {
+            this.cache = cache;
+            this.key = key;
+            lock();
+        }
+
+        @Override
+        public void close() {
+            unlock();
+        }
+
+        private void lock() {
+            cache.acquireWriteLockOnKey( key );
+        }
+
+        private void unlock() {
+            cache.releaseWriteLockOnKey( key );
+        }
+    }
+
+    private static class NoopWriteLock implements Lock {
+
+        @Override
+        public void close() {
+            // noop
         }
     }
 }

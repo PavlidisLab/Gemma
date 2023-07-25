@@ -19,7 +19,7 @@ public class OntologyCacheTest {
 
     private OntologyService ontologyService;
     private OntologyCache ontologyCache;
-    private OntologyTerm term1, term2, term3;
+    private OntologyTerm term1, term2, term3, term4;
 
     @Before
     public void setUp() {
@@ -28,10 +28,11 @@ public class OntologyCacheTest {
         term1 = new OntologyTermSimple( "http://example.com/term1", "term1" );
         term2 = new OntologyTermSimple( "http://example.com/term2", "term2" );
         term3 = new OntologyTermSimple( "http://example.com/term3", "term3" );
+        term4 = new OntologyTermSimple( "http://example.com/term3", "term4" );
     }
 
     @Test
-    public void testLookupSubsets() {
+    public void testLookupByMaximalSubset() {
         ontologyCache.getChildren( ontologyService, Collections.singleton( term1 ), true, true );
         verify( ontologyService ).getChildren( Collections.singleton( term1 ), true, true );
 
@@ -50,5 +51,15 @@ public class OntologyCacheTest {
         verify( ontologyService, atMostOnce() ).getChildren( Collections.singleton( term1 ), true, true );
         verify( ontologyService ).getChildren( Collections.singleton( term2 ), true, true );
         verify( ontologyService, never() ).getChildren( new HashSet<>( Arrays.asList( term1, term2 ) ), true, true );
+    }
+
+    @Test
+    public void testLookupByEnumeration() {
+        ontologyCache.getChildren( ontologyService, Collections.singleton( term1 ), true, true );
+        verify( ontologyService ).getChildren( Collections.singleton( term1 ), true, true );
+
+        // a k-3 subset exist (i.e. [term1]) but only via enumeration
+        ontologyCache.getChildren( ontologyService, Arrays.asList( term1, term2, term3, term4 ), true, true );
+        verify( ontologyService, atMostOnce() ).getChildren( Collections.singleton( term1 ), true, true );
     }
 }
