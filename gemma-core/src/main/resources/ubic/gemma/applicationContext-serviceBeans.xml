@@ -11,7 +11,6 @@
     <!-- Local tasks executor -->
     <bean id="taskExecutor" class="org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor">
         <property name="corePoolSize" value="${gemma.localTasks.corePoolSize}"/>
-        <property name="maxPoolSize" value="${gemma.localTasks.maxPoolSize}"/>
     </bean>
 
     <!-- Message source for this context, loaded from localized "messages_xx" files -->
