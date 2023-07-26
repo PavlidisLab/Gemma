@@ -110,7 +110,12 @@ public abstract class AbstractCuratableDao<C extends Curatable, VO extends Abstr
     @Nullable
     protected String groupByIfNecessary( @Nullable Filters filters, @Nullable Sort sort, String... oneToManyAliases ) {
         if ( FiltersUtils.containsAnyAlias( filters, sort, oneToManyAliases ) || !SecurityUtil.isUserAdmin() ) {
-            return objectAlias;
+            String groupByClause = objectAlias;
+            // grouping is necessary if the sorting column is not the ID
+            if ( sort != null && ( !objectAlias.equals( sort.getObjectAlias() ) || !getIdentifierPropertyName().equals( sort.getPropertyName() ) ) ) {
+                groupByClause += ", " + ( sort.getObjectAlias() != null ? sort.getObjectAlias() + "." : "" ) + sort.getPropertyName();
+            }
+            return groupByClause;
         } else {
             return null;
         }

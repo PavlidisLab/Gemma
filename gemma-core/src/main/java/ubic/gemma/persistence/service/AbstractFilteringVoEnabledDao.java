@@ -49,6 +49,7 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
         String propertyName;
     }
 
+    @Nullable
     private final String objectAlias;
 
     /**
