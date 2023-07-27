@@ -985,7 +985,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
             filters = Filters.by( filters );
         }
 
-        if ( FiltersUtils.containsAnyAlias( filters, sort, EXTERNAL_REFERENCE_ALIAS ) ) {
+        if ( FiltersUtils.containsAnyAlias( null, sort, EXTERNAL_REFERENCE_ALIAS ) ) {
             queryString += " left join ad.externalReferences as " + EXTERNAL_REFERENCE_ALIAS;
         }
 

@@ -1718,30 +1718,30 @@ public class ExpressionExperimentDaoImpl
         // fetching characteristics, bioAssays and arrayDesignUsed is costly, so we reserve these operations only if it
         // is mentioned in the filters
 
-        if ( FiltersUtils.containsAnyAlias( filters, sort, CHARACTERISTIC_ALIAS ) ) {
+        if ( FiltersUtils.containsAnyAlias( null, sort, CHARACTERISTIC_ALIAS ) ) {
             queryString += " left join ee.characteristics as " + CHARACTERISTIC_ALIAS;
         }
 
-        if ( FiltersUtils.containsAnyAlias( filters, sort, FACTOR_VALUE_CHARACTERISTIC_ALIAS ) ) {
+        if ( FiltersUtils.containsAnyAlias( null, sort, FACTOR_VALUE_CHARACTERISTIC_ALIAS ) ) {
             queryString += " left join ee.experimentalDesign.experimentalFactors as ef";
             queryString += " left join ef.factorValues as fv";
             queryString += " left join fv.characteristics as " + FACTOR_VALUE_CHARACTERISTIC_ALIAS;
         }
 
-        if ( FiltersUtils.containsAnyAlias( filters, sort, BIO_ASSAY_ALIAS, BIO_MATERIAL_CHARACTERISTIC_ALIAS, ARRAY_DESIGN_ALIAS ) ) {
+        if ( FiltersUtils.containsAnyAlias( null, sort, BIO_ASSAY_ALIAS, BIO_MATERIAL_CHARACTERISTIC_ALIAS, ARRAY_DESIGN_ALIAS ) ) {
             queryString += " left join ee.bioAssays as " + BIO_ASSAY_ALIAS;
         }
 
         // this is a shorthand for all characteristics (direct + biomaterial + experimental design)
-        if ( FiltersUtils.containsAnyAlias( filters, sort, ALL_CHARACTERISTIC_ALIAS ) ) {
+        if ( FiltersUtils.containsAnyAlias( null, sort, ALL_CHARACTERISTIC_ALIAS ) ) {
             queryString += " left join ee.allCharacteristics as " + ALL_CHARACTERISTIC_ALIAS;
         }
 
-        if ( FiltersUtils.containsAnyAlias( filters, sort, BIO_MATERIAL_CHARACTERISTIC_ALIAS ) ) {
+        if ( FiltersUtils.containsAnyAlias( null, sort, BIO_MATERIAL_CHARACTERISTIC_ALIAS ) ) {
             queryString += " left join " + BIO_ASSAY_ALIAS + ".sampleUsed.characteristics as " + BIO_MATERIAL_CHARACTERISTIC_ALIAS;
         }
 
-        if ( FiltersUtils.containsAnyAlias( filters, sort, ArrayDesignDao.OBJECT_ALIAS ) ) {
+        if ( FiltersUtils.containsAnyAlias( null, sort, ArrayDesignDao.OBJECT_ALIAS ) ) {
             queryString += " left join " + BIO_ASSAY_ALIAS + ".arrayDesignUsed as " + ARRAY_DESIGN_ALIAS;
         }
 
