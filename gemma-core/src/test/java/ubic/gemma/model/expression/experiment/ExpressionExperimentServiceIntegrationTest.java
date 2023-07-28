@@ -37,15 +37,15 @@ import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.TableMaintenanceUtil;
-import ubic.gemma.persistence.service.common.description.CharacteristicDao;
 import ubic.gemma.persistence.service.common.description.CharacteristicService;
-import ubic.gemma.persistence.service.expression.bioAssay.BioAssayDao;
 import ubic.gemma.persistence.service.expression.bioAssayData.RawExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.experiment.BlacklistedEntityService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentDao;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.util.Filter;
 import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Slice;
+import ubic.gemma.persistence.util.Subquery;
 
 import java.util.*;
 import java.util.function.Consumer;
@@ -324,9 +324,10 @@ public class ExpressionExperimentServiceIntegrationTest extends BaseSpringContex
         Characteristic c = ee.getCharacteristics().stream().findFirst().orElse( null );
         assertThat( c ).isNotNull();
         Filter of = expressionExperimentService.getFilter( "characteristics.id", Filter.Operator.eq, c.getId().toString() );
-        assertEquals( CharacteristicDao.OBJECT_ALIAS, of.getObjectAlias() );
+        assertEquals( ExpressionExperimentDao.OBJECT_ALIAS, of.getObjectAlias() );
         assertEquals( "id", of.getPropertyName() );
         assertEquals( Long.class, of.getPropertyType() );
+        assertTrue( of.getRequiredValue() instanceof Subquery );
         Long id = ee.getId();
         ids.add( id );
         Collection<ExpressionExperimentValueObject> list = expressionExperimentService.loadValueObjects( Filters.by( of ), null, 0, 0 );
@@ -357,8 +358,9 @@ public class ExpressionExperimentServiceIntegrationTest extends BaseSpringContex
         BioAssay ba = ee.getBioAssays().stream().findFirst().orElse( null );
         assertThat( ba ).isNotNull();
         Filter of = expressionExperimentService.getFilter( "bioAssays.id", Filter.Operator.eq, ba.getId().toString() );
-        assertEquals( BioAssayDao.OBJECT_ALIAS, of.getObjectAlias() );
+        assertEquals( ExpressionExperimentDao.OBJECT_ALIAS, of.getObjectAlias() );
         assertEquals( "id", of.getPropertyName() );
+        assertTrue( of.getRequiredValue() instanceof Subquery );
         Long id = ee.getId();
         ids.add( id );
         Collection<ExpressionExperimentValueObject> list = expressionExperimentService.loadValueObjects( Filters.by( of ), null, 0, 0 );
@@ -422,7 +424,6 @@ public class ExpressionExperimentServiceIntegrationTest extends BaseSpringContex
         Consumer<? super ExpressionExperimentService.CharacteristicWithUsageStatisticsAndOntologyTerm> consumer = c2 -> {
             assertThat( c2.getCharacteristic() ).isEqualTo( c );
             assertThat( c2.getNumberOfExpressionExperiments() ).isEqualTo( 1L );
-            assertThat( c2.getTerm() ).isNull();
         };
 
         tableMaintenanceUtil.updateExpressionExperiment2CharacteristicEntries();
