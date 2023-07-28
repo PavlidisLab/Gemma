@@ -123,7 +123,6 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
         //noinspection unchecked
         List<Object[]> result = prepareExperimentsByUrisQuery( uris, taxon, limit > 0 && rankByLevel )
                 .setMaxResults( limit )
-                .setCacheable( true )
                 .list();
         if ( result.isEmpty() ) {
             return Collections.emptyMap();
@@ -159,7 +158,6 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
         //noinspection unchecked
         List<Object[]> result = prepareExperimentsByUrisQuery( uris, taxon, limit > 0 && rankByLevel )
                 .setMaxResults( limit )
-                .setCacheable( true )
                 .list();
         //noinspection unchecked
         return result.stream().collect( Collectors.groupingBy(
