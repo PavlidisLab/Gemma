@@ -181,7 +181,9 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
         Query query = getSessionFactory().getCurrentSession().createSQLQuery( qs )
                 .addScalar( "LEVEL", StandardBasicTypes.CLASS )
                 .addScalar( "VALUE_URI", StandardBasicTypes.STRING )
-                .addScalar( "EXPRESSION_EXPERIMENT_FK", StandardBasicTypes.LONG );
+                .addScalar( "EXPRESSION_EXPERIMENT_FK", StandardBasicTypes.LONG )
+                // invalidate the cache when new characteristics are added/removed
+                .addSynchronizedEntityClass( Characteristic.class );
 
         if ( rankByLevel ) {
             query.setParameter( "eeClass", ExpressionExperiment.class );
@@ -196,6 +198,8 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
         }
 
         AclQueryUtils.addAclParameters( query, ExpressionExperiment.class );
+
+        query.setCacheable( true );
 
         return query;
     }

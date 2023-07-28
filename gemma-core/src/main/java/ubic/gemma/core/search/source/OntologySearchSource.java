@@ -39,7 +39,6 @@ public class OntologySearchSource implements SearchSource {
      * @return collection of SearchResults (Experiments)
      */
     @Override
-    @Cacheable("OntologySearchSource.searchExpressionExperiment")
     public Collection<SearchResult<ExpressionExperiment>> searchExpressionExperiment( SearchSettings settings ) throws SearchException {
         // overall timer
         StopWatch watch = StopWatch.createStarted();
