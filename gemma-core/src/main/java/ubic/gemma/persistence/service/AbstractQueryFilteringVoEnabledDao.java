@@ -73,13 +73,22 @@ public abstract class AbstractQueryFilteringVoEnabledDao<O extends Identifiable,
     };
 
     /**
-     * Obtain a value object transformer for the result of {@link #getFilteringQuery(Filters, Sort)}.
+     * Obtain an entity transformer for the results of {@link #getFilteringQuery(Filters, Sort)}.
+     * <p>
+     * The default entity transformer simply returns the first element of the tuple and omit null values.
+     */
+    protected TypedResultTransformer<O> getEntityTransformer() {
+        return DEFAULT_ENTITY_TRANSFORMER;
+    }
+
+    /**
+     * Obtain a value object transformer for the results of {@link #getFilteringQuery(Filters, Sort)}.
      * <p>
      * By default, it will process the first element of the tuple with {@link #doLoadValueObjects(Collection)} and then
      * post-process the resulting VOs with {@link #postProcessValueObjects(List)}.
      */
     protected TypedResultTransformer<VO> getValueObjectTransformer() {
-        TypedResultTransformer<O> entityTransformer = DEFAULT_ENTITY_TRANSFORMER;
+        TypedResultTransformer<O> entityTransformer = getEntityTransformer();
         return new TypedResultTransformer<VO>() {
 
             @Override
@@ -134,7 +143,7 @@ public abstract class AbstractQueryFilteringVoEnabledDao<O extends Identifiable,
         StopWatch timer = StopWatch.createStarted();
         //noinspection unchecked
         List<O> result = getFilteringQuery( filters, sort )
-                .setResultTransformer( DEFAULT_ENTITY_TRANSFORMER )
+                .setResultTransformer( getEntityTransformer() )
                 .list();
         if ( timer.getTime( TimeUnit.MILLISECONDS ) > REPORT_SLOW_QUERY_AFTER_MS ) {
             log.warn( String.format( "Loading %d entities for %s took %s ms.", result.size(), elementClass.getName(),
@@ -155,7 +164,7 @@ public abstract class AbstractQueryFilteringVoEnabledDao<O extends Identifiable,
             query.setMaxResults( limit );
         //noinspection unchecked
         List<O> result = query
-                .setResultTransformer( DEFAULT_ENTITY_TRANSFORMER )
+                .setResultTransformer( getEntityTransformer() )
                 .list();
         Long totalElements = ( Long ) totalElementsQuery.uniqueResult();
         if ( timer.getTime( TimeUnit.MILLISECONDS ) > REPORT_SLOW_QUERY_AFTER_MS ) {
