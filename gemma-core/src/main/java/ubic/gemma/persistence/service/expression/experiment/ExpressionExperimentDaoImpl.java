@@ -662,6 +662,7 @@ public class ExpressionExperimentDaoImpl
                 // FIXME: use an EnumType for converting
                 .addScalar( "T.EVIDENCE_CODE", StandardBasicTypes.STRING )
                 .addScalar( "EE_COUNT", StandardBasicTypes.LONG )
+                .addSynchronizedEntityClass( Characteristic.class ) // ensures that the cache is invalidated if characteristics are added or removed
                 .setCacheable( true )
                 .setMaxResults( maxResults );
         if ( eeIds != null ) {
