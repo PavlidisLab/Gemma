@@ -204,7 +204,7 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
             String[] propertyNames = classMetadata.getPropertyNames();
             Type[] propertyTypes = classMetadata.getPropertyTypes();
             if ( classMetadata.getIdentifierPropertyName() != null ) {
-                registerProperty( prefix + classMetadata.getIdentifierPropertyName() );
+                registerProperty( prefix + classMetadata.getIdentifierPropertyName(), useSubquery );
             }
             for ( int i = 0; i < propertyNames.length; i++ ) {
                 String propertyName = propertyNames[i];
@@ -217,7 +217,7 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
                     }
                 } else if ( propertyType.isCollectionType() ) {
                     // special case for collection size, regardless of its type
-                    registerProperty( prefix + propertyName + ".size" );
+                    registerProperty( prefix + propertyName + ".size", useSubquery );
                 } else if ( propertyType instanceof MaterializedBlobType || propertyType instanceof MaterializedClobType || propertyType instanceof MaterializedNClobType ) {
                     log.debug( String.format( "Property %s%s of type %s was excluded in %s: BLOBs and CLOBs are not exposed by default.",
                             prefix, propertyName, propertyType.getName(), entityClass.getName() ) );
