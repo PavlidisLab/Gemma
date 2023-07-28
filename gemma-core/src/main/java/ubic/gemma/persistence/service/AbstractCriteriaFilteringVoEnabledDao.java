@@ -12,7 +12,10 @@ import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
 import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.common.Identifiable;
-import ubic.gemma.persistence.util.*;
+import ubic.gemma.persistence.util.FilterCriteriaUtils;
+import ubic.gemma.persistence.util.Filters;
+import ubic.gemma.persistence.util.Slice;
+import ubic.gemma.persistence.util.Sort;
 
 import javax.annotation.Nullable;
 import java.util.*;
@@ -63,28 +66,6 @@ public abstract class AbstractCriteriaFilteringVoEnabledDao<O extends Identifiab
         return this.getSessionFactory().getCurrentSession()
                 .createCriteria( elementClass )
                 .add( FilterCriteriaUtils.formRestrictionClause( filters ) );
-    }
-
-    private TypedResultTransformer<VO> getValueObjectResultTransformer( StopWatch postProcessingStopWatch ) {
-        return new TypedResultTransformer<VO>() {
-
-            @Override
-            public VO transformTuple( Object[] tuple, String[] aliases ) {
-                //noinspection unchecked
-                return doLoadValueObject( ( O ) Criteria.DISTINCT_ROOT_ENTITY.transformTuple( tuple, aliases ) );
-            }
-
-            @Override
-            public List<VO> transformListTyped( List<VO> collection ) {
-                try {
-                    postProcessingStopWatch.start();
-                    //noinspection unchecked
-                    return ( List<VO> ) Criteria.DISTINCT_ROOT_ENTITY.transformList( collection );
-                } finally {
-                    postProcessingStopWatch.stop();
-                }
-            }
-        };
     }
 
     @Override
@@ -196,10 +177,12 @@ public abstract class AbstractCriteriaFilteringVoEnabledDao<O extends Identifiab
             query.setMaxResults( limit );
 
         // setup transformer
-        query.setResultTransformer( getValueObjectResultTransformer( postProcessingStopWatch ) );
+        query.setResultTransformer( Criteria.DISTINCT_ROOT_ENTITY );
 
+        postProcessingStopWatch.start();
         //noinspection unchecked
-        List<VO> results = query.list();
+        List<VO> results = doLoadValueObjects( query.list() );
+        postProcessingStopWatch.stop();
 
         countingStopWatch.start();
         Long totalElements = ( Long ) totalElementsQuery
@@ -232,10 +215,12 @@ public abstract class AbstractCriteriaFilteringVoEnabledDao<O extends Identifiab
         }
 
         // setup transformer
-        query.setResultTransformer( getValueObjectResultTransformer( postProcessingStopWatch ) );
+        query.setResultTransformer( Criteria.DISTINCT_ROOT_ENTITY );
 
+        postProcessingStopWatch.start();
         //noinspection unchecked
-        List<VO> results = query.list();
+        List<VO> results = doLoadValueObjects( query.list() );
+        postProcessingStopWatch.stop();
 
         stopWatch.stop();
 
