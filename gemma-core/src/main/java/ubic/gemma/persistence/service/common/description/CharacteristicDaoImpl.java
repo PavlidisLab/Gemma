@@ -136,13 +136,15 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
                 .list();
         Map<Long, ExpressionExperiment> eeById = EntityUtils.getIdMap( ees );
         //noinspection unchecked
-        return result.stream().collect( Collectors.groupingBy(
-                row -> ( Class<? extends Identifiable> ) row[0],
-                Collectors.groupingBy(
-                        row -> ( String ) row[1],
-                        Collectors.mapping(
-                                row -> Objects.requireNonNull( eeById.get( ( Long ) row[2] ), "No ExpressionExperiment with ID " + row[2] + "." ),
-                                Collectors.toCollection( HashSet::new ) ) ) ) );
+        return result.stream()
+                .filter( row -> eeById.containsKey( ( Long ) row[2] ) )
+                .collect( Collectors.groupingBy(
+                        row -> ( Class<? extends Identifiable> ) row[0],
+                        Collectors.groupingBy(
+                                row -> ( String ) row[1],
+                                Collectors.mapping(
+                                        row -> eeById.get( ( Long ) row[2] ),
+                                        Collectors.toCollection( HashSet::new ) ) ) ) );
     }
 
     /**
