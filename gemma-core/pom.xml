@@ -313,11 +313,17 @@
         </dependency>
 
         <!-- Testing -->
-        <!-- specifically for spring-security-test which imports javax.servlet.Filter -->
+        <!-- specifically for spring-security-test which refers to definitions from javax.servlet-api, spring-web and spring-security-web -->
         <dependency>
             <groupId>javax.servlet</groupId>
             <artifactId>javax.servlet-api</artifactId>
             <version>3.1.0</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.security</groupId>
+            <artifactId>spring-security-web</artifactId>
+            <version>${spring.security.version}</version>
             <scope>test</scope>
         </dependency>
 

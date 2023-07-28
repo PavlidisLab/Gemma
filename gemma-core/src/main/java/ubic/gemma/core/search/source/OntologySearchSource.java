@@ -7,8 +7,6 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.context.support.DefaultMessageSourceResolvable;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
-import org.springframework.web.util.UriComponents;
-import org.springframework.web.util.UriComponentsBuilder;
 import ubic.basecode.ontology.model.*;
 import ubic.basecode.ontology.search.OntologySearchException;
 import ubic.gemma.core.ontology.OntologyService;
@@ -21,6 +19,7 @@ import ubic.gemma.model.expression.experiment.ExperimentalDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.common.description.CharacteristicService;
 
+import java.net.URI;
 import java.util.*;
 
 @Component
@@ -209,20 +208,20 @@ public class OntologySearchSource implements SearchSource {
      * Extract a label for a term URI as per {@link OntologyTerm#getLabel()}.
      */
     static String getLabelFromTermUri( String termUri ) {
-        UriComponents components = UriComponentsBuilder.fromUriString( termUri ).build();
-        List<String> segments = components.getPathSegments();
+        URI components = URI.create( termUri );
+        String[] segments = components.getPath().split( "/" );
         // use the fragment
         if ( !StringUtils.isEmpty( components.getFragment() ) ) {
             return partToTerm( components.getFragment() );
         }
         // pick the last non-empty segment
-        for ( int i = segments.size() - 1; i >= 0; i-- ) {
-            if ( !StringUtils.isEmpty( segments.get( i ) ) ) {
-                return partToTerm( segments.get( i ) );
+        for ( int i = segments.length - 1; i >= 0; i-- ) {
+            if ( !StringUtils.isEmpty( segments[i] ) ) {
+                return partToTerm( segments[i] );
             }
         }
-        // as a last resort, return the parsed URI (this will remove excessive trailing slashes)
-        return components.toUriString();
+        // as a last resort, return the parsed URI
+        return components.toString();
     }
 
     private static String partToTerm( String part ) {
