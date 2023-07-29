@@ -27,7 +27,7 @@ import java.util.stream.Collectors;
  */
 public abstract class AbstractQueryFilteringVoEnabledDao<O extends Identifiable, VO extends IdentifiableValueObject<O>> extends AbstractFilteringVoEnabledDao<O, VO> {
 
-    protected AbstractQueryFilteringVoEnabledDao( @Nullable String objectAlias, Class<O> elementClass, SessionFactory sessionFactory ) {
+    protected AbstractQueryFilteringVoEnabledDao( String objectAlias, Class<O> elementClass, SessionFactory sessionFactory ) {
         super( objectAlias, elementClass, sessionFactory );
     }
 
