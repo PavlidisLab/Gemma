@@ -18,7 +18,6 @@ import ubic.gemma.model.expression.experiment.ExperimentalDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.util.*;
-import ubic.gemma.persistence.util.TestComponent;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -165,6 +164,17 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest {
         // counts = expressionExperimentDao.getPerTaxonCount();
         // assertTrue( counts.containsKey( taxon ) );
         // assertEquals( 1L, counts.get( taxon ).longValue() );
+    }
+
+    @Test
+    @WithMockUser
+    public void testFilterAndCountByArrayDesign() {
+        Filter f = expressionExperimentDao.getFilter( "bioAssays.arrayDesignUsed.id", Long.class, Filter.Operator.eq, 1L );
+        assertEquals( "ee", f.getObjectAlias() );
+        assertEquals( "id", f.getPropertyName() );
+        assertTrue( f.getRequiredValue() instanceof Subquery );
+        expressionExperimentDao.load( Filters.by( f ), null );
+        expressionExperimentDao.count( Filters.by( f ) );
     }
 
     @Test

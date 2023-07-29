@@ -332,6 +332,18 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
                 property );
     }
 
+    @Override
+    public final <T> Filter getFilter( String property, Class<T> propertyType, Filter.Operator operator, T value ) {
+        FilterablePropertyMeta propertyMeta = getFilterablePropertyMeta( property );
+        return nestIfSubquery( Filter.by( propertyMeta.objectAlias, propertyMeta.propertyName, propertyType, operator, value, property ), property );
+    }
+
+    @Override
+    public final <T> Filter getFilter( String property, Class<T> propertyType, Filter.Operator operator, Collection<T> values ) {
+        FilterablePropertyMeta propertyMeta = getFilterablePropertyMeta( property );
+        return nestIfSubquery( Filter.by( propertyMeta.objectAlias, propertyMeta.propertyName, propertyType, operator, values, property ), property );
+    }
+
     private Filter nestIfSubquery( Filter f, String propertyName ) {
         if ( filterablePropertiesViaSubquery.contains( propertyName ) ) {
             String entityName = getSessionFactory().getClassMetadata( elementClass ).getEntityName();
@@ -357,18 +369,6 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
         } else {
             return f;
         }
-    }
-
-    @Override
-    public final <T> Filter getFilter( String property, Class<T> propertyType, Filter.Operator operator, T value ) {
-        FilterablePropertyMeta propertyMeta = getFilterablePropertyMeta( property );
-        return Filter.by( propertyMeta.objectAlias, propertyMeta.propertyName, propertyType, operator, value, property );
-    }
-
-    @Override
-    public final <T> Filter getFilter( String property, Class<T> propertyType, Filter.Operator operator, Collection<T> values ) {
-        FilterablePropertyMeta propertyMeta = getFilterablePropertyMeta( property );
-        return Filter.by( propertyMeta.objectAlias, propertyMeta.propertyName, propertyType, operator, values, property );
     }
 
     @Override
