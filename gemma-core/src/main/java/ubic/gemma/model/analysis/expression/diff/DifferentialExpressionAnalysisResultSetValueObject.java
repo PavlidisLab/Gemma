@@ -45,7 +45,9 @@ public class DifferentialExpressionAnalysisResultSetValueObject extends Analysis
         this.experimentalFactors = analysisResultSet.getExperimentalFactors().stream()
                 .map( ExperimentalFactorValueObject::new )
                 .collect( Collectors.toList() );
-        this.baselineGroup = new FactorValueBasicValueObject( analysisResultSet.getBaselineGroup() );
+        if ( analysisResultSet.getBaselineGroup() != null ) {
+            this.baselineGroup = new FactorValueBasicValueObject( analysisResultSet.getBaselineGroup() );
+        }
     }
 
     /**
