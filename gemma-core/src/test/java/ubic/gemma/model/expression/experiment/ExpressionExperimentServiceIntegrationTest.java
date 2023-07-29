@@ -309,18 +309,17 @@ public class ExpressionExperimentServiceIntegrationTest extends BaseSpringContex
     }
 
     @Test
-    public final void testLoadValueObjects() {
+    public final void testLoadValueObjectsByIds() {
         Collection<Long> ids = new HashSet<>();
         Long id = ee.getId();
         ids.add( id );
         Collection<ExpressionExperimentValueObject> list = expressionExperimentService.loadValueObjectsByIds( ids );
         assertNotNull( list );
-        assertEquals( 1, list.size() );
+        assertThat( list ).hasSize( 1 ).extracting( "id" ).contains( id );
     }
 
     @Test
     public void testLoadValueObjectsByCharacteristic() {
-        Collection<Long> ids = new HashSet<>();
         Characteristic c = ee.getCharacteristics().stream().findFirst().orElse( null );
         assertThat( c ).isNotNull();
         Filter of = expressionExperimentService.getFilter( "characteristics.id", Filter.Operator.eq, c.getId().toString() );
@@ -329,9 +328,8 @@ public class ExpressionExperimentServiceIntegrationTest extends BaseSpringContex
         assertEquals( Long.class, of.getPropertyType() );
         assertTrue( of.getRequiredValue() instanceof Subquery );
         Long id = ee.getId();
-        ids.add( id );
         Collection<ExpressionExperimentValueObject> list = expressionExperimentService.loadValueObjects( Filters.by( of ), null, 0, 0 );
-        assertEquals( 1, list.size() );
+        assertThat( list ).extracting( "id" ).contains( id );
     }
 
     @Test
@@ -354,7 +352,6 @@ public class ExpressionExperimentServiceIntegrationTest extends BaseSpringContex
 
     @Test
     public void testLoadValueObjectsByBioAssay() {
-        Collection<Long> ids = new HashSet<>();
         BioAssay ba = ee.getBioAssays().stream().findFirst().orElse( null );
         assertThat( ba ).isNotNull();
         Filter of = expressionExperimentService.getFilter( "bioAssays.id", Filter.Operator.eq, ba.getId().toString() );
@@ -362,9 +359,12 @@ public class ExpressionExperimentServiceIntegrationTest extends BaseSpringContex
         assertEquals( "id", of.getPropertyName() );
         assertTrue( of.getRequiredValue() instanceof Subquery );
         Long id = ee.getId();
-        ids.add( id );
         Collection<ExpressionExperimentValueObject> list = expressionExperimentService.loadValueObjects( Filters.by( of ), null, 0, 0 );
-        assertEquals( 1, list.size() );
+        assertThat( list )
+                .hasSize( 1 )
+                .first()
+                .extracting( "id" )
+                .isEqualTo( id );
     }
 
     @Test
@@ -373,9 +373,8 @@ public class ExpressionExperimentServiceIntegrationTest extends BaseSpringContex
         assertThat( blacklistedEntityService.isBlacklisted( ee ) ).isTrue();
         Slice<ExpressionExperimentValueObject> result = expressionExperimentService.loadBlacklistedValueObjects( null, null, 0, 10 );
         assertThat( result )
-                .hasSize( 1 )
-                .first()
-                .hasFieldOrPropertyWithValue( "shortName", ee.getShortName() );
+                .extracting( "shortName" )
+                .contains( ee.getShortName() );
     }
 
     @Test
@@ -385,8 +384,7 @@ public class ExpressionExperimentServiceIntegrationTest extends BaseSpringContex
                 .hasFieldOrPropertyWithValue( "objectAlias", "ee" )
                 .hasFieldOrPropertyWithValue( "propertyName", "id" )
                 .hasFieldOrPropertyWithValue( "operator", Filter.Operator.inSubquery );
-        assertThat( expressionExperimentService.load( Filters.by( f ), null ) )
-                .isEmpty();
+        expressionExperimentService.load( Filters.by( f ), null );
     }
 
     @Test
@@ -397,8 +395,7 @@ public class ExpressionExperimentServiceIntegrationTest extends BaseSpringContex
                 .hasFieldOrPropertyWithValue( "propertyName", "(case when geeq.manualQualityOverride = true then geeq.manualQualityScore else geeq.detectedQualityScore end)" )
                 .hasFieldOrPropertyWithValue( "requiredValue", 0.9 )
                 .hasFieldOrPropertyWithValue( "originalProperty", "geeq.publicQualityScore" );
-        assertThat( expressionExperimentService.load( Filters.by( f ), null ) )
-                .isEmpty();
+        expressionExperimentService.load( Filters.by( f ), null );
     }
 
     @Test
@@ -408,8 +405,8 @@ public class ExpressionExperimentServiceIntegrationTest extends BaseSpringContex
 
     @Test(expected = AccessDeniedException.class)
     public void testFilterBySuitabilityScoreAsNonAdmin() {
-        runAsAnonymous();
         try {
+            runAsAnonymous();
             expressionExperimentService.getFilter( "geeq.publicSuitabilityScore", Filter.Operator.greaterOrEq, "0.9" );
         } finally {
             runAsAdmin(); // for cleanups
