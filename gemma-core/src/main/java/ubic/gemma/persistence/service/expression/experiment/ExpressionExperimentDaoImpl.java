@@ -1659,7 +1659,7 @@ public class ExpressionExperimentDaoImpl
                 + "left join fetch eNote.eventType "
                 + "left join fetch s.lastTroubledEvent as eTrbl "
                 + "left join fetch eTrbl.eventType "
-                + "left join fetch ee.geeq as geeq", filters, sort, groupByIfNecessary( filters, sort, ONE_TO_MANY_ALIASES ) );
+                + "left join fetch ee.geeq as geeq", filters, sort, groupByIfNecessary( sort, ONE_TO_MANY_ALIASES ) );
     }
 
     @Override
@@ -1673,13 +1673,13 @@ public class ExpressionExperimentDaoImpl
                 + "left join s.lastNeedsAttentionEvent as eAttn "
                 + "left join s.lastNoteUpdateEvent as eNote "
                 + "left join s.lastTroubledEvent as eTrbl "
-                + "left join ee.geeq as geeq", filters, sort, groupByIfNecessary( filters, sort, ONE_TO_MANY_ALIASES ) );
+                + "left join ee.geeq as geeq", filters, sort, groupByIfNecessary( sort, ONE_TO_MANY_ALIASES ) );
     }
 
     @Override
     protected Query getFilteringCountQuery( @Nullable Filters filters ) {
         //language=HQL
-        return finishFilteringQuery( "select count(" + distinctIfNecessary( filters, ONE_TO_MANY_ALIASES ) + "ee) "
+        return finishFilteringQuery( "select count(" + distinctIfNecessary() + "ee) "
                 + "from ExpressionExperiment as ee "
                 + "left join ee.accession acc "
                 + "left join ee.experimentalDesign as EDES "

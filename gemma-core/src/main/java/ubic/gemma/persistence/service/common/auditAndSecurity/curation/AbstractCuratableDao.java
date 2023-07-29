@@ -95,8 +95,8 @@ public abstract class AbstractCuratableDao<C extends Curatable, VO extends Abstr
      * <p>
      * Note that non-admin users always need a group by because of the jointure on ACL entries.
      */
-    protected String distinctIfNecessary( @Nullable Filters filters, String... oneToManyAliases ) {
-        if ( FiltersUtils.containsAnyAlias( filters, null, oneToManyAliases ) || !SecurityUtil.isUserAdmin() ) {
+    protected String distinctIfNecessary() {
+        if ( !SecurityUtil.isUserAdmin() ) {
             return "distinct ";
         } else {
             return "";
@@ -104,12 +104,12 @@ public abstract class AbstractCuratableDao<C extends Curatable, VO extends Abstr
     }
 
     /**
-     * Similar logic to {@link #distinctIfNecessary(Filters, String...)}, but using a group by since it's more efficient. It does
+     * Similar logic to {@link #distinctIfNecessary()}, but using a group by since it's more efficient. It does
      * not work for the counting queries, however.
      */
     @Nullable
-    protected String groupByIfNecessary( @Nullable Filters filters, @Nullable Sort sort, String... oneToManyAliases ) {
-        if ( FiltersUtils.containsAnyAlias( filters, sort, oneToManyAliases ) || !SecurityUtil.isUserAdmin() ) {
+    protected String groupByIfNecessary( @Nullable Sort sort, String... oneToManyAliases ) {
+        if ( FiltersUtils.containsAnyAlias( null, sort, oneToManyAliases ) || !SecurityUtil.isUserAdmin() ) {
             return objectAlias;
         } else {
             return null;
