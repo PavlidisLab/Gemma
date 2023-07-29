@@ -32,8 +32,8 @@ public class PlatformArgService extends AbstractEntityArgService<ArrayDesign, Ar
      */
     public Slice<ExpressionExperimentValueObject> getExperiments( PlatformArg<?> arg, int limit, int offset ) {
         ArrayDesign ad = this.getEntity( arg );
-        Filters filters = Filters.by( service.getFilter( "id", Long.class, Filter.Operator.eq, ad.getId() ) );
-        return eeService.loadValueObjects( filters, service.getSort( "id", null ), offset, limit );
+        Filters filters = Filters.by( eeService.getFilter( "bioAssays.arrayDesignUsed.id", Long.class, Filter.Operator.eq, ad.getId() ) );
+        return eeService.loadValueObjects( filters, eeService.getSort( "bioAssays.arrayDesignUsed.id", null ), offset, limit );
     }
 
     /**
@@ -44,7 +44,7 @@ public class PlatformArgService extends AbstractEntityArgService<ArrayDesign, Ar
      */
     public Slice<CompositeSequenceValueObject> getElements( PlatformArg<?> arg, int limit, int offset ) {
         final ArrayDesign ad = this.getEntity( arg );
-        Filters filters = Filters.by( service.getFilter( "id", Long.class, Filter.Operator.eq, ad.getId() ) );
+        Filters filters = Filters.by( csService.getFilter( "arrayDesign.id", Long.class, Filter.Operator.eq, ad.getId() ) );
         return csService.loadValueObjects( filters, null, offset, limit );
     }
 }
