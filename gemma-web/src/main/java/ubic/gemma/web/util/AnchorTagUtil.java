@@ -13,7 +13,7 @@ import javax.servlet.ServletContext;
 public class AnchorTagUtil {
 
     public static String getArrayDesignLink( Long adId, String link, ServletContext servletContext ) {
-        return AnchorTagUtil.getArrayDesignLink( adId, link, servletContext );
+        return AnchorTagUtil.getArrayDesignLink( adId, link, null, servletContext );
     }
 
     public static String getArrayDesignLink( Long adId, String link, String hover, ServletContext servletContext ) {
@@ -38,7 +38,7 @@ public class AnchorTagUtil {
      * @return experimental design link html
      */
     public static String getExperimentalDesignLink( Long eeId, String link, ServletContext servletContext ) {
-        return AnchorTagUtil.getExperimentalDesignLink( eeId, link, servletContext );
+        return AnchorTagUtil.getExperimentalDesignLink( eeId, link, null, servletContext );
     }
 
     /**
@@ -54,7 +54,7 @@ public class AnchorTagUtil {
     }
 
     public static String getExpressionExperimentLink( Long eeId, String link, ServletContext servletContext ) {
-        return AnchorTagUtil.getExpressionExperimentLink( eeId, link, servletContext );
+        return AnchorTagUtil.getExpressionExperimentLink( eeId, link, null, servletContext );
     }
 
     public static String getExpressionExperimentLink( Long eeId, String link, String hover, ServletContext servletContext ) {
@@ -66,7 +66,7 @@ public class AnchorTagUtil {
                 eeId );
     }
 
-    public static String getLink( String url, String link, String hover ) {
+    private static String getLink( String url, String link, String hover ) {
         StringBuilder buf = new StringBuilder();
         buf.append( "<a href=\"" );
         buf.append( url );
