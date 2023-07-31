@@ -124,21 +124,18 @@
                         <column name="BIO_ASSAY_DIMENSION_FK" not-null="false" sql-type="BIGINT"/>
                     </many-to-one>
                     <set name="probeLoadings" lazy="true" fetch="select" cascade="all" mutable="false">
-                        <cache usage="read-write"/>
                         <key foreign-key="PROBE_LOADING_PRINCIPAL_COMPONENT_ANALYSIS_FKC">
                             <column name="PRINCIPAL_COMPONENT_ANALYSIS_FK" sql-type="BIGINT"/>
                         </key>
                         <one-to-many class="ubic.gemma.model.analysis.expression.pca.ProbeLoading"/>
                     </set>
                     <set name="eigenValues" lazy="false" fetch="select" cascade="all" mutable="false">
-                        <cache usage="read-write"/>
                         <key foreign-key="EIGENVALUE_PRINCIPAL_COMPONENT_ANALYSIS_FKC">
                             <column name="PRINCIPAL_COMPONENT_ANALYSIS_FK" sql-type="BIGINT"/>
                         </key>
                         <one-to-many class="ubic.gemma.model.analysis.expression.pca.Eigenvalue"/>
                     </set>
                     <set name="eigenVectors" lazy="false" fetch="select" cascade="all" mutable="false">
-                        <cache usage="read-write"/>
                         <key foreign-key="EIGENVECTOR_PRINCIPAL_COMPONENT_ANALYSIS_FKC">
                             <column name="PRINCIPAL_COMPONENT_ANALYSIS_FK" sql-type="BIGINT"/>
                         </key>

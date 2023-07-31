@@ -50,24 +50,6 @@
 
     <!-- Gemma -->
 
-    <cache name="ubic.gemma.model.analysis.expression.pca.Eigenvector" maxElementsInMemory="10000"
-           eternal="true" overflowToDisk="false"/>
-
-    <cache name="ubic.gemma.model.analysis.expression.pca.ProbeLoading" maxElementsInMemory="1000"
-           eternal="true" overflowToDisk="false"/>
-
-    <cache name="ubic.gemma.model.analysis.expression.pca.Eigenvalue" maxElementsInMemory="10000"
-           timeToLiveSeconds="1200" overflowToDisk="false"/>
-
-    <cache name="ubic.gemma.model.analysis.expression.pca.PrincipalComponentAnalysis.eigenValues"
-           maxElementsInMemory="1000" eternal="true" overflowToDisk="false"/>
-
-    <cache name="ubic.gemma.model.analysis.expression.pca.PrincipalComponentAnalysis.eigenVectors"
-           maxElementsInMemory="1000" eternal="true" overflowToDisk="false"/>
-
-    <cache name="ubic.gemma.model.analysis.expression.pca.PrincipalComponentAnalysis.probeLoadings"
-           maxElementsInMemory="1000" eternal="true" overflowToDisk="false"/>
-
     <cache name="ubic.gemma.model.analysis.expression.diff.HitListSize"
            maxElementsInMemory="100000" eternal="true" overflowToDisk="false"/>
 
