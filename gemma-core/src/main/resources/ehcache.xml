@@ -327,17 +327,11 @@
     <cache name="ubic.gemma.model.expression.bioAssayData.MeanVarianceRelation" maxElementsInMemory="10000"
            timeToLiveSeconds="1200" overflowToDisk="false"/>
 
-    <cache name="ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector" maxElementsInMemory="200000"
-           timeToLiveSeconds="1200" overflowToDisk="false"/>
-
     <cache name="ubic.gemma.model.expression.bioAssayData.BioAssayDimension" maxElementsInMemory="10000"
            eternal="true" overflowToDisk="false"/>
 
     <cache name="ubic.gemma.model.expression.bioAssayData.BioAssayDimension.bioAssays" maxElementsInMemory="10000"
            timeToLiveSeconds="1200" overflowToDisk="false"/>
-
-    <cache name="ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector"
-           maxElementsInMemory="200000" timeToLiveSeconds="1200" overflowToDisk="false"/>
 
     <cache name="ubic.gemma.model.expression.biomaterial.BioMaterial" maxElementsInMemory="10000"
            timeToLiveSeconds="1200" overflowToDisk="false"/>
@@ -420,9 +414,6 @@
     <cache name="ubic.gemma.model.analysis.expression.coexpression.CoexpressionAnalysis"
            maxElementsInMemory="10000" timeToLiveSeconds="1200" overflowToDisk="false"/>
 
-    <cache name="ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult"
-           maxElementsInMemory="500000" eternal="true" overflowToDisk="false"/>
-
     <cache name="ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis"
            maxElementsInMemory="10000" timeToLiveSeconds="1200" overflowToDisk="false"/>
 
@@ -432,17 +423,8 @@
     <cache name="ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet"
            maxElementsInMemory="10000" eternal="true" overflowToDisk="false"/>
 
-    <cache name="ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet.results"
-           maxElementsInMemory="10000" timeToLiveSeconds="1200" overflowToDisk="false"/>
-
     <cache name="ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet.hitListSizes"
            maxElementsInMemory="1000" eternal="true" overflowToDisk="false"/>
-
-    <cache name="ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysis.results"
-           maxElementsInMemory="10000" timeToLiveSeconds="1200" overflowToDisk="false"/>
-
-    <cache name="ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysisResult"
-           maxElementsInMemory="10000" timeToLiveSeconds="1200" overflowToDisk="false"/>
 
     <cache name="ubic.gemma.model.analysis.expression.diff.PvalueDistribution"
            maxElementsInMemory="10000" timeToLiveSeconds="1200" overflowToDisk="false"/>

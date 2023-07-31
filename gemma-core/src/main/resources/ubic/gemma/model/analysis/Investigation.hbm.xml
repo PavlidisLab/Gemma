@@ -121,7 +121,6 @@
 				</many-to-one>
 				<set name="rawExpressionDataVectors" lazy="true" fetch="select" inverse="true"
 					 cascade="all,delete-orphan">
-					<cache usage="read-write"/>
 					<key foreign-key="RAW_EXPRESSION_DATA_VECTOR_EXPRESSION_EXPERIMENT_FKC">
 						<column name="EXPRESSION_EXPERIMENT_FK" sql-type="BIGINT"/>
 					</key>
@@ -129,7 +128,6 @@
 				</set>
 				<set name="processedExpressionDataVectors" lazy="true" fetch="select" inverse="true"
 					 cascade="all,delete-orphan">
-					<cache usage="read-write"/>
 					<key foreign-key="PROCESSED_EXPRESSION_DATA_VECTOR_EXPRESSION_EXPERIMENT_FKC">
 						<column name="EXPRESSION_EXPERIMENT_FK" sql-type="BIGINT"/>
 					</key>

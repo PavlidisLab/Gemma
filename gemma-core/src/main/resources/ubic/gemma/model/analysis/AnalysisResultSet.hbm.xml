@@ -38,7 +38,6 @@
                     <column name="BASELINE_GROUP_FK" not-null="false" sql-type="BIGINT"/>
                 </many-to-one>
                 <set name="results" lazy="true" fetch="select" inverse="true" cascade="all">
-                    <cache usage="nonstrict-read-write"/>
                     <key foreign-key="DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT_RESULT_SET_FKC">
                         <column name="RESULT_SET_FK" sql-type="BIGINT"/>
                     </key>
