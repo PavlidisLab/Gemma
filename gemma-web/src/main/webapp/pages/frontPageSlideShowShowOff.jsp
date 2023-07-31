@@ -29,7 +29,7 @@
 							<!-- img style="position:absolute;top:17px;left:300px" src="/Gemma/images/slideShow/rightBrace.png"/-->
 						</div>
 					</td>
-					<td class="slideTextTD">Over <b>15000</b> curated expression studies	</td>
+					<td id="featuredNumberOfDatasets" class="slideTextTD"></td>
 				</tr>
 			</table>
 		</div>
@@ -80,20 +80,10 @@
 	</div>
 </div>
 <script type="text/javascript">
- /*  jQuery.noConflict();
-
-   jQuery( document ).ready( function() {
-
-      jQuery( '#features' ).jshowoff( {
-         //cssClass : 'thumbFeatures',
-         effect : 'slideLeft',
-         autoPlay : true, // default: true
-         controls : false,
-         speed : 5000, // default: 3000 (ms)
-         hoverPause : false
-      // default: true, was buggy
-      } );
-
-   } );
-   */
+   $.getJSON( '${pageContext.request.contextPath}' + '/rest/v2/datasets', function( data ) {
+         var numberFormatter = new Intl.NumberFormat();
+         var featuredNumberOfDatasets = 1000 * Math.floor( data.totalElements / 1000 );
+         document.getElementById( 'featuredNumberOfDatasets' ).innerHTML = 'Over <b>' + numberFormatter.format( featuredNumberOfDatasets ) + '</b> curated expression studies';
+      }
+   )
 </script>
