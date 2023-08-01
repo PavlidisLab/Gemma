@@ -110,7 +110,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
     @Autowired
     private ObiService obiService;
 
-    @Autowired
+    @Autowired(required = false)
     private List<OntologyServiceFactory<?>> ontologyServiceFactories;
 
     @Autowired
@@ -129,23 +129,25 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
     @Override
     public void afterPropertiesSet() throws Exception {
         ontologyCache = new OntologyCache( cacheManager.getCache( PARENTS_CACHE_NAME ), cacheManager.getCache( CHILDREN_CACHE_NAME ) );
-        List<ubic.basecode.ontology.providers.OntologyService> enabledOntologyServices = ontologyServiceFactories.stream()
-                .filter( OntologyServiceFactory::isAutoLoaded )
-                .map( factory -> {
-                    try {
-                        return factory.getObject();
-                    } catch ( Exception e ) {
-                        throw new RuntimeException( e );
-                    }
-                } )
-                .filter( ubic.basecode.ontology.providers.OntologyService::isEnabled )
-                .collect( Collectors.toList() );
-        if ( enabledOntologyServices.isEmpty() ) {
-            log.warn( "No ontologies are enabled, consider enabling them by setting 'load.{name}Ontology' options in Gemma.properties." );
-        } else {
-            log.info( "The following ontologies are enabled:\n\t" + enabledOntologyServices.stream()
-                    .map( ubic.basecode.ontology.providers.OntologyService::toString )
-                    .collect( Collectors.joining( "\n\t" ) ) );
+        if ( ontologyServiceFactories != null ) {
+            List<ubic.basecode.ontology.providers.OntologyService> enabledOntologyServices = ontologyServiceFactories.stream()
+                    .filter( OntologyServiceFactory::isAutoLoaded )
+                    .map( factory -> {
+                        try {
+                            return factory.getObject();
+                        } catch ( Exception e ) {
+                            throw new RuntimeException( e );
+                        }
+                    } )
+                    .filter( ubic.basecode.ontology.providers.OntologyService::isEnabled )
+                    .collect( Collectors.toList() );
+            if ( enabledOntologyServices.isEmpty() ) {
+                log.warn( "No ontologies are enabled, consider enabling them by setting 'load.{name}Ontology' options in Gemma.properties." );
+            } else {
+                log.info( "The following ontologies are enabled:\n\t" + enabledOntologyServices.stream()
+                        .map( ubic.basecode.ontology.providers.OntologyService::toString )
+                        .collect( Collectors.joining( "\n\t" ) ) );
+            }
         }
         // remove GeneOntologyService, it was originally not included in the list before bean injection was used
         ontologyServices.remove( geneOntologyService );
@@ -300,9 +302,8 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
 
     @Override
     public Collection<CharacteristicValueObject> findTermsInexact( String givenQueryString, @Nullable Taxon taxon ) throws SearchException {
-
         if ( StringUtils.isBlank( givenQueryString ) )
-            return null;
+            return Collections.emptySet();
 
         StopWatch watch = new StopWatch();
         watch.start();
