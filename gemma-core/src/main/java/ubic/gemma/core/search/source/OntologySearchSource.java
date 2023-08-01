@@ -3,14 +3,15 @@ package ubic.gemma.core.search.source;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.lang3.time.StopWatch;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.context.support.DefaultMessageSourceResolvable;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import ubic.basecode.ontology.model.*;
-import ubic.basecode.ontology.search.OntologySearchException;
 import ubic.gemma.core.ontology.OntologyService;
-import ubic.gemma.core.search.*;
+import ubic.gemma.core.search.SearchException;
+import ubic.gemma.core.search.SearchResult;
+import ubic.gemma.core.search.SearchResultSet;
+import ubic.gemma.core.search.SearchSource;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.search.SearchSettings;
@@ -72,14 +73,9 @@ public class OntologySearchSource implements SearchSource {
         // Search ontology classes matches to the query
         timer.reset();
         timer.start();
-        Collection<OntologyTerm> matchingTerms;
-        try {
-            matchingTerms = ontologyService.findTerms( settings.getQuery() );
-            terms.addAll( matchingTerms );
-            timer.stop();
-        } catch ( OntologySearchException e ) {
-            throw new BaseCodeOntologySearchException( "Failed to find terms via ontology search.", e );
-        }
+        Collection<OntologyTerm> matchingTerms = ontologyService.findTerms( settings.getQuery() );
+        terms.addAll( matchingTerms );
+        timer.stop();
 
         if ( timer.getTime() > 100 ) {
             log.warn( String.format( "Found %d ontology classes matching '%s' in %d ms",

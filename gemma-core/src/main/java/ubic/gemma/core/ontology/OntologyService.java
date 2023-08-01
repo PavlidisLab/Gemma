@@ -15,7 +15,6 @@
 package ubic.gemma.core.ontology;
 
 import ubic.basecode.ontology.model.OntologyTerm;
-import ubic.basecode.ontology.search.OntologySearchException;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
@@ -54,16 +53,7 @@ public interface OntologyService {
      * @return characteristic vos
      */
     Collection<CharacteristicValueObject> findExperimentsCharacteristicTags( String searchQuery,
-            boolean useNeuroCartaOntology ) throws OntologySearchException;
-
-    /**
-     * Given a search string will look through the Mged, birnlex, obo Disease Ontology and FMA Ontology for terms that
-     * match the search term. this a lucene backed search, is inexact and for general terms can return a lot of results.
-     *
-     * @param  search search
-     * @return a collection of Characteristics that are backed by the corresponding found OntologyTerm
-     */
-    Collection<Characteristic> findTermAsCharacteristic( String search ) throws OntologySearchException;
+            boolean useNeuroCartaOntology ) throws SearchException;
 
     /**
      * Given a search string will look through the loaded ontologies for terms that match the search term. If the query
@@ -73,7 +63,7 @@ public interface OntologyService {
      * @param  search search
      * @return returns a collection of ontologyTerm's
      */
-    Collection<OntologyTerm> findTerms( String search ) throws OntologySearchException;
+    Collection<OntologyTerm> findTerms( String search ) throws SearchException;
 
     /**
      * Given a search string will first look through the characteristic database for any entries that have a match. If a
@@ -86,7 +76,7 @@ public interface OntologyService {
      * @param  givenQueryString query string
      * @return characteristic vos
      */
-    Collection<CharacteristicValueObject> findTermsInexact( String givenQueryString, Taxon taxon ) throws OntologySearchException, SearchException;
+    Collection<CharacteristicValueObject> findTermsInexact( String givenQueryString, @Nullable Taxon taxon ) throws SearchException;
 
     /**
      * @return terms which are allowed for use in the Category of a Characteristic

@@ -28,7 +28,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.annotation.DirtiesContext;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.basecode.ontology.providers.FMAOntologyService;
-import ubic.basecode.ontology.search.OntologySearchException;
 import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.core.loader.entrez.pubmed.PubMedXMLFetcher;
 import ubic.gemma.core.ontology.OntologyService;
@@ -151,7 +150,7 @@ public class SearchServiceIntegrationTest extends BaseSpringContextTest {
      * are found, -- requires LARQ index.
      */
     @Test
-    public void testGeneralSearch4Brain() throws SearchException, OntologySearchException {
+    public void testGeneralSearch4Brain() throws SearchException {
         SearchSettings settings = SearchSettings.builder()
                 .query( "Brain" ) // should hit 'cavity of brain'.
                 .resultType( ExpressionExperiment.class )

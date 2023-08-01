@@ -98,7 +98,7 @@ public class OntologySearchSourceTest extends AbstractJUnit4SpringContextTests {
     }
 
     @Test
-    public void testWhenTermIsNotFoundGenerateLabelFromUri() throws SearchException, OntologySearchException {
+    public void testWhenTermIsNotFoundGenerateLabelFromUri() throws SearchException {
         ExpressionExperiment ee = new ExpressionExperiment();
         ee.setId( 1L );
         when( characteristicService.findExperimentsByUris( Collections.singleton( "http://purl.obolibrary.org/obo/CL_0000129" ), null, 5000, true, false ) )

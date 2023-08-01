@@ -43,6 +43,7 @@ import ubic.basecode.ontology.search.OntologySearchException;
 import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.core.ontology.providers.GeneOntologyService;
 import ubic.gemma.core.ontology.providers.OntologyServiceFactory;
+import ubic.gemma.core.search.BaseCodeOntologySearchException;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.search.SearchResult;
 import ubic.gemma.core.search.SearchService;
@@ -55,7 +56,6 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
-import ubic.gemma.persistence.service.common.description.CharacteristicDao;
 import ubic.gemma.persistence.service.common.description.CharacteristicService;
 import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialService;
 
@@ -79,11 +79,7 @@ import java.util.stream.Collectors;
  */
 @Service
 public class OntologyServiceImpl implements OntologyService, InitializingBean {
-    /**
-     * Throttle how many ontology terms we retrieve. We search the ontologies in a favored order, so we can stop when we
-     * find "enough stuff".
-     */
-    private static final int MAX_TERMS_TO_FETCH = 200;
+
     private static final Log log = LogFactory.getLog( OntologyServiceImpl.class.getName() );
 
     private static final String
@@ -191,7 +187,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
      */
     @Override
     public Collection<CharacteristicValueObject> findExperimentsCharacteristicTags( String searchQueryString,
-            boolean useNeuroCartaOntology ) throws OntologySearchException {
+            boolean useNeuroCartaOntology ) throws BaseCodeOntologySearchException {
 
         String searchQuery = OntologySearch.stripInvalidCharacters( searchQueryString );
 
@@ -262,12 +258,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
     }
 
     @Override
-    public Collection<Characteristic> findTermAsCharacteristic( String search ) throws OntologySearchException {
-        return convert( new HashSet<>( findTerms( search ) ) );
-    }
-
-    @Override
-    public Collection<OntologyTerm> findTerms( String search ) throws OntologySearchException {
+    public Collection<OntologyTerm> findTerms( String search ) throws BaseCodeOntologySearchException {
 
         /*
          * URI input: just retrieve the term.
@@ -296,14 +287,19 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
 
         results = searchInThreads( ontology -> ontology.findTerm( query ) );
 
-        if ( geneOntologyService.isOntologyLoaded() )
-            results.addAll( geneOntologyService.findTerm( search ) );
+        if ( geneOntologyService.isOntologyLoaded() ) {
+            try {
+                results.addAll( geneOntologyService.findTerm( search ) );
+            } catch ( OntologySearchException e ) {
+                throw new BaseCodeOntologySearchException( e );
+            }
+        }
 
         return results;
     }
 
     @Override
-    public Collection<CharacteristicValueObject> findTermsInexact( String givenQueryString, Taxon taxon ) throws OntologySearchException, SearchException {
+    public Collection<CharacteristicValueObject> findTermsInexact( String givenQueryString, @Nullable Taxon taxon ) throws SearchException {
 
         if ( StringUtils.isBlank( givenQueryString ) )
             return null;
@@ -345,8 +341,12 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
         // get GO terms, if we don't already have a lot of possibilities. (might have to adjust this)
         StopWatch findGoTerms = StopWatch.createStarted();
         if ( geneOntologyService.isOntologyLoaded() ) {
-            ontologySearchResults.addAll( CharacteristicValueObject.characteristic2CharacteristicVO(
-                    this.termsToCharacteristics( geneOntologyService.findTerm( queryString ) ) ) );
+            try {
+                ontologySearchResults.addAll( CharacteristicValueObject.characteristic2CharacteristicVO(
+                        this.termsToCharacteristics( geneOntologyService.findTerm( queryString ) ) ) );
+            } catch ( OntologySearchException e ) {
+                throw new BaseCodeOntologySearchException( e );
+            }
         }
         findGoTerms.stop();
 
@@ -670,33 +670,6 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
         return vc;
     }
 
-    /**
-     * Given a collection of ontology terms converts them to a collection of Characteristics
-     */
-    private Collection<Characteristic> convert( final Collection<OntologyTerm> resources ) {
-
-        Collection<Characteristic> converted = new HashSet<>();
-
-        if ( ( resources == null ) || ( resources.isEmpty() ) )
-            return converted;
-
-        for ( OntologyTerm res : resources ) {
-            Characteristic vc = Characteristic.Factory.newInstance();
-
-            // If there is no URI we don't want to send it back (ie useless)
-            if ( ( res.getUri() == null ) || StringUtils.isEmpty( res.getUri() ) )
-                continue;
-
-            vc.setValue( res.getLabel() );
-            vc.setValueUri( res.getUri() );
-            vc.setDescription( res.getComment() );
-
-            converted.add( vc );
-        }
-
-        return converted;
-    }
-
     private void searchForCharacteristics( String queryString, Map<String, CharacteristicValueObject> previouslyUsedInSystem ) {
         StopWatch watch = new StopWatch();
         watch.start();
@@ -734,21 +707,12 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
         return vo;
     }
 
-    private CharacteristicValueObject characteristicByValueCountToValueObject( CharacteristicDao.CharacteristicUsageFrequency characteristic ) {
-        CharacteristicValueObject vo = new CharacteristicValueObject( -1L, characteristic.getValue(), characteristic.getValueUri() );
-        vo.setCategory( null );
-        vo.setCategoryUri( null ); // to avoid us counting separately by category.
-        vo.setAlreadyPresentInDatabase( true );
-        vo.setNumTimesUsed( characteristic.getCount().intValue() );
-        return vo;
-    }
-
     /**
      * given a collection of characteristics add them to the correct List
      */
     private Collection<CharacteristicValueObject> findCharacteristicsFromOntology( String searchQuery,
             boolean useNeuroCartaOntology,
-            Map<String, CharacteristicValueObject> characteristicFromDatabaseWithValueUri ) throws OntologySearchException {
+            Map<String, CharacteristicValueObject> characteristicFromDatabaseWithValueUri ) throws BaseCodeOntologySearchException {
 
         // in neurocarta we don't need to search all Ontologies
         List<ubic.basecode.ontology.providers.OntologyService> ontologyServicesToUse;
@@ -778,13 +742,6 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
 
     private String foundValueKey( Characteristic c ) {
         if ( StringUtils.isNotBlank( c.getValueUri() ) ) {
-            return c.getValueUri().toLowerCase();
-        }
-        return c.getValue().toLowerCase();
-    }
-
-    private String foundValueKey( CharacteristicValueObject c ) {
-        if ( c.getValueUri() != null && StringUtils.isNotBlank( c.getValueUri() ) ) {
             return c.getValueUri().toLowerCase();
         }
         return c.getValue().toLowerCase();
@@ -862,7 +819,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
      * @param taxon         okay if null, but then all matches returned.
      * @param searchResults added to this
      */
-    private void searchForGenes( String queryString, Taxon taxon,
+    private void searchForGenes( String queryString, @Nullable Taxon taxon,
             Map<String, CharacteristicValueObject> searchResults ) throws SearchException {
 
         SearchSettings ss = SearchSettings.builder()
@@ -881,8 +838,10 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
             GeneValueObject g = this.geneService.loadValueObject( sr.getResultObject() );
             if ( OntologyServiceImpl.log.isDebugEnabled() )
                 OntologyServiceImpl.log.debug( "Search for " + queryString + " returned: " + g );
-            Characteristic c = this.gene2Characteristic( g );
-            searchResults.put( c.getValue(), new CharacteristicValueObject( c ) );
+            if ( g != null ) {
+                Characteristic c = this.gene2Characteristic( g );
+                searchResults.put( c.getValue(), new CharacteristicValueObject( c ) );
+            }
         }
     }
 
@@ -999,7 +958,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
         Collection<T> apply( ubic.basecode.ontology.providers.OntologyService service ) throws OntologySearchException;
     }
 
-    private <T> Set<T> searchInThreads( SearchFunction<T> function, List<ubic.basecode.ontology.providers.OntologyService> ontologyServices ) throws OntologySearchException {
+    private <T> Set<T> searchInThreads( SearchFunction<T> function, List<ubic.basecode.ontology.providers.OntologyService> ontologyServices ) throws BaseCodeOntologySearchException {
         try {
             return combineInThreads( os -> {
                 try {
@@ -1009,14 +968,14 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
                 }
             }, ontologyServices );
         } catch ( OntologySearchExceptionWrapper e ) {
-            throw e.getCause();
+            throw new BaseCodeOntologySearchException( e.getCause() );
         }
     }
 
     /**
      * Similar to {@link #combineInThreads(Function)}, but also handles {@link OntologySearchException}.
      */
-    private <T> Set<T> searchInThreads( SearchFunction<T> function ) throws OntologySearchException {
+    private <T> Set<T> searchInThreads( SearchFunction<T> function ) throws BaseCodeOntologySearchException {
         return searchInThreads( function, ontologyServices );
     }
 

@@ -116,18 +116,23 @@ public class GeneSetSearchImpl implements GeneSetSearch {
     }
 
     @Override
-    public Collection<GeneSet> findByGoTermName( String goTermName, @Nullable Taxon taxon ) throws OntologySearchException {
+    public Collection<GeneSet> findByGoTermName( String goTermName, @Nullable Taxon taxon ) throws SearchException {
         return this.findByGoTermName( goTermName, taxon, null, null );
     }
 
     @Override
     public Collection<GeneSet> findByGoTermName( String goTermName, @Nullable Taxon taxon, @Nullable Integer maxGoTermsProcessed,
-            @Nullable Integer maxGeneSetSize ) throws OntologySearchException {
+            @Nullable Integer maxGeneSetSize ) throws SearchException {
         if ( !geneOntologyService.isOntologyLoaded() ) {
             return Collections.emptySet();
         }
-        Collection<OntologyTerm> matches = this.geneOntologyService
-                .findTerm( StringUtils.strip( goTermName ) );
+        Collection<OntologyTerm> matches = null;
+        try {
+            matches = this.geneOntologyService
+                    .findTerm( StringUtils.strip( goTermName ) );
+        } catch ( OntologySearchException e ) {
+            throw new BaseCodeOntologySearchException( e );
+        }
 
         Collection<GeneSet> results = new HashSet<>();
 
@@ -170,7 +175,7 @@ public class GeneSetSearchImpl implements GeneSetSearch {
     }
 
     @Override
-    public Collection<GeneSet> findGeneSetsByName( String query, Long taxonId ) throws OntologySearchException {
+    public Collection<GeneSet> findGeneSetsByName( String query, Long taxonId ) throws SearchException {
 
         if ( StringUtils.isBlank( query ) ) {
             return new HashSet<>();
@@ -209,7 +214,7 @@ public class GeneSetSearchImpl implements GeneSetSearch {
     }
 
     @Override
-    public Collection<GeneSetValueObject> findByPhenotypeName( String phenotypeQuery, Taxon taxon ) throws OntologySearchException {
+    public Collection<GeneSetValueObject> findByPhenotypeName( String phenotypeQuery, Taxon taxon ) throws SearchException {
 
         StopWatch timer = new StopWatch();
         timer.start();

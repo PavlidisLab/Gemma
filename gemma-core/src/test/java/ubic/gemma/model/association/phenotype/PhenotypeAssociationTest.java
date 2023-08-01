@@ -27,7 +27,6 @@ import org.springframework.test.annotation.DirtiesContext;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.basecode.ontology.providers.HumanPhenotypeOntologyService;
 import ubic.basecode.ontology.providers.MammalianPhenotypeOntologyService;
-import ubic.basecode.ontology.search.OntologySearchException;
 import ubic.gemma.core.association.phenotype.PhenotypeAssociationManagerService;
 import ubic.gemma.core.ontology.OntologyTestUtils;
 import ubic.gemma.core.ontology.OntologyUtils;
@@ -222,7 +221,7 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
     }
 
     @Test
-    public void testSearchOntologyForPhenotypes() throws OntologySearchException {
+    public void testSearchOntologyForPhenotypes() throws SearchException {
 
         // simulate someone looking for cancer, it should be found in the ontology file
         assertTrue( !this.phenotypeAssociationManagerService.searchOntologyForPhenotypes( "can", null ).isEmpty() );

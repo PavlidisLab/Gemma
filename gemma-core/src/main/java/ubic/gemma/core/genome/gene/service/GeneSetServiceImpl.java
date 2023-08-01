@@ -25,10 +25,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ubic.basecode.ontology.search.OntologySearchException;
 import ubic.gemma.core.genome.gene.GeneSetValueObjectHelper;
 import ubic.gemma.core.genome.gene.SessionBoundGeneSetValueObject;
+import ubic.gemma.core.search.BaseCodeOntologySearchException;
 import ubic.gemma.core.search.GeneSetSearch;
+import ubic.gemma.core.search.SearchException;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonValueObject;
@@ -413,7 +414,7 @@ public class GeneSetServiceImpl extends AbstractVoEnabledService<GeneSet, Databa
 
     @Override
     @Transactional(readOnly = true)
-    public Collection<GeneSetValueObject> findGeneSetsByName( String query, @Nullable Long taxonId ) throws OntologySearchException {
+    public Collection<GeneSetValueObject> findGeneSetsByName( String query, @Nullable Long taxonId ) throws SearchException {
 
         if ( StringUtils.isBlank( query ) ) {
             return new HashSet<>();

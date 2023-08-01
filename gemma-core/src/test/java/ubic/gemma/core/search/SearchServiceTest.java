@@ -9,7 +9,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
-import ubic.basecode.ontology.search.OntologySearchException;
 import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.core.search.source.OntologySearchSource;
 import ubic.gemma.model.common.search.SearchSettings;
@@ -79,7 +78,7 @@ public class SearchServiceTest extends AbstractJUnit4SpringContextTests {
     }
 
     @Test
-    public void searchExpressionExperiment_whenQueryHasMultipleClauses_thenParseAccordingly() throws SearchException, OntologySearchException {
+    public void searchExpressionExperiment_whenQueryHasMultipleClauses_thenParseAccordingly() throws SearchException {
         SearchSettings settings = SearchSettings.expressionExperimentSearch( "cancer AND liver" );
         searchService.search( settings );
         verify( ontologyService ).findTerms( "cancer" );
@@ -87,7 +86,7 @@ public class SearchServiceTest extends AbstractJUnit4SpringContextTests {
     }
 
     @Test
-    public void searchExpressionExperimentsByUri_whenQueryIsAUri_thenEnsureTheUriIsUsedDirectly() throws SearchException, OntologySearchException {
+    public void searchExpressionExperimentsByUri_whenQueryIsAUri_thenEnsureTheUriIsUsedDirectly() throws SearchException {
         SearchSettings settings = SearchSettings.builder()
                 .query( "http://purl.obolibrary.org/obo/DOID_14602" )
                 .resultType( ExpressionExperiment.class )

@@ -16,7 +16,7 @@ package ubic.gemma.core.association.phenotype;
 
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.basecode.ontology.providers.OntologyService;
-import ubic.basecode.ontology.search.OntologySearchException;
+import ubic.gemma.core.search.SearchException;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 
@@ -58,7 +58,7 @@ public interface PhenotypeAssoOntologyHelper {
      * @param  searchQuery query
      * @return characteristic VOs
      */
-    Set<CharacteristicValueObject> findPhenotypesInOntology( String searchQuery ) throws OntologySearchException;
+    Set<CharacteristicValueObject> findPhenotypesInOntology( String searchQuery ) throws SearchException;
 
     /**
      * search the disease, hp and mp ontology for OntologyTerm
@@ -66,7 +66,7 @@ public interface PhenotypeAssoOntologyHelper {
      * @param  searchQuery free text query?
      * @return terms
      */
-    Collection<OntologyTerm> findValueUriInOntology( String searchQuery ) throws OntologySearchException;
+    Collection<OntologyTerm> findValueUriInOntology( String searchQuery ) throws SearchException;
 
     /**
      * Helper method. For a valueUri return the Characteristic (represents a phenotype)

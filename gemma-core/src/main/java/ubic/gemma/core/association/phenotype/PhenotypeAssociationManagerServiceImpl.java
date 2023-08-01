@@ -31,7 +31,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.basecode.ontology.model.OntologyTerm;
-import ubic.basecode.ontology.search.OntologySearchException;
 import ubic.basecode.util.DateUtil;
 import ubic.basecode.util.StringUtil;
 import ubic.gemma.core.annotation.reference.BibliographicReferenceService;
@@ -390,7 +389,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
     @Override
     @Transactional(readOnly = true)
-    public Collection<CharacteristicValueObject> findExperimentOntologyValue( String givenQueryString ) throws OntologySearchException {
+    public Collection<CharacteristicValueObject> findExperimentOntologyValue( String givenQueryString ) throws SearchException {
         return this.ontologyService.findExperimentsCharacteristicTags( givenQueryString, true );
     }
 
@@ -750,7 +749,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
     @Override
     @Transactional(readOnly = true)
-    public Collection<CharacteristicValueObject> searchInDatabaseForPhenotype( String searchQuery, int maxResults ) throws OntologySearchException {
+    public Collection<CharacteristicValueObject> searchInDatabaseForPhenotype( String searchQuery, int maxResults ) throws SearchException {
         String newSearchQuery = this.prepareOntologyQuery( searchQuery );
 
         // search the Ontology with the search query
@@ -770,7 +769,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
     @Override
     @Transactional(readOnly = true)
-    public Collection<CharacteristicValueObject> searchOntologyForPhenotypes( String searchQuery, Long geneId ) throws OntologySearchException {
+    public Collection<CharacteristicValueObject> searchOntologyForPhenotypes( String searchQuery, Long geneId ) throws SearchException {
         StopWatch timer = new StopWatch();
         timer.start();
         List<CharacteristicValueObject> orderedPhenotypesFromOntology = new ArrayList<>();
