@@ -160,7 +160,7 @@
 					  discriminator-value="ExpressionExperimentSubSet" abstract="false">
 				<!-- this is assumed readily available in ExpressionExperimentSubSetValueObject -->
 				<many-to-one name="sourceExperiment" class="ubic.gemma.model.expression.experiment.ExpressionExperiment"
-							 cascade="none" lazy="false" fetch="join">
+							 cascade="none" lazy="false" fetch="select">
 					<column name="SOURCE_EXPERIMENT_FK" not-null="false" sql-type="BIGINT"/>
 				</many-to-one>
 				<set name="bioAssays" table="BIO_ASSAYS2EXPRESSION_EXPERIMENT_SUB_SET" lazy="true" fetch="select">

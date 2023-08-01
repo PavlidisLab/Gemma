@@ -27,7 +27,10 @@ import org.hibernate.sql.JoinType;
 import org.hibernate.type.StandardBasicTypes;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
-import ubic.gemma.model.analysis.expression.diff.*;
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResultSetValueObject;
+import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
+import ubic.gemma.model.analysis.expression.diff.PvalueDistribution;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.protocol.Protocol;
@@ -61,28 +64,19 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilterin
 
     @Override
     public ExpressionAnalysisResultSet loadWithResultsAndContrasts( Long id ) {
-        StopWatch stopWatch = StopWatch.createStarted();
-        StopWatch resultTimer = StopWatch.createStarted();
+        StopWatch timer = StopWatch.createStarted();
         ExpressionAnalysisResultSet ears = ( ExpressionAnalysisResultSet ) getSessionFactory().getCurrentSession()
                 .createQuery( "select ears from ExpressionAnalysisResultSet ears "
                         + "left join fetch ears.results res "
+                        + "left join fetch res.probe probe "
+                        + "left join fetch probe.biologicalCharacteristic "
                         + "left join fetch res.contrasts "
                         + "where ears.id = :rsId" )
                 .setParameter( "rsId", id )
                 .uniqueResult();
-        resultTimer.stop();
-        if ( ears == null ) {
-            return null;
-        }
-        StopWatch probeTimer = StopWatch.createStarted();
-        // probes and genes are almost certainly cached, if not they will be loaded in batch
-        for ( DifferentialExpressionAnalysisResult r : ears.getResults() ) {
-            Hibernate.initialize( r.getProbe() );
-        }
-        probeTimer.stop();
-        if ( stopWatch.getTime() > 1000 ) {
-            log.info( String.format( "Loaded [%s id=%d] with results and contrasts in %d ms (results and contrasts: %d ms, probes: %d ms).",
-                    elementClass.getName(), id, stopWatch.getTime(), resultTimer.getTime(), probeTimer.getTime() ) );
+        if ( timer.getTime() > 1000 ) {
+            log.info( String.format( "Loaded [%s id=%d] with results, probes and contrasts in %d ms.",
+                    elementClass.getName(), id, timer.getTime() ) );
         }
         return ears;
     }

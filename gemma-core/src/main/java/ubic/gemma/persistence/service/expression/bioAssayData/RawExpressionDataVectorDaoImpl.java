@@ -40,12 +40,14 @@ public class RawExpressionDataVectorDaoImpl extends AbstractDesignElementDataVec
     public Collection<RawExpressionDataVector> find( ArrayDesign arrayDesign, QuantitationType quantitationType ) {
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession().createQuery(
-                        "select dev from RawExpressionDataVector dev  inner join fetch dev.bioAssayDimension bd "
-                                + " inner join fetch dev.designElement de inner join fetch dev.quantitationType inner join de.arrayDesign ad where ad.id = :adid "
-                                + "and dev.quantitationType = :quantitationType " )
-                .setParameter( "quantitationType", quantitationType ).setParameter( "adid", arrayDesign.getId() )
+                        "select dev from RawExpressionDataVector dev "
+                                + "join fetch dev.bioAssayDimension bd "
+                                + "join fetch dev.designElement de "
+                                + "left join fetch de.biologicalCharacteristic "
+                                + "where de.arrayDesign = :ad and dev.quantitationType = :quantitationType" )
+                .setParameter( "quantitationType", quantitationType )
+                .setParameter( "ad", arrayDesign )
                 .list();
-
     }
 
     @Override
@@ -56,16 +58,23 @@ public class RawExpressionDataVectorDaoImpl extends AbstractDesignElementDataVec
 
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession().createQuery(
-                        "select dev from RawExpressionDataVector as dev inner join dev.designElement as de "
-                                + " where de in (:des) and dev.quantitationType = :qt" )
-                .setParameterList( "des", designElements ).setParameter( "qt", quantitationType ).list();
+                        "select dev from RawExpressionDataVector as dev "
+                                + "inner join dev.designElement as de "
+                                // no need for the fetch jointures since the design elements and biological characteristics are already in the session
+                                + "where de in (:des) and dev.quantitationType = :qt" )
+                .setParameterList( "des", designElements )
+                .setParameter( "qt", quantitationType )
+                .list();
     }
 
     @Override
     public Collection<RawExpressionDataVector> findByExpressionExperiment( ExpressionExperiment ee, QuantitationType quantitationType ) {
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession().createQuery(
-                        "select v from RawExpressionDataVector as v where v.expressionExperiment = :ee and v.quantitationType = :qt" )
+                        "select v from RawExpressionDataVector as v "
+                                + "join fetch v.designElement de "
+                                + "left join fetch de.biologicalCharacteristic "
+                                + "where v.expressionExperiment = :ee and v.quantitationType = :qt" )
                 .setParameter( "ee", ee )
                 .setParameter( "qt", quantitationType )
                 .list();
