@@ -279,7 +279,7 @@ public class DatasetsWebService {
             @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filter,
             @Parameter(description = "List of fields to exclude from the payload. Only 'parentTerms' can be excluded.") @QueryParam("exclude") ExcludeArg<AnnotationWithUsageStatisticsValueObject> exclude,
             @Parameter(description = "Maximum number of annotations to returned; capped at " + MAX_DATASETS_ANNOTATIONS + ".") @QueryParam("limit") LimitArg limitArg,
-            @Parameter(description = "Minimum number of associated datasets to report an annotation.") @QueryParam("minFrequency") Integer minFrequency,
+            @Parameter(description = "Minimum number of associated datasets to report an annotation. If used, the limit will default to " + MAX_DATASETS_ANNOTATIONS + ".") @QueryParam("minFrequency") Integer minFrequency,
             @Parameter(description = "Excluded term category and value URIs", hidden = true) @QueryParam("excludedTerms") StringArrayArg excludedTermUris ) {
         boolean excludeParentTerms = getExcludedFields( exclude ).contains( "parentTerms" );
         // if a minFrequency is requested, use the hard cap, otherwise use 100 as a reasonable default
