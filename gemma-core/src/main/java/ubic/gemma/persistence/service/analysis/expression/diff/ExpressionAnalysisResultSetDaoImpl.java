@@ -69,7 +69,8 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilterin
                 .createQuery( "select ears from ExpressionAnalysisResultSet ears "
                         + "left join fetch ears.results res "
                         + "left join fetch res.probe probe "
-                        + "left join fetch probe.biologicalCharacteristic "
+                        + "left join fetch probe.biologicalCharacteristic bc "
+                        + "left join fetch bc.sequenceDatabaseEntry "
                         + "left join fetch res.contrasts "
                         + "where ears.id = :rsId" )
                 .setParameter( "rsId", id )

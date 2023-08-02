@@ -43,7 +43,8 @@ public class RawExpressionDataVectorDaoImpl extends AbstractDesignElementDataVec
                         "select dev from RawExpressionDataVector dev "
                                 + "join fetch dev.bioAssayDimension bd "
                                 + "join fetch dev.designElement de "
-                                + "left join fetch de.biologicalCharacteristic "
+                                + "left join fetch de.biologicalCharacteristic bc "
+                                + "left join fetch bc.sequenceDatabaseEntry "
                                 + "where de.arrayDesign = :ad and dev.quantitationType = :quantitationType" )
                 .setParameter( "quantitationType", quantitationType )
                 .setParameter( "ad", arrayDesign )
@@ -73,7 +74,8 @@ public class RawExpressionDataVectorDaoImpl extends AbstractDesignElementDataVec
         return this.getSessionFactory().getCurrentSession().createQuery(
                         "select v from RawExpressionDataVector as v "
                                 + "join fetch v.designElement de "
-                                + "left join fetch de.biologicalCharacteristic "
+                                + "left join fetch de.biologicalCharacteristic bc "
+                                + "left join fetch bc.sequenceDatabaseEntry "
                                 + "where v.expressionExperiment = :ee and v.quantitationType = :qt" )
                 .setParameter( "ee", ee )
                 .setParameter( "qt", quantitationType )

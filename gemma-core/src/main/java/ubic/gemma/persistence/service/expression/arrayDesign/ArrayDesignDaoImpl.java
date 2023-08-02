@@ -364,7 +364,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
         timer.start();
 
         String queryString = "select ad from ArrayDesign ad inner join fetch ad.compositeSequences cs "
-                + "left outer join fetch cs.biologicalCharacteristic bs where ad = :ad";
+                + "left outer join fetch cs.biologicalCharacteristic bs left join fetch bs.sequenceDatabaseEntry where ad = :ad";
         // have to include ad in the select to be able to use fetch join
         Query query = this.getSessionFactory().getCurrentSession().createQuery( queryString )
                 .setParameter( "ad", arrayDesign );

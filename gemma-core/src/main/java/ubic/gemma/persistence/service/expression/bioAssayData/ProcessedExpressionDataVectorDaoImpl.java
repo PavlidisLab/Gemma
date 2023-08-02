@@ -278,7 +278,8 @@ public class ProcessedExpressionDataVectorDaoImpl extends AbstractDesignElementD
         List<ProcessedExpressionDataVector> result = this.getSessionFactory().getCurrentSession().createQuery(
                         "select dedv from ProcessedExpressionDataVector dedv "
                                 + "join fetch dedv.designElement de "
-                                + "left join fetch de.biologicalCharacteristic "
+                                + "left join fetch de.biologicalCharacteristic bc "
+                                + "left join fetch bc.sequenceDatabaseEntry "
                                 + "where dedv.expressionExperiment = :ee" )
                 .setParameter( "ee", ee )
                 .list();
@@ -528,7 +529,8 @@ public class ProcessedExpressionDataVectorDaoImpl extends AbstractDesignElementD
                         "select dev from ProcessedExpressionDataVector dev "
                                 + "join fetch dev.bioAssayDimension bd "
                                 + "join fetch dev.designElement de "
-                                + "left join fetch de.biologicalCharacteristic "
+                                + "left join fetch de.biologicalCharacteristic bc "
+                                + "left join fetch bc.sequenceDatabaseEntry "
                                 + "where de.arrayDesign = :ad and dev.quantitationType = :quantitationType" )
                 .setParameter( "quantitationType", quantitationType )
                 .setParameter( "ad", arrayDesign )
@@ -559,7 +561,8 @@ public class ProcessedExpressionDataVectorDaoImpl extends AbstractDesignElementD
         return this.getSessionFactory().getCurrentSession().createQuery(
                         "select v from ProcessedExpressionDataVector as v "
                                 + "join fetch v.designElement de "
-                                + "left join fetch de.biologicalCharacteristic "
+                                + "left join fetch de.biologicalCharacteristic bc "
+                                + "left join fetch bc.sequenceDatabaseEntry "
                                 + "where v.expressionExperiment = :ee and v.quantitationType = :qt" )
                 .setParameter( "ee", ee )
                 .setParameter( "qt", quantitationType )
@@ -856,7 +859,8 @@ public class ProcessedExpressionDataVectorDaoImpl extends AbstractDesignElementD
         return this.getSessionFactory().getCurrentSession().createQuery(
                         "select dedv from RawExpressionDataVector dedv "
                                 + "join fetch dedv.designElement de "
-                                + "left join fetch de.biologicalCharacteristic "
+                                + "left join fetch de.biologicalCharacteristic bc "
+                                + "left join fetch bc.sequenceDatabaseEntry "
                                 + "join dedv.quantitationType q "
                                 + "where q.type = 'PRESENTABSENT' and dedv.expressionExperiment  = :ee " )
                 .setParameter( "ee", ee )
@@ -873,7 +877,8 @@ public class ProcessedExpressionDataVectorDaoImpl extends AbstractDesignElementD
         return this.getSessionFactory().getCurrentSession().createQuery(
                         "select dedv from RawExpressionDataVector dedv "
                                 + "join fetch dedv.designElement de "
-                                + "left join fetch de.biologicalCharacteristic "
+                                + "left join fetch de.biologicalCharacteristic bc "
+                                + "left join fetch bc.sequenceDatabaseEntry "
                                 + "inner join dedv.quantitationType q "
                                 + "where q.isPreferred = true and dedv.expressionExperiment = :ee" )
                 .setParameter( "ee", ee )
@@ -1111,7 +1116,8 @@ public class ProcessedExpressionDataVectorDaoImpl extends AbstractDesignElementD
         Query q = this.getSessionFactory().getCurrentSession()
                 .createQuery( " from ProcessedExpressionDataVector dedv "
                         + "join fetch dedv.designElement de "
-                        + "left join fetch de.biologicalCharacteristic "
+                        + "left join fetch de.biologicalCharacteristic bc "
+                        + "left join fetch bc.sequenceDatabaseEntry "
                         + "where dedv.expressionExperiment = :ee" );
         q.setParameter( "ee", ee, LongType.INSTANCE );
         q.setMaxResults( limit );
