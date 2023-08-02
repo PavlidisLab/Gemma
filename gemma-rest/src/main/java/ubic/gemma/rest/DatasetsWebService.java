@@ -157,7 +157,6 @@ public class DatasetsWebService {
     @Operation(summary = "Retrieve all datasets")
     public QueriedAndPaginatedResponseDataObject<ExpressionExperimentWithSearchResultValueObject> getDatasets( // Params:
             @QueryParam("query") String query,
-            @QueryParam("minScore") @DefaultValue("0.0") Double minScoreArg,
             @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filterArg, // Optional, default null
             @QueryParam("offset") @DefaultValue("0") OffsetArg offsetArg, // Optional, default 0
             @QueryParam("limit") @DefaultValue("20") LimitArg limitArg, // Optional, default 20
@@ -167,15 +166,11 @@ public class DatasetsWebService {
         Sort sort = datasetArgService.getSort( sortArg );
         int offset = offsetArg.getValue();
         int limit = limitArg.getValue();
-        double minScore = minScoreArg;
-        if ( minScore < 0 || minScore > 1 ) {
-            throw new IllegalArgumentException( "Score threshold must be between 0 and 1." );
-        }
         Map<Long, SearchResult<ExpressionExperiment>> resultById = new HashMap<>();
         if ( query != null ) {
             List<SearchResult<ExpressionExperiment>> results = new ArrayList<>();
             Filters filtersWithSearchResultIds = Filters.by( filters )
-                    .and( datasetArgService.getFilterForSearchQuery( query, minScore, new Highlighter( request.getLocale() ), results ) );
+                    .and( datasetArgService.getFilterForSearchQuery( query, new Highlighter( request.getLocale() ), results ) );
             results.forEach( e -> resultById.put( e.getResultId(), e ) );
             List<Long> ids = expressionExperimentService.loadIds( filtersWithSearchResultIds, sort );
             // sort is stable, so the order of IDs with the same score is preserved

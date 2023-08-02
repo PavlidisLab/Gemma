@@ -64,10 +64,9 @@ public class DatasetArgService extends AbstractEntityArgService<ExpressionExperi
      * The filter is a restriction over the EE IDs.
      *
      * @param query    query
-     * @param minScore minimum score to retain a result
      * @param _results destination for the search results
      */
-    public Filter getFilterForSearchQuery( String query, double minScore, @Nullable Highlighter highlighter, @Nullable List<SearchResult<ExpressionExperiment>> _results ) {
+    public Filter getFilterForSearchQuery( String query, @Nullable Highlighter highlighter, @Nullable List<SearchResult<ExpressionExperiment>> _results ) {
         if ( StringUtils.isBlank( query ) ) {
             throw new BadRequestException( "A non-empty query must be supplied." );
         }
@@ -81,7 +80,6 @@ public class DatasetArgService extends AbstractEntityArgService<ExpressionExperi
             List<SearchResult<ExpressionExperiment>> results = searchService.search( settings )
                     .getByResultObjectType( ExpressionExperiment.class )
                     .stream()
-                    .filter( r -> r.getScore() >= minScore )
                     .collect( Collectors.toList() );
             if ( _results != null ) {
                 _results.addAll( results );
@@ -100,10 +98,10 @@ public class DatasetArgService extends AbstractEntityArgService<ExpressionExperi
     }
 
     /**
-     * @see #getFilterForSearchQuery(String, double, Highlighter, List)
+     * @see #getFilterForSearchQuery(String, Highlighter, List)
      */
     public Filter getFilterForSearchQuery( String query ) {
-        return getFilterForSearchQuery( query, 0.0, null, null );
+        return getFilterForSearchQuery( query, null, null );
     }
 
     /**
