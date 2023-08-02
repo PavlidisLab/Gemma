@@ -4,8 +4,6 @@ import lombok.extern.apachecommons.CommonsLog;
 import net.sf.ehcache.Cache;
 import org.hibernate.SessionFactory;
 import org.hibernate.cache.ehcache.SingletonEhCacheRegionFactory;
-import org.hibernate.cache.ehcache.internal.nonstop.NonstopAwareEntityRegionAccessStrategy;
-import org.hibernate.cache.ehcache.internal.strategy.ReadOnlyEhcacheEntityRegionAccessStrategy;
 import org.hibernate.cfg.Settings;
 import org.hibernate.internal.SessionFactoryImpl;
 import org.hibernate.metadata.ClassMetadata;
@@ -62,6 +60,8 @@ public class HibernateConfigTest extends BaseDatabaseTest {
         Settings settings = ( ( SessionFactoryImpl ) sessionFactory ).getSettings();
         assertEquals( 3, settings.getMaximumFetchDepth().intValue() );
         assertEquals( 100, settings.getDefaultBatchFetchSize() );
+        assertEquals( 128, settings.getJdbcFetchSize().intValue() );
+        assertEquals( 32, settings.getJdbcBatchSize() );
         assertTrue( settings.isJdbcBatchVersionedData() );
         assertTrue( settings.isOrderInsertsEnabled() );
         assertTrue( settings.isOrderUpdatesEnabled() );
