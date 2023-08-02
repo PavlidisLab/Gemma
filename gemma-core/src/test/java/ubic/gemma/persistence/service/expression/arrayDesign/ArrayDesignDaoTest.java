@@ -10,6 +10,9 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.ContextConfiguration;
 import ubic.gemma.core.util.test.BaseDatabaseTest;
 import ubic.gemma.core.util.test.category.SlowTest;
+import ubic.gemma.model.common.description.DatabaseEntry;
+import ubic.gemma.model.common.description.DatabaseType;
+import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
@@ -49,11 +52,17 @@ public class ArrayDesignDaoTest extends BaseDatabaseTest {
         ArrayDesign ad = new ArrayDesign();
         ad.setPrimaryTaxon( taxon );
         ad = arrayDesignDao.create( ad );
+        ExternalDatabase ed = ExternalDatabase.Factory.newInstance( "test", DatabaseType.SEQUENCE );
+        sessionFactory.getCurrentSession().persist( ed );
 
         Set<CompositeSequence> probes = new HashSet<>();
         for ( int i = 0; i < 20000; i++ ) {
             CompositeSequence cs = CompositeSequence.Factory.newInstance( "cs" + i, ad );
             BioSequence bs = BioSequence.Factory.newInstance( "s" + i, taxon );
+            DatabaseEntry de = DatabaseEntry.Factory.newInstance();
+            de.setExternalDatabase( ed );
+            sessionFactory.getCurrentSession().persist( de );
+            bs.setSequenceDatabaseEntry( de );
             sessionFactory.getCurrentSession().persist( bs );
             cs.setBiologicalCharacteristic( bs );
             probes.add( cs );
@@ -72,6 +81,7 @@ public class ArrayDesignDaoTest extends BaseDatabaseTest {
         arrayDesignDao.thaw( ad );
         assertTrue( Hibernate.isInitialized( ad.getCompositeSequences() ) );
         assertTrue( Hibernate.isInitialized( ad.getCompositeSequences().iterator().next().getBiologicalCharacteristic() ) );
+        assertTrue( Hibernate.isInitialized( ad.getCompositeSequences().iterator().next().getBiologicalCharacteristic().getSequenceDatabaseEntry() ) );
         assertEquals( 20000, ad.getCompositeSequences().size() );
 
         sessionFactory.getCurrentSession().update( ad );

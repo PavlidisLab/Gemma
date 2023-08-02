@@ -836,24 +836,20 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
         /*
          * Thaw basic stuff
          */
-        StopWatch timer = new StopWatch();
-        timer.start();
-
+        StopWatch timer = StopWatch.createStarted();
         this.thawLite( arrayDesign );
 
-        if ( timer.getTime() > 1000 ) {
-            AbstractDao.log.warn( "Thaw array design stage 1: " + timer.getTime() + "ms" );
-        }
-
-        timer.stop();
-        timer.reset();
-        timer.start();
-
         // Thaw the composite sequences
+        StopWatch probeTimer = StopWatch.createStarted();
         Hibernate.initialize( arrayDesign.getCompositeSequences() );
+        probeTimer.stop();
 
+        String message = String.format( "Thaw array design took %d ms (metadata: %d ms, probes: %d ms)",
+                timer.getTime(), timer.getTime() - probeTimer.getTime(), probeTimer.getTime() );
         if ( timer.getTime() > 1000 ) {
-            AbstractDao.log.warn( "Thaw array design stage 2: " + timer.getTime() + "ms" );
+            AbstractDao.log.warn( message );
+        } else {
+            AbstractDao.log.debug( message );
         }
     }
 
