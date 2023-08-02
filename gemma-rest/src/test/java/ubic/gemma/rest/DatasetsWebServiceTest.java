@@ -199,6 +199,13 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
         verify( expressionExperimentService ).loadValueObjectsByIds( ids, true );
     }
 
+    @Test
+    public void testGetDatasetsWithEmptyQuery() {
+        assertThat( target( "/datasets" ).queryParam( "query", "" ).request().get() )
+                .hasStatus( Response.Status.BAD_REQUEST )
+                .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE );
+    }
+
     private SearchResult<ExpressionExperiment> createMockSearchResult( Long id ) {
         return SearchResult.from( ExpressionExperiment.class, id, 0, "test result object" );
     }

@@ -1,5 +1,6 @@
 package ubic.gemma.rest.util.args;
 
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ubic.basecode.ontology.model.OntologyTerm;
@@ -67,6 +68,9 @@ public class DatasetArgService extends AbstractEntityArgService<ExpressionExperi
      * @param _results destination for the search results
      */
     public Filter getFilterForSearchQuery( String query, double minScore, @Nullable Highlighter highlighter, @Nullable List<SearchResult<ExpressionExperiment>> _results ) {
+        if ( StringUtils.isBlank( query ) ) {
+            throw new BadRequestException( "A non-empty query must be supplied." );
+        }
         try {
             SearchSettings settings = SearchSettings.builder()
                     .query( query )
