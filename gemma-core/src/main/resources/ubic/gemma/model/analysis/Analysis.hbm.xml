@@ -47,7 +47,6 @@
                     </many-to-many>
                 </set>
                 <set name="results" lazy="true" fetch="select" cascade="all">
-                    <cache usage="read-write"/>
                     <key foreign-key="GENE_DIFFERENTIAL_EXPRESSION_META_ANALYSIS_RESULT_GENE_DIFFC">
                         <column name="GENE_DIFFERENTIAL_EXPRESSION_META_ANALYSIS_FK" sql-type="BIGINT"/>
                     </key>
