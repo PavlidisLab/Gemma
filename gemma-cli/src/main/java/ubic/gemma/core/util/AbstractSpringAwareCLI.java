@@ -18,7 +18,6 @@
  */
 package ubic.gemma.core.util;
 
-import com.google.common.base.Charsets;
 import gemma.gsec.authentication.ManualAuthenticationService;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.io.IOUtils;
@@ -42,6 +41,7 @@ import ubic.gemma.persistence.service.expression.experiment.ExpressionExperiment
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
@@ -260,7 +260,7 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
                     }
                 } else {
                     log.error( "Could not read the password from '" + passwordCommand + "':\n"
-                            + String.join( "\n", IOUtils.readLines( proc.getErrorStream(), Charsets.UTF_8 ) ) );
+                            + String.join( "\n", IOUtils.readLines( proc.getErrorStream(), StandardCharsets.UTF_8 ) ) );
                     throw new IllegalArgumentException( "Could not read the password from '" + passwordCommand + "'." );
                 }
             } catch ( IOException | InterruptedException e ) {
