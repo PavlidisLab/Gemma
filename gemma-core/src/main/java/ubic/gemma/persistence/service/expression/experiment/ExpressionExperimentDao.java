@@ -250,9 +250,10 @@ public interface ExpressionExperimentDao
      *                                or {@link BioMaterial}
      * @param maxResults              maximum number of annotations to return, or -1 to return everything
      * @param minFrequency            minimum usage frequency to be reported (0 effectively allows everything)
+     * @param categoryUri             a category URI to restrict the results to, or null to consider everything
      * @param retainedTermUris        a collection of term to retain even if they don't meet the minimum frequency criteria
      */
-    Map<Characteristic, Long> getAnnotationsUsageFrequency( @Nullable Collection<Long> expressionExperimentIds, @Nullable Class<? extends Identifiable> level, int maxResults, int minFrequency, @Nullable Collection<String> excludedCategoryUris, @Nullable Collection<String> excludedTermUris, @Nullable Collection<String> retainedTermUris );
+    Map<Characteristic, Long> getAnnotationsUsageFrequency( @Nullable Collection<Long> expressionExperimentIds, @Nullable Class<? extends Identifiable> level, int maxResults, int minFrequency, @Nullable String categoryUri, @Nullable Collection<String> excludedCategoryUris, @Nullable Collection<String> excludedTermUris, @Nullable Collection<String> retainedTermUris );
 
     Collection<ExpressionExperiment> getExperimentsLackingPublications();
 

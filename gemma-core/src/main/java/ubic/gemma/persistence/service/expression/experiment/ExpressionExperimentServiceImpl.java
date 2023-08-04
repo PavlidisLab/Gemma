@@ -640,7 +640,7 @@ public class ExpressionExperimentServiceImpl
      */
     @Override
     @Transactional(readOnly = true)
-    public List<CharacteristicWithUsageStatisticsAndOntologyTerm> getAnnotationsUsageFrequency( @Nullable Filters filters, int maxResults, int minFrequency, @Nullable Collection<String> excludedCategoryUris, @Nullable Collection<String> excludedTermUris, @Nullable Collection<String> retainedTermUris ) {
+    public List<CharacteristicWithUsageStatisticsAndOntologyTerm> getAnnotationsUsageFrequency( @Nullable Filters filters, int maxResults, int minFrequency, String categoryUri, @Nullable Collection<String> excludedCategoryUris, @Nullable Collection<String> excludedTermUris, @Nullable Collection<String> retainedTermUris ) {
         if ( excludedTermUris != null ) {
             excludedTermUris = new HashSet<>( excludedTermUris );
             // never exclude terms that are explicitly retained
@@ -658,10 +658,10 @@ public class ExpressionExperimentServiceImpl
 
         Map<Characteristic, Long> result;
         if ( filters == null || filters.isEmpty() ) {
-            result = expressionExperimentDao.getAnnotationsUsageFrequency( null, null, maxResults, minFrequency, excludedCategoryUris, excludedTermUris, retainedTermUris );
+            result = expressionExperimentDao.getAnnotationsUsageFrequency( null, null, maxResults, minFrequency, categoryUri, excludedCategoryUris, excludedTermUris, retainedTermUris );
         } else {
             List<Long> eeIds = expressionExperimentDao.loadIds( filters, null );
-            result = expressionExperimentDao.getAnnotationsUsageFrequency( eeIds, null, maxResults, minFrequency, excludedCategoryUris, excludedTermUris, retainedTermUris );
+            result = expressionExperimentDao.getAnnotationsUsageFrequency( eeIds, null, maxResults, minFrequency, categoryUri, excludedCategoryUris, excludedTermUris, retainedTermUris );
         }
 
         List<CharacteristicWithUsageStatisticsAndOntologyTerm> resultWithParents = new ArrayList<>( result.size() );

@@ -639,7 +639,7 @@ public class ExpressionExperimentDaoImpl
      * the same characteristic at multiple levels to make counting more efficient.
      */
     @Override
-    public Map<Characteristic, Long> getAnnotationsUsageFrequency( @Nullable Collection<Long> eeIds, @Nullable Class<? extends Identifiable> level, int maxResults, int minFrequency, @Nullable Collection<String> excludedCategoryUris, @Nullable Collection<String> excludedTermUris, @Nullable Collection<String> retainedTermUris ) {
+    public Map<Characteristic, Long> getAnnotationsUsageFrequency( @Nullable Collection<Long> eeIds, @Nullable Class<? extends Identifiable> level, int maxResults, int minFrequency, @Nullable String categoryUri, @Nullable Collection<String> excludedCategoryUris, @Nullable Collection<String> excludedTermUris, @Nullable Collection<String> retainedTermUris ) {
         if ( eeIds != null && eeIds.isEmpty() ) {
             return Collections.emptyMap();
         }
@@ -649,6 +649,7 @@ public class ExpressionExperimentDaoImpl
                                 + "where T.ID is not null " // this is necessary for the clause building since there might be no clause
                                 + ( eeIds != null ? " and T.EXPRESSION_EXPERIMENT_FK in :eeIds" : "" )
                                 + ( level != null ? " and T.LEVEL = :level" : "" )
+                                + ( categoryUri != null ? " and T.CATEGORY_URI = :categoryUri" : "" )
                                 + ( excludedCategoryUris != null && !excludedCategoryUris.isEmpty() ? " and T.CATEGORY_URI not in :excludedCategoryUris" : "" )
                                 + ( excludedTermUris != null && !excludedTermUris.isEmpty() ? " and T.VALUE_URI not in :excludedTermUris" : "" )
                                 + AclQueryUtils.formNativeAclRestrictionClause( ( SessionFactoryImplementor ) getSessionFactory() ) + " "
@@ -668,6 +669,9 @@ public class ExpressionExperimentDaoImpl
                 .setMaxResults( maxResults );
         if ( eeIds != null ) {
             q.setParameterList( "eeIds", new HashSet<>( eeIds ) );
+        }
+        if ( categoryUri != null ) {
+            q.setParameter( "categoryUri", categoryUri );
         }
         if ( excludedCategoryUris != null && !excludedCategoryUris.isEmpty() ) {
             q.setParameterList( "excludedCategoryUris", excludedCategoryUris );

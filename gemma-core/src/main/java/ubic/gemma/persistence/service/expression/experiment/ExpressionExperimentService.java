@@ -292,15 +292,16 @@ public interface ExpressionExperimentService
      * @param filters              filters restricting the terms to a given set of datasets
      * @param maxResults           maximum number of results to return
      * @param minFrequency         minimum occurrences of a term to be included in the results
+     * @param categoryUri          a category to restrict annotations to, or null to include all categories
      * @param excludedCategoryUris ensure that the given categories are excluded
      * @param excludedTermUris     ensure that the given terms and their sub-terms (as per {@code subClassOf} relation)
      *                             are excluded; this requires relevant ontologies to be loaded in {@link ubic.gemma.core.ontology.OntologyService}.
      * @param retainedTermUris     ensure that the given terms are retained (overrides any exclusion from minFrequency and excludedTermUris)
      * @return mapping annotations grouped by category and term (URI or value if null) to their number of occurrences in
      * the matched datasets
-     * @see ExpressionExperimentDao#getAnnotationsUsageFrequency(Collection, Class, int, int, Collection, Collection, Collection)
+     * @see ExpressionExperimentDao#getAnnotationsUsageFrequency(Collection, Class, int, int, String, Collection, Collection, Collection)
      */
-    List<CharacteristicWithUsageStatisticsAndOntologyTerm> getAnnotationsUsageFrequency( @Nullable Filters filters, int maxResults, int minFrequency, @Nullable Collection<String> excludedCategoryUris, @Nullable Collection<String> excludedTermUris, @Nullable Collection<String> retainedTermUris );
+    List<CharacteristicWithUsageStatisticsAndOntologyTerm> getAnnotationsUsageFrequency( @Nullable Filters filters, int maxResults, int minFrequency, String categoryUri, @Nullable Collection<String> excludedCategoryUris, @Nullable Collection<String> excludedTermUris, @Nullable Collection<String> retainedTermUris );
 
     /**
      * @param expressionExperiment experiment
