@@ -28,7 +28,6 @@ import ubic.gemma.persistence.util.TestComponent;
 
 import java.util.Collections;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
 
 /**
@@ -177,17 +176,17 @@ public class ExpressionExperimentServiceTest extends AbstractJUnit4SpringContext
 
     @Test
     public void testGetAnnotationsUsageFrequency() {
-        expressionExperimentService.getAnnotationsUsageFrequency( Filters.empty(), -1, 0, null, null );
-        verify( expressionExperimentDao ).getAnnotationsUsageFrequency( null, null, -1, 0, null, null );
+        expressionExperimentService.getAnnotationsUsageFrequency( Filters.empty(), -1, 0, null, null, null );
+        verify( expressionExperimentDao ).getAnnotationsUsageFrequency( null, null, -1, 0, null, null, null );
         verifyNoMoreInteractions( expressionExperimentDao );
     }
 
     @Test
     public void testGetAnnotationsUsageFrequencyWithFilters() {
         Filters f = Filters.by( "c", "valueUri", String.class, Filter.Operator.eq, "http://example.com/T00001", "characteristics.valueUri" );
-        expressionExperimentService.getAnnotationsUsageFrequency( f, -1, 0, null, null );
+        expressionExperimentService.getAnnotationsUsageFrequency( f, -1, 0, null, null, null );
         verify( expressionExperimentDao ).loadIds( f, null );
-        verify( expressionExperimentDao ).getAnnotationsUsageFrequency( Collections.emptyList(), null, -1, 0, null, null );
+        verify( expressionExperimentDao ).getAnnotationsUsageFrequency( Collections.emptyList(), null, -1, 0, null, null, null );
         verifyNoMoreInteractions( expressionExperimentDao );
     }
 }

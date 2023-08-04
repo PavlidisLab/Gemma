@@ -639,7 +639,7 @@ public class ExpressionExperimentDaoImpl
      * the same characteristic at multiple levels to make counting more efficient.
      */
     @Override
-    public Map<Characteristic, Long> getAnnotationsUsageFrequency( @Nullable Collection<Long> eeIds, @Nullable Class<? extends Identifiable> level, int maxResults, int minFrequency, @Nullable Collection<String> excludedTermUris, @Nullable Collection<String> retainedTermUris ) {
+    public Map<Characteristic, Long> getAnnotationsUsageFrequency( @Nullable Collection<Long> eeIds, @Nullable Class<? extends Identifiable> level, int maxResults, int minFrequency, @Nullable Collection<String> excludedCategoryUris, @Nullable Collection<String> excludedTermUris, @Nullable Collection<String> retainedTermUris ) {
         if ( eeIds != null && eeIds.isEmpty() ) {
             return Collections.emptyMap();
         }
@@ -647,9 +647,10 @@ public class ExpressionExperimentDaoImpl
                         "select T.`VALUE`, T.VALUE_URI, T.CATEGORY, T.CATEGORY_URI, T.EVIDENCE_CODE, count(distinct T.EXPRESSION_EXPERIMENT_FK) as EE_COUNT from EXPRESSION_EXPERIMENT2CHARACTERISTIC T "
                                 + AclQueryUtils.formNativeAclJoinClause( "T.EXPRESSION_EXPERIMENT_FK" ) + " "
                                 + "where T.ID is not null " // this is necessary for the clause building since there might be no clause
-                                + ( eeIds != null ? " and T.EXPRESSION_EXPERIMENT_FK in :eeIds " : "" )
-                                + ( level != null ? " and T.LEVEL = :level " : "" )
-                                + ( excludedTermUris != null && !excludedTermUris.isEmpty() ? " and T.VALUE_URI not in :excludedTermUris and T.CATEGORY_URI not in :excludedTermUris" : "" )
+                                + ( eeIds != null ? " and T.EXPRESSION_EXPERIMENT_FK in :eeIds" : "" )
+                                + ( level != null ? " and T.LEVEL = :level" : "" )
+                                + ( excludedCategoryUris != null && !excludedCategoryUris.isEmpty() ? " and T.CATEGORY_URI not in :excludedCategoryUris" : "" )
+                                + ( excludedTermUris != null && !excludedTermUris.isEmpty() ? " and T.VALUE_URI not in :excludedTermUris" : "" )
                                 + AclQueryUtils.formNativeAclRestrictionClause( ( SessionFactoryImplementor ) getSessionFactory() ) + " "
                                 + "group by COALESCE(T.CATEGORY_URI, T.CATEGORY), COALESCE(T.VALUE_URI, T.`VALUE`) "
                                 + "having EE_COUNT >= :minFrequency "
@@ -667,6 +668,9 @@ public class ExpressionExperimentDaoImpl
                 .setMaxResults( maxResults );
         if ( eeIds != null ) {
             q.setParameterList( "eeIds", new HashSet<>( eeIds ) );
+        }
+        if ( excludedCategoryUris != null && !excludedCategoryUris.isEmpty() ) {
+            q.setParameterList( "excludedCategoryUris", excludedCategoryUris );
         }
         if ( excludedTermUris != null && !excludedTermUris.isEmpty() ) {
             q.setParameterList( "excludedTermUris", excludedTermUris );
@@ -1094,7 +1098,7 @@ public class ExpressionExperimentDaoImpl
                         + "join ee.rawExpressionDataVectors rv "
                         + "join rv.quantitationType qt "
                         + "where qt.isPreferred = true and ee = :ee "
-                        + "group by qt")
+                        + "group by qt" )
                 .setParameter( "ee", ee )
                 .uniqueResult();
     }
@@ -1106,7 +1110,7 @@ public class ExpressionExperimentDaoImpl
                         + "join ee.processedExpressionDataVectors pv "
                         + "join pv.quantitationType qt "
                         + "where qt.isMaskedPreferred = true and ee = :ee "
-                +"group by qt")
+                        + "group by qt" )
                 .setParameter( "ee", ee )
                 .uniqueResult();
     }
