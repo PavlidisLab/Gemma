@@ -109,9 +109,10 @@ public class FactorValue implements Identifiable, Serializable, gemma.gsec.model
         buf.append( "FactorValue " ).append( this.getId() ).append( ": " );
 
         if ( this.getExperimentalFactor() != null )
-            buf.append( this.getExperimentalFactor().getName() ).append( ":" );
+            buf.append( this.getExperimentalFactor().getName() ).append( ": " );
         if ( this.getCharacteristics().size() > 0 ) {
             for ( Characteristic c : this.getCharacteristics() ) {
+                buf.append(c.getCategory() + " - ");
                 buf.append( c.getValue() );
                 if ( this.getCharacteristics().size() > 1 )
                     buf.append( " | " );
