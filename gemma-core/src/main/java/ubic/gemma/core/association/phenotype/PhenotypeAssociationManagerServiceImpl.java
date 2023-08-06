@@ -152,8 +152,8 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
                 .filter( os -> !os.isEnabled() )
                 .collect( Collectors.toSet() );
         if ( !disabledOntologies.isEmpty() ) {
-            log.warn( String.format( "The following ontologies are required by Phenocarta are not enabled: %s.",
-                    disabledOntologies.stream().map( Object::toString ).collect( Collectors.joining( ", " ) ) ) );
+            log.warn( String.format( "The following ontologies are required by Phenocarta are not enabled:\n\t%s.",
+                    disabledOntologies.stream().map( Object::toString ).collect( Collectors.joining( "\n\t" ) ) ) );
         }
     }
 
