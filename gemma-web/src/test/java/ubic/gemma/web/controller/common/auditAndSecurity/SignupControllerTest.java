@@ -20,13 +20,10 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
-import org.mockito.internal.verification.VerificationModeFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.mock.web.MockHttpServletRequest;
-import org.springframework.mock.web.MockHttpServletResponse;
+import org.springframework.http.MediaType;
+import org.springframework.test.annotation.DirtiesContext;
 import ubic.gemma.core.util.test.category.SlowTest;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.web.controller.common.auditAndSecurity.recaptcha.ReCaptcha;
 import ubic.gemma.web.controller.common.auditAndSecurity.recaptcha.ReCaptchaResponse;
 import ubic.gemma.web.util.BaseSpringWebTest;
@@ -34,7 +31,6 @@ import ubic.gemma.web.util.BaseSpringWebTest;
 import javax.servlet.http.HttpServletRequest;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.Random;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -46,20 +42,24 @@ import static org.junit.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mockito.internal.verification.VerificationModeFactory.times;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 /**
  * Tortures the signup system by starting many threads and signing up many users, while at the same time creating a lot
  * of expression experiments.
+ * <p>
+ * This test replaces the recaptcha service used by {@link SignupController}, so it is annotated with {@link DirtiesContext}
+ * to invalidate the context once all the tests have completed.
  *
  * @author Paul
  */
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 public class SignupControllerTest extends BaseSpringWebTest {
 
     @Autowired
     private SignupController suc;
-
-    @Autowired
-    private ExpressionExperimentService expressionExperimentService;
 
     @Mock
     private ReCaptcha mockReCaptcha;
@@ -83,56 +83,33 @@ public class SignupControllerTest extends BaseSpringWebTest {
         }
     }
 
-
-    @SuppressWarnings("Duplicates") // Not in this project
     @Test
     @Category(SlowTest.class)
-    public void testSignup() throws Exception {
+    public void testSignup() {
         int numThreads = 10; // too high and we run out of connections, which is not what we're testing.
         final int numsignupsperthread = 20;
         int expectedEventCount = numThreads * numsignupsperthread;
-        final Random random = new Random();
         final AtomicInteger c = new AtomicInteger( 0 );
         ExecutorService executor = Executors.newFixedThreadPool( numThreads );
         for ( int i = 0; i < expectedEventCount; i++ ) {
             futures.add( executor.submit( () -> {
-                MockHttpServletRequest req;
                 try {
-                    Thread.sleep( random.nextInt( 50 ) );
-                } catch ( InterruptedException e ) {
-                    throw new RuntimeException( e );
-                }
-                req = new MockHttpServletRequest( "POST", "/signup.html" );
-                String uname = RandomStringUtils.randomAlphabetic( 10 );
-                // log.info( "Signingup: " + uname + " (" + c.get() + ")" );
-
-                String password = RandomStringUtils.randomAlphabetic( 40 );
-                req.addParameter( "password", password );
-
-                req.addParameter( "passwordConfirm", password );
-                req.addParameter( "username", uname );
-                String email = "foo@" + RandomStringUtils.randomAlphabetic( 10 ) + ".edu";
-                req.addParameter( "email", email );
-
-                req.addParameter( "emailConfirm", email );
-                try {
-                    suc.signup( password, password, uname, email, email, req, new MockHttpServletResponse() );
+                    String uname = RandomStringUtils.randomAlphabetic( 10 );
+                    String password = RandomStringUtils.randomAlphabetic( 40 );
+                    String email = "foo@" + RandomStringUtils.randomAlphabetic( 10 ) + ".edu";
+                    mvc.perform( post( "/signup.html" )
+                                    .param( "password", password )
+                                    .param( "passwordConfirm", password )
+                                    .param( "username", uname )
+                                    .param( "email", email )
+                                    .param( "emailConfirm", email ) )
+                            .andExpect( status().isOk() )
+                            .andExpect( content().contentTypeCompatibleWith( MediaType.APPLICATION_JSON ) )
+                            .andExpect( jsonPath( "$.success" ).value( true ) );
                 } catch ( Exception e ) {
                     throw new RuntimeException( e );
                 }
-
-                /*
-                 * Extra torture.
-                 */
-                ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
-                ee.setDescription( "From test" );
-                ee.setName( RandomStringUtils.randomAlphabetic( 20 ) );
-                ee.setShortName( RandomStringUtils.randomAlphabetic( 20 ) );
-                // log.info( "Making experiment" + ee.getName() );
-                expressionExperimentService.create( ee );
-
                 c.incrementAndGet();
-                log.debug( "Thread done." );
             } ) );
         }
 
@@ -146,9 +123,9 @@ public class SignupControllerTest extends BaseSpringWebTest {
         log.info( String.format( "Signup torture test took %d seconds", ( System.nanoTime() - startTimeNano ) / 1000 / 1000 / 1000 ) );
 
         assertEquals( expectedEventCount, c.get() );
-        verify( this.mockReCaptcha, VerificationModeFactory.times( expectedEventCount ) )
+        verify( this.mockReCaptcha, times( expectedEventCount ) )
                 .isPrivateKeySet();
-        verify( this.mockReCaptcha, VerificationModeFactory.times( expectedEventCount ) )
+        verify( this.mockReCaptcha, times( expectedEventCount ) )
                 .validateRequest( any() );
     }
 }
