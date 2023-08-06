@@ -137,9 +137,9 @@ public class TaxaWebService {
     public ResponseDataObject<List<GeneValueObject>> getTaxonGenesOverlappingChromosome( // Params:
             @PathParam("taxon") TaxonArg<?> taxonArg, // Required
             @PathParam("chromosome") String chromosomeName, // Required
-            @QueryParam("strand") @DefaultValue("+") String strand, //Optional, default +
-            @QueryParam("start") Long start, // Required
-            @QueryParam("size") Integer size // Required
+            @QueryParam("strand") String strand, //Optional, default +
+            @Parameter(required = true) @QueryParam("start") Long start, // Required
+            @Parameter(required = true) @QueryParam("size") Integer size // Required
     ) {
         if ( start == null ) {
             throw new BadRequestException( "The 'start' query parameter must be supplied." );
@@ -147,7 +147,10 @@ public class TaxaWebService {
         if ( size == null ) {
             throw new BadRequestException( "The 'size' query parameter must be supplied." );
         }
-        return Responder.respond( taxonArgService.getGenesOnChromosome( taxonArg, chromosomeName, start, size ) );
+        if ( strand != null && !( strand.equals( "+" ) || strand.equals( "-" ) ) ) {
+            throw new BadRequestException( "The 'strand' query parameter must be either '+', '-' or left unspecified." );
+        }
+        return Responder.respond( taxonArgService.getGenesOnChromosome( taxonArg, chromosomeName, strand, start, size ) );
     }
 
     /**

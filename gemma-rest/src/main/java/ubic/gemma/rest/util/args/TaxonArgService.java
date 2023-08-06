@@ -12,6 +12,7 @@ import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.persistence.util.Filter;
 import ubic.gemma.persistence.util.Filters;
 
+import javax.annotation.Nullable;
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.NotFoundException;
 import java.util.*;
@@ -58,13 +59,14 @@ public class TaxonArgService extends AbstractEntityArgService<Taxon, TaxonServic
     /**
      * Lists Genes overlapping a location on a specific chromosome on a taxon that this TaxonArg represents.
      *
-     * @param chromosomeName    name of the chromosome to look on
-     * @param start             the start nucleotide denoting the location to look for genes at.
-     * @param size              the size (in nucleotides) of the location from the 'start' nucleotide.
+     * @param chromosomeName name of the chromosome to look on
+     * @param strand
+     * @param start          the start nucleotide denoting the location to look for genes at.
+     * @param size           the size (in nucleotides) of the location from the 'start' nucleotide.
      * @return collection of Gene VOs overlapping the location defined by the 'start' and 'size' parameters.
      * @throws NotFoundException if the taxon cannot retrieved
      */
-    public List<GeneValueObject> getGenesOnChromosome( TaxonArg<?> arg, String chromosomeName, long start, int size ) throws NotFoundException {
+    public List<GeneValueObject> getGenesOnChromosome( TaxonArg<?> arg, String chromosomeName, @Nullable String strand, long start, int size ) throws NotFoundException {
         // Taxon argument
         Taxon taxon = this.getEntity( arg );
 
@@ -79,7 +81,7 @@ public class TaxonArgService extends AbstractEntityArgService<Taxon, TaxonServic
         PhysicalLocation region = PhysicalLocation.Factory.newInstance( chromosome );
         region.setNucleotide( start );
         region.setNucleotideLength( size );
-        // region.setStrand( strand );
+        region.setStrand( strand );
 
         List<GeneValueObject> GVOs = geneService.loadValueObjects( geneService.find( region ) );
         if ( GVOs == null ) {
