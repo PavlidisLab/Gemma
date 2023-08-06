@@ -26,7 +26,7 @@ public class AclCriteriaUtils {
     /**
      * Form a restriction clause for ACL.
      *
-     * @see AclQueryUtils#formAclRestrictionClause()
+     * @see AclQueryUtils#formAclRestrictionClause(String)
      */
     public static Criterion formAclRestrictionClause( String aoiIdColumn, Class<? extends Securable> aoiType ) {
         if ( StringUtils.isBlank( aoiIdColumn ) ) {

@@ -988,8 +988,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
         // Restrict to non-troubled ADs for non-administrators
         addNonTroubledFilter( filters, OBJECT_ALIAS );
 
-        queryString += AclQueryUtils.formAclJoinClause( OBJECT_ALIAS + ".id" );
-        queryString += AclQueryUtils.formAclRestrictionClause();
+        queryString += AclQueryUtils.formAclRestrictionClause( OBJECT_ALIAS + ".id" );
         queryString += FilterQueryUtils.formRestrictionClause( filters );
         if ( groupBy != null ) {
             queryString += " group by " + groupBy;

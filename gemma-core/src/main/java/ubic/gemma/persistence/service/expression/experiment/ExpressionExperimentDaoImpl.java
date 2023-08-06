@@ -779,10 +779,9 @@ public class ExpressionExperimentDaoImpl
                 .createQuery( "select a, count(distinct ee) from ExpressionExperiment ee "
                         + "join ee.bioAssays ba "
                         + "join ba.arrayDesignUsed a "
-                        + AclQueryUtils.formAclJoinClause( "ee.id" ) + " "
+                        + AclQueryUtils.formAclRestrictionClause( "ee.id" )
                         + formNonTroubledClause( "ee" )
-                        + formNonTroubledClause( "a" )
-                        + AclQueryUtils.formAclRestrictionClause() + " "
+                        + formNonTroubledClause( "a" ) + " "
                         + "group by a"
                         + ( maxResults > 0 ? " order by count(distinct ee) desc" : "" ) );
         AclQueryUtils.addAclParameters( query, ExpressionExperiment.class );
@@ -824,11 +823,10 @@ public class ExpressionExperimentDaoImpl
                         + "join ee.bioAssays ba "
                         + "join ba.originalPlatform a "
                         + "left join ba.arrayDesignUsed au "
-                        + AclQueryUtils.formAclJoinClause( "ee.id" ) + " "
+                        + AclQueryUtils.formAclRestrictionClause( "ee.id" ) + " "
                         + "and a <> au "   // ignore noop switch
                         + formNonTroubledClause( "ee" )
-                        + formNonTroubledClause( "a" )
-                        + AclQueryUtils.formAclRestrictionClause() + " "
+                        + formNonTroubledClause( "a" ) + " "
                         + "group by a"
                         + ( maxResults > 0 ? " order by count(distinct ee) desc" : "" ) );
         AclQueryUtils.addAclParameters( query, ExpressionExperiment.class );
@@ -979,8 +977,7 @@ public class ExpressionExperimentDaoImpl
     @Override
     public Map<Taxon, Long> getPerTaxonCount() {
         String queryString = "select ee.taxon, count(distinct ee) from ExpressionExperiment ee "
-                + AclQueryUtils.formAclJoinClause( "ee.id" )
-                + AclQueryUtils.formAclRestrictionClause() + " "
+                + AclQueryUtils.formAclRestrictionClause( "ee.id" ) + " "
                 + formNonTroubledClause( "ee" ) + " "
                 + "group by ee.taxon";
 
@@ -1788,9 +1785,8 @@ public class ExpressionExperimentDaoImpl
         }
 
         // parts of this query (above) are only needed for administrators: the notes, so it could theoretically be sped up even more
-        queryString += AclQueryUtils.formAclJoinClause( OBJECT_ALIAS + ".id" );
+        queryString += AclQueryUtils.formAclRestrictionClause( OBJECT_ALIAS + ".id" );
 
-        queryString += AclQueryUtils.formAclRestrictionClause();
         queryString += FilterQueryUtils.formRestrictionClause( filters );
 
         if ( groupBy != null ) {
