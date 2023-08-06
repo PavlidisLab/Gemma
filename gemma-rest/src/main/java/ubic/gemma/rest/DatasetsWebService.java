@@ -215,9 +215,10 @@ public class DatasetsWebService {
     @GET
     @Path("/count")
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Count datasets matching the provided filters")
+    @Operation(summary = "Count datasets matching the provided query and  filter")
     public ResponseDataObject<Long> getNumberOfDatasets(
-            @QueryParam("query") String query, @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filter ) {
+            @QueryParam("query") String query,
+            @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filter ) {
         Filters filters = datasetArgService.getFilters( filter );
         if ( query != null ) {
             filters.and( datasetArgService.getFilterForSearchQuery( query ) );
@@ -233,7 +234,7 @@ public class DatasetsWebService {
     @GET
     @Path("/platforms")
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Retrieve usage statistics of platforms among datasets matching the provided filterArg",
+    @Operation(summary = "Retrieve usage statistics of platforms among datasets matching the provided query and filter",
             description = "Usage statistics are aggregated across experiment tags, samples and factor values mentioned in the experimental design.")
     public LimitedResponseDataObject<ArrayDesignWithUsageStatisticsValueObject> getDatasetsPlatformsUsageStatistics(
             @QueryParam("query") String query,
@@ -265,7 +266,7 @@ public class DatasetsWebService {
     @GET
     @Path("/categories")
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Retrieve usage statistics of categories among datasets matching the provided filter",
+    @Operation(summary = "Retrieve usage statistics of categories among datasets matching the provided query and filter",
             description = "Usage statistics are aggregated across experiment tags, samples and factor values mentioned in the experimental design.")
     public GroupedResponseDataObject<CategoryWithUsageStatisticsValueObject> getDatasetsCategoriesUsageStatistics(
             @QueryParam("query") String query,
@@ -298,12 +299,12 @@ public class DatasetsWebService {
     @GZIP
     @Path("/annotations")
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Retrieve usage statistics of annotations among datasets matching the provided filter",
+    @Operation(summary = "Retrieve usage statistics of annotations among datasets matching the provided query and filter",
             description = "Usage statistics are aggregated across experiment tags, samples and factor values mentioned in the experimental design.")
     public LimitedResponseDataObject<AnnotationWithUsageStatisticsValueObject> getDatasetsAnnotationsUsageStatistics(
             @QueryParam("query") String query,
             @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filter,
-            @Parameter(description = "List of fields to exclude from the payload. Only 'parentTerms' can be excluded.") @QueryParam("exclude") ExcludeArg<AnnotationWithUsageStatisticsValueObject> exclude,
+            @Parameter(description = "List of fields to exclude from the payload. Only `parentTerms` can be excluded.") @QueryParam("exclude") ExcludeArg<AnnotationWithUsageStatisticsValueObject> exclude,
             @Parameter(description = "Maximum number of annotations to returned; capped at " + MAX_DATASETS_ANNOTATIONS + ".") @QueryParam("limit") LimitArg limitArg,
             @Parameter(description = "Minimum number of associated datasets to report an annotation. If used, the limit will default to " + MAX_DATASETS_ANNOTATIONS + ".") @QueryParam("minFrequency") Integer minFrequency,
             @Parameter(description = "A category URI to restrict reported annotations. If unspecified, annotations from all categories are reported.") @QueryParam("category") String categoryUri,
@@ -412,7 +413,7 @@ public class DatasetsWebService {
     @GET
     @Path("/taxa")
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Retrieve taxa usage statistics for datasets matching the provided filter")
+    @Operation(summary = "Retrieve taxa usage statistics for datasets matching the provided query and filter")
     public FilteredResponseDataObject<TaxonWithUsageStatisticsValueObject> getDatasetsTaxaUsageStatistics(
             @QueryParam("query") String query, @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filterArg ) {
         Filters filters = datasetArgService.getFilters( filterArg );

@@ -128,7 +128,7 @@ public class AnnotationsWebService {
     @GET
     @Path("/search/{query}")
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Search for annotation tags.",
+    @Operation(summary = "Search for annotation tags",
             description = "This is deprecated in favour of passing `query` as a query parameter.",
             deprecated = true,
             responses = {

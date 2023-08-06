@@ -64,7 +64,8 @@ public class RootWebService {
      */
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Retrieve an object with basic API information")
+    @Operation(summary = "Retrieve an object with basic API information",
+            description = "The payload contains a list of featured external databases that Gemma uses under the `externalDatabases` field. Those are mainly genomic references and sources of gene annotations.")
     public ResponseDataObject<ApiInfoValueObject> getApiInfo( // Params:
             // The servlet response, needed for response code setting.
             @Context final HttpServletRequest request,
