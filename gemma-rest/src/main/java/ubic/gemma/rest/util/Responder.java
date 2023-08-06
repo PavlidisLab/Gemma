@@ -60,17 +60,17 @@ public class Responder {
     }
 
     /**
-     * Produce a {@link FilteringResponseDataObject} for a given filtered {@link List}.
+     * Produce a {@link FilteredResponseDataObject} for a given filtered {@link List}.
      */
-    public static <T> FilteringResponseDataObject<T> filter( List<T> payload, @Nullable Filters filters ) {
-        return new FilteringResponseDataObject<>( payload, filters );
+    public static <T> FilteredResponseDataObject<T> filter( List<T> payload, @Nullable Filters filters ) {
+        return new FilteredResponseDataObject<>( payload, filters );
     }
 
     /**
-     * Produce a {@link FilteringAndPaginatedResponseDataObject} for a given {@link Slice}
+     * Produce a {@link FilteredAndPaginatedResponseDataObject} for a given {@link Slice}
      */
-    public static <T extends IdentifiableValueObject<?>> FilteringAndPaginatedResponseDataObject<T> paginate( Slice<T> payload, @Nullable Filters filters, String[] groupBy ) throws NotFoundException {
-        return new FilteringAndPaginatedResponseDataObject<>( payload, filters, groupBy );
+    public static <T extends IdentifiableValueObject<?>> FilteredAndPaginatedResponseDataObject<T> paginate( Slice<T> payload, @Nullable Filters filters, String[] groupBy ) throws NotFoundException {
+        return new FilteredAndPaginatedResponseDataObject<>( payload, filters, groupBy );
     }
 
     /**
@@ -86,11 +86,11 @@ public class Responder {
     /**
      * Paginate using an arbitrary filtering method.
      */
-    public static <T extends IdentifiableValueObject<?>> FilteringAndPaginatedResponseDataObject<T> paginate( FilterMethod<T> filterMethod, @Nullable Filters filters, String[] groupBy, @Nullable Sort sort, int offset, int limit ) throws NotFoundException {
+    public static <T extends IdentifiableValueObject<?>> FilteredAndPaginatedResponseDataObject<T> paginate( FilterMethod<T> filterMethod, @Nullable Filters filters, String[] groupBy, @Nullable Sort sort, int offset, int limit ) throws NotFoundException {
         return paginate( filterMethod.load( filters, sort, offset, limit ), filters, groupBy );
     }
 
-    public static <T extends IdentifiableValueObject<?>> QueriedAndPaginatedResponseDataObject<T> queryAndPaginate( Slice<T> payload, String query, @Nullable Filters filters, String[] groupBy ) {
-        return new QueriedAndPaginatedResponseDataObject<>( payload, query, filters, groupBy );
+    public static <T extends IdentifiableValueObject<?>> QueriedAndFilteredAndPaginatedResponseDataObject<T> queryAndPaginate( Slice<T> payload, String query, @Nullable Filters filters, String[] groupBy ) {
+        return new QueriedAndFilteredAndPaginatedResponseDataObject<>( payload, query, filters, groupBy );
     }
 }

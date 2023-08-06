@@ -85,7 +85,7 @@ public class PlatformsWebService {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve all platforms")
-    public FilteringAndPaginatedResponseDataObject<ArrayDesignValueObject> getPlatforms( // Params:
+    public FilteredAndPaginatedResponseDataObject<ArrayDesignValueObject> getPlatforms( // Params:
             @QueryParam("filter") @DefaultValue("") FilterArg<ArrayDesign> filter, // Optional, default null
             @QueryParam("offset") @DefaultValue("0") OffsetArg offset, // Optional, default 0
             @QueryParam("limit") @DefaultValue("20") LimitArg limit, // Optional, default 20
@@ -122,7 +122,7 @@ public class PlatformsWebService {
     @Path("/{platform}")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve all platforms matching a set of platform identifiers")
-    public FilteringAndPaginatedResponseDataObject<ArrayDesignValueObject> getPlatformsByIds( // Params:
+    public FilteredAndPaginatedResponseDataObject<ArrayDesignValueObject> getPlatformsByIds( // Params:
             @PathParam("platform") PlatformArrayArg platformsArg, // Optional
             @QueryParam("filter") @DefaultValue("") FilterArg<ArrayDesign> filter, // Optional, default null
             @QueryParam("offset") @DefaultValue("0") OffsetArg offset, // Optional, default 0
@@ -140,7 +140,7 @@ public class PlatformsWebService {
     @Produces(MediaType.APPLICATION_JSON)
     @Secured("GROUP_ADMIN")
     @Operation(summary = "Retrieve all blacklisted platforms", hidden = true)
-    public FilteringAndPaginatedResponseDataObject<ArrayDesignValueObject> getBlacklistedPlatforms(
+    public FilteredAndPaginatedResponseDataObject<ArrayDesignValueObject> getBlacklistedPlatforms(
             @QueryParam("filter") @DefaultValue("") FilterArg<ArrayDesign> filter,
             @QueryParam("sort") @DefaultValue("+id") SortArg<ArrayDesign> sort,
             @QueryParam("offset") @DefaultValue("0") OffsetArg offset,
@@ -210,7 +210,7 @@ public class PlatformsWebService {
     @Path("/{platform}/elements/{probes}")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve the selected composite sequences for a given platform")
-    public FilteringAndPaginatedResponseDataObject<CompositeSequenceValueObject> getPlatformElement( // Params:
+    public FilteredAndPaginatedResponseDataObject<CompositeSequenceValueObject> getPlatformElement( // Params:
             @PathParam("platform") PlatformArg<?> platformArg, // Required
             @PathParam("probes") CompositeSequenceArrayArg probesArg, // Required
             @QueryParam("offset") @DefaultValue("0") OffsetArg offset, // Optional, default 0
@@ -240,7 +240,7 @@ public class PlatformsWebService {
     @Path("/{platform}/elements/{probe}/genes")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve the genes associated to a probe in a given platform")
-    public FilteringAndPaginatedResponseDataObject<GeneValueObject> getPlatformElementGenes( // Params:
+    public FilteredAndPaginatedResponseDataObject<GeneValueObject> getPlatformElementGenes( // Params:
             @PathParam("platform") PlatformArg<?> platformArg, // Required
             @PathParam("probe") CompositeSequenceArg<?> probeArg, // Required
             @QueryParam("offset") @DefaultValue("0") OffsetArg offset, // Optional, default 0

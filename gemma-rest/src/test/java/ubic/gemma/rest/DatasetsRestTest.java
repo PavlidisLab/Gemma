@@ -14,7 +14,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentDao;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.rest.util.MalformedArgException;
-import ubic.gemma.rest.util.QueriedAndPaginatedResponseDataObject;
+import ubic.gemma.rest.util.QueriedAndFilteredAndPaginatedResponseDataObject;
 import ubic.gemma.rest.util.ResponseDataObject;
 import ubic.gemma.rest.util.args.*;
 
@@ -64,7 +64,7 @@ public class DatasetsRestTest extends BaseSpringContextTest {
 
     @Test
     public void testAll() {
-        QueriedAndPaginatedResponseDataObject<DatasetsWebService.ExpressionExperimentWithSearchResultValueObject> response = datasetsWebService
+        QueriedAndFilteredAndPaginatedResponseDataObject<DatasetsWebService.ExpressionExperimentWithSearchResultValueObject> response = datasetsWebService
                 .getDatasets( null, FilterArg.valueOf( "" ), OffsetArg.valueOf( "5" ), LimitArg.valueOf( "5" ),
                         SortArg.valueOf( "+id" ) );
         assertThat( response )
@@ -117,7 +117,7 @@ public class DatasetsRestTest extends BaseSpringContextTest {
 
     @Test
     public void testAllFilterById() {
-        QueriedAndPaginatedResponseDataObject<DatasetsWebService.ExpressionExperimentWithSearchResultValueObject> response = datasetsWebService.getDatasets(
+        QueriedAndFilteredAndPaginatedResponseDataObject<DatasetsWebService.ExpressionExperimentWithSearchResultValueObject> response = datasetsWebService.getDatasets(
                 null,
                 FilterArg.valueOf( "id = " + ees.get( 0 ).getId() ),
                 OffsetArg.valueOf( "0" ),
@@ -164,7 +164,7 @@ public class DatasetsRestTest extends BaseSpringContextTest {
                 .hasFieldOrPropertyWithValue( "objectAlias", ExpressionExperimentDao.OBJECT_ALIAS )
                 .hasFieldOrPropertyWithValue( "propertyName", "shortName" )
                 .hasFieldOrPropertyWithValue( "requiredValue", ees.get( 0 ).getShortName() );
-        QueriedAndPaginatedResponseDataObject<DatasetsWebService.ExpressionExperimentWithSearchResultValueObject> response = datasetsWebService.getDatasets(
+        QueriedAndFilteredAndPaginatedResponseDataObject<DatasetsWebService.ExpressionExperimentWithSearchResultValueObject> response = datasetsWebService.getDatasets(
                 null,
                 filterArg,
                 OffsetArg.valueOf( "0" ),
@@ -188,7 +188,7 @@ public class DatasetsRestTest extends BaseSpringContextTest {
                 .hasFieldOrPropertyWithValue( "objectAlias", ExpressionExperimentDao.OBJECT_ALIAS )
                 .hasFieldOrPropertyWithValue( "propertyName", "shortName" )
                 .hasFieldOrPropertyWithValue( "requiredValue", Collections.singletonList( ees.get( 0 ).getShortName() ) );
-        QueriedAndPaginatedResponseDataObject<DatasetsWebService.ExpressionExperimentWithSearchResultValueObject> response = datasetsWebService.getDatasets(
+        QueriedAndFilteredAndPaginatedResponseDataObject<DatasetsWebService.ExpressionExperimentWithSearchResultValueObject> response = datasetsWebService.getDatasets(
                 null,
                 filterArg,
                 OffsetArg.valueOf( "0" ),
@@ -220,7 +220,7 @@ public class DatasetsRestTest extends BaseSpringContextTest {
                 .hasFieldOrPropertyWithValue( "propertyName", "shortName" )
                 .hasFieldOrPropertyWithValue( "requiredValue", Collections.singletonList( ees.get( 1 ).getShortName() ) );
          */
-        QueriedAndPaginatedResponseDataObject<DatasetsWebService.ExpressionExperimentWithSearchResultValueObject> response = datasetsWebService.getDatasets(
+        QueriedAndFilteredAndPaginatedResponseDataObject<DatasetsWebService.ExpressionExperimentWithSearchResultValueObject> response = datasetsWebService.getDatasets(
                 null,
                 filterArg,
                 OffsetArg.valueOf( "0" ),

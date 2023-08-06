@@ -45,7 +45,7 @@ import ubic.gemma.persistence.service.expression.experiment.ExpressionExperiment
 import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.persistence.util.Sort;
-import ubic.gemma.rest.util.FilteringAndPaginatedResponseDataObject;
+import ubic.gemma.rest.util.FilteredAndPaginatedResponseDataObject;
 import ubic.gemma.rest.util.Responder;
 import ubic.gemma.rest.util.ResponseDataObject;
 import ubic.gemma.rest.util.ResponseErrorObject;
@@ -153,7 +153,7 @@ public class AnnotationsWebService {
             @ApiResponse(responseCode = "200", content = @Content(schema = @Schema(ref = "PaginatedResponseDataObjectExpressionExperimentValueObject"))),
             @ApiResponse(responseCode = "400", description = "The search query is empty or invalid.", content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
     })
-    public FilteringAndPaginatedResponseDataObject<ExpressionExperimentValueObject> searchDatasets( // Params:
+    public FilteredAndPaginatedResponseDataObject<ExpressionExperimentValueObject> searchDatasets( // Params:
             @Parameter(schema = @Schema(implementation = StringArrayArg.class), explode = Explode.FALSE) @QueryParam("query") @DefaultValue("") StringArrayArg query,
             @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filterArg, // Optional, default null
             @QueryParam("offset") @DefaultValue("0") OffsetArg offset, // Optional, default 0
@@ -202,7 +202,7 @@ public class AnnotationsWebService {
             @ApiResponse(responseCode = "200", content = @Content(schema = @Schema(ref = "PaginatedResponseDataObjectExpressionExperimentValueObject"))),
             @ApiResponse(responseCode = "400", description = "The search query is empty or invalid.", content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
     }, deprecated = true)
-    public FilteringAndPaginatedResponseDataObject<ExpressionExperimentValueObject> searchDatasetsByQueryInPath( // Params:
+    public FilteredAndPaginatedResponseDataObject<ExpressionExperimentValueObject> searchDatasetsByQueryInPath( // Params:
             @PathParam("query") @DefaultValue("") StringArrayArg query, // Required
             @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filterArg, // Optional, default null
             @QueryParam("offset") @DefaultValue("0") OffsetArg offset, // Optional, default 0
@@ -223,7 +223,7 @@ public class AnnotationsWebService {
             @ApiResponse(responseCode = "200", content = @Content(schema = @Schema(ref = "PaginatedResponseDataObjectExpressionExperimentValueObject"))),
             @ApiResponse(responseCode = "400", description = "The search query is empty or invalid.", content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
     })
-    public FilteringAndPaginatedResponseDataObject<ExpressionExperimentValueObject> searchTaxonDatasets( // Params:
+    public FilteredAndPaginatedResponseDataObject<ExpressionExperimentValueObject> searchTaxonDatasets( // Params:
             @PathParam("taxon") TaxonArg<?> taxonArg, // Required
             @Parameter(schema = @Schema(implementation = StringArrayArg.class), explode = Explode.FALSE) @QueryParam("query") @DefaultValue("") StringArrayArg query,
             @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filter, // Optional, default null
@@ -270,7 +270,7 @@ public class AnnotationsWebService {
             @ApiResponse(responseCode = "200", content = @Content(schema = @Schema(ref = "PaginatedResponseDataObjectExpressionExperimentValueObject"))),
             @ApiResponse(responseCode = "400", description = "The search query is empty or invalid.", content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
     }, deprecated = true)
-    public FilteringAndPaginatedResponseDataObject<ExpressionExperimentValueObject> searchTaxonDatasetsByQueryInPath( // Params:
+    public FilteredAndPaginatedResponseDataObject<ExpressionExperimentValueObject> searchTaxonDatasetsByQueryInPath( // Params:
             @PathParam("taxon") TaxonArg<?> taxonArg, // Required
             @PathParam("query") @DefaultValue("") StringArrayArg query, // Required
             @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filter, // Optional, default null

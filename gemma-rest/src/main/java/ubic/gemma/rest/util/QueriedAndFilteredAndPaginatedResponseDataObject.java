@@ -10,8 +10,9 @@ import java.util.List;
 
 @Value
 @EqualsAndHashCode(callSuper = true)
-public class FilteringAndPaginatedResponseDataObject<T> extends ResponseDataObject<List<T>> {
+public class QueriedAndFilteredAndPaginatedResponseDataObject<T> extends ResponseDataObject<List<T>> {
 
+    String query;
     String filter;
     String[] groupBy;
     SortValueObject sort;
@@ -19,11 +20,9 @@ public class FilteringAndPaginatedResponseDataObject<T> extends ResponseDataObje
     Integer limit;
     Long totalElements;
 
-    /**
-     * @param payload the data to be serialised and returned as the response payload.
-     */
-    public FilteringAndPaginatedResponseDataObject( Slice<T> payload, @Nullable Filters filters, @Nullable String[] groupBy ) {
+    public QueriedAndFilteredAndPaginatedResponseDataObject( Slice<T> payload, @Nullable String query, @Nullable Filters filters, String[] groupBy ) {
         super( payload );
+        this.query = query;
         this.offset = payload.getOffset();
         this.limit = payload.getLimit();
         this.totalElements = payload.getTotalElements();

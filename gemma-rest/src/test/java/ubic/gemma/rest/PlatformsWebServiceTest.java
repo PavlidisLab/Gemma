@@ -17,7 +17,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.experiment.BlacklistedEntityService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.rest.util.FilteringAndPaginatedResponseDataObject;
+import ubic.gemma.rest.util.FilteredAndPaginatedResponseDataObject;
 import ubic.gemma.rest.util.PaginatedResponseDataObject;
 import ubic.gemma.rest.util.args.*;
 
@@ -59,7 +59,7 @@ public class PlatformsWebServiceTest extends BaseSpringContextTest {
 
     @Test
     public void testAll() {
-        FilteringAndPaginatedResponseDataObject<ArrayDesignValueObject> response = platformsWebService.getPlatforms(
+        FilteredAndPaginatedResponseDataObject<ArrayDesignValueObject> response = platformsWebService.getPlatforms(
                 FilterArg.valueOf( "" ),
                 OffsetArg.valueOf( "0" ),
                 LimitArg.valueOf( "20" ),
@@ -99,7 +99,7 @@ public class PlatformsWebServiceTest extends BaseSpringContextTest {
         BlacklistedPlatform bp = blacklistedEntityService.blacklistPlatform( arrayDesign, "This is just a test, don't feel bad about it." );
         assertThat( blacklistedEntityService.isBlacklisted( arrayDesign ) ).isTrue();
         assertThat( bp.getShortName() ).isEqualTo( arrayDesign.getShortName() );
-        FilteringAndPaginatedResponseDataObject<ArrayDesignValueObject> payload = platformsWebService.getBlacklistedPlatforms( FilterArg.valueOf( "" ), SortArg.valueOf( "+id" ), OffsetArg.valueOf( "0" ), LimitArg.valueOf( "20" ) );
+        FilteredAndPaginatedResponseDataObject<ArrayDesignValueObject> payload = platformsWebService.getBlacklistedPlatforms( FilterArg.valueOf( "" ), SortArg.valueOf( "+id" ), OffsetArg.valueOf( "0" ), LimitArg.valueOf( "20" ) );
         assertThat( payload.getData() )
                 .hasSize( 1 )
                 .first()

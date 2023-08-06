@@ -36,7 +36,7 @@ import ubic.gemma.persistence.service.expression.experiment.ExpressionExperiment
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Sort;
-import ubic.gemma.rest.util.FilteringAndPaginatedResponseDataObject;
+import ubic.gemma.rest.util.FilteredAndPaginatedResponseDataObject;
 import ubic.gemma.rest.util.Responder;
 import ubic.gemma.rest.util.ResponseDataObject;
 import ubic.gemma.rest.util.args.*;
@@ -224,7 +224,7 @@ public class TaxaWebService {
     @Path("/{taxon}/datasets")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve the datasets for a given taxon")
-    public FilteringAndPaginatedResponseDataObject<ExpressionExperimentValueObject> getTaxonDatasets( // Params:
+    public FilteredAndPaginatedResponseDataObject<ExpressionExperimentValueObject> getTaxonDatasets( // Params:
             @PathParam("taxon") TaxonArg<?> taxonArg, // Required
             @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filter, // Optional, default null
             @QueryParam("offset") @DefaultValue("0") OffsetArg offset, // Optional, default 0

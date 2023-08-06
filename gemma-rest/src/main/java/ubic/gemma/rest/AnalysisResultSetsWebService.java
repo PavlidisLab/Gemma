@@ -86,7 +86,7 @@ public class AnalysisResultSetsWebService {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve all result sets matching the provided criteria")
-    public FilteringAndPaginatedResponseDataObject<DifferentialExpressionAnalysisResultSetValueObject> getResultSets(
+    public FilteredAndPaginatedResponseDataObject<DifferentialExpressionAnalysisResultSetValueObject> getResultSets(
             @Parameter(schema = @Schema(implementation = DatasetArrayArg.class), explode = Explode.FALSE) @QueryParam("datasets") DatasetArrayArg datasets,
             @Parameter(schema = @Schema(implementation = DatabaseEntryArrayArg.class), explode = Explode.FALSE) @QueryParam("databaseEntries") DatabaseEntryArrayArg databaseEntries,
             @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionAnalysisResultSet> filters,

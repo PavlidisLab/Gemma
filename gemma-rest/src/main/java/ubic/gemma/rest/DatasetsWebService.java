@@ -155,7 +155,7 @@ public class DatasetsWebService {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve all datasets")
-    public QueriedAndPaginatedResponseDataObject<ExpressionExperimentWithSearchResultValueObject> getDatasets( // Params:
+    public QueriedAndFilteredAndPaginatedResponseDataObject<ExpressionExperimentWithSearchResultValueObject> getDatasets( // Params:
             @QueryParam("query") String query,
             @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filterArg, // Optional, default null
             @QueryParam("offset") @DefaultValue("0") OffsetArg offsetArg, // Optional, default 0
@@ -413,7 +413,7 @@ public class DatasetsWebService {
     @Path("/taxa")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve taxa usage statistics for datasets matching the provided filter")
-    public FilteringResponseDataObject<TaxonWithUsageStatisticsValueObject> getDatasetsTaxaUsageStatistics(
+    public FilteredResponseDataObject<TaxonWithUsageStatisticsValueObject> getDatasetsTaxaUsageStatistics(
             @QueryParam("query") String query, @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filterArg ) {
         Filters filters = datasetArgService.getFilters( filterArg );
         if ( query != null ) {
@@ -454,7 +454,7 @@ public class DatasetsWebService {
     @Path("/{dataset}")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve datasets by their identifiers")
-    public FilteringAndPaginatedResponseDataObject<ExpressionExperimentValueObject> getDatasetsByIds( // Params:
+    public FilteredAndPaginatedResponseDataObject<ExpressionExperimentValueObject> getDatasetsByIds( // Params:
             @PathParam("dataset") DatasetArrayArg datasetsArg, // Optional
             @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filter, // Optional, default null
             @QueryParam("offset") @DefaultValue("0") OffsetArg offset, // Optional, default 0
@@ -474,7 +474,7 @@ public class DatasetsWebService {
     @Produces(MediaType.APPLICATION_JSON)
     @Secured("GROUP_ADMIN")
     @Operation(summary = "Retrieve all blacklisted datasets", hidden = true)
-    public FilteringAndPaginatedResponseDataObject<ExpressionExperimentValueObject> getBlacklistedDatasets(
+    public FilteredAndPaginatedResponseDataObject<ExpressionExperimentValueObject> getBlacklistedDatasets(
             @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filterArg,
             @QueryParam("sort") @DefaultValue("+id") SortArg<ExpressionExperiment> sortArg,
             @QueryParam("offset") @DefaultValue("0") OffsetArg offset,
