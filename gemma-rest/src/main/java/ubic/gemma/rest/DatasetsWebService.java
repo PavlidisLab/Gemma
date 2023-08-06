@@ -243,8 +243,8 @@ public class DatasetsWebService {
         if ( query != null ) {
             filters.and( datasetArgService.getFilterForSearchQuery( query ) );
         }
-        Integer l = limit.getValue( 50 );
-        Map<ArrayDesign, Long> ads = expressionExperimentService.getArrayDesignUsedOrOriginalPlatformUsageFrequency( filters, true, limit.getValue( 50 ) );
+        Integer l = limit.getValueNoMaximum();
+        Map<ArrayDesign, Long> ads = expressionExperimentService.getArrayDesignUsedOrOriginalPlatformUsageFrequency( filters, true, l );
         List<ArrayDesignValueObject> adsVos = arrayDesignService.loadValueObjects( ads.keySet() );
         Map<Long, Long> countsById = ads.entrySet().stream().collect( Collectors.toMap( e -> e.getKey().getId(), Map.Entry::getValue ) );
         List<ArrayDesignWithUsageStatisticsValueObject> results =
