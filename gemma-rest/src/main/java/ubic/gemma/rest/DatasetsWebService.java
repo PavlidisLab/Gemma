@@ -256,6 +256,32 @@ public class DatasetsWebService {
     }
 
     @Value
+    public static class CategoryWithUsageStatisticsValueObject implements UsageStatistics {
+        String classUri;
+        String className;
+        Long numberOfExpressionExperiments;
+    }
+
+    @GET
+    @Path("/categories")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(summary = "Retrieve usage statistics of categories among datasets matching the provided filter",
+            description = "Usage statistics are aggregated across experiment tags, samples and factor values mentioned in the experimental design.")
+    public GroupedResponseDataObject<CategoryWithUsageStatisticsValueObject> getDatasetsCategoriesUsageStatistics(
+            @QueryParam("query") String query,
+            @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filter,
+            @Parameter(description = "Excluded category URIs.", hidden = true) @QueryParam("excludedCategories") StringArrayArg excludedCategoryUris
+    ) {
+        Filters filters = datasetArgService.getFilters( filter, null );
+        List<CategoryWithUsageStatisticsValueObject> results = expressionExperimentService.getCategoriesUsageFrequency( filters, excludedCategoryUris != null ? excludedCategoryUris.getValue() : null ).entrySet()
+                .stream()
+                .map( e -> new CategoryWithUsageStatisticsValueObject( e.getKey().getCategoryUri(), e.getKey().getCategory(), e.getValue() ) )
+                .sorted( Comparator.comparing( UsageStatistics::getNumberOfExpressionExperiments, Comparator.reverseOrder() ) )
+                .collect( Collectors.toList() );
+        return new GroupedResponseDataObject<>( results, new String[] { "classUri", "className" }, Sort.by( null, "numberOfExpressionExperiments", Sort.Direction.DESC, "numberOfExpressionExperiments" ) );
+    }
+
+    @Value
     @EqualsAndHashCode(callSuper = true)
     @JsonIgnoreProperties({ "expressionExperimentCount", "numberOfSwitchedExpressionExperiments" })
     public static class ArrayDesignWithUsageStatisticsValueObject extends ArrayDesignValueObject implements UsageStatistics {

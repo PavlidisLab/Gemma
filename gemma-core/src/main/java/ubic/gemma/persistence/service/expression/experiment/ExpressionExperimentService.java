@@ -261,6 +261,8 @@ public interface ExpressionExperimentService
      */
     Filters getFiltersWithInferredAnnotations( Filters f, @Nullable Collection<OntologyTerm> mentionedTerms );
 
+    Map<Characteristic, Long> getCategoriesUsageFrequency( @Nullable Filters filters, @Nullable Collection<String> excludedCategoryUris );
+
     @Value
     class CharacteristicWithUsageStatisticsAndOntologyTerm {
         /**

@@ -634,6 +634,39 @@ public class ExpressionExperimentDaoImpl
                 .list();
     }
 
+    @Override
+    public Map<Characteristic, Long> getCategoriesUsageFrequency( @Nullable Collection<Long> eeIds, @Nullable Collection<String> excludedCategoryUris ) {
+        Query q = getSessionFactory().getCurrentSession().createSQLQuery(
+                        "select T.CATEGORY, T.CATEGORY_URI, count(distinct T.EXPRESSION_EXPERIMENT_FK) as EE_COUNT from EXPRESSION_EXPERIMENT2CHARACTERISTIC T "
+                                + AclQueryUtils.formNativeAclJoinClause( "T.EXPRESSION_EXPERIMENT_FK" ) + " "
+                                + "where T.ID is not null "
+                                + ( eeIds != null ? " and T.EXPRESSION_EXPERIMENT_FK in :eeIds" : "" )
+                                + ( excludedCategoryUris != null && !excludedCategoryUris.isEmpty() ? " and T.CATEGORY_URI not in :excludedCategoryUris" : "" )
+                                + AclQueryUtils.formNativeAclRestrictionClause( ( SessionFactoryImplementor ) getSessionFactory() ) + " "
+                                + "group by COALESCE(T.CATEGORY_URI, T.CATEGORY) "
+                                + "order by EE_COUNT desc" )
+                .addScalar( "T.CATEGORY", StandardBasicTypes.STRING )
+                .addScalar( "T.CATEGORY_URI", StandardBasicTypes.STRING )
+                .addScalar( "EE_COUNT", StandardBasicTypes.LONG )
+                .addSynchronizedEntityClass( Characteristic.class )
+                .setCacheable( true );
+        if ( eeIds != null ) {
+            q.setParameterList( "eeIds", new HashSet<>( eeIds ) );
+        }
+        if ( excludedCategoryUris != null && !excludedCategoryUris.isEmpty() ) {
+            q.setParameterList( "excludedCategoryUris", excludedCategoryUris );
+        }
+        AclQueryUtils.addAclParameters( q, ExpressionExperiment.class );
+        //noinspection unchecked
+        List<Object[]> result = q.list();
+        TreeMap<Characteristic, Long> byC = new TreeMap<>( Characteristic.getByCategoryComparator() );
+        for ( Object[] row : result ) {
+            Characteristic c = Characteristic.Factory.newInstance( null, null, null, null, ( String ) row[0], ( String ) row[1], null );
+            byC.put( c, ( Long ) row[2] );
+        }
+        return byC;
+    }
+
     /**
      * We're making two assumptions: a dataset cannot have a characteristic more than once and a dataset cannot have
      * the same characteristic at multiple levels to make counting more efficient.

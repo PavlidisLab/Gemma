@@ -634,6 +634,18 @@ public class ExpressionExperimentServiceImpl
         String originalProperty;
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public Map<Characteristic, Long> getCategoriesUsageFrequency( @Nullable Filters filters, @Nullable Collection<String> excludedCategoryUris ) {
+        List<Long> eeIds;
+        if ( filters == null || filters.isEmpty() ) {
+            eeIds = null;
+        } else {
+            eeIds = expressionExperimentDao.loadIds( filters, null );
+        }
+        return expressionExperimentDao.getCategoriesUsageFrequency( eeIds, excludedCategoryUris );
+    }
+
     /**
      * If the term cannot be resolved via {@link OntologyService#getTerm(String)}, an attempt is done to resolve its
      * category and assign it as its parent. This handles free-text terms that lack a value URI.

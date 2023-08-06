@@ -238,6 +238,8 @@ public interface ExpressionExperimentDao
      */
     List<Characteristic> getExperimentalDesignAnnotations( ExpressionExperiment expressionExperiment );
 
+    Map<Characteristic, Long> getCategoriesUsageFrequency( @Nullable Collection<Long> eeIds, @Nullable Collection<String> excludedCategoryUris );
+
     /**
      * Obtain annotations usage frequency for a set of given {@link ExpressionExperiment} IDs.
      * <p>
