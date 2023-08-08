@@ -105,4 +105,11 @@ public class GeoSubset extends GeoData {
         this.owningDataset = owningDataset;
     }
 
+    public String getDataSet() {
+        return dataSet;
+    }
+
+    public void setDataSet( String dataSet ) {
+        this.dataSet = dataSet;
+    }
 }

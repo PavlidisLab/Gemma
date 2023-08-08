@@ -184,6 +184,58 @@ public class GeoSeries extends GeoData {
         this.variables.put( number, variable );
     }
 
+    public String getSeriesId() {
+        return seriesId;
+    }
+
+    public void setSeriesId( String seriesId ) {
+        this.seriesId = seriesId;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus( String status ) {
+        this.status = status;
+    }
+
+    public String getSubmissionDate() {
+        return submissionDate;
+    }
+
+    public void setSubmissionDate( String submissionDate ) {
+        this.submissionDate = submissionDate;
+    }
+
+    public String getPlatformId() {
+        return platformId;
+    }
+
+    public void setPlatformId( String platformId ) {
+        this.platformId = platformId;
+    }
+
+    public Collection<GeoDataset> getDataSets() {
+        return dataSets;
+    }
+
+    public void setSubSeries( boolean subSeries ) {
+        isSubSeries = subSeries;
+    }
+
+    public void setSuperSeries( boolean superSeries ) {
+        isSuperSeries = superSeries;
+    }
+
+    public String getSummary() {
+        return summary;
+    }
+
+    public void setSummary( String summary ) {
+        this.summary = summary;
+    }
+
     /**
      * @return Returns the contributers.
      */

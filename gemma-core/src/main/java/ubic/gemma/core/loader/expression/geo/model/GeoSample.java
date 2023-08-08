@@ -164,6 +164,50 @@ public class GeoSample extends GeoData implements Comparable<GeoData> {
         return o.getGeoAccession().compareTo( this.getGeoAccession() );
     }
 
+    public String getId() {
+        return id;
+    }
+
+    public void setId( String id ) {
+        this.id = id;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus( String status ) {
+        this.status = status;
+    }
+
+    public String getSubmissionDate() {
+        return submissionDate;
+    }
+
+    public void setSubmissionDate( String submissionDate ) {
+        this.submissionDate = submissionDate;
+    }
+
+    public void setChannelCount( int channelCount ) {
+        this.channelCount = channelCount;
+    }
+
+    public void setGenePix( boolean genePix ) {
+        isGenePix = genePix;
+    }
+
+    public void setPlatforms( Collection<GeoPlatform> platforms ) {
+        this.platforms = platforms;
+    }
+
+    public boolean isWarnedAboutGenePix() {
+        return warnedAboutGenePix;
+    }
+
+    public void setWarnedAboutGenePix( boolean warnedAboutGenePix ) {
+        this.warnedAboutGenePix = warnedAboutGenePix;
+    }
+
     /**
      * @return Returns the anchor. (SAGE)
      */

@@ -378,6 +378,14 @@ public class GeoDataset extends GeoData {
         this.numSamples = numSamples;
     }
 
+    public int getNumProbes() {
+        return this.numProbes;
+    }
+
+    public void setNumProbes( int numProbes ) {
+        this.numProbes = numProbes;
+    }
+
     /**
      * @return Returns the order.
      */

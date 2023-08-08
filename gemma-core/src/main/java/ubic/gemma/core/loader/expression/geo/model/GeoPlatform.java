@@ -137,6 +137,46 @@ public class GeoPlatform extends GeoData {
 
     }
 
+    public String getId() {
+        return id;
+    }
+
+    public void setId( String id ) {
+        this.id = id;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus( String status ) {
+        this.status = status;
+    }
+
+    public String getSubmissionDate() {
+        return submissionDate;
+    }
+
+    public void setSubmissionDate( String submissionDate ) {
+        this.submissionDate = submissionDate;
+    }
+
+    public String getWebLink() {
+        return webLink;
+    }
+
+    public void setWebLink( String webLink ) {
+        this.webLink = webLink;
+    }
+
+    public Map<String, List<String>> getPlatformInformation() {
+        return platformInformation;
+    }
+
+    public boolean isUseDataFromGEO() {
+        return useDataFromGEO;
+    }
+
     private String id;
     private String status;
     private String submissionDate;
