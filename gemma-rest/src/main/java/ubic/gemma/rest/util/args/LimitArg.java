@@ -1,7 +1,6 @@
 package ubic.gemma.rest.util.args;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.NonNull;
 import ubic.gemma.rest.util.MalformedArgException;
 
 import javax.annotation.Nonnull;
@@ -17,7 +16,7 @@ public class LimitArg extends AbstractArg<Integer> {
      */
     public static int MAXIMUM = 100;
 
-    private LimitArg( @NonNull Integer value ) {
+    private LimitArg( int value ) {
         super( value );
     }
 

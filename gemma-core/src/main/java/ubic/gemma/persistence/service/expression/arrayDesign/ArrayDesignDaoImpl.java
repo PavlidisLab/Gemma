@@ -19,7 +19,6 @@
  */
 package ubic.gemma.persistence.service.expression.arrayDesign;
 
-import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.hibernate.*;
@@ -812,7 +811,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     }
 
     @Override
-    public void thawLite( @NonNull ArrayDesign arrayDesign ) {
+    public void thawLite( ArrayDesign arrayDesign ) {
         Hibernate.initialize( arrayDesign.getSubsumedArrayDesigns() );
         Hibernate.initialize( arrayDesign.getMergees() );
         Hibernate.initialize( arrayDesign.getDesignProvider() );

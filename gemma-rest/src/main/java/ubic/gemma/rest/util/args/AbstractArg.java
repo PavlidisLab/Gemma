@@ -1,7 +1,6 @@
 package ubic.gemma.rest.util.args;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.NonNull;
 import ubic.gemma.rest.util.MalformedArgException;
 
 import javax.annotation.Nonnull;
@@ -27,7 +26,7 @@ public abstract class AbstractArg<T> implements Arg<T> {
      *
      * @param value a well-formed value which cannot be null
      */
-    protected AbstractArg( @NonNull T value ) {
+    protected AbstractArg( @Nonnull T value ) {
         this.value = value;
     }
 

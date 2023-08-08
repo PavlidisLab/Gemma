@@ -21,7 +21,6 @@ package ubic.gemma.persistence.service.expression.experiment;
 import gemma.gsec.acl.domain.AclObjectIdentity;
 import gemma.gsec.acl.domain.AclSid;
 import gemma.gsec.util.SecurityUtil;
-import lombok.NonNull;
 import lombok.Value;
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.commons.lang3.StringUtils;
@@ -1423,8 +1422,7 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
-    public List<ExpressionExperimentDetailsValueObject> loadDetailsValueObjectsByIds
-            ( @NonNull Collection<Long> ids ) {
+    public List<ExpressionExperimentDetailsValueObject> loadDetailsValueObjectsByIds( Collection<Long> ids ) {
         if ( ids.isEmpty() ) {
             return Collections.emptyList();
         }
