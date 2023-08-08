@@ -99,7 +99,7 @@ public class PlatformsWebService {
     @GET
     @Path("/count")
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Count platforms matching a given set of filters")
+    @Operation(summary = "Count platforms matching the provided filter")
     public ResponseDataObject<Long> getNumberOfPlatforms(
             @QueryParam("filter") @DefaultValue("") FilterArg<ArrayDesign> filter ) {
         return Responder.respond( arrayDesignService.count( arrayDesignArgService.getFilters( filter ) ) );
@@ -183,7 +183,7 @@ public class PlatformsWebService {
     @GET
     @Path("/{platform}/elements")
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Retrieve the composite sequences for a given platform")
+    @Operation(summary = "Retrieve the probes for a given platform")
     public PaginatedResponseDataObject<CompositeSequenceValueObject> getPlatformElements( // Params:
             @PathParam("platform") PlatformArg<?> platformArg, // Required
             @QueryParam("offset") @DefaultValue("0") OffsetArg offset, // Optional, default 0
@@ -209,7 +209,7 @@ public class PlatformsWebService {
     @GET
     @Path("/{platform}/elements/{probes}")
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Retrieve the selected composite sequences for a given platform")
+    @Operation(summary = "Retrieve the selected probes for a given platform")
     public FilteredAndPaginatedResponseDataObject<CompositeSequenceValueObject> getPlatformElement( // Params:
             @PathParam("platform") PlatformArg<?> platformArg, // Required
             @PathParam("probes") CompositeSequenceArrayArg probesArg, // Required
