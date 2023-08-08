@@ -756,19 +756,16 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     @Override
     public long numExperiments( ArrayDesign arrayDesign ) {
         //language=HQL
-        final String queryString = "select distinct ee.id  from   "
-                + " ExpressionExperiment ee inner join ee.bioAssays bas join bas.arrayDesignUsed ad where ad = :ad";
-
-        List ids = this.getSessionFactory().getCurrentSession().createQuery( queryString )
-                .setParameter( "ad", arrayDesign ).list();
-
-        if ( ids.isEmpty() ) {
-            return 0;
-        }
-
-        //noinspection unchecked
-        return EntityUtils.securityFilterIds( ExpressionExperiment.class, ids, false, true,
-                this.getSessionFactory().getCurrentSession() ).size();
+        final String queryString = "select count(distinct ee.id) from ExpressionExperiment ee "
+                + "inner join ee.bioAssays bas "
+                + "join bas.arrayDesignUsed ad "
+                + AclQueryUtils.formAclRestrictionClause( "ee.id" ) + " "
+                + "and ad = :ad";
+        Query query = this.getSessionFactory().getCurrentSession()
+                .createQuery( queryString )
+                .setParameter( "ad", arrayDesign );
+        AclQueryUtils.addAclParameters( query, ExpressionExperiment.class );
+        return ( Long ) query.uniqueResult();
     }
 
     @Override

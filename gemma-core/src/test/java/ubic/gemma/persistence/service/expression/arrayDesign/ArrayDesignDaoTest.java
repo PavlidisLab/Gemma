@@ -7,6 +7,7 @@ import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ContextConfiguration;
 import ubic.gemma.core.util.test.BaseDatabaseTest;
 import ubic.gemma.core.util.test.category.SlowTest;
@@ -152,5 +153,16 @@ public class ArrayDesignDaoTest extends BaseDatabaseTest {
                 .hasFieldOrPropertyWithValue( "objectAlias", "ad" )
                 .hasFieldOrPropertyWithValue( "propertyName", "technologyType" )
                 .hasFieldOrPropertyWithValue( "requiredValue", TechnologyType.ONECOLOR );
+    }
+
+    @Test
+    @WithMockUser
+    public void testNumExperiments() {
+        Taxon taxon = Taxon.Factory.newInstance( "test" );
+        sessionFactory.getCurrentSession().persist( taxon );
+        ArrayDesign ad = new ArrayDesign();
+        ad.setPrimaryTaxon( taxon );
+        ad = arrayDesignDao.create( ad );
+        assertThat( arrayDesignDao.numExperiments( ad ) ).isEqualTo( 0 );
     }
 }
