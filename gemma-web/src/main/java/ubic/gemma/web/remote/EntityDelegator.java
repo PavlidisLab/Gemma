@@ -18,7 +18,7 @@
  */
 package ubic.gemma.web.remote;
 
-import ubic.gemma.persistence.util.EntityUtils;
+import ubic.gemma.model.common.Identifiable;
 
 /**
  * Bean to expose for remote access via AJAX, when all that is needed is the ID and a way to know what the class is.
@@ -35,8 +35,8 @@ public class EntityDelegator {
     public EntityDelegator() {
     }
 
-    public EntityDelegator( Object entity ) {
-        this.id = EntityUtils.getProperty( entity, "id" );
+    public EntityDelegator( Identifiable entity ) {
+        this.id = entity.getId();
         this.classDelegatingFor = entity.getClass().getName();
     }
 

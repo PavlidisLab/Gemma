@@ -158,13 +158,6 @@
 			<version>2.1.4.RELEASE</version>
 		</dependency>
 
-		<!-- Apache Commons -->
-		<dependency>
-			<groupId>commons-validator</groupId>
-			<artifactId>commons-validator</artifactId>
-			<version>1.7</version>
-		</dependency>
-
 		<!-- Scheduling -->
 		<!-- This is the latest Quartz release compatible with Spring 3 -->
 		<dependency>

@@ -25,7 +25,6 @@ import gemma.gsec.acl.domain.AclObjectIdentity;
 import gemma.gsec.acl.domain.AclPrincipalSid;
 import gemma.gsec.model.Securable;
 import gemma.gsec.util.SecurityUtil;
-import org.apache.commons.beanutils.PropertyUtils;
 import org.hibernate.Query;
 import org.hibernate.SQLQuery;
 import org.hibernate.Session;
@@ -37,7 +36,6 @@ import ubic.gemma.model.common.Identifiable;
 
 import java.io.File;
 import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
 import java.math.BigInteger;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -95,61 +93,7 @@ public class EntityUtils {
         }
         return result;
     }
-
-    /**
-     * Get a property of an entity object via its getter.
-     *
-     * @param entity       the entity
-     * @param propertyName name of the property
-     * @param <T>          type of the property
-     * @return the return value of the getter for the property
-     * @see PropertyUtils#getProperty(Object, String)
-     */
-    public static <T> T getProperty( Object entity, String propertyName ) {
-        try {
-            //noinspection unchecked
-            return ( T ) PropertyUtils.getProperty( entity, propertyName );
-        } catch ( IllegalAccessException | InvocationTargetException | NoSuchMethodException e ) {
-            throw new RuntimeException( e );
-        }
-    }
-
-    /**
-     * Group entities by their property.
-     *
-     * @param entities     entities
-     * @param propertyName property name (e.g. "id")
-     * @param <T>        the type
-     * @return the created map
-     * @see #getProperty(Object, String)
-     */
-    public static <S, T> Map<S, T> getPropertyMap( Collection<? extends T> entities, String propertyName ) {
-        Map<S, T> result = new HashMap<>();
-        for ( T object : entities ) {
-            result.put( EntityUtils.getProperty( object, propertyName ), object );
-        }
-        return result;
-    }
-
-    /**
-     * Group entities by their property using a nested property.
-     *
-     * @param entities       entities
-     * @param nestedProperty nested property
-     * @param propertyName   property name (e.g. "id")
-     * @param <T>            the type
-     * @return the created map
-     * @see #getProperty(Object, String)
-     */
-    public static <S, T> Map<S, T> getNestedPropertyMap( Collection<T> entities, String nestedProperty,
-            String propertyName ) {
-        Map<S, T> result = new HashMap<>();
-        for ( T object : entities ) {
-            result.put( EntityUtils.getProperty( EntityUtils.getProperty( object, nestedProperty ), propertyName ), object );
-        }
-        return result;
-    }
-
+    
     public static Class<?> getImplClass( Class<?> type ) {
         String canonicalName = type.getName();
         try {

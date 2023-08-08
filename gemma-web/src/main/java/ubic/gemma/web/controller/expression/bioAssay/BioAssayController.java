@@ -36,13 +36,16 @@ import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.persistence.util.EntityUtils;
 import ubic.gemma.web.controller.WebConstants;
 import ubic.gemma.web.util.EntityNotFoundException;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * @author keshav
@@ -77,7 +80,8 @@ public class BioAssayController {
         Collection<OutlierDetails> outliers = outlierDetectionService.getOutlierDetails( ee );
 
         if ( outliers != null ) {
-            Map<Long, OutlierDetails> outlierMap = EntityUtils.getNestedPropertyMap( outliers, "bioAssay", "id" );
+            Map<Long, OutlierDetails> outlierMap = outliers.stream()
+                    .collect( Collectors.toMap( od -> od.getBioAssay().getId(), od -> od, ( a, b ) -> b ) );
             for ( BioAssay assay : ee.getBioAssays() ) {
                 result.add( new BioAssayValueObject( assay, false, outlierMap.containsKey( assay.getId() ) ) );
             }

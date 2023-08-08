@@ -18,12 +18,12 @@
  */
 package ubic.gemma.core.loader.expression.geo;
 
-import org.apache.commons.beanutils.BeanUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.text.WordUtils;
+import org.apache.commons.lang3.reflect.FieldUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.commons.text.WordUtils;
 import ubic.basecode.util.FileTools;
 import ubic.gemma.core.loader.expression.geo.model.*;
 import ubic.gemma.core.loader.util.parser.Parser;
@@ -366,8 +366,8 @@ public class GeoFamilyParser implements Parser<Object> {
         if ( contact == null )
             throw new IllegalArgumentException();
         try {
-            BeanUtils.setProperty( contact, property, value );
-        } catch ( IllegalAccessException | InvocationTargetException e ) {
+            FieldUtils.writeField( contact, property, value, true );
+        } catch ( IllegalAccessException e ) {
             throw new RuntimeException( e );
         }
     }
@@ -420,8 +420,8 @@ public class GeoFamilyParser implements Parser<Object> {
         }
 
         try {
-            BeanUtils.setProperty( dataset, property, value );
-        } catch ( IllegalAccessException | InvocationTargetException e ) {
+            FieldUtils.writeField( dataset, property, value, true );
+        } catch ( IllegalAccessException e ) {
             GeoFamilyParser.log.error( e, e );
             throw new RuntimeException( e );
         }
@@ -1771,8 +1771,8 @@ public class GeoFamilyParser implements Parser<Object> {
         }
 
         try {
-            BeanUtils.setProperty( platform, property, value );
-        } catch ( IllegalAccessException | InvocationTargetException e ) {
+            FieldUtils.writeField( platform, property, value, true );
+        } catch ( IllegalAccessException e ) {
             GeoFamilyParser.log.error( e, e );
             throw new RuntimeException( e );
         }
@@ -1803,8 +1803,8 @@ public class GeoFamilyParser implements Parser<Object> {
         }
 
         try {
-            BeanUtils.setProperty( sample.getChannel( channel ), property, value );
-        } catch ( IllegalAccessException | InvocationTargetException e ) {
+            FieldUtils.writeField( sample.getChannel( channel ), property, value, true );
+        } catch ( IllegalAccessException e ) {
             GeoFamilyParser.log.error( e, e );
             throw new RuntimeException( e );
         }
@@ -1825,8 +1825,8 @@ public class GeoFamilyParser implements Parser<Object> {
         if ( sample == null )
             throw new IllegalArgumentException( "Unknown sample " + accession );
         try {
-            BeanUtils.setProperty( sample, property, value );
-        } catch ( IllegalAccessException | InvocationTargetException e ) {
+            FieldUtils.writeField( sample, property, value, true );
+        } catch ( IllegalAccessException e ) {
             throw new RuntimeException( e );
         }
     }
@@ -1858,8 +1858,8 @@ public class GeoFamilyParser implements Parser<Object> {
         if ( series == null )
             throw new IllegalArgumentException( "Unknown series " + accession );
         try {
-            BeanUtils.setProperty( series, property, value );
-        } catch ( IllegalAccessException | InvocationTargetException e ) {
+            FieldUtils.writeField( series, property, value, true );
+        } catch ( IllegalAccessException e  ) {
             GeoFamilyParser.log.error( e, e );
             throw new RuntimeException( e );
         }
@@ -1892,8 +1892,8 @@ public class GeoFamilyParser implements Parser<Object> {
         }
 
         try {
-            BeanUtils.setProperty( subset, property, value );
-        } catch ( IllegalAccessException | InvocationTargetException e ) {
+            FieldUtils.writeField( subset, property, value, true );
+        } catch ( IllegalAccessException e ) {
             GeoFamilyParser.log.error( e, e );
             throw new RuntimeException( e );
         }

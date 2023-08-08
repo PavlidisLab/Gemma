@@ -40,6 +40,7 @@ import ubic.gemma.persistence.util.TaskCancelledException;
 
 import java.math.BigInteger;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * This is a key class for queries to retrieve differential expression results (as well as standard CRUD aspects of
@@ -295,8 +296,8 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
 
         Session session = this.getSessionFactory().getCurrentSession();
 
-        Map<Long, DiffExResultSetSummaryValueObject> resultSetIdsMap = EntityUtils
-                .getPropertyMap( resultSets, "resultSetId" );
+        Map<Long, DiffExResultSetSummaryValueObject> resultSetIdsMap = resultSets.stream()
+                .collect( Collectors.toMap( DiffExResultSetSummaryValueObject::getResultSetId, rs -> rs, ( a, b ) -> b ) );
 
         Map<Long, Collection<Long>> foundInCache = this.fillFromCache( results, resultSetIdsMap.keySet(), geneIds );
 
