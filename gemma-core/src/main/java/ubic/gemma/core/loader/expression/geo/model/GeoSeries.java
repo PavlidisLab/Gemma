@@ -34,6 +34,11 @@ import java.util.*;
 public class GeoSeries extends GeoData {
 
     private static final long serialVersionUID = -1058350558444775537L;
+
+    private String seriesId;
+    private String status;
+    private String submissionDate;
+    private String platformId;
     private final Collection<GeoSample> samples;
     private final Collection<SeriesType> seriesTypes = new HashSet<>();
     private final Collection<String> subSeries;

@@ -38,6 +38,8 @@ public class GeoContact implements Serializable {
     private String state;
     private String webLink;
     private String country;
+    private String laboratory;
+    private String address;
 
     /**
      * @return Returns the country.

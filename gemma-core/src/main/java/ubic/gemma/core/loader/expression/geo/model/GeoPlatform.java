@@ -137,6 +137,10 @@ public class GeoPlatform extends GeoData {
 
     }
 
+    private String id;
+    private String status;
+    private String submissionDate;
+    private String webLink;
     private Collection<String> catalogNumbers = new HashSet<>();
     private String coating = "";
     private Collection<String> contributer = new HashSet<>();

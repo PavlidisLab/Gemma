@@ -855,7 +855,7 @@ public class GeoFamilyParser implements Parser<Object> {
         } else if ( this.startsWithIgnoreCase( line, "!dataset_description" ) ) {
             this.datasetSet( currentDatasetAccession, "title", value );
         } else if ( this.startsWithIgnoreCase( line, "!dataset_maximum_probes" ) ) {
-            this.datasetSet( currentDatasetAccession, "numProbes", value );
+            this.datasetSet( currentDatasetAccession, "numProbes", Integer.parseInt( value ) );
         } else if ( this.startsWithIgnoreCase( line, "!dataset_order" ) ) {
             this.datasetSet( currentDatasetAccession, "order", value );
         } else if ( this.startsWithIgnoreCase( line, "!dataset_organism" ) ) { // note, no longer used?
@@ -894,10 +894,10 @@ public class GeoFamilyParser implements Parser<Object> {
             }
 
         } else if ( this.startsWithIgnoreCase( line, "!dataset_total_samples" ) ) {
-            this.datasetSet( currentDatasetAccession, "numSamples", value );
+            this.datasetSet( currentDatasetAccession, "numSamples", Integer.parseInt( value ) );
         } else if ( this
                 .startsWithIgnoreCase( line, "!dataset_sample_count" ) ) { // is this the same as "total_samples"?
-            this.datasetSet( currentDatasetAccession, "numSamples", value );
+            this.datasetSet( currentDatasetAccession, "numSamples", Integer.parseInt( value ) );
         } else if ( this.startsWithIgnoreCase( line, "!dataset_update_date" ) ) {
             this.datasetSet( currentDatasetAccession, "updateDate", value );
         } else if ( this.startsWithIgnoreCase( line, "!dataset_value_type" ) ) {

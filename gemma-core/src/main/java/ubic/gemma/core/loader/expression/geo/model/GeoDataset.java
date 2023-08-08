@@ -42,6 +42,7 @@ public class GeoDataset extends GeoData {
     private String featureCount;
     private int numChannels;
     private int numSamples;
+    private int numProbes;
     private String order;
     private String organism;
     private GeoPlatform platform;
