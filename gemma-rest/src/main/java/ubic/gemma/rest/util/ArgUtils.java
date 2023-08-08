@@ -41,9 +41,10 @@ public class ArgUtils {
      * This intended to be used in the {@code valueOf} methods of subclasses.
      */
     public static String decodeCompressedArg( @Nullable String s ) {
-        if ( s != null && s.startsWith( BASE64_ENCODED_GZIP_MAGIC ) && isValidBase64( s ) ) {
+        byte[] decodedS;
+        if ( s != null && s.startsWith( BASE64_ENCODED_GZIP_MAGIC ) && ( decodedS = tryDecodeBase64( s ) ) != null ) {
             try {
-                return IOUtils.toString( new GZIPInputStream( new ByteArrayInputStream( Base64.getDecoder().decode( s ) ) ), StandardCharsets.UTF_8 );
+                return IOUtils.toString( new GZIPInputStream( new ByteArrayInputStream( decodedS ) ), StandardCharsets.UTF_8 );
             } catch ( IOException e ) {
                 throw new MalformedArgException( "Invalid base64-encoded filter, make sure that your filter is first gzipped and then base64-encoded.", e );
             }
@@ -52,13 +53,12 @@ public class ArgUtils {
         }
     }
 
-    private static boolean isValidBase64( String s ) {
+    private static byte[] tryDecodeBase64( String s ) {
         try {
-            Base64.getDecoder().decode( s );
-            return true;
+            return Base64.getDecoder().decode( s );
         } catch ( IllegalArgumentException e ) {
             // invalid base-64 encoded buffer, this might be a regular string
-            return false;
+            return null;
         }
     }
 }
