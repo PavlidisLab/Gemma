@@ -102,6 +102,12 @@ public interface OntologyService {
     Collection<OntologyTerm> getCategoryTerms();
 
     /**
+     *
+     * @return terms allowed for the predicate (relationship) in a Characteristic
+     */
+    Collection<OntologyTerm> getRelationTerms();
+
+    /**
      * Obtain the parents of a collection of terms.
      * @see OntologyTerm#getParents(boolean, boolean)
      */

@@ -33,6 +33,9 @@ AnnotationController.createBioMaterialTag = function (p0, p1, callback) {
 AnnotationController.getCategoryTerms = function (callback) {
     dwr.engine._execute(AnnotationController._path, 'AnnotationController', 'getCategoryTerms', callback);
 };
+AnnotationController.getRelationTerms = function (callback) {
+    dwr.engine._execute(AnnotationController._path, 'AnnotationController', 'getRelationTerms', callback);
+};
 AnnotationController.removeBioMaterialTag = function (p0, p1, callback) {
     dwr.engine._execute(AnnotationController._path, 'AnnotationController', 'removeBioMaterialTag', p0, p1, callback);
 };

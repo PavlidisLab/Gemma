@@ -117,6 +117,8 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
 
     private Set<OntologyTermSimple> categoryTerms = null;
 
+    private Set<OntologyTermSimple> relationTerms = null;
+
     @Override
     public void afterPropertiesSet() throws Exception {
         List<ubic.basecode.ontology.providers.OntologyService> enabledOntologyServices = ontologyServiceFactories.stream()
@@ -140,6 +142,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
         // remove GeneOntologyService, it was originally not included in the list before bean injection was used
         ontologyServices.remove( geneOntologyService );
         initializeCategoryTerms();
+        initializeRelationTerms();
     }
 
     private void countOccurrences( Map<String, CharacteristicValueObject> results ) {
@@ -414,6 +417,17 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
                             return efoTerm;
                         }
                     }
+                    return term;
+                } )
+                .collect( Collectors.toSet() );
+    }
+
+
+    @Override
+    public Collection<OntologyTerm> getRelationTerms() {
+        // FIXME: it's not quite like categoryTerms so this map operation is probably not needed at all, the relations don't come from any particular ontology
+        return relationTerms.stream()
+                .map( term -> {
                     return term;
                 } )
                 .collect( Collectors.toSet() );
@@ -819,6 +833,25 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
         if ( !experimentalFactorOntologyService.isEnabled() ) {
             OntologyServiceImpl.log.warn( String.format( "%s is not enabled; using light-weight placeholder for categories.",
                     experimentalFactorOntologyService ) );
+        }
+    }
+
+
+    private void initializeRelationTerms() throws IOException {
+        Set<OntologyTermSimple> relationTerms= new HashSet<>();
+        Resource resource = new ClassPathResource( "/ubic/gemma/core/ontology/Relation.terms.txt" );
+        try ( BufferedReader reader = new BufferedReader( new InputStreamReader( resource.getInputStream() ) ) ) {
+            String line;
+            while ( ( line = reader.readLine() ) != null ) {
+                if ( line.startsWith( "#" ) || StringUtils.isEmpty( line ) )
+                    continue;
+                String[] f = StringUtils.split( line, '\t' );
+                if ( f.length < 2 ) {
+                    continue;
+                }
+                relationTerms.add( new OntologyTermSimple( f[0], f[1] ) );
+            }
+            this.relationTerms = Collections.unmodifiableSet( relationTerms );
         }
     }
 

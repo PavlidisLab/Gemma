@@ -656,6 +656,10 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
     @Override
     public void updateFactorValueCharacteristics( FactorValueValueObject[] fvvos ) {
 
+        /*
+         * TODO: support Characteristic extensions (predicate-object)
+         */
+
         if ( fvvos == null || fvvos.length == 0 )
             return;
 

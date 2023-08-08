@@ -79,6 +79,10 @@ public class AnnotationController {
         return ontologyService.getCategoryTerms();
     }
 
+    public Collection<OntologyTerm> getRelationTerms() {
+        return ontologyService.getRelationTerms();
+    }
+
     public void createBiomaterialTag( Characteristic vc, Long id ) {
         BioMaterial bm = bioMaterialService.load( id );
         if ( bm == null ) {

@@ -472,6 +472,7 @@
         <dwr:remote javascript="AnnotationController">
             <dwr:include method="findTerm"/>
             <dwr:include method="getCategoryTerms"/>
+            <dwr:include method="getRelationTerms"/>
             <dwr:include method="createExperimentTag"/>
             <dwr:include method="removeExperimentTag"/>
             <dwr:include method="createBioMaterialTag"/>

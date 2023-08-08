@@ -1,0 +1,20 @@
+# Terms usable for relations among concepts.
+http://purl.obolibrary.org/obo/RO_0000087	has role
+http://purl.obolibrary.org/obo/RO_0001000	derives from
+http://purl.obolibrary.org/obo/RO_0000053	has characteristic
+http://purl.obolibrary.org/obo/ENVO_01003004	 derives from part of
+http://purl.obolibrary.org/obo/RO_0002260	has biological role
+http://purl.obolibrary.org/obo/RO_0000086	has quality
+http://purl.obolibrary.org/obo/RO_0002573	has modifier
+http://purl.obolibrary.org/obo/RO_0016002	has disease
+http://purl.obolibrary.org/obo/RO_0002200	has phenotype
+http://purl.obolibrary.org/obo/RO_0001025	located in
+# missing:
+# has_delivered or delivered_by
+# has_timepoint
+# from_cell_line (derived from?)
+# has_genotype
+# has_dose
+# has_stage (developmental stage)
+# has_allele
+# fusion_gene

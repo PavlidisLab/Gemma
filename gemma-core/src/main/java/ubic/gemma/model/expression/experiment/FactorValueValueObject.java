@@ -42,6 +42,12 @@ public class FactorValueValueObject extends IdentifiableValueObject<FactorValue>
     private String factorValue;
     private String value;
     private String valueUri;
+
+    /*
+     * TODO: support objects and predicates for extension of the characteristics
+     */
+
+
     /**
      * It could be the id of the measurement if there is no characteristic.
      */
