@@ -745,6 +745,17 @@ public class ExpressionExperimentServiceImpl
 
     @Override
     @Transactional(readOnly = true)
+    public Map<TechnologyType, Long> getTechnologyTypeUsageFrequency( @Nullable Filters filters ) {
+        if ( filters == null || filters.isEmpty() ) {
+            return expressionExperimentDao.getTechnologyTypeUsageFrequency();
+        } else {
+            List<Long> ids = this.expressionExperimentDao.loadIds( filters, null );
+            return expressionExperimentDao.getTechnologyTypeUsageFrequency( ids );
+        }
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public Map<ArrayDesign, Long> getArrayDesignUsedOrOriginalPlatformUsageFrequency( @Nullable Filters filters, boolean includeOriginalPlatforms, int maxResults ) {
         Map<ArrayDesign, Long> result;
         if ( filters == null || filters.isEmpty() ) {

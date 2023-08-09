@@ -119,6 +119,13 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest {
 
     @Test
     @WithMockUser
+    public void testGetTechnologyTypeUsageFrequency() {
+        expressionExperimentDao.getTechnologyTypeUsageFrequency();
+        expressionExperimentDao.getTechnologyTypeUsageFrequency( Collections.singleton( 1L ) );
+    }
+
+    @Test
+    @WithMockUser
     public void testGetArrayDesignUsageFrequency() {
         expressionExperimentDao.getArrayDesignsUsageFrequency( -1 );
         expressionExperimentDao.getArrayDesignsUsageFrequency( Collections.singleton( 1L ), -1 );

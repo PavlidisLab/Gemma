@@ -44,6 +44,7 @@ import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
+import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.MeanVarianceRelation;
@@ -770,6 +771,58 @@ public class ExpressionExperimentDaoImpl
     @Override
     public Map<ArrayDesign, Collection<Long>> getArrayDesignsUsed( Collection<Long> eeids ) {
         return CommonQueries.getArrayDesignsUsed( eeids, this.getSessionFactory().getCurrentSession() );
+    }
+
+    @Override
+    public Map<TechnologyType, Long> getTechnologyTypeUsageFrequency() {
+        Query query = getSessionFactory().getCurrentSession().createQuery(
+                "select a.technologyType, oa.technologyType, count(distinct ee) from ExpressionExperiment ee "
+                        + "join ee.bioAssays ba "
+                        + "join ba.arrayDesignUsed a "
+                        + "left join ba.originalPlatform oa "
+                        + AclQueryUtils.formAclRestrictionClause( "ee.id" ) + " "
+                        + "and (oa is null or a.technologyType <> oa.technologyType) "   // ignore noop switch
+                        + formNonTroubledClause( "ee" )
+                        + formNonTroubledClause( "a" ) + " "
+                        + "group by a.technologyType, oa.technologyType" );
+        AclQueryUtils.addAclParameters( query, ExpressionExperiment.class );
+        //noinspection unchecked
+        List<Object[]> result = query
+                .setCacheable( true )
+                .list();
+        return aggregateTechnologyTypeCounts( result );
+    }
+
+    @Override
+    public Map<TechnologyType, Long> getTechnologyTypeUsageFrequency( Collection<Long> eeIds ) {
+        Query query = getSessionFactory().getCurrentSession()
+                .createQuery( "select a.technologyType, oa.technologyType, count(distinct ee) from ExpressionExperiment ee "
+                        + "join ee.bioAssays ba "
+                        + "join ba.arrayDesignUsed a "
+                        + "left join ba.originalPlatform oa "
+                        + "where ee.id in :ids "
+                        + "and (oa is null or a.technologyType <> oa.technologyType) "   // ignore noop switch
+                        + formNonTroubledClause( "ee" )
+                        + formNonTroubledClause( "a" ) + " "
+                        + "group by a.technologyType, oa.technologyType" )
+                .setParameterList( "ids", eeIds );
+        //noinspection unchecked
+        List<Object[]> result = query.list();
+        return aggregateTechnologyTypeCounts( result );
+    }
+
+    private Map<TechnologyType, Long> aggregateTechnologyTypeCounts( List<Object[]> result ) {
+        Map<TechnologyType, Long> counts = new HashMap<>();
+        for ( Object[] row : result ) {
+            TechnologyType tt = ( TechnologyType ) row[0];
+            TechnologyType originalTt = ( TechnologyType ) row[1];
+            Long count = ( Long ) row[2];
+            counts.compute( tt, ( k, v ) -> v == null ? count : v + count );
+            if ( originalTt != null ) {
+                counts.compute( originalTt, ( k, v ) -> v == null ? count : v + count );
+            }
+        }
+        return counts;
     }
 
     @Override

@@ -7,6 +7,7 @@ import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.MeanVarianceRelation;
@@ -84,6 +85,21 @@ public interface ExpressionExperimentDao
     Collection<ArrayDesign> getArrayDesignsUsed( BioAssaySet bas );
 
     Map<ArrayDesign, Collection<Long>> getArrayDesignsUsed( Collection<Long> eeids );
+
+    /**
+     * Obtain the dataset usage frequency by technology type.
+     * <p>
+     * If a dataset was switched to a platform of a different technology type, it is counted toward both.
+     */
+    Map<TechnologyType, Long> getTechnologyTypeUsageFrequency();
+
+    /**
+     * Obtain the dataset usage frequency by technology type for the given dataset IDs.
+     * <p>
+     * Note: No ACL filtering is performed.
+     * @see #getTechnologyTypeUsageFrequency()
+     */
+    Map<TechnologyType, Long> getTechnologyTypeUsageFrequency( Collection<Long> eeIds );
 
     /**
      * Obtain dataset usage frequency by platform currently used.

@@ -32,6 +32,7 @@ import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.QuantitationTypeValueObject;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.MeanVarianceRelation;
@@ -313,6 +314,8 @@ public interface ExpressionExperimentService
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     Collection<ArrayDesign> getArrayDesignsUsed( BioAssaySet expressionExperiment );
+
+    Map<TechnologyType, Long> getTechnologyTypeUsageFrequency( @Nullable Filters filters );
 
     /**
      * Calculate the usage frequency of platforms by the datasets matching the provided filters.
