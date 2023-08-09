@@ -65,6 +65,7 @@ import ubic.gemma.persistence.service.expression.experiment.ExpressionExperiment
 import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.persistence.util.Sort;
+import ubic.gemma.rest.annotations.CacheControl;
 import ubic.gemma.rest.annotations.GZIP;
 import ubic.gemma.rest.util.*;
 import ubic.gemma.rest.util.args.*;
@@ -154,6 +155,7 @@ public class DatasetsWebService {
 
     @GZIP
     @GET
+    @CacheControl(maxAge = 1200)
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve all datasets")
     public QueriedAndFilteredAndPaginatedResponseDataObject<ExpressionExperimentWithSearchResultValueObject> getDatasets( // Params:
@@ -234,6 +236,7 @@ public class DatasetsWebService {
     @GZIP
     @GET
     @Path("/platforms")
+    @CacheControl(maxAge = 1200)
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve usage statistics of platforms among datasets matching the provided query and filter",
             description = "Usage statistics are aggregated across experiment tags, samples and factor values mentioned in the experimental design.")
@@ -267,6 +270,7 @@ public class DatasetsWebService {
 
     @GET
     @Path("/categories")
+    @CacheControl(maxAge = 1200)
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve usage statistics of categories among datasets matching the provided query and filter",
             description = "Usage statistics are aggregated across experiment tags, samples and factor values mentioned in the experimental design.")
@@ -310,6 +314,7 @@ public class DatasetsWebService {
 
     @GET
     @GZIP
+    @CacheControl(maxAge = 1200)
     @Path("/annotations")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve usage statistics of annotations among datasets matching the provided query and filter",
@@ -428,6 +433,7 @@ public class DatasetsWebService {
 
     @GET
     @Path("/taxa")
+    @CacheControl(maxAge = 1200)
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve taxa usage statistics for datasets matching the provided query and filter")
     public FilteredResponseDataObject<TaxonWithUsageStatisticsValueObject> getDatasetsTaxaUsageStatistics(
