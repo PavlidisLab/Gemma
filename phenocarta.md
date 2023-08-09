@@ -1,14 +1,8 @@
 # Phenocarta
 
-## Table of contents
+## Phenocarta is being phased out
 
-- [About](#about)
-- [Data sources](#data-sources)
-- [Extraction](#extraction)
-- [Disease mapping from external sources to Disease Ontology (DO) terminology](#disease-mapping-from-external-sources-to-disease-ontology--do--terminology)
-- [Manual curation of the literature](#manual-curation-of-the-literature)
-- [References](#references)
-- [Abbreviations](#abbreviations)
+The Phenocarta component of Gemma is being retired and is no longer updated. The information below is retained "in case".
 
 ## About
 
