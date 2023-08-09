@@ -1,25 +1,25 @@
-<%@ include file="/common/taglibs.jsp"%>
+<%@ include file="/common/taglibs.jsp" %>
 <head>
-<title>Home</title>
+    <title>Home</title>
 
-<jwr:script src='/scripts/api/ext/data/DwrProxy.js' />
-<%-- <jwr:script src='/scripts/app/HomePageAnalysisSearch.js' /> --%>
-<jwr:script src='/scripts/scriptsnonjawr/arbor.js' />
+    <jwr:script src='/scripts/api/ext/data/DwrProxy.js'/>
+    <%-- <jwr:script src='/scripts/app/HomePageAnalysisSearch.js' /> --%>
+    <jwr:script src='/scripts/scriptsnonjawr/arbor.js'/>
 
 </head>
-<%@ include file="/pages/frontPageSlideShowShowOff.jsp"%>
+<%@ include file="/pages/frontPageSlideShowShowOff.jsp" %>
 
 <div id="main" style="text-align: left">
-	<%@ include file="/common/messages.jsp"%>
+    <%@ include file="/common/messages.jsp" %>
 </div>
 
 <script type="text/javascript">
    Ext.BLANK_IMAGE_URL = '${pageContext.request.contextPath}/images/default/s.gif';
-   Ext.onReady(function() {
+   Ext.onReady( function() {
 
       Ext.QuickTips.init();
 
-      Ext.state.Manager.setProvider(new Ext.state.CookieProvider());
+      Ext.state.Manager.setProvider( new Ext.state.CookieProvider() );
       // Apply a set of config properties to the singleton
       /*Ext.apply(Ext.QuickTips.getQuickTip(), {
       	maxWidth : 200,
@@ -31,8 +31,8 @@
       });*/
 
       var generalSearchPanel = new Gemma.Search.GeneralSearchSimple();
-      generalSearchPanel.render("generalSearchSimple-div");
-   });
+      generalSearchPanel.render( "generalSearchSimple-div" );
+   } );
 </script>
 
 
@@ -40,48 +40,42 @@
 
 
 <div style="margin: 0 auto; width: 900px;">
-	<div style="margin-bottom: 20px;" id="generalSearchSimple-div"></div>
+    <div style="margin-bottom: 30px;" id="generalSearchSimple-div"></div>
 
-	<p style="margin-bottom: 10px;">
-		We invite you to check out our new
-		software packages <a href="https://doi.org/doi:10.18129/B9.bioc.gemma.R">gemma.R</a> (R/Bioconductor)
-		and <a href="https://github.com/PavlidisLab/gemmapy">gemmapy</a> (Python) that provide programmatic
-		access to
-		Gemma's expression data, platform annotations, and differential expression analyses.
-	</p>
+    <div id="news-updates" style="margin:20px; justify-content: center">
+        <div style="display:flex; margin-bottom: 40px;max-width: 800px">
+            <p style="margin-bottom: 10px;">
+                Convenient programmatic access to Gemma's data and analyses is available via the
+                software packages <a href="https://doi.org/doi:10.18129/B9.bioc.gemma.R">gemma.R</a> (R/Bioconductor)
+                and <a href="https://github.com/PavlidisLab/gemmapy">gemmapy</a> (Python).
+            </p>
+            <img src="${pageContext.request.contextPath}/images/slideShow/bioconductor-logo.png" style="width:200px; height:auto; padding: 5px; margin: 5px">
+        </div>
 
-	<p style="margin-bottom: 10px;">
-		Try out the new <a href="${pageContext.request.contextPath}/browse">Gemma Browser</a>!
-	</p>
+        <hr/>
+        <div style="display:flex; margin-bottom: 40px;max-width: 800px">
+            <p>
+                We invite you to try out the new <a href="${pageContext.request.contextPath}/browse">Gemma Browser</a>, our
+                new interface for exploring and searching Gemma's data holdings. It's still in beta,
+                and more features and improvements are planned, but we'd love to hear your feedback.
+            </p>
+            <a style="align:right" href="${pageContext.request.contextPath}/browse"><img
+                    src="${pageContext.request.contextPath}/images/slideShow/gemma-browser-preview.png" style="width:350px;height:auto; margin:5px; padding:5px"></a>
+        </div>
+    </div>
 
-	<p>Questions? Feel free to <a href="mailto:pavlab-support@msl.ubc.ca?subject=Gemma">reach out</a>.</p>
-
-	<!--
-	<div style="width: 900px">
-		<div align="center">
-			<div id="analysis-results-search-form-warnings" align="left"></div>
-			<div id="analysis-results-search-form" align="left"></div>
-			<br>
-
-			<div id="tutorial-control-div" align="left"></div>
-			<div id="analysis-results-search-form-messages" align="left"></div>
-			<div id="analysis-results-search-form-results" align="left"></div>
-		</div>
-	</div>
-
-	<div id="meta-heatmap-div" align="left"></div>
--->
+    <p>Questions? Feel free to <a href="mailto:pavlab-support@msl.ubc.ca?subject=Gemma">reach out</a>.</p>
 
 </div>
 
 <div id="footer" class="clearfix">
-	<div id="divider"></div>
-	<div class="footer">
-		<span class="left">Gemma &nbsp;&nbsp;${appConfig["version"]}&nbsp;&nbsp;&nbsp;Copyright &copy; 2007-2022 &nbsp;
-			<a href='<c:url value="https://pavlidislab.github.io/Gemma/terms.html" />'>Terms and conditions</a>
+    <div id="divider"></div>
+    <div class="footer">
+		<span class="left">Gemma &nbsp;&nbsp;${appConfig["version"]}&nbsp;&nbsp;&nbsp;Copyright &copy; 2007-2023 &nbsp;
+			Our <a href='<c:url value="https://pavlidislab.github.io/Gemma/terms.html" />'>Terms and conditions</a> have been updated!
 		</span> &nbsp; &nbsp;
-		<!-- <jsp:include page="/common/social.jsp" /> -->
-	</div>
+        <!-- <jsp:include page="/common/social.jsp" /> -->
+    </div>
 </div>
-<jsp:include page="/common/analytics.jsp" />
+<jsp:include page="/common/analytics.jsp"/>
 

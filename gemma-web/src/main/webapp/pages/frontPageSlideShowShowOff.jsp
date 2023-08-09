@@ -1,7 +1,7 @@
 <%-- jshowoff.css is included in the bundle --%>
 <div id="sloganText">
-	<h2 style="text-align: center; color: grey; font-size: 1.8em">
-		Tools and database for meta-analysis of functional genomics data
+	<h2 style="text-align: center; color: grey; font-size: 1.5em">
+		Database of curated and re-analyzed gene expression studies
 	</h2>
 </div>
 
@@ -83,7 +83,7 @@
    $.getJSON( '${pageContext.request.contextPath}' + '/rest/v2/datasets', function( data ) {
          var numberFormatter = new Intl.NumberFormat();
          var featuredNumberOfDatasets = 1000 * Math.floor( data.totalElements / 1000 );
-         document.getElementById( 'featuredNumberOfDatasets' ).innerHTML = 'Over <b>' + numberFormatter.format( featuredNumberOfDatasets ) + '</b> curated expression studies';
+         document.getElementById( 'featuredNumberOfDatasets' ).innerHTML = 'Over <b>' + numberFormatter.format( featuredNumberOfDatasets ) + '</b> curated data sets';
       }
    )
 </script>
