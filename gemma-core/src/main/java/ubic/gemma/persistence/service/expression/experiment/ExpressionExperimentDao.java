@@ -1,5 +1,6 @@
 package ubic.gemma.persistence.service.expression.experiment;
 
+import org.apache.commons.lang3.RandomStringUtils;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.description.AnnotationValueObject;
@@ -255,7 +256,12 @@ public interface ExpressionExperimentDao
      */
     List<Characteristic> getExperimentalDesignAnnotations( ExpressionExperiment expressionExperiment );
 
-    Map<Characteristic, Long> getCategoriesUsageFrequency( @Nullable Collection<Long> eeIds, @Nullable Collection<String> excludedCategoryUris );
+    Map<Characteristic, Long> getCategoriesUsageFrequency( @Nullable Collection<Long> eeIds, @Nullable Collection<String> excludedCategoryUris, @Nullable Collection<String> excludedTermUris );
+
+    /**
+     * Special indicator for an uncategorized term.
+     */
+    String UNCATEGORIZED = "[uncategorized_" + RandomStringUtils.randomAlphanumeric( 10 ) + "]";
 
     /**
      * Obtain annotations usage frequency for a set of given {@link ExpressionExperiment} IDs.
@@ -269,10 +275,11 @@ public interface ExpressionExperimentDao
      *                                or {@link BioMaterial}
      * @param maxResults              maximum number of annotations to return, or -1 to return everything
      * @param minFrequency            minimum usage frequency to be reported (0 effectively allows everything)
-     * @param categoryUri             a category URI to restrict the results to, or null to consider everything
+     * @param category                a category URI or free text category to restrict the results to, or null to
+     *                                consider everything, empty string to consider uncategorized terms
      * @param retainedTermUris        a collection of term to retain even if they don't meet the minimum frequency criteria
      */
-    Map<Characteristic, Long> getAnnotationsUsageFrequency( @Nullable Collection<Long> expressionExperimentIds, @Nullable Class<? extends Identifiable> level, int maxResults, int minFrequency, @Nullable String categoryUri, @Nullable Collection<String> excludedCategoryUris, @Nullable Collection<String> excludedTermUris, @Nullable Collection<String> retainedTermUris );
+    Map<Characteristic, Long> getAnnotationsUsageFrequency( @Nullable Collection<Long> expressionExperimentIds, @Nullable Class<? extends Identifiable> level, int maxResults, int minFrequency, @Nullable String category, @Nullable Collection<String> excludedCategoryUris, @Nullable Collection<String> excludedTermUris, @Nullable Collection<String> retainedTermUris );
 
     Collection<ExpressionExperiment> getExperimentsLackingPublications();
 

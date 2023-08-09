@@ -141,7 +141,7 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest {
     @Test
     @WithMockUser
     public void testGetCategoriesWithUsageFrequency() {
-        expressionExperimentDao.getCategoriesUsageFrequency( null, null );
+        expressionExperimentDao.getCategoriesUsageFrequency( null, null, null );
     }
 
     @Test

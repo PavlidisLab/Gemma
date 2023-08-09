@@ -636,14 +636,24 @@ public class ExpressionExperimentServiceImpl
 
     @Override
     @Transactional(readOnly = true)
-    public Map<Characteristic, Long> getCategoriesUsageFrequency( @Nullable Filters filters, @Nullable Collection<String> excludedCategoryUris ) {
+    public Map<Characteristic, Long> getCategoriesUsageFrequency( @Nullable Filters filters, @Nullable Collection<String> excludedCategoryUris, @Nullable Collection<String> excludedTermUris ) {
         List<Long> eeIds;
         if ( filters == null || filters.isEmpty() ) {
             eeIds = null;
         } else {
             eeIds = expressionExperimentDao.loadIds( filters, null );
         }
-        return expressionExperimentDao.getCategoriesUsageFrequency( eeIds, excludedCategoryUris );
+        if ( excludedTermUris != null ) {
+            excludedTermUris = new HashSet<>( excludedTermUris );
+            // expand exclusions with implied terms via subclass relation
+            Set<OntologyTerm> excludedTerms = ontologyService.getTerms( excludedTermUris );
+            // exclude terms using the subClass relation
+            Set<OntologyTerm> impliedTerms = ontologyService.getChildren( excludedTerms, false, false );
+            for ( OntologyTerm t : impliedTerms ) {
+                excludedTermUris.add( t.getUri() );
+            }
+        }
+        return expressionExperimentDao.getCategoriesUsageFrequency( eeIds, excludedCategoryUris, excludedTermUris );
     }
 
     /**
@@ -652,7 +662,7 @@ public class ExpressionExperimentServiceImpl
      */
     @Override
     @Transactional(readOnly = true)
-    public List<CharacteristicWithUsageStatisticsAndOntologyTerm> getAnnotationsUsageFrequency( @Nullable Filters filters, int maxResults, int minFrequency, String categoryUri, @Nullable Collection<String> excludedCategoryUris, @Nullable Collection<String> excludedTermUris, @Nullable Collection<String> retainedTermUris ) {
+    public List<CharacteristicWithUsageStatisticsAndOntologyTerm> getAnnotationsUsageFrequency( @Nullable Filters filters, int maxResults, int minFrequency, @Nullable String category, @Nullable Collection<String> excludedCategoryUris, @Nullable Collection<String> excludedTermUris, @Nullable Collection<String> retainedTermUris ) {
         if ( excludedTermUris != null ) {
             excludedTermUris = new HashSet<>( excludedTermUris );
             // never exclude terms that are explicitly retained
@@ -670,10 +680,10 @@ public class ExpressionExperimentServiceImpl
 
         Map<Characteristic, Long> result;
         if ( filters == null || filters.isEmpty() ) {
-            result = expressionExperimentDao.getAnnotationsUsageFrequency( null, null, maxResults, minFrequency, categoryUri, excludedCategoryUris, excludedTermUris, retainedTermUris );
+            result = expressionExperimentDao.getAnnotationsUsageFrequency( null, null, maxResults, minFrequency, category, excludedCategoryUris, excludedTermUris, retainedTermUris );
         } else {
             List<Long> eeIds = expressionExperimentDao.loadIds( filters, null );
-            result = expressionExperimentDao.getAnnotationsUsageFrequency( eeIds, null, maxResults, minFrequency, categoryUri, excludedCategoryUris, excludedTermUris, retainedTermUris );
+            result = expressionExperimentDao.getAnnotationsUsageFrequency( eeIds, null, maxResults, minFrequency, category, excludedCategoryUris, excludedTermUris, retainedTermUris );
         }
 
         List<CharacteristicWithUsageStatisticsAndOntologyTerm> resultWithParents = new ArrayList<>( result.size() );

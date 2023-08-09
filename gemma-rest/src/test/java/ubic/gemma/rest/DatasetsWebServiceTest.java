@@ -286,6 +286,22 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
     }
 
     @Test
+    public void testGetDatasetsAnnotationsForUncategorizedTerms() {
+        assertThat( target( "/datasets/annotations" ).queryParam( "category", "" ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE );
+        verify( expressionExperimentService ).getAnnotationsUsageFrequency( Filters.empty(), 100, 0, ExpressionExperimentService.UNCATEGORIZED, null, null, Collections.emptySet() );
+    }
+
+    @Test
+    public void testGetDatasetsCategories() {
+        assertThat( target( "/datasets/categories" ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE );
+        verify( expressionExperimentService ).getCategoriesUsageFrequency( Filters.empty(), null, null );
+    }
+
+    @Test
     public void testGetDatasetQuantitationTypes() {
         when( expressionExperimentService.load( 1L ) ).thenReturn( ee );
         when( expressionExperimentService.getQuantitationTypeValueObjects( ee ) ).thenReturn( Collections.emptyList() );

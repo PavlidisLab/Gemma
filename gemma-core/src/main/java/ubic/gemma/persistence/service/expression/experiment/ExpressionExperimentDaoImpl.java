@@ -20,7 +20,6 @@ package ubic.gemma.persistence.service.expression.experiment;
 
 import gemma.gsec.acl.domain.AclObjectIdentity;
 import gemma.gsec.acl.domain.AclSid;
-import gemma.gsec.util.SecurityUtil;
 import lombok.Value;
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.commons.lang3.StringUtils;
@@ -635,13 +634,17 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
-    public Map<Characteristic, Long> getCategoriesUsageFrequency( @Nullable Collection<Long> eeIds, @Nullable Collection<String> excludedCategoryUris ) {
+    public Map<Characteristic, Long> getCategoriesUsageFrequency( @Nullable Collection<Long> eeIds, @Nullable Collection<String> excludedCategoryUris, @Nullable Collection<String> excludedTermUris ) {
+        if ( eeIds != null && eeIds.isEmpty() ) {
+            return Collections.emptyMap();
+        }
         Query q = getSessionFactory().getCurrentSession().createSQLQuery(
                         "select T.CATEGORY, T.CATEGORY_URI, count(distinct T.EXPRESSION_EXPERIMENT_FK) as EE_COUNT from EXPRESSION_EXPERIMENT2CHARACTERISTIC T "
                                 + AclQueryUtils.formNativeAclJoinClause( "T.EXPRESSION_EXPERIMENT_FK" ) + " "
                                 + "where T.ID is not null "
                                 + ( eeIds != null ? " and T.EXPRESSION_EXPERIMENT_FK in :eeIds" : "" )
                                 + ( excludedCategoryUris != null && !excludedCategoryUris.isEmpty() ? " and T.CATEGORY_URI not in :excludedCategoryUris" : "" )
+                                + ( excludedTermUris != null && !excludedTermUris.isEmpty() ? " and T.VALUE_URI not in :excludedTermUris" : "" )
                                 + AclQueryUtils.formNativeAclRestrictionClause( ( SessionFactoryImplementor ) getSessionFactory() ) + " "
                                 + "group by COALESCE(T.CATEGORY_URI, T.CATEGORY) "
                                 + "order by EE_COUNT desc" )
@@ -655,6 +658,9 @@ public class ExpressionExperimentDaoImpl
         }
         if ( excludedCategoryUris != null && !excludedCategoryUris.isEmpty() ) {
             q.setParameterList( "excludedCategoryUris", excludedCategoryUris );
+        }
+        if ( excludedTermUris != null && !excludedTermUris.isEmpty() ) {
+            q.setParameterList( "excludedTermUris", excludedTermUris );
         }
         AclQueryUtils.addAclParameters( q, ExpressionExperiment.class );
         //noinspection unchecked
@@ -672,7 +678,7 @@ public class ExpressionExperimentDaoImpl
      * the same characteristic at multiple levels to make counting more efficient.
      */
     @Override
-    public Map<Characteristic, Long> getAnnotationsUsageFrequency( @Nullable Collection<Long> eeIds, @Nullable Class<? extends Identifiable> level, int maxResults, int minFrequency, @Nullable String categoryUri, @Nullable Collection<String> excludedCategoryUris, @Nullable Collection<String> excludedTermUris, @Nullable Collection<String> retainedTermUris ) {
+    public Map<Characteristic, Long> getAnnotationsUsageFrequency( @Nullable Collection<Long> eeIds, @Nullable Class<? extends Identifiable> level, int maxResults, int minFrequency, @Nullable String category, @Nullable Collection<String> excludedCategoryUris, @Nullable Collection<String> excludedTermUris, @Nullable Collection<String> retainedTermUris ) {
         if ( eeIds != null && eeIds.isEmpty() ) {
             return Collections.emptyMap();
         }
@@ -682,7 +688,7 @@ public class ExpressionExperimentDaoImpl
                                 + "where T.ID is not null " // this is necessary for the clause building since there might be no clause
                                 + ( eeIds != null ? " and T.EXPRESSION_EXPERIMENT_FK in :eeIds" : "" )
                                 + ( level != null ? " and T.LEVEL = :level" : "" )
-                                + ( categoryUri != null ? " and T.CATEGORY_URI = :categoryUri" : "" )
+                                + ( category != null ? category.equals( UNCATEGORIZED ) ? " and COALESCE(T.CATEGORY_URI, T.CATEGORY) is NULL" : " and COALESCE(T.CATEGORY_URI, T.CATEGORY) = :category" : "" )
                                 + ( excludedCategoryUris != null && !excludedCategoryUris.isEmpty() ? " and T.CATEGORY_URI not in :excludedCategoryUris" : "" )
                                 + ( excludedTermUris != null && !excludedTermUris.isEmpty() ? " and T.VALUE_URI not in :excludedTermUris" : "" )
                                 + AclQueryUtils.formNativeAclRestrictionClause( ( SessionFactoryImplementor ) getSessionFactory() ) + " "
@@ -703,8 +709,8 @@ public class ExpressionExperimentDaoImpl
         if ( eeIds != null ) {
             q.setParameterList( "eeIds", new HashSet<>( eeIds ) );
         }
-        if ( categoryUri != null ) {
-            q.setParameter( "categoryUri", categoryUri );
+        if ( category != null && !category.equals( UNCATEGORIZED ) ) {
+            q.setParameter( "category", category );
         }
         if ( excludedCategoryUris != null && !excludedCategoryUris.isEmpty() ) {
             q.setParameterList( "excludedCategoryUris", excludedCategoryUris );
@@ -795,6 +801,9 @@ public class ExpressionExperimentDaoImpl
 
     @Override
     public Map<TechnologyType, Long> getTechnologyTypeUsageFrequency( Collection<Long> eeIds ) {
+        if ( eeIds.isEmpty() ) {
+            return Collections.emptyMap();
+        }
         Query query = getSessionFactory().getCurrentSession()
                 .createQuery( "select a.technologyType, oa.technologyType, count(distinct ee) from ExpressionExperiment ee "
                         + "join ee.bioAssays ba "

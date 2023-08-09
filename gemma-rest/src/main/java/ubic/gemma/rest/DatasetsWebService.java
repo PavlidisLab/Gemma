@@ -273,10 +273,18 @@ public class DatasetsWebService {
     public GroupedResponseDataObject<CategoryWithUsageStatisticsValueObject> getDatasetsCategoriesUsageStatistics(
             @QueryParam("query") String query,
             @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filter,
-            @Parameter(description = "Excluded category URIs.", hidden = true) @QueryParam("excludedCategories") StringArrayArg excludedCategoryUris
+            @Parameter(description = "Excluded category URIs.", hidden = true) @QueryParam("excludedCategories") StringArrayArg excludedCategoryUris,
+            @Parameter(description = "Excluded term URIs; this list is expanded with subClassOf inference.", hidden = true) @QueryParam("excludedTerms") StringArrayArg excludedTermUris
     ) {
         Filters filters = datasetArgService.getFilters( filter, null );
-        List<CategoryWithUsageStatisticsValueObject> results = expressionExperimentService.getCategoriesUsageFrequency( filters, excludedCategoryUris != null ? excludedCategoryUris.getValue() : null ).entrySet()
+        if ( query != null ) {
+            filters.and( datasetArgService.getFilterForSearchQuery( query ) );
+        }
+        List<CategoryWithUsageStatisticsValueObject> results = expressionExperimentService.getCategoriesUsageFrequency(
+                        filters,
+                        excludedCategoryUris != null ? excludedCategoryUris.getValue() : null,
+                        excludedTermUris != null ? excludedTermUris.getValue() : null )
+                .entrySet()
                 .stream()
                 .map( e -> new CategoryWithUsageStatisticsValueObject( e.getKey().getCategoryUri(), e.getKey().getCategory(), e.getValue() ) )
                 .sorted( Comparator.comparing( UsageStatistics::getNumberOfExpressionExperiments, Comparator.reverseOrder() ) )
@@ -312,7 +320,7 @@ public class DatasetsWebService {
             @Parameter(description = "List of fields to exclude from the payload. Only `parentTerms` can be excluded.") @QueryParam("exclude") ExcludeArg<AnnotationWithUsageStatisticsValueObject> exclude,
             @Parameter(description = "Maximum number of annotations to returned; capped at " + MAX_DATASETS_ANNOTATIONS + ".") @QueryParam("limit") LimitArg limitArg,
             @Parameter(description = "Minimum number of associated datasets to report an annotation. If used, the limit will default to " + MAX_DATASETS_ANNOTATIONS + ".") @QueryParam("minFrequency") Integer minFrequency,
-            @Parameter(description = "A category URI to restrict reported annotations. If unspecified, annotations from all categories are reported.") @QueryParam("category") String categoryUri,
+            @Parameter(description = "A category URI to restrict reported annotations. If unspecified, annotations from all categories are reported. If empty, uncategorized terms are reported.") @QueryParam("category") String category,
             @Parameter(description = "Excluded category URIs.", hidden = true) @QueryParam("excludedCategories") StringArrayArg excludedCategoryUris,
             @Parameter(description = "Excluded term URIs; this list is expanded with subClassOf inference.", hidden = true) @QueryParam("excludedTerms") StringArrayArg excludedTermUris ) {
         boolean excludeParentTerms = getExcludedFields( exclude ).contains( "parentTerms" );
@@ -328,9 +336,12 @@ public class DatasetsWebService {
         if ( query != null ) {
             filters.and( datasetArgService.getFilterForSearchQuery( query ) );
         }
+        if ( category != null && category.isEmpty() ) {
+            category = ExpressionExperimentService.UNCATEGORIZED;
+        }
         // cache for visited parents (if two term share the same parent, we can save significant time generating the ancestors)
         Map<OntologyTerm, Set<OntologyTermValueObject>> visited = new HashMap<>();
-        List<ExpressionExperimentService.CharacteristicWithUsageStatisticsAndOntologyTerm> initialResults = expressionExperimentService.getAnnotationsUsageFrequency( filters, limit, minFrequency != null ? minFrequency : 0, categoryUri, excludedCategoryUris != null ? excludedCategoryUris.getValue() : null, excludedTermUris != null ? excludedTermUris.getValue() : null, mentionedTermUris );
+        List<ExpressionExperimentService.CharacteristicWithUsageStatisticsAndOntologyTerm> initialResults = expressionExperimentService.getAnnotationsUsageFrequency( filters, limit, minFrequency != null ? minFrequency : 0, category, excludedCategoryUris != null ? excludedCategoryUris.getValue() : null, excludedTermUris != null ? excludedTermUris.getValue() : null, mentionedTermUris );
         List<AnnotationWithUsageStatisticsValueObject> results = initialResults
                 .stream()
                 .map( e -> new AnnotationWithUsageStatisticsValueObject( e.getCharacteristic(), e.getNumberOfExpressionExperiments(), !excludeParentTerms && e.getTerm() != null ? getParentTerms( e.getTerm(), visited ) : null ) )
