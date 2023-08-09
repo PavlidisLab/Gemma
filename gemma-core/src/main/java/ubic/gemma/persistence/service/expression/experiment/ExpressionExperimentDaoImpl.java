@@ -1440,7 +1440,7 @@ public class ExpressionExperimentDaoImpl
         timer.stop();
 
         if ( timer.getTime() > REPORT_SLOW_QUERY_AFTER_MS ) {
-            log.info( String.format( "EE details VO query + postprocessing: %d ms (query: %d ms, counting: %d ms, initializing VOs: %d ms, loading details (bioAssays + bioAssays.arrayDesignUsed + originalPlatforms + otherParts): %d ms, retrieving analysis information: %s ms)",
+            log.warn( String.format( "EE details VO query + postprocessing: %d ms (query: %d ms, counting: %d ms, initializing VOs: %d ms, loading details (bioAssays + bioAssays.arrayDesignUsed + originalPlatforms + otherParts): %d ms, retrieving analysis information: %s ms)",
                     timer.getTime(),
                     timer.getTime() - postProcessingTimer.getTime(),
                     countingTimer.getTime(),

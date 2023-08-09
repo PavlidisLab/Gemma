@@ -222,7 +222,7 @@ public abstract class AbstractQueryFilteringVoEnabledDao<O extends Identifiable,
                 .list();
         stopWatch.stop();
         if ( stopWatch.getTime( TimeUnit.MILLISECONDS ) > REPORT_SLOW_QUERY_AFTER_MS ) {
-            log.info( String.format( "Loading %d VOs for %s took %dms (querying: %d ms, post-processing: %d ms).",
+            log.warn( String.format( "Loading %d VOs for %s took %dms (querying: %d ms, post-processing: %d ms).",
                     results.size(),
                     elementClass.getName(), stopWatch.getTime( TimeUnit.MILLISECONDS ),
                     stopWatch.getTime( TimeUnit.MILLISECONDS ) - postProcessingStopWatch.getTime( TimeUnit.MILLISECONDS ),
@@ -239,7 +239,7 @@ public abstract class AbstractQueryFilteringVoEnabledDao<O extends Identifiable,
         } finally {
             timer.stop();
             if ( timer.getTime( TimeUnit.MILLISECONDS ) > REPORT_SLOW_QUERY_AFTER_MS ) {
-                log.info( String.format( "Count VOs for %s took %d ms.",
+                log.warn( String.format( "Count VOs for %s took %d ms.",
                         elementClass.getName(), timer.getTime( TimeUnit.MILLISECONDS ) ) );
             }
         }

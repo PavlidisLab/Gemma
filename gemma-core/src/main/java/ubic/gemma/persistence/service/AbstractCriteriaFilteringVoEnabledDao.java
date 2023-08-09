@@ -83,7 +83,7 @@ public abstract class AbstractCriteriaFilteringVoEnabledDao<O extends Identifiab
         List<Long> result = criteria.list();
 
         if ( stopWatch.getTime( TimeUnit.MILLISECONDS ) > REPORT_SLOW_QUERY_AFTER_MS ) {
-            log.info( String.format( "Loading %d IDs for %s took %d ms.",
+            log.warn( String.format( "Loading %d IDs for %s took %d ms.",
                     result.size(), elementClass.getName(),
                     stopWatch.getTime( TimeUnit.MILLISECONDS ) ) );
         }
@@ -107,7 +107,7 @@ public abstract class AbstractCriteriaFilteringVoEnabledDao<O extends Identifiab
         List<O> result = criteria.list();
 
         if ( stopWatch.getTime( TimeUnit.MILLISECONDS ) > REPORT_SLOW_QUERY_AFTER_MS ) {
-            log.info( String.format( "Loading %d entities for %s took %d ms.",
+            log.warn( String.format( "Loading %d entities for %s took %d ms.",
                     result.size(), elementClass.getName(),
                     stopWatch.getTime( TimeUnit.MILLISECONDS ) ) );
         }
@@ -225,7 +225,7 @@ public abstract class AbstractCriteriaFilteringVoEnabledDao<O extends Identifiab
         stopWatch.stop();
 
         if ( stopWatch.getTime() > REPORT_SLOW_QUERY_AFTER_MS ) {
-            log.info( String.format( "Loading %d VOs for %s took %d ms (querying: %d ms, post-processing: %d ms).",
+            log.warn( String.format( "Loading %d VOs for %s took %d ms (querying: %d ms, post-processing: %d ms).",
                     results.size(), elementClass.getName(), stopWatch.getTime( TimeUnit.MILLISECONDS ),
                     stopWatch.getTime( TimeUnit.MILLISECONDS ) - postProcessingStopWatch.getTime( TimeUnit.MILLISECONDS ),
                     postProcessingStopWatch.getTime( TimeUnit.MILLISECONDS ) ) );
@@ -242,7 +242,7 @@ public abstract class AbstractCriteriaFilteringVoEnabledDao<O extends Identifiab
                 .uniqueResult();
         timer.stop();
         if ( timer.getTime() > REPORT_SLOW_QUERY_AFTER_MS ) {
-            log.info( String.format( "Counting %d entities for %s took %d ms.",
+            log.warn( String.format( "Counting %d entities for %s took %d ms.",
                     ret, elementClass.getName(), timer.getTime( TimeUnit.MILLISECONDS ) ) );
         }
         return ret;
