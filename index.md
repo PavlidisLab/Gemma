@@ -1,5 +1,5 @@
 # Overview
-Gemma is database of curated and re-analyzed gene expression studies. 
+Gemma (pronounced: Jemma) is database of curated and re-analyzed gene expression studies. 
 
 This webpage serves as an introduction and end-user documentation.
 
@@ -26,15 +26,6 @@ This webpage serves as an introduction and end-user documentation.
 - Access through the [Gemma website](https://gemma.msl.ubc.ca) provides a graphical interface for easy access.
 - Access through [RESTful web services](https://gemma.msl.ubc.ca/resources/restapidocs/) allows incorporation of data and computational capabilities of Gemma with any other software.
 
-## Important Q&A
-##### How do you pronounce ‘Gemma’?
-The ‘G’ is soft, as in ‘general’.
-
-##### How do you map microarray probes to genes?
-Essentially as described by Barnes et al, 2005. Gene annotations are obtained from NCBI and UCSC.
-
-##### Isn’t data quality a problem?
-We have been working hard to ensure that data sets we use for analysis are of high quality, or to “clean up” those that have problems. One problem we have observed is the presence of outlier samples, which are flagged and removed. Batch correction is implemented where possible and we analyze data from raw sources (CEL files or FASTQ files) where possible. We also have a **[dataset scoring system](geeq.md)** in place.
 
 ## Glossary
 - **Array Design, Platform**: A microarray design. For example, the HG-U133A is a specific Array Design.
@@ -66,10 +57,6 @@ Please **[read the full agreement after clicking here](terms.md)**!
 ## Using the Gemma website
 These guides will help you navigate and use the tools provided through the [gemma website](https://gemma.msl.ubc.ca/).
 - **[Searching for Coexpression and differential expression](search.md)**
-- **[Uploading your own experimental data](upload.md)**
-- **[Manging gene and experiment sets](gene_experiment_sets.md)**
-- **[Browsing and managing experimental designs](designs.md)**
-- **[About Phenocarta](phenocarta.md)**
 - **[About the dataset scores](geeq.md)**
 
 ## RESTful API
