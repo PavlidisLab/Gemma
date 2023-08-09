@@ -624,6 +624,24 @@ public class ExpressionExperimentServiceImpl
         return ee;
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public List<Long> loadIdsWithCache( @Nullable Filters filters, @Nullable Sort sort ) {
+        return expressionExperimentDao.loadIdsWithCache( filters, sort );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public long countWithCache( @Nullable Filters filters ) {
+        return expressionExperimentDao.countWithCache( filters );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Slice<ExpressionExperimentValueObject> loadValueObjectsWithCache( @Nullable Filters filters, @Nullable Sort sort, int offset, int limit ) {
+        return expressionExperimentDao.loadValueObjectsWithCache( filters, sort, offset, limit );
+    }
+
     /**
      * Identifies a sub-clause in a filter.
      */
@@ -641,7 +659,7 @@ public class ExpressionExperimentServiceImpl
         if ( filters == null || filters.isEmpty() ) {
             eeIds = null;
         } else {
-            eeIds = expressionExperimentDao.loadIds( filters, null );
+            eeIds = expressionExperimentDao.loadIdsWithCache( filters, null );
         }
         if ( excludedTermUris != null ) {
             excludedTermUris = new HashSet<>( excludedTermUris );
@@ -682,7 +700,7 @@ public class ExpressionExperimentServiceImpl
         if ( filters == null || filters.isEmpty() ) {
             result = expressionExperimentDao.getAnnotationsUsageFrequency( null, null, maxResults, minFrequency, category, excludedCategoryUris, excludedTermUris, retainedTermUris );
         } else {
-            List<Long> eeIds = expressionExperimentDao.loadIds( filters, null );
+            List<Long> eeIds = expressionExperimentDao.loadIdsWithCache( filters, null );
             result = expressionExperimentDao.getAnnotationsUsageFrequency( eeIds, null, maxResults, minFrequency, category, excludedCategoryUris, excludedTermUris, retainedTermUris );
         }
 
@@ -759,7 +777,7 @@ public class ExpressionExperimentServiceImpl
         if ( filters == null || filters.isEmpty() ) {
             return expressionExperimentDao.getTechnologyTypeUsageFrequency();
         } else {
-            List<Long> ids = this.expressionExperimentDao.loadIds( filters, null );
+            List<Long> ids = this.expressionExperimentDao.loadIdsWithCache( filters, null );
             return expressionExperimentDao.getTechnologyTypeUsageFrequency( ids );
         }
     }
@@ -776,7 +794,7 @@ public class ExpressionExperimentServiceImpl
                 }
             }
         } else {
-            List<Long> ids = this.expressionExperimentDao.loadIds( filters, null );
+            List<Long> ids = this.expressionExperimentDao.loadIdsWithCache( filters, null );
             result = new HashMap<>( expressionExperimentDao.getArrayDesignsUsageFrequency( ids, maxResults ) );
             if ( includeOriginalPlatforms ) {
                 for ( Map.Entry<ArrayDesign, Long> e : expressionExperimentDao.getOriginalPlatformsUsageFrequency( ids, maxResults ).entrySet() ) {
@@ -802,7 +820,7 @@ public class ExpressionExperimentServiceImpl
         if ( filters == null || filters.isEmpty() ) {
             return expressionExperimentDao.getPerTaxonCount();
         } else {
-            List<Long> ids = this.expressionExperimentDao.loadIds( filters, null );
+            List<Long> ids = this.expressionExperimentDao.loadIdsWithCache( filters, null );
             return expressionExperimentDao.getPerTaxonCount( ids );
         }
     }

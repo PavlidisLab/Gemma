@@ -17,7 +17,7 @@ import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.BrowsingDao;
-import ubic.gemma.persistence.service.FilteringVoEnabledDao;
+import ubic.gemma.persistence.service.CachedFilteringVoEnabledDao;
 import ubic.gemma.persistence.service.common.auditAndSecurity.curation.CuratableDao;
 import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Slice;
@@ -37,7 +37,7 @@ import java.util.Map;
 @SuppressWarnings("unused") // Possible external use
 public interface ExpressionExperimentDao
         extends CuratableDao<ExpressionExperiment>,
-        FilteringVoEnabledDao<ExpressionExperiment, ExpressionExperimentValueObject>, BrowsingDao<ExpressionExperiment> {
+        CachedFilteringVoEnabledDao<ExpressionExperiment, ExpressionExperimentValueObject>, BrowsingDao<ExpressionExperiment> {
 
     String OBJECT_ALIAS = "ee";
 

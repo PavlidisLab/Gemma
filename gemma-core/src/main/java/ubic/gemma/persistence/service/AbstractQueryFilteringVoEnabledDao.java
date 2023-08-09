@@ -25,7 +25,7 @@ import java.util.stream.Collectors;
  *
  * @author poirigui
  */
-public abstract class AbstractQueryFilteringVoEnabledDao<O extends Identifiable, VO extends IdentifiableValueObject<O>> extends AbstractFilteringVoEnabledDao<O, VO> {
+public abstract class AbstractQueryFilteringVoEnabledDao<O extends Identifiable, VO extends IdentifiableValueObject<O>> extends AbstractFilteringVoEnabledDao<O, VO> implements CachedFilteringVoEnabledDao<O, VO> {
 
     protected AbstractQueryFilteringVoEnabledDao( String objectAlias, Class<O> elementClass, SessionFactory sessionFactory ) {
         super( objectAlias, elementClass, sessionFactory );
@@ -243,5 +243,117 @@ public abstract class AbstractQueryFilteringVoEnabledDao<O extends Identifiable,
                         elementClass.getName(), timer.getTime( TimeUnit.MILLISECONDS ) ) );
             }
         }
+    }
+
+    @Override
+    public List<Long> loadIdsWithCache( @Nullable Filters filters, @Nullable Sort sort ) {
+        //noinspection unchecked
+        return getFilteringIdQuery( filters, sort )
+                .setCacheable( true )
+                .list();
+    }
+
+    @Override
+    public List<O> loadWithCache( @Nullable Filters filters, @Nullable Sort sort ) {
+        StopWatch timer = StopWatch.createStarted();
+        //noinspection unchecked
+        List<O> result = getFilteringQuery( filters, sort )
+                .setResultTransformer( getEntityTransformer() )
+                .setCacheable( true )
+                .list();
+        if ( timer.getTime( TimeUnit.MILLISECONDS ) > REPORT_SLOW_QUERY_AFTER_MS ) {
+            log.warn( String.format( "Loading %d entities for %s took %s ms.", result.size(), elementClass.getName(),
+                    timer.getTime( TimeUnit.MILLISECONDS ) ) );
+        }
+        return result;
+    }
+
+    @Override
+    public Slice<O> loadWithCache( @Nullable Filters filters, @Nullable Sort sort, int offset, int limit ) {
+        StopWatch timer = StopWatch.createStarted();
+        Query query = this.getFilteringQuery( filters, sort );
+        Query totalElementsQuery = getFilteringCountQuery( filters );
+        // setup offset/limit
+        if ( offset > 0 )
+            query.setFirstResult( offset );
+        if ( limit > 0 )
+            query.setMaxResults( limit );
+        //noinspection unchecked
+        List<O> result = query
+                .setResultTransformer( getEntityTransformer() )
+                .setCacheable( true )
+                .list();
+        Long totalElements = ( Long ) totalElementsQuery.uniqueResult();
+        if ( timer.getTime( TimeUnit.MILLISECONDS ) > REPORT_SLOW_QUERY_AFTER_MS ) {
+            log.warn( String.format( "Loading %d entities for %s took %s ms.", result.size(), elementClass.getName(),
+                    timer.getTime( TimeUnit.MILLISECONDS ) ) );
+        }
+        return new Slice<>( result, sort, offset, limit, totalElements );
+    }
+
+    @Override
+    public long countWithCache( @Nullable Filters filters ) {
+        return ( Long ) getFilteringCountQuery( filters ).setCacheable( true ).uniqueResult();
+    }
+
+    @Override
+    public List<VO> loadValueObjectsWithCache( @Nullable Filters filters, @Nullable Sort sort ) {
+        StopWatch stopWatch = StopWatch.createStarted();
+        StopWatch postProcessingStopWatch = StopWatch.create();
+        //noinspection unchecked
+        List<VO> results = this.getFilteringQuery( filters, sort )
+                .setResultTransformer( getValueObjectTransformer( postProcessingStopWatch ) )
+                .setCacheable( true )
+                .list();
+        stopWatch.stop();
+        if ( stopWatch.getTime( TimeUnit.MILLISECONDS ) > REPORT_SLOW_QUERY_AFTER_MS ) {
+            log.warn( String.format( "Loading %d VOs for %s took %dms (querying: %d ms, post-processing: %d ms).",
+                    results.size(),
+                    elementClass.getName(), stopWatch.getTime( TimeUnit.MILLISECONDS ),
+                    stopWatch.getTime( TimeUnit.MILLISECONDS ) - postProcessingStopWatch.getTime( TimeUnit.MILLISECONDS ),
+                    postProcessingStopWatch.getTime( TimeUnit.MILLISECONDS ) ) );
+        }
+        return results;
+    }
+
+    @Override
+    public Slice<VO> loadValueObjectsWithCache( @Nullable Filters filters, @Nullable Sort sort, int offset, int limit ) {
+        StopWatch stopWatch = StopWatch.createStarted();
+        StopWatch postProcessingStopWatch = StopWatch.create();
+
+        Query query = this.getFilteringQuery( filters, sort );
+        Query totalElementsQuery = getFilteringCountQuery( filters );
+
+        // setup offset/limit
+        if ( offset > 0 )
+            query.setFirstResult( offset );
+        if ( limit > 0 )
+            query.setMaxResults( limit );
+
+        //noinspection unchecked
+        List<VO> list = query
+                .setResultTransformer( getValueObjectTransformer( postProcessingStopWatch ) )
+                .setCacheable( true )
+                .list();
+
+        StopWatch countingStopWatch = StopWatch.createStarted();
+        Long totalElements = ( Long ) totalElementsQuery
+                .setCacheable( true )
+                .uniqueResult();
+        countingStopWatch.stop();
+
+        stopWatch.stop();
+
+        if ( stopWatch.getTime( TimeUnit.MILLISECONDS ) > REPORT_SLOW_QUERY_AFTER_MS ) {
+            log.warn( String.format( "Loading and counting %d VOs for %s took %d ms (querying: %d ms, counting: %d ms, post-processing: %d ms).",
+                    list.size(),
+                    elementClass.getName(),
+                    stopWatch.getTime( TimeUnit.MILLISECONDS ),
+                    stopWatch.getTime( TimeUnit.MILLISECONDS ) - countingStopWatch.getTime( TimeUnit.MILLISECONDS ) - postProcessingStopWatch.getTime( TimeUnit.MILLISECONDS ),
+                    countingStopWatch.getTime( TimeUnit.MILLISECONDS ),
+                    postProcessingStopWatch.getTime( TimeUnit.MILLISECONDS ) ) );
+        }
+
+        return new Slice<>( list, sort, offset, limit, totalElements );
     }
 }

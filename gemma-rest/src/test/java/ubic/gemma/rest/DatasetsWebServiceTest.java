@@ -150,7 +150,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
 
     @Test
     public void testGetDatasets() {
-        when( expressionExperimentService.loadValueObjects( any(), any(), anyInt(), anyInt() ) )
+        when( expressionExperimentService.loadValueObjectsWithCache( any(), any(), anyInt(), anyInt() ) )
                 .thenAnswer( a -> new Slice<>( Collections.emptyList(), a.getArgument( 1 ), a.getArgument( 2 ), a.getArgument( 3 ), 0L ) );
         assertThat( target( "/datasets" ).request().acceptLanguage( Locale.CANADA_FRENCH ).get() )
                 .hasStatus( Response.Status.OK )
@@ -181,7 +181,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
         when( map.getByResultObjectType( ExpressionExperiment.class ) )
                 .thenReturn( results );
         when( searchService.search( any() ) ).thenReturn( map );
-        when( expressionExperimentService.loadIds( any(), any() ) ).thenReturn( ids );
+        when( expressionExperimentService.loadIdsWithCache( any(), any() ) ).thenReturn( ids );
         when( expressionExperimentService.getFilter( "id", Long.class, Filter.Operator.in, new HashSet<>( ids ) ) )
                 .thenReturn( Filter.by( "ee", "id", Long.class, Filter.Operator.in, new HashSet<>( ids ) ) );
         when( expressionExperimentService.getSort( "id", Sort.Direction.ASC ) )
@@ -195,7 +195,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
                 .hasFieldOrPropertyWithValue( "query", "cerebellum" )
                 .hasFieldOrPropertyWithValue( "fillResults", false );
         verify( expressionExperimentService ).getFilter( "id", Long.class, Filter.Operator.in, new HashSet<>( ids ) );
-        verify( expressionExperimentService ).loadIds( Filters.by( "ee", "id", Long.class, Filter.Operator.in, new HashSet<>( ids ) ), Sort.by( "ee", "id", Sort.Direction.ASC ) );
+        verify( expressionExperimentService ).loadIdsWithCache( Filters.by( "ee", "id", Long.class, Filter.Operator.in, new HashSet<>( ids ) ), Sort.by( "ee", "id", Sort.Direction.ASC ) );
         verify( expressionExperimentService ).loadValueObjectsByIds( ids, true );
     }
 
@@ -212,7 +212,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
 
     @Test
     public void testGetDatasetsWhenSliceHasNoLimit() {
-        when( expressionExperimentService.loadValueObjects( any(), any(), anyInt(), anyInt() ) )
+        when( expressionExperimentService.loadValueObjectsWithCache( any(), any(), anyInt(), anyInt() ) )
                 .thenAnswer( a -> new Slice<>( Collections.emptyList(), null, null, null, null ) );
         assertThat( target( "/datasets" ).request().get() )
                 .hasStatus( Response.Status.OK )

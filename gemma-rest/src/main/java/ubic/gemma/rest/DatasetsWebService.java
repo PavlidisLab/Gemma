@@ -175,7 +175,7 @@ public class DatasetsWebService {
             Filters filtersWithSearchResultIds = Filters.by( filters )
                     .and( datasetArgService.getFilterForSearchQuery( query, new Highlighter( request.getLocale() ), results ) );
             results.forEach( e -> resultById.put( e.getResultId(), e ) );
-            List<Long> ids = expressionExperimentService.loadIds( filtersWithSearchResultIds, sort );
+            List<Long> ids = expressionExperimentService.loadIdsWithCache( filtersWithSearchResultIds, sort );
             // sort is stable, so the order of IDs with the same score is preserved
             ids.sort( Comparator.<Long>comparingDouble( i -> -resultById.get( i ).getScore() ) );
             // slice the ranked IDs
@@ -192,7 +192,7 @@ public class DatasetsWebService {
                     query, filters, new String[] { "id" } );
         } else {
             return Responder.queryAndPaginate(
-                    expressionExperimentService.loadValueObjects( filters, sort, offset, limit ).map( vo -> new ExpressionExperimentWithSearchResultValueObject( vo, resultById.get( vo.getId() ) ) ),
+                    expressionExperimentService.loadValueObjectsWithCache( filters, sort, offset, limit ).map( vo -> new ExpressionExperimentWithSearchResultValueObject( vo, resultById.get( vo.getId() ) ) ),
                     null, filters, new String[] { "id" } );
         }
     }
@@ -226,7 +226,7 @@ public class DatasetsWebService {
         if ( query != null ) {
             filters.and( datasetArgService.getFilterForSearchQuery( query ) );
         }
-        return Responder.respond( expressionExperimentService.count( filters ) );
+        return Responder.respond( expressionExperimentService.countWithCache( filters ) );
     }
 
     public interface UsageStatistics {
@@ -485,7 +485,7 @@ public class DatasetsWebService {
             @QueryParam("sort") @DefaultValue("+id") SortArg<ExpressionExperiment> sort // Optional, default +id
     ) {
         Filters filters = datasetArgService.getFilters( filter ).and( datasetArgService.getFilters( datasetsArg ) );
-        return Responder.paginate( expressionExperimentService::loadValueObjects, filters, new String[] { "id" },
+        return Responder.paginate( expressionExperimentService::loadValueObjectsWithCache, filters, new String[] { "id" },
                 datasetArgService.getSort( sort ), offset.getValue(), limit.getValue() );
     }
 

@@ -185,7 +185,7 @@ public class ExpressionExperimentServiceTest extends AbstractJUnit4SpringContext
     public void testGetAnnotationsUsageFrequencyWithFilters() {
         Filters f = Filters.by( "c", "valueUri", String.class, Filter.Operator.eq, "http://example.com/T00001", "characteristics.valueUri" );
         expressionExperimentService.getAnnotationsUsageFrequency( f, -1, 0, null, null, null, null );
-        verify( expressionExperimentDao ).loadIds( f, null );
+        verify( expressionExperimentDao ).loadIdsWithCache( f, null );
         verify( expressionExperimentDao ).getAnnotationsUsageFrequency( Collections.emptyList(), null, -1, 0, null, null, null, null );
         verifyNoMoreInteractions( expressionExperimentDao );
     }
