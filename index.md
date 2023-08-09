@@ -1,5 +1,5 @@
 # Overview
-Gemma is a set of tools for genomics data meta-analysis, currently primarily targeted at the analysis of gene expression profiles. Gemma contains data from thousands of public studies, referencing thousands of published papers. Users can search, access and visualize coexpression and differential expression results.
+Gemma is database of curated and re-analyzed gene expression studies. 
 
 This webpage serves as an introduction and end-user documentation.
 
@@ -20,27 +20,21 @@ This webpage serves as an introduction and end-user documentation.
 
 ## Key features:
 - Re-annotated expression platforms at the sequence level, which allows for more consistent cross-platform comparisons.
-  + You can read about the full **[data curation process here](curation.md)**.
+  + You can read about the **[data curation process here](curation.md)**.
 - Support for a variety of expression technologies, including Affymetrix, Illumina and other oligonucleotide arrays, one channel and ratiometric cDNA arrays and RNA-seq data.
 - Manual and automated annotation of datasets, that enhance usability of data.
-- Contains [**Phenocarta**](phenocarta.md), which consolidates information on genes and phenotypes across multiple resources and allows tracking and exploring of the associations.
 - Access through the [Gemma website](https://gemma.msl.ubc.ca) provides a graphical interface for easy access.
 - Access through [RESTful web services](https://gemma.msl.ubc.ca/resources/restapidocs/) allows incorporation of data and computational capabilities of Gemma with any other software.
-- Registration is optional, and unregistered users can access all public data.
-- Registered users have the option to securely upload their own data, which can be privately shared with other users of their choice, and to create and save gene sets or dataset groups for ease of use in queries.
 
 ## Important Q&A
 ##### How do you pronounce ‘Gemma’?
 The ‘G’ is soft, as in ‘general’.
 
-##### How do you map probes to genes?
+##### How do you map microarray probes to genes?
 Essentially as described by Barnes et al, 2005. Gene annotations are obtained from NCBI and UCSC.
 
-##### Isn’t expression data very noisy?
-Yes, sometimes. This is a motivation for performing meta-analyses: to look for results that are in some sense consistent across laboratories.
-
 ##### Isn’t data quality a problem?
-Yes; see the question about noisy data. We have been working hard to ensure that data sets we use for analysis are of high quality, or to “clean up” those that have problems. One problem we have observed is the presence of outlier samples, which are flagged and removed. Batch correction is implemented where possible and we analyze data from raw sources (CEL files or FASTQ files) where possible. We also have a **[dataset scoring system](geeq.md)** in place.
+We have been working hard to ensure that data sets we use for analysis are of high quality, or to “clean up” those that have problems. One problem we have observed is the presence of outlier samples, which are flagged and removed. Batch correction is implemented where possible and we analyze data from raw sources (CEL files or FASTQ files) where possible. We also have a **[dataset scoring system](geeq.md)** in place.
 
 ## Glossary
 - **Array Design, Platform**: A microarray design. For example, the HG-U133A is a specific Array Design.
@@ -66,10 +60,7 @@ The rest of this section concerns the use of the [Gemma website](https://gemma.m
 Please **[read the full agreement after clicking here](terms.md)**!
 
 ### Non-binding summary of terms:
-- We will not use or redistribute non-public data without permission, nor share your registration details with anyone.
-- Uploaded data from published work will be considered public. Please consider putting your data in GEO or another public database instead of loading it directly into Gemma. We will load public datasets from GEO on request.
 - Use of the site is at your own risk. Users should not upload highly sensitive data.
-- Users **must not** upload data that contains identifiable patient information.
 - There is no warranty associated with the use of the site or the data provided.
 
 ## Using the Gemma website
@@ -90,13 +81,6 @@ Please follow **[this link to the RESTful API documentation](https://gemma.msl.u
 We are indebted to the many researchers who have made data publicly available. Lists of published papers that relate to the data included in Gemma are available [here (full list)](https://gemma.msl.ubc.ca/bibRef/showAllEeBibRefs.html) and [here (search)](https://gemma.msl.ubc.ca/bibRef/searchBibRefs.html).
 
 If your data is in Gemma, and your paper is not listed, please let us know.
-
-### Reference data
-- **Human**: hg38
-- **Mouse**: mm10
-- **Rat**: rn6
-
-**GO** and **UCSC Genome Annotations** were last updated in March 2018.
 
 ## Contact
 
