@@ -9,12 +9,19 @@ http://purl.obolibrary.org/obo/RO_0002573	has modifier
 http://purl.obolibrary.org/obo/RO_0016002	has disease
 http://purl.obolibrary.org/obo/RO_0002200	has phenotype
 http://purl.obolibrary.org/obo/RO_0001025	located in
+http://purl.obolibrary.org/obo/GENO_0000222	has_genotype
+http://purl.obolibrary.org/obo/GENO_0000413	has_allele
+http://purl.obolibrary.org/obo/GENO_0000447	is_gene_target_of
+http://purl.obolibrary.org/obo/CLO_0037210	derived from cell line
+http://purl.obolibrary.org/obo/CLO_0000015	derives from patient having disease
+http://purl.obolibrary.org/obo/BCGO_0000182	has duration # perhaps not ideal
 # missing:
 # has_delivered or delivered_by
 # has_timepoint
-# from_cell_line (derived from?)
-# has_genotype
-# has_dose
+# has_dose ;there are terms for 'dose' but not for 'has dose'?
 # has_stage (developmental stage)
-# has_allele
-# fusion_gene
+# fusion_gene - not an object property
+# see https://ontobee.org/ontology/catalog/GENO?iri=http://www.w3.org/2002/07/owl%23ObjectProperty&max=200
+# https://ontobee.org/ontology/catalog/CLO?iri=http://www.w3.org/2002/07/owl%23ObjectProperty&max=500
+# https://ontobee.org/ontology/catalog/CL?iri=http://www.w3.org/2002/07/owl%23ObjectProperty&max=500 (mostly RO terms)
+# warning: CLO has its own "has disease" http://purl.obolibrary.org/obo/CLO_0000167
