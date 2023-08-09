@@ -1784,8 +1784,7 @@ public class ExpressionExperimentDaoImpl
                 + "left join s.lastNeedsAttentionEvent as eAttn "
                 + "left join s.lastNoteUpdateEvent as eNote "
                 + "left join s.lastTroubledEvent as eTrbl "
-                + "left join ee.geeq as geeq", filters, null, null )
-                .setCacheable( true );
+                + "left join ee.geeq as geeq", filters, null, null );
     }
 
     private Query finishFilteringQuery( String queryString, @Nullable Filters filters, @Nullable Sort sort, @Nullable String groupBy ) {
