@@ -10,9 +10,7 @@
 
 ## Workflow
 
-{% include image.html url="curation1.png" description="Figure 1 - data curation workflow" %}
-
-Figure 1 above outlines key steps that are taken to gather data and prepare it for use in Gemma.  In addition to the expression values, our data loaders attempt to import annotations and meta-data about the study where possible. The platform (describing the transcript entities that were assayed), the experimental data and the experimental design (describing the conditions the samples represent, such as “tumor” vs. “control”) are then processed. Microarray platforms are reannotated. The experimental data is checked for quality and the experimental design provided with a structured description. The data are then analyzed and the results are stored in the system for later retrieval. Some of these steps are discussed in more detail in the following sections, and additional information is available in [Lim et al. 2021](https://pubmed.ncbi.nlm.nih.gov/33599246/).
+The figure aboves outlines key steps that are taken to gather data and prepare it for use in Gemma.  In addition to the expression values, our data loaders attempt to import annotations and meta-data about the study where possible. The platform (describing the transcript entities that were assayed), the experimental data and the experimental design (describing the conditions the samples represent, such as “tumor” vs. “control”) are then processed. Microarray platforms are reannotated. The experimental data is checked for quality and the experimental design provided with a structured description. The data are then analyzed and the results are stored in the system for later retrieval. Some of these steps are discussed in more detail in the following sections, and additional information is available in [Lim et al. 2021](https://pubmed.ncbi.nlm.nih.gov/33599246/).
 
 ## Data Sources
 
