@@ -797,21 +797,19 @@ public class ExpressionExperimentDaoImpl
         if ( eeIds.isEmpty() ) {
             return Collections.emptyMap();
         }
-        // this is more efficient than the HQL query because we avoid the jointure on the INVESTIGATION table
-        //noinspection unchecked
-        List<Object[]> result = getSessionFactory().getCurrentSession()
-                .createSQLQuery( "select {AD.*}, count(distinct BA.EXPRESSION_EXPERIMENT_FK) as EE_COUNT from BIO_ASSAY BA "
-                        + "join ARRAY_DESIGN {AD} on BA.ARRAY_DESIGN_USED_FK = {AD}.ID "
-                        + "join CURATION_DETAILS CD on {AD}.CURATION_DETAILS_FK = CD.ID "
-                        + "where BA.EXPRESSION_EXPERIMENT_FK in :ids "
-                        + ( SecurityUtil.isUserAdmin() ? "" : "and not CD.TROUBLED " )
-                        + "group by {AD}.ID"
-                        + ( maxResults > 0 ? " order by EE_COUNT desc" : "" ) )
-                .addEntity( "AD", ArrayDesign.class )
-                .addScalar( "EE_COUNT", StandardBasicTypes.LONG )
+        Query query = getSessionFactory().getCurrentSession()
+                .createQuery( "select a, count(distinct ee) from ExpressionExperiment ee "
+                        + "join ee.bioAssays ba "
+                        + "join ba.arrayDesignUsed a "
+                        + "where ee.id in :ids "
+                        + formNonTroubledClause( "ee" )
+                        + formNonTroubledClause( "a" ) + " "
+                        + "group by a"
+                        + ( maxResults > 0 ? " order by count(distinct ee) desc" : "" ) )
                 .setParameterList( "ids", eeIds )
-                .setMaxResults( maxResults )
-                .list();
+                .setMaxResults( maxResults );
+        //noinspection unchecked
+        List<Object[]> result = query.list();
         return result.stream().collect( groupingBy( row -> ( ArrayDesign ) row[0], summingLong( row -> ( Long ) row[1] ) ) );
     }
 
@@ -842,19 +840,20 @@ public class ExpressionExperimentDaoImpl
         if ( eeIds.isEmpty() ) {
             return Collections.emptyMap();
         }
+        Query query = getSessionFactory().getCurrentSession()
+                .createQuery( "select a, count(distinct ee) from ExpressionExperiment ee "
+                        + "join ee.bioAssays ba "
+                        + "join ba.originalPlatform a "
+                        + "left join ba.arrayDesignUsed au "
+                        + "where ee.id in :ids "
+                        + "and a <> au "   // ignore noop switch
+                        + formNonTroubledClause( "ee" )
+                        + formNonTroubledClause( "a" ) + " "
+                        + "group by a"
+                        + ( maxResults > 0 ? " order by count(distinct ee) desc" : "" ) );
         //noinspection unchecked
-        List<Object[]> result = getSessionFactory().getCurrentSession()
-                .createSQLQuery( "select {AD.*}, count(distinct BA.EXPRESSION_EXPERIMENT_FK) as EE_COUNT from BIO_ASSAY BA "
-                        + "join ARRAY_DESIGN {AD} on BA.ORIGINAL_PLATFORM_FK = {AD}.ID "
-                        + "join CURATION_DETAILS CD on {AD}.CURATION_DETAILS_FK = CD.ID "
-                        + "join ARRAY_DESIGN AU on BA.ARRAY_DESIGN_USED_FK = AU.ID "
-                        + "where BA.EXPRESSION_EXPERIMENT_FK in :ids "
-                        + ( SecurityUtil.isUserAdmin() ? "" : "and not CD.TROUBLED " )
-                        + "and {AD}.ID <> AU.ID "
-                        + "group by {AD}.ID"
-                        + ( maxResults > 0 ? " order by EE_COUNT desc" : "" ) )
-                .addEntity( "AD", ArrayDesign.class )
-                .addScalar( "EE_COUNT", StandardBasicTypes.LONG )
+        List<Object[]> result = query
+                .setMaxResults( maxResults )
                 .setParameterList( "ids", eeIds )
                 .list();
         return result.stream().collect( groupingBy( row -> ( ArrayDesign ) row[0], summingLong( row -> ( Long ) row[1] ) ) );

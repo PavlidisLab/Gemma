@@ -116,6 +116,7 @@ public interface ExpressionExperimentDao
 
     /**
      * Obtain dataset usage frequency by platform currently for the given dataset IDs.
+     * <p>
      * Note: no ACL filtering is performed. Only administrators can see troubled platforms.
      * @see #getOriginalPlatformsUsageFrequency(int)
      */
