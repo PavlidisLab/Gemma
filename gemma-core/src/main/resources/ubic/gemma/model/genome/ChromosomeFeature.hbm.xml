@@ -64,6 +64,10 @@
                 <column name="ENSEMBL_ID" not-null="false" unique="false"
                         sql-type="VARCHAR(255)"/>
             </property>
+            <property name="type" type="java.lang.String">
+                <column name="TYPE" not-null="false" unique="false"
+                        sql-type="VARCHAR(255)"/>
+            </property>
             <set name="products" lazy="true" fetch="select" inverse="true" cascade="all">
                 <cache usage="read-write"/>
                 <key foreign-key="GENE_PRODUCT_GENE_FKC">

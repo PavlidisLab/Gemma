@@ -18,6 +18,7 @@
  */
 package ubic.gemma.model.genome;
 
+import ubic.gemma.core.loader.genome.gene.ncbi.model.NCBIGeneInfo;
 import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.genome.gene.GeneAlias;
@@ -47,11 +48,20 @@ public class Gene extends ChromosomeFeature {
     private Set<DatabaseEntry> accessions = new HashSet<>();
     private Multifunctionality multifunctionality;
     private Set<PhenotypeAssociation> phenotypeAssociations = new HashSet<>();
+    private NCBIGeneInfo.GeneType type;
 
     /**
      * No-arg constructor added to satisfy javabean contract
      */
     public Gene() {
+    }
+
+    public String getType() {
+        return type.toString();
+    }
+
+    public void setType( String type ) {
+        this.type = NCBIGeneInfo.typeStringToGeneType( type );
     }
 
     @Override
