@@ -6,13 +6,13 @@ The use of Gemma is covered by certain licenses and terms, summarized here.
 
 * The [source code of Gemma](https://github.com/PavlidisLab/Gemma) is available under the [Apache 2.0 license](http://www.apache.org/licenses/LICENSE-2.0).
 
-* The gene expression data (expression levels) in Gemma is available under the [Creative Commons CC-BY license](https://creativecommons.org/licenses/by/4.0/), including data we have reprocessed from raw data files.
+* The gene expression data (expression levels) in Gemma are available under the same license under which they were released by the data provider from which we obtained it. That provider is generally indicated by the "Source" shown on our web pages for each data set. For example, data from GEO has "[no restrictions on use or distribution](https://www.ncbi.nlm.nih.gov/geo/info/disclaimer.html)" by default. If no such license or disclaimer is stated by the provider, we make the data available under the [Creative Commons CC-BY license](https://creativecommons.org/licenses/by/4.0/) and note that the attribution requirement in that case extends to citing the publication for the original production of the data as well as Gemma.
 
-* The data annotations (e.g. dataset descriptive tags), sample annotations (e.g. experimental design annotations), and analysis results (differential expression, coexpression, data set diagnostics and the like) we create are made available under the [Creative Commons CC-BY-NC license](https://creativecommons.org/licenses/by-nc/4.0/). Parties interested in licensing these components of Gemma for inclusion in commercial products use should contact us.
+* The data annotations (e.g. dataset descriptive tags), sample annotations (e.g. experimental design annotations), and analysis results (differential expression, coexpression, data set diagnostics and the like) and platform gene annotations (based on our sequence alignments) we create are made available under the [Creative Commons CC-BY-NC license](https://creativecommons.org/licenses/by-nc/4.0/). Parties interested in licensing these components of Gemma for inclusion in commercial products use should contact us.
 
 * Under all use scenarios, we ask that you cite one of our relevant publications (e.g. [here](https://pubmed.ncbi.nlm.nih.gov/33599246/) or [here](https://pubmed.ncbi.nlm.nih.gov/22782548/)).
 
-* Use of the Gemma web site, APIs and data come with no warranty or promise of suitability for any purpose. Use at your own risk.
+* Use of the Gemma web site, APIs, data, code, and annotations come with no warranty or promise of suitability for any purpose. Use at your own risk.
 
 # Additional details
 
