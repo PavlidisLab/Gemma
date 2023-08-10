@@ -51,7 +51,6 @@ import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.persistence.service.AbstractDao;
 import ubic.gemma.persistence.service.common.auditAndSecurity.curation.AbstractCuratableDao;
 import ubic.gemma.persistence.service.common.description.CharacteristicDao;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignDao;
@@ -121,8 +120,8 @@ public class ExpressionExperimentDaoImpl
 
         //language=HQL
         final String queryString =
-                "select distinct ee.id from ExpressionExperiment as ee " + "inner join ee.bioAssays as ba "
-                        + "inner join ba.sampleUsed as sample where sample.sourceTaxon = :taxon and ee.id in (:ids) ";
+                "select ee.id from ExpressionExperiment as ee " + "inner join ee.bioAssays as ba "
+                        + "inner join ba.sampleUsed as sample where sample.sourceTaxon = :taxon and ee.id in (:ids) group by ee";
 
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession().createQuery( queryString ).setParameter( "taxon", taxon )
@@ -182,8 +181,8 @@ public class ExpressionExperimentDaoImpl
     public Collection<ExpressionExperiment> findByBibliographicReference( Long bibRefID ) {
         //language=HQL
         final String queryString =
-                "select distinct ee FROM ExpressionExperiment as ee left join ee.otherRelevantPublications as eeO"
-                        + " WHERE ee.primaryPublication.id = :bibID OR (eeO.id = :bibID) ";
+                "select ee FROM ExpressionExperiment as ee left join ee.otherRelevantPublications as eeO"
+                        + " WHERE ee.primaryPublication.id = :bibID OR (eeO.id = :bibID) group by ee";
 
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession().createQuery( queryString ).setParameter( "bibID", bibRefID )
@@ -192,50 +191,25 @@ public class ExpressionExperimentDaoImpl
 
     @Override
     public ExpressionExperiment findByBioAssay( BioAssay ba ) {
-
-        //language=HQL
-        final String queryString =
-                "select distinct ee from ExpressionExperiment as ee inner join ee.bioAssays as ba " + "where ba = :ba";
-        List list = this.getSessionFactory().getCurrentSession().createQuery( queryString ).setParameter( "ba", ba )
-                .list();
-
-        if ( list.size() == 0 ) {
-            AbstractDao.log.warn( "No expression experiment for " + ba );
-            return null;
-        }
-
-        if ( list.size() > 1 ) {
-            /*
-             * This really shouldn't happen!
-             */
-            AbstractDao.log.warn( "Found " + list.size() + " expression experiment for the given bio assay: " + ba
-                    + " Only 1 returned." );
-        }
-        return ( ExpressionExperiment ) list.iterator().next();
+        return ( ExpressionExperiment ) this.getSessionFactory().getCurrentSession()
+                .createQuery( "select ee from ExpressionExperiment as ee "
+                        + "join ee.bioAssays as ba "
+                        + "where ba = :ba" )
+                .setParameter( "ba", ba )
+                .setMaxResults( 1 )
+                .uniqueResult();
     }
 
     @Override
     public ExpressionExperiment findByBioMaterial( BioMaterial bm ) {
-
-        //language=HQL
-        final String queryString = "select distinct ee from ExpressionExperiment as ee "
-                + "inner join ee.bioAssays as ba inner join ba.sampleUsed as sample where sample = :bm";
-
-        List list = this.getSessionFactory().getCurrentSession().createQuery( queryString ).setParameter( "bm", bm )
-                .list();
-
-        if ( list.size() == 0 ) {
-            AbstractDao.log.warn( "No expression experiment for " + bm );
-            return null;
-        }
-        if ( list.size() > 1 ) {
-            /*
-             * This really shouldn't happen!
-             */
-            AbstractDao.log.warn(
-                    "Found " + list.size() + " expression experiment for the given bm: " + bm + " Only 1 returned." );
-        }
-        return ( ExpressionExperiment ) list.iterator().next();
+        return ( ExpressionExperiment ) this.getSessionFactory().getCurrentSession()
+                .createQuery( "select ee from ExpressionExperiment as ee "
+                        + "join ee.bioAssays as ba "
+                        + "join ba.sampleUsed as sample "
+                        + "where sample = :bm" )
+                .setParameter( "bm", bm )
+                .setMaxResults( 1 )
+                .uniqueResult();
     }
 
     @Override
@@ -244,50 +218,25 @@ public class ExpressionExperimentDaoImpl
             return new HashMap<>();
         }
         //language=HQL
-        final String queryString = "select distinct ee, sample from ExpressionExperiment as ee "
+        final String queryString = "select ee, max(sample) from ExpressionExperiment as ee "
                 + "inner join ee.bioAssays as ba inner join ba.sampleUsed as sample where sample in (:bms) group by ee";
 
-        Map<ExpressionExperiment, BioMaterial> results = new HashMap<>();
-        Collection<BioMaterial> batch = new HashSet<>();
+        //noinspection unchecked
+        List<Object[]> r = this.getSessionFactory().getCurrentSession()
+                .createQuery( queryString )
+                .setParameterList( "bms", bms )
+                .list();
 
-        for ( BioMaterial o : bms ) {
-            batch.add( o );
-            if ( batch.size() == ExpressionExperimentDaoImpl.BATCH_SIZE ) {
-
-                //noinspection unchecked
-                List<Object> r = this.getSessionFactory().getCurrentSession().createQuery( queryString )
-                        .setParameterList( "bms", batch ).list();
-                for ( Object a : r ) {
-                    ExpressionExperiment e = ( ExpressionExperiment ) ( ( Object[] ) a )[0];
-                    BioMaterial b = ( BioMaterial ) ( ( Object[] ) a )[1]; // representative, there may have been multiple used as inputs
-                    results.put( e, b );
-                }
-                batch.clear();
-            }
-        }
-
-        if ( batch.size() > 0 ) {
-
-            //noinspection unchecked
-            List<Object> r = this.getSessionFactory().getCurrentSession().createQuery( queryString )
-                    .setParameterList( "bms", batch ).list();
-            for ( Object a : r ) {
-                ExpressionExperiment e = ( ExpressionExperiment ) ( ( Object[] ) a )[0];
-                BioMaterial b = ( BioMaterial ) ( ( Object[] ) a )[1]; // representative, there may have been multiple used as inputs
-                results.put( e, b );
-            }
-        }
-
-        return results;
+        return r.stream().collect( Collectors.toMap( row -> ( ExpressionExperiment ) row[0], row -> ( BioMaterial ) row[1] ) );
     }
 
     @Override
     public Collection<ExpressionExperiment> findByExpressedGene( Gene gene, Double rank ) {
         //language=MySQL
-        final String queryString = "SELECT DISTINCT ee.ID AS eeID FROM "
+        final String queryString = "SELECT ee.ID AS eeID FROM "
                 + "GENE2CS g2s, COMPOSITE_SEQUENCE cs, PROCESSED_EXPRESSION_DATA_VECTOR dedv, INVESTIGATION ee "
                 + "WHERE g2s.CS = cs.ID AND cs.ID = dedv.DESIGN_ELEMENT_FK AND dedv.EXPRESSION_EXPERIMENT_FK = ee.ID"
-                + " AND g2s.gene = :geneID AND dedv.RANK_BY_MEAN >= :rank";
+                + " AND g2s.gene = :geneID AND dedv.RANK_BY_MEAN >= :rank group by ee.ID";
 
         Collection<Long> eeIds;
 
@@ -307,18 +256,14 @@ public class ExpressionExperimentDaoImpl
     @Override
     public ExpressionExperiment findByFactor( ExperimentalFactor ef ) {
         //language=HQL
-        final String queryString =
-                "select distinct ee from ExpressionExperiment as ee inner join ee.experimentalDesign ed "
-                        + "inner join ed.experimentalFactors ef where ef = :ef ";
-
-        List results = this.getSessionFactory().getCurrentSession().createQuery( queryString ).setParameter( "ef", ef )
-                .list();
-
-        if ( results.size() == 0 ) {
-            AbstractDao.log.info( "There is no expression experiment that has factor = " + ef );
-            return null;
-        }
-        return ( ExpressionExperiment ) results.iterator().next();
+        return ( ExpressionExperiment ) this.getSessionFactory().getCurrentSession()
+                .createQuery( "select ee from ExpressionExperiment as ee "
+                        + "join ee.experimentalDesign ed "
+                        + "join ed.experimentalFactors ef "
+                        + "where ef = :ef" )
+                .setParameter( "ef", ef )
+                .setMaxResults( 1 )
+                .uniqueResult();
     }
 
     @Override
@@ -329,19 +274,16 @@ public class ExpressionExperimentDaoImpl
     @Override
     public ExpressionExperiment findByFactorValue( Long factorValueId ) {
         //language=HQL
-        final String queryString =
-                "select distinct ee from ExpressionExperiment as ee inner join ee.experimentalDesign ed "
-                        + "inner join ed.experimentalFactors ef inner join ef.factorValues fv where fv.id = :fvId ";
-
         //noinspection unchecked
-        List<ExpressionExperiment> results = this.getSessionFactory().getCurrentSession().createQuery( queryString )
-                .setParameter( "fvId", factorValueId ).list();
-
-        if ( results.size() == 0 ) {
-            return null;
-        }
-
-        return results.get( 0 );
+        return ( ExpressionExperiment ) this.getSessionFactory().getCurrentSession()
+                .createQuery( "select ee from ExpressionExperiment as ee "
+                        + "join ee.experimentalDesign ed "
+                        + "join ed.experimentalFactors ef "
+                        + "join ef.factorValues fv "
+                        + "where fv.id = :fvId" )
+                .setParameter( "fvId", factorValueId )
+                .setMaxResults( 1 )
+                .uniqueResult();
     }
 
     @Override
@@ -351,9 +293,9 @@ public class ExpressionExperimentDaoImpl
             return new HashMap<>();
 
         //language=HQL
-        final String queryString = "select distinct ee, f from ExpressionExperiment ee "
+        final String queryString = "select ee, f from ExpressionExperiment ee "
                 + " join ee.experimentalDesign ed join ed.experimentalFactors ef join ef.factorValues f"
-                + " where f in (:fvs) group by ee";
+                + " where f in (:fvs) group by ee, f";
         Map<ExpressionExperiment, FactorValue> results = new HashMap<>();
         Collection<FactorValue> batch = new HashSet<>();
         for ( FactorValue o : fvs ) {
@@ -395,10 +337,10 @@ public class ExpressionExperimentDaoImpl
          * uses GENE2CS table.
          */
         //language=MySQL
-        final String queryString = "SELECT DISTINCT ee.ID AS eeID FROM "
+        final String queryString = "SELECT ee.ID AS eeID FROM "
                 + "GENE2CS g2s, COMPOSITE_SEQUENCE cs, ARRAY_DESIGN ad, BIO_ASSAY ba, INVESTIGATION ee "
                 + "WHERE g2s.CS = cs.ID AND ad.ID = cs.ARRAY_DESIGN_FK AND ba.ARRAY_DESIGN_USED_FK = ad.ID AND"
-                + " ba.EXPRESSION_EXPERIMENT_FK = ee.ID AND g2s.GENE = :geneID";
+                + " ba.EXPRESSION_EXPERIMENT_FK = ee.ID AND g2s.GENE = :geneID GROUP BY ee.ID";
 
         Collection<Long> eeIds;
 
@@ -416,32 +358,18 @@ public class ExpressionExperimentDaoImpl
 
     @Override
     public ExpressionExperiment findByQuantitationType( QuantitationType quantitationType ) {
-        //language=HQL
-        final String queryString =
-                "select ee from ExpressionExperiment as ee " + "inner join ee.quantitationTypes qt where qt = :qt ";
-
-        List results = this.getSessionFactory().getCurrentSession().createQuery( queryString )
-                .setParameter( "qt", quantitationType ).list();
-
-        if ( results.size() == 1 ) {
-            return ( ExpressionExperiment ) results.iterator().next();
-        } else if ( results.size() == 0 ) {
-            return null;
-        }
-
-        throw new IllegalStateException( "More than one ExpressionExperiment associated with " + quantitationType );
+        return ( ExpressionExperiment ) this.getSessionFactory().getCurrentSession()
+                .createQuery( "select ee from ExpressionExperiment as ee inner join ee.quantitationTypes qt where qt = :qt" )
+                .setParameter( "qt", quantitationType )
+                .uniqueResult();
     }
 
     @Override
     public Collection<ExpressionExperiment> findByTaxon( Taxon taxon ) {
-        //language=HQL
-        //        final String queryString =
-        //                "select distinct ee from ExpressionExperiment as ee " + "inner join ee.bioAssays as ba "
-        //                        + "inner join ba.sampleUsed as sample where sample.sourceTaxon = :taxon ";
-        final String queryString = "select ee from ExpressionExperiment as ee where ee.taxon = (:taxon)";
-
         //noinspection unchecked
-        return this.getSessionFactory().getCurrentSession().createQuery( queryString ).setParameter( "taxon", taxon )
+        return this.getSessionFactory().getCurrentSession()
+                .createQuery( "select ee from ExpressionExperiment as ee where ee.taxon = (:taxon)" )
+                .setParameter( "taxon", taxon )
                 .list();
     }
 
@@ -955,8 +883,8 @@ public class ExpressionExperimentDaoImpl
 
     @Override
     public Collection<BioAssayDimension> getBioAssayDimensions( ExpressionExperiment expressionExperiment ) {
-        String queryString = "select distinct b from BioAssayDimension b, ExpressionExperiment e "
-                + "inner join b.bioAssays bba inner join e.bioAssays eb where eb = bba and e = :ee ";
+        String queryString = "select b from BioAssayDimension b, ExpressionExperiment e "
+                + "inner join b.bioAssays bba inner join e.bioAssays eb where eb = bba and e = :ee group by b, e";
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession().createQuery( queryString )
                 .setParameter( "ee", expressionExperiment ).list();
@@ -996,7 +924,7 @@ public class ExpressionExperimentDaoImpl
     public Collection<ExpressionExperiment> getExperimentsWithOutliers() {
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession().createQuery(
-                "select distinct e from ExpressionExperiment e join e.bioAssays b where b.isOutlier = true" ).list();
+                "select e from ExpressionExperiment e join e.bioAssays b where b.isOutlier = true group by e" ).list();
     }
 
     @Override
@@ -1159,8 +1087,10 @@ public class ExpressionExperimentDaoImpl
     @Override
     public Collection<QuantitationType> getQuantitationTypes( final ExpressionExperiment expressionExperiment ) {
         //language=HQL
-        final String queryString = "select distinct quantType " + "from ExpressionExperiment ee "
-                + "inner join ee.quantitationTypes as quantType fetch all properties where ee  = :ee ";
+        final String queryString = "select quantType from ExpressionExperiment ee "
+                + "inner join ee.quantitationTypes as quantType fetch all properties "
+                + "where ee  = :ee "
+                + "group by quantType";
 
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession().createQuery( queryString )
@@ -1176,9 +1106,12 @@ public class ExpressionExperimentDaoImpl
 
         //language=HQL
         final String queryString =
-                "select distinct quantType " + "from ubic.gemma.model.expression.experiment.ExpressionExperiment ee "
-                        + "inner join  ee.quantitationTypes as quantType " + "inner join ee.bioAssays as ba "
-                        + "inner join ba.arrayDesignUsed ad " + "where ee = :ee and ad = :ad";
+                "select quantType from ExpressionExperiment ee "
+                        + "inner join  ee.quantitationTypes as quantType "
+                        + "inner join ee.bioAssays as ba "
+                        + "inner join ba.arrayDesignUsed ad "
+                        + "where ee = :ee and ad = :ad "
+                        + "group by quantType";
 
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession().createQuery( queryString )
@@ -1205,9 +1138,9 @@ public class ExpressionExperimentDaoImpl
                 .createQuery( "select qt from ExpressionExperiment ee "
                         + "join ee.processedExpressionDataVectors pv "
                         + "join pv.quantitationType qt "
-                        + "where qt.isMaskedPreferred = true and ee = :ee "
-                        + "group by qt" )
+                        + "where qt.isMaskedPreferred = true and ee = :ee" )
                 .setParameter( "ee", ee )
+                .setMaxResults( 1 )
                 .uniqueResult();
     }
 
@@ -1283,26 +1216,24 @@ public class ExpressionExperimentDaoImpl
     public Taxon getTaxon( BioAssaySet ee ) {
 
         if ( ee instanceof ExpressionExperiment ) {
-            String queryString = "select distinct SU.sourceTaxon from ExpressionExperiment as EE "
+            String queryString = "select SU.sourceTaxon from ExpressionExperiment as EE "
                     + "inner join EE.bioAssays as BA inner join BA.sampleUsed as SU where EE = :ee";
-            List list = this.getSessionFactory().getCurrentSession().createQuery( queryString ).setParameter( "ee", ee )
-                    .list();
-            if ( list.size() > 0 )
-                return ( Taxon ) list.iterator().next();
+            return ( Taxon ) this.getSessionFactory().getCurrentSession().createQuery( queryString )
+                    .setParameter( "ee", ee )
+                    .setMaxResults( 1 )
+                    .uniqueResult();
         } else if ( ee instanceof ExpressionExperimentSubSet ) {
             String queryString =
-                    "select distinct su.sourceTaxon from ExpressionExperimentSubSet eess inner join eess.sourceExperiment ee"
+                    "select su.sourceTaxon from ExpressionExperimentSubSet eess inner join eess.sourceExperiment ee"
                             + " inner join ee.bioAssays as BA inner join BA.sampleUsed as su where eess = :ee";
-            List list = this.getSessionFactory().getCurrentSession().createQuery( queryString ).setParameter( "ee", ee )
-                    .list();
-            if ( list.size() > 0 )
-                return ( Taxon ) list.iterator().next();
+            return ( Taxon ) this.getSessionFactory().getCurrentSession().createQuery( queryString )
+                    .setParameter( "ee", ee )
+                    .setMaxResults( 1 )
+                    .uniqueResult();
         } else {
             throw new UnsupportedOperationException(
                     "Can't get taxon of BioAssaySet of class " + ee.getClass().getName() );
         }
-
-        return null;
     }
 
     @Value

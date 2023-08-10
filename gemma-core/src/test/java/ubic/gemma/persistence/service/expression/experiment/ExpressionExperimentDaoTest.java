@@ -11,9 +11,11 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ContextConfiguration;
 import ubic.gemma.core.util.test.BaseDatabaseTest;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
+import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExperimentalDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
@@ -41,6 +43,28 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest {
 
     @Autowired
     private ExpressionExperimentDao expressionExperimentDao;
+
+    @Test
+    public void testFindByBiomaterials() {
+        Taxon taxon = new Taxon();
+        sessionFactory.getCurrentSession().persist( taxon );
+        ArrayDesign ad = new ArrayDesign();
+        ad.setPrimaryTaxon( taxon );
+        sessionFactory.getCurrentSession().persist( ad );
+        BioMaterial bm = new BioMaterial();
+        bm.setSourceTaxon( taxon );
+        BioAssay ba = new BioAssay();
+        ba.setArrayDesignUsed( ad );
+        bm.getBioAssaysUsedIn().add( ba );
+        ba.setSampleUsed( bm );
+        sessionFactory.getCurrentSession().persist( bm );
+        sessionFactory.getCurrentSession().persist( ba );
+        ExpressionExperiment ee = new ExpressionExperiment();
+        ee.getBioAssays().add( ba );
+        sessionFactory.getCurrentSession().persist( ee );
+        Assertions.assertThat( expressionExperimentDao.findByBioMaterials( Collections.singleton( bm ) ) )
+                .containsEntry( ee, bm );
+    }
 
     @Test
     public void testThawTransientEntity() {
