@@ -1119,7 +1119,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends AbstractDesignElementD
                         + "left join fetch de.biologicalCharacteristic bc "
                         + "left join fetch bc.sequenceDatabaseEntry "
                         + "where dedv.expressionExperiment = :ee" );
-        q.setParameter( "ee", ee, LongType.INSTANCE );
+        q.setParameter( "ee", ee );
         q.setMaxResults( limit );
         if ( availableVectorCount != null && availableVectorCount > limit ) {
             q.setFirstResult( new Random().nextInt( availableVectorCount - limit ) );
