@@ -806,7 +806,8 @@ public class ExpressionExperimentDaoImpl
         if ( eeIds.isEmpty() ) {
             return Collections.emptyMap();
         }
-        Query query = getSessionFactory().getCurrentSession()
+        //noinspection unchecked
+        List<Object[]> result = getSessionFactory().getCurrentSession()
                 .createQuery( "select a.technologyType, oa.technologyType, count(distinct ee) from ExpressionExperiment ee "
                         + "join ee.bioAssays ba "
                         + "join ba.arrayDesignUsed a "
@@ -816,9 +817,9 @@ public class ExpressionExperimentDaoImpl
                         + formNonTroubledClause( "ee" )
                         + formNonTroubledClause( "a" ) + " "
                         + "group by a.technologyType, oa.technologyType" )
-                .setParameterList( "ids", eeIds );
-        //noinspection unchecked
-        List<Object[]> result = query.list();
+                .setParameterList( "ids", eeIds )
+                .setCacheable( true )
+                .list();
         return aggregateTechnologyTypeCounts( result );
     }
 
@@ -873,7 +874,7 @@ public class ExpressionExperimentDaoImpl
                 .setParameterList( "ids", eeIds )
                 .setMaxResults( maxResults );
         //noinspection unchecked
-        List<Object[]> result = query.list();
+        List<Object[]> result = query.setCacheable( true ).list();
         return result.stream().collect( groupingBy( row -> ( ArrayDesign ) row[0], summingLong( row -> ( Long ) row[1] ) ) );
     }
 
@@ -919,6 +920,7 @@ public class ExpressionExperimentDaoImpl
         List<Object[]> result = query
                 .setMaxResults( maxResults )
                 .setParameterList( "ids", eeIds )
+                .setCacheable( true )
                 .list();
         return result.stream().collect( groupingBy( row -> ( ArrayDesign ) row[0], summingLong( row -> ( Long ) row[1] ) ) );
     }
