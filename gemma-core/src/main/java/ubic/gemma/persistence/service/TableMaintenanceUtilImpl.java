@@ -225,6 +225,7 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
         TableMaintenanceUtilImpl.log.info( "Updating the GENE2CS table..." );
         int updated = this.sessionFactory.getCurrentSession()
                 .createSQLQuery( TableMaintenanceUtilImpl.GENE2CS_REPOPULATE_QUERY )
+                .addSynchronizedQuerySpace( "GENE2CS" )
                 .executeUpdate();
         TableMaintenanceUtilImpl.log.info( String.format( "Done regenerating the GENE2CS table; %d entries were updated.", updated ) );
     }

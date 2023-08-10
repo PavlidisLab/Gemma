@@ -258,6 +258,7 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilterin
                         + "join GENE2CS on GENE2CS.CS = result.PROBE_FK "
                         + "join CHROMOSOME_FEATURE as {gene} on {gene}.ID = GENE2CS.GENE "
                         + "where result.RESULT_SET_FK = :rsid" )
+                .addSynchronizedQuerySpace( "GENE2CS" )
                 .addScalar( "RESULT_ID", StandardBasicTypes.LONG )
                 .addEntity( "gene", Gene.class )
                 .setParameter( "rsid", resultSet.getId() )
