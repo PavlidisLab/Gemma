@@ -182,6 +182,8 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
                 .addScalar( "LEVEL", StandardBasicTypes.CLASS )
                 .addScalar( "VALUE_URI", StandardBasicTypes.STRING )
                 .addScalar( "EXPRESSION_EXPERIMENT_FK", StandardBasicTypes.LONG )
+                // invalidate the cache when the EE2C table is updated
+                .addSynchronizedQuerySpace( "EXPRESSION_EXPERIMENT2CHARACTERISTIC" )
                 // invalidate the cache when new characteristics are added/removed
                 .addSynchronizedEntityClass( Characteristic.class );
 

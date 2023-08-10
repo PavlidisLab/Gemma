@@ -190,6 +190,7 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
     public int updateExpressionExperiment2CharacteristicEntries() {
         log.info( "Updating the EXPRESSION_EXPERIMENT2CHARACTERISTIC table..." );
         int updated = sessionFactory.getCurrentSession().createSQLQuery( E2C_QUERY )
+                .addSynchronizedQuerySpace( "EXPRESSION_EXPERIMENT2CHARACTERISTIC" )
                 .setParameter( "eeClass", ExpressionExperiment.class )
                 .setParameter( "bmClass", BioMaterial.class )
                 .setParameter( "edClass", ExperimentalDesign.class )
