@@ -1,6 +1,7 @@
 package ubic.gemma.web.util;
 
 import org.compass.core.util.Assert;
+import org.hibernate.Hibernate;
 import ubic.gemma.model.common.Describable;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExperimentalDesign;
@@ -33,7 +34,7 @@ public class AnchorTagUtil {
     public static String getExpressionExperimentLink( ExpressionExperiment ee, String link, ServletContext servletContext ) {
         Assert.notNull( ee.getId() );
         return getLink( AnchorTagUtil.getExpressionExperimentUrl( ee, servletContext ),
-                linkForDescribable( ee, defaultIfBlank( link, ee.getShortName() ), "Dataset" ) );
+                linkForDescribable( ee, defaultIfBlank( link, Hibernate.isInitialized( ee ) ? ee.getShortName() : null ), "Dataset" ) );
     }
 
     public static String getExpressionExperimentUrl( ExpressionExperiment ee, ServletContext servletContext ) {
@@ -42,7 +43,7 @@ public class AnchorTagUtil {
     }
 
     private static String linkForDescribable( Describable d, String link, String entityName ) {
-        return defaultIfBlank( link, defaultIfBlank( d.getName(), entityName + " #" + d.getId() ) );
+        return defaultIfBlank( link, defaultIfBlank( Hibernate.isInitialized( d ) ? d.getName() : null, entityName + " #" + d.getId() ) );
     }
 
     private static String getLink( String url, String link ) {

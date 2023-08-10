@@ -190,7 +190,7 @@ public class CharacteristicUpdateTaskImpl extends AbstractTask<TaskResult, Chara
             return new TaskResult( taskCommand, false );
         }
 
-        Map<Characteristic, Object> charToParent = characteristicService.getParents( asChars );
+        Map<Characteristic, Object> charToParent = characteristicService.getParents( asChars, null, -1 );
         for ( Characteristic cFromClient : asChars ) {
             Characteristic cFromDatabase = characteristicService.loadOrFail( cFromClient.getId() );
             Object parent = charToParent.get( cFromDatabase );
@@ -233,7 +233,7 @@ public class CharacteristicUpdateTaskImpl extends AbstractTask<TaskResult, Chara
         if ( asChars.size() == 0 )
             return new TaskResult( taskCommand, true );
 
-        Map<Characteristic, Object> charToParent = characteristicService.getParents( asChars );
+        Map<Characteristic, Object> charToParent = characteristicService.getParents( asChars, null, -1 );
 
         for ( Characteristic cFromClient : asChars ) {
             Long characteristicId = cFromClient.getId();

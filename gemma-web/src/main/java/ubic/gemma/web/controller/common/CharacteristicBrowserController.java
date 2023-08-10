@@ -109,7 +109,7 @@ public class CharacteristicBrowserController {
             records = characteristicService.browse( batch.getStart(), batch.getLimit() );
         }
 
-        Map<Characteristic, Object> charToParent = characteristicService.getParents( records );
+        Map<Characteristic, Object> charToParent = characteristicService.getParents( records, null, -1 );
 
         for ( Characteristic o : records ) {
             Object parent = charToParent.get( o );
@@ -158,30 +158,31 @@ public class CharacteristicBrowserController {
             }
         }
 
-        Map<Characteristic, Object> charToParent = characteristicService.getParents( chars );
-        for ( Object o : chars ) {
-            Characteristic c = ( Characteristic ) o;
+        Collection<Class<?>> parentClasses = new HashSet<>();
+        if ( searchEEs ) {
+            parentClasses.add( ExpressionExperiment.class );
+        }
+        if ( searchBMs ) {
+            parentClasses.add( BioMaterial.class );
+        }
+        if ( searchFVs ) {
+            parentClasses.add( FactorValue.class );
+        }
+        if ( searchPAs ) {
+            parentClasses.add( PhenotypeAssociation.class );
+        }
+
+        Map<Characteristic, Object> charToParent = characteristicService.getParents( chars, parentClasses, MAX_RESULTS );
+        for ( Characteristic c : chars ) {
             Object parent = charToParent.get( c );
-
-            if ( ( searchEEs && parent instanceof ExpressionExperiment ) || ( searchBMs
-                    && parent instanceof BioMaterial )
-                    || ( searchFVs && ( parent instanceof FactorValue
-                    || parent instanceof ExperimentalFactor ) )
-                    || ( searchNos && parent == null ) || ( searchPAs
-                    && parent instanceof PhenotypeAssociation ) ) {
-
-                AnnotationValueObject avo = new AnnotationValueObject( c, Characteristic.class );
-
-                if ( parent != null ) {
-                    populateParentInformation( avo, parent );
-                }
-
-                results.add( avo );
-
-                if ( results.size() >= MAX_RESULTS ) {
-                    break;
-                }
+            if ( parent == null && !searchNos ) {
+                continue;
             }
+            AnnotationValueObject avo = new AnnotationValueObject( c, Characteristic.class );
+            if ( parent != null ) {
+                populateParentInformation( avo, parent );
+            }
+            results.add( avo );
         }
 
         if ( results.size() < MAX_RESULTS && searchFVVs ) { // non-characteristics.
@@ -249,48 +250,13 @@ public class CharacteristicBrowserController {
             BioMaterial bm = ( BioMaterial ) annotatedItem;
             avo.setParentName( String.format( "BioMat: %s", bm.getName() ) );
             avo.setParentLink( AnchorTagUtil.getBioMaterialLink( bm, avo.getParentName(), servletContext ) );
-            ExpressionExperiment ee = expressionExperimentService.findByBioMaterial( bm );
-
-            if ( ee == null ) {
-                log.warn( "Expression experiment for " + bm + " was null" );
-                return;
-            }
-            avo.setParentOfParentName( String.format( "%s", ee.getName() ) );
-            // avo.setParentOfParentDescription( ee.getDescription() );
-            avo.setParentOfParentLink(
-                    AnchorTagUtil.getExpressionExperimentLink( ee, avo.getParentOfParentName(), servletContext ) );
-
         } else if ( annotatedItem instanceof FactorValue ) {
             FactorValue fv = ( FactorValue ) annotatedItem;
-            avo.setParentDescription( String.format( "FactorValue: %s &laquo; Exp.Factor: %s",
-                    ( fv.getValue() == null ? "" : ": " + fv.getValue() ), fv.getExperimentalFactor().getName() ) );
-            ExpressionExperiment ee = expressionExperimentService.findByFactorValue( fv );
-
-            if ( ee == null ) {
-                log.warn( "Expression experiment for " + fv + " was null" );
-                return;
-            }
-            avo.setParentOfParentName( String.format( "Experimental Design for: %s", ee.getName() ) );
-            avo.setParentOfParentLink( AnchorTagUtil
-                    .getExperimentalDesignLink( fv.getExperimentalFactor().getExperimentalDesign(),
-                            avo.getParentName(), servletContext )
-                    + "&nbsp;&laquo;&nbsp;" + AnchorTagUtil
-                    .getExpressionExperimentLink( ee,
-                            String.format( "%s (%s)", StringUtils.abbreviate( ee.getName(), 80 ),
-                                    ee.getShortName() ), servletContext ) );
+            populateParentInformation( avo, fv.getExperimentalFactor() );
         } else if ( annotatedItem instanceof ExperimentalFactor ) {
             ExperimentalFactor ef = ( ExperimentalFactor ) annotatedItem;
             avo.setParentLink( AnchorTagUtil.getExperimentalDesignLink( ef.getExperimentalDesign(),
                     "Exp Fac: " + ef.getName() + " (" + StringUtils.abbreviate( ef.getDescription(), 50 ) + ")", servletContext ) );
-            ExpressionExperiment ee = experimentalDesignService.getExpressionExperiment( ef.getExperimentalDesign() );
-            if ( ee == null ) {
-                log.warn( "Expression experiment for " + ef + " was null" );
-                return;
-            }
-            avo.setParentOfParentName(
-                    String.format( "%s (%s)", StringUtils.abbreviate( ee.getName(), 80 ), ee.getShortName() ) );
-            avo.setParentOfParentLink(
-                    AnchorTagUtil.getExpressionExperimentLink( ee, avo.getParentOfParentName(), servletContext ) );
         } else if ( annotatedItem instanceof PhenotypeAssociation ) {
             PhenotypeAssociation pa = ( PhenotypeAssociation ) annotatedItem;
             avo.setParentLink( "PhenotypeAssoc: " + pa.getGene().getOfficialSymbol() );

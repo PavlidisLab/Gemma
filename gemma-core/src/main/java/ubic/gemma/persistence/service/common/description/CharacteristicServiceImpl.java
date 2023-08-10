@@ -21,20 +21,18 @@ package ubic.gemma.persistence.service.common.description;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ubic.gemma.model.association.Gene2GOAssociation;
-import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.description.Characteristic;
-import ubic.gemma.model.expression.biomaterial.BioMaterial;
-import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 import ubic.gemma.persistence.service.AbstractFilteringVoEnabledService;
 
 import javax.annotation.Nullable;
-import java.util.*;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * @author Luke
@@ -44,12 +42,6 @@ import java.util.*;
 public class CharacteristicServiceImpl extends AbstractFilteringVoEnabledService<Characteristic, CharacteristicValueObject>
         implements CharacteristicService {
 
-    /**
-     * Classes examined when getting the "parents" of characteristics.
-     */
-    private static final Class<?>[] CLASSES_WITH_CHARACTERISTICS = new Class[] { ExpressionExperiment.class,
-            BioMaterial.class, FactorValue.class, ExperimentalFactor.class, Gene2GOAssociation.class,
-            PhenotypeAssociation.class };
     private final CharacteristicDao characteristicDao;
 
     @Autowired
@@ -119,32 +111,8 @@ public class CharacteristicServiceImpl extends AbstractFilteringVoEnabledService
 
     @Override
     @Transactional(readOnly = true)
-    public Map<Characteristic, Object> getParents( Collection<Characteristic> characteristics ) {
-        Map<Characteristic, Object> charToParent = new HashMap<>();
-        Collection<Characteristic> needToSearch = new HashSet<>( characteristics );
-        for ( Class<?> parentClass : CharacteristicServiceImpl.CLASSES_WITH_CHARACTERISTICS ) {
-            Map<Characteristic, Object> found = this.characteristicDao.getParents( parentClass, needToSearch );
-            charToParent.putAll( found );
-            needToSearch.removeAll( found.keySet() );
-        }
-        return charToParent;
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public Map<Characteristic, Long> getParentIds( Class<?> parentClass, @Nullable Collection<Characteristic> characteristics ) {
-        return this.characteristicDao.getParentIds( parentClass, characteristics );
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public Map<Characteristic, Object> getParents( Collection<Class<?>> classes,
-            @Nullable Collection<Characteristic> characteristics ) {
-        Map<Characteristic, Object> charToParent = new HashMap<>();
-        for ( Class<?> parentClass : classes ) {
-            charToParent.putAll( this.characteristicDao.getParents( parentClass, characteristics ) );
-        }
-        return charToParent;
+    public Map<Characteristic, Object> getParents( Collection<Characteristic> characteristics, @Nullable Collection<Class<?>> parentClasses, int maxResults ) {
+        return characteristicDao.getParents( characteristics, parentClasses, maxResults );
     }
 
     @Override
