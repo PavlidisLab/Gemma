@@ -478,11 +478,12 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
         if ( ids.isEmpty() ) {
             return Collections.emptyMap();
         }
-        final String queryString = "select ad.id, count(subs) as isMerged from ArrayDesign as ad left join ad.mergees subs where ad.id in (:ids) group by ad";
-        //noinspection unchecked
-        List<Object[]> list = this.getSessionFactory().getCurrentSession().createQuery( queryString )
-                .setParameterList( "ids", ids ).list();
-        return list.stream().collect( Collectors.toMap( row -> ( Long ) row[0], row -> ( Long ) row[1] > 0 ) );
+        Set<Long> distinctIds = new HashSet<>( ids );
+        //noinspection unchecked,rawtypes
+        Set<Long> mergedIds = new HashSet<>( this.getSessionFactory().getCurrentSession()
+                .createQuery( "select ad.id from ArrayDesign as ad join ad.mergees subs where ad.id in (:ids) group by ad" )
+                .setParameterList( "ids", ids ).list() );
+        return distinctIds.stream().collect( Collectors.toMap( id -> id, mergedIds::contains ) );
     }
 
     @Override
