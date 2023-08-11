@@ -73,7 +73,7 @@
 
 </div>
 
-<div id="footer" class="clearfix">
+<div id="footer">
     <div id="divider"></div>
     <div class="footer" style="display: flex; align-items: baseline; padding-left: 10px; padding-right: 10px;">
         <div>Gemma ${appConfig["version"]}&nbsp;Copyright &copy; 2007-2023</div>
