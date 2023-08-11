@@ -143,7 +143,12 @@ public abstract class AbstractCriteriaFilteringVoEnabledDao<O extends Identifiab
         queryStopWatch.stop();
 
         countingStopWatch.start();
-        Long totalElements = ( Long ) totalElementsQuery.setProjection( Projections.countDistinct( getIdentifierPropertyName() ) ).uniqueResult();
+        Long totalElements;
+        if ( limit > 0 && results.size() >= limit ) {
+            totalElements = ( Long ) totalElementsQuery.setProjection( Projections.countDistinct( getIdentifierPropertyName() ) ).uniqueResult();
+        } else {
+            totalElements = ( long ) results.size();
+        }
         countingStopWatch.stop();
 
         if ( stopWatch.getTime( TimeUnit.MILLISECONDS ) > REPORT_SLOW_QUERY_AFTER_MS ) {
@@ -185,9 +190,14 @@ public abstract class AbstractCriteriaFilteringVoEnabledDao<O extends Identifiab
         postProcessingStopWatch.stop();
 
         countingStopWatch.start();
-        Long totalElements = ( Long ) totalElementsQuery
-                .setProjection( Projections.countDistinct( getIdentifierPropertyName() ) )
-                .uniqueResult();
+        Long totalElements;
+        if ( limit >= 0 && results.size() >= limit ) {
+            totalElements = ( Long ) totalElementsQuery
+                    .setProjection( Projections.countDistinct( getIdentifierPropertyName() ) )
+                    .uniqueResult();
+        } else {
+            totalElements = ( long ) results.size();
+        }
         countingStopWatch.stop();
 
         stopWatch.stop();

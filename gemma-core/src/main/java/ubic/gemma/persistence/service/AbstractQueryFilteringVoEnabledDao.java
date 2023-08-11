@@ -226,7 +226,12 @@ public abstract class AbstractQueryFilteringVoEnabledDao<O extends Identifiable,
                 .setCacheable( cacheable )
                 .list();
         StopWatch countingStopWatch = StopWatch.createStarted();
-        Long totalElements = ( Long ) totalElementsQuery.setCacheable( cacheable ).uniqueResult();
+        Long totalElements;
+        if ( limit > 0 && result.size() >= limit ) {
+            totalElements = ( Long ) totalElementsQuery.setCacheable( cacheable ).uniqueResult();
+        } else {
+            totalElements = ( long ) result.size();
+        }
         countingStopWatch.stop();
         if ( timer.getTime( TimeUnit.MILLISECONDS ) > REPORT_SLOW_QUERY_AFTER_MS ) {
             log.warn( String.format( "Loading and counting %d entities for %s took %s ms (querying: %d ms, counting: %d ms).",
@@ -276,9 +281,14 @@ public abstract class AbstractQueryFilteringVoEnabledDao<O extends Identifiable,
                 .list();
 
         StopWatch countingStopWatch = StopWatch.createStarted();
-        Long totalElements = ( Long ) totalElementsQuery
-                .setCacheable( cacheable )
-                .uniqueResult();
+        Long totalElements;
+        if ( limit > 0 && list.size() >= limit ) {
+            totalElements = ( Long ) totalElementsQuery
+                    .setCacheable( cacheable )
+                    .uniqueResult();
+        } else {
+            totalElements = ( long ) list.size();
+        }
         countingStopWatch.stop();
 
         stopWatch.stop();
