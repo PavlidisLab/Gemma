@@ -80,9 +80,9 @@
 	</div>
 </div>
 <script type="text/javascript">
-   $.getJSON( '${pageContext.request.contextPath}' + '/rest/v2/datasets', function( data ) {
+   $.getJSON( '${pageContext.request.contextPath}' + '/rest/v2/datasets/count', function( data ) {
          var numberFormatter = new Intl.NumberFormat();
-         var featuredNumberOfDatasets = 1000 * Math.floor( data.totalElements / 1000 );
+         var featuredNumberOfDatasets = 1000 * Math.floor( data.data / 1000 );
          document.getElementById( 'featuredNumberOfDatasets' ).innerHTML = 'Over <b>' + numberFormatter.format( featuredNumberOfDatasets ) + '</b> curated data sets';
       }
    )
