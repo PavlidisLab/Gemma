@@ -1418,7 +1418,7 @@ public class ExpressionExperimentDaoImpl
 
         //noinspection unchecked
         List<ExpressionExperimentDetailsValueObject> vos = query
-                .setCacheable( cacheable )
+                .setCacheable( cacheable && isFilteringQueryCacheable() )
                 .list();
 
         countingTimer.start();
