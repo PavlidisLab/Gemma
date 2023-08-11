@@ -22,6 +22,8 @@ package ubic.gemma.persistence.service.expression.arrayDesign;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.hibernate.*;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.type.StandardBasicTypes;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
@@ -1067,12 +1069,21 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     }
 
     private void populateExpressionExperimentCount( Collection<ArrayDesignValueObject> entities ) {
+        Query query = this.getSessionFactory().getCurrentSession()
+                // using EXPRESSION_EXPERIMENT_FK, we don't need to do a jointure on the INVESTIGATION table, however
+                // the count reflect the number of bioassays, not EEs
+                .createSQLQuery( "select AD.ID, count(distinct BA.EXPRESSION_EXPERIMENT_FK) as EE_COUNT from ARRAY_DESIGN AD "
+                        + "join BIO_ASSAY BA on AD.ID = BA.ARRAY_DESIGN_USED_FK "
+                        + AclQueryUtils.formNativeAclJoinClause( "BA.EXPRESSION_EXPERIMENT_FK" )
+                        + AclQueryUtils.formNativeAclRestrictionClause( ( SessionFactoryImplementor ) getSessionFactory() ) + " "
+                        // FIXME: exclude troubled datasets
+                        + "group by AD.ID"
+                )
+                .addScalar( "ID", StandardBasicTypes.LONG )
+                .addScalar( "EE_COUNT", StandardBasicTypes.LONG );
+        AclQueryUtils.addAclParameters( query, ExpressionExperiment.class );
         //noinspection unchecked
-        List<Object[]> list = this.getSessionFactory().getCurrentSession().createQuery(
-                        "select ad.id, count(distinct ee) from ExpressionExperiment ee "
-                                + "join ee.bioAssays bas "
-                                + "join bas.arrayDesignUsed ad "
-                                + "group by ad" )
+        List<Object[]> list = query
                 .setCacheable( true )
                 .list();
         Map<Long, Long> countById = list.stream()
@@ -1084,13 +1095,20 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     }
 
     private void populateSwitchedExpressionExperimentCount( Collection<ArrayDesignValueObject> entities ) {
+        Query query = this.getSessionFactory().getCurrentSession()
+                // using EXPRESSION_EXPERIMENT_FK, we don't need to do a jointure on the INVESTIGATION table, however
+                // the count reflect the number of bioassays, not EEs
+                .createSQLQuery( "select AD.ID, count(distinct BA.EXPRESSION_EXPERIMENT_FK) as EE_COUNT from ARRAY_DESIGN AD "
+                        + "join BIO_ASSAY BA on AD.ID = BA.ORIGINAL_PLATFORM_FK "
+                        + AclQueryUtils.formNativeAclJoinClause( "BA.EXPRESSION_EXPERIMENT_FK" )
+                        + AclQueryUtils.formNativeAclRestrictionClause( ( SessionFactoryImplementor ) getSessionFactory() ) + " "
+                        // FIXME: exclude troubled datasets
+                        + "group by AD.ID" )
+                .addScalar( "ID", StandardBasicTypes.LONG )
+                .addScalar( "EE_COUNT", StandardBasicTypes.LONG );
+        AclQueryUtils.addAclParameters( query, ExpressionExperiment.class );
         //noinspection unchecked
-        List<Object[]> results = this.getSessionFactory().getCurrentSession().createQuery(
-                        "select b.originalPlatform.id, count(distinct e) from ExpressionExperiment e "
-                                + "join e.bioAssays b "
-                                + "group by b.originalPlatform" )
-                .setCacheable( true )
-                .list();
+        List<Object[]> results = query.setCacheable( true ).list();
         Map<Long, Long> switchedCountById = results.stream()
                 .collect( Collectors.toMap( row -> ( Long ) row[0], row -> ( Long ) row[1] ) );
         for ( ArrayDesignValueObject vo : entities ) {
