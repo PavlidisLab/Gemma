@@ -555,8 +555,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
         final String queryString =
                 "select count (distinct cs) from  CompositeSequence as cs inner join cs.arrayDesign as ar "
                         + " where cs.biologicalCharacteristic.sequence is not null";
-        return ( Long ) this.getSessionFactory().getCurrentSession().createQuery( queryString ).list().iterator()
-                .next();
+        return ( Long ) this.getSessionFactory().getCurrentSession().createQuery( queryString ).uniqueResult();
     }
 
     @Override
@@ -579,8 +578,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
         final String queryString =
                 "select count (distinct cs) from  CompositeSequence as cs inner join cs.arrayDesign as ar "
                         + " , BlatResult as blat where blat.querySequence=cs.biologicalCharacteristic";
-        return ( Long ) this.getSessionFactory().getCurrentSession().createQuery( queryString ).list().iterator()
-                .next();
+        return ( Long ) this.getSessionFactory().getCurrentSession().createQuery( queryString ).uniqueResult();
     }
 
     @Override
@@ -603,8 +601,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
                 "select count (distinct cs) from  CompositeSequence as cs inner join cs.arrayDesign as ar "
                         + ", BioSequence2GeneProduct bs2gp, Gene gene inner join gene.products gp "
                         + "where bs2gp.bioSequence=cs.biologicalCharacteristic and bs2gp.geneProduct=gp";
-        return ( Long ) this.getSessionFactory().getCurrentSession().createQuery( queryString ).list().iterator()
-                .next();
+        return ( Long ) this.getSessionFactory().getCurrentSession().createQuery( queryString ).uniqueResult();
     }
 
     @Override
@@ -629,8 +626,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
                 "select count (distinct gene) from  CompositeSequence as cs inner join cs.arrayDesign as ar "
                         + ", BioSequence2GeneProduct bs2gp, Gene gene inner join gene.products gp "
                         + "where bs2gp.bioSequence=cs.biologicalCharacteristic and  bs2gp.geneProduct=gp";
-        return ( Long ) this.getSessionFactory().getCurrentSession().createQuery( queryString ).list().iterator()
-                .next();
+        return ( Long ) this.getSessionFactory().getCurrentSession().createQuery( queryString ).uniqueResult();
     }
 
     @Override
