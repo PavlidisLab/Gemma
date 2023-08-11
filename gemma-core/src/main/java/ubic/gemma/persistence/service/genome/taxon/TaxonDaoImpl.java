@@ -125,14 +125,6 @@ public class TaxonDaoImpl extends AbstractQueryFilteringVoEnabledDao<Taxon, Taxo
         return query;
     }
 
-    /**
-     * There is no {@code fetch join} clauses in the filtering query, so we can safely cache taxa.
-     */
-    @Override
-    protected boolean isFilteringQueryCacheable() {
-        return true;
-    }
-
     @Override
     protected Query getFilteringCountQuery( @Nullable Filters filters ) {
         //noinspection JpaQlInspection // the constants for aliases is messing with the inspector

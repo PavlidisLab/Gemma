@@ -36,20 +36,14 @@ public abstract class AbstractQueryFilteringVoEnabledDao<O extends Identifiable,
      * <p>
      * Note that if your implementation does not produce a {@link List} of {@link O} when {@link Query#list()} is invoked,
      * you must override {@link AbstractQueryFilteringVoEnabledDao#getValueObjectTransformer()}.
+     * <p>
+     * The make the cached query (i.e. {@link #loadWithCache(Filters, Sort)} behave the same, you also have to
+     * explicitly initialize any lazy relations in {@link #doLoadValueObject(Identifiable)} because the VO constructor
+     * will not initialize them.
      *
      * @return a {@link Query} that produce a list of {@link O}
      */
     protected abstract Query getFilteringQuery( @Nullable Filters filters, @Nullable Sort sort );
-
-    /**
-     * Indicate if the filtering query from {@link #getFilteringQuery(Filters, Sort)} is cacheable.
-     * <p>
-     * In general, filtering queries use {@code fetch join} clauses, so they should not be cached because the query
-     * cache only store IDs. If you mark this as cacheable, make sure that {@link O} is also cacheable.
-     */
-    protected boolean isFilteringQueryCacheable() {
-        return false;
-    }
 
     /**
      * Produce a query that will be used to retrieve IDs of {@link #getFilteringQuery(Filters, Sort)}.
@@ -212,7 +206,7 @@ public abstract class AbstractQueryFilteringVoEnabledDao<O extends Identifiable,
         //noinspection unchecked
         List<O> result = getFilteringQuery( filters, sort )
                 .setResultTransformer( getEntityTransformer() )
-                .setCacheable( cacheable && isFilteringQueryCacheable() )
+                .setCacheable( cacheable )
                 .list();
         if ( timer.getTime( TimeUnit.MILLISECONDS ) > REPORT_SLOW_QUERY_AFTER_MS ) {
             log.warn( String.format( "Loading %d entities for %s took %s ms.", result.size(), elementClass.getName(),
@@ -233,7 +227,7 @@ public abstract class AbstractQueryFilteringVoEnabledDao<O extends Identifiable,
         //noinspection unchecked
         List<O> result = query
                 .setResultTransformer( getEntityTransformer() )
-                .setCacheable( cacheable && isFilteringQueryCacheable() )
+                .setCacheable( cacheable )
                 .list();
         StopWatch countingStopWatch = StopWatch.createStarted();
         Long totalElements;
@@ -258,7 +252,7 @@ public abstract class AbstractQueryFilteringVoEnabledDao<O extends Identifiable,
         //noinspection unchecked
         List<VO> results = this.getFilteringQuery( filters, sort )
                 .setResultTransformer( getValueObjectTransformer( postProcessingStopWatch ) )
-                .setCacheable( cacheable && isFilteringQueryCacheable() )
+                .setCacheable( cacheable )
                 .list();
         stopWatch.stop();
         if ( stopWatch.getTime( TimeUnit.MILLISECONDS ) > REPORT_SLOW_QUERY_AFTER_MS ) {
@@ -287,7 +281,7 @@ public abstract class AbstractQueryFilteringVoEnabledDao<O extends Identifiable,
         //noinspection unchecked
         List<VO> list = query
                 .setResultTransformer( getValueObjectTransformer( postProcessingStopWatch ) )
-                .setCacheable( cacheable && isFilteringQueryCacheable() )
+                .setCacheable( cacheable )
                 .list();
 
         StopWatch countingStopWatch = StopWatch.createStarted();

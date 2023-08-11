@@ -523,6 +523,13 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
      */
     @Override
     protected ArrayDesignValueObject doLoadValueObject( ArrayDesign ad ) {
+        // this is necessary because we cache ADs in the filtering query and relations are not stored alongside in the
+        // query cache
+        // all the following entities are cached, so the initialization is not a performance issue
+        Hibernate.initialize( ad.getCurationDetails() );
+        Hibernate.initialize( ad.getPrimaryTaxon() );
+        Hibernate.initialize( ad.getMergedInto() );
+        Hibernate.initialize( ad.getAlternativeTo() );
         return new ArrayDesignValueObject( ad );
     }
 

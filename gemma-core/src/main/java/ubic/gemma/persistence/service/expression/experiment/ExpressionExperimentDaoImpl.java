@@ -1418,7 +1418,7 @@ public class ExpressionExperimentDaoImpl
 
         //noinspection unchecked
         List<ExpressionExperimentDetailsValueObject> vos = query
-                .setCacheable( cacheable && isFilteringQueryCacheable() )
+                .setCacheable( cacheable )
                 .list();
 
         countingTimer.start();
@@ -1454,6 +1454,10 @@ public class ExpressionExperimentDaoImpl
                 ExpressionExperiment ee = ( ExpressionExperiment ) row[0];
                 AclObjectIdentity aoi = ( AclObjectIdentity ) row[1];
                 AclSid sid = ( AclSid ) row[2];
+                Hibernate.initialize( ee.getAccession() );
+                Hibernate.initialize( ee.getExperimentalDesign() );
+                Hibernate.initialize( ee.getCurationDetails() );
+                Hibernate.initialize( ee.getGeeq() );
                 return new ExpressionExperimentDetailsValueObject( ee, aoi, sid );
             }
 
@@ -1568,6 +1572,11 @@ public class ExpressionExperimentDaoImpl
 
     @Override
     protected ExpressionExperimentValueObject doLoadValueObject( ExpressionExperiment entity ) {
+        // this is only necessary because we cache the filtering query and relations are not stored alongside
+        Hibernate.initialize( entity.getAccession() );
+        Hibernate.initialize( entity.getExperimentalDesign() );
+        Hibernate.initialize( entity.getCurationDetails() );
+        Hibernate.initialize( entity.getGeeq() );
         return new ExpressionExperimentValueObject( entity );
     }
 

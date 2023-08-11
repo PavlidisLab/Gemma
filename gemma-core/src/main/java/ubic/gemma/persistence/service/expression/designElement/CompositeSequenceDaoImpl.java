@@ -120,14 +120,6 @@ public class CompositeSequenceDaoImpl extends AbstractQueryFilteringVoEnabledDao
         return query;
     }
 
-    /**
-     * The associated platform is eagerly fetched via select and cached, so we can cache the resulting probes.
-     */
-    @Override
-    protected boolean isFilteringQueryCacheable() {
-        return true;
-    }
-
     @Override
     protected Query getFilteringCountQuery( @Nullable Filters filters ) {
         //language=HQL
