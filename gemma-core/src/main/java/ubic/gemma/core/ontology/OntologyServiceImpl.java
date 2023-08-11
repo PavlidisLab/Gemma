@@ -407,7 +407,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
                 try {
                     return ontologyCache.getChildren( os, terms, direct, includeAdditionalProperties );
                 } finally {
-                    if ( timer2.getTime() > 500 ) {
+                    if ( timer2.getTime() > 1000 ) {
                         log.warn( String.format( "Gathering children of %d terms from %s took %d ms", terms.size(), os, timer2.getTime() ) );
                     } else {
                         log.trace( String.format( "Gathering children of %d terms from %s took %d ms", terms.size(), os, timer2.getTime() ) );
@@ -415,7 +415,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
                 }
             } );
         } finally {
-            if ( timer.getTime() > 500 ) {
+            if ( timer.getTime() > 1000 ) {
                 log.warn( String.format( "Gathering children of %d terms took %d ms", terms.size(), timer.getTime() ) );
             } else {
                 log.debug( String.format( "Gathering children of %d terms took %d ms", terms.size(), timer.getTime() ) );
