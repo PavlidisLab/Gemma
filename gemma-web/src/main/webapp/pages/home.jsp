@@ -42,25 +42,30 @@
 <div style="margin: 0 auto; width: 900px;">
     <div style="margin-bottom: 30px;" id="generalSearchSimple-div"></div>
 
-    <div id="news-updates" style="margin:20px; justify-content: center">
-        <div style="display:flex; margin-bottom: 40px;max-width: 800px">
-            <p style="margin-bottom: 10px;">
+    <div id="news-updates">
+        <div style="display:flex; justify-content: space-between; margin-bottom: 40px;">
+            <p style="margin-right: 15px;">
                 Convenient programmatic access to Gemma's data and analyses is available via the
                 software packages <a href="https://doi.org/doi:10.18129/B9.bioc.gemma.R">gemma.R</a> (R/Bioconductor)
                 and <a href="https://github.com/PavlidisLab/gemmapy">gemmapy</a> (Python).
             </p>
-            <img src="${pageContext.request.contextPath}/images/slideShow/bioconductor-logo.png" style="width:200px; height:auto; padding: 5px; margin: 5px">
+            <img src="${pageContext.request.contextPath}/images/slideShow/bioconductor-logo.png"
+                 alt="Bioconductor Logo"
+                 width="200"/>
         </div>
-
-        <hr/>
-        <div style="display:flex; margin-bottom: 40px;max-width: 800px">
-            <p>
-                We invite you to try out the new <a href="${pageContext.request.contextPath}/browse">Gemma Browser</a>, our
+        <div style="display:flex; justify-content: space-between; margin-bottom: 40px;">
+            <p style="margin-right: 15px;">
+                We invite you to try out the new <a href="${pageContext.request.contextPath}/browse">Gemma Browser</a>,
+                our
                 new interface for exploring and searching Gemma's data holdings. It's still in beta,
                 and more features and improvements are planned, but we'd love to hear your feedback.
             </p>
-            <a style="align:right" href="${pageContext.request.contextPath}/browse"><img
-                    src="${pageContext.request.contextPath}/images/slideShow/gemma-browser-preview.png" style="width:350px;height:auto; margin:5px; padding:5px"></a>
+            <a href="${pageContext.request.contextPath}/browse" style="align-self: center;">
+                <img
+                        src="${pageContext.request.contextPath}/images/slideShow/gemma-browser-preview.png"
+                        alt="A snapshot of the new Gemma Browser."
+                        width="350"/>
+            </a>
         </div>
     </div>
 
