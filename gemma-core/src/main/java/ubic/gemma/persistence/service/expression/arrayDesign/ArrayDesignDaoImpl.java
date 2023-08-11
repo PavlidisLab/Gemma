@@ -86,51 +86,6 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     }
 
     @Override
-    public Collection<CompositeSequence> compositeSequenceWithoutBioSequences( ArrayDesign arrayDesign ) {
-        //language=HQL
-        final String queryString = "select cs from  CompositeSequence as cs inner join cs.arrayDesign as ar "
-                + " left join cs.biologicalCharacteristic bs where ar = :ar and bs IS NULL "
-                + "group by cs";
-
-        //noinspection unchecked
-        return this.getSessionFactory().getCurrentSession().createQuery( queryString ).setParameter( "ar", arrayDesign )
-                .list();
-    }
-
-    @Override
-    public Collection<CompositeSequence> compositeSequenceWithoutBlatResults( ArrayDesign arrayDesign ) {
-        if ( arrayDesign.getId() == null ) {
-            throw new IllegalArgumentException();
-        }
-        long id = arrayDesign.getId();
-        final String nativeQueryString = "SELECT DISTINCT cs.id FROM "
-                + "COMPOSITE_SEQUENCE cs LEFT JOIN BIO_SEQUENCE2_GENE_PRODUCT bs2gp ON bs2gp.BIO_SEQUENCE_FK=cs.BIOLOGICAL_CHARACTERISTIC_FK "
-                + "LEFT JOIN SEQUENCE_SIMILARITY_SEARCH_RESULT ssResult ON bs2gp.BLAT_RESULT_FK=ssResult.ID "
-                + "WHERE ssResult.ID IS NULL AND ARRAY_DESIGN_FK = :id ";
-
-        //noinspection unchecked
-        return this.getSessionFactory().getCurrentSession().createSQLQuery( nativeQueryString ).setParameter( "id", id )
-                .list();
-    }
-
-    @Override
-    public Collection<CompositeSequence> compositeSequenceWithoutGenes( ArrayDesign arrayDesign ) {
-        if ( arrayDesign.getId() == null ) {
-            throw new IllegalArgumentException();
-        }
-        long id = arrayDesign.getId();
-
-        final String nativeQueryString = "SELECT DISTINCT cs.id FROM "
-                + "COMPOSITE_SEQUENCE cs LEFT JOIN BIO_SEQUENCE2_GENE_PRODUCT bs2gp ON BIO_SEQUENCE_FK=BIOLOGICAL_CHARACTERISTIC_FK "
-                + "LEFT JOIN CHROMOSOME_FEATURE geneProduct ON (geneProduct.ID=bs2gp.GENE_PRODUCT_FK AND geneProduct.class='GeneProduct') "
-                + "LEFT JOIN CHROMOSOME_FEATURE gene ON geneProduct.GENE_FK=gene.ID  "
-                + "WHERE gene.ID IS NULL AND ARRAY_DESIGN_FK = :id";
-        //noinspection unchecked
-        return this.getSessionFactory().getCurrentSession().createSQLQuery( nativeQueryString ).setParameter( "id", id )
-                .list();
-    }
-
-    @Override
     public void deleteAlignmentData( ArrayDesign arrayDesign ) {
         // First have to remove all blatAssociations, because they are referred to by the alignments
         this.deleteGeneProductAssociations( arrayDesign );

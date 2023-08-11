@@ -33,12 +33,6 @@ public interface ArrayDesignDao extends CuratableDao<ArrayDesign>,
 
     void addProbes( ArrayDesign arrayDesign, Collection<CompositeSequence> newProbes );
 
-    Collection<CompositeSequence> compositeSequenceWithoutBioSequences( ArrayDesign arrayDesign );
-
-    Collection<CompositeSequence> compositeSequenceWithoutBlatResults( ArrayDesign arrayDesign );
-
-    Collection<CompositeSequence> compositeSequenceWithoutGenes( ArrayDesign arrayDesign );
-
     void deleteAlignmentData( ArrayDesign arrayDesign );
 
     void deleteGeneProductAssociations( ArrayDesign arrayDesign );

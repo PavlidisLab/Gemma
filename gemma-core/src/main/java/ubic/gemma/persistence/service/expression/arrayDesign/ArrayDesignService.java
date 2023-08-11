@@ -47,28 +47,6 @@ public interface ArrayDesignService extends CuratableService<ArrayDesign, ArrayD
     void addProbes( ArrayDesign arrayDesign, Collection<CompositeSequence> newProbes );
 
     /**
-     * @param arrayDesign AD
-     * @return all compositeSequences for the given arrayDesign that do not have any bioSequence
-     * associations.
-     */
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    Collection<CompositeSequence> compositeSequenceWithoutBioSequences( ArrayDesign arrayDesign );
-
-    /**
-     * @param arrayDesign AD
-     * @return all compositeSequences for the given arrayDesign that do not have BLAT result associations.
-     */
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    Collection<CompositeSequence> compositeSequenceWithoutBlatResults( ArrayDesign arrayDesign );
-
-    /**
-     * @param arrayDesign AD
-     * @return all compositeSequences for the given arrayDesign that do not have gene associations.
-     */
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    Collection<CompositeSequence> compositeSequenceWithoutGenes( ArrayDesign arrayDesign );
-
-    /**
      * remove sequence alignment results associated with the bioSequences for this array design. This can indirectly
      * * affect other platforms that use the same sequences.
      *

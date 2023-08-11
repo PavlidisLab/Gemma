@@ -64,24 +64,6 @@ public class ArrayDesignServiceImpl extends AbstractFilteringVoEnabledService<Ar
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public Collection<CompositeSequence> compositeSequenceWithoutBioSequences( ArrayDesign arrayDesign ) {
-        return this.arrayDesignDao.compositeSequenceWithoutBioSequences( arrayDesign );
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public Collection<CompositeSequence> compositeSequenceWithoutBlatResults( ArrayDesign arrayDesign ) {
-        return this.arrayDesignDao.compositeSequenceWithoutBlatResults( arrayDesign );
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public Collection<CompositeSequence> compositeSequenceWithoutGenes( ArrayDesign arrayDesign ) {
-        return this.arrayDesignDao.compositeSequenceWithoutGenes( arrayDesign );
-    }
-
-    @Override
     @Transactional
     public void deleteAlignmentData( ArrayDesign arrayDesign ) {
         this.arrayDesignDao.deleteAlignmentData( arrayDesign );
