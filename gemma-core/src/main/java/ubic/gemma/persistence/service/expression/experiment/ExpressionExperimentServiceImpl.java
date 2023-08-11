@@ -20,7 +20,6 @@ package ubic.gemma.persistence.service.expression.experiment;
 
 import com.google.common.base.Strings;
 import gemma.gsec.SecurityService;
-import io.micrometer.core.annotation.Timed;
 import lombok.Value;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.math3.exception.NotStrictlyPositiveException;
@@ -1145,13 +1144,24 @@ public class ExpressionExperimentServiceImpl
     @Override
     @Transactional(readOnly = true)
     public Slice<ExpressionExperimentDetailsValueObject> loadDetailsValueObjects( @Nullable Collection<Long> ids, @Nullable Taxon taxon, @Nullable Sort sort, int offset, int limit ) {
-        return this.expressionExperimentDao.loadDetailsValueObjectsByIds( ids, taxon, sort, offset, limit );
+        return this.expressionExperimentDao.loadDetailsValueObjects( ids, taxon, sort, offset, limit );
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<ExpressionExperimentDetailsValueObject> loadDetailsValueObjects( Collection<Long> ids ) {
+    public Slice<ExpressionExperimentDetailsValueObject> loadDetailsValueObjectsWithCache( Collection<Long> ids, @Nullable Taxon taxon, @Nullable Sort sort, int offset, int limit ) {
+        return this.expressionExperimentDao.loadDetailsValueObjectsByIdsWithCache( ids, taxon, sort, offset, limit );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<ExpressionExperimentDetailsValueObject> loadDetailsValueObjectsByIds( Collection<Long> ids ) {
         return this.expressionExperimentDao.loadDetailsValueObjectsByIds( ids );
+    }
+
+    @Transactional(readOnly = true)
+    public List<ExpressionExperimentDetailsValueObject> loadDetailsValueObjectsByIdsWithCache( Collection<Long> ids ) {
+        return this.expressionExperimentDao.loadDetailsValueObjectsByIdsWithCache( ids );
     }
 
     @Override

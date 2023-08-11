@@ -1326,7 +1326,7 @@ public class ExpressionExperimentDaoImpl
     /**
      * Gather various EE details and group them by ID.
      */
-    private Map<Long, List<ExpressionExperimentDetail>> getExpressionExperimentDetailsById( List<Long> expressionExperimentIds ) {
+    private Map<Long, List<ExpressionExperimentDetail>> getExpressionExperimentDetailsById( List<Long> expressionExperimentIds, boolean cacheable ) {
         //noinspection unchecked
         List<Object[]> results = getSessionFactory().getCurrentSession()
                 .createQuery( "select ee.id, ad, op, oe, ee.bioAssays.size from ExpressionExperiment as ee "
@@ -1337,13 +1337,117 @@ public class ExpressionExperimentDaoImpl
                         + "where ee.id in :eeIds "
                         + "group by ee, ad, op" )
                 .setParameterList( "eeIds", expressionExperimentIds )
+                .setCacheable( cacheable )
                 .list();
         return results.stream().collect(
                 groupingBy( row -> ( Long ) row[0],
                         Collectors.mapping( ExpressionExperimentDetail::fromRow, Collectors.toList() ) ) );
     }
 
-    private TypedResultTransformer<ExpressionExperimentDetailsValueObject> getDetailedValueObjectTransformer( StopWatch postProcessingTimer, StopWatch detailsTimer, StopWatch analysisInformationTimer ) {
+
+    @Override
+    public Slice<ExpressionExperimentDetailsValueObject> loadDetailsValueObjects
+            ( @Nullable Collection<Long> ids, @Nullable Taxon taxon, @Nullable Sort sort, int offset, int limit ) {
+        if ( ids != null && ids.isEmpty() ) {
+            return new Slice<>( Collections.emptyList(), sort, offset, limit, 0L );
+        }
+        return this.doLoadDetailsValueObjects( getFiltersForIdsAndTaxon( ids, taxon ), sort, offset, limit, false );
+    }
+
+    @Override
+    public Slice<ExpressionExperimentDetailsValueObject> loadDetailsValueObjectsByIdsWithCache( @Nullable Collection<Long> ids, @Nullable Taxon taxon, @Nullable Sort sort, int offset, int limit ) {
+        if ( ids != null && ids.isEmpty() ) {
+            return new Slice<>( Collections.emptyList(), sort, offset, limit, 0L );
+        }
+        return this.doLoadDetailsValueObjects( getFiltersForIdsAndTaxon( ids, taxon ), sort, offset, limit, true );
+    }
+
+    @Override
+    public List<ExpressionExperimentDetailsValueObject> loadDetailsValueObjectsByIds( Collection<Long> ids ) {
+        if ( ids.isEmpty() ) {
+            return Collections.emptyList();
+        }
+        return this.doLoadDetailsValueObjects( getFiltersForIdsAndTaxon( ids, null ), null, 0, 0, false );
+    }
+
+    @Override
+    public List<ExpressionExperimentDetailsValueObject> loadDetailsValueObjectsByIdsWithCache( Collection<Long> ids ) {
+        if ( ids.isEmpty() ) {
+            return Collections.emptyList();
+        }
+        return this.doLoadDetailsValueObjects( getFiltersForIdsAndTaxon( ids, null ), null, 0, 0, true );
+    }
+
+    private Filters getFiltersForIdsAndTaxon( @Nullable Collection<Long> ids, @Nullable Taxon taxon ) {
+        Filters filters = Filters.empty();
+
+        if ( ids != null ) {
+            List<Long> idList = new ArrayList<>( ids );
+            Collections.sort( idList );
+            filters.and( OBJECT_ALIAS, "id", Long.class, Filter.Operator.in, idList );
+        }
+
+        if ( taxon != null ) {
+            filters.and( TaxonDao.OBJECT_ALIAS, "id", Long.class, Filter.Operator.eq, taxon.getId() );
+        }
+
+        return filters;
+    }
+
+    private Slice<ExpressionExperimentDetailsValueObject> doLoadDetailsValueObjects( @Nullable Filters filters, @Nullable Sort sort, int offset, int limit, boolean cacheable ) {
+        // Compose query
+        Query query = this.getFilteringQuery( filters, sort );
+
+        if ( offset > 0 ) {
+            query.setFirstResult( offset );
+        }
+        if ( limit > 0 ) {
+            query.setMaxResults( limit );
+        }
+
+        // overall timer
+        StopWatch timer = StopWatch.createStarted();
+
+        // timers for sub-steps
+        StopWatch countingTimer = StopWatch.create();
+        StopWatch postProcessingTimer = StopWatch.create();
+        StopWatch detailsTimer = StopWatch.create();
+        StopWatch analysisInformationTimer = StopWatch.create();
+
+        query.setResultTransformer( getDetailedValueObjectTransformer( cacheable, postProcessingTimer, detailsTimer, analysisInformationTimer ) );
+
+        //noinspection unchecked
+        List<ExpressionExperimentDetailsValueObject> vos = query
+                .setCacheable( cacheable )
+                .list();
+
+        countingTimer.start();
+        Long totalElements;
+        if ( limit > 0 ) {
+            totalElements = ( Long ) this.getFilteringCountQuery( filters )
+                    .setCacheable( cacheable )
+                    .uniqueResult();
+        } else {
+            totalElements = ( long ) vos.size();
+        }
+        countingTimer.stop();
+
+        timer.stop();
+
+        if ( timer.getTime() > REPORT_SLOW_QUERY_AFTER_MS ) {
+            log.warn( String.format( "EE details VO query + postprocessing: %d ms (query: %d ms, counting: %d ms, initializing VOs: %d ms, loading details (bioAssays + bioAssays.arrayDesignUsed + originalPlatforms + otherParts): %d ms, retrieving analysis information: %s ms)",
+                    timer.getTime(),
+                    timer.getTime() - postProcessingTimer.getTime(),
+                    countingTimer.getTime(),
+                    postProcessingTimer.getTime(),
+                    detailsTimer.getTime(),
+                    analysisInformationTimer.getTime() ) );
+        }
+
+        return new Slice<>( vos, sort, offset, limit, totalElements );
+    }
+
+    private TypedResultTransformer<ExpressionExperimentDetailsValueObject> getDetailedValueObjectTransformer( boolean cacheable, StopWatch postProcessingTimer, StopWatch detailsTimer, StopWatch analysisInformationTimer ) {
         return new TypedResultTransformer<ExpressionExperimentDetailsValueObject>() {
             @Override
             public ExpressionExperimentDetailsValueObject transformTuple( Object[] row, String[] aliases ) {
@@ -1368,7 +1472,7 @@ public class ExpressionExperimentDaoImpl
                 // we could make this a single query in getLoadValueObjectDetails, but performing a jointure with the bioAssays
                 // and arrayDesignUsed is inefficient in the general case, so we only fetch what we need here
                 detailsTimer.start();
-                Map<Long, List<ExpressionExperimentDetail>> detailsByEE = getExpressionExperimentDetailsById( expressionExperimentIds );
+                Map<Long, List<ExpressionExperimentDetail>> detailsByEE = getExpressionExperimentDetailsById( expressionExperimentIds, cacheable );
                 detailsTimer.stop();
 
                 for ( ExpressionExperimentDetailsValueObject vo : vos ) {
@@ -1410,7 +1514,7 @@ public class ExpressionExperimentDaoImpl
                 }
 
                 try ( StopWatchUtils.StopWatchRegion ignored = StopWatchUtils.measuredRegion( analysisInformationTimer ) ) {
-                    populateAnalysisInformation( vos );
+                    populateAnalysisInformation( vos, cacheable );
                 }
 
                 postProcessingTimer.stop();
@@ -1418,83 +1522,6 @@ public class ExpressionExperimentDaoImpl
                 return vos;
             }
         };
-    }
-
-    @Override
-    public Slice<ExpressionExperimentDetailsValueObject> loadDetailsValueObjects( @Nullable Filters filters, @Nullable Sort sort, int offset, int limit ) {
-        // Compose query
-        Query query = this.getFilteringQuery( filters, sort );
-
-        if ( offset > 0 ) {
-            query.setFirstResult( offset );
-        }
-        if ( limit > 0 ) {
-            query.setMaxResults( limit );
-        }
-
-        // overall timer
-        StopWatch timer = StopWatch.createStarted();
-
-        // timers for sub-steps
-        StopWatch countingTimer = StopWatch.create();
-        StopWatch postProcessingTimer = StopWatch.create();
-        StopWatch detailsTimer = StopWatch.create();
-        StopWatch analysisInformationTimer = StopWatch.create();
-
-        query.setResultTransformer( getDetailedValueObjectTransformer( postProcessingTimer, detailsTimer, analysisInformationTimer ) );
-
-        //noinspection unchecked
-        List<ExpressionExperimentDetailsValueObject> vos = query.list();
-
-        countingTimer.start();
-        Long totalElements = ( Long ) this.getFilteringCountQuery( filters ).uniqueResult();
-        countingTimer.stop();
-
-        timer.stop();
-
-        if ( timer.getTime() > REPORT_SLOW_QUERY_AFTER_MS ) {
-            log.warn( String.format( "EE details VO query + postprocessing: %d ms (query: %d ms, counting: %d ms, initializing VOs: %d ms, loading details (bioAssays + bioAssays.arrayDesignUsed + originalPlatforms + otherParts): %d ms, retrieving analysis information: %s ms)",
-                    timer.getTime(),
-                    timer.getTime() - postProcessingTimer.getTime(),
-                    countingTimer.getTime(),
-                    postProcessingTimer.getTime(),
-                    detailsTimer.getTime(),
-                    analysisInformationTimer.getTime() ) );
-        }
-
-        return new Slice<>( vos, sort, offset, limit, totalElements );
-    }
-
-    @Override
-    public Slice<ExpressionExperimentDetailsValueObject> loadDetailsValueObjectsByIds
-            ( @Nullable Collection<Long> ids, @Nullable Taxon taxon, @Nullable Sort sort, int offset, int limit ) {
-        Filters filters = Filters.empty();
-
-        if ( ids != null ) {
-            if ( ids.isEmpty() ) {
-                return new Slice<>( Collections.emptyList(), sort, offset, limit, 0L );
-            }
-            List<Long> idList = new ArrayList<>( ids );
-            Collections.sort( idList );
-            filters.and( OBJECT_ALIAS, "id", Long.class, Filter.Operator.in, idList );
-        }
-
-        if ( taxon != null ) {
-            filters.and( TaxonDao.OBJECT_ALIAS, "id", Long.class, Filter.Operator.eq, taxon.getId() );
-        }
-
-        return this.loadDetailsValueObjects( filters, sort, offset, limit );
-    }
-
-    @Override
-    public List<ExpressionExperimentDetailsValueObject> loadDetailsValueObjectsByIds( Collection<Long> ids ) {
-        if ( ids.isEmpty() ) {
-            return Collections.emptyList();
-        }
-
-        Filters filters = Filters.by( OBJECT_ALIAS, "id", Long.class, Filter.Operator.in, ids );
-
-        return this.loadDetailsValueObjects( filters, null, 0, 0 );
     }
 
     @Override
@@ -1940,14 +1967,14 @@ public class ExpressionExperimentDaoImpl
     /**
      * Filling 'hasDifferentialExpressionAnalysis' and 'hasCoexpressionAnalysis'
      */
-    private void populateAnalysisInformation( Collection<ExpressionExperimentDetailsValueObject> vos ) {
+    private void populateAnalysisInformation( Collection<ExpressionExperimentDetailsValueObject> vos, boolean cacheable ) {
         if ( vos.isEmpty() ) {
             return;
         }
 
         // these are cached queries (thus super-fast)
-        Set<Long> withCoexpression = new HashSet<>( getExpressionExperimentIdsWithCoexpression() );
-        Set<Long> withDiffEx = new HashSet<>( getExpressionExperimentIdsWithDifferentialExpressionAnalysis() );
+        Set<Long> withCoexpression = new HashSet<>( getExpressionExperimentIdsWithCoexpression( cacheable ) );
+        Set<Long> withDiffEx = new HashSet<>( getExpressionExperimentIdsWithDifferentialExpressionAnalysis( cacheable ) );
 
         for ( ExpressionExperimentDetailsValueObject vo : vos ) {
             vo.setHasCoexpressionAnalysis( withCoexpression.contains( vo.getId() ) );
@@ -1955,19 +1982,19 @@ public class ExpressionExperimentDaoImpl
         }
     }
 
-    private List<Long> getExpressionExperimentIdsWithCoexpression() {
+    private List<Long> getExpressionExperimentIdsWithCoexpression( boolean cacheable ) {
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession().createQuery(
                         "select experimentAnalyzed.id from CoexpressionAnalysis" )
-                .setCacheable( true )
+                .setCacheable( cacheable )
                 .list();
     }
 
-    private List<Long> getExpressionExperimentIdsWithDifferentialExpressionAnalysis() {
+    private List<Long> getExpressionExperimentIdsWithDifferentialExpressionAnalysis( boolean cacheable ) {
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession().createQuery(
                         "select experimentAnalyzed.id from DifferentialExpressionAnalysis" )
-                .setCacheable( true )
+                .setCacheable( cacheable )
                 .list();
     }
 

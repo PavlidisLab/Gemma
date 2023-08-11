@@ -199,11 +199,6 @@ public interface ExpressionExperimentDao
     Taxon getTaxon( BioAssaySet ee );
 
     /**
-     * This is a specialized flavour of {@link #loadDetailsValueObjects(Filters, Sort, int, int)} for detailed EE VOs.
-     */
-    Slice<ExpressionExperimentDetailsValueObject> loadDetailsValueObjects( Filters filters, Sort sort, int offset, int limit );
-
-    /**
      * Special method for front-end access. This is partly redundant with {@link #loadValueObjects(Filters, Sort, int, int)};
      * however, it fills in more information, returns ExpressionExperimentDetailsValueObject
      *
@@ -214,12 +209,22 @@ public interface ExpressionExperimentDao
      * @param limit      maximum number of results to return
      * @return a list of EE details VOs representing experiments matching the given arguments.
      */
-    Slice<ExpressionExperimentDetailsValueObject> loadDetailsValueObjectsByIds( @Nullable Collection<Long> ids, @Nullable Taxon taxon, @Nullable Sort sort, int offset, int limit );
+    Slice<ExpressionExperimentDetailsValueObject> loadDetailsValueObjects( @Nullable Collection<Long> ids, @Nullable Taxon taxon, @Nullable Sort sort, int offset, int limit );
 
     /**
-     * Like {@link #loadDetailsValueObjectsByIds(Collection, Taxon, Sort, int, int)}, but returning a list.
+     * Flavour of {@link #loadDetailsValueObjectsByIds(Collection)}, but using the query cache.
+     */
+    Slice<ExpressionExperimentDetailsValueObject> loadDetailsValueObjectsByIdsWithCache( @Nullable Collection<Long> ids, @Nullable Taxon taxon, @Nullable Sort sort, int offset, int limit );
+
+    /**
+     * Like {@link #loadDetailsValueObjects(Collection, Taxon, Sort, int, int)}, but returning a list.
      */
     List<ExpressionExperimentDetailsValueObject> loadDetailsValueObjectsByIds( Collection<Long> ids );
+
+    /**
+     * Flavour of {@link #loadDetailsValueObjectsByIds(Collection)}, but using the query cache.
+     */
+    List<ExpressionExperimentDetailsValueObject> loadDetailsValueObjectsByIdsWithCache( Collection<Long> ids );
 
     Slice<ExpressionExperimentValueObject> loadBlacklistedValueObjects( @Nullable Filters filters, @Nullable Sort sort, int offset, int limit );
 
