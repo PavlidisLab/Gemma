@@ -308,12 +308,6 @@ public class ArrayDesignServiceImpl extends AbstractFilteringVoEnabledService<Ar
 
     @Override
     @Transactional(readOnly = true)
-    public List<ArrayDesignValueObject> loadValueObjectsByIds( Collection<Long> ids ) {
-        return this.arrayDesignDao.loadValueObjectsByIds( ids );
-    }
-
-    @Override
-    @Transactional(readOnly = true)
     public List<ArrayDesignValueObject> loadValueObjectsForEE( Long eeId ) {
         return this.arrayDesignDao.loadValueObjectsForEE( eeId );
     }

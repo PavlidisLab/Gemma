@@ -41,9 +41,7 @@ import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.persistence.service.BaseService;
-import ubic.gemma.persistence.service.FilteringVoEnabledDao;
-import ubic.gemma.persistence.service.FilteringVoEnabledService;
+import ubic.gemma.persistence.service.expression.arrayDesign.CuratableService;
 import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.persistence.util.Sort;
@@ -57,7 +55,7 @@ import java.util.*;
  */
 @SuppressWarnings("unused") // Possible external use
 public interface ExpressionExperimentService
-        extends BaseService<ExpressionExperiment>, FilteringVoEnabledService<ExpressionExperiment, ExpressionExperimentValueObject> {
+        extends CuratableService<ExpressionExperiment, ExpressionExperimentValueObject> {
 
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     ExperimentalFactor addFactor( ExpressionExperiment ee, ExperimentalFactor factor );
@@ -105,26 +103,6 @@ public interface ExpressionExperimentService
      */
     Collection<Long> filterByTaxon( Collection<Long> ids, Taxon taxon );
 
-    @Override
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
-    ExpressionExperiment find( ExpressionExperiment expressionExperiment );
-
-    @Override
-    @Secured({ "GROUP_USER", "AFTER_ACL_READ" })
-    ExpressionExperiment findOrCreate( ExpressionExperiment expressionExperiment );
-
-    @Override
-    @Secured({ "GROUP_USER" })
-    ExpressionExperiment create( ExpressionExperiment expressionExperiment );
-
-    @Override
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    Collection<ExpressionExperiment> load( Collection<Long> ids );
-
-    @Override
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ_QUIET" })
-    ExpressionExperiment load( Long id );
-
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ_QUIET" })
     ExpressionExperiment loadWithCharacteristics( Long id );
 
@@ -135,31 +113,15 @@ public interface ExpressionExperimentService
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
     Slice<ExpressionExperimentValueObject> loadValueObjectsWithCache( @Nullable Filters filters, @Nullable Sort sort, int offset, int limit );
 
-    @Override
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    Collection<ExpressionExperiment> loadAll();
-
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ_QUIET" })
     ExpressionExperiment loadWithPrimaryPublication( Long id );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ_QUIET" })
     ExpressionExperiment loadWithMeanVarianceRelation( Long id );
 
-    @Override
-    @Secured({ "GROUP_ADMIN" })
-    void remove( Long id );
-
     /**
-     * Deletes an experiment and all of its associated objects, including coexpression links. Some types of associated
-     * objects may need to be deleted before this can be run (example: analyses involving multiple experiments; these
-     * will not be deleted automatically).
-     *
-     * @param expressionExperiment experiment to be deleted.
+     * This is used by the scheduled jobs, so it requires lower privilege.
      */
-    @Override
-    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    void remove( ExpressionExperiment expressionExperiment );
-
     @Override
     @Secured({ "GROUP_AGENT" })
     void update( ExpressionExperiment expressionExperiment );
@@ -531,36 +493,6 @@ public interface ExpressionExperimentService
      */
     boolean isTroubled( ExpressionExperiment expressionExperiment );
 
-    @Override
-    @Nullable
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_READ" })
-    ExpressionExperimentValueObject loadValueObject( ExpressionExperiment entity );
-
-    @Override
-    @Nullable
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_READ" })
-    ExpressionExperimentValueObject loadValueObjectById( Long entityId );
-
-    @Override
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
-    List<ExpressionExperimentValueObject> loadAllValueObjects();
-
-    @Override
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
-    List<ExpressionExperimentValueObject> loadValueObjects( Collection<ExpressionExperiment> entities );
-
-    @Override
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
-    List<ExpressionExperimentValueObject> loadValueObjects( @Nullable Filters filters, @Nullable Sort sort );
-
-    /**
-     * @see FilteringVoEnabledDao#loadValueObjects(Filters, Sort, int, int) for
-     * description (no but seriously do look it might not work as you would expect).
-     */
-    @Override
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
-    Slice<ExpressionExperimentValueObject> loadValueObjects( @Nullable Filters filters, @Nullable Sort sort, int offset, int limit );
-
     /**
      * @see ExpressionExperimentDao#loadDetailsValueObjectsByIds(Collection, Taxon, Sort, int, int)
      */
@@ -580,15 +512,13 @@ public interface ExpressionExperimentService
     Collection<ExpressionExperiment> loadLackingTags();
 
     /**
+     * Variant of {@link #loadValueObjectsByIds(Collection)} that preserve its input order.
      * @param ids           ids to load
      * @param maintainOrder If true, order of valueObjects returned will correspond to order of ids passed in.
      * @return value objects
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
     List<ExpressionExperimentValueObject> loadValueObjectsByIds( List<Long> ids, boolean maintainOrder );
-
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
-    List<ExpressionExperimentValueObject> loadValueObjectsByIds( Collection<Long> ids );
 
     /**
      * Used when we are replacing data, such as when converting an experiment from one platform to another. Examples

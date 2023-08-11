@@ -136,13 +136,6 @@ public class ExpressionExperimentServiceImpl
     }
 
     @Override
-    @Timed
-    @Transactional(readOnly = true)
-    public ExpressionExperiment load( Long id ) {
-        return super.load( id );
-    }
-
-    @Override
     @Transactional
     public ExperimentalFactor addFactor( ExpressionExperiment ee, ExperimentalFactor factor ) {
         ExpressionExperiment experiment = expressionExperimentDao.load( ee.getId() );
@@ -1197,12 +1190,6 @@ public class ExpressionExperimentServiceImpl
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public List<ExpressionExperimentValueObject> loadValueObjectsByIds( Collection<Long> ids ) {
-        return this.expressionExperimentDao.loadValueObjectsByIds( ids );
-    }
-
-    @Override
     @Transactional
     public ExpressionExperiment replaceRawVectors( ExpressionExperiment ee,
             Collection<RawExpressionDataVector> newVectors ) {
@@ -1317,6 +1304,11 @@ public class ExpressionExperimentServiceImpl
         remove( ee );
     }
 
+    /**
+     * Deletes an experiment and all of its associated objects, including coexpression links. Some types of associated
+     * objects may need to be deleted before this can be run (example: analyses involving multiple experiments; these
+     * will not be deleted automatically).
+     */
     @Override
     @Transactional
     public void remove( ExpressionExperiment ee ) {
