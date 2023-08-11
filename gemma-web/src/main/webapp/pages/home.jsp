@@ -42,7 +42,7 @@
 <div style="margin: 0 auto; width: 900px;">
     <div style="margin-bottom: 30px;" id="generalSearchSimple-div"></div>
 
-    <div id="news-updates">
+    <div id="news-updates" style="padding-left: 15px; padding-right: 15px;">
         <div style="display:flex; justify-content: space-between; margin-bottom: 40px;">
             <p style="margin-right: 15px;">
                 Convenient programmatic access to Gemma's data and analyses is available via the
@@ -67,9 +67,9 @@
                         width="350"/>
             </a>
         </div>
-    </div>
 
-    <p>Questions? Feel free to <a href="mailto:pavlab-support@msl.ubc.ca?subject=Gemma">reach out</a>.</p>
+        <p>Questions? Feel free to <a href="mailto:pavlab-support@msl.ubc.ca?subject=Gemma">reach out</a>.</p>
+    </div>
 
 </div>
 
