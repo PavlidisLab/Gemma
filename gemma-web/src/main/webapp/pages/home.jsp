@@ -70,11 +70,18 @@
 
 <div id="footer" class="clearfix">
     <div id="divider"></div>
-    <div class="footer">
-		<span class="left">Gemma &nbsp;&nbsp;${appConfig["version"]}&nbsp;&nbsp;&nbsp;Copyright &copy; 2007-2023 &nbsp;
-			Our <a href='<c:url value="https://pavlidislab.github.io/Gemma/terms.html" />'>Terms and conditions</a> have been updated!
-		</span> &nbsp; &nbsp;
-        <!-- <jsp:include page="/common/social.jsp" /> -->
+    <div class="footer" style="display: flex; align-items: baseline; padding-left: 10px; padding-right: 10px;">
+        <div>Gemma ${appConfig["version"]}&nbsp;Copyright &copy; 2007-2023</div>
+        <div style="margin-left: 10px;">
+            Our <a href='<c:url value="https://pavlidislab.github.io/Gemma/terms.html" />'>Terms and conditions</a> have
+            been updated!
+        </div>
+        <!-- <div style="margin-left: 10px;"><jsp:include page="/common/social.jsp"/></div> -->
+        <div style="flex-grow: 1"></div>
+        <a rel="license" href="http://creativecommons.org/licenses/by-nc/4.0/" style="align-self: center;">
+            <img alt="Creative Commons License"
+                 src="https://i.creativecommons.org/l/by-nc/4.0/80x15.png"/>
+        </a>
     </div>
 </div>
 <jsp:include page="/common/analytics.jsp"/>
