@@ -39,7 +39,7 @@
 <input type="hidden" id="reloadOnLogout" value="false">
 
 
-<div style="margin: 0 auto; width: 900px;">
+<div style="margin: 0 auto; width: 900px; padding-top: 30px; padding-bottom: 30px;">
     <div style="margin-bottom: 30px;" id="generalSearchSimple-div"></div>
 
     <div id="news-updates" style="padding-left: 15px; padding-right: 15px;">
@@ -73,7 +73,8 @@
 
 </div>
 
-<div id="footer">
+<div style="margin-bottom: 24px;"></div>
+<div id="footer" style="position: fixed; bottom: 0; height: 24px; background: white;">
     <div id="divider"></div>
     <div class="footer" style="display: flex; align-items: baseline; padding-left: 10px; padding-right: 10px;">
         <div>Gemma ${appConfig["version"]}&nbsp;Copyright &copy; 2007-2023</div>
@@ -85,7 +86,7 @@
         <div style="flex-grow: 1"></div>
         <a rel="license" href="http://creativecommons.org/licenses/by-nc/4.0/" style="align-self: center;">
             <img alt="Creative Commons License"
-                 src="https://i.creativecommons.org/l/by-nc/4.0/80x15.png"/>
+                 src="https://i.creativecommons.org/l/by-nc/4.0/80x15.png" width="80" height="15"/>
         </a>
     </div>
 </div>
