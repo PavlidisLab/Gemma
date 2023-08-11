@@ -311,6 +311,7 @@ public interface ArrayDesignService extends CuratableService<ArrayDesign, ArrayD
      * @param arrayDesign AD
      * @return how many experiments use this platform (not including experiment subsets) security filtered
      */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     long numExperiments( ArrayDesign arrayDesign );
 
     /**
