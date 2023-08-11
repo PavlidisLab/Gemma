@@ -484,48 +484,47 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
         //noinspection unchecked,rawtypes
         Set<Long> mergedIds = new HashSet<>( this.getSessionFactory().getCurrentSession()
                 .createQuery( "select ad.id from ArrayDesign as ad join ad.mergees subs where ad.id in (:ids) group by ad" )
-                .setParameterList( "ids", ids ).list() );
+                .setParameterList( "ids", distinctIds ).list() );
         return distinctIds.stream().collect( Collectors.toMap( id -> id, mergedIds::contains ) );
     }
 
     @Override
     public Map<Long, Boolean> isMergee( final Collection<Long> ids ) {
-        Map<Long, Boolean> eventMap = new HashMap<>();
-        if ( ids.size() == 0 ) {
-            return eventMap;
+        if ( ids.isEmpty() ) {
+            return Collections.emptyMap();
         }
-        //language=HQL
-        final String queryString = "select ad.id, ad.mergedInto.id from ArrayDesign as ad where ad.id in (:ids) ";
-        //noinspection unchecked
-        List<Object[]> list = this.getSessionFactory().getCurrentSession().createQuery( queryString )
-                .setParameterList( "ids", ids ).list();
-        return list.stream().collect( Collectors.toMap( row -> ( Long ) row[0], row -> row[1] != null ) );
+        Set<Long> distinctIds = new HashSet<>( ids );
+        //noinspection unchecked,rawtypes
+        Set<Long> mergeeIds = new HashSet<>( this.getSessionFactory().getCurrentSession()
+                .createQuery( "select ad.id from ArrayDesign as ad where ad.mergedInto.id is not null and ad.id in (:ids)" )
+                .setParameterList( "ids", distinctIds ).list() );
+        return distinctIds.stream().collect( Collectors.toMap( id -> id, mergeeIds::contains ) );
     }
 
     @Override
     public Map<Long, Boolean> isSubsumed( final Collection<Long> ids ) {
-        if ( ids.size() == 0 ) {
+        if ( ids.isEmpty() ) {
             return Collections.emptyMap();
         }
-        //language=HQL
-        final String queryString = "select ad.id, ad.subsumingArrayDesign.id from ArrayDesign as ad where ad.id in (:ids) ";
-        //noinspection unchecked
-        List<Object[]> list = this.getSessionFactory().getCurrentSession().createQuery( queryString )
-                .setParameterList( "ids", ids ).list();
-        return list.stream().collect( Collectors.toMap( row -> ( Long ) row[0], row -> row[1] != null ) );
+        Set<Long> distinctIds = new HashSet<>( ids );
+        //noinspection unchecked,rawtypes
+        Set<Long> subsumedIds = new HashSet<>( this.getSessionFactory().getCurrentSession()
+                .createQuery( "select ad.id from ArrayDesign as ad where ad.subsumingArrayDesign.id is not null and ad.id in (:ids)" )
+                .setParameterList( "ids", distinctIds ).list() );
+        return distinctIds.stream().collect( Collectors.toMap( id -> id, subsumedIds::contains ) );
     }
 
     @Override
     public Map<Long, Boolean> isSubsumer( Collection<Long> ids ) {
-        if ( ids.size() == 0 ) {
+        if ( ids.isEmpty() ) {
             return Collections.emptyMap();
         }
-        //language=HQL
-        final String queryString = "select ad.id, count(subs) from ArrayDesign as ad left join ad.subsumedArrayDesigns subs where ad.id in (:ids) group by ad";
-        //noinspection unchecked
-        List<Object[]> list = this.getSessionFactory().getCurrentSession().createQuery( queryString )
-                .setParameterList( "ids", ids ).list();
-        return list.stream().collect( Collectors.toMap( row -> ( Long ) row[0], row -> ( Long ) row[1] > 0 ) );
+        Set<Long> distinctIds = new HashSet<>( ids );
+        //noinspection unchecked,rawtypes
+        Set<Long> subsumerIds = new HashSet<>( this.getSessionFactory().getCurrentSession()
+                .createQuery( "select ad.id from ArrayDesign as ad join ad.subsumedArrayDesigns subs where ad.id in (:ids) group by ad" )
+                .setParameterList( "ids", distinctIds ).list() );
+        return distinctIds.stream().collect( Collectors.toMap( id -> id, subsumerIds::contains ) );
     }
 
     @Override
