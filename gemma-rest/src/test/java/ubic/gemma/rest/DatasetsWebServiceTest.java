@@ -239,8 +239,8 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
     }
 
     @Test
-    public void testGetDatasetsAnnotations() {
-        assertThat( target( "/datasets/annotations" ).request().get() )
+    public void testGetDatasetsAnnotationsWithRetainMentionedTerms() {
+        assertThat( target( "/datasets/annotations" ).queryParam( "retainMentionedTerms", "true" ).request().get() )
                 .hasStatus( Response.Status.OK )
                 .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE )
                 .hasEncoding( "gzip" )
@@ -252,6 +252,22 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
                 .containsExactly( "classUri", "className", "termUri", "termName" );
         verify( expressionExperimentService ).getFiltersWithInferredAnnotations( Filters.empty(), Collections.emptySet() );
         verify( expressionExperimentService ).getAnnotationsUsageFrequency( Filters.empty(), 100, 0, null, null, null, Collections.emptySet() );
+    }
+
+    @Test
+    public void testGetDatasetsAnnotations() {
+        assertThat( target( "/datasets/annotations" ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE )
+                .hasEncoding( "gzip" )
+                .entity()
+                .hasFieldOrPropertyWithValue( "limit", 100 )
+                .hasFieldOrPropertyWithValue( "sort.orderBy", "numberOfExpressionExperiments" )
+                .hasFieldOrPropertyWithValue( "sort.direction", "-" )
+                .extracting( "groupBy", InstanceOfAssertFactories.list( String.class ) )
+                .containsExactly( "classUri", "className", "termUri", "termName" );
+        verify( expressionExperimentService ).getFiltersWithInferredAnnotations( Filters.empty(), null );
+        verify( expressionExperimentService ).getAnnotationsUsageFrequency( Filters.empty(), 100, 0, null, null, null, null );
     }
 
     @Test
@@ -269,8 +285,8 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
                 .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE )
                 .entity()
                 .hasFieldOrPropertyWithValue( "limit", 5000 );
-        verify( expressionExperimentService ).getFiltersWithInferredAnnotations( Filters.empty(), Collections.emptySet() );
-        verify( expressionExperimentService ).getAnnotationsUsageFrequency( Filters.empty(), 5000, 10, null, null, null, Collections.emptySet() );
+        verify( expressionExperimentService ).getFiltersWithInferredAnnotations( Filters.empty(), null );
+        verify( expressionExperimentService ).getAnnotationsUsageFrequency( Filters.empty(), 5000, 10, null, null, null, null );
     }
 
     @Test
@@ -282,7 +298,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
                 .hasFieldOrPropertyWithValue( "limit", 50 )
                 .extracting( "groupBy", InstanceOfAssertFactories.list( String.class ) )
                 .containsExactly( "classUri", "className", "termUri", "termName" );
-        verify( expressionExperimentService ).getAnnotationsUsageFrequency( Filters.empty(), 50, 0, null, null, null, Collections.emptySet() );
+        verify( expressionExperimentService ).getAnnotationsUsageFrequency( Filters.empty(), 50, 0, null, null, null, null );
     }
 
     @Test
@@ -290,7 +306,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
         assertThat( target( "/datasets/annotations" ).queryParam( "category", "" ).request().get() )
                 .hasStatus( Response.Status.OK )
                 .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE );
-        verify( expressionExperimentService ).getAnnotationsUsageFrequency( Filters.empty(), 100, 0, ExpressionExperimentService.UNCATEGORIZED, null, null, Collections.emptySet() );
+        verify( expressionExperimentService ).getAnnotationsUsageFrequency( Filters.empty(), 100, 0, ExpressionExperimentService.UNCATEGORIZED, null, null, null );
     }
 
     @Test

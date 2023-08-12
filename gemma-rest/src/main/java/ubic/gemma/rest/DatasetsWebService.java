@@ -328,7 +328,8 @@ public class DatasetsWebService {
             @Parameter(description = "Minimum number of associated datasets to report an annotation. If used, the limit will default to " + MAX_DATASETS_ANNOTATIONS + ".") @QueryParam("minFrequency") Integer minFrequency,
             @Parameter(description = "A category URI to restrict reported annotations. If unspecified, annotations from all categories are reported. If empty, uncategorized terms are reported.") @QueryParam("category") String category,
             @Parameter(description = "Excluded category URIs.", hidden = true) @QueryParam("excludedCategories") StringArrayArg excludedCategoryUris,
-            @Parameter(description = "Excluded term URIs; this list is expanded with subClassOf inference.", hidden = true) @QueryParam("excludedTerms") StringArrayArg excludedTermUris ) {
+            @Parameter(description = "Excluded term URIs; this list is expanded with subClassOf inference.", hidden = true) @QueryParam("excludedTerms") StringArrayArg excludedTermUris,
+            @Parameter(description = "Retain terms mentioned in the `filter` parameter even if they don't meet the `minFrequency` threshold.", hidden = true) @QueryParam("retainMentionedTerms") @DefaultValue("false") Boolean retainMentionedTerms ) {
         boolean excludeParentTerms = getExcludedFields( exclude ).contains( "parentTerms" );
         // if a minFrequency is requested, use the hard cap, otherwise use 100 as a reasonable default
         int limit = limitArg != null ? limitArg.getValue( MAX_DATASETS_ANNOTATIONS ) : minFrequency != null ? MAX_DATASETS_ANNOTATIONS : 100;
@@ -336,9 +337,8 @@ public class DatasetsWebService {
             throw new BadRequestException( "Minimum frequency must be positive." );
         }
         // ensure that implied terms are retained in the usage frequency
-        Collection<OntologyTerm> mentionedTerms = new HashSet<>();
+        Collection<OntologyTerm> mentionedTerms = retainMentionedTerms ? new HashSet<>() : null;
         Filters filters = datasetArgService.getFilters( filter, mentionedTerms );
-        Collection<String> mentionedTermUris = mentionedTerms.stream().map( OntologyTerm::getUri ).collect( Collectors.toSet() );
         if ( query != null ) {
             filters.and( datasetArgService.getFilterForSearchQuery( query ) );
         }
@@ -347,7 +347,14 @@ public class DatasetsWebService {
         }
         // cache for visited parents (if two term share the same parent, we can save significant time generating the ancestors)
         Map<OntologyTerm, Set<OntologyTermValueObject>> visited = new HashMap<>();
-        List<ExpressionExperimentService.CharacteristicWithUsageStatisticsAndOntologyTerm> initialResults = expressionExperimentService.getAnnotationsUsageFrequency( filters, limit, minFrequency != null ? minFrequency : 0, category, excludedCategoryUris != null ? excludedCategoryUris.getValue() : null, excludedTermUris != null ? excludedTermUris.getValue() : null, mentionedTermUris );
+        List<ExpressionExperimentService.CharacteristicWithUsageStatisticsAndOntologyTerm> initialResults = expressionExperimentService.getAnnotationsUsageFrequency(
+                filters,
+                limit,
+                minFrequency != null ? minFrequency : 0,
+                category,
+                excludedCategoryUris != null ? excludedCategoryUris.getValue() : null,
+                excludedTermUris != null ? excludedTermUris.getValue() : null,
+                mentionedTerms != null ? mentionedTerms.stream().map( OntologyTerm::getUri ).collect( Collectors.toSet() ) : null );
         List<AnnotationWithUsageStatisticsValueObject> results = initialResults
                 .stream()
                 .map( e -> new AnnotationWithUsageStatisticsValueObject( e.getCharacteristic(), e.getNumberOfExpressionExperiments(), !excludeParentTerms && e.getTerm() != null ? getParentTerms( e.getTerm(), visited ) : null ) )
