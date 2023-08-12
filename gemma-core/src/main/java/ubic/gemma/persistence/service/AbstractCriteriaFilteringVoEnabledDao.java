@@ -144,10 +144,10 @@ public abstract class AbstractCriteriaFilteringVoEnabledDao<O extends Identifiab
 
         countingStopWatch.start();
         Long totalElements;
-        if ( limit > 0 && results.size() >= limit ) {
+        if ( limit > 0 && ( results.isEmpty() || results.size() == limit ) ) {
             totalElements = ( Long ) totalElementsQuery.setProjection( Projections.countDistinct( getIdentifierPropertyName() ) ).uniqueResult();
         } else {
-            totalElements = ( long ) results.size();
+            totalElements = offset + ( long ) results.size();
         }
         countingStopWatch.stop();
 

@@ -231,10 +231,10 @@ public abstract class AbstractQueryFilteringVoEnabledDao<O extends Identifiable,
                 .list();
         StopWatch countingStopWatch = StopWatch.createStarted();
         Long totalElements;
-        if ( limit > 0 && result.size() >= limit ) {
+        if ( limit > 0 && ( result.isEmpty() || result.size() == limit ) ) {
             totalElements = ( Long ) totalElementsQuery.setCacheable( cacheable ).uniqueResult();
         } else {
-            totalElements = ( long ) result.size();
+            totalElements = offset + ( long ) result.size();
         }
         countingStopWatch.stop();
         if ( timer.getTime( TimeUnit.MILLISECONDS ) > REPORT_SLOW_QUERY_AFTER_MS ) {
@@ -286,12 +286,12 @@ public abstract class AbstractQueryFilteringVoEnabledDao<O extends Identifiable,
 
         StopWatch countingStopWatch = StopWatch.createStarted();
         Long totalElements;
-        if ( limit > 0 && list.size() >= limit ) {
+        if ( limit > 0 && ( list.isEmpty() || list.size() == limit ) ) {
             totalElements = ( Long ) totalElementsQuery
                     .setCacheable( cacheable )
                     .uniqueResult();
         } else {
-            totalElements = ( long ) list.size();
+            totalElements = offset + ( long ) list.size();
         }
         countingStopWatch.stop();
 

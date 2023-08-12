@@ -1423,12 +1423,12 @@ public class ExpressionExperimentDaoImpl
 
         countingTimer.start();
         Long totalElements;
-        if ( limit > 0 ) {
+        if ( limit > 0 && ( vos.isEmpty() || vos.size() == limit ) ) {
             totalElements = ( Long ) this.getFilteringCountQuery( filters )
                     .setCacheable( cacheable )
                     .uniqueResult();
         } else {
-            totalElements = ( long ) vos.size();
+            totalElements = offset + ( long ) vos.size();
         }
         countingTimer.stop();
 
