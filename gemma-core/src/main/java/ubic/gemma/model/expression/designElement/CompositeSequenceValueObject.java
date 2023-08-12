@@ -19,12 +19,10 @@
 package ubic.gemma.model.expression.designElement;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import org.hibernate.Hibernate;
 import ubic.gemma.core.analysis.sequence.GeneMappingSummary;
 import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 
-import java.io.Serializable;
 import java.util.Collection;
 
 /**
@@ -36,7 +34,10 @@ public class CompositeSequenceValueObject extends IdentifiableValueObject<Compos
     private static final long serialVersionUID = 4915680501039784666L;
 
     private String name;
+    @JsonIgnore
     private String description;
+    private Long arrayDesignId;
+    @JsonIgnore
     private ArrayDesignValueObject arrayDesign;
     @JsonIgnore
     private Collection<GeneMappingSummary> geneMappingSummaries;
@@ -56,6 +57,7 @@ public class CompositeSequenceValueObject extends IdentifiableValueObject<Compos
         super( cs );
         this.name = cs.getName();
         this.description = cs.getDescription();
+        this.arrayDesignId = cs.getArrayDesign().getId();
         // eagerly fetched in entity definition
         this.arrayDesign = new ArrayDesignValueObject( cs.getArrayDesign() );
     }
@@ -81,6 +83,14 @@ public class CompositeSequenceValueObject extends IdentifiableValueObject<Compos
         int result = 1;
         result = prime * result + ( ( id == null ) ? 0 : id.hashCode() );
         return result;
+    }
+
+    public Long getArrayDesignId() {
+        return arrayDesignId;
+    }
+
+    public void setArrayDesignId( Long arrayDesignId ) {
+        this.arrayDesignId = arrayDesignId;
     }
 
     public ArrayDesignValueObject getArrayDesign() {
