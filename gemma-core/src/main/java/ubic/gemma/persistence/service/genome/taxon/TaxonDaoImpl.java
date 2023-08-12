@@ -126,6 +126,11 @@ public class TaxonDaoImpl extends AbstractQueryFilteringVoEnabledDao<Taxon, Taxo
     }
 
     @Override
+    protected void initializeCachedFilteringResult( Taxon cachedEntity ) {
+
+    }
+
+    @Override
     protected Query getFilteringCountQuery( @Nullable Filters filters ) {
         //noinspection JpaQlInspection // the constants for aliases is messing with the inspector
         //language=HQL

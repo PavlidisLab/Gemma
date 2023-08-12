@@ -523,13 +523,6 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
      */
     @Override
     protected ArrayDesignValueObject doLoadValueObject( ArrayDesign ad ) {
-        // this is necessary because we cache ADs in the filtering query and relations are not stored alongside in the
-        // query cache
-        // all the following entities are cached, so the initialization is not a performance issue
-        Hibernate.initialize( ad.getCurationDetails() );
-        Hibernate.initialize( ad.getPrimaryTaxon() );
-        Hibernate.initialize( ad.getMergedInto() );
-        Hibernate.initialize( ad.getAlternativeTo() );
         return new ArrayDesignValueObject( ad );
     }
 
@@ -900,6 +893,14 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
                 + "left join fetch s.lastNoteUpdateEvent as eNote "
                 + "left join fetch s.lastTroubledEvent as eTrbl "
                 + "left join fetch ad.alternativeTo alt", filters, sort, groupByIfNecessary( sort, EXTERNAL_REFERENCE_ALIAS ) );
+    }
+
+    @Override
+    protected void initializeCachedFilteringResult( ArrayDesign ad ) {
+        Hibernate.initialize( ad.getCurationDetails() );
+        Hibernate.initialize( ad.getPrimaryTaxon() );
+        Hibernate.initialize( ad.getMergedInto() );
+        Hibernate.initialize( ad.getAlternativeTo() );
     }
 
     @Override

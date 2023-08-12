@@ -121,6 +121,11 @@ public class CompositeSequenceDaoImpl extends AbstractQueryFilteringVoEnabledDao
     }
 
     @Override
+    protected void initializeCachedFilteringResult( CompositeSequence cachedEntity ) {
+
+    }
+
+    @Override
     protected Query getFilteringCountQuery( @Nullable Filters filters ) {
         //language=HQL
         String queryString = MessageFormat.format( "select count({0}) "

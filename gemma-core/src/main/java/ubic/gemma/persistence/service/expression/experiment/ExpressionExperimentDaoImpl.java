@@ -1452,12 +1452,9 @@ public class ExpressionExperimentDaoImpl
             @Override
             public ExpressionExperimentDetailsValueObject transformTuple( Object[] row, String[] aliases ) {
                 ExpressionExperiment ee = ( ExpressionExperiment ) row[0];
+                initializeCachedFilteringResult( ee );
                 AclObjectIdentity aoi = ( AclObjectIdentity ) row[1];
                 AclSid sid = ( AclSid ) row[2];
-                Hibernate.initialize( ee.getAccession() );
-                Hibernate.initialize( ee.getExperimentalDesign() );
-                Hibernate.initialize( ee.getCurationDetails() );
-                Hibernate.initialize( ee.getGeeq() );
                 return new ExpressionExperimentDetailsValueObject( ee, aoi, sid );
             }
 
@@ -1572,11 +1569,6 @@ public class ExpressionExperimentDaoImpl
 
     @Override
     protected ExpressionExperimentValueObject doLoadValueObject( ExpressionExperiment entity ) {
-        // this is only necessary because we cache the filtering query and relations are not stored alongside
-        Hibernate.initialize( entity.getAccession() );
-        Hibernate.initialize( entity.getExperimentalDesign() );
-        Hibernate.initialize( entity.getCurationDetails() );
-        Hibernate.initialize( entity.getGeeq() );
         return new ExpressionExperimentValueObject( entity );
     }
 
@@ -1797,6 +1789,14 @@ public class ExpressionExperimentDaoImpl
                 + "left join fetch s.lastTroubledEvent as eTrbl "
                 + "left join fetch eTrbl.eventType "
                 + "left join fetch ee.geeq as geeq", filters, sort, groupByIfNecessary( sort, ONE_TO_MANY_ALIASES ) );
+    }
+
+    @Override
+    protected void initializeCachedFilteringResult( ExpressionExperiment ee ) {
+        Hibernate.initialize( ee.getAccession() );
+        Hibernate.initialize( ee.getExperimentalDesign() );
+        Hibernate.initialize( ee.getCurationDetails() );
+        Hibernate.initialize( ee.getGeeq() );
     }
 
     @Override

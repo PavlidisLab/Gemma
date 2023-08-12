@@ -46,6 +46,16 @@ public abstract class AbstractQueryFilteringVoEnabledDao<O extends Identifiable,
     protected abstract Query getFilteringQuery( @Nullable Filters filters, @Nullable Sort sort );
 
     /**
+     * Initialize a result from {@link #getFilteringQuery(Filters, Sort)} retrieved from the Hibernate
+     * {@link org.hibernate.cache.internal.StandardQueryCache}.
+     * <p>
+     * Lazy-loaded relations that are fetched in {@link #getFilteringQuery(Filters, Sort)} must be initialized manually
+     * in this method to ensure that the entity has all the expected fields if they are retrieved from the second-level
+     * cache.
+     */
+    protected abstract void initializeCachedFilteringResult( O cachedEntity );
+
+    /**
      * Produce a query that will be used to retrieve IDs of {@link #getFilteringQuery(Filters, Sort)}.
      */
     protected Query getFilteringIdQuery( @Nullable Filters filters, @Nullable Sort sort ) {
@@ -65,7 +75,11 @@ public abstract class AbstractQueryFilteringVoEnabledDao<O extends Identifiable,
         @Nullable
         public O transformTuple( Object[] tuple, String[] aliases ) {
             //noinspection unchecked
-            return ( O ) tuple[0];
+            O entity = ( O ) tuple[0];
+            if ( entity != null ) {
+                initializeCachedFilteringResult( entity );
+            }
+            return entity;
         }
 
         @Override

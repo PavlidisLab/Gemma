@@ -519,7 +519,6 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
 
     @Override
     protected GeneValueObject doLoadValueObject( Gene entity ) {
-        Hibernate.initialize( entity.getMultifunctionality() );
         return new GeneValueObject( entity );
     }
 
@@ -546,6 +545,11 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
         FilterQueryUtils.addRestrictionParameters( query, filters );
 
         return query;
+    }
+
+    @Override
+    protected void initializeCachedFilteringResult( Gene entity ) {
+        Hibernate.initialize( entity.getMultifunctionality() );
     }
 
     @Override
