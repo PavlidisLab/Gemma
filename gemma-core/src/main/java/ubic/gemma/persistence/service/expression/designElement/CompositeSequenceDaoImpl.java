@@ -19,6 +19,7 @@
 
 package ubic.gemma.persistence.service.expression.designElement;
 
+import gemma.gsec.util.SecurityUtil;
 import org.apache.commons.lang3.time.StopWatch;
 import org.hibernate.*;
 import org.hibernate.criterion.Restrictions;
@@ -39,14 +40,9 @@ import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.persistence.service.AbstractDao;
 import ubic.gemma.persistence.service.AbstractQueryFilteringVoEnabledDao;
-import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignDao;
-import ubic.gemma.persistence.util.FilterQueryUtils;
-import ubic.gemma.persistence.util.Filters;
-import ubic.gemma.persistence.util.Slice;
-import ubic.gemma.persistence.util.Sort;
+import ubic.gemma.persistence.util.*;
 
 import javax.annotation.Nullable;
-import java.text.MessageFormat;
 import java.util.*;
 
 /**
@@ -104,42 +100,48 @@ public class CompositeSequenceDaoImpl extends AbstractQueryFilteringVoEnabledDao
 
     @Override
     protected Query getFilteringQuery( @Nullable Filters filters, @Nullable Sort sort ) {
-        //language=HQL
-        String queryString = MessageFormat.format( "select {0} from CompositeSequence as {0} "
-                        + "left join fetch {0}.arrayDesign as {1} "
-                        + "where {0}.id is not null ", // needed to use formRestrictionCause()
-                OBJECT_ALIAS, ArrayDesignDao.OBJECT_ALIAS );
-
-        queryString += FilterQueryUtils.formRestrictionClause( filters );
-        queryString += FilterQueryUtils.formOrderByClause( sort );
-
-        Query query = this.getSessionFactory().getCurrentSession().createQuery( queryString );
-
+        Query query = this.getSessionFactory().getCurrentSession()
+                .createQuery( "select probe from CompositeSequence as probe "
+                        + "left join probe.arrayDesign as ad "
+                        + AclQueryUtils.formAclRestrictionClause( "ad.id" )
+                        + ( !SecurityUtil.isUserAdmin() ? " and ad.curationDetails.troubled = false" : "" )
+                        + FilterQueryUtils.formRestrictionClause( filters )
+                        + FilterQueryUtils.formOrderByClause( sort ) );
+        AclQueryUtils.addAclParameters( query, ArrayDesign.class );
         FilterQueryUtils.addRestrictionParameters( query, filters );
-
         return query;
     }
 
     @Override
     protected void initializeCachedFilteringResult( CompositeSequence cachedEntity ) {
+    }
 
+    @Override
+    protected Query getFilteringIdQuery( @Nullable Filters filters, @Nullable Sort sort ) {
+        Query query = this.getSessionFactory().getCurrentSession()
+                .createQuery( "select probe.id from CompositeSequence as probe "
+                        // no need for including the platform in the result set since it's eagerly fetched
+                        // it's also more efficient because probes are likely to originate from the same platform
+                        + "left join probe.arrayDesign as ad "
+                        + AclQueryUtils.formAclRestrictionClause( "ad.id" )
+                        + ( !SecurityUtil.isUserAdmin() ? " and ad.curationDetails.troubled = false" : "" )
+                        + FilterQueryUtils.formRestrictionClause( filters )
+                        + FilterQueryUtils.formOrderByClause( sort ) );
+        AclQueryUtils.addAclParameters( query, ArrayDesign.class );
+        FilterQueryUtils.addRestrictionParameters( query, filters );
+        return query;
     }
 
     @Override
     protected Query getFilteringCountQuery( @Nullable Filters filters ) {
-        //language=HQL
-        String queryString = MessageFormat.format( "select count({0}) "
-                        + "from CompositeSequence as {0} "
-                        + "left join {0}.arrayDesign as " + ArrayDesignDao.OBJECT_ALIAS + " "
-                        + "where {0}.id is not null ", // needed to use formRestrictionCause()
-                OBJECT_ALIAS, ArrayDesignDao.OBJECT_ALIAS );
-
-        queryString += FilterQueryUtils.formRestrictionClause( filters );
-
-        Query query = this.getSessionFactory().getCurrentSession().createQuery( queryString );
-
+        Query query = this.getSessionFactory().getCurrentSession().createQuery( "select count(probe) "
+                + "from CompositeSequence as probe "
+                + "left join probe.arrayDesign as ad "
+                + AclQueryUtils.formAclRestrictionClause( "ad.id" )
+                + ( !SecurityUtil.isUserAdmin() ? " and ad.curationDetails.troubled = false" : "" )
+                + FilterQueryUtils.formRestrictionClause( filters ) );
+        AclQueryUtils.addAclParameters( query, ArrayDesign.class );
         FilterQueryUtils.addRestrictionParameters( query, filters );
-
         return query;
     }
 

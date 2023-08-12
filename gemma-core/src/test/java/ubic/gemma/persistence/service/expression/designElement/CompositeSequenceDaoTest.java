@@ -6,6 +6,7 @@ import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ContextConfiguration;
 import ubic.gemma.core.util.test.BaseDatabaseTest;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -81,5 +82,17 @@ public class CompositeSequenceDaoTest extends BaseDatabaseTest {
         assertNotNull( slice.getLimit() );
         assertEquals( 10, ( int ) slice.getLimit() );
         assertNotNull( slice.getTotalElements() );
+    }
+
+    @Test
+    @WithMockUser
+    public void testLoad() {
+        compositeSequenceDao.load( null, null, 0, 10 );
+    }
+
+    @Test
+    @WithMockUser
+    public void testLoadIds() {
+        compositeSequenceDao.loadIds( null, null );
     }
 }
