@@ -77,7 +77,8 @@
 <div id="footer" style="position: fixed; bottom: 0; height: 24px; background: white;">
     <div id="divider"></div>
     <div class="footer" style="display: flex; align-items: baseline; padding-left: 10px; padding-right: 10px;">
-        <div>Gemma ${appConfig["version"]}&nbsp;Copyright &copy; 2007-2023</div>
+        <div>Gemma ${appConfig["version"]}</div>
+        <div style="margin-left: 10px;">Copyright &copy; 2007-2023</div>
         <div style="margin-left: 10px;">
             Our <a href='<c:url value="https://pavlidislab.github.io/Gemma/terms.html" />'>Terms and conditions</a> have
             been updated!
