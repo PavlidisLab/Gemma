@@ -114,6 +114,7 @@ public class ExpressionExperimentDaoImpl
         throw new NotImplementedException( "Browsing ExpressionExperiment in a specific order is not supported." );
     }
 
+    @Override
     public Collection<Long> filterByTaxon( @Nullable Collection<Long> ids, Taxon taxon ) {
 
         if ( ids == null || ids.isEmpty() )
@@ -749,7 +750,6 @@ public class ExpressionExperimentDaoImpl
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession().createQuery( "select e from ExpressionExperiment e where e.primaryPublication = null and e.shortName like 'GSE%'" ).list();
     }
-
 
     @Override
     public MeanVarianceRelation updateMeanVarianceRelation( ExpressionExperiment ee, MeanVarianceRelation mvr ) {

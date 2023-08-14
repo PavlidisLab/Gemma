@@ -1,7 +1,7 @@
 package ubic.gemma.web.util;
 
-import org.compass.core.util.Assert;
 import org.hibernate.Hibernate;
+import org.springframework.util.Assert;
 import ubic.gemma.model.common.Describable;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExperimentalDesign;

@@ -19,6 +19,7 @@
 package ubic.gemma.web.controller.expression.arrayDesign;
 
 import gemma.gsec.util.SecurityUtil;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
@@ -42,7 +43,6 @@ import ubic.gemma.core.job.executor.webapp.TaskRunningService;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.search.SearchResult;
 import ubic.gemma.core.search.SearchService;
-import ubic.gemma.core.security.audit.AuditableUtil;
 import ubic.gemma.core.tasks.AbstractTask;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.DatabaseEntryValueObject;
@@ -93,8 +93,6 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
     @Autowired
     private ArrayDesignService arrayDesignService;
     @Autowired
-    private AuditableUtil auditableUtil;
-    @Autowired
     private CompositeSequenceService compositeSequenceService;
     @Autowired
     private SearchService searchService;
@@ -127,11 +125,10 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
     @Override
     public JsonReaderResponse<ArrayDesignValueObject> browse( ListBatchCommand batch, Long[] ids, boolean showMerged,
             boolean showOrphans ) {
-
         Collection<ArrayDesignValueObject> valueObjects = getArrayDesigns( ids, showMerged, showOrphans );
 
         if ( !SecurityUtil.isUserAdmin() ) {
-            auditableUtil.removeTroubledArrayDesigns( valueObjects );
+            CollectionUtils.filter( valueObjects, vo -> !vo.getTroubled() );
         }
         int count = valueObjects.size();
 
@@ -485,7 +482,7 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
         if ( SecurityUtil.isUserAdmin() ) {
             arrayDesignReportService.fillEventInformation( valueObjects );
         } else {
-            auditableUtil.removeTroubledArrayDesigns( valueObjects );
+            CollectionUtils.filter( valueObjects, vo -> !vo.getTroubled() );
         }
 
         arrayDesignReportService.fillInSubsumptionInfo( valueObjects );
