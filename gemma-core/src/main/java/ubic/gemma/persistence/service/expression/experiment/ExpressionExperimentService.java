@@ -295,12 +295,10 @@ public interface ExpressionExperimentService
     /**
      * Calculate the usage frequency of platforms by the datasets matching the provided filters.
      *
-     * @param filters                  a set of filters to be applied as per {@link #load(Filters, Sort, int, int)}
-     * @param includeOriginalPlatforms if true, original platforms as per {@link BioAssay#getOriginalPlatform()} are
-     *                                 also included.
-     * @param maxResults               the maximum of results, or unlimited if less than 1
+     * @param filters    a set of filters to be applied as per {@link #load(Filters, Sort, int, int)}
+     * @param maxResults the maximum of results, or unlimited if less than 1
      */
-    Map<ArrayDesign, Long> getArrayDesignUsedOrOriginalPlatformUsageFrequency( @Nullable Filters filters, boolean includeOriginalPlatforms, int maxResults );
+    Map<ArrayDesign, Long> getArrayDesignUsedOrOriginalPlatformUsageFrequency( @Nullable Filters filters, int maxResults );
 
     /**
      * Calculate the usage frequency of taxa by the datasets matching the provided filters.

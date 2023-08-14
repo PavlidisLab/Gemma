@@ -254,7 +254,7 @@ public class DatasetsWebService {
         }
         Integer l = limit.getValueNoMaximum();
         Map<TechnologyType, Long> tts = expressionExperimentService.getTechnologyTypeUsageFrequency( filters );
-        Map<ArrayDesign, Long> ads = expressionExperimentService.getArrayDesignUsedOrOriginalPlatformUsageFrequency( filters, true, l );
+        Map<ArrayDesign, Long> ads = expressionExperimentService.getArrayDesignUsedOrOriginalPlatformUsageFrequency( filters, l );
         List<ArrayDesignValueObject> adsVos = arrayDesignService.loadValueObjects( ads.keySet() );
         Map<Long, Long> countsById = ads.entrySet().stream().collect( Collectors.toMap( e -> e.getKey().getId(), Map.Entry::getValue ) );
         List<ArrayDesignWithUsageStatisticsValueObject> results =
