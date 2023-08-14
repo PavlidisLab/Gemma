@@ -20,8 +20,8 @@ package ubic.gemma.core.genome.gene.service;
 
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.core.userdetails.User;
-import ubic.basecode.ontology.search.OntologySearchException;
 import ubic.gemma.core.genome.gene.SessionBoundGeneSetValueObject;
+import ubic.gemma.core.search.SearchException;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonValueObject;
@@ -287,7 +287,7 @@ public interface GeneSetService extends BaseService<GeneSet>, BaseVoEnabledServi
      * @return collection of GeneSetValueObjects that match name query
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
-    Collection<GeneSetValueObject> findGeneSetsByName( String query, @Nullable Long taxonId ) throws OntologySearchException;
+    Collection<GeneSetValueObject> findGeneSetsByName( String query, @Nullable Long taxonId ) throws SearchException;
 
     /**
      * get the taxon for the gene set parameter, assumes that the taxon of the first gene will be representational of

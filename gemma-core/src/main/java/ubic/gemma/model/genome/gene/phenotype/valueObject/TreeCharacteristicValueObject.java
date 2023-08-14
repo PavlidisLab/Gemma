@@ -19,9 +19,10 @@
 
 package ubic.gemma.model.genome.gene.phenotype.valueObject;
 
-import ubic.basecode.ontology.model.OntologyTerm;
-
-import java.util.*;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.TreeSet;
 
 /**
  * @author Paul
@@ -59,112 +60,12 @@ public class TreeCharacteristicValueObject extends CharacteristicValueObject {
         this._id = this.getUrlId();
     }
 
-    public static TreeCharacteristicValueObject ontology2TreeCharacteristicValueObjects( OntologyTerm ontologyTerm,
-            Map<String, TreeCharacteristicValueObject> phenotypeFoundInTree ) {
-
-        Collection<OntologyTerm> directChildTerms = ontologyTerm.getChildren( true, false );
-
-        TreeSet<TreeCharacteristicValueObject> children = new TreeSet<>();
-
-        for ( OntologyTerm ot : directChildTerms ) {
-            if ( phenotypeFoundInTree.containsKey( ot.getUri() ) ) {
-                TreeCharacteristicValueObject child = phenotypeFoundInTree.get( ot.getUri() );
-                children.add( child );
-
-                // See bug 4102. Removing wreaks havoc and I cannot see why it would be necessary.
-                // treesPhenotypes.remove( child );
-            } else {
-                TreeCharacteristicValueObject tree = ontology2TreeCharacteristicValueObjects( ot,
-                        phenotypeFoundInTree );
-                phenotypeFoundInTree.put( tree.getValueUri(), tree );
-                children.add( tree );
-            }
-        }
-
-        return new TreeCharacteristicValueObject( -1L, ontologyTerm.getLabel(), ontologyTerm.getUri(), children );
-    }
-
-    /**
-     * counts each private occurrence of genes for a phenotype
-     *
-     * @param phenotypesGenesAssociations map
-     */
-    public void countPrivateGeneForEachNode( Map<String, Set<Integer>> phenotypesGenesAssociations ) {
-
-        Set<Integer> allGenes = new HashSet<>();
-
-        for ( TreeCharacteristicValueObject tc : this.children ) {
-
-            tc.countPrivateGeneForEachNode( phenotypesGenesAssociations );
-
-            if ( phenotypesGenesAssociations.get( tc.getValueUri() ) != null ) {
-                allGenes.addAll( phenotypesGenesAssociations.get( tc.getValueUri() ) );
-
-                if ( phenotypesGenesAssociations.get( getValueUri() ) != null ) {
-                    phenotypesGenesAssociations.get( getValueUri() )
-                            .addAll( phenotypesGenesAssociations.get( tc.getValueUri() ) );
-                } else {
-                    HashSet<Integer> genesNBCI = new HashSet<>( phenotypesGenesAssociations.get( tc.getValueUri() ) );
-                    phenotypesGenesAssociations.put( getValueUri(), genesNBCI );
-                }
-            }
-        }
-
-        if ( phenotypesGenesAssociations.get( getValueUri() ) != null ) {
-            allGenes.addAll( phenotypesGenesAssociations.get( getValueUri() ) );
-        }
-        this.setPrivateGeneCount( allGenes.size() );
-    }
-
-    /**
-     * counts each public occurrence of genes for a phenotype
-     *
-     * @param phenotypesGenesAssociations map
-     */
-    public void countPublicGeneForEachNode( Map<String, Set<Integer>> phenotypesGenesAssociations ) {
-
-        for ( TreeCharacteristicValueObject tc : this.children ) {
-
-            tc.countPublicGeneForEachNode( phenotypesGenesAssociations );
-
-            if ( phenotypesGenesAssociations.get( tc.getValueUri() ) != null ) {
-                this.publicGenesNBCI.addAll( phenotypesGenesAssociations.get( tc.getValueUri() ) );
-
-                if ( phenotypesGenesAssociations.get( getValueUri() ) != null ) {
-                    phenotypesGenesAssociations.get( getValueUri() )
-                            .addAll( phenotypesGenesAssociations.get( tc.getValueUri() ) );
-                } else {
-                    Set<Integer> genesNBCI = new HashSet<>( phenotypesGenesAssociations.get( tc.getValueUri() ) );
-                    phenotypesGenesAssociations.put( getValueUri(), genesNBCI );
-                }
-            }
-        }
-
-        if ( phenotypesGenesAssociations.get( getValueUri() ) != null ) {
-            this.publicGenesNBCI.addAll( phenotypesGenesAssociations.get( getValueUri() ) );
-        }
-
-        this.setPublicGeneCount( this.publicGenesNBCI.size() );
-    }
-
     public String get_id() {
         return this._id;
     }
 
     public void set_id( String _id ) {
         this._id = _id;
-    }
-
-    /**
-     * @return all valueUri of children
-     */
-    public Collection<String> getAllChildrenUri() {
-
-        Collection<String> childrenURI = new HashSet<>();
-
-        findAllChildPhenotypeURI( childrenURI );
-
-        return childrenURI;
     }
 
     public Collection<TreeCharacteristicValueObject> getChildren() {
@@ -199,29 +100,6 @@ public class TreeCharacteristicValueObject extends CharacteristicValueObject {
         this.dbPhenotype = dbPhenotype;
     }
 
-    /**
-     * the tree is built with many terms in the Ontology, this method removes all nodes not found in the database
-     */
-    public void removeUnusedPhenotypes() {
-
-        TreeSet<TreeCharacteristicValueObject> newChildren = new TreeSet<>();
-
-        for ( TreeCharacteristicValueObject child : this.children ) {
-
-            long count = child.getPrivateGeneCount() + child.getPublicGeneCount();
-
-            if ( count != 0 ) {
-                newChildren.add( child );
-            }
-        }
-
-        this.children = newChildren;
-
-        for ( TreeCharacteristicValueObject child : this.children ) {
-            child.removeUnusedPhenotypes();
-        }
-    }
-
     @Override
     public String toString() {
         return toString( 0 );
@@ -245,19 +123,4 @@ public class TreeCharacteristicValueObject extends CharacteristicValueObject {
 
         return output.toString();
     }
-
-    /**
-     * step into the tree and keep tracks of all valueURI
-     *
-     * @param phenotypesToFind phenotypes
-     */
-    private void findAllChildPhenotypeURI( Collection<String> phenotypesToFind ) {
-
-        phenotypesToFind.add( this.getValueUri() );
-
-        for ( TreeCharacteristicValueObject tree : this.getChildren() ) {
-            tree.findAllChildPhenotypeURI( phenotypesToFind );
-        }
-    }
-
 }

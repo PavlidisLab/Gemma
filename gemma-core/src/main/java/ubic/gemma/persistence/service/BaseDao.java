@@ -48,6 +48,7 @@ public interface BaseDao<T> {
      * @param entities the entities to be crated.
      * @return collection of entities representing the instances in the persistent storage that were created.
      */
+    @CheckReturnValue
     Collection<T> create( Collection<T> entities );
 
     /**
@@ -62,6 +63,7 @@ public interface BaseDao<T> {
      * @param entity the entity to create
      * @return the persistent version of the entity
      */
+    @CheckReturnValue
     T create( T entity );
 
     /**

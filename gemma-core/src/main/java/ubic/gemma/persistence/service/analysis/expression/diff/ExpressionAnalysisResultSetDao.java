@@ -63,7 +63,7 @@ public interface ExpressionAnalysisResultSetDao extends AnalysisResultSetDao<Dif
      * Note: Not all probes have associated genes, so you should use {@link Map#getOrDefault(Object, Object)} with an
      * empty collection to handle this case.
      */
-    Map<DifferentialExpressionAnalysisResult, List<Gene>> loadResultToGenesMap( ExpressionAnalysisResultSet resultSet );
+    Map<Long, List<Gene>> loadResultToGenesMap( ExpressionAnalysisResultSet resultSet );
 
     /**
      * Retrieve result sets associated to a set of {@link BioAssaySet} and external database entries.

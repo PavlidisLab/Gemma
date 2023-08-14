@@ -8,20 +8,19 @@
  */
 package ubic.gemma.model.expression.experiment;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.measurement.MeasurementValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicBasicValueObject;
 
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Collection;
+import java.util.Comparator;
 import java.util.Iterator;
-
-import org.apache.commons.lang3.StringUtils;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Each factorvalue can be associated with multiple characteristics (or with a measurement).
@@ -35,14 +34,24 @@ public class FactorValueBasicValueObject extends IdentifiableValueObject<FactorV
 
     private static final long serialVersionUID = 3378801249808036785L;
 
-    @JsonProperty("isBaseline")
-    private boolean isBaseline;
-    private Collection<CharacteristicBasicValueObject> characteristics;
-    private CharacteristicBasicValueObject experimentalFactorCategory;
-    private MeasurementValueObject measurement;
-    private String value;
-    private String summary;
     private Long experimentalFactorId;
+    private CharacteristicBasicValueObject experimentalFactorCategory;
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private MeasurementValueObject measurement;
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
+    private List<CharacteristicBasicValueObject> characteristics;
+    private boolean isMeasurement;
+
+    /**
+     * @deprecated use either {@link #characteristics} or {@link #measurement}
+     */
+    @Deprecated
+    private String value;
+    /**
+     * @deprecated define your own logic for summarizing a factor value
+     */
+    @Deprecated
+    private String summary;
 
     /**
      * Required when using the class as a spring bean.
@@ -57,25 +66,25 @@ public class FactorValueBasicValueObject extends IdentifiableValueObject<FactorV
 
     public FactorValueBasicValueObject( FactorValue fv ) {
         super( fv );
-        this.summary = getSummaryString( fv );
         this.experimentalFactorId = fv.getExperimentalFactor().getId();
-        this.isBaseline = fv.getIsBaseline() != null ? fv.getIsBaseline() : false;
-
-        if ( fv.getMeasurement() != null ) {
-            this.measurement = new MeasurementValueObject( fv.getMeasurement() );
-        }
-        this.value = fv.getValue();
-
-        if ( fv.getCharacteristics() != null ) {
-            this.characteristics = new ArrayList<>( fv.getCharacteristics().size() );
-            for ( Characteristic c : fv.getCharacteristics() ) {
-                this.characteristics.add( new CharacteristicBasicValueObject( c ) );
-            }
-        }
 
         if ( fv.getExperimentalFactor().getCategory() != null ) {
             this.experimentalFactorCategory = new CharacteristicBasicValueObject( fv.getExperimentalFactor().getCategory() );
         }
+
+        if ( fv.getMeasurement() != null ) {
+            this.measurement = new MeasurementValueObject( fv.getMeasurement() );
+            this.isMeasurement = true;
+        }
+
+        this.characteristics = fv.getCharacteristics().stream()
+                .map( CharacteristicBasicValueObject::new )
+                .sorted( Comparator.comparing( CharacteristicBasicValueObject::getCategory, Comparator.nullsLast( Comparator.naturalOrder() ) )
+                        .thenComparing( CharacteristicBasicValueObject::getValue, Comparator.nullsLast( Comparator.naturalOrder() ) ) )
+                .collect( Collectors.toList() );
+
+        this.value = fv.getValue();
+        this.summary = getSummaryString( fv );
     }
 
     @Override

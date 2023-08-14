@@ -46,7 +46,6 @@ import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.persistence.persister.Persister;
-import ubic.gemma.persistence.service.common.auditAndSecurity.CurationDetailsService;
 import ubic.gemma.persistence.service.expression.bioAssayData.RawExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSetService;
@@ -74,9 +73,6 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
 
     @Autowired
     private RawExpressionDataVectorService rawExpressionDataVectorService;
-
-    @Autowired
-    private CurationDetailsService curationDetailsService;
 
     @Autowired
     private Persister persister;

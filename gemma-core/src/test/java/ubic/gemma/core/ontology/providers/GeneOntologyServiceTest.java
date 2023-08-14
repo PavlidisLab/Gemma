@@ -29,8 +29,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
-import ubic.basecode.ontology.model.OntologyIndividual;
-import ubic.basecode.ontology.model.OntologyResource;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.basecode.ontology.search.OntologySearchException;
 import ubic.gemma.core.genome.gene.service.GeneService;
@@ -103,18 +101,6 @@ public class GeneOntologyServiceTest extends AbstractJUnit4SpringContextTests {
     @Test(expected = IllegalArgumentException.class)
     public void testFindTermWithEmptyQuery() throws OntologySearchException {
         gos.findTerm( " " );
-    }
-
-    @Test
-    public void testFindIndividuals() throws OntologySearchException {
-        Collection<OntologyIndividual> matches = gos.findIndividuals( "protein tag" );
-        assertEquals( 1, matches.size() );
-    }
-
-    @Test
-    public void testFindResources() throws OntologySearchException {
-        Collection<OntologyResource> matches = gos.findResources( "electron carrier" );
-        assertEquals( 4, matches.size() );
     }
 
     @Test

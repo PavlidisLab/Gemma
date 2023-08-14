@@ -117,27 +117,6 @@ public class ArrayDesignServiceTest extends BaseSpringContextTest {
     }
 
     @Test
-    public void testCompositeSequenceWithoutBioSequences() {
-        ad = ( ArrayDesign ) persisterHelper.persist( ad );
-        Collection<CompositeSequence> cs = arrayDesignService.compositeSequenceWithoutBioSequences( ad );
-        assertNotNull( cs );
-    }
-
-    @Test
-    public void testCompositeSequenceWithoutBlatResults() {
-        ad = ( ArrayDesign ) persisterHelper.persist( ad );
-        Collection<CompositeSequence> cs = arrayDesignService.compositeSequenceWithoutBlatResults( ad );
-        assertNotNull( cs );
-    }
-
-    @Test
-    public void testCompositeSequenceWithoutGenes() {
-        ad = ( ArrayDesign ) persisterHelper.persist( ad );
-        Collection<CompositeSequence> cs = arrayDesignService.compositeSequenceWithoutGenes( ad );
-        assertNotNull( cs );
-    }
-
-    @Test
     public void testCountAll() {
         ad = ( ArrayDesign ) persisterHelper.persist( ad );
         long count = arrayDesignService.countAll();

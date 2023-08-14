@@ -7,15 +7,18 @@ import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ContextConfiguration;
 import ubic.gemma.core.util.test.BaseDatabaseTest;
 import ubic.gemma.core.util.test.category.SlowTest;
+import ubic.gemma.model.common.description.DatabaseEntry;
+import ubic.gemma.model.common.description.DatabaseType;
+import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
-import ubic.gemma.persistence.service.common.auditAndSecurity.CurationDetailsDao;
 import ubic.gemma.persistence.util.Filter;
 import ubic.gemma.persistence.util.TestComponent;
 
@@ -25,7 +28,6 @@ import java.util.Set;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.Assert.*;
-import static org.mockito.Mockito.mock;
 
 @ContextConfiguration
 public class ArrayDesignDaoTest extends BaseDatabaseTest {
@@ -37,11 +39,6 @@ public class ArrayDesignDaoTest extends BaseDatabaseTest {
         @Bean
         public ArrayDesignDao arrayDesignDao( SessionFactory sessionFactory ) {
             return new ArrayDesignDaoImpl( sessionFactory );
-        }
-
-        @Bean
-        public CurationDetailsDao curationDetailsDao() {
-            return mock( CurationDetailsDao.class );
         }
     }
 
@@ -56,11 +53,17 @@ public class ArrayDesignDaoTest extends BaseDatabaseTest {
         ArrayDesign ad = new ArrayDesign();
         ad.setPrimaryTaxon( taxon );
         ad = arrayDesignDao.create( ad );
+        ExternalDatabase ed = ExternalDatabase.Factory.newInstance( "test", DatabaseType.SEQUENCE );
+        sessionFactory.getCurrentSession().persist( ed );
 
         Set<CompositeSequence> probes = new HashSet<>();
         for ( int i = 0; i < 20000; i++ ) {
             CompositeSequence cs = CompositeSequence.Factory.newInstance( "cs" + i, ad );
             BioSequence bs = BioSequence.Factory.newInstance( "s" + i, taxon );
+            DatabaseEntry de = DatabaseEntry.Factory.newInstance();
+            de.setExternalDatabase( ed );
+            sessionFactory.getCurrentSession().persist( de );
+            bs.setSequenceDatabaseEntry( de );
             sessionFactory.getCurrentSession().persist( bs );
             cs.setBiologicalCharacteristic( bs );
             probes.add( cs );
@@ -68,8 +71,7 @@ public class ArrayDesignDaoTest extends BaseDatabaseTest {
         ad.setCompositeSequences( probes );
         arrayDesignDao.update( ad );
 
-        ArrayDesign thawedAd = arrayDesignDao.thaw( ad );
-        assertSame( ad, thawedAd );
+        arrayDesignDao.thaw( ad );
 
         sessionFactory.getCurrentSession().flush();
         sessionFactory.getCurrentSession().clear();
@@ -77,10 +79,10 @@ public class ArrayDesignDaoTest extends BaseDatabaseTest {
         ad = arrayDesignDao.load( ad.getId() );
         assertNotNull( ad );
         assertFalse( Hibernate.isInitialized( ad.getCompositeSequences() ) );
-        ad = arrayDesignDao.thaw( ad );
-        assertNotNull( ad );
+        arrayDesignDao.thaw( ad );
         assertTrue( Hibernate.isInitialized( ad.getCompositeSequences() ) );
         assertTrue( Hibernate.isInitialized( ad.getCompositeSequences().iterator().next().getBiologicalCharacteristic() ) );
+        assertTrue( Hibernate.isInitialized( ad.getCompositeSequences().iterator().next().getBiologicalCharacteristic().getSequenceDatabaseEntry() ) );
         assertEquals( 20000, ad.getCompositeSequences().size() );
 
         sessionFactory.getCurrentSession().update( ad );
@@ -151,5 +153,16 @@ public class ArrayDesignDaoTest extends BaseDatabaseTest {
                 .hasFieldOrPropertyWithValue( "objectAlias", "ad" )
                 .hasFieldOrPropertyWithValue( "propertyName", "technologyType" )
                 .hasFieldOrPropertyWithValue( "requiredValue", TechnologyType.ONECOLOR );
+    }
+
+    @Test
+    @WithMockUser
+    public void testNumExperiments() {
+        Taxon taxon = Taxon.Factory.newInstance( "test" );
+        sessionFactory.getCurrentSession().persist( taxon );
+        ArrayDesign ad = new ArrayDesign();
+        ad.setPrimaryTaxon( taxon );
+        ad = arrayDesignDao.create( ad );
+        assertThat( arrayDesignDao.numExperiments( ad ) ).isEqualTo( 0 );
     }
 }

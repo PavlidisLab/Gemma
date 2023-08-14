@@ -1,89 +1,52 @@
 package ubic.gemma.web.util;
 
-import org.apache.commons.lang3.StringUtils;
-import ubic.gemma.persistence.util.Settings;
+import org.hibernate.Hibernate;
+import org.springframework.util.Assert;
+import ubic.gemma.model.common.Describable;
+import ubic.gemma.model.expression.biomaterial.BioMaterial;
+import ubic.gemma.model.expression.experiment.ExperimentalDesign;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 import javax.servlet.ServletContext;
+
+import static org.apache.commons.lang3.StringUtils.defaultIfBlank;
+import static org.apache.commons.text.StringEscapeUtils.escapeHtml4;
 
 /**
  * Used to generate hyperlinks to various things in Gemma.
  *
  * @author luke
  */
-@SuppressWarnings({ "WeakerAccess", "unused" }) // Possibly used in front end
 public class AnchorTagUtil {
 
-    public static String getArrayDesignLink( Long adId, String link, ServletContext servletContext ) {
-        return AnchorTagUtil.getArrayDesignLink( adId, link, servletContext );
+    public static String getBioMaterialLink( BioMaterial bm, String link, ServletContext servletContext ) {
+        Assert.notNull( bm.getId() );
+        return getLink( String.format( servletContext.getContextPath() + "/bioMaterial/showBioMaterial.html?id=%d", bm.getId() ),
+                linkForDescribable( bm, link, "Sample" ) );
     }
 
-    public static String getArrayDesignLink( Long adId, String link, String hover, ServletContext servletContext ) {
-        return AnchorTagUtil
-                .getLink( String.format( servletContext.getContextPath() + "/arrays/showArrayDesign.html?id=%d", adId ), link,
-                        hover );
+    public static String getExperimentalDesignLink( ExperimentalDesign ed, String link, ServletContext servletContext ) {
+        Assert.notNull( ed.getId() );
+        return getLink( String.format( servletContext.getContextPath() + "/experimentalDesign/showExperimentalDesign.html?edid=%d", ed.getId() ),
+                linkForDescribable( ed, link, "Experimental Design" ) );
     }
 
-    public static String getBioMaterialLink( Long bmId, String link, ServletContext servletContext ) {
-        return AnchorTagUtil.getBioMaterialLink( bmId, link, null,null );
+    public static String getExpressionExperimentLink( ExpressionExperiment ee, String link, ServletContext servletContext ) {
+        Assert.notNull( ee.getId() );
+        return getLink( AnchorTagUtil.getExpressionExperimentUrl( ee, servletContext ),
+                linkForDescribable( ee, defaultIfBlank( link, Hibernate.isInitialized( ee ) ? ee.getShortName() : null ), "Dataset" ) );
     }
 
-    public static String getBioMaterialLink( Long bmId, String link, String hover, ServletContext servletContext ) {
-        return AnchorTagUtil
-                .getLink( String.format( servletContext.getContextPath() + "/bioMaterial/showBioMaterial.html?id=%d", bmId ),
-                        link, hover );
+    public static String getExpressionExperimentUrl( ExpressionExperiment ee, ServletContext servletContext ) {
+        Assert.notNull( ee.getId() );
+        return String.format( servletContext.getContextPath() + "/expressionExperiment/showExpressionExperiment.html?id=%d", ee.getId() );
     }
 
-    /**
-     * @param eeId Id of the experimental design
-     * @param link the link
-     * @return experimental design link html
-     */
-    public static String getExperimentalDesignLink( Long eeId, String link, ServletContext servletContext ) {
-        return AnchorTagUtil.getExperimentalDesignLink( eeId, link, servletContext );
+    private static String linkForDescribable( Describable d, String link, String entityName ) {
+        return defaultIfBlank( link, defaultIfBlank( Hibernate.isInitialized( d ) ? d.getName() : null, entityName + " #" + d.getId() ) );
     }
 
-    /**
-     * @param edId  Id of the experimental design
-     * @param link  the link
-     * @param hover hover tooltip text
-     * @return experimental design link html
-     */
-    public static String getExperimentalDesignLink( Long edId, String link, String hover, ServletContext servletContext ) {
-        return AnchorTagUtil.getLink(
-                String.format( servletContext.getContextPath() + "/experimentalDesign/showExperimentalDesign.html?edid=%d",
-                        edId ), ( StringUtils.isBlank( link ) ? "Experimental Design" : link ), hover );
+    private static String getLink( String url, String link ) {
+        return String.format( "<a href=\"%s\">%s</a>", url, escapeHtml4( link ) );
     }
-
-    public static String getExpressionExperimentLink( Long eeId, String link, ServletContext servletContext ) {
-        return AnchorTagUtil.getExpressionExperimentLink( eeId, link, servletContext );
-    }
-
-    public static String getExpressionExperimentLink( Long eeId, String link, String hover, ServletContext servletContext ) {
-        return AnchorTagUtil.getLink( AnchorTagUtil.getExpressionExperimentUrl( eeId, servletContext ), link, hover );
-    }
-
-    public static String getExpressionExperimentUrl( long eeId, ServletContext servletContext ) {
-        return String.format( servletContext.getContextPath() + "/expressionExperiment/showExpressionExperiment.html?id=%d",
-                eeId );
-    }
-
-    public static String getLink( String url, String link, String hover ) {
-        StringBuilder buf = new StringBuilder();
-        buf.append( "<a href=\"" );
-        buf.append( url );
-        buf.append( "\"" );
-        if ( hover != null ) {
-            buf.append( " class=\"tooltip\"" );
-        }
-        buf.append( ">" );
-        buf.append( link );
-        if ( hover != null ) {
-            buf.append( "<span class=\"tooltiptext\">" );
-            buf.append( hover );
-            buf.append( "</span>" );
-        }
-        buf.append( "</a>" );
-        return buf.toString();
-    }
-
 }

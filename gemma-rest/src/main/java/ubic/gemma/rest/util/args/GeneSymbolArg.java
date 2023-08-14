@@ -4,11 +4,8 @@ import io.swagger.v3.oas.annotations.ExternalDocumentation;
 import io.swagger.v3.oas.annotations.media.Schema;
 import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.model.genome.Gene;
-import ubic.gemma.model.genome.PhysicalLocationValueObject;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.model.genome.gene.GeneValueObject;
 
-import javax.annotation.Nonnull;
 import javax.ws.rs.BadRequestException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -42,31 +39,12 @@ public class GeneSymbolArg extends GeneArg<String> {
     }
 
     @Override
-    public List<GeneValueObject> getValueObjects( GeneService service ) {
-        Collection<Gene> genes = service.findByOfficialSymbol( this.getValue() );
-        genes.iterator().next();
-        return service.loadValueObjects( genes );
+    protected Gene getEntityWithTaxon( GeneService service, Taxon taxon ) {
+        return service.findByOfficialSymbol( getValue(), taxon );
     }
 
     @Override
-    public List<PhysicalLocationValueObject> getGeneLocation( GeneService geneService ) {
-        Collection<Gene> genes = geneService.findByOfficialSymbol( this.getValue() );
-        List<PhysicalLocationValueObject> gVos = new ArrayList<>( genes.size() );
-        for ( Gene gene : genes ) {
-            gVos.addAll( geneService.getPhysicalLocationsValueObjects( gene ) );
-        }
-        return gVos;
+    List<Gene> getEntities( GeneService service ) throws BadRequestException {
+        return new ArrayList<>( service.findByOfficialSymbol( getValue() ) );
     }
-
-    @Override
-    public List<PhysicalLocationValueObject> getGeneLocation( GeneService geneService, Taxon taxon ) {
-        Gene gene = geneService.findByOfficialSymbol( this.getValue(), taxon );
-        if ( gene == null )
-            return null;
-        if ( !gene.getTaxon().equals( taxon ) ) {
-            throw new BadRequestException( "Taxon does not match gene's taxon." );
-        }
-        return geneService.getPhysicalLocationsValueObjects( gene );
-    }
-
 }

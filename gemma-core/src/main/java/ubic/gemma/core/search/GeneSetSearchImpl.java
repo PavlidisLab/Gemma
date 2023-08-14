@@ -25,7 +25,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import ubic.basecode.ontology.model.OntologyResource;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.basecode.ontology.search.OntologySearchException;
 import ubic.gemma.core.association.phenotype.PhenotypeAssociationManagerService;
@@ -117,26 +116,29 @@ public class GeneSetSearchImpl implements GeneSetSearch {
     }
 
     @Override
-    public Collection<GeneSet> findByGoTermName( String goTermName, @Nullable Taxon taxon ) throws OntologySearchException {
+    public Collection<GeneSet> findByGoTermName( String goTermName, @Nullable Taxon taxon ) throws SearchException {
         return this.findByGoTermName( goTermName, taxon, null, null );
     }
 
     @Override
     public Collection<GeneSet> findByGoTermName( String goTermName, @Nullable Taxon taxon, @Nullable Integer maxGoTermsProcessed,
-            @Nullable Integer maxGeneSetSize ) throws OntologySearchException {
+            @Nullable Integer maxGeneSetSize ) throws SearchException {
         if ( !geneOntologyService.isOntologyLoaded() ) {
             return Collections.emptySet();
         }
-        Collection<? extends OntologyResource> matches = this.geneOntologyService
-                .findTerm( StringUtils.strip( goTermName ) );
+        Collection<OntologyTerm> matches = null;
+        try {
+            matches = this.geneOntologyService
+                    .findTerm( StringUtils.strip( goTermName ) );
+        } catch ( OntologySearchException e ) {
+            throw new BaseCodeOntologySearchException( e );
+        }
 
         Collection<GeneSet> results = new HashSet<>();
 
-        for ( OntologyResource t : matches ) {
-            assert t instanceof OntologyTerm;
-
+        for ( OntologyTerm t : matches ) {
             if ( taxon == null ) {
-                Collection<GeneSet> sets = this.goTermToGeneSets( ( OntologyTerm ) t, maxGeneSetSize );
+                Collection<GeneSet> sets = this.goTermToGeneSets( t, maxGeneSetSize );
                 results.addAll( sets );
 
                 // noinspection StatementWithEmptyBody // FIXME should we count each species as one go?
@@ -173,7 +175,7 @@ public class GeneSetSearchImpl implements GeneSetSearch {
     }
 
     @Override
-    public Collection<GeneSet> findGeneSetsByName( String query, Long taxonId ) throws OntologySearchException {
+    public Collection<GeneSet> findGeneSetsByName( String query, Long taxonId ) throws SearchException {
 
         if ( StringUtils.isBlank( query ) ) {
             return new HashSet<>();
@@ -212,7 +214,7 @@ public class GeneSetSearchImpl implements GeneSetSearch {
     }
 
     @Override
-    public Collection<GeneSetValueObject> findByPhenotypeName( String phenotypeQuery, Taxon taxon ) throws OntologySearchException {
+    public Collection<GeneSetValueObject> findByPhenotypeName( String phenotypeQuery, Taxon taxon ) throws SearchException {
 
         StopWatch timer = new StopWatch();
         timer.start();
@@ -284,7 +286,7 @@ public class GeneSetSearchImpl implements GeneSetSearch {
     }
 
     @Nullable
-    private GeneSet goTermToGeneSet( OntologyResource term, @Nullable Taxon taxon ) {
+    private GeneSet goTermToGeneSet( OntologyTerm term, @Nullable Taxon taxon ) {
         return this.goTermToGeneSet( term, taxon, null );
     }
 
@@ -292,20 +294,19 @@ public class GeneSetSearchImpl implements GeneSetSearch {
      * Convert a GO term to a 'GeneSet', including genes from all child terms. Divide up by taxon.
      */
     @Nullable
-    private GeneSet goTermToGeneSet( OntologyResource term, @Nullable Taxon taxon, @Nullable Integer maxGeneSetSize ) {
+    private GeneSet goTermToGeneSet( OntologyTerm term, @Nullable Taxon taxon, @Nullable Integer maxGeneSetSize ) {
         if ( term.getUri() == null )
             return null;
 
-        Collection<OntologyResource> allMatches = new HashSet<>();
+        Collection<OntologyTerm> allMatches = new HashSet<>();
         allMatches.add( term );
-        assert term instanceof OntologyTerm;
-        allMatches.addAll( ( ( OntologyTerm ) term ).getChildren( false, false ) );
+        allMatches.addAll( term.getChildren( false, false ) );
         // GeneSetSearchImpl.log.info( term );
         /*
          * Gather up uris
          */
         Collection<String> termsToFetch = new HashSet<>();
-        for ( OntologyResource t : allMatches ) {
+        for ( OntologyTerm t : allMatches ) {
             String goId = this.uri2goid( t );
             termsToFetch.add( goId );
         }
@@ -340,7 +341,7 @@ public class GeneSetSearchImpl implements GeneSetSearch {
         if ( term.getUri() == null )
             return Collections.emptySet();
 
-        Collection<OntologyResource> allMatches = new HashSet<>();
+        Collection<OntologyTerm> allMatches = new HashSet<>();
         allMatches.add( term );
         allMatches.addAll( term.getChildren( false, false ) );
         GeneSetSearchImpl.log.info( term );
@@ -348,7 +349,7 @@ public class GeneSetSearchImpl implements GeneSetSearch {
          * Gather up uris
          */
         Collection<String> termsToFetch = new HashSet<>();
-        for ( OntologyResource t : allMatches ) {
+        for ( OntologyTerm t : allMatches ) {
             String goId = this.uri2goid( t );
             termsToFetch.add( goId );
         }
@@ -377,7 +378,7 @@ public class GeneSetSearchImpl implements GeneSetSearch {
         return results;
     }
 
-    private String uri2goid( OntologyResource t ) {
+    private String uri2goid( OntologyTerm t ) {
         return t.getUri().replaceFirst( ".*/", "" );
     }
 

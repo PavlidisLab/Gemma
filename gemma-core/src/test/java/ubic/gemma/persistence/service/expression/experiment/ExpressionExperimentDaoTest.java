@@ -17,7 +17,6 @@ import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.experiment.ExperimentalDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.persistence.service.common.auditAndSecurity.CurationDetailsDao;
 import ubic.gemma.persistence.util.*;
 
 import java.util.Arrays;
@@ -26,7 +25,6 @@ import java.util.Collections;
 import java.util.Map;
 
 import static org.junit.Assert.*;
-import static org.mockito.Mockito.mock;
 
 @ContextConfiguration
 public class ExpressionExperimentDaoTest extends BaseDatabaseTest {
@@ -38,11 +36,6 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest {
         @Bean
         public ExpressionExperimentDao expressionExperimentDao( SessionFactory sessionFactory ) {
             return new ExpressionExperimentDaoImpl( sessionFactory );
-        }
-
-        @Bean
-        public CurationDetailsDao curationDetailsDao() {
-            return mock( CurationDetailsDao.class );
         }
     }
 
@@ -126,6 +119,13 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest {
 
     @Test
     @WithMockUser
+    public void testGetTechnologyTypeUsageFrequency() {
+        expressionExperimentDao.getTechnologyTypeUsageFrequency();
+        expressionExperimentDao.getTechnologyTypeUsageFrequency( Collections.singleton( 1L ) );
+    }
+
+    @Test
+    @WithMockUser
     public void testGetArrayDesignUsageFrequency() {
         expressionExperimentDao.getArrayDesignsUsageFrequency( -1 );
         expressionExperimentDao.getArrayDesignsUsageFrequency( Collections.singleton( 1L ), -1 );
@@ -136,6 +136,18 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest {
     public void testGetOriginalPlatformUsageFrequency() {
         expressionExperimentDao.getOriginalPlatformsUsageFrequency( -1 );
         expressionExperimentDao.getOriginalPlatformsUsageFrequency( Collections.singleton( 1L ), -1 );
+    }
+
+    @Test
+    @WithMockUser
+    public void testGetCategoriesWithUsageFrequency() {
+        expressionExperimentDao.getCategoriesUsageFrequency( null, null, null );
+    }
+
+    @Test
+    @WithMockUser
+    public void testGetAnnotationUsageFrequency() {
+        expressionExperimentDao.getAnnotationsUsageFrequency( null, null, 10, 1, null, null, null, null );
     }
 
     @Test
@@ -165,6 +177,17 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest {
         // counts = expressionExperimentDao.getPerTaxonCount();
         // assertTrue( counts.containsKey( taxon ) );
         // assertEquals( 1L, counts.get( taxon ).longValue() );
+    }
+
+    @Test
+    @WithMockUser
+    public void testFilterAndCountByArrayDesign() {
+        Filter f = expressionExperimentDao.getFilter( "bioAssays.arrayDesignUsed.id", Long.class, Filter.Operator.eq, 1L );
+        assertEquals( "ee", f.getObjectAlias() );
+        assertEquals( "id", f.getPropertyName() );
+        assertTrue( f.getRequiredValue() instanceof Subquery );
+        expressionExperimentDao.load( Filters.by( f ), null );
+        expressionExperimentDao.count( Filters.by( f ) );
     }
 
     @Test

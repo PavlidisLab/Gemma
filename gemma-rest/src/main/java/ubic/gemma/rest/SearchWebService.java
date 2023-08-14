@@ -122,13 +122,13 @@ public class SearchWebService {
     @GET
     @GZIP
     @Produces(MediaType.APPLICATION_JSON_VALUE)
-    @Operation(summary = "Search everything in Gemma.")
+    @Operation(summary = "Search everything in Gemma")
     public SearchResultsResponseDataObject search( @QueryParam("query") String query,
             @QueryParam("taxon") TaxonArg<?> taxonArg,
             @QueryParam("platform") PlatformArg<?> platformArg,
             @Parameter(array = @ArraySchema(schema = @Schema(name = RESULT_TYPES_SCHEMA_NAME, hidden = true))) @QueryParam("resultTypes") List<String> resultTypes,
-            @Parameter(description = "Maximum number of search results to return; capped at " + MAX_SEARCH_RESULTS + " unless 'resultObject' is excluded.") @QueryParam("limit") LimitArg limit,
-            @QueryParam("exclude") StringArrayArg excludeArg ) {
+            @Parameter(description = "Maximum number of search results to return; capped at " + MAX_SEARCH_RESULTS + " unless `resultObject` is excluded.") @QueryParam("limit") LimitArg limit,
+            @Parameter(description = "List of fields to exclude from the payload. Only `resultObject` is supported.") @QueryParam("exclude") ExcludeArg<SearchResult<?>> excludeArg ) {
         if ( StringUtils.isBlank( query ) ) {
             throw new BadRequestException( "A non-empty query must be supplied." );
         }
@@ -194,7 +194,7 @@ public class SearchWebService {
 
     private static final Set<String> ALLOWED_FIELDS = Collections.singleton( "resultObject" );
 
-    private static Set<String> getExcludedFields( @Nullable StringArrayArg arg ) {
+    private static Set<String> getExcludedFields( @Nullable ExcludeArg<SearchResult<?>> arg ) {
         if ( arg == null ) {
             return Collections.emptySet();
         }

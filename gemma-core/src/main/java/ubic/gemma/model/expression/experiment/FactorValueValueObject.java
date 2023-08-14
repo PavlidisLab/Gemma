@@ -8,15 +8,18 @@
  */
 package ubic.gemma.model.expression.experiment;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.common.description.Characteristic;
+import ubic.gemma.model.common.measurement.MeasurementValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicBasicValueObject;
 
 import javax.annotation.Nullable;
-import java.util.Collection;
+import java.util.Comparator;
+import java.util.List;
 import java.util.stream.Collectors;
 
 /**
@@ -47,11 +50,13 @@ public class FactorValueValueObject extends IdentifiableValueObject<FactorValue>
      */
     private Long charId;
     private Long factorId;
-    @JsonProperty("isBaseline")
-    private boolean baseline = false;
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    @JsonProperty("measurement")
+    private MeasurementValueObject measurementObject;
     @JsonProperty("isMeasurement")
     private boolean measurement = false;
-    private Collection<CharacteristicBasicValueObject> characteristics;
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
+    private List<CharacteristicBasicValueObject> characteristics;
 
     /**
      * Required when using the class as a spring bean.
@@ -76,12 +81,12 @@ public class FactorValueValueObject extends IdentifiableValueObject<FactorValue>
         super( value );
         this.factorValue = FactorValueBasicValueObject.getSummaryString( value );
         this.factorId = value.getExperimentalFactor().getId();
-        this.baseline = value.getIsBaseline() != null ? value.getIsBaseline() : this.baseline;
 
         if ( value.getMeasurement() != null ) {
             this.setMeasurement( true );
             this.value = value.getMeasurement().getValue();
             this.charId = value.getMeasurement().getId();
+            this.measurementObject = new MeasurementValueObject( value.getMeasurement() );
         } else if ( c != null && c.getId() != null ) {
             this.charId = c.getId();
         } else {
@@ -106,6 +111,8 @@ public class FactorValueValueObject extends IdentifiableValueObject<FactorValue>
 
         this.characteristics = value.getCharacteristics().stream()
                 .map( CharacteristicBasicValueObject::new )
+                .sorted( Comparator.comparing( CharacteristicBasicValueObject::getCategory, Comparator.nullsLast( Comparator.naturalOrder() ) )
+                        .thenComparing( CharacteristicBasicValueObject::getValue, Comparator.nullsLast( Comparator.naturalOrder() ) ) )
                 .collect( Collectors.toList() );
     }
 

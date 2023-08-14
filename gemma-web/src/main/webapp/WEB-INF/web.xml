@@ -83,7 +83,7 @@
         </init-param>
         <init-param>
             <param-name>allowedHeaders</param-name>
-            <param-value>Authorization,Content-Type,X-Gemma-Client-ID</param-value>
+            <param-value>Authorization,Content-Type,X-Gemma-Client-ID,X-Requested-With</param-value>
         </init-param>
         <init-param>
             <param-name>allowCredentials</param-name>
@@ -108,6 +108,12 @@
     <filter-mapping>
         <filter-name>cors</filter-name>
         <url-pattern>/rest/v2/*</url-pattern>
+        <!-- specifically for GemBrow to allow preflights on the logout action -->
+        <!-- FIXME: all these should have equivalent endpoints under /rest/v2 -->
+        <url-pattern>/j_spring_security_logout</url-pattern>
+        <url-pattern>/home.html</url-pattern>
+        <url-pattern>/login.jsp</url-pattern>
+        <url-pattern>/whatsnew/generateCache.html</url-pattern>
     </filter-mapping>
 
     <!-- Spring Security -->

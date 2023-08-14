@@ -1,10 +1,12 @@
 package ubic.gemma.rest.util.args;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
 
-import javax.ws.rs.BadRequestException;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Composite Sequence argument for CS name. ArrayDesign property has to be populated via parent class setter before
@@ -21,8 +23,16 @@ public class CompositeSequenceNameArg extends CompositeSequenceArg<String> {
 
     @Override
     CompositeSequence getEntity( CompositeSequenceService service ) {
-        if ( platform == null )
-            throw new BadRequestException( "Platform not set for composite sequence retrieval" );
+        throw new UnsupportedOperationException( "Obtaining a single entity by name without a platform is not supported. Use getEntities() or getEntityWithPlatform() instead." );
+    }
+
+    @Override
+    List<CompositeSequence> getEntities( CompositeSequenceService service ) {
+        return new ArrayList<>( service.findByName( getValue() ) );
+    }
+
+    @Override
+    CompositeSequence getEntityWithPlatform( CompositeSequenceService service, ArrayDesign platform ) {
         return service.findByName( platform, this.getValue() );
     }
 }

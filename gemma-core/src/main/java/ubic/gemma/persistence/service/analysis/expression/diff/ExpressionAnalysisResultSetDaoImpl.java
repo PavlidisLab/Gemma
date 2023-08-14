@@ -24,13 +24,15 @@ import org.hibernate.*;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.sql.JoinType;
+import org.hibernate.type.StandardBasicTypes;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
-import org.springframework.transaction.PlatformTransactionManager;
-import ubic.gemma.model.analysis.expression.diff.*;
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResultSetValueObject;
+import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
+import ubic.gemma.model.analysis.expression.diff.PvalueDistribution;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.DatabaseEntry;
-import ubic.gemma.model.common.measurement.Measurement;
 import ubic.gemma.model.common.protocol.Protocol;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -41,8 +43,10 @@ import ubic.gemma.persistence.service.AbstractDao;
 import ubic.gemma.persistence.util.*;
 
 import javax.annotation.Nullable;
-import java.util.*;
-import java.util.concurrent.TimeUnit;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -60,24 +64,20 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilterin
 
     @Override
     public ExpressionAnalysisResultSet loadWithResultsAndContrasts( Long id ) {
-        StopWatch stopWatch = new StopWatch();
-        stopWatch.start();
-        //noinspection unchecked
-        ExpressionAnalysisResultSet ears = ( ExpressionAnalysisResultSet ) this.getSessionFactory().getCurrentSession().createQuery(
-                        "select r from ExpressionAnalysisResultSet r "
-                                + "left join fetch r.results res "
-                                + "left join fetch res.probe p "
-                                + "left join fetch res.contrasts c "
-                                + "left join fetch c.factorValue "
-                                + "left join fetch c.secondFactorValue "
-                                + "where r.id = :rs " )
-                .setParameter( "rs", id )
+        StopWatch timer = StopWatch.createStarted();
+        ExpressionAnalysisResultSet ears = ( ExpressionAnalysisResultSet ) getSessionFactory().getCurrentSession()
+                .createQuery( "select ears from ExpressionAnalysisResultSet ears "
+                        + "left join fetch ears.results res "
+                        + "left join fetch res.probe probe "
+                        + "left join fetch probe.biologicalCharacteristic bc "
+                        + "left join fetch bc.sequenceDatabaseEntry "
+                        + "left join fetch res.contrasts "
+                        + "where ears.id = :rsId" )
+                .setParameter( "rsId", id )
                 .uniqueResult();
-        if ( ears == null ) {
-            return null;
-        }
-        if ( stopWatch.getTime( TimeUnit.SECONDS ) > 1 ) {
-            log.info( "Loaded [" + elementClass.getName() + " id=" + id + "] with results and contrasts in " + stopWatch.getTime() + "ms." );
+        if ( timer.getTime() > 1000 ) {
+            log.info( String.format( "Loaded [%s id=%d] with results, probes and contrasts in %d ms.",
+                    elementClass.getName(), id, timer.getTime() ) );
         }
         return ears;
     }
@@ -252,13 +252,14 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilterin
     }
 
     @Override
-    public Map<DifferentialExpressionAnalysisResult, List<Gene>> loadResultToGenesMap( ExpressionAnalysisResultSet resultSet ) {
+    public Map<Long, List<Gene>> loadResultToGenesMap( ExpressionAnalysisResultSet resultSet ) {
         Query query = getSessionFactory().getCurrentSession()
-                .createSQLQuery( "select {result.*}, {gene.*} from DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT {result} "
-                        + "join GENE2CS on GENE2CS.CS = {result}.PROBE_FK "
+                .createSQLQuery( "select result.ID as RESULT_ID, {gene.*} from DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT result "
+                        + "join GENE2CS on GENE2CS.CS = result.PROBE_FK "
                         + "join CHROMOSOME_FEATURE as {gene} on {gene}.ID = GENE2CS.GENE "
-                        + "where {result}.RESULT_SET_FK = :rsid" )
-                .addEntity( "result", DifferentialExpressionAnalysisResult.class )
+                        + "where result.RESULT_SET_FK = :rsid" )
+                .addSynchronizedQuerySpace( "GENE2CS" )
+                .addScalar( "RESULT_ID", StandardBasicTypes.LONG )
                 .addEntity( "gene", Gene.class )
                 .setParameter( "rsid", resultSet.getId() )
                 .setCacheable( true );
@@ -269,7 +270,7 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilterin
         // YAY! my brain was almost fried writing that collector
         return list.stream()
                 .collect( Collectors.groupingBy(
-                        l -> ( DifferentialExpressionAnalysisResult ) l[0],
+                        l -> ( Long ) l[0],
                         Collectors.collectingAndThen( Collectors.toList(),
                                 elem -> elem.stream()
                                         .map( l -> ( Gene ) l[1] )

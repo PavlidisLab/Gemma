@@ -73,7 +73,7 @@ public class OntologySearchSourceTest extends AbstractJUnit4SpringContextTests {
         OntologyTerm term = new OntologyTermSimple( "http://purl.obolibrary.org/obo/CL_0000129", "microglial cell" );
         ExpressionExperiment ee = new ExpressionExperiment();
         ee.setId( 1L );
-        when( ontologyService.getResource( "http://purl.obolibrary.org/obo/CL_0000129" ) )
+        when( ontologyService.getTerm( "http://purl.obolibrary.org/obo/CL_0000129" ) )
                 .thenReturn( term );
         when( characteristicService.findExperimentsByUris( Collections.singleton( "http://purl.obolibrary.org/obo/CL_0000129" ), null, 5000, true, false ) )
                 .thenReturn( Collections.singletonMap( ExpressionExperiment.class,
@@ -86,7 +86,6 @@ public class OntologySearchSourceTest extends AbstractJUnit4SpringContextTests {
                         return String.format( "[%s](%s)", termLabel, termUri );
                     }
                 } ) );
-        verify( ontologyService ).findIndividuals( "http://purl.obolibrary.org/obo/CL_0000129" );
         verify( ontologyService ).findTerms( "http://purl.obolibrary.org/obo/CL_0000129" );
         verify( characteristicService ).findExperimentsByUris( Collections.singleton( "http://purl.obolibrary.org/obo/CL_0000129" ), null, 5000, true, false );
         assertThat( results ).anySatisfy( result -> {
@@ -99,7 +98,7 @@ public class OntologySearchSourceTest extends AbstractJUnit4SpringContextTests {
     }
 
     @Test
-    public void testWhenTermIsNotFoundGenerateLabelFromUri() throws SearchException, OntologySearchException {
+    public void testWhenTermIsNotFoundGenerateLabelFromUri() throws SearchException {
         ExpressionExperiment ee = new ExpressionExperiment();
         ee.setId( 1L );
         when( characteristicService.findExperimentsByUris( Collections.singleton( "http://purl.obolibrary.org/obo/CL_0000129" ), null, 5000, true, false ) )
@@ -113,7 +112,6 @@ public class OntologySearchSourceTest extends AbstractJUnit4SpringContextTests {
                         return String.format( "[%s](%s)", termLabel, termUri );
                     }
                 } ) );
-        verify( ontologyService ).findIndividuals( "http://purl.obolibrary.org/obo/CL_0000129" );
         verify( ontologyService ).findTerms( "http://purl.obolibrary.org/obo/CL_0000129" );
         verify( characteristicService ).findBestByUri( "http://purl.obolibrary.org/obo/CL_0000129" );
         verify( characteristicService ).findExperimentsByUris( Collections.singleton( "http://purl.obolibrary.org/obo/CL_0000129" ), null, 5000, true, false );
@@ -132,7 +130,7 @@ public class OntologySearchSourceTest extends AbstractJUnit4SpringContextTests {
         assertEquals( "CHEBI:7466", getLabelFromTermUri( "http://purl.obolibrary.org/obo/chebi.owl#CHEBI_7466" ) );
         assertEquals( "BIRNLEX:15001", getLabelFromTermUri( "http://ontology.neuinfo.org/NIF/Function/NIF-Function.owl#birnlex_15001" ) );
         assertEquals( "GO:0004016", getLabelFromTermUri( "http://purl.obolibrary.org/obo//GO_0004016//" ) );
-        assertEquals( "http://purl.obolibrary.org//", getLabelFromTermUri( "http://purl.obolibrary.org////" ) );
+        assertEquals( "http://purl.obolibrary.org////", getLabelFromTermUri( "http://purl.obolibrary.org////" ) );
         assertEquals( "PAT:ID_20327", getLabelFromTermUri( "http://www.orphanet.org/rdfns#pat_id_20327" ) );
         assertEquals( "PAT:ID_20327", getLabelFromTermUri( "http://www.orphanet.org/rdfns#pat_id_20327" ) );
         assertEquals( "63857", getLabelFromTermUri( "http://purl.org/commons/record/ncbi_gene/63857" ) );

@@ -28,8 +28,7 @@ public interface BaseImmutableService<O extends Identifiable> extends BaseReadOn
      * @param entities the entities to be created.
      * @return collection of objects referencing the persistent instances of given entities.
      */
-    @SuppressWarnings("unused")
-    // Consistency
+    @CheckReturnValue
     Collection<O> create( Collection<O> entities );
 
     /**
@@ -38,6 +37,7 @@ public interface BaseImmutableService<O extends Identifiable> extends BaseReadOn
      * @param entity the entity to be created.
      * @return object referencing the persistent instance of the given entity.
      */
+    @CheckReturnValue
     O create( O entity );
 
     /**

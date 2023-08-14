@@ -23,11 +23,11 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ContextConfiguration;
 import ubic.gemma.core.util.test.BaseDatabaseTest;
+import ubic.gemma.model.analysis.Investigation;
+import ubic.gemma.model.association.Gene2GOAssociation;
 import ubic.gemma.model.common.Identifiable;
-import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
-import ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails;
 import ubic.gemma.model.common.description.Characteristic;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.TableMaintenanceUtil;
 import ubic.gemma.persistence.service.TableMaintenanceUtilImpl;
@@ -213,6 +213,30 @@ public class CharacteristicDaoImplTest extends BaseDatabaseTest {
         // ranking by level uses the order by field() which is not supported
         Map<Class<? extends Identifiable>, Map<String, Set<ExpressionExperiment>>> results = characteristicDao.findExperimentsByUris( Collections.singleton( "http://example.com" ), taxon, 100, false );
         assertThat( results ).containsKey( ExpressionExperiment.class );
+    }
+
+    @Test
+    public void testGetParents() {
+        Characteristic c = createCharacteristic( "test", "test" );
+        ExperimentalDesign ed = ExperimentalDesign.Factory.newInstance();
+        sessionFactory.getCurrentSession().persist( ed );
+        ExperimentalFactor ef = new ExperimentalFactor();
+        ef.setExperimentalDesign( ed );
+        ef.setType( FactorType.CATEGORICAL );
+        sessionFactory.getCurrentSession().persist( ef );
+        FactorValue fv = FactorValue.Factory.newInstance( ef );
+        fv.getCharacteristics().add( c );
+        sessionFactory.getCurrentSession().persist( fv );
+        sessionFactory.getCurrentSession().flush();
+        assertThat( characteristicDao.getParents( Collections.singleton( c ), null, -1 ) )
+                .hasSize( 1 )
+                .containsEntry( c, fv );
+        assertThat( characteristicDao.getParents( Collections.singleton( c ), Collections.singleton( FactorValue.class ), -1 ) )
+                .hasSize( 1 )
+                .containsEntry( c, fv );
+        assertThat( characteristicDao.getParents( Collections.singleton( c ), Collections.singleton( Investigation.class ), -1 ) ).isEmpty();
+        // this is a special case since it does not use a foreign key in the CHARACTERISTIC table
+        assertThat( characteristicDao.getParents( Collections.singleton( c ), Collections.singleton( Gene2GOAssociation.class ), -1 ) ).isEmpty();
     }
 
     private Characteristic createCharacteristic( @Nullable String valueUri, String value ) {

@@ -87,6 +87,5 @@ public interface QuantitationTypeService extends BaseService<QuantitationType>, 
     @Secured({ "GROUP_USER" })
     List<QuantitationType> loadByDescription( String description );
 
-    @Secured({ "GROUP_USER" })
     List<QuantitationTypeValueObject> loadValueObjectsWithExpressionExperiment( Collection<QuantitationType> qts, ExpressionExperiment expressionExperiment );
 }

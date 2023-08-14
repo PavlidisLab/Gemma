@@ -18,15 +18,13 @@ import cern.colt.list.DoubleArrayList;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
-import org.springframework.transaction.UnexpectedRollbackException;
+import org.springframework.stereotype.Service;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
-import ubic.gemma.core.analysis.preprocess.filter.FilteringException;
-import ubic.gemma.core.analysis.preprocess.filter.NoRowsLeftAfterFilteringException;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.analysis.expression.sampleCoexpression.SampleCoexpressionAnalysisService;
 
+import javax.annotation.Nullable;
 import java.util.*;
 
 /**
@@ -34,22 +32,34 @@ import java.util.*;
  *
  * @author paul
  */
-@Component
+@Service
 public class OutlierDetectionServiceImpl implements OutlierDetectionService {
     private static final Log log = LogFactory.getLog( OutlierDetectionServiceImpl.class );
 
     @Autowired
     private SampleCoexpressionAnalysisService sampleCoexpressionAnalysisService;
 
+    @Nullable
     @Override
-    public Collection<OutlierDetails> identifyOutliersByMedianCorrelation( ExpressionExperiment ee ) throws FilteringException {
-        DoubleMatrix<BioAssay, BioAssay> cormat = sampleCoexpressionAnalysisService.loadTryRegressedThenFull( ee );
-
+    public Collection<OutlierDetails> getOutlierDetails( ExpressionExperiment ee ) {
+        DoubleMatrix<BioAssay, BioAssay> cormat = sampleCoexpressionAnalysisService.loadBestMatrix( ee );
         if ( cormat == null || cormat.rows() == 0 ) {
             OutlierDetectionServiceImpl.log.warn( "Correlation matrix is empty, cannot check for outliers" );
             return new HashSet<>();
         }
+        return this.identifyOutliersByMedianCorrelation( cormat );
+    }
 
+    @Override
+    public Collection<OutlierDetails> identifyOutliersByMedianCorrelation( ExpressionExperiment ee ) {
+        DoubleMatrix<BioAssay, BioAssay> cormat = sampleCoexpressionAnalysisService.loadBestMatrix( ee );
+        if ( cormat == null ) {
+            cormat = sampleCoexpressionAnalysisService.computeIfNecessary( ee );
+        }
+        if ( cormat.rows() == 0 ) {
+            OutlierDetectionServiceImpl.log.warn( "Correlation matrix is empty, cannot check for outliers" );
+            return new HashSet<>();
+        }
         return this.identifyOutliersByMedianCorrelation( cormat );
     }
 

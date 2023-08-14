@@ -45,6 +45,7 @@ import ubic.gemma.persistence.util.EntityUtils;
 import javax.annotation.Nullable;
 import java.math.BigInteger;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Manages and queries coexpression 'links' between genes.
@@ -1958,7 +1959,8 @@ public class CoexpressionDaoImpl implements CoexpressionDao {
                 Collection<Long> g = it.next();
                 q.setParameterList( "genes", g );
                 List<GeneCoexpressionTestedIn> list = q.list();
-                Map<Long, GeneCoexpressionTestedIn> idMap = EntityUtils.getPropertyMap( list, "geneId" );
+                Map<Long, GeneCoexpressionTestedIn> idMap = list.stream()
+                        .collect( Collectors.toMap( GeneCoexpressionTestedIn::getGeneId, g2 -> g2, ( a, b ) -> b ) );
                 geneTestedInCache.cache( idMap );
                 gcTestedIn.putAll( idMap );
                 ++n;

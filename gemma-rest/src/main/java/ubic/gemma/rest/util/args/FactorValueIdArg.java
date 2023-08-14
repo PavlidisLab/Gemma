@@ -4,8 +4,6 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.persistence.service.expression.experiment.FactorValueService;
 
-import javax.annotation.Nonnull;
-
 /**
  * Maps a long identifier to a {@link FactorValue}.
  *

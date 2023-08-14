@@ -15,6 +15,7 @@
 package ubic.gemma.model.expression.bioAssay;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import org.hibernate.Hibernate;
 import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.common.description.DatabaseEntryValueObject;
@@ -57,11 +58,13 @@ public class BioAssayValueObject extends IdentifiableValueObject<BioAssay> {
     private Boolean predictedOutlier = false;
     private Date processingDate;
     private BioMaterialValueObject sample;
-    @JsonIgnore
+
+    // only for RNA-Seq data
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     private Boolean sequencePairedReads;
-    @JsonIgnore
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     private Integer sequenceReadCount;
-    @JsonIgnore
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     private Integer sequenceReadLength;
 
     // to hold state change, initialized as this.outlier

@@ -1,6 +1,6 @@
 package ubic.gemma.persistence.service.expression.experiment;
 
-import ubic.gemma.core.security.audit.IgnoreAudit;
+import org.apache.commons.lang3.RandomStringUtils;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.description.AnnotationValueObject;
@@ -8,6 +8,7 @@ import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.MeanVarianceRelation;
@@ -16,7 +17,7 @@ import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.BrowsingDao;
-import ubic.gemma.persistence.service.FilteringVoEnabledDao;
+import ubic.gemma.persistence.service.CachedFilteringVoEnabledDao;
 import ubic.gemma.persistence.service.common.auditAndSecurity.curation.CuratableDao;
 import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Slice;
@@ -35,14 +36,16 @@ import java.util.Map;
  */
 @SuppressWarnings("unused") // Possible external use
 public interface ExpressionExperimentDao
-        extends CuratableDao<ExpressionExperiment, ExpressionExperimentValueObject>,
-        FilteringVoEnabledDao<ExpressionExperiment, ExpressionExperimentValueObject>, BrowsingDao<ExpressionExperiment> {
+        extends CuratableDao<ExpressionExperiment>,
+        CachedFilteringVoEnabledDao<ExpressionExperiment, ExpressionExperimentValueObject>, BrowsingDao<ExpressionExperiment> {
 
     String OBJECT_ALIAS = "ee";
 
-    long countNotTroubled();
-
     Collection<Long> filterByTaxon( Collection<Long> ids, Taxon taxon );
+
+    ExpressionExperiment findByShortName( String shortName );
+
+    Collection<ExpressionExperiment> findByName( String name );
 
     Collection<ExpressionExperiment> findByAccession( DatabaseEntry accession );
 
@@ -85,6 +88,21 @@ public interface ExpressionExperimentDao
     Map<ArrayDesign, Collection<Long>> getArrayDesignsUsed( Collection<Long> eeids );
 
     /**
+     * Obtain the dataset usage frequency by technology type.
+     * <p>
+     * If a dataset was switched to a platform of a different technology type, it is counted toward both.
+     */
+    Map<TechnologyType, Long> getTechnologyTypeUsageFrequency();
+
+    /**
+     * Obtain the dataset usage frequency by technology type for the given dataset IDs.
+     * <p>
+     * Note: No ACL filtering is performed.
+     * @see #getTechnologyTypeUsageFrequency()
+     */
+    Map<TechnologyType, Long> getTechnologyTypeUsageFrequency( Collection<Long> eeIds );
+
+    /**
      * Obtain dataset usage frequency by platform currently used.
      * <p>
      * Note that a dataset counts toward all the platforms mentioned through its {@link BioAssay}.
@@ -115,6 +133,7 @@ public interface ExpressionExperimentDao
 
     /**
      * Obtain dataset usage frequency by platform currently for the given dataset IDs.
+     * <p>
      * Note: no ACL filtering is performed. Only administrators can see troubled platforms.
      * @see #getOriginalPlatformsUsageFrequency(int)
      */
@@ -180,11 +199,6 @@ public interface ExpressionExperimentDao
     Taxon getTaxon( BioAssaySet ee );
 
     /**
-     * This is a specialized flavour of {@link #loadDetailsValueObjects(Filters, Sort, int, int)} for detailed EE VOs.
-     */
-    Slice<ExpressionExperimentDetailsValueObject> loadDetailsValueObjects( Filters filters, Sort sort, int offset, int limit );
-
-    /**
      * Special method for front-end access. This is partly redundant with {@link #loadValueObjects(Filters, Sort, int, int)};
      * however, it fills in more information, returns ExpressionExperimentDetailsValueObject
      *
@@ -195,12 +209,22 @@ public interface ExpressionExperimentDao
      * @param limit      maximum number of results to return
      * @return a list of EE details VOs representing experiments matching the given arguments.
      */
-    Slice<ExpressionExperimentDetailsValueObject> loadDetailsValueObjectsByIds( @Nullable Collection<Long> ids, @Nullable Taxon taxon, @Nullable Sort sort, int offset, int limit );
+    Slice<ExpressionExperimentDetailsValueObject> loadDetailsValueObjects( @Nullable Collection<Long> ids, @Nullable Taxon taxon, @Nullable Sort sort, int offset, int limit );
 
     /**
-     * Like {@link #loadDetailsValueObjectsByIds(Collection, Taxon, Sort, int, int)}, but returning a list.
+     * Flavour of {@link #loadDetailsValueObjectsByIds(Collection)}, but using the query cache.
+     */
+    Slice<ExpressionExperimentDetailsValueObject> loadDetailsValueObjectsByIdsWithCache( @Nullable Collection<Long> ids, @Nullable Taxon taxon, @Nullable Sort sort, int offset, int limit );
+
+    /**
+     * Like {@link #loadDetailsValueObjects(Collection, Taxon, Sort, int, int)}, but returning a list.
      */
     List<ExpressionExperimentDetailsValueObject> loadDetailsValueObjectsByIds( Collection<Long> ids );
+
+    /**
+     * Flavour of {@link #loadDetailsValueObjectsByIds(Collection)}, but using the query cache.
+     */
+    List<ExpressionExperimentDetailsValueObject> loadDetailsValueObjectsByIdsWithCache( Collection<Long> ids );
 
     Slice<ExpressionExperimentValueObject> loadBlacklistedValueObjects( @Nullable Filters filters, @Nullable Sort sort, int offset, int limit );
 
@@ -237,6 +261,13 @@ public interface ExpressionExperimentDao
      */
     List<Characteristic> getExperimentalDesignAnnotations( ExpressionExperiment expressionExperiment );
 
+    Map<Characteristic, Long> getCategoriesUsageFrequency( @Nullable Collection<Long> eeIds, @Nullable Collection<String> excludedCategoryUris, @Nullable Collection<String> excludedTermUris );
+
+    /**
+     * Special indicator for an uncategorized term.
+     */
+    String UNCATEGORIZED = "[uncategorized_" + RandomStringUtils.randomAlphanumeric( 10 ) + "]";
+
     /**
      * Obtain annotations usage frequency for a set of given {@link ExpressionExperiment} IDs.
      * <p>
@@ -247,25 +278,15 @@ public interface ExpressionExperimentDao
      *                                consider everything
      * @param level                   applicable annotation level, one of {@link ExpressionExperiment}, {@link ExperimentalDesign}
      *                                or {@link BioMaterial}
-     * @param maxResults              maximum number of annotations to return
+     * @param maxResults              maximum number of annotations to return, or -1 to return everything
      * @param minFrequency            minimum usage frequency to be reported (0 effectively allows everything)
+     * @param category                a category URI or free text category to restrict the results to, or null to
+     *                                consider everything, empty string to consider uncategorized terms
      * @param retainedTermUris        a collection of term to retain even if they don't meet the minimum frequency criteria
      */
-    Map<Characteristic, Long> getAnnotationsUsageFrequency( @Nullable Collection<Long> expressionExperimentIds, @Nullable Class<? extends Identifiable> level, int maxResults, int minFrequency, @Nullable Collection<String> retainedTermUris );
+    Map<Characteristic, Long> getAnnotationsUsageFrequency( @Nullable Collection<Long> expressionExperimentIds, @Nullable Class<? extends Identifiable> level, int maxResults, int minFrequency, @Nullable String category, @Nullable Collection<String> excludedCategoryUris, @Nullable Collection<String> excludedTermUris, @Nullable Collection<String> retainedTermUris );
 
     Collection<ExpressionExperiment> getExperimentsLackingPublications();
-
-    /**
-     * Update the troubled status of all experiments using a given platform.
-     * @return the number of expression experiments marked or unmarked as troubled
-     */
-    @IgnoreAudit
-    int updateTroubledByArrayDesign( ArrayDesign arrayDesign, boolean troubled );
-
-    /**
-     * Count the number of distict platforms used that are troubled.
-     */
-    long countTroubledPlatforms( ExpressionExperiment ee );
 
     MeanVarianceRelation updateMeanVarianceRelation( ExpressionExperiment ee, MeanVarianceRelation mvr );
 }

@@ -6,7 +6,6 @@
 <hibernate-mapping>
     <class name="ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult"
            table="DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT" mutable="false">
-        <cache usage="read-only"/>
         <id name="id" type="java.lang.Long" unsaved-value="null">
             <column name="ID" sql-type="BIGINT"/>
             <generator class="native">
@@ -25,7 +24,6 @@
             <column name="CORRECTED_P_VALUE_BIN" not-null="false" unique="false" sql-type="INTEGER"/>
         </property>
         <set name="contrasts" lazy="true" fetch="select" cascade="all" mutable="false">
-            <cache usage="read-write"/>
             <key foreign-key="CONTRAST_RESULT_DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT_FKC">
                 <column name="DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT_FK" sql-type="BIGINT"/>
             </key>

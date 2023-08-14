@@ -21,7 +21,6 @@ package ubic.gemma.web.controller.common.auditAndSecurity;
 import gemma.gsec.authentication.UserDetailsImpl;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.validator.routines.EmailValidator;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.encoding.PasswordEncoder;
@@ -42,6 +41,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 /**
  * Controller to edit profile of users.
@@ -53,6 +53,11 @@ import java.util.Map;
 public class UserFormMultiActionController extends BaseController {
 
     public static final int MIN_PASSWORD_LENGTH = 6;
+
+    /**
+     * RFC 5322 email pattern.
+     */
+    private static final Pattern RFC_5322_EMAIL_PATTERN = Pattern.compile( "^[a-zA-Z0-9_!#$%&'*+/=?`{|}~^.-]+@[a-zA-Z0-9.-]+$" );
 
     @Autowired
     private UserManager userManager;
@@ -88,7 +93,7 @@ public class UserFormMultiActionController extends BaseController {
             boolean changed = false;
 
             if ( StringUtils.isNotBlank( email ) && !user.getEmail().equals( email ) ) {
-                if ( !EmailValidator.getInstance().isValid( email ) ) {
+                if ( !RFC_5322_EMAIL_PATTERN.matcher( email ).matches() ) {
                     JSONObject json = new JSONObject()
                             .put( "success", false )
                             .put( "message", "The email address does not look valid" );

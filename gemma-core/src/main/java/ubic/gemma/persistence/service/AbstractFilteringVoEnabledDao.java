@@ -203,7 +203,7 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
             String[] propertyNames = classMetadata.getPropertyNames();
             Type[] propertyTypes = classMetadata.getPropertyTypes();
             if ( classMetadata.getIdentifierPropertyName() != null ) {
-                registerProperty( prefix + classMetadata.getIdentifierPropertyName() );
+                registerProperty( prefix + classMetadata.getIdentifierPropertyName(), useSubquery );
             }
             for ( int i = 0; i < propertyNames.length; i++ ) {
                 String propertyName = propertyNames[i];
@@ -216,7 +216,7 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
                     }
                 } else if ( propertyType.isCollectionType() ) {
                     // special case for collection size, regardless of its type
-                    registerProperty( prefix + propertyName + ".size" );
+                    registerProperty( prefix + propertyName + ".size", useSubquery );
                 } else if ( propertyType instanceof MaterializedBlobType || propertyType instanceof MaterializedClobType || propertyType instanceof MaterializedNClobType ) {
                     log.debug( String.format( "Property %s%s of type %s was excluded in %s: BLOBs and CLOBs are not exposed by default.",
                             prefix, propertyName, propertyType.getName(), entityClass.getName() ) );
@@ -331,6 +331,18 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
                 property );
     }
 
+    @Override
+    public final <T> Filter getFilter( String property, Class<T> propertyType, Filter.Operator operator, T value ) {
+        FilterablePropertyMeta propertyMeta = getFilterablePropertyMeta( property );
+        return nestIfSubquery( Filter.by( propertyMeta.objectAlias, propertyMeta.propertyName, propertyType, operator, value, property ), property );
+    }
+
+    @Override
+    public final <T> Filter getFilter( String property, Class<T> propertyType, Filter.Operator operator, Collection<T> values ) {
+        FilterablePropertyMeta propertyMeta = getFilterablePropertyMeta( property );
+        return nestIfSubquery( Filter.by( propertyMeta.objectAlias, propertyMeta.propertyName, propertyType, operator, values, property ), property );
+    }
+
     private Filter nestIfSubquery( Filter f, String propertyName ) {
         if ( filterablePropertiesViaSubquery.contains( propertyName ) ) {
             String entityName = getSessionFactory().getClassMetadata( elementClass ).getEntityName();
@@ -356,18 +368,6 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
         } else {
             return f;
         }
-    }
-
-    @Override
-    public final <T> Filter getFilter( String property, Class<T> propertyType, Filter.Operator operator, T value ) {
-        FilterablePropertyMeta propertyMeta = getFilterablePropertyMeta( property );
-        return Filter.by( propertyMeta.objectAlias, propertyMeta.propertyName, propertyType, operator, value, property );
-    }
-
-    @Override
-    public final <T> Filter getFilter( String property, Class<T> propertyType, Filter.Operator operator, Collection<T> values ) {
-        FilterablePropertyMeta propertyMeta = getFilterablePropertyMeta( property );
-        return Filter.by( propertyMeta.objectAlias, propertyMeta.propertyName, propertyType, operator, values, property );
     }
 
     @Override

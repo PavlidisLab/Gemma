@@ -48,7 +48,7 @@
 		</div>
 
 
-		<div id="content" class="clearfix">
+		<div id="content">
 
 
 

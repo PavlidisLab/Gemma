@@ -43,6 +43,16 @@ public class Characteristic extends AbstractDescribable implements Serializable 
 
     private static final long serialVersionUID = -7242166109264718620L;
 
+
+    /**
+     * Obtain a comparator to compare terms by category URI (or category if null) in a case-insensitive manner.
+     */
+    public static Comparator<Characteristic> getByCategoryComparator() {
+        return Comparator
+                .comparing( Characteristic::getCategoryUri, Comparator.nullsLast( String.CASE_INSENSITIVE_ORDER ) )
+                .thenComparing( Characteristic::getCategory, Comparator.nullsLast( String.CASE_INSENSITIVE_ORDER ) );
+    }
+
     /**
      * Obtain a comparator to order terms by value URI (or value if null) in a case-insensitive manner.
      */

@@ -21,6 +21,7 @@ import ubic.gemma.persistence.util.TestComponent;
 import javax.annotation.Nullable;
 import javax.persistence.*;
 import java.util.Collection;
+import java.util.EnumSet;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -139,13 +140,13 @@ public class AbstractFilteringVoEnabledDaoTest extends AbstractJUnit4SpringConte
         assertThat( fakeDao.getFilterablePropertyMeta( "id" ) )
                 .hasFieldOrPropertyWithValue( "propertyType", Long.class );
         assertThat( fakeDao.getFilterablePropertyMeta( "enumByOrdinal" ) )
-                .hasFieldOrPropertyWithValue( "propertyType", Integer.class );
-        assertThat( fakeDao.getFilterablePropertyMeta( "enumByOrdinal" ).getDescription() )
-                .isEqualTo( "available values: 0, 1, 2, 3" );
+                .hasFieldOrPropertyWithValue( "propertyType", FakeEnum.class );
+        assertThat( fakeDao.getFilterablePropertyMeta( "enumByOrdinal" ).getAllowedValues() )
+                .containsExactlyInAnyOrderElementsOf( EnumSet.allOf( FakeEnum.class ) );
         assertThat( fakeDao.getFilterablePropertyMeta( "enumByName" ) )
-                .hasFieldOrPropertyWithValue( "propertyType", String.class );
-        assertThat( fakeDao.getFilterablePropertyMeta( "enumByName" ).getDescription() )
-                .isEqualTo( "available values: FOO, BAR, JOHN, DOE" );
+                .hasFieldOrPropertyWithValue( "propertyType", FakeEnum.class );
+        assertThat( fakeDao.getFilterablePropertyMeta( "enumByName" ).getAllowedValues() )
+                .containsExactlyInAnyOrderElementsOf( EnumSet.allOf( FakeEnum.class ) );
         assertThat( fakeDao.getFilterablePropertyMeta( "collectionOfStrings.size" ) )
                 .hasFieldOrPropertyWithValue( "propertyType", Integer.class );
     }

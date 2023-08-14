@@ -15,16 +15,15 @@
 package ubic.gemma.web.controller.common.auditAndSecurity;
 
 import org.apache.commons.lang3.RandomStringUtils;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.mockito.Mockito;
+import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.mock.web.MockHttpServletRequest;
-import org.springframework.mock.web.MockHttpServletResponse;
+import org.springframework.http.MediaType;
+import org.springframework.test.annotation.DirtiesContext;
 import ubic.gemma.core.util.test.category.SlowTest;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.web.controller.common.auditAndSecurity.recaptcha.ReCaptcha;
 import ubic.gemma.web.controller.common.auditAndSecurity.recaptcha.ReCaptchaResponse;
 import ubic.gemma.web.util.BaseSpringWebTest;
@@ -32,126 +31,101 @@ import ubic.gemma.web.util.BaseSpringWebTest;
 import javax.servlet.http.HttpServletRequest;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.Random;
-import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static org.junit.Assert.fail;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mockito.internal.verification.VerificationModeFactory.times;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 /**
  * Tortures the signup system by starting many threads and signing up many users, while at the same time creating a lot
  * of expression experiments.
+ * <p>
+ * This test replaces the recaptcha service used by {@link SignupController}, so it is annotated with {@link DirtiesContext}
+ * to invalidate the context once all the tests have completed.
  *
  * @author Paul
  */
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 public class SignupControllerTest extends BaseSpringWebTest {
 
     @Autowired
     private SignupController suc;
 
-    @Autowired
-    private ExpressionExperimentService expressionExperimentService;
+    @Mock
+    private ReCaptcha mockReCaptcha;
+
+    /* fixtures */
+    private Collection<Future<?>> futures;
 
     @Before
-    public void setUp() throws Exception {
-
-        ReCaptcha mockReCaptcha = Mockito.mock( ReCaptcha.class );
-
+    public void setUp() {
+        when( mockReCaptcha.isPrivateKeySet() ).thenReturn( true );
         when( mockReCaptcha.validateRequest( any( HttpServletRequest.class ) ) )
                 .thenReturn( new ReCaptchaResponse( true, "" ) );
-
         suc.setRecaptchaTester( mockReCaptcha );
+        futures = new HashSet<>();
     }
 
-    @SuppressWarnings("Duplicates") // Not in this project
+    @After
+    public void tearDown() {
+        for ( Future<?> future : futures ) {
+            future.cancel( true );
+        }
+    }
+
     @Test
     @Category(SlowTest.class)
-    public void testSignup() throws Exception {
+    public void testSignup() {
         int numThreads = 10; // too high and we run out of connections, which is not what we're testing.
         final int numsignupsperthread = 20;
-        final Random random = new Random();
-        final AtomicInteger c = new AtomicInteger( 0 );
-        final AtomicBoolean failed = new AtomicBoolean( false );
-        Collection<Thread> threads = new HashSet<>();
-        for ( int i = 0; i < numThreads; i++ ) {
-
-            Thread k = new Thread( new Runnable() {
-                @Override
-                public void run() {
-                    try {
-                        for ( int j = 0; j < numsignupsperthread; j++ ) {
-                            MockHttpServletRequest req;
-                            Thread.sleep( random.nextInt( 50 ) );
-                            req = new MockHttpServletRequest( "POST", "/signup.html" );
-                            String uname = RandomStringUtils.randomAlphabetic( 10 );
-                            // log.info( "Signingup: " + uname + " (" + c.get() + ")" );
-
-                            String password = RandomStringUtils.randomAlphabetic( 40 );
-                            req.addParameter( "password", password );
-
-                            req.addParameter( "passwordConfirm", password );
-                            req.addParameter( "username", uname );
-                            String email = "foo@" + RandomStringUtils.randomAlphabetic( 10 ) + ".edu";
-                            req.addParameter( "email", email );
-
-                            req.addParameter( "emailConfirm", email );
-                            suc.signup( password, password, uname, email, email, req, new MockHttpServletResponse() );
-
-                            /*
-                             * Extra torture.
-                             */
-                            ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
-                            ee.setDescription( "From test" );
-                            ee.setName( RandomStringUtils.randomAlphabetic( 20 ) );
-                            ee.setShortName( RandomStringUtils.randomAlphabetic( 20 ) );
-                            // log.info( "Making experiment" + ee.getName() );
-                            expressionExperimentService.create( ee );
-
-                            c.incrementAndGet();
-
-                        }
-                    } catch ( Exception e ) {
-                        failed.set( true );
-                        log.error( "!!!!!!!!!!!!!!!!!!!!!! FAILED: " + e.getMessage() );
-                        log.debug( e, e );
-                        throw new RuntimeException( e );
-                    }
-                    log.debug( "Thread done." );
-                }
-            } );
-            threads.add( k );
-
-            k.start();
-        }
-
-        int waits = 0;
-        int maxWaits = 20;
         int expectedEventCount = numThreads * numsignupsperthread;
-        while ( c.get() < expectedEventCount && !failed.get() ) {
-            Thread.sleep( 3000 );
-            log.info( "Waiting ... C=" + +c.get() );
-            if ( ++waits > maxWaits ) {
-                for ( Thread t : threads ) {
-                    if ( t.isAlive() )
-                        t.interrupt();
+        final AtomicInteger c = new AtomicInteger( 0 );
+        ExecutorService executor = Executors.newFixedThreadPool( numThreads );
+        for ( int i = 0; i < expectedEventCount; i++ ) {
+            futures.add( executor.submit( () -> {
+                try {
+                    String uname = RandomStringUtils.randomAlphabetic( 10 );
+                    String password = RandomStringUtils.randomAlphabetic( 40 );
+                    String email = "foo@" + RandomStringUtils.randomAlphabetic( 10 ) + ".edu";
+                    mvc.perform( post( "/signup.html" )
+                                    .param( "password", password )
+                                    .param( "passwordConfirm", password )
+                                    .param( "username", uname )
+                                    .param( "email", email )
+                                    .param( "emailConfirm", email ) )
+                            .andExpect( status().isOk() )
+                            .andExpect( content().contentTypeCompatibleWith( MediaType.APPLICATION_JSON ) )
+                            .andExpect( jsonPath( "$.success" ).value( true ) );
+                } catch ( Exception e ) {
+                    throw new RuntimeException( e );
                 }
-                fail( "Multithreaded failure: timed out." );
-            }
+                c.incrementAndGet();
+            } ) );
         }
 
-        log.debug( " &&&&& DONE &&&&&" );
-
-        for ( Thread thread : threads ) {
-            if ( thread.isAlive() )
-                thread.interrupt();
+        // 20 seconds
+        long maxWaitNano = 20L * 1000L * 1000L * 1000L;
+        long startTimeNano = System.nanoTime();
+        for ( Future<?> f : futures ) {
+            assertThat( f ).succeedsWithin( Math.max( maxWaitNano - ( System.nanoTime() - startTimeNano ), 0 ), TimeUnit.NANOSECONDS );
         }
 
-        if ( failed.get() || c.get() != expectedEventCount ) {
-            fail( "Multithreaded loading failure: check logs for failure to recover from deadlock?" );
-        } else {
-            log.info( "TORTURE TEST PASSED!" );
-        }
+        log.info( String.format( "Signup torture test took %d seconds", ( System.nanoTime() - startTimeNano ) / 1000 / 1000 / 1000 ) );
+
+        assertEquals( expectedEventCount, c.get() );
+        verify( this.mockReCaptcha, times( expectedEventCount ) )
+                .isPrivateKeySet();
+        verify( this.mockReCaptcha, times( expectedEventCount ) )
+                .validateRequest( any() );
     }
 }

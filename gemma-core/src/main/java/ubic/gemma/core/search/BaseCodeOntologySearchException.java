@@ -9,11 +9,6 @@ public class BaseCodeOntologySearchException extends SearchException {
 
     private final ubic.basecode.ontology.search.OntologySearchException cause;
 
-    public BaseCodeOntologySearchException( String message, ubic.basecode.ontology.search.OntologySearchException cause ) {
-        super( message, cause );
-        this.cause = cause;
-    }
-
     public BaseCodeOntologySearchException( OntologySearchException cause ) {
         super( cause.getMessage(), cause );
         this.cause = cause;

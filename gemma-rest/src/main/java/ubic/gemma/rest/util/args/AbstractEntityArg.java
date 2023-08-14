@@ -5,6 +5,8 @@ import ubic.gemma.persistence.service.FilteringService;
 
 import javax.annotation.Nullable;
 import javax.ws.rs.BadRequestException;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * Interface representing and API call argument that can represent various identifiers of different types. E.g a taxon
@@ -36,12 +38,26 @@ public abstract class AbstractEntityArg<T, O extends Identifiable, S extends Fil
     }
 
     /**
-     *
+     * Defines how to retrieve an entity from a service.
+     * @param service the service to retrieve the entity from
      * @return the entity matching the argument if found, otherwise null
-     * @throws BadRequestException if the argument is incorrectly formed
-     * @deprecated specify the retrieval logic by implementing {@link AbstractEntityArgService#getEntity(AbstractEntityArg)} instead
      */
     @Nullable
-    @Deprecated
-    abstract O getEntity( S service ) throws BadRequestException;
+    abstract O getEntity( S service );
+
+    /**
+     * Defines how to retrieve multiple entities from a service.
+     * <p>
+     * This is only meaningful if the argument is ambiguous, otherwise {@link #getEntity(FilteringService)} should be
+     * used.
+     * @see #getEntities(FilteringService)
+     */
+    List<O> getEntities( S service ) {
+        O entity = getEntity( service );
+        if ( entity != null ) {
+            return Collections.singletonList( getEntity( service ) );
+        } else {
+            return Collections.emptyList();
+        }
+    }
 }

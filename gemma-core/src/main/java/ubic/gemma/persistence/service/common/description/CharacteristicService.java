@@ -106,21 +106,11 @@ public interface CharacteristicService extends BaseService<Characteristic>, Base
     Map<String, Long> countCharacteristicsByValueUri( Collection<String> uris );
 
     /**
-     * @param  characteristics characteristics
+     * @param characteristics characteristics
      * @return a map of the specified characteristics to their annotated objects.
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_MAP_VALUES_READ" })
-    Map<Characteristic, Object> getParents( Collection<Characteristic> characteristics );
-
-    /**
-     * @param  characteristics characteristics
-     * @param  classes         classes
-     * @return a map of the specified characteristics to their parent objects, constrained to be among
-     *                         the classes
-     *                         given.
-     */
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_MAP_VALUES_READ" })
-    Map<Characteristic, Object> getParents( Collection<Class<?>> classes, @Nullable Collection<Characteristic> characteristics );
+    Map<Characteristic, Identifiable> getParents( Collection<Characteristic> characteristics, @Nullable Collection<Class<?>> parentClasses, int maxResults );
 
     //    /**
     //     * @param classes constraint
@@ -142,14 +132,6 @@ public interface CharacteristicService extends BaseService<Characteristic>, Base
     @Override
     @Secured({ "GROUP_USER" })
     void remove( Characteristic c );
-
-    /**
-     * Optimized version that only retrieves the IDs of the owning object. The caller has to keep track of the
-     * parentClass
-     *
-     * @param  parentClass     the type of object sought associated with the characteristic
-     */
-    Map<Characteristic, Long> getParentIds( Class<?> parentClass, @Nullable Collection<Characteristic> characteristics );
 
     /**
      * @see FilteringVoEnabledDao#getFilterableProperties()

@@ -11,7 +11,6 @@
     <!-- Local tasks executor -->
     <bean id="taskExecutor" class="org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor">
         <property name="corePoolSize" value="${gemma.localTasks.corePoolSize}"/>
-        <property name="maxPoolSize" value="${gemma.localTasks.maxPoolSize}"/>
     </bean>
 
     <!-- Message source for this context, loaded from localized "messages_xx" files -->
@@ -59,13 +58,6 @@
                     <bean class="io.micrometer.core.instrument.binder.logging.Log4j2Metrics"/>
                     <!-- database metrics -->
                     <bean class="ubic.gemma.core.metrics.binder.jpa.Hibernate4Metrics">
-                        <constructor-arg ref="sessionFactory"/>
-                        <constructor-arg value="sessionFactory"/>
-                        <constructor-arg>
-                            <list/>
-                        </constructor-arg>
-                    </bean>
-                    <bean class="ubic.gemma.core.metrics.binder.jpa.Hibernate4QueryMetrics">
                         <constructor-arg ref="sessionFactory"/>
                         <constructor-arg value="sessionFactory"/>
                         <constructor-arg>

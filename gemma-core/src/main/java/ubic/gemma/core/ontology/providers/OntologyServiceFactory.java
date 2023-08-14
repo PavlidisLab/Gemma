@@ -31,6 +31,8 @@ public class OntologyServiceFactory<T extends OntologyService> extends AbstractF
     private boolean forceIndexing = false;
     private boolean loadInBackground = true;
     private TaskExecutor ontologyTaskExecutor = null;
+    private boolean enableInference = true;
+    private boolean enableSearch = true;
 
 
     /**
@@ -72,6 +74,20 @@ public class OntologyServiceFactory<T extends OntologyService> extends AbstractF
     }
 
     /**
+     * Enable inference for the ontology.
+     */
+    public void setEnableInference( boolean enableInference ) {
+        this.enableInference = enableInference;
+    }
+
+    /**
+     * Enable full-text search for the ontology.
+     */
+    public void setEnableSearch( boolean enableSearch ) {
+        this.enableSearch = enableSearch;
+    }
+
+    /**
      * Check if the ontology returned by this factory will be loaded.
      * <p>
      * This happens if either the {@code load.ontologies} configuration key is set to true or the loading is forced via
@@ -94,6 +110,8 @@ public class OntologyServiceFactory<T extends OntologyService> extends AbstractF
     @Override
     protected T createInstance() throws Exception {
         T service = BeanUtils.instantiate( ontologyServiceClass );
+        service.setInferenceMode( enableInference ? OntologyService.InferenceMode.TRANSITIVE : OntologyService.InferenceMode.NONE );
+        service.setSearchEnabled( enableSearch );
         if ( isAutoLoad || forceLoad ) {
             if ( loadInBackground ) {
                 if ( ontologyTaskExecutor != null ) {

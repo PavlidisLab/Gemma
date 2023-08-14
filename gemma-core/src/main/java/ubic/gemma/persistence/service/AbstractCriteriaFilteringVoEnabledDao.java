@@ -12,7 +12,10 @@ import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
 import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.common.Identifiable;
-import ubic.gemma.persistence.util.*;
+import ubic.gemma.persistence.util.FilterCriteriaUtils;
+import ubic.gemma.persistence.util.Filters;
+import ubic.gemma.persistence.util.Slice;
+import ubic.gemma.persistence.util.Sort;
 
 import javax.annotation.Nullable;
 import java.util.*;
@@ -65,28 +68,6 @@ public abstract class AbstractCriteriaFilteringVoEnabledDao<O extends Identifiab
                 .add( FilterCriteriaUtils.formRestrictionClause( filters ) );
     }
 
-    private TypedResultTransformer<VO> getValueObjectResultTransformer( StopWatch postProcessingStopWatch ) {
-        return new TypedResultTransformer<VO>() {
-
-            @Override
-            public VO transformTuple( Object[] tuple, String[] aliases ) {
-                //noinspection unchecked
-                return doLoadValueObject( ( O ) Criteria.DISTINCT_ROOT_ENTITY.transformTuple( tuple, aliases ) );
-            }
-
-            @Override
-            public List<VO> transformListTyped( List<VO> collection ) {
-                try {
-                    postProcessingStopWatch.start();
-                    //noinspection unchecked
-                    return ( List<VO> ) Criteria.DISTINCT_ROOT_ENTITY.transformList( collection );
-                } finally {
-                    postProcessingStopWatch.stop();
-                }
-            }
-        };
-    }
-
     @Override
     public List<Long> loadIds( @Nullable Filters filters, @Nullable Sort sort ) {
         StopWatch stopWatch = StopWatch.createStarted();
@@ -102,7 +83,7 @@ public abstract class AbstractCriteriaFilteringVoEnabledDao<O extends Identifiab
         List<Long> result = criteria.list();
 
         if ( stopWatch.getTime( TimeUnit.MILLISECONDS ) > REPORT_SLOW_QUERY_AFTER_MS ) {
-            log.info( String.format( "Loading %d IDs for %s took %d ms.",
+            log.warn( String.format( "Loading %d IDs for %s took %d ms.",
                     result.size(), elementClass.getName(),
                     stopWatch.getTime( TimeUnit.MILLISECONDS ) ) );
         }
@@ -126,7 +107,7 @@ public abstract class AbstractCriteriaFilteringVoEnabledDao<O extends Identifiab
         List<O> result = criteria.list();
 
         if ( stopWatch.getTime( TimeUnit.MILLISECONDS ) > REPORT_SLOW_QUERY_AFTER_MS ) {
-            log.info( String.format( "Loading %d entities for %s took %d ms.",
+            log.warn( String.format( "Loading %d entities for %s took %d ms.",
                     result.size(), elementClass.getName(),
                     stopWatch.getTime( TimeUnit.MILLISECONDS ) ) );
         }
@@ -162,7 +143,12 @@ public abstract class AbstractCriteriaFilteringVoEnabledDao<O extends Identifiab
         queryStopWatch.stop();
 
         countingStopWatch.start();
-        Long totalElements = ( Long ) totalElementsQuery.setProjection( Projections.countDistinct( getIdentifierPropertyName() ) ).uniqueResult();
+        Long totalElements;
+        if ( limit > 0 && ( results.isEmpty() || results.size() == limit ) ) {
+            totalElements = ( Long ) totalElementsQuery.setProjection( Projections.countDistinct( getIdentifierPropertyName() ) ).uniqueResult();
+        } else {
+            totalElements = offset + ( long ) results.size();
+        }
         countingStopWatch.stop();
 
         if ( stopWatch.getTime( TimeUnit.MILLISECONDS ) > REPORT_SLOW_QUERY_AFTER_MS ) {
@@ -196,15 +182,22 @@ public abstract class AbstractCriteriaFilteringVoEnabledDao<O extends Identifiab
             query.setMaxResults( limit );
 
         // setup transformer
-        query.setResultTransformer( getValueObjectResultTransformer( postProcessingStopWatch ) );
+        query.setResultTransformer( Criteria.DISTINCT_ROOT_ENTITY );
 
+        postProcessingStopWatch.start();
         //noinspection unchecked
-        List<VO> results = query.list();
+        List<VO> results = doLoadValueObjects( query.list() );
+        postProcessingStopWatch.stop();
 
         countingStopWatch.start();
-        Long totalElements = ( Long ) totalElementsQuery
-                .setProjection( Projections.countDistinct( getIdentifierPropertyName() ) )
-                .uniqueResult();
+        Long totalElements;
+        if ( limit >= 0 && results.size() >= limit ) {
+            totalElements = ( Long ) totalElementsQuery
+                    .setProjection( Projections.countDistinct( getIdentifierPropertyName() ) )
+                    .uniqueResult();
+        } else {
+            totalElements = ( long ) results.size();
+        }
         countingStopWatch.stop();
 
         stopWatch.stop();
@@ -232,15 +225,17 @@ public abstract class AbstractCriteriaFilteringVoEnabledDao<O extends Identifiab
         }
 
         // setup transformer
-        query.setResultTransformer( getValueObjectResultTransformer( postProcessingStopWatch ) );
+        query.setResultTransformer( Criteria.DISTINCT_ROOT_ENTITY );
 
+        postProcessingStopWatch.start();
         //noinspection unchecked
-        List<VO> results = query.list();
+        List<VO> results = doLoadValueObjects( query.list() );
+        postProcessingStopWatch.stop();
 
         stopWatch.stop();
 
         if ( stopWatch.getTime() > REPORT_SLOW_QUERY_AFTER_MS ) {
-            log.info( String.format( "Loading %d VOs for %s took %d ms (querying: %d ms, post-processing: %d ms).",
+            log.warn( String.format( "Loading %d VOs for %s took %d ms (querying: %d ms, post-processing: %d ms).",
                     results.size(), elementClass.getName(), stopWatch.getTime( TimeUnit.MILLISECONDS ),
                     stopWatch.getTime( TimeUnit.MILLISECONDS ) - postProcessingStopWatch.getTime( TimeUnit.MILLISECONDS ),
                     postProcessingStopWatch.getTime( TimeUnit.MILLISECONDS ) ) );
@@ -257,7 +252,7 @@ public abstract class AbstractCriteriaFilteringVoEnabledDao<O extends Identifiab
                 .uniqueResult();
         timer.stop();
         if ( timer.getTime() > REPORT_SLOW_QUERY_AFTER_MS ) {
-            log.info( String.format( "Counting %d entities for %s took %d ms.",
+            log.warn( String.format( "Counting %d entities for %s took %d ms.",
                     ret, elementClass.getName(), timer.getTime( TimeUnit.MILLISECONDS ) ) );
         }
         return ret;

@@ -16,11 +16,13 @@ public interface BaseService<O extends Identifiable> extends BaseImmutableServic
     /**
      * @see BaseDao#save(Collection)
      */
+    @CheckReturnValue
     Collection<O> save( Collection<O> entities );
 
     /**
      * @see BaseDao#save(Object)
      */
+    @CheckReturnValue
     O save( O entity );
 
     /**

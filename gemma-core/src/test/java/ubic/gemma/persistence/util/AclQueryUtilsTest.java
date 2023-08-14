@@ -47,7 +47,7 @@ public class AclQueryUtilsTest extends BaseSpringContextTest {
     @Test
     public void testFormAclJoinClauseAsAdmin() {
         super.runAsAdmin();
-        String clause = formAclJoinClause( "ee.id" );
+        String clause = formAclRestrictionClause( "ee.id" );
         assertThat( clause )
                 .startsWith( "," )
                 .contains( "AclObjectIdentity as aoi" )
@@ -59,7 +59,7 @@ public class AclQueryUtilsTest extends BaseSpringContextTest {
     @Test
     public void testFormAclJoinClauseAsNonAdminIncludesAoiEntriesInnerJointure() {
         super.runAsAnonymous();
-        String clause = formAclJoinClause( "ee.id" );
+        String clause = formAclRestrictionClause( "ee.id" );
         assertThat( clause )
                 .startsWith( "," )
                 .contains( "AclObjectIdentity as aoi" )
@@ -115,8 +115,7 @@ public class AclQueryUtilsTest extends BaseSpringContextTest {
     public void testAsAdmin() {
         Query q = session.createQuery(
                 "select ee from ExpressionExperiment ee"
-                        + formAclJoinClause( "ee.id" )
-                        + formAclRestrictionClause() );
+                        + formAclRestrictionClause( "ee.id" ) );
         addAclParameters( q, ExpressionExperiment.class );
         q.setMaxResults( 1 );
         q.list();
@@ -127,8 +126,7 @@ public class AclQueryUtilsTest extends BaseSpringContextTest {
         runAsUser( "bob", true );
         Query q = session.createQuery(
                 "select ee from ExpressionExperiment ee"
-                        + formAclJoinClause( "ee.id" )
-                        + formAclRestrictionClause() );
+                        + formAclRestrictionClause( "ee.id" ) );
         addAclParameters( q, ExpressionExperiment.class );
         q.setMaxResults( 1 );
         q.list();
@@ -139,8 +137,7 @@ public class AclQueryUtilsTest extends BaseSpringContextTest {
         runAsAnonymous();
         Query q = session.createQuery(
                 "select ee from ExpressionExperiment ee"
-                        + formAclJoinClause( "ee.id" )
-                        + formAclRestrictionClause() );
+                        + formAclRestrictionClause( "ee.id" ) );
         addAclParameters( q, ExpressionExperiment.class );
         q.setMaxResults( 1 );
         q.list();

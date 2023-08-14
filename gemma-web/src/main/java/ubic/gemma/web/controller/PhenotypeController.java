@@ -22,9 +22,9 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.servlet.ModelAndView;
-import ubic.basecode.ontology.search.OntologySearchException;
 import ubic.gemma.core.association.phenotype.PhenotypeAssociationManagerService;
 import ubic.gemma.core.association.phenotype.PhenotypeAssociationManagerServiceImpl;
+import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.security.authentication.UserManager;
 import ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysis;
 import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
@@ -125,7 +125,7 @@ public class PhenotypeController extends BaseController {
     }
 
     public Collection<CharacteristicValueObject> findExperimentOntologyValue( String givenQueryString,
-            String categoryUri, Long taxonId ) throws OntologySearchException {
+            String categoryUri, Long taxonId ) throws SearchException {
         return this.phenotypeAssociationManagerService.findExperimentOntologyValue( givenQueryString );
     }
 
@@ -212,7 +212,7 @@ public class PhenotypeController extends BaseController {
      *
      * @return Collection of phenotypes
      */
-    public Collection<CharacteristicValueObject> searchOntologyForPhenotypes( String query, Long geneId ) throws OntologySearchException {
+    public Collection<CharacteristicValueObject> searchOntologyForPhenotypes( String query, Long geneId ) throws SearchException {
         return this.phenotypeAssociationManagerService.searchOntologyForPhenotypes( query, geneId );
     }
 

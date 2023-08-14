@@ -21,11 +21,10 @@ import java.util.stream.Collectors;
 
 public abstract class AbstractEntityArgService<T extends Identifiable, S extends FilteringService<T>> implements EntityArgService<T, S> {
 
-    private static final String ERROR_FORMAT_ENTITY_NOT_FOUND = "The identifier was recognised to be '%1$s', but entity of type '%2$s' with '%1$s' equal to '%3$s' does not exist or is not accessible.";
-    private static final String ERROR_MSG_ENTITY_NOT_FOUND = "Entity with the given identifier does not exist or is not accessible.";
+    static final String ERROR_FORMAT_ENTITY_NOT_FOUND = "The identifier was recognised to be '%1$s', but entity of type '%2$s' with '%1$s' equal to '%3$s' does not exist or is not accessible.";
+    static final String ERROR_MSG_ENTITY_NOT_FOUND = "Entity with the given identifier does not exist or is not accessible.";
 
     protected final S service;
-
 
     protected AbstractEntityArgService( S service ) {
         this.service = service;
@@ -74,7 +73,12 @@ public abstract class AbstractEntityArgService<T extends Identifiable, S extends
     @Override
     @Nonnull
     public T getEntity( AbstractEntityArg<?, T, S> entityArg ) throws NotFoundException, BadRequestException {
-        return checkEntity( entityArg, service, entityArg.getEntity( service ) );
+        return checkEntity( entityArg, entityArg.getEntity( service ) );
+    }
+
+    @Override
+    public List<T> getEntities( AbstractEntityArg<?, T, S> entityArg ) throws NotFoundException, BadRequestException {
+        return entityArg.getEntities( service );
     }
 
     @Override
@@ -82,7 +86,7 @@ public abstract class AbstractEntityArgService<T extends Identifiable, S extends
         List<T> objects = new ArrayList<>( entitiesArg.getValue().size() );
         for ( String s : entitiesArg.getValue() ) {
             AbstractEntityArg<?, T, S> arg = entityArgValueOf( entitiesArg.getEntityArgClass(), s );
-            objects.add( checkEntity( arg, service, arg.getEntity( service ) ) );
+            objects.add( checkEntity( arg, arg.getEntity( service ) ) );
         }
         return objects;
     }
@@ -142,7 +146,7 @@ public abstract class AbstractEntityArgService<T extends Identifiable, S extends
      * @return the same object as given.
      * @throws NotFoundException if the given entity is null.
      */
-    private <O extends Identifiable, S extends FilteringService<O>> O checkEntity( AbstractEntityArg<?, O, S> entityArg, S service, @Nullable O entity ) throws NotFoundException {
+    protected T checkEntity( AbstractEntityArg<?, T, S> entityArg, @Nullable T entity ) throws NotFoundException {
         if ( entity == null ) {
             EntityNotFoundException cause = new EntityNotFoundException( String.format( ERROR_FORMAT_ENTITY_NOT_FOUND, entityArg.getPropertyName(), service.getElementClass(), entityArg.getValue() ) );
             throw new NotFoundException( ERROR_MSG_ENTITY_NOT_FOUND, cause );
@@ -153,7 +157,7 @@ public abstract class AbstractEntityArgService<T extends Identifiable, S extends
     /**
      * Invoke either a static {@code valueOf} method or a suitable constructor to instantiate the argument.
      */
-    protected AbstractEntityArg<?, T, S> entityArgValueOf( Class<? extends AbstractEntityArg<?, T, S>> entityArgClass, String s ) throws NotFoundException, BadRequestException {
+    protected AbstractEntityArg<?, T, S> entityArgValueOf( Class<? extends AbstractEntityArg<?, T, S>> entityArgClass, String s ) throws BadRequestException {
         try {
             return _entityArgValueOf( entityArgClass, s );
         } catch ( InvocationTargetException e ) {

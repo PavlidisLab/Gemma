@@ -15,11 +15,10 @@
 package ubic.gemma.core.analysis.preprocess;
 
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
-import ubic.gemma.core.analysis.preprocess.filter.FilteringException;
-import ubic.gemma.core.analysis.preprocess.filter.NoRowsLeftAfterFilteringException;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
+import javax.annotation.Nullable;
 import java.util.Collection;
 
 /**
@@ -28,13 +27,20 @@ import java.util.Collection;
 public interface OutlierDetectionService {
 
     /**
-     * Uses the identifyOutliersByMedianCorrelation(DoubleMatrix) method to identify outliers in the given
-     * experiment.
+     * Obtain existing outlier details from a previous {@link #identifyOutliersByMedianCorrelation(ExpressionExperiment)} invocation.
+     * @return outlier details or {@code null} if none exist.
+     */
+    @Nullable
+    Collection<OutlierDetails> getOutlierDetails( ExpressionExperiment ee );
+
+    /**
+     * Identify outliers by median correlation for the given dataset.
      *
      * @param ee The experiment to identify sample outliers in.
      * @return the information about the identified outliers.
+     * @see #identifyOutliersByMedianCorrelation(DoubleMatrix)
      */
-    Collection<OutlierDetails> identifyOutliersByMedianCorrelation( ExpressionExperiment ee ) throws FilteringException;
+    Collection<OutlierDetails> identifyOutliersByMedianCorrelation( ExpressionExperiment ee );
 
     /**
      * Identify outliers by sorting by median, then looking for non-overlap of first quartile-second quartile range

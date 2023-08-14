@@ -42,7 +42,7 @@ import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
 import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.model.common.auditAndSecurity.curation.Curatable;
-import ubic.gemma.persistence.service.common.auditAndSecurity.CurationDetailsService;
+import ubic.gemma.persistence.service.common.auditAndSecurity.curation.GenericCuratableDao;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.*;
@@ -73,7 +73,7 @@ public class AuditAdvice {
     private UserManager userManager;
 
     @Autowired
-    private CurationDetailsService curationDetailsService;
+    private GenericCuratableDao curatableDao;
 
     @Autowired
     private SessionFactory sessionFactory;
@@ -314,7 +314,7 @@ public class AuditAdvice {
         AuditEvent auditEvent = AuditEvent.Factory.newInstance( date, auditAction, note, null, user, null );
         auditable.getAuditTrail().getEvents().add( auditEvent );
         if ( auditable instanceof Curatable && auditAction == AuditAction.UPDATE ) {
-            curationDetailsService.updateCurationDetailsFromAuditEvent( ( Curatable ) auditable, auditEvent );
+            curatableDao.updateCurationDetailsFromAuditEvent( ( Curatable ) auditable, auditEvent );
         }
         if ( AuditAdvice.log.isTraceEnabled() ) {
             AuditAdvice.log.trace( String.format( "Audited event: %s on %s:%d by %s",

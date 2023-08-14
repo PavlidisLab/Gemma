@@ -25,12 +25,15 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.cache.CacheManager;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.core.task.AsyncTaskExecutor;
 import org.springframework.core.task.TaskExecutor;
 import org.springframework.stereotype.Service;
-import ubic.basecode.ontology.model.*;
+import ubic.basecode.ontology.model.AnnotationProperty;
+import ubic.basecode.ontology.model.OntologyTerm;
+import ubic.basecode.ontology.model.OntologyTermSimple;
 import ubic.basecode.ontology.providers.ExperimentalFactorOntologyService;
 import ubic.basecode.ontology.providers.FMAOntologyService;
 import ubic.basecode.ontology.providers.NIFSTDOntologyService;
@@ -40,6 +43,7 @@ import ubic.basecode.ontology.search.OntologySearchException;
 import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.core.ontology.providers.GeneOntologyService;
 import ubic.gemma.core.ontology.providers.OntologyServiceFactory;
+import ubic.gemma.core.search.BaseCodeOntologySearchException;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.search.SearchResult;
 import ubic.gemma.core.search.SearchService;
@@ -52,7 +56,6 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
-import ubic.gemma.persistence.service.common.description.CharacteristicDao;
 import ubic.gemma.persistence.service.common.description.CharacteristicService;
 import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialService;
 
@@ -61,7 +64,9 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.*;
-import java.util.concurrent.*;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorCompletionService;
+import java.util.concurrent.Future;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -74,12 +79,12 @@ import java.util.stream.Collectors;
  */
 @Service
 public class OntologyServiceImpl implements OntologyService, InitializingBean {
-    /**
-     * Throttle how many ontology terms we retrieve. We search the ontologies in a favored order, so we can stop when we
-     * find "enough stuff".
-     */
-    private static final int MAX_TERMS_TO_FETCH = 200;
+
     private static final Log log = LogFactory.getLog( OntologyServiceImpl.class.getName() );
+
+    private static final String
+            PARENTS_CACHE_NAME = "OntologyService.parents",
+            CHILDREN_CACHE_NAME = "OntologyService.children";
 
     @Autowired
     private BioMaterialService bioMaterialService;
@@ -105,7 +110,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
     @Autowired
     private ObiService obiService;
 
-    @Autowired
+    @Autowired(required = false)
     private List<OntologyServiceFactory<?>> ontologyServiceFactories;
 
     @Autowired
@@ -115,27 +120,34 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
     @Qualifier("ontologyTaskExecutor")
     private TaskExecutor ontologyTaskExecutor;
 
+    @Autowired
+    private CacheManager cacheManager;
+
+    private OntologyCache ontologyCache;
     private Set<OntologyTermSimple> categoryTerms = null;
 
     @Override
     public void afterPropertiesSet() throws Exception {
-        List<ubic.basecode.ontology.providers.OntologyService> enabledOntologyServices = ontologyServiceFactories.stream()
-                .filter( OntologyServiceFactory::isAutoLoaded )
-                .map( factory -> {
-                    try {
-                        return factory.getObject();
-                    } catch ( Exception e ) {
-                        throw new RuntimeException( e );
-                    }
-                } )
-                .filter( ubic.basecode.ontology.providers.OntologyService::isEnabled )
-                .collect( Collectors.toList() );
-        if ( enabledOntologyServices.isEmpty() ) {
-            log.warn( "No ontologies are enabled, consider enabling them by setting 'load.{name}Ontology' options in Gemma.properties." );
-        } else {
-            log.info( "The following ontologies are enabled:\n\t" + enabledOntologyServices.stream()
-                    .map( ubic.basecode.ontology.providers.OntologyService::toString )
-                    .collect( Collectors.joining( "\n\t" ) ) );
+        ontologyCache = new OntologyCache( cacheManager.getCache( PARENTS_CACHE_NAME ), cacheManager.getCache( CHILDREN_CACHE_NAME ) );
+        if ( ontologyServiceFactories != null ) {
+            List<ubic.basecode.ontology.providers.OntologyService> enabledOntologyServices = ontologyServiceFactories.stream()
+                    .filter( OntologyServiceFactory::isAutoLoaded )
+                    .map( factory -> {
+                        try {
+                            return factory.getObject();
+                        } catch ( Exception e ) {
+                            throw new RuntimeException( e );
+                        }
+                    } )
+                    .filter( ubic.basecode.ontology.providers.OntologyService::isEnabled )
+                    .collect( Collectors.toList() );
+            if ( enabledOntologyServices.isEmpty() ) {
+                log.warn( "No ontologies are enabled, consider enabling them by setting 'load.{name}Ontology' options in Gemma.properties." );
+            } else {
+                log.info( "The following ontologies are enabled:\n\t" + enabledOntologyServices.stream()
+                        .map( ubic.basecode.ontology.providers.OntologyService::toString )
+                        .collect( Collectors.joining( "\n\t" ) ) );
+            }
         }
         // remove GeneOntologyService, it was originally not included in the list before bean injection was used
         ontologyServices.remove( geneOntologyService );
@@ -177,7 +189,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
      */
     @Override
     public Collection<CharacteristicValueObject> findExperimentsCharacteristicTags( String searchQueryString,
-            boolean useNeuroCartaOntology ) throws OntologySearchException {
+            boolean useNeuroCartaOntology ) throws BaseCodeOntologySearchException {
 
         String searchQuery = OntologySearch.stripInvalidCharacters( searchQueryString );
 
@@ -248,28 +260,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
     }
 
     @Override
-    public Set<OntologyIndividual> findIndividuals( String givenSearch ) throws OntologySearchException {
-        String query = OntologySearch.stripInvalidCharacters( givenSearch );
-        return searchInThreads( ontology -> {
-            StopWatch timer = StopWatch.createStarted();
-            try {
-                return ontology.findIndividuals( query );
-            } finally {
-                if ( timer.getTime( TimeUnit.MILLISECONDS ) > 100 ) {
-                    log.warn( String.format( "Finding individuals for ontology %s for input query '%s' took %d ms",
-                            ontology, givenSearch, timer.getTime( TimeUnit.MILLISECONDS ) ) );
-                }
-            }
-        } );
-    }
-
-    @Override
-    public Collection<Characteristic> findTermAsCharacteristic( String search ) throws OntologySearchException {
-        return convert( new HashSet<>( findTerms( search ) ) );
-    }
-
-    @Override
-    public Collection<OntologyTerm> findTerms( String search ) throws OntologySearchException {
+    public Collection<OntologyTerm> findTerms( String search ) throws BaseCodeOntologySearchException {
 
         /*
          * URI input: just retrieve the term.
@@ -298,17 +289,21 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
 
         results = searchInThreads( ontology -> ontology.findTerm( query ) );
 
-        if ( geneOntologyService.isOntologyLoaded() )
-            results.addAll( geneOntologyService.findTerm( search ) );
+        if ( geneOntologyService.isOntologyLoaded() ) {
+            try {
+                results.addAll( geneOntologyService.findTerm( search ) );
+            } catch ( OntologySearchException e ) {
+                throw new BaseCodeOntologySearchException( e );
+            }
+        }
 
         return results;
     }
 
     @Override
-    public Collection<CharacteristicValueObject> findTermsInexact( String givenQueryString, Taxon taxon ) throws OntologySearchException, SearchException {
-
+    public Collection<CharacteristicValueObject> findTermsInexact( String givenQueryString, @Nullable Taxon taxon ) throws SearchException {
         if ( StringUtils.isBlank( givenQueryString ) )
-            return null;
+            return Collections.emptySet();
 
         StopWatch watch = new StopWatch();
         watch.start();
@@ -337,8 +332,8 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
         // get ontology terms
         Set<CharacteristicValueObject> ontologySearchResults = new HashSet<>();
         ontologySearchResults.addAll( searchInThreads( service -> {
-            Collection<OntologyResource> results2;
-            results2 = service.findResources( queryString );
+            Collection<OntologyTerm> results2;
+            results2 = service.findTerm( queryString );
             if ( results2.isEmpty() )
                 return Collections.emptySet();
             return CharacteristicValueObject.characteristic2CharacteristicVO( this.termsToCharacteristics( results2 ) );
@@ -347,8 +342,12 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
         // get GO terms, if we don't already have a lot of possibilities. (might have to adjust this)
         StopWatch findGoTerms = StopWatch.createStarted();
         if ( geneOntologyService.isOntologyLoaded() ) {
-            ontologySearchResults.addAll( CharacteristicValueObject.characteristic2CharacteristicVO(
-                    this.termsToCharacteristics( geneOntologyService.findTerm( queryString ) ) ) );
+            try {
+                ontologySearchResults.addAll( CharacteristicValueObject.characteristic2CharacteristicVO(
+                        this.termsToCharacteristics( geneOntologyService.findTerm( queryString ) ) ) );
+            } catch ( OntologySearchException e ) {
+                throw new BaseCodeOntologySearchException( e );
+            }
         }
         findGoTerms.stop();
 
@@ -396,12 +395,32 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
 
     @Override
     public Set<OntologyTerm> getParents( Collection<OntologyTerm> terms, boolean direct, boolean includeAdditionalProperties ) {
-        return combineInThreads( os -> os.getParents( terms, direct, includeAdditionalProperties ) );
+        return combineInThreads( os -> ontologyCache.getParents( os, terms, direct, includeAdditionalProperties ) );
     }
 
     @Override
     public Set<OntologyTerm> getChildren( Collection<OntologyTerm> terms, boolean direct, boolean includeAdditionalProperties ) {
-        return combineInThreads( os -> os.getChildren( terms, direct, includeAdditionalProperties ) );
+        StopWatch timer = StopWatch.createStarted();
+        try {
+            return combineInThreads( os -> {
+                StopWatch timer2 = StopWatch.createStarted();
+                try {
+                    return ontologyCache.getChildren( os, terms, direct, includeAdditionalProperties );
+                } finally {
+                    if ( timer2.getTime() > 1000 ) {
+                        log.warn( String.format( "Gathering children of %d terms from %s took %d ms", terms.size(), os, timer2.getTime() ) );
+                    } else {
+                        log.trace( String.format( "Gathering children of %d terms from %s took %d ms", terms.size(), os, timer2.getTime() ) );
+                    }
+                }
+            } );
+        } finally {
+            if ( timer.getTime() > 1000 ) {
+                log.warn( String.format( "Gathering children of %d terms took %d ms", terms.size(), timer.getTime() ) );
+            } else {
+                log.debug( String.format( "Gathering children of %d terms took %d ms", terms.size(), timer.getTime() ) );
+            }
+        }
     }
 
     @Override
@@ -420,13 +439,8 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
     }
 
     @Override
-    public OntologyResource getResource( String uri ) {
-        return findFirst( ontology -> ontology.getResource( uri ) );
-    }
-
-    @Override
     public String getDefinition( String uri ) {
-        if (uri == null) return null;
+        if ( uri == null ) return null;
         OntologyTerm ot = this.getTerm( uri );
         if ( ot != null ) {
             for ( AnnotationProperty ann : ot.getAnnotations() ) {
@@ -442,6 +456,12 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
     @Override
     public OntologyTerm getTerm( String uri ) {
         return findFirst( ontology -> ontology.getTerm( uri ) );
+    }
+
+    @Override
+    public Set<OntologyTerm> getTerms( Collection<String> uris ) {
+        Set<String> distinctUris = uris instanceof Set ? ( Set<String> ) uris : new HashSet<>( uris );
+        return combineInThreads( os -> distinctUris.stream().map( os::getTerm ).filter( Objects::nonNull ).collect( Collectors.toSet() ) );
     }
 
     /**
@@ -476,7 +496,10 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
     @Override
     public void reinitializeAllOntologies() {
         for ( ubic.basecode.ontology.providers.OntologyService serv : this.ontologyServices ) {
-            ontologyTaskExecutor.execute( () -> serv.initialize( true, true ) );
+            ontologyTaskExecutor.execute( () -> {
+                serv.initialize( true, true );
+                ontologyCache.clearByOntology( serv );
+            } );
         }
     }
 
@@ -548,14 +571,14 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
      * Convert raw ontology resources into Characteristics.
      */
     @Override
-    public Collection<Characteristic> termsToCharacteristics( final Collection<? extends OntologyResource> terms ) {
+    public Collection<Characteristic> termsToCharacteristics( final Collection<OntologyTerm> terms ) {
 
         Collection<Characteristic> results = new HashSet<>();
 
         if ( ( terms == null ) || ( terms.isEmpty() ) )
             return results;
 
-        for ( OntologyResource term : terms ) {
+        for ( OntologyTerm term : terms ) {
 
             if ( term == null )
                 continue;
@@ -628,7 +651,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
         return vos;
     }
 
-    private Characteristic termToCharacteristic( OntologyResource res ) {
+    private Characteristic termToCharacteristic( OntologyTerm res ) {
         if ( res.isObsolete() ) {
             OntologyServiceImpl.log.warn( "Skipping an obsolete term: " + res.getLabel() + " / " + res.getUri() );
             return null;
@@ -637,16 +660,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
         Characteristic vc = Characteristic.Factory.newInstance();
         vc.setValue( res.getLabel() );
         vc.setValueUri( res.getUri() );
-
-        if ( res instanceof OntologyTerm ) {
-            OntologyTerm term = ( OntologyTerm ) res;
-            vc.setDescription( term.getComment() );
-        } else if ( res instanceof OntologyIndividual ) {
-            vc.setDescription( "Individual" );
-        } else {
-            OntologyServiceImpl.log.warn( "This is neither an OntologyTerm or an OntologyIndividual: " + res );
-            return null;
-        }
+        vc.setDescription( res.getComment() );
 
         if ( vc.getValue() == null ) {
             OntologyServiceImpl.log
@@ -655,40 +669,6 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
         }
 
         return vc;
-    }
-
-    /**
-     * Given a collection of ontology terms converts them to a collection of Characteristics
-     */
-    private Collection<Characteristic> convert( final Collection<OntologyResource> resources ) {
-
-        Collection<Characteristic> converted = new HashSet<>();
-
-        if ( ( resources == null ) || ( resources.isEmpty() ) )
-            return converted;
-
-        for ( OntologyResource res : resources ) {
-            Characteristic vc = Characteristic.Factory.newInstance();
-
-            // If there is no URI we don't want to send it back (ie useless)
-            if ( ( res.getUri() == null ) || StringUtils.isEmpty( res.getUri() ) )
-                continue;
-
-            vc.setValue( res.getLabel() );
-            vc.setValueUri( res.getUri() );
-
-            if ( res instanceof OntologyTerm ) {
-                OntologyTerm term = ( OntologyTerm ) res;
-                vc.setDescription( term.getComment() );
-            }
-            if ( res instanceof OntologyIndividual ) {
-                vc.setDescription( "Individual" );
-            }
-
-            converted.add( vc );
-        }
-
-        return converted;
     }
 
     private void searchForCharacteristics( String queryString, Map<String, CharacteristicValueObject> previouslyUsedInSystem ) {
@@ -728,21 +708,12 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
         return vo;
     }
 
-    private CharacteristicValueObject characteristicByValueCountToValueObject( CharacteristicDao.CharacteristicUsageFrequency characteristic ) {
-        CharacteristicValueObject vo = new CharacteristicValueObject( -1L, characteristic.getValue(), characteristic.getValueUri() );
-        vo.setCategory( null );
-        vo.setCategoryUri( null ); // to avoid us counting separately by category.
-        vo.setAlreadyPresentInDatabase( true );
-        vo.setNumTimesUsed( characteristic.getCount().intValue() );
-        return vo;
-    }
-
     /**
      * given a collection of characteristics add them to the correct List
      */
     private Collection<CharacteristicValueObject> findCharacteristicsFromOntology( String searchQuery,
             boolean useNeuroCartaOntology,
-            Map<String, CharacteristicValueObject> characteristicFromDatabaseWithValueUri ) throws OntologySearchException {
+            Map<String, CharacteristicValueObject> characteristicFromDatabaseWithValueUri ) throws BaseCodeOntologySearchException {
 
         // in neurocarta we don't need to search all Ontologies
         List<ubic.basecode.ontology.providers.OntologyService> ontologyServicesToUse;
@@ -772,13 +743,6 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
 
     private String foundValueKey( Characteristic c ) {
         if ( StringUtils.isNotBlank( c.getValueUri() ) ) {
-            return c.getValueUri().toLowerCase();
-        }
-        return c.getValue().toLowerCase();
-    }
-
-    private String foundValueKey( CharacteristicValueObject c ) {
-        if ( c.getValueUri() != null && StringUtils.isNotBlank( c.getValueUri() ) ) {
             return c.getValueUri().toLowerCase();
         }
         return c.getValue().toLowerCase();
@@ -856,7 +820,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
      * @param taxon         okay if null, but then all matches returned.
      * @param searchResults added to this
      */
-    private void searchForGenes( String queryString, Taxon taxon,
+    private void searchForGenes( String queryString, @Nullable Taxon taxon,
             Map<String, CharacteristicValueObject> searchResults ) throws SearchException {
 
         SearchSettings ss = SearchSettings.builder()
@@ -875,8 +839,10 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
             GeneValueObject g = this.geneService.loadValueObject( sr.getResultObject() );
             if ( OntologyServiceImpl.log.isDebugEnabled() )
                 OntologyServiceImpl.log.debug( "Search for " + queryString + " returned: " + g );
-            Characteristic c = this.gene2Characteristic( g );
-            searchResults.put( c.getValue(), new CharacteristicValueObject( c ) );
+            if ( g != null ) {
+                Characteristic c = this.gene2Characteristic( g );
+                searchResults.put( c.getValue(), new CharacteristicValueObject( c ) );
+            }
         }
     }
 
@@ -952,20 +918,11 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
      * The functions are evaluated using Gemma's short-lived task executor.
      */
     private <T> Set<T> combineInThreads( Function<ubic.basecode.ontology.providers.OntologyService, Collection<T>> work, List<ubic.basecode.ontology.providers.OntologyService> ontologyServices ) {
-        BlockingQueue<Future<Collection<T>>> futures = new ArrayBlockingQueue<>( ontologyServices.size() );
+        List<Future<Collection<T>>> futures = new ArrayList<>( ontologyServices.size() );
         ExecutorCompletionService<Collection<T>> completionService = new ExecutorCompletionService<>( taskExecutor );
         for ( ubic.basecode.ontology.providers.OntologyService os : ontologyServices ) {
             if ( os.isOntologyLoaded() ) {
-                futures.add( completionService.submit( () -> {
-                    StopWatch timer = StopWatch.createStarted();
-                    try {
-                        return work.apply( os );
-                    } finally {
-                        if ( timer.getTime() > 500 ) {
-                            log.warn( String.format( "Gathering results from %s took %d ms.", os, timer.getTime() ) );
-                        }
-                    }
-                } ) );
+                futures.add( completionService.submit( () -> work.apply( os ) ) );
             }
         }
         Set<T> children = new HashSet<>();
@@ -1002,7 +959,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
         Collection<T> apply( ubic.basecode.ontology.providers.OntologyService service ) throws OntologySearchException;
     }
 
-    private <T> Set<T> searchInThreads( SearchFunction<T> function, List<ubic.basecode.ontology.providers.OntologyService> ontologyServices ) throws OntologySearchException {
+    private <T> Set<T> searchInThreads( SearchFunction<T> function, List<ubic.basecode.ontology.providers.OntologyService> ontologyServices ) throws BaseCodeOntologySearchException {
         try {
             return combineInThreads( os -> {
                 try {
@@ -1012,14 +969,14 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
                 }
             }, ontologyServices );
         } catch ( OntologySearchExceptionWrapper e ) {
-            throw e.getCause();
+            throw new BaseCodeOntologySearchException( e.getCause() );
         }
     }
 
     /**
      * Similar to {@link #combineInThreads(Function)}, but also handles {@link OntologySearchException}.
      */
-    private <T> Set<T> searchInThreads( SearchFunction<T> function ) throws OntologySearchException {
+    private <T> Set<T> searchInThreads( SearchFunction<T> function ) throws BaseCodeOntologySearchException {
         return searchInThreads( function, ontologyServices );
     }
 

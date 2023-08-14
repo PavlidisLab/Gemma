@@ -1,7 +1,6 @@
 package ubic.gemma.rest.util.args;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.NonNull;
 import ubic.gemma.rest.util.MalformedArgException;
 
 /**
@@ -10,7 +9,7 @@ import ubic.gemma.rest.util.MalformedArgException;
 @Schema(type = "integer", minimum = "0", description = "The offset of the first retrieved result.")
 public class OffsetArg extends AbstractArg<Integer> {
 
-    private OffsetArg( @NonNull Integer value ) {
+    private OffsetArg( int value ) {
         super( value );
     }
 

@@ -67,7 +67,7 @@ import static org.junit.Assume.assumeNoException;
  *
  * @author pavlidis
  */
-@Category(GeoTest.class)
+@Category({ GeoTest.class, SlowTest.class })
 public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
 
     @Autowired
@@ -295,14 +295,12 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
         assertNotNull( geeq.getId() );
         ee = this.eeService.thawLite( ee );
         assertEquals( geeq, ee.getGeeq() );
-        assertEquals( 3, ee.getAuditTrail().getEvents().size() );
-        // creation, followed by a GeeqEvent and followed by an update
+        assertEquals( 2, ee.getAuditTrail().getEvents().size() );
+        // creation, followed by a GeeqEvent
         assertEquals( AuditAction.CREATE, ee.getAuditTrail().getEvents().get( 0 ).getAction() );
         assertNull( ee.getAuditTrail().getEvents().get( 0 ).getEventType() );
         assertEquals( AuditAction.UPDATE, ee.getAuditTrail().getEvents().get( 1 ).getAction() );
         assertEquals( GeeqEvent.class, ee.getAuditTrail().getEvents().get( 1 ).getEventType().getClass() );
-        assertEquals( AuditAction.UPDATE, ee.getAuditTrail().getEvents().get( 2 ).getAction() );
-        assertNull( ee.getAuditTrail().getEvents().get( 2 ).getEventType() );
     }
 
     @Test

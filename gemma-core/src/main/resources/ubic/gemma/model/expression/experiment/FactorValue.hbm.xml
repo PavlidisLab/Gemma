@@ -19,7 +19,7 @@
       </property>
       <!-- assumed readily available in FactorValueValueObject -->
       <many-to-one name="experimentalFactor" class="ubic.gemma.model.expression.experiment.ExperimentalFactor"
-                   cascade="none" lazy="false" fetch="join">
+                   cascade="none" lazy="false" fetch="select">
          <column name="EXPERIMENTAL_FACTOR_FK" not-null="true" sql-type="BIGINT"/>
       </many-to-one>
       <!-- assumed readily available in FactorValueValueObject -->

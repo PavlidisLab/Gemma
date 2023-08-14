@@ -41,6 +41,11 @@ public class GeoSample extends GeoData implements Comparable<GeoData> {
 
     private static final Log log = LogFactory.getLog( GeoSample.class.getName() );
     private static final long serialVersionUID = -8820012224856178673L;
+
+    private String status;
+    private String submissionDate;
+    private int channelCount;
+    private String id;
     // SAGE item
     private String anchor;
     private List<GeoChannel> channels;
@@ -157,6 +162,50 @@ public class GeoSample extends GeoData implements Comparable<GeoData> {
     @Override
     public int compareTo( GeoData o ) {
         return o.getGeoAccession().compareTo( this.getGeoAccession() );
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId( String id ) {
+        this.id = id;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus( String status ) {
+        this.status = status;
+    }
+
+    public String getSubmissionDate() {
+        return submissionDate;
+    }
+
+    public void setSubmissionDate( String submissionDate ) {
+        this.submissionDate = submissionDate;
+    }
+
+    public void setChannelCount( int channelCount ) {
+        this.channelCount = channelCount;
+    }
+
+    public void setGenePix( boolean genePix ) {
+        isGenePix = genePix;
+    }
+
+    public void setPlatforms( Collection<GeoPlatform> platforms ) {
+        this.platforms = platforms;
+    }
+
+    public boolean isWarnedAboutGenePix() {
+        return warnedAboutGenePix;
+    }
+
+    public void setWarnedAboutGenePix( boolean warnedAboutGenePix ) {
+        this.warnedAboutGenePix = warnedAboutGenePix;
     }
 
     /**

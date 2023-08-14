@@ -9,12 +9,12 @@ import java.util.List;
 
 @Value
 @EqualsAndHashCode(callSuper = true)
-public class FilteringResponseDataObject<T> extends ResponseDataObject<List<T>> {
+public class FilteredResponseDataObject<T> extends ResponseDataObject<List<T>> {
 
     @Nullable
     String filter;
 
-    public FilteringResponseDataObject( List<T> payload, @Nullable Filters filters ) {
+    public FilteredResponseDataObject( List<T> payload, @Nullable Filters filters ) {
         super( payload );
         this.filter = filters != null ? filters.toOriginalString() : null;
     }

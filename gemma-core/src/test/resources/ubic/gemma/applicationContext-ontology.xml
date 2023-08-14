@@ -12,8 +12,8 @@
     <bean id="obiService" class="ubic.gemma.core.ontology.providers.OntologyServiceFactory">
         <constructor-arg value="ubic.basecode.ontology.providers.ObiService"/>
     </bean>
-    <bean id="diseaseOntologyService" class="ubic.gemma.core.ontology.providers.OntologyServiceFactory">
-        <constructor-arg value="ubic.basecode.ontology.providers.DiseaseOntologyService"/>
+    <bean id="mondoOntologyService" class="ubic.gemma.core.ontology.providers.OntologyServiceFactory">
+        <constructor-arg value="ubic.gemma.core.ontology.providers.MondoOntologyService"/>
     </bean>
     <bean id="mammalianPhenotypeOntologyService" class="ubic.gemma.core.ontology.providers.OntologyServiceFactory">
         <constructor-arg value="ubic.basecode.ontology.providers.MammalianPhenotypeOntologyService"/>

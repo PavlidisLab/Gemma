@@ -51,8 +51,7 @@ public class TableMaintenanceUtilIntegrationTest extends BaseSpringContextTest {
     @Test
     @WithMockUser(authorities = "GROUP_AGENT")
     public void testUpdateExpressionExperiment2CharacteristicEntries() {
-        int updated = tableMaintenanceUtil.updateExpressionExperiment2CharacteristicEntries();
-        assertThat( updated ).isEqualTo( 0 );
+        tableMaintenanceUtil.updateExpressionExperiment2CharacteristicEntries();
     }
 
     @Test(expected = AccessDeniedException.class)

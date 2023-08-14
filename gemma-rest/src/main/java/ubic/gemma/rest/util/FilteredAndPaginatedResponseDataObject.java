@@ -10,7 +10,7 @@ import java.util.List;
 
 @Value
 @EqualsAndHashCode(callSuper = true)
-public class FilteringAndPaginatedResponseDataObject<T> extends ResponseDataObject<List<T>> {
+public class FilteredAndPaginatedResponseDataObject<T> extends ResponseDataObject<List<T>> {
 
     String filter;
     String[] groupBy;
@@ -22,7 +22,7 @@ public class FilteringAndPaginatedResponseDataObject<T> extends ResponseDataObje
     /**
      * @param payload the data to be serialised and returned as the response payload.
      */
-    public FilteringAndPaginatedResponseDataObject( Slice<T> payload, @Nullable Filters filters, @Nullable String[] groupBy ) {
+    public FilteredAndPaginatedResponseDataObject( Slice<T> payload, @Nullable Filters filters, @Nullable String[] groupBy ) {
         super( payload );
         this.offset = payload.getOffset();
         this.limit = payload.getLimit();

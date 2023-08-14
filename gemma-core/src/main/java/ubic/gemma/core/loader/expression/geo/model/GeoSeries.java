@@ -34,6 +34,11 @@ import java.util.*;
 public class GeoSeries extends GeoData {
 
     private static final long serialVersionUID = -1058350558444775537L;
+
+    private String seriesId;
+    private String status;
+    private String submissionDate;
+    private String platformId;
     private final Collection<GeoSample> samples;
     private final Collection<SeriesType> seriesTypes = new HashSet<>();
     private final Collection<String> subSeries;
@@ -177,6 +182,58 @@ public class GeoSeries extends GeoData {
 
     public void addToVariables( Integer number, GeoVariable variable ) {
         this.variables.put( number, variable );
+    }
+
+    public String getSeriesId() {
+        return seriesId;
+    }
+
+    public void setSeriesId( String seriesId ) {
+        this.seriesId = seriesId;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus( String status ) {
+        this.status = status;
+    }
+
+    public String getSubmissionDate() {
+        return submissionDate;
+    }
+
+    public void setSubmissionDate( String submissionDate ) {
+        this.submissionDate = submissionDate;
+    }
+
+    public String getPlatformId() {
+        return platformId;
+    }
+
+    public void setPlatformId( String platformId ) {
+        this.platformId = platformId;
+    }
+
+    public Collection<GeoDataset> getDataSets() {
+        return dataSets;
+    }
+
+    public void setSubSeries( boolean subSeries ) {
+        isSubSeries = subSeries;
+    }
+
+    public void setSuperSeries( boolean superSeries ) {
+        isSuperSeries = superSeries;
+    }
+
+    public String getSummary() {
+        return summary;
+    }
+
+    public void setSummary( String summary ) {
+        this.summary = summary;
     }
 
     /**

@@ -6,6 +6,7 @@ import org.junit.Test;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 public class FiltersTest {
 
@@ -44,4 +45,13 @@ public class FiltersTest {
                 .isEqualTo( Filters.by( "ee", "id", Long.class, Filter.Operator.lessThan, 10L ) );
     }
 
+    @Test
+    public void testUseBuiltSubClause() {
+        Filters.FiltersClauseBuilder subClause = Filters.empty().and();
+        subClause
+                .or( Filter.by( "ee", "id", Long.class, Filter.Operator.lessThan, 10L ) )
+                .build();
+        assertThatThrownBy( () -> subClause.or( Filter.by( "ee", "id", Long.class, Filter.Operator.lessThan, 10L ) ) )
+                .isInstanceOf( IllegalStateException.class );
+    }
 }

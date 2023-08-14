@@ -6,7 +6,6 @@ import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeService;
 
-import javax.annotation.Nonnull;
 import javax.ws.rs.BadRequestException;
 
 @Schema(type = "string", description = "A quantitation type name.")

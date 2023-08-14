@@ -119,7 +119,7 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
         assert id != null;
         Collection<Long> ids = Collections.singletonList( id );
         Collection<ExpressionExperimentDetailsValueObject> vos = expressionExperimentService
-                .loadDetailsValueObjects( ids );
+                .loadDetailsValueObjectsByIds( ids );
         ExpressionExperimentDetailsValueObject vo = vos.iterator().next();
         if ( vo == null ) {
             return null;
@@ -134,7 +134,7 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
     public Collection<ExpressionExperimentDetailsValueObject> generateSummaryObjects() {
         Collection<Long> ids = EntityUtils.getIds( expressionExperimentService.loadAll() );
         Collection<ExpressionExperimentDetailsValueObject> vos = expressionExperimentService
-                .loadDetailsValueObjects( ids );
+                .loadDetailsValueObjectsByIds( ids );
         this.getStats( vos );
         return vos;
     }

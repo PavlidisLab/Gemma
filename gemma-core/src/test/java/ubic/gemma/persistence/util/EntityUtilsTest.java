@@ -34,43 +34,4 @@ public class EntityUtilsTest {
         assertThat( EntityUtils.getIdMap( foos ) )
                 .containsKey( 1L );
     }
-
-    @Test
-    public void testGetProperty() {
-        Identifiable i = mock( Identifiable.class );
-        EntityUtils.getProperty( i, "id" );
-        verify( i ).getId();
-    }
-
-    @Test
-    public void testGetPropertyMap() {
-        Identifiable i = mock( Identifiable.class );
-        EntityUtils.getPropertyMap( Collections.singleton( i ), "id" );
-        verify( i ).getId();
-    }
-
-    public static class Bar {
-
-        private final Foo foo;
-
-        public Bar( Foo foo ) {
-            this.foo = foo;
-        }
-
-        public Foo getFoo() {
-            return foo;
-        }
-    }
-
-    @Test
-    public void testGetNestedPropertyMap() {
-        Foo f = mock( Foo.class );
-        Bar b = mock( Bar.class );
-        when( b.getFoo() ).thenReturn( f );
-        when( f.getId() ).thenReturn( 1L );
-        EntityUtils.getNestedPropertyMap( Collections.singleton( b ), "foo", "id" );
-        verify( b ).getFoo();
-        verify( f ).getId();
-    }
-
 }

@@ -57,7 +57,7 @@ import static org.assertj.core.api.Assertions.tuple;
 /**
  * @author paul
  */
-@DirtiesContext
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 public class GeneMultifunctionalityPopulationServiceTest extends BaseSpringContextTest {
 
     private final String[] goTerms = new String[] { "GO_0047500", "GO_0051530", "GO_0051724", "GO_0004118",
