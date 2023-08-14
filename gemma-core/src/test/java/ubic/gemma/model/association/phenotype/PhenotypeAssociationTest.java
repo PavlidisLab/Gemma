@@ -25,11 +25,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.test.annotation.DirtiesContext;
 import ubic.basecode.ontology.model.OntologyTerm;
-import ubic.basecode.ontology.search.OntologySearchException;
+import ubic.basecode.ontology.providers.HumanPhenotypeOntologyService;
+import ubic.basecode.ontology.providers.MammalianPhenotypeOntologyService;
 import ubic.gemma.core.association.phenotype.PhenotypeAssociationManagerService;
-import ubic.gemma.core.genome.gene.service.GeneService;
-import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.core.ontology.OntologyTestUtils;
+import ubic.gemma.core.ontology.OntologyUtils;
+import ubic.gemma.core.ontology.providers.MondoOntologyService;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.security.authentication.UserManager;
 import ubic.gemma.core.util.test.BaseSpringContextTest;
@@ -48,7 +49,6 @@ import ubic.gemma.persistence.service.association.phenotype.service.PhenotypeAss
 import java.util.*;
 
 import static org.junit.Assert.*;
-import static org.junit.Assume.assumeTrue;
 
 /**
  * This test will likely fail if the full disease ontology is configured to load; instead we want to load a small 'fake'
@@ -64,15 +64,17 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
     private final Integer geneNCBI = new Integer( RandomStringUtils.randomNumeric( 6 ) );
 
     @Autowired
-    private OntologyService os;
-    @Autowired
     private PhenotypeAssociationManagerService phenotypeAssociationManagerService;
     @Autowired
     private PhenotypeAssociationService phenotypeAssociationService;
     @Autowired
-    private GeneService geneService;
-    @Autowired
     private UserManager userManager;
+    @Autowired
+    private MondoOntologyService diseaseOntologyService;
+    @Autowired
+    private HumanPhenotypeOntologyService humanPhenotypeOntologyService;
+    @Autowired
+    private MammalianPhenotypeOntologyService mammalianPhenotypeOntologyService;
 
     private Gene gene = null;
     private LiteratureEvidenceValueObject litEvidence = null;
@@ -80,14 +82,10 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
 
     @Before
     public void setUp() throws Exception {
-        assumeTrue( os.getHumanPhenotypeOntologyService().isEnabled() );
-        assumeTrue( os.getMammalianPhenotypeOntologyService().isEnabled() );
-        OntologyTestUtils.initialize( os.getDiseaseOntologyService(),
+        OntologyTestUtils.initialize( diseaseOntologyService,
                 this.getClass().getResourceAsStream( "/data/loader/ontology/dotest.owl.xml" ) );
-
-        // wait for mammalian and human phenotype ontologies to load
-        os.getHumanPhenotypeOntologyService().waitForInitializationThread();
-        os.getMammalianPhenotypeOntologyService().waitForInitializationThread();
+        OntologyUtils.ensureInitialized( humanPhenotypeOntologyService );
+        OntologyUtils.ensureInitialized( mammalianPhenotypeOntologyService );
 
         // create what will be needed for tests
         this.createGene();
@@ -98,22 +96,7 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
     @After
     public void tearDown() {
         this.runAsAdmin();
-        Collection<PhenotypeAssociation> toRemove = new HashSet<>();
-        for ( Gene g : this.geneService.loadAll() ) {
-
-            g = geneService.thaw( g );
-            toRemove.addAll( g.getPhenotypeAssociations() );
-            g.getPhenotypeAssociations().clear();
-
-            this.geneService.update( g );
-        }
-
-        for ( PhenotypeAssociation pa : toRemove ) {
-            this.phenotypeAssociationService.remove( pa );
-        }
-
-        // this.externalDatabaseService.remove( this.externalDatabase );
-
+        phenotypeAssociationService.removeAllInBatch();
     }
 
     @Test
@@ -238,7 +221,7 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
     }
 
     @Test
-    public void testSearchOntologyForPhenotypes() throws OntologySearchException {
+    public void testSearchOntologyForPhenotypes() throws SearchException {
 
         // simulate someone looking for cancer, it should be found in the ontology file
         assertTrue( !this.phenotypeAssociationManagerService.searchOntologyForPhenotypes( "can", null ).isEmpty() );
@@ -259,7 +242,7 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
 
     @Test
     public void testFindGenesWithPhenotype() {
-        OntologyTerm term = os.getDiseaseOntologyService().getTerm( "http://purl.obolibrary.org/obo/DOID_2531" );
+        OntologyTerm term = diseaseOntologyService.getTerm( "http://purl.obolibrary.org/obo/DOID_2531" );
         assertNotNull( term );
 
         this.createLiteratureEvidence( this.geneNCBI, "http://purl.obolibrary.org/obo/DOID_2531" );

@@ -60,7 +60,8 @@ public class ExternalDatabaseUpdaterCli extends AbstractSpringAwareCLI {
                 .longOpt( "name" )
                 .hasArg()
                 .optionalArg( false )
-                .desc( "External database name" ).build() );
+                .desc( "External database name" )
+                .required( true ).build() );
         options.addOption( DESCRIPTION_OPTION, "description", true, "New description" );
         options.addOption( RELEASE_OPTION, "release", false, "Update the release (only affects last modified moment))" );
         options.addOption( RELEASE_VERSION_OPTION, "release-version", true, "Release version" );
@@ -131,7 +132,7 @@ public class ExternalDatabaseUpdaterCli extends AbstractSpringAwareCLI {
         if ( parentDatabase != null ) {
             AbstractCLI.log.info( String.format( "Updating the parent database of %s to %s.", name, parentDatabase ) );
             parentDatabase.getExternalDatabases().add( ed );
-            externalDatabaseService.update( ed );
+            externalDatabaseService.update( parentDatabase );
         }
     }
 }

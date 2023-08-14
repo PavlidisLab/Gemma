@@ -24,15 +24,28 @@
         <param-value>en</param-value>
     </context-param>
 
+    <context-param>
+        <param-name>spring.profiles.active</param-name>
+        <param-value>web</param-value>
+    </context-param>
+
     <!-- Context Configuration locations for Spring XML files -->
     <context-param>
         <param-name>contextConfigLocation</param-name>
-        <param-value>
-            classpath*:ubic/gemma/applicationContext-*.xml,classpath:ubic/gemma/dataSource.xml
-        </param-value>
+        <param-value>classpath*:ubic/gemma/applicationContext-*.xml</param-value>
     </context-param>
 
     <!-- Filters.  -->
+
+    <!-- Metrics -->
+    <filter>
+        <filter-name>gemmaWebMetricsFilter</filter-name>
+        <filter-class>ubic.gemma.web.metrics.binder.servlet.ServletMetricsFilter</filter-class>
+        <init-param>
+            <param-name>metricName</param-name>
+            <param-value>gemmaWebServlet</param-value>
+        </init-param>
+    </filter>
 
     <!-- Security. -->
     <filter>
@@ -63,14 +76,45 @@
     <!-- CORS -->
     <filter>
         <filter-name>cors</filter-name>
-        <filter-class>ubic.gemma.web.services.rest.servlet.CorsFilter</filter-class>
+        <filter-class>ubic.gemma.rest.servlet.CorsFilter</filter-class>
+        <init-param>
+            <param-name>allowedOrigins</param-name>
+            <param-value>${cors.allowedOrigins}</param-value>
+        </init-param>
+        <init-param>
+            <param-name>allowedHeaders</param-name>
+            <param-value>Authorization,Content-Type,X-Gemma-Client-ID,X-Requested-With</param-value>
+        </init-param>
+        <init-param>
+            <param-name>allowCredentials</param-name>
+            <param-value>true</param-value>
+        </init-param>
     </filter>
 
     <!-- this is the default servlet that servers static resources -->
     <filter>
         <filter-name>restapidocsFilter</filter-name>
-        <filter-class>ubic.gemma.web.services.rest.servlet.RestapidocsIndexRewriteFilter</filter-class>
+        <filter-class>ubic.gemma.rest.servlet.RestapidocsIndexRewriteFilter</filter-class>
     </filter>
+
+    <filter-mapping>
+        <filter-name>gemmaWebMetricsFilter</filter-name>
+        <servlet-name>gemma</servlet-name>
+    </filter-mapping>
+
+    <!-- CORS -->
+    <!-- ideally we'd be using <servlet-name>gemma-rest</servlet-name>, but doing so prevents the filter from running
+         before springSecurityFilterChain and adding any necessary Access-Control-Allow-Origin headers -->
+    <filter-mapping>
+        <filter-name>cors</filter-name>
+        <url-pattern>/rest/v2/*</url-pattern>
+        <!-- specifically for GemBrow to allow preflights on the logout action -->
+        <!-- FIXME: all these should have equivalent endpoints under /rest/v2 -->
+        <url-pattern>/j_spring_security_logout</url-pattern>
+        <url-pattern>/home.html</url-pattern>
+        <url-pattern>/login.jsp</url-pattern>
+        <url-pattern>/whatsnew/generateCache.html</url-pattern>
+    </filter-mapping>
 
     <!-- Spring Security -->
     <filter-mapping>
@@ -89,11 +133,6 @@
     <filter-mapping>
         <filter-name>sitemesh</filter-name>
         <servlet-name>gemma</servlet-name>
-    </filter-mapping>
-
-    <filter-mapping>
-        <filter-name>cors</filter-name>
-        <servlet-name>gemma-rest</servlet-name>
     </filter-mapping>
 
     <!-- rewrites /resources/restapidocs/ -> /resources/restapidocs/index.html -->
@@ -141,7 +180,11 @@
         <servlet-class>org.glassfish.jersey.servlet.ServletContainer</servlet-class>
         <init-param>
             <param-name>jersey.config.server.provider.packages</param-name>
-            <param-value>io.swagger.v3.jaxrs2.integration.resources,ubic.gemma.web.services.rest</param-value>
+            <param-value>io.swagger.v3.jaxrs2.integration.resources,ubic.gemma.rest</param-value>
+        </init-param>
+        <init-param>
+            <param-name>jersey.config.server.provider.classnames</param-name>
+            <param-value>org.glassfish.jersey.message.GZipEncoder,org.glassfish.jersey.server.spring.scope.RequestContextFilter</param-value>
         </init-param>
         <init-param>
             <!-- this is necessary because the file would otherwise be looked at under /WEB-INF/openapi-configuration.yaml -->

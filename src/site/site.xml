@@ -1,0 +1,24 @@
+<project xmlns="http://maven.apache.org/SITE/2.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/SITE/2.0.0 http://maven.apache.org/xsd/site-2.0.0.xsd">
+    <bannerLeft>
+        <name>Gemma</name>
+        <src>https://gemma.msl.ubc.ca/images/logo/gemma-headerlogo.png</src>
+        <href>https://gemma.msl.ubc.ca</href>
+    </bannerLeft>
+    <bannerRight>
+        <name>UBC</name>
+        <src>https://gemma.msl.ubc.ca/images/logo/ubcgrey_logo_40.png</src>
+        <href>https://www.ubc.ca/</href>
+    </bannerRight>
+    <body>
+        <menu name="Overview" inherit="top">
+            <item name="REST API Documentation" href="https://gemma.msl.ubc.ca/resources/restapidocs/"/>
+            <item name="R Package" href="https://www.bioconductor.org/packages/release/bioc/html/gemma.R.html"/>
+            <item name="Python Package" href="https://pypi.org/project/gemmapy/"/>
+            <item name="Help and Documentation" href="https://pavlidislab.github.io/Gemma/"/>
+        </menu>
+        <menu ref="parent" inherit="top"/>
+        <menu ref="modules" inherit="top"/>
+        <menu ref="reports" inherit="top"/>
+    </body>
+</project>

@@ -239,6 +239,8 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
         DifferentialExpressionAnalyzerServiceImpl.log.info( "Saving results" );
         helperService.addResults( persistentAnalysis, resultSets );
 
+        log.info( "Done persisting, creating archive file" );
+
         // get a clean copy of the analysis object from the DB.
         analysis = differentialExpressionAnalysisService.load( analysis.getId() );
         // we do this here because now we have IDs for everything.
@@ -443,7 +445,7 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
             for ( ExpressionAnalysisResultSet oldrs : toUpdateResultSets ) {
 
                 assert oldrs.getId() != null;
-                expressionAnalysisResultSetService.thaw( oldrs );
+                oldrs = expressionAnalysisResultSetService.thaw( oldrs );
 
                 for ( ExpressionAnalysisResultSet temprs : a.getResultSets() ) {
                     /*

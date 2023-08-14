@@ -23,6 +23,7 @@ import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.QuantitationTypeValueObject;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.persistence.service.BaseService;
 import ubic.gemma.persistence.service.FilteringVoEnabledService;
 
 import java.util.Collection;
@@ -31,7 +32,7 @@ import java.util.List;
 /**
  * @author kelsey
  */
-public interface QuantitationTypeService extends FilteringVoEnabledService<QuantitationType, QuantitationTypeValueObject> {
+public interface QuantitationTypeService extends BaseService<QuantitationType>, FilteringVoEnabledService<QuantitationType, QuantitationTypeValueObject> {
 
     /**
      * Locate a QT associated with the given ee matching the specification of the passed quantitationType, or null if
@@ -68,7 +69,7 @@ public interface QuantitationTypeService extends FilteringVoEnabledService<Quant
     void remove( Collection<QuantitationType> entities );
 
     @Override
-    @Secured({ "GROUP_USER" })
+    @Secured({ "GROUP_ADMIN" })
     void remove( Long id );
 
     @Override

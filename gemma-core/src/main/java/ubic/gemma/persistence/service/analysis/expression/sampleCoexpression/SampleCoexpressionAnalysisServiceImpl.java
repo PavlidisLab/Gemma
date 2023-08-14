@@ -16,8 +16,7 @@ package ubic.gemma.persistence.service.analysis.expression.sampleCoexpression;
 
 import cern.colt.list.DoubleArrayList;
 import cern.colt.matrix.DoubleMatrix2D;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.apachecommons.CommonsLog;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
@@ -59,9 +58,9 @@ import java.util.*;
  * @author paul
  */
 @Service
+@CommonsLog
 public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpressionAnalysisService {
 
-    private static final Logger log = LoggerFactory.getLogger( SampleCoexpressionAnalysisServiceImpl.class );
     private static final ByteArrayConverter bac = new ByteArrayConverter();
     private static final String MSG_ERR_NO_VECTORS = "No processed expression vectors available for experiment, can not compute sample correlation matrix.";
     private static final String MSG_ERR_NO_DESIGN = "Can not run factor regression! No experimental factors found.";

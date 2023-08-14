@@ -1,13 +1,15 @@
 package ubic.gemma.core.apps;
 
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.TestExecutionListeners;
 import ubic.gemma.core.util.test.BaseCliTest;
-import ubic.gemma.core.util.test.TestAuthenticationUtils;
-import ubic.gemma.core.util.test.TestAuthenticationUtilsImpl;
+import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.common.description.DatabaseType;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.persistence.service.association.Gene2GOAssociationService;
@@ -16,7 +18,9 @@ import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.persistence.util.TestComponent;
 
 import static org.mockito.Mockito.*;
+import static ubic.gemma.core.util.test.Assumptions.assumeThatResourceIsAvailable;
 
+@Category(SlowTest.class)
 @ContextConfiguration
 public class NCBIGene2GOAssociationLoaderCLITest extends BaseCliTest {
 
@@ -43,11 +47,6 @@ public class NCBIGene2GOAssociationLoaderCLITest extends BaseCliTest {
         public ExternalDatabaseService externalDatabaseService() {
             return mock( ExternalDatabaseService.class );
         }
-
-        @Bean
-        public TestAuthenticationUtils testAuthenticationUtils() {
-            return new TestAuthenticationUtilsImpl();
-        }
     }
 
     @Autowired
@@ -59,12 +58,10 @@ public class NCBIGene2GOAssociationLoaderCLITest extends BaseCliTest {
     @Autowired
     private ExternalDatabaseService externalDatabaseService;
 
-    @Autowired
-    private TestAuthenticationUtils testAuthenticationUtils;
-
     @Test
-    public void test() {
-        testAuthenticationUtils.runAsAdmin();
+    @WithMockUser(authorities = { "GROUP_ADMIN" })
+    public void test() throws Exception {
+        assumeThatResourceIsAvailable( "ftp://ftp.ncbi.nih.gov/gene/DATA/gene2go.gz" );
         ExternalDatabase gene2go = ExternalDatabase.Factory.newInstance( "go", DatabaseType.OTHER );
         when( externalDatabaseService.findByNameWithAuditTrail( "go" ) ).thenReturn( gene2go );
         ncbiGene2GOAssociationLoaderCLI.executeCommand( new String[] {} );

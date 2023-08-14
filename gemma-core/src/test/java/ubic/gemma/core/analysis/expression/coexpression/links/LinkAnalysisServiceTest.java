@@ -18,7 +18,6 @@
  */
 package ubic.gemma.core.analysis.expression.coexpression.links;
 
-import org.apache.commons.dbcp2.BasicDataSource;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -60,9 +59,6 @@ public class LinkAnalysisServiceTest extends BaseSpringContextTest {
 
     private final FilterConfig filterConfig = new FilterConfig();
     private final LinkAnalysisConfig linkAnalysisConfig = new LinkAnalysisConfig();
-
-    @Autowired
-    private BasicDataSource dataSource;
 
     private ExpressionExperiment ee;
 
@@ -178,7 +174,7 @@ public class LinkAnalysisServiceTest extends BaseSpringContextTest {
     }
 
     private void checkUnsupportedLinksHaveNoSupport() {
-        JdbcTemplate jt = new JdbcTemplate( dataSource );
+        JdbcTemplate jt = jdbcTemplate;
 
         // see SupportDetailsTest for validation that these strings represent empty byte arrays. I think the 1 at
         // position 12 is important.

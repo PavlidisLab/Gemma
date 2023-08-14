@@ -28,23 +28,20 @@ import javax.persistence.Transient;
  * @deprecated not needed
  */
 @Deprecated
-public class Person extends Contact implements gemma.gsec.model.Person {
+public class Person extends Contact {
 
     private static final long serialVersionUID = -7873047856249494633L;
     private String lastName;
 
     @Transient
-    @Override
     public String getFullName() {
         return this.getName() + " " + this.getLastName();
     }
 
-    @Override
     public String getLastName() {
         return this.lastName;
     }
 
-    @Override
     public void setLastName( String lastName ) {
         this.lastName = lastName;
     }

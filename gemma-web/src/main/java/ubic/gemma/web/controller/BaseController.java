@@ -29,6 +29,7 @@ import ubic.gemma.persistence.util.MailEngine;
 import ubic.gemma.persistence.util.Settings;
 import ubic.gemma.web.util.MessageUtil;
 
+import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 import java.util.Locale;
 import java.util.Map;
@@ -51,6 +52,9 @@ public abstract class BaseController {
 
     @Autowired
     private MessageUtil messageUtil;
+
+    @Autowired
+    private ServletContext servletContext;
 
     public void setMailEngine( MailEngine mailEngine ) {
         this.mailEngine = mailEngine;
@@ -110,7 +114,7 @@ public abstract class BaseController {
         try {
             model.put( "username", username );
             model.put( "confirmLink",
-                    Settings.getBaseUrl() + "confirmRegistration.html?key=" + token + "&username=" + username );
+                    Settings.getHostUrl() + servletContext.getContextPath() + "/confirmRegistration.html?key=" + token + "&username=" + username );
 
             SimpleMailMessage mailMessage = new SimpleMailMessage();
             mailMessage.setFrom( Settings.getAdminEmailAddress() );

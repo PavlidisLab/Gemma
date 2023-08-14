@@ -8,7 +8,7 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequenceValueObject;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignDao;
 import ubic.gemma.persistence.util.Filters;
-import ubic.gemma.persistence.util.ObjectFilter;
+import ubic.gemma.persistence.util.Filter;
 import ubic.gemma.persistence.util.Slice;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -27,9 +27,9 @@ public class CompositeSequenceServiceTest extends BaseSpringContextTest {
     }
 
     @Test
-    public void testLoadValueObjetsPreFilterByArrayDesign() {
-        Filters filters = Filters.singleFilter( new ObjectFilter( ArrayDesignDao.OBJECT_ALIAS, "id", Long.class, ObjectFilter.Operator.eq, arrayDesign.getId() ) );
-        Slice<CompositeSequenceValueObject> results = compositeSequenceService.loadValueObjectsPreFilter( filters, null, 0, 10 );
+    public void testLoadValueObjetsByArrayDesign() {
+        Filters filters = Filters.by( ArrayDesignDao.OBJECT_ALIAS, "id", Long.class, Filter.Operator.eq, arrayDesign.getId() );
+        Slice<CompositeSequenceValueObject> results = compositeSequenceService.loadValueObjects( filters, null, 0, 10 );
         assertThat( results ).hasSize( 10 )
                 .extracting( "arrayDesign" )
                 .extracting( "id" )

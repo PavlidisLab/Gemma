@@ -25,7 +25,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
-import ubic.basecode.ontology.model.OntologyResource;
+import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.model.common.description.AnnotationValueObject;
 import ubic.gemma.model.common.description.Characteristic;
@@ -81,7 +81,7 @@ public class BioMaterialController {
     public void addFactorValueTo( Collection<Long> bmIds, EntityDelegator factorValueId ) {
 
         Collection<BioMaterial> bms = this.getBioMaterials( bmIds );
-        FactorValue factorVToAdd = factorValueService.load( factorValueId.getId() );
+        FactorValue factorVToAdd = factorValueService.loadOrFail( factorValueId.getId() );
         ExperimentalFactor eFactor = factorVToAdd.getExperimentalFactor();
 
         for ( BioMaterial material : bms ) {
@@ -124,12 +124,12 @@ public class BioMaterialController {
     public Collection<AnnotationValueObject> getAnnotation( EntityDelegator bm ) {
         if ( bm == null || bm.getId() == null )
             return null;
-        BioMaterial bioM = bioMaterialService.load( bm.getId() );
+        BioMaterial bioM = bioMaterialService.loadOrFail( bm.getId() );
 
         Collection<AnnotationValueObject> annotation = new ArrayList<>();
 
         for ( Characteristic c : bioM.getCharacteristics() ) {
-            AnnotationValueObject annotationValue = new AnnotationValueObject( c, BioMaterial.class.getSimpleName() );
+            AnnotationValueObject annotationValue = new AnnotationValueObject( c, BioMaterial.class );
 
             String className = getLabelFromUri( c.getCategoryUri() );
             if ( className != null )
@@ -231,7 +231,7 @@ public class BioMaterialController {
 
     private String getLabelFromUri( String uri ) {
         if ( StringUtils.isBlank( uri ) ) return null;
-        OntologyResource resource = ontologyService.getResource( uri );
+        OntologyTerm resource = ontologyService.getTerm( uri );
         if ( resource != null )
             return resource.getLabel();
 

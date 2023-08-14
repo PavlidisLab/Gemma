@@ -22,15 +22,14 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.quartz.Scheduler;
 import org.springframework.context.ApplicationContext;
+import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.context.ContextLoaderListener;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.context.support.WebApplicationContextUtils;
-import ubic.gemma.core.loader.genome.gene.ncbi.homology.HomologeneService;
-import ubic.gemma.web.scheduler.SchedulerUtils;
 import ubic.gemma.persistence.util.Settings;
+import ubic.gemma.persistence.util.SpringProfiles;
 import ubic.gemma.web.util.Constants;
 
 import javax.servlet.ServletContext;
@@ -38,6 +37,7 @@ import javax.servlet.ServletContextEvent;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import static ubic.gemma.persistence.util.SpringContextUtil.prepareContext;
 
@@ -67,7 +67,20 @@ public class StartupListener extends ContextLoaderListener {
     @Override
     protected WebApplicationContext createWebApplicationContext( ServletContext servletContext ) {
         WebApplicationContext ctx = super.createWebApplicationContext( servletContext );
+
+        // setup active profiles
+        if ( ctx instanceof ConfigurableApplicationContext ) {
+            ConfigurableApplicationContext cac = ( ConfigurableApplicationContext ) ctx;
+            // FIXME: I think this is added in a later version of Spring (maybe https://github.com/PavlidisLab/Gemma/pull/508 will fix this?)
+            if ( servletContext.getInitParameter( "spring.profiles.active" ) != null ) {
+                for ( String activeProfile : servletContext.getInitParameter( "spring.profiles.active" ).split( "," ) ) {
+                    cac.getEnvironment().addActiveProfile( activeProfile.trim() );
+                }
+            }
+        }
+
         prepareContext( ctx );
+
         return ctx;
     }
 
@@ -96,24 +109,27 @@ public class StartupListener extends ContextLoaderListener {
 
         servletContext.setAttribute( Constants.CONFIG, config );
 
-        this.initializeHomologene( ctx );
-
-        this.configureScheduler( ctx );
+        this.configureJawr( ctx );
 
         sw.stop();
 
-        double time = sw.getTime() / 1000.00;
-        StartupListener.log.info( "Initialization of Gemma Spring web context in " + time + " s " );
+        StartupListener.log.info( String.format( "Initialization of Gemma Web context took %d s. The following profiles are active: %s.",
+                sw.getTime( TimeUnit.SECONDS ),
+                String.join( ", ", ctx.getEnvironment().getActiveProfiles() ) ) );
     }
 
-    private void configureScheduler( ApplicationContext ctx ) {
-        if ( !Settings.isSchedulerEnabled() ) {
-            SchedulerUtils.disableScheduler( ctx.getBean( "schedulerFactoryBean", Scheduler.class ) );
-            StartupListener.log.info( "Quartz scheduling disabled.  Set quartzOn=true in Gemma.properties to enable" );
-        } else {
-            StartupListener.log.info( "Quartz scheduling enabled.  Set quartzOn=false in Gemma.properties to disable" );
-        }
+    private static final String JAWR_DEBUG_ON_SYSTEM_PROPERTY = "net.jawr.debug.on";
 
+    /**
+     * Set the net.jawr.debug.on system property to true if the current profile is {@link SpringProfiles#DEV} and no
+     * value has been explicitly set by the user.
+     */
+    private void configureJawr( ApplicationContext ctx ) {
+        if ( ctx.getEnvironment().acceptsProfiles( SpringProfiles.DEV )
+                && System.getProperty( JAWR_DEBUG_ON_SYSTEM_PROPERTY ) == null ) {
+            log.info( String.format( "Enabling debug mode for JAWR by setting %s=true.", JAWR_DEBUG_ON_SYSTEM_PROPERTY ) );
+            System.setProperty( JAWR_DEBUG_ON_SYSTEM_PROPERTY, "true" );
+        }
     }
 
     private Map<String, Object> initializeConfiguration( ServletContext context ) {
@@ -132,12 +148,6 @@ public class StartupListener extends ContextLoaderListener {
         }
 
         return config;
-    }
-
-    private void initializeHomologene( ApplicationContext ctx ) {
-        HomologeneService ho = ( HomologeneService ) ctx.getBean( "homologeneService" );
-        ho.init( false );
-
     }
 
     /**

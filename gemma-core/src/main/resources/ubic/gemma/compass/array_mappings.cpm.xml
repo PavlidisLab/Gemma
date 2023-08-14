@@ -35,7 +35,7 @@
 			<meta-data store="no">name</meta-data>
 		</property>
 	</class>
-	<class name="expression.arrayDesign.AlternateNameImpl" alias="alternateName" root="false">
+	<class name="expression.arrayDesign.AlternateName" alias="alternateName" root="false">
 		<id name="id" />
 		<property name="name">
 			<meta-data store="no">name</meta-data>

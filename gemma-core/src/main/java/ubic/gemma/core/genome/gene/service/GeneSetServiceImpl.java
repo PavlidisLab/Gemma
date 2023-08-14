@@ -25,17 +25,21 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ubic.basecode.ontology.search.OntologySearchException;
 import ubic.gemma.core.genome.gene.GeneSetValueObjectHelper;
 import ubic.gemma.core.genome.gene.SessionBoundGeneSetValueObject;
+import ubic.gemma.core.search.BaseCodeOntologySearchException;
 import ubic.gemma.core.search.GeneSetSearch;
+import ubic.gemma.core.search.SearchException;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonValueObject;
 import ubic.gemma.model.genome.gene.*;
+import ubic.gemma.persistence.service.AbstractVoEnabledService;
 import ubic.gemma.persistence.service.genome.gene.GeneSetDao;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 
+import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.*;
 
 /**
@@ -45,7 +49,8 @@ import java.util.*;
  */
 @Service
 @CommonsLog
-public class GeneSetServiceImpl implements GeneSetService {
+@ParametersAreNonnullByDefault
+public class GeneSetServiceImpl extends AbstractVoEnabledService<GeneSet, DatabaseBackedGeneSetValueObject> implements GeneSetService {
 
     private static final Double DEFAULT_SCORE = 0.0;
 
@@ -67,17 +72,9 @@ public class GeneSetServiceImpl implements GeneSetService {
     @Autowired
     private TaxonService taxonService;
 
-    @SuppressWarnings("unchecked")
-    @Override
-    @Transactional
-    public Collection<GeneSet> create( Collection<GeneSet> sets ) {
-        return this.geneSetDao.create( sets );
-    }
-
-    @Override
-    @Transactional
-    public GeneSet create( GeneSet geneset ) {
-        return this.geneSetDao.create( geneset );
+    @Autowired
+    public GeneSetServiceImpl( GeneSetDao voDao ) {
+        super( voDao );
     }
 
     @Override
@@ -88,21 +85,27 @@ public class GeneSetServiceImpl implements GeneSetService {
 
     @Override
     @Transactional(readOnly = true)
-    public Collection<? extends DatabaseBackedGeneSetValueObject> loadValueObjectsLite( Collection<Long> ids ) {
-        return this.geneSetDao.loadValueObjectsLite( ids );
-    }
-
-    @Override
-    @Transactional(readOnly = true)
     public DatabaseBackedGeneSetValueObject loadValueObject( GeneSet geneSet ) {
         return geneSetDao.loadValueObject( geneSet );
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Collection<? extends DatabaseBackedGeneSetValueObject> loadValueObjects( Collection<Long> ids ) {
-        return this.geneSetDao.loadValueObjects( ids );
+    public DatabaseBackedGeneSetValueObject loadValueObjectByIdLite( Long id ) {
+        return geneSetDao.loadValueObjectByIdLite( id );
+    }
 
+    @Override
+    @Transactional(readOnly = true)
+    public List<DatabaseBackedGeneSetValueObject> loadValueObjectsByIds( Collection<Long> ids ) {
+        return this.geneSetDao.loadValueObjectsByIds( ids );
+
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<DatabaseBackedGeneSetValueObject> loadValueObjectsByIdsLite( Collection<Long> genesetIds ) {
+        return this.geneSetDao.loadValueObjectsByIdsLite( genesetIds );
     }
 
     @Override
@@ -117,85 +120,28 @@ public class GeneSetServiceImpl implements GeneSetService {
         return this.geneSetDao.findByName( name, taxon );
     }
 
-    @SuppressWarnings("unchecked")
-    @Override
-    @Transactional(readOnly = true)
-    public Collection<GeneSet> load( Collection<Long> ids ) {
-        return this.geneSetDao.load( ids );
-
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public GeneSet load( Long id ) {
-        return this.geneSetDao.load( id );
-    }
-
-    @SuppressWarnings("unchecked")
-    @Override
-    @Transactional(readOnly = true)
-    public Collection<GeneSet> loadAll() {
-        return this.geneSetDao.loadAll();
-    }
-
     @Override
     @Transactional(readOnly = true)
     public Collection<GeneSet> loadAll( Taxon tax ) {
         return this.geneSetDao.loadAll( tax );
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     @Transactional(readOnly = true)
     public Collection<GeneSet> loadMyGeneSets() {
-        return this.geneSetDao.loadMyGeneSets();
+        return this.geneSetDao.loadAll();
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     @Transactional(readOnly = true)
     public Collection<GeneSet> loadMyGeneSets( Taxon tax ) {
-        return ( Collection<GeneSet> ) this.geneSetDao.loadMyGeneSets( tax );
+        return this.geneSetDao.loadAll( tax );
     }
 
-    @SuppressWarnings("unchecked")
-    @Override
-    @Transactional(readOnly = true)
-    public Collection<GeneSet> loadMySharedGeneSets() {
-        return ( Collection<GeneSet> ) this.geneSetDao.loadMySharedGeneSets();
-    }
-
-    @SuppressWarnings("unchecked")
     @Override
     @Transactional(readOnly = true)
     public Collection<GeneSet> loadMySharedGeneSets( Taxon tax ) {
-        return ( Collection<GeneSet> ) this.geneSetDao.loadMySharedGeneSets( tax );
-    }
-
-    @Override
-    @Transactional
-    public void remove( Collection<GeneSet> sets ) {
-        this.geneSetDao.remove( sets );
-    }
-
-    @Override
-    @Transactional
-    public void remove( GeneSet geneset ) {
-        this.geneSetDao.remove( geneset );
-    }
-
-    @Override
-    @Transactional
-    public void update( Collection<GeneSet> sets ) {
-        this.geneSetDao.update( sets );
-
-    }
-
-    @Override
-    @Transactional
-    public void update( GeneSet geneset ) {
-        this.geneSetDao.update( geneset );
-
+        return this.geneSetDao.loadAll( tax );
     }
 
 //    @Override
@@ -209,13 +155,6 @@ public class GeneSetServiceImpl implements GeneSetService {
 //    public void removeGene(GeneSet geneset, Gene gene) {
 //        this.geneSetDao.removeGeneFromSet(geneset, gene);
 //    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public DatabaseBackedGeneSetValueObject getValueObject( Long id ) {
-        GeneSet geneSet = this.load( id );
-        return geneSetValueObjectHelper.convertToValueObject( geneSet );
-    }
 
     @Override
     @Transactional
@@ -345,10 +284,10 @@ public class GeneSetServiceImpl implements GeneSetService {
 
             Collection<Long> geneIds = geneSetVo.getGeneIds();
 
-            if ( geneIds.isEmpty() ) {
+            if ( geneIds == null || geneIds.isEmpty() ) {
                 throw new IllegalArgumentException( "No gene ids provided. Cannot save an empty set." );
-
             }
+
             Collection<Gene> genes = geneService.load( geneIds );
 
             if ( genes.isEmpty() ) {
@@ -457,8 +396,14 @@ public class GeneSetServiceImpl implements GeneSetService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Collection<Long> getGeneIdsInGroup( GeneSetValueObject object ) {
-        return this.getValueObject( object.getId() ).getGeneIds();
+        DatabaseBackedGeneSetValueObject vo = loadValueObjectById( object.getId() );
+        if ( vo == null ) {
+            log.warn( String.format( "GeneSet %d was null when reloading it from the database, was it removed?", object.getId() ) );
+            return Collections.emptySet();
+        }
+        return vo.getGeneIds();
     }
 
     @Override
@@ -469,7 +414,7 @@ public class GeneSetServiceImpl implements GeneSetService {
 
     @Override
     @Transactional(readOnly = true)
-    public Collection<GeneSetValueObject> findGeneSetsByName( String query, Long taxonId ) throws OntologySearchException {
+    public Collection<GeneSetValueObject> findGeneSetsByName( String query, @Nullable Long taxonId ) throws SearchException {
 
         if ( StringUtils.isBlank( query ) ) {
             return new HashSet<>();
@@ -522,6 +467,9 @@ public class GeneSetServiceImpl implements GeneSetService {
         if ( geneSetVO == null )
             return null;
 
+        if ( geneSetVO.getGeneIds() == null )
+            return null;
+
         TaxonValueObject taxonVO = null;
         // get taxon from members
         for ( Long l : geneSetVO.getGeneIds() ) {
@@ -548,12 +496,6 @@ public class GeneSetServiceImpl implements GeneSetService {
         return tmpTax;
     }
 
-    @Override
-    @Transactional(readOnly = true)
-    public Collection<DatabaseBackedGeneSetValueObject> getValueObjects( Collection<Long> ids ) {
-        return geneSetValueObjectHelper.convertToValueObjects( this.load( ids ) );
-    }
-
     private void checkGeneList( GeneSet gset, Collection<GeneSetMember> updatedGenelist, Collection<Gene> genes ) {
         for ( Gene g : genes ) {
 
@@ -577,5 +519,4 @@ public class GeneSetServiceImpl implements GeneSetService {
     public void removeAll() {
         this.geneSetDao.removeAllInBatch();
     }
-
 }

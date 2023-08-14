@@ -27,9 +27,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
-import org.springframework.core.task.AsyncTaskExecutor;
 import org.springframework.stereotype.Component;
 import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
@@ -53,7 +51,9 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.model.genome.Gene;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.*;
 
@@ -142,9 +142,6 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
 
         return reorderedDim;
     }
-
-    @Autowired
-    private AsyncTaskExecutor taskExecutor;
 
     /**
      * Determine if any factor should be treated as the intercept term.
@@ -266,13 +263,13 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
 
         for ( double thresh : LinearModelAnalyzer.qValueThresholdsForHitLists ) {
             // Ensure we don't set values to null.
-            Integer up = upCounts.get( thresh ) == null ? 0 : upCounts.get( thresh );
-            Integer down = downCounts.get( thresh ) == null ? 0 : downCounts.get( thresh );
-            Integer either = eitherCounts.get( thresh ) == null ? 0 : eitherCounts.get( thresh );
+            int up = upCounts.getOrDefault( thresh, 0 );
+            int down = downCounts.getOrDefault( thresh, 0 );
+            int either = eitherCounts.getOrDefault( thresh, 0 );
 
-            Integer upGenes = upCountGenes.get( thresh ) == null ? 0 : upCountGenes.get( thresh );
-            Integer downGenes = downCountGenes.get( thresh ) == null ? 0 : downCountGenes.get( thresh );
-            Integer eitherGenes = eitherCountGenes.get( thresh ) == null ? 0 : eitherCountGenes.get( thresh );
+            int upGenes = upCountGenes.getOrDefault( thresh, 0 );
+            int downGenes = downCountGenes.getOrDefault( thresh, 0 );
+            int eitherGenes = eitherCountGenes.getOrDefault( thresh, 0 );
 
             assert !( allGenes.size() < upGenes || allGenes.size() < downGenes
                     || allGenes.size() < eitherGenes ) : "There were more genes differentially expressed than exist in the experiment";
@@ -621,7 +618,7 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
 
                 // In the ANOVA table.
                 String factTableLabel = StringUtils.join( interactionFactorNames, ":" );
-                label2Factors.put( factTableLabel, new HashSet<ExperimentalFactor>() );
+                label2Factors.put( factTableLabel, new HashSet<>() );
                 label2Factors.get( factTableLabel ).addAll( interactionTerms );
             }
         }
@@ -744,8 +741,8 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
         for ( String factorName : properDesignMatrix.getTerms() ) {
             if ( !label2Factors.containsKey( factorName ) ) continue; // so we skip the intercept
             log.info( "Setting up results for " + factorName );
-            resultLists.put( factorName, new ArrayList<DifferentialExpressionAnalysisResult>() );
-            pvaluesForQvalue.put( factorName, new ArrayList<Double>() );
+            resultLists.put( factorName, new ArrayList<>() );
+            pvaluesForQvalue.put( factorName, new ArrayList<>() );
         }
 
         if ( pvaluesForQvalue.isEmpty() ) {
@@ -756,7 +753,7 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
         /*
          * Create result objects for each model fit. Keeping things in order is important.
          */
-        final Transformer rowNameExtractor = TransformerUtils.invokerTransformer( "getId" );
+        final Transformer<CompositeSequence, Long> rowNameExtractor = TransformerUtils.invokerTransformer( "getId" );
         boolean warned = false;
         //  int notUsable = 0;
         int processed = 0;
@@ -873,23 +870,22 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
 
                         }
                     } else {
+                        String message = "ANOVA could not be done for " + experimentalFactor + " on " + el + ": the overall P-value is either null or NaN";
                         if ( !warned ) {
-                            LinearModelAnalyzer.log
-                                    .warn( "ANOVA could not be done for " + experimentalFactor + " on " + el
-                                            + ", further warnings suppressed" );
+                            LinearModelAnalyzer.log.warn( message + ", further warnings suppressed" );
                             warned = true;
+                        } else {
+                            LinearModelAnalyzer.log.debug( message );
                         }
 
                         if ( LinearModelAnalyzer.log.isDebugEnabled() )
-                            LinearModelAnalyzer.log
-                                    .debug( "ANOVA could not be done for " + experimentalFactor + " on " + el );
 
-                        //  notUsable++; // will over count?
-                        continue;
+                            //  notUsable++; // will over count?
+                            continue;
                     }
                 }
 
-                assert !Double.isNaN( overallPValue ) : "We should not be keeping non-number pvalues (null or NaNs)";
+                assert overallPValue != null && !Double.isNaN( overallPValue ) : "We should not be keeping non-number pvalues (null or NaNs)";
 
                 probeAnalysisResult.setPvalue( this.nan2Null( overallPValue ) );
                 pvaluesForQvalue.get( factorName ).add( overallPValue );
@@ -945,7 +941,7 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
         if ( !config.getInteractionsToInclude().isEmpty() ) {
             Collection<Collection<ExperimentalFactor>> newInteractionsToInclude = new HashSet<>();
             for ( Collection<ExperimentalFactor> interactors : config.getInteractionsToInclude() ) {
-                if ( factors.containsAll( interactors ) ) {
+                if ( new HashSet<>( factors ).containsAll( interactors ) ) {
                     newInteractionsToInclude.add( interactors );
                 }
             }
@@ -958,7 +954,6 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
         newConfig.setFactorsToInclude( factors );
 
         return newConfig;
-
     }
 
     /**
@@ -997,7 +992,6 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
         }
 
         return result;
-
     }
 
     /**
@@ -1010,7 +1004,7 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
         for ( Collection<DifferentialExpressionAnalysisResult> resultList : resultLists.values() ) {
             for ( DifferentialExpressionAnalysisResult d : resultList ) {
                 CompositeSequence probe = d.getProbe();
-                result.put( probe, new HashSet<Gene>() );
+                result.put( probe, new HashSet<>() );
             }
         }
 
@@ -1078,9 +1072,8 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
     private Map<String, Collection<ExperimentalFactor>> getRNames( List<ExperimentalFactor> factors ) {
         final Map<String, Collection<ExperimentalFactor>> label2Factors = new LinkedHashMap<>();
         for ( ExperimentalFactor experimentalFactor : factors ) {
-            label2Factors
-                    .put( ExperimentalDesignUtils.nameForR( experimentalFactor ), new HashSet<ExperimentalFactor>() );
-            label2Factors.get( ExperimentalDesignUtils.nameForR( experimentalFactor ) ).add( experimentalFactor );
+            label2Factors.computeIfAbsent( ExperimentalDesignUtils.nameForR( experimentalFactor ), k -> new HashSet<>() )
+                    .add( experimentalFactor );
         }
         return label2Factors;
     }
@@ -1140,10 +1133,7 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
         contrast.setCoefficient( this.nan2Null( coefficient ) );
 
         List<ExperimentalFactor> factorList = new ArrayList<>( experimentalFactors );
-        boolean isInteraction = false;
-        if ( factorList.size() == 2 ) {
-            isInteraction = true;
-        }
+        boolean isInteraction = factorList.size() == 2;
 
         /*
          * The coefficient can be treated as fold-change if the data are log-transformed. This is because the
@@ -1227,7 +1217,6 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
         }
 
         probeAnalysisResult.getContrasts().add( contrast );
-
     }
 
     /**
@@ -1329,7 +1318,7 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
         Map<FactorValue, List<BioMaterial>> subSetSamples = new HashMap<>( subsetFactor.getFactorValues().size() );
         for ( FactorValue fv : subsetFactor.getFactorValues() ) {
             assert fv.getMeasurement() == null;
-            subSetSamples.put( fv, new ArrayList<BioMaterial>() );
+            subSetSamples.put( fv, new ArrayList<>() );
         }
 
         for ( BioMaterial sample : samplesUsed ) {
@@ -1377,155 +1366,125 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
             final DoubleMatrix<String, String> sNamedMatrix, DesignMatrix designMatrix,
             final DoubleMatrix1D librarySize, final DifferentialExpressionAnalysisConfig config ) {
 
-        final Map<String, LinearModelSummary> rawResults = new ConcurrentHashMap<>();
+        // perform the analysis in a background thread, so that we can provide feedback and interrupt it if it takes
+        // too long
+        Future<Map<String, LinearModelSummary>> f = Executors.newSingleThreadExecutor().submit( () -> {
+            StopWatch timer = new StopWatch();
+            timer.start();
+            LeastSquaresFit fit;
+            if ( config.getUseWeights() ) {
+                MeanVarianceEstimator mv = new MeanVarianceEstimator( designMatrix, sNamedMatrix, librarySize );
+                LinearModelAnalyzer.log.info( "Model weights from mean-variance model: " + timer.getTime() + "ms" );
+                timer.reset();
+                timer.start();
+                fit = new LeastSquaresFit( designMatrix, sNamedMatrix, mv.getWeights() );
 
-        Future<?> f = this.runAnalysisFuture( designMatrix, sNamedMatrix, rawResults, librarySize, config );
+                // DEBUG CODE
+                //                    try {
+                // String dir = "/Users/pzoot";
+                //                        File file = File.createTempFile( "loess-fit-", ".txt", new File( dir ) );
+                //                        OutputStream os = new PrintStream( file );
+                //                        ubic.basecode.io.writer.MatrixWriter w = new ubic.basecode.io.writer.MatrixWriter( os );
+                //                        w.writeMatrix( mv.getLoess() );
+                //
+                //                        File f2 = File.createTempFile( "mv-", ".txt", new File( dir ) );
+                //                        OutputStream os2 = new PrintStream( f2 );
+                //                        ubic.basecode.io.writer.MatrixWriter w2 = new ubic.basecode.io.writer.MatrixWriter( os2 );
+                //                        w2.writeMatrix( mv.getMeanVariance() );
+                //
+                //                        File f3 = File.createTempFile( "prepared-data-", ".txt", new File( dir ) );
+                //                        OutputStream os3 = new PrintStream( f3 );
+                //                        ubic.basecode.io.writer.MatrixWriter w3 = new ubic.basecode.io.writer.MatrixWriter( os3 );
+                //                        w3.writeMatrix( new DenseDoubleMatrix2D( preparedData.asArray() ) );
+                //
+                //                        File f4 = File.createTempFile( "voom-weights-", ".txt", new File( dir ) );
+                //                        OutputStream os4 = new PrintStream( f4 );
+                //                        ubic.basecode.io.writer.MatrixWriter w4 = new ubic.basecode.io.writer.MatrixWriter( os4 );
+                //                        w4.writeMatrix( new DenseDoubleMatrix2D( preparedData.asArray() ) );
+                //
+                //                        File f5 = File.createTempFile( "designmatrix-", ".txt", new File( dir ) );
+                //                        OutputStream os5 = new PrintStream( f5 );
+                //                        ubic.basecode.io.writer.MatrixWriter w5 = new ubic.basecode.io.writer.MatrixWriter( os5 );
+                //                        w5.writeMatrix( designMatrix.getMatrix(), true );
+                //
+                //                        File f6 = File.createTempFile( "libsize-", ".txt", new File( dir ) );
+                //                        OutputStream os6 = new PrintStream( f6 );
+                //                        ubic.basecode.io.writer.MatrixWriter w6 = new ubic.basecode.io.writer.MatrixWriter( os6 );
+                //                        w6.writeMatrix( librarySize );
+                //                    } catch ( Exception e ) {
+                //                        ///
+                //                    }
 
-        StopWatch timer = new StopWatch();
-        timer.start();
+            } else {
+                fit = new LeastSquaresFit( designMatrix, sNamedMatrix );
+            }
+            LinearModelAnalyzer.log
+                    .info( "Model fit preparedData matrix " + sNamedMatrix.rows() + " x " + sNamedMatrix.columns() + ": " + timer.getTime()
+                            + "ms" );
+            timer.reset();
+            timer.start();
+            if ( config.getModerateStatistics() ) {
+                ModeratedTstat.ebayes( fit );
+
+                // just for printing to logs:
+                double rdof = 0.0;
+                if ( fit.isHasMissing() ) {
+                    List<Integer> dofs = fit.getResidualDofs();
+                    for ( Integer k : dofs ) {
+                        rdof += k;
+                    }
+                    rdof = rdof / ( double ) dofs.size();
+                } else {
+                    rdof = fit.getResidualDof();
+                }
+                LinearModelAnalyzer.log.info( "Moderate test statistics: " + timer.getTime() + "ms; Mean.residual.dof=" + rdof + " dfPrior=" + fit.getDfPrior() + " varPrior=" + fit.getVarPrior() );
+            }
+
+            timer.reset();
+
+            timer.start();
+            Map<String, LinearModelSummary> res = fit.summarizeByKeys( true );
+            LinearModelAnalyzer.log.info( "Model summarize/ANOVA: " + timer.getTime() + "ms" );
+            LinearModelAnalyzer.log.info( "Analysis phase done ..." );
+            return res;
+        } );
+
+        StopWatch timer = StopWatch.createStarted();
         long lastTime = 0;
 
         // this analysis should take just 10 or 20 seconds for most data sets.
         // but there are cases that take longer; addressing https://github.com/PavlidisLab/Gemma/issues/13
         // would help.
-        double MAX_ANALYSIS_TIME = 60 * 1000 * 100; // 100 minutes.
+        // double MAX_ANALYSIS_TIME = 60 * 1000 * 100; // 100 minutes.
         double updateIntervalMillis = 60 * 1000;// 1 minute
-        while ( !f.isDone() ) {
+        while ( true ) {
             try {
-                Thread.sleep( 500 );
-
+                Map<String, LinearModelSummary> rawResults = f.get( 500, TimeUnit.MILLISECONDS );
+                if ( timer.getTime() > updateIntervalMillis ) {
+                    LinearModelAnalyzer.log
+                            .info( String.format( "Analysis finished in %.1f minutes.", timer.getTime( TimeUnit.SECONDS ) / 60.00 ) );
+                }
+                assert rawResults.size() == namedMatrix.rows() : "expected " + namedMatrix.rows() + " results, got " + rawResults.size();
+                return rawResults;
+            } catch ( InterruptedException e ) {
+                Thread.currentThread().interrupt();
+                LinearModelAnalyzer.log.warn( "Analysis interrupted!" );
+                return Collections.emptyMap();
+            } catch ( ExecutionException e ) {
+                throw new RuntimeException( e.getCause() );
+            } catch ( TimeoutException e ) {
                 if ( timer.getTime() - lastTime > updateIntervalMillis ) {
                     LinearModelAnalyzer.log.info( String
-                            .format( "Analysis running, %.1f minutes elapsed ...", timer.getTime() / 60000.00 ) );
+                            .format( "Analysis running, %.1f minutes elapsed ...", timer.getTime( TimeUnit.SECONDS ) / 60.00 ) );
                     lastTime = timer.getTime();
                 }
-
-            } catch ( InterruptedException e ) {
-                LinearModelAnalyzer.log.warn( "Analysis interrupted!" );
-                return rawResults;
-            }
-
-            if ( timer.getTime() > MAX_ANALYSIS_TIME ) {
-//                LinearModelAnalyzer.log
-//                        .error( "Analysis is taking too long, something bad must have happened; cancelling" );
-//                f.cancel( true );
-//                throw new RuntimeException( "Analysis was taking too long, it was cancelled" );
+                // if ( timer.getTime() > MAX_ANALYSIS_TIME ) {
+                //     LinearModelAnalyzer.log
+                //             .error( "Analysis is taking too long, something bad must have happened; cancelling" );
+                //     f.cancel( true );
+                //     throw new RuntimeException( "Analysis was taking too long, it was cancelled" );
+                // }
             }
         }
-
-        if ( timer.getTime() > updateIntervalMillis ) {
-            LinearModelAnalyzer.log
-                    .info( String.format( "Analysis finished in %.1f minutes.", timer.getTime() / 60000.00 ) );
-        }
-
-        try {
-            f.get();
-        } catch ( InterruptedException e ) {
-            LinearModelAnalyzer.log.warn( "Job was interrupted" );
-            return rawResults;
-        } catch ( ExecutionException e ) {
-            throw new RuntimeException( e );
-        }
-
-        assert rawResults.size() == namedMatrix.rows() : "expected " + namedMatrix.rows() + " results, got " + rawResults.size();
-        return rawResults;
-    }
-
-    /**
-     * Linear models solved
-     * @param preparedData already filtered and on a log scale. For RNA-seq this will be log2cpm. For other types of platforms it will generally be log2 intensity.
-     * @param rawResults Where the results will go
-     * @param librarySize RNA-seq library sizes
-     * @param config settings for the analysis
-     */
-    private Future<?> runAnalysisFuture( final DesignMatrix designMatrix, final DoubleMatrix<String, String> preparedData,
-            final Map<String, LinearModelSummary> rawResults, final DoubleMatrix1D librarySize,
-            final DifferentialExpressionAnalysisConfig config ) {
-
-        Future<?> f = taskExecutor.submit( new Runnable() {
-            @Override
-            public void run() {
-                StopWatch timer = new StopWatch();
-                timer.start();
-                LeastSquaresFit fit;
-                if ( config.getUseWeights() ) {
-                    MeanVarianceEstimator mv = new MeanVarianceEstimator( designMatrix, preparedData, librarySize );
-                    LinearModelAnalyzer.log.info( "Model weights from mean-variance model: " + timer.getTime() + "ms" );
-                    timer.reset();
-                    timer.start();
-                    fit = new LeastSquaresFit( designMatrix, preparedData, mv.getWeights() );
-
-                    // DEBUG CODE
-//                    try {
-                    // String dir = "/Users/pzoot";
-//                        File file = File.createTempFile( "loess-fit-", ".txt", new File( dir ) );
-//                        OutputStream os = new PrintStream( file );
-//                        ubic.basecode.io.writer.MatrixWriter w = new ubic.basecode.io.writer.MatrixWriter( os );
-//                        w.writeMatrix( mv.getLoess() );
-//
-//                        File f2 = File.createTempFile( "mv-", ".txt", new File( dir ) );
-//                        OutputStream os2 = new PrintStream( f2 );
-//                        ubic.basecode.io.writer.MatrixWriter w2 = new ubic.basecode.io.writer.MatrixWriter( os2 );
-//                        w2.writeMatrix( mv.getMeanVariance() );
-//
-//                        File f3 = File.createTempFile( "prepared-data-", ".txt", new File( dir ) );
-//                        OutputStream os3 = new PrintStream( f3 );
-//                        ubic.basecode.io.writer.MatrixWriter w3 = new ubic.basecode.io.writer.MatrixWriter( os3 );
-//                        w3.writeMatrix( new DenseDoubleMatrix2D( preparedData.asArray() ) );
-//
-//                        File f4 = File.createTempFile( "voom-weights-", ".txt", new File( dir ) );
-//                        OutputStream os4 = new PrintStream( f4 );
-//                        ubic.basecode.io.writer.MatrixWriter w4 = new ubic.basecode.io.writer.MatrixWriter( os4 );
-//                        w4.writeMatrix( new DenseDoubleMatrix2D( preparedData.asArray() ) );
-//
-//                        File f5 = File.createTempFile( "designmatrix-", ".txt", new File( dir ) );
-//                        OutputStream os5 = new PrintStream( f5 );
-//                        ubic.basecode.io.writer.MatrixWriter w5 = new ubic.basecode.io.writer.MatrixWriter( os5 );
-//                        w5.writeMatrix( designMatrix.getMatrix(), true );
-//
-//                        File f6 = File.createTempFile( "libsize-", ".txt", new File( dir ) );
-//                        OutputStream os6 = new PrintStream( f6 );
-//                        ubic.basecode.io.writer.MatrixWriter w6 = new ubic.basecode.io.writer.MatrixWriter( os6 );
-//                        w6.writeMatrix( librarySize );
-//                    } catch ( Exception e ) {
-//                        ///
-//                    }
-
-                } else {
-                    fit = new LeastSquaresFit( designMatrix, preparedData );
-                }
-                LinearModelAnalyzer.log
-                        .info( "Model fit preparedData matrix " + preparedData.rows() + " x " + preparedData.columns() + ": " + timer.getTime()
-                                + "ms" );
-                timer.reset();
-                timer.start();
-                if ( config.getModerateStatistics() ) {
-                    ModeratedTstat.ebayes( fit );
-
-                    // just for printing to logs:
-                    double rdof = 0.0;
-                    if ( fit.isHasMissing() ) {
-                        List<Integer> dofs = fit.getResidualDofs();
-                        for ( Integer k : dofs ) {
-                            rdof += k;
-                        }
-                        rdof = rdof / ( double ) dofs.size();
-                    } else {
-                        rdof = fit.getResidualDof();
-                    }
-                    LinearModelAnalyzer.log.info( "Moderate test statistics: " + timer.getTime() + "ms; Mean.residual.dof=" + rdof + " dfPrior=" + fit.getDfPrior() + " varPrior=" + fit.getVarPrior() );
-                }
-
-                timer.reset();
-
-                timer.start();
-                Map<String, LinearModelSummary> res = fit.summarizeByKeys( true );
-                LinearModelAnalyzer.log.info( "Model summarize/ANOVA: " + timer.getTime() + "ms" );
-                rawResults.putAll( res );
-                LinearModelAnalyzer.log.info( "Analysis phase done ..." );
-            }
-        } );
-
-        return f;
     }
 }

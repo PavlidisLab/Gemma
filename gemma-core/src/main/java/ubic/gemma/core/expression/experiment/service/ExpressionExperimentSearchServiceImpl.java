@@ -25,12 +25,9 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import ubic.gemma.core.search.SearchException;
-import ubic.gemma.core.search.SearchResult;
-import ubic.gemma.core.search.SearchResultDisplayObject;
-import ubic.gemma.core.search.SearchService;
+import org.springframework.transaction.annotation.Transactional;
+import ubic.gemma.core.search.*;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
-import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSetValueObject;
@@ -44,6 +41,7 @@ import ubic.gemma.persistence.service.expression.experiment.ExpressionExperiment
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.persistence.util.EntityUtils;
 
+import javax.annotation.Nullable;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -57,6 +55,7 @@ public class ExpressionExperimentSearchServiceImpl implements ExpressionExperime
 
     private static final Log log = LogFactory.getLog( ExpressionExperimentSearchServiceImpl.class );
     private static final String MASTER_SET_PREFIX = "Master set for";
+    private static final int MINIMUM_EE_QUERY_LENGTH = 3;
 
     private final ExpressionExperimentSetService expressionExperimentSetService;
     private final CoexpressionAnalysisService coexpressionAnalysisService;
@@ -85,7 +84,7 @@ public class ExpressionExperimentSearchServiceImpl implements ExpressionExperime
     public Collection<ExpressionExperimentValueObject> searchExpressionExperiments( String query ) throws SearchException {
 
         SearchSettings settings = SearchSettings.expressionExperimentSearch( query );
-        List<SearchResult<ExpressionExperiment>> experimentSearchResults = searchService.search( settings, ExpressionExperiment.class );
+        List<SearchResult<ExpressionExperiment>> experimentSearchResults = searchService.search( settings ).getByResultObjectType( ExpressionExperiment.class );
 
         if ( experimentSearchResults == null || experimentSearchResults.isEmpty() ) {
             ExpressionExperimentSearchServiceImpl.log.info( "No experiments for search: " + query );
@@ -255,9 +254,42 @@ public class ExpressionExperimentSearchServiceImpl implements ExpressionExperime
         return setResults;
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public Collection<Long> searchExpressionExperiments( String query, @Nullable Long taxonId ) throws SearchException {
+        Taxon taxon = null;
+        if ( taxonId != null ) {
+            taxon = taxonService.load( taxonId );
+        }
+        Collection<Long> eeIds = new HashSet<>();
+        if ( StringUtils.isNotBlank( query ) ) {
+
+            if ( query.length() < MINIMUM_EE_QUERY_LENGTH )
+                return eeIds;
+
+            // Initial list
+            SearchSettings settings = SearchSettings.expressionExperimentSearch( query, taxon );
+            /* no fill */
+            /*
+             * speed
+             * search,
+             * irrelevant
+             */
+            List<SearchResult<ExpressionExperiment>> results = searchService.search( settings.withFillResults( false ).withMode( SearchSettings.SearchMode.BALANCED ) )
+                    .getByResultObjectType( ExpressionExperiment.class );
+            for ( SearchResult<ExpressionExperiment> result : results ) {
+                eeIds.add( result.getResultId() );
+            }
+        } else if ( taxon != null ) {
+            // get all for taxon
+            eeIds = EntityUtils.getIds( expressionExperimentService.findByTaxon( taxon ) );
+        }
+        return eeIds;
+    }
+
     private List<SearchResultDisplayObject> getExpressionExperimentResults( SearchService.SearchResultMap results ) {
         // get all expressionExperiment results and convert result object into a value object
-        List<SearchResult<ExpressionExperiment>> srEEs = results.get( ExpressionExperiment.class );
+        List<SearchResult<ExpressionExperiment>> srEEs = results.getByResultObjectType( ExpressionExperiment.class );
 
         List<Long> eeIds = new ArrayList<>();
         for ( SearchResult<ExpressionExperiment> sr : srEEs ) {
@@ -277,7 +309,7 @@ public class ExpressionExperimentSearchServiceImpl implements ExpressionExperime
         List<SearchResultDisplayObject> experimentSets = new ArrayList<>();
 
         List<Long> eeSetIds = new ArrayList<>();
-        for ( SearchResult<ExpressionExperimentSet> sr : results.get( ExpressionExperimentSet.class ) ) {
+        for ( SearchResult<ExpressionExperimentSet> sr : results.getByResultObjectType( ExpressionExperimentSet.class ) ) {
             eeSetIds.add( sr.getResultId() );
         }
 

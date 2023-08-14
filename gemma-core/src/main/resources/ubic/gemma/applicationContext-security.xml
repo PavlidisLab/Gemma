@@ -61,8 +61,8 @@
         <s:after-invocation-provider ref="afterAclDataVectorCollectionRead"/>
         <s:after-invocation-provider ref="afterAclMyDataRead"/>
         <s:after-invocation-provider ref="afterAclMyPrivateDataRead"/>
-        <s:after-invocation-provider ref="afterAclAllMyData"/>
         <s:after-invocation-provider ref="afterAclValueObjectCollection"/>
+        <s:after-invocation-provider ref="afterAclValueObjectMap"/>
         <s:after-invocation-provider ref="afterAclValueObject"/>
         <s:after-invocation-provider ref="afterAclMapRead"/>
         <s:after-invocation-provider ref="afterAclMapValuesRead"/>
@@ -93,6 +93,20 @@
                 <util:constant static-field="org.springframework.security.acls.domain.BasePermission.READ"/>
             </list>
         </constructor-arg>
+        <property name="objectIdentityRetrievalStrategy" ref="objectIdentityRetrievalStrategy"/>
+        <property name="sidRetrievalStrategy" ref="sidRetrievalStrategy"/>
+    </bean>
+
+    <bean id="afterAclArrayDesignRead"
+          class="ubic.gemma.core.security.authorization.acl.AclAfterCompSeqByArrayDesignFilter">
+        <constructor-arg ref="aclService"/>
+        <constructor-arg>
+            <list>
+                <util:constant static-field="org.springframework.security.acls.domain.BasePermission.ADMINISTRATION"/>
+                <util:constant static-field="org.springframework.security.acls.domain.BasePermission.READ"/>
+            </list>
+        </constructor-arg>
+        <property name="objectIdentityRetrievalStrategy" ref="objectIdentityRetrievalStrategy"/>
         <property name="sidRetrievalStrategy" ref="sidRetrievalStrategy"/>
     </bean>
 
@@ -106,6 +120,7 @@
                 <util:constant static-field="org.springframework.security.acls.domain.BasePermission.READ"/>
             </list>
         </constructor-arg>
+        <property name="objectIdentityRetrievalStrategy" ref="objectIdentityRetrievalStrategy"/>
         <property name="sidRetrievalStrategy" ref="sidRetrievalStrategy"/>
     </bean>
 

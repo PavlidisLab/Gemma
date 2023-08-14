@@ -322,7 +322,8 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractCLICon
         }
 
         Collection<SearchResult<ExpressionExperiment>> eeSearchResults = searchService
-                .search( SearchSettings.expressionExperimentSearch( query ), ExpressionExperiment.class );
+                .search( SearchSettings.expressionExperimentSearch( query ) )
+                .getByResultObjectType( ExpressionExperiment.class );
 
         // Filter out all the ee that are not of correct taxon
         for ( SearchResult<ExpressionExperiment> sr : eeSearchResults ) {

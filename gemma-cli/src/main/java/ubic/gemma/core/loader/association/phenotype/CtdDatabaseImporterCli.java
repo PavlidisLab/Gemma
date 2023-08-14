@@ -24,6 +24,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.InputStreamReader;
 
+@Deprecated
 public class CtdDatabaseImporterCli extends ExternalDatabaseEvidenceImporterAbstractCLI {
 
     // name of the external database

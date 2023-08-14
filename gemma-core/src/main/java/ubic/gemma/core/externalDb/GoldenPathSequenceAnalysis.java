@@ -600,7 +600,7 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
         int geneStart = geneLoc.getNucleotide().intValue();
         int geneEnd = geneLoc.getNucleotide().intValue() + geneLoc.getNucleotideLength();
         int exonOverlap = 0;
-        if ( starts != null & sizes != null ) {
+        if ( starts != null && sizes != null ) {
             exonOverlap = SequenceManipulation
                     .getGeneProductExonOverlap( starts, sizes, geneLoc.getStrand(), geneProduct );
             int totalSize = SequenceManipulation.totalSize( sizes );
@@ -886,17 +886,13 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
 
         return this.getJdbcTemplate()
                 .query( "SELECT rg.name2 FROM all_mrna m INNER JOIN refGene rg ON m.qName = rg.name WHERE m.qName = ? ",
-                        new Object[] { ncbiId }, new ResultSetExtractor<String>() {
-
-                            @Override
-                            public String extractData( ResultSet rs ) throws SQLException, DataAccessException {
-                                while ( rs.next() ) {
-                                    String string = rs.getString( 0 );
-                                    if ( StringUtils.isNotBlank( string ) )
-                                        return string;
-                                }
-                                return null;
+                        new Object[] { ncbiId }, rs -> {
+                            while ( rs.next() ) {
+                                String string = rs.getString( 1 );
+                                if ( StringUtils.isNotBlank( string ) )
+                                    return string;
                             }
+                            return null;
                         } );
 
     }

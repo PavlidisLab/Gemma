@@ -24,19 +24,48 @@ import org.apache.commons.lang3.builder.HashCodeBuilder;
 import ubic.gemma.model.association.GOEvidenceCode;
 import ubic.gemma.model.common.AbstractDescribable;
 
+import javax.annotation.Nullable;
 import java.io.Serializable;
+import java.util.Comparator;
 import java.util.Objects;
 
 /**
  * Instances of this are used to describe other entities. This base class is just a characteristic that is simply a
  * 'tag' of free text.
+ * <p>
+ * Characteristics can have an associated URI from an ontology from {@link #getCategoryUri()} and {@link #getValueUri()},
+ * but not necessarily since there might not be an adequate term to represent the conveyed concept. These properties are
+ * marked with {@link Nullable} and should always be handled with care.
  *
  * @author Paul
  */
 public class Characteristic extends AbstractDescribable implements Serializable {
 
     private static final long serialVersionUID = -7242166109264718620L;
+
+
+    /**
+     * Obtain a comparator to compare terms by category URI (or category if null) in a case-insensitive manner.
+     */
+    public static Comparator<Characteristic> getByCategoryComparator() {
+        return Comparator
+                .comparing( Characteristic::getCategoryUri, Comparator.nullsLast( String.CASE_INSENSITIVE_ORDER ) )
+                .thenComparing( Characteristic::getCategory, Comparator.nullsLast( String.CASE_INSENSITIVE_ORDER ) );
+    }
+
+    /**
+     * Obtain a comparator to order terms by value URI (or value if null) in a case-insensitive manner.
+     */
+    public static Comparator<Characteristic> getByCategoryAndValueComparator() {
+        return Comparator
+                .comparing( Characteristic::getCategoryUri, Comparator.nullsLast( String.CASE_INSENSITIVE_ORDER ) )
+                .thenComparing( Characteristic::getCategory, Comparator.nullsLast( String.CASE_INSENSITIVE_ORDER ) )
+                .thenComparing( Characteristic::getValueUri, Comparator.nullsLast( String.CASE_INSENSITIVE_ORDER ) )
+                .thenComparing( Characteristic::getValue, Comparator.nullsLast( String.CASE_INSENSITIVE_ORDER ) ); // there should be no null, but we better be safe than sorry
+    }
+
     private String category;
+    @Nullable
     private String categoryUri;
     private GOEvidenceCode evidenceCode;
     /**
@@ -44,6 +73,7 @@ public class Characteristic extends AbstractDescribable implements Serializable 
      */
     private String originalValue = null;
     private String value;
+    @Nullable
     private String valueUri;
 
     /**
@@ -76,11 +106,12 @@ public class Characteristic extends AbstractDescribable implements Serializable 
      * as
      * associations with this.
      */
+    @Nullable
     public String getCategoryUri() {
         return this.categoryUri;
     }
 
-    public void setCategoryUri( String categoryUri ) {
+    public void setCategoryUri( @Nullable String categoryUri ) {
         this.categoryUri = categoryUri;
     }
 
@@ -121,11 +152,12 @@ public class Characteristic extends AbstractDescribable implements Serializable 
      * the
      * abstract class.
      */
+    @Nullable
     public String getValueUri() {
         return this.valueUri;
     }
 
-    public void setValueUri( String uri ) {
+    public void setValueUri( @Nullable String uri ) {
         this.valueUri = uri;
     }
 
@@ -193,15 +225,15 @@ public class Characteristic extends AbstractDescribable implements Serializable 
             return new Characteristic();
         }
 
-        public static Characteristic newInstance( String name, String description, String value, String valueUri,
-                String category, String categoryUri, GOEvidenceCode evidenceCode ) {
+        public static Characteristic newInstance( String name, String description, String value, @Nullable String valueUri,
+                String category, @Nullable String categoryUri, GOEvidenceCode evidenceCode ) {
             final Characteristic entity = new Characteristic();
             entity.setName( name );
             entity.setDescription( description );
             entity.setValue( value );
-            entity.setValueUri( valueUri );
+            entity.setValueUri( StringUtils.stripToNull( valueUri ) );
             entity.setCategory( category );
-            entity.setCategoryUri( categoryUri );
+            entity.setCategoryUri( StringUtils.stripToNull( categoryUri ) );
             entity.setEvidenceCode( evidenceCode );
             return entity;
         }

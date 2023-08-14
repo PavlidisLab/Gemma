@@ -19,59 +19,56 @@
 
 package ubic.gemma.persistence.service.association.coexpression;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.apachecommons.CommonsLog;
+import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.InitializingBean;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.task.TaskExecutor;
 import org.springframework.security.concurrent.DelegatingSecurityContextRunnable;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.persistence.service.genome.GeneDao;
 
 import java.util.Collection;
 import java.util.Objects;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.*;
 
 /**
  * @author Paul
  */
-// @Repository
-class CoexpressionQueryQueueImpl implements CoexpressionQueryQueue, InitializingBean {
+@CommonsLog
+class CoexpressionQueryQueueImpl implements CoexpressionQueryQueue, InitializingBean, DisposableBean {
 
     private static final int QUEUE_SIZE = 1000;
-    private static final Logger log = LoggerFactory.getLogger( CoexpressionQueryQueueImpl.class );
-    private final BlockingQueue<QueuedGene> geneQueue = new ArrayBlockingQueue<>(
+    private final BlockingQueue<Long> geneQueue = new ArrayBlockingQueue<>(
             CoexpressionQueryQueueImpl.QUEUE_SIZE );
-    @Autowired
-    private CoexpressionDao coexpressionDao;
-    @Autowired
-    private GeneDao geneDao;
-    @Autowired
-    private TaskExecutor taskExecutor;
+
+    private final CoexpressionDao coexpressionDao;
+    private final GeneDao geneDao;
+
+    private Future<?> queryCacheFuture;
+
+    public CoexpressionQueryQueueImpl( CoexpressionDao coexpressionDao, GeneDao geneDao ) {
+        this.coexpressionDao = coexpressionDao;
+        this.geneDao = geneDao;
+    }
 
     @Override
-    public synchronized void addToFullQueryQueue( Collection<Long> geneIds ) {
-        if ( this.geneQueue.remainingCapacity() == 0 ) {
-            CoexpressionQueryQueueImpl.log.debug( "Queue is full, cannot add genes for cache warm." );
-            return;
-        }
-
-        for ( Long id : geneIds ) {
-            this.addToFullQueryQueue( id );
+    public void addToFullQueryQueue( Collection<Gene> genes ) {
+        for ( Gene gene : genes ) {
+            if ( !this.addToFullQueryQueue( gene.getId() ) ) {
+                break;
+            }
         }
     }
 
     @Override
-    public synchronized void addToFullQueryQueue( Gene gene ) {
+    public void addToFullQueryQueue( Gene gene ) {
         this.addToFullQueryQueue( gene.getId() );
     }
 
     @Override
-    public synchronized void removeFromQueue( Collection<Long> geneIds ) {
+    public void removeFromQueue( Collection<Gene> genes ) {
         int count = 0;
-        for ( Long id : geneIds ) {
-            if ( geneQueue.remove( new QueuedGene( id ) ) )
+        for ( Gene gene : genes ) {
+            if ( geneQueue.remove( gene.getId() ) )
                 count++;
         }
 
@@ -82,31 +79,24 @@ class CoexpressionQueryQueueImpl implements CoexpressionQueryQueue, Initializing
 
     @Override
     public void afterPropertiesSet() throws Exception {
-        taskExecutor.execute( new DelegatingSecurityContextRunnable( new Runnable() {
+        queryCacheFuture = Executors.newSingleThreadExecutor().submit( new DelegatingSecurityContextRunnable( new Runnable() {
 
-            private final int MAX_WARNINGS = 5;
+            private static final int MAX_WARNINGS = 5;
 
             @Override
             public void run() {
                 int numWarnings = 0;
-                //noinspection InfiniteLoopStatement // Expected
                 while ( true ) {
-                    QueuedGene gene;
+                    Long gene;
                     try {
-
-                        synchronized ( geneQueue ) {
-                            gene = geneQueue.poll();
+                        gene = geneQueue.poll( 1000, TimeUnit.MILLISECONDS );
+                        if ( gene != null ) {
+                            CoexpressionQueryQueueImpl.this.queryForCache( gene );
                         }
-
-                        if ( gene == null ) {
-                            Thread.sleep( 1000 );
-                            continue;
-                        }
-
-                        CoexpressionQueryQueueImpl.this.queryForCache( gene );
-
-                        Thread.sleep( 500 );
-
+                    } catch ( InterruptedException e ) {
+                        Thread.currentThread().interrupt();
+                        log.warn( "Coexpression query cache was interrupted." );
+                        break;
                     } catch ( Exception e ) {
                         // can happen during tests
                         if ( numWarnings < MAX_WARNINGS ) {
@@ -123,73 +113,34 @@ class CoexpressionQueryQueueImpl implements CoexpressionQueryQueue, Initializing
         } ) );
     }
 
-    private void queryForCache( QueuedGene gene ) {
-        Gene g = Objects.requireNonNull( geneDao.load( gene.getId() ),
-                String.format( "No Gene with ID %d.", gene.getId() ) );
+    @Override
+    public void destroy() throws Exception {
+        queryCacheFuture.cancel( true );
+    }
+
+    private void queryForCache( Long geneId ) {
+        Gene g = Objects.requireNonNull( geneDao.load( geneId ),
+                String.format( "No Gene with ID %d.", geneId ) );
         int numCached = coexpressionDao.queryAndCache( g );
         //noinspection StatementWithEmptyBody // Better readability
         if ( numCached < 0 ) {
             // it was already in the cache
         } else if ( numCached > 0 ) {
             CoexpressionQueryQueueImpl.log.debug( "Cached " + numCached + " coexpression links at stringency="
-                    + CoexpressionCache.CACHE_QUERY_STRINGENCY + " for " + gene.getId() );
+                    + CoexpressionCache.CACHE_QUERY_STRINGENCY + " for " + geneId );
         } else {
             CoexpressionQueryQueueImpl.log
                     .debug( "No coexpression links to cache at stringency=" + CoexpressionCache.CACHE_QUERY_STRINGENCY
-                            + " for " + gene.getId() );
+                            + " for " + geneId );
         }
     }
 
-    private synchronized void addToFullQueryQueue( Long id ) {
-        if ( this.geneQueue.remainingCapacity() == 0 ) {
+    private boolean addToFullQueryQueue( Long geneId ) {
+        if ( this.geneQueue.offer( geneId ) ) {
+            CoexpressionQueryQueueImpl.log.debug( "Queuing gene=" + geneId + " for cache warm" );
+        } else {
             CoexpressionQueryQueueImpl.log.debug( "Queue is full, cannot add genes for cache warm." );
-            return;
         }
-
-        try {
-            CoexpressionQueryQueueImpl.log.debug( "Queuing gene=" + id + " for cache warm" );
-            this.geneQueue.add( new QueuedGene( id ) );
-        } catch ( Exception e ) {
-            // if JVM is finished (e.g. test) this will happen.
-            CoexpressionQueryQueueImpl.log.error( "Could not add to queue: " + e.getMessage() );
-        }
+        return false;
     }
-}
-
-class QueuedGene {
-
-    private final Long id;
-
-    QueuedGene( Long id ) {
-        super();
-        this.id = id;
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + ( ( id == null ) ? 0 : id.hashCode() );
-        return result;
-    }
-
-    @Override
-    public boolean equals( Object obj ) {
-        if ( this == obj )
-            return true;
-        if ( obj == null )
-            return false;
-        if ( this.getClass() != obj.getClass() )
-            return false;
-        QueuedGene other = ( QueuedGene ) obj;
-        if ( id == null ) {
-            return other.id == null;
-        } else
-            return id.equals( other.id );
-    }
-
 }

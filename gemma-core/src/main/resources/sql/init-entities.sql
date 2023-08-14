@@ -147,8 +147,36 @@ create table GENE2CS
     primary key (AD, CS, GENE)
 );
 alter table GENE2CS
-    add foreign key GENE2CS_ARRAY_DESIGN_FKC (AD) references ARRAY_DESIGN (ID) on update cascade on delete cascade;
+    add constraint GENE2CS_ARRAY_DESIGN_FKC foreign key (AD) references ARRAY_DESIGN (ID) on update cascade on delete cascade;
 alter table GENE2CS
-    add foreign key GENE2CS_CS_FKC (CS) references COMPOSITE_SEQUENCE (ID) on update cascade on delete cascade;
+    add constraint GENE2CS_CS_FKC foreign key (CS) references COMPOSITE_SEQUENCE (ID) on update cascade on delete cascade;
 alter table GENE2CS
-    add foreign key GENE2CS_GENE_FKC (GENE) references CHROMOSOME_FEATURE (ID) on update cascade on delete cascade;
+    add constraint GENE2CS_GENE_FKC foreign key (GENE) references CHROMOSOME_FEATURE (ID) on update cascade on delete cascade;
+
+drop table if exists EXPRESSION_EXPERIMENT2CHARACTERISTIC;
+create table EXPRESSION_EXPERIMENT2CHARACTERISTIC
+(
+    ID                       bigint,
+    NAME                     varchar(255),
+    DESCRIPTION              text,
+    CATEGORY                 varchar(255),
+    CATEGORY_URI             varchar(255),
+    VALUE                    varchar(255),
+    VALUE_URI                varchar(255),
+    ORIGINAL_VALUE           varchar(255),
+    EVIDENCE_CODE            varchar(255),
+    EXPRESSION_EXPERIMENT_FK bigint,
+    LEVEL                    varchar(255),
+    primary key (ID, EXPRESSION_EXPERIMENT_FK, LEVEL)
+);
+
+-- note: constraint names cannot exceed 64 characters, so we cannot use the usual naming convention
+-- no URI exceeds 100 characters in practice, so we only index a prefix
+alter table EXPRESSION_EXPERIMENT2CHARACTERISTIC
+    add constraint EE2C_CHARACTERISTIC_FKC foreign key (ID) references CHARACTERISTIC (ID) on update cascade on delete cascade,
+    add constraint EE2C_EXPRESSION_EXPERIMENT_FKC foreign key (EXPRESSION_EXPERIMENT_FK) references INVESTIGATION (id) on update cascade on delete cascade,
+    add index EE2C_VALUE (VALUE),
+    add index EE2C_CATEGORY (CATEGORY),
+    add index EE2C_VALUE_URI_VALUE (VALUE_URI(100), VALUE),
+    add index EE2C_CATEGORY_URI_CATEGORY_VALUE_URI_VALUE (CATEGORY_URI(100), CATEGORY, VALUE_URI(100), VALUE),
+    add index EE2C_LEVEL (LEVEL);

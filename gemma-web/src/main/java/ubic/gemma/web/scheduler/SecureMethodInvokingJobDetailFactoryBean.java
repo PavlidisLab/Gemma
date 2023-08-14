@@ -19,8 +19,8 @@
 package ubic.gemma.web.scheduler;
 
 import gemma.gsec.authentication.ManualAuthenticationService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean;
 import org.springframework.security.core.AuthenticationException;
@@ -41,18 +41,11 @@ import java.lang.reflect.InvocationTargetException;
 @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
 public class SecureMethodInvokingJobDetailFactoryBean extends MethodInvokingJobDetailFactoryBean {
 
-    private static Logger log = LoggerFactory.getLogger( AuditAdvice.class.getName() );
+    private static final Log log = LogFactory.getLog( AuditAdvice.class.getName() );
     @Autowired
     ManualAuthenticationService manualAuthenticationService;
     @Autowired
     UserManager userManager;
-
-    /**
-     * @param log the log to set
-     */
-    public static void setLog( Logger log ) {
-        SecureMethodInvokingJobDetailFactoryBean.log = log;
-    }
 
     @Override
     public Object invoke() throws InvocationTargetException, IllegalAccessException {

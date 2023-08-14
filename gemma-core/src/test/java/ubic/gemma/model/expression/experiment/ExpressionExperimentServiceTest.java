@@ -1,310 +1,192 @@
-/*
- * The Gemma project
- *
- * Copyright (c) 2006 University of British Columbia
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *
- */
 package ubic.gemma.model.expression.experiment;
 
-import org.apache.commons.lang3.RandomStringUtils;
-import org.junit.Before;
+import gemma.gsec.SecurityService;
+import org.junit.After;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import ubic.gemma.core.util.test.BaseSpringContextTest;
-import ubic.gemma.model.common.auditAndSecurity.Contact;
-import ubic.gemma.model.common.description.Characteristic;
-import ubic.gemma.model.common.description.DatabaseEntry;
-import ubic.gemma.model.common.description.ExternalDatabase;
-import ubic.gemma.model.common.quantitationtype.QuantitationType;
-import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
-import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
-import ubic.gemma.model.expression.designElement.CompositeSequence;
-import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.persistence.service.common.description.CharacteristicDao;
-import ubic.gemma.persistence.service.expression.bioAssay.BioAssayDao;
-import ubic.gemma.persistence.service.expression.bioAssayData.RawExpressionDataVectorService;
-import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.security.access.AccessDecisionManager;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
+import ubic.basecode.ontology.model.OntologyTerm;
+import ubic.gemma.core.analysis.preprocess.svd.SVDService;
+import ubic.gemma.core.ontology.OntologyService;
+import ubic.gemma.core.search.SearchService;
+import ubic.gemma.persistence.service.analysis.expression.coexpression.CoexpressionAnalysisService;
+import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
+import ubic.gemma.persistence.service.analysis.expression.pca.PrincipalComponentAnalysisService;
+import ubic.gemma.persistence.service.analysis.expression.sampleCoexpression.SampleCoexpressionAnalysisService;
+import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
+import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeService;
+import ubic.gemma.persistence.service.expression.bioAssayData.BioAssayDimensionService;
+import ubic.gemma.persistence.service.expression.bioAssayData.RawExpressionDataVectorDao;
+import ubic.gemma.persistence.service.expression.experiment.*;
+import ubic.gemma.persistence.util.Filter;
 import ubic.gemma.persistence.util.Filters;
-import ubic.gemma.persistence.util.ObjectFilter;
+import ubic.gemma.persistence.util.TestComponent;
 
-import java.util.*;
+import java.util.Collections;
 
-import static org.junit.Assert.*;
-import static org.assertj.core.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 /**
- * @author kkeshav
- * @author pavlidis
+ * @author poirigui
  */
-public class ExpressionExperimentServiceTest extends BaseSpringContextTest {
+@ContextConfiguration
+public class ExpressionExperimentServiceTest extends AbstractJUnit4SpringContextTests {
 
-    private static final String EE_NAME = RandomStringUtils.randomAlphanumeric( 20 );
+    @Configuration
+    @TestComponent
+    static class ExpressionExperimentServiceTestContextConfiguration {
+
+        @Bean
+        public ExpressionExperimentService expressionExperimentService( ExpressionExperimentDao expressionExperimentDao ) {
+            return new ExpressionExperimentServiceImpl( expressionExperimentDao );
+        }
+
+        @Bean
+        public ExpressionExperimentDao expressionExperimentDao() {
+            return mock( ExpressionExperimentDao.class );
+        }
+
+        @Bean
+        public AuditEventService auditEventService() {
+            return mock( AuditEventService.class );
+        }
+
+        @Bean
+        public BioAssayDimensionService bioAssayDimensionService() {
+            return mock( BioAssayDimensionService.class );
+        }
+
+        @Bean
+        public DifferentialExpressionAnalysisService differentialExpressionAnalysisService() {
+            return mock( DifferentialExpressionAnalysisService.class );
+        }
+
+        @Bean
+        public ExpressionExperimentSetService expressionExperimentSetService() {
+            return mock( ExpressionExperimentSetService.class );
+        }
+
+        @Bean
+        public ExpressionExperimentSubSetService expressionExperimentSubSetService() {
+            return mock( ExpressionExperimentSubSetService.class );
+        }
+
+        @Bean
+        public ExperimentalFactorService experimentalFactorService() {
+            return mock( ExperimentalFactorService.class );
+        }
+
+        @Bean
+        public FactorValueService factorValueService() {
+            return mock( FactorValueService.class );
+        }
+
+        @Bean
+        public RawExpressionDataVectorDao rawExpressionDataVectorDao() {
+            return mock( RawExpressionDataVectorDao.class );
+        }
+
+        @Bean
+        public OntologyService ontologyService() {
+            return mock( OntologyService.class );
+        }
+
+        @Bean
+        public PrincipalComponentAnalysisService principalComponentAnalysisService() {
+            return mock( PrincipalComponentAnalysisService.class );
+        }
+
+        @Bean
+        public QuantitationTypeService quantitationTypeService() {
+            return mock( QuantitationTypeService.class );
+        }
+
+        @Bean
+        public SearchService searchService() {
+            return mock( SearchService.class );
+        }
+
+        @Bean
+        public SecurityService securityService() {
+            return mock( SecurityService.class );
+        }
+
+        @Bean
+        public SVDService svdService() {
+            return mock( SVDService.class );
+        }
+
+        @Bean
+        public CoexpressionAnalysisService coexpressionAnalysisService() {
+            return mock( CoexpressionAnalysisService.class );
+        }
+
+        @Bean
+        public SampleCoexpressionAnalysisService sampleCoexpressionAnalysisService() {
+            return mock( SampleCoexpressionAnalysisService.class );
+        }
+
+        @Bean
+        public BlacklistedEntityService blacklistedEntityService() {
+            return mock( BlacklistedEntityService.class );
+        }
+
+        @Bean
+        public AccessDecisionManager accessDecisionManager() {
+            return mock( AccessDecisionManager.class );
+        }
+    }
+
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
+
     @Autowired
-    private RawExpressionDataVectorService rawExpressionDataVectorService;
-    private ExpressionExperiment ee = null;
-    private ExternalDatabase ed;
-    private String accession;
-    private boolean persisted = false;
+    private ExpressionExperimentDao expressionExperimentDao;
 
-    @Before
-    public void setUp() throws Exception {
+    @Autowired
+    private OntologyService ontologyService;
 
-        if ( !persisted ) {
-            ee = this.getTestPersistentCompleteExpressionExperiment( false );
-            ee.setName( ExpressionExperimentServiceTest.EE_NAME );
-
-            DatabaseEntry accessionEntry = this.getTestPersistentDatabaseEntry();
-            accession = accessionEntry.getAccession();
-            ed = accessionEntry.getExternalDatabase();
-            ee.setAccession( accessionEntry );
-
-            Contact c = this.getTestPersistentContact();
-            ee.setOwner( c );
-
-            ee.getCharacteristics().add( Characteristic.Factory.newInstance() );
-
-            expressionExperimentService.update( ee );
-            ee = expressionExperimentService.thaw( ee );
-
-            persisted = true;
-        } else {
-            log.debug( "Skipping making new ee for test" );
-        }
+    @After
+    public void tearDown() {
+        reset( ontologyService );
     }
 
     @Test
-    public final void testFindByAccession() {
-        DatabaseEntry accessionEntry = DatabaseEntry.Factory.newInstance( ed );
-        accessionEntry.setAccession( accession );
-
-        Collection<ExpressionExperiment> expressionExperiment = expressionExperimentService
-                .findByAccession( accessionEntry );
-        assertTrue( expressionExperiment.size() > 0 );
+    public void testGetFiltersWithInferredAnnotations() {
+        OntologyTerm term = mock( OntologyTerm.class );
+        when( ontologyService.getTerms( Collections.singleton( "http://example.com/T00001" ) ) ).thenReturn( Collections.singleton( term ) );
+        Filters f = Filters.by( "c", "valueUri", String.class, Filter.Operator.eq, "http://example.com/T00001", "characteristics.valueUri" );
+        Filters inferredFilters = expressionExperimentService.getFiltersWithInferredAnnotations( f, null );
+        verify( ontologyService ).getTerms( Collections.singleton( "http://example.com/T00001" ) );
+        verify( ontologyService ).getChildren( Collections.singleton( term ), false, true );
     }
 
     @Test
-    public void testFindByFactor() {
-        ExperimentalDesign design = ee.getExperimentalDesign();
-        assertNotNull( design.getExperimentalFactors() );
-        ExperimentalFactor ef = design.getExperimentalFactors().iterator().next();
-        assertNotNull( ef );
-        ExpressionExperiment eeFound = expressionExperimentService.findByFactor( ef );
-        assertNotNull( eeFound );
-        assertEquals( eeFound.getId(), ee.getId() );
+    public void testGetFiltersWithCategories() {
+        OntologyTerm term = mock( OntologyTerm.class );
+        when( ontologyService.getTerms( Collections.singleton( "http://example.com/T00001" ) ) ).thenReturn( Collections.singleton( term ) );
+        Filters f = Filters.by( "c", "categoryUri", String.class, Filter.Operator.eq, "http://example.com/T00001", "characteristics.categoryUri" );
+        expressionExperimentService.getFiltersWithInferredAnnotations( f, null );
+        verifyNoInteractions( ontologyService );
     }
 
     @Test
-    public void testFindByFactorValue() {
-        ExperimentalDesign design = ee.getExperimentalDesign();
-        assertNotNull( design.getExperimentalFactors() );
-        ExperimentalFactor ef = design.getExperimentalFactors().iterator().next();
-        FactorValue fv = ef.getFactorValues().iterator().next();
-        ExpressionExperiment eeFound = expressionExperimentService.findByFactorValue( fv );
-        assertNotNull( eeFound );
-        assertEquals( eeFound.getId(), ee.getId() );
-
+    public void testGetAnnotationsUsageFrequency() {
+        expressionExperimentService.getAnnotationsUsageFrequency( Filters.empty(), -1, 0, null, null, null, null );
+        verify( expressionExperimentDao ).getAnnotationsUsageFrequency( null, null, -1, 0, null, null, null, null );
+        verifyNoMoreInteractions( expressionExperimentDao );
     }
 
     @Test
-    public void testFindByFactorValueId() {
-        ExperimentalDesign design = ee.getExperimentalDesign();
-        assertNotNull( design.getExperimentalFactors() );
-        ExperimentalFactor ef = design.getExperimentalFactors().iterator().next();
-        FactorValue fv = ef.getFactorValues().iterator().next();
-        assertNotNull( fv.getId() );
-        ExpressionExperiment eeFound = expressionExperimentService.findByFactorValue( fv.getId() );
-        assertNotNull( eeFound );
-        assertEquals( eeFound.getId(), ee.getId() );
-
+    public void testGetAnnotationsUsageFrequencyWithFilters() {
+        Filters f = Filters.by( "c", "valueUri", String.class, Filter.Operator.eq, "http://example.com/T00001", "characteristics.valueUri" );
+        expressionExperimentService.getAnnotationsUsageFrequency( f, -1, 0, null, null, null, null );
+        verify( expressionExperimentDao ).loadIdsWithCache( f, null );
+        verify( expressionExperimentDao ).getAnnotationsUsageFrequency( Collections.emptyList(), null, -1, 0, null, null, null, null );
+        verifyNoMoreInteractions( expressionExperimentDao );
     }
-
-    @Test
-    public void testLoadAllValueObjects() {
-        Collection<ExpressionExperimentValueObject> vos = expressionExperimentService.loadAllValueObjects();
-        assertNotNull( vos );
-        assertTrue( vos.size() > 0 );
-    }
-
-    @Test
-    public void testGetByTaxon() {
-        Taxon taxon = taxonService.findByCommonName( "mouse" );
-        Collection<ExpressionExperiment> list = expressionExperimentService.findByTaxon( taxon );
-        assertNotNull( list );
-        Taxon checkTaxon = expressionExperimentService.getTaxon( list.iterator().next() );
-        assertEquals( taxon, checkTaxon );
-
-    }
-
-    @Test
-    public final void testGetDesignElementDataVectorsByQt() {
-        QuantitationType quantitationType = ee.getRawExpressionDataVectors().iterator().next().getQuantitationType();
-        Collection<QuantitationType> quantitationTypes = new HashSet<>();
-        quantitationTypes.add( quantitationType );
-        Collection<RawExpressionDataVector> vectors = rawExpressionDataVectorService.find( quantitationTypes );
-        assertEquals( 12, vectors.size() );
-    }
-
-    @Test
-    public final void testGetPerTaxonCount() {
-        Map<Taxon, Long> counts = expressionExperimentService.getPerTaxonCount();
-        long oldCount = counts.get( taxonService.findByCommonName( "mouse" ) );
-        assertNotNull( counts );
-        expressionExperimentService.remove( ee );
-        counts = expressionExperimentService.getPerTaxonCount();
-        assertEquals( oldCount - 1, counts.get( taxonService.findByCommonName( "mouse" ) ).longValue() );
-    }
-
-    @Test
-    public void testGetPreferredQuantitationType() {
-        QuantitationType qt = expressionExperimentService.getPreferredQuantitationType( ee );
-        assertNotNull( qt );
-        assertTrue( qt.getIsPreferred() );
-    }
-
-    @Test
-    public final void testGetQuantitationTypes() {
-        Collection<QuantitationType> types = expressionExperimentService.getQuantitationTypes( ee );
-        assertEquals( 2, types.size() );
-    }
-
-    @Test
-    public void testGetBioMaterialCount() {
-        assertEquals( 8, expressionExperimentService.getBioMaterialCount( ee ) );
-    }
-
-    @Test
-    public void testGetQuantitationTypeCount() {
-        Map<QuantitationType, Long> qts = expressionExperimentService.getQuantitationTypeCount( ee );
-        assertEquals( 2, qts.size() );
-    }
-
-    @Test
-    public void testGetDesignElementDataVectorCount() {
-        assertEquals( 24, expressionExperimentService.getDesignElementDataVectorCount( ee ) );
-    }
-
-    @Test
-    public final void testGetQuantitationTypesForArrayDesign() {
-        ArrayDesign ad = ee.getRawExpressionDataVectors().iterator().next().getDesignElement().getArrayDesign();
-        Collection<QuantitationType> types = expressionExperimentService.getQuantitationTypes( ee, ad );
-        assertEquals( 2, types.size() );
-    }
-
-    @Test
-    public final void testGetRawExpressionDataVectors() {
-        ExpressionExperiment eel = this.getTestPersistentCompleteExpressionExperiment( false );
-        Collection<CompositeSequence> designElements = new HashSet<>();
-        QuantitationType quantitationType = eel.getRawExpressionDataVectors().iterator().next().getQuantitationType();
-        Collection<RawExpressionDataVector> allv = eel.getRawExpressionDataVectors();
-
-        assertNotNull( quantitationType );
-
-        assertTrue( allv.size() > 1 );
-
-        for ( RawExpressionDataVector anAllv : allv ) {
-            CompositeSequence designElement = anAllv.getDesignElement();
-            assertNotNull( designElement );
-
-            designElements.add( designElement );
-            if ( designElements.size() == 2 )
-                break;
-        }
-
-        assertEquals( 2, designElements.size() );
-
-        Collection<RawExpressionDataVector> vectors = rawExpressionDataVectorService
-                .find( designElements, quantitationType );
-
-        assertEquals( 2, vectors.size() );
-
-    }
-
-    /**
-     * EE service has a few extensions for supporting various filtering strategies in the frontend, so we need to test
-     * them here.
-     */
-    @Test
-    public final void testGetObjectFilter() {
-        assertThat( expressionExperimentService.getObjectFilter( "taxon", ObjectFilter.Operator.eq, "9606" ) )
-                .hasFieldOrPropertyWithValue( "objectAlias", "taxon" )
-                .hasFieldOrPropertyWithValue( "propertyName", "id" )
-                .hasFieldOrPropertyWithValue( "requiredValue", 9606L );
-
-        assertThat( expressionExperimentService.getObjectFilter( "bioAssayCount", ObjectFilter.Operator.greaterOrEq, "4" ) )
-                .hasFieldOrPropertyWithValue( "objectAlias", "ee" )
-                .hasFieldOrPropertyWithValue( "propertyName", "bioAssays.size" )
-                .hasFieldOrPropertyWithValue( "operator", ObjectFilter.Operator.greaterOrEq )
-                .hasFieldOrPropertyWithValue( "requiredValue", 4 );
-
-        Calendar calendar = new GregorianCalendar( 2020, Calendar.JANUARY, 10 );
-        calendar.setTimeZone( TimeZone.getTimeZone( "UTC" ) );
-        assertThat( expressionExperimentService.getObjectFilter( "lastUpdated", ObjectFilter.Operator.greaterOrEq, "2020-01-10" ) )
-                .hasFieldOrPropertyWithValue( "objectAlias", "s" )
-                .hasFieldOrPropertyWithValue( "propertyName", "lastUpdated" )
-                .hasFieldOrPropertyWithValue( "operator", ObjectFilter.Operator.greaterOrEq )
-                .hasFieldOrPropertyWithValue( "requiredValue", calendar.getTime() );
-
-        assertThat( expressionExperimentService.getObjectFilter( "troubled", ObjectFilter.Operator.eq, "true" ) )
-                .hasFieldOrPropertyWithValue( "objectAlias", "s" )
-                .hasFieldOrPropertyWithValue( "propertyName", "troubled" )
-                .hasFieldOrPropertyWithValue( "operator", ObjectFilter.Operator.eq )
-                .hasFieldOrPropertyWithValue( "requiredValue", true );
-
-        assertThat( expressionExperimentService.getObjectFilter( "needsAttention", ObjectFilter.Operator.eq, "false" ) )
-                .hasFieldOrPropertyWithValue( "objectAlias", "s" )
-                .hasFieldOrPropertyWithValue( "propertyName", "needsAttention" )
-                .hasFieldOrPropertyWithValue( "operator", ObjectFilter.Operator.eq )
-                .hasFieldOrPropertyWithValue( "requiredValue", false );
-    }
-
-    @Test
-    public final void testLoadValueObjects() {
-        Collection<Long> ids = new HashSet<>();
-        Long id = ee.getId();
-        ids.add( id );
-        Collection<ExpressionExperimentValueObject> list = expressionExperimentService.loadValueObjectsByIds( ids );
-        assertNotNull( list );
-        assertEquals( 1, list.size() );
-    }
-
-    @Test
-    public void testLoadValueObjectsPreFilterByCharacteristic() {
-        Collection<Long> ids = new HashSet<>();
-        Filters filters = Filters.singleFilter( expressionExperimentService.getObjectFilter( "characteristics.id", ObjectFilter.Operator.eq, ee.getCharacteristics().stream().findFirst().orElse( null ).getId().toString() ) );
-        ObjectFilter of = filters.iterator().next()[0];
-        assertEquals( CharacteristicDao.OBJECT_ALIAS, of.getObjectAlias() );
-        assertEquals( "id", of.getPropertyName() );
-        Long id = ee.getId();
-        ids.add( id );
-        Collection<ExpressionExperimentValueObject> list = expressionExperimentService.loadValueObjectsPreFilter( filters, null, 0, 0 );
-        assertEquals( 1, list.size() );
-    }
-
-    @Test
-    public void testLoadValueObjectsPreFilterByBioAssay() {
-        Collection<Long> ids = new HashSet<>();
-        Filters filters = Filters.singleFilter( expressionExperimentService.getObjectFilter( "bioAssays.id", ObjectFilter.Operator.eq, ee.getBioAssays().stream().findFirst().orElse( null ).getId().toString() ) );
-        ObjectFilter of = filters.iterator().next()[0];
-        assertEquals( BioAssayDao.OBJECT_ALIAS, of.getObjectAlias() );
-        assertEquals( "id", of.getPropertyName() );
-        Long id = ee.getId();
-        ids.add( id );
-        Collection<ExpressionExperimentValueObject> list = expressionExperimentService.loadValueObjectsPreFilter( filters, null, 0, 0 );
-        assertEquals( 1, list.size() );
-    }
-
 }

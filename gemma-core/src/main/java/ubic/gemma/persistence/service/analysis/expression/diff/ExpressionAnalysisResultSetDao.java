@@ -63,18 +63,18 @@ public interface ExpressionAnalysisResultSetDao extends AnalysisResultSetDao<Dif
      * Note: Not all probes have associated genes, so you should use {@link Map#getOrDefault(Object, Object)} with an
      * empty collection to handle this case.
      */
-    Map<DifferentialExpressionAnalysisResult, List<Gene>> loadResultToGenesMap( ExpressionAnalysisResultSet resultSet );
+    Map<Long, List<Gene>> loadResultToGenesMap( ExpressionAnalysisResultSet resultSet );
 
     /**
      * Retrieve result sets associated to a set of {@link BioAssaySet} and external database entries.
      *
      * @param bioAssaySets related {@link BioAssaySet}, or any if null
      * @param databaseEntries related external identifier associated to the {@link BioAssaySet}, or any if null
-     * @param objectFilters list of object filters
+     * @param filters filters for restricting results
      * @param limit maximum number of results to return
      * @param sort field and direction by which the collection is ordered
      */
-    Slice<DifferentialExpressionAnalysisResultSetValueObject> findByBioAssaySetInAndDatabaseEntryInLimit( @Nullable Collection<BioAssaySet> bioAssaySets, @Nullable Collection<DatabaseEntry> databaseEntries, @Nullable Filters objectFilters, int offset, int limit, @Nullable Sort sort );
+    Slice<DifferentialExpressionAnalysisResultSetValueObject> findByBioAssaySetInAndDatabaseEntryInLimit( @Nullable Collection<BioAssaySet> bioAssaySets, @Nullable Collection<DatabaseEntry> databaseEntries, @Nullable Filters filters, int offset, int limit, @Nullable Sort sort );
 
     void thaw( ExpressionAnalysisResultSet ears );
 }

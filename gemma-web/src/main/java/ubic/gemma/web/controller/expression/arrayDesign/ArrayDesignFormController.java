@@ -34,6 +34,8 @@ import javax.servlet.http.HttpServletResponse;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static java.util.Objects.requireNonNull;
+
 /**
  * Controller for editing basic information about array designs.
  *
@@ -126,9 +128,11 @@ public class ArrayDesignFormController extends BaseFormController {
 
     @Override
     protected ModelAndView getCancelView( HttpServletRequest request ) {
+        long id = Long.parseLong( requireNonNull( request.getParameter( "id" ),
+                "The 'id' query parameter is required." ) );
         // go back to the aray we just edited.
         return new ModelAndView(
-                new RedirectView( "/arrays/showArrayDesign.html?id=" + request.getParameter( "id" ), true ) );
+                new RedirectView( "/arrays/showArrayDesign.html?id=" + id, true ) );
     }
 
     private static final List<String> TECHNOLOGY_TYPES = Arrays.stream( TechnologyType.values() )

@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+		 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<name>Gemma</name>
 	<groupId>gemma</groupId>
 	<artifactId>gemma</artifactId>
-	<version>1.29.16</version>
+	<version>1.30.0</version>
 	<inceptionYear>2005</inceptionYear>
 	<description>The Gemma Project for meta-analysis of genomics data</description>
 	<url>https://gemma.msl.ubc.ca</url>
@@ -21,7 +21,9 @@
 	<modules>
 		<module>gemma-core</module>
 		<module>gemma-cli</module>
+		<module>gemma-rest</module>
 		<module>gemma-web</module>
+		<module>gemma-groovy-support</module>
 	</modules>
 	<packaging>pom</packaging>
 	<scm>
@@ -139,6 +141,12 @@
 			<groupId>baseCode</groupId>
 			<artifactId>baseCode</artifactId>
 			<version>1.1.18</version>
+			<exclusions>
+				<exclusion>
+					<groupId>commons-beanutils</groupId>
+					<artifactId>commons-beanutils</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 
 		<dependency>
@@ -208,6 +216,12 @@
 			<artifactId>spring-security-acl</artifactId>
 			<version>${spring.security.version}</version>
 		</dependency>
+		<dependency>
+			<groupId>org.springframework.security</groupId>
+			<artifactId>spring-security-config</artifactId>
+			<version>${spring.security.version}</version>
+			<scope>runtime</scope>
+		</dependency>
 
 		<!-- Database -->
 		<dependency>
@@ -248,10 +262,13 @@
 		</dependency>
 		<!-- used in dataSource.xml and testDataSource.xml -->
 		<dependency>
-			<groupId>org.apache.commons</groupId>
-			<artifactId>commons-dbcp2</artifactId>
+			<groupId>com.zaxxer</groupId>
+			<artifactId>HikariCP</artifactId>
+			<!-- 5+ require Java 11+ -->
+			<version>4.0.3</version>
 			<scope>compile</scope>
 		</dependency>
+
 
 		<!-- Caching (version is dictated by hibernate-ehcache) -->
 		<dependency>
@@ -266,14 +283,9 @@
 			<version>1.2.0</version>
 		</dependency>
 		<dependency>
-			<groupId>org.apache.xbean</groupId>
-			<artifactId>xbean-spring</artifactId>
-			<version>4.22</version>
-		</dependency>
-		<dependency>
 			<groupId>com.google.guava</groupId>
 			<artifactId>guava</artifactId>
-			<version>31.1-jre</version>
+			<version>32.0.1-jre</version>
 		</dependency>
 		<!-- needed for Java 11 -->
 		<dependency>
@@ -316,22 +328,9 @@
 			<version>1.1</version>
 		</dependency>
 		<dependency>
-			<groupId>commons-beanutils</groupId>
-			<artifactId>commons-beanutils</artifactId>
-			<version>1.9.4</version>
-		</dependency>
-		<dependency>
 			<groupId>org.apache.commons</groupId>
 			<artifactId>commons-collections4</artifactId>
 			<version>4.4</version>
-		</dependency>
-		<!-- We don't use this directly thus the runtime scope, but some of our dependencies (hibernate-core, velocity)
-		indirectly import a vulnerable version of this package (see CVE-2015-6420 and CVE-2017-15708) -->
-		<dependency>
-			<groupId>commons-collections</groupId>
-			<artifactId>commons-collections</artifactId>
-			<version>3.2.2</version>
-			<scope>runtime</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.commons</groupId>
@@ -341,7 +340,12 @@
 		<dependency>
 			<groupId>commons-io</groupId>
 			<artifactId>commons-io</artifactId>
-			<version>2.11.0</version>
+			<version>2.13.0</version>
+		</dependency>
+		<dependency>
+			<groupId>commons-fileupload</groupId>
+			<artifactId>commons-fileupload</artifactId>
+			<version>1.5</version>
 		</dependency>
 
 		<!-- Jackson, for JSON serialization -->
@@ -373,12 +377,6 @@
 			<artifactId>xercesImpl</artifactId>
 			<version>2.12.2</version>
 		</dependency>
-		<!-- This is also used at runtime by taglibs-standard-impl in gemma-web -->
-		<dependency>
-			<groupId>xalan</groupId>
-			<artifactId>xalan</artifactId>
-			<version>2.7.3</version>
-		</dependency>
 
 		<!-- Logging -->
 		<dependency>
@@ -395,17 +393,26 @@
 		</dependency>
 		<dependency>
 			<groupId>org.apache.logging.log4j</groupId>
-			<artifactId>log4j-jul</artifactId>
-			<version>${log4j.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.logging.log4j</groupId>
 			<artifactId>log4j-jcl</artifactId>
 			<version>${log4j.version}</version>
 		</dependency>
 		<dependency>
-			<groupId>org.slf4j</groupId>
-			<artifactId>slf4j-api</artifactId>
+			<groupId>org.apache.logging.log4j</groupId>
+			<artifactId>log4j-jul</artifactId>
+			<version>${log4j.version}</version>
+		</dependency>
+
+
+		<!-- Metrics -->
+		<dependency>
+			<groupId>io.micrometer</groupId>
+			<artifactId>micrometer-core</artifactId>
+			<version>${micrometer.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>io.micrometer</groupId>
+			<artifactId>micrometer-registry-jmx</artifactId>
+			<version>${micrometer.version}</version>
 		</dependency>
 
 		<!-- Test -->
@@ -493,8 +500,6 @@
 					<argLine>-Dlog4j1.compatibility=true -Djava.util.logging.manager=org.apache.logging.log4j.jul.LogManager</argLine>
 					<redirectTestOutputToFile>true</redirectTestOutputToFile>
 					<excludes>
-						<exclude>**/*Abstract*</exclude>
-						<exclude>**/*IntegrationTest.java</exclude>
 						<exclude>**/*Tests.java</exclude>
 					</excludes>
 					<excludedGroups>ubic.gemma.core.util.test.category.SpringContextTest,${excludedGroups}</excludedGroups>
@@ -512,10 +517,6 @@
 					<includes>
 						<include>**/*Test.java</include>
 					</includes>
-					<excludes>
-						<exclude>**/*Abstract*</exclude>
-						<exclude>**/*IntegrationTest.java</exclude>
-					</excludes>
 					<groups>ubic.gemma.core.util.test.category.SpringContextTest</groups>
 					<!--suppress MavenModelInspection -->
 					<skip>${skipIntegrationTests}</skip>
@@ -532,6 +533,9 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-site-plugin</artifactId>
+				<configuration>
+					<relativizeDecorationLinks>false</relativizeDecorationLinks>
+				</configuration>
 			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
@@ -566,7 +570,7 @@
 			<plugin>
 				<groupId>org.owasp</groupId>
 				<artifactId>dependency-check-maven</artifactId>
-				<version>7.3.0</version>
+				<version>8.3.1</version>
 			</plugin>
 		</plugins>
 	</build>
@@ -639,16 +643,16 @@
 		</plugins>
 	</reporting>
 	<properties>
-		<gsec.version>0.0.11</gsec.version>
+		<gsec.version>0.0.14</gsec.version>
 		<spring.version>3.2.18.RELEASE</spring.version>
 		<spring.security.version>3.2.10.RELEASE</spring.security.version>
 		<jersey.version>2.25.1</jersey.version>
-		<jackson.version>2.15.0</jackson.version>
-		<mysql.version>8.0.33</mysql.version>
-		<swagger.version>2.2.10</swagger.version>
+		<jackson.version>2.15.2</jackson.version>
+		<swagger.version>2.2.11</swagger.version>
 		<jawr.version>3.9</jawr.version>
 		<lucene.version>3.6.2</lucene.version>
 		<slack.version>1.29.2</slack.version>
+		<micrometer.version>1.11.0</micrometer.version>
 		<dom4j.version>2.1.4</dom4j.version>
 		<!-- this ensures that -DexcludedGroups works properly -->
 		<excludedGroups/>

@@ -10,6 +10,7 @@ import org.springframework.stereotype.Component;
 import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.core.genome.gene.service.GeneSetService;
 import ubic.gemma.core.search.SearchResult;
+import ubic.gemma.core.search.SearchResultSet;
 import ubic.gemma.core.search.SearchSource;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.common.Identifiable;
@@ -36,6 +37,7 @@ import static ubic.gemma.core.search.source.DatabaseSearchSourceUtils.prepareDat
 
 /**
  * Search source for direct database results.
+ *
  * @author klc
  * @author paul
  * @author keshav
@@ -91,7 +93,7 @@ public class DatabaseSearchSource implements SearchSource {
      */
     @Override
     public Collection<SearchResult<ArrayDesign>> searchArrayDesign( SearchSettings settings ) {
-        if ( !settings.getUseDatabase() )
+        if ( !settings.isUseDatabase() )
             return Collections.emptySet();
 
         StopWatch watch = StopWatch.createStarted();
@@ -129,7 +131,7 @@ public class DatabaseSearchSource implements SearchSource {
      */
     @Override
     public Collection<SearchResult<BioSequence>> searchBioSequence( SearchSettings settings ) {
-        if ( !settings.getUseDatabase() )
+        if ( !settings.isUseDatabase() )
             return Collections.emptySet();
 
         StopWatch watch = StopWatch.createStarted();
@@ -164,7 +166,7 @@ public class DatabaseSearchSource implements SearchSource {
      */
     @Override
     public Collection<SearchResult<?>> searchCompositeSequenceAndGene( SearchSettings settings ) {
-        Set<SearchResult<Gene>> geneSet = new HashSet<>();
+        Set<SearchResult<Gene>> geneSet = new SearchResultSet<>();
         Collection<SearchResult<CompositeSequence>> matchedCs = this.searchCompositeSequenceAndPopulateGenes( settings, geneSet );
         Collection<SearchResult<?>> combinedResults = new HashSet<>();
         combinedResults.addAll( geneSet );
@@ -173,7 +175,7 @@ public class DatabaseSearchSource implements SearchSource {
     }
 
     private Collection<SearchResult<CompositeSequence>> searchCompositeSequenceAndPopulateGenes( SearchSettings settings, Set<SearchResult<Gene>> geneSet ) {
-        if ( !settings.getUseDatabase() )
+        if ( !settings.isUseDatabase() )
             return Collections.emptySet();
 
         StopWatch watch = StopWatch.createStarted();
@@ -182,11 +184,11 @@ public class DatabaseSearchSource implements SearchSource {
         ArrayDesign ad = settings.getPlatformConstraint();
 
         // search by exact composite sequence name
-        Collection<SearchResult<CompositeSequence>> matchedCs = new HashSet<>();
+        Collection<SearchResult<CompositeSequence>> matchedCs = new SearchResultSet<>();
         if ( ad != null ) {
             CompositeSequence cs = compositeSequenceService.findByName( ad, searchString );
             if ( cs != null )
-                matchedCs.add( SearchResult.from( CompositeSequence.class, cs, MATCH_BY_NAME_SCORE, null, "CompositeSequenceService.findByName" ) );
+                matchedCs.add( SearchResult.from( CompositeSequence.class, cs, MATCH_BY_NAME_SCORE, "CompositeSequenceService.findByName" ) );
         } else {
             matchedCs = toSearchResults( CompositeSequence.class, compositeSequenceService.findByName( searchString ), MATCH_BY_NAME_SCORE, "CompositeSequenceService.findByName" );
         }
@@ -251,32 +253,32 @@ public class DatabaseSearchSource implements SearchSource {
      */
     @Override
     public Collection<SearchResult<ExpressionExperiment>> searchExpressionExperiment( SearchSettings settings ) {
-        if ( !settings.getUseDatabase() )
+        if ( !settings.isUseDatabase() )
             return Collections.emptySet();
 
         StopWatch watch = StopWatch.createStarted();
 
         String query = prepareDatabaseQuery( settings );
 
-        Collection<SearchResult<ExpressionExperiment>> results = new HashSet<>();
+        Collection<SearchResult<ExpressionExperiment>> results = new SearchResultSet<>();
 
         Collection<ExpressionExperiment> ees = expressionExperimentService.findByName( query );
         for ( ExpressionExperiment ee : ees ) {
-            results.add( SearchResult.from( ExpressionExperiment.class, ee, MATCH_BY_NAME_SCORE, ee.getName(), "ExpressionExperimentService.findByName" ) );
+            results.add( SearchResult.from( ExpressionExperiment.class, ee, MATCH_BY_NAME_SCORE, Collections.singletonMap( "name", ee.getName() ), "ExpressionExperimentService.findByName" ) );
         }
 
         // in response to https://github.com/PavlidisLab/Gemma/issues/140, always keep going if admin.
         if ( results.isEmpty() || SecurityUtil.isUserAdmin() ) {
             ExpressionExperiment ee = expressionExperimentService.findByShortName( query );
             if ( ee != null ) {
-                results.add( SearchResult.from( ExpressionExperiment.class, ee, MATCH_BY_SHORT_NAME_SCORE, ee.getShortName(), "ExpressionExperimentService.findByShortName" ) );
+                results.add( SearchResult.from( ExpressionExperiment.class, ee, MATCH_BY_SHORT_NAME_SCORE, Collections.singletonMap( "shortName", ee.getShortName() ), "ExpressionExperimentService.findByShortName" ) );
             }
         }
 
         if ( results.isEmpty() || SecurityUtil.isUserAdmin() ) {
             ees = expressionExperimentService.findByAccession( query ); // this will find split parts
             for ( ExpressionExperiment e : ees ) {
-                results.add( SearchResult.from( ExpressionExperiment.class, e, MATCH_BY_ACCESSION_SCORE, e.getId().toString(), "ExpressionExperimentService.findByAccession" ) );
+                results.add( SearchResult.from( ExpressionExperiment.class, e, MATCH_BY_ACCESSION_SCORE, Collections.singletonMap( "id", e.getId().toString() ), "ExpressionExperimentService.findByAccession" ) );
             }
         }
 
@@ -285,7 +287,7 @@ public class DatabaseSearchSource implements SearchSource {
                 // maybe user put in a primary key value.
                 ExpressionExperiment ee = expressionExperimentService.load( Long.parseLong( query ) );
                 if ( ee != null ) {
-                    results.add( SearchResult.from( ExpressionExperiment.class, ee, MATCH_BY_ID_SCORE, ee.getId().toString(), "ExpressionExperimentService.load" ) );
+                    results.add( SearchResult.from( ExpressionExperiment.class, ee, MATCH_BY_ID_SCORE, Collections.singletonMap( "id", ee.getId().toString() ), "ExpressionExperimentService.load" ) );
                 }
             } catch ( NumberFormatException e ) {
                 // no-op - it's not an ID.
@@ -301,7 +303,7 @@ public class DatabaseSearchSource implements SearchSource {
 
         watch.stop();
         if ( watch.getTime() > 1000 )
-            DatabaseSearchSource.log.info( "DB Expression Experiment search for " + settings + " took " + watch.getTime()
+            DatabaseSearchSource.log.warn( "DB Expression Experiment search for " + settings + " took " + watch.getTime()
                     + " ms and found " + results.size() + " EEs" );
 
         return results;
@@ -313,7 +315,7 @@ public class DatabaseSearchSource implements SearchSource {
      */
     @Override
     public Collection<SearchResult<Gene>> searchGene( SearchSettings settings ) {
-        if ( !settings.getUseDatabase() )
+        if ( !settings.isUseDatabase() )
             return Collections.emptySet();
 
         StopWatch watch = StopWatch.createStarted();
@@ -329,7 +331,7 @@ public class DatabaseSearchSource implements SearchSource {
         if ( StringUtils.isBlank( searchString ) )
             return Collections.emptySet();
 
-        Collection<SearchResult<Gene>> results = new HashSet<>();
+        Set<SearchResult<Gene>> results = new SearchResultSet<>();
 
         /*
          * First search by accession. If we find it, stop.
@@ -341,11 +343,11 @@ public class DatabaseSearchSource implements SearchSource {
             //
         }
         if ( result != null ) {
-            results.add( SearchResult.from( Gene.class, result, MATCH_BY_ID_SCORE, null, "GeneService.findByNCBIId" ) );
+            results.add( SearchResult.from( Gene.class, result, MATCH_BY_ID_SCORE, "GeneService.findByNCBIId" ) );
         } else {
             result = geneService.findByAccession( searchString, null );
             if ( result != null ) {
-                results.add( SearchResult.from( Gene.class, result, MATCH_BY_ACCESSION_SCORE, null, "GeneService.findByAccession" ) );
+                results.add( SearchResult.from( Gene.class, result, MATCH_BY_ACCESSION_SCORE, "GeneService.findByAccession" ) );
             }
         }
 
@@ -371,7 +373,7 @@ public class DatabaseSearchSource implements SearchSource {
      * Expanded gene search used when a simple search does not yield results.
      */
     private Collection<SearchResult<Gene>> searchGeneExpanded( SearchSettings settings ) {
-        Collection<SearchResult<Gene>> results = new HashSet<>();
+        Set<SearchResult<Gene>> results = new SearchResultSet<>();
 
         String exactString = prepareDatabaseQuery( settings );
         String inexactString = prepareDatabaseQueryForInexactMatch( settings );
@@ -406,7 +408,7 @@ public class DatabaseSearchSource implements SearchSource {
             results.addAll( toSearchResults( Gene.class, geneService.findByAlias( exactString ), MATCH_BY_ALIAS_SCORE, "GeneService.findByAlias" ) );
             Gene geneByEnsemblId = geneService.findByEnsemblId( exactString );
             if ( geneByEnsemblId != null ) {
-                results.add( SearchResult.from( Gene.class, geneByEnsemblId, MATCH_BY_ACCESSION_SCORE, null, "GeneService.findByAlias" ) );
+                results.add( SearchResult.from( Gene.class, geneByEnsemblId, MATCH_BY_ACCESSION_SCORE, "GeneService.findByAlias" ) );
             }
             results.addAll( toSearchResults( Gene.class, geneProductService.getGenesByName( exactString ), INDIRECT_HIT_PENALTY * MATCH_BY_NAME_SCORE, "GeneProductService.getGenesByName" ) );
             results.addAll( toSearchResults( Gene.class, geneProductService.getGenesByNcbiId( exactString ), INDIRECT_HIT_PENALTY * MATCH_BY_ACCESSION_SCORE, "GeneProductService.getGenesByNcbiId" ) );
@@ -419,7 +421,7 @@ public class DatabaseSearchSource implements SearchSource {
 
     @Override
     public Collection<SearchResult<GeneSet>> searchGeneSet( SearchSettings settings ) {
-        if ( !settings.getUseDatabase() )
+        if ( !settings.isUseDatabase() )
             return Collections.emptySet();
         if ( settings.getTaxon() != null ) {
             return toSearchResults( GeneSet.class, this.geneSetService.findByName( settings.getQuery(), settings.getTaxon() ), MATCH_BY_NAME_SCORE, "GeneSetService.findByNameWithTaxon" );
@@ -428,10 +430,10 @@ public class DatabaseSearchSource implements SearchSource {
         }
     }
 
-    private static <T extends Identifiable> Set<SearchResult<T>> toSearchResults( Class<? extends Identifiable> resultType, Collection<T> entities, double score, String source ) {
+    private static <T extends Identifiable> Set<SearchResult<T>> toSearchResults( Class<T> resultType, Collection<T> entities, double score, String source ) {
         return entities.stream()
                 .filter( Objects::nonNull )
-                .map( e -> SearchResult.from( resultType, e, score, null, source ) )
-                .collect( Collectors.toSet() );
+                .map( e -> SearchResult.from( resultType, e, score, source ) )
+                .collect( Collectors.toCollection( SearchResultSet::new ) );
     }
 }

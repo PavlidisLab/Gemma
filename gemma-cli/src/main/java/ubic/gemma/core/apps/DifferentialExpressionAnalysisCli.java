@@ -477,7 +477,7 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
                 if ( this.factorNames.size() > 0 ) {
                     throw new IllegalArgumentException( "Please provide factor names or ids, not a mixture of each" );
                 }
-                ExperimentalFactor factor = efs.load( factorId );
+                ExperimentalFactor factor = efs.loadOrFail( factorId );
                 factor = efs.thaw( factor );
                 if ( factor == null ) {
                     throw new IllegalArgumentException( "No factor for id=" + factorId );

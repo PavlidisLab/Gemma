@@ -6,8 +6,6 @@
 <hibernate-mapping>
     <class name="ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector"
            table="PROCESSED_EXPRESSION_DATA_VECTOR">
-        <!-- vectors are rarely modified, so this is more efficient than read-write -->
-        <cache usage="nonstrict-read-write"/>
         <id name="id" type="java.lang.Long" unsaved-value="null">
             <column name="ID" sql-type="BIGINT"/>
             <generator class="native">
@@ -21,10 +19,10 @@
                      lazy="false" fetch="join">
             <column name="DESIGN_ELEMENT_FK" not-null="true" sql-type="BIGINT"/>
         </many-to-one>
-        <property name="data" type="ubic.gemma.persistence.model.usertypes.HibernateByteBlobType">
+        <property name="data" type="org.hibernate.type.MaterializedBlobType">
             <column name="DATA" not-null="true" unique="false" sql-type="LONGBLOB"/>
         </property>
-        <many-to-one name="quantitationType" class="ubic.gemma.model.common.quantitationtype.QuantitationTypeImpl"
+        <many-to-one name="quantitationType" class="ubic.gemma.model.common.quantitationtype.QuantitationType"
                      lazy="false" fetch="select">
             <column name="QUANTITATION_TYPE_FK" not-null="false" sql-type="BIGINT"/>
         </many-to-one>

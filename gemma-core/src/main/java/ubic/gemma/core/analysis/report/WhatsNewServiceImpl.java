@@ -63,6 +63,7 @@ public class WhatsNewServiceImpl implements WhatsNewService {
     private SecurityService securityService = null;
 
     @Override
+    @Transactional
     public void generateWeeklyReport() {
         Calendar c = Calendar.getInstance();
         Date date = c.getTime();

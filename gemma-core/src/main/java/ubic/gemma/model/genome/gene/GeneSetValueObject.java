@@ -20,54 +20,39 @@
 package ubic.gemma.model.genome.gene;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import gemma.gsec.model.Securable;
 import gemma.gsec.model.SecureValueObject;
-import lombok.*;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
 import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.annotations.GemmaWebOnly;
+import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonValueObject;
 
 import javax.annotation.Nullable;
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashSet;
 
 /**
  * Represents a Gene group gene set
  *
  * @author kelsey
  */
-@Getter
-@Setter
+@Data
+@EqualsAndHashCode(of = {}, callSuper = true)
 public class GeneSetValueObject extends IdentifiableValueObject<GeneSet> implements SecureValueObject {
 
     private static final long serialVersionUID = 6212231006289412683L;
-
-    /**
-     * Create a lightweight wrapper that can be used for security filtering
-     *
-     * @param ids ids
-     * @return collection of VOs
-     */
-    @SuppressWarnings("unused") // Possible external use
-    public static Collection<GeneSetValueObject> fromIds( Collection<Long> ids ) {
-        Collection<GeneSetValueObject> result = new ArrayList<>();
-        for ( Long id : ids ) {
-            result.add( new GeneSetValueObject( id ) );
-        }
-        return result;
-    }
 
     private String name;
     private String description;
     /**
      * Gene IDs part of this gene set.
-     * <p>
-     * This is currently not populated, but we might consider it, see <a href="https://github.com/PavlidisLab/Gemma/issues/445">#445</a>.
      */
-    @JsonIgnore
-    private Collection<Long> geneIds = new HashSet<>();
-    private Integer size; // only used if we're not populating geneIds
+    @Nullable
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private Collection<Long> geneIds;
+    private Long size; // only used if we're not populating geneIds
 
     @Nullable
     private TaxonValueObject taxon;
@@ -93,10 +78,12 @@ public class GeneSetValueObject extends IdentifiableValueObject<GeneSet> impleme
         super( id );
     }
 
-    public GeneSetValueObject( GeneSet geneSet ) {
+    public GeneSetValueObject( GeneSet geneSet, @Nullable Taxon taxon, @Nullable Long size ) {
         super( geneSet );
-        setName( geneSet.getName() );
-        setDescription( geneSet.getDescription() );
+        this.name = geneSet.getName();
+        this.description = geneSet.getDescription();
+        this.taxon = taxon != null ? new TaxonValueObject( taxon ) : null;
+        this.size = size;
     }
 
     @GemmaWebOnly
@@ -112,17 +99,18 @@ public class GeneSetValueObject extends IdentifiableValueObject<GeneSet> impleme
     /**
      * @return the number of members in the group
      */
-    public int getSize() {
-        if ( this.getGeneIds() != null && !this.getGeneIds().isEmpty() )
-            return this.getGeneIds().size();
-        else if ( this.size > 0 )
-            return this.size;
-        return 0;
+    public Long getSize() {
+        if ( geneIds != null ) {
+            return ( long ) geneIds.size();
+        } else {
+            return size;
+        }
     }
 
-    public void setSize( int size ) {
-        if ( this.getGeneIds() != null && !this.getGeneIds().isEmpty() && size != this.getGeneIds().size() ) {
-            throw new IllegalArgumentException( "Invalid 'size'" );
+    public void setSize( long size ) {
+        if ( geneIds != null && size != geneIds.size() ) {
+            throw new IllegalArgumentException( String.format( "Invalid size: the gene IDs has a size of %d",
+                    geneIds.size() ) );
         }
         this.size = size;
     }

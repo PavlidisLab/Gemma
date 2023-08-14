@@ -1,0 +1,23 @@
+package ubic.gemma.rest.util.args;
+
+import io.swagger.v3.oas.annotations.media.Schema;
+import ubic.gemma.model.common.description.DatabaseEntry;
+import ubic.gemma.persistence.service.common.description.DatabaseEntryService;
+
+/**
+ * Long argument type for DatabaseEntry API, referencing the Taxon ID.
+ *
+ * @author tesarst
+ */
+@Schema(type = "integer", format = "int64", description = "A database entry numerical identifier.")
+public class DatabaseEntryIdArg extends DatabaseEntryArg<Long> {
+
+    DatabaseEntryIdArg( long l ) {
+        super( "id", Long.class, l );
+    }
+
+    @Override
+    DatabaseEntry getEntity( DatabaseEntryService service ) {
+        return service.load( getValue() );
+    }
+}

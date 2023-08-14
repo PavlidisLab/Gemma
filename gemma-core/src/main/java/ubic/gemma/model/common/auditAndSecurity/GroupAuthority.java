@@ -44,17 +44,14 @@ public abstract class GroupAuthority implements gemma.gsec.model.GroupAuthority 
         return this.authority;
     }
 
-    @Override
     public void setAuthority( String authority ) {
         this.authority = authority;
     }
 
-    @Override
     public Long getId() {
         return this.id;
     }
 
-    @Override
     public void setId( Long id ) {
         this.id = id;
     }

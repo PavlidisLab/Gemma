@@ -26,7 +26,7 @@ import org.springframework.stereotype.Component;
 import ubic.basecode.math.Rank;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.gemma.core.genome.gene.service.GeneService;
-import ubic.gemma.core.ontology.OntologyService;
+import ubic.gemma.core.ontology.OntologyUtils;
 import ubic.gemma.core.ontology.providers.GeneOntologyService;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.ExternalDatabase;
@@ -206,18 +206,11 @@ public class GeneMultifunctionalityPopulationServiceImpl implements GeneMultifun
     }
 
     private Map<Gene, Set<String>> fetchGoAnnotations( Collection<Gene> genes ) {
-
-        if ( !goService.isOntologyLoaded() ) {
-            goService.startInitializationThread( true, false );
-        }
-
-        while ( !goService.isOntologyLoaded() ) {
-            try {
-                Thread.sleep( 2000 );
-            } catch ( InterruptedException e ) {
-                //
-            }
-            GeneMultifunctionalityPopulationServiceImpl.log.info( "Waiting for GO to load" );
+        try {
+            OntologyUtils.ensureInitialized( goService );
+        } catch ( InterruptedException e ) {
+            Thread.currentThread().interrupt();
+            return Collections.emptyMap();
         }
 
         /*

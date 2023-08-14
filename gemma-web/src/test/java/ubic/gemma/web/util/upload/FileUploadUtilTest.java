@@ -19,20 +19,30 @@
 
 package ubic.gemma.web.util.upload;
 
+import org.junit.After;
 import org.junit.Test;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.mock.web.MockMultipartHttpServletRequest;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 public class FileUploadUtilTest {
 
+    private File copiedFile;
+
+    @After
+    public void tearDown() {
+        if ( copiedFile != null ) {
+            assertTrue( copiedFile.delete() );
+        }
+    }
+
     @Test
-    public void testCopyUploadedFileStreamClosed() throws FileNotFoundException, IOException {
+    public void testCopyUploadedFileStreamClosed() throws IOException {
 
         MockMultipartHttpServletRequest request = new MockMultipartHttpServletRequest();
         request.setMethod( "POST" );
@@ -47,11 +57,32 @@ public class FileUploadUtilTest {
         request.setContent( text_contents.getBytes() );
         request.addFile( sourceFile );
 
-        File copiedFile = FileUploadUtil.copyUploadedFile( request, key );
-        assert ( copiedFile.exists() );
+        copiedFile = FileUploadUtil.copyUploadedFile( request, key );
+        assertTrue( copiedFile.exists() );
+        assertTrue( copiedFile.getName().endsWith( "__test_upload.txt" ) );
         assertEquals( expectedSize, copiedFile.length() );
+    }
 
-        copiedFile.delete();
+    @Test
+    public void testCopyUploadFileWhenFileContainsDirectory() throws IOException {
+
+        MockMultipartHttpServletRequest request = new MockMultipartHttpServletRequest();
+        request.setMethod( "POST" );
+
+        String text_contents = "test";
+        String key = "file1";
+        String filename = "dir/../test_upload.txt";
+
+        MockMultipartFile sourceFile = new MockMultipartFile( key, filename, "text/plain", text_contents.getBytes() );
+
+        long expectedSize = sourceFile.getSize();
+        request.setContent( text_contents.getBytes() );
+        request.addFile( sourceFile );
+
+        copiedFile = FileUploadUtil.copyUploadedFile( request, key );
+        assertTrue( copiedFile.exists() );
+        assertTrue( copiedFile.getName().endsWith( "__test_upload.txt" ) );
+        assertEquals( expectedSize, copiedFile.length() );
     }
 
 }

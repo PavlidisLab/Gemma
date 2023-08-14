@@ -18,11 +18,10 @@
  */
 package ubic.gemma.core.security.authorization.acl;
 
-import gemma.gsec.acl.afterinvocation.ByAssociationFilteringProvider;
+import gemma.gsec.acl.afterinvocation.AclEntryAfterInvocationByAssociationCollectionFilteringProvider;
 import org.springframework.security.access.AfterInvocationProvider;
 import org.springframework.security.acls.model.AclService;
 import org.springframework.security.acls.model.Permission;
-import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 
 import java.util.List;
@@ -34,29 +33,23 @@ import java.util.List;
  * @author keshav (based in part on code from Acegi)
  * @see AfterInvocationProvider
  */
-public class AclAfterCollectionCompSeqByArrayDesignFilter
-        extends ByAssociationFilteringProvider<ArrayDesign, CompositeSequence> {
-
-    private static final String CONFIG_ATTRIBUTE = "AFTER_ACL_ARRAYDESIGN_COLLECTION_READ";
+public class AclAfterCollectionCompSeqByArrayDesignFilter extends AclEntryAfterInvocationByAssociationCollectionFilteringProvider {
 
     public AclAfterCollectionCompSeqByArrayDesignFilter( AclService aclService, List<Permission> requirePermission ) {
-        super( aclService, AclAfterCollectionCompSeqByArrayDesignFilter.CONFIG_ATTRIBUTE, requirePermission );
+        super( aclService, "AFTER_ACL_ARRAYDESIGN_COLLECTION_READ", requirePermission );
     }
 
     @Override
-    public String getProcessConfigAttribute() {
-        return AclAfterCollectionCompSeqByArrayDesignFilter.CONFIG_ATTRIBUTE;
+    protected Class<?> getProcessDomainObjectClass() {
+        return CompositeSequence.class;
     }
 
     @Override
-    protected ArrayDesign getAssociatedSecurable( Object targetDomainObject ) {
-
-        if ( CompositeSequence.class.isAssignableFrom( targetDomainObject.getClass() ) ) {
+    protected Object getActualDomainObject( Object targetDomainObject ) {
+        if ( targetDomainObject instanceof CompositeSequence ) {
             return ( ( CompositeSequence ) targetDomainObject ).getArrayDesign();
         }
-
         throw new IllegalArgumentException(
                 "Don't know how to filter a " + targetDomainObject.getClass().getSimpleName() );
     }
-
 }

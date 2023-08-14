@@ -210,8 +210,8 @@ public class DEDVController {
         if ( ees == null || ees.isEmpty() )
             return new VisualizationValueObject[0];
 
-        Gene queryGene = geneService.load( queryGeneId );
-        Gene coexpressedGene = geneService.load( coexpressedGeneId );
+        Gene queryGene = geneService.loadOrFail( queryGeneId );
+        Gene coexpressedGene = geneService.loadOrFail( coexpressedGeneId );
 
         List<Long> genes = new ArrayList<>();
         genes.add( queryGeneId );
@@ -266,7 +266,7 @@ public class DEDVController {
 
         StopWatch watch = new StopWatch();
         watch.start();
-        Collection<? extends BioAssaySet> ees = expressionExperimentService.load( eeIds );
+        Collection<ExpressionExperiment> ees = expressionExperimentService.load( eeIds );
         if ( ees == null || ees.isEmpty() )
             return null;
         Collection<Gene> genes = geneService.load( geneIds );
@@ -353,10 +353,8 @@ public class DEDVController {
 
         Collection<Long> genes = new ArrayList<>();
         genes.add( geneId );
-        Collection<BioAssaySet> ees = new ArrayList<>();
-        ees.add( ee );
 
-        dedvs = processedExpressionDataVectorService.getProcessedDataArrays( ees, genes );
+        dedvs = processedExpressionDataVectorService.getProcessedDataArrays( ee, genes );
 
         Long time = watch.getTime();
         watch.reset();
@@ -387,7 +385,7 @@ public class DEDVController {
 
         Map<Long, Collection<DifferentialExpressionValueObject>> validatedProbes = new HashMap<>();
         validatedProbes.put( ee.getId(),
-                geneDifferentialExpressionService.getDifferentialExpression( g, ees, threshold, -1 ) );
+                geneDifferentialExpressionService.getDifferentialExpression( g, ee, threshold, -1 ) );
 
         watch.stop();
         time = watch.getTime();
@@ -558,7 +556,7 @@ public class DEDVController {
      * Handle case of text export of the results.
      */
     @RequestMapping("/downloadDEDV.html")
-    protected ModelAndView handleRequestInternal( HttpServletRequest request ) {
+    public ModelAndView handleRequestInternal( HttpServletRequest request ) {
 
         StopWatch watch = new StopWatch();
         watch.start();
@@ -628,7 +626,7 @@ public class DEDVController {
              * Organize the vectors in the same way expected by the ee+gene type of request.
              */
             ExpressionExperimentValueObject ee = expressionExperimentService
-                    .loadValueObject( expressionExperimentService.load( eeId ) );
+                    .loadValueObjectById( eeId );
 
             result = new HashMap<>();
             Map<Long, Collection<DoubleVectorValueObject>> gmap = new HashMap<>();

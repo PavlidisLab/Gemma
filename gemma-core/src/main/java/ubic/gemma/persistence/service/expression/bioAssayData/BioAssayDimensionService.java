@@ -21,13 +21,14 @@ package ubic.gemma.persistence.service.expression.bioAssayData;
 import org.springframework.security.access.annotation.Secured;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimensionValueObject;
+import ubic.gemma.persistence.service.BaseImmutableService;
 import ubic.gemma.persistence.service.BaseVoEnabledService;
 
 /**
  * @author Paul
  */
 public interface BioAssayDimensionService
-        extends BaseVoEnabledService<BioAssayDimension, BioAssayDimensionValueObject> {
+        extends BaseImmutableService<BioAssayDimension>, BaseVoEnabledService<BioAssayDimension, BioAssayDimensionValueObject> {
 
     @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })

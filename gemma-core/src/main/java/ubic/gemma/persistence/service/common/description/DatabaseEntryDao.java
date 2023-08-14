@@ -20,9 +20,7 @@ package ubic.gemma.persistence.service.common.description;
 
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.DatabaseEntryValueObject;
-import ubic.gemma.persistence.service.BaseVoEnabledDao;
 import ubic.gemma.persistence.service.FilteringVoEnabledDao;
-import ubic.gemma.persistence.util.ObjectFilter;
 
 import java.util.List;
 

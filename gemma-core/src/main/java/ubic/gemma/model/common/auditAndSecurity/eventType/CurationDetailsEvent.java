@@ -21,7 +21,6 @@ package ubic.gemma.model.common.auditAndSecurity.eventType;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.curation.Curatable;
 import ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails;
-import ubic.gemma.persistence.service.common.auditAndSecurity.curation.CuratableService;
 
 /**
  * Event types that can change {@link CurationDetails} of {@link Curatable} objects.

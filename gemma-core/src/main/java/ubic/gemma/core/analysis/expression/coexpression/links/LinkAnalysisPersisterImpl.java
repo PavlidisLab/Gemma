@@ -1,9 +1,8 @@
 package ubic.gemma.core.analysis.expression.coexpression.links;
 
 import cern.colt.list.ObjectArrayList;
+import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.lang3.time.StopWatch;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import ubic.basecode.dataStructure.Link;
@@ -30,9 +29,8 @@ import java.util.*;
  * @author Paul
  */
 @Component
+@CommonsLog
 public class LinkAnalysisPersisterImpl implements LinkAnalysisPersister {
-
-    private static final Logger log = LoggerFactory.getLogger( LinkAnalysisPersisterImpl.class );
 
     @Autowired
     private CoexpressionAnalysisService coexpressionAnalysisService;

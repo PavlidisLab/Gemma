@@ -47,7 +47,6 @@ import ubic.gemma.core.job.executor.webapp.TaskRunningService;
 import ubic.gemma.core.loader.entrez.pubmed.PubMedSearch;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.search.SearchResultDisplayObject;
-import ubic.gemma.core.search.SearchService;
 import ubic.gemma.core.tasks.AbstractTask;
 import ubic.gemma.core.tasks.analysis.expression.UpdateEEDetailsCommand;
 import ubic.gemma.core.tasks.analysis.expression.UpdatePubMedCommand;
@@ -133,8 +132,6 @@ public class ExpressionExperimentController {
     @Autowired
     private Persister persisterHelper;
     @Autowired
-    private SearchService searchService;
-    @Autowired
     private SecurityService securityService;
     @Autowired
     private TaxonService taxonService;
@@ -178,16 +175,14 @@ public class ExpressionExperimentController {
 
     }
 
-    public JsonReaderResponse<ExpressionExperimentDetailsValueObject> browseByTaxon( ListBatchCommand batch,
-            Long taxonId ) {
+    public JsonReaderResponse<ExpressionExperimentDetailsValueObject> browseByTaxon( ListBatchCommand batch, Long taxonId ) {
 
         if ( taxonId == null ) {
             return this.browse( batch );
         }
         Taxon taxon = taxonService.load( taxonId );
         if ( taxon == null ) {
-            ExpressionExperimentController.log.info( "Attempted to browse experiments by taxon with id = " + taxonId
-                    + ", but this id is invalid. Browsing without taxon restriction." );
+            ExpressionExperimentController.log.info( "Attempted to browse experiments by taxon with id = " + taxonId + ", but this id is invalid. Browsing without taxon restriction." );
             return this.browse( batch );
         }
 
@@ -198,8 +193,7 @@ public class ExpressionExperimentController {
     /**
      * AJAX call for remote paging store
      */
-    public JsonReaderResponse<ExpressionExperimentDetailsValueObject> browseSpecificIds( ListBatchCommand batch,
-            Collection<Long> ids ) {
+    public JsonReaderResponse<ExpressionExperimentDetailsValueObject> browseSpecificIds( ListBatchCommand batch, Collection<Long> ids ) {
 
         if ( batch.getLimit() == 0 ) {
             batch.setLimit( ids.size() );
@@ -236,8 +230,7 @@ public class ExpressionExperimentController {
      * Exposed for AJAX calls.
      */
     public String deleteById( Long id ) {
-        if ( id == null )
-            return null;
+        if ( id == null ) return null;
         RemoveExpressionExperimentTask task = new RemoveExpressionExperimentTask( new TaskCommand( id ) );
         return taskRunningService.submitTask( task );
     }
@@ -261,9 +254,7 @@ public class ExpressionExperimentController {
 
         // Validate the filtering search criteria.
         if ( StringUtils.isBlank( searchString ) ) {
-            return new ModelAndView(
-                    new RedirectView( "/expressionExperiment/showAllExpressionExperiments.html", true ) )
-                    .addObject( "message", "No search criteria provided" );
+            return new ModelAndView( new RedirectView( "/expressionExperiment/showAllExpressionExperiments.html", true ) ).addObject( "message", "No search criteria provided" );
         }
 
         Collection<Long> ids;
@@ -275,17 +266,12 @@ public class ExpressionExperimentController {
 
         if ( ids.isEmpty() ) {
 
-            return new ModelAndView(
-                    new RedirectView( "/expressionExperiment/showAllExpressionExperiments.html", true ) )
-                    .addObject( "message", "Your search yielded no results." );
+            return new ModelAndView( new RedirectView( "/expressionExperiment/showAllExpressionExperiments.html", true ) ).addObject( "message", "Your search yielded no results." );
 
         }
 
         if ( ids.size() == 1 ) {
-            return new ModelAndView(
-                    new RedirectView( "/expressionExperiment/showExpressionExperiment.html?id=" + ids.iterator().next(),
-                            true ) ).addObject( "message",
-                    "Search Criteria: " + searchString + "; " + ids.size() + " Datasets matched." );
+            return new ModelAndView( new RedirectView( "/expressionExperiment/showExpressionExperiment.html?id=" + ids.iterator().next(), true ) ).addObject( "message", "Search Criteria: " + searchString + "; " + ids.size() + " Datasets matched." );
         }
 
         StringBuilder list = new StringBuilder();
@@ -293,9 +279,7 @@ public class ExpressionExperimentController {
             list.append( id ).append( "," );
         }
 
-        return new ModelAndView(
-                new RedirectView( "/expressionExperiment/showAllExpressionExperiments.html?id=" + list, true ) )
-                .addObject( "message", "Search Criteria: " + searchString + "; " + ids.size() + " Datasets matched." );
+        return new ModelAndView( new RedirectView( "/expressionExperiment/showAllExpressionExperiments.html?id=" + list, true ) ).addObject( "message", "Search Criteria: " + searchString + "; " + ids.size() + " Datasets matched." );
     }
 
     /**
@@ -309,7 +293,7 @@ public class ExpressionExperimentController {
     public Collection<Long> find( String query, Long taxonId ) {
         ExpressionExperimentController.log.info( "Search: query='" + query + "' taxon=" + taxonId );
         try {
-            return searchService.searchExpressionExperiments( query, taxonId );
+            return expressionExperimentSearchService.searchExpressionExperiments( query, taxonId );
         } catch ( SearchException e ) {
             throw new IllegalArgumentException( "Invalid search settings.", e );
         }
@@ -342,8 +326,7 @@ public class ExpressionExperimentController {
      */
     public String getDescription( Long id ) {
         ExpressionExperiment ee = expressionExperimentService.load( id );
-        if ( ee == null )
-            return null;
+        if ( ee == null ) return null;
 
         ee = expressionExperimentService.thawLite( ee );
 
@@ -357,12 +340,10 @@ public class ExpressionExperimentController {
         if ( eeDescription.length() < ExpressionExperimentController.TRIM_SIZE + 1 )
             descriptive.append( eeDescription );
         else
-            descriptive.append( eeDescription.substring( 0, ExpressionExperimentController.TRIM_SIZE ) )
-                    .append( "...&nbsp;&nbsp;" );
+            descriptive.append( eeDescription.substring( 0, ExpressionExperimentController.TRIM_SIZE ) ).append( "...&nbsp;&nbsp;" );
 
         // Is there any factor info to add?
-        if ( efs.size() < 1 )
-            return descriptive.append( "</br><b>(No Factors)</b>" ).toString();
+        if ( efs.size() < 1 ) return descriptive.append( "</br><b>(No Factors)</b>" ).toString();
 
         String efUri = "&nbsp;<a target='_blank' href='" + servletContext.getContextPath()
                 + "/experimentalDesign/showExperimentalDesign.html?eeid=" + ee.getId() + "'>(details)</a >";
@@ -398,11 +379,9 @@ public class ExpressionExperimentController {
      */
     public Collection<DesignMatrixRowValueObject> getDesignMatrixRows( EntityDelegator e ) {
 
-        if ( e == null || e.getId() == null )
-            return null;
+        if ( e == null || e.getId() == null ) return null;
         ExpressionExperiment ee = this.expressionExperimentService.load( e.getId() );
-        if ( ee == null )
-            return null;
+        if ( ee == null ) return null;
 
         ee = expressionExperimentService.thawLite( ee );
         return DesignMatrixRowValueObject.Factory.getDesignMatrix( ee, true ); // ignore "batch"
@@ -415,15 +394,13 @@ public class ExpressionExperimentController {
      */
     public Collection<ExperimentalFactorValueObject> getExperimentalFactors( EntityDelegator e ) {
 
-        if ( e == null || e.getId() == null )
-            return null;
+        if ( e == null || e.getId() == null ) return null;
 
-        ExpressionExperiment ee = this.expressionExperimentService.load( e.getId() );
+        ExpressionExperiment ee = this.expressionExperimentService.loadOrFail( e.getId() );
 
         Collection<ExperimentalFactorValueObject> result = new HashSet<>();
 
-        if ( ee.getExperimentalDesign() == null )
-            return null;
+        if ( ee.getExperimentalDesign() == null ) return null;
 
         Collection<ExperimentalFactor> factors = ee.getExperimentalDesign().getExperimentalFactors();
 
@@ -440,12 +417,10 @@ public class ExpressionExperimentController {
      */
     public Collection<FactorValueValueObject> getFactorValues( EntityDelegator e ) {
 
-        if ( e == null || e.getId() == null )
-            return null;
+        if ( e == null || e.getId() == null ) return null;
 
         ExperimentalFactor ef = this.experimentalFactorService.load( e.getId() );
-        if ( ef == null )
-            return null;
+        if ( ef == null ) return null;
 
         Collection<FactorValueValueObject> result = new HashSet<>();
 
@@ -518,12 +493,9 @@ public class ExpressionExperimentController {
         int newBioMaterialCount = wn.getNewBioMaterialCount();
 
         Collection<ExpressionExperiment> newExpressionExperiments = wn.getNewExpressionExperiments();
-        Collection<Long> newExpressionExperimentIds = ( newExpressionExperiments != null ) ? EntityUtils.getIds( newExpressionExperiments )
-                : new ArrayList<>();
+        Collection<Long> newExpressionExperimentIds = ( newExpressionExperiments != null ) ? EntityUtils.getIds( newExpressionExperiments ) : new ArrayList<>();
         Collection<ExpressionExperiment> updatedExpressionExperiments = wn.getUpdatedExpressionExperiments();
-        Collection<Long> updatedExpressionExperimentIds = ( updatedExpressionExperiments != null )
-                ? EntityUtils.getIds( updatedExpressionExperiments )
-                : new ArrayList<>();
+        Collection<Long> updatedExpressionExperimentIds = ( updatedExpressionExperiments != null ) ? EntityUtils.getIds( updatedExpressionExperiments ) : new ArrayList<>();
 
         int newExpressionExperimentCount = ( newExpressionExperiments != null ) ? newExpressionExperiments.size() : 0;
         int updatedExpressionExperimentCount = ( updatedExpressionExperiments != null ) ? updatedExpressionExperiments.size() : 0;
@@ -556,8 +528,7 @@ public class ExpressionExperimentController {
         Collection<ArrayDesign> updatedArrayDesigns = wn.getUpdatedArrayDesigns();
         int updatedArrayCount = ( updatedArrayDesigns != null ) ? updatedArrayDesigns.size() : 0;
 
-        boolean drawNewColumn = ( newExpressionExperimentCount > 0 || newArrayCount > 0
-                || newBioMaterialCount > 0 );
+        boolean drawNewColumn = ( newExpressionExperimentCount > 0 || newArrayCount > 0 || newBioMaterialCount > 0 );
         boolean drawUpdatedColumn = ( updatedExpressionExperimentCount > 0 || updatedArrayCount > 0 );
         String date = ( wn.getDate() != null ) ? DateFormat.getDateInstance( DateFormat.LONG ).format( wn.getDate() ) : "";
         date = date.replace( '-', ' ' );
@@ -565,12 +536,9 @@ public class ExpressionExperimentController {
         summary.put( "updateDate", date );
         summary.put( "drawNewColumn", drawNewColumn );
         summary.put( "drawUpdatedColumn", drawUpdatedColumn );
-        if ( newBioMaterialCount != 0 )
-            summary.put( "newBioMaterialCount", ( long ) newBioMaterialCount );
-        if ( newArrayCount != 0 )
-            summary.put( "newArrayDesignCount", ( long ) newArrayCount );
-        if ( updatedArrayCount != 0 )
-            summary.put( "updatedArrayDesignCount", ( long ) updatedArrayCount );
+        if ( newBioMaterialCount != 0 ) summary.put( "newBioMaterialCount", ( long ) newBioMaterialCount );
+        if ( newArrayCount != 0 ) summary.put( "newArrayDesignCount", ( long ) newArrayCount );
+        if ( updatedArrayCount != 0 ) summary.put( "updatedArrayDesignCount", ( long ) updatedArrayCount );
         if ( newExpressionExperimentCount != 0 )
             summary.put( "newExpressionExperimentCount", newExpressionExperimentCount );
         if ( updatedExpressionExperimentCount != 0 )
@@ -586,9 +554,7 @@ public class ExpressionExperimentController {
         summary.put( "expressionExperimentCount", expressionExperimentCount );
 
         if ( sw.getTime( TimeUnit.MILLISECONDS ) > 1000 ) {
-            log.info( "Retrieving EE summary took " + sw.getTime( TimeUnit.MILLISECONDS ) + " ms (" +
-                    "counting: " + countTimer.getTime() + " ms, " +
-                    "report: " + reportTimer.getTime() + " ms)." );
+            log.info( "Retrieving EE summary took " + sw.getTime( TimeUnit.MILLISECONDS ) + " ms (" + "counting: " + countTimer.getTime() + " ms, " + "report: " + reportTimer.getTime() + " ms)." );
         }
 
         return summary;
@@ -603,8 +569,7 @@ public class ExpressionExperimentController {
     public ExpressionExperimentDetailsValueObject loadExpressionExperimentDetails( Long id ) {
 
         ExpressionExperiment ee = this.getEESafely( id );
-        Collection<ExpressionExperimentDetailsValueObject> initialResults = expressionExperimentService
-                .loadDetailsValueObjects( Collections.singleton( id ) );
+        Collection<ExpressionExperimentDetailsValueObject> initialResults = expressionExperimentService.loadDetailsValueObjectsByIdsWithCache( Collections.singleton( id ) );
 
         if ( initialResults.size() == 0 ) {
             return null;
@@ -621,11 +586,11 @@ public class ExpressionExperimentController {
         finalResult.setQChtml( this.getQCTagHTML( ee ) );
         finalResult.setExpressionExperimentSets( this.getExpressionExperimentSets( ee ) );
 
-        finalResult = this.setPreferredAndReprocessed( finalResult, ee );
-        finalResult = this.setTechTypeInfo( finalResult, ee );
+        this.setPreferredAndReprocessed( finalResult, ee );
+        this.setTechTypeInfo( finalResult, ee );
 
-        finalResult = this.setPublicationAndAuthor( finalResult, ee );
-        finalResult = this.setBatchInfo( finalResult, ee );
+        this.setPublicationAndAuthor( finalResult, ee );
+        this.setBatchInfo( finalResult, ee );
 
         Date lastArrayDesignUpdate = expressionExperimentService.getLastArrayDesignUpdate( ee );
         if ( lastArrayDesignUpdate != null ) {
@@ -652,11 +617,6 @@ public class ExpressionExperimentController {
     public void runGeeq( Long id, String mode ) {
         ExpressionExperiment ee = expressionExperimentService.loadOrFail( id );
         geeqService.calculateScore( ee, GeeqService.ScoreMode.valueOf( mode ) );
-    }
-
-    public void setGeeqManualSettings( long id, GeeqAdminValueObject vo ) {
-        ExpressionExperiment ee = expressionExperimentService.loadOrFail( id );
-        geeqService.setManualOverrides( ee, vo );
     }
 
     /**
@@ -704,10 +664,8 @@ public class ExpressionExperimentController {
      * @param  ids of EEs to load
      * @return security-filtered set of value objects.
      */
-    public Collection<ExpressionExperimentDetailsValueObject> loadDetailedExpressionExperiments(
-            Collection<Long> ids ) {
-        Collection<ExpressionExperimentDetailsValueObject> result = this
-                .getFilteredExpressionExperimentValueObjects( null, ids, 0, true );
+    public Collection<ExpressionExperimentDetailsValueObject> loadDetailedExpressionExperiments( Collection<Long> ids ) {
+        Collection<ExpressionExperimentDetailsValueObject> result = this.getFilteredExpressionExperimentValueObjects( null, ids, 0, true );
         this.expressionExperimentReportService.populateReportInformation( result );
         return result;
     }
@@ -755,7 +713,7 @@ public class ExpressionExperimentController {
      */
     public Collection<QuantitationTypeValueObject> loadQuantitationTypes( Long eeId ) {
 
-        ExpressionExperiment ee = expressionExperimentService.load( eeId );
+        ExpressionExperiment ee = expressionExperimentService.loadOrFail( eeId );
         // need to thawRawAndProcessed?
         ee = expressionExperimentService.thawLite( ee );
 
@@ -774,8 +732,7 @@ public class ExpressionExperimentController {
      * @param  showPublic return user's public datasets too
      * @return ee details vos
      */
-    public Collection<ExpressionExperimentDetailsValueObject> loadStatusSummaries( Long taxonId, List<Long> ids,
-            Integer limit, Integer filter, Boolean showPublic ) {
+    public Collection<ExpressionExperimentDetailsValueObject> loadStatusSummaries( Long taxonId, List<Long> ids, Integer limit, Integer filter, Boolean showPublic ) {
         StopWatch timer = new StopWatch();
         timer.start();
 
@@ -810,8 +767,7 @@ public class ExpressionExperimentController {
         expressionExperimentReportService.populateEventInformation( vos );
 
         if ( timer.getTime() > 1000 ) {
-            ExpressionExperimentController.log
-                    .info( "Filling in report data for " + vos.size() + " EEs: " + timer.getTime() + "ms" );
+            ExpressionExperimentController.log.info( "Filling in report data for " + vos.size() + " EEs: " + timer.getTime() + "ms" );
         }
 
         // We need to convert the VOs to detailVos and add array designs so trouble info can be correctly displayed.
@@ -848,9 +804,7 @@ public class ExpressionExperimentController {
 
         // add session bound sets
         // get any session-bound groups
-        Collection<SessionBoundExpressionExperimentSetValueObject> sessionResult = ( taxonLimited )
-                ? sessionListManager.getModifiedExperimentSets( taxonId )
-                : sessionListManager.getModifiedExperimentSets();
+        Collection<SessionBoundExpressionExperimentSetValueObject> sessionResult = ( taxonLimited ) ? sessionListManager.getModifiedExperimentSets( taxonId ) : sessionListManager.getModifiedExperimentSets();
 
         List<SearchResultDisplayObject> sessionSets = new ArrayList<>();
 
@@ -867,8 +821,7 @@ public class ExpressionExperimentController {
         Collections.sort( sessionSets );
         displayResults.addAll( sessionSets );
         try {
-            displayResults
-                    .addAll( expressionExperimentSearchService.searchExperimentsAndExperimentGroups( query, taxonId ) );
+            displayResults.addAll( expressionExperimentSearchService.searchExperimentsAndExperimentGroups( query, taxonId ) );
         } catch ( SearchException e ) {
             throw new IllegalArgumentException( "Invalid search settings.", e );
         }
@@ -923,7 +876,7 @@ public class ExpressionExperimentController {
         }
         Long id = Long.parseLong( idStr );
 
-        ExpressionExperiment expressionExperiment = expressionExperimentService.load( id );
+        ExpressionExperiment expressionExperiment = expressionExperimentService.loadOrFail( id );
 
         expressionExperiment = expressionExperimentService.thawLite( expressionExperiment );
 
@@ -931,8 +884,7 @@ public class ExpressionExperimentController {
             throw new EntityNotFoundException( id + " not found" );
         }
         request.setAttribute( "id", id );
-        ModelAndView mv = new ModelAndView( "bioAssays" )
-                .addObject( "bioAssays", bioAssayService.thaw( expressionExperiment.getBioAssays() ) );
+        ModelAndView mv = new ModelAndView( "bioAssays" ).addObject( "bioAssays", bioAssayService.thaw( expressionExperiment.getBioAssays() ) );
 
         this.addQCInfo( expressionExperiment, mv );
         mv.addObject( "expressionExperiment", expressionExperiment );
@@ -949,7 +901,7 @@ public class ExpressionExperimentController {
         }
         Long id = Long.parseLong( idStr );
 
-        ExpressionExperiment expressionExperiment = expressionExperimentService.load( id );
+        ExpressionExperiment expressionExperiment = expressionExperimentService.loadOrFail( id );
         expressionExperiment = expressionExperimentService.thawLite( expressionExperiment );
 
         if ( expressionExperiment == null ) {
@@ -994,8 +946,7 @@ public class ExpressionExperimentController {
         mav.addObject( "eeClass", ExpressionExperiment.class.getName() );
 
         if ( timer.getTime() > 200 ) {
-            ExpressionExperimentController.log
-                    .info( "Show Experiment was slow: id=" + expExp.getId() + " " + timer.getTime() + "ms" );
+            ExpressionExperimentController.log.info( "Show Experiment was slow: id=" + expExp.getId() + " " + timer.getTime() + "ms" );
         }
 
         return mav;
@@ -1086,8 +1037,7 @@ public class ExpressionExperimentController {
 
         if ( StringUtils.isNotBlank( command.getShortName() ) && !command.getShortName().equals( ee.getShortName() ) ) {
             if ( expressionExperimentService.findByShortName( command.getShortName() ) != null ) {
-                throw new IllegalArgumentException( "An experiment with short name '" + command.getShortName()
-                        + "' already exists, you must use a unique name" );
+                throw new IllegalArgumentException( "An experiment with short name '" + command.getShortName() + "' already exists, you must use a unique name" );
             }
             details += "short name (" + ee.getShortName() + " -> " + command.getShortName() + ")";
             changed = true;
@@ -1098,17 +1048,14 @@ public class ExpressionExperimentController {
             changed = true;
             ee.setName( command.getName() );
         }
-        if ( StringUtils.isNotBlank( command.getDescription() ) && !command.getDescription()
-                .equals( ee.getDescription() ) ) {
-            details += ( changed ? ", " : "" ) + "description (" + ee.getDescription() + " -> " + command.getDescription()
-                    + ")";
+        if ( StringUtils.isNotBlank( command.getDescription() ) && !command.getDescription().equals( ee.getDescription() ) ) {
+            details += ( changed ? ", " : "" ) + "description (" + ee.getDescription() + " -> " + command.getDescription() + ")";
             changed = true;
             ee.setDescription( StringUtils.strip( command.getDescription() ) );
         }
         if ( !command.isRemovePrimaryPublication() && StringUtils.isNotBlank( command.getPubMedId() ) ) {
             if ( ee.getPrimaryPublication() != null ) {
-                details += ( changed ? ", " : "" ) + "primary publication (id " + ee.getPrimaryPublication().getId()
-                        + " -> " + command.getPubMedId() + ")";
+                details += ( changed ? ", " : "" ) + "primary publication (id " + ee.getPrimaryPublication().getId() + " -> " + command.getPubMedId() + ")";
             } else {
                 details += ( changed ? ", " : "" ) + "primary publication ( none -> " + command.getPubMedId() + ")";
             }
@@ -1145,7 +1092,7 @@ public class ExpressionExperimentController {
     }
 
     @RequestMapping("/downloadExpressionExperimentList.html")
-    protected ModelAndView handleRequestInternal( HttpServletRequest request ) {
+    public ModelAndView handleRequestInternal( HttpServletRequest request ) {
 
         StopWatch watch = new StopWatch();
         watch.start();
@@ -1156,8 +1103,7 @@ public class ExpressionExperimentController {
 
         ModelAndView mav = new ModelAndView( new TextView() );
         if ( ( eeIds == null || eeIds.isEmpty() ) && ( eeSetIds == null || eeSetIds.isEmpty() ) ) {
-            mav.addObject( TextView.TEXT_PARAM, "Could not find genes to match expression experiment ids: {" + eeIds
-                    + "} or expression experiment set ids {" + eeSetIds + "}" );
+            mav.addObject( TextView.TEXT_PARAM, "Could not find genes to match expression experiment ids: {" + eeIds + "} or expression experiment set ids {" + eeSetIds + "}" );
             return mav;
         }
 
@@ -1172,19 +1118,16 @@ public class ExpressionExperimentController {
         Long time = watch.getTime();
 
         if ( time > 100 ) {
-            ExpressionExperimentController.log
-                    .info( "Retrieved and Formated" + ees.size() + " genes in : " + time + " ms." );
+            ExpressionExperimentController.log.info( "Retrieved and Formated" + ees.size() + " genes in : " + time + " ms." );
         }
         return mav;
     }
 
-    private JsonReaderResponse<ExpressionExperimentDetailsValueObject> browseSpecific( ListBatchCommand batch,
-            List<Long> ids, Taxon taxon ) {
+    private JsonReaderResponse<ExpressionExperimentDetailsValueObject> browseSpecific( ListBatchCommand batch, List<Long> ids, Taxon taxon ) {
 
-        Slice<ExpressionExperimentDetailsValueObject> records = this
-                .loadAllValueObjectsOrdered( batch, ids, taxon );
+        Slice<ExpressionExperimentDetailsValueObject> records = this.loadAllValueObjectsOrdered( batch, ids, taxon );
 
-        return new JsonReaderResponse<>( records, records.getTotalElements() );
+        return new JsonReaderResponse<>( records, records.getTotalElements() != null ? records.getTotalElements() : -1L );
     }
 
     /**
@@ -1212,8 +1155,7 @@ public class ExpressionExperimentController {
 
         count = outliers.size();
 
-        if ( count > 0 )
-            ExpressionExperimentController.log.info( count + " possible outliers detected." );
+        if ( count > 0 ) ExpressionExperimentController.log.info( count + " possible outliers detected." );
 
         return count;
     }
@@ -1237,8 +1179,7 @@ public class ExpressionExperimentController {
 
         }
 
-        if ( count > 0 )
-            ExpressionExperimentController.log.info( count + " outliers were removed." );
+        if ( count > 0 ) ExpressionExperimentController.log.info( count + " outliers were removed." );
 
         return count;
     }
@@ -1250,8 +1191,7 @@ public class ExpressionExperimentController {
      * @param  finalResult result
      * @return ee details vo
      */
-    private ExpressionExperimentDetailsValueObject setBatchInfo( ExpressionExperimentDetailsValueObject finalResult,
-            ExpressionExperiment ee ) {
+    private void setBatchInfo( ExpressionExperimentDetailsValueObject finalResult, ExpressionExperiment ee ) {
         boolean hasBatchInformation = expressionExperimentService.checkHasBatchInfo( ee );
         finalResult.setHasBatchInformation( hasBatchInformation );
         if ( hasBatchInformation ) {
@@ -1259,8 +1199,6 @@ public class ExpressionExperimentController {
         }
 
         finalResult.setBatchEffect( expressionExperimentService.getBatchEffect( ee ) );
-
-        return finalResult;
     }
 
     /**
@@ -1270,14 +1208,12 @@ public class ExpressionExperimentController {
      * @param  finalResult result
      * @return ee details vo
      */
-    private ExpressionExperimentDetailsValueObject setPublicationAndAuthor(
-            ExpressionExperimentDetailsValueObject finalResult, ExpressionExperiment ee ) {
+    private void setPublicationAndAuthor( ExpressionExperimentDetailsValueObject finalResult, ExpressionExperiment ee ) {
 
         finalResult.setDescription( ee.getDescription() );
 
         if ( ee.getPrimaryPublication() != null && ee.getPrimaryPublication().getPubAccession() != null ) {
-            finalResult.setPrimaryCitation(
-                    CitationValueObject.convert2CitationValueObject( ee.getPrimaryPublication() ) );
+            finalResult.setPrimaryCitation( CitationValueObject.convert2CitationValueObject( ee.getPrimaryPublication() ) );
             String accession = ee.getPrimaryPublication().getPubAccession().getAccession();
 
             try {
@@ -1286,8 +1222,6 @@ public class ExpressionExperimentController {
                 ExpressionExperimentController.log.warn( "Pubmed id not formatted correctly: " + accession );
             }
         }
-
-        return finalResult;
     }
 
     /**
@@ -1329,8 +1263,7 @@ public class ExpressionExperimentController {
      * @param  finalResult result
      * @return ee details vo
      */
-    private ExpressionExperimentDetailsValueObject setTechTypeInfo(
-            ExpressionExperimentDetailsValueObject finalResult, ExpressionExperiment ee ) {
+    private void setTechTypeInfo( ExpressionExperimentDetailsValueObject finalResult, ExpressionExperiment ee ) {
         Collection<TechnologyType> techTypes = new HashSet<>();
         for ( ArrayDesign ad : expressionExperimentService.getArrayDesignsUsed( ee ) ) {
             techTypes.add( ad.getTechnologyType() );
@@ -1339,8 +1272,6 @@ public class ExpressionExperimentController {
         finalResult.setHasMultipleTechnologyTypes( techTypes.size() > 1 );
 
         finalResult.setIsRNASeq( expressionExperimentService.isRNASeq( ee ) );
-
-        return finalResult;
     }
 
     /**
@@ -1350,8 +1281,7 @@ public class ExpressionExperimentController {
      * @param  finalResult result
      * @return ee details vo
      */
-    private ExpressionExperimentDetailsValueObject setPreferredAndReprocessed(
-            ExpressionExperimentDetailsValueObject finalResult, ExpressionExperiment ee ) {
+    private void setPreferredAndReprocessed( ExpressionExperimentDetailsValueObject finalResult, ExpressionExperiment ee ) {
 
         Collection<QuantitationType> quantitationTypes = expressionExperimentService.getQuantitationTypes( ee );
 
@@ -1368,8 +1298,6 @@ public class ExpressionExperimentController {
 
         finalResult.setHasMultiplePreferredQuantitationTypes( countPreferred > 1 );
         finalResult.setReprocessedFromRawData( dataReprocessedFromRaw );
-
-        return finalResult;
     }
 
     private void addQCInfo( ExpressionExperiment expressionExperiment, ModelAndView mav ) {
@@ -1395,8 +1323,7 @@ public class ExpressionExperimentController {
      * @param  filter         filter
      * @return filtered vos
      */
-    private Collection<ExpressionExperimentDetailsValueObject> applyFilter(
-            Collection<ExpressionExperimentDetailsValueObject> eeValObjectCol, Integer filter ) {
+    private Collection<ExpressionExperimentDetailsValueObject> applyFilter( Collection<ExpressionExperimentDetailsValueObject> eeValObjectCol, Integer filter ) {
         List<ExpressionExperimentDetailsValueObject> filtered = new ArrayList<>();
         Collection<ExpressionExperiment> eesToKeep = null;
         List<ExpressionExperimentDetailsValueObject> eeVOsToKeep = null;
@@ -1490,8 +1417,7 @@ public class ExpressionExperimentController {
 
         if ( eeSetName != null && eeSetName.length() != 0 )
             strBuff.append( "# Experiment Set: " ).append( eeSetName ).append( "\n" );
-        strBuff.append( "# " ).append( ees.size() ).append( ( ees.size() > 1 ) ? " experiments" : " experiment" )
-                .append( "\n#\n" );
+        strBuff.append( "# " ).append( ees.size() ).append( ( ees.size() > 1 ) ? " experiments" : " experiment" ).append( "\n#\n" );
 
         // add header
         strBuff.append( "Short Name\tFull Name\n" );
@@ -1514,8 +1440,7 @@ public class ExpressionExperimentController {
      * @param  showPublic return the user's public datasets as well
      * @return ee details vos
      */
-    private Collection<ExpressionExperimentDetailsValueObject> getEEVOsForManager( Long taxonId, List<Long> ids,
-            Integer limit, Integer filter, boolean showPublic ) {
+    private Collection<ExpressionExperimentDetailsValueObject> getEEVOsForManager( Long taxonId, List<Long> ids, Integer limit, Integer filter, boolean showPublic ) {
         Collection<ExpressionExperimentDetailsValueObject> eeVos;
 
         Taxon taxon;
@@ -1530,8 +1455,7 @@ public class ExpressionExperimentController {
         }
 
         // Limit default desc - lastUpdated is a date and the most recent date is the largest one.
-        eeVos = this
-                .getFilteredExpressionExperimentValueObjects( taxon, ids, limit, showPublic );
+        eeVos = this.getFilteredExpressionExperimentValueObjects( taxon, ids, limit, showPublic );
 
         if ( filter != null && filter > 0 ) {
             eeVos = this.applyFilter( eeVos, filter );
@@ -1589,8 +1513,7 @@ public class ExpressionExperimentController {
             return new HashSet<>();
         }
 
-        Collection<ExpressionExperimentSetValueObject> vos = expressionExperimentSetService
-                .loadValueObjectsByIds( eeSetIds );
+        Collection<ExpressionExperimentSetValueObject> vos = expressionExperimentSetService.loadValueObjectsByIds( eeSetIds );
         Collection<ExpressionExperimentSetValueObject> sVos = new ArrayList<>();
 
         for ( ExpressionExperimentSetValueObject vo : vos ) {
@@ -1611,15 +1534,10 @@ public class ExpressionExperimentController {
      * @param  showPublic show public
      * @return Collection<ExpressionExperimentValueObject>
      */
-    private Collection<ExpressionExperimentDetailsValueObject> getFilteredExpressionExperimentValueObjects( Taxon taxon,
-            Collection<Long> eeIds, int limit, boolean showPublic ) {
+    private Collection<ExpressionExperimentDetailsValueObject> getFilteredExpressionExperimentValueObjects( Taxon taxon, Collection<Long> eeIds, int limit, boolean showPublic ) {
 
         Sort.Direction direction = limit < 0 ? Sort.Direction.ASC : Sort.Direction.DESC;
-        Collection<ExpressionExperimentDetailsValueObject> vos = expressionExperimentService
-                .loadDetailsValueObjects( eeIds, taxon,
-                        expressionExperimentService.getSort( "curationDetails.lastUpdated", direction ),
-                        0, Math.abs( limit ) );
-
+        Collection<ExpressionExperimentDetailsValueObject> vos = expressionExperimentService.loadDetailsValueObjectsWithCache( eeIds, taxon, expressionExperimentService.getSort( "curationDetails.lastUpdated", direction ), 0, Math.abs( limit ) );
         // Hide public data sets if desired.
         if ( !vos.isEmpty() && !showPublic ) {
             Collection<ExpressionExperimentDetailsValueObject> publicEEs = securityService.choosePublic( vos );
@@ -1630,8 +1548,7 @@ public class ExpressionExperimentController {
         return vos;
     }
 
-    private List<ExpressionExperimentValueObject> getSubList( Integer limit,
-            List<ExpressionExperimentValueObject> initialListOfValueObject ) {
+    private List<ExpressionExperimentValueObject> getSubList( Integer limit, List<ExpressionExperimentValueObject> initialListOfValueObject ) {
 
         if ( limit < initialListOfValueObject.size() ) {
             initialListOfValueObject = initialListOfValueObject.subList( 0, limit );
@@ -1639,8 +1556,7 @@ public class ExpressionExperimentController {
         return initialListOfValueObject;
     }
 
-    private Slice<ExpressionExperimentDetailsValueObject> loadAllValueObjectsOrdered( ListBatchCommand batch,
-            List<Long> ids, Taxon taxon ) {
+    private Slice<ExpressionExperimentDetailsValueObject> loadAllValueObjectsOrdered( ListBatchCommand batch, List<Long> ids, Taxon taxon ) {
         String o = batch.getSort();
         Sort.Direction direction;
         if ( batch.getDir() == null ) {
@@ -1655,7 +1571,7 @@ public class ExpressionExperimentController {
         }
         int limit = batch.getLimit();
         int start = batch.getStart();
-        return expressionExperimentService.loadDetailsValueObjects( ids, taxon, expressionExperimentService.getSort( o, direction ), start, limit );
+        return expressionExperimentService.loadDetailsValueObjectsWithCache( ids, taxon, expressionExperimentService.getSort( o, direction ), start, limit );
     }
 
     /**
@@ -1667,8 +1583,7 @@ public class ExpressionExperimentController {
      * @param  eevos            ee vos
      * @return ee vos
      */
-    private <T extends ExpressionExperimentValueObject> List<T> returnTroubled( Collection<T> eevos,
-            boolean shouldBeTroubled ) {
+    private <T extends ExpressionExperimentValueObject> List<T> returnTroubled( Collection<T> eevos, boolean shouldBeTroubled ) {
         List<T> filtered = new ArrayList<>();
 
         for ( T eevo : eevos ) {
@@ -1687,8 +1602,7 @@ public class ExpressionExperimentController {
      * @param  ees ees
      * @return ee detail vos
      */
-    private List<ExpressionExperimentDetailsValueObject> returnNeedsAttention(
-            Collection<ExpressionExperimentDetailsValueObject> ees ) {
+    private List<ExpressionExperimentDetailsValueObject> returnNeedsAttention( Collection<ExpressionExperimentDetailsValueObject> ees ) {
         List<ExpressionExperimentDetailsValueObject> troubled = new ArrayList<>();
 
         for ( ExpressionExperimentDetailsValueObject eevo : ees ) {
@@ -1708,7 +1622,7 @@ public class ExpressionExperimentController {
      */
     private void updateCorrelationMatrixFile( Long id ) {
         ExpressionExperiment ee;
-        ee = expressionExperimentService.load( id );
+        ee = expressionExperimentService.loadOrFail( id );
         ee = expressionExperimentService.thawLiter( ee );
         if ( ee == null ) {
             throw new IllegalArgumentException( "Unable to access experiment with id=" + id );
@@ -1740,9 +1654,7 @@ public class ExpressionExperimentController {
         public TaskResult call() {
             expressionExperimentService.remove( taskCommand.getEntityId() );
 
-            return new TaskResult( taskCommand, new ModelAndView(
-                    new RedirectView( "/expressionExperiment/showAllExpressionExperiments.html", true ) )
-                    .addObject( "message", "Dataset id: " + taskCommand.getEntityId() + " removed from Database" ) );
+            return new TaskResult( taskCommand, new ModelAndView( new RedirectView( "/expressionExperiment/showAllExpressionExperiments.html", true ) ).addObject( "message", "Dataset id: " + taskCommand.getEntityId() + " removed from Database" ) );
 
         }
     }
@@ -1755,7 +1667,7 @@ public class ExpressionExperimentController {
 
         @Override
         public TaskResult call() {
-            ExpressionExperiment ee = expressionExperimentService.load( taskCommand.getEntityId() );
+            ExpressionExperiment ee = expressionExperimentService.loadOrFail( taskCommand.getEntityId() );
 
             ee = expressionExperimentService.thawLite( ee );
 
@@ -1842,8 +1754,7 @@ public class ExpressionExperimentController {
                     expressionExperimentService.update( expressionExperiment );
                 }
             }
-            ExpressionExperimentDetailsValueObject result = new ExpressionExperimentDetailsValueObject(
-                    expressionExperiment );
+            ExpressionExperimentDetailsValueObject result = new ExpressionExperimentDetailsValueObject( expressionExperiment );
             result.setPubmedId( Integer.parseInt( pubmedId ) );
             publication = bibliographicReferenceService.thaw( publication );
             result.setPrimaryCitation( CitationValueObject.convert2CitationValueObject( publication ) );

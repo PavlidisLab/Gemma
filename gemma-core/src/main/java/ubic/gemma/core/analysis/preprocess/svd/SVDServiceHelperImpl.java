@@ -287,9 +287,12 @@ public class SVDServiceHelperImpl implements SVDServiceHelper {
                     importantFactors.add( ef );
                 } else {
                     SVDServiceHelperImpl.log
-                            .info( ef + " not retained at p=" + String.format( "%.2g", pvalue ) + " for PC" + cmp );
+                            .debug( ef + " not retained at p=" + String.format( "%.2g", pvalue ) + " for PC" + cmp );
                 }
             }
+        }
+        if ( !importantFactors.isEmpty() ) {
+            SVDServiceHelperImpl.log.warn( importantFactors.size() + " factors chosen as important" );
         }
         return importantFactors;
     }

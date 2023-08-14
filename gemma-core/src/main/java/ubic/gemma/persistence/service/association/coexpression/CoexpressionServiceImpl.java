@@ -19,9 +19,8 @@
 package ubic.gemma.persistence.service.association.coexpression;
 
 import cern.colt.list.DoubleArrayList;
+import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.lang3.ArrayUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -44,9 +43,8 @@ import java.util.*;
  * @see CoexpressionService
  */
 @Service
+@CommonsLog
 public class CoexpressionServiceImpl implements CoexpressionService {
-
-    private static final Logger log = LoggerFactory.getLogger( CoexpressionServiceImpl.class );
 
     @Autowired
     private CoexpressionDao coexpressionDao;

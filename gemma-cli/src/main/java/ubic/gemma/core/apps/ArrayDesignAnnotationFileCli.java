@@ -36,6 +36,7 @@ import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.core.analysis.service.ArrayDesignAnnotationService;
 import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.core.genome.gene.service.GeneService;
+import ubic.gemma.core.ontology.OntologyUtils;
 import ubic.gemma.core.ontology.providers.GeneOntologyService;
 import ubic.gemma.core.util.AbstractCLI;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -165,9 +166,7 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
     protected void doWork() throws Exception {
         this.taxonService = this.getBean( TaxonService.class );
 
-        this.waitForGeneOntologyReady();
-
-        this.goService.initialize( true, false );
+        OntologyUtils.ensureInitialized( goService );
 
         log.info( "***** Annotation file(s) will be written to " + ArrayDesignAnnotationService.ANNOT_DATA_DIR + " ******" );
 
@@ -400,21 +399,4 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
 
     }
 
-    private void waitForGeneOntologyReady() {
-
-        goService.initialize( true, false );
-
-        while ( !goService.isOntologyLoaded() ) {
-            try {
-                Thread.sleep( 10000 );
-                AbstractCLI.log.info( "Waiting for Gene Ontology to load ..." );
-            } catch ( InterruptedException e ) {
-                throw new RuntimeException( "Failure while waiting for GO to load", e );
-            }
-        }
-        if ( !this.notifiedAboutGOState ) {
-            AbstractCLI.log.info( "GO is ready." );
-            this.notifiedAboutGOState = true;
-        }
-    }
 }

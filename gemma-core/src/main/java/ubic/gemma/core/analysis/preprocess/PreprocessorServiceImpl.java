@@ -14,6 +14,7 @@
  */
 package ubic.gemma.core.analysis.preprocess;
 
+import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -83,6 +84,8 @@ public class PreprocessorServiceImpl implements PreprocessorService {
     @Override
     @Transactional(propagation = Propagation.NEVER)
     public void process( ExpressionExperiment ee, boolean ignoreQuantitationMismatch, boolean ignoreDiagnosticsFailure ) throws PreprocessingException {
+        StopWatch timer = new StopWatch();
+        timer.start();
         ee = expressionExperimentService.thaw( ee );
         removeInvalidatedData( ee ); // clear out old files
         processForMissingValues( ee ); // only relevant for two-channel arrays
@@ -100,6 +103,7 @@ public class PreprocessorServiceImpl implements PreprocessorService {
 
         }
         updateDEAs( ee ); // if existing, redo it
+        log.info( "Processing complete for " + ee.getShortName() + " in " + timer.getTime() / 1000 + " seconds" );
     }
 
     /**

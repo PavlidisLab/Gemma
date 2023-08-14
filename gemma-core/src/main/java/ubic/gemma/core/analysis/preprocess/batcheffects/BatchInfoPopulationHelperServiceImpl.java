@@ -112,11 +112,21 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
     @Override
     @Transactional
     public ExperimentalFactor createBatchFactor( ExpressionExperiment ee, Map<BioMaterial, Date> dates ) {
+        TreeMap<BioMaterial, Date> sortedB2Dates = new TreeMap<>( Comparator.comparing( dates::get ) );
+        sortedB2Dates.putAll( dates );
+
+        List<Boolean> isUsable = new ArrayList<>();
+        for ( BioMaterial bm : sortedB2Dates.keySet() ) {
+            isUsable.add( !bm.getBioAssaysUsedIn().iterator().next().getIsOutlier() );
+        }
+
+        List<Date> sortedDates = new ArrayList<>( sortedB2Dates.values() );
 
         /*
          * Go through the dates and convert to factor values.
          */
-        Map<String, Collection<Date>> datesToBatch = this.convertDatesToBatches( new HashSet<>( dates.values() ) );
+        Map<String, Collection<Date>> datesToBatch = this.convertDatesToBatches( sortedDates, isUsable );
+
 
         Map<Date, FactorValue> d2fv = new HashMap<>();
         ExperimentalFactor ef = createExperimentalFactor( ee, datesToBatch, d2fv );
@@ -126,16 +136,18 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
     }
 
     /**
-     * Apply some heuristics to condense the dates down to batches. For example, we might assume dates very close
+     * <p>Apply some heuristics to condense the dates down to batches. For example, we might assume dates very close
      * together (for example, in the same day or within MAX_GAP_BETWEEN_SAMPLES_TO_BE_SAME_BATCH, and we avoid singleton
      * batches) are to be treated as the same batch (see implementation for details).
+     *</p><p>
+     * If a sample is an outlier, it is effectively ignored when deciding if a batch is a singleton.
+     * That is, a batch of size 2 in which one is usuable is still considered a singleton.</p>
      *
-     * @param  allDates all dates
+     * @param allDates all dates, in ascending order (important!)
+     * @param isUsable whether the corresponding date is usable (i.e. not an outlier sample). If null this is ignored.
      * @return map of batch identifiers to dates
      */
-    Map<String, Collection<Date>> convertDatesToBatches( Collection<Date> allDates ) {
-        List<Date> lDates = new ArrayList<>( allDates );
-        Collections.sort( lDates );
+    Map<String, Collection<Date>> convertDatesToBatches( List<Date> allDates, List<Boolean> isUsable ) {
         Map<String, Collection<Date>> result = new LinkedHashMap<>();
 
         int batchNum = 1;
@@ -149,11 +161,16 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
          */
         Date lastDate = null;
         Date nextDate;
-        for ( int i = 0; i < lDates.size(); i++ ) {
-            Date currentDate = lDates.get( i );
+        for ( int i = 0; i < allDates.size(); i++ ) {
+            Date currentDate = allDates.get( i );
 
-            if ( i < lDates.size() - 1 ) {
-                nextDate = lDates.get( i + 1 );
+            Boolean usable = true;
+            if ( isUsable != null ) {
+                usable = isUsable.get( i );
+            }
+
+            if ( i < allDates.size() - 1 ) {
+                nextDate = allDates.get( i + 1 );
             } else {
                 nextDate = null;
             }
@@ -164,6 +181,13 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
                 result.put( batchDateString, new HashSet<Date>() );
                 result.get( batchDateString ).add( currentDate );
                 lastDate = currentDate;
+                continue;
+            }
+
+
+            // unusable samples always get added to the current batch.
+            if ( !usable ) {
+                result.get( batchDateString ).add( currentDate );
                 continue;
             }
 
@@ -240,6 +264,7 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
 
             // express the constraint that we don't allow batches of size 1, even if we would have normally left it in
             // its own batch.
+            // This detection of a final singleton can fail if it contains one usable and one unusable sample, but it's just a logging statement.
             if ( result.get( batchDateString ).size() == 1 && this.gapIsLarge( lastDate, currentDate ) ) {
                 mergedAnySingletons = true;
                 BatchInfoPopulationHelperServiceImpl.log

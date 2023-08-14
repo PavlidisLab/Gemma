@@ -46,6 +46,7 @@ import static org.mockito.Mockito.mock;
  *
  * @author Paul
  */
+@Category(SlowTest.class)
 @ContextConfiguration
 public class GeneOntologyService2Test extends AbstractJUnit4SpringContextTests {
 

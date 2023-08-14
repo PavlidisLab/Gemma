@@ -14,9 +14,8 @@
  */
 package ubic.gemma.model.analysis.expression.coexpression;
 
+import lombok.extern.apachecommons.CommonsLog;
 import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.Collection;
 import java.util.HashSet;
@@ -28,9 +27,8 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author Paul
  */
+@CommonsLog
 public class GeneCoexpressionTestedInTest {
-
-    private static final Logger log = LoggerFactory.getLogger( GeneCoexpressionTestedInTest.class );
 
     @Test
     public void test() {

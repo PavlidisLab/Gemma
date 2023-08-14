@@ -3,12 +3,14 @@ package ubic.gemma.core.search;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.concurrent.ConcurrentMapCache;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Import;
 import ubic.gemma.core.annotation.reference.BibliographicReferenceService;
 import ubic.gemma.core.association.phenotype.PhenotypeAssociationManagerService;
 import ubic.gemma.core.genome.gene.service.GeneSearchService;
 import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.core.genome.gene.service.GeneSetService;
 import ubic.gemma.core.ontology.OntologyService;
+import ubic.gemma.core.search.source.OntologySearchSource;
 import ubic.gemma.persistence.service.common.description.CharacteristicService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
@@ -18,6 +20,7 @@ import ubic.gemma.persistence.service.expression.experiment.ExpressionExperiment
 import ubic.gemma.persistence.service.genome.biosequence.BioSequenceService;
 import ubic.gemma.persistence.service.genome.gene.GeneProductService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
+import ubic.gemma.persistence.util.ValueObjectConfig;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
@@ -26,6 +29,7 @@ import static org.mockito.Mockito.when;
 /**
  * Base class for mocking beans for
  */
+@Import(ValueObjectConfig.class)
 class SearchServiceTestContextConfiguration {
 
     @Bean
@@ -48,6 +52,11 @@ class SearchServiceTestContextConfiguration {
     @Bean
     public SearchSource databaseSearchSource() {
         return mock( SearchSource.class );
+    }
+
+    @Bean
+    public SearchSource ontologySearchSource() {
+        return mock( OntologySearchSource.class );
     }
 
     @Bean

@@ -35,7 +35,6 @@ import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.genome.Gene;
-import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionResultService;
 import ubic.gemma.persistence.service.analysis.expression.diff.ExpressionAnalysisResultSetService;
 import ubic.gemma.persistence.service.analysis.expression.diff.GeneDiffExMetaAnalysisService;
 import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
@@ -59,9 +58,6 @@ public class DiffExMetaAnalyzerServiceImpl implements DiffExMetaAnalyzerService 
 
     @Autowired
     private ExpressionExperimentSubSetService expressionExperimentSubSetService;
-
-    @Autowired
-    private DifferentialExpressionResultService differentialExpressionResultService;
 
     @Autowired
     private ExpressionAnalysisResultSetService expressionAnalysisResultSetService;
@@ -105,10 +101,6 @@ public class DiffExMetaAnalyzerServiceImpl implements DiffExMetaAnalyzerService 
 
     @Override
     public GeneDifferentialExpressionMetaAnalysis persist( GeneDifferentialExpressionMetaAnalysis analysis ) {
-        for ( ExpressionAnalysisResultSet r : analysis.getResultSetsIncluded() ) {
-            expressionAnalysisResultSetService.update( r );
-        }
-
         return analysisService.create( analysis );
     }
 
@@ -418,7 +410,7 @@ public class DiffExMetaAnalyzerServiceImpl implements DiffExMetaAnalyzerService 
                 DiffExMetaAnalyzerServiceImpl.log.warn( "No diff ex result set with ID=" + analysisResultSetId );
                 throw new IllegalArgumentException( "No diff ex result set with ID=" + analysisResultSetId );
             }
-            expressionAnalysisResultSetService.thaw( expressionAnalysisResultSet );
+            expressionAnalysisResultSet = expressionAnalysisResultSetService.thaw( expressionAnalysisResultSet );
             resultSets.add( expressionAnalysisResultSet );
         }
         return resultSets;

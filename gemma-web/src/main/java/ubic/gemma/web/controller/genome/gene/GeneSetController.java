@@ -27,9 +27,9 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.servlet.ModelAndView;
-import ubic.basecode.ontology.search.OntologySearchException;
 import ubic.gemma.core.genome.gene.SessionBoundGeneSetValueObject;
 import ubic.gemma.core.genome.gene.service.GeneSetService;
+import ubic.gemma.core.search.SearchException;
 import ubic.gemma.model.genome.TaxonValueObject;
 import ubic.gemma.model.genome.gene.DatabaseBackedGeneSetValueObject;
 import ubic.gemma.model.genome.gene.GeneSetValueObject;
@@ -189,7 +189,7 @@ public class GeneSetController {
     public Collection<GeneSetValueObject> findGeneSetsByName( String query, Long taxonId ) {
         try {
             return geneSetService.findGeneSetsByName( query, taxonId );
-        } catch ( OntologySearchException e ) {
+        } catch ( SearchException e ) {
             throw new IllegalArgumentException( "Invalid search query.", e );
         }
     }
@@ -288,7 +288,7 @@ public class GeneSetController {
         if ( id == null ) {
             throw new IllegalArgumentException( "Cannot load a gene set with a null id." );
         }
-        return geneSetService.getValueObject( id );
+        return geneSetService.loadValueObjectById( id );
 
     }
 
@@ -493,7 +493,7 @@ public class GeneSetController {
             } catch ( NumberFormatException e ) {
                 throw new IllegalArgumentException( "You must provide a valid numerical identifier" );
             }
-            geneSet = geneSetService.getValueObject( id );
+            geneSet = geneSetService.loadValueObjectById( id );
 
             if ( geneSet == null ) {
                 throw new IllegalArgumentException( "Unable to access gene set with id=" + id );

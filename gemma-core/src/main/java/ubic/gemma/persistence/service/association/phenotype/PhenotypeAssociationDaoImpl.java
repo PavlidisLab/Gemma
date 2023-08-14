@@ -56,7 +56,7 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
     private static final String DISCRIMINATOR_CLAUSE = "('ubic.gemma.model.association.phenotype.LiteratureEvidence',"
             + "'ubic.gemma.model.association.phenotype.GenericEvidence',"
             + "'ubic.gemma.model.association.phenotype.ExperimentalEvidence',"
-            + "'ubic.gemma.model.association.phenotype.DifferentialExpressionEvidenceImpl') ";
+            + "'ubic.gemma.model.association.phenotype.DifferentialExpressionEvidence') ";
     private static final Log log = LogFactory.getLog( PhenotypeAssociationDaoImpl.class );
 
     @Autowired
@@ -85,7 +85,7 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
             Long geneDifferentialExpressionMetaAnalysisId ) {
 
         return ( Long ) this.getSessionFactory().getCurrentSession().createQuery(
-                        "select count (d) from DifferentialExpressionEvidenceImpl as d where d.geneDifferentialExpressionMetaAnalysisResult "
+                        "select count (d) from DifferentialExpressionEvidence as d where d.geneDifferentialExpressionMetaAnalysisResult "
                                 + "in (select r from GeneDifferentialExpressionMetaAnalysis as g join g.results as r where g.id= :gid)" )
                 .setParameter( "gid", geneDifferentialExpressionMetaAnalysisId ).uniqueResult();
     }
@@ -609,7 +609,7 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
 
         //noinspection unchecked
         return ( List<DifferentialExpressionEvidence> ) this.getSessionFactory().getCurrentSession().createQuery(
-                        "select d from DifferentialExpressionEvidenceImpl as d where d.geneDifferentialExpressionMetaAnalysisResult "
+                        "select d from DifferentialExpressionEvidence as d where d.geneDifferentialExpressionMetaAnalysisResult "
                                 + "in (select r from GeneDifferentialExpressionMetaAnalysis as g join g.results as r where g.id=:gid)" )
                 .setParameter( "gid", geneDifferentialExpressionMetaAnalysisId ).setMaxResults( maxResults ).list();
     }
@@ -756,7 +756,7 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
     @Override
     public void removePhenotypePublication( PhenotypeAssociationPublication phenotypeAssociationPublication ) {
         this.getSessionFactory().getCurrentSession()
-                .createQuery( "delete from PhenotypeAssociationPublicationImpl p where p = :p" )
+                .createQuery( "delete from PhenotypeAssociationPublication p where p = :p" )
                 .setParameter( "p", phenotypeAssociationPublication )
                 .executeUpdate();
     }

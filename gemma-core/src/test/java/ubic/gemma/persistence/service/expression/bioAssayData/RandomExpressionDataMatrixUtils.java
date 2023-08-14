@@ -28,7 +28,7 @@ public class RandomExpressionDataMatrixUtils {
     }
 
     public static ExpressionDataDoubleMatrix randomCountMatrix( ExpressionExperiment ee ) {
-        QuantitationType qt = new QuantitationTypeImpl();
+        QuantitationType qt = new QuantitationType();
         qt.setGeneralType( GeneralType.QUANTITATIVE );
         qt.setType( StandardQuantitationType.COUNT );
         qt.setScale( ScaleType.COUNT );
@@ -38,7 +38,7 @@ public class RandomExpressionDataMatrixUtils {
 
 
     public static ExpressionDataDoubleMatrix randomLinearMatrix( ExpressionExperiment ee ) {
-        QuantitationType qt = new QuantitationTypeImpl();
+        QuantitationType qt = new QuantitationType();
         qt.setGeneralType( GeneralType.QUANTITATIVE );
         qt.setType( StandardQuantitationType.AMOUNT );
         qt.setScale( ScaleType.LINEAR );
@@ -47,7 +47,7 @@ public class RandomExpressionDataMatrixUtils {
     }
 
     public static ExpressionDataDoubleMatrix randomLog2RatiometricMatrix( ExpressionExperiment ee ) {
-        QuantitationType qt = new QuantitationTypeImpl();
+        QuantitationType qt = new QuantitationType();
         qt.setGeneralType( GeneralType.QUANTITATIVE );
         qt.setType( StandardQuantitationType.AMOUNT );
         qt.setScale( ScaleType.LOG2 );
@@ -57,7 +57,7 @@ public class RandomExpressionDataMatrixUtils {
     }
 
     public static ExpressionDataDoubleMatrix randomLog2Matrix( ExpressionExperiment ee ) {
-        QuantitationType qt = new QuantitationTypeImpl();
+        QuantitationType qt = new QuantitationType();
         qt.setGeneralType( GeneralType.QUANTITATIVE );
         qt.setType( StandardQuantitationType.AMOUNT );
         qt.setScale( ScaleType.LOG2 );

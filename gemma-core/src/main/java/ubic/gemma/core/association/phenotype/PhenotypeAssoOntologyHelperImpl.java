@@ -25,6 +25,8 @@ import ubic.basecode.ontology.providers.MammalianPhenotypeOntologyService;
 import ubic.basecode.ontology.search.OntologySearchException;
 import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.core.ontology.providers.MondoOntologyService;
+import ubic.gemma.core.search.BaseCodeOntologySearchException;
+import ubic.gemma.core.search.SearchException;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 
@@ -60,7 +62,7 @@ public class PhenotypeAssoOntologyHelperImpl implements PhenotypeAssoOntologyHel
 
         Characteristic characteristic = Characteristic.Factory.newInstance();
         characteristic.setCategory( characteristicValueObject.getCategory() );
-        characteristic.setCategoryUri( characteristicValueObject.getCategoryUri() );
+        characteristic.setCategoryUri( StringUtils.stripToNull( characteristicValueObject.getCategoryUri() ) );
         characteristic.setValue( characteristicValueObject.getValue() );
 
         if ( StringUtils.isNotBlank( characteristicValueObject.getValueUri() ) ) {
@@ -79,7 +81,7 @@ public class PhenotypeAssoOntologyHelperImpl implements PhenotypeAssoOntologyHel
                         break;
                     }
                 }
-            } catch ( OntologySearchException e ) {
+            } catch ( SearchException e ) {
                 log.error( "Failed to retrieve ontology terms for " + value + " when converting to VO. The value URI will not be set.", e );
             }
 
@@ -105,11 +107,16 @@ public class PhenotypeAssoOntologyHelperImpl implements PhenotypeAssoOntologyHel
     }
 
     @Override
-    public Set<CharacteristicValueObject> findPhenotypesInOntology( String searchQuery ) throws OntologySearchException {
+    public Set<CharacteristicValueObject> findPhenotypesInOntology( String searchQuery ) throws SearchException {
         Map<String, OntologyTerm> uniqueValueTerm = new HashMap<>();
 
         for ( ubic.basecode.ontology.providers.OntologyService ontology : this.ontologies ) {
-            Collection<OntologyTerm> hits = ontology.findTerm( searchQuery );
+            Collection<OntologyTerm> hits;
+            try {
+                hits = ontology.findTerm( searchQuery );
+            } catch ( OntologySearchException e ) {
+                throw new BaseCodeOntologySearchException( e );
+            }
 
             for ( OntologyTerm ontologyTerm : hits ) {
                 if ( ontologyTerm.getLabel() != null && uniqueValueTerm.get( ontologyTerm.getLabel().toLowerCase() ) == null ) {
@@ -122,12 +129,17 @@ public class PhenotypeAssoOntologyHelperImpl implements PhenotypeAssoOntologyHel
     }
 
     @Override
-    public Collection<OntologyTerm> findValueUriInOntology( String searchQuery ) throws OntologySearchException {
+    public Collection<OntologyTerm> findValueUriInOntology( String searchQuery ) throws SearchException {
 
         Collection<OntologyTerm> results = new TreeSet<>();
         for ( ubic.basecode.ontology.providers.OntologyService ontology : this.ontologies ) {
             if ( ontology.isOntologyLoaded() ) {
-                Collection<OntologyTerm> found = ontology.findTerm( searchQuery );
+                Collection<OntologyTerm> found;
+                try {
+                    found = ontology.findTerm( searchQuery );
+                } catch ( OntologySearchException e ) {
+                    throw new BaseCodeOntologySearchException( e );
+                }
                 if ( found != null && !found.isEmpty() )
                     results.addAll( found );
             }

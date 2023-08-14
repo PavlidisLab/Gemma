@@ -18,40 +18,16 @@
  */
 package ubic.gemma.core.loader.expression.geo.service;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.lang.reflect.Array;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.net.URLConnection;
-import java.text.DateFormat;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.*;
-
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.xpath.XPath;
-import javax.xml.xpath.XPathConstants;
-import javax.xml.xpath.XPathExpression;
-import javax.xml.xpath.XPathExpressionException;
-import javax.xml.xpath.XPathFactory;
-
+import org.apache.commons.collections4.ListUtils;
+import org.apache.commons.fileupload.util.LimitedInputStream;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.w3c.dom.DOMException;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
+import org.w3c.dom.*;
 import org.xml.sax.SAXException;
-
+import org.xml.sax.SAXParseException;
 import ubic.basecode.util.DateUtil;
 import ubic.basecode.util.StringUtil;
 import ubic.gemma.core.loader.entrez.pubmed.PubMedXMLFetcher;
@@ -61,10 +37,27 @@ import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.MedicalSubjectHeading;
 import ubic.gemma.persistence.util.Settings;
 
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.xpath.*;
+import java.io.*;
+import java.lang.reflect.Array;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.*;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
+
 /**
  * Gets records from GEO and compares them to Gemma. This is used to identify data sets that are new in GEO and not in
  * Gemma.
- *
+ * <p>
  * See <a href="https://www.ncbi.nlm.nih.gov/geo/info/geo_paccess.html">Programmatic access to GEO</a> for
  * some information.
  *
@@ -72,7 +65,11 @@ import ubic.gemma.persistence.util.Settings;
  */
 public class GeoBrowser {
 
-    private static final DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
+    /**
+     * Maximum size of a MINiML record in bytes.
+     * @see #openUrlWithMaxSize(URL, long)
+     */
+    private static final long MAX_MINIML_RECORD_SIZE = 100_000_000;
 
     private static final String EFETCH = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi?db=gds&";
     private static final String EPLATRETRIEVE = "https://eutls.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=gds&term=gpl[ETYP]+AND+(mouse[orgn]+OR+human[orgn]+OR+rat[orgn])";
@@ -86,38 +83,39 @@ public class GeoBrowser {
     private static final String GEO_BROWSE_URL = "https://www.ncbi.nlm.nih.gov/geo/browse/?view=series&zsort=date&mode=csv&page=";
     private static final Log log = LogFactory.getLog( GeoBrowser.class.getName() );
     private static final String NCBI_API_KEY = Settings.getString( "entrez.efetch.apikey" );
-    XPathExpression characteristics;
-    XPathExpression source;
 
-    XPathExpression xaccession;
-    XPathExpression xChannel;
-    XPathExpression xLibraryStrategy;
-    XPathFactory xFactory = XPathFactory.newInstance();
-    XPathExpression xgpl;
-    XPathExpression xnumSamples;
-    XPathExpression xorganisms;
-    XPath xpath = xFactory.newXPath();
-    XPathExpression xPlataccession;
-    XPathExpression xPlatformTech;
-    XPathExpression xpubmed;
-    XPathExpression xRelationType;
-    XPathExpression xOverallDesign;
-    XPathExpression xreleaseDate;
-    XPathExpression xsummary;
-    XPathExpression xtitle;
+    private static final DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
 
-    XPathExpression xtype;
+    private static final XPathExpression characteristics;
+    private static final XPathExpression source;
+    private static final XPathExpression xaccession;
+    private static final XPathExpression xChannel;
+    private static final XPathExpression xLibraryStrategy;
+    private static final XPathExpression xgpl;
+    private static final XPathExpression xnumSamples;
+    private static final XPathExpression xorganisms;
+    private static final XPathExpression xPlataccession;
+    private static final XPathExpression xPlatformTech;
+    private static final XPathExpression xpubmed;
+    private static final XPathExpression xRelationType;
+    private static final XPathExpression xOverallDesign;
+    private static final XPathExpression xreleaseDate;
+    private static final XPathExpression xsummary;
+    private static final XPathExpression xtitle;
+    private static final XPathExpression xtype;
 
     /* locale */
     private static final Locale GEO_LOCALE = Locale.ENGLISH;
-    private final String[] GEO_DATE_FORMATS = new String[] { "MMM dd, yyyy" };
+    private static final String[] GEO_DATE_FORMATS = new String[] { "MMM dd, yyyy" };
 
     @SuppressWarnings("FieldCanBeLocal") // Constant is better
-    private final String GEO_BROWSE_SUFFIX = "&display=";
+    private static final String GEO_BROWSE_SUFFIX = "&display=";
 
-    private PubMedXMLFetcher pubmedFetcher = new PubMedXMLFetcher();
-
-    public GeoBrowser() {
+    static {
+        GeoBrowser.docFactory.setIgnoringComments( true );
+        GeoBrowser.docFactory.setValidating( false );
+        XPathFactory xFactory = XPathFactory.newInstance();
+        XPath xpath = xFactory.newXPath();
         try {
             // Get relevant data from the XML file
             xaccession = xpath.compile( "//DocSum/Item[@Name='GSE']" );
@@ -138,12 +136,12 @@ public class GeoBrowser {
             xPlataccession = xpath.compile( "//DocSum/Item[@Name='GPL']" );
             xPlatformTech = xpath.compile( "//DocSum/Item[@Name='ptechType']" );
             //   XPathExpression xsampleaccs = xpath.compile( "//Item[@Name='Sample']/Item[@Name='Accession']" );
-        } catch ( Exception e ) {
-            throw new RuntimeException( "Error setting up GEOBrowser xpaths: " + e.getMessage() );
+        } catch ( XPathExpressionException e ) {
+            throw new RuntimeException( e );
         }
-
     }
 
+    private final PubMedXMLFetcher pubmedFetcher = new PubMedXMLFetcher();
 
     /**
      * Retrieve records for experiments
@@ -154,29 +152,10 @@ public class GeoBrowser {
         List<GeoRecord> records = new ArrayList<>();
         //https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=gds&term=GSE[ETYP]+AND+(GSE100[accn]+OR+GSE101[accn])&retmax=5000&usehistory=y
 
-        int chunkSize = 10;
-        Collection<String> chunk = new ArrayList<>();
-        for ( String acc : accessions ) {
-            chunk.add( acc );
-
-            if ( chunk.size() == chunkSize ) {
-                String searchUrlString = GeoBrowser.ESEARCH + "(" + StringUtils.join( chunk, "[accn]+OR+" ) + "[accn])&usehistory=y";
-
-                if ( StringUtils.isNotBlank( NCBI_API_KEY ) ) {
-                    searchUrlString = searchUrlString + "&api_key=" + NCBI_API_KEY;
-                }
-
-                getGeoBasicRecords( records, searchUrlString );
-                chunk.clear();
-            }
-
-        }
-
-        if ( !chunk.isEmpty() ) {
-            String searchUrlString = GeoBrowser.ESEARCH + "(" + StringUtils.join( chunk, "[accn]+OR+" ) + "[accn])&usehistory=y";
-
+        for ( List<String> chunk : ListUtils.partition( new ArrayList<>( accessions ), 10 ) ) {
+            String searchUrlString = GeoBrowser.ESEARCH + "(" + chunk.stream().map( GeoBrowser::urlEncode ).collect( Collectors.joining( "[accn]+OR+" ) ) + "[accn])&usehistory=y";
             if ( StringUtils.isNotBlank( NCBI_API_KEY ) ) {
-                searchUrlString = searchUrlString + "&api_key=" + NCBI_API_KEY;
+                searchUrlString = searchUrlString + "&api_key=" + urlEncode( NCBI_API_KEY );
             }
             getGeoBasicRecords( records, searchUrlString );
         }
@@ -187,32 +166,20 @@ public class GeoBrowser {
     private void getGeoBasicRecords( List<GeoRecord> records, String searchUrlString ) throws IOException {
         Document searchDocument;
         URL searchUrl = new URL( searchUrlString );
-        URLConnection conn = searchUrl.openConnection();
-        conn.connect();
 
-        try ( InputStream is = conn.getInputStream() ) {
-
-            GeoBrowser.docFactory.setIgnoringComments( true );
-            GeoBrowser.docFactory.setValidating( false );
-
+        try ( InputStream is = searchUrl.openStream() ) {
             DocumentBuilder builder = GeoBrowser.docFactory.newDocumentBuilder();
             searchDocument = builder.parse( is );
         } catch ( ParserConfigurationException | SAXException e ) {
-            throw new RuntimeException( e );
+            throw new RuntimeException( String.format( "Failed to parse XML for %s", searchUrl ), e );
         }
 
         NodeList countNode = searchDocument.getElementsByTagName( "Count" );
         Node countEl = countNode.item( 0 );
 
-        int count;
-        try {
-            count = Integer.parseInt( XMLUtils.getTextValue( ( Element ) countEl ) );
-        } catch ( NumberFormatException e ) {
-            throw new IOException( "Could not parse count from: " + searchUrl );
-        }
-
+        int count = Integer.parseInt( XMLUtils.getTextValue( ( Element ) countEl ) );
         if ( count == 0 )
-            throw new IOException( "Got no records from: " + searchUrl );
+            throw new RuntimeException( "Got no records from: " + searchUrl );
 
         NodeList qnode = searchDocument.getElementsByTagName( "QueryKey" );
 
@@ -225,87 +192,70 @@ public class GeoBrowser {
         String cookie = XMLUtils.getTextValue( cookieEl );
 
         URL fetchUrl = new URL(
-                GeoBrowser.EFETCH + "&mode=mode.text&query_key=" + queryId + "&WebEnv=" + cookie
-                        + ( StringUtils.isNotBlank( NCBI_API_KEY ) ? "&api_key=" + NCBI_API_KEY : "" ) );
+                GeoBrowser.EFETCH + "&mode=mode.text&query_key=" + urlEncode( queryId ) + "&WebEnv=" + urlEncode( cookie )
+                        + ( StringUtils.isNotBlank( NCBI_API_KEY ) ? "&api_key=" + urlEncode( NCBI_API_KEY ) : "" ) );
 
         StopWatch t = new StopWatch();
         t.start();
-        conn = fetchUrl.openConnection();
-        conn.connect();
 
         Document summaryDocument;
-        try ( InputStream is = conn.getInputStream() ) {
+        NodeList accNodes, titleNodes, sampleNodes, dateNodes, orgnNodes, platformNodes, summaryNodes, typeNodes, pubmedNodes;
+        try ( InputStream is = openUrlWithMaxSize( fetchUrl, MAX_MINIML_RECORD_SIZE ) ) {
             DocumentBuilder builder = GeoBrowser.docFactory.newDocumentBuilder();
             summaryDocument = builder.parse( is );
+            accNodes = ( NodeList ) xaccession.evaluate( summaryDocument, XPathConstants.NODESET );
+            titleNodes = ( NodeList ) xtitle.evaluate( summaryDocument, XPathConstants.NODESET );
+            sampleNodes = ( NodeList ) xnumSamples.evaluate( summaryDocument, XPathConstants.NODESET );
+            dateNodes = ( NodeList ) xreleaseDate.evaluate( summaryDocument, XPathConstants.NODESET );
+            orgnNodes = ( NodeList ) xorganisms.evaluate( summaryDocument, XPathConstants.NODESET );
+            platformNodes = ( NodeList ) xgpl.evaluate( summaryDocument, XPathConstants.NODESET );
+            summaryNodes = ( NodeList ) xsummary.evaluate( summaryDocument, XPathConstants.NODESET );
+            typeNodes = ( NodeList ) xtype.evaluate( summaryDocument, XPathConstants.NODESET );
+            pubmedNodes = ( NodeList ) xpubmed.evaluate( summaryDocument, XPathConstants.NODESET );
+        } catch ( XPathExpressionException | ParserConfigurationException | SAXException e ) {
+            throw new RuntimeException( String.format( "Failed to parse XML for %s", fetchUrl ), e );
+        }
 
-            Object accs = xaccession.evaluate( summaryDocument, XPathConstants.NODESET );
-            NodeList accNodes = ( NodeList ) accs;
+        // Create GeoRecords using information parsed from XML file
+        log.debug( "Got " + accNodes.getLength() + " XML records" );
 
-            Object titles = xtitle.evaluate( summaryDocument, XPathConstants.NODESET );
-            NodeList titleNodes = ( NodeList ) titles;
+        for ( int i = 0; i < accNodes.getLength(); i++ ) {
 
-            Object sampleCounts = xnumSamples.evaluate( summaryDocument, XPathConstants.NODESET );
-            NodeList sampleNodes = ( NodeList ) sampleCounts;
+            GeoRecord record = new GeoRecord();
+            record.setGeoAccession( "GSE" + accNodes.item( i ).getTextContent() );
 
-            Object dates = xreleaseDate.evaluate( summaryDocument, XPathConstants.NODESET );
-            NodeList dateNodes = ( NodeList ) dates;
+            record.setSeriesType( typeNodes.item( i ).getTextContent() );
+            if ( !record.getSeriesType().contains( "Expression profiling" ) ) {
+                continue;
+            }
+            Collection<String> taxa = this.getTaxonCollection( orgnNodes.item( i ).getTextContent() );
 
-            Object organisms = xorganisms.evaluate( summaryDocument, XPathConstants.NODESET );
-            NodeList orgnNodes = ( NodeList ) organisms;
+            record.setOrganisms( taxa );
 
-            Object platforms = xgpl.evaluate( summaryDocument, XPathConstants.NODESET );
-            NodeList platformNodes = ( NodeList ) platforms;
+            record.setTitle( titleNodes.item( i ).getTextContent() );
 
-            Object summary = xsummary.evaluate( summaryDocument, XPathConstants.NODESET );
-            NodeList summaryNodes = ( NodeList ) summary;
+            record.setNumSamples( Integer.parseInt( sampleNodes.item( i ).getTextContent() ) );
 
-            Object type = xtype.evaluate( summaryDocument, XPathConstants.NODESET );
-            NodeList typeNodes = ( NodeList ) type;
-
-            Object pubmed = xpubmed.evaluate( summaryDocument, XPathConstants.NODESET );
-            NodeList pubmedNodes = ( NodeList ) pubmed;
-
-            // Create GeoRecords using information parsed from XML file
-            log.debug( "Got " + accNodes.getLength() + " XML records" );
-
-            for ( int i = 0; i < accNodes.getLength(); i++ ) {
-
-                GeoRecord record = new GeoRecord();
-                record.setGeoAccession( "GSE" + accNodes.item( i ).getTextContent() );
-
-                record.setSeriesType( typeNodes.item( i ).getTextContent() );
-                if ( !record.getSeriesType().contains( "Expression profiling" ) ) {
-                    continue;
-                }
-                Collection<String> taxa = this.getTaxonCollection( orgnNodes.item( i ).getTextContent() );
-
-                record.setOrganisms( taxa );
-
-                record.setTitle( titleNodes.item( i ).getTextContent() );
-
-                record.setNumSamples( Integer.parseInt( sampleNodes.item( i ).getTextContent() ) );
-
+            try {
                 Date date = DateUtil.convertStringToDate( "yyyy/MM/dd", dateNodes.item( i ).getTextContent() );
                 record.setReleaseDate( date );
-
-                // there can be more than one, delimited by ';'
-                String[] platformlist = StringUtils.split( platformNodes.item( i ).getTextContent(), ";" );
-                List<String> finalPlatformIds = new ArrayList<>();
-                for ( String p : platformlist ) {
-                    finalPlatformIds.add( "GPL" + p );
-                }
-
-                String platformS = StringUtils.join( finalPlatformIds, ";" );
-                record.setPlatform( platformS );
-                record.setSummary( summaryNodes.item( i ).getTextContent() );
-                record.setPubMedIds( StringUtils.strip( pubmedNodes.item( i ).getTextContent() ).replaceAll( "\\n", "," ).replaceAll( "\\s*", "" ) );
-                record.setSuperSeries( record.getTitle().contains( "SuperSeries" ) || record.getSummary().contains( "SuperSeries" ) );
-                records.add( record );
-
+            } catch ( ParseException e ) {
+                log.error( String.format( "Failed to parse date for %s", record.getGeoAccession() ), e );
             }
 
-        } catch ( IOException | ParserConfigurationException | ParseException | XPathExpressionException | SAXException e ) {
-            log.error( "Could not parse data: " + searchUrl, e );
+            // there can be more than one, delimited by ';'
+            String[] platformlist = StringUtils.split( platformNodes.item( i ).getTextContent(), ";" );
+            List<String> finalPlatformIds = new ArrayList<>();
+            for ( String p : platformlist ) {
+                finalPlatformIds.add( "GPL" + p );
+            }
+
+            String platformS = StringUtils.join( finalPlatformIds, ";" );
+            record.setPlatform( platformS );
+            record.setSummary( summaryNodes.item( i ).getTextContent() );
+            record.setPubMedIds( StringUtils.strip( pubmedNodes.item( i ).getTextContent() ).replaceAll( "\\n", "," ).replaceAll( "\\s*", "" ) );
+            record.setSuperSeries( record.getTitle().contains( "SuperSeries" ) || record.getSummary().contains( "SuperSeries" ) );
+            records.add( record );
         }
 
         if ( records.isEmpty() ) {
@@ -323,44 +273,30 @@ public class GeoBrowser {
      */
     public Collection<GeoRecord> getAllGEOPlatforms() throws IOException {
 
-        List<GeoRecord> records = new ArrayList<>();
-
         String searchUrlString;
 
         searchUrlString = GeoBrowser.EPLATRETRIEVE + "&retmax=" + 10000 + "&usehistory=y"; //10k is the limit.
 
         if ( StringUtils.isNotBlank( NCBI_API_KEY ) ) {
-            searchUrlString = searchUrlString + "&api_key=" + NCBI_API_KEY;
+            searchUrlString = searchUrlString + "&api_key=" + urlEncode( NCBI_API_KEY );
         }
 
         URL searchUrl = new URL( searchUrlString );
 
         Document searchDocument;
-        URLConnection conn = searchUrl.openConnection();
-        conn.connect();
-        try ( InputStream is = conn.getInputStream() ) {
-
-            GeoBrowser.docFactory.setIgnoringComments( true );
-            GeoBrowser.docFactory.setValidating( false );
-
+        try ( InputStream is = searchUrl.openStream() ) {
             DocumentBuilder builder = GeoBrowser.docFactory.newDocumentBuilder();
             searchDocument = builder.parse( is );
         } catch ( ParserConfigurationException | SAXException e ) {
-            throw new RuntimeException( e );
+            throw new RuntimeException( String.format( "Failed to parse XML for %s", searchUrl ), e );
         }
 
         NodeList countNode = searchDocument.getElementsByTagName( "Count" );
         Node countEl = countNode.item( 0 );
 
-        int count;
-        try {
-            count = Integer.parseInt( XMLUtils.getTextValue( ( Element ) countEl ) );
-        } catch ( NumberFormatException e ) {
-            throw new IOException( "Could not parse count from: " + searchUrl );
-        }
-
+        int count = Integer.parseInt( XMLUtils.getTextValue( ( Element ) countEl ) );
         if ( count == 0 )
-            throw new IOException( "Got no records from: " + searchUrl );
+            throw new RuntimeException( "Got no records from: " + searchUrl );
 
         NodeList qnode = searchDocument.getElementsByTagName( "QueryKey" );
 
@@ -373,61 +309,50 @@ public class GeoBrowser {
         String cookie = XMLUtils.getTextValue( cookieEl );
 
         URL fetchUrl = new URL(
-                GeoBrowser.EFETCH + "&mode=mode.text" + "&query_key=" + queryId + "&retmax="
-                        + 10000 + "&WebEnv=" + cookie
-                        + ( StringUtils.isNotBlank( NCBI_API_KEY ) ? "&api_key=" + NCBI_API_KEY : "" ) );
+                GeoBrowser.EFETCH + "&mode=mode.text" + "&query_key=" + urlEncode( queryId ) + "&retmax="
+                        + 10000 + "&WebEnv=" + urlEncode( cookie )
+                        + ( StringUtils.isNotBlank( NCBI_API_KEY ) ? "&api_key=" + urlEncode( NCBI_API_KEY ) : "" ) );
 
         StopWatch t = new StopWatch();
         t.start();
-        conn = fetchUrl.openConnection();
-        conn.connect();
 
         Document summaryDocument;
-        try ( InputStream is = conn.getInputStream() ) {
+        NodeList accNodes, titleNodes, dateNodes, orgnNodes, summaryNodes, techNodes;
+        try ( InputStream is = openUrlWithMaxSize( fetchUrl, MAX_MINIML_RECORD_SIZE ) ) {
             DocumentBuilder builder = GeoBrowser.docFactory.newDocumentBuilder();
             summaryDocument = builder.parse( is );
+            accNodes = ( NodeList ) xPlataccession.evaluate( summaryDocument, XPathConstants.NODESET );
+            titleNodes = ( NodeList ) xtitle.evaluate( summaryDocument, XPathConstants.NODESET );
+            summaryNodes = ( NodeList ) xsummary.evaluate( summaryDocument, XPathConstants.NODESET );
+            techNodes = ( NodeList ) xPlatformTech.evaluate( summaryDocument, XPathConstants.NODESET );
+            orgnNodes = ( NodeList ) xorganisms.evaluate( summaryDocument, XPathConstants.NODESET );
+            dateNodes = ( NodeList ) xreleaseDate.evaluate( summaryDocument, XPathConstants.NODESET );
+        } catch ( ParserConfigurationException | XPathExpressionException | SAXException | DOMException e ) {
+            log.error( "Could not parse data: " + searchUrl, e );
+            return Collections.emptyList();
+        }
 
-            Object accessions = xPlataccession.evaluate( summaryDocument, XPathConstants.NODESET );
-            NodeList accNodes = ( NodeList ) accessions;
+        // consider n_samples (number of elements) and the number of GSEs, but not every record has them, so it would be trickier.
 
-            Object titles = xtitle.evaluate( summaryDocument, XPathConstants.NODESET );
-            NodeList titleNodes = ( NodeList ) titles;
+        log.debug( "Got " + accNodes.getLength() + " XML records" );
 
-            Object summary = xsummary.evaluate( summaryDocument, XPathConstants.NODESET );
-            NodeList summaryNodes = ( NodeList ) summary;
-
-            Object tech = xPlatformTech.evaluate( summaryDocument, XPathConstants.NODESET );
-            NodeList techNodes = ( NodeList ) tech;
-
-            Object organisms = xorganisms.evaluate( summaryDocument, XPathConstants.NODESET );
-            NodeList orgnNodes = ( NodeList ) organisms;
-
-            Object dates = xreleaseDate.evaluate( summaryDocument, XPathConstants.NODESET );
-            NodeList dateNodes = ( NodeList ) dates;
-
-            // consider n_samples (number of elements) and the number of GSEs, but not every record has them, so it would be trickier.
-
-            log.debug( "Got " + accNodes.getLength() + " XML records" );
-
-            for ( int i = 0; i < accNodes.getLength(); i++ ) {
-
-                GeoRecord record = new GeoRecord();
-
+        List<GeoRecord> records = new ArrayList<>( accNodes.getLength() );
+        for ( int i = 0; i < accNodes.getLength(); i++ ) {
+            GeoRecord record = new GeoRecord();
+            record.setGeoAccession( "GPL" + accNodes.item( i ).getTextContent() );
+            try {
                 Date date = DateUtil.convertStringToDate( "yyyy/MM/dd", dateNodes.item( i ).getTextContent() );
                 record.setReleaseDate( date );
-                record.setGeoAccession( "GPL" + accNodes.item( i ).getTextContent() );
-                record.setTitle( titleNodes.item( i ).getTextContent() );
-                record.setOrganisms( null );
-                record.setSummary( summaryNodes.item( i ).getTextContent() );
-                record.setSeriesType( techNodes.item( i ).getTextContent() ); // slight abuse
-                Collection<String> taxa = this.getTaxonCollection( orgnNodes.item( i ).getTextContent() );
-                record.setOrganisms( taxa );
-                records.add( record );
+            } catch ( ParseException e ) {
+                log.error( String.format( "Failed to parse release date for %s", record.getGeoAccession() ), e );
             }
-
-        } catch ( ParserConfigurationException | XPathExpressionException | SAXException | DOMException | ParseException e ) {
-            log.error( e.getMessage() );
-
+            record.setTitle( titleNodes.item( i ).getTextContent() );
+            record.setOrganisms( null );
+            record.setSummary( summaryNodes.item( i ).getTextContent() );
+            record.setSeriesType( techNodes.item( i ).getTextContent() ); // slight abuse
+            Collection<String> taxa = this.getTaxonCollection( orgnNodes.item( i ).getTextContent() );
+            record.setOrganisms( taxa );
+            records.add( record );
         }
 
         return records;
@@ -459,15 +384,15 @@ public class GeoBrowser {
 
         String platformLimitClause = "";
         if ( limitPlatforms != null && !limitPlatforms.isEmpty() ) {
-            platformLimitClause = "%20AND%20(" + StringUtils.join( limitPlatforms, "[ACCN]%20OR%20" ) + "[ACCN])";
+            platformLimitClause = " AND (" + limitPlatforms.stream().map( s -> s + "[ACCN]" ).collect( Collectors.joining( " OR " ) );
         }
 
         String searchUrlString;
         if ( StringUtils.isBlank( searchTerms ) ) {
-            searchUrlString = GeoBrowser.ERETRIEVE + platformLimitClause + "&retstart=" + start + "&retmax=" + pageSize + "&usehistory=y";
+            searchUrlString = GeoBrowser.ERETRIEVE + urlEncode( platformLimitClause ) + "&retstart=" + start + "&retmax=" + pageSize + "&usehistory=y";
         } else {
             // FIXME: could allow merging in of platformLimitClause. Should really rewrite the way we form these urls to be more modular.
-            searchUrlString = GeoBrowser.ESEARCH + searchTerms + "&retstart=" + start + "&retmax=" + pageSize
+            searchUrlString = GeoBrowser.ESEARCH + urlEncode( searchTerms ) + "&retstart=" + start + "&retmax=" + pageSize
                     + "&usehistory=y";
         }
 
@@ -478,31 +403,19 @@ public class GeoBrowser {
         URL searchUrl = new URL( searchUrlString );
 
         Document searchDocument;
-        URLConnection conn = searchUrl.openConnection();
-        conn.connect();
-        try ( InputStream is = conn.getInputStream() ) {
-
-            GeoBrowser.docFactory.setIgnoringComments( true );
-            GeoBrowser.docFactory.setValidating( false );
-
+        try ( InputStream is = searchUrl.openStream() ) {
             DocumentBuilder builder = GeoBrowser.docFactory.newDocumentBuilder();
             searchDocument = builder.parse( is );
         } catch ( ParserConfigurationException | SAXException e ) {
-            throw new RuntimeException( e );
+            throw new RuntimeException( String.format( "Failed to parse XML for %s", searchUrl ), e );
         }
 
         NodeList countNode = searchDocument.getElementsByTagName( "Count" );
         Node countEl = countNode.item( 0 );
 
-        int count;
-        try {
-            count = Integer.parseInt( XMLUtils.getTextValue( ( Element ) countEl ) );
-        } catch ( NumberFormatException e ) {
-            throw new IOException( "Could not parse count from: " + searchUrl );
-        }
-
+        int count = Integer.parseInt( XMLUtils.getTextValue( ( Element ) countEl ) );
         if ( count == 0 )
-            throw new IOException( "Got no records from: " + searchUrl );
+            throw new RuntimeException( "Got no records from: " + searchUrl );
 
         NodeList qnode = searchDocument.getElementsByTagName( "QueryKey" );
 
@@ -515,125 +428,105 @@ public class GeoBrowser {
         String cookie = XMLUtils.getTextValue( cookieEl );
 
         URL fetchUrl = new URL(
-                GeoBrowser.EFETCH + "&mode=mode.text" + "&query_key=" + queryId + "&retstart=" + start + "&retmax="
-                        + pageSize + "&WebEnv=" + cookie
-                        + ( StringUtils.isNotBlank( NCBI_API_KEY ) ? "&api_key=" + NCBI_API_KEY : "" ) );
+                GeoBrowser.EFETCH + "&mode=mode.text" + "&query_key=" + urlEncode( queryId ) + "&retstart=" + start + "&retmax="
+                        + pageSize + "&WebEnv=" + urlEncode( cookie )
+                        + ( StringUtils.isNotBlank( NCBI_API_KEY ) ? "&api_key=" + urlEncode( NCBI_API_KEY ) : "" ) );
 
         StopWatch t = new StopWatch();
         DateFormat dateFormat = new SimpleDateFormat( "yyyy.MM.dd", Locale.ENGLISH ); // for logging
 
         t.start();
-        conn = fetchUrl.openConnection();
-        conn.connect();
         int rawRecords = 0;
 
         Document summaryDocument;
-        try ( InputStream is = conn.getInputStream() ) {
+        NodeList accNodes, titleNodes, sampleNodes, dateNodes, orgnNodes, platformNodes, summaryNodes, typeNodes, pubmedNodes;
+        try ( InputStream is = fetchUrl.openStream() ) {
             DocumentBuilder builder = GeoBrowser.docFactory.newDocumentBuilder();
             summaryDocument = builder.parse( is );
+            accNodes = ( NodeList ) xaccession.evaluate( summaryDocument, XPathConstants.NODESET );
+            titleNodes = ( NodeList ) xtitle.evaluate( summaryDocument, XPathConstants.NODESET );
+            sampleNodes = ( NodeList ) xnumSamples.evaluate( summaryDocument, XPathConstants.NODESET );
+            dateNodes = ( NodeList ) xreleaseDate.evaluate( summaryDocument, XPathConstants.NODESET );
+            orgnNodes = ( NodeList ) xorganisms.evaluate( summaryDocument, XPathConstants.NODESET );
+            platformNodes = ( NodeList ) xgpl.evaluate( summaryDocument, XPathConstants.NODESET );
+            summaryNodes = ( NodeList ) xsummary.evaluate( summaryDocument, XPathConstants.NODESET );
+            typeNodes = ( NodeList ) xtype.evaluate( summaryDocument, XPathConstants.NODESET );
+            pubmedNodes = ( NodeList ) xpubmed.evaluate( summaryDocument, XPathConstants.NODESET );
+            // NodeList sampleLists = ( NodeList ) xsamples.evaluate( summaryDocument, XPathConstants.NODESET );
+        } catch ( ParserConfigurationException | XPathExpressionException | SAXException e ) {
+            throw new RuntimeException( String.format( "Failed to parse XML for %s", searchUrl ), e );
+        }
 
-            Object accessions = xaccession.evaluate( summaryDocument, XPathConstants.NODESET );
-            NodeList accNodes = ( NodeList ) accessions;
+        // Create GeoRecords using information parsed from XML file
+        log.debug( String.format( "Got %d XML records in %d ms", accNodes.getLength(), t.getTime( TimeUnit.MILLISECONDS ) ) );
 
-            Object titles = xtitle.evaluate( summaryDocument, XPathConstants.NODESET );
-            NodeList titleNodes = ( NodeList ) titles;
+        for ( int i = 0; i < accNodes.getLength(); i++ ) {
+            t.reset();
+            t.start();
 
-            Object sampleCounts = xnumSamples.evaluate( summaryDocument, XPathConstants.NODESET );
-            NodeList sampleNodes = ( NodeList ) sampleCounts;
+            GeoRecord record = new GeoRecord();
 
-            Object dates = xreleaseDate.evaluate( summaryDocument, XPathConstants.NODESET );
-            NodeList dateNodes = ( NodeList ) dates;
+            rawRecords++; // prior to any filtering.
 
-            Object organisms = xorganisms.evaluate( summaryDocument, XPathConstants.NODESET );
-            NodeList orgnNodes = ( NodeList ) organisms;
+            record.setGeoAccession( "GSE" + accNodes.item( i ).getTextContent() );
 
-            Object platforms = xgpl.evaluate( summaryDocument, XPathConstants.NODESET );
-            NodeList platformNodes = ( NodeList ) platforms;
-
-            Object summary = xsummary.evaluate( summaryDocument, XPathConstants.NODESET );
-            NodeList summaryNodes = ( NodeList ) summary;
-
-            Object type = xtype.evaluate( summaryDocument, XPathConstants.NODESET );
-            NodeList typeNodes = ( NodeList ) type;
-
-            Object pubmed = xpubmed.evaluate( summaryDocument, XPathConstants.NODESET );
-            NodeList pubmedNodes = ( NodeList ) pubmed;
-
-            //                Object samples = xsamples.evaluate( summaryDocument, XPathConstants.NODESET );
-            //                NodeList sampleLists = ( NodeList ) samples;
-
-            // Create GeoRecords using information parsed from XML file
-            log.debug( "Got " + accNodes.getLength() + " XML records" );
-
-            for ( int i = 0; i < accNodes.getLength(); i++ ) {
-
-                GeoRecord record = new GeoRecord();
-
-                rawRecords++; // prior to any filtering.
-
-                record.setGeoAccession( "GSE" + accNodes.item( i ).getTextContent() );
-
-                log.debug( record.getGeoAccession() );
-
-                record.setSeriesType( typeNodes.item( i ).getTextContent() );
-                if ( !record.getSeriesType().contains( "Expression profiling" ) ) {
-                    continue;
-                }
-
-                Collection<String> taxa = this.getTaxonCollection( orgnNodes.item( i ).getTextContent() );
-                if ( allowedTaxa != null && !allowedTaxa.isEmpty() ) {
-                    boolean useableTaxa = false;
-                    for ( String ta : taxa ) {
-                        if ( allowedTaxa.contains( ta ) ) {
-                            useableTaxa = true;
-                        }
-                    }
-                    if ( !useableTaxa ) {
-                        continue;
-                    }
-                }
-                record.setOrganisms( taxa );
-
-                record.setTitle( titleNodes.item( i ).getTextContent() );
-
-                record.setNumSamples( Integer.parseInt( sampleNodes.item( i ).getTextContent() ) );
-
-                Date date = DateUtil.convertStringToDate( "yyyy/MM/dd", dateNodes.item( i ).getTextContent() );
-                record.setReleaseDate( date );
-
-                // there can be more than one, delimited by ';'
-                String[] platformlist = StringUtils.split( platformNodes.item( i ).getTextContent(), ";" );
-                List<String> finalPlatformIds = new ArrayList<>();
-                for ( String p : platformlist ) {
-                    finalPlatformIds.add( "GPL" + p );
-                }
-
-                String platformS = StringUtils.join( finalPlatformIds, ";" );
-
-                record.setPlatform( platformS );
-
-                record.setSummary( summaryNodes.item( i ).getTextContent() );
-                record.setPubMedIds( StringUtils.strip( pubmedNodes.item( i ).getTextContent() ).replaceAll( "\\n", "," ).replaceAll( "\\s*", "" ) );
-                record.setSuperSeries( record.getTitle().contains( "SuperSeries" ) || record.getSummary().contains( "SuperSeries" ) );
-
-                if ( detailed ) {
-                    getDetails( record );
-                }
-
-                records.add( record );
-
-                if ( detailed ) {
-                    // without details this goes a lot quicker so feedback isn't very important
-                    System.err.println(
-                            "Processed: " + record.getGeoAccession() + " (" + dateFormat.format( record.getReleaseDate() ) + "), " + record.getNumSamples() + " samples, " + t.getTime() / 1000 + "s " );
-                }
-                t.reset();
-                t.start();
+            record.setSeriesType( typeNodes.item( i ).getTextContent() );
+            if ( !record.getSeriesType().contains( "Expression profiling" ) ) {
+                continue;
             }
 
-        } catch ( IOException | ParserConfigurationException | ParseException | XPathExpressionException | SAXException e ) {
-            log.error( "Could not parse data: " + searchUrl, e );
+            Collection<String> taxa = this.getTaxonCollection( orgnNodes.item( i ).getTextContent() );
+            if ( allowedTaxa != null && !allowedTaxa.isEmpty() ) {
+                boolean useableTaxa = false;
+                for ( String ta : taxa ) {
+                    if ( allowedTaxa.contains( ta ) ) {
+                        useableTaxa = true;
+                        break;
+                    }
+                }
+                if ( !useableTaxa ) {
+                    continue;
+                }
+            }
+            record.setOrganisms( taxa );
+
+            record.setTitle( titleNodes.item( i ).getTextContent() );
+
+            record.setNumSamples( Integer.parseInt( sampleNodes.item( i ).getTextContent() ) );
+
+            try {
+                Date date = DateUtil.convertStringToDate( "yyyy/MM/dd", dateNodes.item( i ).getTextContent() );
+                record.setReleaseDate( date );
+            } catch ( ParseException e ) {
+                log.error( String.format( "Failed to parse date for %s", record.getGeoAccession() ) );
+            }
+
+            // there can be more than one, delimited by ';'
+            String[] platformlist = StringUtils.split( platformNodes.item( i ).getTextContent(), ";" );
+            List<String> finalPlatformIds = new ArrayList<>();
+            for ( String p : platformlist ) {
+                finalPlatformIds.add( "GPL" + p );
+            }
+
+            String platformS = StringUtils.join( finalPlatformIds, ";" );
+
+            record.setPlatform( platformS );
+
+            record.setSummary( summaryNodes.item( i ).getTextContent() );
+            record.setPubMedIds( StringUtils.strip( pubmedNodes.item( i ).getTextContent() ).replaceAll( "\\n", "," ).replaceAll( "\\s*", "" ) );
+            record.setSuperSeries( record.getTitle().contains( "SuperSeries" ) || record.getSummary().contains( "SuperSeries" ) );
+
+            if ( detailed ) {
+                // without details this goes a lot quicker so feedback isn't very important
+                log.debug( "Obtaining details for " + record.getGeoAccession() + " " + record.getNumSamples() + " samples..." );
+                getDetails( record );
+            }
+
+            records.add( record );
+
+            log.debug( "Processed: " + record.getGeoAccession() + " (" + dateFormat.format( record.getReleaseDate() ) + "), " + record.getNumSamples() + " samples, " + t.getTime() / 1000 + "s " );
         }
+
 
         if ( records.isEmpty() && rawRecords != 0 ) {
             /*
@@ -649,7 +542,6 @@ public class GeoBrowser {
         }
 
         return records;
-
     }
 
     /**
@@ -660,26 +552,16 @@ public class GeoBrowser {
      * @param  pageSize       page size
      * @return list of GeoRecords
      * @throws IOException    if there is a problem while manipulating the file
-     * @throws ParseException if there is a parsing problem
      */
-    public List<GeoRecord> getRecentGeoRecords( int startPage, int pageSize ) throws IOException, ParseException {
+    public List<GeoRecord> getRecentGeoRecords( int startPage, int pageSize ) throws IOException {
 
         if ( startPage < 0 || pageSize < 0 )
             throw new IllegalArgumentException( "Values must be greater than zero " );
 
         List<GeoRecord> records = new ArrayList<>();
-        URL url;
-        try {
-            url = new URL( GEO_BROWSE_URL + startPage + GEO_BROWSE_SUFFIX + pageSize );
-        } catch ( MalformedURLException e ) {
-            throw new RuntimeException( "Invalid URL: " + GEO_BROWSE_URL + startPage + GEO_BROWSE_SUFFIX + pageSize,
-                    e );
-        }
+        URL url = new URL( GEO_BROWSE_URL + startPage + GEO_BROWSE_SUFFIX + pageSize );
 
-        URLConnection conn = url.openConnection();
-        conn.connect();
-        try ( InputStream is = conn.getInputStream();
-                BufferedReader br = new BufferedReader( new InputStreamReader( is ) ) ) {
+        try ( BufferedReader br = new BufferedReader( new InputStreamReader( url.openStream() ) ) ) {
 
             // We are getting a tab delimited file.
 
@@ -720,9 +602,13 @@ public class GeoBrowser {
                         .replaceAll( GeoBrowser.FLANKING_QUOTES_REGEX, "" ).split( ";" );
                 geoRecord.getOrganisms().addAll( Arrays.asList( taxons ) );
 
-                Date date = DateUtils.parseDate( fields[columnNameToIndex.get( "Release Date" )]
-                        .replaceAll( GeoBrowser.FLANKING_QUOTES_REGEX, "" ), GEO_LOCALE, GEO_DATE_FORMATS );
-                geoRecord.setReleaseDate( date );
+                try {
+                    Date date = DateUtils.parseDate( fields[columnNameToIndex.get( "Release Date" )]
+                            .replaceAll( GeoBrowser.FLANKING_QUOTES_REGEX, "" ), GEO_LOCALE, GEO_DATE_FORMATS );
+                    geoRecord.setReleaseDate( date );
+                } catch ( ParseException e ) {
+                    log.error( String.format( "Failed to parse date for %s", geoRecord.getGeoAccession() ) );
+                }
 
                 geoRecord.setSeriesType( fields[columnNameToIndex.get( "Series Type" )] );
 
@@ -742,35 +628,33 @@ public class GeoBrowser {
      * exposed for testing
      *
      */
-    void parseMINiML( GeoRecord record, InputStream is ) {
-
+    void parseMINiML( GeoRecord record, InputStream is ) throws IOException {
+        // e.g. https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE180363&targ=gse&form=xml&view=full
+        Document detailsDocument;
+        NodeList relTypeNodes;
+        String overallDesign;
         try {
-
-            // e.g. https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE180363&targ=gse&form=xml&view=full
-            DocumentBuilder builderD = GeoBrowser.docFactory.newDocumentBuilder(); // can move out
-            Document detailsDocument = builderD.parse( is );
-            Object relationTypes = xRelationType.evaluate( detailsDocument, XPathConstants.NODESET );
-            NodeList relTypeNodes = ( NodeList ) relationTypes;
-
-            for ( int i = 0; i < relTypeNodes.getLength(); i++ ) {
-
-                String relType = relTypeNodes.item( i ).getAttributes().getNamedItem( "type" ).getTextContent();
-                String relTo = relTypeNodes.item( i ).getAttributes().getNamedItem( "target" ).getTextContent();
-
-                if ( relType.startsWith( "SubSeries" ) ) {
-                    record.setSubSeries( true );
-                    record.setSubSeriesOf( relTo );
-                }
-            }
-
-            String overallDesign = ( String ) xOverallDesign.evaluate( detailsDocument, XPathConstants.STRING );
-            if ( overallDesign != null )
-                record.setOverallDesign( StringUtils.remove( overallDesign, '\n' ) );
-
-        } catch ( IOException | ParserConfigurationException | SAXException | XPathExpressionException e ) {
-            log.error( e.getMessage() + " while processing MINiML for " + record.getGeoAccession()
-                    + ", subseries status will not be determined." );
+            DocumentBuilder builderD = GeoBrowser.docFactory.newDocumentBuilder();
+            detailsDocument = builderD.parse( is );
+            relTypeNodes = ( NodeList ) xRelationType.evaluate( detailsDocument, XPathConstants.NODESET );
+            overallDesign = ( String ) xOverallDesign.evaluate( detailsDocument, XPathConstants.STRING );
+        } catch ( ParserConfigurationException | XPathExpressionException | SAXException e ) {
+            throw new RuntimeException( "Failed to parse MINiML", e );
         }
+
+        for ( int i = 0; i < relTypeNodes.getLength(); i++ ) {
+
+            String relType = relTypeNodes.item( i ).getAttributes().getNamedItem( "type" ).getTextContent();
+            String relTo = relTypeNodes.item( i ).getAttributes().getNamedItem( "target" ).getTextContent();
+
+            if ( relType.startsWith( "SubSeries" ) ) {
+                record.setSubSeries( true );
+                record.setSubSeriesOf( relTo );
+            }
+        }
+
+        if ( overallDesign != null )
+            record.setOverallDesign( StringUtils.remove( overallDesign, '\n' ) );
     }
 
     /**
@@ -782,8 +666,7 @@ public class GeoBrowser {
         // Source, Characteristics
         DocumentBuilder builder = GeoBrowser.docFactory.newDocumentBuilder(); // can move out
         Document detailsDocument = builder.parse( isd );
-        Object channels = xChannel.evaluate( detailsDocument, XPathConstants.NODESET );
-        NodeList channelNodes = ( NodeList ) channels;
+        NodeList channelNodes = ( NodeList ) xChannel.evaluate( detailsDocument, XPathConstants.NODESET );
         Set<String> props = new HashSet<>(); // expect duplicate terms
 
         for ( int i = 0; i < channelNodes.getLength(); i++ ) {
@@ -826,104 +709,106 @@ public class GeoBrowser {
     /**
      * Do another query to NCBI to fetch additional information not present in the eutils. Specifically: whether this is
      * a subseries, and MeSH headings associated with any publication.
-     *
+     * <p>
+     * This method is resilient to various errors, ensuring that the GEO record can still be returned even if all the
+     * details might not be filled.
      */
     private void getDetails( GeoRecord record ) {
-        URL miniMLURL = null;
-        try {
-
-            if ( !record.isSuperSeries() ) {
-                miniMLURL = new URL(
-                        "https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?targ=gse&form=xml&view=full&acc=" + record.getGeoAccession() );
-
-                /*
-                 * I can't find a better way to get subseries info: the eutils doesn't provide this
-                 * information other than mentioning (in the summary text) when a series is a superseries. Determining
-                 * subseries
-                 * status is impossible without another query. I don't think batch queries for MiniML is possible.
-                 */
-
-                URLConnection dconn = miniMLURL.openConnection();
-                dconn.connect();
-
-                try ( InputStream isd = dconn.getInputStream() ) {
-                    parseMINiML( record, isd );
-                }
+        if ( !record.isSuperSeries() ) {
+            URL miniMLURL;
+            try {
+                miniMLURL = new URL( "https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?targ=gse&form=xml&view=full&acc=" + urlEncode( record.getGeoAccession() ) );
+            } catch ( MalformedURLException e ) {
+                throw new RuntimeException( e );
             }
 
-            getSampleDetails( record );
-
-            // another query. Note that new Pubmed IDs generally don't have mesh headings yet, so this might not be that useful.
-            if ( StringUtils.isNotBlank( record.getPubMedIds() ) ) {
-                getMeshHeadings( record );
+            /*
+             * I can't find a better way to get subseries info: the eutils doesn't provide this
+             * information other than mentioning (in the summary text) when a series is a superseries. Determining
+             * subseries
+             * status is impossible without another query. I don't think batch queries for MiniML is possible.
+             */
+            try ( InputStream isd = openUrlWithMaxSize( miniMLURL, MAX_MINIML_RECORD_SIZE ) ) {
+                parseMINiML( record, isd );
+            } catch ( IOException e ) {
+                log.error( e.getMessage() + " while processing MINiML for " + record.getGeoAccession()
+                        + ", subseries status will not be determined." );
             }
-
-            // get sample information
-            // https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSM5230452&targ=self&form=xml&view=full
-
-        } catch ( IOException e ) {
-            // This is particularly common (and reproducible) for data sets with >300 samples, but can happen other times
-            log.error( "Error while getting details for " + record.getGeoAccession() + ": " + e.getMessage() );
         }
 
+        try {
+            getSampleDetails( record );
+        } catch ( IOException e ) {
+            log.error( e.getMessage() + " while processing MINiML for " + record.getGeoAccession()
+                    + ", sample details will not be obtained" );
+        }
+
+        // another query. Note that new Pubmed IDs generally don't have mesh headings yet, so this might not be that useful.
+        if ( StringUtils.isNotBlank( record.getPubMedIds() ) ) {
+            try {
+                getMeshHeadings( record );
+            } catch ( IOException e ) {
+                log.error( "Could not get MeSH headings for " + record.getGeoAccession() + ": " + e.getMessage() );
+            }
+        }
+
+        // get sample information
+        // https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSM5230452&targ=self&form=xml&view=full
     }
 
     /**
      * @param  record      to process
      */
     private void getMeshHeadings( GeoRecord record ) throws IOException {
-        try {
-            Collection<String> meshheadings = new ArrayList<>();
-            List<String> idlist = Arrays.asList( record.getPubMedIds().split( "[,\\s]+" ) );
-            List<Integer> idints = new ArrayList<>();
-            for ( String s : idlist ) {
-                try {
-                    idints.add( Integer.parseInt( s ) );
-                } catch ( NumberFormatException e ) {
-                    log.warn( "Invalid PubMed ID '" + s + "' for " + record.getGeoAccession() );
-                }
+        Collection<String> meshheadings = new ArrayList<>();
+        String[] idlist = record.getPubMedIds().split( "[,\\s]+" );
+        List<Integer> idints = new ArrayList<>();
+        for ( String s : idlist ) {
+            try {
+                idints.add( Integer.parseInt( s ) );
+            } catch ( NumberFormatException e ) {
+                log.warn( "Invalid PubMed ID '" + s + "' for " + record.getGeoAccession() );
             }
-            Collection<BibliographicReference> refs = pubmedFetcher.retrieveByHTTP( idints );
-            for ( BibliographicReference ref : refs ) {
-                for ( MedicalSubjectHeading mesh : ref.getMeshTerms() ) {
-                    meshheadings.add( mesh.getTerm() );
-                }
-            }
-
-            if ( !meshheadings.isEmpty() )
-                record.setMeshHeadings( StringUtils.join( meshheadings, ";" ) );
-        } catch ( IOException e ) {
-            log.error( "Could not get MeSH headings for " + record.getGeoAccession() + ": " + e.getMessage() );
         }
+        Collection<BibliographicReference> refs = pubmedFetcher.retrieveByHTTP( idints );
+        for ( BibliographicReference ref : refs ) {
+            for ( MedicalSubjectHeading mesh : ref.getMeshTerms() ) {
+                meshheadings.add( mesh.getTerm() );
+            }
+        }
+
+        if ( !meshheadings.isEmpty() )
+            record.setMeshHeadings( StringUtils.join( meshheadings, ";" ) );
     }
 
     /**
      * Fetch and parse MINiML for samples.
      *
      */
-    private void getSampleDetails( GeoRecord record ) {
-
-        try {
-
-            // Fetch miniML for the samples.
-            // e.g. https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE171682&targ=gsm&form=xml&view=full
-            URL sampleMINIMLURL = new URL(
-                    "https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?targ=gsm&form=xml&view=full&acc=" + record.getGeoAccession() );
-            URLConnection sconn = sampleMINIMLURL.openConnection();
-            sconn.connect();
-
-            try ( InputStream isd = sconn.getInputStream() ) {
-
-                parseSampleMiNIML( record, isd );
-
+    private void getSampleDetails( GeoRecord record ) throws IOException {
+        // Fetch miniML for the samples.
+        // e.g. https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE171682&targ=gsm&form=xml&view=full
+        URL sampleMINIMLURL = new URL( "https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?targ=gsm&form=xml&view=full&acc=" + urlEncode( record.getGeoAccession() ) );
+        log.debug( String.format( "Obtaining sample details for %s from %s...", record.getGeoAccession(), sampleMINIMLURL ) );
+        try ( InputStream isd = openUrlWithMaxSize( sampleMINIMLURL, MAX_MINIML_RECORD_SIZE ) ) {
+            parseSampleMiNIML( record, isd );
+        } catch ( XPathExpressionException | ParserConfigurationException | SAXException e ) {
+            if ( isLikelyCausedByAPrivateGeoRecord( e ) ) {
+                throw new LikelyNonPublicGeoRecordException( record.getGeoAccession(), e );
+            } else {
+                throw new RuntimeException( String.format( "Failed to parse MINiML from URL %s", sampleMINIMLURL ), e );
             }
-
-        } catch ( IOException | ParserConfigurationException | SAXException | XPathExpressionException e ) {
-
-            log.error( e.getMessage() + " while processing MINiML for " + record.getGeoAccession()
-                    + ", sample details will not be obtained" );
         }
     }
+
+    /**
+     * GEO delivers an HTML document for non-public datasets
+     * it's possible for this specific case because we're not querying a dataset in particular
+     */
+    private boolean isLikelyCausedByAPrivateGeoRecord( Exception e ) {
+        return e instanceof SAXParseException && e.getMessage().contains( "White spaces are required between publicId and systemId" );
+    }
+
 
     /**
      * Extracts taxon names from input string; returns a collection of taxon names
@@ -943,4 +828,27 @@ public class GeoBrowser {
         return taxa;
     }
 
+    private static String urlEncode( String s ) {
+        try {
+            return URLEncoder.encode( s, StandardCharsets.UTF_8.name() );
+        } catch ( UnsupportedEncodingException e ) {
+            throw new RuntimeException( e );
+        }
+    }
+
+    /**
+     * Open an URL with a maximum size, raising an {@link IOException} if exceeded.
+     * <p>
+     * This is trick we use to read from GEO MINiML because the HTTP payload does not advertise its size via a
+     * {@code Content-Length} header.
+     */
+    private static InputStream openUrlWithMaxSize( URL url, long maxSize ) throws IOException {
+        InputStream inputStream = url.openStream();
+        return new LimitedInputStream( inputStream, maxSize ) {
+            @Override
+            protected void raiseError( long pSizeMax, long pCount ) throws IOException {
+                throw new IOException( String.format( "Document exceeds %d B.", maxSize ) );
+            }
+        };
+    }
 }

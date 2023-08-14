@@ -18,7 +18,10 @@
  */
 package ubic.gemma.persistence.service;
 
+import ubic.gemma.model.common.Identifiable;
+
 import javax.annotation.*;
+import java.io.Serializable;
 import java.util.Collection;
 
 /**
@@ -30,9 +33,14 @@ import java.util.Collection;
 public interface BaseDao<T> {
 
     /**
-     * Obtain the element class of this.
+     * Obtain the element class of {@link T}.
      */
     Class<? extends T> getElementClass();
+
+    /**
+     * Obtain the identifiable property name for {@link T}.
+     */
+    String getIdentifierPropertyName();
 
     /**
      * Crates all the given entities in the persistent storage.
@@ -40,6 +48,7 @@ public interface BaseDao<T> {
      * @param entities the entities to be crated.
      * @return collection of entities representing the instances in the persistent storage that were created.
      */
+    @CheckReturnValue
     Collection<T> create( Collection<T> entities );
 
     /**
@@ -54,6 +63,7 @@ public interface BaseDao<T> {
      * @param entity the entity to create
      * @return the persistent version of the entity
      */
+    @CheckReturnValue
     T create( T entity );
 
     /**
@@ -95,6 +105,8 @@ public interface BaseDao<T> {
      *
      * @param id the id of entity to load.
      * @return the entity with given ID, or null if such entity does not exist or if the passed ID was null
+     *
+     * @see org.hibernate.Session#get(Class, Serializable)
      */
     @Nullable
     T load( Long id );
@@ -105,6 +117,26 @@ public interface BaseDao<T> {
      * @return a collection containing all instances that are currently accessible.
      */
     Collection<T> loadAll();
+
+    /**
+     * Load references for all the given IDs.
+     * <p>
+     * Entities already in the session will be returned directly.
+     */
+    Collection<T> loadReference( Collection<Long> ids );
+
+    /**
+     * Load reference for an entity.
+     * <p>
+     * If the entity is already in the session, it will be returned instead. Note that unlike {@link #load(Long)}, this
+     * method will not return null if the entity does not exist.
+     * <p>
+     * You may freely access the {@link Identifiable#getId()} field without triggering proxy initialization.
+     *
+     * @see org.hibernate.Session#load(Object, Serializable)
+     */
+    @Nonnull
+    T loadReference( Long id );
 
     /**
      * Counts all instances of specific class in the persitent storage.

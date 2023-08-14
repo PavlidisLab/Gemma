@@ -4,9 +4,8 @@
         "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
 
 <hibernate-mapping>
-    <class name="ubic.gemma.model.analysis.expression.pca.Eigenvector" table="EIGENVECTOR"
+    <class name="ubic.gemma.model.analysis.expression.pca.Eigenvector" table="EIGENVECTOR" mutable="false"
     >
-        <cache usage="read-write"/>
         <id name="id" type="java.lang.Long" unsaved-value="null">
             <column name="ID" sql-type="BIGINT"/>
             <generator class="native">
@@ -15,7 +14,7 @@
         <property name="componentNumber" type="java.lang.Integer">
             <column name="COMPONENT_NUMBER" not-null="true" unique="false" sql-type="INTEGER"/>
         </property>
-        <property name="vector" type="ubic.gemma.persistence.model.usertypes.HibernateByteBlobType">
+        <property name="vector" type="org.hibernate.type.MaterializedBlobType">
             <column name="VECTOR" not-null="true" unique="false" sql-type="LONGBLOB"/>
         </property>
     </class>

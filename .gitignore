@@ -116,8 +116,9 @@ gemma-core/src/main/uml/*.bak
 
 # IntelliJ
 /out/
-.idea/
+.idea/*
 !.idea/codeStyles/
+!.idea/runConfigurations/
 *.iml
 
 # Eclipse
@@ -129,3 +130,8 @@ gemma-core/src/main/uml/*.bak
 # JIRA plugin
 atlassian-ide-plugin.xml
 !/gemma-core/src/main/
+
+# a user-defined Gemma.properties file
+/Gemma.properties
+/gemma-data
+/gemma-logs

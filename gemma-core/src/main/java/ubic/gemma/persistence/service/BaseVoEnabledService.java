@@ -1,9 +1,7 @@
 package ubic.gemma.persistence.service;
 
-import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.common.Identifiable;
-import ubic.gemma.persistence.util.ObjectFilter;
 
 import javax.annotation.Nullable;
 import java.util.Collection;
@@ -14,7 +12,7 @@ import java.util.List;
  * Interface for services that provide value object functionality.
  */
 public interface BaseVoEnabledService<O extends Identifiable, VO extends IdentifiableValueObject<O>>
-        extends BaseService<O> {
+        extends BaseReadOnlyService<O> {
 
     /**
      * @see BaseVoEnabledDao#loadValueObject(Identifiable)

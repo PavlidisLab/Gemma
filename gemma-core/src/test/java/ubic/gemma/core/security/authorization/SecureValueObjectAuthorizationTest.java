@@ -88,14 +88,14 @@ public class SecureValueObjectAuthorizationTest extends BaseSpringContextTest {
 
         Collection<ExpressionExperimentValueObject> valueObjects;
 
-        super.runAsUser( aDifferentUsername );
+        super.runAsUser( aDifferentUsername, false );
 
         // should be able to see the ones which are
         valueObjects = eeService.loadValueObjectsByIds( eeIds, true );
 
         assertEquals( 1, valueObjects.size() );
 
-        super.runAsUser( ownerUsername );
+        super.runAsUser( ownerUsername, false );
 
         valueObjects = eeService.loadValueObjectsByIds( eeIds, true );
 

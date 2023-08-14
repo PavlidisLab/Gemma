@@ -18,11 +18,6 @@
  */
 package ubic.gemma.core.security.audit;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Random;
@@ -47,6 +42,8 @@ import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+
+import static org.junit.Assert.*;
 
 /**
  * Test of adding audit events when objects are created, updated or deleted.
@@ -161,7 +158,7 @@ public class AuditAdviceTest extends BaseSpringContextTest {
         assertEquals( 1, ee.getAuditTrail().getEvents().size() );
         assertNotNull( ee.getCurationDetails() );
         assertNotNull( ee.getCurationDetails().getId() );
-        assertNotNull( ee.getCurationDetails().getLastUpdated() );
+        assertNull( ee.getCurationDetails().getLastUpdated() );
         assertNotNull( ee.getAuditTrail().getCreationEvent().getId() );
     }
 
@@ -200,7 +197,7 @@ public class AuditAdviceTest extends BaseSpringContextTest {
                             assertEquals( 1, ee.getAuditTrail().getEvents().size() );
                             assertNotNull( ee.getCurationDetails() );
                             assertNotNull( ee.getCurationDetails().getId() );
-                            assertNotNull( ee.getCurationDetails().getLastUpdated() );
+                            assertNull( ee.getCurationDetails().getLastUpdated() );
                             assertNotNull( ee.getAuditTrail().getCreationEvent().getId() );
 
                             for ( int q = 0; q < numUpdates; q++ ) {

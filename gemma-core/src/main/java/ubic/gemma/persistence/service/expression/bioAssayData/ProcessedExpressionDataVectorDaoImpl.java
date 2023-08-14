@@ -19,7 +19,10 @@
 package ubic.gemma.persistence.service.expression.bioAssayData;
 
 import org.apache.commons.lang3.time.StopWatch;
-import org.hibernate.*;
+import org.hibernate.FlushMode;
+import org.hibernate.Hibernate;
+import org.hibernate.Query;
+import org.hibernate.SessionFactory;
 import org.hibernate.type.LongType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
@@ -31,7 +34,6 @@ import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrixUtil;
 import ubic.gemma.core.datastructure.matrix.QuantitationMismatchException;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
-import ubic.gemma.model.common.quantitationtype.QuantitationTypeImpl;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -275,6 +277,9 @@ public class ProcessedExpressionDataVectorDaoImpl extends AbstractDesignElementD
         //noinspection unchecked
         List<ProcessedExpressionDataVector> result = this.getSessionFactory().getCurrentSession().createQuery(
                         "select dedv from ProcessedExpressionDataVector dedv "
+                                + "join fetch dedv.designElement de "
+                                + "left join fetch de.biologicalCharacteristic bc "
+                                + "left join fetch bc.sequenceDatabaseEntry "
                                 + "where dedv.expressionExperiment = :ee" )
                 .setParameter( "ee", ee )
                 .list();
@@ -306,22 +311,23 @@ public class ProcessedExpressionDataVectorDaoImpl extends AbstractDesignElementD
         for ( Collection<CompositeSequence> batch : batchIterator ) {
 
             //language=HQL
-            final String queryString = "select distinct dedv.expressionExperiment, dedv.designElement, dedv.rankByMean, "
-                    + "dedv.rankByMax from ProcessedExpressionDataVector dedv "
-                    + " where dedv.designElement in ( :cs ) and dedv.expressionExperiment in (:ees) ";
+            //noinspection unchecked
+            List<Object[]> qr = this.getSessionFactory().getCurrentSession().createQuery(
+                            "select dedv.expressionExperiment, dedv.designElement, dedv.rankByMean, dedv.rankByMax from ProcessedExpressionDataVector dedv "
+                                    + "where dedv.designElement in ( :cs ) and dedv.expressionExperiment in (:ees) "
+                                    + "group by dedv.designElement, dedv.expressionExperiment" )
+                    .setParameter( "cs", batch )
+                    .setParameterList( "ees", expressionExperiments )
+                    .list();
 
-            List qr = this.getSessionFactory().getCurrentSession().createQuery( queryString )
-                    .setParameter( "cs", batch ).setParameterList( "ees", expressionExperiments ).list();
-
-            for ( Object o : qr ) {
-                Object[] oa = ( Object[] ) o;
-                ExpressionExperiment e = ( ExpressionExperiment ) oa[0];
-                CompositeSequence d = ( CompositeSequence ) oa[1];
-                Double rMean = oa[2] == null ? Double.NaN : ( Double ) oa[2];
-                Double rMax = oa[3] == null ? Double.NaN : ( Double ) oa[3];
+            for ( Object[] o : qr ) {
+                ExpressionExperiment e = ( ExpressionExperiment ) o[0];
+                CompositeSequence d = ( CompositeSequence ) o[1];
+                Double rMean = o[2] == null ? Double.NaN : ( Double ) o[2];
+                Double rMax = o[3] == null ? Double.NaN : ( Double ) o[3];
 
                 if ( !result.containsKey( e ) ) {
-                    result.put( e, new HashMap<Gene, Collection<Double>>() );
+                    result.put( e, new HashMap<>() );
                 }
 
                 Map<Gene, Collection<Double>> rMap = result.get( e );
@@ -345,18 +351,20 @@ public class ProcessedExpressionDataVectorDaoImpl extends AbstractDesignElementD
         }
 
         //language=HQL
-        final String queryString = "select distinct dedv.designElement, dedv.rankByMean, dedv.rankByMax from ProcessedExpressionDataVector dedv "
-                + " where dedv.designElement in ( :cs ) and dedv.expressionExperiment.id = :eeid ";
-
-        List qr = this.getSessionFactory().getCurrentSession().createQuery( queryString )
-                .setParameterList( "cs", cs2gene.keySet() ).setParameter( "eeid", expressionExperiment.getId() ).list();
+        //noinspection unchecked
+        List<Object[]> qr = this.getSessionFactory().getCurrentSession().createQuery(
+                        "select dedv.designElement, dedv.rankByMean, dedv.rankByMax from ProcessedExpressionDataVector dedv "
+                                + "where dedv.designElement in (:cs) and dedv.expressionExperiment = :ee "
+                                + "group by dedv.designElement, dedv.expressionExperiment" )
+                .setParameterList( "cs", cs2gene.keySet() )
+                .setParameter( "ee", expressionExperiment )
+                .list();
 
         Map<Gene, Collection<Double>> result = new HashMap<>();
-        for ( Object o : qr ) {
-            Object[] oa = ( Object[] ) o;
-            CompositeSequence d = ( CompositeSequence ) oa[0];
-            Double rMean = oa[1] == null ? Double.NaN : ( Double ) oa[1];
-            Double rMax = oa[2] == null ? Double.NaN : ( Double ) oa[2];
+        for ( Object[] o : qr ) {
+            CompositeSequence d = ( CompositeSequence ) o[0];
+            Double rMean = o[1] == null ? Double.NaN : ( Double ) o[1];
+            Double rMax = o[2] == null ? Double.NaN : ( Double ) o[2];
 
             Collection<Gene> genes4probe = cs2gene.get( d );
 
@@ -369,16 +377,17 @@ public class ProcessedExpressionDataVectorDaoImpl extends AbstractDesignElementD
     @Override
     public Map<CompositeSequence, Double> getRanks( ExpressionExperiment expressionExperiment, RankMethod method ) {
         //language=HQL
-        final String queryString = "select dedv.designElement, dedv.rankByMean, dedv.rankByMax from ProcessedExpressionDataVector dedv "
-                + "where dedv.expressionExperiment.id = :ee";
-        List qr = this.getSessionFactory().getCurrentSession().createQuery( queryString )
-                .setParameter( "ee", expressionExperiment.getId() ).list();
+        //noinspection unchecked
+        List<Object[]> qr = this.getSessionFactory().getCurrentSession().createQuery(
+                        "select dedv.designElement, dedv.rankByMean, dedv.rankByMax from ProcessedExpressionDataVector dedv "
+                                + "where dedv.expressionExperiment = :ee" )
+                .setParameter( "ee", expressionExperiment )
+                .list();
         Map<CompositeSequence, Double> result = new HashMap<>();
-        for ( Object o : qr ) {
-            Object[] oa = ( Object[] ) o;
-            CompositeSequence d = ( CompositeSequence ) oa[0];
-            Double rMean = oa[1] == null ? Double.NaN : ( Double ) oa[1];
-            Double rMax = oa[2] == null ? Double.NaN : ( Double ) oa[2];
+        for ( Object[] o : qr ) {
+            CompositeSequence d = ( CompositeSequence ) o[0];
+            Double rMean = o[1] == null ? Double.NaN : ( Double ) o[1];
+            Double rMax = o[2] == null ? Double.NaN : ( Double ) o[2];
             switch ( method ) {
                 case mean:
                     result.put( d, rMean );
@@ -406,24 +415,25 @@ public class ProcessedExpressionDataVectorDaoImpl extends AbstractDesignElementD
         }
 
         //language=HQL
-        final String queryString = "select distinct dedv.expressionExperiment, dedv.designElement, dedv.rankByMean, dedv.rankByMax "
-                + "from ProcessedExpressionDataVector dedv " + " inner join dedv.designElement de  "
-                + " where dedv.designElement.id in ( :cs ) and dedv.expressionExperiment.id in (:ees) ";
-
-        List qr = this.getSessionFactory().getCurrentSession().createQuery( queryString )
-                .setParameterList( "cs", EntityUtils.getIds( cs2gene.keySet() ) )
-                .setParameterList( "ees", EntityUtils.getIds( expressionExperiments ) ).list();
+        //noinspection unchecked
+        List<Object[]> qr = this.getSessionFactory().getCurrentSession().createQuery( "select dedv.expressionExperiment, dedv.designElement, dedv.rankByMean, dedv.rankByMax "
+                        + "from ProcessedExpressionDataVector dedv "
+                        + "join dedv.designElement de  "
+                        + "where dedv.designElement in (:cs) and dedv.expressionExperiment in (:ees) "
+                        + "group by dedv.designElement, dedv.expressionExperiment" )
+                .setParameterList( "cs", cs2gene.keySet() )
+                .setParameterList( "ees", expressionExperiments )
+                .list();
 
         Map<ExpressionExperiment, Map<Gene, Map<CompositeSequence, Double[]>>> resultNew = new HashMap<>();
-        for ( Object o : qr ) {
-            Object[] oa = ( Object[] ) o;
-            ExpressionExperiment e = ( ExpressionExperiment ) oa[0];
-            CompositeSequence d = ( CompositeSequence ) oa[1];
-            Double rMean = ( Double ) oa[2];
-            Double rMax = ( Double ) oa[3];
+        for ( Object[] o : qr ) {
+            ExpressionExperiment e = ( ExpressionExperiment ) o[0];
+            CompositeSequence d = ( CompositeSequence ) o[1];
+            Double rMean = ( Double ) o[2];
+            Double rMax = ( Double ) o[3];
 
             if ( !resultNew.containsKey( e ) ) {
-                resultNew.put( e, new HashMap<Gene, Map<CompositeSequence, Double[]>>() );
+                resultNew.put( e, new HashMap<>() );
             }
 
             Map<Gene, Map<CompositeSequence, Double[]>> rMapNew = resultNew.get( e );
@@ -432,7 +442,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends AbstractDesignElementD
 
             for ( Gene gene : genes4probe ) {
                 if ( !rMapNew.containsKey( gene ) ) {
-                    rMapNew.put( gene, new HashMap<CompositeSequence, Double[]>() );
+                    rMapNew.put( gene, new HashMap<>() );
                 }
 
                 // return BOTH mean and max
@@ -462,9 +472,13 @@ public class ProcessedExpressionDataVectorDaoImpl extends AbstractDesignElementD
          */
         //noinspection unchecked
         List<QuantitationType> qtsToRemove = this.getSessionFactory().getCurrentSession().createQuery(
-                        "select distinct p.quantitationType from ExpressionExperiment e "
-                                + "inner join e.processedExpressionDataVectors p where e.id = :id" )
-                .setParameter( "id", expressionExperiment.getId() ).list();
+                        "select q from ExpressionExperiment e "
+                                + "inner join e.processedExpressionDataVectors p "
+                                + "inner join p.quantitationType q "
+                                + "where e = :ee "
+                                + "group by q" )
+                .setParameter( "ee", expressionExperiment )
+                .list();
 
         //        Collection<ProcessedExpressionDataVector> vectors = expressionExperiment.getProcessedExpressionDataVectors();
         //        Hibernate.initialize( vectors );
@@ -484,7 +498,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends AbstractDesignElementD
             qtsToRemove.forEach( expressionExperiment.getQuantitationTypes()::remove );
             this.getSessionFactory().getCurrentSession().update( expressionExperiment );
             this.getSessionFactory().getCurrentSession()
-                    .createQuery( "delete from QuantitationTypeImpl where id in (:ids)" )
+                    .createQuery( "delete from QuantitationType where id in (:ids)" )
                     .setParameterList( "ids", EntityUtils.getIds( qtsToRemove ) );
         }
     }
@@ -512,10 +526,14 @@ public class ProcessedExpressionDataVectorDaoImpl extends AbstractDesignElementD
             QuantitationType quantitationType ) {
         //noinspection unchecked
         return new HashSet<>( this.getSessionFactory().getCurrentSession().createQuery(
-                        "select dev from ProcessedExpressionDataVector dev  inner join fetch dev.bioAssayDimension bd "
-                                + " inner join fetch dev.designElement de inner join fetch dev.quantitationType inner join de.arrayDesign ad where ad.id = :adid "
-                                + "and dev.quantitationType = :quantitationType " )
-                .setParameter( "quantitationType", quantitationType ).setParameter( "adid", arrayDesign.getId() )
+                        "select dev from ProcessedExpressionDataVector dev "
+                                + "join fetch dev.bioAssayDimension bd "
+                                + "join fetch dev.designElement de "
+                                + "left join fetch de.biologicalCharacteristic bc "
+                                + "left join fetch bc.sequenceDatabaseEntry "
+                                + "where de.arrayDesign = :ad and dev.quantitationType = :quantitationType" )
+                .setParameter( "quantitationType", quantitationType )
+                .setParameter( "ad", arrayDesign )
                 .list() );
     }
 
@@ -527,16 +545,25 @@ public class ProcessedExpressionDataVectorDaoImpl extends AbstractDesignElementD
 
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession().createQuery(
-                        "select dev from ProcessedExpressionDataVector as dev inner join dev.designElement as de "
-                                + " where de in (:des) and dev.quantitationType = :qt" )
-                .setParameterList( "des", designElements ).setParameter( "qt", quantitationType ).list();
+                        "select dev from ProcessedExpressionDataVector as dev "
+                                // no need for fetch jointures here since the design elements and biological
+                                // characteristics are already in the session
+                                + "join dev.designElement as de "
+                                + "where de in (:des) and dev.quantitationType = :qt" )
+                .setParameterList( "des", designElements )
+                .setParameter( "qt", quantitationType )
+                .list();
     }
 
     @Override
     public Collection<ProcessedExpressionDataVector> findByExpressionExperiment( ExpressionExperiment ee, QuantitationType quantitationType ) {
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession().createQuery(
-                        "select v from ProcessedExpressionDataVector as v where v.expressionExperiment = :ee and v.quantitationType = :qt" )
+                        "select v from ProcessedExpressionDataVector as v "
+                                + "join fetch v.designElement de "
+                                + "left join fetch de.biologicalCharacteristic bc "
+                                + "left join fetch bc.sequenceDatabaseEntry "
+                                + "where v.expressionExperiment = :ee and v.quantitationType = :qt" )
                 .setParameter( "ee", ee )
                 .setParameter( "qt", quantitationType )
                 .list();
@@ -585,7 +612,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends AbstractDesignElementD
             Collection<Gene> genes4probe ) {
         for ( Gene gene : genes4probe ) {
             if ( !result.containsKey( gene ) ) {
-                result.put( gene, new ArrayList<Double>() );
+                result.put( gene, new ArrayList<>() );
             }
             switch ( method ) {
                 case mean:
@@ -710,17 +737,21 @@ public class ProcessedExpressionDataVectorDaoImpl extends AbstractDesignElementD
         if ( ee instanceof ExpressionExperiment ) {
             StopWatch timer = new StopWatch();
             timer.start();
-            List r = this.getSessionFactory().getCurrentSession().createQuery(
+            //noinspection unchecked
+            List<BioAssayDimension> r = this.getSessionFactory().getCurrentSession().createQuery(
                             // this does not look efficient.
-                            "select distinct bad from ExpressionExperiment e, BioAssayDimension bad"
-                                    + " inner join e.bioAssays b inner join bad.bioAssays badba where e = :ee and b in (badba) " )
-                    .setParameter( "ee", ee ).list();
+                            "select bad from ExpressionExperiment e, BioAssayDimension bad "
+                                    + "inner join e.bioAssays b "
+                                    + "inner join bad.bioAssays badba "
+                                    + "where e = :ee and b in (badba) "
+                                    + "group by bad" )
+                    .setParameter( "ee", ee )
+                    .list();
             timer.stop();
             if ( timer.getTime() > 100 ) {
                 AbstractDao.log.info( "Fetch " + r.size() + " bioassayDimensions for experiment id=" + ee.getId() + ": "
                         + timer.getTime() + "ms" );
             }
-            //noinspection unchecked
             return r;
         }
 
@@ -742,18 +773,21 @@ public class ProcessedExpressionDataVectorDaoImpl extends AbstractDesignElementD
         StopWatch timer = new StopWatch();
         timer.start();
         //noinspection unchecked
-        List<Object> r = this.getSessionFactory().getCurrentSession().createQuery(
-                        "select distinct e, bad from ExpressionExperiment e, BioAssayDimension bad"
-                                + " inner join e.bioAssays b inner join bad.bioAssays badba where e in (:ees) and b in (badba) " )
-                .setParameterList( "ees", ees ).list();
+        List<Object[]> r = this.getSessionFactory().getCurrentSession().createQuery(
+                        "select e, bad from ExpressionExperiment e, BioAssayDimension bad "
+                                + "inner join e.bioAssays b "
+                                + "inner join bad.bioAssays badba "
+                                + "where e in (:ees) and b in (badba) "
+                                + "group by e, bad" )
+                .setParameterList( "ees", ees )
+                .list();
 
-        for ( Object o : r ) {
-            Object[] tup = ( Object[] ) o;
-            BioAssaySet bas = ( BioAssaySet ) tup[0];
+        for ( Object[] o : r ) {
+            BioAssaySet bas = ( BioAssaySet ) o[0];
             if ( !result.containsKey( bas ) )
-                result.put( bas, new HashSet<BioAssayDimension>() );
+                result.put( bas, new HashSet<>() );
 
-            result.get( bas ).add( ( BioAssayDimension ) tup[1] );
+            result.get( bas ).add( ( BioAssayDimension ) o[1] );
         }
         if ( timer.getTime() > 100 ) {
             AbstractDao.log
@@ -821,11 +855,16 @@ public class ProcessedExpressionDataVectorDaoImpl extends AbstractDesignElementD
 
     private Collection<RawExpressionDataVector> getMissingValueVectors( ExpressionExperiment ee ) {
         //language=HQL
-        final String queryString = "select dedv from RawExpressionDataVector dedv "
-                + "inner join dedv.quantitationType q where q.type = 'PRESENTABSENT'"
-                + " and dedv.expressionExperiment  = :ee ";
         //noinspection unchecked
-        return this.getSessionFactory().getCurrentSession().createQuery( queryString ).setParameter( "ee", ee ).list();
+        return this.getSessionFactory().getCurrentSession().createQuery(
+                        "select dedv from RawExpressionDataVector dedv "
+                                + "join fetch dedv.designElement de "
+                                + "left join fetch de.biologicalCharacteristic bc "
+                                + "left join fetch bc.sequenceDatabaseEntry "
+                                + "join dedv.quantitationType q "
+                                + "where q.type = 'PRESENTABSENT' and dedv.expressionExperiment  = :ee " )
+                .setParameter( "ee", ee )
+                .list();
     }
 
     /**
@@ -834,10 +873,15 @@ public class ProcessedExpressionDataVectorDaoImpl extends AbstractDesignElementD
      */
     private Collection<RawExpressionDataVector> getPreferredDataVectors( ExpressionExperiment ee ) {
         //language=HQL
-        final String queryString = "select dedv from RawExpressionDataVector dedv inner join dedv.quantitationType q "
-                + " where q.isPreferred = true  and dedv.expressionExperiment.id = :ee";
         //noinspection unchecked
-        return this.getSessionFactory().getCurrentSession().createQuery( queryString ).setParameter( "ee", ee.getId() )
+        return this.getSessionFactory().getCurrentSession().createQuery(
+                        "select dedv from RawExpressionDataVector dedv "
+                                + "join fetch dedv.designElement de "
+                                + "left join fetch de.biologicalCharacteristic bc "
+                                + "left join fetch bc.sequenceDatabaseEntry "
+                                + "inner join dedv.quantitationType q "
+                                + "where q.isPreferred = true and dedv.expressionExperiment = :ee" )
+                .setParameter( "ee", ee )
                 .list();
     }
 
@@ -883,7 +927,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends AbstractDesignElementD
 
         if ( present.getId() == null ) {
             Long id = ( Long ) this.getSessionFactory().getCurrentSession().save( present );
-            return ( QuantitationType ) this.getSessionFactory().getCurrentSession().load( QuantitationTypeImpl.class, id );
+            return ( QuantitationType ) this.getSessionFactory().getCurrentSession().load( QuantitationType.class, id );
         }
         return present;
 
@@ -899,7 +943,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends AbstractDesignElementD
         Map<Long, Collection<Long>> noGeneProbes = new HashMap<>();
         for ( Long pid : probeIds ) {
             if ( !cs2gene.containsKey( pid ) || cs2gene.get( pid ).isEmpty() ) {
-                noGeneProbes.put( pid, new HashSet<Long>() );
+                noGeneProbes.put( pid, new HashSet<>() );
                 cs2gene.remove( pid );
             }
         }
@@ -939,7 +983,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends AbstractDesignElementD
                 }
             }
             needToSearch.addAll( eesForNoGeneProbes );
-            noncached.putAll( this.getProcessedVectorsAndGenes(  eesForNoGeneProbes , noGeneProbes ) );
+            noncached.putAll( this.getProcessedVectorsAndGenes( eesForNoGeneProbes, noGeneProbes ) );
         }
 
         if ( !noncached.isEmpty() )
@@ -954,10 +998,10 @@ public class ProcessedExpressionDataVectorDaoImpl extends AbstractDesignElementD
              * cut cs2gene down, otherwise we're probably fetching everything again.
              */
             Map<Long, Collection<Long>> filteredcs2gene = cs2gene.entrySet().stream()
-                    .filter(entry -> entry.getValue().stream().anyMatch(genesToSearch::contains))
-                    .collect( Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+                    .filter( entry -> entry.getValue().stream().anyMatch( genesToSearch::contains ) )
+                    .collect( Collectors.toMap( Map.Entry::getKey, Map.Entry::getValue ) );
 
-            moreNonCached = this.getProcessedVectorsAndGenes(  needToSearch , filteredcs2gene );
+            moreNonCached = this.getProcessedVectorsAndGenes( needToSearch, filteredcs2gene );
         }
 
         if ( !moreNonCached.isEmpty() )
@@ -1070,8 +1114,12 @@ public class ProcessedExpressionDataVectorDaoImpl extends AbstractDesignElementD
         }
 
         Query q = this.getSessionFactory().getCurrentSession()
-                .createQuery( " from ProcessedExpressionDataVector dedv where dedv.expressionExperiment.id = :ee" );
-        q.setParameter( "ee", ee.getId(), LongType.INSTANCE );
+                .createQuery( " from ProcessedExpressionDataVector dedv "
+                        + "join fetch dedv.designElement de "
+                        + "left join fetch de.biologicalCharacteristic bc "
+                        + "left join fetch bc.sequenceDatabaseEntry "
+                        + "where dedv.expressionExperiment = :ee" );
+        q.setParameter( "ee", ee );
         q.setMaxResults( limit );
         if ( availableVectorCount != null && availableVectorCount > limit ) {
             q.setFirstResult( new Random().nextInt( availableVectorCount - limit ) );
@@ -1253,12 +1301,12 @@ public class ProcessedExpressionDataVectorDaoImpl extends AbstractDesignElementD
         for ( DoubleVectorValueObject v : newResults ) {
             ExpressionExperimentValueObject e = v.getExpressionExperiment();
             if ( !mapForCache.containsKey( e.getId() ) ) {
-                mapForCache.put( e.getId(), new HashMap<Long, Collection<DoubleVectorValueObject>>() );
+                mapForCache.put( e.getId(), new HashMap<>() );
             }
             Map<Long, Collection<DoubleVectorValueObject>> innerMap = mapForCache.get( e.getId() );
             for ( Long g : v.getGenes() ) {
                 if ( !innerMap.containsKey( g ) ) {
-                    innerMap.put( g, new HashSet<DoubleVectorValueObject>() );
+                    innerMap.put( g, new HashSet<>() );
                 }
                 innerMap.get( g ).add( v );
             }

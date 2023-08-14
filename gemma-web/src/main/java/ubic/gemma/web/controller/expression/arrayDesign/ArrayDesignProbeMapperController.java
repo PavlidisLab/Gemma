@@ -43,7 +43,7 @@ public class ArrayDesignProbeMapperController {
      */
     public String run( Long id ) {
 
-        ArrayDesign arrayDesign = arrayDesignService.load( id );
+        ArrayDesign arrayDesign = arrayDesignService.loadOrFail( id );
         arrayDesign = arrayDesignService.thaw( arrayDesign );
 
         ArrayDesignProbeMapTaskCommand cmd = new ArrayDesignProbeMapTaskCommand();

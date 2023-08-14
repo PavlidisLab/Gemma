@@ -5,7 +5,7 @@
 
 <hibernate-mapping>
     <class name="ubic.gemma.model.common.description.ExternalDatabase" table="EXTERNAL_DATABASE">
-        <cache usage="read-write"/>
+        <cache usage="nonstrict-read-write"/>
         <id name="id" type="java.lang.Long" unsaved-value="null">
             <column name="ID" sql-type="BIGINT"/>
             <generator class="native">

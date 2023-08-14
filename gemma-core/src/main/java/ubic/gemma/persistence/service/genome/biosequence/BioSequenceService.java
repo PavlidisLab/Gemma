@@ -24,6 +24,7 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.sequenceAnalysis.BioSequenceValueObject;
+import ubic.gemma.persistence.service.BaseService;
 import ubic.gemma.persistence.service.BaseVoEnabledService;
 
 import java.util.Collection;
@@ -32,7 +33,7 @@ import java.util.Map;
 /**
  * @author kelsey
  */
-public interface BioSequenceService extends BaseVoEnabledService<BioSequence, BioSequenceValueObject> {
+public interface BioSequenceService extends BaseService<BioSequence>, BaseVoEnabledService<BioSequence, BioSequenceValueObject> {
 
     BioSequence findByAccession( DatabaseEntry accession );
 

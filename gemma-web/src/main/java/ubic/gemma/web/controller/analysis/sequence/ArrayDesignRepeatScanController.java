@@ -42,7 +42,7 @@ public class ArrayDesignRepeatScanController {
      * AJAX entry point.
      */
     public String run( Long id ) {
-        ArrayDesign ad = arrayDesignService.load( id );
+        ArrayDesign ad = arrayDesignService.loadOrFail( id );
 
         ad = arrayDesignService.thawLite( ad );
         ArrayDesignRepeatScanTaskCommand cmd = new ArrayDesignRepeatScanTaskCommand( ad );

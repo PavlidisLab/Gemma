@@ -4,7 +4,7 @@
 <beans xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
        xmlns:aop="http://www.springframework.org/schema/aop"
        xmlns:dwr="http://www.directwebremoting.org/schema/spring-dwr"
-       xmlns:p="http://www.springframework.org/schema/p" xmlns="http://www.springframework.org/schema/beans"
+       xmlns="http://www.springframework.org/schema/beans"
        xmlns:context="http://www.springframework.org/schema/context"
        xsi:schemaLocation="http://www.springframework.org/schema/beans
    http://www.springframework.org/schema/beans/spring-beans.xsd
@@ -17,6 +17,12 @@
                             name-generator="ubic.gemma.persistence.util.BeanNameGenerator">
         <context:exclude-filter type="annotation" expression="ubic.gemma.persistence.util.TestComponent"/>
     </context:component-scan>
+
+    <bean class="org.springframework.context.support.PropertySourcesPlaceholderConfigurer">
+        <property name="environment">
+            <bean class="org.springframework.web.context.support.StandardServletEnvironment"/>
+        </property>
+    </bean>
 
     <!-- Mapping URLS to controllers -->
 
@@ -119,17 +125,6 @@
         <property name="suffix" value=".jsp"/>
     </bean>
 
-    <!-- ==================================================== -->
-    <!-- Make spring aware of our i18n support files -->
-    <!-- ==================================================== -->
-    <bean id="messageSource" class="org.springframework.context.support.ResourceBundleMessageSource">
-        <property name="basenames">
-            <list>
-                <value>messages</value>
-            </list>
-        </property>
-    </bean>
-
     <bean id="geneSetListContainer" class="ubic.gemma.web.persistence.GeneSetListContainer" scope="session">
         <aop:scoped-proxy/>
     </bean>
@@ -139,9 +134,8 @@
     </bean>
 
     <bean id="expressionExperimentFormController"
-          class="ubic.gemma.web.controller.expression.experiment.ExpressionExperimentFormController"
-          p:successView="redirect:/expressionExperiment/showAllExpressionExperiments.html">
-
+          class="ubic.gemma.web.controller.expression.experiment.ExpressionExperimentFormController">
+        <property name="successView" value="redirect:/expressionExperiment/showAllExpressionExperiments.html"/>
         <property name="commandName" value="expressionExperiment"/>
         <property name="commandClass"
                   value="ubic.gemma.web.controller.expression.experiment.ExpressionExperimentEditValueObject"/>
@@ -295,7 +289,6 @@
             <dwr:include method="recalculateBatchConfound"/>
             <dwr:include method="recalculateBatchEffect"/>
             <dwr:include method="runGeeq"/>
-            <dwr:include method="setGeeqManualSettings"/>
         </dwr:remote>
     </bean>
 
@@ -805,10 +798,11 @@
         <dwr:convert type="bean"
                      class="ubic.gemma.web.visualization.DifferentialExpressionGeneConditionSearchService$TaskProgress"/>
 
-        <dwr:convert type="bean" class="ubic.gemma.core.search.SearchResult"/>
+        <dwr:convert type="bean" class="ubic.gemma.web.controller.GeneralSearchController$SearchResultValueObject"/>
 
         <dwr:convert type="bean" class="ubic.gemma.model.expression.experiment.ExperimentalFactorValueObject"/>
         <dwr:convert type="bean" class="ubic.gemma.model.expression.experiment.FactorValueValueObject"/>
+        <dwr:convert type="bean" class="ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicBasicValueObject"/>
 
         <dwr:convert type="bean" class="ubic.gemma.model.expression.experiment.ExpressionExperimentDetailsValueObject"/>
         <dwr:convert type="bean" class="ubic.gemma.model.common.quantitationtype.QuantitationTypeValueObject"/>

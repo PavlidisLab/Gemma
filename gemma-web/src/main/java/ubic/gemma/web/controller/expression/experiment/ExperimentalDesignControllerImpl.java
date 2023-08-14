@@ -94,7 +94,7 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
 
     @Override
     public void createDesignFromFile( Long eeid, String filePath ) {
-        ExpressionExperiment ee = expressionExperimentService.load( eeid );
+        ExpressionExperiment ee = expressionExperimentService.loadOrFail( eeid );
         ee = expressionExperimentService.thaw( ee );
 
         if ( ee == null ) {
@@ -280,7 +280,7 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
     public Collection<BioMaterialValueObject> getBioMaterials( EntityDelegator e ) {
         if ( e == null || e.getId() == null )
             return null;
-        ExpressionExperiment ee = expressionExperimentService.load( e.getId() );
+        ExpressionExperiment ee = expressionExperimentService.loadOrFail( e.getId() );
         ee = expressionExperimentService.thawLite( ee );
         Collection<BioMaterialValueObject> result = new HashSet<>();
         for ( BioAssay assay : ee.getBioAssays() ) {
@@ -410,7 +410,7 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
         Long designId;
         if ( e.getClassDelegatingFor().equalsIgnoreCase( "ExpressionExperiment" ) || e.getClassDelegatingFor()
                 .endsWith( ".ExpressionExperiment" ) ) {
-            ExpressionExperiment ee = this.expressionExperimentService.load( e.getId() );
+            ExpressionExperiment ee = this.expressionExperimentService.loadOrFail( e.getId() );
             designId = ee.getExperimentalDesign().getId();
         } else if ( e.getClassDelegatingFor().equalsIgnoreCase( "ExperimentalDesign" ) || e.getClassDelegatingFor()
                 .equalsIgnoreCase( "ExperimentalDesign" )
@@ -422,7 +422,7 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
         }
         // ugly fix for bug 3746
         ExpressionExperiment ee = experimentalDesignService
-                .getExpressionExperiment( this.experimentalDesignService.load( designId ) );
+                .getExpressionExperiment( this.experimentalDesignService.loadOrFail( designId ) );
         ee = expressionExperimentService.thawLite( ee );
         ExperimentalDesign ed = ee.getExperimentalDesign();
 
@@ -541,7 +541,7 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
         mnv.addObject( "experimentalDesign", ee.getExperimentalDesign() );
         mnv.addObject( "expressionExperiment", ee );
         mnv.addObject( "currentUserCanEdit", securityService.isEditable( ee ) ? "true" : "" );
-        mnv.addObject( "expressionExperimentUrl", AnchorTagUtil.getExpressionExperimentUrl( ee.getId(), request.getServletContext() ) );
+        mnv.addObject( "expressionExperimentUrl", AnchorTagUtil.getExpressionExperimentUrl( ee, request.getServletContext() ) );
 
         return mnv;
     }
@@ -612,7 +612,7 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
             return;
 
         for ( ExperimentalFactorValueObject efvo : efvos ) {
-            ExperimentalFactor ef = experimentalFactorService.load( efvo.getId() );
+            ExperimentalFactor ef = experimentalFactorService.loadOrFail( efvo.getId() );
             ef.setName( efvo.getName() );
             ef.setDescription( efvo.getDescription() );
 
@@ -637,16 +637,16 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
             // String originalCategoryUri = vc.getCategoryUri();
 
             vc.setCategory( efvo.getCategory() );
-            vc.setCategoryUri( efvo.getCategoryUri() );
+            vc.setCategoryUri( StringUtils.stripToNull( efvo.getCategoryUri() ) );
             vc.setValue( efvo.getCategory() );
-            vc.setValueUri( efvo.getCategoryUri() );
+            vc.setValueUri( StringUtils.stripToNull( efvo.getCategoryUri() ) );
 
             ef.setCategory( vc );
 
             experimentalFactorService.update( ef );
         }
 
-        ExperimentalFactor ef = experimentalFactorService.load( efvos[0].getId() );
+        ExperimentalFactor ef = experimentalFactorService.loadOrFail( efvos[0].getId() );
         ExpressionExperiment ee = expressionExperimentService.findByFactor( ef );
         if ( ee == null )
             throw new IllegalArgumentException( "No experiment for factor: " + ef );
@@ -715,8 +715,8 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
 
             c.setCategory( fvvo.getCategory() );
             c.setValue( fvvo.getValue() );
-            c.setCategoryUri( fvvo.getCategoryUri() );
-            c.setValueUri( fvvo.getValueUri() );
+            c.setCategoryUri( StringUtils.stripToNull( fvvo.getCategoryUri() ) );
+            c.setValueUri( StringUtils.stripToNull( fvvo.getValueUri() ) );
 
             c.setEvidenceCode( GOEvidenceCode.IC ); // characteristic has been manually updated
 
@@ -729,7 +729,7 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
 
         }
 
-        FactorValue fv = this.factorValueService.load( fvvos[0].getId() );
+        FactorValue fv = this.factorValueService.loadOrFail( fvvos[0].getId() );
         ExpressionExperiment ee = expressionExperimentService.findByFactorValue( fv );
         // this.auditTrailService.addUpdateEvent( ee, ExperimentalDesignEvent.class,
         // "FactorValue characteristics updated", StringUtils.join( fvvos, "\n" ) );
@@ -741,8 +741,8 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
         Characteristic c;
         if ( categoryUri != null ) {
             Characteristic vc = Characteristic.Factory.newInstance();
-            vc.setCategoryUri( categoryUri );
-            vc.setValueUri( categoryUri );
+            vc.setCategoryUri( StringUtils.stripToNull( categoryUri ) );
+            vc.setValueUri( StringUtils.stripToNull( categoryUri ) );
             c = vc;
         } else {
             c = Characteristic.Factory.newInstance();

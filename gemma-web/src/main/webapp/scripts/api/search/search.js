@@ -17,7 +17,8 @@ Gemma.Search.SEARCH_RESULT_CLASS_METAS = {
    "ExpressionExperimentSet" : {title : "Experiment group", sortBy : "name"},
    "Gene" : {title : "Gene", sortBy : "name"},
    "GeneSet" : {title : "Gene group", sortBy : "name"},
-   "PhenotypeAssociation" : {title : "Phenotype"}
+   "PhenotypeAssociation" : {title : "Phenotype"},
+   "BlacklistedEntity" : {title : "Blacklisted entity"}
 };
 
 Gemma.Search.GeneralSearch = Ext.extend( Ext.Panel, {
@@ -806,7 +807,7 @@ Gemma.SearchGrid = Ext.extend( Ext.grid.GridPanel, {
    },
 
    sortInfo : function( record ) {
-      var clazz = record.get( "resultsClass" );
+      var clazz = record.get( "resultClass" );
       if ( clazz in Gemma.Search.SEARCH_RESULT_CLASS_METAS ) {
          return record[Gemma.Search.SEARCH_RESULT_CLASS_METAS[clazz].sortBy] || clazz;
       } else {

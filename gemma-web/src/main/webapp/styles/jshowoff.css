@@ -169,7 +169,6 @@ span,img{padding:0;margin:0;border:0;}
 #frontPageSlideShow {
 	width: 100%;
 	background: url(../images/slideShow/gradientBack.jpg) repeat-x;
-	margin-bottom: 30px;
 	border-top: 1px solid gainsboro;
 	border-bottom: 1px solid gainsboro;
 }

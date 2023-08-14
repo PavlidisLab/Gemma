@@ -18,9 +18,12 @@
  */
 package ubic.gemma.model.common.search;
 
-import lombok.*;
+import lombok.Builder;
+import lombok.Data;
+import lombok.Singular;
+import lombok.With;
 import org.apache.commons.lang3.StringUtils;
-import ubic.gemma.core.search.SearchResult;
+import org.springframework.context.MessageSourceResolvable;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -32,6 +35,7 @@ import ubic.gemma.model.genome.Taxon;
 import javax.annotation.Nullable;
 import java.io.Serializable;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Configuration options for searching.
@@ -41,12 +45,26 @@ import java.util.Set;
 @Data
 @Builder
 @With
-@ToString(of = { "query", "taxon", "platformConstraint", "resultTypes" })
 public class SearchSettings implements Serializable {
 
     public static final char
             WILDCARD_CHAR = '*',
             SINGLE_WILDCARD_CHAR = '?';
+
+    public enum SearchMode {
+        /**
+         * Prefer correctness over speed.
+         */
+        ACCURATE,
+        /**
+         * Normal search mode with trade-offs to make it usable.
+         */
+        BALANCED,
+        /**
+         * Fast search mode, designed for autocompletion.
+         */
+        FAST
+    }
 
     /**
      * The serial version UID of this class. Needed for serialization.
@@ -152,20 +170,13 @@ public class SearchSettings implements Serializable {
 
     /* sources */
     @Builder.Default
-    private Boolean useCharacteristics = Boolean.TRUE;
+    private boolean useCharacteristics = true;
     @Builder.Default
-    private Boolean useDatabase = Boolean.TRUE;
+    private boolean useDatabase = true;
     @Builder.Default
-    private Boolean useGo = Boolean.TRUE;
+    private boolean useGo = true;
     @Builder.Default
-    private Boolean useIndices = Boolean.TRUE;
-
-    /**
-     * Highlight part of the search result as per {@link SearchResult#getHighlightedText()}.
-     *
-     * Overhead can be reduced by disabling highlighting if not needed.
-     */
-    private boolean doHighlighting;
+    private boolean useIndices = true;
 
     /**
      * Limit for the number of results per result type in {@link ubic.gemma.core.search.SearchService.SearchResultMap}.
@@ -175,6 +186,24 @@ public class SearchSettings implements Serializable {
      */
     @Builder.Default
     private int maxResults = SearchSettings.DEFAULT_MAX_RESULTS_PER_RESULT_TYPE;
+
+    /**
+     * Indicate if results should be filled.
+     */
+    @Builder.Default
+    private boolean fillResults = true;
+
+    /**
+     * Fast mode, return quickly.
+     */
+    @Builder.Default
+    private SearchMode mode = SearchMode.BALANCED;
+
+    /**
+     * A custom highlighter.
+     */
+    @Nullable
+    private Highlighter highlighter;
 
     /**
      * Get this query, trimmed.
@@ -193,7 +222,7 @@ public class SearchSettings implements Serializable {
 
     /**
      * Indicate if the query refers to an ontology term.
-     *
+     * <p>
      * This is done by checking if this query starts with 'http://' for now, but there could be fancier checks performed
      * in the future.
      */
@@ -240,5 +269,31 @@ public class SearchSettings implements Serializable {
      */
     public boolean hasResultType( Class<?> cls ) {
         return resultTypes.contains( cls );
+    }
+
+    /**
+     * Highlight a given ontology term.
+     * <p>
+     * This is a shorthand for {@link #getHighlighter()} and {@link Highlighter#highlightTerm(String, String, Class)}
+     * that deals with a potentially null highlighter.
+     * @see #setHighlighter(Highlighter)
+     * @return a highlight, or null if no provider is set or the provider returns null
+     */
+    @Nullable
+    public String highlightTerm( String termUri, String termLabel, MessageSourceResolvable className ) {
+        return highlighter != null ? highlighter.highlightTerm( termUri, termLabel, className ) : null;
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder s = new StringBuilder( "'" + query + "'" );
+        s.append( " in " ).append( resultTypes.stream().map( Class::getSimpleName ).sorted().collect( Collectors.joining( ", " ) ) );
+        if ( platformConstraint != null ) {
+            s.append( " " ).append( "[" ).append( platformConstraint ).append( "]" );
+        }
+        if ( taxon != null ) {
+            s.append( " " ).append( "[" ).append( taxon ).append( "]" );
+        }
+        return s.toString();
     }
 }

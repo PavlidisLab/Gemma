@@ -52,8 +52,7 @@ public class CuratableDaoTest extends BaseDatabaseTest {
         sessionFactory.getCurrentSession().persist( taxon );
         ArrayDesign curatable = new ArrayDesign();
         curatable.setPrimaryTaxon( taxon );
-        curatable.setAuditTrail( new AuditTrail() );
-        curatable = arrayDesignDao.create( curatable );
+        sessionFactory.getCurrentSession().persist( curatable );
         assertNotNull( curatable.getId() );
         assertNotNull( curatable.getCurationDetails().getId() );
         AuditEvent event = createEventOfType( TroubledStatusFlagEvent.class );
@@ -70,16 +69,14 @@ public class CuratableDaoTest extends BaseDatabaseTest {
         sessionFactory.getCurrentSession().persist( taxon );
         ArrayDesign curatable = new ArrayDesign();
         curatable.setPrimaryTaxon( taxon );
-        curatable.setAuditTrail( new AuditTrail() );
-        curatable = arrayDesignDao.create( curatable );
         curatable.getCurationDetails().setTroubled( true );
-        ArrayDesign finalCuratable = curatable;
-        IllegalArgumentException e = assertThrows( IllegalArgumentException.class, () -> arrayDesignDao.updateCurationDetailsFromAuditEvent( finalCuratable, createEventOfType( TroubledStatusFlagEvent.class ) ) );
+        sessionFactory.getCurrentSession().persist( curatable );
+        IllegalArgumentException e = assertThrows( IllegalArgumentException.class, () -> arrayDesignDao.updateCurationDetailsFromAuditEvent( curatable, createEventOfType( TroubledStatusFlagEvent.class ) ) );
         assertTrue( e.getMessage().contains( "already troubled" ) );
         assertTrue( curatable.getCurationDetails().getTroubled() );
         // same for non-troubled
         curatable.getCurationDetails().setTroubled( false );
-        e = assertThrows( IllegalArgumentException.class, () -> arrayDesignDao.updateCurationDetailsFromAuditEvent( finalCuratable, createEventOfType( NotTroubledStatusFlagEvent.class ) ) );
+        e = assertThrows( IllegalArgumentException.class, () -> arrayDesignDao.updateCurationDetailsFromAuditEvent( curatable, createEventOfType( NotTroubledStatusFlagEvent.class ) ) );
         assertTrue( e.getMessage().contains( "already non-troubled" ) );
         assertFalse( curatable.getCurationDetails().getTroubled() );
     }

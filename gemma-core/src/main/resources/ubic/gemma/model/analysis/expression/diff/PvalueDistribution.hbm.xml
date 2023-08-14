@@ -14,7 +14,7 @@
         <property name="numBins" type="java.lang.Integer">
             <column name="NUM_BINS" not-null="true" unique="false" sql-type="INTEGER"/>
         </property>
-        <property name="binCounts" type="byte[]">
+        <property name="binCounts" type="org.hibernate.type.MaterializedBlobType">
             <column name="BIN_COUNTS" not-null="true" unique="false" sql-type="BLOB"/>
         </property>
     </class>

@@ -214,7 +214,7 @@ public class UserServiceImpl implements UserService {
     public void removeUserFromGroup( gemma.gsec.model.User user, gemma.gsec.model.UserGroup group ) {
         group.getGroupMembers().remove( user );
 
-        String userName = user.getName();
+        String userName = user.getUserName();
         String groupName = group.getName();
 
         if ( AuthorityConstants.REQUIRED_ADMINISTRATOR_USER_NAME.equals( userName )

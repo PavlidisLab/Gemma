@@ -24,13 +24,16 @@ import org.hibernate.*;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.sql.JoinType;
+import org.hibernate.type.StandardBasicTypes;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
-import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResultSetValueObject;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
+import ubic.gemma.model.analysis.expression.diff.PvalueDistribution;
+import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.DatabaseEntry;
+import ubic.gemma.model.common.protocol.Protocol;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
@@ -44,7 +47,6 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 /**
@@ -62,24 +64,20 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilterin
 
     @Override
     public ExpressionAnalysisResultSet loadWithResultsAndContrasts( Long id ) {
-        StopWatch stopWatch = new StopWatch();
-        stopWatch.start();
-        //noinspection unchecked
-        ExpressionAnalysisResultSet ears = ( ExpressionAnalysisResultSet ) this.getSessionFactory().getCurrentSession().createQuery(
-                        "select r from ExpressionAnalysisResultSet r "
-                                + "left join fetch r.results res "
-                                + "left join fetch res.probe p "
-                                + "left join fetch res.contrasts c "
-                                + "left join fetch c.factorValue "
-                                + "left join fetch c.secondFactorValue "
-                                + "where r.id = :rs " )
-                .setParameter( "rs", id )
+        StopWatch timer = StopWatch.createStarted();
+        ExpressionAnalysisResultSet ears = ( ExpressionAnalysisResultSet ) getSessionFactory().getCurrentSession()
+                .createQuery( "select ears from ExpressionAnalysisResultSet ears "
+                        + "left join fetch ears.results res "
+                        + "left join fetch res.probe probe "
+                        + "left join fetch probe.biologicalCharacteristic bc "
+                        + "left join fetch bc.sequenceDatabaseEntry "
+                        + "left join fetch res.contrasts "
+                        + "where ears.id = :rsId" )
+                .setParameter( "rsId", id )
                 .uniqueResult();
-        if ( ears == null ) {
-            return null;
-        }
-        if ( stopWatch.getTime( TimeUnit.SECONDS ) > 1 ) {
-            log.info( "Loaded [" + elementClass.getName() + " id=" + id + "] with results and contrasts in " + stopWatch.getTime() + "ms." );
+        if ( timer.getTime() > 1000 ) {
+            log.info( String.format( "Loaded [%s id=%d] with results, probes and contrasts in %d ms.",
+                    elementClass.getName(), id, timer.getTime() ) );
         }
         return ears;
     }
@@ -134,9 +132,9 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilterin
     }
 
     @Override
-    public Slice<DifferentialExpressionAnalysisResultSetValueObject> findByBioAssaySetInAndDatabaseEntryInLimit( @Nullable Collection<BioAssaySet> bioAssaySets, @Nullable Collection<DatabaseEntry> databaseEntries, @Nullable Filters objectFilters, int offset, int limit, @Nullable Sort sort ) {
-        Criteria query = getLoadValueObjectsCriteria( objectFilters );
-        Criteria totalElementsQuery = getLoadValueObjectsCriteria( objectFilters );
+    public Slice<DifferentialExpressionAnalysisResultSetValueObject> findByBioAssaySetInAndDatabaseEntryInLimit( @Nullable Collection<BioAssaySet> bioAssaySets, @Nullable Collection<DatabaseEntry> databaseEntries, @Nullable Filters filters, int offset, int limit, @Nullable Sort sort ) {
+        Criteria query = getFilteringCriteria( filters );
+        Criteria totalElementsQuery = getFilteringCriteria( filters );
 
         if ( bioAssaySets != null ) {
             query.add( Restrictions.in( "a.experimentAnalyzed", bioAssaySets ) );
@@ -180,24 +178,67 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilterin
     }
 
     @Override
-    protected Criteria getLoadValueObjectsCriteria( @Nullable Filters filters ) {
+    protected Criteria getFilteringCriteria( @Nullable Filters filters ) {
         Criteria query = this.getSessionFactory().getCurrentSession()
-                .createCriteria( ExpressionAnalysisResultSet.class, getObjectAlias() )
+                .createCriteria( ExpressionAnalysisResultSet.class )
                 // these two are necessary for ACL filtering, so we must use a (default) inner jointure
                 .createAlias( "analysis", "a" )
                 .createAlias( "analysis.experimentAnalyzed", "e" )
+                // we need a left outer jointure so that we do not miss any result set that lacks one of these associations
+                // these aliases are necessary to resolve filterable properties
+                .createAlias( "analysis.experimentAnalyzed.accession", "ea", JoinType.LEFT_OUTER_JOIN )
+                .createAlias( "analysis.protocol", "p", JoinType.LEFT_OUTER_JOIN )
+                .createAlias( "analysis.subsetFactorValue", "sfv", JoinType.LEFT_OUTER_JOIN )
+                .createAlias( "analysis.subsetFactorValue.characteristics", "sfvc", JoinType.LEFT_OUTER_JOIN )
+                .createAlias( "baselineGroup", "b", JoinType.LEFT_OUTER_JOIN )
+                .createAlias( "baselineGroup.characteristics", "bc", JoinType.LEFT_OUTER_JOIN )
+                .createAlias( "baselineGroup.experimentalFactor", "bef", JoinType.LEFT_OUTER_JOIN )
+                .createAlias( "baselineGroup.measurement", "bm", JoinType.LEFT_OUTER_JOIN )
+                .createAlias( "pvalueDistribution", "pvd", JoinType.LEFT_OUTER_JOIN )
+                // these are used for filtering
                 .createAlias( "experimentalFactors", "ef", JoinType.LEFT_OUTER_JOIN )
                 .createAlias( "ef.factorValues", "fv", JoinType.LEFT_OUTER_JOIN );
 
         // apply filtering
-        query.add( ObjectFilterCriteriaUtils.formRestrictionClause( filters ) );
+        query.add( FilterCriteriaUtils.formRestrictionClause( filters ) );
 
         // apply the ACL on the associated EE (or EE subset)
         query.add( Restrictions.or(
-                AclCriteriaUtils.formAclRestrictionClause( "e", ExpressionExperiment.class ),
-                AclCriteriaUtils.formAclRestrictionClause( "e", ExpressionExperimentSubSet.class ) ) );
+                AclCriteriaUtils.formAclRestrictionClause( "e.id", ExpressionExperiment.class ),
+                AclCriteriaUtils.formAclRestrictionClause( "e.id", ExpressionExperimentSubSet.class ) ) );
 
         return query;
+    }
+
+    @Override
+    protected void configureFilterableProperties( FilterablePropertiesConfigurer configurer ) {
+        super.configureFilterableProperties( configurer );
+
+        // this column is mostly null
+        configurer.unregisterProperty( "analysis.name" );
+
+        // this is useless
+        configurer.unregisterEntity( "analysis.protocol.", Protocol.class );
+
+        // use the characteristics instead
+        configurer.registerAlias( "analysis.subsetFactorValue.characteristics.", "sfvc", Characteristic.class, null, 1 );
+        configurer.unregisterProperty( "analysis.subsetFactorValue.characteristics.originalValue" );
+        configurer.unregisterProperty( "analysis.subsetFactorValue.value" );
+
+        // baseline is always baseline
+        configurer.unregisterProperty( "baselineGroup.isBaseline" );
+        configurer.registerAlias( "baselineGroup.characteristics.", "bc", Characteristic.class, null, 1 );
+        configurer.unregisterProperty( "baselineGroup.characteristics.originalValue" );
+        configurer.unregisterProperty( "baselineGroup.value" );
+
+        // not relevant
+        configurer.unregisterProperty( "hitListSizes.size" );
+        configurer.unregisterEntity( "pvalueDistribution.", PvalueDistribution.class );
+
+        // FIXME: these cause a org.hibernate.MappingException: Unknown collection role exception (see https://github.com/PavlidisLab/Gemma/issues/518)
+        configurer.unregisterProperty( "analysis.experimentAnalyzed.characteristics.size" );
+        configurer.unregisterProperty( "analysis.experimentAnalyzed.otherRelevantPublications.size" );
+        configurer.unregisterProperty( "experimentalFactors.size" );
     }
 
     @Override
@@ -211,13 +252,14 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilterin
     }
 
     @Override
-    public Map<DifferentialExpressionAnalysisResult, List<Gene>> loadResultToGenesMap( ExpressionAnalysisResultSet resultSet ) {
+    public Map<Long, List<Gene>> loadResultToGenesMap( ExpressionAnalysisResultSet resultSet ) {
         Query query = getSessionFactory().getCurrentSession()
-                .createSQLQuery( "select {result.*}, {gene.*} from DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT {result} "
-                        + "join GENE2CS on GENE2CS.CS = {result}.PROBE_FK "
+                .createSQLQuery( "select result.ID as RESULT_ID, {gene.*} from DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT result "
+                        + "join GENE2CS on GENE2CS.CS = result.PROBE_FK "
                         + "join CHROMOSOME_FEATURE as {gene} on {gene}.ID = GENE2CS.GENE "
-                        + "where {result}.RESULT_SET_FK = :rsid" )
-                .addEntity( "result", DifferentialExpressionAnalysisResult.class )
+                        + "where result.RESULT_SET_FK = :rsid" )
+                .addSynchronizedQuerySpace( "GENE2CS" )
+                .addScalar( "RESULT_ID", StandardBasicTypes.LONG )
                 .addEntity( "gene", Gene.class )
                 .setParameter( "rsid", resultSet.getId() )
                 .setCacheable( true );
@@ -228,7 +270,7 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilterin
         // YAY! my brain was almost fried writing that collector
         return list.stream()
                 .collect( Collectors.groupingBy(
-                        l -> ( DifferentialExpressionAnalysisResult ) l[0],
+                        l -> ( Long ) l[0],
                         Collectors.collectingAndThen( Collectors.toList(),
                                 elem -> elem.stream()
                                         .map( l -> ( Gene ) l[1] )

@@ -19,10 +19,9 @@
 
 package ubic.gemma.core.loader.association.phenotype;
 
-import org.apache.commons.lang3.ClassPathUtils;
+import lombok.extern.apachecommons.CommonsLog;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.core.io.ClassPathResource;
 import org.xml.sax.SAXException;
 import ubic.basecode.ontology.model.OntologyTerm;
@@ -32,7 +31,6 @@ import ubic.basecode.ontology.providers.HumanPhenotypeOntologyService;
 import ubic.basecode.ontology.providers.MedicOntologyService;
 import ubic.basecode.util.Configuration;
 import ubic.gemma.core.genome.gene.service.GeneService;
-import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.core.ontology.providers.MondoOntologyService;
 import ubic.gemma.model.association.phenotype.PhenotypeMappingType;
 import ubic.gemma.model.genome.Gene;
@@ -50,6 +48,8 @@ import java.util.*;
  *
  * @author paul (code originally from Nicolas)
  */
+@CommonsLog
+@Deprecated
 class PhenotypeProcessingUtil {
     // this is where the results and files downloaded are put
     static final String WRITE_FOLDER = Settings.getString( "gemma.appdata.home" ) + File.separator + "Phenocarta";
@@ -71,8 +71,6 @@ class PhenotypeProcessingUtil {
     private static final String MANUAL_MAPPING = RESOURCE_CLASSPATH + "ManualDescriptionMapping.tsv";
     // results we exclude, we know those results are not good
     private static final String RESULTS_TO_IGNORE = RESOURCE_CLASSPATH + "ResultsToIgnore.tsv";
-    private static Logger log = LoggerFactory.getLogger( PhenotypeProcessingUtil.class );
-    private static MedicOntologyService medicOntologyService = null;
     // keep a log file of the process and error
     final TreeSet<String> logMessages = new TreeSet<>();
     private final Map<Integer, String> geneToSymbol = new HashMap<>();
@@ -90,19 +88,20 @@ class PhenotypeProcessingUtil {
     GeneService geneService;
     // the 3 possible out files
     BufferedWriter outFinalResults = null;
-    private OntologyService ontologyService;
-    private MondoOntologyService diseaseOntologyService = null;
-    private HumanPhenotypeOntologyService humanPhenotypeOntologyService = null;
+    private final MedicOntologyService medicOntologyService;
+    private final MondoOntologyService diseaseOntologyService;
+    private final HumanPhenotypeOntologyService humanPhenotypeOntologyService;
     // to avoid repeatedly checking....
     private Set<String> unmappableIds = new HashSet<>();
     private BufferedWriter logRequestAnnotator = null;
     private BufferedWriter outMappingFound = null;
 
-    PhenotypeProcessingUtil( GeneService g, OntologyService o ) throws Exception {
+    PhenotypeProcessingUtil( GeneService g, MedicOntologyService medicOntologyService, MondoOntologyService diseaseOntologyService, HumanPhenotypeOntologyService humanPhenotypeOntologyService ) throws Exception {
         this.geneService = g;
-        this.ontologyService = o;
+        this.medicOntologyService = medicOntologyService;
+        this.diseaseOntologyService = diseaseOntologyService;
+        this.humanPhenotypeOntologyService = humanPhenotypeOntologyService;
         assert g != null;
-        assert o != null;
         init();
     }
 
@@ -374,19 +373,8 @@ class PhenotypeProcessingUtil {
 
         try ( InputStream reader = url.openStream();
                 FileOutputStream writer = new FileOutputStream( outputFileFullPath ) ) {
-
-            byte[] buffer = new byte[153600];
-            int bytesRead;
-
-            while ( ( bytesRead = reader.read( buffer ) ) > 0 ) {
-                writer.write( buffer, 0, bytesRead );
-                buffer = new byte[153600];
-            }
-
-            writer.close();
-            reader.close();
+            IOUtils.copy( reader, writer );
             log.info( "Download Completed" );
-
         } catch ( IOException e ) {
             throw new RuntimeException( e );
         }
@@ -1131,11 +1119,6 @@ class PhenotypeProcessingUtil {
      * @throws Exception problems
      */
     private synchronized void init() throws Exception {
-
-        diseaseOntologyService = ontologyService.getDiseaseOntologyService();
-        humanPhenotypeOntologyService = ontologyService.getHumanPhenotypeOntologyService();
-        medicOntologyService = new MedicOntologyService();
-
         medicOntologyService.startInitializationThread( true, false );
         diseaseOntologyService.startInitializationThread( true, false );
         humanPhenotypeOntologyService.startInitializationThread( true, false );

@@ -30,8 +30,11 @@ import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.persistence.service.AbstractFilteringVoEnabledService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventDao;
 import ubic.gemma.persistence.service.expression.experiment.BlacklistedEntityService;
-import ubic.gemma.persistence.util.EntityUtils;
+import ubic.gemma.persistence.util.Filters;
+import ubic.gemma.persistence.util.Slice;
+import ubic.gemma.persistence.util.Sort;
 
+import javax.annotation.Nullable;
 import java.util.*;
 
 /**
@@ -58,24 +61,6 @@ public class ArrayDesignServiceImpl extends AbstractFilteringVoEnabledService<Ar
     @Transactional
     public void addProbes( ArrayDesign arrayDesign, Collection<CompositeSequence> newProbes ) {
         this.arrayDesignDao.addProbes( arrayDesign, newProbes );
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public Collection<CompositeSequence> compositeSequenceWithoutBioSequences( ArrayDesign arrayDesign ) {
-        return this.arrayDesignDao.compositeSequenceWithoutBioSequences( arrayDesign );
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public Collection<CompositeSequence> compositeSequenceWithoutBlatResults( ArrayDesign arrayDesign ) {
-        return this.arrayDesignDao.compositeSequenceWithoutBlatResults( arrayDesign );
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public Collection<CompositeSequence> compositeSequenceWithoutGenes( ArrayDesign arrayDesign ) {
-        return this.arrayDesignDao.compositeSequenceWithoutGenes( arrayDesign );
     }
 
     @Override
@@ -259,7 +244,6 @@ public class ArrayDesignServiceImpl extends AbstractFilteringVoEnabledService<Ar
     @Transactional(readOnly = true)
     public boolean isBlackListed( String geoAccession ) {
         return this.blacklistedEntityService.isBlacklisted( geoAccession );
-
     }
 
     @Override
@@ -272,6 +256,12 @@ public class ArrayDesignServiceImpl extends AbstractFilteringVoEnabledService<Ar
     @Transactional
     public void deleteGeneProductAlignmentAssociations( ArrayDesign arrayDesign ) {
         this.arrayDesignDao.deleteGeneProductAnnotationAssociations( arrayDesign );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Slice<ArrayDesignValueObject> loadBlacklistedValueObjects( @Nullable Filters filters, @Nullable Sort sort, int offset, int limit ) {
+        return arrayDesignDao.loadBlacklistedValueObjects( filters, sort, offset, limit );
     }
 
     @Override
@@ -296,12 +286,6 @@ public class ArrayDesignServiceImpl extends AbstractFilteringVoEnabledService<Ar
     @Transactional(readOnly = true)
     public Map<Long, Boolean> isSubsumer( Collection<Long> ids ) {
         return this.arrayDesignDao.isSubsumer( ids );
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public List<ArrayDesignValueObject> loadValueObjectsByIds( Collection<Long> ids ) {
-        return this.arrayDesignDao.loadValueObjectsByIds( ids );
     }
 
     @Override
@@ -409,46 +393,39 @@ public class ArrayDesignServiceImpl extends AbstractFilteringVoEnabledService<Ar
     @Override
     @Transactional(readOnly = true)
     public ArrayDesign thaw( ArrayDesign arrayDesign ) {
-        return Objects.requireNonNull( this.arrayDesignDao.thaw( arrayDesign ) );
+        arrayDesign = ensureInSession( arrayDesign );
+        arrayDesignDao.thaw( arrayDesign );
+        return arrayDesign;
     }
 
     @Override
     @Transactional(readOnly = true)
     public Collection<ArrayDesign> thaw( Collection<ArrayDesign> aas ) {
-        return arrayDesignDao.thaw( aas );
+        aas = ensureInSession( aas );
+        aas.forEach( arrayDesignDao::thaw );
+        return aas;
     }
 
     @Override
     @Transactional(readOnly = true)
     public ArrayDesign thawLite( ArrayDesign arrayDesign ) {
-        return Objects.requireNonNull( this.arrayDesignDao.thawLite( arrayDesign ) );
+        arrayDesign = ensureInSession( arrayDesign );
+        arrayDesignDao.thaw( arrayDesign );
+        return arrayDesign;
     }
 
     @Override
     @Transactional(readOnly = true)
     public Collection<ArrayDesign> thawLite( Collection<ArrayDesign> arrayDesigns ) {
-        return this.arrayDesignDao.thawLite( arrayDesigns );
+        arrayDesigns = ensureInSession( arrayDesigns );
+        arrayDesigns.forEach( arrayDesignDao::thawLite );
+        return arrayDesigns;
     }
 
     @Override
     @Transactional
     public Boolean updateSubsumingStatus( ArrayDesign candidateSubsumer, ArrayDesign candidateSubsumee ) {
         return this.arrayDesignDao.updateSubsumingStatus( candidateSubsumer, candidateSubsumee );
-    }
-
-    @Override
-    protected ObjectFilterPropertyMeta getObjectFilterPropertyMeta( String propertyName ) throws NoSuchFieldException {
-        // handle cases such as taxon = 1
-        if ( propertyName.equals( "taxon" ) ) {
-            return new ObjectFilterPropertyMeta( "t", "id", Long.class );
-        }
-        // handles taxon.{propertyName} {op} {value}
-        else if ( propertyName.startsWith( "taxon." ) ) {
-            String fieldName = propertyName.replaceFirst( "^taxon\\.", "" );
-            return new ObjectFilterPropertyMeta( "t", fieldName, EntityUtils.getDeclaredFieldType( fieldName, Taxon.class ) );
-        } else {
-            return super.getObjectFilterPropertyMeta( propertyName );
-        }
     }
 
     private void checkForMoreRecentMethod( Map<Long, AuditEvent> lastEventMap,
@@ -491,11 +468,5 @@ public class ArrayDesignServiceImpl extends AbstractFilteringVoEnabledService<Ar
             }
 
         }
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public List<Long> retainNonTroubledIds( Collection<Long> ids ) {
-        return arrayDesignDao.retainNonTroubledIds( ids );
     }
 }

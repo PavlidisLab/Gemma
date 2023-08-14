@@ -2,6 +2,8 @@ package ubic.gemma.core.security.authorization.acl;
 
 import gemma.gsec.acl.domain.AclObjectIdentity;
 import gemma.gsec.acl.domain.AclService;
+import gemma.gsec.model.Securable;
+import gemma.gsec.model.SecuredChild;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,7 +40,7 @@ public class AclTestUtils {
      *
      * @param f f
      */
-    public void checkDeletedAcl( Object f ) {
+    public void checkDeletedAcl( Securable f ) {
         try {
             Acl acl = this.getAcl( f );
             fail( "Failed to  remove ACL for " + f + ", got " + acl );
@@ -118,7 +120,7 @@ public class AclTestUtils {
 
             ArrayDesign arrayDesign = ba.getArrayDesignUsed();
             this.checkHasAcl( arrayDesign );
-            assertTrue( this.getParentAcl( arrayDesign ) == null );
+            assertNull( this.getParentAcl( arrayDesign ) );
 
         }
     }
@@ -130,12 +132,12 @@ public class AclTestUtils {
         this.checkHasAclParent( eeset, eeset.getSourceExperiment() );
     }
 
-    public void checkHasAces( Object f ) {
+    public void checkHasAces( Securable f ) {
         Acl a = this.getAcl( f );
         assertTrue( "For object " + f + " with ACL " + a + ":doesn't have ACEs, it should", a.getEntries().size() > 0 );
     }
 
-    public void checkHasAcl( Object f ) {
+    public void checkHasAcl( Securable f ) {
         try {
             aclService.readAclById( new AclObjectIdentity( f ) );
             AclTestUtils.log.debug( "Have acl for " + f );
@@ -144,7 +146,7 @@ public class AclTestUtils {
         }
     }
 
-    public void checkHasAclParent( Object f, Object parent ) {
+    public void checkHasAclParent( SecuredChild f, Securable parent ) {
         Acl parentAcl = this.getParentAcl( f );
         assertNotNull( "No ACL for parent of " + f + "; the parent is " + parent, parentAcl );
 
@@ -158,33 +160,21 @@ public class AclTestUtils {
         AclTestUtils.log.debug( "ACL has correct parent for " + f + " <----- " + parentAcl.getObjectIdentity() );
     }
 
-    public void checkLacksAces( Object f ) {
+    public void checkLacksAces( Securable f ) {
         Acl a = this.getAcl( f );
-        assertTrue( f + " has ACEs, it shouldn't: " + a, a.getEntries().size() == 0 );
-    }
-
-    public void checkLacksAcl( Object f ) {
-
-        try {
-
-            aclService.readAclById( new AclObjectIdentity( f ) );
-            fail( "Should not have found an ACL" );
-
-        } catch ( NotFoundException okaye ) {
-            // good
-        }
+        assertEquals( f + " has ACEs, it shouldn't: " + a, 0, a.getEntries().size() );
     }
 
     public void update( MutableAcl acl ) {
         this.aclService.updateAcl( acl );
     }
 
-    public MutableAcl getAcl( Object f ) {
+    public MutableAcl getAcl( Securable f ) {
         Acl a = aclService.readAclById( new AclObjectIdentity( f ) );
         return ( MutableAcl ) a;
     }
 
-    private Acl getParentAcl( Object f ) {
+    private Acl getParentAcl( Securable f ) {
         Acl a = this.getAcl( f );
         return a.getParentAcl();
     }

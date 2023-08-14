@@ -91,7 +91,7 @@ public class LoadExpressionDataCli extends AbstractCLIContextCLI {
         options.addOption( accessionOption );
 
         Option platformOnlyOption = Option.builder( "y" ).argName( "Platforms only" ).desc(
-                "Load platforms (array designs) only; implied if you supply GPL instead of GSE or GDS" )
+                        "Load platforms (array designs) only; implied if you supply GPL instead of GSE or GDS" )
                 .longOpt( "platforms" ).build();
         options.addOption( platformOnlyOption );
 

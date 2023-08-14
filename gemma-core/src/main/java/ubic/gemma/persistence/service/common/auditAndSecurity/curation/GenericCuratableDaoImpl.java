@@ -9,9 +9,6 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignDao;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentDao;
 
-import java.util.Collection;
-import java.util.List;
-
 @Repository
 public class GenericCuratableDaoImpl implements GenericCuratableDao {
 
@@ -20,11 +17,6 @@ public class GenericCuratableDaoImpl implements GenericCuratableDao {
 
     @Autowired
     private ExpressionExperimentDao expressionExperimentDao;
-
-    @Override
-    public List<Long> retainNonTroubledIds( Collection<Long> ids ) {
-        throw new UnsupportedOperationException( "Filtering troubled entities by ID is not supported, use a specific service instead." );
-    }
 
     @Override
     public void updateCurationDetailsFromAuditEvent( Curatable auditable, AuditEvent auditEvent ) {

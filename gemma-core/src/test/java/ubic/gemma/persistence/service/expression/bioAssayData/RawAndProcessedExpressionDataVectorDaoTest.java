@@ -76,7 +76,6 @@ public class RawAndProcessedExpressionDataVectorDaoTest extends BaseDatabaseTest
         session.persist( taxon );
         ArrayDesign ad = ArrayDesign.Factory.newInstance( "test", taxon );
         ad.setPrimaryTaxon( taxon );
-        ad.setAuditTrail( new AuditTrail() );
         session.persist( ad );
         CompositeSequence cs = CompositeSequence.Factory.newInstance( "test", ad );
         session.persist( cs );
@@ -91,7 +90,6 @@ public class RawAndProcessedExpressionDataVectorDaoTest extends BaseDatabaseTest
         pv.setBioAssayDimension( bad );
         pv.setData( new byte[0] );
         ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
-        ee.setAuditTrail( new AuditTrail() );
         ev.setExpressionExperiment( ee );
         pv.setExpressionExperiment( ee );
         ee.setRawExpressionDataVectors( Collections.singleton( ev ) );

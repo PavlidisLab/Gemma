@@ -36,7 +36,7 @@ public class PhenotypeAssociationConstants {
 
     // those are used to write files the PhenocartaExport
 
-    public final static String DISEASE_ONTOLOGY_ROOT = "DOID_4";
+    public final static String DISEASE_ONTOLOGY_ROOT = "MONDO_0000001";
     public final static String PHENOCARTA_EXPORT = "PhenocartaExport";
     public final static String MANUAL_CURATION = "Manual Curation";
 
@@ -54,7 +54,7 @@ public class PhenotypeAssociationConstants {
 
     // path to the final files on production
     public final static String GEMMA_PHENOCARTA_HOST_URL =
-            Settings.getBaseUrl() + PhenotypeAssociationConstants.PHENOCARTA_NAME + File.separator
+            Settings.getHostUrl() + "/" + PhenotypeAssociationConstants.PHENOCARTA_NAME + File.separator
                     + PhenotypeAssociationConstants.LATEST_EVIDENCE_EXPORT + File.separator;
     // those are folders
     public final static String GEMMA_PHENOCARTA_HOST_URL_DATASETS =

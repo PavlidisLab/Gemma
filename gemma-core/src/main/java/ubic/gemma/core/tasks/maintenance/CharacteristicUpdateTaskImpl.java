@@ -27,6 +27,7 @@ import org.springframework.stereotype.Component;
 import ubic.gemma.core.job.TaskResult;
 import ubic.gemma.core.tasks.AbstractTask;
 import ubic.gemma.model.association.GOEvidenceCode;
+import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.description.AnnotationValueObject;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
@@ -105,9 +106,9 @@ public class CharacteristicUpdateTaskImpl extends AbstractTask<TaskResult, Chara
         Characteristic vc = Characteristic.Factory.newInstance();
         vc.setId( avo.getId() );
         vc.setCategory( avo.getClassName() );
-        vc.setCategoryUri( avo.getClassUri() );
+        vc.setCategoryUri( StringUtils.stripToNull( avo.getClassUri() ) );
         vc.setValue( avo.getTermName() );
-        vc.setValueUri( avo.getTermUri() );
+        vc.setValueUri( StringUtils.stripToNull( avo.getTermUri() ) );
         if ( StringUtils.isNotBlank( avo.getEvidenceCode() ) )
             vc.setEvidenceCode( GOEvidenceCode.valueOf( avo.getEvidenceCode() ) );
         return vc;
@@ -190,7 +191,7 @@ public class CharacteristicUpdateTaskImpl extends AbstractTask<TaskResult, Chara
             return new TaskResult( taskCommand, false );
         }
 
-        Map<Characteristic, Object> charToParent = characteristicService.getParents( asChars );
+        Map<Characteristic, Identifiable> charToParent = characteristicService.getParents( asChars, null, -1 );
         for ( Characteristic cFromClient : asChars ) {
             Characteristic cFromDatabase = characteristicService.loadOrFail( cFromClient.getId() );
             Object parent = charToParent.get( cFromDatabase );
@@ -233,7 +234,7 @@ public class CharacteristicUpdateTaskImpl extends AbstractTask<TaskResult, Chara
         if ( asChars.size() == 0 )
             return new TaskResult( taskCommand, true );
 
-        Map<Characteristic, Object> charToParent = characteristicService.getParents( asChars );
+        Map<Characteristic, Identifiable> charToParent = characteristicService.getParents( asChars, null, -1 );
 
         for ( Characteristic cFromClient : asChars ) {
             Long characteristicId = cFromClient.getId();

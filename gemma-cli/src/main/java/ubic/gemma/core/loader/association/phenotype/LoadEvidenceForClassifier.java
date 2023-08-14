@@ -16,6 +16,7 @@ package ubic.gemma.core.loader.association.phenotype;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
+import org.springframework.core.io.ClassPathResource;
 import ubic.gemma.core.annotation.reference.BibliographicReferenceService;
 import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.core.util.AbstractCLIContextCLI;
@@ -105,7 +106,7 @@ public class LoadEvidenceForClassifier extends AbstractCLIContextCLI {
     private void findEvidence() throws IOException {
 
         BufferedReader br = new BufferedReader(
-                new InputStreamReader( LoadEvidenceForClassifier.class.getResourceAsStream( evidenceDumpPath ) ) );
+                new InputStreamReader( new ClassPathResource( evidenceDumpPath ).getInputStream() ) );
 
         // skip first line
         String firstLine = br.readLine();
@@ -169,7 +170,7 @@ public class LoadEvidenceForClassifier extends AbstractCLIContextCLI {
     private void loadTrainingSetUsed() throws IOException {
 
         BufferedReader br = new BufferedReader(
-                new InputStreamReader( LoadEvidenceForClassifier.class.getResourceAsStream( trainingSetPath ) ) );
+                new InputStreamReader( new ClassPathResource( trainingSetPath ).getInputStream() ) );
 
         String line;
 

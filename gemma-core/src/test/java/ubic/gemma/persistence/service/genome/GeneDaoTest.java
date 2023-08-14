@@ -20,13 +20,8 @@ public class GeneDaoTest extends BaseDatabaseTest {
     static class GeneDaoTestContextConfiguration extends BaseDatabaseTestContextConfiguration {
 
         @Bean
-        public CacheManager cacheManager() {
-            return new ConcurrentMapCacheManager();
-        }
-
-        @Bean
-        public GeneDao geneDao( SessionFactory sessionFactory, CacheManager cacheManager ) {
-            return new GeneDaoImpl( sessionFactory, cacheManager );
+        public GeneDao geneDao( SessionFactory sessionFactory ) {
+            return new GeneDaoImpl( sessionFactory );
         }
     }
 

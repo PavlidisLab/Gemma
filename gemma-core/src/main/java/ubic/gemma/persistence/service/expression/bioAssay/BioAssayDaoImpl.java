@@ -19,7 +19,9 @@
 package ubic.gemma.persistence.service.expression.bioAssay;
 
 import org.apache.commons.lang3.StringUtils;
-import org.hibernate.*;
+import org.hibernate.Hibernate;
+import org.hibernate.Session;
+import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
@@ -27,10 +29,9 @@ import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
-import ubic.gemma.persistence.service.AbstractVoEnabledDao;
+import ubic.gemma.persistence.service.AbstractNoopFilteringVoEnabledDao;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignDao;
-import ubic.gemma.persistence.util.BusinessKey;
-import ubic.gemma.persistence.util.EntityUtils;
+import ubic.gemma.persistence.util.*;
 
 import java.util.*;
 
@@ -38,7 +39,7 @@ import java.util.*;
  * @author pavlidis
  */
 @Repository
-public class BioAssayDaoImpl extends AbstractVoEnabledDao<BioAssay, BioAssayValueObject> implements BioAssayDao {
+public class BioAssayDaoImpl extends AbstractNoopFilteringVoEnabledDao<BioAssay, BioAssayValueObject> implements BioAssayDao {
 
     @Autowired
     private ArrayDesignDao arrayDesignDao;
@@ -123,5 +124,4 @@ public class BioAssayDaoImpl extends AbstractVoEnabledDao<BioAssay, BioAssayValu
     protected BioAssayValueObject doLoadValueObject( BioAssay entity ) {
         return new BioAssayValueObject( entity, null, false );
     }
-
 }

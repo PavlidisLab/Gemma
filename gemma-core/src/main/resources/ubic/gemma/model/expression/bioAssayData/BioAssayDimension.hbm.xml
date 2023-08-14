@@ -4,8 +4,8 @@
         "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
 
 <hibernate-mapping>
-    <class name="ubic.gemma.model.expression.bioAssayData.BioAssayDimension" table="BIO_ASSAY_DIMENSION">
-        <cache usage="read-write"/>
+    <class name="ubic.gemma.model.expression.bioAssayData.BioAssayDimension" table="BIO_ASSAY_DIMENSION" mutable="false">
+        <cache usage="read-only"/>
         <id name="id" type="java.lang.Long" unsaved-value="null">
             <column name="ID" sql-type="BIGINT"/>
             <generator class="native">

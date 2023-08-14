@@ -91,7 +91,7 @@ public class GeneOntologyServiceImpl extends AbstractOntologyMemoryBackedService
 
     @Override
     protected String getOntologyUrl() {
-        return GO_URL;
+        return Settings.getString( "url.geneOntology" );
     }
 
     /**

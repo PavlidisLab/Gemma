@@ -409,7 +409,8 @@ public class BatchInfoPopulationServiceImpl implements BatchInfoPopulationServic
      * @return map of GEO id to headers, including the platform ID
      */
     private Map<String, String> readFastqHeaders( ExpressionExperiment ee ) throws IOException {
-        String accession = ee.getAccession().getAccession();
+        String accession = Objects.requireNonNull( ee.getAccession(), String.format( "%s does not have an accession", ee ) )
+                .getAccession();
         File headerFile = locateFASTQheadersForBatchInfo( accession );
 
         if ( !headerFile.canRead() ) {

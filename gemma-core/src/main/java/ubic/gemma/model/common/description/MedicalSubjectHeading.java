@@ -22,7 +22,7 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
-public class MedicalSubjectHeading extends BibRefAnnotationImpl {
+public class MedicalSubjectHeading extends BibRefAnnotation {
 
     private static final long serialVersionUID = 7820807342851172028L;
     private Set<MedicalSubjectHeading> qualifiers = new HashSet<>();

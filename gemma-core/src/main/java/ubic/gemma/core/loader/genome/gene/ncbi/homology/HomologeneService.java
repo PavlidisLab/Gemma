@@ -21,6 +21,7 @@ import ubic.gemma.model.genome.gene.GeneValueObject;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collection;
+import java.util.concurrent.Future;
 
 /**
  * @author paul
@@ -47,8 +48,6 @@ public interface HomologeneService {
      */
     Collection<Long> getHomologues( Long ncbiId );
 
-    void init( boolean force );
-
     /**
      * @param taxonCommonName desired taxon to find homologue in
      * @param geneId          gene id
@@ -58,6 +57,8 @@ public interface HomologeneService {
 
     Collection<Long> getNCBIGeneIdsInGroup( long homologeneGroupId );
 
-    void parseHomologeneFile( InputStream is ) throws IOException;
-
+    /**
+     * Refresh homologene data.
+     */
+    void refresh() throws IOException;
 }

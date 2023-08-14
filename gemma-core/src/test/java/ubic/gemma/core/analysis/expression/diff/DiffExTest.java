@@ -59,6 +59,7 @@ import static org.junit.Assert.*;
  *
  * @author Paul
  */
+@Category(SlowTest.class)
 public class DiffExTest extends AbstractGeoServiceTest {
 
     @Autowired
@@ -97,7 +98,6 @@ public class DiffExTest extends AbstractGeoServiceTest {
      * Test differential expression analysis on RNA-seq data. See bug 3383. R code in voomtest.R
      */
     @Test
-    @Category(SlowTest.class)
     public void testCountData() throws Exception {
         ee = eeService.findByShortName( "GSE29006" );
         Assume.assumeTrue( String.format( "%s was not properly cleaned up by another test.", ee ),

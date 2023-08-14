@@ -60,7 +60,7 @@ public interface GeneDifferentialExpressionService {
      * @param limit     : the maximum number of results to return (null for all)
      * @return DEA VOs
      */
-    Collection<DifferentialExpressionValueObject> getDifferentialExpression( Gene gene, Collection<BioAssaySet> ees,
+    Collection<DifferentialExpressionValueObject> getDifferentialExpression( Gene gene, BioAssaySet ees,
             double threshold, int limit );
 
     /**

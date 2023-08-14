@@ -19,11 +19,11 @@
 
 package ubic.gemma.persistence.service;
 
+import io.micrometer.core.annotation.Timed;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.SimpleMailMessage;
@@ -35,6 +35,9 @@ import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignGeneMapping
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.common.description.ExternalDatabases;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.biomaterial.BioMaterial;
+import ubic.gemma.model.expression.experiment.ExperimentalDesign;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.model.Gene2CsStatus;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.persistence.service.common.description.ExternalDatabaseService;
@@ -51,7 +54,6 @@ import java.nio.file.Paths;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Functions for maintaining the database. This is intended for denormalized tables and statistics tables that need to
@@ -62,17 +64,42 @@ import java.util.concurrent.atomic.AtomicBoolean;
  */
 @Service
 public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
-    private static final AtomicBoolean running = new AtomicBoolean( false );
 
     /**
      * The query used to repopulate the contents of the GENE2CS table.
      */
     private static final String GENE2CS_REPOPULATE_QUERY =
-            "INSERT INTO GENE2CS (GENE, CS, AD) " + "SELECT DISTINCT gene.ID, cs.ID, cs.ARRAY_DESIGN_FK "
+            "REPLACE INTO GENE2CS (GENE, CS, AD) " + "SELECT DISTINCT gene.ID, cs.ID, cs.ARRAY_DESIGN_FK "
                     + " FROM CHROMOSOME_FEATURE AS gene, CHROMOSOME_FEATURE AS geneprod,BIO_SEQUENCE2_GENE_PRODUCT AS bsgp,COMPOSITE_SEQUENCE cs "
                     + " WHERE geneprod.GENE_FK = gene.ID AND bsgp.GENE_PRODUCT_FK = geneprod.ID AND "
                     + " bsgp.BIO_SEQUENCE_FK = cs.BIOLOGICAL_CHARACTERISTIC_FK ORDER BY gene.ID,cs.ARRAY_DESIGN_FK";
 
+    /**
+     * Query used to repopulate the EXPRESSION_EXPERIMENT2CHARACTERISTIC table.
+     */
+    private static final String E2C_QUERY =
+            "replace into EXPRESSION_EXPERIMENT2CHARACTERISTIC (ID, NAME, DESCRIPTION, CATEGORY, CATEGORY_URI, `VALUE`, VALUE_URI, ORIGINAL_VALUE, EVIDENCE_CODE, EXPRESSION_EXPERIMENT_FK, LEVEL) "
+                    + "select C.ID, C.NAME, C.DESCRIPTION, C.CATEGORY, C.CATEGORY_URI, C.`VALUE`, C.VALUE_URI, C.ORIGINAL_VALUE, C.EVIDENCE_CODE, I.ID, cast(:eeClass as char(255)) "
+                    + "from INVESTIGATION I "
+                    + "join CHARACTERISTIC C on I.ID = C.INVESTIGATION_FK "
+                    + "where I.class = 'ExpressionExperiment' "
+                    + "union "
+                    + "select C.ID, C.NAME, C.DESCRIPTION, C.CATEGORY, C.CATEGORY_URI, C.`VALUE`, C.VALUE_URI, C.ORIGINAL_VALUE, C.EVIDENCE_CODE, I.ID, cast(:bmClass as char(255)) "
+                    + "from INVESTIGATION I "
+                    + "join BIO_ASSAY BA on I.ID = BA.EXPRESSION_EXPERIMENT_FK "
+                    + "join BIO_MATERIAL BM on BA.SAMPLE_USED_FK = BM.ID "
+                    + "join BIO_MATERIAL_FACTOR_VALUES BMFV on BM.ID = BMFV.BIO_MATERIALS_FK "
+                    + "join FACTOR_VALUE FV on BMFV.FACTOR_VALUES_FK = FV.ID "
+                    + "join CHARACTERISTIC C on FV.ID = C.FACTOR_VALUE_FK "
+                    + "where I.class = 'ExpressionExperiment' "
+                    + "union "
+                    + "select C.ID, C.NAME, C.DESCRIPTION, C.CATEGORY, C.CATEGORY_URI, C.`VALUE`, C.VALUE_URI, C.ORIGINAL_VALUE, C.EVIDENCE_CODE, I.ID, cast(:edClass as char(255)) "
+                    + "from INVESTIGATION I "
+                    + "join EXPERIMENTAL_DESIGN on I.EXPERIMENTAL_DESIGN_FK = EXPERIMENTAL_DESIGN.ID "
+                    + "join EXPERIMENTAL_FACTOR EF on EXPERIMENTAL_DESIGN.ID = EF.EXPERIMENTAL_DESIGN_FK "
+                    + "join FACTOR_VALUE FV on FV.EXPERIMENTAL_FACTOR_FK = EF.ID "
+                    + "join CHARACTERISTIC C on FV.ID = C.FACTOR_VALUE_FK "
+                    + "where I.class = 'ExpressionExperiment'";
     private static final Path DEFAULT_GENE2CS_INFO_PATH = Paths.get( Settings.getString( "gemma.appdata.home" ), "DbReports", "gene2cs.info" );
     private static final Log log = LogFactory.getLog( TableMaintenanceUtil.class.getName() );
     @Autowired
@@ -92,17 +119,12 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
 
     @Override
     @Transactional
-    public synchronized void updateGene2CsEntries() {
-
-        if ( TableMaintenanceUtilImpl.running.get() )
-            return;
-
+    @Timed
+    public void updateGene2CsEntries() {
         TableMaintenanceUtilImpl.log.debug( "Running Gene2CS status check" );
 
         String annotation = "";
         try {
-            TableMaintenanceUtilImpl.running.set( true );
-
             Gene2CsStatus status = this.getLastGene2CsUpdateStatus();
             boolean needToRefresh = false;
             if ( status == null ) {
@@ -155,17 +177,26 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
                 TableMaintenanceUtilImpl.log.debug( "No update of GENE2CS needed" );
             }
 
-        } catch ( Exception e ) {
-            try {
-                TableMaintenanceUtilImpl.log.info( "Error during attempt to check status or update GENE2CS", e );
-                Gene2CsStatus updatedStatus = this.writeUpdateStatus( annotation, e );
-                this.sendEmail( updatedStatus );
-            } catch ( IOException e1 ) {
-                throw new RuntimeException( e1 );
-            }
-        } finally {
-            TableMaintenanceUtilImpl.running.set( false );
+        } catch ( RuntimeException e ) {
+            Gene2CsStatus updatedStatus = this.writeUpdateStatus( annotation, e );
+            this.sendEmail( updatedStatus );
+            throw e;
         }
+    }
+
+    @Override
+    @Transactional
+    @Timed
+    public int updateExpressionExperiment2CharacteristicEntries() {
+        log.info( "Updating the EXPRESSION_EXPERIMENT2CHARACTERISTIC table..." );
+        int updated = sessionFactory.getCurrentSession().createSQLQuery( E2C_QUERY )
+                .addSynchronizedQuerySpace( "EXPRESSION_EXPERIMENT2CHARACTERISTIC" )
+                .setParameter( "eeClass", ExpressionExperiment.class )
+                .setParameter( "bmClass", BioMaterial.class )
+                .setParameter( "edClass", ExperimentalDesign.class )
+                .executeUpdate();
+        log.info( String.format( "Done updating the EXPRESSION_EXPERIMENT2CHARACTERISTIC table; %d entries were updated.", updated ) );
+        return updated;
     }
 
     /**
@@ -191,20 +222,12 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
      * @see GeneDao for where the GENE2CS table is used extensively.
      */
     private void generateGene2CsEntries() {
-        TableMaintenanceUtilImpl.log.info( "Updating Gene2Cs ..." );
-        Session session = this.sessionFactory.getCurrentSession();
-        TableMaintenanceUtilImpl.log.info( "Deleting all entries for Gene2Cs." );
-        String queryString = "DELETE FROM GENE2CS"; // Truncate doesn't work., bug 2057
-        org.hibernate.SQLQuery queryObject;
-
-        queryObject = session.createSQLQuery( queryString ); // for native query.
-        int deleted = queryObject.executeUpdate();
-
-        TableMaintenanceUtilImpl.log.info( "Deleted " + deleted + "; Recreating all entries for Gene2Cs." );
-        queryString = TableMaintenanceUtilImpl.GENE2CS_REPOPULATE_QUERY;
-        queryObject = session.createSQLQuery( queryString ); // for native query.
-        queryObject.executeUpdate();
-        TableMaintenanceUtilImpl.log.info( "Done regenerating Gene2Cs." );
+        TableMaintenanceUtilImpl.log.info( "Updating the GENE2CS table..." );
+        int updated = this.sessionFactory.getCurrentSession()
+                .createSQLQuery( TableMaintenanceUtilImpl.GENE2CS_REPOPULATE_QUERY )
+                .addSynchronizedQuerySpace( "GENE2CS" )
+                .executeUpdate();
+        TableMaintenanceUtilImpl.log.info( String.format( "Done regenerating the GENE2CS table; %d entries were updated.", updated ) );
     }
 
     /**
@@ -212,11 +235,14 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
      *
      * @return null if there is no update information available.
      */
-    private Gene2CsStatus getLastGene2CsUpdateStatus() throws IOException, ClassNotFoundException {
+    @Nullable
+    private Gene2CsStatus getLastGene2CsUpdateStatus() {
         try ( ObjectInputStream ois = new ObjectInputStream( Files.newInputStream( gene2CsInfoPath ) ) ) {
             return ( Gene2CsStatus ) ois.readObject();
         } catch ( NoSuchFileException e ) {
             return null;
+        } catch ( IOException | ClassNotFoundException e ) {
+            throw new RuntimeException( "Failed to obtain last gene2cs update status.", e );
         }
     }
 
@@ -240,19 +266,21 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
     /**
      * @param annotation extra text that describes the status
      */
-    private Gene2CsStatus writeUpdateStatus( String annotation, @Nullable Exception e ) throws IOException {
+    private Gene2CsStatus writeUpdateStatus( String annotation, @Nullable Exception e ) {
         Gene2CsStatus status = new Gene2CsStatus();
         Calendar c = Calendar.getInstance();
         Date date = c.getTime();
         status.setLastUpdate( date );
         status.setError( e );
         status.setAnnotation( annotation );
-
-        FileUtils.forceMkdirParent( gene2CsInfoPath.toFile() );
-        try ( ObjectOutputStream oos = new ObjectOutputStream( Files.newOutputStream( gene2CsInfoPath ) ) ) {
-            oos.writeObject( status );
+        try {
+            FileUtils.forceMkdirParent( gene2CsInfoPath.toFile() );
+            try ( ObjectOutputStream oos = new ObjectOutputStream( Files.newOutputStream( gene2CsInfoPath ) ) ) {
+                oos.writeObject( status );
+            }
+        } catch ( IOException e2 ) {
+            throw new RuntimeException( "Failed to update gene2cs update status.", e2 );
         }
-
         return status;
     }
 

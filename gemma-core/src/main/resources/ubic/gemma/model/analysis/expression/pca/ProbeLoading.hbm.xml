@@ -1,12 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
-        "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+    "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
 
 <hibernate-mapping>
     <class name="ubic.gemma.model.analysis.expression.pca.ProbeLoading" table="PROBE_LOADING"
-    >
-        <cache usage="read-write"/>
+           mutable="false">
         <id name="id" type="java.lang.Long" unsaved-value="null">
             <column name="ID" sql-type="BIGINT"/>
             <generator class="native">
@@ -22,7 +21,7 @@
             <column name="LOADING_RANK" not-null="true" unique="false" sql-type="INTEGER"/>
         </property>
         <many-to-one name="probe" class="ubic.gemma.model.expression.designElement.CompositeSequence" lazy="false"
-                     fetch="join">
+                     fetch="select">
             <column name="PROBE_FK" not-null="true" sql-type="BIGINT"/>
         </many-to-one>
     </class>

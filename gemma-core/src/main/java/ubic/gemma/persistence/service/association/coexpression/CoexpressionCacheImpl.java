@@ -18,9 +18,8 @@
  */
 package ubic.gemma.persistence.service.association.coexpression;
 
+import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.lang3.time.StopWatch;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.Cache;
@@ -39,10 +38,10 @@ import java.util.concurrent.atomic.AtomicBoolean;
  */
 @SuppressWarnings("SynchronizeOnNonFinalField") // Cache has to be initialized in afterPropertiesSet
 @Component
+@CommonsLog
 public class CoexpressionCacheImpl implements InitializingBean, CoexpressionCache {
 
     private static final String GENE_COEXPRESSION_CACHE_NAME = "Gene2GeneCoexpressionCache";
-    private static final Logger log = LoggerFactory.getLogger( CoexpressionCacheImpl.class );
     private final AtomicBoolean enabled = new AtomicBoolean(
             Settings.getBoolean( "gemma.cache.gene2gene.enabled", true ) );
     private Cache cache;

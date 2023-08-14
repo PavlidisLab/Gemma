@@ -42,6 +42,7 @@ public class GeoDataset extends GeoData {
     private String featureCount;
     private int numChannels;
     private int numSamples;
+    private int numProbes;
     private String order;
     private String organism;
     private GeoPlatform platform;
@@ -375,6 +376,14 @@ public class GeoDataset extends GeoData {
      */
     public void setNumSamples( int numSamples ) {
         this.numSamples = numSamples;
+    }
+
+    public int getNumProbes() {
+        return this.numProbes;
+    }
+
+    public void setNumProbes( int numProbes ) {
+        this.numProbes = numProbes;
     }
 
     /**

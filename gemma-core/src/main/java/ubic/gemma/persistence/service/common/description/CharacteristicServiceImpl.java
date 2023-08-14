@@ -21,38 +21,27 @@ package ubic.gemma.persistence.service.common.description;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ubic.gemma.model.association.Gene2GOAssociation;
-import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.description.Characteristic;
-import ubic.gemma.model.expression.biomaterial.BioMaterial;
-import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
-import ubic.gemma.persistence.service.AbstractVoEnabledService;
-import ubic.gemma.persistence.util.EntityUtils;
-import ubic.gemma.persistence.util.ObjectFilter;
-import ubic.gemma.persistence.util.Sort;
+import ubic.gemma.persistence.service.AbstractFilteringVoEnabledService;
 
 import javax.annotation.Nullable;
-import java.util.*;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * @author Luke
  * @see    CharacteristicService
  */
 @Service
-public class CharacteristicServiceImpl extends AbstractVoEnabledService<Characteristic, CharacteristicValueObject>
+public class CharacteristicServiceImpl extends AbstractFilteringVoEnabledService<Characteristic, CharacteristicValueObject>
         implements CharacteristicService {
 
-    /**
-     * Classes examined when getting the "parents" of characteristics.
-     */
-    private static final Class<?>[] CLASSES_WITH_CHARACTERISTICS = new Class[] { ExpressionExperiment.class,
-            BioMaterial.class, FactorValue.class, ExperimentalFactor.class, Gene2GOAssociation.class,
-            PhenotypeAssociation.class };
     private final CharacteristicDao characteristicDao;
 
     @Autowired
@@ -75,8 +64,12 @@ public class CharacteristicServiceImpl extends AbstractVoEnabledService<Characte
 
     @Override
     @Transactional(readOnly = true)
-    public Map<Class<? extends Identifiable>, Map<String, Set<ExpressionExperiment>>> findExperimentsByUris( Collection<String> uris, @Nullable Taxon taxon, int limit ) {
-        return this.characteristicDao.findExperimentsByUris( uris, taxon, limit );
+    public Map<Class<? extends Identifiable>, Map<String, Set<ExpressionExperiment>>> findExperimentsByUris( Collection<String> uris, @Nullable Taxon taxon, int limit, boolean loadEEs, boolean rankByLevel ) {
+        if ( loadEEs ) {
+            return this.characteristicDao.findExperimentsByUris( uris, taxon, limit, rankByLevel );
+        } else {
+            return this.characteristicDao.findExperimentReferencesByUris( uris, taxon, limit, rankByLevel );
+        }
     }
 
     @Override
@@ -89,6 +82,13 @@ public class CharacteristicServiceImpl extends AbstractVoEnabledService<Characte
     @Transactional(readOnly = true)
     public Collection<Characteristic> findByUri( String searchString ) {
         return this.characteristicDao.findByUri( searchString );
+    }
+
+    @Nullable
+    @Override
+    @Transactional(readOnly = true)
+    public Characteristic findBestByUri( String uri ) {
+        return this.characteristicDao.findBestByUri( uri );
     }
 
     @Override
@@ -111,65 +111,13 @@ public class CharacteristicServiceImpl extends AbstractVoEnabledService<Characte
 
     @Override
     @Transactional(readOnly = true)
-    public Map<Characteristic, Object> getParents( Collection<Characteristic> characteristics ) {
-        Map<Characteristic, Object> charToParent = new HashMap<>();
-        Collection<Characteristic> needToSearch = new HashSet<>( characteristics );
-        for ( Class<?> parentClass : CharacteristicServiceImpl.CLASSES_WITH_CHARACTERISTICS ) {
-            Map<Characteristic, Object> found = this.characteristicDao.getParents( parentClass, needToSearch );
-            charToParent.putAll( found );
-            needToSearch.removeAll( found.keySet() );
-        }
-        return charToParent;
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public Map<Characteristic, Long> getParentIds( Class<?> parentClass, @Nullable Collection<Characteristic> characteristics ) {
-        return this.characteristicDao.getParentIds( parentClass, characteristics );
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public Map<Characteristic, Object> getParents( Collection<Class<?>> classes,
-            @Nullable Collection<Characteristic> characteristics ) {
-        Map<Characteristic, Object> charToParent = new HashMap<>();
-        for ( Class<?> parentClass : classes ) {
-            charToParent.putAll( this.characteristicDao.getParents( parentClass, characteristics ) );
-        }
-        return charToParent;
+    public Map<Characteristic, Identifiable> getParents( Collection<Characteristic> characteristics, @Nullable Collection<Class<?>> parentClasses, int maxResults ) {
+        return characteristicDao.getParents( characteristics, parentClasses, maxResults );
     }
 
     @Override
     @Transactional(readOnly = true)
     public Collection<? extends Characteristic> findByCategory( String query ) {
         return this.characteristicDao.findByCategory( query );
-    }
-
-    @Override
-    public ObjectFilter getObjectFilter( String property, ObjectFilter.Operator operator, String value ) throws IllegalArgumentException {
-        try {
-            return ObjectFilter.parseObjectFilter( CharacteristicDao.OBJECT_ALIAS, property, EntityUtils.getDeclaredFieldType( property, Characteristic.class ), operator, value );
-        } catch ( NoSuchFieldException e ) {
-            throw new IllegalArgumentException( e );
-        }
-    }
-
-    @Override
-    public ObjectFilter getObjectFilter( String property, ObjectFilter.Operator operator, Collection<String> values ) throws IllegalArgumentException {
-        try {
-            return ObjectFilter.parseObjectFilter( CharacteristicDao.OBJECT_ALIAS, property, EntityUtils.getDeclaredFieldType( property, Characteristic.class ), operator, values );
-        } catch ( NoSuchFieldException e ) {
-            throw new IllegalArgumentException( e );
-        }
-    }
-
-    @Override
-    public Sort getSort( String property, @Nullable Sort.Direction direction ) throws IllegalArgumentException {
-        try {
-            EntityUtils.getDeclaredFieldType( property, Characteristic.class );
-            return Sort.by( CharacteristicDao.OBJECT_ALIAS, property, direction );
-        } catch ( NoSuchFieldException e ) {
-            throw new IllegalArgumentException( e );
-        }
     }
 }

@@ -4,7 +4,8 @@
 	   xmlns:s="http://www.springframework.org/schema/security"
 	   xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
             http://www.springframework.org/schema/security
-            http://www.springframework.org/schema/security/spring-security.xsd">
+            http://www.springframework.org/schema/security/spring-security.xsd"
+	   profile="web">
 
 	<bean id="httpAccessDecisionManager" class="org.springframework.security.access.vote.AffirmativeBased">
 		<property name="allowIfAllAbstainDecisions" value="true"/>
@@ -32,7 +33,7 @@
 		<property name="defaultFailureUrl" value="/login.jsp"/>
 	</bean>
 
-	<bean id="restAuthEntryPoint" class="ubic.gemma.web.services.rest.security.RestAuthEntryPoint">
+	<bean id="restAuthEntryPoint" class="ubic.gemma.rest.security.RestAuthEntryPoint">
 		<constructor-arg ref="objectMapper"/>
 	</bean>
 

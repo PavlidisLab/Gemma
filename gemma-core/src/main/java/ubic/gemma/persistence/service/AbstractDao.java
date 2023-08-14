@@ -28,10 +28,12 @@ import org.hibernate.metadata.ClassMetadata;
 import org.springframework.util.Assert;
 import ubic.gemma.model.common.Identifiable;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.OverridingMethodsMustInvokeSuper;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import static java.util.Objects.requireNonNull;
 
@@ -78,6 +80,7 @@ public abstract class AbstractDao<T extends Identifiable> implements BaseDao<T> 
     protected AbstractDao( Class<? extends T> elementClass, SessionFactory sessionFactory, ClassMetadata classMetadata, int batchSize ) {
         Assert.isTrue( elementClass.isAssignableFrom( ( Class<?> ) classMetadata.getMappedClass() ),
                 String.format( "The mapped class must be assignable from %s.", elementClass.getName() ) );
+        Assert.notNull( classMetadata.getIdentifierPropertyName(), String.format( "%s does not have a ID.", elementClass.getName() ) );
         Assert.isTrue( batchSize >= 1, "Batch size must be greater or equal to 1." );
         this.elementClass = elementClass;
         this.sessionFactory = sessionFactory;
@@ -88,6 +91,11 @@ public abstract class AbstractDao<T extends Identifiable> implements BaseDao<T> 
     @Override
     public Class<? extends T> getElementClass() {
         return elementClass;
+    }
+
+    @Override
+    public String getIdentifierPropertyName() {
+        return this.classMetadata.getIdentifierPropertyName();
     }
 
     @Override
@@ -107,6 +115,7 @@ public abstract class AbstractDao<T extends Identifiable> implements BaseDao<T> 
         warnIfBatchingIsNotAdvisable( "create", entities );
         int i = 0;
         for ( T t : entities ) {
+            //noinspection ResultOfMethodCallIgnored
             this.create( t );
             if ( ++i % batchSize == 0 && isBatchingAdvisable() ) {
                 flushAndClear();
@@ -119,7 +128,7 @@ public abstract class AbstractDao<T extends Identifiable> implements BaseDao<T> 
     @Override
     @OverridingMethodsMustInvokeSuper
     public T create( T entity ) {
-        this.getSessionFactory().getCurrentSession().persist( entity );
+        sessionFactory.getCurrentSession().persist( entity );
         AbstractDao.log.trace( String.format( "Created %s.", formatEntity( entity ) ) );
         return entity;
     }
@@ -154,12 +163,12 @@ public abstract class AbstractDao<T extends Identifiable> implements BaseDao<T> 
     @OverridingMethodsMustInvokeSuper
     public T save( T entity ) {
         if ( entity.getId() == null ) {
-            getSessionFactory().getCurrentSession().persist( entity );
+            sessionFactory.getCurrentSession().persist( entity );
             AbstractDao.log.trace( String.format( "Created %s.", formatEntity( entity ) ) );
             return entity;
         } else {
             //noinspection unchecked
-            T result = ( T ) getSessionFactory().getCurrentSession().merge( entity );
+            T result = ( T ) sessionFactory.getCurrentSession().merge( entity );
             AbstractDao.log.trace( String.format( "Updated %s.", formatEntity( entity ) ) );
             return result;
         }
@@ -167,18 +176,42 @@ public abstract class AbstractDao<T extends Identifiable> implements BaseDao<T> 
 
     @Override
     public Collection<T> load( Collection<Long> ids ) {
-        StopWatch timer = StopWatch.createStarted();
         if ( ids.isEmpty() ) {
             AbstractDao.log.trace( String.format( "Loading %s with an empty collection of IDs, returning an empty collection.", elementClass.getSimpleName() ) );
             return Collections.emptyList();
         }
+        StopWatch timer = StopWatch.createStarted();
         String idPropertyName = classMetadata.getIdentifierPropertyName();
-        //noinspection unchecked
-        List<T> results = this.getSessionFactory().getCurrentSession()
-                .createCriteria( elementClass )
-                .add( Restrictions.in( idPropertyName, new HashSet<>( ids ) ) )
-                .list();
+
+        List<T> results = new ArrayList<>( ids.size() );
+
+        boolean sortById = false;
+        Set<Long> unloadedIds = new HashSet<>();
+        for ( Long id : ids ) {
+            //noinspection unchecked
+            T entity = ( T ) sessionFactory.getCurrentSession().load( elementClass, id );
+            if ( Hibernate.isInitialized( entity ) ) {
+                results.add( entity );
+                sortById = true;
+            } else {
+                unloadedIds.add( id );
+            }
+        }
+
+        if ( !unloadedIds.isEmpty() ) {
+            //noinspection unchecked
+            results.addAll( sessionFactory.getCurrentSession()
+                    .createCriteria( elementClass )
+                    .add( Restrictions.in( idPropertyName, new HashSet<>( ids ) ) )
+                    .list() );
+        }
+
+        if ( sortById ) {
+            results.sort( Comparator.comparing( Identifiable::getId ) );
+        }
+
         AbstractDao.log.debug( String.format( "Loaded %d %s entities in %d ms.", results.size(), elementClass.getSimpleName(), timer.getTime( TimeUnit.MILLISECONDS ) ) );
+
         return results;
     }
 
@@ -186,7 +219,7 @@ public abstract class AbstractDao<T extends Identifiable> implements BaseDao<T> 
     public T load( Long id ) {
         // Don't use 'load' because if the object doesn't exist you can get an invalid proxy.
         //noinspection unchecked
-        T result = ( T ) this.getSessionFactory().getCurrentSession().get( elementClass, id );
+        T result = ( T ) sessionFactory.getCurrentSession().get( elementClass, id );
         AbstractDao.log.trace( String.format( String.format( "Loaded %s.", formatEntity( result ) ) ) );
         return result;
     }
@@ -195,14 +228,36 @@ public abstract class AbstractDao<T extends Identifiable> implements BaseDao<T> 
     public Collection<T> loadAll() {
         StopWatch timer = StopWatch.createStarted();
         //noinspection unchecked
-        Collection<T> results = this.getSessionFactory().getCurrentSession().createCriteria( elementClass ).list();
+        Collection<T> results = sessionFactory.getCurrentSession().createCriteria( elementClass ).list();
         AbstractDao.log.debug( String.format( "Loaded all (%d) %s entities in %d ms.", results.size(), elementClass.getSimpleName(), timer.getTime( TimeUnit.MILLISECONDS ) ) );
         return results;
     }
 
     @Override
+    public Collection<T> loadReference( Collection<Long> ids ) {
+        StopWatch timer = StopWatch.createStarted();
+        //noinspection unchecked
+        Collection<T> results = ids.stream()
+                .distinct().sorted() // this will make the output appear similar to load(Collection)
+                .map( id -> ( T ) sessionFactory.getCurrentSession().load( elementClass, id ) )
+                .collect( Collectors.toList() ); // no HashSet here because otherwise proxies would get initialized
+        AbstractDao.log.debug( String.format( "Loaded %d %s entities in %d ms.", results.size(), elementClass.getSimpleName(),
+                timer.getTime( TimeUnit.MILLISECONDS ) ) );
+        return results;
+    }
+
+    @Nonnull
+    @Override
+    public T loadReference( Long id ) {
+        //noinspection unchecked
+        T entity = ( T ) sessionFactory.getCurrentSession().load( elementClass, id );
+        AbstractDao.log.debug( String.format( "Loaded reference to %s.", formatEntity( entity ) ) );
+        return entity;
+    }
+
+    @Override
     public long countAll() {
-        return ( Long ) this.getSessionFactory().getCurrentSession().createCriteria( elementClass )
+        return ( Long ) sessionFactory.getCurrentSession().createCriteria( elementClass )
                 .setProjection( Projections.rowCount() )
                 .uniqueResult();
     }
@@ -244,7 +299,7 @@ public abstract class AbstractDao<T extends Identifiable> implements BaseDao<T> 
     @Override
     @OverridingMethodsMustInvokeSuper
     public void remove( T entity ) {
-        this.getSessionFactory().getCurrentSession().delete( entity );
+        sessionFactory.getCurrentSession().delete( entity );
         AbstractDao.log.trace( String.format( "Removed %s.", formatEntity( entity ) ) );
     }
 
@@ -291,7 +346,7 @@ public abstract class AbstractDao<T extends Identifiable> implements BaseDao<T> 
     @Override
     @OverridingMethodsMustInvokeSuper
     public void update( T entity ) {
-        this.getSessionFactory().getCurrentSession().update( entity );
+        sessionFactory.getCurrentSession().update( entity );
     }
 
     @Override
@@ -315,7 +370,7 @@ public abstract class AbstractDao<T extends Identifiable> implements BaseDao<T> 
         }
     }
 
-    protected SessionFactory getSessionFactory() {
+    protected final SessionFactory getSessionFactory() {
         return sessionFactory;
     }
 
@@ -331,7 +386,7 @@ public abstract class AbstractDao<T extends Identifiable> implements BaseDao<T> 
      */
     protected T findOneByProperty( String propertyName, Object propertyValue ) {
         //noinspection unchecked
-        return ( T ) this.getSessionFactory().getCurrentSession()
+        return ( T ) sessionFactory.getCurrentSession()
                 .createCriteria( this.elementClass )
                 .add( Restrictions.eq( propertyName, propertyValue ) )
                 .uniqueResult();
@@ -346,7 +401,7 @@ public abstract class AbstractDao<T extends Identifiable> implements BaseDao<T> 
      */
     protected List<T> findByProperty( String propertyName, Object propertyValue ) {
         //noinspection unchecked
-        return this.getSessionFactory().getCurrentSession()
+        return sessionFactory.getCurrentSession()
                 .createCriteria( this.elementClass )
                 .add( Restrictions.eq( propertyName, propertyValue ) )
                 .list();
@@ -360,7 +415,7 @@ public abstract class AbstractDao<T extends Identifiable> implements BaseDao<T> 
             return Collections.emptyList();
         }
         //noinspection unchecked
-        return this.getSessionFactory().getCurrentSession()
+        return sessionFactory.getCurrentSession()
                 .createCriteria( this.elementClass )
                 .add( Restrictions.in( propertyName, propertyValues ) )
                 .list();
@@ -370,7 +425,7 @@ public abstract class AbstractDao<T extends Identifiable> implements BaseDao<T> 
      * Flush pending changes to the persistent storage.
      */
     protected void flush() {
-        this.getSessionFactory().getCurrentSession().flush();
+        sessionFactory.getCurrentSession().flush();
     }
 
     /**
@@ -389,7 +444,7 @@ public abstract class AbstractDao<T extends Identifiable> implements BaseDao<T> 
     private void warnIfBatchingIsNotAdvisable( String operation, Collection<?> entities ) {
         if ( entities.size() >= DEFAULT_BATCH_SIZE && !isBatchingAdvisable() ) {
             AbstractDao.log.warn( String.format( "Batching is not advisable with current flush mode %s, will proceed with %s on %d entities without invoking Session.flush() and Session.clear().",
-                    getSessionFactory().getCurrentSession().getFlushMode(),
+                    sessionFactory.getCurrentSession().getFlushMode(),
                     operation,
                     entities.size() ) );
         }
@@ -402,7 +457,7 @@ public abstract class AbstractDao<T extends Identifiable> implements BaseDao<T> 
      * unintended flushes.
      */
     private boolean isBatchingAdvisable() {
-        FlushMode flushMode = getSessionFactory().getCurrentSession().getFlushMode();
+        FlushMode flushMode = sessionFactory.getCurrentSession().getFlushMode();
         return flushMode == FlushMode.AUTO || flushMode == FlushMode.ALWAYS;
     }
 

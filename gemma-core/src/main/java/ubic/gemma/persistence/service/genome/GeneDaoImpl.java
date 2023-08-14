@@ -21,14 +21,17 @@ package ubic.gemma.persistence.service.genome;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.hibernate.Criteria;
+import org.hibernate.Hibernate;
 import org.hibernate.Query;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cache.CacheManager;
 import org.springframework.stereotype.Repository;
 import ubic.basecode.util.BatchIterator;
 import ubic.gemma.model.common.Describable;
+import ubic.gemma.model.common.Identifiable;
+import ubic.gemma.model.common.description.DatabaseEntry;
+import ubic.gemma.model.common.description.DatabaseEntryValueObject;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
@@ -36,7 +39,6 @@ import ubic.gemma.model.genome.Chromosome;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.PhysicalLocation;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.model.genome.gene.GeneSetMember;
 import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.persistence.service.AbstractDao;
 import ubic.gemma.persistence.service.AbstractQueryFilteringVoEnabledDao;
@@ -44,6 +46,7 @@ import ubic.gemma.persistence.util.*;
 
 import javax.annotation.Nullable;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Base Spring DAO Class: is able to create, update, remove, load, and find objects of type <code>Gene</code>.
@@ -55,13 +58,10 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
 
     private static final int BATCH_SIZE = 100;
     private static final int MAX_RESULTS = 100;
-    private static final String G2CS_CACHE_NAME = "Gene2CsCache";
-    private final CacheManager cacheManager;
 
     @Autowired
-    public GeneDaoImpl( SessionFactory sessionFactory, CacheManager cacheManager ) {
+    public GeneDaoImpl( SessionFactory sessionFactory ) {
         super( GeneDao.OBJECT_ALIAS, Gene.class, sessionFactory );
-        this.cacheManager = cacheManager;
     }
 
     @Override
@@ -522,54 +522,58 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
         return new GeneValueObject( entity );
     }
 
-    @Override
-    public void afterPropertiesSet() {
-        CacheUtils.getCache( cacheManager, GeneDaoImpl.G2CS_CACHE_NAME );
-    }
-
     /**
-     * @param filters         see {@link ObjectFilterQueryUtils#formRestrictionClause(Filters)} filters argument for
+     * @param filters         see {@link FilterQueryUtils#formRestrictionClause(Filters)} filters argument for
      *                        description.
      * @return a Hibernated Query object ready to be used for TaxonVO retrieval.
      */
     @Override
-    protected Query getLoadValueObjectsQuery( @Nullable Filters filters, @Nullable Sort sort, EnumSet<QueryHint> hints ) {
+    protected Query getFilteringQuery( @Nullable Filters filters, @Nullable Sort sort ) {
 
         //noinspection JpaQlInspection // the constants for aliases is messing with the inspector
-        String queryString = "select " + getObjectAlias() + " "
-                + "from Gene as " + getObjectAlias() + " " // gene
-                + "left join fetch " + getObjectAlias() + ".multifunctionality " // multifunctionality, if available
-                + "left join fetch " + getObjectAlias() + ".taxon as " + "taxon" + " "// taxon
-                + "left join fetch " + getObjectAlias() + ".aliases " // aliases
-                + "where " + getObjectAlias() + ".id is not null "; // needed to use formRestrictionCause()
+        String queryString = "select gene "
+                + "from Gene as gene " // gene
+                + "left join fetch gene.multifunctionality " // multifunctionality, if available
+                + "left join fetch gene.taxon as taxon "// taxon
+                + "where gene.id is not null"; // needed to use formRestrictionCause()
 
-        queryString += ObjectFilterQueryUtils.formRestrictionAndGroupByAndOrderByClauses( filters, getObjectAlias(), sort );
+        queryString += FilterQueryUtils.formRestrictionClause( filters );
+        queryString += FilterQueryUtils.formOrderByClause( sort );
 
         Query query = this.getSessionFactory().getCurrentSession().createQuery( queryString );
 
-        if ( filters != null ) {
-            ObjectFilterQueryUtils.addRestrictionParameters( query, filters );
-        }
+        FilterQueryUtils.addRestrictionParameters( query, filters );
 
         return query;
     }
 
     @Override
-    protected Query getCountValueObjectsQuery( @Nullable Filters filters ) {
-        //noinspection JpaQlInspection // the constants for aliases is messing with the inspector
-        String queryString = "select count(*) from Gene as " + getObjectAlias() + " " // gene
-                + "left join " + getObjectAlias() + ".taxon as " + "taxon" + " "// taxon
-                + "where " + getObjectAlias() + ".id is not null "; // needed to use formRestrictionCause()
+    protected void initializeCachedFilteringResult( Gene entity ) {
+        Hibernate.initialize( entity.getMultifunctionality() );
+    }
 
-        queryString += ObjectFilterQueryUtils.formRestrictionAndGroupByAndOrderByClauses( filters, getObjectAlias(), null );
+    @Override
+    protected Query getFilteringCountQuery( @Nullable Filters filters ) {
+        //noinspection JpaQlInspection // the constants for aliases is messing with the inspector
+        String queryString = "select count(gene) from Gene as gene " // gene
+                + "left join gene.multifunctionality " // multifunctionality, if available
+                + "left join gene.taxon as taxon "// taxon
+                + "where gene.id is not null"; // needed to use formRestrictionCause()
+
+        queryString += FilterQueryUtils.formRestrictionClause( filters );
 
         Query query = this.getSessionFactory().getCurrentSession().createQuery( queryString );
 
-        if ( filters != null ) {
-            ObjectFilterQueryUtils.addRestrictionParameters( query, filters );
-        }
+        FilterQueryUtils.addRestrictionParameters( query, filters );
 
         return query;
+    }
+
+    @Override
+    protected void postProcessValueObjects( List<GeneValueObject> geneValueObjects ) {
+        fillAliases( geneValueObjects );
+        fillAccessions( geneValueObjects );
+        fillMultifunctionalityRank( geneValueObjects );
     }
 
     private Collection<Gene> doLoadThawedLite( Collection<Long> ids ) {
@@ -632,5 +636,84 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
         }
         AbstractDao.log.error( buf );
 
+    }
+
+    private void fillAliases( List<GeneValueObject> geneValueObjects ) {
+        if ( geneValueObjects.isEmpty() ) {
+            return;
+        }
+        //noinspection unchecked
+        List<Object[]> results = getSessionFactory().getCurrentSession()
+                .createQuery( "select g.id, a.alias from Gene g join g.aliases a where g.id in :ids" )
+                .setParameterList( "ids", geneValueObjects.stream().map( GeneValueObject::getId ).collect( Collectors.toSet() ) )
+                .list();
+        Map<Long, List<String>> aliasByGeneId = results.stream()
+                .collect( Collectors.groupingBy(
+                        row -> ( Long ) row[0],
+                        Collectors.mapping( row -> ( String ) row[1], Collectors.toList() ) ) );
+        for ( GeneValueObject gvo : geneValueObjects ) {
+            List<String> aliases = aliasByGeneId.get( gvo.getId() );
+            if ( aliases != null ) {
+                gvo.setAliases( new TreeSet<>( aliases ) );
+            } else {
+                gvo.setAliases( Collections.emptySortedSet() );
+            }
+        }
+    }
+
+    private void fillAccessions( List<GeneValueObject> geneValueObjects ) {
+        if ( geneValueObjects.isEmpty() ) {
+            return;
+        }
+        //noinspection unchecked
+        List<Object[]> results = getSessionFactory().getCurrentSession()
+                .createQuery( "select g.id, a from Gene g join g.accessions a where g.id in :ids" )
+                .setParameterList( "ids", geneValueObjects.stream().map( GeneValueObject::getId ).collect( Collectors.toSet() ) )
+                .list();
+        Map<Long, List<DatabaseEntry>> accessionsByGeneId = results.stream()
+                .collect( Collectors.groupingBy(
+                        row -> ( Long ) row[0],
+                        Collectors.mapping( row -> ( DatabaseEntry ) row[1], Collectors.toList() ) ) );
+        for ( GeneValueObject gvo : geneValueObjects ) {
+            List<DatabaseEntry> accessions = accessionsByGeneId.get( gvo.getId() );
+            if ( accessions != null ) {
+                gvo.setAccessions( accessions.stream()
+                        .map( DatabaseEntryValueObject::new )
+                        .collect( Collectors.toSet() ) );
+            } else {
+                gvo.setAccessions( Collections.emptySet() );
+            }
+        }
+    }
+
+    /**
+     * Fill multifuctionality ranks.
+     * <p>
+     * Usually, if genes are loaded via {@link #loadValueObject(Identifiable)}-family of functions, this is unnecessary
+     * because of the {@code join fetch}, but in the search service, entities are retrieved via other methods that do
+     * always retrieve multifunctionality scores eagerly.
+     */
+    private void fillMultifunctionalityRank( List<GeneValueObject> geneValueObjects ) {
+        // only fill ranks that are null
+        Set<Long> ids = geneValueObjects.stream()
+                .filter( gvo -> gvo.getMultifunctionalityRank() == null )
+                .map( GeneValueObject::getId )
+                .collect( Collectors.toSet() );
+        if ( ids.isEmpty() ) {
+            return;
+        }
+        //noinspection unchecked
+        List<Object[]> results = getSessionFactory().getCurrentSession()
+                .createQuery( "select g.id, g.multifunctionality.rank from Gene g where g.id in :ids" )
+                .setParameterList( "ids", ids )
+                .list();
+        Map<Long, Double> result = results.stream()
+                .collect( Collectors.toMap( row -> ( Long ) row[0], row -> ( Double ) row[1] ) );
+        for ( GeneValueObject gvo : geneValueObjects ) {
+            Double rank = result.get( gvo.getId() );
+            if ( rank != null ) {
+                gvo.setMultifunctionalityRank( rank );
+            }
+        }
     }
 }

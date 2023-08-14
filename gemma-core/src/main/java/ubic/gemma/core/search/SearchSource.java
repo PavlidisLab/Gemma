@@ -9,10 +9,10 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.gene.GeneSet;
-import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 
 import javax.annotation.Nullable;
 import java.util.Collection;
+import java.util.Collections;
 
 /**
  * Search source that provides {@link SearchResult} from a search engine.
@@ -20,45 +20,63 @@ import java.util.Collection;
  */
 public interface SearchSource {
 
-    Collection<SearchResult<ArrayDesign>> searchArrayDesign( SearchSettings settings ) throws SearchException;
+    default Collection<SearchResult<ArrayDesign>> searchArrayDesign( SearchSettings settings ) throws SearchException {
+        return Collections.emptyList();
+    }
 
-    Collection<SearchResult<BibliographicReference>> searchBibliographicReference( SearchSettings settings ) throws SearchException;
+    default Collection<SearchResult<BibliographicReference>> searchBibliographicReference( SearchSettings settings ) throws SearchException {
+        return Collections.emptyList();
+    }
 
-    Collection<SearchResult<ExpressionExperimentSet>> searchExperimentSet( SearchSettings settings ) throws SearchException;
+    default Collection<SearchResult<ExpressionExperimentSet>> searchExperimentSet( SearchSettings settings ) throws SearchException {
+        return Collections.emptyList();
+    }
 
-    Collection<SearchResult<BioSequence>> searchBioSequence( SearchSettings settings ) throws SearchException;
+    default Collection<SearchResult<BioSequence>> searchBioSequence( SearchSettings settings ) throws SearchException {
+        return Collections.emptyList();
+    }
 
     /**
      * Search for biosequence and, unfortunately genes.
      * <p>
      * I wanted to remove this, but there's some logic with indirect gene hit penalty that we might want to keep around.
      *
-     * @deprecated use {@link #searchBioSequence(SearchSettings)} (SearchSettings)} instead
-     *
      * @return a mixture of {@link BioSequence} and {@link Gene} matching the search settings.
+     * @deprecated use {@link #searchBioSequence(SearchSettings)} (SearchSettings)} instead
      */
     @Deprecated
-    Collection<SearchResult<?>> searchBioSequenceAndGene( SearchSettings settings,
-            @Nullable Collection<SearchResult<Gene>> previousGeneSearchResults ) throws SearchException;
+    default Collection<SearchResult<?>> searchBioSequenceAndGene( SearchSettings settings,
+            @Nullable Collection<SearchResult<Gene>> previousGeneSearchResults ) throws SearchException {
+        return Collections.emptyList();
+    }
 
     @SuppressWarnings("unused")
-    Collection<SearchResult<CompositeSequence>> searchCompositeSequence( SearchSettings settings ) throws SearchException;
+    default Collection<SearchResult<CompositeSequence>> searchCompositeSequence( SearchSettings settings ) throws SearchException {
+        return Collections.emptyList();
+    }
 
     /**
      * Search for composite sequences and, unfortunately, genes.
      * <p>
      * FIXME: this should solely return {@link CompositeSequence}
      *
-     * @deprecated use {@link #searchCompositeSequence(SearchSettings)} instead
-     *
      * @return a mixture of {@link Gene} and {@link CompositeSequence} matching the search settings
+     * @deprecated use {@link #searchCompositeSequence(SearchSettings)} instead
      */
     @Deprecated
-    Collection<SearchResult<?>> searchCompositeSequenceAndGene( SearchSettings settings ) throws SearchException;
+    default Collection<SearchResult<?>> searchCompositeSequenceAndGene( SearchSettings settings ) throws SearchException {
+        return Collections.emptyList();
+    }
 
-    Collection<SearchResult<ExpressionExperiment>> searchExpressionExperiment( SearchSettings settings ) throws SearchException;
+    default Collection<SearchResult<ExpressionExperiment>> searchExpressionExperiment( SearchSettings settings ) throws SearchException {
+        return Collections.emptyList();
+    }
 
-    Collection<SearchResult<Gene>> searchGene( SearchSettings settings ) throws SearchException;
+    default Collection<SearchResult<Gene>> searchGene( SearchSettings settings ) throws SearchException {
+        return Collections.emptyList();
+    }
 
-    Collection<SearchResult<GeneSet>> searchGeneSet( SearchSettings settings ) throws SearchException;
+    default Collection<SearchResult<GeneSet>> searchGeneSet( SearchSettings settings ) throws SearchException {
+        return Collections.emptyList();
+    }
 }

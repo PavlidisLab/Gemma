@@ -24,14 +24,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.logging.log4j.Level;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.core.config.Configuration;
-import org.apache.logging.log4j.core.config.LoggerConfig;
-import org.apache.logging.log4j.core.LoggerContext;
-import org.springframework.transaction.support.TransactionTemplate;
 import ubic.basecode.util.DateUtil;
-import ubic.gemma.core.apps.GemmaCLI;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.persistence.util.Settings;
 
@@ -73,19 +66,16 @@ public abstract class AbstractCLI implements CLI {
     protected static final String AUTO_OPTION_NAME = "auto";
     protected static final String THREADS_OPTION = "threads";
     protected static final Log log = LogFactory.getLog( AbstractCLI.class );
-    private static final String LOGGER_OPTION = "logger";
     private static final int DEFAULT_PORT = 3306;
     public static final String HEADER = "Options:";
     private static final String HOST_OPTION = "H";
     private static final String PORT_OPTION = "P";
-    private static final String VERBOSITY_OPTION = "v";
     private static final String HELP_OPTION = "h";
     private static final String TESTING_OPTION = "testing";
     private static final String DATE_OPTION = "mdate";
 
     /* support for convenience options */
     private final String DEFAULT_HOST = "localhost";
-    private final Map<String, Level> originalLoggingLevels = new HashMap<>();
     /**
      * Automatically identify which entities to run the tool on. To enable call addAutoOption.
      */
@@ -148,7 +138,6 @@ public abstract class AbstractCLI implements CLI {
         } finally {
             // always summarize processing, even if an error is thrown
             summarizeProcessing();
-            resetLogging();
             AbstractCLI.log.info( "Elapsed time: " + watch.getTime() / 1000 + " seconds." );
         }
     }
@@ -220,18 +209,8 @@ public abstract class AbstractCLI implements CLI {
         AbstractCLI.log.debug( "Creating standard options" );
         Option helpOpt = new Option( HELP_OPTION, "help", false, "Print this message" );
         Option testOpt = new Option( TESTING_OPTION, "testing", false, "Use the test environment. This option must be passed before the command." );
-        Option logOpt = new Option( VERBOSITY_OPTION, "verbosity", true,
-                "Set verbosity level for all loggers (0=silent, 5=very verbose; default is custom, see log4j.properties)" );
-        Option otherLogOpt = Option.builder( LOGGER_OPTION )
-                .longOpt( "logger" ).hasArg().argName( "logger" )
-                .desc( "Configure a specific logger verbosity. For example, '--logger ubic.gemma=5' or --logger log4j.logger.org.hibernate.SQL=5" )
-                .build();
-
-        options.addOption( otherLogOpt );
-        options.addOption( logOpt );
         options.addOption( helpOpt );
         options.addOption( testOpt );
-
     }
 
     /**
@@ -368,18 +347,6 @@ public abstract class AbstractCLI implements CLI {
     protected abstract void processOptions( CommandLine commandLine ) throws Exception;
 
     /**
-     * This is needed for CLIs that run in tests, so the logging settings get reset.
-     */
-    protected void resetLogging() {
-        LoggerContext context = ( LoggerContext ) LogManager.getContext( false );
-        Configuration config = context.getConfiguration();
-        for ( String loggerName : originalLoggingLevels.keySet() ) {
-            config.getLoggerConfig( loggerName ).setLevel( originalLoggingLevels.get( loggerName ) );
-        }
-        context.updateLoggers();
-    }
-
-    /**
      * Add a success object to indicate success in a batch processing.
      * <p>
      * This is further used in {@link #summarizeProcessing()} to summarize the execution of the command.
@@ -479,39 +446,6 @@ public abstract class AbstractCLI implements CLI {
         return futureResults;
     }
 
-    private void configureAllLoggers( int v ) {
-        LoggerContext context = ( LoggerContext ) LogManager.getContext( false );
-        Configuration config = context.getConfiguration();
-
-        Level newLevel = toLog4jLevel( v );
-
-        // configure all individual loggers
-        for ( Map.Entry<String, LoggerConfig> e : config.getLoggers().entrySet() ) {
-            configureLogging( e.getKey(), e.getValue(), newLevel );
-        }
-
-        // This causes all Loggers to refetch information from their LoggerConfig.
-        context.updateLoggers();
-    }
-
-    /**
-     * Set up logging according to the user-selected (or default) verbosity level.
-     */
-    private void configureLogging( String loggerName, LoggerConfig loggerConfig, Level newLevel ) {
-        if ( loggerName.equals( loggerConfig.getName() ) ) {
-            AbstractCLI.log.info( String.format( "Setting logging level of '%s' to %s.", loggerConfig.getName(), newLevel ) );
-        } else {
-            // effective logger differs, this means that there no configuration
-            LoggerContext context = ( LoggerContext ) LogManager.getContext( false );
-            AbstractCLI.log.warn( String.format( "Setting logging level of '%s' to %s since there's no logger named '%s'. To prevent this, add an entry for '%s' in log4j.properties.",
-                    loggerConfig.getName(), newLevel, loggerName, loggerName ) );
-        }
-        if ( !originalLoggingLevels.containsKey( loggerConfig.getName() ) ) {
-            originalLoggingLevels.put( loggerConfig.getName(), loggerConfig.getLevel() );
-        }
-        loggerConfig.setLevel( newLevel );
-    }
-
     private String invalidOptionString( CommandLine commandLine, String option ) {
         return "Invalid value '" + commandLine.getOptionValue( option ) + " for option " + option;
     }
@@ -534,30 +468,6 @@ public abstract class AbstractCLI implements CLI {
             this.port = AbstractCLI.DEFAULT_PORT;
         }
 
-        if ( commandLine.hasOption( AbstractCLI.VERBOSITY_OPTION ) ) {
-            int verbosity = this.getIntegerOptionValue( commandLine, AbstractCLI.VERBOSITY_OPTION );
-            if ( verbosity < 0 || verbosity > 5 ) {
-                throw new IllegalArgumentException( "Verbosity must be from 0 to 5." );
-            }
-            this.configureAllLoggers( verbosity );
-        }
-
-        if ( commandLine.hasOption( AbstractCLI.LOGGER_OPTION ) ) {
-            LoggerContext context = ( LoggerContext ) LogManager.getContext( false );
-            Configuration config = context.getConfiguration();
-            for ( String value : commandLine.getOptionValues( AbstractCLI.LOGGER_OPTION ) ) {
-                String[] vals = value.split( "=" );
-                if ( vals.length != 2 )
-                    throw new IllegalArgumentException( "Logging value must in format [loggerName]=[value]." );
-                try {
-                    configureLogging( vals[0], config.getLoggerConfig( vals[0] ), toLog4jLevel( Integer.parseInt( vals[1] ) ) );
-                } catch ( NumberFormatException e ) {
-                    throw new IllegalArgumentException( "Logging level must be an integer between 0 and 5." );
-                }
-            }
-            context.updateLoggers();
-        }
-
         if ( commandLine.hasOption( DATE_OPTION ) ) {
             this.mDate = commandLine.getOptionValue( DATE_OPTION );
         }
@@ -566,25 +476,6 @@ public abstract class AbstractCLI implements CLI {
             throw new IllegalArgumentException( "Number of threads must be greater than 1." );
         }
         this.executorService = new ForkJoinPool( this.numThreads );
-    }
-
-    private static Level toLog4jLevel( int level ) {
-        switch ( level ) {
-            case 0:
-                return Level.OFF;
-            case 1:
-                return Level.FATAL;
-            case 2:
-                return Level.ERROR;
-            case 3:
-                return Level.WARN;
-            case 4:
-                return Level.INFO;
-            case 5:
-                return Level.DEBUG;
-            default:
-                throw new IllegalArgumentException( "Verbosity must be from 0 to 5" );
-        }
     }
 
     /**

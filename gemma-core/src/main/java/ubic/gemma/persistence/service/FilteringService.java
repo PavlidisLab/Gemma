@@ -1,53 +1,116 @@
 package ubic.gemma.persistence.service;
 
+import org.springframework.context.MessageSourceResolvable;
+import org.springframework.security.access.ConfigAttribute;
 import ubic.gemma.model.common.Identifiable;
+import ubic.gemma.persistence.util.Filter;
 import ubic.gemma.persistence.util.Filters;
-import ubic.gemma.persistence.util.ObjectFilter;
+import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.persistence.util.Sort;
 
 import javax.annotation.Nullable;
 import java.util.Collection;
+import java.util.List;
+import java.util.Set;
 
 /**
+ * Interface for filtering-capable services.
  * @see FilteringDao
- * @author poirigui
  */
-public interface FilteringService<O extends Identifiable> extends BaseService<O> {
+public interface FilteringService<O extends Identifiable> extends BaseReadOnlyService<O> {
 
     /**
-     * Obtain an {@link ObjectFilter} for the entity this DAO is providing.
-     *
-     * It is the responsibility of the DAO to infer the ObjectFilter property type as well as the alias to use.
-     *
-     * If the ObjectFilter refers to a related entity (i.e. a {@link ubic.gemma.model.expression.bioAssay.BioAssay} of an
-     * {@link ubic.gemma.model.expression.experiment.ExpressionExperiment}), then the DAO should inject the corresponding
-     * DAO and delegate it the work of creating the ObjectFilter.
-     *
-     * In the frontend, that correspond to a FilterArg, but since the definition is not available here, we unpack its
-     * attributes.
-     *
-     * @param property property name in the entity use as a left-hand side of the operator
-     * @param operator an operator
-     * @param value the corresponding, unparsed value, to the right-hand side of the operator
-     * @return an object filter filled with the object alias, property, inferred type, operator and parsed value
-     * @throws IllegalArgumentException if the property does not exist in {@link O}, or if the operator cannot be applied,
-     * or if the value cannot apply to the property an operator see {@link ObjectFilter#parseObjectFilter(String, String, Class, ObjectFilter.Operator, String)}
-     * for more details
+     * @see BaseDao#getIdentifierPropertyName()
      */
-    ObjectFilter getObjectFilter( String property, ObjectFilter.Operator operator, String value ) throws IllegalArgumentException;
+    String getIdentifierPropertyName();
 
     /**
-     * Similar to {@link #getObjectFilter(String, ObjectFilter.Operator, String)}, but with a collection of values.
+     * @see FilteringDao#getFilterableProperties()
      */
-    ObjectFilter getObjectFilter( String property, ObjectFilter.Operator operator, Collection<String> values ) throws IllegalArgumentException;
+    Set<String> getFilterableProperties();
 
     /**
-     * Obtain a {@link Sort} object for a property of the {@link O}.
+     * @see FilteringDao#getFilterablePropertyType(String)
+     */
+    Class<?> getFilterablePropertyType( String property );
+
+    /**
+     * @see FilteringDao#getFilterablePropertyDescription(String)
+     */
+    @Nullable
+    String getFilterablePropertyDescription( String property );
+
+    /**
+     * @see FilteringDao#getFilterablePropertyAllowedValues(String)
+     */
+    @Nullable
+    List<Object> getFilterablePropertyAllowedValues( String property );
+
+    /**
+     * Obtain a list of resolvable {@link MessageSourceResolvable}s to be used for user display purposes.
+     * <p>
+     * Nullity and the number of elements is guaranteed to match {@link #getFilterablePropertyAllowedValues(String)} (String)},
+     * so the two methods can be used jointly.
      *
-     * @param property a property of {@link O} to sort by
-     * @param direction a sorting direction, or null if the default direction applies
-     * @return a {@link Sort} object that can be used, for example, on {@link FilteringVoEnabledDao#loadValueObjectsPreFilter(Filters, Sort, int, int)}
-     * @throws IllegalArgumentException if no such field exists in {@link O}
+     * @see #getFilterablePropertyResolvableAllowedValuesLabels(String)
+     */
+    @Nullable
+    List<MessageSourceResolvable> getFilterablePropertyResolvableAllowedValuesLabels( String property );
+
+    /**
+     * @see FilteringDao#getFilterablePropertyIsUsingSubquery(String)
+     */
+    boolean getFilterablePropertyIsUsingSubquery( String property );
+
+    /**
+     * Obtain the Spring Security config attributes for a given property.
+     * @return the config attributes, or null if no security check should be performed
+     */
+    @Nullable
+    Collection<ConfigAttribute> getFilterablePropertyConfigAttributes( String property );
+
+    /**
+     * @see FilteringDao#getFilterableProperties()
+     */
+    Filter getFilter( String property, Filter.Operator operator, String value ) throws IllegalArgumentException;
+
+    /**
+     * @see FilteringDao#getFilter(String, Filter.Operator, Collection)
+     */
+    Filter getFilter( String property, Filter.Operator operator, Collection<String> values ) throws IllegalArgumentException;
+
+    /**
+     * @see FilteringDao#getFilter(String, Class, Filter.Operator, Object)
+     */
+    <T> Filter getFilter( String property, Class<T> propertyType, Filter.Operator operator, T value );
+
+    /**
+     * @see FilteringDao#getFilter(String, Class, Filter.Operator, Collection)
+     */
+    <T> Filter getFilter( String property, Class<T> propertyType, Filter.Operator operator, Collection<T> parsedValues );
+
+    /**
+     * @see FilteringDao#getSort(String, Sort.Direction)
      */
     Sort getSort( String property, @Nullable Sort.Direction direction ) throws IllegalArgumentException;
+
+    /**
+     * @see FilteringDao#loadIds(Filters, Sort)
+     */
+    List<Long> loadIds( @Nullable Filters filters, @Nullable Sort sort );
+
+    /**
+     * @see FilteringDao#load(Filters, Sort, int, int)
+     */
+    Slice<O> load( @Nullable Filters filters, @Nullable Sort sort, int offset, int limit );
+
+    /**
+     * @see FilteringDao#load(Filters, Sort)
+     */
+    List<O> load( @Nullable Filters filters, @Nullable Sort sort );
+
+    /**
+     * @see FilteringDao#count(Filters)
+     */
+    long count( @Nullable Filters filters );
 }

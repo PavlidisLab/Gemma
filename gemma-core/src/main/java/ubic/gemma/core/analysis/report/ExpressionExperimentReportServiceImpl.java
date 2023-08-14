@@ -119,7 +119,7 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
         assert id != null;
         Collection<Long> ids = Collections.singletonList( id );
         Collection<ExpressionExperimentDetailsValueObject> vos = expressionExperimentService
-                .loadDetailsValueObjects( ids );
+                .loadDetailsValueObjectsByIds( ids );
         ExpressionExperimentDetailsValueObject vo = vos.iterator().next();
         if ( vo == null ) {
             return null;
@@ -134,7 +134,7 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
     public Collection<ExpressionExperimentDetailsValueObject> generateSummaryObjects() {
         Collection<Long> ids = EntityUtils.getIds( expressionExperimentService.loadAll() );
         Collection<ExpressionExperimentDetailsValueObject> vos = expressionExperimentService
-                .loadDetailsValueObjects( ids );
+                .loadDetailsValueObjectsByIds( ids );
         this.getStats( vos );
         return vos;
     }
@@ -478,7 +478,6 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
 
         Date timestamp = new Date( System.currentTimeMillis() );
         eeVo.setDateCached( timestamp );
-        assert eeVo.getLastUpdated() != null;
 
         // update cached detailed VOs
         this.evictFromCache( eeVo.getId() );

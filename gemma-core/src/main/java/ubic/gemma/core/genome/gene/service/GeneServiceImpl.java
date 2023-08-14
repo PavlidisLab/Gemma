@@ -24,6 +24,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.core.genome.gene.GeneSetValueObjectHelper;
 import ubic.gemma.core.loader.genome.gene.ncbi.homology.HomologeneService;
+import ubic.gemma.core.loader.genome.gene.ncbi.homology.HomologeneServiceFactory;
 import ubic.gemma.core.ontology.providers.GeneOntologyService;
 import ubic.gemma.core.search.GeneSetSearch;
 import ubic.gemma.core.search.SearchException;
@@ -32,7 +33,6 @@ import ubic.gemma.core.search.SearchService;
 import ubic.gemma.model.association.Gene2GOAssociation;
 import ubic.gemma.model.association.coexpression.GeneCoexpressionNodeDegreeValueObject;
 import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
-import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.description.AnnotationValueObject;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.common.search.SearchSettings;
@@ -52,11 +52,13 @@ import ubic.gemma.persistence.service.association.coexpression.CoexpressionServi
 import ubic.gemma.persistence.service.genome.GeneDao;
 import ubic.gemma.persistence.service.genome.sequenceAnalysis.AnnotationAssociationService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
+import ubic.gemma.persistence.util.AsyncFactoryBeanUtils;
 
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.*;
 import java.util.Map.Entry;
+import java.util.concurrent.Future;
 
 /**
  * @author pavlidis
@@ -82,11 +84,11 @@ public class GeneServiceImpl extends AbstractFilteringVoEnabledService<Gene, Gen
     @Autowired
     private GeneSetValueObjectHelper geneSetValueObjectHelper;
     @Autowired
-    private HomologeneService homologeneService;
-    @Autowired
     private SearchService searchService;
     @Autowired
     private TaxonService taxonService;
+    @Autowired
+    private Future<HomologeneService> homologeneService;
 
     @Autowired
     public GeneServiceImpl( GeneDao geneDao ) {
@@ -329,7 +331,7 @@ public class GeneServiceImpl extends AbstractFilteringVoEnabledService<Gene, Gen
 
         gvo.setGeneSets( gsVos );
 
-        Collection<Gene> geneHomologues = this.homologeneService.getHomologues( gene );
+        Collection<Gene> geneHomologues = AsyncFactoryBeanUtils.getSilently( this.homologeneService, HomologeneServiceFactory.class ).getHomologues( gene );
         geneHomologues = this.thawLite( geneHomologues );
         Collection<GeneValueObject> homologues = this.loadValueObjects( geneHomologues );
 
@@ -351,7 +353,7 @@ public class GeneServiceImpl extends AbstractFilteringVoEnabledService<Gene, Gen
             SearchService.SearchResultMap r;
             try {
                 r = searchService.search( s );
-                List<SearchResult<ExpressionExperiment>> hits = r.get( ExpressionExperiment.class );
+                List<SearchResult<ExpressionExperiment>> hits = r.getByResultObjectType( ExpressionExperiment.class );
                 gvo.setAssociatedExperimentCount( hits.size() );
             } catch ( SearchException e ) {
                 log.error( "Failed to retrieve the associated EE count for " + s + ".", e );
@@ -398,7 +400,7 @@ public class GeneServiceImpl extends AbstractFilteringVoEnabledService<Gene, Gen
         gsVos.addAll( geneSetValueObjectHelper.convertToValueObjects( geneSets, false ) );
         details.setGeneSets( gsVos );
 
-        Collection<Gene> geneHomologues = homologeneService.getHomologues( gene );
+        Collection<Gene> geneHomologues = AsyncFactoryBeanUtils.getSilently( homologeneService, HomologeneServiceFactory.class ).getHomologues( gene );
         geneHomologues = this.thawLite( geneHomologues );
         Collection<GeneValueObject> homologues = this.loadValueObjects( geneHomologues );
         details.setHomologues( homologues );
@@ -493,7 +495,7 @@ public class GeneServiceImpl extends AbstractFilteringVoEnabledService<Gene, Gen
             taxon = this.taxonService.load( taxonId );
         }
         SearchSettings settings = SearchSettings.geneSearch( query, taxon );
-        List<SearchResult<Gene>> geneSearchResults = this.searchService.search( settings, Gene.class );
+        List<SearchResult<Gene>> geneSearchResults = this.searchService.search( settings ).getByResultObjectType( Gene.class );
 
         Collection<Gene> genes = new HashSet<>();
         if ( geneSearchResults == null || geneSearchResults.isEmpty() ) {

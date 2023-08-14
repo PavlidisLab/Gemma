@@ -67,8 +67,8 @@ public class ExpressionExperimentControllerTest extends BaseSpringWebTest {
         for ( int i = 0; i < 2; i++ ) {
             ExpressionExperiment ee = this.getTestPersistentCompleteExpressionExperiment( false );
 
-            if ( lastUpdated == null || lastUpdated.getCurationDetails().getLastUpdated()
-                    .before( ee.getCurationDetails().getLastUpdated() ) ) {
+            if ( lastUpdated == null || ( lastUpdated.getCurationDetails().getLastUpdated() != null && lastUpdated.getCurationDetails().getLastUpdated()
+                    .before( ee.getCurationDetails().getLastUpdated() ) ) ) {
                 lastUpdated = ee;
             }
 

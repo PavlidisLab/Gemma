@@ -259,6 +259,9 @@ public class ComBat<R, C> {
 
         DoubleMatrix2D adjustedData = this.rawAdjust( sdata, gammastar, deltastar );
 
+        // check nothing went wrong
+        this.checkForProblems( adjustedData );
+
         // assertEquals( -0.95099, adjustedData.get( 18, 0 ), 0.0001 );
         // assertEquals( -0.30273984, adjustedData.get( 14, 6 ), 0.0001 );
         // assertEquals( 0.2097977, adjustedData.get( 7, 3 ), 0.0001 );
@@ -369,6 +372,12 @@ public class ComBat<R, C> {
         }
     }
 
+    /**
+     *
+     * @param sdata the data
+     * @param gammastar matrix will be populated with values
+     * @param deltastar matrix will be populated with values
+     */
     private void runParametric( final DoubleMatrix2D sdata, DoubleMatrix2D gammastar, DoubleMatrix2D deltastar ) {
         int batchIndex = 0;
         for ( String batchId : batches.keySet() ) {
@@ -382,10 +391,12 @@ public class ComBat<R, C> {
                     bPrior.get( batchIndex ) );
 
             for ( int j = 0; j < batchResults[0].size(); j++ ) {
-                gammastar.set( batchIndex, j, batchResults[0].get( j ) );
+                double v = batchResults[0].get( j );
+                gammastar.set( batchIndex, j, v );
             }
             for ( int j = 0; j < batchResults[1].size(); j++ ) {
-                deltastar.set( batchIndex, j, batchResults[1].get( j ) );
+                double v = batchResults[1].get( j );
+                deltastar.set( batchIndex, j, v );
             }
             batchIndex++;
         }
@@ -477,17 +488,18 @@ public class ComBat<R, C> {
     }
 
     /**
-     * Check sdata for problems. If the design is not of full rank, we get NaN in standardized data.
+     * Check data for problems. If the design is not of full rank, we get NaN in standardized data.
+     * Similarly, if there are singleton batches (only one sample in a batch), we get NaNs for the same basic reason.
      *
-     * @param sdata sdata
+     * @param data data
      * @throws ComBatException combat problem
      */
-    private void checkForProblems( DoubleMatrix2D sdata ) throws ComBatException {
+    private void checkForProblems( DoubleMatrix2D data ) throws ComBatException {
         int numMissing = 0;
         int total = 0;
-        for ( int i = 0; i < sdata.rows(); i++ ) {
-            DoubleMatrix1D row = sdata.viewRow( i );
-            for ( int j = 0; j < sdata.columns(); j++ ) {
+        for ( int i = 0; i < data.rows(); i++ ) {
+            DoubleMatrix1D row = data.viewRow( i );
+            for ( int j = 0; j < data.columns(); j++ ) {
                 if ( Double.isNaN( row.getQuick( j ) ) ) {
                     numMissing++;
                 }

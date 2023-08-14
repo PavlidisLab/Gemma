@@ -19,10 +19,10 @@
 
 package ubic.gemma.persistence.service.expression.designElement;
 
+import gemma.gsec.util.SecurityUtil;
 import org.apache.commons.lang3.time.StopWatch;
 import org.hibernate.*;
 import org.hibernate.criterion.Restrictions;
-import org.hibernate.type.LongType;
 import org.hibernate.type.StandardBasicTypes;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
@@ -40,14 +40,9 @@ import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.persistence.service.AbstractDao;
 import ubic.gemma.persistence.service.AbstractQueryFilteringVoEnabledDao;
-import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignDao;
-import ubic.gemma.persistence.util.Filters;
-import ubic.gemma.persistence.util.ObjectFilterQueryUtils;
-import ubic.gemma.persistence.util.Slice;
-import ubic.gemma.persistence.util.Sort;
+import ubic.gemma.persistence.util.*;
 
 import javax.annotation.Nullable;
-import java.text.MessageFormat;
 import java.util.*;
 
 /**
@@ -104,43 +99,49 @@ public class CompositeSequenceDaoImpl extends AbstractQueryFilteringVoEnabledDao
     }
 
     @Override
-    protected Query getLoadValueObjectsQuery( @Nullable Filters filters, @Nullable Sort sort, EnumSet<QueryHint> hints ) {
-        //language=HQL
-        String queryString = MessageFormat.format( "select {0} from CompositeSequence as {0} "
-                        + "left join fetch {0}.arrayDesign as {1} "
-                        + "where {0}.id is not null ", // needed to use formRestrictionCause()
-                getObjectAlias(), ArrayDesignDao.OBJECT_ALIAS );
-
-        queryString += ObjectFilterQueryUtils.formRestrictionAndGroupByAndOrderByClauses( filters, null, sort );
-
-        Query query = this.getSessionFactory().getCurrentSession().createQuery( queryString );
-
-        if ( filters != null ) {
-            ObjectFilterQueryUtils.addRestrictionParameters( query, filters );
-        }
-
+    protected Query getFilteringQuery( @Nullable Filters filters, @Nullable Sort sort ) {
+        Query query = this.getSessionFactory().getCurrentSession()
+                .createQuery( "select probe from CompositeSequence as probe "
+                        + "left join probe.arrayDesign as ad "
+                        + AclQueryUtils.formAclRestrictionClause( "ad.id" )
+                        + ( !SecurityUtil.isUserAdmin() ? " and ad.curationDetails.troubled = false" : "" )
+                        + FilterQueryUtils.formRestrictionClause( filters )
+                        + FilterQueryUtils.formOrderByClause( sort ) );
+        AclQueryUtils.addAclParameters( query, ArrayDesign.class );
+        FilterQueryUtils.addRestrictionParameters( query, filters );
         return query;
     }
 
     @Override
-    protected Query getCountValueObjectsQuery( @Nullable Filters filters ) {
-        //language=HQL
-        String queryString = MessageFormat.format( "select count(distinct {0}) "
-                        + "from CompositeSequence as {0} "
-                        + "left join {0}.arrayDesign as " + ArrayDesignDao.OBJECT_ALIAS + " "
-                        + "where {0}.id is not null ", // needed to use formRestrictionCause()
-                getObjectAlias(), ArrayDesignDao.OBJECT_ALIAS );
+    protected void initializeCachedFilteringResult( CompositeSequence cachedEntity ) {
+    }
 
-        if ( filters != null ) {
-            queryString += ObjectFilterQueryUtils.formRestrictionClause( filters );
-        }
+    @Override
+    protected Query getFilteringIdQuery( @Nullable Filters filters, @Nullable Sort sort ) {
+        Query query = this.getSessionFactory().getCurrentSession()
+                .createQuery( "select probe.id from CompositeSequence as probe "
+                        // no need for including the platform in the result set since it's eagerly fetched
+                        // it's also more efficient because probes are likely to originate from the same platform
+                        + "left join probe.arrayDesign as ad "
+                        + AclQueryUtils.formAclRestrictionClause( "ad.id" )
+                        + ( !SecurityUtil.isUserAdmin() ? " and ad.curationDetails.troubled = false" : "" )
+                        + FilterQueryUtils.formRestrictionClause( filters )
+                        + FilterQueryUtils.formOrderByClause( sort ) );
+        AclQueryUtils.addAclParameters( query, ArrayDesign.class );
+        FilterQueryUtils.addRestrictionParameters( query, filters );
+        return query;
+    }
 
-        Query query = this.getSessionFactory().getCurrentSession().createQuery( queryString );
-
-        if ( filters != null ) {
-            ObjectFilterQueryUtils.addRestrictionParameters( query, filters );
-        }
-
+    @Override
+    protected Query getFilteringCountQuery( @Nullable Filters filters ) {
+        Query query = this.getSessionFactory().getCurrentSession().createQuery( "select count(probe) "
+                + "from CompositeSequence as probe "
+                + "left join probe.arrayDesign as ad "
+                + AclQueryUtils.formAclRestrictionClause( "ad.id" )
+                + ( !SecurityUtil.isUserAdmin() ? " and ad.curationDetails.troubled = false" : "" )
+                + FilterQueryUtils.formRestrictionClause( filters ) );
+        AclQueryUtils.addAclParameters( query, ArrayDesign.class );
+        FilterQueryUtils.addRestrictionParameters( query, filters );
         return query;
     }
 
@@ -250,8 +251,8 @@ public class CompositeSequenceDaoImpl extends AbstractQueryFilteringVoEnabledDao
         List<Object> csGene = new ArrayList<>();
         Session session = this.getSessionFactory().getCurrentSession();
         org.hibernate.SQLQuery queryObject = session.createSQLQuery( nativeQuery );
-        queryObject.addScalar( "cs", new LongType() );
-        queryObject.addScalar( "gene", new LongType() );
+        queryObject.addScalar( "cs", StandardBasicTypes.LONG );
+        queryObject.addScalar( "gene", StandardBasicTypes.LONG );
 
         Collection<Long> csIdBatch = new HashSet<>();
         for ( CompositeSequence cs : compositeSequences ) {

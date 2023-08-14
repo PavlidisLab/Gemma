@@ -122,15 +122,8 @@ public class ExpressionExperimentSetDaoImpl
         return this.loadValueObject( entity.getId(), false );
     }
 
-    /**
-     * @param entities entities
-     * @return EE set VOs
-     * @deprecated extremely inefficient for EESets, use {@link #loadValueObjects(Collection, boolean)} if possible.
-     */
-    @Deprecated
     @Override
-    public List<ExpressionExperimentSetValueObject> loadValueObjects(
-            Collection<ExpressionExperimentSet> entities ) {
+    public List<ExpressionExperimentSetValueObject> doLoadValueObjects( Collection<ExpressionExperimentSet> entities ) {
         return this.loadValueObjects( EntityUtils.getIds( entities ), false );
     }
 

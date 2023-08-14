@@ -3,10 +3,19 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8"/>
-    <title>Gemma RESTful API documentation</title>
+    <title>RESTful API documentation | Gemma</title>
     <link rel="stylesheet" type="text/css" href="swagger-ui.css"/>
+    <link rel="stylesheet" type="text/css" href="style.css"/>
 </head>
 <body>
+<header class="header">
+    <a href="${pageContext.request.contextPath}/home.html" class="logo">
+        <img src="${pageContext.request.contextPath}/images/logo/gemma-headerlogo.png"/>
+    </a>
+    <a href="https://www.ubc.ca/" class="right-logo">
+        <img src="${pageContext.request.contextPath}/images/logo/ubcgrey_logo_40.png"/>
+    </a>
+</header>
 <div id="swagger-ui"></div>
 <script src="swagger-ui-bundle.js"></script>
 <script>
@@ -20,6 +29,16 @@
             ]
         });
     };
+</script>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=${appConfig["ga.tracker"]}"></script>
+<script>
+   window.dataLayer = window.dataLayer || [];
+   function gtag() {
+      dataLayer.push( arguments );
+   }
+   gtag( 'js', new Date() );
+   gtag( 'config', '${appConfig["ga.tracker"]}' );
 </script>
 </body>
 </html>

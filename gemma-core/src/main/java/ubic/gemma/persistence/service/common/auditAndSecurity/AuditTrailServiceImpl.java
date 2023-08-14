@@ -128,15 +128,6 @@ public class AuditTrailServiceImpl extends AbstractService<AuditTrail> implement
 
     private AuditEvent addEvent( final Auditable auditable, final AuditEvent auditEvent ) {
         AuditTrail trail = auditable.getAuditTrail();
-        if ( trail == null ) {
-            /*
-             * Note: this step should be done by the AuditAdvice when the entity was first created, so this is just
-             * defensive.
-             */
-            log.warn( String.format( "AuditTrail is null for %s. It should have been initialized by the AuditAdvice when the entity was first created.",
-                    auditable ) );
-            trail = AuditTrail.Factory.newInstance();
-        }
         trail = ensureInSession( trail );
         // this is necessary otherwise we would have to guess the event from the audit trail
         AuditEvent persistedAuditEvent = auditEventDao.save( auditEvent );

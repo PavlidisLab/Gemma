@@ -6,6 +6,7 @@ import ubic.gemma.model.common.Identifiable;
 
 import javax.annotation.Nullable;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -23,7 +24,7 @@ public abstract class AbstractVoEnabledDao<O extends Identifiable, VO extends Id
      * If there is no way to perform a given query under this amount of time, consider paginating results or optimizing
      * how Hibernate entities are loaded or cached.
      */
-    protected static final int REPORT_SLOW_QUERY_AFTER_MS = 200;
+    protected static final int REPORT_SLOW_QUERY_AFTER_MS = 1000;
 
     protected AbstractVoEnabledDao( Class<? extends O> elementClass, SessionFactory sessionFactory ) {
         super( elementClass, sessionFactory );
@@ -33,40 +34,65 @@ public abstract class AbstractVoEnabledDao<O extends Identifiable, VO extends Id
      * Load a value object for a given entity.
      * <p>
      * This should be fast and efficient, and avoid any database query or post-processing. If you need to perform
-     * additional queries, consider overriding {@link #loadValueObject(Identifiable)} or {@link #loadValueObjects(Collection)}.
+     * additional queries, implement {@link #postProcessValueObjects(List)} instead.
      */
     @Nullable
     protected abstract VO doLoadValueObject( O entity );
 
-    @Override
-    public VO loadValueObject( O entity ) {
-        return doLoadValueObject( entity );
-    }
-
-    @Override
-    public VO loadValueObjectById( Long id ) {
-        O entity = load( id );
-        return entity == null ? null : doLoadValueObject( entity );
-    }
-
     /**
-     * The default implementation calls {@link #doLoadValueObject(Identifiable)} for each entity and filters out nulls.
+     * Load all the value objects for the given entities.
+     * <p>
+     * The default is to apply {@link #doLoadValueObject(Identifiable)} on each entry and weed out null elements.
+     * <p>
+     * This method should be fast and any post-processing should happen in {@link #postProcessValueObjects(List)}.
      */
-    protected List<VO> doLoadValueObjects( Collection<O> entities ) {
+    public List<VO> doLoadValueObjects( Collection<O> entities ) {
         return entities.stream()
                 .map( this::doLoadValueObject )
                 .filter( Objects::nonNull )
                 .collect( Collectors.toList() );
     }
 
-    @Override
-    public List<VO> loadValueObjects( Collection<O> entities ) {
-        return doLoadValueObjects( entities );
+    /**
+     * Post-process VOs in bulk.
+     * <p>
+     * Use this as an opportunity to load extra informations that could not be populated in the initial
+     * {@link #doLoadValueObject(Identifiable)} or {@link #doLoadValueObjects(Collection)}
+     */
+    protected void postProcessValueObjects( List<VO> vos ) {
+
     }
 
     @Override
-    public List<VO> loadValueObjectsByIds( Collection<Long> ids ) {
-        return doLoadValueObjects( load( ids ) );
+    public final VO loadValueObject( O entity ) {
+        VO vo = doLoadValueObject( entity );
+        if ( vo != null ) {
+            postProcessValueObjects( Collections.singletonList( vo ) );
+            return vo;
+        } else {
+            return null;
+        }
+    }
+
+    @Override
+    public final VO loadValueObjectById( Long id ) {
+        O entity = load( id );
+        return entity == null ? null : loadValueObject( entity );
+    }
+
+    /**
+     * The default implementation calls {@link #loadValueObject(Identifiable)} for each entity and filters out nulls.
+     */
+    @Override
+    public final List<VO> loadValueObjects( Collection<O> entities ) {
+        List<VO> results = doLoadValueObjects( entities );
+        postProcessValueObjects( results );
+        return results;
+    }
+
+    @Override
+    public final List<VO> loadValueObjectsByIds( Collection<Long> ids ) {
+        return loadValueObjects( load( ids ) );
     }
 
     /**
@@ -75,7 +101,7 @@ public abstract class AbstractVoEnabledDao<O extends Identifiable, VO extends Id
      * @return VOs of all instances of the class this DAO manages.
      */
     @Override
-    public List<VO> loadAllValueObjects() {
-        return doLoadValueObjects( loadAll() );
+    public final List<VO> loadAllValueObjects() {
+        return loadValueObjects( loadAll() );
     }
 }

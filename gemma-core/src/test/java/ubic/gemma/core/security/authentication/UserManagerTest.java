@@ -1,10 +1,8 @@
 package ubic.gemma.core.security.authentication;
 
 import gemma.gsec.SecurityService;
-import gemma.gsec.acl.domain.AclService;
 import gemma.gsec.authentication.UserDetailsImpl;
 import org.hibernate.SessionFactory;
-import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -43,11 +41,6 @@ public class UserManagerTest extends BaseDatabaseTest {
         }
 
         @Bean
-        public AclService aclService() {
-            return mock( AclService.class );
-        }
-
-        @Bean
         public SecurityService securityService() {
             return mock( SecurityService.class );
         }
@@ -65,11 +58,6 @@ public class UserManagerTest extends BaseDatabaseTest {
 
     @Autowired
     private UserManager userManager;
-
-    @Before
-    public void setUpGroups() {
-        super.executeSqlScript( "sql/init-entities-h2.sql", false );
-    }
 
     @Test
     public void testUpdateUser() {

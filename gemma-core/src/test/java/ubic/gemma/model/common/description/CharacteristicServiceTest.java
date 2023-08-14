@@ -19,16 +19,19 @@
 package ubic.gemma.model.common.description;
 
 import org.apache.commons.lang3.RandomStringUtils;
+import org.hibernate.Hibernate;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-
+import org.springframework.orm.hibernate4.HibernateQueryException;
 import ubic.gemma.core.util.test.BaseSpringContextTest;
+import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
+import ubic.gemma.persistence.service.TableMaintenanceUtil;
 import ubic.gemma.persistence.service.common.description.CharacteristicService;
 import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
@@ -36,7 +39,7 @@ import ubic.gemma.persistence.service.expression.experiment.FactorValueService;
 
 import java.util.*;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 /**
  * @author luke
@@ -61,7 +64,6 @@ public class CharacteristicServiceTest extends BaseSpringContextTest {
 
     @Before
     public void setUp() throws Exception {
-
         ee = this.getTestPersistentBasicExpressionExperiment();
         ee.setCharacteristics( this.getTestPersistentCharacteristics( 2 ) );
         Characteristic[] eeChars = ee.getCharacteristics().toArray( new Characteristic[0] );
@@ -87,23 +89,61 @@ public class CharacteristicServiceTest extends BaseSpringContextTest {
         FactorValue fv = ef.getFactorValues().iterator().next();
         fv.setCharacteristics( this.getTestPersistentCharacteristics( 1 ) );
         fvService.update( fv );
+
+        tableMaintenanceUtil.updateExpressionExperiment2CharacteristicEntries();
     }
 
     @Test
     public final void testGetParents() {
-        Map<Characteristic, Object> charToParent;
-        charToParent = characteristicService.getParents( Collections.singletonList( eeChar1 ) );
+        Map<Characteristic, Identifiable> charToParent;
+        charToParent = characteristicService.getParents( Collections.singletonList( eeChar1 ), null, -1 );
         assertEquals( ee, charToParent.get( eeChar1 ) );
-        assertEquals( null, charToParent.get( eeChar2 ) );
+        assertNull( charToParent.get( eeChar2 ) );
     }
 
     @Test
-    public final void testGetParentsWithClazzConstraint() {
-        Map<Characteristic, Object> charToParent;
-        charToParent = characteristicService.getParents( Arrays.asList( new Class<?>[] { ExpressionExperiment.class } ),
-                Collections.singletonList( eeChar1 ) );
-        assertEquals( ee, charToParent.get( eeChar1 ) );
-        assertEquals( null, charToParent.get( eeChar2 ) );
+    public void testBrowse() {
+        characteristicService.browse( 10, 10, "category", true );
+    }
+
+    @Test(expected = HibernateQueryException.class)
+    public void testBrowseWithInvalidField() {
+        characteristicService.browse( 10, 10, "foo", true );
+    }
+
+    @Autowired
+    private TableMaintenanceUtil tableMaintenanceUtil;
+
+    @Test
+    public void testFindExperimentsByUris() {
+        Map<Class<? extends Identifiable>, Map<String, Set<ExpressionExperiment>>> result = characteristicService.findExperimentsByUris( Collections.singletonList( eeChar1.getValueUri() ), null, 10, true, true );
+        assertEquals( 1, result.keySet().size() );
+        assertTrue( result.containsKey( ExpressionExperiment.class ) );
+        ExpressionExperiment ee = result.get( ExpressionExperiment.class ).get( eeChar1.getValueUri() ).iterator().next();
+        assertTrue( Hibernate.isInitialized( ee ) );
+    }
+
+    @Test
+    public void testFindExperimentsByUrisAsProxies() {
+        Map<Class<? extends Identifiable>, Map<String, Set<ExpressionExperiment>>> result = characteristicService.findExperimentsByUris( Collections.singletonList( eeChar1.getValueUri() ), null, 10, false, true );
+        assertEquals( 1, result.size() );
+        Collection<ExpressionExperiment> ees = result.get( ExpressionExperiment.class ).get( eeChar1.getValueUri() );
+        ExpressionExperiment ee = result.get( ExpressionExperiment.class ).get( eeChar1.getValueUri() ).iterator().next();
+        assertFalse( Hibernate.isInitialized( ee ) );
+    }
+
+    @Test
+    public void testFindExperimentsByUrisAsAnonymousUser() {
+        runAsAnonymous();
+        Map<Class<? extends Identifiable>, Map<String, Set<ExpressionExperiment>>> result = characteristicService.findExperimentsByUris( Collections.singletonList( eeChar1.getValueUri() ), null, 10, true, true );
+        assertTrue( result.isEmpty() );
+    }
+
+    @Test
+    public void testFindExperimentsByUrisAsUser() {
+        runAsUser( "bob" );
+        Map<Class<? extends Identifiable>, Map<String, Set<ExpressionExperiment>>> result = characteristicService.findExperimentsByUris( Collections.singletonList( eeChar1.getValueUri() ), null, 10, true, true );
+        assertTrue( result.isEmpty() );
     }
 
     private Set<Characteristic> getTestPersistentCharacteristics( int n ) {
@@ -112,6 +152,7 @@ public class CharacteristicServiceTest extends BaseSpringContextTest {
             Characteristic c = Characteristic.Factory.newInstance();
             c.setCategory( "test" );
             c.setValue( RandomStringUtils.randomNumeric( 10 ) );
+            c.setValueUri( "http://www.ebi.ac.uk/efo/EFO_" + RandomStringUtils.randomAlphabetic( 7 ) );
             characteristicService.create( c );
             chars.add( c );
         }

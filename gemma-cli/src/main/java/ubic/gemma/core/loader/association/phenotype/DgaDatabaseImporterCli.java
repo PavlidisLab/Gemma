@@ -22,6 +22,7 @@ import java.util.Set;
  *
  * @author Nicolas
  */
+@Deprecated
 public class DgaDatabaseImporterCli extends ExternalDatabaseEvidenceImporterAbstractCLI {
 
     // to find to file go to : http://dga.nubic.northwestern.edu/pages/download.php -- DEAD URL

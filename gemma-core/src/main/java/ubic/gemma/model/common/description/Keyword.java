@@ -18,7 +18,7 @@
  */
 package ubic.gemma.model.common.description;
 
-public class Keyword extends BibRefAnnotationImpl {
+public class Keyword extends BibRefAnnotation {
 
     private static final long serialVersionUID = 2663428244994277220L;
 

@@ -206,7 +206,7 @@ public class ExpressionDataDoubleMatrixUtil {
 
         StandardQuantitationType finalType = type;
         List<QuantitationType> log2Qts = dmatrix.getQuantitationTypes().stream()
-                .map( QuantitationTypeImpl.Factory::newInstance )
+                .map( QuantitationType.Factory::newInstance )
                 .peek( qt -> {
                     qt.setType( finalType );
                     qt.setScale( ScaleType.LOG2 );
@@ -285,7 +285,7 @@ public class ExpressionDataDoubleMatrixUtil {
      * Infer a {@link QuantitationType} from expression data.
      */
     public static QuantitationType inferQuantitationType( ExpressionDataDoubleMatrix expressionDataDoubleMatrix ) {
-        QuantitationType qt = new QuantitationTypeImpl();
+        QuantitationType qt = new QuantitationType();
         InferredQuantitationType iqt = infer( expressionDataDoubleMatrix );
         qt.setGeneralType( GeneralType.QUANTITATIVE );
         qt.setType( iqt.type );

@@ -131,9 +131,15 @@ public class ProcessedExpressionDataVectorServiceImpl
     @Override
     @Transactional(readOnly = true)
     public Collection<DoubleVectorValueObject> getProcessedDataArrays(
-            Collection<? extends BioAssaySet> expressionExperiments, Collection<Long> genes ) {
+            Collection<ExpressionExperiment> expressionExperiments, Collection<Long> genes ) {
         this.clearCache(); // Fix for 4320
         return processedExpressionDataVectorDao.getProcessedDataArrays( expressionExperiments, genes );
+    }
+
+    @Override
+    public Collection<DoubleVectorValueObject> getProcessedDataArrays( BioAssaySet ee, Collection<Long> genes ) {
+        this.clearCache(); // Fix for 4320
+        return processedExpressionDataVectorDao.getProcessedDataArrays( Collections.singleton( ee ), genes );
     }
 
     @Override
@@ -220,7 +226,7 @@ public class ProcessedExpressionDataVectorServiceImpl
     @Override
     @Transactional(readOnly = true)
     public Collection<DoubleVectorValueObject> getProcessedDataArraysByProbe(
-            Collection<? extends BioAssaySet> expressionExperiments,
+            Collection<ExpressionExperiment> expressionExperiments,
             Collection<CompositeSequence> compositeSequences ) {
 
         return this.processedExpressionDataVectorDao

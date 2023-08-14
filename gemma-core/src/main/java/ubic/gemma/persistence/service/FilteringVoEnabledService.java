@@ -13,15 +13,15 @@ import java.util.List;
  * Interface VO-enabled service with filtering capabilities.
  */
 public interface FilteringVoEnabledService<O extends Identifiable, VO extends IdentifiableValueObject<O>>
-        extends FilteringService<O>, BaseVoEnabledService<O, VO> {
+        extends BaseVoEnabledService<O, VO>, FilteringService<O> {
 
     /**
-     * @see FilteringVoEnabledDao#loadValueObjectsPreFilter(Filters, Sort, int, int)
+     * @see FilteringVoEnabledDao#loadValueObjects(Filters, Sort, int, int)
      */
-    Slice<VO> loadValueObjectsPreFilter( @Nullable Filters filters, @Nullable Sort sort, int offset, int limit );
+    Slice<VO> loadValueObjects( @Nullable Filters filters, @Nullable Sort sort, int offset, int limit );
 
     /**
-     * @see FilteringVoEnabledDao#loadValueObjectsPreFilter(Filters, Sort)
+     * @see FilteringVoEnabledDao#loadValueObjects(Filters, Sort)
      */
-    List<VO> loadValueObjectsPreFilter( @Nullable Filters filters, @Nullable Sort sort );
+    List<VO> loadValueObjects( @Nullable Filters filters, @Nullable Sort sort );
 }

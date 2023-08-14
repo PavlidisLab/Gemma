@@ -115,7 +115,7 @@ public class SecurityServiceTest extends BaseSpringContextTest {
         this.makeUser( username );
         this.securityService.makeOwnedByUser( ee, username );
         assertTrue( this.securityService.isEditableByUser( ee, username ) );
-        this.runAsUser( username );
+        this.runAsUser( username, false );
 
         this.securityService.createGroup( groupName );
 
@@ -157,7 +157,7 @@ public class SecurityServiceTest extends BaseSpringContextTest {
 
         assertTrue( this.securityService.isEditableByUser( entity, username ) );
 
-        this.runAsUser( username );
+        this.runAsUser( username, false );
 
         /*
          * Create a group, do stuff...
@@ -175,7 +175,7 @@ public class SecurityServiceTest extends BaseSpringContextTest {
         /*
          * Now, log in as another user.
          */
-        this.runAsUser( usertwo );
+        this.runAsUser( usertwo, false );
 
         entity = this.arrayDesignService.load( entity.getId() );
         assertNotNull( entity );
@@ -183,13 +183,13 @@ public class SecurityServiceTest extends BaseSpringContextTest {
         this.arrayDesignService.update( entity );
         // no exception == happy.
 
-        this.runAsUser( username );
+        this.runAsUser( username, false );
         this.securityService.makeUnreadableByGroup( entity, groupName );
         // should still work.
         entity = this.arrayDesignService.load( entity.getId() );
         assertNotNull( entity );
 
-        this.runAsUser( usertwo );
+        this.runAsUser( usertwo, false );
         // should be locked out.
 
         entity = this.arrayDesignService.load( entity.getId() );
@@ -201,7 +201,7 @@ public class SecurityServiceTest extends BaseSpringContextTest {
         } catch ( AccessDeniedException ok ) {
             // expected behaviour
         }
-        this.runAsUser( username );
+        this.runAsUser( username, false );
         this.userManager.deleteGroup( groupName );
 
     }
@@ -242,7 +242,7 @@ public class SecurityServiceTest extends BaseSpringContextTest {
     @Test
     public void testMakePrivateWithoutPermission() {
         this.makeUser( "unauthorizedTestUser" );
-        this.runAsUser( "unauthorizedTestUser" ); // test setup.
+        this.runAsUser( "unauthorizedTestUser", false ); // test setup.
 
         ArrayDesign ad = this.arrayDesignService.findByName( this.arrayDesignName ).iterator().next();
 

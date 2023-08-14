@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -25,6 +25,7 @@ import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.persistence.util.Settings;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URL;
 import java.util.Collection;
 
@@ -58,7 +59,9 @@ public class PubMedXMLFetcher {
         URL toBeGotten = new URL( uri + StringUtils.chomp( buf.toString() ) );
         log.debug( "Fetching " + toBeGotten );
         PubMedXMLParser pmxp = new PubMedXMLParser();
-        return pmxp.parse( toBeGotten.openStream() );
+        try ( InputStream is = toBeGotten.openStream() ) {
+            return pmxp.parse( is );
+        }
     }
 
     public BibliographicReference retrieveByHTTP( int pubMedId ) {
@@ -69,7 +72,9 @@ public class PubMedXMLFetcher {
                 URL toBeGotten = new URL( uri + pubMedId );
                 log.debug( "Fetching " + toBeGotten );
                 PubMedXMLParser pmxp = new PubMedXMLParser();
-                results = pmxp.parse( toBeGotten.openStream() );
+                try ( InputStream is = toBeGotten.openStream() ) {
+                    results = pmxp.parse( is );
+                }
                 if ( results != null && results.size() > 0 )
                     break;
                 try {

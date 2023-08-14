@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <beans xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
        xmlns:task="http://www.springframework.org/schema/task"
-       xmlns:p="http://www.springframework.org/schema/p"
        xmlns="http://www.springframework.org/schema/beans"
        xsi:schemaLocation="http://www.springframework.org/schema/beans
             http://www.springframework.org/schema/beans/spring-beans.xsd
             http://www.springframework.org/schema/task
-            http://www.springframework.org/schema/task/spring-task.xsd">
+            http://www.springframework.org/schema/task/spring-task.xsd"
+       profile="web">
 
     <!-- author: keshav -->
 
@@ -24,10 +24,12 @@
                 <ref local="whatsNewTrigger"/>
                 <ref local="gene2CsUpdateTrigger"/>
                 <ref local="batchInfoTrigger"/>
+                <ref local="ee2cUpdateTrigger"/>
                 <!-- <ref local="viewTrigger" /> -->
                 <!--<ref local="monitorSpaceTrigger" /> -->
             </list>
         </property>
+        <property name="autoStartup" value="${quartzOn}"/>
     </bean>
 
     <!-- Triggers -->
@@ -37,27 +39,44 @@
         fire frequently for testing, try <value>0 0/2 * ? * *</value>. -->
     <bean id="batchInfoTrigger" class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
         <property name="jobDetail" ref="batchInfoDetail"/>
-        <property name="cronExpression" value="0 30 0 ? * *"/>
+        <!-- every day at 00:30:00 -->
+        <property name="cronExpression" value="0 30 0 * * ?"/>
     </bean>
     <bean id="indexTrigger" class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
         <property name="jobDetail" ref="indexJobDetail"/>
+        <!-- every saturday at 01:15:00 -->
         <property name="cronExpression" value="0 15 1 ? * SAT"/>
     </bean>
     <bean id="expressionExperimentReportTrigger" class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
         <property name="jobDetail" ref="expressionExperimentReportJobDetail"/>
+        <!-- every first-of-the-month at 00:15:00 -->
         <property name="cronExpression" value="0 15 0 1 * ?"/>
     </bean>
     <bean id="arrayDesignReportTrigger" class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
         <property name="jobDetail" ref="arrayDesignReportJobDetail"/>
+        <!-- every first-of-the-month at 01:30:00 -->
         <property name="cronExpression" value="0 30 1 1 * ?"/>
     </bean>
     <bean id="whatsNewTrigger" class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
         <property name="jobDetail" ref="whatsNewJobDetail"/>
-        <property name="cronExpression" value="0 15 0 ? * *"/>
+        <!-- every day at 00:15:00 -->
+        <property name="cronExpression" value="0 15 0 * * ?"/>
     </bean>
     <bean id="gene2CsUpdateTrigger" class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
         <property name="jobDetail" ref="gene2CsUpdateJobDetail"/>
-        <property name="cronExpression" value="0 40 0 ? * *"/>
+        <!-- every day at 00:40:00 -->
+        <property name="cronExpression" value="0 40 0 * * ?"/>
+    </bean>
+    <bean id="ee2cUpdateTrigger" class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
+        <property name="jobDetail">
+            <bean class="ubic.gemma.web.scheduler.SecureMethodInvokingJobDetailFactoryBean">
+                <property name="targetObject" ref="tableMaintenanceUtil"/>
+                <property name="targetMethod" value="updateExpressionExperiment2CharacteristicEntries"/>
+                <property name="concurrent" value="false"/>
+            </bean>
+        </property>
+        <!-- every 30 minutes during working hours (when the curators actively update annotations) -->
+        <property name="cronExpression" value="0 0/30 9-17 ? * MON-FRI"/>
     </bean>
 
     <!-- TODO make this work in the space, disabling until then. <bean id="viewTrigger" class="org.springframework.scheduling.quartz.CronTriggerBean">
@@ -76,8 +95,8 @@
 
 
     <!-- Job details -->
-    <bean id="batchInfoDetail" class="ubic.gemma.web.scheduler.SecureMethodInvokingJobDetailFactoryBean"
-          p:targetObject-ref="expressionExperimentReportService">
+    <bean id="batchInfoDetail" class="ubic.gemma.web.scheduler.SecureMethodInvokingJobDetailFactoryBean">
+        <property name="targetObject" ref="expressionExperimentReportService"/>
         <property name="concurrent" value="false"/>
         <property name="targetMethod" value="recalculateBatchInfo"/>
     </bean>
@@ -93,8 +112,8 @@
         <property name="targetMethod" value="generateArrayDesignReport"/>
     </bean>
     <bean id="expressionExperimentReportJobDetail"
-          class="ubic.gemma.web.scheduler.SecureMethodInvokingJobDetailFactoryBean"
-          p:targetObject-ref="expressionExperimentReportService">
+          class="ubic.gemma.web.scheduler.SecureMethodInvokingJobDetailFactoryBean">
+        <property name="targetObject" ref="expressionExperimentReportService"/>
         <property name="concurrent" value="false"/>
         <property name="targetMethod" value="generateSummaryObjects"/>
     </bean>
@@ -106,8 +125,8 @@
     </bean>
 
     <bean id="gene2CsUpdateJobDetail"
-          class="ubic.gemma.web.scheduler.SecureMethodInvokingJobDetailFactoryBean"
-          p:targetObject-ref="tableMaintenanceUtil">
+          class="ubic.gemma.web.scheduler.SecureMethodInvokingJobDetailFactoryBean">
+        <property name="targetObject" ref="tableMaintenanceUtil"/>
         <property name="concurrent" value="false"/>
         <property name="targetMethod" value="updateGene2CsEntries"/>
     </bean>

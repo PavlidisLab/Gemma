@@ -4,6 +4,7 @@
 <hibernate-mapping>
     <class mutable="false"
            name="ubic.gemma.model.common.auditAndSecurity.AuditEvent" table="AUDIT_EVENT">
+        <cache usage="read-only"/>
         <id access="field" name="id" type="java.lang.Long">
             <column name="ID" sql-type="BIGINT"/>
             <generator class="native"/>
@@ -34,7 +35,7 @@
         </many-to-one>
         <many-to-one access="field" cascade="all"
                      class="ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType"
-                     fetch="select" lazy="false" name="eventType">
+                     lazy="false" fetch="join" name="eventType">
             <!-- we cannot use component mapping here because of the polymorphism of auditeventtypes see HHH1152 -->
             <column name="EVENT_TYPE_FK" not-null="false" sql-type="BIGINT" unique="true"/>
         </many-to-one>

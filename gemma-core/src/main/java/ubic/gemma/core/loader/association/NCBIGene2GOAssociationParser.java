@@ -163,7 +163,7 @@ public class NCBIGene2GOAssociationParser extends BasicLineParser<Gene2GOAssocia
         Characteristic oe = Characteristic.Factory.newInstance();
         String value = values[GO_ID].replace( ":", "_" );
         oe.setValueUri( GeneOntologyService.BASE_GO_URI + value );
-        oe.setValue( value );
+        oe.setValue( value ); // NOTE: this is not the GO term label, it's the GO ID. It's OK because we do label lookups
 
         // g2GOAss.setSource( ncbiGeneDb );
 

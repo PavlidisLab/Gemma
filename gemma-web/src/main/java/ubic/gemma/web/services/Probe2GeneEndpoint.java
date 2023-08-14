@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2008 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -36,7 +36,7 @@ import java.util.HashSet;
 /**
  * Used for determining what genes a probe assays for. Given a probe name and an array Design Id will return a list of
  * gene ids
- * 
+ *
  * @author gavin, klc
  *
  */
@@ -67,7 +67,7 @@ public class Probe2GeneEndpoint extends AbstractGemmaEndpoint {
 
     /**
      * Reads the given <code>requestElement</code>, and sends a the response back.
-     * 
+     *
      * @param requestElement the contents of the SOAP message as DOM elements
      * @param document a DOM document to be used for constructing <code>Node</code>s
      * @return the response element
@@ -90,7 +90,7 @@ public class Probe2GeneEndpoint extends AbstractGemmaEndpoint {
         for ( String id : adResults ) {
             adid = id;
         }
-        ArrayDesign ad = arrayDesignService.load( Long.parseLong( adid ) );
+        ArrayDesign ad = arrayDesignService.loadOrFail( Long.parseLong( adid ) );
 
         // get genes, given probe (which is unique to an Array Design
         // therefore, the Array Design Identifier input is not really necessary

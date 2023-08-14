@@ -1,10 +1,8 @@
 package ubic.gemma.core.analysis.report;
 
 import org.junit.After;
-import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.concurrent.DelegatingSecurityContextRunnable;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import ubic.gemma.core.util.test.BaseSpringContextTest;
@@ -35,6 +33,10 @@ public class ExpressionExperimentReportServiceTest extends BaseSpringContextTest
         ee = getTestPersistentBasicExpressionExperiment();
         assertNull( ee.getBatchEffect() );
         assertNull( ee.getBatchConfound() );
+        assertNull( ee.getCurationDetails().getLastUpdated() );
+        expressionExperimentService.update( ee );
+        ee = expressionExperimentService.thawLite( ee );
+        assertNotNull( ee.getCurationDetails().getLastUpdated() );
         SecurityContext previousContext = SecurityContextHolder.getContext();
         try {
             runAsAgent();

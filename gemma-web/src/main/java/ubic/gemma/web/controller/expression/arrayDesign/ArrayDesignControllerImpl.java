@@ -234,7 +234,8 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
 
         Collection<SearchResult<ArrayDesign>> searchResults = null;
         try {
-            searchResults = searchService.search( SearchSettings.arrayDesignSearch( filter ), ArrayDesign.class );
+            searchResults = searchService.search( SearchSettings.arrayDesignSearch( filter ) )
+                    .getByResultObjectType( ArrayDesign.class );
         } catch ( SearchException e ) {
             return new ModelAndView( new RedirectView( "/arrays/showAllArrayDesigns.html", true ) )
                     .addObject( "message", "Invalid search settings: " + e.getMessage() );
@@ -249,7 +250,7 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
         StringBuilder list = new StringBuilder();
 
         if ( searchResults.size() == 1 ) {
-            ArrayDesign arrayDesign = arrayDesignService.load( searchResults.iterator().next().getResultId() );
+            ArrayDesign arrayDesign = arrayDesignService.loadOrFail( searchResults.iterator().next().getResultId() );
             return new ModelAndView(
                     new RedirectView( "/arrays/showArrayDesign.html?id=" + arrayDesign.getId(), true ) )
                     .addObject( "message",
@@ -288,7 +289,7 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
             Long id = Long.parseLong( sId );
             job = new GenerateArraySummaryLocalTask( new TaskCommand( id ) );
             String taskId = taskRunningService.submitTask( job );
-            return new ModelAndView( new RedirectView( "/arrays/showAllArrayDesigns.html?id=" + sId, true ) )
+            return new ModelAndView( new RedirectView( "/arrays/showAllArrayDesigns.html?id=" + id, true ) )
                     .addObject( "taskId", taskId );
         } catch ( NumberFormatException e ) {
             throw new RuntimeException( "Invalid ID: " + sId );
@@ -360,10 +361,10 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
         arrayDesignReportService.fillInSubsumptionInfo( Collections.singleton( vo ) );
 
         ArrayDesignValueObjectExt result = new ArrayDesignValueObjectExt( vo );
-        result = this.setExtRefsAndCounts( result, arrayDesign );
-        result = this.setAlternateNames( result, arrayDesign );
-        result = this.setExtRefsAndCounts( result, arrayDesign );
-        result = this.setSummaryInfo( result, id );
+        this.setExtRefsAndCounts( result, arrayDesign );
+        this.setAlternateNames( result, arrayDesign );
+        this.setExtRefsAndCounts( result, arrayDesign );
+        this.setSummaryInfo( result, id );
         result.setSwitchedExpressionExperimentCount( arrayDesignService.getSwitchedExpressionExperimentCount( arrayDesign ) );
 
         populateMergeStatus( arrayDesign, result ); // SLOW if we follow down to mergees of mergees etc.
@@ -396,19 +397,18 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
     /**
      * Set alternate names on the given value object.
      */
-    private ArrayDesignValueObjectExt setAlternateNames( ArrayDesignValueObjectExt result, ArrayDesign arrayDesign ) {
+    private void setAlternateNames( ArrayDesignValueObjectExt result, ArrayDesign arrayDesign ) {
         Collection<String> names = new HashSet<>();
         for ( AlternateName an : arrayDesign.getAlternateNames() ) {
             names.add( an.getName() );
         }
         result.setAlternateNames( names );
-        return result;
     }
 
     /**
      * Sets external references, design element count and express. experiment count on the given value object.
      */
-    private ArrayDesignValueObjectExt setExtRefsAndCounts( ArrayDesignValueObjectExt result, ArrayDesign arrayDesign ) {
+    private void setExtRefsAndCounts( ArrayDesignValueObjectExt result, ArrayDesign arrayDesign ) {
         Integer numCompositeSequences = arrayDesignService.getCompositeSequenceCount( arrayDesign ).intValue();
 
         long numExpressionExperiments = arrayDesignService.numExperiments( arrayDesign );
@@ -420,20 +420,18 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
         result.setExternalReferences( externalReferences );
         result.setDesignElementCount( numCompositeSequences );
         result.setExpressionExperimentCount( numExpressionExperiments );
-        return result;
     }
 
     /**
      * Sets the summary info on the given value object.
      */
-    private ArrayDesignValueObjectExt setSummaryInfo( ArrayDesignValueObjectExt result, Long id ) {
+    private void setSummaryInfo( ArrayDesignValueObjectExt result, Long id ) {
         ArrayDesignValueObject summary = arrayDesignReportService.getSummaryObject( id );
         if ( summary != null ) {
             result.setNumProbeAlignments( summary.getNumProbeAlignments() );
             result.setNumProbesToGenes( summary.getNumProbesToGenes() );
             result.setNumProbeSequences( summary.getNumProbeSequences() );
         }
-        return result;
     }
 
     @Override

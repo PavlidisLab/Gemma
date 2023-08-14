@@ -1,64 +1,143 @@
-/*
- * The Gemma project
- *
- * Copyright (c) 2007-2013 University of British Columbia
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *
- */
 package ubic.gemma.core.ontology;
 
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.test.annotation.DirtiesContext;
-import ubic.basecode.ontology.model.OntologyTerm;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.cache.CacheManager;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.core.task.AsyncTaskExecutor;
+import org.springframework.core.task.SimpleAsyncTaskExecutor;
+import org.springframework.core.task.TaskExecutor;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
+import ubic.basecode.ontology.providers.*;
 import ubic.basecode.ontology.search.OntologySearchException;
+import ubic.gemma.core.genome.gene.service.GeneService;
+import ubic.gemma.core.ontology.providers.GeneOntologyService;
 import ubic.gemma.core.search.SearchException;
-import ubic.gemma.core.util.test.BaseSpringContextTest;
-import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
+import ubic.gemma.core.search.SearchService;
+import ubic.gemma.model.common.search.SearchSettings;
+import ubic.gemma.model.genome.Gene;
+import ubic.gemma.persistence.service.common.description.CharacteristicService;
+import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialService;
+import ubic.gemma.persistence.util.TestComponent;
 
-import java.util.Collection;
+import java.util.Collections;
 
-import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.*;
 
-/**
- * @author paul
- */
-@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
-public class OntologyServiceTest extends BaseSpringContextTest {
+@ContextConfiguration
+public class OntologyServiceTest extends AbstractJUnit4SpringContextTests {
+
+    @Configuration
+    @TestComponent
+    static class OntologyServiceTestContextConfiguration {
+
+        @Bean
+        public OntologyService ontologyService() {
+            return new OntologyServiceImpl();
+        }
+
+        @Bean
+        public ChebiOntologyService chebiOntologyService() {
+            return mock( ChebiOntologyService.class );
+        }
+
+        @Bean
+        public BioMaterialService bioMaterialService() {
+            return mock();
+        }
+
+        @Bean
+        public CharacteristicService characteristicService() {
+            return mock();
+        }
+
+        @Bean
+        public SearchService searchService() {
+            return mock();
+        }
+
+        @Bean
+        public GeneOntologyService geneOntologyService() {
+            return mock();
+        }
+
+        @Bean
+        public GeneService geneService() {
+            return mock();
+        }
+
+        @Bean
+        public AsyncTaskExecutor taskExecutor() {
+            return new SimpleAsyncTaskExecutor();
+        }
+
+        @Bean
+        public ExperimentalFactorOntologyService experimentalFactorOntologyService() {
+            return mock();
+        }
+
+        @Deprecated
+        @Bean
+        public FMAOntologyService fmaOntologyService() {
+            return mock();
+        }
+
+        @Deprecated
+        @Bean
+        public NIFSTDOntologyService nifstdOntologyService() {
+            return mock();
+        }
+
+        @Bean
+        public ObiService obiService() {
+            return mock();
+        }
+
+        @Bean
+        @Qualifier("ontologyTaskExecutor")
+        public TaskExecutor ontologyTaskExecutor() {
+            return mock();
+        }
+
+        @Bean
+        public CacheManager cacheManager() {
+            return mock();
+        }
+    }
 
     @Autowired
-    private OntologyService os;
+    private OntologyService ontologyService;
+
+    @Autowired
+    private ChebiOntologyService chebiOntologyService;
+
+    @Autowired
+    private SearchService searchService;
+
+    @Autowired
+    private CharacteristicService characteristicService;
 
     @Test
-    public void test() throws SearchException, OntologySearchException, InterruptedException {
-        OntologyTestUtils.initialize( os.getDiseaseOntologyService(),
-                this.getClass().getResourceAsStream( "/data/loader/ontology/dotest.owl.xml" ) );
-
-        Collection<CharacteristicValueObject> name = os.findTermsInexact( "diarrhea", null );
-
-        assertTrue( name.size() > 0 );
-
-        OntologyTerm t1 = os.getTerm( "http://purl.obolibrary.org/obo/DOID_0050001" );
-        assertNotNull( t1 );
-
-        // Actinomadura madurae infectious disease
-        assertTrue( os.isObsolete( "http://purl.obolibrary.org/obo/DOID_0050001" ) );
-
-        // inflammatory diarrhea, not obsolete as of May 2012.
-        assertNotNull( os.getTerm( "http://purl.obolibrary.org/obo/DOID_0050132" ) );
-        assertTrue( !os.isObsolete( "http://purl.obolibrary.org/obo/DOID_0050132" ) );
-
+    public void testFindTermInexact() throws OntologySearchException, SearchException {
+        SearchService.SearchResultMap srm = mock();
+        when( srm.getByResultObjectType( Gene.class ) ).thenReturn( Collections.emptyList() );
+        when( searchService.search( any() ) ).thenReturn( srm );
+        when( chebiOntologyService.isOntologyLoaded() ).thenReturn( true );
+        ontologyService.findTermsInexact( "9-chloro-5-phenyl-3-prop-2-enyl-1,2,4,5-tetrahydro-3-benzazepine-7,8-diol", null );
+        verify( characteristicService ).findCharacteristicsByValueUriOrValueLike( "9-chloro-5-phenyl-3-prop-2-enyl-1,2,4,5-tetrahydro-3-benzazepine-7,8-diol" );
+        ArgumentCaptor<SearchSettings> captor = ArgumentCaptor.forClass( SearchSettings.class );
+        verify( searchService ).search( captor.capture() );
+        SearchSettings settings = captor.getValue();
+        assertEquals( "9-chloro-5-phenyl-3-prop-2-enyl-1,2,4,5-tetrahydro-3-benzazepine-7,8-diol", settings.getQuery() );
+        assertTrue( settings.getResultTypes().contains( Gene.class ) );
+        assertTrue( settings.isFillResults() );
+        verify( chebiOntologyService ).isOntologyLoaded();
+        verify( chebiOntologyService ).findTerm( "9-chloro-5-phenyl-3-prop-2-enyl-1,2,4,5-tetrahydro-3-benzazepine-7,8-diol" );
     }
 }

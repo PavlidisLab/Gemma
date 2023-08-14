@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
-		"http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+	"http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
 
 <hibernate-mapping>
 	<class name="ubic.gemma.model.analysis.Investigation" table="INVESTIGATION">
@@ -68,11 +68,11 @@
 					<column name="METADATA" not-null="false" unique="false"
 							sql-type="text"/>
 				</property>
-				<property name="batchEffect" type="java.lang.String">
+				<property name="batchEffect" type="org.hibernate.type.MaterializedClobType">
 					<column name="BATCH_EFFECT" not-null="false" unique="false"
 							sql-type="TEXT"/>
 				</property>
-				<property name="batchConfound" type="java.lang.String">
+				<property name="batchConfound" type="org.hibernate.type.MaterializedClobType">
 					<column name="BATCH_CONFOUND" not-null="false" unique="false"
 							sql-type="TEXT"/>
 				</property>
@@ -85,7 +85,7 @@
 					<key foreign-key="QUANTITATION_TYPE_EXPRESSION_EXPERIMENT_FKC">
 						<column name="EXPRESSION_EXPERIMENT_FK" sql-type="BIGINT"/>
 					</key>
-					<one-to-many class="ubic.gemma.model.common.quantitationtype.QuantitationTypeImpl"/>
+					<one-to-many class="ubic.gemma.model.common.quantitationtype.QuantitationType"/>
 				</set>
 				<many-to-one name="accession" class="ubic.gemma.model.common.description.DatabaseEntry" cascade="all"
 							 lazy="proxy" fetch="select">
@@ -103,7 +103,8 @@
 					</key>
 					<one-to-many class="ubic.gemma.model.expression.bioAssay.BioAssay"/>
 				</set>
-				<many-to-one name="taxon" class="ubic.gemma.model.genome.Taxon" lazy="proxy" fetch="select">
+				<!-- assumed available in ExpressionExperimentValueObject -->
+				<many-to-one name="taxon" class="ubic.gemma.model.genome.Taxon" lazy="false" fetch="select">
 					<column name="TAXON_FK" not-null="false" sql-type="BIGINT"/>
 				</many-to-one>
 				<many-to-one name="meanVarianceRelation"
@@ -115,11 +116,11 @@
 				<many-to-one name="curationDetails"
 							 class="ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails" cascade="all"
 							 lazy="false" fetch="join">
+					<!-- cannot be non-null because subsets and generic experiments don't have curation details -->
 					<column name="CURATION_DETAILS_FK" not-null="false" sql-type="BIGINT" unique="true"/>
 				</many-to-one>
 				<set name="rawExpressionDataVectors" lazy="true" fetch="select" inverse="true"
 					 cascade="all,delete-orphan">
-					<cache usage="read-write"/>
 					<key foreign-key="RAW_EXPRESSION_DATA_VECTOR_EXPRESSION_EXPERIMENT_FKC">
 						<column name="EXPRESSION_EXPERIMENT_FK" sql-type="BIGINT"/>
 					</key>
@@ -127,7 +128,6 @@
 				</set>
 				<set name="processedExpressionDataVectors" lazy="true" fetch="select" inverse="true"
 					 cascade="all,delete-orphan">
-					<cache usage="read-write"/>
 					<key foreign-key="PROCESSED_EXPRESSION_DATA_VECTOR_EXPRESSION_EXPERIMENT_FKC">
 						<column name="EXPRESSION_EXPERIMENT_FK" sql-type="BIGINT"/>
 					</key>
@@ -145,12 +145,22 @@
 					</many-to-many>
 				</set>
 
+				<set name="allCharacteristics" table="EXPRESSION_EXPERIMENT2CHARACTERISTIC"
+					 inverse="true">
+					<key>
+						<column name="EXPRESSION_EXPERIMENT_FK" sql-type="BIGINT"/>
+					</key>
+					<many-to-many class="ubic.gemma.model.common.description.Characteristic">
+						<column name="ID" sql-type="BIGINT"/>
+					</many-to-many>
+				</set>
+
 			</subclass>
 			<subclass name="ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet"
 					  discriminator-value="ExpressionExperimentSubSet" abstract="false">
 				<!-- this is assumed readily available in ExpressionExperimentSubSetValueObject -->
 				<many-to-one name="sourceExperiment" class="ubic.gemma.model.expression.experiment.ExpressionExperiment"
-							 cascade="none" lazy="false" fetch="join">
+							 cascade="none" lazy="false" fetch="select">
 					<column name="SOURCE_EXPERIMENT_FK" not-null="false" sql-type="BIGINT"/>
 				</many-to-one>
 				<set name="bioAssays" table="BIO_ASSAYS2EXPRESSION_EXPERIMENT_SUB_SET" lazy="true" fetch="select">

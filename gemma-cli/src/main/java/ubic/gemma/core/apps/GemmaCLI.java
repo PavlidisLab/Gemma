@@ -26,8 +26,11 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import ubic.gemma.core.util.AbstractCLI;
 import ubic.gemma.core.util.CLI;
+import ubic.gemma.core.logging.log4j.Log4jConfigurer;
+import ubic.gemma.core.logging.LoggingConfigurer;
 import ubic.gemma.persistence.util.Settings;
 import ubic.gemma.persistence.util.SpringContextUtil;
+import ubic.gemma.persistence.util.SpringProfiles;
 
 import javax.annotation.Nullable;
 import java.io.PrintWriter;
@@ -50,7 +53,9 @@ public class GemmaCLI {
     private static final String
             HELP_OPTION = "h",
             HELP_ALL_OPTION = "ha",
-            VERSION_OPTION = "v",
+            VERSION_OPTION = "version",
+            LOGGER_OPTION = "logger",
+            VERBOSITY_OPTION = "v",
             TESTING_OPTION = "testing"; // historically named '-testing', but now '--testing' is also accepted
 
     /**
@@ -60,11 +65,24 @@ public class GemmaCLI {
      */
     private static final Pattern PASSWORD_IN_CLI_MATCHER = Pattern.compile( "(-{1,2}p(?:assword)?)\\s+(.+?)\\b" );
 
+    private static final LoggingConfigurer loggingConfigurer = new Log4jConfigurer();
+
     public static void main( String[] args ) {
+        Option logOpt = Option.builder( VERBOSITY_OPTION )
+                .longOpt( "verbosity" ).hasArg()
+                .desc( "Set verbosity level for all loggers (0=silent, 5=very verbose; default is custom, see log4j.properties)" )
+                .type( Number.class )
+                .build();
+        Option otherLogOpt = Option.builder( LOGGER_OPTION )
+                .longOpt( "logger" ).hasArg()
+                .desc( "Configure a specific logger verbosity. For example, '--logger ubic.gemma=5' or --logger log4j.logger.org.hibernate.SQL=5" )
+                .build();
         Options options = new Options()
                 .addOption( HELP_OPTION, "help", false, "Show help" )
                 .addOption( HELP_ALL_OPTION, "help-all", false, "Show complete help with all available CLI commands" )
                 .addOption( VERSION_OPTION, "version", false, "Show Gemma version" )
+                .addOption( otherLogOpt )
+                .addOption( logOpt )
                 .addOption( TESTING_OPTION, "testing", false, "Use the test environment" );
         CommandLine commandLine;
         try {
@@ -87,15 +105,53 @@ public class GemmaCLI {
             return;
         }
 
+        if ( commandLine.hasOption( VERBOSITY_OPTION ) ) {
+            try {
+                loggingConfigurer.configureAllLoggers( ( ( Number ) commandLine.getParsedOptionValue( VERBOSITY_OPTION ) ).intValue() );
+            } catch ( ParseException | IllegalArgumentException e ) {
+                System.err.printf( "Failed to parse the %s option: %s.%n", VERBOSITY_OPTION,
+                        ExceptionUtils.getRootCauseMessage( e ) );
+                System.exit( 1 );
+                return;
+            }
+        }
+
+        if ( commandLine.hasOption( LOGGER_OPTION ) ) {
+            for ( String value : commandLine.getOptionValues( LOGGER_OPTION ) ) {
+                String[] vals = value.split( "=" );
+                if ( vals.length != 2 ) {
+                    System.err.println( "Logging value must in format [loggerName]=[value]." );
+                    System.exit( 1 );
+                }
+                String loggerName = vals[0];
+                try {
+                    loggingConfigurer.configureLogger( loggerName, Integer.parseInt( vals[1] ) );
+                } catch ( IllegalArgumentException e ) {
+                    System.err.printf( "Failed to parse the %s option for %s: %s.%n", VERBOSITY_OPTION,
+                            loggerName,
+                            ExceptionUtils.getRootCauseMessage( e ) );
+                    System.exit( 1 );
+                    return;
+                }
+            }
+        }
+
+        loggingConfigurer.apply();
+
         /*
          * Guarantee that the security settings are uniform throughout the application (all threads).
          */
         SecurityContextHolder.setStrategyName( SecurityContextHolder.MODE_INHERITABLETHREADLOCAL );
 
+        List<String> profiles = new ArrayList<>();
+        profiles.add( "cli" );
+        if ( commandLine.hasOption( TESTING_OPTION ) ) {
+            profiles.add( SpringProfiles.TEST );
+        }
+
         // check for the -testing flag to load the appropriate application context
         /* webapp */
-        ApplicationContext ctx = SpringContextUtil.getApplicationContext( commandLine.hasOption( TESTING_OPTION ),
-                "classpath*:ubic/gemma/cliContext-component-scan.xml" );
+        ApplicationContext ctx = SpringContextUtil.getApplicationContext( profiles.toArray( new String[0] ) );
 
         /*
          * Build a map from command names to classes.

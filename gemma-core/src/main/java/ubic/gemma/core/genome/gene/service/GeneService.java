@@ -30,7 +30,7 @@ import ubic.gemma.model.genome.PhysicalLocationValueObject;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneProductValueObject;
 import ubic.gemma.model.genome.gene.GeneValueObject;
-import ubic.gemma.persistence.service.BaseVoEnabledService;
+import ubic.gemma.persistence.service.BaseService;
 import ubic.gemma.persistence.service.FilteringVoEnabledService;
 
 import javax.annotation.Nullable;
@@ -44,7 +44,7 @@ import java.util.Map;
  */
 @SuppressWarnings("unused") // Possible external use
 @ParametersAreNonnullByDefault
-public interface GeneService extends FilteringVoEnabledService<Gene, GeneValueObject> {
+public interface GeneService extends BaseService<Gene>, FilteringVoEnabledService<Gene, GeneValueObject> {
 
     @Override
     @Secured({ "GROUP_ADMIN" })
@@ -53,14 +53,6 @@ public interface GeneService extends FilteringVoEnabledService<Gene, GeneValueOb
     @Override
     @Secured({ "GROUP_ADMIN" })
     void remove( Gene gene );
-
-    @Override
-    @Secured({ "GROUP_ADMIN" })
-    void update( Collection<Gene> genes );
-
-    @Override
-    @Secured({ "GROUP_ADMIN" })
-    void update( Gene gene );
 
     /**
      * Find all genes at a physical location. All overlapping genes are returned. The location can be a point or a

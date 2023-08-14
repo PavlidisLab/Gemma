@@ -19,12 +19,15 @@
 package ubic.gemma.core.security.authorization.acl;
 
 import gemma.gsec.acl.BaseAclAdvice;
+import gemma.gsec.acl.domain.AclService;
 import gemma.gsec.model.GroupAuthority;
 import gemma.gsec.model.Securable;
 import gemma.gsec.model.User;
 import gemma.gsec.model.UserGroup;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.hibernate.SessionFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.acls.model.*;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -51,6 +54,11 @@ import java.util.Collection;
 public class AclAdvice extends BaseAclAdvice {
 
     private static final Log log = LogFactory.getLog( AclAdvice.class );
+
+    @Autowired
+    public AclAdvice( AclService aclService, SessionFactory sessionFactory, ObjectIdentityRetrievalStrategy objectIdentityRetrievalStrategy ) {
+        super( aclService, sessionFactory, objectIdentityRetrievalStrategy );
+    }
 
     @Override
     protected boolean canSkipAclCheck( Object object ) {
@@ -137,22 +145,10 @@ public class AclAdvice extends BaseAclAdvice {
     }
 
     @Override
-    protected boolean specialCaseToKeepPrivateOnCreation( Class<? extends Securable> clazz ) {
-
-        if ( super.specialCaseToKeepPrivateOnCreation( clazz ) ) {
-            return true;
-        }
-
-        if ( UserGroup.class.isAssignableFrom( clazz ) ) {
-            return true;
-        }
-
-        if ( User.class.isAssignableFrom( clazz ) ) {
-            return true;
-        }
-
-        // important if we return true for SecuredChild.
-        return Investigation.class.isAssignableFrom( clazz );
-
+    protected boolean specialCaseToKeepPrivateOnCreation( Securable object ) {
+        return super.specialCaseToKeepPrivateOnCreation( object )
+                || object instanceof UserGroup
+                || object instanceof User
+                || object instanceof Investigation;
     }
 }

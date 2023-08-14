@@ -18,13 +18,11 @@
  */
 package ubic.gemma.core.security.authorization.acl;
 
-import gemma.gsec.acl.afterinvocation.ByAssociationFilteringProvider;
+import gemma.gsec.acl.afterinvocation.AclEntryAfterInvocationByAssociationCollectionFilteringProvider;
 import org.springframework.security.acls.model.AclService;
 import org.springframework.security.acls.model.Permission;
 import ubic.gemma.model.expression.bioAssayData.DataVectorValueObject;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 
 import java.util.List;
 
@@ -35,33 +33,25 @@ import java.util.List;
  * @author pavlidis (based in part on code from Acegi)
  */
 public class AclAfterCollectionDataVectorByExpressionExperimentFilter
-        extends ByAssociationFilteringProvider<ExpressionExperiment, Object> {
+        extends AclEntryAfterInvocationByAssociationCollectionFilteringProvider {
 
-    private static final String CONFIG_ATTRIBUTE = "AFTER_ACL_DATAVECTOR_COLLECTION_READ";
-
-    public AclAfterCollectionDataVectorByExpressionExperimentFilter( AclService aclService,
-            List<Permission> requirePermission ) {
-        super( aclService, AclAfterCollectionDataVectorByExpressionExperimentFilter.CONFIG_ATTRIBUTE,
-                requirePermission );
+    public AclAfterCollectionDataVectorByExpressionExperimentFilter( AclService aclService, List<Permission> requirePermission ) {
+        super( aclService, "AFTER_ACL_DATAVECTOR_COLLECTION_READ", requirePermission );
     }
 
     @Override
-    public String getProcessConfigAttribute() {
-        return AclAfterCollectionDataVectorByExpressionExperimentFilter.CONFIG_ATTRIBUTE;
+    protected Class<?> getProcessDomainObjectClass() {
+        return DesignElementDataVector.class;
     }
 
     @Override
-    protected ExpressionExperiment getAssociatedSecurable( Object targetDomainObject ) {
-        ExpressionExperiment domainObject = null;
+    protected Object getActualDomainObject( Object targetDomainObject ) {
         if ( targetDomainObject instanceof DesignElementDataVector ) {
-            domainObject = ( ( DesignElementDataVector ) targetDomainObject ).getExpressionExperiment();
+            return ( ( DesignElementDataVector ) targetDomainObject ).getExpressionExperiment();
         } else if ( targetDomainObject instanceof DataVectorValueObject ) {
-            ExpressionExperimentValueObject expressionExperiment = ( ( DataVectorValueObject ) targetDomainObject )
-                    .getExpressionExperiment();
-            domainObject = ExpressionExperiment.Factory.newInstance();
-            domainObject.setId( expressionExperiment.getId() );
+            return ( ( DataVectorValueObject ) targetDomainObject ).getExpressionExperiment();
         }
-        return domainObject;
+        throw new IllegalArgumentException( String.format( "Don't know how to find actual domain object for %s.",
+                targetDomainObject.getClass().getName() ) );
     }
-
 }

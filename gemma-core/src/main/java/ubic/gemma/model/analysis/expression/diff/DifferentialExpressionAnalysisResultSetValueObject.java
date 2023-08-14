@@ -3,6 +3,7 @@ package ubic.gemma.model.analysis.expression.diff;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import ubic.gemma.model.analysis.AnalysisResultSetValueObject;
 import ubic.gemma.model.expression.experiment.ExperimentalFactorValueObject;
+import ubic.gemma.model.expression.experiment.FactorValueBasicValueObject;
 import ubic.gemma.model.genome.Gene;
 
 import java.util.Collection;
@@ -18,6 +19,7 @@ public class DifferentialExpressionAnalysisResultSetValueObject extends Analysis
 
     private DifferentialExpressionAnalysisValueObject analysis;
     private Collection<ExperimentalFactorValueObject> experimentalFactors;
+    private FactorValueBasicValueObject baselineGroup;
 
     /**
      * Related analysis results.
@@ -43,6 +45,9 @@ public class DifferentialExpressionAnalysisResultSetValueObject extends Analysis
         this.experimentalFactors = analysisResultSet.getExperimentalFactors().stream()
                 .map( ExperimentalFactorValueObject::new )
                 .collect( Collectors.toList() );
+        if ( analysisResultSet.getBaselineGroup() != null ) {
+            this.baselineGroup = new FactorValueBasicValueObject( analysisResultSet.getBaselineGroup() );
+        }
     }
 
     /**
@@ -50,11 +55,11 @@ public class DifferentialExpressionAnalysisResultSetValueObject extends Analysis
      *
      * Note: this constructor assumes that {@link ExpressionAnalysisResultSet#getResults()} has already been initialized.
      */
-    public DifferentialExpressionAnalysisResultSetValueObject( ExpressionAnalysisResultSet analysisResultSet, Map<DifferentialExpressionAnalysisResult, List<Gene>> result2Genes ) {
+    public DifferentialExpressionAnalysisResultSetValueObject( ExpressionAnalysisResultSet analysisResultSet, Map<Long, List<Gene>> result2Genes ) {
         this( analysisResultSet );
         this.results = analysisResultSet.getResults()
                 .stream()
-                .map( result -> new DifferentialExpressionAnalysisResultValueObject( result, result2Genes.getOrDefault( result, Collections.emptyList() ) ) )
+                .map( result -> new DifferentialExpressionAnalysisResultValueObject( result, result2Genes.getOrDefault( result.getId(), Collections.emptyList() ) ) )
                 .collect( Collectors.toList() );
     }
 
@@ -72,6 +77,14 @@ public class DifferentialExpressionAnalysisResultSetValueObject extends Analysis
 
     public void setExperimentalFactors( Collection<ExperimentalFactorValueObject> experimentalFactors ) {
         this.experimentalFactors = experimentalFactors;
+    }
+
+    public FactorValueBasicValueObject getBaselineGroup() {
+        return baselineGroup;
+    }
+
+    public void setBaselineGroup( FactorValueBasicValueObject baselineGroup ) {
+        this.baselineGroup = baselineGroup;
     }
 
     @Override

@@ -129,7 +129,8 @@ public class AuditTrailServiceImplTest extends BaseSpringContextTest {
         assertNotNull( ev.getId() );
         assertNotNull( auditable.getCurationDetails() );
         assertNotNull( auditable.getCurationDetails().getLastUpdated() );
-        assertEquals( ev.getDate(), auditable.getCurationDetails().getLastUpdated() );
+        // FIXME: one of the two date makes a round-trip in the database and is of type Timestamp (which is a subclass of Date)
+        assertEquals( ev.getDate().getTime(), auditable.getCurationDetails().getLastUpdated().getTime() );
         assertEquals( size + 1, auditTrail.getEvents().size() );
         assertEquals( AlignmentBasedGeneMappingEvent.class, ev.getEventType().getClass() );
     }

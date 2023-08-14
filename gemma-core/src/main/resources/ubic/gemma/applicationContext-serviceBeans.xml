@@ -2,59 +2,83 @@
 <!-- Somewhat miscellaneous beans. @author Gemma paul -->
 <beans xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
        xmlns="http://www.springframework.org/schema/beans"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xmlns:context="http://www.springframework.org/schema/context"
        xsi:schemaLocation="http://www.springframework.org/schema/beans
-            http://www.springframework.org/schema/beans/spring-beans.xsd">
+            http://www.springframework.org/schema/beans/spring-beans.xsd
+       http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop.xsd http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd">
 
     <!-- Local tasks executor -->
     <bean id="taskExecutor" class="org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor">
         <property name="corePoolSize" value="${gemma.localTasks.corePoolSize}"/>
-        <property name="maxPoolSize" value="${gemma.localTasks.maxPoolSize}"/>
     </bean>
 
     <!-- Message source for this context, loaded from localized "messages_xx" files -->
     <bean id="messageSource" class="org.springframework.context.support.ReloadableResourceBundleMessageSource">
-        <property name="basename" value="messages"/>
-    </bean>
-
-    <!-- configurationPropertyConfigurer allows you to use variables like ${mail.host} in the spring bean definitions. Variables
-        are listed in a resource. If the resource is in your classpath, list in in 'locations'. Other config files can be added by
-        defining PropertiesConfiguration instances -->
-    <bean id="userPropertiesFileHandler" class="org.apache.commons.configuration2.io.FileHandler" init-method="load">
-        <constructor-arg index="0">
-            <ref local="userProperties"/>
-        </constructor-arg>
-        <property name="fileName" value="Gemma.properties"/>
-    </bean>
-
-    <bean id="userProperties" class="org.apache.commons.configuration2.PropertiesConfiguration"/>
-
-    <bean id="configurationPropertyConfigurer"
-          class="ubic.gemma.persistence.util.CommonsConfigurationPropertyPlaceholderConfigurer"
-          depends-on="userPropertiesFileHandler">
-        <property name="configuration">
-            <ref local="userProperties"/>
-        </property>
-        <property name="locations">
+        <property name="basenames">
             <list>
-                <value>classpath:default.properties</value>
+                <value>classpath:messages</value>
+                <value>classpath:ubic/gemma/core/messages</value>
             </list>
         </property>
-        <property name="ignoreUnresolvablePlaceholders" value="false"/>
-        <property name="ignoreResourceNotFound" value="false"/>
+        <property name="fallbackToSystemLocale" value="false"/>
     </bean>
 
+    <context:property-placeholder location="file:${user.home}/Gemma.properties" ignore-unresolvable="true"/>
+    <context:property-placeholder location="classpath:default.properties" ignore-unresolvable="true"/>
+    <context:property-placeholder location="classpath:project.properties" ignore-unresolvable="true"/>
+    <context:property-placeholder location="classpath:ubic/gemma/version.properties" ignore-resource-not-found="true"/>
 
     <!-- Configure Velocity for sending e-mail -->
-    <bean id="velocityEngine" class="org.springframework.ui.velocity.VelocityEngineFactoryBean">
-        <property name="velocityProperties">
+    <bean id="velocityEngine" class="org.apache.velocity.app.VelocityEngine">
+        <constructor-arg>
             <props>
-                <prop key="resource.loader">class</prop>
-                <prop key="class.resource.loader.class">
-                    org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader
-                </prop>
+                <prop key="resource.loaders">class</prop>
+                <prop key="resource.loader.class.class">org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader</prop>
             </props>
-        </property>
+        </constructor-arg>
     </bean>
 
+    <!-- micrometer, for metrics -->
+    <beans profile="production,dev">
+        <bean id="meterRegistry" class="io.micrometer.jmx.JmxMeterRegistry">
+            <constructor-arg value="DEFAULT"/>
+            <constructor-arg value="SYSTEM"/>
+        </bean>
+        <bean class="ubic.gemma.core.metrics.GenericMeterRegistryConfigurer">
+            <constructor-arg ref="meterRegistry"/>
+            <constructor-arg>
+                <list>
+                    <!-- basic metrics -->
+                    <bean class="io.micrometer.core.instrument.binder.jvm.ClassLoaderMetrics"/>
+                    <bean class="io.micrometer.core.instrument.binder.jvm.JvmMemoryMetrics"/>
+                    <bean class="io.micrometer.core.instrument.binder.system.ProcessorMetrics"/>
+                    <bean class="io.micrometer.core.instrument.binder.jvm.JvmThreadMetrics"/>
+                    <!-- logging metrics -->
+                    <bean class="io.micrometer.core.instrument.binder.logging.Log4j2Metrics"/>
+                    <!-- database metrics -->
+                    <bean class="ubic.gemma.core.metrics.binder.jpa.Hibernate4Metrics">
+                        <constructor-arg ref="sessionFactory"/>
+                        <constructor-arg value="sessionFactory"/>
+                        <constructor-arg>
+                            <list/>
+                        </constructor-arg>
+                    </bean>
+                    <bean class="ubic.gemma.core.metrics.binder.database.HikariCPMetrics">
+                        <constructor-arg ref="dataSource"/>
+                    </bean>
+                </list>
+            </constructor-arg>
+        </bean>
+        <bean class="ubic.gemma.core.metrics.MeterRegistryEhcacheConfigurer">
+            <constructor-arg ref="meterRegistry"/>
+            <constructor-arg ref="cacheManager"/>
+        </bean>
+        <!-- for @Timed annotations -->
+        <aop:aspectj-autoproxy/>
+        <bean class="io.micrometer.core.aop.TimedAspect">
+            <constructor-arg ref="meterRegistry"/>
+        </bean>
+    </beans>
 
 </beans>

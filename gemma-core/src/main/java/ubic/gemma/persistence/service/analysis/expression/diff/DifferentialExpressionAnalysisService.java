@@ -27,6 +27,7 @@ import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentDetailsValueObject;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.persistence.service.BaseService;
 import ubic.gemma.persistence.service.analysis.SingleExperimentAnalysisService;
 
 import javax.annotation.CheckReturnValue;
@@ -38,7 +39,7 @@ import java.util.Map;
  * @author kelsey
  */
 @SuppressWarnings("unused") // Possible external use
-public interface DifferentialExpressionAnalysisService extends SingleExperimentAnalysisService<DifferentialExpressionAnalysis> {
+public interface DifferentialExpressionAnalysisService extends BaseService<DifferentialExpressionAnalysis>, SingleExperimentAnalysisService<DifferentialExpressionAnalysis> {
 
     /**
      * @param par       result set
@@ -105,6 +106,7 @@ public interface DifferentialExpressionAnalysisService extends SingleExperimentA
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     DifferentialExpressionAnalysis thawFully( DifferentialExpressionAnalysis differentialExpressionAnalysis );
 
+    @Override
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     void update( DifferentialExpressionAnalysis o );
 
@@ -126,11 +128,11 @@ public interface DifferentialExpressionAnalysisService extends SingleExperimentA
      * @param ids of experiments or experimentsubsets.
      * @return map of bioassayset (valueobjects) to analyses (valueobjects) for each.
      */
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_MAP_READ" })
     Map<ExpressionExperimentDetailsValueObject, List<DifferentialExpressionAnalysisValueObject>> getAnalysesByExperiment(
             Collection<Long> ids );
 
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_MAP_READ" })
     Map<ExpressionExperimentDetailsValueObject, List<DifferentialExpressionAnalysisValueObject>> getAnalysesByExperiment(
             Collection<Long> ids, int offset, int limit );
 

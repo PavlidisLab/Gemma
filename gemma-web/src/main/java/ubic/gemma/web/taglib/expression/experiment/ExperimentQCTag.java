@@ -169,7 +169,7 @@ public class ExperimentQCTag extends TagSupport {
 
       /*  if ( hasCorrDist ) {
             buf.append(
-                    " <td style=\"margin:3px;padding:2px;background-color:#EEEEEE\" valign='top'><img title='Correlation distribution' src=\"" + Settings.getRootContext() + "/expressionExperiment/visualizeProbeCorrDist.html?id=" )
+                    " <td style=\"margin:3px;padding:2px;background-color:#EEEEEE\" valign='top'><img title='Correlation distribution' src=\"" + contextPath + "/expressionExperiment/visualizeProbeCorrDist.html?id=" )
                     .append( this.eeid ).append( "\" /></td>" );
         } else {
             buf.append( placeHolder );

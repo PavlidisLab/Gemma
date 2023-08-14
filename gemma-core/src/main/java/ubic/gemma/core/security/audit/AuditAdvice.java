@@ -18,6 +18,7 @@
  */
 package ubic.gemma.core.security.audit;
 
+import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.collections4.CollectionUtils;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.Signature;
@@ -30,8 +31,6 @@ import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.CascadingAction;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.Type;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
@@ -59,10 +58,9 @@ import java.util.*;
 @Aspect
 @Component
 @ParametersAreNonnullByDefault
+// Note that we have a special logger configured for this class, so remove events get stored.
+@CommonsLog
 public class AuditAdvice {
-
-    // Note that we have a special logger configured for this class, so remove events get stored.
-    private static final Logger log = LoggerFactory.getLogger( AuditAdvice.class.getName() );
 
     private enum OperationType {
         CREATE,
@@ -273,6 +271,10 @@ public class AuditAdvice {
                 Object propertyValue = propertyValues[j];
                 Type propertyType = propertyTypes[j];
 
+                if ( propertyValue == null ) {
+                    continue;
+                }
+
                 // ensure that the operation performed on the original object cascades as per JPA definition
                 // events don't cascade through uninitialized properties
                 if ( !cs.doCascade( cascadingAction ) || !Hibernate.isInitialized( propertyValue ) ) {
@@ -300,10 +302,7 @@ public class AuditAdvice {
     private void addAuditEvent( Signature method, Auditable auditable, AuditAction auditAction, String
             cascadedNote, User user, Date date ) {
         String note = String.format( "%s event on entity %s:%d [%s] by %s via %s on %s%s", auditAction, auditable.getClass().getName(), auditable.getId(), auditable, user.getUserName(), method, date, cascadedNote );
-        if ( auditable.getAuditTrail() == null ) {
-            // transient
-            auditable.setAuditTrail( AuditTrail.Factory.newInstance() );
-        } else if ( auditable.getAuditTrail().getId() != null ) {
+        if ( auditable.getAuditTrail().getId() != null ) {
             // persistent, but let's make sure it is part of this session
             auditable.setAuditTrail( ( AuditTrail ) sessionFactory.getCurrentSession().merge( auditable.getAuditTrail() ) );
         }

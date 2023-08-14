@@ -3,6 +3,7 @@ package ubic.gemma.persistence.service.expression.bioAssayData;
 import org.apache.commons.math3.distribution.LogNormalDistribution;
 import org.apache.commons.math3.distribution.NormalDistribution;
 import org.hibernate.Hibernate;
+import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.junit.Before;
 import org.junit.Test;
@@ -10,12 +11,14 @@ import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.security.test.context.support.WithSecurityContextTestExecutionListener;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.TestExecutionListeners;
 import ubic.basecode.io.ByteArrayConverter;
 import ubic.gemma.core.datastructure.matrix.QuantitationMismatchException;
 import ubic.gemma.core.util.test.BaseDatabaseTest;
 import ubic.gemma.core.util.test.category.SlowTest;
-import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
 import ubic.gemma.model.common.quantitationtype.*;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -31,11 +34,16 @@ import ubic.gemma.persistence.util.TestComponent;
 import java.util.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
 import static ubic.gemma.persistence.service.expression.bioAssayData.RandomExpressionDataMatrixUtils.randomExpressionMatrix;
 
+@Category(SlowTest.class)
 @ContextConfiguration
+@TestExecutionListeners(WithSecurityContextTestExecutionListener.class)
 public class ProcessedExpressionDataVectorDaoTest extends BaseDatabaseTest {
+
+    private static final int NUM_PROBES = 20000;
 
     @Configuration
     @TestComponent
@@ -63,13 +71,23 @@ public class ProcessedExpressionDataVectorDaoTest extends BaseDatabaseTest {
     }
 
     @Test
+    public void testFind() {
+        ArrayDesign ad = new ArrayDesign();
+        ad.setId( 1L );
+        QuantitationType qt = new QuantitationType();
+        qt.setId( 1L );
+        assertThat( processedExpressionDataVectorDao.find( ad, qt ) ).isEmpty();
+    }
+
+    @Test
+    @WithMockUser
     public void testCreateProcessedDataVectors() throws QuantitationMismatchException {
-        double[][] matrix = randomExpressionMatrix( 100, 4, new LogNormalDistribution( 10, 1 ) );
+        double[][] matrix = randomExpressionMatrix( NUM_PROBES, 4, new LogNormalDistribution( 9, 1 ) );
         ExpressionExperiment ee = getTestExpressionExperimentForRawExpressionMatrix( matrix, ScaleType.LINEAR, false );
         assertThat( ee.getProcessedExpressionDataVectors() ).isEmpty();
-        assertThat( ee.getRawExpressionDataVectors() ).hasSize( 100 );
+        assertThat( ee.getRawExpressionDataVectors() ).hasSize( NUM_PROBES );
         Set<ProcessedExpressionDataVector> vectors = processedExpressionDataVectorDao.createProcessedDataVectors( ee, false );
-        assertThat( vectors ).hasSize( 100 );
+        assertThat( vectors ).hasSize( NUM_PROBES );
         assertThat( ee.getQuantitationTypes() ).hasSize( 1 ).first().satisfies( qt -> {
             assertThat( qt.getGeneralType() ).isEqualTo( GeneralType.QUANTITATIVE );
             assertThat( qt.getScale() ).isEqualTo( ScaleType.LOG2 );
@@ -78,33 +96,35 @@ public class ProcessedExpressionDataVectorDaoTest extends BaseDatabaseTest {
     }
 
     @Test
+    @WithMockUser
     public void testCreateProcessedDataVectorsFromLog2Data() throws QuantitationMismatchException {
-        double[][] matrix = randomExpressionMatrix( 100, 4, new NormalDistribution( 15, 1 ) );
+        double[][] matrix = randomExpressionMatrix( NUM_PROBES, 4, new NormalDistribution( 15, 1 ) );
         ExpressionExperiment ee = getTestExpressionExperimentForRawExpressionMatrix( matrix, ScaleType.LOG2, false );
         assertThat( ee.getProcessedExpressionDataVectors() ).isEmpty();
-        assertThat( ee.getRawExpressionDataVectors() ).hasSize( 100 );
+        assertThat( ee.getRawExpressionDataVectors() ).hasSize( NUM_PROBES );
         Set<ProcessedExpressionDataVector> vectors = processedExpressionDataVectorDao.createProcessedDataVectors( ee, false );
-        assertThat( vectors ).hasSize( 100 );
+        assertThat( vectors ).hasSize( NUM_PROBES );
     }
 
     @Test
+    @WithMockUser
     public void testCreateProcessedDataVectorsFromLog2RatiometricData() throws QuantitationMismatchException {
-        double[][] matrix = randomExpressionMatrix( 100, 4, new NormalDistribution( 0, 1 ) );
+        double[][] matrix = randomExpressionMatrix( NUM_PROBES, 4, new NormalDistribution( 0, 1 ) );
         ExpressionExperiment ee = getTestExpressionExperimentForRawExpressionMatrix( matrix, ScaleType.LOG2, true );
         assertThat( ee.getProcessedExpressionDataVectors() ).isEmpty();
-        assertThat( ee.getRawExpressionDataVectors() ).hasSize( 100 );
+        assertThat( ee.getRawExpressionDataVectors() ).hasSize( NUM_PROBES );
         Set<ProcessedExpressionDataVector> vectors = processedExpressionDataVectorDao.createProcessedDataVectors( ee, false );
-        assertThat( vectors ).hasSize( 100 );
+        assertThat( vectors ).hasSize( NUM_PROBES );
     }
 
     @Test
-    @Category(SlowTest.class)
+    @WithMockUser
     public void testThaw() throws QuantitationMismatchException {
-        double[][] matrix = randomExpressionMatrix( 20000, 8, new NormalDistribution( 0, 1 ) );
+        double[][] matrix = randomExpressionMatrix( NUM_PROBES, 8, new NormalDistribution( 0, 1 ) );
         ExpressionExperiment ee = getTestExpressionExperimentForRawExpressionMatrix( matrix, ScaleType.LOG2, true );
-        assertThat( ee.getRawExpressionDataVectors() ).hasSize( 20000 );
+        assertThat( ee.getRawExpressionDataVectors() ).hasSize( NUM_PROBES );
         Set<ProcessedExpressionDataVector> vectors = processedExpressionDataVectorDao.createProcessedDataVectors( ee, false );
-        assertThat( vectors ).hasSize( 20000 );
+        assertThat( vectors ).hasSize( NUM_PROBES );
 
         sessionFactory.getCurrentSession().flush();
         sessionFactory.getCurrentSession().clear();
@@ -126,6 +146,45 @@ public class ProcessedExpressionDataVectorDaoTest extends BaseDatabaseTest {
         processedExpressionDataVectorDao.thaw( reloadedVectors );
         assertThat( reloadedVectors )
                 .allSatisfy( ProcessedExpressionDataVectorDaoTest::checkVectorInitializationAfterThaw );
+    }
+
+    @Test
+    public void testGetProcessedVectors() {
+        Session session = sessionFactory.getCurrentSession();
+        Taxon taxon = new Taxon();
+        session.persist( taxon );
+        ArrayDesign platform = new ArrayDesign();
+        platform.setPrimaryTaxon( taxon );
+        session.persist( platform );
+        ExpressionExperiment ee = new ExpressionExperiment();
+        List<CompositeSequence> probes = new ArrayList<>();
+        for ( int i = 0; i < NUM_PROBES; i++ ) {
+            CompositeSequence probe = new CompositeSequence();
+            probe.setArrayDesign( platform );
+            session.persist( probe );
+            probes.add( probe );
+        }
+        List<BioAssayDimension> bads = new ArrayList<>();
+        for ( int i = 0; i < NUM_PROBES; i++ ) {
+            BioAssayDimension bad = new BioAssayDimension();
+            session.persist( bad );
+            bads.add( bad );
+        }
+        // create 10000 vectors
+        Set<ProcessedExpressionDataVector> vectors = new HashSet<>();
+        for ( int i = 0; i < NUM_PROBES; i++ ) {
+            ProcessedExpressionDataVector vector = new ProcessedExpressionDataVector();
+            vector.setExpressionExperiment( ee );
+            vector.setBioAssayDimension( bads.get( i ) );
+            vector.setDesignElement( probes.get( i ) );
+            vector.setData( new byte[8 * 8] );
+            vectors.add( vector );
+        }
+        ee.setProcessedExpressionDataVectors( vectors );
+        session.persist( ee );
+        session.clear();
+        Collection<ProcessedExpressionDataVector> reloadedVectors = processedExpressionDataVectorDao.getProcessedVectors( ee );
+        assertEquals( NUM_PROBES, reloadedVectors.size() );
     }
 
     private static void checkVectorInitializationBeforeThaw( ProcessedExpressionDataVector vector ) {
@@ -164,10 +223,9 @@ public class ProcessedExpressionDataVectorDaoTest extends BaseDatabaseTest {
 
         ArrayDesign ad = new ArrayDesign();
         ad.setPrimaryTaxon( taxon );
-        ad.setAuditTrail( new AuditTrail() );
         sessionFactory.getCurrentSession().persist( ad );
 
-        QuantitationType qt = new QuantitationTypeImpl();
+        QuantitationType qt = new QuantitationType();
         qt.setRepresentation( PrimitiveType.DOUBLE );
         qt.setScale( scaleType );
         qt.setGeneralType( GeneralType.QUANTITATIVE );
@@ -175,38 +233,47 @@ public class ProcessedExpressionDataVectorDaoTest extends BaseDatabaseTest {
         qt.setIsRatio( isRatio );
         qt.setIsPreferred( true );
         sessionFactory.getCurrentSession().persist( qt );
-
-        BioAssayDimension bad = new BioAssayDimension();
-        List<BioAssay> bas = new ArrayList<>();
+        List<BioMaterial> bioMaterials = new ArrayList<>();
         for ( int i = 0; i < matrix[0].length; i++ ) {
             BioMaterial bm = new BioMaterial();
             bm.setSourceTaxon( taxon );
             sessionFactory.getCurrentSession().persist( bm );
+            bioMaterials.add( bm );
+        }
+        BioAssayDimension bad = new BioAssayDimension();
+        List<BioAssay> bas = new ArrayList<>();
+        for ( int i = 0; i < matrix[0].length; i++ ) {
             BioAssay ba = new BioAssay();
             ba.setArrayDesignUsed( ad );
-            ba.setSampleUsed( bm );
+            ba.setSampleUsed( bioMaterials.get( i ) );
             sessionFactory.getCurrentSession().persist( ba );
             bas.add( ba );
         }
         bad.setBioAssays( bas );
         sessionFactory.getCurrentSession().persist( bad );
 
-        Set<RawExpressionDataVector> vectors = new HashSet<>();
-        for ( double[] row : matrix ) {
-            RawExpressionDataVector ev = new RawExpressionDataVector();
-            ev.setBioAssayDimension( bad );
+        List<CompositeSequence> probes = new ArrayList<>();
+        for ( int i = 0; i < matrix.length; i++ ) {
             CompositeSequence cs = new CompositeSequence();
             cs.setArrayDesign( ad );
             sessionFactory.getCurrentSession().persist( cs );
-            ev.setDesignElement( cs );
+            probes.add( cs );
+        }
+
+        Set<RawExpressionDataVector> vectors = new HashSet<>();
+        int i = 0;
+        for ( double[] row : matrix ) {
+            RawExpressionDataVector ev = new RawExpressionDataVector();
+            ev.setBioAssayDimension( bad );
+            ev.setDesignElement( probes.get( i ) );
             ev.setData( bac.doubleArrayToBytes( row ) );
             ev.setExpressionExperiment( ee );
             ev.setQuantitationType( qt );
             vectors.add( ev );
+            i++;
         }
 
         ee.setRawExpressionDataVectors( vectors );
-        ee.setAuditTrail( new AuditTrail() );
         sessionFactory.getCurrentSession().persist( ee );
         return ee;
     }

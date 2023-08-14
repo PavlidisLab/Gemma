@@ -26,7 +26,6 @@ import org.springframework.stereotype.Repository;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
-import ubic.gemma.model.common.quantitationtype.QuantitationTypeImpl;
 import ubic.gemma.model.common.quantitationtype.QuantitationTypeValueObject;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
@@ -52,7 +51,7 @@ public class QuantitationTypeDaoImpl extends AbstractCriteriaFilteringVoEnabledD
 
     @Autowired
     public QuantitationTypeDaoImpl( SessionFactory sessionFactory ) {
-        super( QuantitationTypeImpl.class, sessionFactory );
+        super( QuantitationType.class, sessionFactory );
     }
 
     @Override
@@ -142,7 +141,7 @@ public class QuantitationTypeDaoImpl extends AbstractCriteriaFilteringVoEnabledD
     public List<QuantitationType> loadByDescription( String description ) {
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession()
-                .createQuery( "select q from QuantitationTypeImpl q where q.description like :description" )
+                .createQuery( "select q from QuantitationType q where q.description like :description" )
                 .setParameter( "description", description )
                 .list();
     }

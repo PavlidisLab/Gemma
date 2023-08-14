@@ -24,9 +24,7 @@ import ubic.gemma.model.common.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
-import ubic.gemma.model.common.auditAndSecurity.eventType.FailedBatchInformationFetchingEvent;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.persistence.service.BaseService;
+import ubic.gemma.persistence.service.BaseImmutableService;
 
 import javax.annotation.Nullable;
 import java.util.Date;
@@ -40,7 +38,7 @@ import java.util.List;
  *
  * @author kelsey
  */
-public interface AuditTrailService extends BaseService<AuditTrail> {
+public interface AuditTrailService extends BaseImmutableService<AuditTrail> {
 
     /**
      * Add an update event defined by the given parameters, to the given auditable. Returns the generated event.
@@ -50,19 +48,19 @@ public interface AuditTrailService extends BaseService<AuditTrail> {
      * @return the newly created event, which will be somewhere in the auditable's {@link AuditTrail#getEvents()}
      * collection.
      */
-    @Secured({ "GROUP_AGENT", "ACL_SECURABLE_EDIT" })
+    @Secured({ "GROUP_AGENT" })
     AuditEvent addUpdateEvent( Auditable auditable, String note );
 
     /**
      * @see #addUpdateEvent(Auditable, Class, String, String, Date)
      */
-    @Secured({ "GROUP_AGENT", "ACL_SECURABLE_EDIT" })
+    @Secured({ "GROUP_AGENT" })
     AuditEvent addUpdateEvent( Auditable auditable, Class<? extends AuditEventType> type, String note );
 
     /**
      * @see #addUpdateEvent(Auditable, Class, String, String, Date)
      */
-    @Secured({ "GROUP_AGENT", "ACL_SECURABLE_EDIT" })
+    @Secured({ "GROUP_AGENT" })
     AuditEvent addUpdateEvent( Auditable auditable, Class<? extends AuditEventType> type, @Nullable String note, String detail );
 
     /**
@@ -73,7 +71,7 @@ public interface AuditTrailService extends BaseService<AuditTrail> {
      *
      * @see #addUpdateEvent(Auditable, Class, String, String, Date)
      */
-    @Secured({ "GROUP_AGENT", "ACL_SECURABLE_EDIT" })
+    @Secured({ "GROUP_AGENT" })
     AuditEvent addUpdateEvent( Auditable auditable, Class<? extends AuditEventType> type, @Nullable String note, Throwable throwable );
 
     /**
@@ -87,7 +85,7 @@ public interface AuditTrailService extends BaseService<AuditTrail> {
      * @return the newly created event, which will be somewhere in the auditable's {@link AuditTrail#getEvents()}
      * collection.
      */
-    @Secured({ "GROUP_AGENT", "ACL_SECURABLE_EDIT" })
+    @Secured({ "GROUP_AGENT" })
     AuditEvent addUpdateEvent( Auditable auditable, Class<? extends AuditEventType> type, @Nullable String note, @Nullable String detail, Date performedDate );
 
     @Override

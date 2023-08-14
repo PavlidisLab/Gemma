@@ -32,7 +32,6 @@ import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.search.SearchResult;
 import ubic.gemma.core.search.SearchService;
-import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
@@ -45,10 +44,7 @@ import ubic.gemma.web.remote.EntityDelegator;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.awt.*;
 import java.util.*;
-import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * @author joseph
@@ -145,7 +141,7 @@ public class CompositeSequenceController extends BaseController {
         if ( csd == null || csd.getId() == null ) {
             return new HashSet<>();
         }
-        CompositeSequence cs = compositeSequenceService.load( csd.getId() );
+        CompositeSequence cs = compositeSequenceService.loadOrFail( csd.getId() );
 
         // unnecessary see https://github.com/PavlidisLab/Gemma/issues/176
         //     compositeSequenceService.thaw( Collections.singletonList( cs ) );
@@ -175,7 +171,7 @@ public class CompositeSequenceController extends BaseController {
         SearchService.SearchResultMap search = searchService.search( SearchSettings.compositeSequenceSearch( searchString, arrayDesign ) );
 
         Collection<CompositeSequence> css = new HashSet<>();
-        Collection<SearchResult<CompositeSequence>> searchResults = search.get( CompositeSequence.class );
+        Collection<SearchResult<CompositeSequence>> searchResults = search.getByResultObjectType( CompositeSequence.class );
         for ( SearchResult<CompositeSequence> sr : searchResults ) {
             CompositeSequence cs = sr.getResultObject();
             if ( cs != null && ( arrayDesign == null || cs.getArrayDesign().equals( arrayDesign ) ) ) {

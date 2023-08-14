@@ -123,11 +123,13 @@ public class ArrayDesignProbeMapperServiceImpl implements ArrayDesignProbeMapper
     }
 
     @Override
+    @Transactional
     public void processArrayDesign( ArrayDesign arrayDesign ) {
         this.processArrayDesign( arrayDesign, new ProbeMapperConfig(), true );
     }
 
     @Override
+    @Transactional
     public void processArrayDesign( ArrayDesign arrayDesign, ProbeMapperConfig config, boolean useDB ) {
 
         assert config != null;
@@ -215,6 +217,7 @@ public class ArrayDesignProbeMapperServiceImpl implements ArrayDesignProbeMapper
     }
 
     @Override
+    @Transactional
     public void processArrayDesign( ArrayDesign arrayDesign, Taxon taxon, File source, ExternalDatabase sourceDB,
             boolean ncbiIds ) throws IOException {
 

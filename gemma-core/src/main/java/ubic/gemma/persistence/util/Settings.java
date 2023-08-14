@@ -23,11 +23,17 @@ import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.FileSystemResource;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.UrlResource;
+import org.springframework.util.ResourceUtils;
 import ubic.basecode.util.ConfigUtils;
 
 import java.io.File;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.net.MalformedURLException;
 import java.util.*;
 
 /**
@@ -36,8 +42,10 @@ import java.util.*;
  *
  * @author pavlidis
  * @see org.apache.commons.configuration2.CompositeConfiguration
+ * @deprecated use {@link org.springframework.beans.factory.annotation.Value} to inject configurations
  */
 @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
+@Deprecated
 public class Settings {
 
     /**
@@ -57,7 +65,6 @@ public class Settings {
      * Name of the resource containing defaults that the user can override (classpath)
      */
     private static final String DEFAULT_CONFIGURATION = "default.properties";
-    private static final String QUARTZ_ENABLED_PROPERTY = "quartzOn";
     /**
      * The name of the file users can use to configure Gemma.
      */
@@ -277,41 +284,11 @@ public class Settings {
      * @return host url e.g. http://gemma.msl.ubc.ca
      */
     public static String getHostUrl() {
-        String host = Settings.getString( "gemma.hosturl", "http://gemma.msl.ubc.ca" );
+        String host = Settings.getString( "gemma.hosturl", "https://gemma.msl.ubc.ca" );
         if ( host.length() > 1 && host.endsWith( "/" ) ) {
             return host.substring( 0, host.length() - 1 );
         }
         return host;
-    }
-
-    /**
-     * @return root context e.g. /Gemma
-     */
-    @Deprecated
-    public static String getRootContext() {
-        String ctx = Settings.getString( "gemma.rootcontext", "" );
-        if ( ctx.isEmpty() || ctx.equals( "/" ) ) {
-            return "";
-        }
-        if ( !ctx.startsWith( "/" ) ) {
-            ctx = "/" + ctx;
-        }
-        if ( ctx.length() > 1 && ctx.endsWith( "/" ) ) {
-            return ctx.substring( 0, ctx.length() - 1 );
-        }
-        return ctx;
-    }
-
-    /**
-     * @return the configured base url (e.g., http://gemma.msl.ubc.ca/Gemma/). It will always end in a slash.
-     */
-    @Deprecated
-    public static String getBaseUrl() {
-        String url = Settings.getString( "gemma.baseurl", Settings.getHostUrl() + Settings.getRootContext() + "/" );
-        if ( !url.endsWith( "/" ) ) {
-            return url + "/";
-        }
-        return url;
     }
 
     public static Configuration getInMemoryConfiguration() {
@@ -432,13 +409,6 @@ public class Settings {
     }
 
     /**
-     * @return true if the scheduler (e.g. Quartz for cron-style tasks) is enabled by the user's configuration
-     */
-    public static boolean isSchedulerEnabled() {
-        return Settings.getBoolean( Settings.QUARTZ_ENABLED_PROPERTY, false );
-    }
-
-    /**
      * Set an environment/application variable programatically.
      *
      * @param key   key
@@ -448,4 +418,20 @@ public class Settings {
         Settings.config.setProperty( key, value );
     }
 
+    public static Resource getResource( String key ) {
+        String val = getString( key );
+        if ( val == null ) {
+            return null;
+        } else if ( val.startsWith( "classpath:" ) ) {
+            return new ClassPathResource( getString( key ) );
+        } else if ( val.startsWith( "file:" ) || val.startsWith( "http:" ) || val.startsWith( "https:" ) || val.startsWith( "ftp:" ) ) {
+            try {
+                return new UrlResource( val );
+            } catch ( MalformedURLException e ) {
+                throw new RuntimeException( e );
+            }
+        } else {
+            return new FileSystemResource( val );
+        }
+    }
 }

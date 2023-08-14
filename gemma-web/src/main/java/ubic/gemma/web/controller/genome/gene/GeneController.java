@@ -218,7 +218,7 @@ public class GeneController extends BaseController {
 
     @SuppressWarnings({ "WeakerAccess", "unused" }) // Frontend access
     @RequestMapping("/downloadGeneList.html")
-    protected ModelAndView handleRequestInternal( HttpServletRequest request ) {
+    public ModelAndView handleRequestInternal( HttpServletRequest request ) {
 
         StopWatch watch = new StopWatch();
         watch.start();

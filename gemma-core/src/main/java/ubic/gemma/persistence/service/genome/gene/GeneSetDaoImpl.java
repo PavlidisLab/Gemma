@@ -21,21 +21,22 @@ package ubic.gemma.persistence.service.genome.gene;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.hibernate.Hibernate;
-import org.hibernate.LockOptions;
 import org.hibernate.Query;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.model.genome.TaxonValueObject;
 import ubic.gemma.model.genome.gene.DatabaseBackedGeneSetValueObject;
 import ubic.gemma.model.genome.gene.GeneSet;
 import ubic.gemma.model.genome.gene.GeneSetMember;
 import ubic.gemma.model.genome.gene.GeneSetValueObject;
 import ubic.gemma.persistence.service.AbstractDao;
 
+import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Base Spring DAO Class: is able to create, update, remove, load, and find objects of type
@@ -45,6 +46,7 @@ import java.util.*;
  * @see    GeneSet
  */
 @Repository
+@ParametersAreNonnullByDefault
 public class GeneSetDaoImpl extends AbstractDao<GeneSet> implements GeneSetDao {
 
     @Autowired
@@ -71,78 +73,75 @@ public class GeneSetDaoImpl extends AbstractDao<GeneSet> implements GeneSetDao {
     }
 
     @Override
-    public Collection<GeneSet> loadMyGeneSets() {
-        return this.loadAll();
-    }
-
-    @Override
-    public Collection<GeneSet> loadMyGeneSets( Taxon tax ) {
-        return this.loadAll( tax );
-    }
-
-    @Override
-    public Collection<GeneSet> loadMySharedGeneSets() {
-        return this.loadAll();
-    }
-
-    @Override
-    public Collection<GeneSet> loadMySharedGeneSets( Taxon tax ) {
-        return this.loadAll( tax );
-    }
-
-    @Override
     public DatabaseBackedGeneSetValueObject loadValueObject( GeneSet geneSet ) {
+        return loadValueObjectById( geneSet.getId() );
+    }
+
+    @Override
+    public DatabaseBackedGeneSetValueObject loadValueObjectById( Long id ) {
+        DatabaseBackedGeneSetValueObject vo = loadValueObjectByIdLite( id );
+        fillGeneIds( Collections.singletonList( vo ) );
+        return vo;
+    }
+
+    @Override
+    public DatabaseBackedGeneSetValueObject loadValueObjectByIdLite( Long id ) {
         Object[] row = ( Object[] ) this.getSessionFactory().getCurrentSession().createQuery(
                         "select g, t, count(m) from GeneSet g "
                                 + "left join g.members m "
                                 + "left join m.gene.taxon t "
-                                + "where g = (:geneset) group by g.id" )
-                .setParameter( "geneset", geneSet )
+                                + "where g.id = :id "
+                                + "group by g.id" )
+                .setParameter( "id", id )
                 .uniqueResult();
-        return fillValueObject( ( GeneSet ) row[0], ( Taxon ) row[1], ( Long ) row[2] );
-    }
-
-    @Override
-    public Collection<DatabaseBackedGeneSetValueObject> loadValueObjects( Collection<Long> ids ) {
-        Collection<DatabaseBackedGeneSetValueObject> result = this.loadValueObjectsLite( ids );
-
-        /*
-         * Populate gene members - a bit inefficient
-         * inner join is okay here, we only care about ones that have genes.
-         */
-
-        for ( GeneSetValueObject res : result ) {
-            //noinspection unchecked
-            res.setGeneIds( new HashSet<>( this.getSessionFactory().getCurrentSession()
-                    .createQuery( "select genes.id from GeneSet g join g.members m join m.gene genes where g.id = :id" )
-                    .setParameter( "id", res.getId() ).list() ) );
+        if ( row != null ) {
+            return new DatabaseBackedGeneSetValueObject( ( GeneSet ) row[0], ( Taxon ) row[1], ( Long ) row[2] );
+        } else {
+            return null;
         }
-
-        return result;
     }
 
     @Override
-    public Collection<DatabaseBackedGeneSetValueObject> loadValueObjectsLite( Collection<Long> ids ) {
-        Collection<DatabaseBackedGeneSetValueObject> result = new HashSet<>();
+    public List<DatabaseBackedGeneSetValueObject> loadValueObjects( Collection<GeneSet> entities ) {
+        return loadValueObjectsByIds( entities.stream().map( GeneSet::getId ).collect( Collectors.toSet() ) );
+    }
 
-        if ( ids.isEmpty() )
-            return result;
+    @Override
+    public List<DatabaseBackedGeneSetValueObject> loadValueObjectsByIds( Collection<Long> ids ) {
+        List<DatabaseBackedGeneSetValueObject> vos = loadValueObjectsByIdsLite( ids );
+        fillGeneIds( vos );
+        return vos;
+    }
 
-        // Left join: includes one that have no members. Caller has to filter them out if they need to.
+    @Override
+    public List<DatabaseBackedGeneSetValueObject> loadValueObjectsByIdsLite( Collection<Long> ids ) {
+        if ( ids.isEmpty() ) {
+            return Collections.emptyList();
+        }
         //noinspection unchecked
-        List<Object[]> list = this.getSessionFactory().getCurrentSession().createQuery(
+        List<Object[]> result = this.getSessionFactory().getCurrentSession().createQuery(
                         "select g, t, count(m) from GeneSet g "
                                 + "left join g.members m "
                                 + "left join m.gene.taxon t "
-                                + "where g.id in (:ids) group by g.id" )
+                                + "where g.id in :ids "
+                                + "group by g.id" )
                 .setParameterList( "ids", ids )
                 .list();
+        return fillValueObjects( result );
+    }
 
-        for ( Object[] oa : list ) {
-            result.add( this.fillValueObject( ( GeneSet ) oa[0], ( Taxon ) oa[1], ( Long ) oa[2] ) );
-        }
-
-        return result;
+    @Override
+    public List<DatabaseBackedGeneSetValueObject> loadAllValueObjects() {
+        //noinspection unchecked
+        List<Object[]> result = this.getSessionFactory().getCurrentSession().createQuery(
+                        "select g, t, count(m) from GeneSet g "
+                                + "left join g.members m "
+                                + "left join m.gene.taxon t "
+                                + "group by g.id" )
+                .list();
+        List<DatabaseBackedGeneSetValueObject> vos = fillValueObjects( result );
+        fillGeneIds( vos );
+        return vos;
     }
 
     @Override
@@ -155,33 +154,34 @@ public class GeneSetDaoImpl extends AbstractDao<GeneSet> implements GeneSetDao {
 
     @Override
     public Collection<GeneSet> findByName( String name ) {
-        //noinspection unchecked
-        return this.getSessionFactory().getCurrentSession()
-                .createQuery( "select gs from GeneSet gs where gs.name like :name order by gs.name" )
-                .setParameter( "name", name + "%" ).list();
+        return findByName( name, null );
     }
 
-    @SuppressWarnings("unchecked")
     @Override
-    public Collection<GeneSet> findByName( String name, Taxon taxon ) {
-        StopWatch timer = new StopWatch();
-        timer.start();
+    public Collection<GeneSet> findByName( String name, @Nullable Taxon taxon ) {
+        StopWatch timer = StopWatch.createStarted();
         if ( StringUtils.isBlank( name ) )
             return new HashSet<>();
-        assert taxon != null;
         // slow? would it be faster to just findByName and then restrict taxon?
-        List<?> result = this.getSessionFactory().getCurrentSession().createQuery(
-                        "select gs from GeneSet gs join gs.members gm join gm.gene g where g.taxon = :taxon and gs.name like :query order by gs.name" )
-                .setParameter( "query", name + "%" ).setParameter( "taxon", taxon ).list();
+        Query query = this.getSessionFactory().getCurrentSession().createQuery(
+                        "select gs from GeneSet gs join gs.members gm join gm.gene g "
+                                + "where gs.name like :query "
+                                + ( taxon != null ? "and g.taxon = :taxon " : "" )
+                                + "order by gs.name" )
+                .setParameter( "query", name + "%" );
+        if ( taxon != null ) {
+            query.setParameter( "taxon", taxon );
+        }
+        //noinspection unchecked
+        List<GeneSet> result = query.list();
         if ( timer.getTime() > 500 )
             AbstractDao.log
                     .info( "Find geneSets by name took " + timer.getTime() + "ms query=" + name + " taxon=" + taxon );
-        //noinspection unchecked
-        return ( Collection<GeneSet> ) result;
+        return result;
     }
 
     @Override
-    public Collection<GeneSet> loadAll( Taxon tax ) {
+    public Collection<GeneSet> loadAll( @Nullable Taxon tax ) {
         if ( tax == null )
             return this.loadAll();
         //noinspection unchecked
@@ -193,32 +193,6 @@ public class GeneSetDaoImpl extends AbstractDao<GeneSet> implements GeneSetDao {
     @Override
     public GeneSet find( GeneSet entity ) {
         return this.findByName( entity.getName() ).iterator().next();
-    }
-
-    /**
-     * Retrieve taxa for genesets
-     *
-     */
-    private Map<Long, Taxon> getTaxa( Collection<Long> ids ) {
-        // fast
-        //noinspection unchecked
-        List<Object[]> q = this.getSessionFactory().getCurrentSession().createQuery(
-                        "select distinct gs.id, t from GeneSet gs join gs.members m"
-                                + " join m.gene g join g.taxon t where gs.id in (:ids) group by gs.id" )
-                .setParameterList( "ids", ids ).list();
-
-        Map<Long, Taxon> result = new HashMap<>();
-        for ( Object[] o : q ) {
-            //noinspection RedundantCast // Without casting we get suspicious call warning
-            if ( result.containsKey( o[0] ) ) {
-                throw new IllegalStateException( "More than one taxon in gene set id= " + o[0] );
-            }
-
-            result.put( ( Long ) o[0], ( Taxon ) o[1] );
-
-        }
-
-        return result;
     }
 
     /*
@@ -235,15 +209,50 @@ public class GeneSetDaoImpl extends AbstractDao<GeneSet> implements GeneSetDao {
         }
     }
 
-    private DatabaseBackedGeneSetValueObject fillValueObject( GeneSet geneSet, Taxon taxon, Long membersCount ) {
-        DatabaseBackedGeneSetValueObject dvo = new DatabaseBackedGeneSetValueObject( geneSet );
-        dvo.setSize( membersCount.intValue() );
-        if ( taxon != null ) {
-            dvo.setTaxon( new TaxonValueObject( taxon ) );
-        } else {
-            // NPE bug 60 - happens if we have leftover (empty) gene sets for taxa that were removed.
-            log.warn( "No taxon found for gene set " + geneSet );
+    @Override
+    public final void update( Collection<GeneSet> entities ) {
+        super.update( entities );
+    }
+
+    @Override
+    public final void update( GeneSet entity ) {
+        super.update( entity );
+    }
+
+    @Override
+    public final void remove( Collection<GeneSet> entities ) {
+        super.remove( entities );
+    }
+
+    @Override
+    public final void remove( GeneSet entity ) {
+        super.remove( entity );
+    }
+
+    private List<DatabaseBackedGeneSetValueObject> fillValueObjects( List<Object[]> result ) {
+        return result.stream()
+                .map( row -> new DatabaseBackedGeneSetValueObject( ( GeneSet ) row[0], ( Taxon ) row[1], ( Long ) row[2] ) )
+                .collect( Collectors.toList() );
+    }
+
+    private void fillGeneIds( List<DatabaseBackedGeneSetValueObject> result ) {
+        if ( result.isEmpty() ) {
+            return;
         }
-        return dvo;
+        Set<Long> ids = result.stream().map( DatabaseBackedGeneSetValueObject::getId ).collect( Collectors.toSet() );
+        //noinspection unchecked
+        List<Object[]> r = getSessionFactory().getCurrentSession()
+                .createQuery( "select g.id, genes.id from GeneSet g join g.members m join m.gene genes where g.id in :ids" )
+                .setParameterList( "ids", ids )
+                .list();
+        Map<Long, Set<Long>> geneIdsByGeneSetId = r.stream()
+                .collect( Collectors.groupingBy( row -> ( Long ) row[0], Collectors.mapping( row -> ( Long ) row[1], Collectors.toSet() ) ) );
+        /*
+         * Populate gene members - a bit inefficient
+         * inner join is okay here, we only care about ones that have genes.
+         */
+        for ( GeneSetValueObject res : result ) {
+            res.setGeneIds( geneIdsByGeneSetId.getOrDefault( res.getId(), Collections.emptySet() ) );
+        }
     }
 }

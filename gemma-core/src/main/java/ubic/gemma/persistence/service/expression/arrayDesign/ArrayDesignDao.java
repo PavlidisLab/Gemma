@@ -12,8 +12,10 @@ import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.persistence.service.FilteringVoEnabledDao;
 import ubic.gemma.persistence.service.common.auditAndSecurity.curation.CuratableDao;
+import ubic.gemma.persistence.util.Filters;
+import ubic.gemma.persistence.util.Slice;
+import ubic.gemma.persistence.util.Sort;
 
-import javax.annotation.CheckReturnValue;
 import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.List;
@@ -30,12 +32,6 @@ public interface ArrayDesignDao extends CuratableDao<ArrayDesign>,
     String OBJECT_ALIAS = "ad";
 
     void addProbes( ArrayDesign arrayDesign, Collection<CompositeSequence> newProbes );
-
-    Collection<CompositeSequence> compositeSequenceWithoutBioSequences( ArrayDesign arrayDesign );
-
-    Collection<CompositeSequence> compositeSequenceWithoutBlatResults( ArrayDesign arrayDesign );
-
-    Collection<CompositeSequence> compositeSequenceWithoutGenes( ArrayDesign arrayDesign );
 
     void deleteAlignmentData( ArrayDesign arrayDesign );
 
@@ -134,28 +130,20 @@ public interface ArrayDesignDao extends CuratableDao<ArrayDesign>,
     void removeBiologicalCharacteristics( ArrayDesign arrayDesign );
 
     /**
-     * Thaw the given platform as per {@link #thawLite(ArrayDesign)} with its probes and genes.
+     * Lightly thaw the given platform.
      */
-    @Nullable
-    @CheckReturnValue
-    ArrayDesign thaw( ArrayDesign arrayDesign );
+    void thawLite( ArrayDesign arrayDesign );
 
     /**
-     * Thaw the given platforms as per {@link #thawLite(Collection)} with its probes and genes.
+     * Thaw the given platform as per {@link #thawLite(ArrayDesign)} with its probes and genes.
      */
-    @CheckReturnValue
-    Collection<ArrayDesign> thaw( Collection<ArrayDesign> aas );
-
-    @Nullable
-    @CheckReturnValue
-    ArrayDesign thawLite( ArrayDesign arrayDesign );
-
-    @CheckReturnValue
-    Collection<ArrayDesign> thawLite( Collection<ArrayDesign> arrayDesigns );
+    void thaw( ArrayDesign arrayDesign );
 
     Boolean updateSubsumingStatus( ArrayDesign candidateSubsumer, ArrayDesign candidateSubsumee );
 
     void deleteGeneProductAlignmentAssociations( ArrayDesign arrayDesign );
 
     void deleteGeneProductAnnotationAssociations( ArrayDesign arrayDesign );
+
+    Slice<ArrayDesignValueObject> loadBlacklistedValueObjects( @Nullable Filters filters, @Nullable Sort sort, int offset, int limit );
 }

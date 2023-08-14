@@ -27,7 +27,6 @@ import ubic.gemma.core.loader.expression.geo.model.GeoDataset;
 import ubic.gemma.core.loader.expression.geo.model.GeoSeries;
 import ubic.gemma.core.util.test.category.SlowTest;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collection;
 import java.util.HashSet;
@@ -37,7 +36,7 @@ import java.util.zip.GZIPInputStream;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assume.assumeNoException;
+import static ubic.gemma.core.util.test.Assumptions.assumeThatResourceIsAvailable;
 
 /**
  * @author pavlidis
@@ -49,22 +48,14 @@ public class DatasetCombinerTest {
     private Collection<GeoDataset> gds;
 
     @Test
-    public void testFindGDSGrouping() {
-        try {
-            Collection<String> result = DatasetCombiner.findGDSforGSE( "GSE674" );
-            assertEquals( 2, result.size() );
-            assertTrue( result.contains( "GDS472" ) && result.contains( "GDS473" ) );
-        } catch ( RuntimeException e ) {
-            if ( e.getCause() instanceof IOException ) {
-                assumeNoException( "Test skipped due to an I/O error from NCBI.", e.getCause() );
-            } else {
-                throw e;
-            }
-        }
+    public void testFindGDSGrouping() throws Exception {
+        assumeThatResourceIsAvailable( "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi" );
+        Collection<String> result = DatasetCombiner.findGDSforGSE( "GSE674" );
+        assertEquals( 2, result.size() );
+        assertTrue( result.contains( "GDS472" ) && result.contains( "GDS473" ) );
     }
 
     @Test
-    @Category(SlowTest.class)
     public void testFindGSE13() throws Exception {
         GeoFamilyParser parser = new GeoFamilyParser();
 
@@ -107,17 +98,10 @@ public class DatasetCombinerTest {
     }
 
     @Test
-    public void testFindGSE267() {
-        try {
-            Collection<String> result = DatasetCombiner.findGDSforGSE( "GSE267" );
-            assertEquals( 0, result.size() );
-        } catch ( RuntimeException e ) {
-            if ( e.getCause() instanceof IOException ) {
-                assumeNoException( "Test skipped due to an I/O error from NCBI.", e.getCause() );
-            } else {
-                throw e;
-            }
-        }
+    public void testFindGSE267() throws Exception {
+        assumeThatResourceIsAvailable( "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi" );
+        Collection<String> result = DatasetCombiner.findGDSforGSE( "GSE267" );
+        assertEquals( 0, result.size() );
     }
 
     /*
@@ -153,7 +137,6 @@ public class DatasetCombinerTest {
     }
 
     @Test
-    @Category(SlowTest.class)
     public void testFindGSE469() throws Exception {
         GeoFamilyParser parser = new GeoFamilyParser();
         try ( InputStream is = new GZIPInputStream(
@@ -193,7 +176,6 @@ public class DatasetCombinerTest {
     }
 
     @Test
-    @Category(SlowTest.class)
     public void testFindGSE493() throws Exception {
         GeoFamilyParser parser = new GeoFamilyParser();
 
@@ -238,7 +220,6 @@ public class DatasetCombinerTest {
      * Fairly hard case; twelve samples, 3 array design each sample run on each array design
      */
     @Test
-    @Category(SlowTest.class)
     public void testFindGSE611() throws Exception {
         GeoFamilyParser parser = new GeoFamilyParser();
 
@@ -281,7 +262,6 @@ public class DatasetCombinerTest {
     }
 
     @Test
-    @Category(SlowTest.class)
     public void testFindGSE88() throws Exception {
         GeoFamilyParser parser = new GeoFamilyParser();
 
@@ -319,7 +299,6 @@ public class DatasetCombinerTest {
     }
 
     @Test
-    @Category(SlowTest.class)
     public void testFindGSE91() throws Exception {
         GeoFamilyParser parser = new GeoFamilyParser();
 
@@ -362,7 +341,6 @@ public class DatasetCombinerTest {
     }
 
     @Test
-    @Category(SlowTest.class)
     public void testFindGSECorrespondence() throws Exception {
         GeoFamilyParser parser = new GeoFamilyParser();
         try ( InputStream is = new GZIPInputStream(
@@ -408,7 +386,6 @@ public class DatasetCombinerTest {
      * This has just a single data set but results in a "no platform assigned" error.
      */
     @Test
-    @Category(SlowTest.class)
     public void testGDS186() throws Exception {
         GeoFamilyParser parser = new GeoFamilyParser();
 
@@ -448,7 +425,6 @@ public class DatasetCombinerTest {
      * A difficult case, lots of singletons.
      */
     @Test
-    @Category(SlowTest.class)
     public void testGSE465() throws Exception {
         GeoFamilyParser parser = new GeoFamilyParser();
 

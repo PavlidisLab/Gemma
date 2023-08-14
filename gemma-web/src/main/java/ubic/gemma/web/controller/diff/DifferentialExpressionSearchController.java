@@ -88,7 +88,7 @@ public class DifferentialExpressionSearchController {
     public Collection<DifferentialExpressionValueObject> getDifferentialExpression( Long geneId, double threshold,
             Integer limit ) {
 
-        Gene g = geneService.load( geneId );
+        Gene g = geneService.loadOrFail( geneId );
         g = geneService.thaw( g );
 
         if ( g == null ) {
@@ -226,10 +226,10 @@ public class DifferentialExpressionSearchController {
 
         // Load genes
         Collection<GeneValueObject> genes;
-        if ( gsvo.getGeneIds().isEmpty() ) {
-            genes = geneSetService.getGenesInGroup( gsvo );
-        } else {
+        if ( gsvo.getGeneIds() != null ) {
             genes = geneService.loadValueObjectsByIds( gsvo.getGeneIds() );
+        } else {
+            genes = geneSetService.getGenesInGroup( gsvo );
         }
 
         log.info( "Got genes" );
@@ -305,7 +305,7 @@ public class DifferentialExpressionSearchController {
         }
 
         Collection<ExpressionExperimentDetailsValueObject> experiments = expressionExperimentService
-                .loadDetailsValueObjects( ids );
+                .loadDetailsValueObjectsByIdsWithCache( ids );
 
         if ( experiments.isEmpty() ) {
             throw new EntityNotFoundException( "Could not access any experiments for " + ids.size() + " ids" );

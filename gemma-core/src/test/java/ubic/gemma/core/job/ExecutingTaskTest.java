@@ -49,9 +49,6 @@ import static org.mockito.Mockito.verify;
  */
 public class ExecutingTaskTest extends BaseSpringContextTest {
 
-    @Autowired
-    UserManager userManager;
-
     @Before
     public void setUp() throws Exception {
         Assume.assumeTrue( "These tests must be run with -Dlog4j1.compatibility=true",
@@ -114,14 +111,6 @@ public class ExecutingTaskTest extends BaseSpringContextTest {
 
     @Test
     public void testSecurityContextManagement() {
-
-        try {
-            this.userManager.loadUserByUsername( "ExecutingTaskTestUser" );
-        } catch ( UsernameNotFoundException e ) {
-            this.userManager.createUser(
-                    new UserDetailsImpl( "foo", "ExecutingTaskTestUser", true, null, "fooUser@gemma.msl.ubc.ca", "key",
-                            new Date() ) );
-        }
 
         this.runAsUser( "ExecutingTaskTestUser" );
         TaskCommand taskCommand = new TaskCommand();

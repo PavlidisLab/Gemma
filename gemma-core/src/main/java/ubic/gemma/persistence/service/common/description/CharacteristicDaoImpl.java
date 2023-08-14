@@ -20,29 +20,35 @@ package ubic.gemma.persistence.service.common.description;
 
 import org.apache.commons.collections4.ListUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.time.StopWatch;
+import org.hibernate.Hibernate;
 import org.hibernate.Query;
 import org.hibernate.SessionFactory;
+import org.hibernate.criterion.MatchMode;
+import org.hibernate.criterion.Order;
+import org.hibernate.criterion.Restrictions;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.type.StandardBasicTypes;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
-import ubic.basecode.util.BatchIterator;
 import ubic.gemma.model.association.Gene2GOAssociation;
 import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
 import ubic.gemma.model.common.Identifiable;
+import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
-import ubic.gemma.model.expression.biomaterial.Treatment;
+import ubic.gemma.model.expression.experiment.ExperimentalDesign;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.model.genome.gene.GeneSet;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
-import ubic.gemma.persistence.service.AbstractDao;
-import ubic.gemma.persistence.service.AbstractVoEnabledDao;
+import ubic.gemma.persistence.service.AbstractNoopFilteringVoEnabledDao;
 import ubic.gemma.persistence.util.AclQueryUtils;
 import ubic.gemma.persistence.util.EntityUtils;
 
 import javax.annotation.Nullable;
+import java.math.BigInteger;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -52,10 +58,8 @@ import java.util.stream.Collectors;
  * @see    Characteristic
  */
 @Repository
-public class CharacteristicDaoImpl extends AbstractVoEnabledDao<Characteristic, CharacteristicValueObject>
+public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Characteristic, CharacteristicValueObject>
         implements CharacteristicDao {
-
-    private static final int BATCH_SIZE = 500;
 
     @Autowired
     public CharacteristicDaoImpl( SessionFactory sessionFactory ) {
@@ -73,9 +77,12 @@ public class CharacteristicDaoImpl extends AbstractVoEnabledDao<Characteristic, 
     @Override
     public List<Characteristic> browse( int start, int limit, String orderField, boolean descending ) {
         //noinspection unchecked
-        return this.getSessionFactory().getCurrentSession().createQuery(
-                        "from Characteristic where value not like 'GO_%' order by " + orderField + " " + ( descending ? "desc" : "" ) ).setMaxResults( limit )
-                .setFirstResult( start ).list();
+        return this.getSessionFactory().getCurrentSession().createCriteria( elementClass )
+                .add( Restrictions.not( Restrictions.like( "value", "GO_", MatchMode.START ) ) )
+                .addOrder( descending ? Order.desc( orderField ) : Order.asc( orderField ) )
+                .setFirstResult( start )
+                .setMaxResults( limit )
+                .list();
     }
 
     @Override
@@ -88,106 +95,94 @@ public class CharacteristicDaoImpl extends AbstractVoEnabledDao<Characteristic, 
     }
 
     @Override
-    public Collection<Characteristic> findByUri( Collection<Class<?>> classes, @Nullable Collection<String> characteristicUris ) {
-
-        Collection<Characteristic> result = new HashSet<>();
-
-        if ( characteristicUris == null || characteristicUris.isEmpty() )
-            return result;
-
-        for ( Class<?> clazz : classes ) {
-            String field = this.getCharacteristicFieldName( clazz );
-            final String queryString = "select char from " + EntityUtils.getImplClass( clazz ).getSimpleName() + " as parent "
-                    + " join parent." + field + " as char where char.valueUri in (:uriStrings) ";
-            //noinspection unchecked
-            result.addAll( this.getSessionFactory().getCurrentSession().createQuery( queryString )
-                    .setParameterList( "uriStrings", characteristicUris ).list() );
-        }
-
-        return result;
-    }
-
-    @SuppressWarnings({ "rawtypes", "cast" })
-    @Override
-    public Map<Class<? extends Identifiable>, Map<String, Set<ExpressionExperiment>>> findExperimentsByUris( Collection<String> uris, @Nullable Taxon taxon, int limit ) {
-        Map<Class<? extends Identifiable>, Map<String, Set<ExpressionExperiment>>> result = new HashMap<>();
-
-        if ( uris.isEmpty() )
-            return result;
-
-        // Note that the limit isn't strictly adhered to; we just stop querying when we have enough. We avoid duplicates
-        Set<ExpressionExperiment> seenEEs = new HashSet<>();
-
-        // direct associations
-        // language=HQL
-        result.put( ExpressionExperiment.class, queryAndMarkAsSeen(
-                "select distinct ee, c.valueUri from ExpressionExperiment ee "
-                        + "join ee.characteristics c",
-                uris, taxon, seenEEs, limit ) );
-
-        // via experimental factor
-        // language=HQL
-        result.put( FactorValue.class, queryAndMarkAsSeen( "select distinct ee, c.valueUri from ExpressionExperiment ee "
-                + "join ee.experimentalDesign ed join ed.experimentalFactors ef "
-                + "join ef.factorValues fv join fv.characteristics c", uris, taxon, seenEEs, limit ) );
-
-        // via biomaterial
-        // language=HQL
-        result.put( BioMaterial.class, queryAndMarkAsSeen( "select distinct ee, c.valueUri from ExpressionExperiment ee "
-                        + "join ee.bioAssays ba join ba.sampleUsed bm join bm.characteristics c",
-                uris, taxon, seenEEs, limit ) );
-
-        return result;
-    }
-
-    private Map<String, Set<ExpressionExperiment>> queryAndMarkAsSeen( String query, Collection<String> uris, @Nullable Taxon taxon, Set<ExpressionExperiment> seenEEs, int limit ) {
-        if ( limit > 0 && seenEEs.size() > limit ) {
+    public Map<Class<? extends Identifiable>, Map<String, Set<ExpressionExperiment>>> findExperimentsByUris( Collection<String> uris, @Nullable Taxon taxon, int limit, boolean rankByLevel ) {
+        if ( uris.isEmpty() ) {
             return Collections.emptyMap();
         }
-
-        query += AclQueryUtils.formAclJoinClause( "ee" );
-        query += AclQueryUtils.formAclRestrictionClause();
-
-        query += " and c.valueUri in (:uriStrings)";
-
-        // don't retrieve EE IDs that we have already fetched otherwise
-        if ( !seenEEs.isEmpty() ) {
-            query += " and ee not in (:seenEEs)";
-        }
-
-        // by taxon
-        if ( taxon != null ) {
-            query += " and ee.taxon = :t";
-        }
-
-        Query q = getSessionFactory().getCurrentSession()
-                .createQuery( query )
-                .setParameterList( "uriStrings", uris );
-        if ( !seenEEs.isEmpty() )
-            q.setParameterList( "seenEEs", seenEEs );
-        if ( taxon != null )
-            q.setParameter( "t", taxon );
-        AclQueryUtils.addAclJoinParameters( q, ExpressionExperiment.class );
-        AclQueryUtils.addAclRestrictionParameters( q );
-
         //noinspection unchecked
-        List<Object[]> results = q.list();
+        List<Object[]> result = prepareExperimentsByUrisQuery( uris, taxon, limit > 0 && rankByLevel )
+                .setMaxResults( limit )
+                .list();
+        if ( result.isEmpty() ) {
+            return Collections.emptyMap();
+        }
+        Set<Long> ids = result.stream().map( row -> ( Long ) row[2] ).collect( Collectors.toSet() );
+        //noinspection unchecked
+        List<ExpressionExperiment> ees = getSessionFactory().getCurrentSession()
+                .createCriteria( ExpressionExperiment.class )
+                .add( Restrictions.in( "id", ids ) )
+                .list();
+        Map<Long, ExpressionExperiment> eeById = EntityUtils.getIdMap( ees );
+        //noinspection unchecked
+        return result.stream()
+                .filter( row -> eeById.containsKey( ( Long ) row[2] ) )
+                .collect( Collectors.groupingBy(
+                        row -> ( Class<? extends Identifiable> ) row[0],
+                        Collectors.groupingBy(
+                                row -> ( String ) row[1],
+                                Collectors.mapping(
+                                        row -> eeById.get( ( Long ) row[2] ),
+                                        Collectors.toCollection( HashSet::new ) ) ) ) );
+    }
 
-        Map<String, Set<ExpressionExperiment>> map = new HashMap<>();
-        for ( Object[] row : results ) {
-            ExpressionExperiment ee = ( ExpressionExperiment ) row[0];
-            String uri = ( String ) row[1];
-            if ( seenEEs.contains( ee ) ) {
-                continue;
-            }
-            if ( !map.containsKey( uri ) ) {
-                map.put( uri, new HashSet<>() );
-            }
-            map.get( uri ).add( ee );
-            seenEEs.add( ee );
+    /**
+     * Since proxies are returned, they cannot be collected in a {@link HashSet} which would otherwise cause their
+     * initialization by accessing {@link Object#hashCode()}. Thus we need to create a {@link TreeSet} over the EE IDs.
+     */
+    @Override
+    public Map<Class<? extends Identifiable>, Map<String, Set<ExpressionExperiment>>> findExperimentReferencesByUris( Collection<String> uris, @Nullable Taxon taxon, int limit, boolean rankByLevel ) {
+        if ( uris.isEmpty() ) {
+            return Collections.emptyMap();
+        }
+        //noinspection unchecked
+        List<Object[]> result = prepareExperimentsByUrisQuery( uris, taxon, limit > 0 && rankByLevel )
+                .setMaxResults( limit )
+                .list();
+        //noinspection unchecked
+        return result.stream().collect( Collectors.groupingBy(
+                row -> ( Class<? extends Identifiable> ) row[0],
+                Collectors.groupingBy(
+                        row -> ( String ) row[1],
+                        Collectors.mapping(
+                                row -> ( ExpressionExperiment ) getSessionFactory().getCurrentSession().load( ExpressionExperiment.class, ( Long ) row[2] ),
+                                Collectors.toCollection( () -> new TreeSet<>( Comparator.comparing( ExpressionExperiment::getId ) ) ) ) ) ) );
+    }
+
+    private Query prepareExperimentsByUrisQuery( Collection<String> uris, @Nullable Taxon taxon, boolean rankByLevel ) {
+        String qs = "select T.`LEVEL`, T.VALUE_URI, T.EXPRESSION_EXPERIMENT_FK from EXPRESSION_EXPERIMENT2CHARACTERISTIC T"
+                + ( taxon != null ? " join INVESTIGATION I on T.EXPRESSION_EXPERIMENT_FK = I.ID " : "" )
+                + AclQueryUtils.formNativeAclJoinClause( "T.EXPRESSION_EXPERIMENT_FK" ) + " "
+                + "where T.VALUE_URI in :uris"
+                + ( taxon != null ? " and I.TAXON_FK = :taxonId" : "" )
+                + AclQueryUtils.formNativeAclRestrictionClause( ( SessionFactoryImplementor ) getSessionFactory() )
+                + ( rankByLevel ? " order by FIELD(T.LEVEL, :eeClass, :edClass, :bmClass)" : "" );
+
+        Query query = getSessionFactory().getCurrentSession().createSQLQuery( qs )
+                .addScalar( "LEVEL", StandardBasicTypes.CLASS )
+                .addScalar( "VALUE_URI", StandardBasicTypes.STRING )
+                .addScalar( "EXPRESSION_EXPERIMENT_FK", StandardBasicTypes.LONG )
+                // invalidate the cache when the EE2C table is updated
+                .addSynchronizedQuerySpace( "EXPRESSION_EXPERIMENT2CHARACTERISTIC" )
+                // invalidate the cache when new characteristics are added/removed
+                .addSynchronizedEntityClass( Characteristic.class );
+
+        if ( rankByLevel ) {
+            query.setParameter( "eeClass", ExpressionExperiment.class );
+            query.setParameter( "edClass", ExperimentalDesign.class );
+            query.setParameter( "bmClass", BioMaterial.class );
         }
 
-        return map;
+        query.setParameterList( "uris", uris );
+
+        if ( taxon != null ) {
+            query.setParameter( "taxonId", taxon.getId() );
+        }
+
+        AclQueryUtils.addAclParameters( query, ExpressionExperiment.class );
+
+        query.setCacheable( true );
+
+        return query;
     }
 
     @Override
@@ -221,6 +216,19 @@ public class CharacteristicDaoImpl extends AbstractVoEnabledDao<Characteristic, 
         return this.getSessionFactory().getCurrentSession()
                 .createQuery( "select char from Characteristic as char where  char.valueUri = :search" )
                 .setParameter( "search", searchString ).list();
+    }
+
+    @Override
+    public Characteristic findBestByUri( String uri ) {
+        return ( Characteristic ) getSessionFactory().getCurrentSession()
+                .createQuery( "select c from Characteristic c "
+                        + "where valueUri = :uri "
+                        + "group by c.value "
+                        + "having c.value <> null "
+                        + "order by count(*) desc" )
+                .setParameter( "uri", uri )
+                .setMaxResults( 1 )
+                .uniqueResult();
     }
 
     @Override
@@ -272,76 +280,93 @@ public class CharacteristicDaoImpl extends AbstractVoEnabledDao<Characteristic, 
     }
 
     @Override
-    public Map<Characteristic, Object> getParents( Class<?> parentClass, @Nullable Collection<Characteristic> characteristics ) {
+    public Map<Characteristic, Identifiable> getParents( Collection<Characteristic> characteristics, @Nullable Collection<Class<?>> parentClasses, int maxResults ) {
+        Set<Long> characteristicIds = characteristics.stream().map( Characteristic::getId ).collect( Collectors.toSet() );
+        Class<?>[] classes = { BioMaterial.class, BibliographicReference.class, ExpressionExperiment.class, ExperimentalDesign.class, ExperimentalFactor.class, PhenotypeAssociation.class, FactorValue.class, GeneSet.class };
+        String[] foreignKeys = { "BIO_MATERIAL_FK", "BIBLIOGRAPHIC_REFERENCE_FK", "INVESTIGATION_FK", "EXPERIMENTAL_DESIGN_FK", "EXPERIMENTAL_FACTOR_FK", "PHENOTYPE_ASSOCIATION_FK", "FACTOR_VALUE_FK", "GENE_SET_FK" };
 
-        Map<Characteristic, Object> charToParent = new HashMap<>();
-        if ( characteristics == null || characteristics.size() == 0 ) {
-            return charToParent;
-        }
-        if ( AbstractDao.log.isDebugEnabled() ) {
-            Collection<String> uris = new HashSet<>();
-            for ( Characteristic c : characteristics ) {
-
-                if ( c.getValueUri() == null )
-                    continue;
-                uris.add( c.getValueUri() );
-
+        // ensure that at least one of the parentClass-associated column is non-null
+        Set<String> foreignKeyToRestrictOn = null;
+        if ( parentClasses != null ) {
+            foreignKeyToRestrictOn = new HashSet<>();
+            for ( int i = 0; i < classes.length; i++ ) {
+                final int j = i;
+                if ( parentClasses.stream().anyMatch( pc -> pc.isAssignableFrom( classes[j] ) ) ) {
+                    foreignKeyToRestrictOn.add( foreignKeys[i] );
+                }
             }
-            AbstractDao.log.debug( "For class=" + parentClass.getSimpleName() + ": " + characteristics.size()
-                    + " Characteristics have URIS:\n" + StringUtils.join( uris, "\n" ) );
         }
 
-        StopWatch timer = new StopWatch();
-        timer.start();
-        for ( Collection<Characteristic> batch : new BatchIterator<>( characteristics,
-                CharacteristicDaoImpl.BATCH_SIZE ) ) {
-            this.batchGetParents( parentClass, batch, charToParent );
+        boolean gene2GoOk = parentClasses == null || parentClasses.stream().anyMatch( pc -> pc.isAssignableFrom( Gene2GOAssociation.class ) );
+
+        String extraClause;
+        if ( foreignKeyToRestrictOn != null ) {
+            if ( foreignKeyToRestrictOn.isEmpty() ) {
+                // ensure that all columns are NULL
+                //language=HQL
+                extraClause = " and (" + Arrays.stream( foreignKeys ).map( fk -> "C." + fk + " is NULL" ).collect( Collectors.joining( " and " ) ) + ")";
+            } else {
+                //language=HQL
+                extraClause = " and (" + foreignKeyToRestrictOn.stream().map( fk -> "C." + fk + " is not NULL" ).collect( Collectors.joining( " or " ) ) + ")";
+            }
+        } else {
+            extraClause = "";
         }
 
-        if ( timer.getTime() > 1000 ) {
-            AbstractDao.log
-                    .info( "Fetch parents of characteristics: " + timer.getTime() + "ms for " + characteristics.size()
-                            + " elements for class=" + parentClass.getSimpleName() );
+        //noinspection unchecked
+        List<Object[]> result = getSessionFactory().getCurrentSession()
+                .createSQLQuery( "select C.ID, C.BIO_MATERIAL_FK, C.BIBLIOGRAPHIC_REFERENCE_FK, C.INVESTIGATION_FK, C.EXPERIMENTAL_DESIGN_FK, C.EXPERIMENTAL_FACTOR_FK, C.PHENOTYPE_ASSOCIATION_FK, C.FACTOR_VALUE_FK, C.GENE_SET_FK from CHARACTERISTIC C "
+                        + "left join INVESTIGATION I on C.INVESTIGATION_FK = I.ID "
+                        + "where C.ID in :ids "
+                        + "and (I.class is NULL or I.class = 'ExpressionExperiment') " // for investigations, only retrieve EEs
+                        + extraClause )
+                .setParameterList( "ids", characteristicIds )
+                .setMaxResults( maxResults )
+                .list();
+        Set<Characteristic> characteristicsNotFound = new HashSet<>();
+        Map<Long, Characteristic> charById = EntityUtils.getIdMap( characteristics );
+        Map<Characteristic, Identifiable> charToParent = new HashMap<>();
+        for ( Object[] row : result ) {
+            Characteristic c = charById.get( ( ( BigInteger ) row[0] ).longValue() );
+            if ( c == null ) {
+                log.warn( "Could not find characteristic with ID " + row[0] + " in the database." );
+                continue;
+            }
+            boolean found = false;
+            for ( int i = 0; i < classes.length; i++ ) {
+                if ( row[i + 1] != null ) {
+                    charToParent.put( c, ( Identifiable ) getSessionFactory().getCurrentSession().load( classes[i], ( ( BigInteger ) row[i + 1] ).longValue() ) );
+                    found = true;
+                    break;
+                }
+            }
+            if ( !found ) {
+                // none matched in the CHARACTERISTIC table, check one-to-one relations later
+                characteristicsNotFound.add( c );
+            }
+        }
+
+        // batch-load all the proxies
+        charToParent.forEach( ( c, parent ) -> Hibernate.initialize( parent ) );
+
+        if ( !characteristicsNotFound.isEmpty() && gene2GoOk ) {
+            //noinspection unchecked
+            List<Object[]> g2gResults = getSessionFactory().getCurrentSession()
+                    .createQuery( "select g2g, g2g.ontologyEntry from Gene2GOAssociation g2g where g2g.ontologyEntry in :characteristics" )
+                    .setParameterList( "characteristics", characteristicsNotFound )
+                    .list();
+            for ( Object[] row : g2gResults ) {
+                charToParent.put( ( Characteristic ) row[1], ( Identifiable ) row[0] );
+                characteristicsNotFound.remove( ( Characteristic ) row[1] );
+            }
+        }
+
+        if ( !characteristicsNotFound.isEmpty() ) {
+            log.warn( String.format( "Could not find parents for the following characteristics: %s.",
+                    characteristicsNotFound.stream().map( Characteristic::getId ).map( String::valueOf ).collect( Collectors.joining( ", " ) ) ) );
         }
 
         return charToParent;
-    }
-
-    @Override
-    public Map<Characteristic, Long> getParentIds( Class<?> parentClass, @Nullable Collection<Characteristic> characteristics ) {
-
-        Map<Characteristic, Long> charToParent = new HashMap<>();
-        if ( characteristics == null || characteristics.size() == 0 ) {
-            return charToParent;
-        }
-        if ( AbstractDao.log.isDebugEnabled() ) {
-            Collection<String> uris = new HashSet<>();
-            for ( Characteristic c : characteristics ) {
-
-                if ( c.getValueUri() == null )
-                    continue;
-                uris.add( c.getValueUri() );
-
-            }
-            AbstractDao.log.debug( "For class=" + parentClass.getSimpleName() + ": " + characteristics.size()
-                    + " Characteristics have URIS:\n" + StringUtils.join( uris, "\n" ) );
-        }
-
-        StopWatch timer = new StopWatch();
-        timer.start();
-        for ( Collection<Characteristic> batch : new BatchIterator<>( characteristics,
-                CharacteristicDaoImpl.BATCH_SIZE ) ) {
-            this.batchGetParentIds( parentClass, batch, charToParent );
-        }
-
-        if ( timer.getTime() > 1000 ) {
-            AbstractDao.log
-                    .info( "Fetch parents of characteristics: " + timer.getTime() + "ms for " + characteristics.size()
-                            + " elements for class=" + parentClass.getSimpleName() );
-        }
-
-        return charToParent;
-
     }
 
     @Override
@@ -349,59 +374,4 @@ public class CharacteristicDaoImpl extends AbstractVoEnabledDao<Characteristic, 
         return new CharacteristicValueObject( entity );
     }
 
-    /*
-     * Retrieve the objects that have these associated characteristics. Time-critical.
-     */
-    private void batchGetParents( Class<?> parentClass, Collection<Characteristic> characteristics,
-            Map<Characteristic, Object> charToParent ) {
-        if ( characteristics.isEmpty() )
-            return;
-
-        String field = this.getCharacteristicFieldName( parentClass );
-        String queryString = "select parent, char from " + parentClass.getSimpleName() + " as parent " + " join parent." + field
-                + " as char " + "where char in (:chars)";
-
-        List<?> results = this.getSessionFactory().getCurrentSession().createQuery( queryString )
-                .setParameterList( "chars", characteristics ).list();
-        for ( Object o : results ) {
-            Object[] row = ( Object[] ) o;
-            charToParent.put( ( Characteristic ) row[1], row[0] );
-        }
-    }
-
-    /*
-     * Retrieve the objects that have these associated characteristics. Time-critical.
-     */
-    private void batchGetParentIds( Class<?> parentClass, Collection<Characteristic> characteristics,
-            Map<Characteristic, Long> charToParent ) {
-        if ( characteristics.isEmpty() )
-            return;
-
-        String field = this.getCharacteristicFieldName( parentClass );
-        String queryString = "select parent.id, char from " + parentClass.getSimpleName() + " as parent " + " join parent." + field
-                + " as char " + "where char in (:chars)";
-
-        List<?> results = this.getSessionFactory().getCurrentSession().createQuery( queryString )
-                .setParameterList( "chars", characteristics ).list();
-        for ( Object o : results ) {
-            Object[] row = ( Object[] ) o;
-            charToParent.put( ( Characteristic ) row[1], ( Long ) row[0] );
-        }
-    }
-
-    private String getCharacteristicFieldName( Class<?> parentClass ) {
-        String field = "characteristics";
-        if ( parentClass.isAssignableFrom( ExperimentalFactor.class ) )
-            field = "category";
-        else if ( parentClass.isAssignableFrom( Gene2GOAssociation.class ) )
-            field = "ontologyEntry";
-        else if ( parentClass.isAssignableFrom( PhenotypeAssociation.class ) ) {
-            field = "phenotypes";
-        } else if ( parentClass.isAssignableFrom( Treatment.class ) ) {
-            field = "action";
-        } else if ( parentClass.isAssignableFrom( BioMaterial.class ) ) {
-            field = "characteristics";
-        }
-        return field;
-    }
 }

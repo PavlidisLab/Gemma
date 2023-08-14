@@ -27,15 +27,16 @@ import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.access.AccessDecisionManager;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
+import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.core.analysis.preprocess.svd.SVDService;
 import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.core.search.SearchService;
 import ubic.gemma.core.util.test.BaseSpringContextTest;
 import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
-import ubic.gemma.model.common.quantitationtype.QuantitationTypeImpl;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
@@ -158,6 +159,11 @@ public class ExpressionExperimentServiceImplTest extends AbstractJUnit4SpringCon
         public BlacklistedEntityService blacklistedEntityService() {
             return mock( BlacklistedEntityService.class );
         }
+
+        @Bean
+        public AccessDecisionManager accessDecisionManager() {
+            return mock( AccessDecisionManager.class );
+        }
     }
 
     @Autowired
@@ -231,7 +237,7 @@ public class ExpressionExperimentServiceImplTest extends AbstractJUnit4SpringCon
         ExpressionExperiment ee = new ExpressionExperiment();
         ee.setId( 1L );
         when( eeDao.load( 1L ) ).thenReturn( ee );
-        QuantitationType qt = new QuantitationTypeImpl();
+        QuantitationType qt = new QuantitationType();
         qt.setIsPreferred( true );
         BioAssayDimension bad = new BioAssayDimension();
         bad.setBioAssays( Collections.singletonList( new BioAssay() ) );
@@ -252,7 +258,7 @@ public class ExpressionExperimentServiceImplTest extends AbstractJUnit4SpringCon
         ExpressionExperiment ee = new ExpressionExperiment();
         ee.setId( 1L );
         when( eeDao.load( 1L ) ).thenReturn( ee );
-        QuantitationType qt = new QuantitationTypeImpl();
+        QuantitationType qt = new QuantitationType();
         BioAssayDimension bad = new BioAssayDimension();
         ArrayDesign ad = new ArrayDesign();
         Set<RawExpressionDataVector> vectors = createRawVectors( ee, qt, bad, ad );

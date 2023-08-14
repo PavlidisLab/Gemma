@@ -76,13 +76,16 @@ public interface ProcessedExpressionDataVectorService
     Set<ProcessedExpressionDataVector> createProcessedDataVectors( ExpressionExperiment expressionExperiment, boolean ignoreInferredScale ) throws QuantitationMismatchException;
 
     /**
-     * @param bioassaySets - expressionExperiments or expressionExperimentSubSets
-     * @param genes        genes
+     * @param expressionExperiments - expressionExperiments or expressionExperimentSubSets
+     * @param genes                 genes
      * @return vectors, which will be subsetted if the bioassayset is a subset.
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_COLLECTION_READ" })
-    Collection<DoubleVectorValueObject> getProcessedDataArrays( Collection<? extends BioAssaySet> bioassaySets,
+    Collection<DoubleVectorValueObject> getProcessedDataArrays( Collection<ExpressionExperiment> expressionExperiments,
             Collection<Long> genes );
+
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    Collection<DoubleVectorValueObject> getProcessedDataArrays( BioAssaySet ee, Collection<Long> genes );
 
     /**
      * @param ees                 expressionExperiments
@@ -148,7 +151,7 @@ public interface ProcessedExpressionDataVectorService
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_COLLECTION_READ" })
     Collection<DoubleVectorValueObject> getProcessedDataArraysByProbe(
-            Collection<? extends BioAssaySet> expressionExperiments, Collection<CompositeSequence> compositeSequences );
+            Collection<ExpressionExperiment> expressionExperiments, Collection<CompositeSequence> compositeSequences );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     Collection<DoubleVectorValueObject> getProcessedDataArraysByProbeIds( BioAssaySet analyzedSet,

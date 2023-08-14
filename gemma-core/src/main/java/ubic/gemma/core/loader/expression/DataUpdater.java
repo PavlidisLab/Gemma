@@ -1,7 +1,5 @@
 package ubic.gemma.core.loader.expression;
 
-import org.springframework.transaction.annotation.Propagation;
-import org.springframework.transaction.annotation.Transactional;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
@@ -19,7 +17,6 @@ public interface DataUpdater {
 
     void log2cpmFromCounts( ExpressionExperiment ee, QuantitationType qt );
 
-    @SuppressWarnings("UnusedReturnValue") // Possible external use
     void replaceData( ExpressionExperiment ee, ArrayDesign targetPlatform, QuantitationType qt,
             DoubleMatrix<String, String> data );
 

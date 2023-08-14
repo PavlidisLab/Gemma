@@ -6,6 +6,7 @@ import org.compass.core.*;
 import org.compass.core.engine.SearchEngineException;
 import org.compass.core.engine.SearchEngineHits;
 import org.compass.core.engine.SearchEngineQueryParseException;
+import org.compass.core.impl.DefaultCompassHighlightedText;
 import org.compass.core.mapping.CompassMapping;
 import org.compass.core.mapping.Mapping;
 import org.compass.core.mapping.ResourceMapping;
@@ -15,11 +16,11 @@ import org.compass.core.spi.InternalCompassHits;
 import org.compass.core.spi.InternalCompassSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.core.convert.ConversionService;
+import org.springframework.core.convert.TypeDescriptor;
 import org.springframework.stereotype.Component;
-import ubic.gemma.core.search.CompassSearchException;
-import ubic.gemma.core.search.SearchException;
-import ubic.gemma.core.search.SearchResult;
-import ubic.gemma.core.search.SearchSource;
+import ubic.gemma.core.search.*;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.description.BibliographicReference;
@@ -28,10 +29,10 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
-import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.gene.GeneSet;
 import ubic.gemma.persistence.service.genome.biosequence.BioSequenceService;
+import ubic.gemma.persistence.util.EntityUtils;
 
 import javax.annotation.Nullable;
 import java.util.*;
@@ -41,6 +42,7 @@ import static java.util.function.Function.identity;
 
 /**
  * Compass-based search source.
+ *
  * @author klc
  * @author paul
  * @author keshav
@@ -95,6 +97,9 @@ public class CompassSearchSource implements SearchSource {
     private Compass compassProbe;
     @Autowired
     private BioSequenceService bioSequenceService;
+    @Autowired
+    @Qualifier("valueObjectConversionService")
+    private ConversionService valueObjectConversionService;
 
     /**
      * A Compass search on array designs.
@@ -136,10 +141,10 @@ public class CompassSearchSource implements SearchSource {
         // FIXME: incorporate the genes in the biosequence results (breaks generics)
         Collection<SearchResult<Gene>> geneResults;
         if ( previousGeneSearchResults == null ) {
-            CompassSearchSource.log.info( "Biosequence Search:  running gene search with " + settings.getQuery() );
+            CompassSearchSource.log.debug( "Biosequence Search:  running gene search with " + settings.getQuery() );
             geneResults = this.searchGene( settings );
         } else {
-            CompassSearchSource.log.info( "Biosequence Search:  using previous results" );
+            CompassSearchSource.log.debug( "Biosequence Search:  using previous results" );
             geneResults = previousGeneSearchResults;
         }
 
@@ -153,7 +158,7 @@ public class CompassSearchSource implements SearchSource {
             results.addAll( seqsFromDb.get( gene ).stream()
                     .filter( Objects::nonNull )
                     .filter( entity -> entity.getId() != null )
-                    .map( entity -> SearchResult.from( BioSequence.class, entity, compassHitDerivedFrom.getScore() * CompassSearchSource.INDIRECT_DB_HIT_PENALTY, compassHitDerivedFrom.getHighlightedText(), compassHitDerivedFrom.getSource() ) )
+                    .map( entity -> SearchResult.from( BioSequence.class, entity, compassHitDerivedFrom.getScore() * CompassSearchSource.INDIRECT_DB_HIT_PENALTY, compassHitDerivedFrom.getHighlights(), compassHitDerivedFrom.getSource() ) )
                     .collect( Collectors.toList() ) );
         }
 
@@ -177,24 +182,9 @@ public class CompassSearchSource implements SearchSource {
      * @return {@link Collection}
      */
     @Override
+    @Cacheable("CompassSearchSource.searchExpressionExperiment")
     public Collection<SearchResult<ExpressionExperiment>> searchExpressionExperiment( SearchSettings settings ) throws SearchException {
-        Collection<SearchResult<ExpressionExperiment>> unfilteredResults = this.compassSearch( compassExpression, settings, ExpressionExperiment.class );
-        Taxon t = settings.getTaxon();
-        if ( t == null || unfilteredResults.isEmpty() )
-            return unfilteredResults;
-
-        Collection<SearchResult<ExpressionExperiment>> filteredResults = new HashSet<>();
-        Collection<Long> eeIds = unfilteredResults.stream().map( SearchResult::getResultId ).collect( Collectors.toSet() );
-        for ( SearchResult<ExpressionExperiment> sr : unfilteredResults ) {
-            if ( eeIds.contains( sr.getResultId() ) ) {
-                filteredResults.add( sr );
-            }
-        }
-        if ( filteredResults.size() < unfilteredResults.size() ) {
-            log.info( "Filtered for taxon = " + t.getCommonName() + ", removed " + ( unfilteredResults.size()
-                    - filteredResults.size() ) + " results" );
-        }
-        return filteredResults;
+        return compassSearch( compassExpression, settings, ExpressionExperiment.class );
     }
 
     @Override
@@ -211,7 +201,7 @@ public class CompassSearchSource implements SearchSource {
      * Generic method for searching Lucene indices for entities (excluding ontology terms, which use the OntologySearch)
      */
     private <T extends Identifiable> Set<SearchResult<T>> compassSearch( Compass compass, final SearchSettings settings, Class<T> clazz ) throws SearchException {
-        if ( !settings.getUseIndices() )
+        if ( !settings.isUseIndices() )
             return Collections.emptySet();
         try {
             StopWatch timer = StopWatch.createStarted();
@@ -264,7 +254,7 @@ public class CompassSearchSource implements SearchSource {
         }
 
         // highlighting, if desired & supported by Compass (always!)
-        if ( settings.isDoHighlighting() ) {
+        if ( settings.getHighlighter() != null ) {
             if ( session instanceof InternalCompassSession ) {
                 // always ...
                 CompassMapping mapping = ( ( InternalCompassSession ) session ).getMapping();
@@ -276,7 +266,7 @@ public class CompassSearchSource implements SearchSource {
 
         String source = String.format( "%s with '%s'", session.getSettings().getSetting( "compass.name" ), compassQuery );
 
-        Set<SearchResult<T>> results = new HashSet<>( maxHits );
+        Set<SearchResult<T>> results = new SearchResultSet<>( maxHits );
         for ( int i = 0; i < maxHits; i++ ) {
             Object resultObject = hits.data( i );
 
@@ -288,13 +278,17 @@ public class CompassSearchSource implements SearchSource {
             }
 
             double score = Double.isNaN( hits.score( i ) ) ? 1.0 : hits.score( i );
-            String ht = null;
-            if ( settings.isDoHighlighting() && hits.highlightedText( i ) != null ) {
-                ht = hits.highlightedText( i ).getHighlightedText();
+            Map<String, String> ht = null;
+            if ( settings.getHighlighter() != null && hits.highlightedText( i ) != null ) {
+                ht = settings.getHighlighter().highlightCompassHits( ( DefaultCompassHighlightedText ) hits.highlightedText( i ) );
             }
 
             //noinspection unchecked
-            results.add( SearchResult.from( clazz, ( T ) resultObject, score * CompassSearchSource.COMPASS_HIT_SCORE_PENALTY_FACTOR, ht, source ) );
+            results.add( SearchResult.from( clazz, ( ( T ) resultObject ).getId(), score * CompassSearchSource.COMPASS_HIT_SCORE_PENALTY_FACTOR, ht, source ) );
+        }
+
+        if ( settings.isFillResults() ) {
+            fillSearchResults( results, clazz );
         }
 
         watch.stop();
@@ -303,8 +297,6 @@ public class CompassSearchSource implements SearchSource {
                 hits.getLength(), enhancedQuery, compassQuery, session.getSettings().getSetting( "compass.name" ), watch.getTime() );
         if ( watch.getTime() > 5000 ) {
             CompassSearchSource.log.warn( "***** Slow Lucene Index Search!  " + message );
-        } else if ( watch.getTime() > 1 ) {
-            CompassSearchSource.log.info( message );
         } else {
             CompassSearchSource.log.debug( message );
         }
@@ -347,6 +339,35 @@ public class CompassSearchSource implements SearchSource {
                     }
                 }
             }
+        }
+    }
+
+    private <T extends Identifiable> void fillSearchResults( Collection<SearchResult<T>> results, Class<T> clazz ) {
+        StopWatch timer = StopWatch.createStarted();
+
+        Set<Long> ids = results.stream()
+                .map( SearchResult::getResultId )
+                .collect( Collectors.toSet() );
+
+        //noinspection unchecked
+        List<T> entities = ( List<T> ) valueObjectConversionService.convert( ids,
+                TypeDescriptor.collection( Set.class, TypeDescriptor.valueOf( Long.class ) ),
+                TypeDescriptor.collection( List.class, TypeDescriptor.valueOf( clazz ) ) );
+
+        Map<Long, T> entitiesById = EntityUtils.getIdMap( entities );
+
+        Iterator<SearchResult<T>> it = results.iterator();
+        while ( it.hasNext() ) {
+            SearchResult<T> sr = it.next();
+            if ( entitiesById.containsKey( sr.getResultId() ) ) {
+                sr.setResultObject( entitiesById.get( sr.getResultId() ) );
+            } else {
+                it.remove();
+            }
+        }
+
+        if ( timer.getTime() > 100 ) {
+            log.warn( String.format( "Filling %d %s results took %d ms", ids.size(), clazz.getSimpleName(), timer.getTime() ) );
         }
     }
 }

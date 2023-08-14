@@ -30,6 +30,11 @@ public abstract class AbstractService<O extends Identifiable> implements BaseSer
     }
 
     @Override
+    public Class<? extends O> getElementClass() {
+        return mainDao.getElementClass();
+    }
+
+    @Override
     @Transactional(readOnly = true)
     public O find( O entity ) {
         return mainDao.find( entity );

@@ -21,7 +21,7 @@ package ubic.gemma.model.association.phenotype;
 import ubic.gemma.model.common.description.BibliographicReference;
 
 @Deprecated
-public abstract class PhenotypeAssociationPublication implements java.io.Serializable {
+public class PhenotypeAssociationPublication implements java.io.Serializable {
 
     /**
      * The serial version UID of this class. Needed for serialization.
@@ -64,7 +64,7 @@ public abstract class PhenotypeAssociationPublication implements java.io.Seriali
     public static final class Factory {
 
         public static PhenotypeAssociationPublication newInstance() {
-            return new PhenotypeAssociationPublicationImpl();
+            return new PhenotypeAssociationPublication();
         }
 
     }

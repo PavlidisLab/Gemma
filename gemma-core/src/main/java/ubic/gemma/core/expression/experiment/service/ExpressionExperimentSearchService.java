@@ -41,6 +41,9 @@ public interface ExpressionExperimentSearchService {
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
     Collection<ExpressionExperimentValueObject> searchExpressionExperiments( List<String> value ) throws SearchException;
 
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
+    Collection<Long> searchExpressionExperiments( String query, Long taxonId ) throws SearchException;
+
     /**
      * does not include session bound sets
      *
@@ -51,5 +54,4 @@ public interface ExpressionExperimentSearchService {
     List<SearchResultDisplayObject> searchExperimentsAndExperimentGroups( String query, Long taxonId ) throws SearchException;
 
     List<SearchResultDisplayObject> getAllTaxonExperimentGroup( Long taxonId );
-
 }

@@ -27,6 +27,7 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.CompositeSequenceValueObject;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.biosequence.BioSequence;
+import ubic.gemma.persistence.service.BaseService;
 import ubic.gemma.persistence.service.FilteringVoEnabledService;
 import ubic.gemma.persistence.util.Slice;
 
@@ -40,7 +41,7 @@ import java.util.Map;
  */
 @SuppressWarnings("unused") // Possible external use
 public interface CompositeSequenceService
-        extends FilteringVoEnabledService<CompositeSequence, CompositeSequenceValueObject> {
+        extends BaseService<CompositeSequence>, FilteringVoEnabledService<CompositeSequence, CompositeSequenceValueObject> {
 
     @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_ARRAYDESIGN_COLLECTION_READ" })
@@ -90,7 +91,7 @@ public interface CompositeSequenceService
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_ARRAYDESIGN_COLLECTION_READ" })
     Collection<CompositeSequence> findByName( String name );
 
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_ARRAYDESIGN_COLLECTION_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_ARRAYDESIGN_READ" })
     CompositeSequence findByName( ArrayDesign arrayDesign, String name );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_ARRAYDESIGN_COLLECTION_READ" })

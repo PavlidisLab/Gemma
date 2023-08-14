@@ -324,7 +324,7 @@ public class SearchResultDisplayObject implements Comparable<SearchResultDisplay
 
     private void setValues( GeneSetValueObject geneSet ) {
         this.isGroup = true;
-        this.size = geneSet.getSize();
+        this.size = geneSet.getSize().intValue();
         this.taxonId = geneSet.getTaxonId();
         this.taxonName = geneSet.getTaxonName();
         this.name = geneSet.getName();
@@ -354,7 +354,7 @@ public class SearchResultDisplayObject implements Comparable<SearchResultDisplay
     private void setValues( SearchResult<?> searchResult ) {
 
         // if it's a search result, grab the underlying object
-        Class<?> searchResultClass = searchResult.getResultClass();
+        Class<?> searchResultClass = searchResult.getResultType();
         Object resultObject = searchResult.getResultObject();
         // class-specific construction
         if ( resultObject instanceof GeneValueObject ) {
