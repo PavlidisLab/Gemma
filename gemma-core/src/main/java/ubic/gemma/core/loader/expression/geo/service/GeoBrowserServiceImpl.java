@@ -18,6 +18,7 @@
  */
 package ubic.gemma.core.loader.expression.geo.service;
 
+import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.DisposableBean;
@@ -291,11 +292,15 @@ public class GeoBrowserServiceImpl implements GeoBrowserService, InitializingBea
     private void initializeLocalInfo() {
         File f = this.getInfoStoreFile();
         if ( f.exists() ) {
+            GeoBrowserServiceImpl.log.info( String.format( "Loading GEO browser info from %s...", f.getAbsolutePath() ) );
+            StopWatch timer = StopWatch.createStarted();
             try ( FileInputStream fis = new FileInputStream( f ); ObjectInputStream ois = new ObjectInputStream( fis ) ) {
                 //noinspection unchecked
-                for ( Map.Entry<String, GeoRecord> e : ( ( Map<String, GeoRecord> ) ois.readObject() ).entrySet() ) {
+                Map<String, GeoRecord> records = ( ( Map<String, GeoRecord> ) ois.readObject() );
+                for ( Map.Entry<String, GeoRecord> e : records.entrySet() ) {
                     this.localInfo.putIfAbsent( e.getKey(), e.getValue() );
                 }
+                GeoBrowserServiceImpl.log.info( String.format( "Done GEO browser info. Loaded %d on-disk GEO records in %d ms.", records.size(), timer.getTime() ) );
             } catch ( Exception e ) {
                 GeoBrowserServiceImpl.log.error( "Failed to load local GEO info from " + f.getAbsolutePath(), e );
             }
