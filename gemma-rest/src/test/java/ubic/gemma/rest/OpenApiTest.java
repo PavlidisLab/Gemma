@@ -16,6 +16,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.security.access.AccessDecisionManager;
 import org.springframework.test.context.ContextConfiguration;
 import ubic.gemma.core.search.SearchService;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
@@ -80,6 +81,11 @@ public class OpenApiTest extends BaseJerseyTest {
         @Bean
         public AnalyticsProvider analyticsProvider() {
             return mock( AnalyticsProvider.class );
+        }
+
+        @Bean
+        public AccessDecisionManager accessDecisionManager() {
+            return mock( AccessDecisionManager.class );
         }
 
         private static <S extends Identifiable, T extends EntityArgService<S, ?>> T mockFilteringService( Class<T> clazz, Class<S> elementClass ) {

@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
+import org.springframework.security.access.AccessDecisionManager;
 import org.springframework.test.context.ContextConfiguration;
 import ubic.gemma.core.analysis.preprocess.OutlierDetectionService;
 import ubic.gemma.core.analysis.preprocess.svd.SVDService;
@@ -111,6 +112,11 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
         @Bean
         public AnalyticsProvider analyticsProvider() {
             return mock( AnalyticsProvider.class );
+        }
+
+        @Bean
+        public AccessDecisionManager accessDecisionManager() {
+            return mock( AccessDecisionManager.class );
         }
     }
 

@@ -1,12 +1,16 @@
 package ubic.gemma.rest.annotations;
 
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+import java.lang.annotation.*;
 
+@Repeatable(CacheControls.class)
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ ElementType.METHOD })
 public @interface CacheControl {
-    int maxAge();
+    int maxAge() default -1;
+    boolean isPrivate() default false;
+
+    /**
+     * Authorities to whom this cache directive applies.
+     */
+    String[] authorities() default {};
 }

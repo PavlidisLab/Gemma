@@ -156,6 +156,7 @@ public class DatasetsWebService {
     @GZIP
     @GET
     @CacheControl(maxAge = 1200)
+    @CacheControl(isPrivate = true, authorities = { "GROUP_USER" })
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve all datasets")
     public QueriedAndFilteredAndPaginatedResponseDataObject<ExpressionExperimentWithSearchResultValueObject> getDatasets( // Params:
@@ -218,6 +219,7 @@ public class DatasetsWebService {
     @GET
     @Path("/count")
     @CacheControl(maxAge = 1200)
+    @CacheControl(isPrivate = true, authorities = { "GROUP_USER" })
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Count datasets matching the provided query and  filter")
     public ResponseDataObject<Long> getNumberOfDatasets(
@@ -238,6 +240,7 @@ public class DatasetsWebService {
     @GET
     @Path("/platforms")
     @CacheControl(maxAge = 1200)
+    @CacheControl(isPrivate = true, authorities = { "GROUP_USER" })
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve usage statistics of platforms among datasets matching the provided query and filter",
             description = "Usage statistics are aggregated across experiment tags, samples and factor values mentioned in the experimental design.")
@@ -272,6 +275,7 @@ public class DatasetsWebService {
     @GET
     @Path("/categories")
     @CacheControl(maxAge = 1200)
+    @CacheControl(isPrivate = true, authorities = { "GROUP_USER" })
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve usage statistics of categories among datasets matching the provided query and filter",
             description = "Usage statistics are aggregated across experiment tags, samples and factor values mentioned in the experimental design.")
@@ -316,6 +320,7 @@ public class DatasetsWebService {
     @GET
     @GZIP
     @CacheControl(maxAge = 1200)
+    @CacheControl(isPrivate = true, authorities = { "GROUP_USER" })
     @Path("/annotations")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve usage statistics of annotations among datasets matching the provided query and filter",
@@ -442,6 +447,7 @@ public class DatasetsWebService {
     @GET
     @Path("/taxa")
     @CacheControl(maxAge = 1200)
+    @CacheControl(isPrivate = true, authorities = { "GROUP_USER" })
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve taxa usage statistics for datasets matching the provided query and filter")
     public FilteredResponseDataObject<TaxonWithUsageStatisticsValueObject> getDatasetsTaxaUsageStatistics(
@@ -484,6 +490,7 @@ public class DatasetsWebService {
     @GET
     @Path("/{dataset}")
     @CacheControl(maxAge = 1200)
+    @CacheControl(isPrivate = true, authorities = { "GROUP_USER" })
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve datasets by their identifiers")
     public FilteredAndPaginatedResponseDataObject<ExpressionExperimentValueObject> getDatasetsByIds( // Params:
