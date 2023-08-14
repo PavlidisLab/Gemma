@@ -20,6 +20,8 @@ package ubic.gemma.core.loader.expression.geo.service;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.beans.factory.DisposableBean;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.w3c.dom.Document;
@@ -39,18 +41,19 @@ import ubic.gemma.persistence.service.expression.experiment.ExpressionExperiment
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.persistence.util.Settings;
 
-import javax.annotation.PostConstruct;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.xpath.*;
 import java.io.*;
 import java.text.ParseException;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executors;
 
 /**
  * @author pavlidis
  */
 @Component
-public class GeoBrowserServiceImpl implements GeoBrowserService {
+public class GeoBrowserServiceImpl implements GeoBrowserService, InitializingBean, DisposableBean {
     private static final int MIN_SAMPLES = 5;
     private static final String GEO_DATA_STORE_FILE_NAME = "GEODataStore";
     private static final Log log = LogFactory.getLog( GeoBrowserServiceImpl.class.getName() );
@@ -67,16 +70,14 @@ public class GeoBrowserServiceImpl implements GeoBrowserService {
     @Autowired
     private ExternalDatabaseService externalDatabaseService;
 
-    private Map<String, GeoRecord> localInfo;
+    private final Map<String, GeoRecord> localInfo = new ConcurrentHashMap<>();
     private XPathExpression xgse;
     private XPathExpression xtitle;
     private XPathExpression xgpls;
     private XPathExpression xsummary;
 
-    @PostConstruct
-    public void afterPropertiesSet() throws Exception {
-        this.initializeLocalInfo();
-
+    @Override
+    public void afterPropertiesSet() throws XPathExpressionException {
         XPathFactory xf = XPathFactory.newInstance();
         XPath xpath = xf.newXPath();
         // xgds = xpath.compile( "/eSummaryResult/DocSum/Item[@Name=\"GDS\"][1]/text()" );
@@ -84,6 +85,12 @@ public class GeoBrowserServiceImpl implements GeoBrowserService {
         xtitle = xpath.compile( "/eSummaryResult/DocSum/Item[@Name=\"title\"][1]/text()" );
         xgpls = xpath.compile( "/eSummaryResult/DocSum/Item[@Name=\"GPL\"]/text()" );
         xsummary = xpath.compile( "/eSummaryResult/DocSum/Item[@Name=\"summary\"][1]/text()" );
+        Executors.newSingleThreadExecutor().submit( this::initializeLocalInfo );
+    }
+
+    @Override
+    public void destroy() throws Exception {
+        saveLocalInfo();
     }
 
     @Override
@@ -104,8 +111,6 @@ public class GeoBrowserServiceImpl implements GeoBrowserService {
          * increment click counts.
          */
         localInfo.get( accession ).setPreviousClicks( localInfo.get( accession ).getPreviousClicks() + 1 );
-
-        this.saveLocalInfo();
 
         return this.formatDetails( details, contextPath );
 
@@ -136,8 +141,6 @@ public class GeoBrowserServiceImpl implements GeoBrowserService {
         this.initLocalRecord( accession );
 
         localInfo.get( accession ).setUsable( !localInfo.get( accession ).isUsable() );
-
-        this.saveLocalInfo();
 
         return localInfo.get( accession ).isUsable();
     }
@@ -282,29 +285,24 @@ public class GeoBrowserServiceImpl implements GeoBrowserService {
         return new File( path + File.separatorChar + GeoBrowserServiceImpl.GEO_DATA_STORE_FILE_NAME );
     }
 
-    @SuppressWarnings("unchecked")
+    /**
+     * Initialize local info from disk. Only fill in entries that are not already present.
+     */
     private void initializeLocalInfo() {
         File f = this.getInfoStoreFile();
         if ( f.exists() ) {
             try ( FileInputStream fis = new FileInputStream( f ); ObjectInputStream ois = new ObjectInputStream( fis ) ) {
-
                 //noinspection unchecked
-                this.localInfo = ( Map<String, GeoRecord> ) ois.readObject();
-
+                for ( Map.Entry<String, GeoRecord> e : ( ( Map<String, GeoRecord> ) ois.readObject() ).entrySet() ) {
+                    this.localInfo.putIfAbsent( e.getKey(), e.getValue() );
+                }
             } catch ( Exception e ) {
-                GeoBrowserServiceImpl.log
-                        .error( "Failed to load local GEO info from " + f.getAbsolutePath() + ", reinitializing..." );
-                this.localInfo = new HashMap<>();
-                this.saveLocalInfo(); // ensure this gets initialized even if unused
+                GeoBrowserServiceImpl.log.error( "Failed to load local GEO info from " + f.getAbsolutePath(), e );
             }
-        } else {
-            this.localInfo = new HashMap<>();
         }
-        assert this.localInfo != null;
     }
 
     private void initLocalRecord( String accession ) {
-        assert localInfo != null;
         if ( !localInfo.containsKey( accession ) ) {
             localInfo.put( accession, new GeoRecord() );
             localInfo.get( accession ).setGeoAccession( accession );
@@ -314,17 +312,10 @@ public class GeoBrowserServiceImpl implements GeoBrowserService {
     /**
      * Save the cached GEO information for next time
      */
-    private void saveLocalInfo() {
-        if ( this.localInfo == null )
-            return;
+    private void saveLocalInfo() throws IOException {
         try ( FileOutputStream fos = new FileOutputStream( this.getInfoStoreFile() );
                 ObjectOutputStream oos = new ObjectOutputStream( fos ) ) {
-
             oos.writeObject( this.localInfo );
-            oos.flush();
-        } catch ( Exception e ) {
-            GeoBrowserServiceImpl.log.error( "Failed to save local GEO info", e );
         }
     }
-
 }
