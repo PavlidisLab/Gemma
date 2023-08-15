@@ -6,6 +6,7 @@ import gemma.gsec.acl.domain.AclDao;
 import gemma.gsec.acl.domain.AclDaoImpl;
 import gemma.gsec.acl.domain.AclService;
 import gemma.gsec.acl.domain.AclServiceImpl;
+import org.apache.lucene.util.Version;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.FactoryBean;
 import org.springframework.beans.factory.InitializingBean;
@@ -72,6 +73,9 @@ public abstract class BaseDatabaseTest extends AbstractTransactionalJUnit4Spring
             props.setProperty( "hibernate.order_updates", "true" );
             props.setProperty( "hibernate.show_sql", Settings.getString( "gemma.hibernate.show_sql" ) );
             props.setProperty( "hibernate.format_sql", Settings.getString( "gemma.hibernate.format_sql" ) );
+            props.setProperty( "hibernate.search.lucene_version", Version.LUCENE_36.name() );
+            // use an in-memory search index for testing
+            props.setProperty( "hibernate.search.default.directory_provider", "ram" );
             factory.setHibernateProperties( props );
             return factory;
         }

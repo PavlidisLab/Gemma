@@ -18,11 +18,15 @@
  */
 package ubic.gemma.model.genome.gene;
 
+import org.hibernate.search.annotations.DocumentId;
+import org.hibernate.search.annotations.Indexed;
+import org.hibernate.search.annotations.IndexedEmbedded;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.genome.Gene;
 
 import java.io.Serializable;
 
+@Indexed
 public class GeneSetMember implements Identifiable, Serializable {
 
     @Override
@@ -46,6 +50,7 @@ public class GeneSetMember implements Identifiable, Serializable {
     public GeneSetMember() {
     }
 
+    @IndexedEmbedded
     public Gene getGene() {
         return this.gene;
     }
@@ -55,6 +60,7 @@ public class GeneSetMember implements Identifiable, Serializable {
     }
 
     @Override
+    @DocumentId
     public Long getId() {
         return this.id;
     }

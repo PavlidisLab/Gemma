@@ -25,7 +25,6 @@ import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.text.StringEscapeUtils;
-import org.hibernate.Hibernate;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -150,6 +149,9 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
     @Qualifier("databaseSearchSource")
     private SearchSource databaseSearchSource;
     @Autowired
+    @Qualifier("hibernateSearchSource")
+    private SearchSource hibernateSearchSource;
+    @Autowired
     @Qualifier("ontologySearchSource")
     private SearchSource ontologySearchSource;
 
@@ -224,7 +226,7 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
 
     @Override
     public void afterPropertiesSet() throws Exception {
-        searchSource = new CompositeSearchSource( Collections.singletonList( databaseSearchSource ) );
+        searchSource = new CompositeSearchSource( Arrays.asList( databaseSearchSource, hibernateSearchSource, ontologySearchSource ) );
         initializeSupportedResultTypes();
         this.initializeNameToTaxonMap();
     }
@@ -761,7 +763,7 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
          */
 
         // Skip compass searching of composite sequences because it only bloats the results.
-        Collection<SearchResult<?>> compositeSequenceResults = new HashSet<>( this.databaseSearchSource.searchCompositeSequenceAndGene( settings ) );
+        Collection<SearchResult<?>> compositeSequenceResults = new HashSet<>( this.searchSource.searchCompositeSequenceAndGene( settings ) );
 
         /*
          * This last step is needed because the compassSearch for compositeSequences returns bioSequences too.
@@ -913,7 +915,7 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
 
         // searches for GEO names, etc - "exact" matches.
         if ( settings.isUseDatabase() ) {
-            results.addAll( this.databaseSearchSource.searchExpressionExperiment( settings ) );
+            results.addAll( this.searchSource.searchExpressionExperiment( settings ) );
             if ( watch.getTime() > 500 )
                 SearchServiceImpl.log
                         .info( "Expression Experiment database search for " + settings + " took " + watch.getTime()
@@ -1135,7 +1137,7 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
 
         StopWatch watch = StopWatch.createStarted();
 
-        Collection<SearchResult<Gene>> geneDbList = this.databaseSearchSource.searchGene( settings );
+        Collection<SearchResult<Gene>> geneDbList = this.searchSource.searchGene( settings );
 
         if ( settings.getMode() == SearchSettings.SearchMode.FAST && geneDbList.size() > 0 ) {
             return geneDbList;
@@ -1144,7 +1146,7 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
         Set<SearchResult<Gene>> combinedGeneList = new HashSet<>( geneDbList );
 
         if ( combinedGeneList.isEmpty() ) {
-            Collection<SearchResult<?>> geneCsList = this.databaseSearchSource.searchCompositeSequenceAndGene( settings );
+            Collection<SearchResult<?>> geneCsList = this.searchSource.searchCompositeSequenceAndGene( settings );
             for ( SearchResult<?> res : geneCsList ) {
                 if ( Gene.class.equals( res.getResultType() ) )
                     //noinspection unchecked
