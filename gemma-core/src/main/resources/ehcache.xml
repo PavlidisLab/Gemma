@@ -464,12 +464,6 @@
     <cache name="GeneOntologyService.goTerms" maxElementsInMemory="10000" eternal="true" overflowToDisk="false"/>
     <cache name="GeneOntologyService.term2Aspect" maxElementsInMemory="10000" eternal="true" overflowToDisk="false"/>
 
-    <!-- search-related caches -->
-    <!-- we use time-to-idle here so that a search is cached as long as it being performed to produce somewhat consistent and fast results  -->
-    <cache name="CompassSearchSource.searchExpressionExperiment"
-           maxElementsInMemory="10000"
-           timeToIdleSeconds="120"/>
-
     <!-- calculating the size of caches is expensive, so we cache it! -->
     <!-- we use a TTI of zero because stale data should not be extrapolated -->
     <cache name="CacheMonitor.inMemoryCacheSizeCache" maxElementsInMemory="100" timeToLiveSeconds="60"

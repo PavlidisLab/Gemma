@@ -45,11 +45,6 @@ class SearchServiceTestContextConfiguration {
     }
 
     @Bean
-    public SearchSource compassSearchSource() {
-        return mock( SearchSource.class );
-    }
-
-    @Bean
     public SearchSource databaseSearchSource() {
         return mock( SearchSource.class );
     }

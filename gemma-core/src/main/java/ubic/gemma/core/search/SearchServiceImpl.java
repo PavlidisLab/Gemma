@@ -147,9 +147,6 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
 
     /* sources */
     @Autowired
-    @Qualifier("compassSearchSource")
-    private SearchSource compassSearchSource;
-    @Autowired
     @Qualifier("databaseSearchSource")
     private SearchSource databaseSearchSource;
     @Autowired
@@ -227,7 +224,7 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
 
     @Override
     public void afterPropertiesSet() throws Exception {
-        searchSource = new CompositeSearchSource( Arrays.asList( databaseSearchSource, compassSearchSource ) );
+        searchSource = new CompositeSearchSource( Collections.singletonList( databaseSearchSource ) );
         initializeSupportedResultTypes();
         this.initializeNameToTaxonMap();
     }
@@ -428,7 +425,7 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
         }
 
         if ( settings.hasResultType( BibliographicReference.class ) ) {
-            results.addAll( this.compassSearchSource.searchBibliographicReference( settings ) );
+            results.addAll( this.searchSource.searchBibliographicReference( settings ) );
         }
 
         if ( settings.hasResultType( GeneSet.class ) ) {
@@ -611,28 +608,6 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
          * FIXME: add merged platforms and subsumers
          */
         results.addAll( searchSource.searchArrayDesign( settings ) );
-
-        Collection<SearchResult<CompositeSequence>> probes;
-        if ( probeResults == null ) {
-            probes = this.compassSearchSource.searchCompositeSequenceAndGene( settings ).stream()
-                    // strip all the gene results
-                    .filter( result -> CompositeSequence.class.equals( result.getResultType() ) )
-                    .map( result -> SearchResult.from( result, ( CompositeSequence ) result.getResultObject() ) )
-                    .collect( Collectors.toCollection( SearchResultSet::new ) );
-        } else {
-            probes = probeResults;
-        }
-
-        for ( SearchResult<CompositeSequence> r : probes ) {
-            CompositeSequence cs = r.getResultObject();
-            // This might happen as compass might not have indexed the AD for the CS
-            if ( cs == null || cs.getArrayDesign() == null ) {
-                continue;
-            }
-            // FIXME: this should not be necessary, the AD is eagerly fetched in the model definition (see https://github.com/PavlidisLab/Gemma/issues/483)
-            Hibernate.initialize( cs.getArrayDesign() );
-            results.add( SearchResult.from( ArrayDesign.class, cs.getArrayDesign(), INDIRECT_HIT_PENALTY * r.getScore(), "ArrayDesign associated to probes obtained by a Compass search." ) );
-        }
 
         watch.stop();
         if ( watch.getTime() > 1000 )
@@ -996,18 +971,6 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
             watch.start();
         }
 
-        // searches for strings in associated free text including factorvalues and biomaterials
-        // we have toyed with having this be done before the characteristic search
-        if ( settings.isUseIndices() && !isFilled( results, settings ) ) {
-            results.addAll( this.compassSearchSource.searchExpressionExperiment( settings ) );
-            if ( watch.getTime() > 500 )
-                SearchServiceImpl.log
-                        .warn( "Expression Experiment index search for " + settings + " took " + watch.getTime()
-                                + " ms, " + results.size() + " hits." );
-            watch.reset();
-            watch.start();
-        }
-
         /*
          * this should be unnecessary we we hit bibrefs in our regular lucene-index search. Also as written, this is
          * very slow
@@ -1179,9 +1142,6 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
         }
 
         Set<SearchResult<Gene>> combinedGeneList = new HashSet<>( geneDbList );
-
-        Collection<SearchResult<Gene>> geneCompassList = this.compassSearchSource.searchGene( settings );
-        combinedGeneList.addAll( geneCompassList );
 
         if ( combinedGeneList.isEmpty() ) {
             Collection<SearchResult<?>> geneCsList = this.databaseSearchSource.searchCompositeSequenceAndGene( settings );
