@@ -218,8 +218,6 @@ public class DatasetsWebService {
 
     @GET
     @Path("/count")
-    @CacheControl(maxAge = 1200)
-    @CacheControl(isPrivate = true, authorities = { "GROUP_USER" })
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Count datasets matching the provided query and  filter")
     public ResponseDataObject<Long> getNumberOfDatasets(
@@ -489,8 +487,6 @@ public class DatasetsWebService {
      */
     @GET
     @Path("/{dataset}")
-    @CacheControl(maxAge = 1200)
-    @CacheControl(isPrivate = true, authorities = { "GROUP_USER" })
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve datasets by their identifiers")
     public FilteredAndPaginatedResponseDataObject<ExpressionExperimentValueObject> getDatasetsByIds( // Params:
