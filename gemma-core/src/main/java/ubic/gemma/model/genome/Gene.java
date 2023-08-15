@@ -18,19 +18,21 @@
  */
 package ubic.gemma.model.genome;
 
+import org.hibernate.annotations.Index;
+import org.hibernate.search.annotations.*;
 import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.genome.gene.GeneAlias;
 import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.model.genome.gene.Multifunctionality;
 
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
 /**
  * Represents a functionally transcribed unit in the genome, recognized by other databases (NCBI, Ensembl).
  */
+@Indexed
 public class Gene extends ChromosomeFeature {
 
     /**
@@ -46,6 +48,7 @@ public class Gene extends ChromosomeFeature {
     private Taxon taxon;
     private Set<DatabaseEntry> accessions = new HashSet<>();
     private Multifunctionality multifunctionality;
+    @Deprecated
     private Set<PhenotypeAssociation> phenotypeAssociations = new HashSet<>();
 
     /**
@@ -125,6 +128,25 @@ public class Gene extends ChromosomeFeature {
         return b.toString();
     }
 
+    @Override
+    @DocumentId
+    public Long getId() {
+        return super.getId();
+    }
+
+    @Override
+    @Field
+    public String getName() {
+        return super.getName();
+    }
+
+    @Override
+    @Field
+    public String getDescription() {
+        return super.getDescription();
+    }
+
+    @IndexedEmbedded
     public Set<DatabaseEntry> getAccessions() {
         return this.accessions;
     }
@@ -133,6 +155,7 @@ public class Gene extends ChromosomeFeature {
         this.accessions = accessions;
     }
 
+    @IndexedEmbedded
     public Set<GeneAlias> getAliases() {
         return this.aliases;
     }
@@ -144,6 +167,7 @@ public class Gene extends ChromosomeFeature {
     /**
      * @return An Ensembl ID for the gene.
      */
+    @Field(analyze = Analyze.NO)
     public String getEnsemblId() {
         return this.ensemblId;
     }
@@ -160,6 +184,7 @@ public class Gene extends ChromosomeFeature {
         this.multifunctionality = multifunctionality;
     }
 
+    @Field(analyze = Analyze.NO)
     public Integer getNcbiGeneId() {
         return this.ncbiGeneId;
     }
@@ -168,6 +193,7 @@ public class Gene extends ChromosomeFeature {
         this.ncbiGeneId = ncbiGeneId;
     }
 
+    @Field(analyze = Analyze.NO)
     public String getOfficialName() {
         return this.officialName;
     }
@@ -176,6 +202,7 @@ public class Gene extends ChromosomeFeature {
         this.officialName = officialName;
     }
 
+    @Field(analyze = Analyze.NO)
     public String getOfficialSymbol() {
         return this.officialSymbol;
     }
@@ -184,14 +211,17 @@ public class Gene extends ChromosomeFeature {
         this.officialSymbol = officialSymbol;
     }
 
+    @Deprecated
     public Set<PhenotypeAssociation> getPhenotypeAssociations() {
         return this.phenotypeAssociations;
     }
 
+    @Deprecated
     public void setPhenotypeAssociations( Set<PhenotypeAssociation> phenotypeAssociations ) {
         this.phenotypeAssociations = phenotypeAssociations;
     }
 
+    @IndexedEmbedded
     public Set<GeneProduct> getProducts() {
         return this.products;
     }
@@ -204,6 +234,7 @@ public class Gene extends ChromosomeFeature {
      * @return Note that a Gene also has a chromosome, so the organism can be inferred that way as well. This direct association
      * is a denormalization for queries that don't care about location, just species-membership.
      */
+    @IndexedEmbedded
     public Taxon getTaxon() {
         return this.taxon;
     }

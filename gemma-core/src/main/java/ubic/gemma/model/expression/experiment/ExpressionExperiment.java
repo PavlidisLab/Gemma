@@ -14,16 +14,13 @@
  */
 package ubic.gemma.model.expression.experiment;
 
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Set;
-
+import gemma.gsec.model.SecuredNotChild;
 import org.hibernate.Hibernate;
 import org.hibernate.proxy.HibernateProxyHelper;
-
-import gemma.gsec.model.SecuredNotChild;
+import org.hibernate.search.annotations.*;
 import ubic.gemma.model.common.auditAndSecurity.curation.Curatable;
 import ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails;
+import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -32,9 +29,13 @@ import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.genome.Taxon;
 
+import java.util.HashSet;
+import java.util.Set;
+
 /**
  * @author paul
  */
+@Indexed
 public class ExpressionExperiment extends BioAssaySet implements SecuredNotChild, Curatable {
 
     public static final class Factory {
@@ -105,6 +106,48 @@ public class ExpressionExperiment extends BioAssaySet implements SecuredNotChild
         return false;
     }
 
+    @Override
+    @DocumentId
+    public Long getId() {
+        return super.getId();
+    }
+
+    @Override
+    @Field
+    public String getName() {
+        return super.getName();
+    }
+
+    @Override
+    @Field
+    public String getDescription() {
+        return super.getDescription();
+    }
+
+    @Override
+    @IndexedEmbedded
+    public Set<BioAssay> getBioAssays() {
+        return super.getBioAssays();
+    }
+
+    @Override
+    @IndexedEmbedded
+    public BibliographicReference getPrimaryPublication() {
+        return super.getPrimaryPublication();
+    }
+
+    @Override
+    @IndexedEmbedded
+    public Set<BibliographicReference> getOtherRelevantPublications() {
+        return super.getOtherRelevantPublications();
+    }
+
+    @Override
+    @IndexedEmbedded(includePaths = { "value", "valueUri" })
+    public Set<Characteristic> getCharacteristics() {
+        return super.getCharacteristics();
+    }
+
     public String getBatchConfound() {
         return batchConfound;
     }
@@ -118,6 +161,7 @@ public class ExpressionExperiment extends BioAssaySet implements SecuredNotChild
         return this.curationDetails;
     }
 
+    @IndexedEmbedded
     public ExperimentalDesign getExperimentalDesign() {
         return this.experimentalDesign;
     }
@@ -163,6 +207,7 @@ public class ExpressionExperiment extends BioAssaySet implements SecuredNotChild
      * we often
      * used names like "alizadeh-lymphoma".
      */
+    @Field(analyze = Analyze.NO)
     public String getShortName() {
         return this.shortName;
     }

@@ -19,6 +19,7 @@
 
 package ubic.gemma.model.expression.arrayDesign;
 
+import org.hibernate.search.annotations.*;
 import ubic.gemma.model.common.AbstractAuditable;
 import ubic.gemma.model.common.auditAndSecurity.Contact;
 import ubic.gemma.model.common.auditAndSecurity.curation.Curatable;
@@ -35,6 +36,7 @@ import java.util.Set;
  *
  * @author Paul
  */
+@Indexed
 public class ArrayDesign extends AbstractAuditable implements gemma.gsec.model.SecuredNotChild, Curatable {
 
     public static final class Factory {
@@ -89,6 +91,24 @@ public class ArrayDesign extends AbstractAuditable implements gemma.gsec.model.S
 
     }
 
+    @Override
+    @DocumentId
+    public Long getId() {
+        return super.getId();
+    }
+
+    @Override
+    @Field
+    public String getName() {
+        return super.getName();
+    }
+
+    @Override
+    @Field
+    public String getDescription() {
+        return super.getDescription();
+    }
+
     /**
      * @return The number of design elements, according to the manufactuerer or determined at the time the array design
      *         was
@@ -100,6 +120,7 @@ public class ArrayDesign extends AbstractAuditable implements gemma.gsec.model.S
         return this.advertisedNumberOfDesignElements;
     }
 
+    @IndexedEmbedded
     public Set<AlternateName> getAlternateNames() {
         return this.alternateNames;
     }
@@ -128,6 +149,7 @@ public class ArrayDesign extends AbstractAuditable implements gemma.gsec.model.S
     /**
      * @return Accessions for this array design in other databases, e.g., GEO, ArrayExpression.
      */
+    @IndexedEmbedded
     public Set<DatabaseEntry> getExternalReferences() {
         return this.externalReferences;
     }
@@ -155,6 +177,7 @@ public class ArrayDesign extends AbstractAuditable implements gemma.gsec.model.S
      *         we often
      *         used names like "HG-U95A".
      */
+    @Field(analyze = Analyze.NO)
     public String getShortName() {
         return this.shortName;
     }

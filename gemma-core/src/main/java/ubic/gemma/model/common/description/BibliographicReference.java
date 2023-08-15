@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006-2012 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,6 +18,7 @@
  */
 package ubic.gemma.model.common.description;
 
+import org.hibernate.search.annotations.*;
 import ubic.gemma.model.common.AbstractDescribable;
 import ubic.gemma.model.expression.biomaterial.Compound;
 
@@ -26,6 +27,7 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 
+@Indexed
 public class BibliographicReference extends AbstractDescribable implements Serializable {
 
     /**
@@ -49,7 +51,7 @@ public class BibliographicReference extends AbstractDescribable implements Seria
     private Boolean retracted = false;
 
     /**
-     * @deprecated  never used
+     * @deprecated never used
      */
     @Deprecated
     private Set<Characteristic> annotations = new HashSet<>();
@@ -58,6 +60,25 @@ public class BibliographicReference extends AbstractDescribable implements Seria
     private Set<Keyword> keywords = new HashSet<>();
     private Set<Compound> chemicals = new HashSet<>();
 
+    @Override
+    @DocumentId
+    public Long getId() {
+        return super.getId();
+    }
+
+    @Override
+    @Field
+    public String getName() {
+        return super.getName();
+    }
+
+    @Override
+    @Field
+    public String getDescription() {
+        return super.getDescription();
+    }
+
+    @Field
     public String getAbstractText() {
         return this.abstractText;
     }
@@ -69,6 +90,7 @@ public class BibliographicReference extends AbstractDescribable implements Seria
     /**
      * @return A version of the abstract with inserted markup (e.g., abbreviation expansions, part-of-speech)
      */
+    @Field
     public String getAnnotatedAbstract() {
         return this.annotatedAbstract;
     }
@@ -87,6 +109,7 @@ public class BibliographicReference extends AbstractDescribable implements Seria
         this.annotations = annotations;
     }
 
+    @Field
     public String getAuthorList() {
         return this.authorList;
     }
@@ -95,6 +118,7 @@ public class BibliographicReference extends AbstractDescribable implements Seria
         this.authorList = authorList;
     }
 
+    @IndexedEmbedded
     public Set<Compound> getChemicals() {
         return this.chemicals;
     }
@@ -125,6 +149,7 @@ public class BibliographicReference extends AbstractDescribable implements Seria
     /**
      * @return URI of the full text on the publisher's web site.
      */
+    @Field(analyze = Analyze.NO)
     public String getFullTextUri() {
         return this.fullTextUri;
     }
@@ -141,6 +166,7 @@ public class BibliographicReference extends AbstractDescribable implements Seria
         this.issue = issue;
     }
 
+    @IndexedEmbedded
     public Set<Keyword> getKeywords() {
         return this.keywords;
     }
@@ -149,6 +175,7 @@ public class BibliographicReference extends AbstractDescribable implements Seria
         this.keywords = keywords;
     }
 
+    @IndexedEmbedded
     public Set<MedicalSubjectHeading> getMeshTerms() {
         return this.meshTerms;
     }
@@ -165,6 +192,7 @@ public class BibliographicReference extends AbstractDescribable implements Seria
         this.pages = pages;
     }
 
+    @IndexedEmbedded
     public DatabaseEntry getPubAccession() {
         return this.pubAccession;
     }
@@ -197,6 +225,7 @@ public class BibliographicReference extends AbstractDescribable implements Seria
         this.publisher = publisher;
     }
 
+    @Field
     public String getTitle() {
         return this.title;
     }

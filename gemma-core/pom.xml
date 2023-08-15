@@ -257,6 +257,13 @@
             <version>${lucene.version}</version>
         </dependency>
 
+        <!-- Hibernate Search (latest for Hibernate and Lucene) -->
+        <dependency>
+            <groupId>org.hibernate</groupId>
+            <artifactId>hibernate-search-orm</artifactId>
+            <version>4.4.6.Final</version>
+        </dependency>
+
         <!-- Apache Commons -->
         <dependency>
             <groupId>org.apache.commons</groupId>
