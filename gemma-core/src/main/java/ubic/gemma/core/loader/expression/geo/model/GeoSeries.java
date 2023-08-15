@@ -250,10 +250,6 @@ public class GeoSeries extends GeoData {
         this.contributers = contributers;
     }
 
-    public Collection<GeoDataset> getDatasets() {
-        return this.dataSets;
-    }
-
     /**
      * @return Returns the type.
      */
