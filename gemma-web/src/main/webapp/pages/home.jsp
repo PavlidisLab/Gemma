@@ -49,9 +49,17 @@
                 software packages <a href="https://doi.org/doi:10.18129/B9.bioc.gemma.R">gemma.R</a> (R/Bioconductor)
                 and <a href="https://github.com/PavlidisLab/gemmapy">gemmapy</a> (Python).
             </p>
-            <img src="${pageContext.request.contextPath}/images/slideShow/bioconductor-logo.png"
-                 alt="Bioconductor Logo"
-                 width="200"/>
+            <a href="https://doi.org/doi:10.18129/B9.bioc.gemma.R">
+                <img src="${pageContext.request.contextPath}/images/slideShow/bioconductor-logo.png"
+                     alt="Bioconductor Logo"
+                     width="200"
+                     style="margin-right: 15px;"/>
+            </a>
+            <a href="https://pypi.org/project/gemmapy/">
+                <img src="${pageContext.request.contextPath}/images/slideShow/pypi-logo.svg"
+                     alt="PyPi Logo"
+                     width="100"/>
+            </a>
         </div>
         <div style="display:flex; justify-content: space-between; margin-bottom: 40px;">
             <p style="margin-right: 15px;">
