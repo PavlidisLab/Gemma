@@ -13,6 +13,7 @@ import ubic.gemma.model.genome.gene.GeneSet;
 import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 
 /**
  * Search source that provides {@link SearchResult} from a search engine.
@@ -50,7 +51,6 @@ public interface SearchSource {
         return Collections.emptyList();
     }
 
-    @SuppressWarnings("unused")
     default Collection<SearchResult<CompositeSequence>> searchCompositeSequence( SearchSettings settings ) throws SearchException {
         return Collections.emptyList();
     }
@@ -65,7 +65,10 @@ public interface SearchSource {
      */
     @Deprecated
     default Collection<SearchResult<?>> searchCompositeSequenceAndGene( SearchSettings settings ) throws SearchException {
-        return Collections.emptyList();
+        Collection<SearchResult<?>> results = new HashSet<>();
+        results.addAll( this.searchBioSequence( settings ) );
+        results.addAll( this.searchGene( settings ) );
+        return results;
     }
 
     default Collection<SearchResult<ExpressionExperiment>> searchExpressionExperiment( SearchSettings settings ) throws SearchException {

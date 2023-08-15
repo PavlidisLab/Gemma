@@ -18,7 +18,6 @@
     <bean id="schedulerFactoryBean" class="org.springframework.scheduling.quartz.SchedulerFactoryBean">
         <property name="triggers">
             <list>
-                <ref local="indexTrigger"/>
                 <ref local="arrayDesignReportTrigger"/>
                 <ref local="expressionExperimentReportTrigger"/>
                 <ref local="whatsNewTrigger"/>
@@ -41,11 +40,6 @@
         <property name="jobDetail" ref="batchInfoDetail"/>
         <!-- every day at 00:30:00 -->
         <property name="cronExpression" value="0 30 0 * * ?"/>
-    </bean>
-    <bean id="indexTrigger" class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
-        <property name="jobDetail" ref="indexJobDetail"/>
-        <!-- every saturday at 01:15:00 -->
-        <property name="cronExpression" value="0 15 1 ? * SAT"/>
     </bean>
     <bean id="expressionExperimentReportTrigger" class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
         <property name="jobDetail" ref="expressionExperimentReportJobDetail"/>
@@ -100,11 +94,6 @@
         <property name="concurrent" value="false"/>
         <property name="targetMethod" value="recalculateBatchInfo"/>
     </bean>
-    <bean id="indexJobDetail" class="ubic.gemma.web.scheduler.SecureMethodInvokingJobDetailFactoryBean">
-        <property name="targetObject" ref="indexService"/>
-        <property name="concurrent" value="false"/>
-        <property name="targetMethod" value="indexAll"/>
-    </bean>
     <bean id="arrayDesignReportJobDetail"
           class="ubic.gemma.web.scheduler.SecureMethodInvokingJobDetailFactoryBean">
         <property name="targetObject" ref="arrayDesignReportService"/>
@@ -138,5 +127,4 @@
     <bean id="tableMaintenanceUtil" class="ubic.gemma.persistence.service.TableMaintenanceUtilImpl"/>
     <bean id="whatsNewService" class="ubic.gemma.core.analysis.report.WhatsNewServiceImpl"/>
     <bean id="arrayDesignReportService" class="ubic.gemma.core.analysis.report.ArrayDesignReportServiceImpl"/>
-    <bean id="indexService" class="ubic.gemma.core.search.indexer.IndexServiceImpl"/>
 </beans>
