@@ -21,7 +21,7 @@ import java.util.Collection;
  */
 @Component
 @Scope("prototype")
-public class ExpressionExperimentLoadTaskImpl extends AbstractTask<TaskResult, ExpressionExperimentLoadTaskCommand>
+public class ExpressionExperimentLoadTaskImpl extends AbstractTask<ExpressionExperimentLoadTaskCommand>
         implements ExpressionExperimentLoadTask {
 
     private final Log log = LogFactory.getLog( this.getClass().getName() );

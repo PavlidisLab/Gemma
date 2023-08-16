@@ -34,7 +34,7 @@ public class TaskCommandToTaskMatcherImpl implements TaskCommandToTaskMatcher {
     private ApplicationContext applicationContext;
 
     @Override
-    public Task<?, TaskCommand> match( TaskCommand taskCommand ) {
+    public Task<TaskCommand> match( TaskCommand taskCommand ) {
         Class<?> taskClass = taskCommand.getTaskClass();
         if ( taskClass == null )
             throw new IllegalArgumentException( "Task is not set for " + taskCommand.getClass().getSimpleName() );
@@ -43,7 +43,7 @@ public class TaskCommandToTaskMatcherImpl implements TaskCommandToTaskMatcher {
          * Get instance of the bean that allows running the task. For remote tasks this is run on the worker, for local
          * tasks in process.
          */
-        @SuppressWarnings("unchecked") Task<?, TaskCommand> task = ( Task<?, TaskCommand> ) applicationContext
+        @SuppressWarnings("unchecked") Task<TaskCommand> task = ( Task<TaskCommand> ) applicationContext
                 .getBean( taskClass );
         if ( task == null )
             throw new IllegalArgumentException( "Task bean is not found for " + taskClass.getSimpleName() );

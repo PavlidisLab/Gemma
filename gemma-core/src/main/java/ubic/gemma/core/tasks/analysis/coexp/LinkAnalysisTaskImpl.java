@@ -12,7 +12,7 @@ import ubic.gemma.core.tasks.AbstractTask;
  */
 @Component
 @Scope("prototype")
-public class LinkAnalysisTaskImpl extends AbstractTask<TaskResult, LinkAnalysisTaskCommand>
+public class LinkAnalysisTaskImpl extends AbstractTask<LinkAnalysisTaskCommand>
         implements LinkAnalysisTask {
 
     @Autowired

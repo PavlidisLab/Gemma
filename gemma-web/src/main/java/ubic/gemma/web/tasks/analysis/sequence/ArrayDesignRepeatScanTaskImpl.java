@@ -22,7 +22,7 @@ import java.util.Collection;
  */
 @Component
 @Scope("prototype")
-public class ArrayDesignRepeatScanTaskImpl extends AbstractTask<TaskResult, ArrayDesignRepeatScanTaskCommand>
+public class ArrayDesignRepeatScanTaskImpl extends AbstractTask<ArrayDesignRepeatScanTaskCommand>
         implements ArrayDesignRepeatScanTask {
 
     @Autowired

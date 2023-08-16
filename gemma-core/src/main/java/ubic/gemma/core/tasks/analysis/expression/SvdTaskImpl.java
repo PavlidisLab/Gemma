@@ -29,7 +29,7 @@ import ubic.gemma.core.tasks.AbstractTask;
  */
 @Component
 @Scope("prototype")
-public class SvdTaskImpl extends AbstractTask<TaskResult, SvdTaskCommand> implements SvdTask {
+public class SvdTaskImpl extends AbstractTask<SvdTaskCommand> implements SvdTask {
 
     private final Log log = LogFactory.getLog( SvdTask.class.getName() );
 

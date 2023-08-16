@@ -43,7 +43,7 @@ import java.util.HashSet;
 @Component
 @Scope("prototype")
 public class DifferentialExpressionAnalysisTaskImpl
-        extends AbstractTask<TaskResult, DifferentialExpressionAnalysisTaskCommand>
+        extends AbstractTask<DifferentialExpressionAnalysisTaskCommand>
         implements DifferentialExpressionAnalysisTask {
 
     private static final Log log = LogFactory.getLog( DifferentialExpressionAnalysisTask.class.getName() );

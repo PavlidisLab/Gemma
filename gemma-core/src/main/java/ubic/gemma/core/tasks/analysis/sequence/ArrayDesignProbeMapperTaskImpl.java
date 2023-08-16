@@ -15,7 +15,7 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
  */
 @Component
 @Scope("prototype")
-public class ArrayDesignProbeMapperTaskImpl extends AbstractTask<TaskResult, ArrayDesignProbeMapTaskCommand>
+public class ArrayDesignProbeMapperTaskImpl extends AbstractTask<ArrayDesignProbeMapTaskCommand>
         implements ArrayDesignProbeMapperTask {
 
     @Autowired

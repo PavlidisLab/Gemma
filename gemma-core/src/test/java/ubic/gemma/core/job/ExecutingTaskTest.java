@@ -14,25 +14,20 @@
  */
 package ubic.gemma.core.job;
 
-import gemma.gsec.authentication.UserDetailsImpl;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.concurrent.DelegatingSecurityContextCallable;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import ubic.gemma.core.job.executor.common.ExecutingTask;
-import ubic.gemma.core.security.authentication.UserManager;
 import ubic.gemma.core.tasks.AbstractTask;
 import ubic.gemma.core.tasks.Task;
 import ubic.gemma.core.util.test.BaseSpringContextTest;
 
-import java.util.Date;
 import java.util.Objects;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -58,10 +53,10 @@ public class ExecutingTaskTest extends BaseSpringContextTest {
     @Test
     public void testOrderOfExecutionFailure() {
         TaskCommand taskCommand = new TaskCommand();
-        Task<TaskResult, TaskCommand> task = new FailureTestTask();
+        Task<TaskCommand> task = new FailureTestTask();
         task.setTaskCommand( taskCommand );
 
-        ExecutingTask<TaskResult> executingTask = new ExecutingTask<>( task, taskCommand.getTaskId() );
+        ExecutingTask executingTask = new ExecutingTask( task, taskCommand.getTaskId() );
         ExecutingTask.TaskLifecycleHandler lifecycleHandler = mock( ExecutingTask.TaskLifecycleHandler.class );
         executingTask.setLifecycleHandler( lifecycleHandler );
 
@@ -92,10 +87,10 @@ public class ExecutingTaskTest extends BaseSpringContextTest {
     @Test
     public void testOrderOfExecutionSuccess() {
         TaskCommand taskCommand = new TaskCommand();
-        Task<TaskResult, TaskCommand> task = new SuccessTestTask();
+        Task<TaskCommand> task = new SuccessTestTask();
         task.setTaskCommand( taskCommand );
 
-        ExecutingTask<TaskResult> executingTask = new ExecutingTask<>( task, taskCommand.getTaskId() );
+        ExecutingTask executingTask = new ExecutingTask( task, taskCommand.getTaskId() );
         ExecutingTask.TaskLifecycleHandler lifecycleHandler = mock( ExecutingTask.TaskLifecycleHandler.class );
         executingTask.setLifecycleHandler( lifecycleHandler );
 
@@ -122,7 +117,7 @@ public class ExecutingTaskTest extends BaseSpringContextTest {
 
         assertNotSame( executingUserAuth, launchingUserAuth );
 
-        Task<TaskResult, TaskCommand> task = new SuccessTestTask();
+        Task<TaskCommand> task = new SuccessTestTask();
         task.setTaskCommand( taskCommand );
 
         final Authentication[] authenticationAfterInitialize = new Authentication[1];
@@ -130,7 +125,7 @@ public class ExecutingTaskTest extends BaseSpringContextTest {
         final Authentication[] authenticationAfterSuccess = new Authentication[1];
         final Authentication[] authenticationAfterComplete = new Authentication[1];
 
-        ExecutingTask<TaskResult> executingTask = new ExecutingTask<>( task, taskCommand.getTaskId() );
+        ExecutingTask executingTask = new ExecutingTask( task, taskCommand.getTaskId() );
         executingTask.setLifecycleHandler( new ExecutingTask.TaskLifecycleHandler() {
 
             @Override
@@ -179,9 +174,9 @@ public class ExecutingTaskTest extends BaseSpringContextTest {
         }
     }
 
-    private static class FailureTestTask extends AbstractTask<TaskResult, TaskCommand> {
+    private static class FailureTestTask extends AbstractTask<TaskCommand> {
 
-        private static Log log = LogFactory.getLog( FailureTestTask.class );
+        private static final Log log = LogFactory.getLog( FailureTestTask.class );
 
         @Override
         public TaskResult call() {
@@ -190,9 +185,9 @@ public class ExecutingTaskTest extends BaseSpringContextTest {
         }
     }
 
-    private static class SuccessTestTask extends AbstractTask<TaskResult, TaskCommand> {
+    private static class SuccessTestTask extends AbstractTask<TaskCommand> {
 
-        private static Log log = LogFactory.getLog( SuccessTestTask.class );
+        private static final Log log = LogFactory.getLog( SuccessTestTask.class );
 
         @Override
         public TaskResult call() {

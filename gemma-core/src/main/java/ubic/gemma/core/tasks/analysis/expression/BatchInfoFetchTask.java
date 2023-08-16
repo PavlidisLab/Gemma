@@ -14,12 +14,11 @@
  */
 package ubic.gemma.core.tasks.analysis.expression;
 
-import ubic.gemma.core.job.TaskResult;
 import ubic.gemma.core.tasks.Task;
 
 /**
  * @author anton
  *
  */
-public interface BatchInfoFetchTask extends Task<TaskResult, BatchInfoFetchTaskCommand> {
+public interface BatchInfoFetchTask extends Task<BatchInfoFetchTaskCommand> {
 }

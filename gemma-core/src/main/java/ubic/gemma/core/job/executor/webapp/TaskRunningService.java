@@ -31,9 +31,9 @@ public interface TaskRunningService {
     /**
      * @return the submittedTasks
      */
-    Collection<SubmittedTask<? extends TaskResult>> getSubmittedTasks();
+    Collection<SubmittedTask> getSubmittedTasks();
 
-    <T extends Task> String submitTask( T task );
+    <T extends Task<?>> String submitTask( T task );
 
     /**
      * Submit a task and track its progress. When it is finished, the results can be retrieved with checkResult(). Tasks

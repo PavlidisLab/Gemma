@@ -1644,7 +1644,7 @@ public class ExpressionExperimentController {
      *
      * @author pavlidis
      */
-    private class RemoveExpressionExperimentTask extends AbstractTask<TaskResult, TaskCommand> {
+    private class RemoveExpressionExperimentTask extends AbstractTask<TaskCommand> {
 
         public RemoveExpressionExperimentTask( TaskCommand command ) {
             super( command );
@@ -1659,7 +1659,7 @@ public class ExpressionExperimentController {
         }
     }
 
-    private class RemovePubMed extends AbstractTask<TaskResult, TaskCommand> {
+    private class RemovePubMed extends AbstractTask<TaskCommand> {
 
         public RemovePubMed( TaskCommand command ) {
             super( command );
@@ -1685,7 +1685,7 @@ public class ExpressionExperimentController {
 
     }
 
-    private class UpdatePubMed extends AbstractTask<TaskResult, UpdatePubMedCommand> {
+    private class UpdatePubMed extends AbstractTask<UpdatePubMedCommand> {
 
         public UpdatePubMed( UpdatePubMedCommand command ) {
             super( command );
