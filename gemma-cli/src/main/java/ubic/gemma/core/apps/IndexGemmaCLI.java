@@ -2,15 +2,13 @@ package ubic.gemma.core.apps;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
-import org.hibernate.SessionFactory;
-import org.hibernate.search.FullTextSession;
-import org.hibernate.search.Search;
-import org.hibernate.search.impl.SimpleIndexingProgressMonitor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import ubic.gemma.core.search.IndexerService;
 import ubic.gemma.core.util.AbstractCLI;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
+import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
@@ -27,6 +25,9 @@ import java.util.stream.Collectors;
 @Component
 public class IndexGemmaCLI extends AbstractCLI {
 
+    /**
+     * A list of all searchable entities this CLI supports.
+     */
     private static final IndexableEntity[] indexableEntities = {
             new IndexableEntity( "g", "genes", Gene.class ),
             new IndexableEntity( "e", "datasets", ExpressionExperiment.class ),
@@ -42,16 +43,16 @@ public class IndexGemmaCLI extends AbstractCLI {
     private static class IndexableEntity {
         String option;
         String description;
-        Class<?> clazz;
+        Class<? extends Identifiable> clazz;
     }
 
     @Autowired
-    private SessionFactory sessionFactory;
+    private IndexerService indexerService;
 
     @Value("${gemma.search.dir}")
     private File searchDir;
 
-    private final Set<Class<?>> classesToIndex = new HashSet<>();
+    private final Set<Class<? extends Identifiable>> classesToIndex = new HashSet<>();
 
     @Override
     public String getCommandName() {
@@ -89,19 +90,12 @@ public class IndexGemmaCLI extends AbstractCLI {
     protected void doWork() throws Exception {
         if ( classesToIndex.isEmpty() ) {
             log.info( String.format( "All entities will be indexed under %s.", searchDir.getAbsolutePath() ) );
+            indexerService.index( numThreads );
         } else {
             log.info( String.format( "The following entities will be indexed under %s:\n\t%s",
                     searchDir.getAbsolutePath(),
                     classesToIndex.stream().map( Class::getName ).collect( Collectors.joining( "\n\t" ) ) ) );
-        }
-        FullTextSession fullTextSession = Search.getFullTextSession( sessionFactory.openSession() );
-        try {
-            fullTextSession.createIndexer( classesToIndex.toArray( new Class[0] ) )
-                    .threadsToLoadObjects( numThreads )
-                    .progressMonitor( new SimpleIndexingProgressMonitor() )
-                    .startAndWait();
-        } finally {
-            fullTextSession.close();
+            indexerService.index( classesToIndex, numThreads );
         }
     }
 }
