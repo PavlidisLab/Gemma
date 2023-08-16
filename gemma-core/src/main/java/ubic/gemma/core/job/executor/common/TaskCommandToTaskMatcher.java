@@ -15,7 +15,6 @@
 package ubic.gemma.core.job.executor.common;
 
 import ubic.gemma.core.job.TaskCommand;
-import ubic.gemma.core.job.TaskResult;
 import ubic.gemma.core.tasks.Task;
 
 /**
@@ -23,5 +22,5 @@ import ubic.gemma.core.tasks.Task;
  * @author anton
  */
 public interface TaskCommandToTaskMatcher {
-    Task<? extends TaskResult, ? extends TaskCommand> match( TaskCommand taskCommand );
+    Task<? extends TaskCommand> match( TaskCommand taskCommand );
 }

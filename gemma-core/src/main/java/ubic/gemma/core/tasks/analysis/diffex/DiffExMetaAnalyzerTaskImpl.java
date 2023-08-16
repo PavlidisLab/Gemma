@@ -18,7 +18,7 @@ import ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaA
  */
 @Component
 @Scope("prototype")
-public class DiffExMetaAnalyzerTaskImpl extends AbstractTask<TaskResult, DiffExMetaAnalyzerTaskCommand> implements
+public class DiffExMetaAnalyzerTaskImpl extends AbstractTask<DiffExMetaAnalyzerTaskCommand> implements
         DiffExMetaAnalyzerTask {
 
     @Autowired

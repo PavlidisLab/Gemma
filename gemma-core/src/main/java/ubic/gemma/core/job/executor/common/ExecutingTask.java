@@ -14,7 +14,6 @@
  */
 package ubic.gemma.core.job.executor.common;
 
-import ubic.gemma.core.job.TaskCommand;
 import ubic.gemma.core.job.TaskResult;
 import ubic.gemma.core.tasks.Task;
 
@@ -25,23 +24,22 @@ import java.util.concurrent.Callable;
  *
  * @author anton
  */
-public class ExecutingTask<T extends TaskResult> implements Callable<T> {
+public class ExecutingTask implements Callable<TaskResult> {
 
-    private final Task<T, ?> task;
+    private final Task<?> task;
     private final String taskId;
 
     // Does not survive serialization.
     private transient TaskLifecycleHandler lifecycleHandler;
 
-    public ExecutingTask( Task<T, ?> task, String taskId ) {
+    public ExecutingTask( Task<?> task, String taskId ) {
         this.task = task;
         this.taskId = taskId;
     }
 
-    @SuppressWarnings("unchecked")
     @Override
-    public final T call() {
-        T result;
+    public final TaskResult call() {
+        TaskResult result;
 
         if ( lifecycleHandler == null ) {
             throw new IllegalStateException( "No lifecycle handler has been configured for this executing task." );
@@ -49,12 +47,12 @@ public class ExecutingTask<T extends TaskResult> implements Callable<T> {
 
         lifecycleHandler.onStart();
 
-        try ( ProgressUpdateAppender.ProgressUpdateContext progressUpdateContext = new ProgressUpdateAppender.ProgressUpdateContext( lifecycleHandler::onProgress ) ) {
+        try ( ProgressUpdateAppender.ProgressUpdateContext ignored = new ProgressUpdateAppender.ProgressUpdateContext( lifecycleHandler::onProgress ) ) {
             // From here we are running as user who submitted the task.
             result = this.task.call();
         } catch ( Exception e ) {
             // result is an exception
-            result = ( T ) new TaskResult( taskId );
+            result = new TaskResult( taskId );
             result.setException( e );
         }
 

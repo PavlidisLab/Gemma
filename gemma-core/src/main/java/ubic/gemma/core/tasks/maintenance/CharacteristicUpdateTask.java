@@ -19,8 +19,7 @@
 
 package ubic.gemma.core.tasks.maintenance;
 
-import ubic.gemma.core.job.TaskResult;
 import ubic.gemma.core.tasks.Task;
 
-public interface CharacteristicUpdateTask extends Task<TaskResult, CharacteristicUpdateCommand> {}
+public interface CharacteristicUpdateTask extends Task<CharacteristicUpdateCommand> {}
 

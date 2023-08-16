@@ -53,7 +53,7 @@ import java.util.stream.Collectors;
 @Component
 @Scope("prototype")
 public class DifferentialExpressionSearchTaskImpl
-        extends AbstractTask<TaskResult, DifferentialExpressionSearchTaskCommand>
+        extends AbstractTask<DifferentialExpressionSearchTaskCommand>
         implements DifferentialExpressionSearchTask {
 
     private static final Log log = LogFactory.getLog( DifferentialExpressionSearchTaskImpl.class );

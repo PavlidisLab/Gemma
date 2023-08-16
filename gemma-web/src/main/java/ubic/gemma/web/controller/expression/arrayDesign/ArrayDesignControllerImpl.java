@@ -672,7 +672,7 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
     /**
      * Inner class used for building array design summary
      */
-    class GenerateArraySummaryLocalTask extends AbstractTask<TaskResult, TaskCommand> {
+    class GenerateArraySummaryLocalTask extends AbstractTask<TaskCommand> {
 
         public GenerateArraySummaryLocalTask( TaskCommand command ) {
             super( command );
@@ -697,7 +697,7 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
     /**
      * Inner class used for deleting array designs
      */
-    class RemoveArrayLocalTask extends AbstractTask<TaskResult, TaskCommand> {
+    class RemoveArrayLocalTask extends AbstractTask<TaskCommand> {
 
         public RemoveArrayLocalTask( TaskCommand command ) {
             super( command );

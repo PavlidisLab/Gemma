@@ -49,7 +49,7 @@ import java.util.Map;
  */
 @Component
 @Scope("prototype")
-public class CharacteristicUpdateTaskImpl extends AbstractTask<TaskResult, CharacteristicUpdateCommand>
+public class CharacteristicUpdateTaskImpl extends AbstractTask<CharacteristicUpdateCommand>
         implements CharacteristicUpdateTask {
 
     private static final Log log = LogFactory.getLog( CharacteristicUpdateTask.class );

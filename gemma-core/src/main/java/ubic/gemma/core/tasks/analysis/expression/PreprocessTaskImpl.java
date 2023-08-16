@@ -30,7 +30,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 @Component
 @Scope("prototype")
 public class PreprocessTaskImpl
-        extends AbstractTask<TaskResult, PreprocessTaskCommand>
+        extends AbstractTask<PreprocessTaskCommand>
         implements PreprocessExperimentTask {
 
     @Autowired

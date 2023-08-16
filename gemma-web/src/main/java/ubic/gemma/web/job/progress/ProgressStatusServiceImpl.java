@@ -58,7 +58,7 @@ public class ProgressStatusServiceImpl implements ProgressStatusService {
         if ( taskId == null )
             throw new IllegalArgumentException( "task id cannot be null" );
 
-        SubmittedTask<?> submittedTask = taskRunningService.getSubmittedTask( taskId );
+        SubmittedTask submittedTask = taskRunningService.getSubmittedTask( taskId );
         if ( submittedTask == null )
             throw new IllegalArgumentException( "Couldn't find task with task id: " + taskId );
 
@@ -69,7 +69,7 @@ public class ProgressStatusServiceImpl implements ProgressStatusService {
 
     @Override
     public Object checkResult( String taskId ) throws Exception {
-        SubmittedTask<?> submittedTask = taskRunningService.getSubmittedTask( taskId );
+        SubmittedTask submittedTask = taskRunningService.getSubmittedTask( taskId );
         if ( submittedTask == null )
             return null;
 
@@ -99,7 +99,7 @@ public class ProgressStatusServiceImpl implements ProgressStatusService {
     public synchronized List<ProgressData> getProgressStatus( String taskId ) {
         if ( taskId == null )
             throw new IllegalArgumentException( "task id cannot be null" );
-        SubmittedTask<?> task = taskRunningService.getSubmittedTask( taskId );
+        SubmittedTask task = taskRunningService.getSubmittedTask( taskId );
 
         List<ProgressData> statusObjects = new Vector<>();
 
@@ -152,7 +152,7 @@ public class ProgressStatusServiceImpl implements ProgressStatusService {
 
     @Override
     public SubmittedTaskValueObject getSubmittedTask( String taskId ) {
-        SubmittedTask<?> task = taskRunningService.getSubmittedTask( taskId );
+        SubmittedTask task = taskRunningService.getSubmittedTask( taskId );
         if ( task == null )
             return null;
         return new SubmittedTaskValueObject( task );
