@@ -158,23 +158,23 @@ public class HibernateSearchSource implements SearchSource {
                 .setProjection( projection )
                 .list();
         return results.stream()
-                .map( r -> searchResultFromRow( r, settings, highlighter, analyzer, clazz ) )
+                .map( r -> searchResultFromRow( r, settings, highlighter, analyzer, fields, clazz ) )
                 .collect( Collectors.toList() );
     }
 
-    private <T extends Identifiable> SearchResult<T> searchResultFromRow( Object[] row, SearchSettings settings, @Nullable Highlighter highlighter, @Nullable Analyzer analyzer, Class<T> clazz ) {
+    private <T extends Identifiable> SearchResult<T> searchResultFromRow( Object[] row, SearchSettings settings, @Nullable Highlighter highlighter, @Nullable Analyzer analyzer, String[] fields, Class<T> clazz ) {
         if ( settings.isFillResults() ) {
             //noinspection unchecked
-            return SearchResult.from( clazz, ( T ) row[0], ( Float ) row[1], highlighter != null && analyzer != null ? highlightDocument( ( Document ) row[2], highlighter, analyzer ) : null, "hibernateSearch" );
+            return SearchResult.from( clazz, ( T ) row[0], ( Float ) row[1], highlighter != null && analyzer != null ? highlightDocument( ( Document ) row[2], highlighter, analyzer, fields ) : null, "hibernateSearch" );
         } else {
-            return SearchResult.from( clazz, ( Long ) row[0], ( Float ) row[1], highlighter != null && analyzer != null ? highlightDocument( ( Document ) row[2], highlighter, analyzer ) : null, "hibernateSearch" );
+            return SearchResult.from( clazz, ( Long ) row[0], ( Float ) row[1], highlighter != null && analyzer != null ? highlightDocument( ( Document ) row[2], highlighter, analyzer, fields ) : null, "hibernateSearch" );
         }
     }
 
-    private Map<String, String> highlightDocument( Document document, Highlighter highlighter, Analyzer analyzer ) {
+    private Map<String, String> highlightDocument( Document document, Highlighter highlighter, Analyzer analyzer, String[] fields ) {
         Map<String, String> highlights = new HashMap<>();
         for ( Fieldable field : document.getFields() ) {
-            if ( !field.isTokenized() || field.isBinary() ) {
+            if ( !field.isTokenized() || field.isBinary() || !ArrayUtils.contains( fields, field.name() ) ) {
                 continue;
             }
             try {
