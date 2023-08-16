@@ -34,7 +34,7 @@ public class IndexerServiceImpl implements IndexerService {
         try {
             fullTextSession.createIndexer( classesToIndex )
                     .threadsToLoadObjects( numThreads )
-                    .progressMonitor( new SimpleIndexingProgressMonitor() )
+                    .progressMonitor( new SimpleIndexingProgressMonitor( 10000 ) )
                     .startAndWait();
         } catch ( InterruptedException e ) {
             Thread.currentThread().interrupt();
