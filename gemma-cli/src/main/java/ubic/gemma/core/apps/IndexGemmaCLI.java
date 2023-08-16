@@ -1,6 +1,5 @@
 package ubic.gemma.core.apps;
 
-import lombok.Value;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
 import org.hibernate.SessionFactory;
@@ -8,6 +7,7 @@ import org.hibernate.search.FullTextSession;
 import org.hibernate.search.Search;
 import org.hibernate.search.impl.SimpleIndexingProgressMonitor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import ubic.gemma.core.util.AbstractCLI;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
@@ -19,6 +19,7 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.gene.GeneSet;
 
+import java.io.File;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -37,7 +38,7 @@ public class IndexGemmaCLI extends AbstractCLI {
             new IndexableEntity( "y", "gene sets", GeneSet.class )
     };
 
-    @Value
+    @lombok.Value
     private static class IndexableEntity {
         String option;
         String description;
@@ -46,6 +47,9 @@ public class IndexGemmaCLI extends AbstractCLI {
 
     @Autowired
     private SessionFactory sessionFactory;
+
+    @Value("${gemma.search.dir}")
+    private File searchDir;
 
     private final Set<Class<?>> classesToIndex = new HashSet<>();
 
@@ -84,9 +88,10 @@ public class IndexGemmaCLI extends AbstractCLI {
     @Override
     protected void doWork() throws Exception {
         if ( classesToIndex.isEmpty() ) {
-            log.info( "All entities will be indexed." );
+            log.info( String.format( "All entities will be indexed under %s.", searchDir.getAbsolutePath() ) );
         } else {
-            log.info( String.format( "The following entities will be indexed:\n\t%s",
+            log.info( String.format( "The following entities will be indexed under %s:\n\t%s",
+                    searchDir.getAbsolutePath(),
                     classesToIndex.stream().map( Class::getName ).collect( Collectors.joining( "\n\t" ) ) ) );
         }
         FullTextSession fullTextSession = Search.getFullTextSession( sessionFactory.openSession() );
