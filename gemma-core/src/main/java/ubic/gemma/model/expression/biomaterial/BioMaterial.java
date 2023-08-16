@@ -62,11 +62,6 @@ public class BioMaterial extends AbstractDescribable implements gemma.gsec.model
         return super.getName();
     }
 
-    @Override
-    public String getDescription() {
-        return super.getDescription();
-    }
-
     @ContainedIn
     public Set<BioAssay> getBioAssaysUsedIn() {
         return this.bioAssaysUsedIn;

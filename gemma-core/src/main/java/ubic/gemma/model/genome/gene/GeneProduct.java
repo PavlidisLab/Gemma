@@ -102,11 +102,6 @@ public class GeneProduct extends ChromosomeFeature {
         return super.getName();
     }
 
-    @Override
-    public String getDescription() {
-        return super.getDescription();
-    }
-
     @IndexedEmbedded
     public Set<DatabaseEntry> getAccessions() {
         return this.accessions;

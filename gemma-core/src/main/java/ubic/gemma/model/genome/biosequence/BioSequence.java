@@ -79,11 +79,6 @@ public class BioSequence extends AbstractDescribable implements Serializable {
         return super.getName();
     }
 
-    @Override
-    public String getDescription() {
-        return super.getDescription();
-    }
-
     public Set<BioSequence2GeneProduct> getBioSequence2GeneProduct() {
         return this.bioSequence2GeneProduct;
     }
