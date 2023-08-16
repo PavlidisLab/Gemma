@@ -18,10 +18,7 @@
  */
 package ubic.gemma.model.expression.biomaterial;
 
-import org.hibernate.search.annotations.Analyze;
-import org.hibernate.search.annotations.DocumentId;
-import org.hibernate.search.annotations.Field;
-import org.hibernate.search.annotations.Indexed;
+import org.hibernate.search.annotations.*;
 import ubic.gemma.model.common.AbstractDescribable;
 
 import java.io.Serializable;
@@ -57,7 +54,6 @@ public class Compound extends AbstractDescribable implements Serializable {
     }
 
     @Override
-    @Field
     public String getDescription() {
         return super.getDescription();
     }

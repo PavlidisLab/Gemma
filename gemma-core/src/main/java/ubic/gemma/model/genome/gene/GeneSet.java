@@ -20,18 +20,15 @@
 package ubic.gemma.model.genome.gene;
 
 import gemma.gsec.model.SecuredNotChild;
-import org.hibernate.search.annotations.DocumentId;
-import org.hibernate.search.annotations.Field;
-import org.hibernate.search.annotations.Indexed;
-import org.hibernate.search.annotations.IndexedEmbedded;
+import org.hibernate.search.annotations.*;
 import ubic.gemma.model.common.AbstractAuditable;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.genome.Gene;
 
-import java.util.Set;
 import java.util.HashSet;
+import java.util.Set;
 
 /**
  * A grouping of genes that share a common relationship
@@ -66,7 +63,7 @@ public class GeneSet extends AbstractAuditable implements SecuredNotChild {
     }
 
     @Override
-    @Field
+    @Field(store = Store.YES)
     public String getDescription() {
         return super.getDescription();
     }

@@ -8,6 +8,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.ContextConfiguration;
 import ubic.gemma.core.util.test.BaseDatabaseTest;
+import ubic.gemma.model.common.description.BibliographicReference;
+import ubic.gemma.model.common.search.Highlighter;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
@@ -62,12 +64,26 @@ public class HibernateSearchSourceTest extends BaseDatabaseTest {
         fts.persist( taxon );
         ExpressionExperiment ee = new ExpressionExperiment();
         ee.setShortName( "hello" );
+        ee.setDescription( "hello world!" );
         ee.setTaxon( taxon );
+        BibliographicReference bibref = new BibliographicReference();
+        fts.persist( bibref );
+        bibref.setTitle( "The greatest hello world!" );
+        ee.setPrimaryPublication( bibref );
         fts.persist( ee );
         fts.flushToIndexes();
 
-        assertThat( hibernateSearchSource.searchExpressionExperiment( SearchSettings.expressionExperimentSearch( "hello" ) ) )
-                .extracting( "resultObject" )
-                .contains( ee );
+        assertThat( hibernateSearchSource.searchExpressionExperiment( SearchSettings.expressionExperimentSearch( "hello" )
+                .withHighlighter( new TestHighlighter() ) ) )
+                .anySatisfy( result -> {
+                    assertThat( result.getResultObject() ).isEqualTo( ee );
+                    assertThat( result.getHighlights() )
+                            .containsEntry( "description", "<b>hello</b> world!" )
+                            .containsEntry( "primaryPublication.title", "The greatest <b>hello</b> world!" );
+                } );
+    }
+
+    private static final class TestHighlighter implements Highlighter {
+
     }
 }

@@ -104,7 +104,7 @@ public class ArrayDesign extends AbstractAuditable implements gemma.gsec.model.S
     }
 
     @Override
-    @Field
+    @Field(store = Store.YES)
     public String getDescription() {
         return super.getDescription();
     }

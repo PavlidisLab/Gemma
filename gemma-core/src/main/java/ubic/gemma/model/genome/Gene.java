@@ -18,7 +18,6 @@
  */
 package ubic.gemma.model.genome;
 
-import org.hibernate.annotations.Index;
 import org.hibernate.search.annotations.*;
 import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
 import ubic.gemma.model.common.description.DatabaseEntry;
@@ -141,7 +140,6 @@ public class Gene extends ChromosomeFeature {
     }
 
     @Override
-    @Field
     public String getDescription() {
         return super.getDescription();
     }

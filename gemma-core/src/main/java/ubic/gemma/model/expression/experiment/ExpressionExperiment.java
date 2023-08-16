@@ -119,7 +119,7 @@ public class ExpressionExperiment extends BioAssaySet implements SecuredNotChild
     }
 
     @Override
-    @Field
+    @Field(store = Store.YES)
     public String getDescription() {
         return super.getDescription();
     }

@@ -1,6 +1,13 @@
 package ubic.gemma.core.search.source;
 
+import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.lang3.ArrayUtils;
+import org.apache.lucene.analysis.Analyzer;
+import org.apache.lucene.document.Document;
+import org.apache.lucene.document.Fieldable;
+import org.apache.lucene.search.Query;
+import org.apache.lucene.search.highlight.Formatter;
+import org.apache.lucene.search.highlight.*;
 import org.hibernate.SessionFactory;
 import org.hibernate.search.FullTextQuery;
 import org.hibernate.search.FullTextSession;
@@ -21,25 +28,30 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.gene.GeneSet;
 
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
+import javax.annotation.Nullable;
+import java.io.IOException;
+import java.util.*;
 import java.util.stream.Collectors;
+
+import static org.apache.commons.text.StringEscapeUtils.escapeHtml4;
 
 /**
  * Search source based on Hibernate Search.
  * @author poirigui
  */
 @Component
+@CommonsLog
 public class HibernateSearchSource implements SearchSource {
 
-    private static final String[] PUBLICATION_FIELDS = new String[] { "name", "description", "abstractText",
-            "annotatedAbstract", "authorList", "chemicals.name", "chemicals.description", "chemicals.registryNumber",
+
+    private static final String[] PLATFORM_FIELDS = { "shortName", "name", "description", "alternateNames.name", "externalReferences.accession" };
+    private static final String[] PUBLICATION_FIELDS = new String[] { "name", "abstractText",
+            "authorList", "chemicals.name", "chemicals.registryNumber",
             "fullTextUri", "keywords.term", "meshTerms.term", "pubAccession.accession", "title" };
 
     private static String[] DATASET_FIELDS = {
             "shortName", "name", "description", "bioAssays.name", "bioAssays.description", "bioAssays.accession.accession",
-            "bioAssays.sampleUsed.name", "bioAssays.sampleUsed.description", "bioAssays.sampleUsed.characteristics.value",
+            "bioAssays.sampleUsed.name", "bioAssays.sampleUsed.characteristics.value",
             "bioAssays.sampleUsed.characteristics.valueUri", "characteristics.value", "characteristics.valueUri",
             "experimentalDesign.name", "experimentalDesign.description", "experimentalDesign.experimentalFactors.name",
             "experimentalDesign.experimentalFactors.description",
@@ -49,8 +61,8 @@ public class HibernateSearchSource implements SearchSource {
             "experimentalDesign.experimentalFactors.factorValues.characteristics.valueUri" };
 
     private static final String[] GENE_FIELDS = {
-            "name", "description", "accessions.accession", "aliases.alias",
-            "ensemblId", "ncbiGeneId", "officialName", "officialSymbol", "products.name", "products.description",
+            "name", "accessions.accession", "aliases.alias",
+            "ensemblId", "ncbiGeneId", "officialName", "officialSymbol", "products.name",
             "products.ncbiGi", "products.accessions.accession", "products.previousNcbiId"
     };
 
@@ -58,9 +70,9 @@ public class HibernateSearchSource implements SearchSource {
             "name", "description", "characteristics.value", "characteristics.valueUri", "sourceAccession.accession"
     };
 
-    private static String[] EXPERIMENT_SET_FIELDS = { "name", "description" };
+    private static final String[] EXPERIMENT_SET_FIELDS = { "name", "description" };
 
-    private static final String[] BIO_SEQUENCE_FIELDS = { "name", "description", "sequenceDatabaseEntry.accession" };
+    private static final String[] BIO_SEQUENCE_FIELDS = { "name", "sequenceDatabaseEntry.accession" };
 
     private static String[] COMPOSITE_SEQUENCE_FIELDS = { "name", "description" };
 
@@ -82,7 +94,7 @@ public class HibernateSearchSource implements SearchSource {
 
     @Override
     public Collection<SearchResult<ArrayDesign>> searchArrayDesign( SearchSettings settings ) {
-        return searchFor( settings, ArrayDesign.class, "shortName", "name", "description", "alternateNames.name", "externalReferences.accession" );
+        return searchFor( settings, ArrayDesign.class, PLATFORM_FIELDS );
     }
 
     @Override
@@ -124,22 +136,66 @@ public class HibernateSearchSource implements SearchSource {
         FullTextSession fullTextSession = Search.getFullTextSession( sessionFactory.getCurrentSession() );
         QueryBuilder queryBuilder = fullTextSession.getSearchFactory().buildQueryBuilder().forEntity( clazz )
                 .get();
+        Query query = queryBuilder.keyword()
+                .onFields( fields )
+                .matching( settings.getQuery() )
+                .createQuery();
+        Highlighter highlighter;
+        Analyzer analyzer;
+        String[] projection;
+        if ( settings.getHighlighter() != null ) {
+            highlighter = new Highlighter( new SimpleHTMLFormatter(), new QueryScorer( query ) );
+            analyzer = fullTextSession.getSearchFactory().getAnalyzer( clazz );
+            projection = new String[] { settings.isFillResults() ? FullTextQuery.THIS : FullTextQuery.ID, FullTextQuery.SCORE, FullTextQuery.DOCUMENT };
+        } else {
+            highlighter = null;
+            analyzer = null;
+            projection = new String[] { settings.isFillResults() ? FullTextQuery.THIS : FullTextQuery.ID, FullTextQuery.SCORE };
+        }
         //noinspection unchecked
         List<Object[]> results = fullTextSession
-                .createFullTextQuery( queryBuilder.keyword().onFields( fields ).matching( settings.getQuery() ).createQuery(), clazz )
-                .setProjection( settings.isFillResults() ? FullTextQuery.THIS : FullTextQuery.ID, FullTextQuery.SCORE )
+                .createFullTextQuery( query, clazz )
+                .setProjection( projection )
                 .list();
         return results.stream()
-                .map( r -> searchResultFromRow( r, settings, clazz ) )
+                .map( r -> searchResultFromRow( r, settings, highlighter, analyzer, clazz ) )
                 .collect( Collectors.toList() );
     }
 
-    private <T extends Identifiable> SearchResult<T> searchResultFromRow( Object[] row, SearchSettings settings, Class<T> clazz ) {
+    private <T extends Identifiable> SearchResult<T> searchResultFromRow( Object[] row, SearchSettings settings, @Nullable Highlighter highlighter, @Nullable Analyzer analyzer, Class<T> clazz ) {
         if ( settings.isFillResults() ) {
             //noinspection unchecked
-            return SearchResult.from( clazz, ( T ) row[0], ( Float ) row[1], "hibernateSearch" );
+            return SearchResult.from( clazz, ( T ) row[0], ( Float ) row[1], highlighter != null && analyzer != null ? highlightDocument( ( Document ) row[2], highlighter, analyzer ) : null, "hibernateSearch" );
         } else {
-            return SearchResult.from( clazz, ( Long ) row[0], ( Float ) row[1], "hibernateSearch" );
+            return SearchResult.from( clazz, ( Long ) row[0], ( Float ) row[1], highlighter != null && analyzer != null ? highlightDocument( ( Document ) row[2], highlighter, analyzer ) : null, "hibernateSearch" );
+        }
+    }
+
+    private Map<String, String> highlightDocument( Document document, Highlighter highlighter, Analyzer analyzer ) {
+        Map<String, String> highlights = new HashMap<>();
+        for ( Fieldable field : document.getFields() ) {
+            if ( !field.isTokenized() || field.isBinary() ) {
+                continue;
+            }
+            try {
+                String bestFragment = highlighter.getBestFragment( analyzer, field.name(), field.stringValue() );
+                if ( bestFragment != null ) {
+                    highlights.put( field.name(), bestFragment );
+                }
+            } catch ( IOException | InvalidTokenOffsetsException e ) {
+                log.warn( String.format( "Failed to highlight field %s.", field.name() ) );
+            }
+        }
+        return highlights;
+    }
+
+    private static class SimpleHTMLFormatter implements Formatter {
+        @Override
+        public String highlightTerm( String originalText, TokenGroup tokenGroup ) {
+            if ( tokenGroup.getTotalScore() <= 0 ) {
+                return escapeHtml4( originalText );
+            }
+            return "<b>" + escapeHtml4( originalText ) + "</b>";
         }
     }
 }

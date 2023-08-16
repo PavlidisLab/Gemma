@@ -1,7 +1,5 @@
 package ubic.gemma.model.common.search;
 
-import org.apache.lucene.document.Document;
-import org.apache.lucene.search.Explanation;
 import org.springframework.context.MessageSourceResolvable;
 
 import javax.annotation.Nullable;

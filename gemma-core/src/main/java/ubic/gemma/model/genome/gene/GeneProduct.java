@@ -103,7 +103,6 @@ public class GeneProduct extends ChromosomeFeature {
     }
 
     @Override
-    @Field
     public String getDescription() {
         return super.getDescription();
     }

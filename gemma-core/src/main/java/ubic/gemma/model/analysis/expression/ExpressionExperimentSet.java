@@ -23,7 +23,7 @@ import gemma.gsec.model.Securable;
 import org.hibernate.search.annotations.DocumentId;
 import org.hibernate.search.annotations.Field;
 import org.hibernate.search.annotations.Indexed;
-import org.hibernate.search.annotations.IndexedEmbedded;
+import org.hibernate.search.annotations.Store;
 import ubic.gemma.model.common.AbstractAuditable;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.genome.Taxon;
@@ -65,7 +65,7 @@ public class ExpressionExperimentSet extends AbstractAuditable implements Secura
     }
 
     @Override
-    @Field
+    @Field(store = Store.YES)
     public String getDescription() {
         return super.getDescription();
     }
