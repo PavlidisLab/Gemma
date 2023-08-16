@@ -23,6 +23,7 @@ import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.lang3.time.StopWatch;
+import org.apache.lucene.search.highlight.Formatter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
 import org.springframework.context.MessageSourceResolvable;
@@ -37,6 +38,7 @@ import org.springframework.web.servlet.view.RedirectView;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.search.SearchResult;
 import ubic.gemma.core.search.SearchService;
+import ubic.gemma.core.search.lucene.SimpleHTMLFormatter;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
 import ubic.gemma.model.common.Identifiable;
@@ -55,6 +57,7 @@ import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.web.propertyeditor.TaxonPropertyEditor;
 import ubic.gemma.web.remote.JsonReaderResponse;
 
+import javax.annotation.Nullable;
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -150,7 +153,7 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
     }
 
     @EqualsAndHashCode
-    private class Highlighter implements ubic.gemma.model.common.search.Highlighter {
+    private class Highlighter implements ubic.gemma.core.search.Highlighter {
 
         private final Locale locale;
 
@@ -172,6 +175,11 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
             return matchedText;
         }
 
+        @Nullable
+        @Override
+        public Formatter getLuceneFormatter() {
+            return new SimpleHTMLFormatter();
+        }
     }
 
     @Override

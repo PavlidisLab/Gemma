@@ -25,6 +25,7 @@ import lombok.EqualsAndHashCode;
 import lombok.Value;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.io.FilenameUtils;
+import org.apache.lucene.search.highlight.Formatter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
 import org.springframework.context.MessageSourceResolvable;
@@ -39,6 +40,7 @@ import ubic.gemma.core.analysis.preprocess.svd.SVDService;
 import ubic.gemma.core.analysis.preprocess.svd.SVDValueObject;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
 import ubic.gemma.core.search.SearchResult;
+import ubic.gemma.core.search.lucene.SimpleHTMLFormatter;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisValueObject;
 import ubic.gemma.model.common.auditAndSecurity.eventType.BatchInformationFetchingEvent;
 import ubic.gemma.model.common.description.AnnotationValueObject;
@@ -125,7 +127,7 @@ public class DatasetsWebService {
     private HttpServletRequest request;
 
     @EqualsAndHashCode
-    private class Highlighter implements ubic.gemma.model.common.search.Highlighter {
+    private class Highlighter implements ubic.gemma.core.search.Highlighter {
 
         private final Locale locale;
 
@@ -150,6 +152,11 @@ public class DatasetsWebService {
             return String.format( "**[%s](%s)** via *%s*", termLabel, reconstructedUri, messageSource.getMessage( clazz, locale ) );
         }
 
+        @Nullable
+        @Override
+        public Formatter getLuceneFormatter() {
+            return new SimpleHTMLFormatter();
+        }
     }
 
 

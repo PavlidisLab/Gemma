@@ -23,9 +23,8 @@ import lombok.Data;
 import lombok.Singular;
 import lombok.With;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.lucene.document.Document;
-import org.apache.lucene.search.Explanation;
 import org.springframework.context.MessageSourceResolvable;
+import ubic.gemma.core.search.Highlighter;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -36,7 +35,6 @@ import ubic.gemma.model.genome.Taxon;
 
 import javax.annotation.Nullable;
 import java.io.Serializable;
-import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -206,7 +204,7 @@ public class SearchSettings implements Serializable {
      * A custom highlighter.
      */
     @Nullable
-    private Highlighter highlighter;
+    private transient Highlighter highlighter;
 
     /**
      * Get this query, trimmed.

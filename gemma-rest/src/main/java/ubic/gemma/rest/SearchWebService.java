@@ -10,6 +10,7 @@ import lombok.Value;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.apache.lucene.search.highlight.Formatter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
 import org.springframework.context.MessageSourceResolvable;
@@ -18,6 +19,7 @@ import org.springframework.stereotype.Service;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.search.SearchResult;
 import ubic.gemma.core.search.SearchService;
+import ubic.gemma.core.search.lucene.SimpleHTMLFormatter;
 import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.description.BibliographicReferenceValueObject;
@@ -94,7 +96,7 @@ public class SearchWebService {
      * Highlights search result.
      */
     @EqualsAndHashCode
-    private class Highlighter implements ubic.gemma.model.common.search.Highlighter {
+    private class Highlighter implements ubic.gemma.core.search.Highlighter {
 
         private final Locale locale;
 
@@ -111,6 +113,12 @@ public class SearchWebService {
             } catch ( UnsupportedEncodingException e ) {
                 throw new RuntimeException( e );
             }
+        }
+
+        @Nullable
+        @Override
+        public Formatter getLuceneFormatter() {
+            return new SimpleHTMLFormatter();
         }
     }
 

@@ -1,5 +1,6 @@
 package ubic.gemma.core.search.source;
 
+import org.apache.lucene.search.highlight.Formatter;
 import org.hibernate.search.FullTextSession;
 import org.hibernate.search.Search;
 import org.junit.Test;
@@ -7,9 +8,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.ContextConfiguration;
+import ubic.gemma.core.search.Highlighter;
+import ubic.gemma.core.search.lucene.SimpleHTMLFormatter;
 import ubic.gemma.core.util.test.BaseDatabaseTest;
 import ubic.gemma.model.common.description.BibliographicReference;
-import ubic.gemma.model.common.search.Highlighter;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
@@ -85,5 +87,9 @@ public class HibernateSearchSourceTest extends BaseDatabaseTest {
 
     private static final class TestHighlighter implements Highlighter {
 
+        @Override
+        public Formatter getLuceneFormatter() {
+            return new SimpleHTMLFormatter();
+        }
     }
 }
