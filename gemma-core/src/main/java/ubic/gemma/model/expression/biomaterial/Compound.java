@@ -53,11 +53,6 @@ public class Compound extends AbstractDescribable implements Serializable {
         return super.getName();
     }
 
-    @Override
-    public String getDescription() {
-        return super.getDescription();
-    }
-
     /**
      * @return CAS registry number (see http://www.cas.org/)
      */

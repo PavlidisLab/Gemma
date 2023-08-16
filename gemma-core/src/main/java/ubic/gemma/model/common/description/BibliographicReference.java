@@ -73,11 +73,6 @@ public class BibliographicReference extends AbstractDescribable implements Seria
         return super.getName();
     }
 
-    @Override
-    public String getDescription() {
-        return super.getDescription();
-    }
-
     @Field(store = Store.YES)
     public String getAbstractText() {
         return this.abstractText;
