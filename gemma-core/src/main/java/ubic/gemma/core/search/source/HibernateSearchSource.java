@@ -6,8 +6,9 @@ import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Fieldable;
 import org.apache.lucene.search.Query;
-import org.apache.lucene.search.highlight.Formatter;
-import org.apache.lucene.search.highlight.*;
+import org.apache.lucene.search.highlight.Highlighter;
+import org.apache.lucene.search.highlight.InvalidTokenOffsetsException;
+import org.apache.lucene.search.highlight.QueryScorer;
 import org.hibernate.SessionFactory;
 import org.hibernate.search.FullTextQuery;
 import org.hibernate.search.FullTextSession;
@@ -32,8 +33,6 @@ import javax.annotation.Nullable;
 import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
-
-import static org.apache.commons.text.StringEscapeUtils.escapeHtml4;
 
 /**
  * Search source based on Hibernate Search.
@@ -143,8 +142,8 @@ public class HibernateSearchSource implements SearchSource {
         Highlighter highlighter;
         Analyzer analyzer;
         String[] projection;
-        if ( settings.getHighlighter() != null ) {
-            highlighter = new Highlighter( new SimpleHTMLFormatter(), new QueryScorer( query ) );
+        if ( settings.getHighlighter() != null && settings.getHighlighter().getLuceneFormatter() != null ) {
+            highlighter = new Highlighter( settings.getHighlighter().getLuceneFormatter(), new QueryScorer( query ) );
             analyzer = fullTextSession.getSearchFactory().getAnalyzer( clazz );
             projection = new String[] { settings.isFillResults() ? FullTextQuery.THIS : FullTextQuery.ID, FullTextQuery.SCORE, FullTextQuery.DOCUMENT };
         } else {
@@ -187,15 +186,5 @@ public class HibernateSearchSource implements SearchSource {
             }
         }
         return highlights;
-    }
-
-    private static class SimpleHTMLFormatter implements Formatter {
-        @Override
-        public String highlightTerm( String originalText, TokenGroup tokenGroup ) {
-            if ( tokenGroup.getTotalScore() <= 0 ) {
-                return escapeHtml4( originalText );
-            }
-            return "<b>" + escapeHtml4( originalText ) + "</b>";
-        }
     }
 }

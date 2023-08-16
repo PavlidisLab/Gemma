@@ -1,9 +1,9 @@
-package ubic.gemma.model.common.search;
+package ubic.gemma.core.search;
 
+import org.apache.lucene.search.highlight.Formatter;
 import org.springframework.context.MessageSourceResolvable;
 
 import javax.annotation.Nullable;
-import java.io.Serializable;
 import java.util.Map;
 
 /**
@@ -11,7 +11,7 @@ import java.util.Map;
  * @see ubic.gemma.core.search.SearchResult#setHighlights(Map)
  * @author poirigui
  */
-public interface Highlighter extends Serializable {
+public interface Highlighter {
 
     /**
      * Produce a highlight for a given ontology term.
@@ -23,6 +23,14 @@ public interface Highlighter extends Serializable {
      */
     @Nullable
     default String highlightTerm( String termUri, String termLabel, MessageSourceResolvable className ) {
+        return null;
+    }
+
+    /**
+     * Obtain a formatter for Lucene hits.
+     */
+    @Nullable
+    default Formatter getLuceneFormatter() {
         return null;
     }
 }
