@@ -317,7 +317,7 @@ public class GeoServiceImpl extends AbstractGeoService {
             series.getSampleCorrespondence().removeSample( gs.getGeoAccession() );
         }
 
-        for ( GeoDataset gds : series.getDatasets() ) {
+        for ( GeoDataset gds : series.getDataSets() ) {
             for ( GeoSubset gSub : gds.getSubsets() ) {
                 for ( GeoSample gs : toSkip ) {
                     gSub.getSamples().remove( gs );
@@ -386,7 +386,7 @@ public class GeoServiceImpl extends AbstractGeoService {
             series.getSampleCorrespondence().removeSample( gs.getGeoAccession() );
         }
 
-        for ( GeoDataset gds : series.getDatasets() ) {
+        for ( GeoDataset gds : series.getDataSets() ) {
             for ( GeoSubset gSub : gds.getSubsets() ) {
                 for ( GeoSample gs : toSkip ) {
                     gSub.getSamples().remove( gs );
@@ -463,10 +463,10 @@ public class GeoServiceImpl extends AbstractGeoService {
      */
     private void confirmPlatformUniqueness( GeoSeries series, boolean doSampleMatching ) {
         Set<GeoPlatform> platforms = this.getPlatforms( series );
-        if ( platforms.size() == series.getDatasets().size() ) {
+        if ( platforms.size() == series.getDataSets().size() ) {
             return;
         }
-        Collection<GeoDataset> collapsed = this.potentiallyCombineDatasets( series.getDatasets() );
+        Collection<GeoDataset> collapsed = this.potentiallyCombineDatasets( series.getDataSets() );
         series.setDataSets( collapsed );
         DatasetCombiner combiner = new DatasetCombiner( doSampleMatching );
         GeoSampleCorrespondence corr = combiner.findGSECorrespondence( series );
@@ -533,7 +533,7 @@ public class GeoServiceImpl extends AbstractGeoService {
             /*
              * Never bother with columns like "COL" or "ROW" as these are positions.
              */
-            if ( geoColName.toUpperCase().equals( "ROW" ) || geoColName.toUpperCase().equals( "COL" ) ) {
+            if ( geoColName.equalsIgnoreCase( "ROW" ) || geoColName.equalsIgnoreCase( "COL" ) ) {
                 continue;
             }
 
@@ -615,8 +615,8 @@ public class GeoServiceImpl extends AbstractGeoService {
     private Set<GeoPlatform> getPlatforms( GeoSeries series ) {
         Set<GeoPlatform> platforms = new HashSet<>();
 
-        if ( series.getDatasets().size() > 0 ) {
-            for ( GeoDataset dataset : series.getDatasets() ) {
+        if ( series.getDataSets().size() > 0 ) {
+            for ( GeoDataset dataset : series.getDataSets() ) {
                 platforms.add( dataset.getPlatform() );
             }
         } else {
@@ -780,7 +780,7 @@ public class GeoServiceImpl extends AbstractGeoService {
         for ( GeoDataset dataset : datasets ) {
             GeoPlatform platform = dataset.getPlatform();
             if ( !seenPlatforms.containsKey( platform ) ) {
-                seenPlatforms.put( platform, new HashSet<GeoDataset>() );
+                seenPlatforms.put( platform, new HashSet<>() );
             }
             seenPlatforms.get( platform ).add( dataset );
         }
