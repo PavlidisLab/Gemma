@@ -46,6 +46,7 @@ public class BibliographicReference extends AbstractDescribable implements Seria
     private String abstractText;
     private String citation;
     private Date publicationDate;
+    @Deprecated
     private String annotatedAbstract;
     private DatabaseEntry pubAccession;
     private Boolean retracted = false;
@@ -73,12 +74,11 @@ public class BibliographicReference extends AbstractDescribable implements Seria
     }
 
     @Override
-    @Field
     public String getDescription() {
         return super.getDescription();
     }
 
-    @Field
+    @Field(store = Store.YES)
     public String getAbstractText() {
         return this.abstractText;
     }
@@ -90,11 +90,12 @@ public class BibliographicReference extends AbstractDescribable implements Seria
     /**
      * @return A version of the abstract with inserted markup (e.g., abbreviation expansions, part-of-speech)
      */
-    @Field
+    @Deprecated
     public String getAnnotatedAbstract() {
         return this.annotatedAbstract;
     }
 
+    @Deprecated
     public void setAnnotatedAbstract( String annotatedAbstract ) {
         this.annotatedAbstract = annotatedAbstract;
     }
@@ -109,7 +110,7 @@ public class BibliographicReference extends AbstractDescribable implements Seria
         this.annotations = annotations;
     }
 
-    @Field
+    @Field(store = Store.YES)
     public String getAuthorList() {
         return this.authorList;
     }
@@ -225,7 +226,7 @@ public class BibliographicReference extends AbstractDescribable implements Seria
         this.publisher = publisher;
     }
 
-    @Field
+    @Field(store = Store.YES)
     public String getTitle() {
         return this.title;
     }

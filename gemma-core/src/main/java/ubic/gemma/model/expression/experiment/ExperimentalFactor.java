@@ -121,7 +121,7 @@ public class ExperimentalFactor extends AbstractDescribable implements SecuredCh
     }
 
     @Override
-    @Field
+    @Field(store = Store.YES)
     public String getDescription() {
         return super.getDescription();
     }

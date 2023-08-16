@@ -18,10 +18,7 @@
  */
 package ubic.gemma.model.genome.biosequence;
 
-import org.hibernate.search.annotations.DocumentId;
-import org.hibernate.search.annotations.Field;
-import org.hibernate.search.annotations.Indexed;
-import org.hibernate.search.annotations.IndexedEmbedded;
+import org.hibernate.search.annotations.*;
 import ubic.gemma.model.association.BioSequence2GeneProduct;
 import ubic.gemma.model.common.AbstractDescribable;
 import ubic.gemma.model.common.description.DatabaseEntry;
@@ -83,7 +80,6 @@ public class BioSequence extends AbstractDescribable implements Serializable {
     }
 
     @Override
-    @Field
     public String getDescription() {
         return super.getDescription();
     }

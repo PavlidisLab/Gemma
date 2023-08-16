@@ -63,7 +63,6 @@ public class BioMaterial extends AbstractDescribable implements gemma.gsec.model
     }
 
     @Override
-    @Field
     public String getDescription() {
         return super.getDescription();
     }

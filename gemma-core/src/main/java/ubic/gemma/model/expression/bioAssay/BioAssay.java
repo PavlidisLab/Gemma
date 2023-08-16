@@ -108,7 +108,7 @@ public class BioAssay extends AbstractDescribable implements gemma.gsec.model.Se
     }
 
     @Override
-    @Field
+    @Field(store = Store.YES)
     public String getDescription() {
         return super.getDescription();
     }

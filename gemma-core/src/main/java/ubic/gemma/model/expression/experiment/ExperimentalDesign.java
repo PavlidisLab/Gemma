@@ -50,7 +50,7 @@ public class ExperimentalDesign extends AbstractDescribable implements gemma.gse
     }
 
     @Override
-    @Field
+    @Field(store = Store.YES)
     public String getDescription() {
         return super.getDescription();
     }
