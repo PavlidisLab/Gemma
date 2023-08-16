@@ -18,6 +18,11 @@
  */
 package ubic.gemma.model.expression.arrayDesign;
 
+import org.hibernate.search.annotations.DocumentId;
+import org.hibernate.search.annotations.Field;
+import org.hibernate.search.annotations.Indexed;
+
+@Indexed
 public class AlternateName implements java.io.Serializable {
 
     /**
@@ -36,6 +41,7 @@ public class AlternateName implements java.io.Serializable {
     public AlternateName() {
     }
 
+    @DocumentId
     public Long getId() {
         return this.id;
     }
@@ -45,6 +51,7 @@ public class AlternateName implements java.io.Serializable {
         this.id = id;
     }
 
+    @Field
     public String getName() {
         return this.name;
     }

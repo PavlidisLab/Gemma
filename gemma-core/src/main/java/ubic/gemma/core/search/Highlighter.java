@@ -1,11 +1,9 @@
-package ubic.gemma.model.common.search;
+package ubic.gemma.core.search;
 
-import org.compass.core.impl.DefaultCompassHighlightedText;
+import org.apache.lucene.search.highlight.Formatter;
 import org.springframework.context.MessageSourceResolvable;
 
 import javax.annotation.Nullable;
-import java.io.Serializable;
-import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -13,17 +11,7 @@ import java.util.Map;
  * @see ubic.gemma.core.search.SearchResult#setHighlights(Map)
  * @author poirigui
  */
-public interface Highlighter extends Serializable {
-
-    @Nullable
-    default Map<String, String> highlightCompassHits( DefaultCompassHighlightedText compassHighlights ) {
-        Map<String, String> result = new HashMap<>( compassHighlights.size() );
-        //noinspection unchecked
-        for ( Map.Entry<String, String> e : ( ( Map<String, String> ) compassHighlights ).entrySet() ) {
-            result.put( e.getKey(), e.getValue().trim() );
-        }
-        return result;
-    }
+public interface Highlighter {
 
     /**
      * Produce a highlight for a given ontology term.
@@ -35,6 +23,14 @@ public interface Highlighter extends Serializable {
      */
     @Nullable
     default String highlightTerm( String termUri, String termLabel, MessageSourceResolvable className ) {
+        return null;
+    }
+
+    /**
+     * Obtain a formatter for Lucene hits.
+     */
+    @Nullable
+    default Formatter getLuceneFormatter() {
         return null;
     }
 }

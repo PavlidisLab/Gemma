@@ -24,6 +24,7 @@ import lombok.Singular;
 import lombok.With;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.context.MessageSourceResolvable;
+import ubic.gemma.core.search.Highlighter;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -203,7 +204,7 @@ public class SearchSettings implements Serializable {
      * A custom highlighter.
      */
     @Nullable
-    private Highlighter highlighter;
+    private transient Highlighter highlighter;
 
     /**
      * Get this query, trimmed.
@@ -274,7 +275,7 @@ public class SearchSettings implements Serializable {
     /**
      * Highlight a given ontology term.
      * <p>
-     * This is a shorthand for {@link #getHighlighter()} and {@link Highlighter#highlightTerm(String, String, Class)}
+     * This is a shorthand for {@link #getHighlighter()} and {@link Highlighter#highlightTerm(String, String, MessageSourceResolvable)}
      * that deals with a potentially null highlighter.
      * @see #setHighlighter(Highlighter)
      * @return a highlight, or null if no provider is set or the provider returns null

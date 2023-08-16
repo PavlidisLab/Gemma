@@ -30,7 +30,7 @@ public class SubmittedTaskValueObject implements Serializable {
     public SubmittedTaskValueObject() {
     }
 
-    public SubmittedTaskValueObject( SubmittedTask<?> submittedTask ) {
+    public SubmittedTaskValueObject( SubmittedTask submittedTask ) {
         this.taskId = submittedTask.getTaskId();
         this.taskType = submittedTask.getTaskCommand().getTaskClass() == null ?
                 "Not specified" :
@@ -48,13 +48,13 @@ public class SubmittedTaskValueObject implements Serializable {
     }
 
     public static Collection<SubmittedTaskValueObject> convert2ValueObjects(
-            Collection<SubmittedTask<? extends TaskResult>> submittedTasks ) {
+            Collection<SubmittedTask> submittedTasks ) {
 
         Collection<SubmittedTaskValueObject> converted = new HashSet<>();
         if ( submittedTasks == null )
             return converted;
 
-        for ( SubmittedTask<?> submittedTask : submittedTasks ) {
+        for ( SubmittedTask submittedTask : submittedTasks ) {
             converted.add( new SubmittedTaskValueObject( submittedTask ) );
         }
 

@@ -78,6 +78,8 @@
 				<!-- debugging options -->
 				<prop key="hibernate.show_sql">${gemma.hibernate.show_sql}</prop>
 				<prop key="hibernate.format_sql">${gemma.hibernate.format_sql}</prop>
+				<prop key="hibernate.search.lucene_version">LUCENE_36</prop>
+				<prop key="hibernate.search.default.indexBase">${gemma.search.dir}</prop>
 			</props>
 		</property>
 	</bean>

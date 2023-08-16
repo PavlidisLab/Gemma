@@ -257,17 +257,11 @@
             <version>${lucene.version}</version>
         </dependency>
 
-        <!-- Compass (fork compatible with Lucene 3.6.2) -->
+        <!-- Hibernate Search (latest for Hibernate and Lucene) -->
         <dependency>
-            <groupId>ubc.chibi.compass-fork</groupId>
-            <artifactId>compass-fork</artifactId>
-            <version>1.2.0</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>commons-el</groupId>
-                    <artifactId>commons-el</artifactId>
-                </exclusion>
-            </exclusions>
+            <groupId>org.hibernate</groupId>
+            <artifactId>hibernate-search-orm</artifactId>
+            <version>4.4.6.Final</version>
         </dependency>
 
         <!-- Apache Commons -->

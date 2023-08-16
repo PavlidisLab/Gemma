@@ -229,7 +229,7 @@ public class ExpressionExperimentDataFetchController {
         return null;
     }
 
-    class CoExpressionDataWriterJob extends AbstractTask<TaskResult, ExpressionExperimentDataFetchCommand> {
+    class CoExpressionDataWriterJob extends AbstractTask<ExpressionExperimentDataFetchCommand> {
 
         protected Log log = LogFactory.getLog( this.getClass().getName() );
 
@@ -265,7 +265,7 @@ public class ExpressionExperimentDataFetchController {
     /**
      * @author keshav
      */
-    class DataWriterJob extends AbstractTask<TaskResult, ExpressionExperimentDataFetchCommand> {
+    class DataWriterJob extends AbstractTask<ExpressionExperimentDataFetchCommand> {
 
         protected Log log = LogFactory.getLog( this.getClass().getName() );
 
@@ -389,7 +389,7 @@ public class ExpressionExperimentDataFetchController {
 
     }
 
-    class DiffExpressionDataWriterTask extends AbstractTask<TaskResult, ExpressionExperimentDataFetchCommand> {
+    class DiffExpressionDataWriterTask extends AbstractTask<ExpressionExperimentDataFetchCommand> {
 
         protected Log log = LogFactory.getLog( this.getClass().getName() );
 

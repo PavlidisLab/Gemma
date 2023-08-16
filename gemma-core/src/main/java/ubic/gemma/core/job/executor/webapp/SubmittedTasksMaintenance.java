@@ -7,7 +7,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import ubic.gemma.core.job.SubmittedTask;
-import ubic.gemma.core.job.TaskResult;
 
 import java.util.Collection;
 import java.util.Date;
@@ -30,13 +29,13 @@ public class SubmittedTasksMaintenance {
     @Scheduled(fixedDelay = 120000)
     public void doSubmittedTasksMaintenance() {
         // Assumes collection implementing weakly consistent iterator with remove support.
-        Collection<SubmittedTask<? extends TaskResult>> tasks = taskRunningService.getSubmittedTasks();
+        Collection<SubmittedTask> tasks = taskRunningService.getSubmittedTasks();
 
         int numQueued = 0;
         int numRunning = 0;
         int numDone = 0;
         int numCancelled = 0;
-        for ( SubmittedTask<?> task : tasks ) {
+        for ( SubmittedTask task : tasks ) {
             if ( !task.getStatus().equals( SubmittedTask.Status.COMPLETED ) ) {
                 SubmittedTasksMaintenance.log
                         .info( "Checking task: " + task.getTaskCommand().getClass().getSimpleName() + task.getTaskId()

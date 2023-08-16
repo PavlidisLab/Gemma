@@ -18,13 +18,12 @@
  */
 package ubic.gemma.core.tasks.analysis.diffex;
 
-import ubic.gemma.core.job.TaskResult;
 import ubic.gemma.core.tasks.Task;
 
 /**
  * @author Paul
  *
  */
-public interface DiffExMetaAnalyzerTask extends Task<TaskResult, DiffExMetaAnalyzerTaskCommand> {
+public interface DiffExMetaAnalyzerTask extends Task<DiffExMetaAnalyzerTaskCommand> {
 
 }

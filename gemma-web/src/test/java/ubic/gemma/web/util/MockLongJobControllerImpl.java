@@ -47,7 +47,7 @@ public class MockLongJobControllerImpl implements MockLongJobController {
         return taskRunningService.submitTask( new WasteOfTime( command ) );
     }
 
-    static class WasteOfTime extends AbstractTask<TaskResult, TaskCommand> {
+    static class WasteOfTime extends AbstractTask<TaskCommand> {
         protected Log log = LogFactory.getLog( this.getClass().getName() );
 
         public WasteOfTime( TaskCommand command ) {

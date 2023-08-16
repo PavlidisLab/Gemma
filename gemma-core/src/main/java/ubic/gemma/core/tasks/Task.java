@@ -22,7 +22,7 @@ import java.util.concurrent.Callable;
 /**
  * @author anton
  */
-public interface Task<T extends TaskResult, C extends TaskCommand> extends Callable<T> {
+public interface Task<C extends TaskCommand> extends Callable<TaskResult> {
 
     C getTaskCommand();
 

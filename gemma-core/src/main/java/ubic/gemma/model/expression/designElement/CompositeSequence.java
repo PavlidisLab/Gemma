@@ -18,6 +18,7 @@
  */
 package ubic.gemma.model.expression.designElement;
 
+import org.hibernate.search.annotations.*;
 import ubic.gemma.model.common.AbstractDescribable;
 import ubic.gemma.model.common.Describable;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -29,6 +30,7 @@ import java.io.Serializable;
  * A "Probe set" (Affymetrix) or a "Probe" (other types of arrays). The sequence referred to is a "target sequence"
  * (Affymetrix), oligo (oligo arrays) or cDNA clone/EST (cDNA arrays)
  */
+@Indexed
 public class CompositeSequence extends AbstractDescribable implements Serializable {
 
     /**
@@ -75,6 +77,24 @@ public class CompositeSequence extends AbstractDescribable implements Serializab
         return result;
     }
 
+    @Override
+    @DocumentId
+    public Long getId() {
+        return super.getId();
+    }
+
+    @Override
+    @Field
+    public String getName() {
+        return super.getName();
+    }
+
+    @Override
+    @Field(store = Store.YES)
+    public String getDescription() {
+        return super.getDescription();
+    }
+
     public ArrayDesign getArrayDesign() {
         return this.arrayDesign;
     }
@@ -86,6 +106,7 @@ public class CompositeSequence extends AbstractDescribable implements Serializab
     /**
      * @return The sequence for this composite sequence.
      */
+    @IndexedEmbedded
     public BioSequence getBiologicalCharacteristic() {
         return this.biologicalCharacteristic;
     }

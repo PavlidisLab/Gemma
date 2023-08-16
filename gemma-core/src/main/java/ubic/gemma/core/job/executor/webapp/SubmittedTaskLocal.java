@@ -34,12 +34,12 @@ import java.util.concurrent.LinkedBlockingDeque;
 /**
  * SubmittedTask implementation representing the task running on local TaskRunningService.
  */
-public class SubmittedTaskLocal<T extends TaskResult> extends SubmittedTaskAbstract<T> {
+public class SubmittedTaskLocal extends SubmittedTaskAbstract {
 
     private final TaskPostProcessing taskPostProcessing;
     private final Deque<String> progressUpdates = new LinkedBlockingDeque<>();
     private final Executor executor;
-    private ListenableFuture<T> future;
+    private ListenableFuture<TaskResult> future;
 
     public SubmittedTaskLocal( TaskCommand taskCommand, TaskPostProcessing taskPostProcessing, Executor executor ) {
         super( taskCommand );
@@ -78,7 +78,7 @@ public class SubmittedTaskLocal<T extends TaskResult> extends SubmittedTaskAbstr
     }
 
     @Override
-    public T getResult() throws ExecutionException, InterruptedException {
+    public TaskResult getResult() throws ExecutionException, InterruptedException {
         // blocking call.
         return this.future.get();
     }
@@ -123,14 +123,14 @@ public class SubmittedTaskLocal<T extends TaskResult> extends SubmittedTaskAbstr
 
     @SuppressWarnings("unused")
         // Possible external use
-    ListenableFuture<T> getFuture() {
+    ListenableFuture<TaskResult> getFuture() {
         return future;
     }
 
     /*
      * Package-private methods, used by TaskRunningService
      */
-    void setFuture( ListenableFuture<T> future ) {
+    void setFuture( ListenableFuture<TaskResult> future ) {
         this.future = future;
     }
 

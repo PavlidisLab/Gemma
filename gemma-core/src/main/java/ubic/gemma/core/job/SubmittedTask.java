@@ -30,7 +30,7 @@ import java.util.concurrent.ExecutionException;
  * @param <T> TaskResult (or subclass) representing type of result of submitted task.
  * @author anton
  */
-public interface SubmittedTask<T extends TaskResult> {
+public interface SubmittedTask {
 
     String getTaskId();
 
@@ -77,7 +77,7 @@ public interface SubmittedTask<T extends TaskResult> {
      * @throws ExecutionException   execution exception
      * @throws InterruptedException interrupted exception
      */
-    T getResult() throws ExecutionException, InterruptedException;
+    TaskResult getResult() throws ExecutionException, InterruptedException;
 
     /**
      * Send cancellation request. It's not guaranteed that this will cancel the task but it will request task

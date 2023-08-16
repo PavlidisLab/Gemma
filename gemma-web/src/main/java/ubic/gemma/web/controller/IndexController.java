@@ -16,7 +16,8 @@ package ubic.gemma.web.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
-import ubic.gemma.core.search.indexer.IndexService;
+import ubic.gemma.core.job.executor.webapp.TaskRunningService;
+import ubic.gemma.core.search.IndexerService;
 import ubic.gemma.core.tasks.maintenance.IndexerTaskCommand;
 
 /**
@@ -26,9 +27,9 @@ import ubic.gemma.core.tasks.maintenance.IndexerTaskCommand;
 public class IndexController {
 
     @Autowired
-    private IndexService indexService;
+    private TaskRunningService taskRunningService;
 
     public String index( IndexerTaskCommand command ) {
-        return this.indexService.index( command );
+        return taskRunningService.submitTaskCommand( command );
     }
 }

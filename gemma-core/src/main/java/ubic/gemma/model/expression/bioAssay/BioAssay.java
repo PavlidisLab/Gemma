@@ -19,6 +19,7 @@
 package ubic.gemma.model.expression.bioAssay;
 
 import gemma.gsec.model.Securable;
+import org.hibernate.search.annotations.*;
 import ubic.gemma.model.common.AbstractDescribable;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -33,6 +34,7 @@ import java.util.Date;
  * don't distinguish between "physical" and "computational" BioAssays, so this is a concrete class. This has several
  * slots that are used specifically to support sequence-based data, but is intended to be generic.
  */
+@Indexed
 public class BioAssay extends AbstractDescribable implements gemma.gsec.model.SecuredChild, Serializable {
 
     private static final long serialVersionUID = -7868768731812964045L;
@@ -93,6 +95,25 @@ public class BioAssay extends AbstractDescribable implements gemma.gsec.model.Se
                 .equals( that.getDescription() );
     }
 
+    @Override
+    @DocumentId
+    public Long getId() {
+        return super.getId();
+    }
+
+    @Override
+    @Field
+    public String getName() {
+        return super.getName();
+    }
+
+    @Override
+    @Field(store = Store.YES)
+    public String getDescription() {
+        return super.getDescription();
+    }
+
+    @IndexedEmbedded
     public DatabaseEntry getAccession() {
         return this.accession;
     }
@@ -101,7 +122,7 @@ public class BioAssay extends AbstractDescribable implements gemma.gsec.model.Se
         this.accession = accession;
     }
 
-    public ubic.gemma.model.expression.arrayDesign.ArrayDesign getArrayDesignUsed() {
+    public ArrayDesign getArrayDesignUsed() {
         return this.arrayDesignUsed;
     }
 
@@ -134,6 +155,7 @@ public class BioAssay extends AbstractDescribable implements gemma.gsec.model.Se
         this.processingDate = processingDate;
     }
 
+    @IndexedEmbedded
     public BioMaterial getSampleUsed() {
         return this.sampleUsed;
     }

@@ -21,26 +21,29 @@ package ubic.gemma.model.expression.experiment;
 
 import gemma.gsec.model.Securable;
 import gemma.gsec.model.SecuredChild;
+import org.hibernate.search.annotations.*;
 import ubic.gemma.model.common.AbstractDescribable;
 import ubic.gemma.model.common.description.Characteristic;
 
 import javax.annotation.Nullable;
 import javax.persistence.Transient;
 import java.io.Serializable;
-import java.util.Set;
 import java.util.HashSet;
+import java.util.Set;
 
 /**
  * ExperimentFactors are the dependent variables of an experiment (e.g., genotype, time, glucose concentration).
  *
  * @author Paul
  */
+@Indexed
 public class ExperimentalFactor extends AbstractDescribable implements SecuredChild, Serializable {
 
     /**
      * The serial version UID of this class. Needed for serialization.
      */
     private static final long serialVersionUID = 4615731059510436891L;
+    @Deprecated
     private Set<Characteristic> annotations = new HashSet<>();
     @Nullable
     private Characteristic category;
@@ -105,6 +108,24 @@ public class ExperimentalFactor extends AbstractDescribable implements SecuredCh
 
     }
 
+    @Override
+    @DocumentId
+    public Long getId() {
+        return super.getId();
+    }
+
+    @Override
+    @Field
+    public String getName() {
+        return super.getName();
+    }
+
+    @Override
+    @Field(store = Store.YES)
+    public String getDescription() {
+        return super.getDescription();
+    }
+
     @Transient
     @Override
     public Securable getSecurityOwner() {
@@ -118,10 +139,12 @@ public class ExperimentalFactor extends AbstractDescribable implements SecuredCh
         this.securityOwner = securityOwner;
     }
 
-    public Set<ubic.gemma.model.common.description.Characteristic> getAnnotations() {
+    @Deprecated
+    public Set<Characteristic> getAnnotations() {
         return this.annotations;
     }
 
+    @Deprecated
     public void setAnnotations( Set<Characteristic> annotations ) {
         this.annotations = annotations;
     }
@@ -132,6 +155,7 @@ public class ExperimentalFactor extends AbstractDescribable implements SecuredCh
      * @return the category or null if annotated automatically from GEO or used as a dummy.
      */
     @Nullable
+    @IndexedEmbedded
     public Characteristic getCategory() {
         return this.category;
     }
@@ -151,7 +175,8 @@ public class ExperimentalFactor extends AbstractDescribable implements SecuredCh
     /**
      * @return The pairing of BioAssay FactorValues with the ExperimentDesign ExperimentFactor.
      */
-    public Set<ubic.gemma.model.expression.experiment.FactorValue> getFactorValues() {
+    @IndexedEmbedded
+    public Set<FactorValue> getFactorValues() {
         return this.factorValues;
     }
 

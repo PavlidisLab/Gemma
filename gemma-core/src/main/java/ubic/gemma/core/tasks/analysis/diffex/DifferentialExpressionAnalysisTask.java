@@ -18,12 +18,11 @@
  */
 package ubic.gemma.core.tasks.analysis.diffex;
 
-import ubic.gemma.core.job.TaskResult;
 import ubic.gemma.core.tasks.Task;
 
 /**
  * @author Paul
  *
  */
-public interface DifferentialExpressionAnalysisTask extends Task<TaskResult, DifferentialExpressionAnalysisTaskCommand> {
+public interface DifferentialExpressionAnalysisTask extends Task<DifferentialExpressionAnalysisTaskCommand> {
 }

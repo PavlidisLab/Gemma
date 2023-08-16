@@ -19,6 +19,7 @@
 package ubic.gemma.model.expression.experiment;
 
 import gemma.gsec.model.Securable;
+import org.hibernate.search.annotations.*;
 import ubic.gemma.model.common.AbstractDescribable;
 import ubic.gemma.model.common.description.Characteristic;
 
@@ -26,6 +27,7 @@ import javax.persistence.Transient;
 import java.io.Serializable;
 import java.util.Set;
 
+@Indexed
 public class ExperimentalDesign extends AbstractDescribable implements gemma.gsec.model.SecuredChild, Serializable {
 
     private static final long serialVersionUID = 1734101852541885497L;
@@ -35,9 +37,28 @@ public class ExperimentalDesign extends AbstractDescribable implements gemma.gse
     private Set<ExperimentalFactor> experimentalFactors = new java.util.HashSet<>();
     private Set<Characteristic> types = new java.util.HashSet<>();
 
+    @Override
+    @DocumentId
+    public Long getId() {
+        return super.getId();
+    }
+
+    @Override
+    @Field
+    public String getName() {
+        return super.getName();
+    }
+
+    @Override
+    @Field(store = Store.YES)
+    public String getDescription() {
+        return super.getDescription();
+    }
+
     /**
      * @return The description of the factors (TimeCourse, Dosage, etc.) that group the BioAssays.
      */
+    @IndexedEmbedded
     public Set<ExperimentalFactor> getExperimentalFactors() {
         return this.experimentalFactors;
     }

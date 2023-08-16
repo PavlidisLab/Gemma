@@ -21,6 +21,10 @@ package ubic.gemma.model.common.description;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
+import org.hibernate.search.annotations.Analyze;
+import org.hibernate.search.annotations.DocumentId;
+import org.hibernate.search.annotations.Field;
+import org.hibernate.search.annotations.Indexed;
 import ubic.gemma.model.association.GOEvidenceCode;
 import ubic.gemma.model.common.AbstractDescribable;
 
@@ -39,6 +43,7 @@ import java.util.Objects;
  *
  * @author Paul
  */
+@Indexed
 public class Characteristic extends AbstractDescribable implements Serializable {
 
     private static final long serialVersionUID = -7242166109264718620L;
@@ -82,9 +87,16 @@ public class Characteristic extends AbstractDescribable implements Serializable 
     public Characteristic() {
     }
 
+    @Override
+    @DocumentId
+    public Long getId() {
+        return super.getId();
+    }
+
     /**
      * @return either the human readable form of the classUri or a free text version if no classUri exists
      */
+    @Field
     public String getCategory() {
         return this.category;
     }
@@ -107,6 +119,7 @@ public class Characteristic extends AbstractDescribable implements Serializable 
      * associations with this.
      */
     @Nullable
+    @Field(analyze = Analyze.NO)
     public String getCategoryUri() {
         return this.categoryUri;
     }
@@ -137,6 +150,7 @@ public class Characteristic extends AbstractDescribable implements Serializable 
     /**
      * @return The human-readable term (e.g., "OrganismPart"; "kinase")
      */
+    @Field
     public String getValue() {
         return this.value;
     }
@@ -153,6 +167,7 @@ public class Characteristic extends AbstractDescribable implements Serializable 
      * abstract class.
      */
     @Nullable
+    @Field(analyze = Analyze.NO)
     public String getValueUri() {
         return this.valueUri;
     }

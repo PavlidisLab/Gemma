@@ -304,7 +304,7 @@ public class CoexpressionSearchController {
     /**
      * Inner class used for doing a long running coex search
      */
-    class CoexpressionSearchTask extends AbstractTask<TaskResult, TaskCommand> {
+    class CoexpressionSearchTask extends AbstractTask<TaskCommand> {
 
         public CoexpressionSearchTask( CoexSearchTaskCommand command ) {
             super( command );

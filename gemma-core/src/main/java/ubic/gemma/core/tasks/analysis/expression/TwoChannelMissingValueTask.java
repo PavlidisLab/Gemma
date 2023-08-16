@@ -18,8 +18,7 @@
  */
 package ubic.gemma.core.tasks.analysis.expression;
 
-import ubic.gemma.core.job.TaskResult;
 import ubic.gemma.core.tasks.Task;
 
-interface TwoChannelMissingValueTask extends Task<TaskResult, TwoChannelMissingValueTaskCommand> {
+interface TwoChannelMissingValueTask extends Task<TwoChannelMissingValueTaskCommand> {
 }

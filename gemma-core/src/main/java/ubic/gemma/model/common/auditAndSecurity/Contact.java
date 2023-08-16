@@ -43,6 +43,16 @@ public class Contact extends AbstractDescribable implements Serializable {
     public Contact() {
     }
 
+    @Override
+    public Long getId() {
+        return super.getId();
+    }
+
+    @Override
+    public String getName() {
+        return super.getName();
+    }
+
     public String getEmail() {
         return this.email;
     }
