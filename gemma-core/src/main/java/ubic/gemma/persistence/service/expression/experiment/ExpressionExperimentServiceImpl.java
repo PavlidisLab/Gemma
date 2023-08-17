@@ -307,7 +307,12 @@ public class ExpressionExperimentServiceImpl
     public ExpressionExperiment loadWithPrimaryPublication( Long id ) {
         ExpressionExperiment ee = load( id );
         if ( ee != null ) {
-            Hibernate.initialize( ee.getPrimaryPublication() );
+            if ( ee.getPrimaryPublication() != null ) {
+                Hibernate.initialize( ee.getPrimaryPublication() );
+                Hibernate.initialize( ee.getPrimaryPublication().getMeshTerms() );
+                Hibernate.initialize( ee.getPrimaryPublication().getChemicals() );
+                Hibernate.initialize( ee.getPrimaryPublication().getKeywords() );
+            }
         }
         return ee;
     }
