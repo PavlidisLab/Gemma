@@ -11,6 +11,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ContextConfiguration;
 import ubic.gemma.core.util.test.BaseDatabaseTest;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
@@ -46,7 +47,9 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest {
     public void testThawTransientEntity() {
         ExpressionExperiment ee = new ExpressionExperiment();
         ee.setExperimentalDesign( new ExperimentalDesign() );
-        ee.setBioAssays( Collections.singleton( new BioAssay() ) );
+        BioAssay ba = new BioAssay();
+        ba.setArrayDesignUsed( new ArrayDesign() );
+        ee.setBioAssays( Collections.singleton( ba ) );
         ee.setRawExpressionDataVectors( Collections.singleton( new RawExpressionDataVector() ) );
         ee.setProcessedExpressionDataVectors( Collections.singleton( new ProcessedExpressionDataVector() ) );
         expressionExperimentDao.thaw( ee );
