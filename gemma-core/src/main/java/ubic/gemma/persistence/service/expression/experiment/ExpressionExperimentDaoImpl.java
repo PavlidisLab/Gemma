@@ -1687,34 +1687,15 @@ public class ExpressionExperimentDaoImpl
 
         Hibernate.initialize( ee.getBioAssays() );
         for ( BioAssay ba : ee.getBioAssays() ) {
-            if ( ba.getArrayDesignUsed() != null ) {
-                Hibernate.initialize( ba.getArrayDesignUsed() );
-                Hibernate.initialize( ba.getArrayDesignUsed().getDesignProvider() );
+            Hibernate.initialize( ba.getArrayDesignUsed() );
+            Hibernate.initialize( ba.getArrayDesignUsed().getDesignProvider() );
+            if ( ba.getOriginalPlatform() != null ) {
+                Hibernate.initialize( ba.getOriginalPlatform() );
             }
-            Hibernate.initialize( ba.getOriginalPlatform() );
-            Hibernate.initialize( ba.getSampleUsed() );
             BioMaterial bm = ba.getSampleUsed();
             if ( bm != null ) {
                 Hibernate.initialize( bm.getFactorValues() );
                 Hibernate.initialize( bm.getTreatments() );
-            }
-        }
-
-        ExperimentalDesign experimentalDesign = ee.getExperimentalDesign();
-        if ( experimentalDesign != null ) {
-            Hibernate.initialize( experimentalDesign.getExperimentalFactors() );
-            Hibernate.initialize( experimentalDesign.getTypes() );
-            for ( ExperimentalFactor factor : experimentalDesign.getExperimentalFactors() ) {
-                Hibernate.initialize( factor.getAnnotations() );
-                for ( FactorValue f : factor.getFactorValues() ) {
-                    Hibernate.initialize( f.getCharacteristics() );
-                    if ( f.getMeasurement() != null ) {
-                        Hibernate.initialize( f.getMeasurement() );
-                        if ( f.getMeasurement().getUnit() != null ) {
-                            Hibernate.initialize( f.getMeasurement().getUnit() );
-                        }
-                    }
-                }
             }
         }
     }
@@ -1762,14 +1743,19 @@ public class ExpressionExperimentDaoImpl
         if ( expressionExperiment.getExperimentalDesign() != null ) {
             Hibernate.initialize( expressionExperiment.getExperimentalDesign() );
             Hibernate.initialize( expressionExperiment.getExperimentalDesign().getExperimentalFactors() );
+            Hibernate.initialize( expressionExperiment.getExperimentalDesign().getTypes() );
         }
 
-        if ( expressionExperiment.getOtherRelevantPublications() != null ) {
-            Hibernate.initialize( expressionExperiment.getOtherRelevantPublications() );
-            for ( BibliographicReference bf : expressionExperiment.getOtherRelevantPublications() ) {
-                Hibernate.initialize( bf.getPubAccession() );
-                Hibernate.initialize( bf.getPubAccession().getExternalDatabase() );
-            }
+        if ( expressionExperiment.getPrimaryPublication() != null ) {
+            Hibernate.initialize( expressionExperiment.getPrimaryPublication().getMeshTerms() );
+            Hibernate.initialize( expressionExperiment.getPrimaryPublication().getKeywords() );
+            Hibernate.initialize( expressionExperiment.getPrimaryPublication().getChemicals() );
+        }
+
+        for ( BibliographicReference br : expressionExperiment.getOtherRelevantPublications() ) {
+            Hibernate.initialize( br.getMeshTerms() );
+            Hibernate.initialize( br.getKeywords() );
+            Hibernate.initialize( br.getChemicals() );
         }
     }
 
