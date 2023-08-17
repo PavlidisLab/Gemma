@@ -1,5 +1,8 @@
 package ubic.gemma.core.search.source;
 
+import org.apache.lucene.analysis.Analyzer;
+import org.apache.lucene.document.Document;
+import org.apache.lucene.search.Query;
 import org.junit.After;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,10 +15,10 @@ import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.basecode.ontology.model.OntologyTermSimple;
 import ubic.basecode.ontology.search.OntologySearchException;
 import ubic.gemma.core.ontology.OntologyService;
+import ubic.gemma.core.search.Highlighter;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.search.SearchResult;
 import ubic.gemma.core.search.SearchSource;
-import ubic.gemma.core.search.Highlighter;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.common.description.CharacteristicService;
@@ -24,6 +27,7 @@ import ubic.gemma.persistence.util.TestComponent;
 import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Map;
 
 import static junit.framework.TestCase.assertEquals;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -85,6 +89,17 @@ public class OntologySearchSourceTest extends AbstractJUnit4SpringContextTests {
                     public String highlightTerm( String termUri, String termLabel, MessageSourceResolvable className ) {
                         return String.format( "[%s](%s)", termLabel, termUri );
                     }
+
+                    @Nullable
+                    @Override
+                    public org.apache.lucene.search.highlight.Highlighter createLuceneHighlighter( Query query ) {
+                        return null;
+                    }
+
+                    @Override
+                    public Map<String, String> highlightDocument( Document document, org.apache.lucene.search.highlight.Highlighter highlighter, Analyzer analyzer, String[] fields ) {
+                        return Collections.emptyMap();
+                    }
                 } ) );
         verify( ontologyService ).findTerms( "http://purl.obolibrary.org/obo/CL_0000129" );
         verify( characteristicService ).findExperimentsByUris( Collections.singleton( "http://purl.obolibrary.org/obo/CL_0000129" ), null, 5000, true, false );
@@ -110,6 +125,17 @@ public class OntologySearchSourceTest extends AbstractJUnit4SpringContextTests {
                     @Override
                     public String highlightTerm( String termUri, String termLabel, MessageSourceResolvable className ) {
                         return String.format( "[%s](%s)", termLabel, termUri );
+                    }
+
+                    @Nullable
+                    @Override
+                    public org.apache.lucene.search.highlight.Highlighter createLuceneHighlighter( Query query ) {
+                        return null;
+                    }
+
+                    @Override
+                    public Map<String, String> highlightDocument( Document document, org.apache.lucene.search.highlight.Highlighter highlighter, Analyzer analyzer, String[] fields ) {
+                        return Collections.emptyMap();
                     }
                 } ) );
         verify( ontologyService ).findTerms( "http://purl.obolibrary.org/obo/CL_0000129" );

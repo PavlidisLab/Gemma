@@ -1,6 +1,8 @@
 package ubic.gemma.core.search;
 
-import org.apache.lucene.search.highlight.Formatter;
+import org.apache.lucene.analysis.Analyzer;
+import org.apache.lucene.document.Document;
+import org.apache.lucene.search.Query;
 import org.springframework.context.MessageSourceResolvable;
 
 import javax.annotation.Nullable;
@@ -18,19 +20,20 @@ public interface Highlighter {
      *
      * @param termUri   a URI for the term
      * @param termLabel a label for the term
-     * @param clazz     the identifiable type associated to the ontology term
+     * @param className a resolvable message for the type associated to the ontology term
      * @return a suitable highlight, or null if none is found
      */
     @Nullable
-    default String highlightTerm( String termUri, String termLabel, MessageSourceResolvable className ) {
-        return null;
-    }
+    String highlightTerm( String termUri, String termLabel, MessageSourceResolvable className );
 
     /**
-     * Obtain a formatter for Lucene hits.
+     * Obtain a highlighter for Lucene hits.
      */
     @Nullable
-    default Formatter getLuceneFormatter() {
-        return null;
-    }
+    org.apache.lucene.search.highlight.Highlighter createLuceneHighlighter( Query query );
+
+    /**
+     * Highlight a given Lucene document.
+     */
+    Map<String, String> highlightDocument( Document document, org.apache.lucene.search.highlight.Highlighter highlighter, Analyzer analyzer, String[] fields );
 }

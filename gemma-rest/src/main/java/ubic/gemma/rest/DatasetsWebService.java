@@ -25,7 +25,8 @@ import lombok.EqualsAndHashCode;
 import lombok.Value;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.io.FilenameUtils;
-import org.apache.lucene.search.highlight.Formatter;
+import org.apache.lucene.analysis.Analyzer;
+import org.apache.lucene.document.Document;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
 import org.springframework.context.MessageSourceResolvable;
@@ -39,8 +40,8 @@ import ubic.gemma.core.analysis.preprocess.filter.NoRowsLeftAfterFilteringExcept
 import ubic.gemma.core.analysis.preprocess.svd.SVDService;
 import ubic.gemma.core.analysis.preprocess.svd.SVDValueObject;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
+import ubic.gemma.core.search.DefaultHighlighter;
 import ubic.gemma.core.search.SearchResult;
-import ubic.gemma.core.search.lucene.SimpleHTMLFormatter;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisValueObject;
 import ubic.gemma.model.common.auditAndSecurity.eventType.BatchInformationFetchingEvent;
 import ubic.gemma.model.common.description.AnnotationValueObject;
@@ -126,16 +127,16 @@ public class DatasetsWebService {
     @Autowired
     private HttpServletRequest request;
 
-    @EqualsAndHashCode
-    private class Highlighter implements ubic.gemma.core.search.Highlighter {
+    private class Highlighter extends DefaultHighlighter {
 
+        private final Set<Long> documentIdsToHighlight;
         private final Locale locale;
 
-        private Highlighter( Locale locale ) {
+        private Highlighter( Set<Long> documentIdsToHighlight, Locale locale ) {
+            this.documentIdsToHighlight = documentIdsToHighlight;
             this.locale = locale;
         }
 
-        @Nullable
         @Override
         public String highlightTerm( String termUri, String termLabel, MessageSourceResolvable clazz ) {
             String reconstructedUri = ServletUriComponentsBuilder.fromRequest( request )
@@ -152,13 +153,16 @@ public class DatasetsWebService {
             return String.format( "**[%s](%s)** via *%s*", termLabel, reconstructedUri, messageSource.getMessage( clazz, locale ) );
         }
 
-        @Nullable
         @Override
-        public Formatter getLuceneFormatter() {
-            return new SimpleHTMLFormatter();
+        public Map<String, String> highlightDocument( Document document, org.apache.lucene.search.highlight.Highlighter highlighter, Analyzer analyzer, String[] fields ) {
+            long id = Long.parseLong( document.get( "id" ) );
+            // TODO: maybe use a filter in the Lucene query?
+            if ( !documentIdsToHighlight.contains( id ) ) {
+                return Collections.emptyMap();
+            }
+            return super.highlightDocument( document, highlighter, analyzer, fields );
         }
     }
-
 
     @GZIP
     @GET
@@ -179,13 +183,15 @@ public class DatasetsWebService {
         int limit = limitArg.getValue();
         Map<Long, SearchResult<ExpressionExperiment>> resultById = new HashMap<>();
         if ( query != null ) {
+            // fetch the IDs before the search constraint, so we know which documents should be highlighted and which order to preserve
+            List<Long> ids = new ArrayList<>( expressionExperimentService.loadIdsWithCache( filters, sort ) );
             List<SearchResult<ExpressionExperiment>> results = new ArrayList<>();
-            Filters filtersWithSearchResultIds = Filters.by( filters )
-                    .and( datasetArgService.getFilterForSearchQuery( query, new Highlighter( request.getLocale() ), results ) );
+            // intersect search results and filter results
+            // we only highlight results falling in the slice
+            ids.retainAll( datasetArgService.getIdsForSearchQuery( query, new Highlighter( new HashSet<>( ids ), request.getLocale() ), results ) );
             results.forEach( e -> resultById.put( e.getResultId(), e ) );
-            List<Long> ids = expressionExperimentService.loadIdsWithCache( filtersWithSearchResultIds, sort );
             // sort is stable, so the order of IDs with the same score is preserved
-            ids.sort( Comparator.<Long>comparingDouble( i -> -resultById.get( i ).getScore() ) );
+            ids.sort( Comparator.comparingDouble( i -> -resultById.get( i ).getScore() ) );
             // slice the ranked IDs
             List<Long> idsSlice;
             if ( offset < ids.size() ) {
