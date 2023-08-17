@@ -2,7 +2,6 @@ package ubic.gemma.core.search.source;
 
 import gemma.gsec.util.SecurityUtil;
 import lombok.extern.apachecommons.CommonsLog;
-import org.apache.commons.lang3.NotImplementedException;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,7 +13,6 @@ import ubic.gemma.core.search.SearchResultSet;
 import ubic.gemma.core.search.SearchSource;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.common.Identifiable;
-import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
@@ -113,11 +111,6 @@ public class DatabaseSearchSource implements SearchSource {
                             + " ms" + " found " + adSet.size() + " Ads" );
 
         return toSearchResults( ArrayDesign.class, adSet, MATCH_BY_NAME_SCORE, "CompositeSequenceService.findByName" );
-    }
-
-    @Override
-    public Collection<SearchResult<BibliographicReference>> searchBibliographicReference( SearchSettings settings ) {
-        throw new NotImplementedException( "Database search for bibliographic reference is not implemented." );
     }
 
     @Override
