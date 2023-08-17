@@ -23,13 +23,9 @@ public class SearchResultSet<T extends Identifiable> extends AbstractSet<SearchR
         results = new HashMap<>();
     }
 
-    public SearchResultSet( int initialCapacity ) {
-        results = new HashMap<>( initialCapacity );
-    }
-
     @Override
     public Iterator<SearchResult<T>> iterator() {
-        return results.keySet().iterator();
+        return results.values().iterator();
     }
 
     @Override
@@ -45,6 +41,14 @@ public class SearchResultSet<T extends Identifiable> extends AbstractSet<SearchR
             // retain the result object to avoid fetching it again in the future
             if ( previousValue != null && previousValue.getResultObject() != null && t.getResultObject() == null ) {
                 t.setResultObject( previousValue.getResultObject() );
+            }
+            // merge highlights
+            if ( previousValue != null && previousValue.getHighlights() != null ) {
+                Map<String, String> mergedHighlights = new HashMap<>( previousValue.getHighlights() );
+                if ( t.getHighlights() != null ) {
+                    mergedHighlights.putAll( t.getHighlights() );
+                }
+                t.setHighlights( mergedHighlights );
             }
             return true;
         }
