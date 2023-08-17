@@ -1,7 +1,7 @@
 package ubic.gemma.model.common.search;
 
 import org.junit.Test;
-import ubic.gemma.core.search.Highlighter;
+import ubic.gemma.core.search.DefaultHighlighter;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -60,13 +60,8 @@ public class SearchSettingsTest {
 
     @Test
     public void testSettingsWithDifferentHighlighterAreEqual() {
-        assertThat( SearchSettings.builder().query( "test" ).highlighter( new Highlighter1() ).build() )
-                .isEqualTo( SearchSettings.builder().query( "test" ).highlighter( new Highlighter2() ).build() );
-    }
-
-    private static class Highlighter1 implements Highlighter {
-    }
-
-    private static class Highlighter2 implements Highlighter {
+        assertThat( new DefaultHighlighter() ).isNotEqualTo( new DefaultHighlighter() );
+        assertThat( SearchSettings.builder().query( "test" ).highlighter( new DefaultHighlighter() ).build() )
+                .isEqualTo( SearchSettings.builder().query( "test" ).highlighter( new DefaultHighlighter() ).build() );
     }
 }

@@ -2,13 +2,11 @@ package ubic.gemma.core.search.source;
 
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.time.StopWatch;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.document.Document;
-import org.apache.lucene.document.Fieldable;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.highlight.Highlighter;
-import org.apache.lucene.search.highlight.InvalidTokenOffsetsException;
-import org.apache.lucene.search.highlight.QueryScorer;
 import org.hibernate.SessionFactory;
 import org.hibernate.search.FullTextQuery;
 import org.hibernate.search.FullTextSession;
@@ -31,7 +29,6 @@ import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.gene.GeneSet;
 
 import javax.annotation.Nullable;
-import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -165,55 +162,44 @@ public class HibernateSearchSource implements SearchSource, InitializingBean {
                     .onFields( fields )
                     .matching( settings.getQuery() )
                     .createQuery();
+            Analyzer analyzer = analyzers.get( clazz );
             Highlighter highlighter;
-            Analyzer analyzer;
             String[] projection;
-            if ( settings.getHighlighter() != null && settings.getHighlighter().getLuceneFormatter() != null ) {
-                highlighter = new Highlighter( settings.getHighlighter().getLuceneFormatter(), new QueryScorer( query ) );
-                analyzer = analyzers.get( clazz );
+            if ( settings.getHighlighter() != null && settings.getHighlighter().createLuceneHighlighter( query ) != null ) {
+                highlighter = settings.getHighlighter().createLuceneHighlighter( query );
                 projection = new String[] { settings.isFillResults() ? FullTextQuery.THIS : FullTextQuery.ID, FullTextQuery.SCORE, FullTextQuery.DOCUMENT };
             } else {
                 highlighter = null;
-                analyzer = null;
                 projection = new String[] { settings.isFillResults() ? FullTextQuery.THIS : FullTextQuery.ID, FullTextQuery.SCORE };
             }
             //noinspection unchecked
             List<Object[]> results = fullTextSession
                     .createFullTextQuery( query, clazz )
                     .setProjection( projection )
+                    .setMaxResults( settings.getMaxResults() )
+                    .setCacheable( true )
                     .list();
-            return results.stream()
-                    .map( r -> searchResultFromRow( r, settings, highlighter, analyzer, fields, clazz ) )
-                    .collect( Collectors.toList() );
+            StopWatch timer = StopWatch.createStarted();
+            try {
+                return results.stream()
+                        .map( r -> searchResultFromRow( r, settings, highlighter, analyzer, fields, clazz ) )
+                        .collect( Collectors.toList() );
+            } finally {
+                if ( timer.getTime() > 100 ) {
+                    log.warn( String.format( "Highlighting %d results took %d ms", results.size(), timer.getTime() ) );
+                }
+            }
         } catch ( org.hibernate.search.SearchException e ) {
             throw new HibernateSearchException( String.format( "Error while searching for %s.", clazz.getName() ), e );
         }
     }
 
-    private <T extends Identifiable> SearchResult<T> searchResultFromRow( Object[] row, SearchSettings settings, @Nullable Highlighter highlighter, @Nullable Analyzer analyzer, String[] fields, Class<T> clazz ) {
+    private <T extends Identifiable> SearchResult<T> searchResultFromRow( Object[] row, SearchSettings settings, @Nullable Highlighter highlighter, Analyzer analyzer, String[] fields, Class<T> clazz ) {
         if ( settings.isFillResults() ) {
             //noinspection unchecked
-            return SearchResult.from( clazz, ( T ) row[0], ( Float ) row[1], highlighter != null && analyzer != null ? highlightDocument( ( Document ) row[2], highlighter, analyzer, fields ) : null, "hibernateSearch" );
+            return SearchResult.from( clazz, ( T ) row[0], ( Float ) row[1], highlighter != null ? settings.highlightDocument( ( Document ) row[2], highlighter, analyzer, fields ) : null, "hibernateSearch" );
         } else {
-            return SearchResult.from( clazz, ( Long ) row[0], ( Float ) row[1], highlighter != null && analyzer != null ? highlightDocument( ( Document ) row[2], highlighter, analyzer, fields ) : null, "hibernateSearch" );
+            return SearchResult.from( clazz, ( Long ) row[0], ( Float ) row[1], highlighter != null ? settings.highlightDocument( ( Document ) row[2], highlighter, analyzer, fields ) : null, "hibernateSearch" );
         }
-    }
-
-    private Map<String, String> highlightDocument( Document document, Highlighter highlighter, Analyzer analyzer, String[] fields ) {
-        Map<String, String> highlights = new HashMap<>();
-        for ( Fieldable field : document.getFields() ) {
-            if ( !field.isTokenized() || field.isBinary() || !ArrayUtils.contains( fields, field.name() ) ) {
-                continue;
-            }
-            try {
-                String bestFragment = highlighter.getBestFragment( analyzer, field.name(), field.stringValue() );
-                if ( bestFragment != null ) {
-                    highlights.put( field.name(), bestFragment );
-                }
-            } catch ( IOException | InvalidTokenOffsetsException e ) {
-                log.warn( String.format( "Failed to highlight field %s.", field.name() ) );
-            }
-        }
-        return highlights;
     }
 }

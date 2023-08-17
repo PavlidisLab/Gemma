@@ -23,6 +23,8 @@ import lombok.Data;
 import lombok.Singular;
 import lombok.With;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.lucene.analysis.Analyzer;
+import org.apache.lucene.document.Document;
 import org.springframework.context.MessageSourceResolvable;
 import ubic.gemma.core.search.Highlighter;
 import ubic.gemma.model.common.Identifiable;
@@ -35,6 +37,7 @@ import ubic.gemma.model.genome.Taxon;
 
 import javax.annotation.Nullable;
 import java.io.Serializable;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -51,6 +54,7 @@ public class SearchSettings implements Serializable {
     public static final char
             WILDCARD_CHAR = '*',
             SINGLE_WILDCARD_CHAR = '?';
+
 
     public enum SearchMode {
         /**
@@ -283,6 +287,11 @@ public class SearchSettings implements Serializable {
     @Nullable
     public String highlightTerm( String termUri, String termLabel, MessageSourceResolvable className ) {
         return highlighter != null ? highlighter.highlightTerm( termUri, termLabel, className ) : null;
+    }
+
+    @Nullable
+    public Map<String, String> highlightDocument( Document document, org.apache.lucene.search.highlight.Highlighter luceneHighlighter, Analyzer analyzer, String[] fields ) {
+        return highlighter != null ? highlighter.highlightDocument( document, luceneHighlighter, analyzer, fields ) : null;
     }
 
     @Override
