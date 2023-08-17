@@ -95,12 +95,12 @@ public class BibliographicReference extends AbstractDescribable implements Seria
         this.annotatedAbstract = annotatedAbstract;
     }
 
-    // never used
+    @Deprecated
     public Set<Characteristic> getAnnotations() {
         return this.annotations;
     }
 
-    // never used
+    @Deprecated
     public void setAnnotations( Set<Characteristic> annotations ) {
         this.annotations = annotations;
     }
