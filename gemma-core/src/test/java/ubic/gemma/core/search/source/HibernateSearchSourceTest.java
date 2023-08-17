@@ -36,7 +36,7 @@ public class HibernateSearchSourceTest extends BaseDatabaseTest {
     private HibernateSearchSource hibernateSearchSource;
 
     @Test
-    public void test() {
+    public void test() throws HibernateSearchException {
         assertThat( hibernateSearchSource.searchExpressionExperiment( SearchSettings.expressionExperimentSearch( "hello" ) ) )
                 .isEmpty();
         assertThat( hibernateSearchSource.searchArrayDesign( SearchSettings.expressionExperimentSearch( "hello" ) ) )
@@ -56,7 +56,7 @@ public class HibernateSearchSourceTest extends BaseDatabaseTest {
     }
 
     @Test
-    public void testSearchExpressionExperiment() {
+    public void testSearchExpressionExperiment() throws HibernateSearchException {
         FullTextSession fts = Search.getFullTextSession( sessionFactory.getCurrentSession() );
 
         assertThat( hibernateSearchSource.searchExpressionExperiment( SearchSettings.expressionExperimentSearch( "hello" ) ) )

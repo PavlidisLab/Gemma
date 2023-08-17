@@ -14,6 +14,7 @@ import org.hibernate.search.FullTextQuery;
 import org.hibernate.search.FullTextSession;
 import org.hibernate.search.Search;
 import org.hibernate.search.query.dsl.QueryBuilder;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import ubic.gemma.core.search.SearchResult;
@@ -40,8 +41,18 @@ import java.util.stream.Collectors;
  */
 @Component
 @CommonsLog
-public class HibernateSearchSource implements SearchSource {
+public class HibernateSearchSource implements SearchSource, InitializingBean {
 
+    private static final Class<?>[] SEARCHABLE_CLASSES = new Class[] {
+            ExpressionExperiment.class,
+            ArrayDesign.class,
+            CompositeSequence.class,
+            BioSequence.class,
+            Gene.class,
+            GeneSet.class,
+            ExpressionExperimentSet.class,
+            BibliographicReference.class
+    };
 
     private static final String[] PLATFORM_FIELDS = { "shortName", "name", "description", "alternateNames.name", "externalReferences.accession" };
     private static final String[] PUBLICATION_FIELDS = new String[] { "name", "abstractText",
@@ -91,74 +102,92 @@ public class HibernateSearchSource implements SearchSource {
     @Autowired
     private SessionFactory sessionFactory;
 
+    private final Map<Class<?>, Analyzer> analyzers = new HashMap<>();
+
     @Override
-    public Collection<SearchResult<ArrayDesign>> searchArrayDesign( SearchSettings settings ) {
+    public void afterPropertiesSet() throws Exception {
+        FullTextSession fullTextSession = Search.getFullTextSession( sessionFactory.openSession() );
+        try {
+            for ( Class<?> clazz : SEARCHABLE_CLASSES ) {
+                analyzers.put( clazz, fullTextSession.getSearchFactory().getAnalyzer( clazz ) );
+            }
+        } finally {
+            fullTextSession.close();
+        }
+    }
+
+    @Override
+    public Collection<SearchResult<ArrayDesign>> searchArrayDesign( SearchSettings settings ) throws HibernateSearchException {
         return searchFor( settings, ArrayDesign.class, PLATFORM_FIELDS );
     }
 
     @Override
-    public Collection<SearchResult<BibliographicReference>> searchBibliographicReference( SearchSettings settings ) {
+    public Collection<SearchResult<BibliographicReference>> searchBibliographicReference( SearchSettings settings ) throws HibernateSearchException {
         return searchFor( settings, BibliographicReference.class, PUBLICATION_FIELDS );
     }
 
     @Override
-    public Collection<SearchResult<ExpressionExperimentSet>> searchExperimentSet( SearchSettings settings ) {
+    public Collection<SearchResult<ExpressionExperimentSet>> searchExperimentSet( SearchSettings settings ) throws HibernateSearchException {
         return searchFor( settings, ExpressionExperimentSet.class, EXPERIMENT_SET_FIELDS );
     }
 
     @Override
-    public Collection<SearchResult<BioSequence>> searchBioSequence( SearchSettings settings ) {
+    public Collection<SearchResult<BioSequence>> searchBioSequence( SearchSettings settings ) throws HibernateSearchException {
         return searchFor( settings, BioSequence.class, BIO_SEQUENCE_FIELDS );
     }
 
     @Override
-    public Collection<SearchResult<CompositeSequence>> searchCompositeSequence( SearchSettings settings ) {
+    public Collection<SearchResult<CompositeSequence>> searchCompositeSequence( SearchSettings settings ) throws HibernateSearchException {
         return searchFor( settings, CompositeSequence.class, COMPOSITE_SEQUENCE_FIELDS );
     }
 
     @Override
-    public Collection<SearchResult<ExpressionExperiment>> searchExpressionExperiment( SearchSettings settings ) {
+    public Collection<SearchResult<ExpressionExperiment>> searchExpressionExperiment( SearchSettings settings ) throws HibernateSearchException {
         return searchFor( settings, ExpressionExperiment.class, DATASET_FIELDS );
     }
 
     @Override
-    public Collection<SearchResult<Gene>> searchGene( SearchSettings settings ) {
+    public Collection<SearchResult<Gene>> searchGene( SearchSettings settings ) throws HibernateSearchException {
         return searchFor( settings, Gene.class, GENE_FIELDS );
     }
 
     @Override
-    public Collection<SearchResult<GeneSet>> searchGeneSet( SearchSettings settings ) {
+    public Collection<SearchResult<GeneSet>> searchGeneSet( SearchSettings settings ) throws HibernateSearchException {
         return searchFor( settings, GeneSet.class, GENE_SET_FIELDS );
     }
 
-    private <T extends Identifiable> Collection<SearchResult<T>> searchFor( SearchSettings settings, Class<T> clazz, String... fields ) {
-        FullTextSession fullTextSession = Search.getFullTextSession( sessionFactory.getCurrentSession() );
-        QueryBuilder queryBuilder = fullTextSession.getSearchFactory().buildQueryBuilder().forEntity( clazz )
-                .get();
-        Query query = queryBuilder.keyword()
-                .onFields( fields )
-                .matching( settings.getQuery() )
-                .createQuery();
-        Highlighter highlighter;
-        Analyzer analyzer;
-        String[] projection;
-        if ( settings.getHighlighter() != null && settings.getHighlighter().getLuceneFormatter() != null ) {
-            highlighter = new Highlighter( settings.getHighlighter().getLuceneFormatter(), new QueryScorer( query ) );
-            analyzer = fullTextSession.getSearchFactory().getAnalyzer( clazz );
-            projection = new String[] { settings.isFillResults() ? FullTextQuery.THIS : FullTextQuery.ID, FullTextQuery.SCORE, FullTextQuery.DOCUMENT };
-        } else {
-            highlighter = null;
-            analyzer = null;
-            projection = new String[] { settings.isFillResults() ? FullTextQuery.THIS : FullTextQuery.ID, FullTextQuery.SCORE };
+    private <T extends Identifiable> Collection<SearchResult<T>> searchFor( SearchSettings settings, Class<T> clazz, String... fields ) throws HibernateSearchException {
+        try {
+            FullTextSession fullTextSession = Search.getFullTextSession( sessionFactory.getCurrentSession() );
+            QueryBuilder queryBuilder = fullTextSession.getSearchFactory().buildQueryBuilder().forEntity( clazz )
+                    .get();
+            Query query = queryBuilder.keyword()
+                    .onFields( fields )
+                    .matching( settings.getQuery() )
+                    .createQuery();
+            Highlighter highlighter;
+            Analyzer analyzer;
+            String[] projection;
+            if ( settings.getHighlighter() != null && settings.getHighlighter().getLuceneFormatter() != null ) {
+                highlighter = new Highlighter( settings.getHighlighter().getLuceneFormatter(), new QueryScorer( query ) );
+                analyzer = analyzers.get( clazz );
+                projection = new String[] { settings.isFillResults() ? FullTextQuery.THIS : FullTextQuery.ID, FullTextQuery.SCORE, FullTextQuery.DOCUMENT };
+            } else {
+                highlighter = null;
+                analyzer = null;
+                projection = new String[] { settings.isFillResults() ? FullTextQuery.THIS : FullTextQuery.ID, FullTextQuery.SCORE };
+            }
+            //noinspection unchecked
+            List<Object[]> results = fullTextSession
+                    .createFullTextQuery( query, clazz )
+                    .setProjection( projection )
+                    .list();
+            return results.stream()
+                    .map( r -> searchResultFromRow( r, settings, highlighter, analyzer, fields, clazz ) )
+                    .collect( Collectors.toList() );
+        } catch ( org.hibernate.search.SearchException e ) {
+            throw new HibernateSearchException( String.format( "Error while searching for %s.", clazz.getName() ), e );
         }
-        //noinspection unchecked
-        List<Object[]> results = fullTextSession
-                .createFullTextQuery( query, clazz )
-                .setProjection( projection )
-                .list();
-        return results.stream()
-                .map( r -> searchResultFromRow( r, settings, highlighter, analyzer, fields, clazz ) )
-                .collect( Collectors.toList() );
     }
 
     private <T extends Identifiable> SearchResult<T> searchResultFromRow( Object[] row, SearchSettings settings, @Nullable Highlighter highlighter, @Nullable Analyzer analyzer, String[] fields, Class<T> clazz ) {
