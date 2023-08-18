@@ -18,11 +18,12 @@
  */
 package ubic.gemma.web.controller;
 
-import lombok.EqualsAndHashCode;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.lang3.time.StopWatch;
+import org.apache.lucene.analysis.Analyzer;
+import org.apache.lucene.document.Document;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
 import org.springframework.context.MessageSourceResolvable;
@@ -63,6 +64,7 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static org.apache.commons.text.StringEscapeUtils.escapeHtml4;
 
@@ -170,6 +172,18 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
                 matchedText = matchedText + " via " + messageSource.getMessage( className, locale );
             }
             return matchedText;
+        }
+
+        @Override
+        public Map<String, String> highlightDocument( Document document, org.apache.lucene.search.highlight.Highlighter highlighter, Analyzer analyzer, String[] fields ) {
+            return super.highlightDocument( document, highlighter, analyzer, fields )
+                    .entrySet().stream()
+                    .collect( Collectors.toMap( e -> localizeDocumentField( document, e.getKey() ), Map.Entry::getValue, ( a, b ) -> b ) );
+        }
+
+        private String localizeDocumentField( Document document, String key ) {
+            String hibernateClass = document.get( "_hibernate_class" );
+            return messageSource.getMessage( StringUtils.substringAfterLast( hibernateClass, '.' ) + "." + key, null, key, locale );
         }
     }
 
