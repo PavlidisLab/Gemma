@@ -836,6 +836,8 @@
         <dwr:convert type="bean"
                      class="ubic.gemma.web.controller.expression.experiment.ExpressionExperimentExperimentalFactorValueObject"/>
 
+        <dwr:convert type="bean" class="ubic.gemma.model.common.measurement.MeasurementValueObject"/>
+
         <dwr:convert type="bean" class="ubic.gemma.core.ontology.OntologyTreeNode"/>
         <!-- yes, used -->
         <dwr:convert type="bean" class="ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType"/>
