@@ -183,6 +183,7 @@ public class HibernateSearchSource implements SearchSource, InitializingBean {
             try {
                 return results.stream()
                         .map( r -> searchResultFromRow( r, settings, highlighter, analyzer, fields, clazz ) )
+                        .filter( Objects::nonNull )
                         .collect( Collectors.toList() );
             } finally {
                 if ( timer.getTime() > 100 ) {
@@ -194,10 +195,16 @@ public class HibernateSearchSource implements SearchSource, InitializingBean {
         }
     }
 
+    @Nullable
     private <T extends Identifiable> SearchResult<T> searchResultFromRow( Object[] row, SearchSettings settings, @Nullable Highlighter highlighter, Analyzer analyzer, String[] fields, Class<T> clazz ) {
         if ( settings.isFillResults() ) {
             //noinspection unchecked
-            return SearchResult.from( clazz, ( T ) row[0], ( Float ) row[1], highlighter != null ? settings.highlightDocument( ( Document ) row[2], highlighter, analyzer, fields ) : null, "hibernateSearch" );
+            T entity = ( T ) row[0];
+            if ( row[0] == null ) {
+                // this happens if an entity is still in the cache, but was removed from the database
+                return null;
+            }
+            return SearchResult.from( clazz, entity, ( Float ) row[1], highlighter != null ? settings.highlightDocument( ( Document ) row[2], highlighter, analyzer, fields ) : null, "hibernateSearch" );
         } else {
             return SearchResult.from( clazz, ( Long ) row[0], ( Float ) row[1], highlighter != null ? settings.highlightDocument( ( Document ) row[2], highlighter, analyzer, fields ) : null, "hibernateSearch" );
         }
