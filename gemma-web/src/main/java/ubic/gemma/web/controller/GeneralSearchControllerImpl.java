@@ -177,7 +177,7 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
         }
 
         @Override
-        public Map<String, String> highlightDocument( Document document, org.apache.lucene.search.highlight.Highlighter highlighter, Analyzer analyzer, String[] fields ) {
+        public Map<String, String> highlightDocument( Document document, org.apache.lucene.search.highlight.Highlighter highlighter, Analyzer analyzer, Set<String> fields ) {
             if ( highlightedDocuments >= 500 ) {
                 return Collections.emptyMap();
             }

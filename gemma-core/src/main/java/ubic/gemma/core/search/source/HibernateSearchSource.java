@@ -181,8 +181,9 @@ public class HibernateSearchSource implements SearchSource, InitializingBean {
                     .list();
             StopWatch timer = StopWatch.createStarted();
             try {
+                Set<String> fieldsSet = new HashSet<>( Arrays.asList( fields ) );
                 return results.stream()
-                        .map( r -> searchResultFromRow( r, settings, highlighter, analyzer, fields, clazz ) )
+                        .map( r -> searchResultFromRow( r, settings, highlighter, analyzer, fieldsSet, clazz ) )
                         .filter( Objects::nonNull )
                         .collect( Collectors.toList() );
             } finally {
@@ -196,7 +197,7 @@ public class HibernateSearchSource implements SearchSource, InitializingBean {
     }
 
     @Nullable
-    private <T extends Identifiable> SearchResult<T> searchResultFromRow( Object[] row, SearchSettings settings, @Nullable Highlighter highlighter, Analyzer analyzer, String[] fields, Class<T> clazz ) {
+    private <T extends Identifiable> SearchResult<T> searchResultFromRow( Object[] row, SearchSettings settings, @Nullable Highlighter highlighter, Analyzer analyzer, Set<String> fields, Class<T> clazz ) {
         if ( settings.isFillResults() ) {
             //noinspection unchecked
             T entity = ( T ) row[0];

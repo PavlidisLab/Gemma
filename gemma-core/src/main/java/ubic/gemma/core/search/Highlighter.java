@@ -7,6 +7,7 @@ import org.springframework.context.MessageSourceResolvable;
 
 import javax.annotation.Nullable;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Custom highlighter for search results.
@@ -35,5 +36,5 @@ public interface Highlighter {
     /**
      * Highlight a given Lucene document.
      */
-    Map<String, String> highlightDocument( Document document, org.apache.lucene.search.highlight.Highlighter highlighter, Analyzer analyzer, String[] fields );
+    Map<String, String> highlightDocument( Document document, org.apache.lucene.search.highlight.Highlighter highlighter, Analyzer analyzer, Set<String> fields );
 }

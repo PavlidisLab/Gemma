@@ -28,6 +28,7 @@ import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
+import java.util.Set;
 
 import static junit.framework.TestCase.assertEquals;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -97,7 +98,7 @@ public class OntologySearchSourceTest extends AbstractJUnit4SpringContextTests {
                     }
 
                     @Override
-                    public Map<String, String> highlightDocument( Document document, org.apache.lucene.search.highlight.Highlighter highlighter, Analyzer analyzer, String[] fields ) {
+                    public Map<String, String> highlightDocument( Document document, org.apache.lucene.search.highlight.Highlighter highlighter, Analyzer analyzer, Set<String> fields ) {
                         return Collections.emptyMap();
                     }
                 } ) );
@@ -134,7 +135,7 @@ public class OntologySearchSourceTest extends AbstractJUnit4SpringContextTests {
                     }
 
                     @Override
-                    public Map<String, String> highlightDocument( Document document, org.apache.lucene.search.highlight.Highlighter highlighter, Analyzer analyzer, String[] fields ) {
+                    public Map<String, String> highlightDocument( Document document, org.apache.lucene.search.highlight.Highlighter highlighter, Analyzer analyzer, Set<String> fields ) {
                         return Collections.emptyMap();
                     }
                 } ) );

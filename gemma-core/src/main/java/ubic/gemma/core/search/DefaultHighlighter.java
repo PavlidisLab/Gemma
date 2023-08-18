@@ -1,7 +1,6 @@
 package ubic.gemma.core.search;
 
 import lombok.extern.apachecommons.CommonsLog;
-import org.apache.commons.lang3.ArrayUtils;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Fieldable;
@@ -15,6 +14,7 @@ import javax.annotation.Nullable;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 @CommonsLog
 public class DefaultHighlighter implements Highlighter {
@@ -32,10 +32,10 @@ public class DefaultHighlighter implements Highlighter {
     }
 
     @Override
-    public Map<String, String> highlightDocument( Document document, org.apache.lucene.search.highlight.Highlighter highlighter, Analyzer analyzer, String[] fields ) {
+    public Map<String, String> highlightDocument( Document document, org.apache.lucene.search.highlight.Highlighter highlighter, Analyzer analyzer, Set<String> fields ) {
         Map<String, String> highlights = new HashMap<>();
         for ( Fieldable field : document.getFields() ) {
-            if ( !field.isTokenized() || field.isBinary() || !ArrayUtils.contains( fields, field.name() ) ) {
+            if ( !field.isTokenized() || field.isBinary() || !fields.contains( field.name() ) ) {
                 continue;
             }
             try {

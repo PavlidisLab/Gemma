@@ -154,7 +154,7 @@ public class DatasetsWebService {
         }
 
         @Override
-        public Map<String, String> highlightDocument( Document document, org.apache.lucene.search.highlight.Highlighter highlighter, Analyzer analyzer, String[] fields ) {
+        public Map<String, String> highlightDocument( Document document, org.apache.lucene.search.highlight.Highlighter highlighter, Analyzer analyzer, Set<String> fields ) {
             long id = Long.parseLong( document.get( "id" ) );
             // TODO: maybe use a filter in the Lucene query?
             if ( !documentIdsToHighlight.contains( id ) ) {
