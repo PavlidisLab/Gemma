@@ -196,10 +196,18 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
                 .hasStatus( Response.Status.OK )
                 .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE );
         ArgumentCaptor<SearchSettings> captor = ArgumentCaptor.forClass( SearchSettings.class );
-        verify( searchService ).search( captor.capture() );
-        assertThat( captor.getValue() )
-                .hasFieldOrPropertyWithValue( "query", "cerebellum" )
-                .hasFieldOrPropertyWithValue( "fillResults", false );
+        verify( searchService, times( 2 ) ).search( captor.capture() );
+        assertThat( captor.getAllValues() )
+                .hasSize( 2 )
+                .satisfiesExactly( s -> {
+                    assertThat( s.getQuery() ).isEqualTo( "cerebellum" );
+                    assertThat( s.isFillResults() ).isFalse();
+                    assertThat( s.getHighlighter() ).isNull();
+                }, s -> {
+                    assertThat( s.getQuery() ).isEqualTo( "cerebellum" );
+                    assertThat( s.isFillResults() ).isFalse();
+                    assertThat( s.getHighlighter() ).isNotNull();
+                } );
         verify( expressionExperimentService ).getFilter( "id", Long.class, Filter.Operator.in, new HashSet<>( ids ) );
         verify( expressionExperimentService ).loadIdsWithCache( Filters.by( "ee", "id", Long.class, Filter.Operator.in, new HashSet<>( ids ) ), Sort.by( "ee", "id", Sort.Direction.ASC ) );
         verify( expressionExperimentService ).loadValueObjectsByIds( ids, true );

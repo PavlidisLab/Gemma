@@ -27,9 +27,10 @@ import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.document.Document;
+import org.apache.lucene.search.highlight.Highlighter;
+import org.apache.lucene.search.highlight.QueryScorer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
-import org.springframework.context.MessageSourceResolvable;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
@@ -42,6 +43,7 @@ import ubic.gemma.core.analysis.preprocess.svd.SVDValueObject;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
 import ubic.gemma.core.search.DefaultHighlighter;
 import ubic.gemma.core.search.SearchResult;
+import ubic.gemma.core.search.lucene.SimpleMarkdownFormatter;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisValueObject;
 import ubic.gemma.model.common.auditAndSecurity.eventType.BatchInformationFetchingEvent;
 import ubic.gemma.model.common.description.AnnotationValueObject;
@@ -74,6 +76,7 @@ import ubic.gemma.rest.util.*;
 import ubic.gemma.rest.util.args.*;
 
 import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
@@ -121,36 +124,38 @@ public class DatasetsWebService {
     private DatasetArgService datasetArgService;
     @Autowired
     private GeneArgService geneArgService;
-    @Autowired
-    private MessageSource messageSource;
 
     @Autowired
     private HttpServletRequest request;
 
+    @ParametersAreNonnullByDefault
     private class Highlighter extends DefaultHighlighter {
 
         private final Set<Long> documentIdsToHighlight;
-        private final Locale locale;
 
-        private Highlighter( Set<Long> documentIdsToHighlight, Locale locale ) {
+        private Highlighter( Set<Long> documentIdsToHighlight ) {
             this.documentIdsToHighlight = documentIdsToHighlight;
-            this.locale = locale;
         }
 
         @Override
-        public String highlightTerm( String termUri, String termLabel, MessageSourceResolvable clazz ) {
+        public Map<String, String> highlightTerm( @Nullable String termUri, String termLabel, String field ) {
             String reconstructedUri = ServletUriComponentsBuilder.fromRequest( request )
                     .scheme( null )
                     .host( null )
                     .port( -1 )
                     // replace the query with the term URI and only retain the filter
-                    .replaceQueryParam( "query", termUri )
+                    .replaceQueryParam( "query", termUri != null ? termUri : termLabel )
                     .replaceQueryParam( "offset" )
                     .replaceQueryParam( "limit" )
                     .replaceQueryParam( "sort" )
                     .build()
                     .toUriString();
-            return String.format( "**[%s](%s)** via *%s*", termLabel, reconstructedUri, messageSource.getMessage( clazz, locale ) );
+            return Collections.singletonMap( field, String.format( "**[%s](%s)**", termLabel, reconstructedUri ) );
+        }
+
+        @Override
+        public org.apache.lucene.search.highlight.Highlighter createLuceneHighlighter( QueryScorer queryScorer ) {
+            return new org.apache.lucene.search.highlight.Highlighter( new SimpleMarkdownFormatter(), queryScorer );
         }
 
         @Override
@@ -200,7 +205,7 @@ public class DatasetsWebService {
             }
 
             // now highlight the results in the slice
-            results = datasetArgService.getIdsForSearchQuery( query, new Highlighter( new HashSet<>( idsSlice ), request.getLocale() ) );
+            results = datasetArgService.getIdsForSearchQuery( query, new Highlighter( new HashSet<>( idsSlice ) ) );
             results.forEach( e -> resultById.put( e.getResultId(), e ) );
 
             List<ExpressionExperimentValueObject> vos = expressionExperimentService.loadValueObjectsByIds( idsSlice, true );

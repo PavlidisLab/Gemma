@@ -4,14 +4,13 @@ import lombok.extern.apachecommons.CommonsLog;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Fieldable;
-import org.apache.lucene.search.Query;
 import org.apache.lucene.search.highlight.InvalidTokenOffsetsException;
 import org.apache.lucene.search.highlight.QueryScorer;
-import org.springframework.context.MessageSourceResolvable;
 import ubic.gemma.core.search.lucene.SimpleHTMLFormatter;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -19,16 +18,14 @@ import java.util.Set;
 @CommonsLog
 public class DefaultHighlighter implements Highlighter {
 
-    @Nullable
     @Override
-    public String highlightTerm( String termUri, String termLabel, MessageSourceResolvable className ) {
-        return null;
+    public Map<String, String> highlightTerm( @Nullable String termUri, String termLabel, String field ) {
+        return Collections.emptyMap();
     }
 
-    @Nullable
     @Override
-    public org.apache.lucene.search.highlight.Highlighter createLuceneHighlighter( Query query ) {
-        return new org.apache.lucene.search.highlight.Highlighter( new SimpleHTMLFormatter(), new QueryScorer( query ) );
+    public org.apache.lucene.search.highlight.Highlighter createLuceneHighlighter( QueryScorer queryScorer ) {
+        return new org.apache.lucene.search.highlight.Highlighter( new SimpleHTMLFormatter(), queryScorer );
     }
 
     @Override

@@ -11,15 +11,15 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.document.Document;
+import org.apache.lucene.search.highlight.QueryScorer;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.MessageSource;
-import org.springframework.context.MessageSourceResolvable;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import ubic.gemma.core.search.DefaultHighlighter;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.search.SearchResult;
 import ubic.gemma.core.search.SearchService;
+import ubic.gemma.core.search.lucene.SimpleMarkdownFormatter;
 import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.description.BibliographicReferenceValueObject;
@@ -42,8 +42,8 @@ import ubic.gemma.rest.util.ResponseDataObject;
 import ubic.gemma.rest.util.args.*;
 
 import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
 import javax.servlet.ServletContext;
-import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.*;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
@@ -64,7 +64,7 @@ import static java.util.function.Function.identity;
 public class SearchWebService {
 
     /**
-     * Name used in the OpenAPI schema to identify result types as per {@link #search(String, TaxonArg, PlatformArg, List, LimitArg, StringArrayArg)}'s
+     * Name used in the OpenAPI schema to identify result types as per {@link #search(String, TaxonArg, PlatformArg, List, LimitArg, ExcludeArg)}'s
      * fourth argument.
      */
     public static final String RESULT_TYPES_SCHEMA_NAME = "SearchResultType";
@@ -73,6 +73,11 @@ public class SearchWebService {
      * Maximum number of search results.
      */
     public static final int MAX_SEARCH_RESULTS = 2000;
+
+    /**
+     * Maximum number of highlighted documents.
+     */
+    private static final int MAX_HIGHLIGHTED_DOCUMENTS = 500;
 
     @Autowired
     private SearchService searchService;
@@ -84,41 +89,36 @@ public class SearchWebService {
     private TaxonArgService taxonArgService;
     @Autowired
     private PlatformArgService platformArgService;
-    @Autowired
-    private MessageSource messageSource;
 
     @Autowired
     private ServletContext servletContext;
-    @Autowired
-    private HttpServletRequest request;
 
     /**
      * Highlights search result.
      */
+    @ParametersAreNonnullByDefault
     private class Highlighter extends DefaultHighlighter {
-
-        private final Locale locale;
 
         private int highlightedDocuments = 0;
 
-        private Highlighter( Locale locale ) {
-            this.locale = locale;
-        }
-
         @Override
-        public String highlightTerm( String uri, String label, MessageSourceResolvable className ) {
+        public Map<String, String> highlightTerm( @Nullable String uri, String label, String field ) {
             try {
-                return String.format( "**[%s](%s)** via *%s*", label,
-                        servletContext.getContextPath() + "/rest/v2/search?query=" + URLEncoder.encode( uri, StandardCharsets.UTF_8.name() ),
-                        messageSource.getMessage( className, locale ) );
+                return Collections.singletonMap( field, String.format( "**[%s](%s)**", label,
+                        servletContext.getContextPath() + "/rest/v2/search?query=" + URLEncoder.encode( uri != null ? uri : label, StandardCharsets.UTF_8.name() ) ) );
             } catch ( UnsupportedEncodingException e ) {
                 throw new RuntimeException( e );
             }
         }
 
         @Override
+        public org.apache.lucene.search.highlight.Highlighter createLuceneHighlighter( QueryScorer queryScorer ) {
+            return new org.apache.lucene.search.highlight.Highlighter( new SimpleMarkdownFormatter(), queryScorer );
+        }
+
+        @Override
         public Map<String, String> highlightDocument( Document document, org.apache.lucene.search.highlight.Highlighter highlighter, Analyzer analyzer, Set<String> fields ) {
-            if ( highlightedDocuments >= 500 ) {
+            if ( highlightedDocuments >= MAX_HIGHLIGHTED_DOCUMENTS ) {
                 return Collections.emptyMap();
             }
             highlightedDocuments++;
@@ -175,7 +175,7 @@ public class SearchWebService {
                 .resultTypes( resultTypesCls )
                 .maxResults( maxResults )
                 .fillResults( fillResults )
-                .highlighter( new Highlighter( request.getLocale() ) )
+                .highlighter( new Highlighter() )
                 .build();
 
         List<SearchResult<?>> searchResults;

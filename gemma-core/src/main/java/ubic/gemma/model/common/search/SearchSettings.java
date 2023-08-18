@@ -279,14 +279,14 @@ public class SearchSettings implements Serializable {
     /**
      * Highlight a given ontology term.
      * <p>
-     * This is a shorthand for {@link #getHighlighter()} and {@link Highlighter#highlightTerm(String, String, MessageSourceResolvable)}
+     * This is a shorthand for {@link #getHighlighter()} and {@link Highlighter#highlightTerm(String, String, String)}
      * that deals with a potentially null highlighter.
      * @see #setHighlighter(Highlighter)
      * @return a highlight, or null if no provider is set or the provider returns null
      */
     @Nullable
-    public String highlightTerm( String termUri, String termLabel, MessageSourceResolvable className ) {
-        return highlighter != null ? highlighter.highlightTerm( termUri, termLabel, className ) : null;
+    public Map<String, String> highlightTerm( String termUri, String termLabel, String field ) {
+        return highlighter != null ? highlighter.highlightTerm( termUri, termLabel, field ) : null;
     }
 
     @Nullable

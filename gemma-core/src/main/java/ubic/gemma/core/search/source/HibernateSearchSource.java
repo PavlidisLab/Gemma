@@ -7,6 +7,7 @@ import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.highlight.Highlighter;
+import org.apache.lucene.search.highlight.QueryScorer;
 import org.hibernate.SessionFactory;
 import org.hibernate.search.FullTextQuery;
 import org.hibernate.search.FullTextSession;
@@ -163,13 +164,11 @@ public class HibernateSearchSource implements SearchSource, InitializingBean {
                     .matching( settings.getQuery() )
                     .createQuery();
             Analyzer analyzer = analyzers.get( clazz );
-            Highlighter highlighter;
+            Highlighter highlighter = settings.getHighlighter() != null ? settings.getHighlighter().createLuceneHighlighter( new QueryScorer( query ) ) : null;
             String[] projection;
-            if ( settings.getHighlighter() != null && settings.getHighlighter().createLuceneHighlighter( query ) != null ) {
-                highlighter = settings.getHighlighter().createLuceneHighlighter( query );
+            if ( highlighter != null ) {
                 projection = new String[] { settings.isFillResults() ? FullTextQuery.THIS : FullTextQuery.ID, FullTextQuery.SCORE, FullTextQuery.DOCUMENT };
             } else {
-                highlighter = null;
                 projection = new String[] { settings.isFillResults() ? FullTextQuery.THIS : FullTextQuery.ID, FullTextQuery.SCORE };
             }
             //noinspection unchecked

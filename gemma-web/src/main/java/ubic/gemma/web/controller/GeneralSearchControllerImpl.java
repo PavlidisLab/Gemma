@@ -18,7 +18,6 @@
  */
 package ubic.gemma.web.controller;
 
-import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.lang3.time.StopWatch;
@@ -26,7 +25,6 @@ import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.document.Document;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
-import org.springframework.context.MessageSourceResolvable;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.BindException;
 import org.springframework.web.bind.WebDataBinder;
@@ -57,6 +55,8 @@ import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.web.propertyeditor.TaxonPropertyEditor;
 import ubic.gemma.web.remote.JsonReaderResponse;
 
+import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -77,6 +77,11 @@ import static org.apache.commons.text.StringEscapeUtils.escapeHtml4;
  */
 @Controller
 public class GeneralSearchControllerImpl extends BaseFormController implements GeneralSearchController {
+
+    /**
+     * Maximum number of highlighted documents.
+     */
+    private static final int MAX_HIGHLIGHTED_DOCUMENTS = 500;
 
     @Autowired
     private SearchService searchService;
@@ -152,6 +157,7 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
         return new JsonReaderResponse<>( finalResults );
     }
 
+    @ParametersAreNonnullByDefault
     private class Highlighter extends DefaultHighlighter {
 
         private final Locale locale;
@@ -163,33 +169,29 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
         }
 
         @Override
-        public String highlightTerm( String uri, String value, MessageSourceResolvable className ) {
+        public Map<String, String> highlightTerm( @Nullable String uri, String value, String field ) {
             String matchedText;
             try {
-                matchedText = "<a href=\"" + servletContext.getContextPath() + "/searcher.html?query=" + URLEncoder.encode( uri, StandardCharsets.UTF_8.name() ) + "\">" + escapeHtml4( value ) + "</a> ";
+                matchedText = "<a href=\"" + servletContext.getContextPath() + "/searcher.html?query=" + URLEncoder.encode( uri != null ? uri : value, StandardCharsets.UTF_8.name() ) + "\">" + escapeHtml4( value ) + "</a> ";
             } catch ( UnsupportedEncodingException e ) {
                 throw new RuntimeException( e );
             }
-            if ( !ArrayUtils.contains( className.getCodes(), ExpressionExperiment.class.getName() ) ) {
-                matchedText = matchedText + " via " + messageSource.getMessage( className, locale );
-            }
-            return matchedText;
+            return Collections.singletonMap( localizeField( "ExpressionExperiment", field ), matchedText );
         }
 
         @Override
         public Map<String, String> highlightDocument( Document document, org.apache.lucene.search.highlight.Highlighter highlighter, Analyzer analyzer, Set<String> fields ) {
-            if ( highlightedDocuments >= 500 ) {
+            if ( highlightedDocuments >= MAX_HIGHLIGHTED_DOCUMENTS ) {
                 return Collections.emptyMap();
             }
             highlightedDocuments++;
             return super.highlightDocument( document, highlighter, analyzer, fields )
                     .entrySet().stream()
-                    .collect( Collectors.toMap( e -> localizeDocumentField( document, e.getKey() ), Map.Entry::getValue, ( a, b ) -> b ) );
+                    .collect( Collectors.toMap( e -> localizeField( StringUtils.substringAfterLast( document.get( "_hibernate_class" ), '.' ), e.getKey() ), Map.Entry::getValue, ( a, b ) -> b ) );
         }
 
-        private String localizeDocumentField( Document document, String key ) {
-            String hibernateClass = document.get( "_hibernate_class" );
-            return messageSource.getMessage( StringUtils.substringAfterLast( hibernateClass, '.' ) + "." + key, null, key, locale );
+        private String localizeField( String className, String field ) {
+            return messageSource.getMessage( className + "." + field, null, field, locale );
         }
     }
 
