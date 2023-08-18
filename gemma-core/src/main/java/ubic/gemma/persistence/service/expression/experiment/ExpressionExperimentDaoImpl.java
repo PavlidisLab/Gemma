@@ -1040,10 +1040,11 @@ public class ExpressionExperimentDaoImpl
 
     @Override
     public Map<Taxon, Long> getPerTaxonCount() {
-        String queryString = "select ee.taxon, count(distinct ee) from ExpressionExperiment ee "
+        String queryString = "select ee.taxon, count(distinct ee) as EE_COUNT from ExpressionExperiment ee "
                 + AclQueryUtils.formAclRestrictionClause( "ee.id" ) + " "
                 + formNonTroubledClause( "ee" ) + " "
-                + "group by ee.taxon";
+                + "group by ee.taxon "
+                + "order by EE_COUNT desc";
 
         Query query = this.getSessionFactory().getCurrentSession().createQuery( queryString );
 
@@ -1066,9 +1067,10 @@ public class ExpressionExperimentDaoImpl
         }
         //noinspection unchecked
         List<Object[]> list = this.getSessionFactory().getCurrentSession().createQuery(
-                        "select ee.taxon, count(distinct ee) from ExpressionExperiment ee "
+                        "select ee.taxon, count(distinct ee) as EE_COUNT from ExpressionExperiment ee "
                                 + "where ee.id in :eeIds "
-                                + "group by ee.taxon" )
+                                + "group by ee.taxon "
+                                + "order by EE_COUNT desc")
                 .setParameterList( "eeIds", ids )
                 .list();
         return list.stream()

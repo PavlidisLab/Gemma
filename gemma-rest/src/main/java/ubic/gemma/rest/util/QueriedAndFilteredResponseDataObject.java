@@ -8,27 +8,23 @@ import ubic.gemma.persistence.util.Sort;
 import javax.annotation.Nullable;
 import java.util.List;
 
-/**
- * Represent limit results.
- *
- * @param <T>
- */
 @Value
 @EqualsAndHashCode(callSuper = true)
-public class LimitedResponseDataObject<T> extends ResponseDataObject<List<T>> {
+public class QueriedAndFilteredResponseDataObject<T> extends ResponseDataObject<List<T>> {
 
     String query;
     String filter;
     String[] groupBy;
-    SortValueObject sort;
-    Integer limit;
+    String sort;
 
-    public LimitedResponseDataObject( List<T> payload, @Nullable String query, @Nullable Filters filters, String[] groupBy, @Nullable Sort sort, @Nullable Integer limit ) {
+    /**
+     * @param payload the data to be serialised and returned as the response payload.
+     */
+    public QueriedAndFilteredResponseDataObject( List<T> payload, @Nullable String query, @Nullable Filters filters, String[] groupBy, @Nullable Sort sort ) {
         super( payload );
         this.query = query;
         this.filter = filters != null ? filters.toOriginalString() : null;
+        this.sort = sort != null ? sort.toOriginalString() : null;
         this.groupBy = groupBy;
-        this.sort = sort != null ? new SortValueObject( sort ) : null;
-        this.limit = limit;
     }
 }
