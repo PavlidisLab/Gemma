@@ -18,7 +18,10 @@ import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.gene.GeneSet;
 
 import javax.annotation.Nullable;
-import java.util.*;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -39,25 +42,26 @@ public class CompositeSearchSource implements SearchSource {
 
     @Override
     public Collection<SearchResult<ArrayDesign>> searchArrayDesign( SearchSettings settings ) throws SearchException {
-        return searchWith( ( s ) -> s.searchArrayDesign( settings ) );
+        return searchWith( ( s ) -> s.searchArrayDesign( settings ), ArrayDesign.class );
     }
 
     @Override
     public Collection<SearchResult<BibliographicReference>> searchBibliographicReference( SearchSettings settings ) throws SearchException {
-        return searchWith( ( s ) -> s.searchBibliographicReference( settings ) );
+        return searchWith( ( s ) -> s.searchBibliographicReference( settings ), BibliographicReference.class );
     }
 
     @Override
     public Collection<SearchResult<ExpressionExperimentSet>> searchExperimentSet( SearchSettings settings ) throws SearchException {
-        return searchWith( ( s ) -> s.searchExperimentSet( settings ) );
+        return searchWith( ( s ) -> s.searchExperimentSet( settings ), ExpressionExperimentSet.class );
     }
 
     @Override
     public Collection<SearchResult<BioSequence>> searchBioSequence( SearchSettings settings ) throws SearchException {
-        return searchWith( ( s ) -> s.searchBioSequence( settings ) );
+        return searchWith( ( s ) -> s.searchBioSequence( settings ), BioSequence.class );
     }
 
     @Override
+    @Deprecated
     public Collection<SearchResult<?>> searchBioSequenceAndGene( SearchSettings settings, @Nullable Collection<SearchResult<Gene>> previousGeneSearchResults ) throws SearchException {
         // FIXME: use searchWith
         Set<SearchResult<?>> results = new HashSet<>();
@@ -69,10 +73,11 @@ public class CompositeSearchSource implements SearchSource {
 
     @Override
     public Collection<SearchResult<CompositeSequence>> searchCompositeSequence( SearchSettings settings ) throws SearchException {
-        return searchWith( ( s ) -> s.searchCompositeSequence( settings ) );
+        return searchWith( ( s ) -> s.searchCompositeSequence( settings ), CompositeSequence.class );
     }
 
     @Override
+    @Deprecated
     public Collection<SearchResult<?>> searchCompositeSequenceAndGene( SearchSettings settings ) throws SearchException {
         // FIXME: use searchWith
         Set<SearchResult<?>> results = new HashSet<>();
@@ -84,17 +89,17 @@ public class CompositeSearchSource implements SearchSource {
 
     @Override
     public Collection<SearchResult<ExpressionExperiment>> searchExpressionExperiment( SearchSettings settings ) throws SearchException {
-        return searchWith( ( s ) -> s.searchExpressionExperiment( settings ) );
+        return searchWith( ( s ) -> s.searchExpressionExperiment( settings ), ExpressionExperiment.class );
     }
 
     @Override
     public Collection<SearchResult<Gene>> searchGene( SearchSettings settings ) throws SearchException {
-        return searchWith( ( s ) -> s.searchGene( settings ) );
+        return searchWith( ( s ) -> s.searchGene( settings ), Gene.class );
     }
 
     @Override
     public Collection<SearchResult<GeneSet>> searchGeneSet( SearchSettings settings ) throws SearchException {
-        return searchWith( ( s ) -> s.searchGeneSet( settings ) );
+        return searchWith( ( s ) -> s.searchGeneSet( settings ), GeneSet.class );
     }
 
     @FunctionalInterface
@@ -102,7 +107,7 @@ public class CompositeSearchSource implements SearchSource {
         Collection<SearchResult<T>> apply( SearchSource searchSource ) throws SearchException;
     }
 
-    private <T extends Identifiable> Collection<SearchResult<T>> searchWith( SearchFunction<T> func ) throws SearchException {
+    private <T extends Identifiable> Collection<SearchResult<T>> searchWith( SearchFunction<T> func, Class<T> clazz ) throws SearchException {
         StopWatch timer = StopWatch.createStarted();
         Set<SearchResult<T>> results = new SearchResultSet<>();
         long[] timeSpentBySource = new long[sources.size()];
@@ -122,7 +127,7 @@ public class CompositeSearchSource implements SearchSource {
         boolean shouldWarn = timer.getTime( TimeUnit.MILLISECONDS ) > 200;
         if ( shouldWarn || log.isDebugEnabled() ) {
             String breakdownBySource = IntStream.range( 0, sources.size() ).mapToObj( i -> String.format( "source: %s, found items: %d, found items (novel): %d, time spent: %d ms", sources.get( i ).getClass().getSimpleName(), foundItemsBySource[i], newItemsBySource[i], timeSpentBySource[i] ) ).collect( Collectors.joining( "; " ) );
-            String message = String.format( "Found %d results in %d ms (%s)", results.size(), timer.getTime( TimeUnit.MILLISECONDS ), breakdownBySource );
+            String message = String.format( "Found %d %s results in %d ms (%s)", results.size(), clazz.getSimpleName(), timer.getTime( TimeUnit.MILLISECONDS ), breakdownBySource );
             if ( shouldWarn ) {
                 log.warn( message );
             } else {
