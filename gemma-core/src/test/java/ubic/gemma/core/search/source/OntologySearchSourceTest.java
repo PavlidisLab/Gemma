@@ -107,7 +107,7 @@ public class OntologySearchSourceTest extends AbstractJUnit4SpringContextTests {
                     .hasFieldOrPropertyWithValue( "resultType", ExpressionExperiment.class )
                     .hasFieldOrPropertyWithValue( "resultId", 1L );
             assertThat( result.getHighlights() )
-                    .containsEntry( "term", "[microglial cell](http://purl.obolibrary.org/obo/CL_0000129)" );
+                    .containsEntry( "characteristics.valueUri", "[microglial cell](http://purl.obolibrary.org/obo/CL_0000129)" );
         } );
     }
 
@@ -144,7 +144,7 @@ public class OntologySearchSourceTest extends AbstractJUnit4SpringContextTests {
                     .hasFieldOrPropertyWithValue( "resultType", ExpressionExperiment.class )
                     .hasFieldOrPropertyWithValue( "resultId", 1L );
             assertThat( result.getHighlights() )
-                    .containsEntry( "term", "[CL:0000129](http://purl.obolibrary.org/obo/CL_0000129)" );
+                    .containsEntry( "characteristics.valueUri", "[CL:0000129](http://purl.obolibrary.org/obo/CL_0000129)" );
         } );
     }
 
