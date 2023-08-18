@@ -18,6 +18,7 @@
  */
 package ubic.gemma.web.controller;
 
+import lombok.Value;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.lang3.time.StopWatch;
@@ -32,7 +33,9 @@ import org.springframework.web.bind.annotation.InitBinder;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.servlet.ModelAndView;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import org.springframework.web.servlet.view.RedirectView;
+import org.springframework.web.util.UriComponentsBuilder;
 import ubic.gemma.core.search.DefaultHighlighter;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.search.SearchResult;
@@ -57,12 +60,8 @@ import ubic.gemma.web.remote.JsonReaderResponse;
 
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
-import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -83,14 +82,29 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
      */
     private static final int MAX_HIGHLIGHTED_DOCUMENTS = 500;
 
+    @Value
+    private static class Scope {
+        char scope;
+        Class<? extends Identifiable> resultType;
+    }
+
+    private static final Scope[] scopes = {
+            new Scope( 'G', Gene.class ),
+            new Scope( 'E', ExpressionExperiment.class ),
+            new Scope( 'S', BioSequence.class ),
+            new Scope( 'P', CompositeSequence.class ),
+            new Scope( 'A', ArrayDesign.class ),
+            new Scope( 'M', GeneSet.class ),
+            new Scope( 'N', ExpressionExperimentSet.class )
+    };
+
     @Autowired
     private SearchService searchService;
     @Autowired
     private TaxonService taxonService;
     @Autowired
     private MessageSource messageSource;
-    @Autowired
-    private ServletContext servletContext;
+
     @Autowired
     private HttpServletRequest request;
 
@@ -111,7 +125,7 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
         timer.start();
 
         SearchSettings searchSettings = searchSettingsFromVo( settingsValueObject )
-                .withHighlighter( new Highlighter( request.getLocale() ) );
+                .withHighlighter( new Highlighter( scopeFromVo( settingsValueObject ), request.getLocale() ) );
 
         searchTimer.start();
         SearchService.SearchResultMap searchResults;
@@ -160,22 +174,26 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
     @ParametersAreNonnullByDefault
     private class Highlighter extends DefaultHighlighter {
 
+        @Nullable
+        private final String scope;
         private final Locale locale;
 
         private int highlightedDocuments = 0;
 
-        private Highlighter( Locale locale ) {
+        private Highlighter( @Nullable String scope, Locale locale ) {
+            this.scope = scope;
             this.locale = locale;
         }
 
         @Override
         public Map<String, String> highlightTerm( @Nullable String uri, String value, String field ) {
-            String matchedText;
-            try {
-                matchedText = "<a href=\"" + servletContext.getContextPath() + "/searcher.html?query=" + URLEncoder.encode( uri != null ? uri : value, StandardCharsets.UTF_8.name() ) + "\">" + escapeHtml4( value ) + "</a> ";
-            } catch ( UnsupportedEncodingException e ) {
-                throw new RuntimeException( e );
+            UriComponentsBuilder builder = ServletUriComponentsBuilder.fromContextPath( request )
+                    .queryParam( "query", uri != null ? uri : value );
+            if ( scope != null ) {
+                builder.queryParam( "scope", scope );
             }
+            String searchUrl = builder.build().toUriString();
+            String matchedText = "<a href=\"" + searchUrl + "\">" + escapeHtml4( value ) + "</a> ";
             return Collections.singletonMap( localizeField( "ExpressionExperiment", field ), matchedText );
         }
 
@@ -244,44 +262,26 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
         String taxon = request.getParameter( "taxon" );
         if ( taxon != null )
             csc.taxon( taxonService.findByScientificName( taxon ) );
-        csc.highlighter( new Highlighter( request.getLocale() ) );
         String scope = request.getParameter( "scope" );
+        csc.highlighter( new Highlighter( scope, request.getLocale() ) );
         if ( StringUtils.isNotBlank( scope ) ) {
             char[] scopes = scope.toCharArray();
             for ( char scope1 : scopes ) {
+                // FIXME: these are passed by the frontend, but obviously not supported
                 switch ( scope1 ) {
-                    case 'G':
-                        csc.resultType( Gene.class );
-                        break;
-                    case 'E':
-                        csc.resultType( ExpressionExperiment.class );
-                        break;
-                    case 'S':
-                        csc.resultType( BioSequence.class );
-                        break;
-                    case 'P':
-                        csc.resultType( CompositeSequence.class );
-                        break;
-                    case 'A':
-                        csc.resultType( ArrayDesign.class );
-                        break;
-                    case 'M':
-                        csc.resultType( GeneSet.class );
-                        break;
-                    case 'N':
-                        csc.resultType( ExpressionExperimentSet.class );
-                        break;
                     case 'H':
                     case 'B':
-                        // FIXME: these two are passed by the frontend, but obviously not supported
-                        break;
                     case ',':
                         break;
-                    default:
-                        // TODO: 400 Bad Request error?
-                        log.warn( String.format( "Unsupported value for scope: %c.", scope1 ) );
-                        break;
                 }
+                for ( Scope s : GeneralSearchControllerImpl.scopes ) {
+                    if ( s.scope == scope1 ) {
+                        csc.resultType( s.resultType );
+                        break;
+                    }
+                }
+                // TODO: 400 Bad Request error?
+                log.warn( String.format( "Unsupported value for scope: %c.", scope1 ) );
             }
         }
         return csc.build();
@@ -353,6 +353,20 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
                 .useCharacteristics( settingsValueObject.getUseCharacteristics() )
                 .useGo( settingsValueObject.getUseGo() )
                 .build();
+    }
+
+    private String scopeFromVo( SearchSettingsValueObject settingsValueObject ) {
+        Set<Class<? extends Identifiable>> resultTypes = resultTypesFromVo( settingsValueObject );
+        StringBuilder scope = new StringBuilder();
+        for ( Class<? extends Identifiable> resultType : resultTypes ) {
+            for ( Scope s : scopes ) {
+                if ( resultType.equals( s.resultType ) ) {
+                    scope.append( s.scope );
+                    break;
+                }
+            }
+        }
+        return scope.toString();
     }
 
     private static Set<Class<? extends Identifiable>> resultTypesFromVo( SearchSettingsValueObject valueObject ) {

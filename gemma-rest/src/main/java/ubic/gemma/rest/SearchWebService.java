@@ -15,6 +15,7 @@ import org.apache.lucene.search.highlight.QueryScorer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import ubic.gemma.core.search.DefaultHighlighter;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.search.SearchResult;
@@ -43,11 +44,8 @@ import ubic.gemma.rest.util.args.*;
 
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
-import javax.servlet.ServletContext;
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.*;
-import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -91,7 +89,7 @@ public class SearchWebService {
     private PlatformArgService platformArgService;
 
     @Autowired
-    private ServletContext servletContext;
+    private HttpServletRequest request;
 
     /**
      * Highlights search result.
@@ -103,12 +101,14 @@ public class SearchWebService {
 
         @Override
         public Map<String, String> highlightTerm( @Nullable String uri, String label, String field ) {
-            try {
-                return Collections.singletonMap( field, String.format( "**[%s](%s)**", label,
-                        servletContext.getContextPath() + "/rest/v2/search?query=" + URLEncoder.encode( uri != null ? uri : label, StandardCharsets.UTF_8.name() ) ) );
-            } catch ( UnsupportedEncodingException e ) {
-                throw new RuntimeException( e );
-            }
+            String searchUrl = ServletUriComponentsBuilder.fromRequest( request )
+                    .scheme( null )
+                    .host( null )
+                    .port( -1 )
+                    .replaceQueryParam( "query", uri != null ? uri : label )
+                    .build()
+                    .toUriString();
+            return Collections.singletonMap( field, String.format( "**[%s](%s)**", label, searchUrl ) );
         }
 
         @Override
