@@ -8,7 +8,7 @@ openAPI:
       url: https://dev.gemma.msl.ubc.ca/rest/v2
   info:
     title: Gemma RESTful API
-    version: 2.7.0
+    version: 2.7.1
     description: |
       This website documents the usage of the [Gemma RESTful API](https://gemma.msl.ubc.ca/rest/v2/). Here you can find
       example script usage of the API, as well as graphical interface for each endpoint, with description of its
@@ -18,6 +18,15 @@ openAPI:
       Please read these in full before continuing to use this webpage or any other part of the Gemma system.
 
       ## Updates
+
+      ### Update 2.7.1
+
+      - improved highlights of search results
+      - fix the limit for getDatasetsAnnotations() endpoint to 5000 in the specification
+      - fix missing initialization of datasets retrieved from the cache
+
+      Highlights now use Markdown syntax for formatting. Fields for highlighted ontology terms now use complete object
+      path instead of just `term`. Last but not least, highlights from multiple results are merged.
 
       ### Update 2.7.0
 
