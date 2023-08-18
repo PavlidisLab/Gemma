@@ -156,6 +156,8 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
 
         private final Locale locale;
 
+        private int highlightedDocuments = 0;
+
         private Highlighter( Locale locale ) {
             this.locale = locale;
         }
@@ -176,6 +178,10 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
 
         @Override
         public Map<String, String> highlightDocument( Document document, org.apache.lucene.search.highlight.Highlighter highlighter, Analyzer analyzer, String[] fields ) {
+            if ( highlightedDocuments >= 500 ) {
+                return Collections.emptyMap();
+            }
+            highlightedDocuments++;
             return super.highlightDocument( document, highlighter, analyzer, fields )
                     .entrySet().stream()
                     .collect( Collectors.toMap( e -> localizeDocumentField( document, e.getKey() ), Map.Entry::getValue, ( a, b ) -> b ) );

@@ -9,6 +9,8 @@ import lombok.Value;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.apache.lucene.analysis.Analyzer;
+import org.apache.lucene.document.Document;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
 import org.springframework.context.MessageSourceResolvable;
@@ -97,6 +99,8 @@ public class SearchWebService {
 
         private final Locale locale;
 
+        private int highlightedDocuments = 0;
+
         private Highlighter( Locale locale ) {
             this.locale = locale;
         }
@@ -110,6 +114,15 @@ public class SearchWebService {
             } catch ( UnsupportedEncodingException e ) {
                 throw new RuntimeException( e );
             }
+        }
+
+        @Override
+        public Map<String, String> highlightDocument( Document document, org.apache.lucene.search.highlight.Highlighter highlighter, Analyzer analyzer, String[] fields ) {
+            if ( highlightedDocuments >= 500 ) {
+                return Collections.emptyMap();
+            }
+            highlightedDocuments++;
+            return super.highlightDocument( document, highlighter, analyzer, fields );
         }
     }
 
