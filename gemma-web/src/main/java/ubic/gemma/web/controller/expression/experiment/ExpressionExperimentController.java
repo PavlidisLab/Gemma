@@ -1708,6 +1708,8 @@ public class ExpressionExperimentController {
                     ExpressionExperimentController.log.info( "Reference exists in system, copying over the metadata and associating..." );
                     publication.setId( null );
                     publication = ( BibliographicReference ) persisterHelper.persist( publication );
+                    // we need to thaw mesh terms, keywords, etc. for Hibernate Search
+                    publication = bibliographicReferenceService.thaw( publication );
                     expressionExperiment.setPrimaryPublication( publication );
                     expressionExperimentService.update( expressionExperiment );
                 }
