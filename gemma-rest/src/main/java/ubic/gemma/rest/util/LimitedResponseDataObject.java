@@ -9,9 +9,8 @@ import javax.annotation.Nullable;
 import java.util.List;
 
 /**
- * Represent limit results.
- *
- * @param <T>
+ * Represents a payload with a limited number of results.
+ * @author poirigui
  */
 @Value
 @EqualsAndHashCode(callSuper = true)

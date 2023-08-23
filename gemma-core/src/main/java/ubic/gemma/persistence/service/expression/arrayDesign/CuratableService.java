@@ -18,7 +18,7 @@ import java.util.List;
  * Interface for curatable services.
  * <p>
  * For now, this mainly adds {@link Secured} annotations to safeguard methods inherited from {@link BaseService}.
- * @param <C>
+ * @author poirigui
  */
 public interface CuratableService<C extends Curatable, VO extends AbstractCuratableValueObject<C>> extends BaseService<C>, FilteringVoEnabledService<C, VO> {
 

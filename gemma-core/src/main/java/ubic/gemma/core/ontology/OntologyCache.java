@@ -109,7 +109,6 @@ class OntologyCache {
 
     /**
      * A HashSet implementation with a cheap hashCode() operation.
-     * @param <T>
      */
     private static class IncrementalHashSet<T> extends HashSet<T> {
 

@@ -48,7 +48,7 @@ public interface ProcessedExpressionDataVectorDao extends DesignElementDataVecto
      * @param expressionExperiment       ee
      * @param ignoreQuantitationMismatch use raw data to infer scale type and the adequate transformation for producing
      *                                   processed EVs instead of relying on the QT
-     * @return
+     * @return the created processed vectors
      */
     Set<ProcessedExpressionDataVector> createProcessedDataVectors( ExpressionExperiment expressionExperiment, boolean ignoreQuantitationMismatch ) throws QuantitationMismatchException;
 
