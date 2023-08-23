@@ -206,7 +206,7 @@ public class DatasetsWebService {
             results = datasetArgService.getIdsForSearchQuery( query, new Highlighter( new HashSet<>( idsSlice ) ) );
             results.forEach( e -> resultById.put( e.getResultId(), e ) );
 
-            List<ExpressionExperimentValueObject> vos = expressionExperimentService.loadValueObjectsByIds( idsSlice, true );
+            List<ExpressionExperimentValueObject> vos = expressionExperimentService.loadValueObjectsByIdsWithRelationsAndCache( idsSlice );
             return Responder.queryAndPaginate(
                     new Slice<>( vos, Sort.by( null, "searchResult.score", Sort.Direction.DESC ), offset, limit, ( long ) ids.size() )
                             .map( vo -> new ExpressionExperimentWithSearchResultValueObject( vo, resultById.get( vo.getId() ) ) ),

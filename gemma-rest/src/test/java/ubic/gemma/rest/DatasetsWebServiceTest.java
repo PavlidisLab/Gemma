@@ -210,7 +210,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
                 } );
         verify( expressionExperimentService ).getFilter( "id", Long.class, Filter.Operator.in, new HashSet<>( ids ) );
         verify( expressionExperimentService ).loadIdsWithCache( Filters.by( "ee", "id", Long.class, Filter.Operator.in, new HashSet<>( ids ) ), Sort.by( "ee", "id", Sort.Direction.ASC ) );
-        verify( expressionExperimentService ).loadValueObjectsByIds( ids, true );
+        verify( expressionExperimentService ).loadValueObjectsByIdsWithRelationsAndCache( ids );
     }
 
     @Test

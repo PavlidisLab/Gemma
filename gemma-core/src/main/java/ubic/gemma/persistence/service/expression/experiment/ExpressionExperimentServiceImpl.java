@@ -1185,6 +1185,16 @@ public class ExpressionExperimentServiceImpl
 
     @Override
     @Transactional(readOnly = true)
+    public List<ExpressionExperimentValueObject> loadValueObjectsByIdsWithRelationsAndCache( List<Long> ids ) {
+        List<ExpressionExperiment> results = expressionExperimentDao.loadWithRelationsAndCache( ids );
+        Map<Long, Integer> id2position = ListUtils.indexOfElements( ids );
+        return expressionExperimentDao.loadValueObjects( results ).stream()
+                .sorted( Comparator.comparing( vo -> id2position.get( vo.getId() ) ) )
+                .collect( Collectors.toList() );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public List<ExpressionExperimentValueObject> loadValueObjectsByIds( final List<Long> ids,
             boolean maintainOrder ) {
         List<ExpressionExperimentValueObject> results = this.expressionExperimentDao.loadValueObjectsByIds( ids );

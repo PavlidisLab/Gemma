@@ -1346,6 +1346,28 @@ public class ExpressionExperimentDaoImpl
                         Collectors.mapping( ExpressionExperimentDetail::fromRow, Collectors.toList() ) ) );
     }
 
+    @Override
+    public List<ExpressionExperiment> loadWithRelationsAndCache( List<Long> ids ) {
+        if ( ids.isEmpty() ) {
+            return Collections.emptyList();
+        }
+        //noinspection unchecked
+        return ( List<ExpressionExperiment> ) getSessionFactory().getCurrentSession()
+                .createQuery( "select ee from ExpressionExperiment ee "
+                        + "left join ee.accession acc "
+                        + "left join ee.experimentalDesign as EDES "
+                        + "left join ee.curationDetails as s " /* needed for trouble status */
+                        + "left join s.lastNeedsAttentionEvent as eAttn "
+                        + "left join s.lastNoteUpdateEvent as eNote "
+                        + "left join s.lastTroubledEvent as eTrbl "
+                        + "left join ee.geeq as geeq "
+                        + "where ee.id in :ids" )
+                .setParameterList( "ids", ids )
+                .setCacheable( true )
+                // this transformer performs initialization of cached results
+                .setResultTransformer( getEntityTransformer() )
+                .list();
+    }
 
     @Override
     public Slice<ExpressionExperimentDetailsValueObject> loadDetailsValueObjects

@@ -199,6 +199,11 @@ public interface ExpressionExperimentDao
     Taxon getTaxon( BioAssaySet ee );
 
     /**
+     * Load datasets by IDs with the same relation as {@link #loadWithCache(Filters, Sort)}.
+     */
+    List<ExpressionExperiment> loadWithRelationsAndCache( List<Long> ids );
+
+    /**
      * Special method for front-end access. This is partly redundant with {@link #loadValueObjects(Filters, Sort, int, int)};
      * however, it fills in more information, returns ExpressionExperimentDetailsValueObject
      *

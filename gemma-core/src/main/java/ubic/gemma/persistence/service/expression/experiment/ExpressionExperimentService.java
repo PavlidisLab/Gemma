@@ -516,6 +516,14 @@ public interface ExpressionExperimentService
     Collection<ExpressionExperiment> loadLackingTags();
 
     /**
+     * Load VOs for the given dataset IDs and initialize their relations like {@link #load(Filters, Sort)}.
+     * <p>
+     * The order of VOs is preserved.
+     */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
+    List<ExpressionExperimentValueObject> loadValueObjectsByIdsWithRelationsAndCache( List<Long> ids );
+
+    /**
      * Variant of {@link #loadValueObjectsByIds(Collection)} that preserve its input order.
      * @param ids           ids to load
      * @param maintainOrder If true, order of valueObjects returned will correspond to order of ids passed in.
