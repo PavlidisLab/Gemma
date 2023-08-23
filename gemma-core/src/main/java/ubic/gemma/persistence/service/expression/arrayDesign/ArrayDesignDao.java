@@ -91,8 +91,6 @@ public interface ArrayDesignDao extends CuratableDao<ArrayDesign>,
 
     Collection<CompositeSequence> loadCompositeSequences( ArrayDesign arrayDesign, int limit, int offset );
 
-    List<ArrayDesignValueObject> loadValueObjectsByIds( Collection<Long> ids );
-
     List<ArrayDesignValueObject> loadValueObjectsForEE( Long eeId );
 
     long numAllCompositeSequenceWithBioSequences();

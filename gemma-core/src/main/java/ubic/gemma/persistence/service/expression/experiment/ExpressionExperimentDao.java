@@ -237,8 +237,6 @@ public interface ExpressionExperimentDao
 
     Collection<ExpressionExperiment> loadLackingTags();
 
-    List<ExpressionExperimentValueObject> loadValueObjectsByIds( Collection<Long> ids );
-
     void thaw( ExpressionExperiment expressionExperiment );
 
     void thawWithoutVectors( ExpressionExperiment expressionExperiment );
