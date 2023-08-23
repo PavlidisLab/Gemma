@@ -185,14 +185,11 @@ public class DatasetsWebService {
         int offset = offsetArg.getValue();
         int limit = limitArg.getValue();
         if ( query != null ) {
-            List<SearchResult<ExpressionExperiment>> results = new ArrayList<>();
-            Filters filtersWithQuery = Filters.by( filters ).and( datasetArgService.getFilterForSearchQuery( query, null, results ) );
+            Map<Long, Double> scoreById = new HashMap<>();
+            Filters filtersWithQuery = Filters.by( filters ).and( datasetArgService.getFilterForSearchQuery( query, scoreById ) );
             List<Long> ids = new ArrayList<>( expressionExperimentService.loadIdsWithCache( filtersWithQuery, sort ) );
-            // intersect search results and filter results
-            Map<Long, SearchResult<ExpressionExperiment>> resultById = new HashMap<>();
-            results.forEach( e -> resultById.put( e.getResultId(), e ) );
             // sort is stable, so the order of IDs with the same score is preserved
-            ids.sort( Comparator.comparingDouble( i -> -resultById.get( i ).getScore() ) );
+            ids.sort( Comparator.comparingDouble( i -> -scoreById.get( i ) ) );
 
             // slice the ranked IDs
             List<Long> idsSlice;
@@ -203,8 +200,8 @@ public class DatasetsWebService {
             }
 
             // now highlight the results in the slice
-            results = datasetArgService.getIdsForSearchQuery( query, new Highlighter( new HashSet<>( idsSlice ) ) );
-            results.forEach( e -> resultById.put( e.getResultId(), e ) );
+            List<SearchResult<ExpressionExperiment>> results = datasetArgService.getResultsForSearchQuery( query, new Highlighter( new HashSet<>( idsSlice ) ) );
+            Map<Long, SearchResult<ExpressionExperiment>> resultById = results.stream().collect( Collectors.toMap( SearchResult::getResultId, e -> e ) );
 
             List<ExpressionExperimentValueObject> vos = expressionExperimentService.loadValueObjectsByIdsWithRelationsAndCache( idsSlice );
             return Responder.queryAndPaginate(
@@ -245,7 +242,7 @@ public class DatasetsWebService {
             @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filter ) {
         Filters filters = datasetArgService.getFilters( filter );
         if ( query != null ) {
-            filters.and( datasetArgService.getFilterForSearchQuery( query ) );
+            filters.and( datasetArgService.getFilterForSearchQuery( query, null ) );
         }
         return Responder.respond( expressionExperimentService.countWithCache( filters ) );
     }
@@ -269,7 +266,7 @@ public class DatasetsWebService {
         Filters filters = datasetArgService.getFilters( filter );
         Filters filtersWithQuery;
         if ( query != null ) {
-            filtersWithQuery = Filters.by( filters ).and( datasetArgService.getFilterForSearchQuery( query ) );
+            filtersWithQuery = Filters.by( filters ).and( datasetArgService.getFilterForSearchQuery( query, null ) );
         } else {
             filtersWithQuery = filters;
         }
@@ -309,7 +306,7 @@ public class DatasetsWebService {
         Filters filters = datasetArgService.getFilters( filter, null );
         Filters filtersWithQuery;
         if ( query != null ) {
-            filtersWithQuery = Filters.by( filters ).and( datasetArgService.getFilterForSearchQuery( query ) );
+            filtersWithQuery = Filters.by( filters ).and( datasetArgService.getFilterForSearchQuery( query, null ) );
         } else {
             filtersWithQuery = filters;
         }
@@ -370,7 +367,7 @@ public class DatasetsWebService {
         Filters filters = datasetArgService.getFilters( filter, mentionedTerms );
         Filters filtersWithQuery;
         if ( query != null ) {
-            filtersWithQuery = Filters.by( filters ).and( datasetArgService.getFilterForSearchQuery( query ) );
+            filtersWithQuery = Filters.by( filters ).and( datasetArgService.getFilterForSearchQuery( query, null ) );
         } else {
             filtersWithQuery = filters;
         }
@@ -482,7 +479,7 @@ public class DatasetsWebService {
         Filters filters = datasetArgService.getFilters( filterArg );
         Filters filtersWithQuery;
         if ( query != null ) {
-            filtersWithQuery = Filters.by( filters ).and( datasetArgService.getFilterForSearchQuery( query ) );
+            filtersWithQuery = Filters.by( filters ).and( datasetArgService.getFilterForSearchQuery( query, null ) );
         } else {
             filtersWithQuery = filters;
         }
