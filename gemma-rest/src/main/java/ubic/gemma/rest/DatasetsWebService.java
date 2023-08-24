@@ -749,6 +749,9 @@ public class DatasetsWebService {
                 .build();
     }
 
+    @Autowired
+    private QuantitationTypeArgService quantitationTypeArgService;
+
     /**
      * Retrieve raw expression data.
      * <p>
@@ -769,7 +772,7 @@ public class DatasetsWebService {
         ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
         QuantitationType qt;
         if ( quantitationTypeArg != null ) {
-            qt = quantitationTypeArg.getEntityForExpressionExperimentAndDataVectorType( ee, RawExpressionDataVector.class, quantitationTypeService );
+            qt = quantitationTypeArgService.getEntity( quantitationTypeArg, ee, RawExpressionDataVector.class );
         } else {
             qt = expressionExperimentService.getPreferredQuantitationType( ee );
             if ( qt == null ) {

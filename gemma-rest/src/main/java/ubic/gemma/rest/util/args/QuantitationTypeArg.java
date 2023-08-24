@@ -13,8 +13,6 @@ public abstract class QuantitationTypeArg<T> extends AbstractEntityArg<T, Quanti
         super( propertyName, propertyType, value );
     }
 
-    public abstract QuantitationType getEntityForExpressionExperimentAndDataVectorType( ExpressionExperiment ee, Class<? extends DesignElementDataVector> dataVectorType, QuantitationTypeService service );
-
     public static QuantitationTypeArg<?> valueOf( String s ) {
         try {
             return new QuantitationTypeByIdArg( Long.parseLong( s ) );

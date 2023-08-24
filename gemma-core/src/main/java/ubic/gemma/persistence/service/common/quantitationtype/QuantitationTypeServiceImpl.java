@@ -67,14 +67,8 @@ public class QuantitationTypeServiceImpl extends AbstractFilteringVoEnabledServi
 
     @Override
     @Transactional(readOnly = true)
-    public QuantitationType findByIdAndDataVectorType( ExpressionExperiment ee, Long id, Class<? extends DesignElementDataVector> dataVectorType ) {
+    public QuantitationType findByQuantitationTypeAndDataVectorType( ExpressionExperiment ee, Long id, Class<? extends DesignElementDataVector> dataVectorType ) {
         return this.quantitationTypeDao.findByIdAndDataVectorType( ee, id, dataVectorType );
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public QuantitationType findByNameAndDataVectorType( ExpressionExperiment ee, String name, Class<? extends DesignElementDataVector> dataVectorType ) {
-        return this.quantitationTypeDao.findByNameAndDataVectorType( ee, name, dataVectorType );
     }
 
 }
