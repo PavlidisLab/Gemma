@@ -34,7 +34,10 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.AbstractCriteriaFilteringVoEnabledDao;
 import ubic.gemma.persistence.util.BusinessKey;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -120,19 +123,11 @@ public class QuantitationTypeDaoImpl extends AbstractCriteriaFilteringVoEnabledD
     }
 
     @Override
-    public QuantitationType findByIdAndDataVectorType( ExpressionExperiment ee, Long id, Class<? extends DesignElementDataVector> dataVectorClass ) {
-        return ( QuantitationType ) this.getSessionFactory().getCurrentSession()
-                .createQuery( "select distinct q from " + dataVectorClass.getName() + " v join v.quantitationType as q where q.id = :id and v.expressionExperiment = :ee" )
-                .setParameter( "id", id )
-                .setParameter( "ee", ee )
-                .uniqueResult();
-    }
-
-    @Override
-    public QuantitationType findByNameAndDataVectorType( ExpressionExperiment ee, String name, Class<? extends DesignElementDataVector> dataVectorClass ) {
-        return ( QuantitationType ) this.getSessionFactory().getCurrentSession()
-                .createQuery( "select distinct q from " + dataVectorClass.getName() + " v join v.quantitationType as q where q.name = :name and v.expressionExperiment = :ee" )
-                .setParameter( "name", name )
+    public boolean existsByExpressionExperimentAndVectorType( QuantitationType quantitationType, ExpressionExperiment ee, Class<? extends DesignElementDataVector> dataVectorClass ) {
+        return ( Boolean ) this.getSessionFactory().getCurrentSession()
+                .createQuery( "select count(v) > 0 from " + dataVectorClass.getName() + " v "
+                        + "where v.quantitationType = :qt and v.expressionExperiment = :ee" )
+                .setParameter( "qt", quantitationType )
                 .setParameter( "ee", ee )
                 .uniqueResult();
     }

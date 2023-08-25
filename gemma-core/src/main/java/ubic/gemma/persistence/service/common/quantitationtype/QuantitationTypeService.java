@@ -49,7 +49,7 @@ public interface QuantitationTypeService extends BaseService<QuantitationType>, 
      * While the QT can be retrieved uniquely by ID, the purpose of this method is to ensure that it also belongs to a
      * given expression experiment and data vector type.
      */
-    QuantitationType findByQuantitationTypeAndDataVectorType( ExpressionExperiment ee, Long id, Class<? extends DesignElementDataVector> dataVectorType );
+    boolean existsByExpressionExperimentAndVectorType( QuantitationType quantitationType, ExpressionExperiment ee, Class<? extends DesignElementDataVector> dataVectorType );
 
     @Override
     @Secured({ "GROUP_USER" })

@@ -11,14 +11,17 @@ import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeSe
 public class QuantitationTypeArgService extends AbstractEntityArgService<QuantitationType, QuantitationTypeService> {
 
     @Autowired
-    private QuantitationTypeService quantitationTypeService;
-
     public QuantitationTypeArgService( QuantitationTypeService service ) {
         super( service );
     }
 
     public QuantitationType getEntity( QuantitationTypeArg<?> quantitationTypeArg, ExpressionExperiment ee, Class<? extends DesignElementDataVector> vectorType ) {
         QuantitationType quantitationType = getEntity( quantitationTypeArg );
-        return checkEntity( quantitationTypeArg, quantitationTypeService.findByQuantitationTypeAndDataVectorType( ee, quantitationType.getId(), vectorType ) );
+        if ( service.existsByExpressionExperimentAndVectorType( quantitationType, ee, vectorType ) ) {
+            return quantitationType;
+        } else {
+            // will raise a 404 error
+            return checkEntity( quantitationTypeArg, null );
+        }
     }
 }

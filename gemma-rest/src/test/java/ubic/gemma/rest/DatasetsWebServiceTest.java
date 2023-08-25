@@ -378,11 +378,11 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
         QuantitationType qt = QuantitationType.Factory.newInstance();
         qt.setId( 12L );
         when( quantitationTypeService.load( 12L ) ).thenReturn( qt );
-        when( quantitationTypeService.findByQuantitationTypeAndDataVectorType( ee, 12L, RawExpressionDataVector.class ) ).thenReturn( null );
+        when( quantitationTypeService.existsByExpressionExperimentAndVectorType( qt, ee, RawExpressionDataVector.class ) ).thenReturn( false );
         Response res = target( "/datasets/1/data/raw" )
                 .queryParam( "quantitationType", "12" ).request().get();
         verify( quantitationTypeService ).load( 12L );
-        verify( quantitationTypeService ).findByQuantitationTypeAndDataVectorType( ee, 12L, RawExpressionDataVector.class );
+        verify( quantitationTypeService ).existsByExpressionExperimentAndVectorType( qt, ee, RawExpressionDataVector.class );
         verifyNoInteractions( expressionDataFileService );
         assertThat( res )
                 .hasStatus( Response.Status.NOT_FOUND )
@@ -394,11 +394,11 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
         QuantitationType qt = QuantitationType.Factory.newInstance();
         qt.setId( 12L );
         when( quantitationTypeService.load( 12L ) ).thenReturn( qt );
-        when( quantitationTypeService.findByQuantitationTypeAndDataVectorType( ee, 12L, RawExpressionDataVector.class ) ).thenReturn( qt );
+        when( quantitationTypeService.existsByExpressionExperimentAndVectorType( qt, ee, RawExpressionDataVector.class ) ).thenReturn( true );
         Response res = target( "/datasets/1/data/raw" )
                 .queryParam( "quantitationType", "12" ).request().get();
         verify( quantitationTypeService ).load( 12L );
-        verify( quantitationTypeService ).findByQuantitationTypeAndDataVectorType( ee, 12L, RawExpressionDataVector.class );
+        verify( quantitationTypeService ).existsByExpressionExperimentAndVectorType( qt, ee, RawExpressionDataVector.class );
         verify( expressionDataFileService ).writeRawExpressionData( eq( ee ), eq( qt ), any() );
         assertThat( res ).hasStatus( Response.Status.OK )
                 .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE )
