@@ -7,6 +7,7 @@ import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
+import ubic.gemma.persistence.util.Specification;
 
 import java.util.Collection;
 
@@ -35,11 +36,11 @@ public class RawAndProcessedExpressionDataVectorDaoImpl extends AbstractDesignEl
     }
 
     @Override
-    public DesignElementDataVector find( DesignElementDataVector entity ) {
-        if ( entity instanceof RawExpressionDataVector ) {
-            return rawExpressionDataVectorDao.find( ( RawExpressionDataVector ) entity );
-        } else if ( entity instanceof ProcessedExpressionDataVector ) {
-            return processedExpressionDataVectorDao.find( ( ProcessedExpressionDataVector ) entity );
+    public DesignElementDataVector find( Specification<DesignElementDataVector> spec ) {
+        if ( spec.getEntity() instanceof RawExpressionDataVector ) {
+            return rawExpressionDataVectorDao.find( ( Specification<RawExpressionDataVector> ) spec );
+        } else if ( spec.getEntity() instanceof ProcessedExpressionDataVector ) {
+            return processedExpressionDataVectorDao.find( ( Specification<ProcessedExpressionDataVector> ) spec );
         } else {
             throw new UnsupportedOperationException( "Only raw and processed vectors can be used with this service." );
         }

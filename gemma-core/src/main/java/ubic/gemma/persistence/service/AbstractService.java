@@ -5,6 +5,7 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.core.util.ListUtils;
 import ubic.gemma.model.common.Identifiable;
+import ubic.gemma.persistence.util.Specification;
 
 import javax.annotation.CheckReturnValue;
 import javax.annotation.Nonnull;
@@ -36,22 +37,22 @@ public abstract class AbstractService<O extends Identifiable> implements BaseSer
 
     @Override
     @Transactional(readOnly = true)
-    public O find( O entity ) {
-        return mainDao.find( entity );
+    public O find( Specification<O> spec ) {
+        return mainDao.find( spec );
     }
 
     @Nonnull
     @Override
     @Transactional(readOnly = true)
-    public O findOrFail( O entity ) {
-        return requireNonNull( mainDao.find( entity ),
-                String.format( "No %s matching %s could be found.", mainDao.getElementClass().getName(), entity ) );
+    public O findOrFail( Specification<O> spec ) {
+        return requireNonNull( mainDao.find( spec ),
+                String.format( "No %s matching %s could be found.", mainDao.getElementClass().getName(), spec ) );
     }
 
     @Override
     @Transactional
-    public O findOrCreate( O entity ) {
-        return mainDao.findOrCreate( entity );
+    public O findOrCreate( Specification<O> spec ) {
+        return mainDao.findOrCreate( spec );
     }
 
     @Override

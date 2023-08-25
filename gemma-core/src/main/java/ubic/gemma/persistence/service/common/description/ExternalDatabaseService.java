@@ -21,6 +21,7 @@ package ubic.gemma.persistence.service.common.description;
 import org.springframework.security.access.annotation.Secured;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.persistence.service.BaseService;
+import ubic.gemma.persistence.util.Specification;
 
 import javax.annotation.Nullable;
 import java.net.URL;
@@ -52,7 +53,7 @@ public interface ExternalDatabaseService extends BaseService<ExternalDatabase> {
 
     @Override
     @Secured({ "GROUP_ADMIN" })
-    ExternalDatabase findOrCreate( ExternalDatabase externalDatabase );
+    ExternalDatabase findOrCreate( Specification<ExternalDatabase> spec );
 
     @Override
     @Secured({ "GROUP_AGENT" })

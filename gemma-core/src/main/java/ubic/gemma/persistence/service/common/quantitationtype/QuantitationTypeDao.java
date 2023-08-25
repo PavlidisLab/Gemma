@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006-2007 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -23,6 +23,7 @@ import ubic.gemma.model.common.quantitationtype.QuantitationTypeValueObject;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.FilteringVoEnabledDao;
+import ubic.gemma.persistence.util.Specification;
 
 import java.util.Collection;
 import java.util.List;
@@ -38,10 +39,10 @@ public interface QuantitationTypeDao extends FilteringVoEnabledDao<QuantitationT
     /**
      * Locate a QT associated with the given ee matching the specification of the passed quantitationType, or null if
      * there isn't one.
-     * 
-     * @return                  found QT
+     *
+     * @return found QT
      */
-    QuantitationType find( ExpressionExperiment ee, QuantitationType quantitationType );
+    QuantitationType find( ExpressionExperiment ee, Specification<QuantitationType> quantitationType );
 
     QuantitationType findByIdAndDataVectorType( ExpressionExperiment ee, Long id, Class<? extends DesignElementDataVector> dataVectorClass );
 

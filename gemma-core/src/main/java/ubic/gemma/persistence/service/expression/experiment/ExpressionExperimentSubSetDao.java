@@ -31,17 +31,7 @@ import java.util.Collection;
  */
 public interface ExpressionExperimentSubSetDao extends BaseDao<ExpressionExperimentSubSet> {
 
-    @Override
-    ExpressionExperimentSubSet find( ExpressionExperimentSubSet entity );
-
-    /**
-     * @return matching or new entity. Matching would mean the same bioassays.
-     */
-    @Override
-    ExpressionExperimentSubSet findOrCreate( ExpressionExperimentSubSet entity );
-
     Collection<FactorValue> getFactorValuesUsed( ExpressionExperimentSubSet entity, ExperimentalFactor factor );
 
     Collection<FactorValueValueObject> getFactorValuesUsed( Long subSetId, Long experimentalFactor );
-
 }

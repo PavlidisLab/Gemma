@@ -33,12 +33,6 @@ import java.util.Map;
  */
 public interface Gene2GOAssociationDao extends BaseDao<Gene2GOAssociation> {
 
-    @Override
-    Gene2GOAssociation find( Gene2GOAssociation gene2GOAssociation );
-
-    @Override
-    Gene2GOAssociation findOrCreate( Gene2GOAssociation gene2GOAssociation );
-
     Collection<Gene2GOAssociation> findAssociationByGene( Gene gene );
 
     Collection<Gene2GOAssociation> findAssociationByGenes( Collection<Gene> genes );
@@ -55,6 +49,4 @@ public interface Gene2GOAssociationDao extends BaseDao<Gene2GOAssociation> {
     Collection<Gene> getGenes( Collection<String> ids );
 
     Collection<Gene> getGenes( Collection<String> ids, @Nullable Taxon taxon );
-
-    void removeAllInBatch();
 }

@@ -15,9 +15,7 @@
 package ubic.gemma.persistence.service.common.auditAndSecurity;
 
 import gemma.gsec.AuthorityConstants;
-import org.hibernate.FlushMode;
 import org.hibernate.SessionFactory;
-import org.hibernate.criterion.Restrictions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import ubic.gemma.model.common.auditAndSecurity.GroupAuthority;
@@ -25,6 +23,7 @@ import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.model.common.auditAndSecurity.UserGroup;
 import ubic.gemma.persistence.service.AbstractDao;
 import ubic.gemma.persistence.util.BusinessKey;
+import ubic.gemma.persistence.util.Specification;
 
 import java.util.Collection;
 import java.util.Objects;
@@ -74,7 +73,7 @@ public class UserDaoImpl extends AbstractDao<User> implements UserDao {
     public void remove( User user ) {
         if ( user.getName() != null && user.getName().equals( AuthorityConstants.REQUIRED_ADMINISTRATOR_USER_NAME ) ) {
             throw new IllegalArgumentException(
-                    "Cannot remove user " + AuthorityConstants.REQUIRED_ADMINISTRATOR_USER_NAME );
+                    "Cannot remove spec " + AuthorityConstants.REQUIRED_ADMINISTRATOR_USER_NAME );
         }
         super.remove( user );
     }
@@ -90,15 +89,15 @@ public class UserDaoImpl extends AbstractDao<User> implements UserDao {
         if ( Objects.equals( user.getId(), AuthorityConstants.REQUIRED_ADMINISTRATOR_ID )
                 && !AuthorityConstants.REQUIRED_ADMINISTRATOR_USER_NAME.equals( user.getName() ) ) {
             throw new IllegalArgumentException(
-                    "Cannot modify name of user ID=" + AuthorityConstants.REQUIRED_ADMINISTRATOR_ID );
+                    "Cannot modify name of spec ID=" + AuthorityConstants.REQUIRED_ADMINISTRATOR_ID );
         }
 
         super.update( user );
     }
 
     @Override
-    public User find( User user ) {
-        BusinessKey.checkKey( user );
-        return this.findByUserName( user.getUserName() );
+    public User find( Specification<User> spec ) {
+        BusinessKey.checkUserKey( spec );
+        return this.findByUserName( spec.getEntity().getUserName() );
     }
 }

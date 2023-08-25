@@ -21,9 +21,9 @@ package ubic.gemma.persistence.service.expression.experiment;
 import org.springframework.security.access.annotation.Secured;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.expression.experiment.FactorValueValueObject;
-import ubic.gemma.persistence.service.BaseImmutableService;
 import ubic.gemma.persistence.service.BaseService;
 import ubic.gemma.persistence.service.FilteringVoEnabledService;
+import ubic.gemma.persistence.util.Specification;
 
 import java.util.Collection;
 
@@ -38,7 +38,7 @@ public interface FactorValueService extends BaseService<FactorValue>, FilteringV
 
     @Override
     @Secured({ "GROUP_USER", "AFTER_ACL_READ" })
-    FactorValue findOrCreate( FactorValue factorValue );
+    FactorValue findOrCreate( Specification<FactorValue> spec );
 
     @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })

@@ -28,10 +28,4 @@ import ubic.gemma.persistence.service.BaseDao;
 @Repository
 public interface UnitDao extends BaseDao<Unit> {
 
-    @Override
-    Unit find( Unit unit );
-
-    @Override
-    Unit findOrCreate( Unit unit );
-
 }

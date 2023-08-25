@@ -18,7 +18,10 @@
  */
 package ubic.gemma.persistence.service.expression.biomaterial;
 
-import org.hibernate.*;
+import org.hibernate.Criteria;
+import org.hibernate.Hibernate;
+import org.hibernate.ObjectNotFoundException;
+import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
@@ -29,10 +32,11 @@ import ubic.gemma.persistence.service.AbstractDao;
 import ubic.gemma.persistence.service.AbstractVoEnabledDao;
 import ubic.gemma.persistence.util.BusinessKey;
 import ubic.gemma.persistence.util.EntityUtils;
+import ubic.gemma.persistence.util.Specification;
 
 import java.util.Collection;
-import java.util.LinkedHashSet;
-import java.util.List;
+
+import static ubic.gemma.persistence.util.Specifications.byIdentifiable;
 
 /**
  * @author pavlidis
@@ -50,10 +54,10 @@ public class BioMaterialDaoImpl extends AbstractVoEnabledDao<BioMaterial, BioMat
     }
 
     @Override
-    public BioMaterial find( BioMaterial bioMaterial ) {
+    public BioMaterial find( Specification<BioMaterial> spec ) {
         Criteria queryObject = this.getSessionFactory().getCurrentSession().createCriteria( BioMaterial.class );
 
-        BusinessKey.addRestrictions( queryObject, bioMaterial );
+        BusinessKey.addG2GRestrictions( queryObject, spec );
 
         // This part is involved in a weird race condition that I could not get to a bottom of, so this is a hack-fix for now - tesarst, 2018-May-2
         BioMaterial result = null;
@@ -82,7 +86,7 @@ public class BioMaterialDaoImpl extends AbstractVoEnabledDao<BioMaterial, BioMat
         newMaterial.setFactorValues( bioMaterial.getFactorValues() );
 
         newMaterial.setName( "Modeled after " + bioMaterial.getName() );
-        newMaterial = this.findOrCreate( newMaterial );
+        newMaterial = this.findOrCreate( byIdentifiable( newMaterial ) );
         return newMaterial;
 
     }

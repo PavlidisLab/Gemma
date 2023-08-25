@@ -26,6 +26,7 @@ import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.sequenceAnalysis.BioSequenceValueObject;
 import ubic.gemma.persistence.service.BaseService;
 import ubic.gemma.persistence.service.BaseVoEnabledService;
+import ubic.gemma.persistence.util.Specification;
 
 import java.util.Collection;
 import java.util.Map;
@@ -35,7 +36,7 @@ import java.util.Map;
  */
 public interface BioSequenceService extends BaseService<BioSequence>, BaseVoEnabledService<BioSequence, BioSequenceValueObject> {
 
-    BioSequence findByAccession( DatabaseEntry accession );
+    BioSequence findByAccession( Specification<DatabaseEntry> accession );
 
     /**
      * @param genes genes
@@ -56,7 +57,7 @@ public interface BioSequenceService extends BaseService<BioSequence>, BaseVoEnab
 
     @Override
     @Secured({ "GROUP_USER" })
-    BioSequence findOrCreate( BioSequence bioSequence );
+    BioSequence findOrCreate( Specification<BioSequence> bioSequence );
 
     @Override
     @Secured({ "GROUP_USER" })

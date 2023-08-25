@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006-2007 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -23,6 +23,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import ubic.gemma.model.expression.biomaterial.Compound;
 import ubic.gemma.persistence.service.AbstractDao;
+import ubic.gemma.persistence.util.Specification;
 
 import java.util.Comparator;
 
@@ -43,8 +44,8 @@ public class CompoundDaoImpl extends AbstractDao<Compound> implements CompoundDa
     }
 
     @Override
-    public Compound find( Compound compound ) {
-        return this.findByProperty( "name", compound.getName() )
+    public Compound find( Specification<Compound> compound ) {
+        return this.findByProperty( "name", compound.getEntity().getName() )
                 .stream()
                 .max( Comparator.comparing( Compound::getId ) )
                 .orElse( null );

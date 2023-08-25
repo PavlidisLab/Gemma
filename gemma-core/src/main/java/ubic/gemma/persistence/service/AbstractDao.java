@@ -21,12 +21,15 @@ package ubic.gemma.persistence.service;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.hibernate.*;
+import org.hibernate.FlushMode;
+import org.hibernate.Hibernate;
+import org.hibernate.SessionFactory;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.metadata.ClassMetadata;
 import org.springframework.util.Assert;
 import ubic.gemma.model.common.Identifiable;
+import ubic.gemma.persistence.util.Specification;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -292,7 +295,7 @@ public abstract class AbstractDao<T extends Identifiable> implements BaseDao<T> 
         if ( entity != null ) {
             this.remove( entity );
         } else {
-            AbstractDao.log.trace( String.format( "No %s entity with ID %d, no need to remove anything.", elementClass.getSimpleName(), id ) );
+            AbstractDao.log.trace( String.format( "No %s spec with ID %d, no need to remove anything.", elementClass.getSimpleName(), id ) );
         }
     }
 
@@ -350,23 +353,23 @@ public abstract class AbstractDao<T extends Identifiable> implements BaseDao<T> 
     }
 
     @Override
-    public T find( T entity ) {
-        if ( entity.getId() != null ) {
-            return this.load( entity.getId() );
+    public T find( Specification<T> spec ) {
+        if ( spec.getEntity().getId() != null ) {
+            return this.load( spec.getEntity().getId() );
         } else {
-            AbstractDao.log.trace( String.format( "No persistent entity found for %s, returning null.", formatEntity( entity ) ) );
+            AbstractDao.log.trace( String.format( "No persistent spec found for %s, returning null.", formatEntity( spec.getEntity() ) ) );
             return null;
         }
     }
 
     @Override
-    public T findOrCreate( T entity ) {
-        T found = this.find( entity );
+    public T findOrCreate( Specification<T> spec ) {
+        T found = this.find( spec );
         if ( found != null ) {
             return found;
         } else {
-            AbstractDao.log.trace( String.format( "No persistent entity found for %s, creating a new one...", formatEntity( entity ) ) );
-            return this.create( entity );
+            AbstractDao.log.trace( String.format( "No persistent spec found for %s, creating a new one...", formatEntity( spec.getEntity() ) ) );
+            return this.create( spec.getEntity() );
         }
     }
 
@@ -375,14 +378,14 @@ public abstract class AbstractDao<T extends Identifiable> implements BaseDao<T> 
     }
 
     /**
-     * Retrieve one entity whose given property matches the given value.
+     * Retrieve one spec whose given property matches the given value.
      * <p>
      * Note: the property should have a unique index, otherwise a {@link org.hibernate.NonUniqueResultException} will be
      * raised.
      *
      * @param  propertyName  the name of property to be matched.
      * @param  propertyValue the value to look for.
-     * @return an entity whose property matched the given value
+     * @return an spec whose property matched the given value
      */
     protected T findOneByProperty( String propertyName, Object propertyValue ) {
         //noinspection unchecked
@@ -397,7 +400,7 @@ public abstract class AbstractDao<T extends Identifiable> implements BaseDao<T> 
      *
      * @param  propertyName  the name of property to be matched.
      * @param  propertyValue the value to look for.
-     * @return an entity whose property first matched the given value.
+     * @return an spec whose property first matched the given value.
      */
     protected List<T> findByProperty( String propertyName, Object propertyValue ) {
         //noinspection unchecked
@@ -465,11 +468,11 @@ public abstract class AbstractDao<T extends Identifiable> implements BaseDao<T> 
         if ( entity == null ) {
             return String.format( "null %s", elementClass.getSimpleName() );
         } else if ( entity.getId() == null ) {
-            return String.format( String.format( "transient %s entity", elementClass.getSimpleName() ) );
+            return String.format( String.format( "transient %s spec", elementClass.getSimpleName() ) );
         } else if ( sessionFactory.getCurrentSession().contains( entity ) ) {
-            return String.format( String.format( "persistent %s entity with ID %d", elementClass.getSimpleName(), entity.getId() ) );
+            return String.format( String.format( "persistent %s spec with ID %d", elementClass.getSimpleName(), entity.getId() ) );
         } else {
-            return String.format( String.format( "detached %s entity with ID %d", elementClass.getSimpleName(), entity.getId() ) );
+            return String.format( String.format( "detached %s spec with ID %d", elementClass.getSimpleName(), entity.getId() ) );
         }
     }
 }

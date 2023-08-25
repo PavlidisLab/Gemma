@@ -26,6 +26,7 @@ import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.persistence.service.BaseImmutableService;
 import ubic.gemma.persistence.service.BaseService;
 import ubic.gemma.persistence.service.BaseVoEnabledService;
+import ubic.gemma.persistence.util.Specification;
 
 import javax.annotation.CheckReturnValue;
 import java.util.Collection;
@@ -54,7 +55,7 @@ public interface BioMaterialService extends BaseService<BioMaterial>, BaseVoEnab
 
     @Override
     @Secured({ "GROUP_USER", "AFTER_ACL_READ" })
-    BioMaterial findOrCreate( BioMaterial bioMaterial );
+    BioMaterial findOrCreate( Specification<BioMaterial> bioMaterial );
 
     @Override
     @Secured({ "GROUP_USER" })

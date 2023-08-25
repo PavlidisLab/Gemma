@@ -45,6 +45,8 @@ import ubic.gemma.persistence.util.ArrayDesignsForExperimentCache;
 import javax.annotation.Nullable;
 import java.util.*;
 
+import static ubic.gemma.persistence.util.Specifications.byIdentifiable;
+
 /**
  * @author pavlidis
  */
@@ -390,7 +392,7 @@ public abstract class ExpressionPersister extends ArrayDesignPersister implement
         assert persistedBioAssays.size() > 0;
         bioAssayDimension.setBioAssays( persistedBioAssays );
         // bioAssayDimension.setId( null ); // in case of retry.
-        return bioAssayDimensionDao.findOrCreate( bioAssayDimension );
+        return bioAssayDimensionDao.findOrCreate( byIdentifiable( bioAssayDimension ) );
     }
 
     private BioMaterial persistBioMaterial( BioMaterial entity, Caches caches ) {
@@ -408,14 +410,14 @@ public abstract class ExpressionPersister extends ArrayDesignPersister implement
         AbstractPersister.log.debug( "taxon done" );
 
         AbstractPersister.log.debug( "start save" );
-        BioMaterial bm = bioMaterialDao.findOrCreate( entity );
+        BioMaterial bm = bioMaterialDao.findOrCreate( byIdentifiable( entity ) );
         AbstractPersister.log.debug( "save biomaterial done" );
 
         return bm;
     }
 
     private Compound persistCompound( Compound compound ) {
-        return compoundDao.findOrCreate( compound );
+        return compoundDao.findOrCreate( byIdentifiable( compound ) );
     }
 
     /**
@@ -434,7 +436,7 @@ public abstract class ExpressionPersister extends ArrayDesignPersister implement
             throw new IllegalArgumentException(
                     "Subsets are only supported for expression experiments that are already persistent" );
         } else {
-            return expressionExperimentSubSetDao.findOrCreate( entity );
+            return expressionExperimentSubSetDao.findOrCreate( byIdentifiable( entity ) );
         }
     }
 
@@ -447,7 +449,7 @@ public abstract class ExpressionPersister extends ArrayDesignPersister implement
                     "You must fill in the experimental factor before persisting a factorvalue" );
         }
         this.fillInFactorValueAssociations( factorValue, caches );
-        return factorValueDao.findOrCreate( factorValue );
+        return factorValueDao.findOrCreate( byIdentifiable( factorValue ) );
     }
 
     /**

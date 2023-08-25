@@ -33,6 +33,7 @@ import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.AbstractCriteriaFilteringVoEnabledDao;
 import ubic.gemma.persistence.util.BusinessKey;
+import ubic.gemma.persistence.util.Specification;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -55,9 +56,9 @@ public class QuantitationTypeDaoImpl extends AbstractCriteriaFilteringVoEnabledD
     }
 
     @Override
-    public QuantitationType find( QuantitationType quantitationType ) {
+    public QuantitationType find( Specification<QuantitationType> spec ) {
         //        Criteria queryObject = this.getSessionFactory().getCurrentSession().createCriteria( QuantitationType.class );
-        //        BusinessKey.addRestrictions( queryObject, quantitationType );
+        //        BusinessKey.addRestrictions( queryObject, spec );
         //        return ( QuantitationType ) queryObject.uniqueResult();
         /*
          * Using this method doesn't really make sense, since QTs are EE-specific not re-usable outside of the context
@@ -68,7 +69,7 @@ public class QuantitationTypeDaoImpl extends AbstractCriteriaFilteringVoEnabledD
     }
 
     @Override
-    public QuantitationType find( ExpressionExperiment ee, QuantitationType quantitationType ) {
+    public QuantitationType find( ExpressionExperiment ee, Specification<QuantitationType> quantitationType ) {
 
         // find all QTs for the experiment
         //language=HQL
@@ -76,13 +77,13 @@ public class QuantitationTypeDaoImpl extends AbstractCriteriaFilteringVoEnabledD
                 + "inner join ee.quantitationTypes as quantType where ee  = :ee ";
 
         //noinspection unchecked
-        List<?> list = this.getSessionFactory().getCurrentSession().createQuery( queryString )
+        List<QuantitationType> list = this.getSessionFactory().getCurrentSession().createQuery( queryString )
                 .setParameter( "ee", ee ).list();
 
         // find all matching QTs; not necessarily for this experiment. This is lazy - we could go through the above to check each for a match.
         Criteria queryObject = this.getSessionFactory().getCurrentSession().createCriteria( QuantitationType.class );
-        BusinessKey.addRestrictions( queryObject, quantitationType );
-        Collection<?> qts = queryObject.list();
+        BusinessKey.addG2GRestrictions( queryObject, quantitationType );
+        Collection<QuantitationType> qts = queryObject.list();
 
         // intersect that with the ones the experiment has (again, this is the lazy way to do this)
         list.retainAll( qts );

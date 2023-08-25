@@ -40,9 +40,9 @@ public class ContactDaoImpl extends AbstractDao<Contact> implements ContactDao {
 
     @Override
     public Contact find( Contact contact ) {
-        BusinessKey.checkKey( contact );
+        BusinessKey.checkEESSKey( contact );
         Criteria queryObject = this.getSessionFactory().getCurrentSession().createCriteria( Contact.class );
-        BusinessKey.addRestrictions( queryObject, contact );
+        BusinessKey.addDERestrictions( queryObject, contact );
         return ( Contact ) queryObject.uniqueResult();
     }
 }

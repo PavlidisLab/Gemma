@@ -21,11 +21,10 @@ package ubic.gemma.persistence.service.expression.experiment;
 import org.springframework.security.access.annotation.Secured;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExperimentalFactorValueObject;
-import ubic.gemma.persistence.service.BaseImmutableService;
 import ubic.gemma.persistence.service.BaseService;
 import ubic.gemma.persistence.service.BaseVoEnabledService;
+import ubic.gemma.persistence.util.Specification;
 
-import javax.annotation.Nullable;
 import java.util.Collection;
 
 /**
@@ -53,11 +52,11 @@ public interface ExperimentalFactorService
 
     @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
-    ExperimentalFactor find( ExperimentalFactor experimentalFactor );
+    ExperimentalFactor find( Specification<ExperimentalFactor> experimentalFactor );
 
     @Override
     @Secured({ "GROUP_USER", "AFTER_ACL_READ" })
-    ExperimentalFactor findOrCreate( ExperimentalFactor experimentalFactor );
+    ExperimentalFactor findOrCreate( Specification<ExperimentalFactor> experimentalFactor );
 
     @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })

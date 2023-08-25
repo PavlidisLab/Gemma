@@ -26,9 +26,9 @@ import ubic.gemma.model.common.auditAndSecurity.GroupAuthority;
 import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.model.common.auditAndSecurity.UserGroup;
 import ubic.gemma.persistence.service.AbstractDao;
+import ubic.gemma.persistence.util.Specification;
 
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.Objects;
 
 /**
@@ -118,11 +118,11 @@ public class UserGroupDaoImpl extends AbstractDao<UserGroup> implements UserGrou
     }
 
     @Override
-    public UserGroup find( UserGroup entity ) {
-        if ( entity.getId() != null ) {
-            return this.load( entity.getId() );
+    public UserGroup find( Specification<UserGroup> spec ) {
+        if ( spec.getEntity().getId() != null ) {
+            return this.load( spec.getEntity().getId() );
         } else {
-            return this.findByName( entity.getName() );
+            return this.findByName( spec.getEntity().getName() );
         }
     }
 

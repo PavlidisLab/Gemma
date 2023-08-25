@@ -30,6 +30,7 @@ import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.persistence.service.BaseService;
 import ubic.gemma.persistence.service.FilteringVoEnabledService;
 import ubic.gemma.persistence.util.Slice;
+import ubic.gemma.persistence.util.Specification;
 
 import javax.annotation.CheckReturnValue;
 import javax.annotation.Nullable;
@@ -45,11 +46,11 @@ public interface CompositeSequenceService
 
     @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_ARRAYDESIGN_COLLECTION_READ" })
-    CompositeSequence find( CompositeSequence compositeSequence );
+    CompositeSequence find( Specification<CompositeSequence> spec );
 
     @Override
     @Secured({ "GROUP_USER" })
-    CompositeSequence findOrCreate( CompositeSequence compositeSequence );
+    CompositeSequence findOrCreate( Specification<CompositeSequence> spec );
 
     @Override
     @Secured({ "GROUP_USER" })

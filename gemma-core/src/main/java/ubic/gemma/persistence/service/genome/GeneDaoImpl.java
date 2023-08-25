@@ -222,7 +222,7 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
     }
 
     /**
-     * Gets a count of the CompositeSequences related to the gene identified by the given id.
+     * Gets a count of the CompositeSequences related to the spec identified by the given id.
      *
      * @return Collection
      */
@@ -257,7 +257,7 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
     }
 
     /**
-     * Gets all the CompositeSequences related to the gene identified by the given id.
+     * Gets all the CompositeSequences related to the spec identified by the given id.
      *
      * @return Collection
      */
@@ -440,13 +440,13 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
     }
 
     @Override
-    public Gene find( Gene gene ) {
+    public Gene find( Specification<Gene> spec ) {
 
         Criteria queryObject = this.getSessionFactory().getCurrentSession().createCriteria( Gene.class );
 
-        BusinessKey.checkKey( gene );
+        BusinessKey.checkUserKey( spec );
 
-        BusinessKey.createQueryObject( queryObject, gene );
+        BusinessKey.createGPQueryObject( queryObject, spec );
 
         //noinspection unchecked,unchecked
         List<Gene> results = queryObject.list();
@@ -473,7 +473,7 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
                 // Note hack we used to allow multiple previous ids.
                 for ( String previousId : StringUtils.split( foundGene.getPreviousNcbiId(), "," ) ) {
                     try {
-                        if ( gene.getNcbiGeneId().equals( Integer.parseInt( previousId ) ) ) {
+                        if ( spec.getEntity().getNcbiGeneId().equals( Integer.parseInt( previousId ) ) ) {
                             toDelete.add( foundGene );
                         }
                     } catch ( NumberFormatException e ) {
@@ -485,14 +485,14 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
             if ( !toDelete.isEmpty() ) {
                 assert toDelete.size() < results.size(); // it shouldn't be everything!
                 AbstractDao.log.warn(
-                        "Deleting gene(s) that use a deprecated NCBI ID: " + StringUtils.join( toDelete, " | " ) );
+                        "Deleting spec(s) that use a deprecated NCBI ID: " + StringUtils.join( toDelete, " | " ) );
                 this.remove( toDelete ); // WARNING this might fail due to constraints.
             }
             results.removeAll( toDelete );
 
             for ( Gene foundGene : results ) {
-                if ( foundGene.getNcbiGeneId() != null && gene.getNcbiGeneId() != null && foundGene.getNcbiGeneId()
-                        .equals( gene.getNcbiGeneId() ) ) {
+                if ( foundGene.getNcbiGeneId() != null && spec.getEntity().getNcbiGeneId() != null && foundGene.getNcbiGeneId()
+                        .equals( spec.getEntity().getNcbiGeneId() ) ) {
                     return foundGene;
                 }
             }
@@ -501,11 +501,11 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
              * This should be quite a rare situation if the database is kept tidy.
              */
             if ( results.size() > 1 ) {
-                AbstractDao.log.error( "Multiple genes found for " + gene + ":" );
+                AbstractDao.log.error( "Multiple genes found for " + spec + ":" );
                 this.debug( results );
                 results.sort( Comparator.comparing( Describable::getId ) );
                 result = results.iterator().next();
-                AbstractDao.log.error( "Returning arbitrary gene: " + result );
+                AbstractDao.log.error( "Returning arbitrary spec: " + result );
             } else {
                 result = results.get( 0 );
             }
@@ -532,7 +532,7 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
 
         //noinspection JpaQlInspection // the constants for aliases is messing with the inspector
         String queryString = "select gene "
-                + "from Gene as gene " // gene
+                + "from Gene as gene " // spec
                 + "left join fetch gene.multifunctionality " // multifunctionality, if available
                 + "left join fetch gene.taxon as taxon "// taxon
                 + "where gene.id is not null"; // needed to use formRestrictionCause()
@@ -555,7 +555,7 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
     @Override
     protected Query getFilteringCountQuery( @Nullable Filters filters ) {
         //noinspection JpaQlInspection // the constants for aliases is messing with the inspector
-        String queryString = "select count(gene) from Gene as gene " // gene
+        String queryString = "select count(gene) from Gene as gene " // spec
                 + "left join gene.multifunctionality " // multifunctionality, if available
                 + "left join gene.taxon as taxon "// taxon
                 + "where gene.id is not null"; // needed to use formRestrictionCause()

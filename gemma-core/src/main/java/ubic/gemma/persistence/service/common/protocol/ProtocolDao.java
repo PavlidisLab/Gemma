@@ -28,10 +28,4 @@ import ubic.gemma.persistence.service.BaseDao;
 @Repository
 public interface ProtocolDao extends BaseDao<Protocol> {
 
-    @Override
-    Protocol find( Protocol protocol );
-
-    @Override
-    Protocol findOrCreate( Protocol protocol );
-
 }

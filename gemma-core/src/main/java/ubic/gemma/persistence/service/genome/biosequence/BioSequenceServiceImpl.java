@@ -27,10 +27,13 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.sequenceAnalysis.BioSequenceValueObject;
 import ubic.gemma.persistence.service.AbstractVoEnabledService;
+import ubic.gemma.persistence.util.Specification;
 
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Map;
+
+import static ubic.gemma.persistence.util.Specifications.byIdentifiable;
 
 /**
  * Spring Service base class for <code>BioSequenceService</code>, provides access to
@@ -54,7 +57,7 @@ public class BioSequenceServiceImpl extends AbstractVoEnabledService<BioSequence
 
     @Override
     @Transactional(readOnly = true)
-    public BioSequence findByAccession( DatabaseEntry accession ) {
+    public BioSequence findByAccession( Specification<DatabaseEntry> accession ) {
         return this.bioSequenceDao.findByAccession( accession );
     }
 
@@ -75,7 +78,7 @@ public class BioSequenceServiceImpl extends AbstractVoEnabledService<BioSequence
     public Collection<BioSequence> findOrCreate( Collection<BioSequence> bioSequences ) {
         Collection<BioSequence> result = new HashSet<>();
         for ( BioSequence bioSequence : bioSequences ) {
-            result.add( this.bioSequenceDao.findOrCreate( bioSequence ) );
+            result.add( this.bioSequenceDao.findOrCreate( byIdentifiable( bioSequence ) ) );
         }
         return result;
     }

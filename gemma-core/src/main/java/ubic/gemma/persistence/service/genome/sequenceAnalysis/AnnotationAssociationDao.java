@@ -13,17 +13,18 @@ import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.model.genome.sequenceAnalysis.AnnotationAssociation;
 import ubic.gemma.persistence.service.BaseDao;
+import ubic.gemma.persistence.util.Specification;
 
 import java.util.Collection;
 
 /**
  * @author paul
  */
-public interface AnnotationAssociationDao extends BaseDao<AnnotationAssociation>{
+public interface AnnotationAssociationDao extends BaseDao<AnnotationAssociation> {
 
-    Collection<AnnotationAssociation> find( BioSequence bioSequence );
+    Collection<AnnotationAssociation> findByBioSequence( Specification<BioSequence> bioSequence );
 
-    Collection<AnnotationAssociation> find( Gene gene );
+    Collection<AnnotationAssociation> findByGene( Specification<Gene> gene );
 
     void thaw( final AnnotationAssociation annotationAssociation );
 

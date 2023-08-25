@@ -30,9 +30,10 @@ import ubic.gemma.persistence.service.BaseVoEnabledService;
 import ubic.gemma.persistence.service.FilteringVoEnabledDao;
 import ubic.gemma.persistence.util.Filter;
 import ubic.gemma.persistence.util.Sort;
+import ubic.gemma.persistence.util.Specification;
 
-import javax.annotation.Nullable;
 import javax.annotation.CheckReturnValue;
+import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
@@ -70,7 +71,7 @@ public interface BioAssayService extends BaseService<BioAssay>, BaseVoEnabledSer
 
     @Override
     @Secured({ "GROUP_USER", "AFTER_ACL_READ" })
-    BioAssay findOrCreate( BioAssay bioAssay );
+    BioAssay findOrCreate( Specification<BioAssay> bioAssay );
 
     @Override
     @Secured({ "GROUP_USER" })

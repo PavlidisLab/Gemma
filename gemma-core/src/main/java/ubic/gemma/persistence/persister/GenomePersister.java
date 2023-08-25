@@ -43,6 +43,8 @@ import ubic.gemma.persistence.util.SequenceBinUtils;
 import javax.annotation.Nullable;
 import java.util.*;
 
+import static ubic.gemma.persistence.util.Specifications.byIdentifiable;
+
 /**
  * @author pavlidis
  */
@@ -207,7 +209,7 @@ public abstract class GenomePersister extends CommonPersister {
                 GeneProduct existingGeneProduct = updatedGpMap.get( newGeneProductInfo.getNcbiGi() );
                 this.updateGeneProduct( existingGeneProduct, newGeneProductInfo, caches );
             } else {
-                GeneProduct existingGeneProduct = geneProductDao.find( newGeneProductInfo );
+                GeneProduct existingGeneProduct = geneProductDao.find( byIdentifiable( newGeneProductInfo ) );
                 if ( existingGeneProduct == null ) {
                     // it is, in fact, new, so far as we can tell.
                     newGeneProductInfo.setGene( existingGene );
@@ -297,7 +299,7 @@ public abstract class GenomePersister extends CommonPersister {
     }
 
     protected BioSequence persistBioSequence( BioSequence bioSequence, Caches caches ) {
-        BioSequence existingBioSequence = bioSequenceDao.find( bioSequence );
+        BioSequence existingBioSequence = bioSequenceDao.find( byIdentifiable( bioSequence ) );
 
         // try to avoid making the instance 'dirty' if we don't have to, to avoid updates.
         if ( existingBioSequence != null ) {
@@ -328,7 +330,7 @@ public abstract class GenomePersister extends CommonPersister {
         } else if ( commonName != null && seenTaxa.containsKey( commonName.toLowerCase() ) ) {
             return seenTaxa.get( commonName.toLowerCase() );
         } else {
-            Taxon fTaxon = taxonDao.findOrCreate( taxon );
+            Taxon fTaxon = taxonDao.findOrCreate( byIdentifiable( taxon ) );
             assert fTaxon != null;
             assert fTaxon.getId() != null;
 
@@ -377,7 +379,7 @@ public abstract class GenomePersister extends CommonPersister {
             Collection<DatabaseEntry> accessions = gpt.getAccessions();
             Collection<DatabaseEntry> toRelease = new HashSet<>();
             for ( DatabaseEntry de : accessions ) {
-                if ( this.bioSequenceDao.findByAccession( de ) != null ) {
+                if ( this.bioSequenceDao.findByAccession( byIdentifiable( de ) ) != null ) {
                     toRelease.add( de );
                 }
             }
@@ -420,7 +422,7 @@ public abstract class GenomePersister extends CommonPersister {
 
     private Gene persistGene( Gene gene, boolean checkFirst, Caches caches ) {
         if ( checkFirst ) {
-            Gene existingGene = geneDao.find( gene );
+            Gene existingGene = geneDao.find( byIdentifiable( gene ) );
 
             if ( existingGene != null ) {
                 if ( AbstractPersister.log.isDebugEnabled() )
@@ -450,7 +452,7 @@ public abstract class GenomePersister extends CommonPersister {
 
         Set<GeneProduct> geneProductsForNewGene = new HashSet<>();
         for ( GeneProduct product : tempGeneProduct ) {
-            GeneProduct existingProduct = geneProductDao.find( product );
+            GeneProduct existingProduct = geneProductDao.find( byIdentifiable( product ) );
             if ( existingProduct != null ) {
                 /*
                  * A geneProduct is being moved to a gene that didn't exist in the system already
@@ -494,7 +496,7 @@ public abstract class GenomePersister extends CommonPersister {
     }
 
     private GeneProduct persistGeneProduct( GeneProduct geneProduct, Caches caches ) {
-        GeneProduct existing = geneProductDao.find( geneProduct );
+        GeneProduct existing = geneProductDao.find( byIdentifiable( geneProduct ) );
 
         if ( existing != null ) {
             if ( AbstractPersister.log.isDebugEnabled() )
@@ -525,7 +527,7 @@ public abstract class GenomePersister extends CommonPersister {
     private BioSequence persistOrUpdateBioSequence( BioSequence bioSequence, Caches caches ) {
         // Note that this method is only really used by the ArrayDesignSequencePersister: it's for filling in
         //information about probes on arrays.
-        BioSequence existingBioSequence = bioSequenceDao.find( bioSequence );
+        BioSequence existingBioSequence = bioSequenceDao.find( byIdentifiable( bioSequence ) );
 
         if ( existingBioSequence == null ) {
             if ( AbstractPersister.log.isDebugEnabled() )
@@ -597,7 +599,7 @@ public abstract class GenomePersister extends CommonPersister {
         if ( gene.getId() != null ) {
             existingGene = geneDao.load( gene.getId() );
         } else {
-            existingGene = geneDao.find( gene );
+            existingGene = geneDao.find( byIdentifiable( gene ) );
         }
 
         if ( existingGene == null ) {
@@ -615,7 +617,7 @@ public abstract class GenomePersister extends CommonPersister {
         if ( geneProduct.getId() != null ) {
             existing = geneProductDao.load( geneProduct.getId() );
         } else {
-            existing = geneProductDao.find( geneProduct );
+            existing = geneProductDao.find( byIdentifiable( geneProduct ) );
         }
 
         if ( existing == null ) {

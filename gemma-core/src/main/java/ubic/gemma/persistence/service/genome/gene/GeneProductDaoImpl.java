@@ -107,9 +107,9 @@ public class GeneProductDaoImpl extends AbstractVoEnabledDao<GeneProduct, GenePr
         Criteria queryObject = this.getSessionFactory().getCurrentSession().createCriteria( GeneProduct.class )
                 .setResultTransformer( CriteriaSpecification.DISTINCT_ROOT_ENTITY );
 
-        BusinessKey.checkValidKey( geneProduct );
+        BusinessKey.checkValidUnitKey( geneProduct );
 
-        BusinessKey.createQueryObject( queryObject, geneProduct );
+        BusinessKey.createFVQueryObject( queryObject, geneProduct );
 
         //noinspection unchecked
         List<GeneProduct> results = queryObject.list();

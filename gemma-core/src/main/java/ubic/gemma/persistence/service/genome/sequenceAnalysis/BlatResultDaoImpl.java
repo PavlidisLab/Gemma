@@ -23,17 +23,14 @@ import org.hibernate.Hibernate;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
-import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResultValueObject;
 import ubic.gemma.persistence.service.AbstractVoEnabledDao;
 import ubic.gemma.persistence.util.BusinessKey;
-import ubic.gemma.persistence.util.EntityUtils;
+import ubic.gemma.persistence.util.Specification;
 
-import java.sql.Connection;
 import java.util.Collection;
-import java.util.LinkedHashSet;
 import java.util.List;
 
 /**
@@ -85,12 +82,12 @@ public class BlatResultDaoImpl extends AbstractVoEnabledDao<BlatResult, BlatResu
 
     @SuppressWarnings("unchecked")
     @Override
-    public Collection<BlatResult> findByBioSequence( BioSequence bioSequence ) {
-        BusinessKey.checkValidKey( bioSequence );
+    public Collection<BlatResult> findByBioSequence( Specification<BioSequence> bioSequence ) {
+        BusinessKey.checkValidBioSequenceKey( bioSequence );
 
         Criteria queryObject = this.getSessionFactory().getCurrentSession().createCriteria( BlatResult.class );
 
-        BusinessKey.attachCriteria( queryObject, bioSequence, "querySequence" );
+        BusinessKey.attachBSCriteria( queryObject, bioSequence, "querySequence" );
 
         List<?> results = queryObject.list();
 

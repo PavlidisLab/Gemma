@@ -142,7 +142,7 @@ public class BibliographicReferenceDaoImpl
     @Override
     public BibliographicReference find( BibliographicReference bibliographicReference ) {
 
-        BusinessKey.checkKey( bibliographicReference );
+        BusinessKey.checkBRKey( bibliographicReference );
         Criteria queryObject = this.getSessionFactory().getCurrentSession()
                 .createCriteria( BibliographicReference.class );
 

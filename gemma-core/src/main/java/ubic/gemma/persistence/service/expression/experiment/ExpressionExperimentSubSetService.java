@@ -24,6 +24,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.expression.experiment.FactorValueValueObject;
 import ubic.gemma.persistence.service.BaseService;
+import ubic.gemma.persistence.util.Specification;
 
 import javax.annotation.Nullable;
 import java.util.Collection;
@@ -35,11 +36,11 @@ public interface ExpressionExperimentSubSetService extends BaseService<Expressio
 
     @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
-    ExpressionExperimentSubSet find( ExpressionExperimentSubSet entity );
+    ExpressionExperimentSubSet find( Specification<ExpressionExperimentSubSet> spec );
 
     @Override
     @Secured({ "GROUP_USER" })
-    ExpressionExperimentSubSet findOrCreate( ExpressionExperimentSubSet entity );
+    ExpressionExperimentSubSet findOrCreate( Specification<ExpressionExperimentSubSet> spec );
 
     @Override
     @Secured({ "GROUP_USER" })

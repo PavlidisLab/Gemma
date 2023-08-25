@@ -20,7 +20,6 @@ package ubic.gemma.persistence.service.expression.bioAssay;
 
 import org.apache.commons.lang3.StringUtils;
 import org.hibernate.Hibernate;
-import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
@@ -52,7 +51,7 @@ public class BioAssayDaoImpl extends AbstractNoopFilteringVoEnabledDao<BioAssay,
     @Override
     public BioAssay find( BioAssay bioAssay ) {
         return ( BioAssay ) BusinessKey
-                .createQueryObject( this.getSessionFactory().getCurrentSession(), bioAssay )
+                .createFVQueryObject( this.getSessionFactory().getCurrentSession(), bioAssay )
                 .uniqueResult();
     }
 

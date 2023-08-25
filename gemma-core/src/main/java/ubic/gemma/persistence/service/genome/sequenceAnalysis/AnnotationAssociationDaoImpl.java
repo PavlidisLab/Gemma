@@ -27,10 +27,13 @@ import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.model.genome.sequenceAnalysis.AnnotationAssociation;
 import ubic.gemma.persistence.service.AbstractDao;
 import ubic.gemma.persistence.util.BusinessKey;
+import ubic.gemma.persistence.util.Specification;
 
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
+
+import static ubic.gemma.persistence.util.Specifications.byIdentifiable;
 
 /**
  * @author paul
@@ -45,27 +48,27 @@ public class AnnotationAssociationDaoImpl extends AbstractDao<AnnotationAssociat
     }
 
     @Override
-    public Collection<AnnotationAssociation> find( BioSequence bioSequence ) {
-        BusinessKey.checkValidKey( bioSequence );
+    public Collection<AnnotationAssociation> findByBioSequence( Specification<BioSequence> bioSequence ) {
+        BusinessKey.checkValidG2GKey( bioSequence );
         Criteria queryObject = this.getSessionFactory().getCurrentSession()
                 .createCriteria( AnnotationAssociation.class );
-        BusinessKey.attachCriteria( queryObject, bioSequence, "bioSequence" );
+        BusinessKey.attachCCriteria( queryObject, bioSequence, "bioSequence" );
 
         //noinspection unchecked
         return queryObject.list();
     }
 
     @Override
-    public Collection<AnnotationAssociation> find( Gene gene ) {
-        if ( gene.getProducts().size() == 0 ) {
+    public Collection<AnnotationAssociation> findByGene( Specification<Gene> gene ) {
+        if ( gene.getEntity().getProducts().size() == 0 ) {
             throw new IllegalArgumentException( "Gene has no products" );
         }
 
         Collection<AnnotationAssociation> result = new HashSet<>();
 
-        for ( GeneProduct geneProduct : gene.getProducts() ) {
+        for ( GeneProduct geneProduct : gene.getEntity().getProducts() ) {
 
-            BusinessKey.checkValidKey( geneProduct );
+            BusinessKey.checkValidG2GKey( byIdentifiable( geneProduct ) );
             Criteria queryObject = this.getSessionFactory().getCurrentSession()
                     .createCriteria( AnnotationAssociation.class );
             Criteria innerQuery = queryObject.createCriteria( "geneProduct" );

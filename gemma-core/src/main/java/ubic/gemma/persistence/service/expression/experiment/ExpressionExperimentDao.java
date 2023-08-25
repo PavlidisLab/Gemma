@@ -22,6 +22,7 @@ import ubic.gemma.persistence.service.common.auditAndSecurity.curation.Curatable
 import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.persistence.util.Sort;
+import ubic.gemma.persistence.util.Specification;
 
 import javax.annotation.Nullable;
 import java.util.Collection;
@@ -47,7 +48,7 @@ public interface ExpressionExperimentDao
 
     Collection<ExpressionExperiment> findByName( String name );
 
-    Collection<ExpressionExperiment> findByAccession( DatabaseEntry accession );
+    Collection<ExpressionExperiment> findByAccession( Specification<DatabaseEntry> accession );
 
     Collection<ExpressionExperiment> findByAccession( String accession );
 

@@ -23,7 +23,6 @@ import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
-import ubic.gemma.model.expression.experiment.ExperimentalDesign;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.expression.experiment.FactorValueValueObject;
@@ -96,9 +95,9 @@ public class FactorValueDaoImpl extends AbstractNoopFilteringVoEnabledDao<Factor
     public FactorValue find( FactorValue factorValue ) {
         Criteria queryObject = this.getSessionFactory().getCurrentSession().createCriteria( FactorValue.class );
 
-        BusinessKey.checkKey( factorValue );
+        BusinessKey.checkEESSKey( factorValue );
 
-        BusinessKey.createQueryObject( queryObject, factorValue );
+        BusinessKey.createFVQueryObject( queryObject, factorValue );
 
         return ( FactorValue ) queryObject.uniqueResult();
     }

@@ -141,7 +141,7 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
-    public ExpressionExperiment find( ExpressionExperiment entity ) {
+    public ExpressionExperiment find( Specification<ExpressionExperiment> entity ) {
 
         Criteria criteria = this.getSessionFactory().getCurrentSession().createCriteria( ExpressionExperiment.class );
 
@@ -159,11 +159,11 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
-    public Collection<ExpressionExperiment> findByAccession( DatabaseEntry accession ) {
+    public Collection<ExpressionExperiment> findByAccession( Specification<DatabaseEntry> accession ) {
         Criteria criteria = this.getSessionFactory().getCurrentSession().createCriteria( ExpressionExperiment.class );
 
-        BusinessKey.checkKey( accession );
-        BusinessKey.attachCriteria( criteria, accession, "accession" );
+        BusinessKey.checkDEKey( accession );
+        BusinessKey.attachDECriteria( criteria, accession, "accession" );
 
         //noinspection unchecked
         return criteria.list();

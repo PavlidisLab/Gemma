@@ -14,15 +14,10 @@
  */
 package ubic.gemma.core.apps;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
-
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.lang3.StringUtils;
-
 import ubic.gemma.core.analysis.report.ArrayDesignReportService;
 import ubic.gemma.core.analysis.service.ArrayDesignAnnotationService;
 import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
@@ -48,6 +43,12 @@ import ubic.gemma.persistence.service.expression.designElement.CompositeSequence
 import ubic.gemma.persistence.service.genome.biosequence.BioSequenceService;
 import ubic.gemma.persistence.service.genome.sequenceAnalysis.AnnotationAssociationService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
+
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
+
+import static ubic.gemma.persistence.util.Specifications.byIdentifiable;
 
 /**
  * Create (or update) an array design based on the current set of transcripts for a taxon.
@@ -116,9 +117,9 @@ public class GenericGenelistDesignGenerator extends AbstractCLIContextCLI {
         arrayDesign.setDescription( "Created by Gemma" );
         arrayDesign.setTechnologyType( TechnologyType.GENELIST ); // this is key
 
-        if ( arrayDesignService.find( arrayDesign ) != null ) {
+        if ( arrayDesignService.find( byIdentifiable( arrayDesign ) ) != null ) {
             AbstractCLI.log.info( "Platform for " + taxon + " already exists, will update" );
-            arrayDesign = arrayDesignService.findOrFail( arrayDesign );
+            arrayDesign = arrayDesignService.findOrFail( byIdentifiable( arrayDesign ) );
             arrayDesignService.deleteGeneProductAnnotationAssociations( arrayDesign );
             arrayDesign = arrayDesignService.loadOrFail( arrayDesign.getId() );
 

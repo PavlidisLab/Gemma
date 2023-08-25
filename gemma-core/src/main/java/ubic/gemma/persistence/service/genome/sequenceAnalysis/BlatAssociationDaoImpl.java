@@ -19,7 +19,9 @@
 package ubic.gemma.persistence.service.genome.sequenceAnalysis;
 
 import org.apache.commons.lang3.StringUtils;
-import org.hibernate.*;
+import org.hibernate.Criteria;
+import org.hibernate.Hibernate;
+import org.hibernate.SessionFactory;
 import org.hibernate.criterion.Restrictions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
@@ -29,10 +31,13 @@ import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
 import ubic.gemma.persistence.service.AbstractDao;
 import ubic.gemma.persistence.util.BusinessKey;
+import ubic.gemma.persistence.util.Specification;
 
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
+
+import static ubic.gemma.persistence.util.Specifications.byIdentifiable;
 
 /**
  * <p>
@@ -51,26 +56,26 @@ public class BlatAssociationDaoImpl extends AbstractDao<BlatAssociation> impleme
     }
 
     @Override
-    public Collection<BlatAssociation> find( BioSequence bioSequence ) {
-        BusinessKey.checkValidKey( bioSequence );
+    public Collection<BlatAssociation> findByBioSequence( Specification<BioSequence> bioSequence ) {
+        BusinessKey.checkValidG2GKey( bioSequence );
         Criteria queryObject = super.getSessionFactory().getCurrentSession().createCriteria( BlatAssociation.class );
-        BusinessKey.attachCriteria( queryObject, bioSequence, "bioSequence" );
+        BusinessKey.attachCCriteria( queryObject, bioSequence, "bioSequence" );
         //noinspection unchecked
         return queryObject.list();
     }
 
     @Override
-    public Collection<BlatAssociation> find( Gene gene ) {
+    public Collection<BlatAssociation> findByGene( Specification<Gene> gene ) {
 
-        if ( gene.getProducts().size() == 0 ) {
+        if ( gene.getEntity().getProducts().size() == 0 ) {
             throw new IllegalArgumentException( "Gene has no products" );
         }
 
         Collection<BlatAssociation> result = new HashSet<>();
 
-        for ( GeneProduct geneProduct : gene.getProducts() ) {
+        for ( GeneProduct geneProduct : gene.getEntity().getProducts() ) {
 
-            BusinessKey.checkValidKey( geneProduct );
+            BusinessKey.checkValidG2GKey( byIdentifiable( geneProduct ) );
 
             Criteria queryObject = super.getSessionFactory().getCurrentSession()
                     .createCriteria( BlatAssociation.class );

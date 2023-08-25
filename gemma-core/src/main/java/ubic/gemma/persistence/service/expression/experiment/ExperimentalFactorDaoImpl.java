@@ -30,7 +30,6 @@ import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.persistence.service.AbstractVoEnabledDao;
 import ubic.gemma.persistence.util.BusinessKey;
 
-import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
@@ -100,9 +99,9 @@ public class ExperimentalFactorDaoImpl extends AbstractVoEnabledDao<Experimental
     @Override
     public ExperimentalFactor find( ExperimentalFactor experimentalFactor ) {
 
-        BusinessKey.checkValidKey( experimentalFactor );
+        BusinessKey.checkValidEFKey( experimentalFactor );
         Criteria queryObject = super.getSessionFactory().getCurrentSession().createCriteria( ExperimentalFactor.class );
-        BusinessKey.addRestrictions( queryObject, experimentalFactor );
+        BusinessKey.addDERestrictions( queryObject, experimentalFactor );
         return ( ExperimentalFactor ) queryObject.uniqueResult();
     }
 

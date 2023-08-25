@@ -571,7 +571,8 @@ public class CompositeSequenceDaoImpl extends AbstractQueryFilteringVoEnabledDao
     //    }
 
     @Override
-    public CompositeSequence find( CompositeSequence compositeSequence ) {
+    public CompositeSequence find( Specification<CompositeSequence> spec ) {
+        CompositeSequence compositeSequence = spec.getEntity();
 
         if ( compositeSequence.getName() == null )
             return null;
