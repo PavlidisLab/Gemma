@@ -23,10 +23,10 @@ import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
-import ubic.gemma.model.expression.experiment.ExperimentalDesign;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.expression.experiment.FactorValueValueObject;
+import ubic.gemma.model.expression.experiment.Statement;
 import ubic.gemma.persistence.service.AbstractDao;
 import ubic.gemma.persistence.service.AbstractNoopFilteringVoEnabledDao;
 import ubic.gemma.persistence.util.BusinessKey;
@@ -101,6 +101,26 @@ public class FactorValueDaoImpl extends AbstractNoopFilteringVoEnabledDao<Factor
         BusinessKey.createQueryObject( queryObject, factorValue );
 
         return ( FactorValue ) queryObject.uniqueResult();
+    }
+
+    @Override
+    public void removeCharacteristic( FactorValue fv, Statement statement ) {
+        fv.getCharacteristics().remove( statement );
+        if ( statement.getObject() != null ) {
+            Statement objectAsStatement = ( Statement ) getSessionFactory().getCurrentSession()
+                    .get( Statement.class, statement.getObject().getId() );
+            if ( objectAsStatement != null && fv.getCharacteristics().contains( objectAsStatement ) ) {
+                statement.setObject( null );
+            }
+        }
+        if ( statement.getSecondObject() != null ) {
+            Statement secondObjectAsStatement = ( Statement ) getSessionFactory().getCurrentSession()
+                    .get( Statement.class, statement.getSecondObject().getId() );
+            if ( secondObjectAsStatement != null && fv.getCharacteristics().contains( secondObjectAsStatement ) ) {
+                statement.setSecondObject( null );
+            }
+        }
+        getSessionFactory().getCurrentSession().delete( statement );
     }
 
     @Override

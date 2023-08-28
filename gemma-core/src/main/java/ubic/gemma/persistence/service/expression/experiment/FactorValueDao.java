@@ -20,7 +20,7 @@ package ubic.gemma.persistence.service.expression.experiment;
 
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.expression.experiment.FactorValueValueObject;
-import ubic.gemma.persistence.service.BaseVoEnabledDao;
+import ubic.gemma.model.expression.experiment.Statement;
 import ubic.gemma.persistence.service.FilteringVoEnabledDao;
 
 import java.util.Collection;
@@ -39,4 +39,8 @@ public interface FactorValueDao extends FilteringVoEnabledDao<FactorValue, Facto
     @Deprecated
     Collection<FactorValue> findByValue( String valuePrefix );
 
+    /**
+     * Remove a given characteristic from a factor value.
+     */
+    void removeCharacteristic( FactorValue fv, Statement statement );
 }

@@ -253,9 +253,7 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
                 continue;
             }
 
-            fv.getCharacteristics().remove( c );
-            characteristicService.remove( c );
-            factorValueService.update( fv );
+            factorValueService.removeCharacteristic( fv, c );
         }
     }
 

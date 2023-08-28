@@ -17,12 +17,16 @@ package ubic.gemma.persistence.service.expression.experiment;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.expression.experiment.FactorValueValueObject;
+import ubic.gemma.model.expression.experiment.Statement;
 import ubic.gemma.persistence.service.AbstractFilteringVoEnabledService;
-import ubic.gemma.persistence.service.AbstractVoEnabledService;
+import ubic.gemma.persistence.service.common.description.CharacteristicDao;
 
 import java.util.Collection;
+
+import static java.util.Objects.requireNonNull;
 
 /**
  * <p>
@@ -39,11 +43,13 @@ public class FactorValueServiceImpl extends AbstractFilteringVoEnabledService<Fa
         implements FactorValueService {
 
     private final FactorValueDao factorValueDao;
+    private final CharacteristicDao characteristicDao;
 
     @Autowired
-    public FactorValueServiceImpl( FactorValueDao factorValueDao ) {
+    public FactorValueServiceImpl( FactorValueDao factorValueDao, CharacteristicDao characteristicDao ) {
         super( factorValueDao );
         this.factorValueDao = factorValueDao;
+        this.characteristicDao = characteristicDao;
     }
 
     @Override
@@ -56,5 +62,13 @@ public class FactorValueServiceImpl extends AbstractFilteringVoEnabledService<Fa
     @Transactional
     public void remove( FactorValue entity ) {
         super.remove( ensureInSession( entity ) );
+    }
+
+    @Override
+    @Transactional
+    public void removeCharacteristic( FactorValue fv, Characteristic c ) {
+        Statement s = requireNonNull( characteristicDao.loadStatement( c.getId() ),
+                String.format( "There is no statement with ID %d.", c.getId() ) );
+        this.factorValueDao.removeCharacteristic( ensureInSession( fv ), s );
     }
 }
