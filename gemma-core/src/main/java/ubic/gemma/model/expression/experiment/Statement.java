@@ -119,13 +119,23 @@ public class Statement extends Characteristic {
     @Override
     public String toString() {
         StringBuilder b = new StringBuilder( super.toString() );
-        if ( predicateUri != null ) {
+        if ( predicate != null ) {
+            b.append( " Predicate=" ).append( predicate );
+            if ( predicateUri != null ) {
+                b.append( " [" ).append( predicateUri ).append( "]" );
+            }
+        } else if ( predicateUri != null ) {
             b.append( " Predicate URI=" ).append( predicateUri );
         }
         if ( object != null ) {
             b.append( " Object=" ).append( object.getId() );
         }
-        if ( secondPredicateUri != null ) {
+        if ( secondPredicate != null ) {
+            b.append( " Second Predicate=" ).append( secondPredicate );
+            if ( secondPredicateUri != null ) {
+                b.append( " [" ).append( secondPredicateUri ).append( "]" );
+            }
+        } else if ( secondPredicateUri != null ) {
             b.append( " Second Predicate URI=" ).append( secondPredicateUri );
         }
         if ( secondObject != null ) {
