@@ -32,6 +32,7 @@ import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
+import ubic.gemma.model.expression.experiment.Statement;
 import ubic.gemma.persistence.service.common.description.CharacteristicService;
 import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
@@ -84,25 +85,20 @@ public class CharacteristicUpdateTaskImpl extends AbstractTask<TaskResult, Chara
         super.setTaskCommand( command );
     }
 
-    private void addToParent( Characteristic c, Object parent ) {
-        if ( parent instanceof ExpressionExperiment ) {
-            ExpressionExperiment ee = ( ExpressionExperiment ) parent;
-            ee = expressionExperimentService.thawLite( ee );
-            ee.getCharacteristics().add( c );
-            expressionExperimentService.update( ee );
-        } else if ( parent instanceof BioMaterial ) {
-            BioMaterial bm = ( BioMaterial ) parent;
-            bm.getCharacteristics().add( c );
-            bioMaterialService.update( bm );
-        } else if ( parent instanceof FactorValue ) {
-            FactorValue fv = ( FactorValue ) parent;
-            fv.getCharacteristics().add( c );
-            factorValueService.update( fv );
-        }
-    }
-
     private Characteristic convertAvo2Characteristic( AnnotationValueObject avo ) {
         Characteristic vc = Characteristic.Factory.newInstance();
+        vc.setId( avo.getId() );
+        vc.setCategory( avo.getClassName() );
+        vc.setCategoryUri( StringUtils.stripToNull( avo.getClassUri() ) );
+        vc.setValue( avo.getTermName() );
+        vc.setValueUri( StringUtils.stripToNull( avo.getTermUri() ) );
+        if ( StringUtils.isNotBlank( avo.getEvidenceCode() ) )
+            vc.setEvidenceCode( GOEvidenceCode.valueOf( avo.getEvidenceCode() ) );
+        return vc;
+    }
+
+    private Statement convertAvo2Statement( AnnotationValueObject avo ) {
+        Statement vc = new Statement();
         vc.setId( avo.getId() );
         vc.setCategory( avo.getClassName() );
         vc.setCategoryUri( StringUtils.stripToNull( avo.getClassUri() ) );
@@ -161,7 +157,7 @@ public class CharacteristicUpdateTaskImpl extends AbstractTask<TaskResult, Chara
                         "Don't use the annotator to update factor values that already have characteristics" );
             }
 
-            Characteristic vc = convertAvo2Characteristic( avo );
+            Statement vc = convertAvo2Statement( avo );
             vc.setId( null );
 
             if ( vc.getEvidenceCode() == null ) {

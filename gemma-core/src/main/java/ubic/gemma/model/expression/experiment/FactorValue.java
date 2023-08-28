@@ -47,7 +47,7 @@ public class FactorValue implements Identifiable, Serializable, gemma.gsec.model
     private Long id;
     private ExperimentalFactor experimentalFactor;
     private Measurement measurement;
-    private Set<Characteristic> characteristics = new java.util.HashSet<>();
+    private Set<Statement> characteristics = new java.util.HashSet<>();
 
     /**
      * No-arg constructor added to satisfy javabean contract
@@ -144,11 +144,11 @@ public class FactorValue implements Identifiable, Serializable, gemma.gsec.model
         this.securityOwner = ee;
     }
 
-    public Set<Characteristic> getCharacteristics() {
+    public Set<Statement> getCharacteristics() {
         return this.characteristics;
     }
 
-    public void setCharacteristics( Set<Characteristic> characteristics ) {
+    public void setCharacteristics( Set<Statement> characteristics ) {
         this.characteristics = characteristics;
     }
 

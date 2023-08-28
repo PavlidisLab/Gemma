@@ -117,7 +117,7 @@ public class ExpressionAnalysisResultSetFileServiceImpl extends AbstractTsvFileS
                 + ( measurement.getUnit() != null ? measurement.getUnit().getUnitNameCV() : "" );
     }
 
-    private String formatCharacteristics( Collection<Characteristic> characteristics ) {
+    private String formatCharacteristics( Collection<? extends Characteristic> characteristics ) {
         return characteristics.stream().map( Characteristic::getValue ).collect( Collectors.joining( ", " ) );
     }
 

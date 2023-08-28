@@ -29,6 +29,7 @@ import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
+import ubic.gemma.model.expression.experiment.Statement;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 import ubic.gemma.persistence.service.AbstractFilteringVoEnabledService;
@@ -56,6 +57,12 @@ public class CharacteristicServiceImpl extends AbstractFilteringVoEnabledService
     public CharacteristicServiceImpl( CharacteristicDao characteristicDao ) {
         super( characteristicDao );
         this.characteristicDao = characteristicDao;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Statement loadStatement( Long charId ) {
+        return this.characteristicDao.loadStatement( charId );
     }
 
     @Override
@@ -151,5 +158,11 @@ public class CharacteristicServiceImpl extends AbstractFilteringVoEnabledService
     @Transactional(readOnly = true)
     public Collection<? extends Characteristic> findByCategory( String query ) {
         return this.characteristicDao.findByCategory( query );
+    }
+
+    @Override
+    @Transactional
+    public Statement create( Statement c ) {
+        return this.characteristicDao.create( c );
     }
 }

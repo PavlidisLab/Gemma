@@ -42,6 +42,7 @@ import ubic.gemma.model.expression.biomaterial.Treatment;
 import ubic.gemma.model.expression.experiment.ExperimentalDesign;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.Statement;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 import ubic.gemma.persistence.service.AbstractDao;
@@ -67,6 +68,11 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
     @Autowired
     public CharacteristicDaoImpl( SessionFactory sessionFactory ) {
         super( Characteristic.class, sessionFactory );
+    }
+
+    @Override
+    public Statement loadStatement( Long charId ) {
+        return ( Statement ) getSessionFactory().getCurrentSession().get( Statement.class, charId );
     }
 
     @Override
@@ -367,6 +373,12 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
 
         return charToParent;
 
+    }
+
+    @Override
+    public Statement create( Statement s ) {
+        getSessionFactory().getCurrentSession().persist( s );
+        return s;
     }
 
     @Override

@@ -91,7 +91,7 @@ public class FactorValueBasicValueObject extends IdentifiableValueObject<FactorV
     static String getSummaryString( FactorValue fv ) {
         StringBuilder buf = new StringBuilder();
         if ( fv.getCharacteristics().size() > 0 ) {
-            for ( Iterator<Characteristic> iter = fv.getCharacteristics().iterator(); iter.hasNext(); ) {
+            for ( Iterator<Statement> iter = fv.getCharacteristics().iterator(); iter.hasNext(); ) {
                 Characteristic c = iter.next();
                 buf.append( c.getValue() == null ? "[Unassigned]" : c.getValue() );
                 if ( iter.hasNext() )

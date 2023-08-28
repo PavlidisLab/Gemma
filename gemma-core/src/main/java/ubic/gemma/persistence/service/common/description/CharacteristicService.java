@@ -22,6 +22,7 @@ import org.springframework.security.access.annotation.Secured;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.Statement;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 import ubic.gemma.persistence.service.BaseService;
@@ -40,6 +41,9 @@ import java.util.Set;
  * @author paul
  */
 public interface CharacteristicService extends BaseService<Characteristic>, BaseVoEnabledService<Characteristic, CharacteristicValueObject> {
+
+    @Nullable
+    Statement loadStatement( Long charId );
 
     /**
      * Browse through the characteristics, excluding GO annotations.
@@ -134,6 +138,12 @@ public interface CharacteristicService extends BaseService<Characteristic>, Base
     @Override
     @Secured({ "GROUP_USER" })
     Characteristic create( Characteristic c );
+
+    /**
+     * @see CharacteristicDao#create(Statement)
+     */
+    @Secured({ "GROUP_USER" })
+    Statement create( Statement c );
 
     @Override
     @Secured({ "GROUP_ADMIN" })

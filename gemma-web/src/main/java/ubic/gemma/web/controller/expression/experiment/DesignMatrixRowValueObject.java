@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2008 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -27,6 +27,7 @@ import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
+import ubic.gemma.model.expression.experiment.Statement;
 import ubic.gemma.persistence.util.FactorValueVector;
 
 import java.io.Serializable;
@@ -145,7 +146,7 @@ public class DesignMatrixRowValueObject implements Serializable {
 
         StringBuilder buf = new StringBuilder();
         if ( !factorValue.getCharacteristics().isEmpty() ) {
-            for ( Iterator<Characteristic> i = factorValue.getCharacteristics().iterator(); i.hasNext(); ) {
+            for ( Iterator<Statement> i = factorValue.getCharacteristics().iterator(); i.hasNext(); ) {
                 Characteristic characteristic = i.next();
 
                 /*

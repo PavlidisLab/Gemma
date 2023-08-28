@@ -29,7 +29,6 @@ import ubic.gemma.core.analysis.expression.diff.LinearModelAnalyzer;
 import ubic.gemma.core.analysis.report.ExpressionExperimentReportService;
 import ubic.gemma.core.expression.experiment.FactorValueDeletion;
 import ubic.gemma.core.loader.expression.simple.ExperimentalDesignImporter;
-import ubic.gemma.web.util.AnchorTagUtil;
 import ubic.gemma.model.association.GOEvidenceCode;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ExperimentalDesignUpdatedEvent;
 import ubic.gemma.model.common.description.Characteristic;
@@ -48,6 +47,7 @@ import ubic.gemma.persistence.service.expression.experiment.FactorValueService;
 import ubic.gemma.persistence.util.EntityUtils;
 import ubic.gemma.web.controller.BaseController;
 import ubic.gemma.web.remote.EntityDelegator;
+import ubic.gemma.web.util.AnchorTagUtil;
 import ubic.gemma.web.util.EntityNotFoundException;
 
 import javax.servlet.http.HttpServletRequest;
@@ -167,11 +167,11 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
                     "Experimental factor with ID=" + e.getId() + " could not be accessed for editing" );
         }
 
-        Set<Characteristic> chars = new HashSet<>();
+        Set<Statement> chars = new HashSet<>();
         for ( FactorValue fv : ef.getFactorValues() ) {
             //noinspection LoopStatementThatDoesntLoop // No, but its an effective way of doing this
-            for ( Characteristic c : fv.getCharacteristics() ) {
-                chars.add( this.createTemplateCharacteristic( c ) );
+            for ( Statement c : fv.getCharacteristics() ) {
+                chars.add( this.createTemplateStatement( c ) );
                 break;
             }
         }
@@ -180,7 +180,7 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
                 throw new IllegalArgumentException(
                         "You cannot create new factor values on a experimental factor that is not defined by a formal Category" );
             }
-            chars.add( this.createTemplateCharacteristic( ef.getCategory() ) );
+            chars.add( this.createTemplateStatement( ef.getCategory() ) );
         }
 
         FactorValue fv = FactorValue.Factory.newInstance();
@@ -194,7 +194,7 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
     }
 
     @Override
-    public void createFactorValueCharacteristic( EntityDelegator e, Characteristic c ) {
+    public void createFactorValueCharacteristic( EntityDelegator e, Statement c ) {
         if ( e == null || e.getId() == null )
             return;
         FactorValue fv = factorValueService.load( e.getId() );
@@ -208,7 +208,7 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
         }
 
         if ( fv.getCharacteristics() == null ) {
-            fv.setCharacteristics( new HashSet<Characteristic>() );
+            fv.setCharacteristics( new HashSet<>() );
         }
 
         fv.getCharacteristics().add( c );
@@ -687,10 +687,10 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
             Long charId = fvvo.getCharId(); // this is optional. Maybe we're actually adding a characteristic for the
             // first time.
 
-            Characteristic c;
+            Statement c;
             if ( charId != null ) {
 
-                c = characteristicService.load( charId );
+                c = characteristicService.loadStatement( charId );
 
                 if ( c == null ) {
                     /*
@@ -706,7 +706,7 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
 
             } else {
 
-                c = Characteristic.Factory.newInstance();
+                c = new Statement();
 
             }
 
@@ -757,8 +757,8 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
         return c;
     }
 
-    private Characteristic createTemplateCharacteristic( Characteristic source ) {
-        Characteristic template = Characteristic.Factory.newInstance();
+    private Statement createTemplateStatement( Characteristic source ) {
+        Statement template = new Statement();
         template.setCategory( source.getCategory() );
         template.setCategoryUri( source.getCategoryUri() );
         template.setEvidenceCode( GOEvidenceCode.IEA ); // automatically added characteristic

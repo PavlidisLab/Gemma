@@ -194,7 +194,7 @@ public class Characteristic extends AbstractDescribable implements Serializable 
                 b.append( " [" ).append( categoryUri ).append( "]" );
             }
         } else if ( categoryUri != null ) {
-            b.append( " Value URI=" ).append( categoryUri );
+            b.append( " Category URI=" ).append( categoryUri );
         } else {
             b.append( " [No Category]" );
         }

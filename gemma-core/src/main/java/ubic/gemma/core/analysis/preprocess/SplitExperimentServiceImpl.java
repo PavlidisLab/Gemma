@@ -30,7 +30,6 @@ import ubic.gemma.core.analysis.service.ExpressionDataFileService;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataMatrix;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
-import ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.measurement.Measurement;
@@ -41,10 +40,7 @@ import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.biomaterial.Treatment;
-import ubic.gemma.model.expression.experiment.ExperimentalDesign;
-import ubic.gemma.model.expression.experiment.ExperimentalFactor;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.expression.experiment.FactorValue;
+import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.persistence.persister.Persister;
 import ubic.gemma.persistence.service.common.auditAndSecurity.CurationDetailsService;
 import ubic.gemma.persistence.service.expression.bioAssayData.RawExpressionDataVectorService;
@@ -407,7 +403,7 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
         Collection<FactorValue> result = new HashSet<>();
         for ( FactorValue fv : factorValues ) {
             FactorValue clone = FactorValue.Factory.newInstance( ef );
-            clone.setCharacteristics( this.cloneCharacteristics( fv.getCharacteristics() ) );
+            clone.setCharacteristics( this.cloneStatements( fv.getCharacteristics() ) );
             clone.setIsBaseline( fv.getIsBaseline() );
             clone.setValue( fv.getValue() );
             clone.setMeasurement( this.cloneMeasurement( fv.getMeasurement() ) );
@@ -464,6 +460,39 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
     private Characteristic cloneCharacteristic( Characteristic c ) {
         return Characteristic.Factory.newInstance( c.getName(), c.getDescription(), c.getValue(), c.getValueUri(),
                 c.getCategory(), c.getCategoryUri(), c.getEvidenceCode() );
+    }
+
+    private Set<Statement> cloneStatements( Collection<Statement> ch ) {
+        List<Statement> orderedStatements = new ArrayList<>( ch );
+        List<Statement> result = new ArrayList<>( orderedStatements.size() );
+        for ( Statement c : orderedStatements ) {
+            Statement s = new Statement();
+            s.setName( c.getName() );
+            s.setDescription( c.getDescription() );
+            s.setValue( c.getValue() );
+            s.setValueUri( c.getValueUri() );
+            s.setCategory( c.getCategory() );
+            s.setCategoryUri( c.getCategoryUri() );
+            s.setEvidenceCode( c.getEvidenceCode() );
+            s.setPredicate( c.getPredicate() );
+            s.setPredicateUri( c.getPredicateUri() );
+            s.setSecondPredicate( c.getSecondPredicate() );
+            s.setSecondPredicateUri( c.getSecondPredicateUri() );
+            result.add( s );
+        }
+        // link object and second object
+        for ( int i = 0; i < orderedStatements.size(); i++ ) {
+            Statement s = orderedStatements.get( i );
+            for ( int j = 0; j < orderedStatements.size(); j++ ) {
+                if ( s.getObject() != null && s.getObject().equals( orderedStatements.get( j ) ) ) {
+                    result.get( i ).setObject( result.get( j ) );
+                }
+                if ( s.getSecondObject() != null && s.getSecondObject().equals( orderedStatements.get( j ) ) ) {
+                    result.get( i ).setSecondObject( result.get( j ) );
+                }
+            }
+        }
+        return new HashSet<>( result );
     }
 
     private BioAssay cloneBioAssay( BioAssay ba ) {

@@ -33,7 +33,7 @@
          <key foreign-key="CHARACTERISTIC_FACTOR_VALUE_FKC">
             <column name="FACTOR_VALUE_FK" sql-type="BIGINT"/>
          </key>
-         <one-to-many class="ubic.gemma.model.common.description.Characteristic"/>
+         <one-to-many class="ubic.gemma.model.expression.experiment.Statement"/>
       </set>
    </class>
 </hibernate-mapping>

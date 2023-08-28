@@ -22,6 +22,7 @@ import lombok.Value;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.Statement;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 import ubic.gemma.persistence.service.BrowsingDao;
@@ -41,6 +42,9 @@ public interface CharacteristicDao
         extends BrowsingDao<Characteristic>, FilteringVoEnabledDao<Characteristic, CharacteristicValueObject> {
 
     String OBJECT_ALIAS = "ch";
+
+    @Nullable
+    Statement loadStatement( Long charId );
 
     /**
      * Browse through the characteristics, excluding GO annotations.
@@ -162,4 +166,9 @@ public interface CharacteristicDao
      * the caller.
      */
     Map<Characteristic, Long> getParentIds( Class<?> parentClass, @Nullable Collection<Characteristic> characteristics );
+
+    /**
+     * Create a statement.
+     */
+    Statement create( Statement s );
 }

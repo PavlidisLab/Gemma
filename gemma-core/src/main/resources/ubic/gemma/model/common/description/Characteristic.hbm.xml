@@ -1,17 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
-        "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+    "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
 
 <hibernate-mapping>
-    <class name="ubic.gemma.model.common.description.Characteristic" table="CHARACTERISTIC"
-           discriminator-value="Characteristic">
+    <class name="ubic.gemma.model.common.description.Characteristic" table="CHARACTERISTIC">
         <cache usage="nonstrict-read-write"/>
         <id name="id" type="java.lang.Long" unsaved-value="null">
             <column name="ID" sql-type="BIGINT"/>
             <generator class="native">
             </generator>
         </id>
+        <discriminator column="class"/>
         <property name="name" type="java.lang.String">
             <column name="NAME" not-null="false" unique="false"
                     sql-type="VARCHAR(255)"/>
@@ -48,5 +48,29 @@
             <column name="ORIGINAL_VALUE" not-null="false" unique="false"
                     sql-type="VARCHAR(255)"/>
         </property>
+        <subclass name="ubic.gemma.model.expression.experiment.Statement"
+                  discriminator-value="Statement">
+            <!-- cannot use not-null for the main predicate/object because -->
+            <property name="predicate" type="java.lang.String">
+                <column name="PREDICATE"/>
+            </property>
+            <property name="predicateUri" type="java.lang.String">
+                <column name="PREDICATE_URI"/>
+            </property>
+            <many-to-one name="object" class="ubic.gemma.model.common.description.Characteristic"
+                         lazy="proxy" fetch="select" cascade="all">
+                <column name="OBJECT_FK"/>
+            </many-to-one>
+            <property name="secondPredicate" type="java.lang.String">
+                <column name="SECOND_PREDICATE"/>
+            </property>
+            <property name="secondPredicateUri" type="java.lang.String">
+                <column name="SECOND_PREDICATE_URI"/>
+            </property>
+            <many-to-one name="secondObject" class="ubic.gemma.model.common.description.Characteristic"
+                         lazy="proxy" fetch="select" cascade="all">
+                <column name="SECOND_OBJECT_FK"/>
+            </many-to-one>
+        </subclass>
     </class>
 </hibernate-mapping>
