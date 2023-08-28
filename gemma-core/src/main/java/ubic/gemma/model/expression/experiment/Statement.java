@@ -1,9 +1,11 @@
 package ubic.gemma.model.expression.experiment;
 
+import org.hibernate.Hibernate;
 import ubic.gemma.model.common.description.Characteristic;
 
 import javax.annotation.Nullable;
 import javax.persistence.Transient;
+import java.util.Objects;
 
 /**
  * A special kind of characteristic that act as a statement.
@@ -117,6 +119,40 @@ public class Statement extends Characteristic {
     }
 
     @Override
+    public boolean equals( Object object ) {
+        if ( object == null )
+            return false;
+        if ( this == object )
+            return true;
+        if ( !( object instanceof Statement ) )
+            return false;
+        Statement that = ( Statement ) object;
+        if ( this.getId() != null && that.getId() != null )
+            return super.equals( that );
+        // if both URIs are non-null, we can compare them directly
+        boolean comparePredicateUris = predicateUri != null && that.predicateUri != null;
+        boolean compareSecondPredicateUris = secondPredicateUri != null && that.secondPredicateUri != null;
+        return super.equals( object )
+                && ( comparePredicateUris ? Objects.equals( predicateUri, that.predicateUri ) : Objects.equals( predicate, that.predicate ) )
+                && Objects.equals( this.object, that.object )
+                && ( compareSecondPredicateUris ? Objects.equals( secondPredicateUri, that.secondPredicateUri ) : Objects.equals( secondPredicate, that.secondPredicate ) )
+                && Objects.equals( secondObject, that.secondObject );
+    }
+
+    @Override
+    public int hashCode() {
+        if ( this.getId() != null )
+            return super.hashCode();
+        // don't both hashing labels unless the URI is null
+        return super.hashCode() + 31 * Objects.hash(
+                predicateUri != null ? predicateUri : predicate,
+                object,
+                secondPredicateUri != null ? secondPredicateUri : secondPredicate,
+                secondObject );
+    }
+
+
+    @Override
     public String toString() {
         StringBuilder b = new StringBuilder( super.toString() );
         if ( predicate != null ) {
@@ -128,7 +164,11 @@ public class Statement extends Characteristic {
             b.append( " Predicate URI=" ).append( predicateUri );
         }
         if ( object != null ) {
-            b.append( " Object=" ).append( object.getId() );
+            if ( Hibernate.isInitialized( object ) ) {
+                b.append( " Object=[" ).append( object ).append( "]" );
+            } else {
+                b.append( " Object=" ).append( object.getId() );
+            }
         }
         if ( secondPredicate != null ) {
             b.append( " Second Predicate=" ).append( secondPredicate );
@@ -139,7 +179,11 @@ public class Statement extends Characteristic {
             b.append( " Second Predicate URI=" ).append( secondPredicateUri );
         }
         if ( secondObject != null ) {
-            b.append( " Second Object=" ).append( secondObject.getId() );
+            if ( Hibernate.isInitialized( secondObject ) ) {
+                b.append( " Second Object=[" ).append( secondObject ).append( "]" );
+            } else {
+                b.append( " Second Object=" ).append( secondObject.getId() );
+            }
         }
         return b.toString();
     }
