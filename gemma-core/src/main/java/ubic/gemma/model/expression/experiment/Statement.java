@@ -15,6 +15,12 @@ import javax.persistence.Transient;
  */
 public class Statement extends Characteristic {
 
+    public static class Factory {
+        public static Statement newInstance() {
+            return new Statement();
+        }
+    }
+
     /**
      * The predicate of the statement.
      */

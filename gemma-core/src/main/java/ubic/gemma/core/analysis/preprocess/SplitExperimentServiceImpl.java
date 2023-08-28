@@ -466,7 +466,7 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
         List<Statement> orderedStatements = new ArrayList<>( ch );
         List<Statement> result = new ArrayList<>( orderedStatements.size() );
         for ( Statement c : orderedStatements ) {
-            Statement s = new Statement();
+            Statement s = Statement.Factory.newInstance();
             s.setName( c.getName() );
             s.setDescription( c.getDescription() );
             s.setValue( c.getValue() );

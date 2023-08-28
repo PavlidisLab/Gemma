@@ -876,7 +876,7 @@ public class PersistentDummyObjectHelper {
     }
 
     protected Statement getTestStatement( String name, String value ) {
-        Statement s = new Statement();
+        Statement s = Statement.Factory.newInstance();
         s.setName( name );
         s.setValue( value );
         return s;

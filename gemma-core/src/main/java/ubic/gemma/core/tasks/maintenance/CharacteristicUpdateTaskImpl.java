@@ -98,7 +98,7 @@ public class CharacteristicUpdateTaskImpl extends AbstractTask<TaskResult, Chara
     }
 
     private Statement convertAvo2Statement( AnnotationValueObject avo ) {
-        Statement vc = new Statement();
+        Statement vc = Statement.Factory.newInstance();
         vc.setId( avo.getId() );
         vc.setCategory( avo.getClassName() );
         vc.setCategoryUri( StringUtils.stripToNull( avo.getClassUri() ) );

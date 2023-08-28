@@ -120,7 +120,7 @@ public class ExperimentalDesignControllerTest extends BaseSpringWebTest {
         assertNotNull( ef );
         EntityDelegator e = new EntityDelegator( ef.getFactorValues().iterator().next() );
 
-        Statement vc = new Statement();
+        Statement vc = Statement.Factory.newInstance();
         vc.setValue( "foo" );
         vc.setCategory( "bar" );
         vc.setCategoryUri( "bar" );

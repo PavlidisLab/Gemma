@@ -706,7 +706,7 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
 
             } else {
 
-                c = new Statement();
+                c = Statement.Factory.newInstance();
 
             }
 
@@ -758,7 +758,7 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
     }
 
     private Statement createTemplateStatement( Characteristic source ) {
-        Statement template = new Statement();
+        Statement template = Statement.Factory.newInstance();
         template.setCategory( source.getCategory() );
         template.setCategoryUri( source.getCategoryUri() );
         template.setEvidenceCode( GOEvidenceCode.IEA ); // automatically added characteristic

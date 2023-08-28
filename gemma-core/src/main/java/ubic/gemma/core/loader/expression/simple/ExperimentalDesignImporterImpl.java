@@ -366,7 +366,7 @@ public class ExperimentalDesignImporterImpl implements ExperimentalDesignImporte
 
             if ( factorType.equalsIgnoreCase( "CATEGORICAL" ) ) {
                 ExperimentalDesignImporterImpl.log.debug( "Factor is categorical" );
-                Statement newVc = new Statement();
+                Statement newVc = Statement.Factory.newInstance();
                 if ( category != null ) {
                     String category2 = category.getCategory();
                     assert category2 != null;

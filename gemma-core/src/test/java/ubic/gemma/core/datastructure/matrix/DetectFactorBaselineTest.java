@@ -32,7 +32,7 @@ public class DetectFactorBaselineTest {
         FactorValue fv = FactorValue.Factory.newInstance();
         fv.setValue( "fv" );
 
-        Statement c = new Statement();
+        Statement c = Statement.Factory.newInstance();
         c.setValue( "control_group" );
         fv.getCharacteristics().add( c );
 
@@ -47,7 +47,7 @@ public class DetectFactorBaselineTest {
         FactorValue fv = FactorValue.Factory.newInstance();
         fv.setValue( "fv" );
 
-        Statement c = new Statement();
+        Statement c = Statement.Factory.newInstance();
         c.setValueUri( "http://purl.org/nbirn/birnlex/ontology/BIRNLex-Investigation.owl#birnlex_2201" );
         fv.getCharacteristics().add( c );
 
@@ -62,7 +62,7 @@ public class DetectFactorBaselineTest {
         FactorValue fv = FactorValue.Factory.newInstance();
         fv.setValue( "fv" );
 
-        Statement c = new Statement();
+        Statement c = Statement.Factory.newInstance();
         c.setValueUri( "http://purl.org/obo/owl/CHEBI#CHEBI_16236" );
         fv.getCharacteristics().add( c );
 

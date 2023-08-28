@@ -145,7 +145,7 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
         factorValueA1 = FactorValue.Factory.newInstance();
         factorValueA1.setId( 1001L );
         factorValueA1.setValue( "cerebellum" );
-        Statement characteristicA1 = new Statement();
+        Statement characteristicA1 = Statement.Factory.newInstance();
         characteristicA1.setValue( factorValueA1.getValue() );
         Set<Statement> characteristicsA1 = new HashSet<>();
         characteristicsA1.add( characteristicA1 );
@@ -156,7 +156,7 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
         factorValueA2.setIsBaseline( true );
         factorValueA2.setValue( "amygdala" );
         factorValueA2.setId( 1002L );
-        Statement characteristicA2 = new Statement();
+        Statement characteristicA2 = Statement.Factory.newInstance();
         characteristicA2.setValue( factorValueA2.getValue() );
         Set<Statement> characteristicsA2 = new HashSet<>();
         characteristicsA2.add( characteristicA2 );
@@ -178,7 +178,7 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
         FactorValue factorValueB1 = FactorValue.Factory.newInstance();
         factorValueB1.setValue( "pcp" );
         factorValueB1.setId( 1003L );
-        Statement characteristicB1 = new Statement();
+        Statement characteristicB1 = Statement.Factory.newInstance();
         characteristicB1.setValue( factorValueB1.getValue() );
         Set<Statement> characteristicsB1 = new HashSet<>();
         characteristicsB1.add( characteristicB1 );
@@ -188,7 +188,7 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
         factorValueB2 = FactorValue.Factory.newInstance();
         factorValueB2.setValue( "control_group" );
         factorValueB2.setId( 1004L );
-        Statement characteristicB2 = new Statement();
+        Statement characteristicB2 = Statement.Factory.newInstance();
         characteristicB2.setValue( factorValueB2.getValue() );
         Set<Statement> characteristicsB2 = new HashSet<>();
         characteristicsB2.add( characteristicB2 );

@@ -1611,7 +1611,7 @@ public class GeoConverterImpl implements GeoConverter {
      * Note that this is apparently never actually used?
      */
     private Statement convertReplicatationType( ReplicationType repType ) {
-        Statement result = new Statement();
+        Statement result = Statement.Factory.newInstance();
         result.setCategory( "replicate" );
         result.setCategoryUri( "http://www.ebi.ac.uk/efo/EFO_0000683" /* replicate */ );
         result.setEvidenceCode( GOEvidenceCode.IIA );
@@ -2157,7 +2157,7 @@ public class GeoConverterImpl implements GeoConverter {
         // By definition each subset defines a new factor value.
         FactorValue factorValue = FactorValue.Factory.newInstance();
 
-        Statement term = new Statement();
+        Statement term = Statement.Factory.newInstance();
         this.convertVariableType( term, geoSubSet.getType() );
         if ( term.getCategory() != null ) {
             term.setValue( geoSubSet.getDescription() );
@@ -2183,7 +2183,7 @@ public class GeoConverterImpl implements GeoConverter {
 
     private FactorValue convertTypeToFactorValue( VariableType type, String value ) {
         FactorValue factorValue = FactorValue.Factory.newInstance();
-        Statement term = new Statement();
+        Statement term = Statement.Factory.newInstance();
         this.convertVariableType( term, type );
         if ( term.getCategory() != null ) { // is this right ???
             factorValue.setValue( value );

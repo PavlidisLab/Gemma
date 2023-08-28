@@ -172,7 +172,7 @@ public class CharacteristicServiceTest extends BaseSpringContextTest {
     private Set<Statement> getTestPersistentStatements( int n ) {
         Set<Statement> chars = new HashSet<>();
         for ( int i = 0; i < n; ++i ) {
-            Statement c = new Statement();
+            Statement c = Statement.Factory.newInstance();
             c.setCategory( "test" );
             c.setValue( RandomStringUtils.randomNumeric( 10 ) );
             c.setValueUri( "http://www.ebi.ac.uk/efo/EFO_" + RandomStringUtils.randomAlphabetic( 7 ) );
