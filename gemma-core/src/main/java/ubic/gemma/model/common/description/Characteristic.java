@@ -20,7 +20,6 @@
 package ubic.gemma.model.common.description;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.builder.HashCodeBuilder;
 import ubic.gemma.model.association.GOEvidenceCode;
 import ubic.gemma.model.common.AbstractDescribable;
 
@@ -153,11 +152,10 @@ public class Characteristic extends AbstractDescribable implements Serializable 
 
     @Override
     public int hashCode() {
-
-        if ( this.getId() != null ) return this.getId().hashCode();
-
-        return new HashCodeBuilder( 17, 1 ).append( this.getCategory() )
-                .append( this.getValue() ).toHashCode();
+        if ( this.getId() != null ) {
+            return super.hashCode();
+        }
+        return Objects.hash( categoryUri != null ? categoryUri : category, valueUri != null ? valueUri : value );
     }
 
     @Override
@@ -170,19 +168,19 @@ public class Characteristic extends AbstractDescribable implements Serializable 
             return false;
         Characteristic that = ( Characteristic ) object;
         if ( this.getId() != null && that.getId() != null )
-            return this.getId().equals( that.getId() );
+            return super.equals( object );
 
         /*
          * at this point, we know we have two Characteristics, at least one of which is transient, so we have to look at
          * the fields; we can't just compare the hashcodes because they also look at the id, so comparing one transient
          * and one persistent would always fail...
          */
-        return Objects.equals( this.getCategory(), that.getCategory() ) && Objects
-                .equals( this.getValue(), that.getValue() );
 
-        /*
-         * FIXME add uris
-         */
+        boolean compareCategoryUri = categoryUri != null && that.categoryUri != null;
+        boolean compareValueUri = valueUri != null && that.valueUri != null;
+
+        return ( compareCategoryUri ? Objects.equals( categoryUri, that.categoryUri ) : Objects.equals( category, that.category ) )
+                && ( compareValueUri ? Objects.equals( valueUri, that.valueUri ) : Objects.equals( value, that.value ) );
     }
 
     @Override
