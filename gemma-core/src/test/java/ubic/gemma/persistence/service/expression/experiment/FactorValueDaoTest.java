@@ -8,7 +8,9 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.ContextConfiguration;
 import ubic.gemma.core.util.test.BaseDatabaseTest;
 import ubic.gemma.model.common.description.Characteristic;
+import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.*;
+import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.util.TestComponent;
 
 import static org.junit.Assert.*;
@@ -96,6 +98,33 @@ public class FactorValueDaoTest extends BaseDatabaseTest {
         fv = reload( fv );
         assertFalse( fv.getCharacteristics().contains( s1 ) );
         assertTrue( fv.getCharacteristics().contains( s2 ) );
+    }
+
+    @Test
+    public void testRemove() {
+        Taxon taxon = new Taxon();
+        sessionFactory.getCurrentSession().persist( taxon );
+        FactorValue fv = createFactorValue();
+        ExperimentalFactor ef = fv.getExperimentalFactor();
+        BioMaterial bm = new BioMaterial();
+        bm.setSourceTaxon( taxon );
+        bm.getFactorValues().add( fv );
+        sessionFactory.getCurrentSession().persist( bm );
+        sessionFactory.getCurrentSession().flush();
+        sessionFactory.getCurrentSession().clear();
+        ef = ( ExperimentalFactor ) sessionFactory.getCurrentSession().get( ExperimentalFactor.class, ef.getId() );
+        fv = ( FactorValue ) sessionFactory.getCurrentSession().get( FactorValue.class, fv.getId() );
+        bm = ( BioMaterial ) sessionFactory.getCurrentSession().get( BioMaterial.class, bm.getId() );
+        assertTrue( ef.getFactorValues().contains( fv ) );
+        assertTrue( bm.getFactorValues().contains( fv ) );
+        factorValueDao.remove( fv );
+        sessionFactory.getCurrentSession().flush();
+        sessionFactory.getCurrentSession().clear();
+        ef = ( ExperimentalFactor ) sessionFactory.getCurrentSession().get( ExperimentalFactor.class, ef.getId() );
+        fv = ( FactorValue ) sessionFactory.getCurrentSession().get( FactorValue.class, fv.getId() );
+        bm = ( BioMaterial ) sessionFactory.getCurrentSession().get( BioMaterial.class, bm.getId() );
+        assertFalse( ef.getFactorValues().contains( fv ) );
+        assertFalse( bm.getFactorValues().contains( fv ) );
     }
 
     private FactorValue createFactorValue() {

@@ -23,7 +23,6 @@ import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
-import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.expression.experiment.FactorValueValueObject;
 import ubic.gemma.model.expression.experiment.Statement;
@@ -62,32 +61,16 @@ public class FactorValueDaoImpl extends AbstractNoopFilteringVoEnabledDao<Factor
         if ( factorValue == null )
             return;
 
-        //noinspection unchecked
-        Collection<BioMaterial> bms = this.getSessionFactory().getCurrentSession()
-                .createQuery( "select distinct bm from BioMaterial as bm join bm.factorValues fv where fv = :fv" )
-                .setParameter( "fv", factorValue ).list();
+        // detach from the experimental factor
+        factorValue.getExperimentalFactor().getFactorValues().remove( factorValue );
 
-        AbstractDao.log.info( "Disassociating " + factorValue + " from " + bms.size() + " biomaterials" );
-        for ( BioMaterial bioMaterial : bms ) {
-            AbstractDao.log.info( "Processing " + bioMaterial ); // temporary, debugging.
-            if ( bioMaterial.getFactorValues().remove( factorValue ) ) {
-                this.getSessionFactory().getCurrentSession().update( bioMaterial );
-            } else {
-                AbstractDao.log.warn( "Unexpectedly the factor value was not actually associated with " + bioMaterial );
-            }
-        }
-
-        // detach from all associated experimental factors
-        //noinspection unchecked
-        List<ExperimentalFactor> efs = this.getSessionFactory().getCurrentSession()
-                .createQuery( "select ef from ExperimentalFactor ef join ef.factorValues fv where fv = :fv" )
-                .setParameter( "fv", factorValue )
-                .list();
-        AbstractDao.log.info( "Disassociating " + factorValue + " from " + efs.size() + " experimental factors" );
-        for ( ExperimentalFactor ef : efs ) {
-            ef.getFactorValues().remove( factorValue );
-            this.getSessionFactory().getCurrentSession().update( ef );
-        }
+        // detach the factor from any sample
+        int deleted = this.getSessionFactory().getCurrentSession()
+                .createSQLQuery( "delete from BIO_MATERIAL_FACTOR_VALUES bmfv where bmfv.FACTOR_VALUES_FK = :fvId" )
+                .addSynchronizedEntityClass( BioMaterial.class )
+                .setParameter( "fvId", factorValue.getId() )
+                .executeUpdate();
+        AbstractDao.log.info( String.format( "%s was detached from %d samples.", factorValue, deleted ) );
 
         super.remove( factorValue );
     }
