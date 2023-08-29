@@ -27,6 +27,7 @@ import ubic.gemma.persistence.service.BaseService;
 import ubic.gemma.persistence.service.FilteringVoEnabledService;
 
 import java.util.Collection;
+import java.util.Set;
 
 /**
  * @author kelsey
@@ -59,6 +60,11 @@ public interface FactorValueService extends BaseService<FactorValue>, FilteringV
      */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     void removeCharacteristic( FactorValue fv, Characteristic c );
+
+    /**
+     * @see FactorValueDao#cloneCharacteristics(FactorValue)
+     */
+    Set<Statement> cloneCharacteristics( FactorValue fv );
 
     @Override
     @Secured({ "GROUP_USER", "ACL_SECURABLE_COLLECTION_EDIT" })

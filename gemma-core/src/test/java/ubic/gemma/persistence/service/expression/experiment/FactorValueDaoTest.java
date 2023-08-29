@@ -1,5 +1,6 @@
 package ubic.gemma.persistence.service.expression.experiment;
 
+import org.assertj.core.api.Assertions;
 import org.hibernate.SessionFactory;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,6 +13,9 @@ import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.util.TestComponent;
+
+import java.util.Collections;
+import java.util.Set;
 
 import static org.junit.Assert.*;
 
@@ -135,7 +139,56 @@ public class FactorValueDaoTest extends BaseDatabaseTest {
         assertFalse( bm.getFactorValues().contains( fv ) );
     }
 
+    @Test
+    public void testCloneCharacteristics() {
+        FactorValue fv = createFactorValue();
+        Statement s1, s2, s3;
+        s1 = Statement.Factory.newInstance();
+        s1.setValue( "1" );
+        s2 = Statement.Factory.newInstance();
+        s2.setValue( "2" );
+        s3 = Statement.Factory.newInstance();
+        s3.setValue( "3" );
+        s1.setObject( s2 );
+        s1.setSecondObject( s3 );
+        fv.getCharacteristics().add( s1 );
+        fv.getCharacteristics().add( s2 );
+        sessionFactory.getCurrentSession().persist( fv );
+        Set<Statement> clonedCharacteristics = factorValueDao.cloneCharacteristics( fv );
+        for ( Statement s : clonedCharacteristics ) {
+            assertNull( s.getId() );
+            assertTrue( s.getObject() == null || s.getObject().getId() == null );
+            assertTrue( s.getSecondObject() == null || s.getSecondObject().getId() == null );
+        }
+        FactorValue fvWithClonedCharacteristics = createFactorValue( clonedCharacteristics );
+        assertEquals( 2, fvWithClonedCharacteristics.getCharacteristics().size() );
+        Assertions.assertThat( fvWithClonedCharacteristics.getCharacteristics() )
+                .hasSize( 2 )
+                .satisfiesOnlyOnce( s -> {
+                    assertEquals( "1", s.getValue() );
+                    assertFalse( fvWithClonedCharacteristics.getCharacteristics().contains( ( Statement ) s.getObject() ) );
+                    assertFalse( fvWithClonedCharacteristics.getCharacteristics().contains( ( Statement ) s.getSecondObject() ) );
+                } )
+                .satisfiesOnlyOnce( s -> {
+                    assertEquals( "2", s.getValue() );
+                    assertNull( s.getObject() );
+                    assertNull( s.getSecondObject() );
+                } )
+                .noneSatisfy( s -> assertEquals( "3", s.getValue() ) );
+    }
+
+    @Test
+    public void testCloneNonPersistentStatement() {
+        FactorValue fv = createFactorValue();
+        fv.getCharacteristics().add( Statement.Factory.newInstance() );
+        assertThrows( IllegalArgumentException.class, () -> factorValueDao.cloneCharacteristics( fv ) );
+    }
+
     private FactorValue createFactorValue() {
+        return createFactorValue( Collections.emptySet() );
+    }
+
+    private FactorValue createFactorValue( Set<Statement> statements ) {
         ExperimentalDesign ed = new ExperimentalDesign();
         sessionFactory.getCurrentSession().persist( ed );
         ExperimentalFactor ef = new ExperimentalFactor();
@@ -144,6 +197,7 @@ public class FactorValueDaoTest extends BaseDatabaseTest {
         sessionFactory.getCurrentSession().persist( ef );
         FactorValue fv = FactorValue.Factory.newInstance();
         fv.setExperimentalFactor( ef );
+        fv.getCharacteristics().addAll( statements );
         sessionFactory.getCurrentSession().persist( fv );
         return fv;
     }

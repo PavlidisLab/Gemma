@@ -22,6 +22,7 @@ import org.hibernate.Criteria;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
+import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.expression.experiment.FactorValueValueObject;
@@ -31,8 +32,7 @@ import ubic.gemma.persistence.service.AbstractNoopFilteringVoEnabledDao;
 import ubic.gemma.persistence.util.BusinessKey;
 
 import javax.annotation.Nullable;
-import java.util.Collection;
-import java.util.List;
+import java.util.*;
 
 /**
  * <p>
@@ -106,6 +106,66 @@ public class FactorValueDaoImpl extends AbstractNoopFilteringVoEnabledDao<Factor
             }
         }
         getSessionFactory().getCurrentSession().delete( statement );
+    }
+
+    @Override
+    public Set<Statement> cloneCharacteristics( FactorValue fv ) {
+        Collection<Statement> ch = fv.getCharacteristics();
+        // pair of original -> clone
+        Map<Statement, Statement> clonedStatements = new HashMap<>();
+        List<Statement> result = new ArrayList<>( ch.size() );
+        for ( Statement s : ch ) {
+            result.add( cloneStatement( s, clonedStatements ) );
+        }
+        return new HashSet<>( result );
+    }
+
+    private Statement cloneStatement( Statement s, Map<Statement, Statement> clonedStatements ) {
+        // because of how statements (and characteristics) are hashed, the ID must be non-null
+        if ( s.getId() == null ) {
+            throw new IllegalArgumentException( String.format( "Cannot clone non-persistent %s.", s ) );
+        }
+        Statement clone = clonedStatements.get( s );
+        if ( clone != null ) {
+            return clone;
+        } else {
+            clone = Statement.Factory.newInstance();
+            clonedStatements.put( s, clone );
+        }
+        clone.setName( s.getName() );
+        clone.setDescription( s.getDescription() );
+        clone.setValue( s.getValue() );
+        clone.setValueUri( s.getValueUri() );
+        clone.setCategory( s.getCategory() );
+        clone.setCategoryUri( s.getCategoryUri() );
+        clone.setEvidenceCode( s.getEvidenceCode() );
+        clone.setPredicate( s.getPredicate() );
+        clone.setPredicateUri( s.getPredicateUri() );
+        if ( s.getObject() != null ) {
+            if ( s.getObject() instanceof Statement ) {
+                clone.setObject( cloneStatement( ( Statement ) s.getObject(), clonedStatements ) );
+            } else {
+                clone.setObject( cloneCharacteristic( s.getObject() ) );
+            }
+        }
+        clone.setSecondPredicate( s.getSecondPredicate() );
+        clone.setSecondPredicateUri( s.getSecondPredicateUri() );
+        if ( s.getSecondObject() != null ) {
+            if ( s.getSecondObject() instanceof Statement ) {
+                clone.setSecondObject( cloneStatement( ( Statement ) s.getSecondObject(), clonedStatements ) );
+            } else {
+                clone.setSecondObject( cloneCharacteristic( s.getSecondObject() ) );
+            }
+        }
+        return clone;
+    }
+
+    private Characteristic cloneCharacteristic( Characteristic c ) {
+        if ( c.getId() == null ) {
+            throw new IllegalArgumentException( String.format( "Cannot clone non-persistent %s.", c ) );
+        }
+        return Characteristic.Factory.newInstance( c.getName(), c.getDescription(), c.getValue(), c.getValueUri(),
+                c.getCategory(), c.getCategoryUri(), c.getEvidenceCode() );
     }
 
     @Override

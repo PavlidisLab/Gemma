@@ -45,6 +45,7 @@ import ubic.gemma.persistence.persister.Persister;
 import ubic.gemma.persistence.service.expression.bioAssayData.RawExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSetService;
+import ubic.gemma.persistence.service.expression.experiment.FactorValueService;
 
 import java.util.*;
 
@@ -81,6 +82,9 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
 
     @Autowired
     private ExpressionExperimentSetService expressionExperimentSetService;
+
+    @Autowired
+    private FactorValueService factorValueService;
 
     /*
      * (non-Javadoc)
@@ -399,7 +403,7 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
         Collection<FactorValue> result = new HashSet<>();
         for ( FactorValue fv : factorValues ) {
             FactorValue clone = FactorValue.Factory.newInstance( ef );
-            clone.setCharacteristics( this.cloneStatements( fv.getCharacteristics() ) );
+            clone.setCharacteristics( factorValueService.cloneCharacteristics( fv ) );
             clone.setIsBaseline( fv.getIsBaseline() );
             clone.setValue( fv.getValue() );
             clone.setMeasurement( this.cloneMeasurement( fv.getMeasurement() ) );
@@ -456,39 +460,6 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
     private Characteristic cloneCharacteristic( Characteristic c ) {
         return Characteristic.Factory.newInstance( c.getName(), c.getDescription(), c.getValue(), c.getValueUri(),
                 c.getCategory(), c.getCategoryUri(), c.getEvidenceCode() );
-    }
-
-    private Set<Statement> cloneStatements( Collection<Statement> ch ) {
-        List<Statement> orderedStatements = new ArrayList<>( ch );
-        List<Statement> result = new ArrayList<>( orderedStatements.size() );
-        for ( Statement c : orderedStatements ) {
-            Statement s = Statement.Factory.newInstance();
-            s.setName( c.getName() );
-            s.setDescription( c.getDescription() );
-            s.setValue( c.getValue() );
-            s.setValueUri( c.getValueUri() );
-            s.setCategory( c.getCategory() );
-            s.setCategoryUri( c.getCategoryUri() );
-            s.setEvidenceCode( c.getEvidenceCode() );
-            s.setPredicate( c.getPredicate() );
-            s.setPredicateUri( c.getPredicateUri() );
-            s.setSecondPredicate( c.getSecondPredicate() );
-            s.setSecondPredicateUri( c.getSecondPredicateUri() );
-            result.add( s );
-        }
-        // link object and second object
-        for ( int i = 0; i < orderedStatements.size(); i++ ) {
-            Statement s = orderedStatements.get( i );
-            for ( int j = 0; j < orderedStatements.size(); j++ ) {
-                if ( s.getObject() != null && s.getObject().equals( orderedStatements.get( j ) ) ) {
-                    result.get( i ).setObject( result.get( j ) );
-                }
-                if ( s.getSecondObject() != null && s.getSecondObject().equals( orderedStatements.get( j ) ) ) {
-                    result.get( i ).setSecondObject( result.get( j ) );
-                }
-            }
-        }
-        return new HashSet<>( result );
     }
 
     private BioAssay cloneBioAssay( BioAssay ba ) {

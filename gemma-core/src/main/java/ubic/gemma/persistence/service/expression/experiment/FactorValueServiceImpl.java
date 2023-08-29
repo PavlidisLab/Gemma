@@ -25,6 +25,7 @@ import ubic.gemma.persistence.service.AbstractFilteringVoEnabledService;
 import ubic.gemma.persistence.service.common.description.CharacteristicDao;
 
 import java.util.Collection;
+import java.util.Set;
 
 import static java.util.Objects.requireNonNull;
 
@@ -70,5 +71,11 @@ public class FactorValueServiceImpl extends AbstractFilteringVoEnabledService<Fa
         Statement s = requireNonNull( characteristicDao.loadStatement( c.getId() ),
                 String.format( "There is no statement with ID %d.", c.getId() ) );
         this.factorValueDao.removeCharacteristic( ensureInSession( fv ), s );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Set<Statement> cloneCharacteristics( FactorValue fv ) {
+        return factorValueDao.cloneCharacteristics( ensureInSession( fv ) );
     }
 }

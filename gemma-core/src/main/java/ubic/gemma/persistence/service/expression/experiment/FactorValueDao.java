@@ -24,6 +24,7 @@ import ubic.gemma.model.expression.experiment.Statement;
 import ubic.gemma.persistence.service.FilteringVoEnabledDao;
 
 import java.util.Collection;
+import java.util.Set;
 
 /**
  * @see ubic.gemma.model.expression.experiment.FactorValue
@@ -43,4 +44,10 @@ public interface FactorValueDao extends FilteringVoEnabledDao<FactorValue, Facto
      * Remove a given characteristic from a factor value.
      */
     void removeCharacteristic( FactorValue fv, Statement statement );
+
+    /**
+     * Clone the characteristics of a factor value, preserving any structure between statements and their objects which
+     * may be other statements.
+     */
+    Set<Statement> cloneCharacteristics( FactorValue fv );
 }
