@@ -42,7 +42,6 @@ import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.biomaterial.Treatment;
 import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.persistence.persister.Persister;
-import ubic.gemma.persistence.service.common.auditAndSecurity.CurationDetailsService;
 import ubic.gemma.persistence.service.expression.bioAssayData.RawExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSetService;
@@ -70,9 +69,6 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
 
     @Autowired
     private RawExpressionDataVectorService rawExpressionDataVectorService;
-
-    @Autowired
-    private CurationDetailsService curationDetailsService;
 
     @Autowired
     private Persister persister;
@@ -334,7 +330,7 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
         ExpressionExperimentSet g = ExpressionExperimentSet.Factory.newInstance();
         g.setDescription( "Parts of " + toSplit.getShortName() + " that were split on " + splitOn.getName() );
         g.setName( toSplit.getShortName() + " splits" );
-        g.setTaxon( toSplit.getBioAssays().iterator().next().getSampleUsed().getSourceTaxon() );
+        g.setTaxon( toSplit.getTaxon() );
         g.getExperiments().addAll( result );
         g = this.expressionExperimentSetService.create( g );
 
