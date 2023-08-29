@@ -88,7 +88,9 @@ public class FactorValueDaoImpl extends AbstractNoopFilteringVoEnabledDao<Factor
 
     @Override
     public void removeCharacteristic( FactorValue fv, Statement statement ) {
-        fv.getCharacteristics().remove( statement );
+        if ( !fv.getCharacteristics().remove( statement ) ) {
+            throw new IllegalArgumentException( String.format( "The statement %s is not associated with the factor value %s", statement, fv ) );
+        }
         if ( statement.getObject() != null ) {
             Statement objectAsStatement = ( Statement ) getSessionFactory().getCurrentSession()
                     .get( Statement.class, statement.getObject().getId() );

@@ -101,6 +101,14 @@ public class FactorValueDaoTest extends BaseDatabaseTest {
     }
 
     @Test
+    public void testRemoveUnrelatedStatementRaisesAnException() {
+        FactorValue fv = createFactorValue();
+        Statement s = Statement.Factory.newInstance();
+        sessionFactory.getCurrentSession().persist( s );
+        assertThrows( IllegalArgumentException.class, () -> factorValueDao.removeCharacteristic( fv, s ) );
+    }
+
+    @Test
     public void testRemove() {
         Taxon taxon = new Taxon();
         sessionFactory.getCurrentSession().persist( taxon );
