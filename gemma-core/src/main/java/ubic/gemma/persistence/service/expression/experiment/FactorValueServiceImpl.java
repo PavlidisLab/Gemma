@@ -27,8 +27,6 @@ import ubic.gemma.persistence.service.common.description.CharacteristicDao;
 import java.util.Collection;
 import java.util.Set;
 
-import static java.util.Objects.requireNonNull;
-
 /**
  * <p>
  * Spring Service base class for <code>FactorValueService</code>, provides access
@@ -68,9 +66,7 @@ public class FactorValueServiceImpl extends AbstractFilteringVoEnabledService<Fa
     @Override
     @Transactional
     public void removeCharacteristic( FactorValue fv, Characteristic c ) {
-        Statement s = requireNonNull( characteristicDao.loadStatement( c.getId() ),
-                String.format( "There is no statement with ID %d.", c.getId() ) );
-        this.factorValueDao.removeCharacteristic( ensureInSession( fv ), s );
+        this.factorValueDao.removeCharacteristic( ensureInSession( fv ), c );
     }
 
     @Override

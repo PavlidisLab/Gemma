@@ -88,6 +88,9 @@ public class Statement extends Characteristic {
     }
 
     public void setObject( @Nullable Characteristic object ) {
+        if ( object instanceof Statement ) {
+            throw new IllegalArgumentException( "A statement cannot be used as an object" );
+        }
         this.object = object;
     }
 
@@ -115,6 +118,9 @@ public class Statement extends Characteristic {
     }
 
     public void setSecondObject( @Nullable Characteristic secondObject ) {
+        if ( object instanceof Statement ) {
+            throw new IllegalArgumentException( "A statement cannot be used as a second object" );
+        }
         this.secondObject = secondObject;
     }
 

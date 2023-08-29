@@ -40,15 +40,17 @@ public class FactorValueDaoTest extends BaseDatabaseTest {
         FactorValue fv = createFactorValue();
         Statement s1, s2;
         s1 = Statement.Factory.newInstance();
+        s1.setValue( "1" );
         s2 = Statement.Factory.newInstance();
-        s1.setObject( s2 );
+        s2.setValue( "2" );
         fv.getCharacteristics().add( s1 );
+        fv.getCharacteristics().add( s2 );
         sessionFactory.getCurrentSession().persist( fv );
         assertNotNull( fv.getId() );
         assertNotNull( s1.getId() );
         assertNotNull( s2.getId() ); // persisted in cascade
         fv = reload( fv );
-        assertEquals( 1, fv.getCharacteristics().size() );
+        assertEquals( 2, fv.getCharacteristics().size() );
         assertTrue( fv.getCharacteristics().contains( s1 ) );
     }
 
@@ -79,29 +81,38 @@ public class FactorValueDaoTest extends BaseDatabaseTest {
     }
 
     @Test
-    public void testDeleteStatementWhenObjectIsAlsoAStatementOfTheFactorValue() {
+    public void testDeleteStatementWhenObjectIsReusedInAnotherStatement() {
         FactorValue fv = createFactorValue();
         Statement s1, s2;
+        Characteristic c;
         s1 = Statement.Factory.newInstance();
+        s1.setValue( "1" );
         s2 = Statement.Factory.newInstance();
-        s1.setObject( s2 );
+        s2.setValue( "2" );
+        c = Characteristic.Factory.newInstance();
+        s1.setSecondObject( c );
+        s2.setObject( c );
         fv.getCharacteristics().add( s1 );
         fv.getCharacteristics().add( s2 );
         sessionFactory.getCurrentSession().persist( fv );
         assertNotNull( fv.getId() );
         assertNotNull( s1.getId() );
         assertNotNull( s2.getId() ); // persisted in cascade
+        assertNotNull( c.getId() ); // also persisted in cascade
 
         // later on
         fv = reload( fv );
         s1 = ( Statement ) sessionFactory.getCurrentSession().get( Statement.class, s1.getId() );
         factorValueDao.removeCharacteristic( fv, s1 );
-        // s2 is retained
-        assertTrue( fv.getCharacteristics().contains( s2 ) );
 
         fv = reload( fv );
-        assertFalse( fv.getCharacteristics().contains( s1 ) );
-        assertTrue( fv.getCharacteristics().contains( s2 ) );
+        Assertions.assertThat( fv.getCharacteristics() )
+                .hasSize( 1 )
+                .doesNotContain( s1 )
+                .satisfiesOnlyOnce( s -> {
+                    assertEquals( "2", s.getValue() );
+                    assertEquals( c, s.getObject() );
+                } );
     }
 
     @Test
@@ -142,15 +153,15 @@ public class FactorValueDaoTest extends BaseDatabaseTest {
     @Test
     public void testCloneCharacteristics() {
         FactorValue fv = createFactorValue();
-        Statement s1, s2, s3;
+        Statement s1, s2;
         s1 = Statement.Factory.newInstance();
         s1.setValue( "1" );
         s2 = Statement.Factory.newInstance();
         s2.setValue( "2" );
-        s3 = Statement.Factory.newInstance();
-        s3.setValue( "3" );
-        s1.setObject( s2 );
-        s1.setSecondObject( s3 );
+        Characteristic c = Characteristic.Factory.newInstance();
+        c.setValue( "3" );
+        s1.setObject( c );
+        s2.setSecondObject( c );
         fv.getCharacteristics().add( s1 );
         fv.getCharacteristics().add( s2 );
         sessionFactory.getCurrentSession().persist( fv );
@@ -166,13 +177,14 @@ public class FactorValueDaoTest extends BaseDatabaseTest {
                 .hasSize( 2 )
                 .satisfiesOnlyOnce( s -> {
                     assertEquals( "1", s.getValue() );
-                    assertFalse( fvWithClonedCharacteristics.getCharacteristics().contains( ( Statement ) s.getObject() ) );
-                    assertFalse( fvWithClonedCharacteristics.getCharacteristics().contains( ( Statement ) s.getSecondObject() ) );
+                    assertNotNull( s.getObject() );
+                    assertEquals( "3", s.getObject().getValue() );
                 } )
                 .satisfiesOnlyOnce( s -> {
                     assertEquals( "2", s.getValue() );
                     assertNull( s.getObject() );
-                    assertNull( s.getSecondObject() );
+                    assertNotNull( s.getSecondObject() );
+                    assertEquals( "3", s.getSecondObject().getValue() );
                 } )
                 .noneSatisfy( s -> assertEquals( "3", s.getValue() ) );
     }

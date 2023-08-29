@@ -70,7 +70,7 @@ public class FactorValueDaoImpl extends AbstractNoopFilteringVoEnabledDao<Factor
                 .addSynchronizedEntityClass( BioMaterial.class )
                 .setParameter( "fvId", factorValue.getId() )
                 .executeUpdate();
-        AbstractDao.log.info( String.format( "%s was detached from %d samples.", factorValue, deleted ) );
+        AbstractDao.log.debug( String.format( "%s was detached from %d samples.", factorValue, deleted ) );
 
         super.remove( factorValue );
     }
@@ -87,24 +87,56 @@ public class FactorValueDaoImpl extends AbstractNoopFilteringVoEnabledDao<Factor
     }
 
     @Override
-    public void removeCharacteristic( FactorValue fv, Statement statement ) {
-        if ( !fv.getCharacteristics().remove( statement ) ) {
-            throw new IllegalArgumentException( String.format( "The statement %s is not associated with the factor value %s", statement, fv ) );
-        }
-        if ( statement.getObject() != null ) {
-            Statement objectAsStatement = ( Statement ) getSessionFactory().getCurrentSession()
-                    .get( Statement.class, statement.getObject().getId() );
-            if ( objectAsStatement != null && fv.getCharacteristics().contains( objectAsStatement ) ) {
-                statement.setObject( null );
+    public void removeCharacteristic( FactorValue fv, Characteristic statement ) {
+        boolean removed = false;
+
+        if ( statement instanceof Statement ) {
+            removed = fv.getCharacteristics().remove( ( Statement ) statement );
+        } else {
+            // detach the statement if it is referred as an object of any remaining statement
+            for ( Statement s : fv.getCharacteristics() ) {
+                if ( s.getObject() != null && s.getObject().equals( statement ) ) {
+                    AbstractDao.log.debug( String.format( "Detaching %s from %s", statement, s ) );
+                    s.setObject( null );
+                    removed = true;
+                }
+                if ( s.getSecondObject() != null && s.getSecondObject().equals( statement ) ) {
+                    AbstractDao.log.debug( String.format( "Detaching %s from %s", statement, s ) );
+                    s.setSecondObject( null );
+                    removed = true;
+                }
             }
         }
-        if ( statement.getSecondObject() != null ) {
-            Statement secondObjectAsStatement = ( Statement ) getSessionFactory().getCurrentSession()
-                    .get( Statement.class, statement.getSecondObject().getId() );
-            if ( secondObjectAsStatement != null && fv.getCharacteristics().contains( secondObjectAsStatement ) ) {
-                statement.setSecondObject( null );
+
+        if ( !removed ) {
+            throw new IllegalArgumentException( String.format( "%s is not associated with %s", statement, fv ) );
+        }
+
+        // collect all remaining characteristics in the FV
+        Set<Characteristic> remainingCharacteristics = new HashSet<>();
+        for ( Statement s : fv.getCharacteristics() ) {
+            if ( s.getObject() != null ) {
+                remainingCharacteristics.add( s.getObject() );
+            }
+            if ( s.getSecondObject() != null ) {
+                remainingCharacteristics.add( s.getSecondObject() );
             }
         }
+
+        // detach any remaining characteristics from the statement to be removed
+        if ( statement instanceof Statement ) {
+            Statement s = ( Statement ) statement;
+            if ( s.getObject() != null && remainingCharacteristics.contains( s.getObject() ) ) {
+                AbstractDao.log.debug( String.format( "Detaching %s from %s", s.getObject(), s ) );
+                s.setObject( null );
+            }
+            if ( s.getSecondObject() != null && remainingCharacteristics.contains( s.getSecondObject() ) ) {
+                AbstractDao.log.debug( String.format( "Detaching %s from %s", s.getSecondObject(), s ) );
+                s.setSecondObject( null );
+            }
+        }
+
+        // now we can safely delete it
         getSessionFactory().getCurrentSession().delete( statement );
     }
 
@@ -112,26 +144,20 @@ public class FactorValueDaoImpl extends AbstractNoopFilteringVoEnabledDao<Factor
     public Set<Statement> cloneCharacteristics( FactorValue fv ) {
         Collection<Statement> ch = fv.getCharacteristics();
         // pair of original -> clone
-        Map<Statement, Statement> clonedStatements = new HashMap<>();
+        Map<Characteristic, Characteristic> clonedCharacteristics = new HashMap<>();
         List<Statement> result = new ArrayList<>( ch.size() );
         for ( Statement s : ch ) {
-            result.add( cloneStatement( s, clonedStatements ) );
+            result.add( cloneStatement( s, clonedCharacteristics ) );
         }
         return new HashSet<>( result );
     }
 
-    private Statement cloneStatement( Statement s, Map<Statement, Statement> clonedStatements ) {
+    private Statement cloneStatement( Statement s, Map<Characteristic, Characteristic> clonedCharacteristics ) {
         // because of how statements (and characteristics) are hashed, the ID must be non-null
         if ( s.getId() == null ) {
             throw new IllegalArgumentException( String.format( "Cannot clone non-persistent %s.", s ) );
         }
-        Statement clone = clonedStatements.get( s );
-        if ( clone != null ) {
-            return clone;
-        } else {
-            clone = Statement.Factory.newInstance();
-            clonedStatements.put( s, clone );
-        }
+        Statement clone = Statement.Factory.newInstance();
         clone.setName( s.getName() );
         clone.setDescription( s.getDescription() );
         clone.setValue( s.getValue() );
@@ -142,20 +168,12 @@ public class FactorValueDaoImpl extends AbstractNoopFilteringVoEnabledDao<Factor
         clone.setPredicate( s.getPredicate() );
         clone.setPredicateUri( s.getPredicateUri() );
         if ( s.getObject() != null ) {
-            if ( s.getObject() instanceof Statement ) {
-                clone.setObject( cloneStatement( ( Statement ) s.getObject(), clonedStatements ) );
-            } else {
-                clone.setObject( cloneCharacteristic( s.getObject() ) );
-            }
+            clone.setObject( cloneCharacteristic( s.getObject() ) );
         }
         clone.setSecondPredicate( s.getSecondPredicate() );
         clone.setSecondPredicateUri( s.getSecondPredicateUri() );
         if ( s.getSecondObject() != null ) {
-            if ( s.getSecondObject() instanceof Statement ) {
-                clone.setSecondObject( cloneStatement( ( Statement ) s.getSecondObject(), clonedStatements ) );
-            } else {
-                clone.setSecondObject( cloneCharacteristic( s.getSecondObject() ) );
-            }
+            clone.setSecondObject( cloneCharacteristic( s.getSecondObject() ) );
         }
         return clone;
     }
