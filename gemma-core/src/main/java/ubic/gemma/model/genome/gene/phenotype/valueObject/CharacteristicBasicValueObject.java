@@ -1,17 +1,33 @@
 package ubic.gemma.model.genome.gene.phenotype.valueObject;
 
-import lombok.Getter;
-import lombok.Setter;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
 import ubic.gemma.model.IdentifiableValueObject;
+import ubic.gemma.model.annotations.GemmaWebOnly;
 import ubic.gemma.model.common.description.Characteristic;
+import ubic.gemma.model.expression.experiment.Statement;
 
-@Getter
-@Setter
+@Data
+@EqualsAndHashCode(callSuper = true)
 public class CharacteristicBasicValueObject extends IdentifiableValueObject<Characteristic> {
-    protected String value;
-    protected String valueUri;
-    protected String category;
-    protected String categoryUri;
+
+    private String value;
+    private String valueUri;
+    private String category;
+    private String categoryUri;
+
+    @GemmaWebOnly
+    private String predicate;
+    @GemmaWebOnly
+    private String predicateUri;
+    @GemmaWebOnly
+    private CharacteristicBasicValueObject object;
+    @GemmaWebOnly
+    private String secondPredicate;
+    @GemmaWebOnly
+    private String secondPredicateUri;
+    @GemmaWebOnly
+    private CharacteristicBasicValueObject secondObject;
 
     /**
      * Required when using the class as a spring bean.
@@ -20,13 +36,9 @@ public class CharacteristicBasicValueObject extends IdentifiableValueObject<Char
         super();
     }
 
-    public CharacteristicBasicValueObject( Long id ) {
-        super( id );
-    }
-
-    public CharacteristicBasicValueObject( Long id, String value, String valueUri, String category,
+    public CharacteristicBasicValueObject( String value, String valueUri, String category,
             String categoryUri ) {
-        super( id );
+        super( ( Long ) null );
         this.value = value;
         this.valueUri = valueUri;
         this.category = category;
@@ -39,5 +51,19 @@ public class CharacteristicBasicValueObject extends IdentifiableValueObject<Char
         this.valueUri = c.getValueUri();
         this.category = c.getCategory();
         this.categoryUri = c.getCategoryUri();
+    }
+
+    public CharacteristicBasicValueObject( Statement s ) {
+        this( ( Characteristic ) s );
+        this.predicate = s.getPredicate();
+        this.predicateUri = s.getPredicateUri();
+        if ( s.getObject() != null ) {
+            this.object = new CharacteristicBasicValueObject( s.getObject() );
+        }
+        this.secondPredicate = s.getSecondPredicate();
+        this.secondPredicateUri = s.getSecondPredicateUri();
+        if ( s.getSecondObject() != null ) {
+            this.secondObject = new CharacteristicBasicValueObject( s.getSecondObject() );
+        }
     }
 }

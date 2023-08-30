@@ -883,7 +883,7 @@ public class GeoConverterImpl implements GeoConverter {
                 }
 
                 // NOTE: extensions via modifiers is not to be supported here, as GEO only has key-value pairs.
-                CharacteristicBasicValueObject c = new CharacteristicBasicValueObject( null, value, valueUri, category, categoryUri );
+                CharacteristicBasicValueObject c = new CharacteristicBasicValueObject( value, valueUri, category, categoryUri );
                 term2OntologyMappings.get( category ).put( inputValue, c );
             }
         } catch ( IOException e ) {

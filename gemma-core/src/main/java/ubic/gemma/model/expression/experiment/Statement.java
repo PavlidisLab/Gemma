@@ -1,6 +1,5 @@
 package ubic.gemma.model.expression.experiment;
 
-import org.hibernate.Hibernate;
 import ubic.gemma.model.common.description.Characteristic;
 
 import javax.annotation.Nullable;
@@ -170,11 +169,7 @@ public class Statement extends Characteristic {
             b.append( " Predicate URI=" ).append( predicateUri );
         }
         if ( object != null ) {
-            if ( Hibernate.isInitialized( object ) ) {
-                b.append( " Object=[" ).append( object ).append( "]" );
-            } else {
-                b.append( " Object=" ).append( object.getId() );
-            }
+            b.append( " Object=" ).append( object.getId() );
         }
         if ( secondPredicate != null ) {
             b.append( " Second Predicate=" ).append( secondPredicate );
@@ -185,11 +180,7 @@ public class Statement extends Characteristic {
             b.append( " Second Predicate URI=" ).append( secondPredicateUri );
         }
         if ( secondObject != null ) {
-            if ( Hibernate.isInitialized( secondObject ) ) {
-                b.append( " Second Object=[" ).append( secondObject ).append( "]" );
-            } else {
-                b.append( " Second Object=" ).append( secondObject.getId() );
-            }
+            b.append( " Second Object=" ).append( secondObject.getId() );
         }
         return b.toString();
     }

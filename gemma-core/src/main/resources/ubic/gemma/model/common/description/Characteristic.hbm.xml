@@ -58,7 +58,7 @@
                 <column name="PREDICATE_URI"/>
             </property>
             <many-to-one name="object" class="ubic.gemma.model.common.description.Characteristic"
-                         lazy="proxy" fetch="select" cascade="all">
+                         lazy="false" fetch="join" cascade="all">
                 <column name="OBJECT_FK"/>
             </many-to-one>
             <property name="secondPredicate" type="java.lang.String">
@@ -68,7 +68,7 @@
                 <column name="SECOND_PREDICATE_URI"/>
             </property>
             <many-to-one name="secondObject" class="ubic.gemma.model.common.description.Characteristic"
-                         lazy="proxy" fetch="select" cascade="all">
+                         lazy="false" fetch="join" cascade="all">
                 <column name="SECOND_OBJECT_FK"/>
             </many-to-one>
         </subclass>
