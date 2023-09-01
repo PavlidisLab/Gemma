@@ -1628,6 +1628,7 @@ public class ExpressionExperimentDaoImpl
                 ExpressionExperiment ee = ( ExpressionExperiment ) row[0];
                 AclObjectIdentity aoi = ( AclObjectIdentity ) row[1];
                 AclSid sid = ( AclSid ) row[2];
+                initializeCachedFilteringResult( ee );
                 return new ExpressionExperimentValueObject( ee, aoi, sid );
             }
 
