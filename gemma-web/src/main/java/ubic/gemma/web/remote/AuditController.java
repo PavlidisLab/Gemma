@@ -61,7 +61,7 @@ public class AuditController {
     private ExpressionExperimentService expressionExperimentService;
 
     @SuppressWarnings("unchecked")
-    public void addAuditEvent( EntityDelegator e, String auditEventType, String comment, String detail ) {
+    public void addAuditEvent( EntityDelegator<? extends Auditable> e, String auditEventType, String comment, String detail ) {
         Auditable entity = this.getAuditable( e );
         if ( entity == null ) {
             AuditController.log.warn( "Couldn't find Auditable represented by " + e );
@@ -83,7 +83,7 @@ public class AuditController {
         }
     }
 
-    public Collection<AuditEventValueObject> getEvents( EntityDelegator e ) {
+    public Collection<AuditEventValueObject> getEvents( EntityDelegator<? extends Auditable> e ) {
         Collection<AuditEventValueObject> result = new HashSet<>();
 
         Auditable entity = this.getAuditable( e );
@@ -109,7 +109,7 @@ public class AuditController {
         return result;
     }
 
-    private Auditable getAuditable( EntityDelegator e ) {
+    private Auditable getAuditable( EntityDelegator<? extends Auditable> e ) {
         if ( e == null || e.getId() == null )
             return null;
         if ( e.getClassDelegatingFor() == null )

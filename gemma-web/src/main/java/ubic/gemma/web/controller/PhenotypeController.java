@@ -156,7 +156,7 @@ public class PhenotypeController extends BaseController {
                             geneDifferentialExpressionMetaAnalysisId, phenotypes, selectionThreshold );
 
             // get the permission of the metaAnalysis
-            EntityDelegator ed = new EntityDelegator();
+            EntityDelegator<GeneDifferentialExpressionMetaAnalysis> ed = new EntityDelegator<>();
             ed.setId( geneDifferentialExpressionMetaAnalysisId );
             ed.setClassDelegatingFor( GeneDifferentialExpressionMetaAnalysis.class.getName() );
 
@@ -169,7 +169,7 @@ public class PhenotypeController extends BaseController {
         return validateEvidenceValueObject;
     }
 
-    public ValidateEvidenceValueObject processPhenotypeAssociationForm( EvidenceValueObject evidenceValueObject ) {
+    public ValidateEvidenceValueObject processPhenotypeAssociationForm( EvidenceValueObject<?> evidenceValueObject ) {
         ValidateEvidenceValueObject validateEvidenceValueObject;
 
         try {
@@ -237,7 +237,7 @@ public class PhenotypeController extends BaseController {
         return new ModelAndView( "phenotypeAssociationManager" );
     }
 
-    public ValidateEvidenceValueObject validatePhenotypeAssociationForm( EvidenceValueObject evidenceValueObject ) {
+    public ValidateEvidenceValueObject validatePhenotypeAssociationForm( EvidenceValueObject<PhenotypeAssociation> evidenceValueObject ) {
         ValidateEvidenceValueObject validateEvidenceValueObject;
         try {
             validateEvidenceValueObject = this.phenotypeAssociationManagerService

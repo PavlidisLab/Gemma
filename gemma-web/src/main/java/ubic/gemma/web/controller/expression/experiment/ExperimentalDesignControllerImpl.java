@@ -126,7 +126,7 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
     }
 
     @Override
-    public void createExperimentalFactor( EntityDelegator e, ExperimentalFactorValueObject efvo ) {
+    public void createExperimentalFactor( EntityDelegator<ExperimentalDesign> e, ExperimentalFactorValueObject efvo ) {
         if ( e == null || e.getId() == null )
             return;
         ExperimentalDesign ed = experimentalDesignService.loadWithExperimentalFactors( e.getId() );
@@ -157,7 +157,7 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
     }
 
     @Override
-    public void createFactorValue( EntityDelegator e ) {
+    public void createFactorValue( EntityDelegator<ExperimentalFactor> e ) {
         if ( e == null || e.getId() == null )
             return;
         ExperimentalFactor ef = experimentalFactorService.load( e.getId() );
@@ -194,7 +194,7 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
     }
 
     @Override
-    public void createFactorValueCharacteristic( EntityDelegator e, Statement c ) {
+    public void createFactorValueCharacteristic( EntityDelegator<FactorValue> e, CharacteristicBasicValueObject cvo ) {
         if ( e == null || e.getId() == null )
             return;
         FactorValue fv = factorValueService.load( e.getId() );
@@ -222,7 +222,7 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
     }
 
     @Override
-    public void deleteExperimentalFactors( EntityDelegator e, Long[] efIds ) {
+    public void deleteExperimentalFactors( EntityDelegator<ExperimentalDesign> e, Long[] efIds ) {
 
         if ( e == null || e.getId() == null )
             return;
@@ -258,7 +258,7 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
     }
 
     @Override
-    public void deleteFactorValues( EntityDelegator e, Long[] fvIds ) {
+    public void deleteFactorValues( EntityDelegator<ExperimentalFactor> e, Long[] fvIds ) {
 
         if ( e == null || e.getId() == null )
             return;
@@ -275,7 +275,7 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
     }
 
     @Override
-    public Collection<BioMaterialValueObject> getBioMaterials( EntityDelegator e ) {
+    public Collection<BioMaterialValueObject> getBioMaterials( EntityDelegator<ExpressionExperiment> e ) {
         if ( e == null || e.getId() == null )
             return null;
         ExpressionExperiment ee = expressionExperimentService.loadOrFail( e.getId() );
@@ -400,20 +400,16 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
     }
 
     @Override
-    public Collection<ExperimentalFactorValueObject> getExperimentalFactors( EntityDelegator e ) {
+    public Collection<ExperimentalFactorValueObject> getExperimentalFactors( EntityDelegator<?> e ) {
         if ( e == null || e.getId() == null )
             return null;
 
         Collection<ExperimentalFactorValueObject> result = new HashSet<>();
         Long designId;
-        if ( e.getClassDelegatingFor().equalsIgnoreCase( "ExpressionExperiment" ) || e.getClassDelegatingFor()
-                .endsWith( ".ExpressionExperiment" ) ) {
+        if ( e.holds( ExpressionExperiment.class ) ) {
             ExpressionExperiment ee = this.expressionExperimentService.loadOrFail( e.getId() );
             designId = ee.getExperimentalDesign().getId();
-        } else if ( e.getClassDelegatingFor().equalsIgnoreCase( "ExperimentalDesign" ) || e.getClassDelegatingFor()
-                .equalsIgnoreCase( "ExperimentalDesign" )
-                || e.getClassDelegatingFor()
-                .endsWith( ".ExperimentalDesign" ) ) {
+        } else if ( e.holds( ExperimentalDesign.class ) ) {
             designId = e.getId();
         } else {
             throw new RuntimeException( "Don't know how to process a " + e.getClassDelegatingFor() );
@@ -432,7 +428,7 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
     }
 
     @Override
-    public Collection<FactorValueValueObject> getFactorValues( EntityDelegator e ) {
+    public Collection<FactorValueValueObject> getFactorValues( EntityDelegator<ExperimentalFactor> e ) {
         // FIXME I'm not sure why this keeps getting called with empty fields.
         if ( e == null || e.getId() == null )
             return new HashSet<>();
@@ -453,7 +449,7 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
     }
 
     @Override
-    public Collection<FactorValueValueObject> getFactorValuesWithCharacteristics( EntityDelegator e ) {
+    public Collection<FactorValueValueObject> getFactorValuesWithCharacteristics( EntityDelegator<ExperimentalFactor> e ) {
         Collection<FactorValueValueObject> result = new HashSet<>();
         if ( e == null || e.getId() == null ) {
             return result;

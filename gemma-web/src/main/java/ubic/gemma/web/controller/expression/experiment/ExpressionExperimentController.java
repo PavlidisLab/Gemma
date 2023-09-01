@@ -311,7 +311,7 @@ public class ExpressionExperimentController {
     /**
      * AJAX
      */
-    public Collection<AnnotationValueObject> getAnnotation( EntityDelegator e ) {
+    public Collection<AnnotationValueObject> getAnnotation( EntityDelegator<Characteristic> e ) {
         if ( e == null || e.getId() == null )
             return null;
         return expressionExperimentService.getAnnotationsById( e.getId() );
@@ -379,7 +379,7 @@ public class ExpressionExperimentController {
     /**
      * AJAX
      */
-    public Collection<DesignMatrixRowValueObject> getDesignMatrixRows( EntityDelegator e ) {
+    public Collection<DesignMatrixRowValueObject> getDesignMatrixRows( EntityDelegator<ExpressionExperiment> e ) {
 
         if ( e == null || e.getId() == null ) return null;
         ExpressionExperiment ee = this.expressionExperimentService.load( e.getId() );
@@ -394,7 +394,7 @@ public class ExpressionExperimentController {
      *
      * @return a collection of factor value objects that represent the factors of a given experiment
      */
-    public Collection<ExperimentalFactorValueObject> getExperimentalFactors( EntityDelegator e ) {
+    public Collection<ExperimentalFactorValueObject> getExperimentalFactors( EntityDelegator<ExpressionExperiment> e ) {
 
         if ( e == null || e.getId() == null ) return null;
 
@@ -417,7 +417,7 @@ public class ExpressionExperimentController {
      *
      * @return A collection of factor value objects for the specified experimental factor
      */
-    public Collection<FactorValueValueObject> getFactorValues( EntityDelegator e ) {
+    public Collection<FactorValueValueObject> getFactorValues( EntityDelegator<ExperimentalFactor> e ) {
 
         if ( e == null || e.getId() == null ) return null;
 
@@ -473,7 +473,7 @@ public class ExpressionExperimentController {
         StopWatch reportTimer = StopWatch.create();
 
         Map<String, Object> summary = new HashMap<>();
-        List<Map<String, Object>> taxonEntries = new ArrayList();
+        List<Map<String, Object>> taxonEntries = new ArrayList<>();
 
         countTimer.start();
         long bioMaterialCount = bioMaterialService.countAll();
@@ -680,15 +680,14 @@ public class ExpressionExperimentController {
 
         Collection<ExpressionExperiment> outlierEEs = expressionExperimentService.getExperimentsWithOutliers();
 
-        Collection<ExpressionExperiment> ees = new HashSet<>();
-        ees.addAll( outlierEEs );
+        Collection<ExpressionExperiment> ees = new HashSet<>( outlierEEs );
         // ees.addAll( batchEffectEEs );
 
         List<Map<String, Object>> jsonRecords = new ArrayList<>();
 
         for ( ExpressionExperiment ee : ees ) {
             //noinspection MismatchedQueryAndUpdateOfCollection
-            Map<String, Object> record = new HashMap();
+            Map<String, Object> record = new HashMap<>();
             record.put( "id", ee.getId() );
             record.put( "shortName", ee.getShortName() );
             record.put( "name", ee.getName() );

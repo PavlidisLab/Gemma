@@ -41,7 +41,7 @@ import static org.junit.Assert.*;
  */
 public class SecurityControllerTest extends BaseSpringWebTest {
 
-    private EntityDelegator ed;
+    private EntityDelegator<ExpressionExperiment> ed;
 
     private ExpressionExperiment ee;
 
@@ -65,7 +65,7 @@ public class SecurityControllerTest extends BaseSpringWebTest {
         this.eeId = ee.getId();
         this.userName = this.randomName();
         this.makeUser( userName );
-        ed = new EntityDelegator();
+        ed = new EntityDelegator<>();
         ed.setClassDelegatingFor( ee.getClass().getName() );
         ed.setId( this.eeId );
         securityService.makeOwnedByUser( ee, userName );

@@ -1,19 +1,20 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2012 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
 package ubic.gemma.web.controller.common.auditAndSecurity;
 
+import gemma.gsec.model.Securable;
 import org.springframework.dao.DataIntegrityViolationException;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.web.remote.EntityDelegator;
@@ -70,7 +71,7 @@ public interface SecurityController {
 
     Collection<UserValueObject> getGroupMembers( String groupName );
 
-    SecurityInfoValueObject getSecurityInfo( EntityDelegator ed );
+    SecurityInfoValueObject getSecurityInfo( EntityDelegator<? extends Securable> ed );
 
     /**
      * AJAX
@@ -83,17 +84,17 @@ public interface SecurityController {
      */
     Collection<SecurityInfoValueObject> getUsersData( String currentGroup, boolean privateOnly );
 
-    boolean makeGroupReadable( EntityDelegator ed, String groupName );
+    boolean makeGroupReadable( EntityDelegator<? extends Securable> ed, String groupName );
 
-    boolean makeGroupWriteable( EntityDelegator ed, String groupName );
+    boolean makeGroupWriteable( EntityDelegator<? extends Securable> ed, String groupName );
 
-    boolean makePrivate( EntityDelegator ed );
+    boolean makePrivate( EntityDelegator<? extends Securable> ed );
 
-    boolean makePublic( EntityDelegator ed );
+    boolean makePublic( EntityDelegator<? extends Securable> ed );
 
-    boolean removeGroupReadable( EntityDelegator ed, String groupName );
+    boolean removeGroupReadable( EntityDelegator<? extends Securable> ed, String groupName );
 
-    boolean removeGroupWriteable( EntityDelegator ed, String groupName );
+    boolean removeGroupWriteable( EntityDelegator<? extends Securable> ed, String groupName );
 
     boolean removeUsersFromGroup( String[] userNames, String groupName );
 

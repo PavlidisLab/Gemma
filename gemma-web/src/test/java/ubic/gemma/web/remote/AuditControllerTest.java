@@ -45,7 +45,7 @@ public class AuditControllerTest extends BaseSpringWebTest {
     public void testAddUpdateEvent() {
         ExpressionExperiment e = this.getTestPersistentExpressionExperiment();
 
-        EntityDelegator ed = new EntityDelegator( e );
+        EntityDelegator<ExpressionExperiment> ed = new EntityDelegator<>( e );
 
         assertEquals( "ubic.gemma.model.expression.experiment.ExpressionExperiment", ed.getClassDelegatingFor() );
 

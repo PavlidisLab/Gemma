@@ -136,7 +136,7 @@ public class CompositeSequenceController extends BaseController {
     /**
      * Exposed for AJAX calls.
      */
-    public Collection<GeneMappingSummary> getGeneMappingSummary( EntityDelegator csd ) {
+    public Collection<GeneMappingSummary> getGeneMappingSummary( EntityDelegator<CompositeSequence> csd ) {
         log.debug( "Started processing AJAX call: getGeneMappingSummary" );
         if ( csd == null || csd.getId() == null ) {
             return new HashSet<>();

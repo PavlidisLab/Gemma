@@ -79,8 +79,8 @@ public class ExperimentalDesignControllerTest extends BaseSpringWebTest {
         ExpressionExperiment ee = this.getTestPersistentCompleteExpressionExperiment( true ); // readonly.
 
         Collection<ExperimentalFactorValueObject> experimentalFactors = experimentalDesignController
-                .getExperimentalFactors( new EntityDelegator( ee.getExperimentalDesign() ) );
-        assertTrue( !experimentalFactors.isEmpty() );
+                .getExperimentalFactors( new EntityDelegator<>( ee.getExperimentalDesign() ) );
+        assertFalse( experimentalFactors.isEmpty() );
     }
 
     @Test
@@ -91,8 +91,8 @@ public class ExperimentalDesignControllerTest extends BaseSpringWebTest {
         ee = this.eeService.thawLite( ee );
 
         Collection<FactorValueValueObject> fvs = experimentalDesignController.getFactorValuesWithCharacteristics(
-                new EntityDelegator( ee.getExperimentalDesign().getExperimentalFactors().iterator().next() ) );
-        assertTrue( !fvs.isEmpty() );
+                new EntityDelegator<>( ee.getExperimentalDesign().getExperimentalFactors().iterator().next() ) );
+        assertFalse( fvs.isEmpty() );
     }
 
     @Test
@@ -105,7 +105,7 @@ public class ExperimentalDesignControllerTest extends BaseSpringWebTest {
         ExperimentalFactorValueObject evvo = new ExperimentalFactorValueObject( -1L );
         evvo.setCategory( "foo" );
         experimentalDesignController
-                .createExperimentalFactor( new EntityDelegator( ee.getExperimentalDesign() ), evvo );
+                .createExperimentalFactor( new EntityDelegator<>( ee.getExperimentalDesign() ), evvo );
 
     }
 
@@ -118,7 +118,7 @@ public class ExperimentalDesignControllerTest extends BaseSpringWebTest {
 
         ExperimentalFactor ef = ee.getExperimentalDesign().getExperimentalFactors().iterator().next();
         assertNotNull( ef );
-        EntityDelegator e = new EntityDelegator( ef.getFactorValues().iterator().next() );
+        EntityDelegator<FactorValue> e = new EntityDelegator<>( ef.getFactorValues().iterator().next() );
 
         Statement vc = Statement.Factory.newInstance();
         vc.setValue( "foo" );
@@ -129,9 +129,9 @@ public class ExperimentalDesignControllerTest extends BaseSpringWebTest {
         assertEquals( 2, ef.getFactorValues().size() );
 
         // new empty
-        experimentalDesignController.createFactorValue( new EntityDelegator( ef ) );
-        experimentalDesignController.createFactorValue( new EntityDelegator( ef ) );
-        experimentalDesignController.createFactorValue( new EntityDelegator( ef ) );
+        experimentalDesignController.createFactorValue( new EntityDelegator<>( ef ) );
+        experimentalDesignController.createFactorValue( new EntityDelegator<>( ef ) );
+        experimentalDesignController.createFactorValue( new EntityDelegator<>( ef ) );
 
         ef = experimentalFactorService.load( ef.getId() );
         assertNotNull( ef );

@@ -14,9 +14,6 @@
  */
 package ubic.gemma.web.controller.expression.arrayDesign;
 
-import org.springframework.core.io.FileSystemResource;
-import org.springframework.core.io.Resource;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
@@ -29,7 +26,6 @@ import ubic.gemma.web.remote.ListBatchCommand;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Map;
@@ -80,14 +76,14 @@ public interface ArrayDesignController {
     /**
      * Exposed for AJAX calls.
      */
-    Collection<CompositeSequenceMapValueObject> getCsSummaries( EntityDelegator ed );
+    Collection<CompositeSequenceMapValueObject> getCsSummaries( EntityDelegator<ArrayDesign> ed );
 
     Collection<CompositeSequenceMapValueObject> getDesignSummaries( ArrayDesign arrayDesign );
 
     /**
      * @return the HTML to display.
      */
-    Map<String, String> getReportHtml( EntityDelegator ed );
+    Map<String, String> getReportHtml( EntityDelegator<ArrayDesign> ed );
 
     String getSummaryForArrayDesign( Long id );
 
@@ -95,7 +91,7 @@ public interface ArrayDesignController {
 
     ArrayDesignValueObject loadArrayDesignsSummary();
 
-    String remove( EntityDelegator ed );
+    String remove( EntityDelegator<ArrayDesign> ed );
 
     /**
      * Show all array designs, or according to a list of IDs passed in.
@@ -120,7 +116,7 @@ public interface ArrayDesignController {
     @RequestMapping("/showExpressionExperiments.html")
     ModelAndView showExpressionExperiments( HttpServletRequest request );
 
-    String updateReport( EntityDelegator ed );
+    String updateReport( EntityDelegator<ArrayDesign> ed );
 
     String updateReportById( Long id );
 
