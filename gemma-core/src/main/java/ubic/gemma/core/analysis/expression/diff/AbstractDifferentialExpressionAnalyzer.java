@@ -31,6 +31,7 @@ import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
+import javax.annotation.Nullable;
 import java.util.Collection;
 
 /**
@@ -82,13 +83,11 @@ public abstract class AbstractDifferentialExpressionAnalyzer extends AbstractAna
      * @param pvalues pvalues
      * @return Qvalues, or null if they could not be computed.
      */
+    @Nullable
     double[] benjaminiHochberg( Double[] pvalues ) {
         DoubleMatrix1D benjaminiHochberg = MultipleTestCorrection
                 .benjaminiHochberg( new DenseDoubleMatrix1D( ArrayUtils.toPrimitive( pvalues ) ) );
-        if ( benjaminiHochberg == null ) {
-            return null;
-        }
-        return benjaminiHochberg.toArray();
+        return benjaminiHochberg != null ? benjaminiHochberg.toArray() : null;
     }
 
     DifferentialExpressionAnalysis initAnalysisEntity( BioAssaySet bioAssaySet,
