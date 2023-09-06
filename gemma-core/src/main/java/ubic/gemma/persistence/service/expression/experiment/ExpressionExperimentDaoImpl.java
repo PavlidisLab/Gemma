@@ -684,6 +684,11 @@ public class ExpressionExperimentDaoImpl
         if ( eeIds != null && eeIds.isEmpty() ) {
             return Collections.emptyMap();
         }
+        // never exclude terms that are explicitly retained
+        if ( excludedTermUris != null && retainedTermUris != null ) {
+            excludedTermUris = new HashSet<>( excludedTermUris );
+            excludedTermUris.removeAll( retainedTermUris );
+        }
         Query q = getSessionFactory().getCurrentSession().createSQLQuery(
                         "select T.`VALUE`, T.VALUE_URI, T.CATEGORY, T.CATEGORY_URI, T.EVIDENCE_CODE, count(distinct T.EXPRESSION_EXPERIMENT_FK) as EE_COUNT from EXPRESSION_EXPERIMENT2CHARACTERISTIC T "
                                 + AclQueryUtils.formNativeAclJoinClause( "T.EXPRESSION_EXPERIMENT_FK" ) + " "
@@ -691,12 +696,15 @@ public class ExpressionExperimentDaoImpl
                                 + ( eeIds != null ? " and T.EXPRESSION_EXPERIMENT_FK in :eeIds" : "" )
                                 + ( level != null ? " and T.LEVEL = :level" : "" )
                                 + ( category != null ? category.equals( UNCATEGORIZED ) ? " and COALESCE(T.CATEGORY_URI, T.CATEGORY) is NULL" : " and COALESCE(T.CATEGORY_URI, T.CATEGORY) = :category" : "" )
-                                + ( excludedCategoryUris != null && !excludedCategoryUris.isEmpty() ? " and T.CATEGORY_URI not in :excludedCategoryUris" : "" )
+                                // FIXME: there's a bug in Hibernate that that prevents it from producing proper tuples
+                                //        for the excludedCategoryUris, retainedTermUris parameters, so we add explicit
+                                //        parentheses
+                                + ( excludedCategoryUris != null && !excludedCategoryUris.isEmpty() ? " and (T.CATEGORY_URI not in (:excludedCategoryUris)" + ( retainedTermUris != null && !retainedTermUris.isEmpty() ? " or T.VALUE_URI in (:retainedTermUris)" : "" ) + ")" : "" )
                                 + ( excludedTermUris != null && !excludedTermUris.isEmpty() ? " and T.VALUE_URI not in :excludedTermUris" : "" )
                                 + AclQueryUtils.formNativeAclRestrictionClause( ( SessionFactoryImplementor ) getSessionFactory() ) + " "
                                 + "group by COALESCE(T.CATEGORY_URI, T.CATEGORY), COALESCE(T.VALUE_URI, T.`VALUE`) "
                                 + "having EE_COUNT >= :minFrequency "
-                                + ( retainedTermUris != null && !retainedTermUris.isEmpty() ? "or T.VALUE_URI in :retainedTermUris " : "" )
+                                + ( retainedTermUris != null && !retainedTermUris.isEmpty() ? "or T.VALUE_URI in (:retainedTermUris) " : "" )
                                 + "order by EE_COUNT desc" )
                 .addScalar( "T.VALUE", StandardBasicTypes.STRING )
                 .addScalar( "T.VALUE_URI", StandardBasicTypes.STRING )
@@ -1070,7 +1078,7 @@ public class ExpressionExperimentDaoImpl
                         "select ee.taxon, count(distinct ee) as EE_COUNT from ExpressionExperiment ee "
                                 + "where ee.id in :eeIds "
                                 + "group by ee.taxon "
-                                + "order by EE_COUNT desc")
+                                + "order by EE_COUNT desc" )
                 .setParameterList( "eeIds", ids )
                 .list();
         return list.stream()

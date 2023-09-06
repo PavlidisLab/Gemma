@@ -659,14 +659,7 @@ public class ExpressionExperimentServiceImpl
             eeIds = expressionExperimentDao.loadIdsWithCache( filters, null );
         }
         if ( excludedTermUris != null ) {
-            excludedTermUris = new HashSet<>( excludedTermUris );
-            // expand exclusions with implied terms via subclass relation
-            Set<OntologyTerm> excludedTerms = ontologyService.getTerms( excludedTermUris );
-            // exclude terms using the subClass relation
-            Set<OntologyTerm> impliedTerms = ontologyService.getChildren( excludedTerms, false, false );
-            for ( OntologyTerm t : impliedTerms ) {
-                excludedTermUris.add( t.getUri() );
-            }
+            excludedTermUris = inferTermsUris( excludedTermUris );
         }
         return expressionExperimentDao.getCategoriesUsageFrequency( eeIds, excludedCategoryUris, excludedTermUris );
     }
@@ -679,18 +672,7 @@ public class ExpressionExperimentServiceImpl
     @Transactional(readOnly = true)
     public List<CharacteristicWithUsageStatisticsAndOntologyTerm> getAnnotationsUsageFrequency( @Nullable Filters filters, int maxResults, int minFrequency, @Nullable String category, @Nullable Collection<String> excludedCategoryUris, @Nullable Collection<String> excludedTermUris, @Nullable Collection<String> retainedTermUris ) {
         if ( excludedTermUris != null ) {
-            excludedTermUris = new HashSet<>( excludedTermUris );
-            // never exclude terms that are explicitly retained
-            if ( retainedTermUris != null ) {
-                excludedTermUris.removeAll( retainedTermUris );
-            }
-            // expand exclusions with implied terms via subclass relation
-            Set<OntologyTerm> excludedTerms = ontologyService.getTerms( excludedTermUris );
-            // exclude terms using the subClass relation
-            Set<OntologyTerm> impliedTerms = ontologyService.getChildren( excludedTerms, false, false );
-            for ( OntologyTerm t : impliedTerms ) {
-                excludedTermUris.add( t.getUri() );
-            }
+            excludedTermUris = inferTermsUris( excludedTermUris );
         }
 
         Map<Characteristic, Long> result;
@@ -727,6 +709,21 @@ public class ExpressionExperimentServiceImpl
         }
 
         return resultWithParents;
+    }
+
+    /**
+     * Infer all the implied terms from the given collection of term URIs.
+     */
+    private Set<String> inferTermsUris( Collection<String> termUris ) {
+        Set<String> excludedTermUris = new HashSet<>( termUris );
+        // expand exclusions with implied terms via subclass relation
+        Set<OntologyTerm> excludedTerms = ontologyService.getTerms( excludedTermUris );
+        // exclude terms using the subClass relation
+        Set<OntologyTerm> impliedTerms = ontologyService.getChildren( excludedTerms, false, false );
+        for ( OntologyTerm t : impliedTerms ) {
+            excludedTermUris.add( t.getUri() );
+        }
+        return excludedTermUris;
     }
 
     /**
