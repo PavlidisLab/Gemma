@@ -211,38 +211,22 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
         this.deleteOldAnalyses( expressionExperiment, analysis, config.getFactorsToInclude() );
         StopWatch timer = new StopWatch();
         timer.start();
-        Collection<ExpressionAnalysisResultSet> resultSets = analysis.getResultSets();
 
-        analysis.setResultSets( new HashSet<ExpressionAnalysisResultSet>() );
-
-        // first transaction, gets us an ID
-        DifferentialExpressionAnalysis persistentAnalysis = helperService.persistStub( analysis );
-
-        // second set of transactions creates the empty resultSets.
-        for ( ExpressionAnalysisResultSet rs : resultSets ) {
-            Collection<DifferentialExpressionAnalysisResult> results = rs.getResults();
-
-            rs.setResults( new HashSet<DifferentialExpressionAnalysisResult>() );
-            ExpressionAnalysisResultSet prs = helperService.create( rs );
-            assert prs != null;
-            for ( DifferentialExpressionAnalysisResult r : results ) {
-                r.setResultSet( prs );
+        for ( ExpressionAnalysisResultSet rs : analysis.getResultSets() ) {
+            // ensure that all result have the right resultSet
+            for ( DifferentialExpressionAnalysisResult r : rs.getResults() ) {
+                r.setResultSet( rs );
             }
-            analysis.getResultSets().add( prs );
-            rs.getResults().addAll( results );
-
-            this.addPvalueDistribution( prs );
-
+            // add P-value distribution
+            this.addPvalueDistribution( rs );
         }
 
-        // third transaction - add results.
+        // now persist, everything is done by Hibernate in cascade
         DifferentialExpressionAnalyzerServiceImpl.log.info( "Saving results" );
-        helperService.addResults( persistentAnalysis, resultSets );
+        analysis = helperService.persistStub( analysis );
 
         log.info( "Done persisting, creating archive file" );
 
-        // get a clean copy of the analysis object from the DB.
-        analysis = differentialExpressionAnalysisService.load( analysis.getId() );
         // we do this here because now we have IDs for everything.
         if ( config.getMakeArchiveFile() ) {
             try {
@@ -257,7 +241,7 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
         try {
             auditTrailService
                     .addUpdateEvent( expressionExperiment, DifferentialExpressionAnalysisEvent.class,
-                            persistentAnalysis.getDescription() + "; analysis id=" + persistentAnalysis.getId() );
+                            analysis.getDescription() + "; analysis id=" + analysis.getId() );
         } catch ( Exception e ) {
             DifferentialExpressionAnalyzerServiceImpl.log
                     .error( "Error while trying to add audit event: " + e.getMessage(), e );
@@ -271,7 +255,7 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
             DifferentialExpressionAnalyzerServiceImpl.log.info( "Save results: " + timer.getTime() + "ms" );
         }
 
-        return persistentAnalysis;
+        return analysis;
 
     }
 

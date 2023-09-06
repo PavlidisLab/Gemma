@@ -99,9 +99,8 @@
                                  lazy="proxy" fetch="select">
                         <column name="SUBSET_FACTOR_VALUE_FK" not-null="false" sql-type="BIGINT"/>
                     </many-to-one>
-                    <!-- TODO: make result sets immutable -->
-                    <set name="resultSets" lazy="true" fetch="select" inverse="true" cascade="all">
-                        <cache usage="read-write"/>
+                    <set name="resultSets" lazy="true" fetch="select" inverse="true" cascade="all" mutable="false">
+                        <cache usage="read-only"/>
                         <key foreign-key="EXPRESSION_ANALYSIS_RESULT_SET_ANALYSIS_FKC">
                             <column name="ANALYSIS_FK" sql-type="BIGINT"/>
                         </key>
