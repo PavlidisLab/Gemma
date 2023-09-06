@@ -264,7 +264,7 @@ public interface ExpressionExperimentDao
      */
     List<Characteristic> getExperimentalDesignAnnotations( ExpressionExperiment expressionExperiment );
 
-    Map<Characteristic, Long> getCategoriesUsageFrequency( @Nullable Collection<Long> eeIds, @Nullable Collection<String> excludedCategoryUris, @Nullable Collection<String> excludedTermUris );
+    Map<Characteristic, Long> getCategoriesUsageFrequency( @Nullable Collection<Long> eeIds, @Nullable Collection<String> excludedCategoryUris, @Nullable Collection<String> excludedTermUris, @Nullable Collection<String> retainedTermUris );
 
     /**
      * Special indicator for an uncategorized term.

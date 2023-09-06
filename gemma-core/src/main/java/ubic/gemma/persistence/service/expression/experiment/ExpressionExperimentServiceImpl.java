@@ -651,7 +651,7 @@ public class ExpressionExperimentServiceImpl
 
     @Override
     @Transactional(readOnly = true)
-    public Map<Characteristic, Long> getCategoriesUsageFrequency( @Nullable Filters filters, @Nullable Collection<String> excludedCategoryUris, @Nullable Collection<String> excludedTermUris ) {
+    public Map<Characteristic, Long> getCategoriesUsageFrequency( @Nullable Filters filters, @Nullable Collection<String> excludedCategoryUris, @Nullable Collection<String> excludedTermUris, @Nullable Collection<String> retainedTermUris ) {
         List<Long> eeIds;
         if ( filters == null || filters.isEmpty() ) {
             eeIds = null;
@@ -661,7 +661,7 @@ public class ExpressionExperimentServiceImpl
         if ( excludedTermUris != null ) {
             excludedTermUris = inferTermsUris( excludedTermUris );
         }
-        return expressionExperimentDao.getCategoriesUsageFrequency( eeIds, excludedCategoryUris, excludedTermUris );
+        return expressionExperimentDao.getCategoriesUsageFrequency( eeIds, excludedCategoryUris, excludedTermUris, retainedTermUris );
     }
 
     /**

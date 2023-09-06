@@ -332,7 +332,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
         assertThat( target( "/datasets/categories" ).request().get() )
                 .hasStatus( Response.Status.OK )
                 .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE );
-        verify( expressionExperimentService ).getCategoriesUsageFrequency( Filters.empty(), null, null );
+        verify( expressionExperimentService ).getCategoriesUsageFrequency( Filters.empty(), null, null, null );
     }
 
     @Test

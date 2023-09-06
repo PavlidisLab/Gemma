@@ -635,16 +635,24 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
-    public Map<Characteristic, Long> getCategoriesUsageFrequency( @Nullable Collection<Long> eeIds, @Nullable Collection<String> excludedCategoryUris, @Nullable Collection<String> excludedTermUris ) {
+    public Map<Characteristic, Long> getCategoriesUsageFrequency( @Nullable Collection<Long> eeIds, @Nullable Collection<String> excludedCategoryUris, @Nullable Collection<String> excludedTermUris, @Nullable Collection<String> retainedTermUris ) {
         if ( eeIds != null && eeIds.isEmpty() ) {
             return Collections.emptyMap();
+        }
+        // never exclude terms that are explicitly retained
+        if ( excludedTermUris != null && retainedTermUris != null ) {
+            excludedTermUris = new HashSet<>( excludedTermUris );
+            excludedTermUris.removeAll( retainedTermUris );
         }
         Query q = getSessionFactory().getCurrentSession().createSQLQuery(
                         "select T.CATEGORY, T.CATEGORY_URI, count(distinct T.EXPRESSION_EXPERIMENT_FK) as EE_COUNT from EXPRESSION_EXPERIMENT2CHARACTERISTIC T "
                                 + AclQueryUtils.formNativeAclJoinClause( "T.EXPRESSION_EXPERIMENT_FK" ) + " "
                                 + "where T.ID is not null "
                                 + ( eeIds != null ? " and T.EXPRESSION_EXPERIMENT_FK in :eeIds" : "" )
-                                + ( excludedCategoryUris != null && !excludedCategoryUris.isEmpty() ? " and T.CATEGORY_URI not in :excludedCategoryUris" : "" )
+                                // FIXME: there's a bug in Hibernate that that prevents it from producing proper tuples
+                                //        for the excludedCategoryUris, retainedTermUris parameters, so we add explicit
+                                //        parentheses
+                                + ( excludedCategoryUris != null && !excludedCategoryUris.isEmpty() ? " and (T.CATEGORY_URI not in (:excludedCategoryUris)" + ( retainedTermUris != null && !retainedTermUris.isEmpty() ? " or T.VALUE_URI in (:retainedTermUris)" : "" ) + ")" : "" )
                                 + ( excludedTermUris != null && !excludedTermUris.isEmpty() ? " and T.VALUE_URI not in :excludedTermUris" : "" )
                                 + AclQueryUtils.formNativeAclRestrictionClause( ( SessionFactoryImplementor ) getSessionFactory() ) + " "
                                 + "group by COALESCE(T.CATEGORY_URI, T.CATEGORY) "
@@ -663,6 +671,9 @@ public class ExpressionExperimentDaoImpl
         }
         if ( excludedTermUris != null && !excludedTermUris.isEmpty() ) {
             q.setParameterList( "excludedTermUris", excludedTermUris );
+        }
+        if ( retainedTermUris != null && !retainedTermUris.isEmpty() ) {
+            q.setParameterList( "retainedTermUris", retainedTermUris );
         }
         AclQueryUtils.addAclParameters( q, ExpressionExperiment.class );
         //noinspection unchecked
