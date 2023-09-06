@@ -2,7 +2,7 @@
 http://purl.obolibrary.org/obo/RO_0000087	has role
 http://purl.obolibrary.org/obo/RO_0001000	derives from
 http://purl.obolibrary.org/obo/RO_0000053	has characteristic
-http://purl.obolibrary.org/obo/ENVO_01003004	 derives from part of
+http://purl.obolibrary.org/obo/ENVO_01003004	derives from part of
 http://purl.obolibrary.org/obo/RO_0002260	has biological role
 http://purl.obolibrary.org/obo/RO_0000086	has quality
 http://purl.obolibrary.org/obo/RO_0002573	has modifier
@@ -15,6 +15,7 @@ http://purl.obolibrary.org/obo/GENO_0000447	is_gene_target_of
 http://purl.obolibrary.org/obo/CLO_0037210	derived from cell line
 http://purl.obolibrary.org/obo/CLO_0000015	derives from patient having disease
 http://purl.obolibrary.org/obo/BCGO_0000182	has duration # perhaps not ideal
+http://purl.obolibrary.org/obo/RO_0002220	adjacent to
 # missing:
 # has_delivered or delivered_by
 # has_timepoint
