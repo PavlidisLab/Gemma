@@ -24,8 +24,6 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ContextConfiguration;
 import ubic.gemma.core.util.test.BaseDatabaseTest;
 import ubic.gemma.model.common.Identifiable;
-import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
-import ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
@@ -213,6 +211,19 @@ public class CharacteristicDaoImplTest extends BaseDatabaseTest {
         // ranking by level uses the order by field() which is not supported
         Map<Class<? extends Identifiable>, Map<String, Set<ExpressionExperiment>>> results = characteristicDao.findExperimentsByUris( Collections.singleton( "http://example.com" ), taxon, 100, false );
         assertThat( results ).containsKey( ExpressionExperiment.class );
+    }
+
+    @Test
+    public void testDiscriminator() {
+        Characteristic c = createCharacteristic( "test", "test" );
+        sessionFactory.getCurrentSession().persist( c );
+        List<String> clazz = ( List<String> ) sessionFactory.getCurrentSession()
+                .createSQLQuery( "select C.class from CHARACTERISTIC C where C.ID = :id" )
+                .setParameter( "id", c.getId() )
+                .list();
+        assertThat( clazz )
+                .hasSize( 1 )
+                .allSatisfy( s -> assertThat( s ).isNull() );
     }
 
     private Characteristic createCharacteristic( @Nullable String valueUri, String value ) {
