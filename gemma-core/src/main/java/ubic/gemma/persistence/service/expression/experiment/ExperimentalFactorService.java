@@ -21,11 +21,9 @@ package ubic.gemma.persistence.service.expression.experiment;
 import org.springframework.security.access.annotation.Secured;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExperimentalFactorValueObject;
-import ubic.gemma.persistence.service.BaseImmutableService;
 import ubic.gemma.persistence.service.BaseService;
 import ubic.gemma.persistence.service.BaseVoEnabledService;
 
-import javax.annotation.Nullable;
 import java.util.Collection;
 
 /**
@@ -43,6 +41,7 @@ public interface ExperimentalFactorService
     String BATCH_FACTOR_NAME = "batch";
     String FACTOR_VALUE_RNAME_PREFIX = "fv_";
 
+
     /**
      * Delete the factor, its associated factor values and all differential expression analyses in which it is used.
      *
@@ -51,6 +50,18 @@ public interface ExperimentalFactorService
     @Override
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     void remove( ExperimentalFactor experimentalFactor );
+
+    @Override
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    void remove( Collection<ExperimentalFactor> entities );
+
+    @Override
+    @Secured({ "GROUP_ADMIN" })
+    void remove( Long id );
+
+    @Override
+    @Secured({ "GROUP_ADMIN" })
+    void removeAllInBatch();
 
     @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
@@ -75,6 +86,10 @@ public interface ExperimentalFactorService
     @Override
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     void update( ExperimentalFactor experimentalFactor );
+
+    @Override
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    void update( Collection<ExperimentalFactor> entities );
 
     ExperimentalFactor thaw( ExperimentalFactor ef );
 }
