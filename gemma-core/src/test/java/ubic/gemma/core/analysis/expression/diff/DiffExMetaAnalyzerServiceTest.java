@@ -177,15 +177,15 @@ public class DiffExMetaAnalyzerServiceTest extends AbstractGeoServiceTest {
          * just a test)
          */
         for ( ExperimentalFactor ef : ds1.getExperimentalDesign().getExperimentalFactors() ) {
-            experimentalFactorService.delete( ef );
+            experimentalFactorService.remove( ef );
 
         }
         for ( ExperimentalFactor ef : ds2.getExperimentalDesign().getExperimentalFactors() ) {
-            experimentalFactorService.delete( ef );
+            experimentalFactorService.remove( ef );
 
         }
         for ( ExperimentalFactor ef : ds3.getExperimentalDesign().getExperimentalFactors() ) {
-            experimentalFactorService.delete( ef );
+            experimentalFactorService.remove( ef );
         }
         ds1.getExperimentalDesign().getExperimentalFactors().clear();
         ds2.getExperimentalDesign().getExperimentalFactors().clear();

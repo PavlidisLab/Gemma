@@ -48,8 +48,9 @@ public interface ExperimentalFactorService
      *
      * @param experimentalFactor the factor to be deleted
      */
+    @Override
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    void delete( ExperimentalFactor experimentalFactor );
+    void remove( ExperimentalFactor experimentalFactor );
 
     @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })

@@ -124,8 +124,7 @@ public class TwoWayAnovaWithInteractionsTest2 extends AbstractGeoServiceTest {
 
         Collection<ExperimentalFactor> toremove = new HashSet<>( ee.getExperimentalDesign().getExperimentalFactors() );
         for ( ExperimentalFactor ef : toremove ) {
-            experimentalFactorService.delete( ef );
-            ee.getExperimentalDesign().getExperimentalFactors().remove( ef );
+            experimentalFactorService.remove( ef );
         }
 
         expressionExperimentService.update( ee );

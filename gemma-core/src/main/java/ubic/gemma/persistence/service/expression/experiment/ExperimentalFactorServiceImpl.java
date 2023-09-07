@@ -47,7 +47,7 @@ public class ExperimentalFactorServiceImpl
 
     @Override
     @Transactional
-    public void delete( ExperimentalFactor experimentalFactor ) {
+    public void remove( ExperimentalFactor experimentalFactor ) {
         experimentalFactor = ensureInSession( experimentalFactor );
         /*
          * First, check to see if there are any diff results that use this factor.
@@ -57,7 +57,7 @@ public class ExperimentalFactorServiceImpl
         for ( DifferentialExpressionAnalysis a : analyses ) {
             differentialExpressionAnalysisService.remove( a );
         }
-        this.experimentalFactorDao.remove( experimentalFactor );
+        super.remove( experimentalFactor );
     }
 
     @Override

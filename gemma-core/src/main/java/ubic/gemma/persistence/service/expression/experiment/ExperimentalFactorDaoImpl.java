@@ -30,7 +30,6 @@ import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.persistence.service.AbstractVoEnabledDao;
 import ubic.gemma.persistence.util.BusinessKey;
 
-import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
@@ -59,8 +58,11 @@ public class ExperimentalFactorDaoImpl extends AbstractVoEnabledDao<Experimental
     public void remove( ExperimentalFactor experimentalFactor ) {
         ExperimentalDesign ed = experimentalFactor.getExperimentalDesign();
 
+        // detach the experimental factor from its experimental design, otherwise it will be re-saved in cascade
+        ed.getExperimentalFactors().remove( experimentalFactor );
+
         //language=HQL
-        final String queryString = "select distinct ee from ExpressionExperiment as ee where ee.experimentalDesign = :ed";
+        final String queryString = "select ee from ExpressionExperiment as ee where ee.experimentalDesign = :ed";
         //noinspection unchecked
         List<ExpressionExperiment> results = getSessionFactory().getCurrentSession()
                 .createQuery( queryString )
