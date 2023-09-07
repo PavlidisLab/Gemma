@@ -1,17 +1,6 @@
 name: Build Gemma
 
-on:
-  push:
-    branches:
-    - master
-    - development
-    - hotfix-*
-    - release-*
-  pull_request:
-    branches:
-    - master
-    - development
-    - release-*
+on: [push]
 
 jobs:
   build:
