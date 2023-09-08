@@ -9,8 +9,7 @@
         <cache usage="read-only"/>
         <id name="id" type="java.lang.Long" unsaved-value="null">
             <column name="ID" sql-type="BIGINT"/>
-            <generator class="native">
-            </generator>
+            <generator class="native"/>
         </id>
         <discriminator column="class"/>
         <subclass name="ubic.gemma.model.analysis.expression.FactorAssociatedAnalysisResultSet"
@@ -37,7 +36,7 @@
                              lazy="proxy" fetch="select">
                     <column name="BASELINE_GROUP_FK" not-null="false" sql-type="BIGINT"/>
                 </many-to-one>
-                <set name="results" lazy="true" fetch="select" inverse="true" cascade="all" mutable="false">
+                <set name="results" lazy="true" fetch="select" inverse="true" cascade="delete" mutable="false">
                     <key foreign-key="DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT_RESULT_SET_FKC">
                         <column name="RESULT_SET_FK" sql-type="BIGINT"/>
                     </key>

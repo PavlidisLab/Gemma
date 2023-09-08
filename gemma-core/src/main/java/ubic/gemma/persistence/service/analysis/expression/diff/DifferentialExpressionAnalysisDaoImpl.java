@@ -20,10 +20,12 @@ package ubic.gemma.persistence.service.analysis.expression.diff;
 
 import org.apache.commons.collections4.ListUtils;
 import org.apache.commons.lang3.time.StopWatch;
-import org.hibernate.*;
+import org.hibernate.Hibernate;
+import org.hibernate.SQLQuery;
+import org.hibernate.Session;
+import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
-import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.analysis.expression.diff.*;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.*;
@@ -49,6 +51,29 @@ class DifferentialExpressionAnalysisDaoImpl extends SingleExperimentAnalysisDaoB
     @Autowired
     public DifferentialExpressionAnalysisDaoImpl( SessionFactory sessionFactory ) {
         super( DifferentialExpressionAnalysis.class, sessionFactory );
+    }
+
+    /**
+     * Creating a full analysis with a single persist() is not efficient because Hibernate does not order inserts with
+     * MySQL 5.7 dialect. However, inserting in order and using 'rewriteBatchedStatements=true' will cause batch inserts
+     * to be performed.
+     */
+    @Override
+    public DifferentialExpressionAnalysis create( DifferentialExpressionAnalysis entity ) {
+        entity = super.create( entity );
+        for ( ExpressionAnalysisResultSet rs : entity.getResultSets() ) {
+            for ( DifferentialExpressionAnalysisResult dear : rs.getResults() ) {
+                this.getSessionFactory().getCurrentSession().persist( dear );
+            }
+        }
+        for ( ExpressionAnalysisResultSet rs : entity.getResultSets() ) {
+            for ( DifferentialExpressionAnalysisResult dear : rs.getResults() ) {
+                for ( ContrastResult cr : dear.getContrasts() ) {
+                    this.getSessionFactory().getCurrentSession().persist( cr );
+                }
+            }
+        }
+        return entity;
     }
 
     @Override
