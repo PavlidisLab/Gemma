@@ -57,6 +57,9 @@ class DifferentialExpressionAnalysisDaoImpl extends SingleExperimentAnalysisDaoB
      * Creating a full analysis with a single persist() is not efficient because Hibernate does not order inserts with
      * MySQL 5.7 dialect. However, inserting in order and using 'rewriteBatchedStatements=true' will cause batch inserts
      * to be performed.
+     * <p>
+     * FIXME: remove this method when <a href="https://github.com/PavlidisLab/Gemma/issues/822">#822</a> is resolve and
+     *        persist by cascade
      */
     @Override
     public DifferentialExpressionAnalysis create( DifferentialExpressionAnalysis entity ) {
