@@ -1031,12 +1031,11 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
         Query query = this.getSessionFactory().getCurrentSession()
                 // using EXPRESSION_EXPERIMENT_FK, we don't need to do a jointure on the INVESTIGATION table, however
                 // the count reflect the number of bioassays, not EEs
-                .createSQLQuery( "select AD.ID, count(distinct BA.EXPRESSION_EXPERIMENT_FK) as EE_COUNT from ARRAY_DESIGN AD "
-                        + "join BIO_ASSAY BA on AD.ID = BA.ARRAY_DESIGN_USED_FK "
+                .createSQLQuery( "select BA.ARRAY_DESIGN_USED_FK as ID, count(distinct BA.EXPRESSION_EXPERIMENT_FK) as EE_COUNT from BIO_ASSAY BA "
                         + AclQueryUtils.formNativeAclJoinClause( "BA.EXPRESSION_EXPERIMENT_FK" )
                         + AclQueryUtils.formNativeAclRestrictionClause( ( SessionFactoryImplementor ) getSessionFactory() ) + " "
                         // FIXME: exclude troubled datasets
-                        + "group by AD.ID"
+                        + "group by BA.ARRAY_DESIGN_USED_FK"
                 )
                 .addScalar( "ID", StandardBasicTypes.LONG )
                 .addScalar( "EE_COUNT", StandardBasicTypes.LONG );
@@ -1057,12 +1056,11 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
         Query query = this.getSessionFactory().getCurrentSession()
                 // using EXPRESSION_EXPERIMENT_FK, we don't need to do a jointure on the INVESTIGATION table, however
                 // the count reflect the number of bioassays, not EEs
-                .createSQLQuery( "select AD.ID, count(distinct BA.EXPRESSION_EXPERIMENT_FK) as EE_COUNT from ARRAY_DESIGN AD "
-                        + "join BIO_ASSAY BA on AD.ID = BA.ORIGINAL_PLATFORM_FK "
+                .createSQLQuery( "select BA.ORIGINAL_PLATFORM_FK as ID, count(distinct BA.EXPRESSION_EXPERIMENT_FK) as EE_COUNT from BIO_ASSAY BA "
                         + AclQueryUtils.formNativeAclJoinClause( "BA.EXPRESSION_EXPERIMENT_FK" )
                         + AclQueryUtils.formNativeAclRestrictionClause( ( SessionFactoryImplementor ) getSessionFactory() ) + " "
                         // FIXME: exclude troubled datasets
-                        + "group by AD.ID" )
+                        + "group by BA.ORIGINAL_PLATFORM_FK" )
                 .addScalar( "ID", StandardBasicTypes.LONG )
                 .addScalar( "EE_COUNT", StandardBasicTypes.LONG );
         AclQueryUtils.addAclParameters( query, ExpressionExperiment.class );
