@@ -56,6 +56,7 @@ import static org.junit.Assert.*;
  *
  * @author nicolas
  */
+@Category(SlowTest.class)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 public class PhenotypeAssociationTest extends BaseSpringContextTest {
 

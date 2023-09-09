@@ -2,13 +2,11 @@ package ubic.gemma.persistence.service.analysis.expression.diff;
 
 import org.hibernate.SessionFactory;
 import org.junit.Test;
-import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.ContextConfiguration;
 import ubic.gemma.core.util.test.BaseDatabaseTest;
-import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.analysis.expression.diff.*;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
@@ -34,7 +32,6 @@ public class DifferentialExpressionAnalysisDaoTest extends BaseDatabaseTest {
     private DifferentialExpressionAnalysisDao differentialExpressionAnalysisDao;
 
     @Test
-    @Category(SlowTest.class)
     public void testCreateAnalysisWithResultSetAndPvalueDistribution() {
         DifferentialExpressionAnalysis analysis = new DifferentialExpressionAnalysis();
         Taxon taxon = new Taxon();

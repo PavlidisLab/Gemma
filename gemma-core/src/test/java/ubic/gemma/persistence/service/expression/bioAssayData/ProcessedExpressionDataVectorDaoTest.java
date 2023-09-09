@@ -38,7 +38,6 @@ import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
 import static ubic.gemma.persistence.service.expression.bioAssayData.RandomExpressionDataMatrixUtils.randomExpressionMatrix;
 
-@Category(SlowTest.class)
 @ContextConfiguration
 @TestExecutionListeners(WithSecurityContextTestExecutionListener.class)
 public class ProcessedExpressionDataVectorDaoTest extends BaseDatabaseTest {
@@ -97,6 +96,7 @@ public class ProcessedExpressionDataVectorDaoTest extends BaseDatabaseTest {
 
     @Test
     @WithMockUser
+    @Category(SlowTest.class)
     public void testCreateProcessedDataVectorsFromLog2Data() throws QuantitationMismatchException {
         double[][] matrix = randomExpressionMatrix( NUM_PROBES, 4, new NormalDistribution( 15, 1 ) );
         ExpressionExperiment ee = getTestExpressionExperimentForRawExpressionMatrix( matrix, ScaleType.LOG2, false );
