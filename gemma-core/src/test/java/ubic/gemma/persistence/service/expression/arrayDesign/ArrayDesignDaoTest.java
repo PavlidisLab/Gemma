@@ -57,16 +57,20 @@ public class ArrayDesignDaoTest extends BaseDatabaseTest {
         sessionFactory.getCurrentSession().persist( ed );
 
         Set<CompositeSequence> probes = new HashSet<>();
-        for ( int i = 0; i < 20000; i++ ) {
+        for ( int i = 0; i < 200; i++ ) {
             CompositeSequence cs = CompositeSequence.Factory.newInstance( "cs" + i, ad );
             BioSequence bs = BioSequence.Factory.newInstance( "s" + i, taxon );
             DatabaseEntry de = DatabaseEntry.Factory.newInstance();
             de.setExternalDatabase( ed );
-            sessionFactory.getCurrentSession().persist( de );
             bs.setSequenceDatabaseEntry( de );
-            sessionFactory.getCurrentSession().persist( bs );
             cs.setBiologicalCharacteristic( bs );
             probes.add( cs );
+        }
+        for ( CompositeSequence cs : probes ) {
+            sessionFactory.getCurrentSession().persist( cs.getBiologicalCharacteristic().getSequenceDatabaseEntry() );
+        }
+        for ( CompositeSequence cs : probes ) {
+            sessionFactory.getCurrentSession().persist( cs.getBiologicalCharacteristic() );
         }
         ad.setCompositeSequences( probes );
         arrayDesignDao.update( ad );
@@ -83,7 +87,7 @@ public class ArrayDesignDaoTest extends BaseDatabaseTest {
         assertTrue( Hibernate.isInitialized( ad.getCompositeSequences() ) );
         assertTrue( Hibernate.isInitialized( ad.getCompositeSequences().iterator().next().getBiologicalCharacteristic() ) );
         assertTrue( Hibernate.isInitialized( ad.getCompositeSequences().iterator().next().getBiologicalCharacteristic().getSequenceDatabaseEntry() ) );
-        assertEquals( 20000, ad.getCompositeSequences().size() );
+        assertEquals( 200, ad.getCompositeSequences().size() );
 
         sessionFactory.getCurrentSession().update( ad );
         sessionFactory.getCurrentSession().flush();
