@@ -52,7 +52,7 @@ public interface ExperimentalFactorService
     void remove( ExperimentalFactor experimentalFactor );
 
     @Override
-    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_COLLECTION_EDIT" })
     void remove( Collection<ExperimentalFactor> entities );
 
     @Override
@@ -88,7 +88,7 @@ public interface ExperimentalFactorService
     void update( ExperimentalFactor experimentalFactor );
 
     @Override
-    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_COLLECTION_EDIT" })
     void update( Collection<ExperimentalFactor> entities );
 
     ExperimentalFactor thaw( ExperimentalFactor ef );
