@@ -58,7 +58,7 @@ class DifferentialExpressionAnalysisDaoImpl extends SingleExperimentAnalysisDaoB
      * MySQL 5.7 dialect. However, inserting in order and using 'rewriteBatchedStatements=true' will cause batch inserts
      * to be performed.
      * <p>
-     * FIXME: remove this method when <a href="https://github.com/PavlidisLab/Gemma/issues/822">#822</a> is resolve and
+     * FIXME: remove this method when <a href="https://github.com/PavlidisLab/Gemma/issues/825">#825</a> is resolve and
      *        persist by cascade
      */
     @Override
