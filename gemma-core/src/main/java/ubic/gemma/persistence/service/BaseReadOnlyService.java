@@ -1,7 +1,7 @@
 package ubic.gemma.persistence.service;
 
 import ubic.gemma.model.common.Identifiable;
-import ubic.gemma.persistence.service.BaseDao;
+import ubic.gemma.persistence.util.Specification;
 
 import javax.annotation.CheckReturnValue;
 import javax.annotation.Nonnull;
@@ -20,16 +20,16 @@ public interface BaseReadOnlyService<O extends Identifiable> {
     /**
      * Does a search for the entity in the persistent storage
      *
-     * @param entity the entity to be searched for
+     * @param spec the entity to be searched for
      * @return the version of entity retrieved from the persistent storage, if found, otherwise null.
      */
     @Nullable
     @CheckReturnValue
-    O find( O entity );
+    O find( Specification<O> spec );
 
     @Nonnull
     @CheckReturnValue
-    O findOrFail( O entity );
+    O findOrFail( Specification<O> spec );
 
     /**
      * Loads objects with given ids.

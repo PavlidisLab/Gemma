@@ -25,6 +25,8 @@ import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.BaseService;
 import ubic.gemma.persistence.service.FilteringVoEnabledService;
+import ubic.gemma.persistence.util.Specification;
+import ubic.gemma.persistence.util.Specifications;
 
 import java.util.Collection;
 import java.util.List;
@@ -41,7 +43,7 @@ public interface QuantitationTypeService extends BaseService<QuantitationType>, 
      * @return                  found QT
      */
     @Secured({ "GROUP_USER" })
-    QuantitationType find( ExpressionExperiment ee, QuantitationType quantitationType );
+    QuantitationType find( ExpressionExperiment ee, Specification<QuantitationType> quantitationType );
 
     /**
      * Find a quantitation type by ID and vector type.
@@ -58,7 +60,7 @@ public interface QuantitationTypeService extends BaseService<QuantitationType>, 
 
     @Override
     @Secured({ "GROUP_USER" })
-    QuantitationType findOrCreate( QuantitationType quantitationType );
+    QuantitationType findOrCreate( Specification<QuantitationType> quantitationType );
 
     @Override
     @Secured({ "GROUP_USER" })

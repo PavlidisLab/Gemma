@@ -237,10 +237,10 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     }
 
     @Override
-    public ArrayDesign find( ArrayDesign entity ) {
-        BusinessKey.checkValidKey( entity );
+    public ArrayDesign find( Specification<ArrayDesign> spec ) {
+        BusinessKey.checkValidG2GKey( spec );
         Criteria query = super.getSessionFactory().getCurrentSession().createCriteria( ArrayDesign.class );
-        BusinessKey.addRestrictions( query, entity );
+        BusinessKey.addG2GRestrictions( query, spec );
 
         return ( ArrayDesign ) query.uniqueResult();
     }

@@ -40,6 +40,8 @@ import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeDa
 import java.util.Collection;
 import java.util.Map;
 
+import static ubic.gemma.persistence.util.Specifications.byIdentifiable;
+
 /**
  * Persister for ubic.gemma.model.common package classes.
  *
@@ -128,7 +130,7 @@ public abstract class CommonPersister extends AbstractPersister {
     }
 
     protected Contact persistContact( Contact contact ) {
-        return this.contactDao.findOrCreate( contact );
+        return this.contactDao.findOrCreate( byIdentifiable( contact ) );
     }
 
     protected ExternalDatabase persistExternalDatabase( ExternalDatabase database, Caches caches ) {
@@ -140,7 +142,7 @@ public abstract class CommonPersister extends AbstractPersister {
             return seenDatabases.get( name );
         }
 
-        ExternalDatabase existingDatabase = externalDatabaseDao.find( database );
+        ExternalDatabase existingDatabase = externalDatabaseDao.find( byIdentifiable( database ) );
 
         // don't use findOrCreate to avoid flush.
         if ( existingDatabase == null ) {
@@ -196,16 +198,17 @@ public abstract class CommonPersister extends AbstractPersister {
     }
 
     protected Unit persistUnit( Unit unit ) {
-        return this.unitDao.findOrCreate( unit );
+        return this.unitDao.findOrCreate( byIdentifiable( unit ) );
     }
 
     private Object persistBibliographicReference( BibliographicReference reference, Caches caches ) {
         this.fillInDatabaseEntry( reference.getPubAccession(), caches );
-        return this.bibliographicReferenceDao.findOrCreate( reference );
+        return this.bibliographicReferenceDao.findOrCreate( byIdentifiable( reference ) );
     }
 
+    @Deprecated
     private Person persistPerson( Person person ) {
-        return this.personDao.findOrCreate( person );
+        return this.personDao.findOrCreate( byIdentifiable( person ) );
     }
 
 }

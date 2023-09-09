@@ -23,6 +23,7 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonValueObject;
 import ubic.gemma.persistence.service.BaseService;
 import ubic.gemma.persistence.service.FilteringVoEnabledService;
+import ubic.gemma.persistence.util.Specification;
 
 import java.util.Collection;
 
@@ -39,7 +40,7 @@ public interface TaxonService extends BaseService<Taxon>, FilteringVoEnabledServ
 
     @Override
     @Secured({ "GROUP_USER" })
-    Taxon findOrCreate( Taxon taxon );
+    Taxon findOrCreate( Specification<Taxon> spec );
 
     @Override
     @Secured({ "GROUP_USER" })

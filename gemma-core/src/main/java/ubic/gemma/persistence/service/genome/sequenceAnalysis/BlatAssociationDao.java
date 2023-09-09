@@ -18,9 +18,12 @@
  */
 package ubic.gemma.persistence.service.genome.sequenceAnalysis;
 
+import ubic.gemma.model.genome.Gene;
+import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
 import ubic.gemma.persistence.service.BaseDao;
+import ubic.gemma.persistence.util.Specification;
 
 import java.util.Collection;
 
@@ -29,9 +32,9 @@ import java.util.Collection;
  */
 public interface BlatAssociationDao extends BaseDao<BlatAssociation> {
 
-    java.util.Collection<BlatAssociation> find( ubic.gemma.model.genome.biosequence.BioSequence bioSequence );
+    Collection<BlatAssociation> findByBioSequence( Specification<BioSequence> bioSequence );
 
-    java.util.Collection<BlatAssociation> find( ubic.gemma.model.genome.Gene gene );
+    Collection<BlatAssociation> findByGene( Specification<Gene> gene );
 
     void thaw( Collection<BlatAssociation> blatAssociations );
 

@@ -25,6 +25,7 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.BaseImmutableService;
 import ubic.gemma.persistence.service.BaseService;
+import ubic.gemma.persistence.util.Specification;
 
 import javax.annotation.Nullable;
 import java.util.Collection;
@@ -37,7 +38,7 @@ public interface Gene2GOAssociationService extends BaseImmutableService<Gene2GOA
 
     @Override
     @Secured({ "GROUP_ADMIN" })
-    Gene2GOAssociation findOrCreate( Gene2GOAssociation gene2GOAssociation );
+    Gene2GOAssociation findOrCreate( Specification<Gene2GOAssociation> spec );
 
     @Override
     @Secured({ "GROUP_ADMIN" })

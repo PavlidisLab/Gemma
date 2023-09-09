@@ -21,7 +21,9 @@ package ubic.gemma.persistence.service.expression.biomaterial;
 import org.springframework.security.access.annotation.Secured;
 import ubic.gemma.model.expression.biomaterial.Compound;
 import ubic.gemma.persistence.service.BaseImmutableService;
-import ubic.gemma.persistence.service.BaseService;
+import ubic.gemma.persistence.util.Specification;
+
+import java.util.Collection;
 
 /**
  * @author kelsey
@@ -30,7 +32,7 @@ public interface CompoundService extends BaseImmutableService<Compound> {
 
     @Override
     @Secured({ "GROUP_USER" })
-    Compound findOrCreate( Compound compound );
+    Compound findOrCreate( Specification<Compound> spec );
 
     @Override
     @Secured({ "GROUP_USER" })

@@ -8,6 +8,7 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.sequenceAnalysis.AnnotationAssociation;
 import ubic.gemma.persistence.service.AbstractService;
+import ubic.gemma.persistence.util.Specification;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -26,14 +27,14 @@ public class AnnotationAssociationServiceImpl extends AbstractService<Annotation
 
     @Override
     @Transactional(readOnly = true)
-    public Collection<AnnotationAssociation> find( BioSequence bioSequence ) {
-        return this.annotationAssociationDao.find( bioSequence );
+    public Collection<AnnotationAssociation> findByBioSequence( Specification<BioSequence> bioSequence ) {
+        return this.annotationAssociationDao.findByBioSequence( bioSequence );
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Collection<AnnotationAssociation> find( Gene gene ) {
-        return this.annotationAssociationDao.find( gene );
+    public Collection<AnnotationAssociation> findByGene( Specification<Gene> gene ) {
+        return this.annotationAssociationDao.findByGene( gene );
     }
 
     /**

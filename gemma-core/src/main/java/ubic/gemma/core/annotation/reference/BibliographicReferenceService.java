@@ -27,6 +27,7 @@ import ubic.gemma.model.common.search.SearchSettingsValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.BaseImmutableService;
 import ubic.gemma.persistence.service.BaseVoEnabledService;
+import ubic.gemma.persistence.util.Specification;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.Collection;
@@ -45,18 +46,9 @@ public interface BibliographicReferenceService
 
     List<BibliographicReference> browse( int start, int limit, String orderField, boolean descending );
 
-    /**
-     * check to see if the object already exists
-     *
-     * @param bibliographicReference reference
-     * @return reference
-     */
-    @Override
-    BibliographicReference find( BibliographicReference bibliographicReference );
-
     @Override
     @Secured({ "GROUP_USER" })
-    BibliographicReference findOrCreate( BibliographicReference BibliographicReference );
+    BibliographicReference findOrCreate( Specification<BibliographicReference> spec );
 
     @Override
     @Secured({ "GROUP_USER" })
@@ -74,7 +66,7 @@ public interface BibliographicReferenceService
      * @param id id
      * @return reference
      */
-    BibliographicReference findByExternalId( java.lang.String id );
+    BibliographicReference findByExternalId( String id );
 
     /**
      * Retrieve a reference by identifier, qualified by the database name (such as 'pubmed').
@@ -83,7 +75,7 @@ public interface BibliographicReferenceService
      * @param databaseName db name
      * @return reference
      */
-    BibliographicReference findByExternalId( java.lang.String id, java.lang.String databaseName );
+    BibliographicReference findByExternalId( String id, String databaseName );
 
     /**
      * <p>
@@ -93,7 +85,7 @@ public interface BibliographicReferenceService
      * @param id id
      * @return reference VO
      */
-    BibliographicReferenceValueObject findVOByExternalId( java.lang.String id );
+    BibliographicReferenceValueObject findVOByExternalId( String id );
 
     /**
      * Return all the BibRefs that are linked to ExpressionExperiments.

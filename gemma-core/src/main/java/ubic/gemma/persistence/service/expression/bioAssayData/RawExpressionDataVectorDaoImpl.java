@@ -20,6 +20,7 @@ import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.util.BusinessKey;
+import ubic.gemma.persistence.util.Specification;
 
 import java.util.Collection;
 import java.util.HashSet;
@@ -83,9 +84,10 @@ public class RawExpressionDataVectorDaoImpl extends AbstractDesignElementDataVec
     }
 
     @Override
-    public RawExpressionDataVector find( RawExpressionDataVector designElementDataVector ) {
+    public RawExpressionDataVector find( Specification<RawExpressionDataVector> spec ) {
+        RawExpressionDataVector designElementDataVector = spec.getEntity();
 
-        BusinessKey.checkKey( designElementDataVector );
+        BusinessKey.checkDEDVKey( spec );
 
         DetachedCriteria crit = DetachedCriteria.forClass( RawExpressionDataVector.class );
 

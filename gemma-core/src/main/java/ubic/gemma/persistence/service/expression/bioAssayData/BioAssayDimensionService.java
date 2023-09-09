@@ -23,6 +23,7 @@ import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimensionValueObject;
 import ubic.gemma.persistence.service.BaseImmutableService;
 import ubic.gemma.persistence.service.BaseVoEnabledService;
+import ubic.gemma.persistence.util.Specification;
 
 /**
  * @author Paul
@@ -32,7 +33,7 @@ public interface BioAssayDimensionService
 
     @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
-    BioAssayDimension findOrCreate( BioAssayDimension bioAssayDimension );
+    BioAssayDimension findOrCreate( Specification<BioAssayDimension> spec );
 
     @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })

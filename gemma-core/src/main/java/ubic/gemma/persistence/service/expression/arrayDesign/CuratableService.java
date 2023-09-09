@@ -8,6 +8,7 @@ import ubic.gemma.persistence.service.FilteringVoEnabledService;
 import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.persistence.util.Sort;
+import ubic.gemma.persistence.util.Specification;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -24,11 +25,11 @@ public interface CuratableService<C extends Curatable, VO extends AbstractCurata
 
     @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ_QUIET" })
-    C find( C curatable );
+    C find( Specification<C> spec );
 
     @Override
     @Secured({ "GROUP_USER", "AFTER_ACL_READ" })
-    C findOrCreate( C curatable );
+    C findOrCreate( Specification<C> spec );
 
     @Override
     @Secured({ "GROUP_USER" })

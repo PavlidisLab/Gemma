@@ -24,6 +24,8 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.sequenceAnalysis.BioSequenceValueObject;
 import ubic.gemma.persistence.service.BaseVoEnabledDao;
+import ubic.gemma.persistence.util.Specification;
+import ubic.gemma.persistence.util.Specifications;
 
 import java.util.Collection;
 import java.util.Map;
@@ -33,7 +35,7 @@ import java.util.Map;
  */
 public interface BioSequenceDao extends BaseVoEnabledDao<BioSequence, BioSequenceValueObject> {
 
-    BioSequence findByAccession( DatabaseEntry accession );
+    BioSequence findByAccession( Specification<DatabaseEntry> accession );
 
     /**
      * <p>

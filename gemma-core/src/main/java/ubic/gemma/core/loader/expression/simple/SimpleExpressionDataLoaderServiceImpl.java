@@ -27,7 +27,6 @@ import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.dataStructure.matrix.DoubleMatrixFactory;
 import ubic.basecode.io.ByteArrayConverter;
 import ubic.basecode.io.reader.DoubleMatrixReader;
-import ubic.gemma.core.analysis.preprocess.PreprocessingException;
 import ubic.gemma.core.analysis.preprocess.PreprocessorService;
 import ubic.gemma.core.loader.entrez.pubmed.PubMedXMLFetcher;
 import ubic.gemma.core.loader.expression.simple.model.SimpleExpressionExperimentMetaData;
@@ -50,6 +49,8 @@ import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
+
+import static ubic.gemma.persistence.util.Specifications.byIdentifiable;
 
 /**
  * Convert a simple matrix and some meta-data into an ExpressionExperiment. Used to handle flat file conversion.
@@ -357,7 +358,7 @@ public class SimpleExpressionDataLoaderServiceImpl implements SimpleExpressionDa
         if ( taxonService == null ) {
             return taxon; // for tests
         }
-        return taxonService.findOrCreate( taxon );
+        return taxonService.findOrCreate( byIdentifiable( taxon ) );
 
     }
 

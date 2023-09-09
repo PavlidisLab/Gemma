@@ -21,7 +21,6 @@ package ubic.gemma.persistence.service.association;
 import org.apache.commons.lang3.time.StopWatch;
 import org.hibernate.Criteria;
 import org.hibernate.Query;
-import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
@@ -32,6 +31,7 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.AbstractDao;
 import ubic.gemma.persistence.util.BusinessKey;
 import ubic.gemma.persistence.util.EntityUtils;
+import ubic.gemma.persistence.util.Specification;
 
 import javax.annotation.Nullable;
 import java.util.*;
@@ -49,14 +49,13 @@ public class Gene2GOAssociationDaoImpl extends AbstractDao<Gene2GOAssociation> i
     }
 
     @Override
-    public Gene2GOAssociation find( Gene2GOAssociation gene2GOAssociation ) {
-        BusinessKey.checkValidKey( gene2GOAssociation );
+    public Gene2GOAssociation find( Specification<Gene2GOAssociation> spec ) {
+        BusinessKey.checkValidG2GKey( spec );
         Criteria queryObject = this.getSessionFactory().getCurrentSession().createCriteria( Gene2GOAssociation.class );
-        BusinessKey.addRestrictions( queryObject, gene2GOAssociation );
+        BusinessKey.addG2GRestrictions( queryObject, spec );
         return ( Gene2GOAssociation ) queryObject.uniqueResult();
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     public Collection<Gene2GOAssociation> findAssociationByGene( Gene gene ) {
         return this.findByProperty( "gene", gene );

@@ -25,6 +25,7 @@ import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.model.genome.gene.GeneProductValueObject;
 import ubic.gemma.persistence.service.BaseService;
 import ubic.gemma.persistence.service.BaseVoEnabledService;
+import ubic.gemma.persistence.util.Specification;
 
 import java.util.Collection;
 
@@ -35,7 +36,7 @@ public interface GeneProductService extends BaseService<GeneProduct>, BaseVoEnab
 
     @Override
     @Secured({ "GROUP_USER" })
-    GeneProduct findOrCreate( GeneProduct geneProduct );
+    GeneProduct findOrCreate( Specification<GeneProduct> geneProduct );
 
     @Override
     @Secured({ "GROUP_USER" })

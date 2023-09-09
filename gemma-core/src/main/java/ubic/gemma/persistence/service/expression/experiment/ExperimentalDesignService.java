@@ -22,8 +22,8 @@ import org.springframework.security.access.annotation.Secured;
 import ubic.gemma.model.expression.experiment.ExperimentalDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.BaseService;
+import ubic.gemma.persistence.util.Specification;
 
-import javax.annotation.Nullable;
 import java.util.Collection;
 
 /**
@@ -33,7 +33,7 @@ public interface ExperimentalDesignService extends BaseService<ExperimentalDesig
 
     @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
-    ExperimentalDesign find( ExperimentalDesign experimentalDesign );
+    ExperimentalDesign find( Specification<ExperimentalDesign> spec );
 
     @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })

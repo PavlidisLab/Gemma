@@ -26,6 +26,7 @@ import ubic.gemma.model.common.quantitationtype.QuantitationTypeValueObject;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.AbstractFilteringVoEnabledService;
+import ubic.gemma.persistence.util.Specification;
 
 import java.util.Collection;
 import java.util.List;
@@ -61,7 +62,7 @@ public class QuantitationTypeServiceImpl extends AbstractFilteringVoEnabledServi
 
     @Override
     @Transactional(readOnly = true)
-    public QuantitationType find( ExpressionExperiment ee, QuantitationType quantitationType ) {
+    public QuantitationType find( ExpressionExperiment ee, Specification<QuantitationType> quantitationType ) {
         return this.quantitationTypeDao.find( ee, quantitationType );
     }
 

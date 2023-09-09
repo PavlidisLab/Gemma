@@ -21,6 +21,7 @@ package ubic.gemma.persistence.service.common.protocol;
 import org.springframework.security.access.annotation.Secured;
 import ubic.gemma.model.common.protocol.Protocol;
 import ubic.gemma.persistence.service.BaseImmutableService;
+import ubic.gemma.persistence.util.Specification;
 
 import javax.annotation.Nonnull;
 import java.util.Collection;
@@ -32,16 +33,16 @@ public interface ProtocolService extends BaseImmutableService<Protocol> {
 
     @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
-    Protocol find( Protocol protocol );
+    Protocol find( Specification<Protocol> spec );
 
     @Override
     @Nonnull
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
-    Protocol findOrFail( Protocol protocol );
+    Protocol findOrFail( Specification<Protocol> spec );
 
     @Override
     @Secured({ "GROUP_USER", "AFTER_ACL_READ" })
-    Protocol findOrCreate( Protocol protocol );
+    Protocol findOrCreate( Specification<Protocol> spec );
 
     @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })

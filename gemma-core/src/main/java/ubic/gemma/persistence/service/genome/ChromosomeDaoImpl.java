@@ -24,6 +24,7 @@ import org.springframework.stereotype.Repository;
 import ubic.gemma.model.genome.Chromosome;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.AbstractDao;
+import ubic.gemma.persistence.util.Specification;
 
 import java.util.Collection;
 
@@ -52,8 +53,8 @@ public class ChromosomeDaoImpl extends AbstractDao<Chromosome> implements Chromo
     }
 
     @Override
-    public Chromosome find( Chromosome entity ) {
-        Collection<Chromosome> hits = this.find( entity.getName(), entity.getSequence().getTaxon() );
+    public Chromosome find( Specification<Chromosome> spec ) {
+        Collection<Chromosome> hits = this.find( spec.getEntity().getName(), spec.getEntity().getSequence().getTaxon() );
         if ( hits.isEmpty() ) {
             return null;
         } else {

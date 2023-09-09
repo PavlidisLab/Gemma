@@ -25,6 +25,7 @@ import org.springframework.stereotype.Repository;
 import ubic.gemma.model.common.measurement.Unit;
 import ubic.gemma.persistence.service.AbstractDao;
 import ubic.gemma.persistence.util.BusinessKey;
+import ubic.gemma.persistence.util.Specification;
 
 /**
  * <p>
@@ -44,9 +45,9 @@ public class UnitDaoImpl extends AbstractDao<Unit> implements UnitDao {
     }
 
     @Override
-    public Unit find( Unit unit ) {
-        BusinessKey.checkValidKey( unit );
-        Criteria queryObject = BusinessKey.createQueryObject( this.getSessionFactory().getCurrentSession(), unit );
+    public Unit find( Specification<Unit> spec ) {
+        BusinessKey.checkValidG2GKey( spec );
+        Criteria queryObject = BusinessKey.createADQueryObject( this.getSessionFactory().getCurrentSession(), spec );
         return ( Unit ) queryObject.uniqueResult();
     }
 }

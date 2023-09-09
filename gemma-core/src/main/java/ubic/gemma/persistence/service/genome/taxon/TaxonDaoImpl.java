@@ -25,10 +25,7 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonValueObject;
 import ubic.gemma.persistence.service.AbstractFilteringVoEnabledDao;
 import ubic.gemma.persistence.service.AbstractQueryFilteringVoEnabledDao;
-import ubic.gemma.persistence.util.BusinessKey;
-import ubic.gemma.persistence.util.FilterQueryUtils;
-import ubic.gemma.persistence.util.Filters;
-import ubic.gemma.persistence.util.Sort;
+import ubic.gemma.persistence.util.*;
 
 import javax.annotation.Nullable;
 import java.text.MessageFormat;
@@ -49,21 +46,21 @@ public class TaxonDaoImpl extends AbstractQueryFilteringVoEnabledDao<Taxon, Taxo
     @Override
     public Taxon create( Taxon taxon ) {
         if ( StringUtils.isBlank( taxon.getCommonName() ) && StringUtils.isBlank( taxon.getScientificName() ) ) {
-            throw new IllegalArgumentException( "Cannot create a taxon without names: " + taxon );
+            throw new IllegalArgumentException( "Cannot create a spec without names: " + taxon );
         }
         return super.create( taxon );
     }
 
     @Override
-    public Taxon find( Taxon taxon ) {
+    public Taxon find( Specification<Taxon> spec ) {
 
-        BusinessKey.checkValidKey( taxon );
+        BusinessKey.checkValidG2GKey( spec );
 
         Criteria queryObject = this.getSessionFactory().getCurrentSession().createCriteria( Taxon.class )
                 .setReadOnly( true );
         queryObject.setReadOnly( true );
         queryObject.setFlushMode( FlushMode.MANUAL );
-        BusinessKey.addRestrictions( queryObject, taxon );
+        BusinessKey.addG2GRestrictions( queryObject, spec );
 
         return ( Taxon ) queryObject.uniqueResult();
     }
@@ -111,7 +108,7 @@ public class TaxonDaoImpl extends AbstractQueryFilteringVoEnabledDao<Taxon, Taxo
         //noinspection JpaQlInspection // the constants for aliases is messing with the inspector
         //language=HQL
         String queryString = MessageFormat.format( "select {0} "
-                + "from Taxon as {0} " // taxon
+                + "from Taxon as {0} " // spec
                 + "left join {0}.externalDatabase as ED " // external db
                 + "where {0}.id is not null ", OBJECT_ALIAS ); // needed to use formRestrictionCause()
 
@@ -135,7 +132,7 @@ public class TaxonDaoImpl extends AbstractQueryFilteringVoEnabledDao<Taxon, Taxo
         //noinspection JpaQlInspection // the constants for aliases is messing with the inspector
         //language=HQL
         String queryString = MessageFormat.format( "select count({0}) "
-                + "from Taxon as {0} " // taxon
+                + "from Taxon as {0} " // spec
                 + "left join {0}.externalDatabase as ED " // external db
                 + "where {0}.id is not null ", OBJECT_ALIAS ); // needed to use formRestrictionCause()
 

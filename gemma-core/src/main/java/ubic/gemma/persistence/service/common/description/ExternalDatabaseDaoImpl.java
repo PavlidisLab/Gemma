@@ -19,6 +19,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.persistence.service.AbstractDao;
+import ubic.gemma.persistence.util.Specification;
 
 import java.util.Collection;
 import java.util.List;
@@ -36,8 +37,8 @@ public class ExternalDatabaseDaoImpl extends AbstractDao<ExternalDatabase> imple
     }
 
     @Override
-    public ExternalDatabase find( ExternalDatabase externalDatabase ) {
-        return this.findOneByProperty( "name", externalDatabase.getName() );
+    public ExternalDatabase find( Specification<ExternalDatabase> spec ) {
+        return this.findOneByProperty( "name", spec.getEntity().getName() );
     }
 
     @Override

@@ -64,6 +64,8 @@ import ubic.gemma.persistence.util.EntityUtils;
 import java.io.IOException;
 import java.util.*;
 
+import static ubic.gemma.persistence.util.Specifications.byIdentifiable;
+
 /**
  * Update or fill in the data associated with an experiment. Cases include reprocessing data from CEL files (Affymetrix,
  * GEO only), inserting data for RNA-seq data sets but also generic cases where data didn't come from GEO and we need to
@@ -993,7 +995,7 @@ public class DataUpdaterImpl implements DataUpdater {
         assert bioAssayDimension != null;
         assert !bioAssayDimension.getBioAssays().isEmpty();
 
-        bioAssayDimension = assayDimensionService.findOrCreate( bioAssayDimension );
+        bioAssayDimension = assayDimensionService.findOrCreate( byIdentifiable( bioAssayDimension ) );
 
         assert !bioAssayDimension.getBioAssays().isEmpty();
 

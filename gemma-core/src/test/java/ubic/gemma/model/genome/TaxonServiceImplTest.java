@@ -22,9 +22,12 @@ package ubic.gemma.model.genome;
 import org.junit.Test;
 
 import ubic.gemma.core.util.test.BaseSpringContextTest;
+import ubic.gemma.persistence.util.Specification;
+import ubic.gemma.persistence.util.Specifications;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static ubic.gemma.persistence.util.Specifications.byIdentifiable;
 
 /**
  * @author paul
@@ -32,7 +35,7 @@ import static org.junit.Assert.assertNotNull;
 public class TaxonServiceImplTest extends BaseSpringContextTest {
 
     /**
-     * Test method for {@link ubic.gemma.persistence.service.genome.taxon.TaxonService#findOrCreate(Taxon)} )}.
+     * Test method for {@link ubic.gemma.persistence.service.genome.taxon.TaxonService#findOrCreate(Specification)} )}.
      * Situation where the secondary id is treated as the primary, we must not make a new taxon!
      */
     @Test
@@ -43,7 +46,7 @@ public class TaxonServiceImplTest extends BaseSpringContextTest {
         Taxon yeast = taxonService.findByCommonName( "yeast" );
         assertNotNull( yeast ); // this should be loaded automatically.
 
-        Taxon found = taxonService.findOrCreate( t );
+        Taxon found = taxonService.findOrCreate( byIdentifiable(t) );
 
         assertEquals( new Integer( 4932 ), found.getNcbiId() );
     }

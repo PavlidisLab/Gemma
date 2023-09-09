@@ -21,6 +21,7 @@ package ubic.gemma.persistence.service.common.auditAndSecurity;
 import org.springframework.security.access.annotation.Secured;
 import ubic.gemma.model.common.auditAndSecurity.Contact;
 import ubic.gemma.persistence.service.BaseService;
+import ubic.gemma.persistence.util.Specification;
 
 /**
  * @author kelsey
@@ -29,11 +30,11 @@ public interface ContactService extends BaseService<Contact> {
 
     @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ_QUIET" })
-    Contact find( Contact contact );
+    Contact find( Specification<Contact> contact );
 
     @Override
     @Secured({ "GROUP_USER" })
-    Contact findOrCreate( Contact contact );
+    Contact findOrCreate( Specification<Contact> contact );
 
     @Override
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })

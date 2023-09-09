@@ -33,6 +33,7 @@ import ubic.gemma.persistence.service.AbstractDao;
 import ubic.gemma.persistence.service.AbstractVoEnabledDao;
 import ubic.gemma.persistence.util.BusinessKey;
 import ubic.gemma.persistence.util.EntityUtils;
+import ubic.gemma.persistence.util.Specification;
 
 import javax.annotation.Nullable;
 import java.util.*;
@@ -51,39 +52,38 @@ public class BioSequenceDaoImpl extends AbstractVoEnabledDao<BioSequence, BioSeq
     }
 
     @Override
-    public BioSequence findByAccession( DatabaseEntry databaseEntry ) {
-        BusinessKey.checkValidKey( databaseEntry );
+    public BioSequence findByAccession( Specification<DatabaseEntry> databaseEntry ) {
+        BusinessKey.checkValidDatabaseEntryKey( databaseEntry );
 
         String queryString;
         List<BioSequence> results;
-        if ( databaseEntry.getId() != null ) {
+        if ( databaseEntry.getEntity().getId() != null ) {
             queryString = "select b from BioSequence b inner join fetch b.sequenceDatabaseEntry d inner join fetch d.externalDatabase e  where d=:dbe";
             //noinspection unchecked
             results = this.getSessionFactory().getCurrentSession().createQuery( queryString )
-                    .setParameter( "dbe", databaseEntry ).list();
+                    .setParameter( "dbe", databaseEntry.getEntity() ).list();
         } else {
             queryString = "select b from BioSequence b inner join fetch b.sequenceDatabaseEntry d "
                     + "inner join fetch d.externalDatabase e where d.accession = :acc and e.name = :dbName";
             //noinspection unchecked
             results = this.getSessionFactory().getCurrentSession().createQuery( queryString )
-                    .setParameter( "acc", databaseEntry.getAccession() )
-                    .setParameter( "dbName", databaseEntry.getExternalDatabase().getName() ).list();
+                    .setParameter( "acc", databaseEntry.getEntity().getAccession() )
+                    .setParameter( "dbName", databaseEntry.getEntity().getExternalDatabase().getName() ).list();
         }
 
         if ( results.size() > 1 ) {
             this.debug( null, results );
             AbstractDao.log.warn( "More than one instance of '" + BioSequence.class.getName()
-                    + "' was found when executing query for accession=" + databaseEntry.getAccession() );
+                    + "' was found when executing query for accession=" + databaseEntry.getEntity().getAccession() );
 
             // favor the one with name matching the accession.
-            for ( Object object : results ) {
-                BioSequence bs = ( BioSequence ) object;
-                if ( bs.getName().equals( databaseEntry.getAccession() ) ) {
+            for ( BioSequence bs : results ) {
+                if ( bs.getName().equals( databaseEntry.getEntity().getAccession() ) ) {
                     return bs;
                 }
             }
 
-            AbstractDao.log.error( "No biosequence really matches " + databaseEntry.getAccession() );
+            AbstractDao.log.error( "No biosequence really matches " + databaseEntry.getEntity().getAccession() );
             return null;
 
         } else if ( results.size() == 1 ) {
@@ -203,12 +203,12 @@ public class BioSequenceDaoImpl extends AbstractVoEnabledDao<BioSequence, BioSeq
 
     @SuppressWarnings("unchecked")
     @Override
-    public BioSequence find( BioSequence bioSequence ) {
+    public BioSequence find( Specification<BioSequence> bioSequence ) {
 
-        BusinessKey.checkValidKey( bioSequence );
+        BusinessKey.checkValidG2GKey( bioSequence );
 
         Criteria queryObject = BusinessKey
-                .createQueryObject( this.getSessionFactory().getCurrentSession(), bioSequence );
+                .createADQueryObject( this.getSessionFactory().getCurrentSession(), bioSequence );
         queryObject.setReadOnly( true );
         queryObject.setFlushMode( FlushMode.MANUAL );
         /*

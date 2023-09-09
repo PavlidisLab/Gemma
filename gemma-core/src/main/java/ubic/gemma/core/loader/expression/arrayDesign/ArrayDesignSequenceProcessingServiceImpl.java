@@ -23,7 +23,6 @@ import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.access.method.P;
 import org.springframework.stereotype.Component;
 import ubic.gemma.core.analysis.report.ArrayDesignReportService;
 import ubic.gemma.core.analysis.sequence.SequenceManipulation;
@@ -46,6 +45,8 @@ import ubic.gemma.persistence.service.genome.biosequence.BioSequenceService;
 
 import java.io.*;
 import java.util.*;
+
+import static ubic.gemma.persistence.util.Specifications.byIdentifiable;
 
 /**
  * Handles collapsing the sequences, attaching sequences to DesignElements, either from provided input or via a fetch.
@@ -650,14 +651,14 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
 
         BioSequence existing;
 
-        existing = bioSequenceService.findByAccession( sequenceDatabaseEntry );
+        existing = bioSequenceService.findByAccession( byIdentifiable( sequenceDatabaseEntry ) );
 
         BioSequence result;
         if ( existing == null ) {
             if ( ArrayDesignSequenceProcessingServiceImpl.log.isDebugEnabled() )
                 ArrayDesignSequenceProcessingServiceImpl.log.debug( "Find (or creating) new sequence " + found );
 
-            result = bioSequenceService.find( found ); // there still might be a match.
+            result = bioSequenceService.find( byIdentifiable( found ) ); // there still might be a match.
 
             if ( result == null ) {
                 result = bioSequenceService.create( found );
@@ -722,7 +723,7 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
             BioSequence template = BioSequence.Factory.newInstance();
             template.setTaxon( taxon );
             template.setName( id );
-            BioSequence seq = bioSequenceService.find( template );
+            BioSequence seq = bioSequenceService.find( byIdentifiable( template ) );
             if ( seq != null ) {
                 seq = bioSequenceService.thaw( seq );
                 found.put( id, seq );

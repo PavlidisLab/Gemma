@@ -1,8 +1,10 @@
 package ubic.gemma.persistence.service;
 
 import ubic.gemma.model.common.Identifiable;
+import ubic.gemma.persistence.util.Specification;
 
 import javax.annotation.CheckReturnValue;
+import javax.annotation.Nullable;
 import java.util.Collection;
 
 /**
@@ -16,11 +18,11 @@ public interface BaseImmutableService<O extends Identifiable> extends BaseReadOn
     /**
      * Does a search for the entity in the persistent storage, and if not found, creates it.
      *
-     * @param entity the entity to look for, and create if not found.
+     * @param spec the entity to look for, and create if not found.
      * @return the entity retrieved from the persistent storage, either found or created.
      */
     @CheckReturnValue
-    O findOrCreate( O entity );
+    O findOrCreate( Specification<O> spec );
 
     /**
      * Creates all the given entities in a persistent storage

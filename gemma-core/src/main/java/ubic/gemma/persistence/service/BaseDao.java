@@ -19,6 +19,7 @@
 package ubic.gemma.persistence.service;
 
 import ubic.gemma.model.common.Identifiable;
+import ubic.gemma.persistence.util.Specification;
 
 import javax.annotation.*;
 import java.io.Serializable;
@@ -197,7 +198,7 @@ public interface BaseDao<T> {
      */
     @Nullable
     @CheckReturnValue
-    T find( T entity );
+    T find( Specification<T> entity );
 
     /**
      * Calls the find method, and if this method returns null, creates a new instance in the persistent storage.
@@ -206,5 +207,5 @@ public interface BaseDao<T> {
      * @return the given entity, guaranteed to be representing an entity present in the persistent storage.
      */
     @CheckReturnValue
-    T findOrCreate( T entity );
+    T findOrCreate( Specification<T> entity );
 }
