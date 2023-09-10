@@ -1381,9 +1381,7 @@ public class ExpressionExperimentServiceImpl
     @Override
     @Transactional
     public void remove( Collection<ExpressionExperiment> entities ) {
-        for ( ExpressionExperiment ee : entities ) {
-            remove( ee );
-        }
+        entities.forEach( this::remove );
     }
 
     @Override

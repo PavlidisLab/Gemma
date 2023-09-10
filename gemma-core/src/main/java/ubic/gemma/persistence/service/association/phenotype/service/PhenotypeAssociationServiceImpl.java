@@ -52,16 +52,6 @@ public class PhenotypeAssociationServiceImpl extends AbstractService<PhenotypeAs
     }
 
     /**
-     * @param pa Using an phenotypeAssociation id removes the evidence
-     */
-    @Override
-    @Transactional
-    public void remove( PhenotypeAssociation pa ) {
-        pa.getGene().getPhenotypeAssociations().remove( pa );
-        super.remove( pa );
-    }
-
-    /**
      * @param taxon               taxon
      * @param externalDatabaseIds external db ids
      * @param phenotypesValueUris phenotype value uris

@@ -61,6 +61,22 @@ public class ExperimentalFactorServiceImpl
     }
 
     @Override
+    @Transactional
+    public void remove( Collection<ExperimentalFactor> experimentalFactors ) {
+        experimentalFactors.forEach( this::remove );
+    }
+
+    @Override
+    public void remove( Long id ) {
+        throw new UnsupportedOperationException( "Removing an experimental factor by ID is not supported" );
+    }
+
+    @Override
+    public void removeAllInBatch() {
+        throw new UnsupportedOperationException( "Removing all experimental factors in batch is not supported." );
+    }
+
+    @Override
     @Transactional(readOnly = true)
     public ExperimentalFactor thaw( ExperimentalFactor ef ) {
         return this.experimentalFactorDao.thaw( ef );
