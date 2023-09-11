@@ -185,12 +185,6 @@ public class DifferentialExpressionAnalysisServiceImpl extends AbstractService<D
     }
 
     @Override
-    @Transactional
-    public void update( ExpressionAnalysisResultSet a ) {
-        this.expressionAnalysisResultSetDao.update( a );
-    }
-
-    @Override
     @Transactional(readOnly = true)
     public boolean canDelete( DifferentialExpressionAnalysis differentialExpressionAnalysis ) {
         return this.expressionAnalysisResultSetDao.canDelete( differentialExpressionAnalysis );
@@ -231,9 +225,6 @@ public class DifferentialExpressionAnalysisServiceImpl extends AbstractService<D
         Collection<GeneDifferentialExpressionMetaAnalysis> metas = this.geneDiffExMetaAnalysisDao
                 .findByExperiment( toDelete.getExperimentAnalyzed() );
         geneDiffExMetaAnalysisDao.remove( metas );
-
-        // Remove result sets
-        this.removeResultSets( ensureInSession( toDelete ) );
 
         // Remove the DEA
         super.remove( toDelete );
@@ -295,30 +286,5 @@ public class DifferentialExpressionAnalysisServiceImpl extends AbstractService<D
     @Transactional(readOnly = true)
     public Collection<Long> getExperimentsWithAnalysis( Taxon taxon ) {
         return this.differentialExpressionAnalysisDao.getExperimentsWithAnalysis( taxon );
-
     }
-
-    private void removeResultSets( DifferentialExpressionAnalysis toDelete ) {
-        Hibernate.initialize( toDelete.getResultSets() );
-        Collection<ExpressionAnalysisResultSet> rss = toDelete.getResultSets();
-        log.info( "Removing result sets..." );
-
-        // Wipe references
-        toDelete.setResultSets( new HashSet<ExpressionAnalysisResultSet>() );
-        this.update( toDelete );
-
-        StopWatch sw = new StopWatch();
-        sw.start();
-        int rsCnt = 0;
-
-        // remove from database
-        for ( ExpressionAnalysisResultSet rs : rss ) {
-            this.expressionAnalysisResultSetDao.remove( rs );
-            rsCnt++;
-        }
-
-        sw.stop();
-        log.info( "Removed in " + rsCnt + " result sets." );
-    }
-
 }

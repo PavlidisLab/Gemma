@@ -54,9 +54,6 @@ public class AnalysisResultSetsWebServiceTest extends BaseSpringContextTest {
     private DifferentialExpressionAnalysisService differentialExpressionAnalysisService;
 
     @Autowired
-    private ExpressionAnalysisResultSetService expressionAnalysisResultSetService;
-
-    @Autowired
     private DatabaseEntryService databaseEntryService;
 
     @Autowired
@@ -116,7 +113,6 @@ public class AnalysisResultSetsWebServiceTest extends BaseSpringContextTest {
 
     @After
     public void tearDown() {
-        expressionAnalysisResultSetService.remove( dears );
         differentialExpressionAnalysisService.remove( dea );
         expressionExperimentService.remove( ee );
         databaseEntryService.remove( databaseEntry2 );

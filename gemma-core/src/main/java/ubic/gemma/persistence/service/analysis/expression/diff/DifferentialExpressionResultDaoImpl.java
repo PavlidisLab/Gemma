@@ -120,6 +120,16 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
     }
 
     @Override
+    public Collection<DifferentialExpressionAnalysisResult> create( Collection<DifferentialExpressionAnalysisResult> entities ) {
+        throw new UnsupportedOperationException( "Results cannot be created directly, use DifferentialExpressionAnalysisDao.create() instead." );
+    }
+
+    @Override
+    public void remove( DifferentialExpressionAnalysisResult entity ) {
+        throw new UnsupportedOperationException( "Results cannot be removed directly, use DifferentialExpressionAnalysisDao.remove() instead." );
+    }
+
+    @Override
     public Map<ExpressionExperimentValueObject, List<DifferentialExpressionValueObject>> find( Gene gene,
             Collection<Long> experimentsAnalyzed, double threshold, int limit ) {
 
@@ -919,33 +929,6 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
     @Override
     public Collection<DifferentialExpressionAnalysisResult> loadAll() {
         throw new UnsupportedOperationException( "Sorry, that would be nuts" );
-    }
-
-    @Override
-    public void remove( Collection<DifferentialExpressionAnalysisResult> entities ) {
-        if ( entities == null || entities.size() < 1 ) return;
-        Collection<Long> cIds = new HashSet<>();
-
-        // Read contrast ids and wipe references
-        for ( DifferentialExpressionAnalysisResult r : entities ) {
-            cIds.addAll( EntityUtils.getIds( r.getContrasts() ) );
-            r.setContrasts( new HashSet<ContrastResult>() );
-        }
-
-        // Remove contrasts
-        if ( cIds.size() > 0 ) {
-            AbstractDao.log.info( "Removing contrasts..." );
-            this.getSessionFactory().getCurrentSession().createQuery( "delete from ContrastResult e where e.id in (:ids)" )
-                    .setParameterList( "ids", cIds )
-                    .executeUpdate();
-
-        }
-
-        // Remove results
-        AbstractDao.log.info( "Removing DEA results" );
-        this.getSessionFactory().getCurrentSession()
-                .createQuery( "delete from DifferentialExpressionAnalysisResult e where e.id in (:ids)" )
-                .setParameterList( "ids", EntityUtils.getIds( entities ) ).executeUpdate();
     }
 
     /**

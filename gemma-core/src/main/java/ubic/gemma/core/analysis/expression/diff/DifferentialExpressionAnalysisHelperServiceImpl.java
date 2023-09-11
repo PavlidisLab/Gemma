@@ -43,9 +43,6 @@ public class DifferentialExpressionAnalysisHelperServiceImpl implements Differen
     private DifferentialExpressionAnalysisService differentialExpressionAnalysisService = null;
 
     @Autowired
-    private ExpressionAnalysisResultSetDao expressionAnalysisResultSetDao;
-
-    @Autowired
     private Persister persisterHelper = null;
 
     @Override
