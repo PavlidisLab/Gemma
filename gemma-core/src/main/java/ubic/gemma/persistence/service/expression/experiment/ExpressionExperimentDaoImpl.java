@@ -122,8 +122,8 @@ public class ExpressionExperimentDaoImpl
 
         //language=HQL
         final String queryString =
-                "select distinct ee.id from ExpressionExperiment as ee " + "inner join ee.bioAssays as ba "
-                        + "inner join ba.sampleUsed as sample where sample.sourceTaxon = :taxon and ee.id in (:ids) ";
+                "select ee.id from ExpressionExperiment as ee " + "inner join ee.bioAssays as ba "
+                        + "inner join ba.sampleUsed as sample where sample.sourceTaxon = :taxon and ee.id in (:ids) group by ee";
 
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession().createQuery( queryString ).setParameter( "taxon", taxon )
@@ -183,8 +183,8 @@ public class ExpressionExperimentDaoImpl
     public Collection<ExpressionExperiment> findByBibliographicReference( Long bibRefID ) {
         //language=HQL
         final String queryString =
-                "select distinct ee FROM ExpressionExperiment as ee left join ee.otherRelevantPublications as eeO"
-                        + " WHERE ee.primaryPublication.id = :bibID OR (eeO.id = :bibID) ";
+                "select ee FROM ExpressionExperiment as ee left join ee.otherRelevantPublications as eeO"
+                        + " WHERE ee.primaryPublication.id = :bibID OR (eeO.id = :bibID) group by ee";
 
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession().createQuery( queryString ).setParameter( "bibID", bibRefID )
@@ -196,7 +196,7 @@ public class ExpressionExperimentDaoImpl
 
         //language=HQL
         final String queryString =
-                "select distinct ee from ExpressionExperiment as ee inner join ee.bioAssays as ba " + "where ba = :ba";
+                "select ee from ExpressionExperiment as ee inner join ee.bioAssays as ba " + "where ba = :ba group by ee";
         List list = this.getSessionFactory().getCurrentSession().createQuery( queryString ).setParameter( "ba", ba )
                 .list();
 
@@ -219,8 +219,8 @@ public class ExpressionExperimentDaoImpl
     public ExpressionExperiment findByBioMaterial( BioMaterial bm ) {
 
         //language=HQL
-        final String queryString = "select distinct ee from ExpressionExperiment as ee "
-                + "inner join ee.bioAssays as ba inner join ba.sampleUsed as sample where sample = :bm";
+        final String queryString = "select ee from ExpressionExperiment as ee "
+                + "inner join ee.bioAssays as ba inner join ba.sampleUsed as sample where sample = :bm group by ee";
 
         List list = this.getSessionFactory().getCurrentSession().createQuery( queryString ).setParameter( "bm", bm )
                 .list();
@@ -245,8 +245,8 @@ public class ExpressionExperimentDaoImpl
             return new HashMap<>();
         }
         //language=HQL
-        final String queryString = "select distinct ee, sample from ExpressionExperiment as ee "
-                + "inner join ee.bioAssays as ba inner join ba.sampleUsed as sample where sample in (:bms) group by ee";
+        final String queryString = "select ee, sample from ExpressionExperiment as ee "
+                + "inner join ee.bioAssays as ba inner join ba.sampleUsed as sample where sample in (:bms) group by ee, sample";
 
         Map<ExpressionExperiment, BioMaterial> results = new HashMap<>();
         Collection<BioMaterial> batch = new HashSet<>();
@@ -309,8 +309,8 @@ public class ExpressionExperimentDaoImpl
     public ExpressionExperiment findByFactor( ExperimentalFactor ef ) {
         //language=HQL
         final String queryString =
-                "select distinct ee from ExpressionExperiment as ee inner join ee.experimentalDesign ed "
-                        + "inner join ed.experimentalFactors ef where ef = :ef ";
+                "select ee from ExpressionExperiment as ee inner join ee.experimentalDesign ed "
+                        + "inner join ed.experimentalFactors ef where ef = :ef group by ee";
 
         List results = this.getSessionFactory().getCurrentSession().createQuery( queryString ).setParameter( "ef", ef )
                 .list();
@@ -331,8 +331,8 @@ public class ExpressionExperimentDaoImpl
     public ExpressionExperiment findByFactorValue( Long factorValueId ) {
         //language=HQL
         final String queryString =
-                "select distinct ee from ExpressionExperiment as ee inner join ee.experimentalDesign ed "
-                        + "inner join ed.experimentalFactors ef inner join ef.factorValues fv where fv.id = :fvId ";
+                "select ee from ExpressionExperiment as ee inner join ee.experimentalDesign ed "
+                        + "inner join ed.experimentalFactors ef inner join ef.factorValues fv where fv.id = :fvId group by ee";
 
         //noinspection unchecked
         List<ExpressionExperiment> results = this.getSessionFactory().getCurrentSession().createQuery( queryString )
@@ -352,9 +352,9 @@ public class ExpressionExperimentDaoImpl
             return new HashMap<>();
 
         //language=HQL
-        final String queryString = "select distinct ee, f from ExpressionExperiment ee "
+        final String queryString = "select ee, f from ExpressionExperiment ee "
                 + " join ee.experimentalDesign ed join ed.experimentalFactors ef join ef.factorValues f"
-                + " where f in (:fvs) group by ee";
+                + " where f in (:fvs) group by ee, f";
         Map<ExpressionExperiment, FactorValue> results = new HashMap<>();
         Collection<FactorValue> batch = new HashSet<>();
         for ( FactorValue o : fvs ) {
