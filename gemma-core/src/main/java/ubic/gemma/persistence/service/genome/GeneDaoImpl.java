@@ -74,7 +74,7 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
     @Override
     public Gene findByAccession( String accession, @Nullable ExternalDatabase source ) {
         Collection<Gene> genes = new HashSet<>();
-        final String accessionQuery = "select g from Gene g inner join g.accessions a where a.accession = :accession";
+        final String accessionQuery = "select distinct g from Gene g inner join g.accessions a where a.accession = :accession";
         final String externalDbQuery = accessionQuery + " and a.externalDatabase = :source";
 
         if ( source == null ) {
@@ -106,11 +106,8 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
                         .list();
             }
         }
-        if ( genes.size() > 0 ) {
-            return genes.iterator().next();
-        }
-        return null;
 
+        return genes.iterator().next();
     }
 
     /**
@@ -162,7 +159,7 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
     @Override
     public Gene findByOfficialSymbol( String symbol, Taxon taxon ) {
         return ( Gene ) this.getSessionFactory().getCurrentSession()
-                .createQuery( "select distinct g from Gene as g where g.officialSymbol = :symbol and g.taxon = :taxon" )
+                .createQuery( "select g from Gene as g where g.officialSymbol = :symbol and g.taxon = :taxon" )
                 .setParameter( "symbol", symbol ).setParameter( "taxon", taxon ).uniqueResult();
     }
 
@@ -242,11 +239,15 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
     @Override
     public Collection<CompositeSequence> getCompositeSequences( Gene gene, ArrayDesign arrayDesign ) {
         //language=HQL
-        final String queryString =
-                "select distinct cs from Gene as gene inner join gene.products gp,  BioSequence2GeneProduct"
-                        + " as bs2gp, CompositeSequence as cs where gp=bs2gp.geneProduct "
-                        + " and cs.biologicalCharacteristic=bs2gp.bioSequence "
-                        + " and gene = :gene and cs.arrayDesign = :arrayDesign ";
+        final String queryString = "select cs from Gene as gene "
+                + "inner join gene.products gp, "
+                + "BioSequence2GeneProduct as bs2gp, "
+                + "CompositeSequence as cs "
+                + "where gp=bs2gp.geneProduct "
+                + "and cs.biologicalCharacteristic=bs2gp.bioSequence "
+                + "and gene = :gene "
+                + "and cs.arrayDesign = :arrayDesign "
+                + "group by cs";
 
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession()
@@ -265,9 +266,13 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
     public Collection<CompositeSequence> getCompositeSequencesById( long id ) {
         //language=HQL
         final String queryString =
-                "select distinct cs from Gene as gene  inner join gene.products as gp, BioSequence2GeneProduct "
-                        + " as bs2gp , CompositeSequence as cs where gp=bs2gp.geneProduct "
-                        + " and cs.biologicalCharacteristic=bs2gp.bioSequence " + " and gene.id = :id ";
+                "select cs from Gene as gene inner join gene.products as gp, "
+                        + "BioSequence2GeneProduct as bs2gp, "
+                        + "CompositeSequence as cs "
+                        + "where gp=bs2gp.geneProduct "
+                        + "and cs.biologicalCharacteristic=bs2gp.bioSequence "
+                        + "and gene.id = :id "
+                        + "group by cs";
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession().createQuery( queryString )
                 .setParameter( "id", id )
@@ -416,7 +421,7 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
             return gene;
 
         return ( Gene ) this.getSessionFactory().getCurrentSession()
-                .createQuery( "select distinct g from Gene g left join fetch g.taxon where g.id=:gid" )
+                .createQuery( "select g from Gene g left join fetch g.taxon where g.id=:gid" )
                 .setParameter( "gid", gene.getId() )
                 .uniqueResult();
     }
@@ -579,7 +584,7 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
     private Collection<Gene> doLoadThawedLite( Collection<Long> ids ) {
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession().createQuery(
-                "select g from Gene g left join fetch g.aliases left join fetch g.accessions acc "
+                "select distinct g from Gene g left join fetch g.aliases left join fetch g.accessions acc "
                         + "join fetch g.taxon t left join fetch g.products gp left join fetch g.multifunctionality "
                         + "where g.id in (:gIds)" ).setParameterList( "gIds", ids ).list();
     }
@@ -599,7 +604,6 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
             @Nullable final String strand ) {
 
         // the 'fetch'es are so we don't get lazy loads (typical applications of this method)
-        //language=none // Prevents unresolvable missing value warnings.
         String query = "select distinct g from Gene as g "
                 + "inner join fetch g.products prod  inner join fetch prod.physicalLocation pl inner join fetch pl.chromosome "
                 + "where ((pl.nucleotide >= :start AND (pl.nucleotide + pl.nucleotideLength) <= :end) "
