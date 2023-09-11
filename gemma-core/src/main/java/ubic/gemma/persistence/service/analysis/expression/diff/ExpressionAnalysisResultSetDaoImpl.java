@@ -63,6 +63,11 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilterin
     }
 
     @Override
+    public ExpressionAnalysisResultSet create( ExpressionAnalysisResultSet entity ) {
+        throw new UnsupportedOperationException( "Individual result sets cannot be created directly, use DifferentialExpressionAnalysisDao.create() instead." );
+    }
+
+    @Override
     public ExpressionAnalysisResultSet loadWithResultsAndContrasts( Long id ) {
         StopWatch timer = StopWatch.createStarted();
         ExpressionAnalysisResultSet ears = ( ExpressionAnalysisResultSet ) getSessionFactory().getCurrentSession()
