@@ -753,10 +753,7 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
 
         Collection<ContrastResult> contrasts = result.getContrasts();
         for ( ContrastResult contrast : contrasts ) {
-            FactorValue f = contrast.getFactorValue();
-            Hibernate.initialize( f );
-            //noinspection ResultOfMethodCallIgnored
-            f.getIsBaseline();
+            Hibernate.initialize( contrast.getFactorValue() );
         }
     }
 

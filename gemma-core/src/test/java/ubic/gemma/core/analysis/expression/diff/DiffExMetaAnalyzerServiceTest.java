@@ -30,7 +30,6 @@ import ubic.gemma.core.loader.expression.simple.ExperimentalDesignImporter;
 import ubic.gemma.core.loader.genome.gene.ExternalFileGeneLoaderService;
 import ubic.gemma.core.loader.util.AlreadyExistsInSystemException;
 import ubic.gemma.core.util.test.category.SlowTest;
-import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.analysis.expression.diff.*;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -38,6 +37,7 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentDetailsValueObject;
+import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.TableMaintenanceUtil;
@@ -566,8 +566,8 @@ public class DiffExMetaAnalyzerServiceTest extends AbstractGeoServiceTest {
         StringBuilder buf = new StringBuilder( "\n" );
         for ( DifferentialExpressionAnalysisResult rr : r.getResultsUsed() ) {
             buf.append( String.format( "%s  %s fv=%d  p=%.4g t=%.2f id=%d", gene, rr.getProbe().getName(),
-                    rr.getContrasts().iterator().next().getFactorValue().getId(), rr.getPvalue(),
-                    rr.getContrasts().iterator().next().getCoefficient(), rr.getId() ) ).append( "\n" );
+                    rr.getContrasts().stream().findAny().map( ContrastResult::getFactorValue ).map( FactorValue::getId ).orElse( null ),
+                    rr.getPvalue(), rr.getContrasts().iterator().next().getCoefficient(), rr.getId() ) ).append( "\n" );
         }
         return buf.toString();
     }

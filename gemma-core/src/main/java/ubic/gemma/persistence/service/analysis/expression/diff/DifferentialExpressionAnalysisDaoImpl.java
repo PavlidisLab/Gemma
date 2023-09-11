@@ -20,6 +20,7 @@ package ubic.gemma.persistence.service.analysis.expression.diff;
 
 import org.apache.commons.collections4.ListUtils;
 import org.apache.commons.lang3.time.StopWatch;
+import org.apache.commons.lang3.tuple.Pair;
 import org.hibernate.*;
 import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
 import org.hibernate.internal.SessionFactoryImpl;
@@ -86,6 +87,58 @@ class DifferentialExpressionAnalysisDaoImpl extends SingleExperimentAnalysisDaoB
      */
     @Override
     public DifferentialExpressionAnalysis create( DifferentialExpressionAnalysis entity ) {
+        for ( ExpressionAnalysisResultSet rs : entity.getResultSets() ) {
+            Set<CompositeSequence> expectedProbes = rs.getResults().stream()
+                    .map( DifferentialExpressionAnalysisResult::getProbe )
+                    .collect( Collectors.toSet() );
+            // cannot use a set here because that would collapse duplicates
+            List<Pair<FactorValue, FactorValue>> expectedContrasts = rs.getResults().stream().findAny()
+                    .map( DifferentialExpressionAnalysisResult::getContrasts )
+                    .map( cr -> cr.stream().map( cr2 -> Pair.of( cr2.getFactorValue(), cr2.getSecondFactorValue() ) ).collect( Collectors.toList() ) )
+                    .orElse( Collections.emptyList() );
+            if ( rs.getAnalysis() != entity ) {
+                throw new IllegalArgumentException( "The result set is not associated to its analysis." );
+            }
+            if ( rs.getPvalueDistribution() == null ) {
+                throw new IllegalArgumentException( "The result set must have a P-value distribution." );
+            }
+            if ( rs.getResults().size() != expectedProbes.size() ) {
+                throw new IllegalArgumentException();
+            }
+            for ( CompositeSequence cs : expectedProbes ) {
+                boolean found = false;
+                for ( DifferentialExpressionAnalysisResult result : rs.getResults() ) {
+                    if ( result.getProbe() == cs ) {
+                        found = true;
+                        break;
+                    }
+                }
+                if ( !found ) {
+                    throw new IllegalArgumentException( String.format( "The expected probe %s was not found in %s.", cs, rs ) );
+                }
+            }
+            for ( DifferentialExpressionAnalysisResult result : rs.getResults() ) {
+                if ( result.getResultSet() != rs ) {
+                    throw new IllegalArgumentException( String.format( "%s is not associated to its result set.", result ) );
+                }
+                if ( result.getContrasts().size() != expectedContrasts.size() ) {
+                    throw new IllegalArgumentException( String.format( "%s is expected to have %d contrasts.", result, expectedContrasts.size() ) );
+                }
+                for ( Pair<FactorValue, FactorValue> ef : expectedContrasts ) {
+                    boolean found = false;
+                    for ( ContrastResult cr : result.getContrasts() ) {
+                        if ( cr.getFactorValue() == ef.getLeft() && cr.getSecondFactorValue() == ef.getRight() ) {
+                            found = true;
+                            break;
+                        }
+                    }
+                    if ( !found ) {
+                        throw new IllegalArgumentException( String.format( "The expected factor value pair %s was not found in %s.", ef, result ) );
+                    }
+                }
+            }
+        }
+
         // create the analysis, result sets, pvalue distributions, etc.
         DifferentialExpressionAnalysis finalEntity = super.create( entity );
 
@@ -139,7 +192,8 @@ class DifferentialExpressionAnalysisDaoImpl extends SingleExperimentAnalysisDaoB
         return finalEntity;
     }
 
-    private void ensureExpectedRowsAreInserted( PreparedStatement statement, int[] batchStatus ) throws HibernateException, SQLException {
+    private void ensureExpectedRowsAreInserted( PreparedStatement statement, int[] batchStatus ) throws
+            HibernateException, SQLException {
         int i = 0;
         for ( int bs : batchStatus ) {
             Expectations.BASIC.verifyOutcome( bs, statement, i++ );
@@ -573,7 +627,8 @@ class DifferentialExpressionAnalysisDaoImpl extends SingleExperimentAnalysisDaoB
     }
 
     @Override
-    public Map<BioAssaySet, Collection<DifferentialExpressionAnalysis>> findByExperiments( Collection<? extends BioAssaySet> experiments ) {
+    public Map<BioAssaySet, Collection<DifferentialExpressionAnalysis>> findByExperiments( Collection<? extends
+            BioAssaySet> experiments ) {
         Collection<DifferentialExpressionAnalysis> results = new HashSet<>();
 
         //noinspection unchecked
