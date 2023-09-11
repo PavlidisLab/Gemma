@@ -361,6 +361,13 @@ public interface ArrayDesignService extends CuratableService<ArrayDesign, ArrayD
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     void deleteGeneProductAlignmentAssociations( ArrayDesign arrayDesign );
 
-    @Secured({ "GROUP_ADMIN", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
+    /**
+     * No need for ACL_VALUE_OBJECT_COLLECTION_READ because the filtering is done in the query.
+     * @see ArrayDesignDao#loadBlacklistedValueObjects(Filters, Sort, int, int)
+     */
+    @Secured("GROUP_ADMIN")
     Slice<ArrayDesignValueObject> loadBlacklistedValueObjects( @Nullable Filters filters, @Nullable Sort sort, int offset, int limit );
+
+    @Secured("IS_AUTHENTICATED_ANONYMOUSLY")
+    Collection<ArrayDesignValueObject> loadValueObjectsWithCache( @Nullable Filters filters, @Nullable Sort sort );
 }
