@@ -37,37 +37,7 @@ public class DifferentialExpressionAnalysisDaoTest extends BaseDatabaseTest {
 
     @Test
     public void testCreateAnalysisWithResultSetAndPvalueDistribution() {
-        DifferentialExpressionAnalysis analysis = new DifferentialExpressionAnalysis();
-        Taxon taxon = new Taxon();
-        sessionFactory.getCurrentSession().persist( taxon );
-        ArrayDesign ad = new ArrayDesign();
-        ad.setPrimaryTaxon( taxon );
-        List<CompositeSequence> probes = new ArrayList<>( 100 );
-        for ( int i = 0; i < 100; i++ ) {
-            CompositeSequence cs = CompositeSequence.Factory.newInstance( "cs" + i );
-            cs.setArrayDesign( ad );
-            ad.getCompositeSequences().add( cs );
-            probes.add( cs );
-        }
-        sessionFactory.getCurrentSession().persist( ad );
-        for ( int j = 0; j < 3; j++ ) {
-            ExpressionAnalysisResultSet resultSet = new ExpressionAnalysisResultSet();
-            resultSet.setAnalysis( analysis );
-            PvalueDistribution pvalueDist = new PvalueDistribution();
-            pvalueDist.setNumBins( 2 );
-            pvalueDist.setBinCounts( new byte[2] );
-            for ( int i = 0; i < 100; i++ ) {
-                DifferentialExpressionAnalysisResult der = new DifferentialExpressionAnalysisResult();
-                der.setProbe( probes.get( i ) );
-                der.setResultSet( resultSet );
-                der.getContrasts().add( ContrastResult.Factory.newInstance() );
-                der.getContrasts().add( ContrastResult.Factory.newInstance() );
-                resultSet.getResults().add( der );
-            }
-            resultSet.setPvalueDistribution( pvalueDist );
-            analysis.getResultSets().add( resultSet );
-        }
-        analysis = differentialExpressionAnalysisDao.create( analysis );
+        DifferentialExpressionAnalysis analysis = createAnalysis( 3, 100, 2 );
         assertNotNull( analysis.getId() );
         assertEquals( 3, analysis.getResultSets().size() );
         for ( ExpressionAnalysisResultSet resultSet : analysis.getResultSets() ) {
@@ -106,18 +76,7 @@ public class DifferentialExpressionAnalysisDaoTest extends BaseDatabaseTest {
     @Test(expected = IllegalArgumentException.class)
     public void testCreateInvalidAnalysis() {
         DifferentialExpressionAnalysis analysis = new DifferentialExpressionAnalysis();
-        Taxon taxon = new Taxon();
-        sessionFactory.getCurrentSession().persist( taxon );
-        ArrayDesign ad = new ArrayDesign();
-        ad.setPrimaryTaxon( taxon );
-        List<CompositeSequence> probes = new ArrayList<>( 100 );
-        for ( int i = 0; i < 100; i++ ) {
-            CompositeSequence cs = CompositeSequence.Factory.newInstance( "cs" + i );
-            cs.setArrayDesign( ad );
-            ad.getCompositeSequences().add( cs );
-            probes.add( cs );
-        }
-        sessionFactory.getCurrentSession().persist( ad );
+        List<CompositeSequence> probes = createPlatform( 100 );
         for ( int j = 0; j < 3; j++ ) {
             ExpressionAnalysisResultSet resultSet = new ExpressionAnalysisResultSet();
             resultSet.setAnalysis( analysis );
@@ -142,57 +101,63 @@ public class DifferentialExpressionAnalysisDaoTest extends BaseDatabaseTest {
 
     @Test
     public void testCreateAnalysisWithoutResults() {
+        DifferentialExpressionAnalysis analysis = createAnalysis( 3, 0, 2 );
+        assertNotNull( analysis.getId() );
+        for ( ExpressionAnalysisResultSet rs : analysis.getResultSets() ) {
+            assertEquals( 0, rs.getResults().size() );
+        }
+    }
+
+    @Test
+    public void testCreateAnalysisWithoutContrasts() {
+        DifferentialExpressionAnalysis analysis = createAnalysis( 2, 100, 0 );
+        assertNotNull( analysis.getId() );
+        for ( ExpressionAnalysisResultSet rs : analysis.getResultSets() ) {
+            assertEquals( 100, rs.getResults().size() );
+            for ( DifferentialExpressionAnalysisResult result : rs.getResults() ) {
+                assertEquals( 0, result.getContrasts().size() );
+            }
+        }
+    }
+
+    private DifferentialExpressionAnalysis createAnalysis( int numResultSets, int numResults, int numContrasts ) {
         DifferentialExpressionAnalysis analysis = new DifferentialExpressionAnalysis();
-        Taxon taxon = new Taxon();
-        sessionFactory.getCurrentSession().persist( taxon );
-        ArrayDesign ad = new ArrayDesign();
-        ad.setPrimaryTaxon( taxon );
-        sessionFactory.getCurrentSession().persist( ad );
-        for ( int j = 0; j < 3; j++ ) {
+        List<CompositeSequence> probes = createPlatform( numResults );
+        for ( int j = 0; j < numResultSets; j++ ) {
             ExpressionAnalysisResultSet resultSet = new ExpressionAnalysisResultSet();
             resultSet.setAnalysis( analysis );
             PvalueDistribution pvalueDist = new PvalueDistribution();
             pvalueDist.setNumBins( 2 );
             pvalueDist.setBinCounts( new byte[2] );
+            for ( int i = 0; i < numResults; i++ ) {
+                DifferentialExpressionAnalysisResult der = new DifferentialExpressionAnalysisResult();
+                der.setProbe( probes.get( i ) );
+                der.setResultSet( resultSet );
+                for ( int k = 0; k < numContrasts; k++ ) {
+                    der.getContrasts().add( ContrastResult.Factory.newInstance() );
+                }
+                resultSet.getResults().add( der );
+            }
             resultSet.setPvalueDistribution( pvalueDist );
             analysis.getResultSets().add( resultSet );
         }
-        //noinspection ResultOfMethodCallIgnored
-        differentialExpressionAnalysisDao.create( analysis );
+        return differentialExpressionAnalysisDao.create( analysis );
     }
 
-    @Test
-    public void testCreateAnalysisWithoutContrasts() {
-        DifferentialExpressionAnalysis analysis = new DifferentialExpressionAnalysis();
+    private List<CompositeSequence> createPlatform( int numProbes ) {
         Taxon taxon = new Taxon();
         sessionFactory.getCurrentSession().persist( taxon );
         ArrayDesign ad = new ArrayDesign();
         ad.setPrimaryTaxon( taxon );
-        List<CompositeSequence> probes = new ArrayList<>( 100 );
-        for ( int i = 0; i < 100; i++ ) {
+        List<CompositeSequence> probes = new ArrayList<>( numProbes );
+        for ( int i = 0; i < numProbes; i++ ) {
             CompositeSequence cs = CompositeSequence.Factory.newInstance( "cs" + i );
             cs.setArrayDesign( ad );
             ad.getCompositeSequences().add( cs );
             probes.add( cs );
         }
         sessionFactory.getCurrentSession().persist( ad );
-        for ( int j = 0; j < 3; j++ ) {
-            ExpressionAnalysisResultSet resultSet = new ExpressionAnalysisResultSet();
-            resultSet.setAnalysis( analysis );
-            PvalueDistribution pvalueDist = new PvalueDistribution();
-            pvalueDist.setNumBins( 2 );
-            pvalueDist.setBinCounts( new byte[2] );
-            resultSet.setPvalueDistribution( pvalueDist );
-            for ( int i = 0; i < 100; i++ ) {
-                DifferentialExpressionAnalysisResult der = new DifferentialExpressionAnalysisResult();
-                der.setProbe( probes.get( i ) );
-                der.setResultSet( resultSet );
-                resultSet.getResults().add( der );
-            }
-            analysis.getResultSets().add( resultSet );
-        }
-        //noinspection ResultOfMethodCallIgnored
-        differentialExpressionAnalysisDao.create( analysis );
+        return probes;
     }
 
     private DifferentialExpressionAnalysis reload( DifferentialExpressionAnalysis analysis ) {

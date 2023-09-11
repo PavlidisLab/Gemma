@@ -91,11 +91,13 @@ class DifferentialExpressionAnalysisDaoImpl extends SingleExperimentAnalysisDaoB
             Set<CompositeSequence> expectedProbes = rs.getResults().stream()
                     .map( DifferentialExpressionAnalysisResult::getProbe )
                     .collect( Collectors.toSet() );
-            // cannot use a set here because that would collapse duplicates
-            List<Pair<FactorValue, FactorValue>> expectedContrasts = rs.getResults().stream().findAny()
-                    .map( DifferentialExpressionAnalysisResult::getContrasts )
-                    .map( cr -> cr.stream().map( cr2 -> Pair.of( cr2.getFactorValue(), cr2.getSecondFactorValue() ) ).collect( Collectors.toList() ) )
-                    .orElse( Collections.emptyList() );
+            // collect all the pairs of FVs that are used in the contrasts of the result set
+            // Gemma might not retain insignificant contrasts, so we hope that all the contrasts defined in the design
+            // appear at least once
+            Set<Pair<FactorValue, FactorValue>> expectedContrasts = rs.getResults().stream()
+                    .flatMap( r -> r.getContrasts().stream() )
+                    .map( cr2 -> Pair.of( cr2.getFactorValue(), cr2.getSecondFactorValue() ) )
+                    .collect( Collectors.toSet() );
             if ( rs.getAnalysis() != entity ) {
                 throw new IllegalArgumentException( "The result set is not associated to its analysis." );
             }
@@ -121,19 +123,16 @@ class DifferentialExpressionAnalysisDaoImpl extends SingleExperimentAnalysisDaoB
                 if ( result.getResultSet() != rs ) {
                     throw new IllegalArgumentException( String.format( "%s is not associated to its result set.", result ) );
                 }
-                if ( result.getContrasts().size() != expectedContrasts.size() ) {
-                    throw new IllegalArgumentException( String.format( "%s is expected to have %d contrasts.", result, expectedContrasts.size() ) );
-                }
-                for ( Pair<FactorValue, FactorValue> ef : expectedContrasts ) {
+                for ( ContrastResult cr : result.getContrasts() ) {
                     boolean found = false;
-                    for ( ContrastResult cr : result.getContrasts() ) {
+                    for ( Pair<FactorValue, FactorValue> ef : expectedContrasts ) {
                         if ( cr.getFactorValue() == ef.getLeft() && cr.getSecondFactorValue() == ef.getRight() ) {
                             found = true;
                             break;
                         }
                     }
                     if ( !found ) {
-                        throw new IllegalArgumentException( String.format( "The expected factor value pair %s was not found in %s.", ef, result ) );
+                        throw new IllegalArgumentException( String.format( "%s has unexpected contrast %s: it does not share its FVs with other contrasts of the result set.", result, cr ) );
                     }
                 }
             }
