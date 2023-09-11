@@ -58,6 +58,10 @@ class DifferentialExpressionAnalysisDaoImpl extends SingleExperimentAnalysisDaoB
      */
     private static final SqlStatementLogger statementLogger = new SqlStatementLogger();
 
+    private static final String
+            INSERT_RESULT_SQL = "insert into DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT (ID, PVALUE, CORRECTED_PVALUE, `RANK`, CORRECTED_P_VALUE_BIN, PROBE_FK, RESULT_SET_FK) values (?, ?, ?, ?, ?, ?, ?)",
+            INSERT_CONTRAST_SQL = "insert into CONTRAST_RESULT (ID, PVALUE, TSTAT, FACTOR_VALUE_FK, DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT_FK, COEFFICIENT, LOG_FOLD_CHANGE, SECOND_FACTOR_VALUE_FK) values (?, ?, ?, ?, ?, ?, ?, ?)";
+
     private final EntityPersister resultPersister, contrastPersister;
 
     @Autowired
@@ -86,10 +90,8 @@ class DifferentialExpressionAnalysisDaoImpl extends SingleExperimentAnalysisDaoB
         DifferentialExpressionAnalysis finalEntity = super.create( entity );
 
         getSessionFactory().getCurrentSession().doWork( work -> {
-            String insertResultSql = "insert into DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT (ID, PVALUE, CORRECTED_PVALUE, `RANK`, CORRECTED_P_VALUE_BIN, PROBE_FK, RESULT_SET_FK) values (?, ?, ?, ?, ?, ?, ?)";
-            PreparedStatement insertResultStmt = work.prepareStatement( insertResultSql );
-            String insertContrastSql = "insert into CONTRAST_RESULT (ID, PVALUE, TSTAT, FACTOR_VALUE_FK, DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT_FK, COEFFICIENT, LOG_FOLD_CHANGE, SECOND_FACTOR_VALUE_FK) values (?, ?, ?, ?, ?, ?, ?, ?)";
-            PreparedStatement insertContrastStmt = work.prepareStatement( insertContrastSql );
+            PreparedStatement insertResultStmt = work.prepareStatement( INSERT_RESULT_SQL );
+            PreparedStatement insertContrastStmt = work.prepareStatement( INSERT_CONTRAST_SQL );
             int numResults = 0;
             int numContrasts = 0;
             for ( ExpressionAnalysisResultSet rs : finalEntity.getResultSets() ) {
@@ -128,9 +130,9 @@ class DifferentialExpressionAnalysisDaoImpl extends SingleExperimentAnalysisDaoB
                 }
             }
 
-            statementLogger.logStatement( insertResultSql + String.format( " [repeated %d times]", numResults ) );
+            statementLogger.logStatement( INSERT_RESULT_SQL + String.format( " [repeated %d times]", numResults ) );
             ensureExpectedRowsAreInserted( insertResultStmt, insertResultStmt.executeBatch() );
-            statementLogger.logStatement( insertContrastSql + String.format( " [repeated %d times]", numContrasts ) );
+            statementLogger.logStatement( INSERT_CONTRAST_SQL + String.format( " [repeated %d times]", numContrasts ) );
             ensureExpectedRowsAreInserted( insertContrastStmt, insertContrastStmt.executeBatch() );
         } );
 
