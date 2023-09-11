@@ -73,17 +73,17 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
 
     @Override
     public Gene findByAccession( String accession, @Nullable ExternalDatabase source ) {
-        Collection<Gene> genes = new HashSet<>();
+        Gene gene = null;
         final String accessionQuery = "select distinct g from Gene g inner join g.accessions a where a.accession = :accession";
         final String externalDbQuery = accessionQuery + " and a.externalDatabase = :source";
 
         if ( source == null ) {
-            //noinspection unchecked
-            genes = this.getSessionFactory().getCurrentSession()
+            gene = ( Gene ) this.getSessionFactory().getCurrentSession()
                     .createQuery( accessionQuery )
                     .setParameter( "accession", accession )
-                    .list();
-            if ( genes.isEmpty() ) {
+                    .setMaxResults( 1 )
+                    .uniqueResult();
+            if ( gene == null ) {
                 try {
                     return this.findByNcbiId( Integer.parseInt( accession ) );
                 } catch ( NumberFormatException e ) {
@@ -98,16 +98,16 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
                     // it's not an NCBIid
                 }
             } else {
-                //noinspection unchecked
-                genes = this.getSessionFactory().getCurrentSession()
+                gene = ( Gene ) this.getSessionFactory().getCurrentSession()
                         .createQuery( externalDbQuery )
                         .setParameter( "accession", accession )
                         .setParameter( "source", source )
-                        .list();
+                        .setMaxResults( 1 )
+                        .uniqueResult();
             }
         }
 
-        return genes.iterator().next();
+        return gene;
     }
 
     /**
