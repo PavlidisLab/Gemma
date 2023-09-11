@@ -25,7 +25,7 @@
         <!-- FIXME: use cascade="all" when https://github.com/PavlidisLab/Gemma/issues/825 is resolved -->
         <set name="contrasts" lazy="true" fetch="select" cascade="delete" mutable="false">
             <key foreign-key="CONTRAST_RESULT_DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT_FKC">
-                <column name="DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT_FK" sql-type="BIGINT"/>
+                <column name="DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT_FK" sql-type="BIGINT" not-null="true"/>
             </key>
             <one-to-many class="ubic.gemma.model.analysis.expression.diff.ContrastResult"/>
         </set>

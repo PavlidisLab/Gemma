@@ -358,9 +358,9 @@ public class DatabaseViewGeneratorImpl implements DatabaseViewGenerator {
         for ( ContrastResult cr : contrasts ) {
             FactorValue factorValue = cr.getFactorValue();
 
-            String direction = cr.getLogFoldChange() < 0 ? "-" : "+";
+            String direction = cr.getLogFoldChange() != null ? ( cr.getLogFoldChange() < 0 ? "-" : "+" ) : "";
 
-            String factorValueDescription = ExperimentalDesignUtils.prettyString( factorValue );
+            String factorValueDescription = factorValue != null ? ExperimentalDesignUtils.prettyString( factorValue ) : "";
 
             buf.append( String.format( "%d\t%s\t%s\t%d\t%s\t%s\t%s\t%s\t%s\n", ee.getId(), ee.getShortName(),
                     g.getNcbiGeneId().toString(), g.getId(), factorName, factorURI, baselineDescription,
