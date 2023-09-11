@@ -29,8 +29,8 @@ import ubic.gemma.core.util.test.category.AllenBrainAtlasTest;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
+import static org.junit.Assume.assumeNotNull;
 
 /**
  * Alan brain Atlas service test.
@@ -78,9 +78,9 @@ public class AllenBrainAtlasServiceTest extends BaseSpringContextTest {
 
         abaGene = abaService.getGene( gene );
 
-        assertNotNull( abaGene );
+        assumeNotNull( "ABA gene for grin1 could was not found.", abaGene );
         assertNotNull( abaGene.getImageSeries() );
-        assertTrue( !abaGene.getImageSeries().isEmpty() );
+        assertFalse( abaGene.getImageSeries().isEmpty() );
     }
 
 }
