@@ -13,7 +13,7 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.util.TestComponent;
 
-import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.*;
 
 @ContextConfiguration
 public class DifferentialExpressionAnalysisDaoTest extends BaseDatabaseTest {
@@ -41,6 +41,7 @@ public class DifferentialExpressionAnalysisDaoTest extends BaseDatabaseTest {
         sessionFactory.getCurrentSession().persist( ad );
         for ( int j = 0; j < 3; j++ ) {
             ExpressionAnalysisResultSet resultSet = new ExpressionAnalysisResultSet();
+            resultSet.setAnalysis( analysis );
             PvalueDistribution pvalueDist = new PvalueDistribution();
             pvalueDist.setNumBins( 2 );
             pvalueDist.setBinCounts( new byte[2] );
@@ -61,13 +62,18 @@ public class DifferentialExpressionAnalysisDaoTest extends BaseDatabaseTest {
         analysis = differentialExpressionAnalysisDao.create( analysis );
         sessionFactory.getCurrentSession().flush();
         assertNotNull( analysis.getId() );
+        assertEquals( 3, analysis.getResultSets().size() );
         for ( ExpressionAnalysisResultSet resultSet : analysis.getResultSets() ) {
             assertNotNull( resultSet.getId() );
             assertNotNull( resultSet.getPvalueDistribution().getId() );
+            assertEquals( 100, resultSet.getResults().size() );
             for ( DifferentialExpressionAnalysisResult result : resultSet.getResults() ) {
                 assertNotNull( result.getId() );
+                assertFalse( sessionFactory.getCurrentSession().contains( result ) );
+                assertEquals( 2, result.getContrasts().size() );
                 for ( ContrastResult contrast : result.getContrasts() ) {
                     assertNotNull( contrast.getId() );
+                    assertFalse( sessionFactory.getCurrentSession().contains( contrast ) );
                 }
             }
         }
